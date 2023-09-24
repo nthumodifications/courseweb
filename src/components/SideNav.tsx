@@ -8,22 +8,22 @@ const SideNav:FC = () => {
         {
             title: 'Today',
             href: '/today',
-            icon: <FontAwesomeIcon icon={faClock} />
+            icon: <FontAwesomeIcon className="w-6 h-6" icon={faClock} />
         },
         {
             title: 'Timetable',
             href: '/timetable',
-            icon: <FontAwesomeIcon icon={faCalendar}/>
+            icon: <FontAwesomeIcon className="w-6 h-6" icon={faCalendar}/>
         },
         {
             title: 'Courses',
             href: '/courses',
-            icon: <FontAwesomeIcon icon={faCalendarPlus}/>
+            icon: <FontAwesomeIcon className="w-6 h-6" icon={faCalendarPlus}/>
         },
         {
             title: 'Locations',
             href: '/locations',
-            icon: <FontAwesomeIcon icon={faMap}/>
+            icon: <FontAwesomeIcon className="w-6 h-6" icon={faMap}/>
         }
     ]
     return (
@@ -32,9 +32,8 @@ const SideNav:FC = () => {
                 <Link 
                     key={index} 
                     href={link.href} 
-                    className="flex items-center space-x-2 px-4 py-2 text-base text-gray-700 hover:text-violet-700">
-                        <span className="w-6 h-6">{link.icon}</span>
-                        
+                    className="flex items-center space-x-3 py-2 text-base text-gray-400 hover:text-violet-700">
+                        <span>{link.icon}</span>
                         <span className="text-semibold">{link.title}</span>
                 </Link>
             ))}
