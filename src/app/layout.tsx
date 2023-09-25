@@ -1,10 +1,12 @@
-import Header from '@/components/Header'
-import './globals.css'
-import type { Metadata } from 'next'
+import {SettingsProvider} from '@/hooks/contexts/settings';
 import { Inter } from 'next/font/google'
+import './globals.css'
+
+import Header from '@/components/Header'
 import SideNav from '@/components/SideNav'
 import Footer from '@/components/Footer'
-import {SettingsProvider} from '@/hooks/contexts/settings';
+
+import type { Metadata } from 'next'
 
 const inter = Inter({ subsets: ['latin'] })
 
