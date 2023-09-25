@@ -37,7 +37,6 @@ const SideNav:FC = () => {
                     <span className="text-semibold">
                         {link.title}
                     </span>
-
                 </Link>
             ))}
         </nav>
