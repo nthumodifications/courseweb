@@ -12,7 +12,7 @@ const CourseListItem: FC<{ course: CourseDefinition }> = ({ course }) => {
         <h1 className="font-semibold text-xl text-blue-700">{course.course_id} {course.name_zh}</h1>
         <h3>{course.name_en}</h3>
         <p>Computer Science • {course.credits} Credits</p>
-        {course.language == 'en' ? <Chip
+        {course.language == '英' ? <Chip
             color="primary"
             disabled={false}
             onClick={function(){}}
