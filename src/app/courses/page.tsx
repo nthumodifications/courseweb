@@ -1,14 +1,34 @@
+'use client';
+import supabase, { CourseDefinition } from "@/config/supabase";
 import { useSettings } from "@/hooks/contexts/settings";
+import { Database } from "@/types/supabase";
+import { Chip } from "@mui/joy";
 import { NextPage } from "next";
 
-const CourseListItem = () => {
+import { useEffect, useState, FC } from "react";
+
+const CourseListItem: FC<{ course: CourseDefinition }> = ({ course }) => {
     return <div className="space-y-1 text-gray-600">
-        <h1 className="font-semibold text-xl text-blue-700">CS 135501 計算機程式設計一</h1>
-        <h3>Introduction to Programming (I)</h3>
-        <p>Computer Science • 3 Credits</p>
-        <p>胡敏君 MIN-CHUN HU</p>
+        <h1 className="font-semibold text-xl text-blue-700">{course.course_id} {course.name_zh}</h1>
+        <h3>{course.name_en}</h3>
+        <p>Computer Science • {course.credits} Credits</p>
+        {course.language == 'en' ? <Chip
+            color="primary"
+            disabled={false}
+            onClick={function(){}}
+            size="md"
+            variant="outlined"
+        >English Instruction</Chip>:
+        <Chip
+            color="success"
+            disabled={false}
+            onClick={function(){}}
+            size="md"
+            variant="outlined"
+        >Chinese Instruction</Chip>}
+        <p>{course.teacher_zh} {course.teacher_en}</p>
         <p>
-            This course is aimed to help the students learn how to program in C.
+            {course.venue}
         </p>
 
     </div>
@@ -16,9 +36,27 @@ const CourseListItem = () => {
 
 const CoursePage: NextPage = () => {
     // const { language } = useSettings();
+
+    const [courses, setCourses] = useState<CourseDefinition[]>([]);
+
+    useEffect(() => {
+        (async () => {
+            let { data: courses, error } = await supabase
+                .from('courses')
+                .select('*')
+                .limit(300)
+            console.log('courses',courses)
+            if(error) console.log(error);
+            else setCourses(courses!);
+        })()
+    },[])
+
+
     return (
         <div className="flex flex-col w-full">
-            <CourseListItem/>
+            {courses.map((course, index) => (
+                <CourseListItem key={index} course={course}/>
+            ))}
         </div>
     )
 }
