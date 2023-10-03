@@ -2,8 +2,8 @@ import { FC } from "react";
 
 const Header: FC = () => {
     return (
-        <header className="h-14 w-screen bg-gray-200 px-8 py-4 col-span-2">
-            <h1>NTHU</h1>
+        <header className="h-14 w-screen bg-gray-100 px-8 py-4 md:col-span-2">
+            <h1 className="font-bold text-lg">NTHUMODS</h1>
         </header>
     )
 }

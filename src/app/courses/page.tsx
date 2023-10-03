@@ -1,18 +1,34 @@
-'use client';
+'use client';;
 import InputControl from "@/components/FormComponents/InputControl";
 import MultiSelectControl from "@/components/FormComponents/MultiSelectControl";
 import supabase, { CourseDefinition } from "@/config/supabase";
 import { departments } from "@/const/departments";
-import { useSettings } from "@/hooks/contexts/settings";
-import { Database } from "@/types/supabase";
-import { Autocomplete, AutocompleteOption, Button, Checkbox, Chip, FormControl, FormHelperText, FormLabel, Input, LinearProgress, List, ListItem, ListItemContent, ListItemDecorator, Sheet, Typography } from "@mui/joy";
+import {
+    Autocomplete,
+    AutocompleteOption,
+    Button,
+    Chip,
+    Divider,
+    Drawer,
+    FormControl,
+    FormLabel,
+    IconButton,
+    LinearProgress,
+    List,
+    ListItem,
+    ListItemContent,
+    ListItemDecorator,
+    Sheet,
+    Typography,
+} from "@mui/joy";
 import { NextPage } from "next";
 
-import { useEffect, useState, FC } from "react";
-import { Users } from "react-feather";
-import { useForm, Controller, Path } from "react-hook-form";
-import type { Control, FieldValues } from "react-hook-form";
+import { useEffect, useState, FC, Fragment } from "react";
+import { Filter, Users } from "react-feather";
+import { useForm, Controller } from "react-hook-form";
+import type { Control } from "react-hook-form";
 import { useDebouncedCallback } from "use-debounce";
+import { useMediaQuery } from 'usehooks-ts';
 
 const CourseListItem: FC<{ course: CourseDefinition }> = ({ course }) => {
     return <div className="text-gray-600 px-4">
@@ -55,6 +71,118 @@ const CourseListItem: FC<{ course: CourseDefinition }> = ({ course }) => {
     </div>
 }
 
+const RefineControls: FC<{ control: Control<FormTypes> }> = ({ control }) => {
+    return <Sheet variant="outlined" sx={{ p: 2, borderRadius: 'sm', width: 300 }}>
+        <Typography
+            id="filter-status"
+            sx={{
+                textTransform: 'uppercase',
+                fontSize: 'xs',
+                letterSpacing: 'lg',
+                fontWeight: 'lg',
+                color: 'text.secondary',
+            }}
+        >
+            Refine
+        </Typography>
+        <div role="group" aria-labelledby="filter-status">
+            <List>
+                <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
+                    <MultiSelectControl
+                        control={control}
+                        name="level"
+                        options={[
+                            { value: 1, label: '1xxx' },
+                            { value: 2, label: '2xxx' },
+                            { value: 3, label: '3xxx' },
+                            { value: 4, label: '4xxx' },
+                            { value: 5, label: '5xxx' },
+                            { value: 6, label: '6xxx' },
+                            { value: 7, label: '7xxx' },
+                            { value: 8, label: '8xxx' },
+                            { value: 9, label: '9xxx' },
+                        ]}
+                        label="Level"
+                    />
+                </ListItem>
+                <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
+                    <MultiSelectControl
+                        control={control}
+                        name="language"
+                        options={[
+                            { value: '英', label: 'English' },
+                            { value: '中', label: '國語' },
+                        ]}
+                        label="Instruction Language"
+                    />
+                </ListItem>
+                <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
+                    <FormControl>
+                        <FormLabel>Departments</FormLabel>
+                        <Controller
+                            control={control}
+                            name="department"
+                            render={({ field: { value, onChange } }) => (
+                                <Autocomplete
+                                    placeholder="Departments"
+                                    value={value}
+                                    onChange={(e, v) => onChange(v)}
+                                    multiple={true}
+                                    getOptionLabel={(option) => `${option.code} ${option.name_zh}`}
+                                    isOptionEqualToValue={(option, value) => option.code === value.code}
+                                    renderTags={(value, getTagProps) =>
+                                        value.map((option, index) =>
+                                            <Chip
+                                                variant="soft"
+                                                {...getTagProps({ index })}
+                                            >
+                                                {`${option.code}`}
+                                            </Chip>
+                                        )
+                                    }
+                                    renderOption={(props, option) => (
+                                        <AutocompleteOption {...props}>
+                                            <ListItemDecorator>
+                                                <span className="text-sm font-semibold">{option.code}</span>
+                                            </ListItemDecorator>
+                                            <ListItemContent sx={{ fontSize: 'sm' }}>
+                                                <Typography level="body-xs">
+                                                    {option.name_zh} {option.name_en}
+                                                </Typography>
+                                            </ListItemContent>
+                                        </AutocompleteOption>
+                                    )}
+                                    options={departments}
+                                    sx={{ width: 250 }}
+                                />
+                            )} />
+                    </FormControl>
+                </ListItem>
+                <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
+                    <MultiSelectControl
+                        control={control}
+                        name="others"
+                        options={[
+                            { value: 'xclass', label: 'X-Class' },
+                        ]}
+                        label="Others"
+                    />
+                </ListItem>
+            </List>
+        </div>
+        <Button
+            variant="outlined"
+            color="neutral"
+            size="sm"
+            onClick={() => { }
+            }
+            sx={{ px: 1.5, mt: 1 }}
+        >
+            Clear All
+        </Button>
+    </Sheet>
+}
+
 type FormTypes = {
     textSearch: string,
     level: string[],
@@ -69,6 +197,7 @@ const CoursePage: NextPage = () => {
     const [courses, setCourses] = useState<CourseDefinition[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [totalCount, setTotalCount] = useState<number>(0);
+    const [open, setOpen] = useState<boolean>(false);
     const { control, watch, } = useForm<FormTypes>({
         defaultValues: {
             textSearch: '',
@@ -78,6 +207,8 @@ const CoursePage: NextPage = () => {
             department: []
         }
     })
+
+    const isMobile = useMediaQuery('(max-width: 768px)');
 
     //codes should be 4 char, so we need to pad it at the end
     const padEnd = (str: string) => str + ' '.repeat(4 - str.length)
@@ -100,7 +231,7 @@ const CoursePage: NextPage = () => {
                 if (error) console.log(error);
                 else setCourses(courses!);
             }
-            catch(e) {
+            catch (e) {
                 console.error(e);
             }
             setLoading(false);
@@ -116,132 +247,50 @@ const CoursePage: NextPage = () => {
 
 
     return (
-        <div className="grid grid-cols-[auto_320px] w-full h-full">
+        <div className="grid grid-cols-1 md:grid-cols-[auto_320px] w-full h-full">
             <div className="flex flex-col w-full h-full overflow-auto space-y-5">
                 <InputControl
                     control={control}
                     name="textSearch"
                     placeholder="Search for your course (Name, Class, Anything)"
                     variant="soft"
+                    endDecorator={isMobile ?
+                        <Fragment>
+                            <Divider orientation="vertical" />
+                            <IconButton onClick={() => setOpen(true)}>
+                                <Filter className="text-gray-400 p-1" />
+                            </IconButton>
+                        </Fragment> :
+                        <></>
+                    }
                 />
                 <div className="flex flex-row justify-between px-3 py-1 border-b">
                     <h6 className="text-gray-600">Courses</h6>
                     <h6 className="text-gray-600">Found: {totalCount} Courses</h6>
                 </div>
-                {loading && <LinearProgress/>}
+                {loading && <LinearProgress />}
                 {courses.map((course, index) => (
                     <CourseListItem key={index} course={course} />
                 ))}
             </div>
-            <Sheet variant="outlined" sx={{ p: 2, borderRadius: 'sm', width: 300 }}>
-                <Typography
-                    id="filter-status"
-                    sx={{
-                        textTransform: 'uppercase',
-                        fontSize: 'xs',
-                        letterSpacing: 'lg',
-                        fontWeight: 'lg',
-                        color: 'text.secondary',
-                    }}
-                >
-                    Refine
-                </Typography>
-                <div role="group" aria-labelledby="filter-status">
-                    <List>
-                        <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
-                            <MultiSelectControl
-                                control={control}
-                                name="level"
-                                options={[
-                                    { value: 1, label: '1xxx' },
-                                    { value: 2, label: '2xxx' },
-                                    { value: 3, label: '3xxx' },
-                                    { value: 4, label: '4xxx' },
-                                    { value: 5, label: '5xxx' },
-                                    { value: 6, label: '6xxx' },
-                                    { value: 7, label: '7xxx' },
-                                    { value: 8, label: '8xxx' },
-                                    { value: 9, label: '9xxx' },
-                                ]}
-                                label="Level"
-                            />
-                        </ListItem>
-                        <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
-                            <MultiSelectControl
-                                control={control}
-                                name="language"
-                                options={[
-                                    { value: '英', label: 'English' },
-                                    { value: '中', label: '國語' },
-                                ]}
-                                label="Instruction Language"
-                            />
-                        </ListItem>
-                        <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
-                            <FormControl>
-                                <FormLabel>Departments</FormLabel>
-                                <Controller
-                                    control={control}
-                                    name="department"
-                                    render={({ field: { value, onChange } }) => (
-                                        <Autocomplete
-                                            placeholder="Departments"
-                                            value={value}
-                                            onChange={(e, v) => onChange(v)}
-                                            multiple={true}
-                                            getOptionLabel={(option) => `${option.code} ${option.name_zh}`}
-                                            isOptionEqualToValue={(option, value) => option.code === value.code}
-                                            renderTags={(value, getTagProps) =>
-                                                value.map((option, index) =>
-                                                    <Chip
-                                                        variant="soft"
-                                                        {...getTagProps({ index })}
-                                                    >
-                                                        {`${option.code}`}
-                                                    </Chip>
-                                                )
-                                            }
-                                            renderOption={(props, option) => (
-                                                <AutocompleteOption {...props}>
-                                                    <ListItemDecorator>
-                                                        <span className="text-sm font-semibold">{option.code}</span>
-                                                    </ListItemDecorator>
-                                                    <ListItemContent sx={{ fontSize: 'sm' }}>
-                                                        <Typography level="body-xs">
-                                                            {option.name_zh} {option.name_en}
-                                                        </Typography>
-                                                    </ListItemContent>
-                                                </AutocompleteOption>
-                                            )}
-                                            options={departments}
-                                            sx={{ width: 250 }}
-                                        />
-                                    )} />
-                            </FormControl>
-                        </ListItem>
-                        <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
-                            <MultiSelectControl
-                                control={control}
-                                name="others"
-                                options={[
-                                    { value: 'xclass', label: 'X-Class' },
-                                ]}
-                                label="Others"
-                            />
-                        </ListItem>
-                    </List>
-                </div>
-                <Button
-                    variant="outlined"
-                    color="neutral"
-                    size="sm"
-                    onClick={() => { }
-                    }
-                    sx={{ px: 1.5, mt: 1 }}
-                >
-                    Clear All
-                </Button>
-            </Sheet>
+            {!isMobile && <RefineControls control={control} />}
+            {isMobile && <Drawer
+                size="md"
+                variant="plain"
+                open={open}
+                onClose={() => setOpen(false)}
+                slotProps={{
+                    content: {
+                        sx: {
+                            bgcolor: 'transparent',
+                            p: { md: 3, sm: 0 },
+                            boxShadow: 'none',
+                        },
+                    },
+                }}
+            >
+                <RefineControls control={control} />
+            </Drawer>}
         </div>
 
     )
