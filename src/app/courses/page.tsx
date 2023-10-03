@@ -3,6 +3,7 @@ import InputControl from "@/components/FormComponents/InputControl";
 import MultiSelectControl from "@/components/FormComponents/MultiSelectControl";
 import supabase, { CourseDefinition } from "@/config/supabase";
 import { departments } from "@/const/departments";
+import { useSettings } from "@/hooks/contexts/settings";
 import {
     Autocomplete,
     AutocompleteOption,
@@ -23,7 +24,7 @@ import {
 } from "@mui/joy";
 import { NextPage } from "next";
 
-import { useEffect, useState, FC, Fragment } from "react";
+import { useEffect, useState, FC, Fragment, useMemo } from "react";
 import { Filter, Users } from "react-feather";
 import { useForm, Controller } from "react-hook-form";
 import type { Control } from "react-hook-form";
@@ -31,6 +32,11 @@ import { useDebouncedCallback } from "use-debounce";
 import { useMediaQuery } from 'usehooks-ts';
 
 const CourseListItem: FC<{ course: CourseDefinition }> = ({ course }) => {
+    const { courses, language, setCourses } = useSettings();
+
+    const isCourseSelected = useMemo(() => courses.includes(course.raw_id ?? ""), [courses, course]);
+    
+
     return <div className="text-gray-600 px-4">
         <div className="flex flex-row justify-between">
             <div className="mb-3">
@@ -46,6 +52,13 @@ const CourseListItem: FC<{ course: CourseDefinition }> = ({ course }) => {
             <div className="space-y-1">
                 <p>{course.venue || "No Venue"} • {course.credits} Credits</p>
                 <p>{course.課程限制說明}</p>
+                {isCourseSelected ?
+                <Button color="danger" variant="outlined" onClick={() => setCourses(courses => courses.filter(m => m != course.raw_id))}>
+                    Remove from this semester
+                </Button>:
+                <Button variant="outlined" onClick={() => setCourses(courses => [...courses, course.raw_id ?? ""])}>
+                    Add to this semester
+                </Button>}
             </div>
             <div className="space-x-2 justify-end">
                 {course.備註?.includes('X-Class') && <Chip
@@ -192,7 +205,6 @@ type FormTypes = {
 }
 
 const CoursePage: NextPage = () => {
-    // const { language } = useSettings();
 
     const [courses, setCourses] = useState<CourseDefinition[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
@@ -248,7 +260,7 @@ const CoursePage: NextPage = () => {
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-[auto_320px] w-full h-full">
-            <div className="flex flex-col w-full h-full overflow-auto space-y-5">
+            <div className="flex flex-col w-full h-full overflow-auto space-y-5 px-2">
                 <InputControl
                     control={control}
                     name="textSearch"

@@ -1,36 +1,39 @@
 "use client";
 import { FC, PropsWithChildren, createContext, useContext, useState } from "react";
-
+import { useLocalStorage } from 'usehooks-ts';
 type Languages = "tw" | "en";
 
 type SettingsType = {
     language: Languages;
     darkMode: boolean;
+    courses: string[];
 };
 
-type SettingsContextType = SettingsType & {
-    setSettings: (settings: SettingsType) => void;
-};
-
-const settingsContext = createContext<SettingsContextType>({
+const settingsContext = createContext<ReturnType<typeof useSettingsProvider>>({
     language: "tw",
     darkMode: false,
+    courses: [],
     setSettings: () => {},
+    setCourses: () => {}
 });
 
 const useSettingsProvider = () => {
-    const [language, setLanguage] = useState<Languages>("tw");
-    const [darkMode, setDarkMode] = useState(false);
+    const [language, setLanguage] = useLocalStorage<Languages>("language", "tw");
+    const [darkMode, setDarkMode] = useLocalStorage("darkMode",false);
+    const [courses, setCourses] = useLocalStorage<string[]>("courses", []);
 
     const setSettings = (settings: SettingsType) => {
         setLanguage(settings.language);
         setDarkMode(settings.darkMode);
+        setCourses(settings.courses);
     };
 
     return {
         language,
         darkMode,
+        courses,
         setSettings,
+        setCourses
     };
 }
 

@@ -11,11 +11,11 @@ const TimeslotHeader = forwardRef<HTMLTableCellElement, TimeSlot & { firstRow: b
                     <span className='text-sm font-semibold'>第{time}節</span>
                     <span className='text-xs text-gray-700'>{end}</span>
                 </td>
-                <td className='border border-gray-800' ref={firstRow ? ref: null}></td>
-                <td className='border border-gray-800'></td>
-                <td className='border border-gray-800'></td>
-                <td className='border border-gray-800'></td>
-                <td className='border border-gray-800'></td>
+                <td className='border border-gray-300' ref={firstRow ? ref: null}></td>
+                <td className='border border-gray-300'></td>
+                <td className='border border-gray-300'></td>
+                <td className='border border-gray-300'></td>
+                <td className='border border-gray-300'></td>
             </tr>
         )
     })
