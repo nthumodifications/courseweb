@@ -62,48 +62,96 @@ export interface Database {
       courses: {
         Row: {
           capacity: number | null
-          course_id: string | null
+          class: string | null
+          course: string | null
           credits: number | null
-          current: number | null
+          department: string | null
+          ge_target: string | null
+          ge_type: string | null
           id: number
-          info: Json | null
           language: string | null
           name_en: string | null
           name_zh: string | null
+          raw_id: string | null
+          raw_teacher_en: string | null
+          raw_teacher_zh: string | null
+          raw_time: string | null
           reserve: number | null
-          teacher_en: string | null
-          teacher_zh: string | null
+          semester: string | null
+          teacher_en: Json | null
+          teacher_zh: Json | null
+          time: Json | null
           venue: string | null
+          不可加簽說明: string | null
+          停開註記: string | null
+          備註: string | null
+          學分學程對應: string | null
+          必選修說明: string | null
+          擋修說明: string | null
+          第一二專長對應: string | null
+          課程限制說明: string | null
         }
         Insert: {
           capacity?: number | null
-          course_id?: string | null
+          class?: string | null
+          course?: string | null
           credits?: number | null
-          current?: number | null
-          id?: number
-          info?: Json | null
+          department?: string | null
+          ge_target?: string | null
+          ge_type?: string | null
+          id: number
           language?: string | null
           name_en?: string | null
           name_zh?: string | null
+          raw_id?: string | null
+          raw_teacher_en?: string | null
+          raw_teacher_zh?: string | null
+          raw_time?: string | null
           reserve?: number | null
-          teacher_en?: string | null
-          teacher_zh?: string | null
+          semester?: string | null
+          teacher_en?: Json | null
+          teacher_zh?: Json | null
+          time?: Json | null
           venue?: string | null
+          不可加簽說明?: string | null
+          停開註記?: string | null
+          備註?: string | null
+          學分學程對應?: string | null
+          必選修說明?: string | null
+          擋修說明?: string | null
+          第一二專長對應?: string | null
+          課程限制說明?: string | null
         }
         Update: {
           capacity?: number | null
-          course_id?: string | null
+          class?: string | null
+          course?: string | null
           credits?: number | null
-          current?: number | null
+          department?: string | null
+          ge_target?: string | null
+          ge_type?: string | null
           id?: number
-          info?: Json | null
           language?: string | null
           name_en?: string | null
           name_zh?: string | null
+          raw_id?: string | null
+          raw_teacher_en?: string | null
+          raw_teacher_zh?: string | null
+          raw_time?: string | null
           reserve?: number | null
-          teacher_en?: string | null
-          teacher_zh?: string | null
+          semester?: string | null
+          teacher_en?: Json | null
+          teacher_zh?: Json | null
+          time?: Json | null
           venue?: string | null
+          不可加簽說明?: string | null
+          停開註記?: string | null
+          備註?: string | null
+          學分學程對應?: string | null
+          必選修說明?: string | null
+          擋修說明?: string | null
+          第一二專長對應?: string | null
+          課程限制說明?: string | null
         }
         Relationships: []
       }
