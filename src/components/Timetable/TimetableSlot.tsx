@@ -14,7 +14,7 @@ const TimetableSlot: FC<{course: CourseTimeslotData, tableDim: TimetableDim}> = 
             backgroundColor: course.color
         }}
         >
-        <div className='flex flex-col justify-center items-start text-left h-full text-black/70 p-1'>
+        <div className='flex flex-col justify-start items-start text-left h-full text-black/70 p-1'>
             <span className='text-xs lg:text-base font-semibold'>{course.course.name_zh}</span>
             {/* {<span className='text-xs'>{course.course.name_en}</span>} */}
             <span className='text-[10px]'>{course.course.venue}</span>

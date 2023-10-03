@@ -1,9 +1,9 @@
 'use client';;
+import CourseListItem from "@/components/Courses/CourseListItem";
 import InputControl from "@/components/FormComponents/InputControl";
 import MultiSelectControl from "@/components/FormComponents/MultiSelectControl";
 import supabase, { CourseDefinition } from "@/config/supabase";
 import { departments } from "@/const/departments";
-import { useSettings } from "@/hooks/contexts/settings";
 import {
     Autocomplete,
     AutocompleteOption,
@@ -19,70 +19,23 @@ import {
     ListItem,
     ListItemContent,
     ListItemDecorator,
+    Radio,
+    RadioGroup,
     Sheet,
+    Stack,
     Typography,
+    radioClasses,
 } from "@mui/joy";
 import { NextPage } from "next";
-
-import { useEffect, useState, FC, Fragment, useMemo } from "react";
-import { Filter, Users } from "react-feather";
+import { useEffect, useState, FC, Fragment, useRef } from "react";
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter } from "react-feather";
 import { useForm, Controller } from "react-hook-form";
 import type { Control } from "react-hook-form";
 import { useDebouncedCallback } from "use-debounce";
 import { useMediaQuery } from 'usehooks-ts';
+import {arrayRange} from '@/helpers/array';
+import { render } from "react-dom";
 
-const CourseListItem: FC<{ course: CourseDefinition }> = ({ course }) => {
-    const { courses, language, setCourses } = useSettings();
-
-    const isCourseSelected = useMemo(() => courses.includes(course.raw_id ?? ""), [courses, course]);
-    
-
-    return <div className="text-gray-600 px-4">
-        <div className="flex flex-row justify-between">
-            <div className="mb-3">
-                <h1 className="font-semibold text-lg text-fuchsia-800">{course.department} {course.course}-{course.class} {course.name_zh} - {course.raw_teacher_zh}</h1>
-                <h3 className="text-base text-gray-800 mt-0">{course.name_en} - {course.raw_teacher_en}</h3>
-            </div>
-            <div className="flex flex-row space-x-1 mb-2">
-                <Users />
-                <span className="">{course.capacity} / {course.reserve}R</span>
-            </div>
-        </div>
-        <div className="flex flex-row justify-between">
-            <div className="space-y-1">
-                <p>{course.venue || "No Venue"} • {course.credits} Credits</p>
-                <p>{course.課程限制說明}</p>
-                {isCourseSelected ?
-                <Button color="danger" variant="outlined" onClick={() => setCourses(courses => courses.filter(m => m != course.raw_id))}>
-                    Remove from this semester
-                </Button>:
-                <Button variant="outlined" onClick={() => setCourses(courses => [...courses, course.raw_id ?? ""])}>
-                    Add to this semester
-                </Button>}
-            </div>
-            <div className="space-x-2 justify-end">
-                {course.備註?.includes('X-Class') && <Chip
-                    color="danger"
-                    disabled={false}
-                    size="md"
-                    variant="outlined"
-                >X-Class</Chip>}
-                {course.language == '英' ? <Chip
-                    color="primary"
-                    disabled={false}
-                    size="md"
-                    variant="outlined"
-                >English</Chip> :
-                    <Chip
-                        color="success"
-                        disabled={false}
-                        size="md"
-                        variant="outlined"
-                    >國語</Chip>}
-            </div>
-        </div>
-    </div>
-}
 
 const RefineControls: FC<{ control: Control<FormTypes> }> = ({ control }) => {
     return <Sheet variant="outlined" sx={{ p: 2, borderRadius: 'sm', width: 300 }}>
@@ -209,7 +162,9 @@ const CoursePage: NextPage = () => {
     const [courses, setCourses] = useState<CourseDefinition[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [totalCount, setTotalCount] = useState<number>(0);
+    const [headIndex, setHeadIndex] = useState<number>(0);
     const [open, setOpen] = useState<boolean>(false);
+    const scrollRef = useRef<HTMLDivElement>(null);
     const { control, watch, } = useForm<FormTypes>({
         defaultValues: {
             textSearch: '',
@@ -223,9 +178,46 @@ const CoursePage: NextPage = () => {
     const isMobile = useMediaQuery('(max-width: 768px)');
 
     //codes should be 4 char, so we need to pad it at the end
-    const padEnd = (str: string) => str + ' '.repeat(4 - str.length)
+    const padEnd = (str: string) => str + ' '.repeat(4 - str.length);
 
-    const searchQueryFunc = useDebouncedCallback((filters: FormTypes) => {
+    const paginationRange = (current: number, total: number, max: number = 7) => {
+        if (total <= max) return arrayRange(1, total);
+        let start = Math.max(1, current - Math.floor(max / 2));
+        let end = Math.min(total, start + max - 1);
+        if (end - start + 1 < max) {
+            start = Math.max(1, end - max + 1);
+        }
+        return arrayRange(start, end);
+    }
+    
+    const currentPage = headIndex / 30 + 1;
+    const totalPage = Math.ceil(totalCount / 30);
+
+    const PAGNIATION_MAX = 7;
+
+    const renderPagination = () => {
+        const range = paginationRange(currentPage, totalPage, PAGNIATION_MAX);
+
+        return range.map((page, index) => {
+            return (
+            <Button  
+                variant="soft" 
+                aria-pressed={currentPage == page}
+                sx={(theme) => ({
+                [`&[aria-pressed="true"]`]: {
+                    ...theme.variants.outlinedActive.neutral,
+                    borderColor: theme.vars.palette.neutral.outlinedHoverBorder,
+                },
+                })}
+                onClick={() => searchQueryFunc(watch(), (page - 1) * 30)}
+            >
+                {page}
+            </Button>)
+        })
+    }
+
+
+    const searchQueryFunc = useDebouncedCallback((filters: FormTypes, index: number = 0) => {
         console.log(filters);
         (async () => {
             setLoading(true);
@@ -237,11 +229,17 @@ const CoursePage: NextPage = () => {
                 if (filters.level.length) temp = temp.or(filters.level.map(level => `and(course.gte.${level}000,course.lte.${level}999)`).join(','))
                 if (filters.language.length) temp = temp.or(filters.language.map(lang => `language.eq.${lang}`).join(','))
                 if (filters.department.length) temp = temp.in('department', filters.department.map(({ code }) => padEnd(code)))
-                let { data: courses, error, count } = await temp.limit(300)
-                console.log('filter courses', courses)
+                if (filters.others.includes('xclass')) temp = temp.textSearch(`備註`,`'X-Class'`)
+                let { data: courses, error, count } = await temp.range(index, index + 29)
+                // console.log('range', index, index + 29);
+                // move scroll to top
+                scrollRef.current?.scrollTo(0, 0);
                 setTotalCount(count ?? 0)
                 if (error) console.log(error);
-                else setCourses(courses!);
+                else {
+                    setCourses(courses!);
+                    setHeadIndex(index);
+                }
             }
             catch (e) {
                 console.error(e);
@@ -253,14 +251,13 @@ const CoursePage: NextPage = () => {
     //filters
     const filters = watch()
     useEffect(() => {
-        // console.log(filters);
         searchQueryFunc(filters);
-    }, [filters.textSearch, filters.level, filters.department, filters.language])
+    }, [filters.textSearch, filters.level, filters.department, filters.language, filters.others])
 
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-[auto_320px] w-full h-full">
-            <div className="flex flex-col w-full h-full overflow-auto space-y-5 px-2">
+            <div className="flex flex-col w-full h-full overflow-auto space-y-5 px-2 pt-2 pb-8" ref={scrollRef}>
                 <InputControl
                     control={control}
                     name="textSearch"
@@ -284,6 +281,23 @@ const CoursePage: NextPage = () => {
                 {courses.map((course, index) => (
                     <CourseListItem key={index} course={course} />
                 ))}
+                <Stack
+                    direction="row"
+                >
+                    {currentPage != 1 && <IconButton onClick={() => searchQueryFunc(filters, 0)}>
+                        <ChevronsLeft/>
+                    </IconButton>}
+                    {currentPage != 1 && <IconButton onClick={() => searchQueryFunc(filters, headIndex - 30)}>
+                        <ChevronLeft/>
+                    </IconButton>}
+                    {renderPagination()}
+                    {currentPage != totalPage && <IconButton onClick={() => searchQueryFunc(filters, headIndex + 30)}>
+                        <ChevronRight/>
+                    </IconButton>}
+                    {currentPage != totalPage && <IconButton onClick={() => searchQueryFunc(filters, (totalPage - 1) * 30)}>
+                        <ChevronsRight/>
+                    </IconButton>}
+                </Stack>
             </div>
             {!isMobile && <RefineControls control={control} />}
             {isMobile && <Drawer
