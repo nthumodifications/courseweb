@@ -8,8 +8,9 @@ import { Database } from "@/types/supabase";
 import { NextPage } from "next";
 import { useEffect, useState } from "react";
 import {CourseDefinition} from '@/config/supabase';
-import { ButtonGroup, IconButton, Input } from "@mui/joy";
-import { Delete, EyeOff, Trash } from "react-feather";
+import { Button, ButtonGroup, IconButton, Input } from "@mui/joy";
+import { Delete, Download, EyeOff, Share, Trash } from "react-feather";
+import { useLocalStorage, useIsFirstRender } from "usehooks-ts";
 
 const pastelColors = [
     "#ffffed", // lavender
@@ -40,53 +41,63 @@ const tsinghuarian = [
 
 const TimetablePage: NextPage = () => {
     const { courses, setCourses } = useSettings();
+    const [localCourseCache, setLocalCourseCache] = useLocalStorage<CourseDefinition[]>("cached_courses", []);
 
     const [timetableData, setTimetableData] = useState<CourseTimeslotData[]>([]);
     const [allCourseData, setAllCourseData] = useState<CourseDefinition[]>([]);
 
     useEffect(() => {
-        console.log(courses);
+        console.log('Loading from Cache')
+        createTimetableFromCourses(localCourseCache);
+    }, []);
+
+    useEffect(() => {
+        console.log('Loading from Server');
         (async () => {
             try {
                 let { data = [], error } = await supabase.from('courses').select("*").in('raw_id', courses);
                 if(error) console.error(error);
                 else {
-                    console.log("your courses", data);
-                    const unscheduled: CourseDefinition[]  = [];
-                    const newTimetableData:CourseTimeslotData[] = [];
-                    setAllCourseData(data!);
-                    data!.forEach(course => {
-                        //get unique days first
-                        if(!course.raw_time) {
-                            return;
-                        };
-                        const timeslots = course.raw_time.match(/.{1,2}/g)?.map(day => ({ day: day[0], time: day[1] }));
-                        const days = timeslots!.map(time => time.day).filter((day, index, self) => self.indexOf(day) === index);
-                        days.forEach(day => {
-                            const times = timeslots!.filter(time => time.day == day).map(time => scheduleTimeSlots.map(m => m.time).indexOf(time.time));
-                            //get the start and end time
-                            const startTime = Math.min(...times);
-                            const endTime = Math.max(...times);
-                            //get the color
-                            const color = tsinghuarian[data!.indexOf(course)];
-                            //push to scheduleData
-                            newTimetableData.push({
-                                course: course,
-                                dayOfWeek: 'MTWRFS'.indexOf(day),
-                                startTime: startTime,
-                                endTime: endTime,
-                                color: color
-                            });
-                        });
-                    });
-                    console.log("your timetable data", newTimetableData);
-                    setTimetableData(newTimetableData);
+                    createTimetableFromCourses(data!);
+                    setLocalCourseCache(data!);
                 }
             } catch(e) {
                 console.error(e);
             }
         })();
-    }, [courses])
+    }, [courses.length])
+
+    const createTimetableFromCourses = (data: CourseDefinition[]) => {
+        console.log("your courses", data);
+        const newTimetableData:CourseTimeslotData[] = [];
+        setAllCourseData(data!);
+        data!.forEach(course => {
+            //get unique days first
+            if(!course.raw_time) {
+                return;
+            };
+            const timeslots = course.raw_time.match(/.{1,2}/g)?.map(day => ({ day: day[0], time: day[1] }));
+            const days = timeslots!.map(time => time.day).filter((day, index, self) => self.indexOf(day) === index);
+            days.forEach(day => {
+                const times = timeslots!.filter(time => time.day == day).map(time => scheduleTimeSlots.map(m => m.time).indexOf(time.time));
+                //get the start and end time
+                const startTime = Math.min(...times);
+                const endTime = Math.max(...times);
+                //get the color
+                const color = tsinghuarian[data!.indexOf(course)];
+                //push to scheduleData
+                newTimetableData.push({
+                    course: course,
+                    dayOfWeek: 'MTWRFS'.indexOf(day),
+                    startTime: startTime,
+                    endTime: endTime,
+                    color: color
+                });
+            });
+        });
+        console.log("your timetable data", newTimetableData);
+        setTimetableData(newTimetableData);
+    }
 
     const deleteCourse = async (course: CourseDefinition) => {
         setCourses(courses.filter(c => c != course.raw_id));
@@ -114,6 +125,10 @@ const TimetablePage: NextPage = () => {
                         </ButtonGroup>
                     </div>
                 ))}
+                <div className="grid grid-cols-2 grid-rows-2 gap-2">
+                    <Button variant="outlined" startDecorator={<Download className="w-4 h-4"/>}>Download</Button>
+                    <Button variant="outlined" startDecorator={<Share className="w-4 h-4"/>}>Share/Sync</Button>
+                </div>
             </div>
         </div>
     )
