@@ -94,7 +94,7 @@ const RefineControls: FC<{ control: Control<FormTypes> }> = ({ control }) => {
                                     value={value}
                                     onChange={(e, v) => onChange(v)}
                                     multiple={true}
-                                    getOptionLabel={(option) => `${option.code} ${option.name_zh}`}
+                                    getOptionLabel={(option) => `${option.code} ${option.name_zh} ${option.name_en}`}
                                     isOptionEqualToValue={(option, value) => option.code === value.code}
                                     renderTags={(value, getTagProps) =>
                                         value.map((option, index) =>
@@ -216,8 +216,8 @@ const CoursePage: NextPage = () => {
         })
     }
 
-
-    const searchQueryFunc = useDebouncedCallback((filters: FormTypes, index: number = 0) => {
+    const searchQuery = (filters: FormTypes, index: number = 0) => {
+        scrollRef.current?.scrollTo(0, 0);
         console.log(filters);
         (async () => {
             setLoading(true);
@@ -233,7 +233,6 @@ const CoursePage: NextPage = () => {
                 let { data: courses, error, count } = await temp.range(index, index + 29)
                 // console.log('range', index, index + 29);
                 // move scroll to top
-                scrollRef.current?.scrollTo(0, 0);
                 setTotalCount(count ?? 0)
                 if (error) console.log(error);
                 else {
@@ -246,7 +245,8 @@ const CoursePage: NextPage = () => {
             }
             setLoading(false);
         })()
-    }, 1000);
+    }
+    const searchQueryFunc = useDebouncedCallback(searchQuery, 1000);
 
     //filters
     const filters = watch()
@@ -256,8 +256,8 @@ const CoursePage: NextPage = () => {
 
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-[auto_320px] w-full h-full">
-            <div className="flex flex-col w-full h-full overflow-auto space-y-5 px-2 pt-2 pb-8" ref={scrollRef}>
+        <div className="grid grid-cols-1 md:grid-cols-[auto_320px] w-full h-full overflow-hidden">
+            <div className="flex flex-col w-full h-full overflow-hidden space-y-5 px-2 pt-2">
                 <InputControl
                     control={control}
                     name="textSearch"
@@ -273,31 +273,34 @@ const CoursePage: NextPage = () => {
                         <></>
                     }
                 />
-                <div className="flex flex-row justify-between px-3 py-1 border-b">
-                    <h6 className="text-gray-600">Courses</h6>
-                    <h6 className="text-gray-600">Found: {totalCount} Courses</h6>
+                <div className="flex flex-col w-full h-full overflow-auto space-y-5 pb-8 scroll-smooth" ref={scrollRef}>
+                    <div className="flex flex-row justify-between px-3 py-1 border-b">
+                        <h6 className="text-gray-600">Courses</h6>
+                        <h6 className="text-gray-600">Found: {totalCount} Courses</h6>
+                    </div>
+                    {loading && <LinearProgress />}
+                    {courses.map((course, index) => (
+                        <CourseListItem key={index} course={course} />
+                    ))}
+                    <Stack
+                        direction="row"
+                        justifyContent="center"
+                    >
+                        {currentPage != 1 && <IconButton onClick={() => searchQuery(filters, 0)}>
+                            <ChevronsLeft/>
+                        </IconButton>}
+                        {currentPage != 1 && <IconButton onClick={() => searchQuery(filters, headIndex - 30)}>
+                            <ChevronLeft/>
+                        </IconButton>}
+                        {renderPagination()}
+                        {currentPage != totalPage && <IconButton onClick={() => searchQuery(filters, headIndex + 30)}>
+                            <ChevronRight/>
+                        </IconButton>}
+                        {currentPage != totalPage && <IconButton onClick={() => searchQuery(filters, (totalPage - 1) * 30)}>
+                            <ChevronsRight/>
+                        </IconButton>}
+                    </Stack>
                 </div>
-                {loading && <LinearProgress />}
-                {courses.map((course, index) => (
-                    <CourseListItem key={index} course={course} />
-                ))}
-                <Stack
-                    direction="row"
-                >
-                    {currentPage != 1 && <IconButton onClick={() => searchQueryFunc(filters, 0)}>
-                        <ChevronsLeft/>
-                    </IconButton>}
-                    {currentPage != 1 && <IconButton onClick={() => searchQueryFunc(filters, headIndex - 30)}>
-                        <ChevronLeft/>
-                    </IconButton>}
-                    {renderPagination()}
-                    {currentPage != totalPage && <IconButton onClick={() => searchQueryFunc(filters, headIndex + 30)}>
-                        <ChevronRight/>
-                    </IconButton>}
-                    {currentPage != totalPage && <IconButton onClick={() => searchQueryFunc(filters, (totalPage - 1) * 30)}>
-                        <ChevronsRight/>
-                    </IconButton>}
-                </Stack>
             </div>
             {!isMobile && <RefineControls control={control} />}
             {isMobile && <Drawer

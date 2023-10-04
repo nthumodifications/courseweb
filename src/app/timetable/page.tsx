@@ -104,7 +104,7 @@ const TimetablePage: NextPage = () => {
     }
 
     return (
-        <div className="grid grid-cols-1 grid-rows-2 md:grid-cols-[3fr_2fr] px-1 py-4 md:p-4">
+        <div className="grid grid-cols-1 grid-rows-2 md:grid-rows-1 md:grid-cols-[3fr_2fr] px-1 py-4 md:p-4">
             <Timetable timetableData={timetableData} />
             <div className="flex flex-col gap-4 px-4">
                 <Input placeholder="Add course to Timetable" />

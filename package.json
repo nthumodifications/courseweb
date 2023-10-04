@@ -21,6 +21,7 @@
     "@types/react": "18.2.22",
     "@types/react-dom": "18.2.7",
     "autoprefixer": "10.4.16",
+    "date-fns": "^2.30.0",
     "leaflet": "^1.9.4",
     "next": "13.5.2",
     "postcss": "8.4.30",
