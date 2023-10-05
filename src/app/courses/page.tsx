@@ -225,11 +225,21 @@ const CoursePage: NextPage = () => {
                 let temp = supabase
                     .from('courses')
                     .select('*', { count: 'exact' })
-                if (filters.textSearch) temp = temp.textSearch('name_en', `'${filters.textSearch.split(' ').join("' & '")}'`)
-                if (filters.level.length) temp = temp.or(filters.level.map(level => `and(course.gte.${level}000,course.lte.${level}999)`).join(','))
-                if (filters.language.length) temp = temp.or(filters.language.map(lang => `language.eq.${lang}`).join(','))
-                if (filters.department.length) temp = temp.in('department', filters.department.map(({ code }) => padEnd(code)))
-                if (filters.others.includes('xclass')) temp = temp.textSearch(`備註`,`'X-Class'`)
+                if (filters.textSearch) 
+                    temp = temp
+                        .textSearch('name_en', `'${filters.textSearch.split(' ').join("' & '")}'`)
+                if (filters.level.length) 
+                    temp = temp
+                        .or(filters.level.map(level => `and(course.gte.${level}000,course.lte.${level}999)`).join(','))
+                if (filters.language.length) 
+                    temp = temp
+                        .or(filters.language.map(lang => `language.eq.${lang}`).join(','))
+                if (filters.department.length) 
+                    temp = temp
+                        .in('department', filters.department.map(({ code }) => padEnd(code)))
+                if (filters.others.includes('xclass')) 
+                    temp = temp
+                        .textSearch(`備註`,`'X-Class'`)
                 let { data: courses, error, count } = await temp.range(index, index + 29)
                 // console.log('range', index, index + 29);
                 // move scroll to top
