@@ -14,7 +14,9 @@ const settingsContext = createContext<ReturnType<typeof useSettingsProvider>>({
     darkMode: false,
     courses: [],
     setSettings: () => {},
-    setCourses: () => {}
+    setCourses: () => {},
+    setLanguage: () => {},
+    setDarkMode: () => {}
 });
 
 const useSettingsProvider = () => {
@@ -33,7 +35,9 @@ const useSettingsProvider = () => {
         darkMode,
         courses,
         setSettings,
-        setCourses
+        setCourses,
+        setLanguage,
+        setDarkMode
     };
 }
 
