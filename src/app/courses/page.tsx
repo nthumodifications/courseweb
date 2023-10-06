@@ -28,7 +28,7 @@ import {
 } from "@mui/joy";
 import { NextPage } from "next";
 import { useEffect, useState, FC, Fragment, useRef } from "react";
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter } from "react-feather";
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter, X } from "react-feather";
 import { useForm, Controller } from "react-hook-form";
 import type { Control } from "react-hook-form";
 import { useDebouncedCallback } from "use-debounce";
@@ -165,7 +165,7 @@ const CoursePage: NextPage = () => {
     const [headIndex, setHeadIndex] = useState<number>(0);
     const [open, setOpen] = useState<boolean>(false);
     const scrollRef = useRef<HTMLDivElement>(null);
-    const { control, watch, } = useForm<FormTypes>({
+    const { control, watch, setValue } = useForm<FormTypes>({
         defaultValues: {
             textSearch: '',
             level: [],
@@ -201,6 +201,7 @@ const CoursePage: NextPage = () => {
         return range.map((page, index) => {
             return (
             <Button  
+                key={index}
                 variant="soft" 
                 aria-pressed={currentPage == page}
                 sx={(theme) => ({
@@ -225,9 +226,11 @@ const CoursePage: NextPage = () => {
                 let temp = supabase
                     .from('courses')
                     .select('*', { count: 'exact' })
-                if (filters.textSearch) 
+                if (filters.textSearch) {
                     temp = temp
-                        .textSearch('name_en', `'${filters.textSearch.split(' ').join("' & '")}'`)
+                        .textSearch('multilang_search', `'${filters.textSearch.split(' ').join("' & '")}'`)
+
+                }
                 if (filters.level.length) 
                     temp = temp
                         .or(filters.level.map(level => `and(course.gte.${level}000,course.lte.${level}999)`).join(','))
@@ -275,6 +278,9 @@ const CoursePage: NextPage = () => {
                     variant="soft"
                     endDecorator={isMobile ?
                         <Fragment>
+                            <IconButton onClick={() => setValue('textSearch', "")}>
+                                <X className="text-gray-400 p-1" />
+                            </IconButton>
                             <Divider orientation="vertical" />
                             <IconButton onClick={() => setOpen(true)}>
                                 <Filter className="text-gray-400 p-1" />

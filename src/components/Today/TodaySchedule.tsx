@@ -97,7 +97,7 @@ const TodaySchedule: FC<{ weather: any }> = ({ weather }) => {
         )
 
         return classesThisDay.map((t, index) => (
-            <div className="flex flex-row">
+            <div className="flex flex-row" key={index}>
                 <div className="flex flex-col justify-between text-sm pr-1 py-[2px] text-gray-400 w-11">
                     <p>{scheduleTimeSlots[t.startTime].start}</p>
                     <p>{scheduleTimeSlots[t.endTime].end}</p>
