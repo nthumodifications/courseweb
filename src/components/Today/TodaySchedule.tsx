@@ -27,7 +27,6 @@ const WeatherIcon: FC<{ date: Date, weather: [
         }[]
     }
 ]}> = ({ date, weather }) => {
-    console.log(weather)
     if(!weather) return <></>;
 
     const weatherData = weather[0].time.find(t => new Date(t.startTime) <= date && new Date(t.endTime) >= date);

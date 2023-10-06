@@ -1,8 +1,7 @@
 import {Json, Database} from '@/types/supabase';
 import { createClient } from "@supabase/supabase-js";
 
-
-const supabase = createClient<Database>("https://sb.chibimello.com", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJyb2xlIjogImFub24iLAogICJpc3MiOiAic3VwYWJhc2UiLAogICJpYXQiOiAxNjk1Mzk4NDAwLAogICJleHAiOiAxODUzMjUxMjAwCn0.IldZY_FwoLs6cXpVyas9fR_F3uLDWSXu70s3Uyvn-dI" ?? "");
+const supabase = createClient<Database>(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "", process.env.NEXT_PUBLIC_SUPABASE_KEY ?? "");
 
 export type CourseDefinition = Database['public']['Tables']['courses']['Row'];
 

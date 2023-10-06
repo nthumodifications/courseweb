@@ -221,7 +221,6 @@ const CoursePage: NextPage = () => {
 
     const searchQuery = (filters: FormTypes, index: number = 0) => {
         scrollRef.current?.scrollTo(0, 0);
-        console.log(filters);
         (async () => {
             setLoading(true);
             try {
@@ -249,7 +248,7 @@ const CoursePage: NextPage = () => {
                 // console.log('range', index, index + 29);
                 // move scroll to top
                 setTotalCount(count ?? 0)
-                if (error) console.log(error);
+                if (error) console.error(error);
                 else {
                     setCourses(courses!);
                     setHeadIndex(index);

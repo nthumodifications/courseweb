@@ -1,17 +1,10 @@
 'use client';;
 import Timetable from "@/components/Timetable/Timetable";
-import supabase from "@/config/supabase";
-import { scheduleTimeSlots } from "@/const/timetable";
 import { useSettings } from "@/hooks/contexts/settings";
-import { CourseTimeslotData} from '@/types/courses';
-import { Database } from "@/types/supabase";
 import { NextPage } from "next";
-import { useEffect, useState } from "react";
-import {CourseDefinition} from '@/config/supabase';
 import { Button, ButtonGroup, IconButton, Input } from "@mui/joy";
-import { Delete, Download, EyeOff, Search, Share, Trash, UploadCloud } from "react-feather";
-import { useLocalStorage, useIsFirstRender } from "usehooks-ts";
-import {createTimetableFromCourses, timetableColors} from '@/helpers/timetable';
+import { Download, EyeOff, Search, Share, Trash } from "react-feather";
+import { timetableColors } from '@/helpers/timetable';
 import useUserTimetable from "@/hooks/useUserTimetable";
 import { useRouter } from "next/navigation";
 

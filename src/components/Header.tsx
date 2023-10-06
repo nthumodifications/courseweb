@@ -13,7 +13,6 @@ const Header: FC = () => {
 
     const currentSemester = semesterInfo.find(semester => {
         const now = new Date();
-        console.log(semester)
         return now >= semester.begins && now <= semester.ends;
     });
 

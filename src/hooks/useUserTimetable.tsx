@@ -14,14 +14,14 @@ const useUserTimetable = (loadCourse = true) => {
 
     useEffect(() => {
         if(!loadCourse) return;
-        console.log('Loading from Cache')
+        console.info('Loading from Cache')
         setAllCourseData(localCourseCache!);
         setTimetableData(createTimetableFromCourses(localCourseCache));
     }, []);
 
     useEffect(() => {
         if(!loadCourse) return;
-        console.log('Loading from Server');
+        console.info('Loading from Server');
         (async () => {
             try {
                 let { data = [], error } = await supabase.from('courses').select("*").in('raw_id', courses);
