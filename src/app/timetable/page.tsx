@@ -2,20 +2,97 @@
 import Timetable from "@/components/Timetable/Timetable";
 import { useSettings } from "@/hooks/contexts/settings";
 import { NextPage } from "next";
-import { Button, ButtonGroup, DialogActions, DialogContent, DialogTitle, IconButton, Input, ModalClose, ModalDialog, Sheet, Typography } from "@mui/joy";
+import { Autocomplete, AutocompleteOption, Button, ButtonGroup, CircularProgress, DialogActions, DialogContent, DialogTitle, IconButton, Input, ListItemContent, ModalClose, ModalDialog, Sheet, Typography } from "@mui/joy";
 import { Download, EyeOff, Mail, Search, Share, Trash } from "react-feather";
 import { timetableColors } from '@/helpers/timetable';
 import useUserTimetable from "@/hooks/useUserTimetable";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from 'next/navigation'
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useModal } from "@/hooks/contexts/useModal";
 import {QRCodeSVG} from 'qrcode.react';
+import { useDebouncedCallback } from "use-debounce";
+import supabase, { CourseDefinition } from '@/config/supabase';
+
+const CourseSearchbar = ({ onAddCourse }: { onAddCourse: (course: CourseDefinition) => void }) => {
+    const [open, setOpen] = useState(false);
+    const [options, setOptions] = useState<CourseDefinition[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [textSearch, setTextSearch] = useState('');
+    const [refreshKey, setRefreshKey] = useState<string>("init");
+
+
+    const search = useDebouncedCallback(async (text: string) => {
+        console.log(text)
+        try {
+            setLoading(true);
+            let temp = supabase
+                .from('courses')
+                .select('*')
+            if(text.length > 0) temp = temp.textSearch('multilang_search', `'${text.split(' ').join("' & '")}'`)
+            const { data = [], error } = await temp
+                .order('raw_id', { ascending: true })
+                .limit(10);
+            if(error) console.error(error);
+            else setOptions(data ?? []);
+        } catch (e) {
+            console.error(e);
+        }
+        setLoading(false);
+    }, 500);
+
+    useEffect(() => {
+        if(open) search("");
+    },[open]);
+
+    return <Autocomplete
+        key={refreshKey} 
+        placeholder="Search for a course..."
+        open={open}
+        onOpen={() => {
+            setLoading(true);
+            setOpen(true);
+        }}
+        onClose={() => {
+            setOpen(false);
+        }}
+        inputValue={textSearch}
+        onInputChange={(event, newInputValue) => {
+            setLoading(true);
+            setTextSearch(newInputValue);
+            search(newInputValue);
+        }}
+        defaultValue={null}
+        value={null}
+        onChange={(event, newValue) => {
+            setRefreshKey(newValue!.raw_id! ?? Date.now());
+            if(newValue) onAddCourse(newValue!);
+        }}
+        isOptionEqualToValue={(option, value) => option.id === value.id}
+        getOptionLabel={(option) => `${option.department} ${option.course}-${option.class} ${option.name_zh} ${option.name_en} ${option.raw_teacher_zh} ${option.raw_teacher_en}`}
+        renderOption={(props, option) => (
+            <AutocompleteOption {...props}>
+                <ListItemContent sx={{ fontSize: 'sm' }}>
+                    <p className="font-semibold">{option.department} {option.course}-{option.class} {option.name_zh}</p>
+                    <p className="text-xs">{option.name_en}</p>
+                    <p className="text-xs text-gray-400">{option.raw_teacher_zh} {option.raw_teacher_en} </p>
+                </ListItemContent>
+            </AutocompleteOption>
+        )}
+        options={options}
+        loading={loading}
+        endDecorator={
+        loading ? (
+            <CircularProgress size="sm" sx={{ bgcolor: 'background.surface' }} />
+        ) : null
+        }
+    />
+}
 
 const TimetablePage: NextPage = () => {
     const { courses, setCourses } = useSettings();
 
-    const { timetableData, allCourseData, deleteCourse } = useUserTimetable();
+    const { timetableData, allCourseData, deleteCourse, addCourse } = useUserTimetable();
 
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -98,7 +175,7 @@ const TimetablePage: NextPage = () => {
         <div className="grid grid-cols-1 grid-rows-2 md:grid-rows-1 md:grid-cols-[3fr_2fr] px-1 py-4 md:p-4">
             <Timetable timetableData={timetableData} />
             <div className="flex flex-col gap-4 px-4">
-                <Input placeholder="Add course to Timetable" />
+                <CourseSearchbar onAddCourse={course => addCourse(course)} />
                 {allCourseData.map((course, index) => (
                     <div key={index} className="flex flex-row gap-4 items-center">
                         <div className="w-4 h-4 rounded-full" style={{ backgroundColor: timetableColors['tsinghuarian'][index] }}></div>
