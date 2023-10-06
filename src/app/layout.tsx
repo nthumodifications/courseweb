@@ -12,8 +12,15 @@ import ModalProvider from '@/hooks/contexts/useModal';
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Tsinghua Course Web',
-  description: 'A student-made course web for Tsinghua University.',
+  title: 'NTHUMods',
+  description: 'NTHUMods is a course selection system for National Tsing Hua University, Made with ❤️ by Students',
+  themeColor: "#7e1083",
+  applicationName: "NTHUMods",
+  appleWebApp: {
+    title: "NTHUMods",
+    statusBarStyle: "black-translucent",
+  },
+  manifest: '/manifest.json'
 }
 
 export default function RootLayout({
