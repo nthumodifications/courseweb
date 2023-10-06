@@ -28,6 +28,11 @@ const SideNav:FC = () => {
             title: 'Locations',
             href: '/locations',
             icon: <I.Map strokeWidth="1"/>
+        },
+        {
+            title: 'Settings',
+            href: '/settings',
+            icon: <I.Settings strokeWidth="1"/>
         }
     ]
     if(isMobile) return (

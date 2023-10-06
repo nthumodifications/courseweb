@@ -4,8 +4,9 @@ import {Alert, ColorPaletteProp, Divider, Tooltip} from '@mui/joy';
 import {format, formatRelative, getDay} from 'date-fns';
 import useUserTimetable from '@/hooks/useUserTimetable';
 import {scheduleTimeSlots} from '@/const/timetable';
-import {enUS} from 'date-fns/esm/locale';
+import { enUS, zhTW } from 'date-fns/esm/locale';
 import { FC } from "react";
+import { useSettings } from '@/hooks/contexts/settings';
 
 const WeatherIcon: FC<{ date: Date, weather: [
     {
@@ -47,6 +48,7 @@ const WeatherIcon: FC<{ date: Date, weather: [
 
 const TodaySchedule: FC<{ weather: any }> = ({ weather }) => {
     const { timetableData, allCourseData, deleteCourse } = useUserTimetable();
+    const { language } = useSettings();
 
     // WARN: Day is formatted by MTWRFSS (0-7)
 
@@ -69,9 +71,12 @@ const TodaySchedule: FC<{ weather: any }> = ({ weather }) => {
         other: 'P'
     };
 
-    const customLocale = {
+    const customLocale = language == 'en' ? {
         ...enUS,
         formatRelative: (token: string) => enLocale[token],
+    }: {
+        ...zhTW,
+        formatRelative: (token: string) => zhLocale[token],
     }
       
 
@@ -141,7 +146,7 @@ const TodaySchedule: FC<{ weather: any }> = ({ weather }) => {
                 <div className="flex flex-row gap-2 justify-between border-b border-gray-400 pb-2">
                     <div className="flex flex-col flex-1">
                         {/* 6TH OCTOBER */}
-                        <div className="text-sm font-semibold text-gray-400">{format(day, 'EEEE, do MMMM')}</div>
+                        <div className="text-sm font-semibold text-gray-400">{format(day, 'EEEE, do MMMM', { locale: zhTW })}</div>
                         {/* WEDNESDAY */}
                         <div className="text-xl font-semibold text-gray-600">{formatRelative(day, Date.now(), { locale: customLocale })}</div>
                     </div>

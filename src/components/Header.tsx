@@ -22,10 +22,12 @@ const Header: FC = () => {
     return (
         <header className="h-14 w-screen bg-gray-100 px-8 py-4 md:col-span-2 flex flex-row justify-between">
             <h1 className="font-bold text-lg">NTHUMODS</h1>
+            <p className="text-sm text-gray-600">
             {language == 'en' &&
-                (currentSemester ?`AC${currentSemester.year} S${currentSemester.semester}, Week ${currentWeek}`: `No Active Semester`)}
+                (currentSemester ?`AC${currentSemester.year} Sem ${currentSemester.semester}, Week ${currentWeek}`: `No Active Semester`)}
             {language == 'tw' &&
                 (currentSemester ?`${currentSemester.year-1911}-${currentSemester.semester} 學期, 第${currentWeek}周`: `No Active Semester`)}
+            </p>
         </header>
     )
 }
