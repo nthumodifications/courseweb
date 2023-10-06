@@ -297,7 +297,7 @@ const CoursePage: NextPage = () => {
                         <h6 className="text-gray-600">Courses</h6>
                         <h6 className="text-gray-600">Found: {totalCount} Courses</h6>
                     </div>
-                    {loading && <LinearProgress />}
+                    {loading && <div className="w-full"><LinearProgress  /> </div>}
                     {courses.map((course, index) => (
                         <CourseListItem key={index} course={course} />
                     ))}
