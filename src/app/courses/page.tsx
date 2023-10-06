@@ -195,6 +195,8 @@ const CoursePage: NextPage = () => {
 
     const PAGNIATION_MAX = 7;
 
+    const filters = watch()
+
     const renderPagination = () => {
         const range = paginationRange(currentPage, totalPage, PAGNIATION_MAX);
 
@@ -210,7 +212,7 @@ const CoursePage: NextPage = () => {
                     borderColor: theme.vars.palette.neutral.outlinedHoverBorder,
                 },
                 })}
-                onClick={() => searchQueryFunc(watch(), (page - 1) * 30)}
+                onClick={() => searchQueryFunc(filters, (page - 1) * 30)}
             >
                 {page}
             </Button>)
@@ -262,7 +264,6 @@ const CoursePage: NextPage = () => {
     const searchQueryFunc = useDebouncedCallback(searchQuery, 1000);
 
     //filters
-    const filters = watch()
     useEffect(() => {
         searchQueryFunc(filters);
     }, [filters.textSearch, filters.level, filters.department, filters.language, filters.others])
@@ -276,17 +277,20 @@ const CoursePage: NextPage = () => {
                     name="textSearch"
                     placeholder="Search for your course (Name, Class, Anything)"
                     variant="soft"
-                    endDecorator={isMobile ?
+                    endDecorator={
                         <Fragment>
-                            <IconButton onClick={() => setValue('textSearch', "")}>
+                            {filters.textSearch.length > 0 && <IconButton onClick={() => setValue('textSearch', "")}>
                                 <X className="text-gray-400 p-1" />
-                            </IconButton>
-                            <Divider orientation="vertical" />
-                            <IconButton onClick={() => setOpen(true)}>
-                                <Filter className="text-gray-400 p-1" />
-                            </IconButton>
-                        </Fragment> :
-                        <></>
+                            </IconButton>}
+                            {
+                                isMobile ? <>
+                                    <Divider orientation="vertical" />
+                                    <IconButton onClick={() => setOpen(true)}>
+                                        <Filter className="text-gray-400 p-1" />
+                                    </IconButton>
+                                </>: <></>
+                            }
+                        </Fragment>
                     }
                 />
                 <div className="flex flex-col w-full h-full overflow-auto space-y-5 pb-8 scroll-smooth" ref={scrollRef}>
