@@ -240,7 +240,7 @@ const CoursePage: NextPage = () => {
                         .or(filters.language.map(lang => `language.eq.${lang}`).join(','))
                 if (filters.department.length) 
                     temp = temp
-                        .in('department', filters.department.map(({ code }) => padEnd(code)))
+                        .in('department', filters.department)
                 if (filters.others.includes('xclass')) 
                     temp = temp
                         .textSearch(`備註`,`'X-Class'`)
