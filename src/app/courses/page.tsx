@@ -34,10 +34,45 @@ import type { Control } from "react-hook-form";
 import { useDebouncedCallback } from "use-debounce";
 import { useMediaQuery } from 'usehooks-ts';
 import {arrayRange} from '@/helpers/array';
-import { render } from "react-dom";
+import { PostgrestFilterBuilder, PostgrestQueryBuilder } from "@supabase/postgrest-js";
+import { Database } from "@/types/supabase";
+import { GenericSchema, GenericTable, GenericView, PostgrestSingleResponse } from "@supabase/postgrest-js/dist/module/types";
+
 
 
 const RefineControls: FC<{ control: Control<FormTypes> }> = ({ control }) => {
+    const [firstSpecial, setFirstSpecial] = useState<string[]>([]);
+    const [secondSpecial, setSecondSpecial] = useState<string[]>([]);
+
+    useEffect(() => {
+        (async () => {
+            try {
+                const { data = [], error } = await supabase.from('distinct_first_specialization').select('unique_first_specialization');
+                if (error) throw error;
+                else {
+                    setFirstSpecial(data?.map(({ unique_first_specialization }) => unique_first_specialization!) ?? []);
+                }
+            }
+            catch (e) {
+                console.error(e);
+            }
+        })();
+        (async () => {
+            try {
+                const { data = [], error } = await supabase.from('distinct_second_specialization').select('unique_second_specialization');
+                if (error) throw error;
+                else {
+                    setSecondSpecial(data?.map(({ unique_second_specialization }) => unique_second_specialization!) ?? []);
+                }
+            }
+            catch (e) {
+                console.error(e);
+            }
+        })();
+    }, []);
+
+
+
     return <Sheet variant="outlined" sx={{ p: 2, borderRadius: 'sm', width: 300 }}>
         <Typography
             id="filter-status"
@@ -125,6 +160,36 @@ const RefineControls: FC<{ control: Control<FormTypes> }> = ({ control }) => {
                     </FormControl>
                 </ListItem>
                 <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
+                    <FormControl>
+                        <FormLabel>Specialization</FormLabel>
+                        <Controller
+                            control={control}
+                            name="firstSpecialization"
+                            render={({ field: { value, onChange } }) => (
+                                <Autocomplete
+                                    placeholder="First Specialization"
+                                    value={value}
+                                    onChange={(e, v) => onChange(v)}
+                                    options={firstSpecial}
+                                    sx={{ width: 250 }}
+                                />
+                            )} />
+                        <Controller
+                            control={control}
+                            name="secondSpecialization"
+                            render={({ field: { value, onChange } }) => (
+                                <Autocomplete
+                                    placeholder="Second Specialization"
+                                    value={value}
+                                    onChange={(e, v) => onChange(v)}
+                                    options={secondSpecial}
+                                    sx={{ width: 250 }}
+                                />
+                            )} />
+
+                    </FormControl>
+                </ListItem>
+                <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
                     <MultiSelectControl
                         control={control}
                         name="others"
@@ -154,7 +219,9 @@ type FormTypes = {
     level: string[],
     language: string[],
     others: string[],
-    department: { code: string; name_zh: string; name_en: string; }[]
+    department: { code: string; name_zh: string; name_en: string; }[],
+    firstSpecialization: string | null,
+    secondSpecialization: string | null,
 }
 
 const CoursePage: NextPage = () => {
@@ -171,7 +238,9 @@ const CoursePage: NextPage = () => {
             level: [],
             others: [],
             language: [],
-            department: []
+            department: [],
+            firstSpecialization: null,
+            secondSpecialization: null,
         }
     })
 
@@ -245,6 +314,15 @@ const CoursePage: NextPage = () => {
                 if (filters.others.includes('xclass')) 
                     temp = temp
                         .textSearch(`備註`,`'X-Class'`)
+                if (filters.firstSpecialization)
+                    temp = temp
+                        .containedBy('first_specialization', [filters.firstSpecialization])
+                if (filters.secondSpecialization)
+                    temp = temp
+                        .containedBy('second_specialization', [filters.secondSpecialization])
+                //TODO: Specialization Filters are now in AND mode, should be in OR mode
+                // if(filters.firstSpecialization || filters.secondSpecialization) 
+                //     temp = temp.or(`first_specialization.containedBy.${`("${filters.firstSpecialization}")` ?? '("")'},second_specialization.containedBy.${`("${filters.secondSpecialization}")` ?? '("")'})`)
                 let { data: courses, error, count } = await temp.range(index, index + 29)
                 // console.log('range', index, index + 29);
                 // move scroll to top
@@ -267,7 +345,7 @@ const CoursePage: NextPage = () => {
     //filters
     useEffect(() => {
         searchQueryFunc(filters);
-    }, [filters.textSearch, filters.level, filters.department, filters.language, filters.others])
+    }, [JSON.stringify(filters)])
 
 
     return (
