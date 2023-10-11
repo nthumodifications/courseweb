@@ -100,7 +100,7 @@ const TodaySchedule: FC<{ weather: any }> = ({ weather }) => {
             </div>
         )
 
-        return classesThisDay.map((t, index) => (
+        return classesThisDay.sort((a, b) => a.startTime - b.startTime).map((t, index) => (
             <div className="flex flex-row" key={index}>
                 <div className="flex flex-col justify-between text-sm pr-1 py-[2px] text-gray-400 w-11">
                     <p>{scheduleTimeSlots[t.startTime].start}</p>
