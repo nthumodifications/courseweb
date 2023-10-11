@@ -220,6 +220,7 @@ const CoursePage: NextPage = () => {
     }
 
     const searchQuery = (filters: FormTypes, index: number = 0) => {
+        console.log("current filters", filters);
         scrollRef.current?.scrollTo(0, 0);
         (async () => {
             setLoading(true);
@@ -240,7 +241,7 @@ const CoursePage: NextPage = () => {
                         .or(filters.language.map(lang => `language.eq.${lang}`).join(','))
                 if (filters.department.length) 
                     temp = temp
-                        .in('department', filters.department)
+                        .in('department', filters.department.map(({code}) => code))
                 if (filters.others.includes('xclass')) 
                     temp = temp
                         .textSearch(`備註`,`'X-Class'`)
@@ -250,6 +251,7 @@ const CoursePage: NextPage = () => {
                 setTotalCount(count ?? 0)
                 if (error) console.error(error);
                 else {
+                    console.log(courses)
                     setCourses(courses!);
                     setHeadIndex(index);
                 }
