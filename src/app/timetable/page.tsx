@@ -76,6 +76,13 @@ const CourseSearchbar = ({ onAddCourse }: { onAddCourse: (course: CourseDefiniti
                     <p className="font-semibold">{option.department} {option.course}-{option.class} {option.name_zh}</p>
                     <p className="text-xs">{option.name_en}</p>
                     <p className="text-xs text-gray-400">{option.raw_teacher_zh} {option.raw_teacher_en} </p>
+                    {option.venues?.map((venue, index) => {
+                        const time = option.times![index];
+                        return <div key={index} className="flex flex-row items-center space-x-2 text-gray-400">
+                            <span className="text-xs">{venue}</span>
+                            <span className="text-xs">{time}</span>
+                        </div>
+                    }) || <span className="text-gray-400 text-xs">No Venue</span>}
                 </ListItemContent>
             </AutocompleteOption>
         )}
@@ -182,6 +189,15 @@ const TimetablePage: NextPage = () => {
                         <div className="flex flex-col flex-1">
                             <span className="text-sm">{course.name_zh}</span>
                             <span className="text-xs">{course.name_en}</span>
+                            <div className="mt-1">
+                                {course.venues?.map((venue, index) => {
+                                    const time = course.times![index];
+                                    return <div key={index} className="flex flex-row items-center space-x-2 font-mono text-gray-400">
+                                        <span className="text-xs">{venue}</span>
+                                        <span className="text-xs">{time}</span>
+                                    </div>
+                                }) || <span className="text-gray-400 text-xs">No Venue</span>}
+                            </div>
                         </div>
                         <ButtonGroup>
                             <IconButton onClick={() => deleteCourse(course)}>

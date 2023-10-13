@@ -1,3 +1,4 @@
+import {CourseDefinition} from '@/config/supabase';
 export type TimeSlot = {
     time: string;
     start: string;
@@ -15,3 +16,12 @@ export type TimetableDim = {
         height: number;
     };
 }
+
+export type CourseTimeslotData = {
+    course: CourseDefinition,
+    venue: string,
+    dayOfWeek: number,
+    startTime: number,
+    endTime: number,
+    color: string
+};

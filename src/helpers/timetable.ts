@@ -1,6 +1,6 @@
 import { CourseDefinition } from "@/config/supabase";
 import { scheduleTimeSlots } from "@/const/timetable";
-import { CourseTimeslotData } from "@/types/courses";
+import { CourseTimeslotData } from "@/types/timetable";
 
 export const timetableColors = {
     'pastelColors': [
@@ -35,27 +35,31 @@ export const createTimetableFromCourses = (data: CourseDefinition[]) => {
     const newTimetableData: CourseTimeslotData[] = [];
     data!.forEach(course => {
         //get unique days first
-        if (!course.raw_time) {
+        if (!course.times) {
             return;
         };
-        const timeslots = course.raw_time.match(/.{1,2}/g)?.map(day => ({ day: day[0], time: day[1] }));
-        const days = timeslots!.map(time => time.day).filter((day, index, self) => self.indexOf(day) === index);
-        days.forEach(day => {
-            const times = timeslots!.filter(time => time.day == day).map(time => scheduleTimeSlots.map(m => m.time).indexOf(time.time));
-            //get the start and end time
-            const startTime = Math.min(...times);
-            const endTime = Math.max(...times);
-            //get the color
-            const color = timetableColors['tsinghuarian'][data!.indexOf(course)];
-            //push to scheduleData
-            newTimetableData.push({
-                course: course,
-                dayOfWeek: 'MTWRFS'.indexOf(day),
-                startTime: startTime,
-                endTime: endTime,
-                color: color
+        course.times.forEach((time_str, index) => {
+            const timeslots = time_str.match(/.{1,2}/g)?.map(day => ({ day: day[0], time: day[1] }));
+            const days = timeslots!.map(time => time.day).filter((day, index, self) => self.indexOf(day) === index);
+            days.forEach(day => {
+                const times = timeslots!.filter(time => time.day == day).map(time => scheduleTimeSlots.map(m => m.time).indexOf(time.time));
+                //get the start and end time
+                const startTime = Math.min(...times);
+                const endTime = Math.max(...times);
+                //get the color
+                const color = timetableColors['tsinghuarian'][data!.indexOf(course)];
+                //push to scheduleData
+                newTimetableData.push({
+                    course: course,
+                    venue: course.venues![index]!,
+                    dayOfWeek: 'MTWRFS'.indexOf(day),
+                    startTime: startTime,
+                    endTime: endTime,
+                    color: color
+                });
             });
         });
+        
     });
     console.log("your timetable data", newTimetableData);
     return newTimetableData;

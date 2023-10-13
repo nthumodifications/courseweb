@@ -88,7 +88,9 @@ export interface Database {
           teacher_en: string[] | null
           teacher_zh: string[] | null
           time: string[] | null
+          times: string[] | null
           venue: string | null
+          venues: string[] | null
           停開註記: string | null
           備註: string | null
           必選修說明: string | null
@@ -124,7 +126,9 @@ export interface Database {
           teacher_en?: string[] | null
           teacher_zh?: string[] | null
           time?: string[] | null
+          times?: string[] | null
           venue?: string | null
+          venues?: string[] | null
           停開註記?: string | null
           備註?: string | null
           必選修說明?: string | null
@@ -159,7 +163,9 @@ export interface Database {
           teacher_en?: string[] | null
           teacher_zh?: string[] | null
           time?: string[] | null
+          times?: string[] | null
           venue?: string | null
+          venues?: string[] | null
           停開註記?: string | null
           備註?: string | null
           必選修說明?: string | null
@@ -179,6 +185,12 @@ export interface Database {
       distinct_second_specialization: {
         Row: {
           unique_second_specialization: string | null
+        }
+        Relationships: []
+      }
+      distinct_venues: {
+        Row: {
+          venue: string | null
         }
         Relationships: []
       }

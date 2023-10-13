@@ -73,7 +73,7 @@ const RefineControls: FC<{ control: Control<FormTypes> }> = ({ control }) => {
 
 
 
-    return <Sheet variant="outlined" sx={{ p: 2, borderRadius: 'sm', width: 300 }}>
+    return <Sheet variant="outlined" sx={{ p: 2, borderRadius: 'sm', width: 300, height: '100%', overflow: 'auto' }}>
         <Typography
             id="filter-status"
             sx={{
@@ -323,7 +323,7 @@ const CoursePage: NextPage = () => {
                 //TODO: Specialization Filters are now in AND mode, should be in OR mode
                 // if(filters.firstSpecialization || filters.secondSpecialization) 
                 //     temp = temp.or(`first_specialization.containedBy.${`("${filters.firstSpecialization}")` ?? '("")'},second_specialization.containedBy.${`("${filters.secondSpecialization}")` ?? '("")'})`)
-                let { data: courses, error, count } = await temp.range(index, index + 29)
+                let { data: courses, error, count } = await temp.order('raw_id', { ascending: true }).range(index, index + 29)
                 // console.log('range', index, index + 29);
                 // move scroll to top
                 setTotalCount(count ?? 0)

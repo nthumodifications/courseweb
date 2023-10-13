@@ -22,7 +22,7 @@ const CourseListItem: FC<{ course: CourseDefinition }> = ({ course }) => {
         </div>
         <div className="flex flex-row justify-between">
             <div className="space-y-1">
-                <p>{course.venue || "No Venue"} • {course.credits} Credits</p>
+                <p>{course.venues?.join(', ') || "No Venue"} • {course.credits} Credits</p>
                 <p>{course.課程限制說明}</p>
                 {isCourseSelected ?
                 <Button color="danger" variant="outlined" onClick={() => setCourses(courses => courses.filter(m => m != course.raw_id))}>

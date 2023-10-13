@@ -1,8 +1,7 @@
 import TimeslotHeader from '@/components/Timetable/TimeslotHeader';
 import TimetableSlot from '@/components/Timetable/TimetableSlot';
 import { scheduleTimeSlots } from '@/const/timetable';
-import { CourseTimeslotData} from '@/types/courses';
-import {TimeSlot} from '@/types/timetable';
+import {CourseTimeslotData, TimeSlot} from '@/types/timetable';
 import {FC, useLayoutEffect, useRef, useState} from 'react';
 
 const Timetable: FC<{ timetableData: CourseTimeslotData[] }> = ({ timetableData = [] }) => {

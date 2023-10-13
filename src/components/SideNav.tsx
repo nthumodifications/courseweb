@@ -25,8 +25,8 @@ const SideNav:FC = () => {
             icon: <I.BookOpen strokeWidth="1"/>
         },
         {
-            title: 'Locations',
-            href: '/locations',
+            title: 'Venues',
+            href: '/venues',
             icon: <I.Map strokeWidth="1"/>
         },
         {
