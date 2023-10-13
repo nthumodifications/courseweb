@@ -54,15 +54,6 @@ const Timetable: FC<{ timetableData: CourseTimeslotData[] }> = ({ timetableData 
             </tbody>
           </table>
           <div className='absolute top-0 left-0 w-full h-full'>
-            {/* <div 
-              className="absolute rounded-md bg-purple-600 shadow-md shadow-purple-600 transform translate-y-0.5" 
-              style={{ 
-                left: tableDim.header.width, 
-                top: tableDim.header.height, 
-                width: tableDim.timetable.width-4, 
-                height: tableDim.timetable.height 
-              }}>
-            </div> */}
             {timetableData.map((data, index) => (<TimetableSlot key={index} course={data} tableDim={tableDim}/>))}
           </div>
         </div>

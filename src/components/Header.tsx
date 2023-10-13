@@ -21,7 +21,7 @@ const Header: FC = () => {
 
     return (
         <header className="h-14 w-screen bg-gray-100 px-8 py-4 md:col-span-2 flex flex-row justify-between">
-            <h1 className="font-bold text-lg">NTHUMODS</h1>
+            <h1 className="font-bold text-lg">NTHUMods</h1>
             <p className="text-sm text-gray-600">
             {language == 'en' &&
                 (currentSemester ?`AC${currentSemester.year} Sem ${currentSemester.semester}, Week ${currentWeek}`: `No Active Semester`)}

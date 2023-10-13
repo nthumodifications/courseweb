@@ -32,7 +32,7 @@ export default function RootLayout({
     <ModalProvider>
       <SettingsProvider>
         <html lang="en">
-          <body className={`${inter.className} grid grid-cols-1 grid-rows-[64px_40px_calc(100vh-108px)] md:grid-cols-[12rem_auto] md:grid-rows-[64px_calc(100vh-64px)_16rem] `}>
+          <body className={`${inter.className} grid grid-cols-1 grid-rows-[64px_40px_calc(100vh-108px)] md:grid-cols-[12rem_auto] md:grid-rows-[64px_calc(100vh-64px)_10rem] `}>
             <Header/>
             <SideNav/>
             <main className='overflow-auto'>
