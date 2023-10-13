@@ -1,9 +1,9 @@
 import { useLocalStorage } from "usehooks-ts";
 import { useSettings } from "./contexts/settings";
 import { useState, useEffect } from "react";
-import { CourseTimeslotData } from "@/types/courses";
 import supabase, { CourseDefinition } from "@/config/supabase";
 import { createTimetableFromCourses } from "@/helpers/timetable";
+import { CourseTimeslotData } from "@/types/timetable";
 
 const useUserTimetable = (loadCourse = true) => {
     const { courses, setCourses } = useSettings();
