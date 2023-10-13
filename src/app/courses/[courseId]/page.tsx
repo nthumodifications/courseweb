@@ -13,6 +13,7 @@ export async function generateMetadata({ params }: PageProps, parent: ResolvingM
     const course = await getCourse(decodeURI(params.courseId as string));
     return {
         title: `${course?.department} ${course?.course}-${course?.class} ${course!.name_zh} ${course!.name_en} | NTHUMods`,
+        description: `${course!.name_zh} ${course!.name_en} | ${course!.teacher_zh?.join(',')} ${course!.teacher_en?.join(',')} `
     }
 }
 
@@ -22,7 +23,7 @@ const CourseDetailPage = async ({ params }: PageProps) => {
 
     const reviews = await getCoursePTTReview(courseId);
 
-    return <div className="grid grid-cols-1 lg:grid-cols-[auto_320px]  py-6">
+    return <div className="grid grid-cols-1 lg:grid-cols-[auto_320px]  py-6 px-4">
         <div className="space-y-2">
             <h1 className="font-bold text-3xl mb-4 text-fuchsia-800">{`${course?.department} ${course?.course}-${course?.class}`}</h1>
             <h2 className="font-semibold text-3xl text-gray-500 mb-2">{course!.name_zh} - {course?.teacher_zh?.join(',')?? ""}</h2>

@@ -18,7 +18,6 @@ export const getCoursePTTReview = async (courseId: string) => {
         const searchTerm = encodeURI(`${course!.name_zh} ${course!.teacher_zh?.join(' ')}`);
         const res = await fetch(`${PTTWEBSITE}${searchTerm}`, { cache: 'force-cache' });
         const html = await res.text();
-        console.log(html);
         const root = parse(html);
 
         const posts_link = root.querySelectorAll('.r-ent');

@@ -8,7 +8,6 @@ import { Route } from 'next';
 
 const SideNav:FC = () => {
     const pathname = usePathname();
-    const isMobile = useMediaQuery('(max-width: 768px)');
     const links: {
         title: string;
         href: Route;
@@ -40,8 +39,8 @@ const SideNav:FC = () => {
             icon: <I.Settings strokeWidth="1"/>
         }
     ]
-    if(isMobile) return (
-        <nav className="w-screen flex flex-row h-10 gap-4 justify-evenly">
+    return (<>
+        <nav className="md:hidden w-screen flex flex-row h-10 gap-4 justify-evenly">
             {links.map((link, index) => (
                 <Link className={`flex items-center gap-4 hover:text-fuchsia-600 hover:underline transition-colors ${link.href == pathname ? "text-fuchsia-600":"text-gray-600"}`}
                     key={index} href={link.href}>
@@ -51,9 +50,7 @@ const SideNav:FC = () => {
                 </Link>
             ))}
         </nav>
-    )
-    else return (
-        <nav className="h-screen flex flex-col w-max gap-4 p-6">
+        <nav className="hidden h-screen md:flex flex-col w-max gap-4 p-6">
             {links.map((link, index) => (
                 <Link className={`flex items-center gap-4 hover:text-fuchsia-600 hover:underline transition-colors ${link.href == pathname ? "text-fuchsia-600":"text-gray-600"}`}
                     key={index} href={link.href}>
@@ -67,7 +64,7 @@ const SideNav:FC = () => {
                 </Link>
             ))}
         </nav>
-    )
+    </>)
 }
 
 export default SideNav;
