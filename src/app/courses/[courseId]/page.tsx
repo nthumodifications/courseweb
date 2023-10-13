@@ -11,7 +11,7 @@ type PageProps = {
 export async function generateMetadata({ params }: PageProps, parent: ResolvingMetadata) {
     const course = await getCourse(decodeURI(params.courseId as string));
     return {
-        title: `${course?.department} ${course?.course} ${course!.name_zh} | NTHUMods `,
+        title: `${course?.department} ${course?.course}-${course?.class} ${course!.name_zh} ${course!.name_en} | NTHUMods`,
     }
 }
 
@@ -24,7 +24,7 @@ const CourseDetailPage = async ({ params }: PageProps) => {
 
     return <div className="grid grid-cols-1 lg:grid-cols-[auto_320px]  py-6">
         <div className="space-y-2">
-            <h1 className="font-bold text-3xl mb-4 text-fuchsia-800">{`${course?.department} ${course?.course}`}</h1>
+            <h1 className="font-bold text-3xl mb-4 text-fuchsia-800">{`${course?.department} ${course?.course}-${course?.class}`}</h1>
             <h2 className="font-semibold text-3xl text-gray-500 mb-2">{course!.name_zh} - {course?.teacher_zh?.join(',')?? ""}</h2>
             <h2 className="font-semibold text-xl text-gray-500">{course!.name_en} - {course?.teacher_en?.join(',')?? ""}</h2>
 
