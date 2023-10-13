@@ -1,6 +1,7 @@
 import {CourseDefinition} from '@/config/supabase';
 import {useSettings} from '@/hooks/contexts/settings';
 import {Button, Chip} from '@mui/joy';
+import Link from 'next/link';
 import {FC, useMemo} from 'react';
 import {Users} from 'react-feather';
 
@@ -12,7 +13,7 @@ const CourseListItem: FC<{ course: CourseDefinition }> = ({ course }) => {
     return <div className="text-gray-600 px-4">
         <div className="flex flex-row justify-between">
             <div className="mb-3">
-                <h1 className="font-semibold text-lg text-fuchsia-800">{course.department} {course.course}-{course.class} {course.name_zh} - {course.raw_teacher_zh}</h1>
+                <Link className="font-semibold text-lg text-fuchsia-800" href={'/courses/'+course.raw_id}>{course.department} {course.course}-{course.class} {course.name_zh} - {course.raw_teacher_zh}</Link>
                 <h3 className="text-base text-gray-800 mt-0">{course.name_en} - {course.raw_teacher_en}</h3>
             </div>
             {course.capacity && <div className="flex flex-row space-x-1 mb-2">

@@ -34,10 +34,6 @@ import type { Control } from "react-hook-form";
 import { useDebouncedCallback } from "use-debounce";
 import { useMediaQuery } from 'usehooks-ts';
 import {arrayRange} from '@/helpers/array';
-import { PostgrestFilterBuilder, PostgrestQueryBuilder } from "@supabase/postgrest-js";
-import { Database } from "@/types/supabase";
-import { GenericSchema, GenericTable, GenericView, PostgrestSingleResponse } from "@supabase/postgrest-js/dist/module/types";
-
 
 
 const RefineControls: FC<{ control: Control<FormTypes> }> = ({ control }) => {

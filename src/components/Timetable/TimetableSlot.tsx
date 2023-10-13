@@ -1,10 +1,21 @@
+import { CourseDefinition } from '@/config/supabase';
+import { useModal } from '@/hooks/contexts/useModal';
 import { CourseTimeslotData, TimetableDim } from '@/types/timetable';
+import { ModalClose, ModalDialog } from '@mui/joy';
+import { useRouter } from 'next/navigation';
 import {FC} from 'react';
 
 const TimetableSlot: FC<{course: CourseTimeslotData, tableDim: TimetableDim}> = ({ course, tableDim}) => {
+    const [openModal, closeModal] = useModal();
+    const router = useRouter();
+
+    const handleShowCourseDetail = (course: CourseDefinition) => () => {
+        router.push(`/courses/${course.raw_id}`);
+    }
     return ( 
     <div 
-        className={`absolute rounded-md shadow-lg transform translate-y-0.5`}
+        className={`absolute rounded-md shadow-lg transform translate-y-0.5 cursor-pointer`}
+        onClick={handleShowCourseDetail(course.course)}
         style={{ 
             left: tableDim.header.width + course.dayOfWeek * tableDim.timetable.width, 
             top: tableDim.header.height + (course.startTime) * tableDim.timetable.height, 

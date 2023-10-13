@@ -4,11 +4,16 @@ import Link from "next/link";
 import { FC } from "react";
 import { usePathname } from 'next/navigation';
 import { useMediaQuery } from 'usehooks-ts';
+import { Route } from 'next';
 
 const SideNav:FC = () => {
     const pathname = usePathname();
     const isMobile = useMediaQuery('(max-width: 768px)');
-    const links = [
+    const links: {
+        title: string;
+        href: Route;
+        icon: JSX.Element;
+    }[] = [
         {
             title: 'Today',
             href: '/today',

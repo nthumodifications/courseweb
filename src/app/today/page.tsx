@@ -3,7 +3,6 @@ import { NextPage } from "next";
 import {getWeatherData} from '@/lib/weather';
 import TodaySchedule from "@/components/Today/TodaySchedule";
 
-
 const TodayPage: NextPage = async () => {
     const weatherData = await getWeatherData();
 

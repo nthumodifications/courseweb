@@ -2,6 +2,7 @@
 import { useSettings } from "@/hooks/contexts/settings";
 import { Divider, Option, Select, Slider, Switch } from "@mui/joy";
 
+
 const SettingsPage = () => {
 
     const { darkMode, setDarkMode, language, setLanguage } = useSettings();
