@@ -1,8 +1,9 @@
 import supabase from "@/config/supabase";
 import {getCourse, getCoursePTTReview} from '@/lib/course';
-import { Accordion, AccordionDetails, AccordionGroup, AccordionSummary, Chip, Divider } from "@mui/joy";
+import { Accordion, AccordionDetails, AccordionGroup, AccordionSummary, Alert, Chip, Divider } from "@mui/joy";
 import { format } from "date-fns";
 import { NextPage, ResolvingMetadata } from "next";
+import { AlertTriangle } from "react-feather";
 
 type PageProps = { 
     params: { courseId? : string } 
@@ -39,19 +40,25 @@ const CourseDetailPage = async ({ params }: PageProps) => {
                         <h3 className="font-semibold text-xl mb-2">Description</h3>
                         <p>{course?.備註}</p>
                     </div>
-                    <div className="">
                     <Divider/>
+                    {reviews.length > 0 && <div className="">
                     <h3 className="font-semibold text-xl mb-2">PTT Reviews</h3>
+                        <Alert variant="soft" color="warning" className="mb-4" startDecorator={<AlertTriangle/>}>
+                            PTT 評論來自於 NTHU_Course 版，並非由 NTHUMods 審核。評論並不代表 NTHUMods 的立場。若您發現任何不當內容，請向板本檢舉。
+                            <br/>
+                            PTT reviews are from the NTHU_Course board and are not moderated by NTHUMods. The reviews do not represent the views of NTHUMods. If you find any inappropriate content, please report to the board itself.
+                        </Alert>
                         <AccordionGroup>
-                        {reviews?.map((m, index) => <Accordion key={index}>
-                            <AccordionSummary>{index + 1}. Review from {format(new Date(m.date), 'yyyy-MM-dd')}</AccordionSummary>
-                            <AccordionDetails>
-                                <p className="whitespace-pre-line text-sm">{m.content}</p>
-                            </AccordionDetails>
-                        </Accordion>
+                        {reviews.map((m, index) => 
+                            <Accordion key={index}>
+                                <AccordionSummary>{index + 1}. Review from {format(new Date(m.date), 'yyyy-MM-dd')}</AccordionSummary>
+                                <AccordionDetails>
+                                    <p className="whitespace-pre-line text-sm">{m.content}</p>
+                                </AccordionDetails>
+                            </Accordion>
                         )}
                         </AccordionGroup>
-                    </div>
+                    </div>}
                 </div>
                 <div className="space-y-2">
                     <div>
