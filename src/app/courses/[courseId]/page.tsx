@@ -21,7 +21,6 @@ const CourseDetailPage = async ({ params }: PageProps) => {
     const course = await getCourse(courseId);
 
     const reviews = await getCoursePTTReview(courseId);
-    console.log(reviews)
 
     return <div className="grid grid-cols-1 lg:grid-cols-[auto_320px]  py-6">
         <div className="space-y-2">
@@ -34,7 +33,7 @@ const CourseDetailPage = async ({ params }: PageProps) => {
             <p>Capacity: {course?.capacity} • Reserve: {course?.reserve}</p>
             <p>Class: {course?.class}</p>
             <Divider/>
-            <div className="grid grid-cols-[auto_320px] gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-[auto_320px] gap-6">
                 <div className="space-y-4">
                     <div className="">
                         <h3 className="font-semibold text-xl mb-2">Description</h3>
