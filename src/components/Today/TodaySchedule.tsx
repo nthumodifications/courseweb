@@ -110,7 +110,7 @@ const TodaySchedule: FC<{ weather: any }> = ({ weather }) => {
                     <p className="font-semibold">{t.course.name_zh}</p>
                     <p className="text-xs">{t.course.name_en}</p>
                     <Divider/>
-                    <p className="text-xs">{t.course.venue}</p>
+                    <p className="text-xs">{t.venue}</p>
                 </div>
             </div>
         ))
