@@ -1,30 +1,28 @@
 import supabase from "@/config/supabase";
-import { Chip, Divider } from "@mui/joy";
+import {getCourse, getCoursePTTReview} from '@/lib/course';
+import { Accordion, AccordionDetails, AccordionGroup, AccordionSummary, Chip, Divider } from "@mui/joy";
+import { format } from "date-fns";
 import { NextPage, ResolvingMetadata } from "next";
 
-
-
-const getCourse = async (courseId: string) => {
-    const { data, error } = await supabase.from('courses').select('*').eq('raw_id', courseId);
-    if(error) console.error(error);
-    else return data![0];
-}
 type PageProps = { 
     params: { courseId? : string } 
 }
 
 export async function generateMetadata({ params }: PageProps, parent: ResolvingMetadata) {
     const course = await getCourse(decodeURI(params.courseId as string));
-    console.log(course);
     return {
         title: `${course?.department} ${course?.course} ${course!.name_zh} | NTHUMods `,
     }
 }
 
 const CourseDetailPage = async ({ params }: PageProps) => {
-    const course = await getCourse(decodeURI(params.courseId as string));
-    console.log(course);
-    return <div className="grid grid-cols-[auto_320px] py-6">
+    const courseId = decodeURI(params.courseId as string);
+    const course = await getCourse(courseId);
+
+    const reviews = await getCoursePTTReview(courseId);
+    console.log(reviews)
+
+    return <div className="grid grid-cols-1 lg:grid-cols-[auto_320px]  py-6">
         <div className="space-y-2">
             <h1 className="font-bold text-3xl mb-4 text-fuchsia-800">{`${course?.department} ${course?.course}`}</h1>
             <h2 className="font-semibold text-3xl text-gray-500 mb-2">{course!.name_zh} - {course?.teacher_zh?.join(',')?? ""}</h2>
@@ -36,9 +34,24 @@ const CourseDetailPage = async ({ params }: PageProps) => {
             <p>Class: {course?.class}</p>
             <Divider/>
             <div className="grid grid-cols-[auto_320px] gap-6">
-                <div className="">
-                    <h3 className="font-semibold text-xl mb-2">Description</h3>
-                    <p>{course?.備註}</p>
+                <div className="space-y-4">
+                    <div className="">
+                        <h3 className="font-semibold text-xl mb-2">Description</h3>
+                        <p>{course?.備註}</p>
+                    </div>
+                    <div className="">
+                    <Divider/>
+                    <h3 className="font-semibold text-xl mb-2">PTT Reviews</h3>
+                        <AccordionGroup>
+                        {reviews?.map((m, index) => <Accordion key={index}>
+                            <AccordionSummary>{index + 1}. Review from {format(new Date(m.date), 'yyyy-MM-dd')}</AccordionSummary>
+                            <AccordionDetails>
+                                <p className="whitespace-pre-line text-sm">{m.content}</p>
+                            </AccordionDetails>
+                        </Accordion>
+                        )}
+                        </AccordionGroup>
+                    </div>
                 </div>
                 <div className="space-y-2">
                     <div>
