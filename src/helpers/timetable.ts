@@ -31,7 +31,6 @@ export const timetableColors = {
 
 
 export const createTimetableFromCourses = (data: CourseDefinition[]) => {
-    console.log("your courses", data);
     const newTimetableData: CourseTimeslotData[] = [];
     data!.forEach(course => {
         //get unique days first
@@ -61,6 +60,5 @@ export const createTimetableFromCourses = (data: CourseDefinition[]) => {
         });
         
     });
-    console.log("your timetable data", newTimetableData);
     return newTimetableData;
 }
