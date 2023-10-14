@@ -1,8 +1,5 @@
-'use server';
-import { Button, Input } from "@mui/joy";
-import {FC, PropsWithChildren, useEffect, useState} from 'react';
-import supabase from '@/config/supabase';
-import Link from "next/link";
+'use server';;
+import { FC, PropsWithChildren } from 'react';
 import VenueList from "@/components/Venue/VenueList";
 
 export const generateMetadata = () => ({
@@ -10,7 +7,7 @@ export const generateMetadata = () => ({
 })
 
 const LocationLayout: FC<PropsWithChildren> = async ({ children }) => {
-    return <div className="h-full grid grid-cols-[480px_auto] grid-rows-1">
+    return <div className="h-full grid grid-cols-[auto_820px] grid-rows-1">
         <VenueList/>
         <main className='overflow-auto'>
             {children}

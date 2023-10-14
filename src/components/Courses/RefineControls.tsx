@@ -118,7 +118,7 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes> }> = ({ cont
                                     }
                                     renderOption={(props, option) => (
                                         <AutocompleteOption {...props}>
-                                            <ListItemDecorator>
+                                            <ListItemDecorator sx={{ width: '100px'}}>
                                                 <span className="text-sm font-semibold">{option.code}</span>
                                             </ListItemDecorator>
                                             <ListItemContent sx={{ fontSize: 'sm' }}>

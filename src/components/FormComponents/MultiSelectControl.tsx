@@ -7,9 +7,9 @@ const MultiSelectControl = <T extends FieldValues>({ control, name, options, lab
         name={name}
         render={({ field: {value, onChange} }) => (
             <FormControl>
-                <FormLabel>{label}</FormLabel>
+                <FormLabel sx={{ margin: '0.125rem 0 0 0'}}>{label}</FormLabel>
                 <List size="sm">
-                    {options.map(op => <ListItem key={op.value} variant="plain" sx={{ borderRadius: 'sm' }}>
+                    {options.map(op => <ListItem key={op.value} variant="plain" sx={{ minHeight: '1.5rem' }}>
                     <Checkbox
                         label={op.label}
                         color="neutral"
