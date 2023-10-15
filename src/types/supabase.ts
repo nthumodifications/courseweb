@@ -59,15 +59,46 @@ export interface Database {
   }
   public: {
     Tables: {
+      alerts: {
+        Row: {
+          created_at: string
+          description: string | null
+          end_date: string
+          id: number
+          severity: string
+          start_date: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          end_date: string
+          id?: number
+          severity: string
+          start_date: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          end_date?: string
+          id?: number
+          severity?: string
+          start_date?: string
+          title?: string
+        }
+        Relationships: []
+      }
       courses: {
         Row: {
           capacity: number | null
           class: string | null
+          compulsory_for: string[] | null
           course: string | null
           credits: number | null
           cross_discipline: string[] | null
           department: string | null
-          extra_selection: boolean | null
+          elective_for: string[] | null
           first_specialization: string[] | null
           ge_target: string | null
           ge_type: string | null
@@ -75,6 +106,7 @@ export interface Database {
           language: string | null
           name_en: string | null
           name_zh: string | null
+          no_extra_selection: boolean | null
           raw_1_2_specialization: string | null
           raw_cross_discipline: string | null
           raw_extra_selection: string | null
@@ -82,14 +114,13 @@ export interface Database {
           raw_teacher_en: string | null
           raw_teacher_zh: string | null
           raw_time: string | null
+          raw_venue: string | null
           reserve: number | null
           second_specialization: string[] | null
           semester: string | null
           teacher_en: string[] | null
           teacher_zh: string[] | null
-          time: string[] | null
           times: string[] | null
-          venue: string | null
           venues: string[] | null
           停開註記: string | null
           備註: string | null
@@ -101,11 +132,12 @@ export interface Database {
         Insert: {
           capacity?: number | null
           class?: string | null
+          compulsory_for?: string[] | null
           course?: string | null
           credits?: number | null
           cross_discipline?: string[] | null
           department?: string | null
-          extra_selection?: boolean | null
+          elective_for?: string[] | null
           first_specialization?: string[] | null
           ge_target?: string | null
           ge_type?: string | null
@@ -113,6 +145,7 @@ export interface Database {
           language?: string | null
           name_en?: string | null
           name_zh?: string | null
+          no_extra_selection?: boolean | null
           raw_1_2_specialization?: string | null
           raw_cross_discipline?: string | null
           raw_extra_selection?: string | null
@@ -120,14 +153,13 @@ export interface Database {
           raw_teacher_en?: string | null
           raw_teacher_zh?: string | null
           raw_time?: string | null
+          raw_venue?: string | null
           reserve?: number | null
           second_specialization?: string[] | null
           semester?: string | null
           teacher_en?: string[] | null
           teacher_zh?: string[] | null
-          time?: string[] | null
           times?: string[] | null
-          venue?: string | null
           venues?: string[] | null
           停開註記?: string | null
           備註?: string | null
@@ -138,11 +170,12 @@ export interface Database {
         Update: {
           capacity?: number | null
           class?: string | null
+          compulsory_for?: string[] | null
           course?: string | null
           credits?: number | null
           cross_discipline?: string[] | null
           department?: string | null
-          extra_selection?: boolean | null
+          elective_for?: string[] | null
           first_specialization?: string[] | null
           ge_target?: string | null
           ge_type?: string | null
@@ -150,6 +183,7 @@ export interface Database {
           language?: string | null
           name_en?: string | null
           name_zh?: string | null
+          no_extra_selection?: boolean | null
           raw_1_2_specialization?: string | null
           raw_cross_discipline?: string | null
           raw_extra_selection?: string | null
@@ -157,14 +191,13 @@ export interface Database {
           raw_teacher_en?: string | null
           raw_teacher_zh?: string | null
           raw_time?: string | null
+          raw_venue?: string | null
           reserve?: number | null
           second_specialization?: string[] | null
           semester?: string | null
           teacher_en?: string[] | null
           teacher_zh?: string[] | null
-          time?: string[] | null
           times?: string[] | null
-          venue?: string | null
           venues?: string[] | null
           停開註記?: string | null
           備註?: string | null
@@ -176,6 +209,12 @@ export interface Database {
       }
     }
     Views: {
+      distinct_classes: {
+        Row: {
+          class: string | null
+        }
+        Relationships: []
+      }
       distinct_first_specialization: {
         Row: {
           unique_first_specialization: string | null

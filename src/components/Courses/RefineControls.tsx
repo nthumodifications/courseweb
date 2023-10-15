@@ -10,6 +10,7 @@ export type RefineControlFormTypes = {
     level: string[],
     language: string[],
     others: string[],
+    className: string | null,
     department: { code: string; name_zh: string; name_en: string; }[],
     firstSpecialization: string | null,
     secondSpecialization: string | null,
@@ -18,27 +19,22 @@ export type RefineControlFormTypes = {
 const RefineControls: FC<{ control: Control<RefineControlFormTypes> }> = ({ control }) => {
     const [firstSpecial, setFirstSpecial] = useState<string[]>([]);
     const [secondSpecial, setSecondSpecial] = useState<string[]>([]);
+    const [classList, setClassList] = useState<string[]>([]);
 
     useEffect(() => {
         (async () => {
             try {
-                const { data = [], error } = await supabase.from('distinct_first_specialization').select('unique_first_specialization');
-                if (error) throw error;
-                else {
-                    setFirstSpecial(data?.map(({ unique_first_specialization }) => unique_first_specialization!) ?? []);
-                }
-            }
-            catch (e) {
-                console.error(e);
-            }
-        })();
-        (async () => {
-            try {
-                const { data = [], error } = await supabase.from('distinct_second_specialization').select('unique_second_specialization');
-                if (error) throw error;
-                else {
-                    setSecondSpecial(data?.map(({ unique_second_specialization }) => unique_second_specialization!) ?? []);
-                }
+                const { data: firstSpecial = [], error: error1 } = await supabase.from('distinct_first_specialization').select('unique_first_specialization');
+                if (error1) throw error1;
+                else setFirstSpecial(firstSpecial?.map(({ unique_first_specialization }) => unique_first_specialization!) ?? []);
+
+                const { data: secondSpecial = [], error: error2 } = await supabase.from('distinct_second_specialization').select('unique_second_specialization');
+                if (error2) throw error2;
+                else setSecondSpecial(secondSpecial?.map(({ unique_second_specialization }) => unique_second_specialization!) ?? []);
+
+                const { data: classList = [], error: error3 } = await supabase.from('distinct_classes').select('class');
+                if (error3) throw error3;
+                else setClassList(classList?.map(({ class: className }) => className!) ?? []);
             }
             catch (e) {
                 console.error(e);
@@ -118,7 +114,7 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes> }> = ({ cont
                                     }
                                     renderOption={(props, option) => (
                                         <AutocompleteOption {...props}>
-                                            <ListItemDecorator sx={{ width: '100px'}}>
+                                            <ListItemDecorator>
                                                 <span className="text-sm font-semibold">{option.code}</span>
                                             </ListItemDecorator>
                                             <ListItemContent sx={{ fontSize: 'sm' }}>
@@ -162,6 +158,24 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes> }> = ({ cont
                                 />
                             )} />
 
+                    </FormControl>
+                </ListItem>
+                
+                <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
+                    <FormControl>
+                        <FormLabel>Compulsory & Elective</FormLabel>
+                        <Controller
+                            control={control}
+                            name="className"
+                            render={({ field: { value, onChange } }) => (
+                                <Autocomplete
+                                    placeholder="Class"
+                                    value={value}
+                                    onChange={(e, v) => onChange(v)}
+                                    options={classList}
+                                    sx={{ width: 250 }}
+                                />
+                            )} />
                     </FormControl>
                 </ListItem>
                 <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>

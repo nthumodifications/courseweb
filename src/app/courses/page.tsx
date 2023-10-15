@@ -28,6 +28,7 @@ const CoursePage: NextPage = () => {
             others: [],
             language: [],
             department: [],
+            className: null,
             firstSpecialization: null,
             secondSpecialization: null,
         }
@@ -86,7 +87,6 @@ const CoursePage: NextPage = () => {
                 if (filters.textSearch) {
                     temp = temp
                         .textSearch('multilang_search', `'${filters.textSearch.split(' ').join("' & '")}'`)
-
                 }
                 if (filters.level.length)
                     temp = temp
@@ -97,20 +97,17 @@ const CoursePage: NextPage = () => {
                 if (filters.department.length)
                     temp = temp
                         .in('department', filters.department.map(({ code }) => code))
+                if (filters.className)
+                    temp = temp
+                        .or(`compulsory_for.cs.{"${filters.className}"},elective_for.cs.{"${filters.className}"}`);
                 if (filters.others.includes('xclass'))
                     temp = temp
                         .textSearch(`備註`, `'X-Class'`)
-                if (filters.firstSpecialization)
+                if(filters.firstSpecialization || filters.secondSpecialization) {
                     temp = temp
-                        .containedBy('first_specialization', [filters.firstSpecialization])
-                if (filters.secondSpecialization)
-                    temp = temp
-                        .containedBy('second_specialization', [filters.secondSpecialization])
-                //TODO: Specialization Filters are now in AND mode, should be in OR mode
-                // if(filters.firstSpecialization || filters.secondSpecialization) 
-                //     temp = temp.or(`first_specialization.containedBy.${`("${filters.firstSpecialization}")` ?? '("")'},second_specialization.containedBy.${`("${filters.secondSpecialization}")` ?? '("")'})`)
+                        .or(`first_specialization.cs.{"${filters.firstSpecialization?? ""}"},second_specialization.cs.{"${filters.secondSpecialization ?? ""}"}`)
+                }
                 let { data: courses, error, count } = await temp.order('raw_id', { ascending: true }).range(index, index + 29)
-                // console.log('range', index, index + 29);
                 // move scroll to top
                 setTotalCount(count ?? 0)
                 if (error) console.error(error);

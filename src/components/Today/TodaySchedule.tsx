@@ -7,6 +7,7 @@ import {scheduleTimeSlots} from '@/const/timetable';
 import { enUS, zhTW } from 'date-fns/esm/locale';
 import { FC } from "react";
 import { useSettings } from '@/hooks/contexts/settings';
+import { AlertDefinition } from '@/config/supabase';
 
 const WeatherIcon: FC<{ date: Date, weather: [
     {
@@ -33,6 +34,7 @@ const WeatherIcon: FC<{ date: Date, weather: [
     const weatherData = weather[0].time.find(t => new Date(t.startTime) <= date && new Date(t.endTime) >= date);
     const weatherDescription = weather[1].time.find(t => new Date(t.startTime) <= date && new Date(t.endTime) >= date);
 
+
     if(!weatherData || !weatherDescription) return <></>;
 
     return (
@@ -46,7 +48,7 @@ const WeatherIcon: FC<{ date: Date, weather: [
 
 }
 
-const TodaySchedule: FC<{ weather: any }> = ({ weather }) => {
+const TodaySchedule: FC<{ weather: any, alerts: AlertDefinition[] }> = ({ weather, alerts }) => {
     const { timetableData, allCourseData, deleteCourse } = useUserTimetable();
     const { language } = useSettings();
 
@@ -117,18 +119,8 @@ const TodaySchedule: FC<{ weather: any }> = ({ weather }) => {
     }
 
     const renderAlerts = (day: Date) => {
-        const alerts: {
-            title: string,
-            description: string,
-            alert: ColorPaletteProp,
-            startDate: string,
-            endDate: string
-        }[] = [
-            { title: 'Typhoon Koinu: Class Suspended', description: 'Typhoon Koinu is approaching, classes are suspended for the day.', alert: 'danger', startDate: '2023-10-05 00:00:00', endDate: '2023-10-05 23:59:59' },
-        ]
-
-        return alerts.filter(alert => new Date(alert.startDate) <= day && new Date(alert.endDate) >= day).map((alert, index) => (
-            <Alert key={index} className="mb-4" color={alert.alert}>
+        return alerts.filter(alert => new Date(alert.start_date) <= day && new Date(alert.end_date) >= day).map((alert, index) => (
+            <Alert key={index} className="mb-4" color={alert.severity as ColorPaletteProp}>
                 <div className="flex flex-row justify-between">
                     <div className="flex flex-col">
                         <span className="text-sm font-semibold">{alert.title}</span>

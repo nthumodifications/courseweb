@@ -44,3 +44,12 @@ export const getCoursePTTReview = async (courseId: string) => {
         return [];
     } 
 }
+
+export const getClassList = async () => {
+    const { data, error } = await supabase.from('distinct_classes').select('class');
+    if(error) {
+        console.error(error)
+        return null;
+    }
+    else return data!;
+}
