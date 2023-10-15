@@ -66,6 +66,18 @@ const CourseDetailPage = async ({ params }: PageProps) => {
                         <p>{course?.課程限制說明}</p>
                     </div>
                     <div>
+                        <h3 className="font-semibold text-base mb-2">必修</h3>
+                        <div className="flex flex-row gap-2 flex-wrap">
+                            {course?.compulsory_for?.map((m, index) => <Chip key={index}>{m}</Chip>)}
+                        </div>
+                    </div>
+                    <div>
+                        <h3 className="font-semibold text-base mb-2">選修</h3>
+                        <div className="flex flex-row gap-2 flex-wrap">
+                            {course?.elective_for?.map((m, index) => <Chip key={index}>{m}</Chip>)}
+                        </div>
+                    </div>
+                    <div>
                         <h3 className="font-semibold text-base mb-2">跨領域</h3>
                         <div className="flex flex-row gap-2 flex-wrap">
                             {course?.cross_discipline?.map((m, index) => <Chip key={index}>{m}</Chip>)}
