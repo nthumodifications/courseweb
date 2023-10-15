@@ -29,7 +29,7 @@ const SettingsPage = () => {
                 </div>
                 <div className="flex items-center">
                 <Select defaultValue={language} value={language} onChange={(e,v) => setLanguage(v!)}>
-                    <Option value="tw">繁體中文</Option>
+                    <Option value="zh">繁體中文</Option>
                     <Option value="en">English</Option>
                 </Select>
                 </div>

@@ -25,7 +25,7 @@ const Header: FC = () => {
             <p className="text-sm text-gray-600">
             {language == 'en' &&
                 (currentSemester ?`AC${currentSemester.year} Sem ${currentSemester.semester}, Week ${currentWeek}`: `No Active Semester`)}
-            {language == 'tw' &&
+            {language == 'zh' &&
                 (currentSemester ?`${currentSemester.year-1911}-${currentSemester.semester} 學期, 第${currentWeek}周`: `No Active Semester`)}
             </p>
         </header>

@@ -1,7 +1,8 @@
 "use client";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import { FC, PropsWithChildren, createContext, useContext, useState } from "react";
 import { useLocalStorage } from 'usehooks-ts';
-type Languages = "tw" | "en";
+type Languages = "zh" | "en";
 
 type SettingsType = {
     language: Languages;
@@ -10,7 +11,7 @@ type SettingsType = {
 };
 
 const settingsContext = createContext<ReturnType<typeof useSettingsProvider>>({
-    language: "tw",
+    language: "zh",
     darkMode: false,
     courses: [],
     setSettings: () => {},
@@ -20,14 +21,20 @@ const settingsContext = createContext<ReturnType<typeof useSettingsProvider>>({
 });
 
 const useSettingsProvider = () => {
-    const [language, setLanguage] = useLocalStorage<Languages>("language", "tw");
+    const language = useParams().lang as Languages;
+    const router = useRouter();
+    const pathname = usePathname();
     const [darkMode, setDarkMode] = useLocalStorage("darkMode",false);
     const [courses, setCourses] = useLocalStorage<string[]>("courses", []);
 
     const setSettings = (settings: SettingsType) => {
-        setLanguage(settings.language);
         setDarkMode(settings.darkMode);
         setCourses(settings.courses);
+    };
+
+    const setLanguage = (newLang: Languages) => {
+        console.log(pathname);
+        router.push(`/${newLang}/`+pathname.split('/').slice(2).join('/'));
     };
 
     return {
