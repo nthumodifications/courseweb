@@ -8,6 +8,7 @@ import { enUS, zhTW } from 'date-fns/esm/locale';
 import { FC } from "react";
 import { useSettings } from '@/hooks/contexts/settings';
 import { AlertDefinition } from '@/config/supabase';
+import useDictionary from '@/dictionaries/useDictionary';
 
 const WeatherIcon: FC<{ date: Date, weather: [
     {
@@ -51,6 +52,7 @@ const WeatherIcon: FC<{ date: Date, weather: [
 const TodaySchedule: FC<{ weather: any, alerts: AlertDefinition[] }> = ({ weather, alerts }) => {
     const { timetableData, allCourseData, deleteCourse } = useUserTimetable();
     const { language } = useSettings();
+    const dict = useDictionary();
 
     // WARN: Day is formatted by MTWRFSS (0-7)
 
@@ -97,8 +99,8 @@ const TodaySchedule: FC<{ weather: any, alerts: AlertDefinition[] }> = ({ weathe
 
         if(classesThisDay.length == 0) return (
             <div className="flex flex-col items-center">
-                <span className="text-sm font-semibold">No Classes Today</span>
-                <span className="text-xs">Enjoy your day off!</span>
+                <span className="text-sm font-semibold">{dict.today.noclass}</span>
+                <span className="text-xs">{dict.today.noclass_sub}</span>
             </div>
         )
 
