@@ -49,7 +49,8 @@
         "courses": "課表",
         "timetable": "時間表",
         "settings": "設定",
-        "venues": "地點"
+        "venues": "地點",
+        "bus": "校車"
     },
     "settings": {
         "title": "設定",

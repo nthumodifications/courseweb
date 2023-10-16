@@ -38,6 +38,11 @@ const SideNav:FC = () => {
             icon: <I.Map strokeWidth="1"/>
         },
         {
+            title: dict.navigation.bus,
+            href: `/${language}/bus`,
+            icon: <I.Navigation strokeWidth="1"/>
+        },
+        {
             title: dict.navigation.settings,
             href: `/${language}/settings`,
             icon: <I.Settings strokeWidth="1"/>

@@ -89,6 +89,27 @@ export interface Database {
         }
         Relationships: []
       }
+      bus_schedule: {
+        Row: {
+          id: number
+          route_name: string | null
+          schedule: string[] | null
+          vehicle: string | null
+        }
+        Insert: {
+          id?: number
+          route_name?: string | null
+          schedule?: string[] | null
+          vehicle?: string | null
+        }
+        Update: {
+          id?: number
+          route_name?: string | null
+          schedule?: string[] | null
+          vehicle?: string | null
+        }
+        Relationships: []
+      }
       courses: {
         Row: {
           capacity: number | null

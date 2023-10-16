@@ -24,7 +24,6 @@ const VenueList = () => {
     }, [])
 
     useEffect(() => {
-        console.log(textSearch);
         setFiltered(fuse.current.search(textSearch));
     }, [textSearch])
 
