@@ -1,4 +1,5 @@
 import { CourseDefinition } from '@/config/supabase';
+import { useSettings } from '@/hooks/contexts/settings';
 import { useModal } from '@/hooks/contexts/useModal';
 import { CourseTimeslotData, TimetableDim } from '@/types/timetable';
 import { ModalClose, ModalDialog } from '@mui/joy';
@@ -8,9 +9,10 @@ import {FC} from 'react';
 const TimetableSlot: FC<{course: CourseTimeslotData, tableDim: TimetableDim}> = ({ course, tableDim}) => {
     const [openModal, closeModal] = useModal();
     const router = useRouter();
+    const { language } = useSettings();
 
     const handleShowCourseDetail = (course: CourseDefinition) => () => {
-        router.push(`courses/${course.raw_id}`);
+        router.push(`/${language}/courses/${course.raw_id}`);
     }
     return ( 
     <div 

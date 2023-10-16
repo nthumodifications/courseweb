@@ -16,7 +16,7 @@ const TimetableCourseList = () => {
     const router = useRouter();
 
     const [openModal, closeModal] = useModal();
-
+    const { language } = useSettings();
 
 
     const handleShowShareDialog = () => {
@@ -96,7 +96,7 @@ const TimetableCourseList = () => {
                 <span className="text-lg font-semibold text-gray-400">{"No Courses Added (yet)"}</span>
                 <div className="flex flex-row gap-2">
                     {/* <Button variant="plain" startDecorator={<UploadCloud className="w-4 h-4"/>}>Import from File</Button> */}
-                    <Button variant="soft" startDecorator={<Search className="w-4 h-4" />} onClick={() => router.push('/courses')}>All Courses</Button>
+                    <Button variant="soft" startDecorator={<Search className="w-4 h-4" />} onClick={() => router.push(`/${language}/courses`)}>All Courses</Button>
                 </div>
             </div>
         )}
