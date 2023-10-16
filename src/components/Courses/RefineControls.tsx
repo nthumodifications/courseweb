@@ -1,6 +1,7 @@
 import MultiSelectControl from '@/components/FormComponents/MultiSelectControl';
 import supabase from '@/config/supabase';
 import { departments } from '@/const/departments';
+import useDictionary from '@/dictionaries/useDictionary';
 import { Autocomplete, AutocompleteOption, Button, Chip, FormControl, FormLabel, List, ListItem, ListItemContent, ListItemDecorator, Sheet, Typography } from '@mui/joy';
 import { useEffect, useState, FC } from 'react';
 import { Controller, Control } from 'react-hook-form';
@@ -17,6 +18,7 @@ export type RefineControlFormTypes = {
 }
 
 const RefineControls: FC<{ control: Control<RefineControlFormTypes> }> = ({ control }) => {
+    const dict = useDictionary();
     const [firstSpecial, setFirstSpecial] = useState<string[]>([]);
     const [secondSpecial, setSecondSpecial] = useState<string[]>([]);
     const [classList, setClassList] = useState<string[]>([]);
@@ -55,7 +57,7 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes> }> = ({ cont
                 color: 'text.secondary',
             }}
         >
-            Refine
+            {dict.course.refine.title}
         </Typography>
         <div role="group" aria-labelledby="filter-status">
             <List>
@@ -74,7 +76,7 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes> }> = ({ cont
                             { value: 8, label: '8xxx' },
                             { value: 9, label: '9xxx' },
                         ]}
-                        label="Level"
+                        label={dict.course.refine.level}
                     />
                 </ListItem>
                 <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
@@ -85,18 +87,18 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes> }> = ({ cont
                             { value: '英', label: 'English' },
                             { value: '中', label: '國語' },
                         ]}
-                        label="Instruction Language"
+                        label={dict.course.refine.language}
                     />
                 </ListItem>
                 <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
                     <FormControl>
-                        <FormLabel>Departments</FormLabel>
+                        <FormLabel>{dict.course.refine.department}</FormLabel>
                         <Controller
                             control={control}
                             name="department"
                             render={({ field: { value, onChange } }) => (
                                 <Autocomplete
-                                    placeholder="Departments"
+                                    placeholder={dict.course.refine.department}
                                     value={value}
                                     onChange={(e, v) => onChange(v)}
                                     multiple={true}
@@ -132,13 +134,13 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes> }> = ({ cont
                 </ListItem>
                 <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
                     <FormControl>
-                        <FormLabel>Specialization</FormLabel>
+                        <FormLabel>{dict.course.refine.specialization}</FormLabel>
                         <Controller
                             control={control}
                             name="firstSpecialization"
                             render={({ field: { value, onChange } }) => (
                                 <Autocomplete
-                                    placeholder="First Specialization"
+                                    placeholder={dict.course.refine.firstSpecialization}
                                     value={value}
                                     onChange={(e, v) => onChange(v)}
                                     options={firstSpecial}
@@ -150,7 +152,7 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes> }> = ({ cont
                             name="secondSpecialization"
                             render={({ field: { value, onChange } }) => (
                                 <Autocomplete
-                                    placeholder="Second Specialization"
+                                    placeholder={dict.course.refine.secondSpecialization}
                                     value={value}
                                     onChange={(e, v) => onChange(v)}
                                     options={secondSpecial}
@@ -163,13 +165,13 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes> }> = ({ cont
                 
                 <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
                     <FormControl>
-                        <FormLabel>Compulsory & Elective</FormLabel>
+                        <FormLabel>{dict.course.refine.compulsory_elective}</FormLabel>
                         <Controller
                             control={control}
                             name="className"
                             render={({ field: { value, onChange } }) => (
                                 <Autocomplete
-                                    placeholder="Class"
+                                    placeholder={dict.course.refine.class}
                                     value={value}
                                     onChange={(e, v) => onChange(v)}
                                     options={classList}
@@ -183,7 +185,7 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes> }> = ({ cont
                         control={control}
                         name="others"
                         options={[
-                            { value: 'xclass', label: 'X-Class' },
+                            { value: 'xclass', label: dict.course.refine['x-class'] },
                         ]}
                         label="Others"
                     />
@@ -198,7 +200,7 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes> }> = ({ cont
             }
             sx={{ px: 1.5, mt: 1 }}
         >
-            Clear All
+            {dict.course.refine.clear}
         </Button>
     </Sheet>
 }

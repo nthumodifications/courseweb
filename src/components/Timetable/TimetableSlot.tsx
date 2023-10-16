@@ -10,7 +10,7 @@ const TimetableSlot: FC<{course: CourseTimeslotData, tableDim: TimetableDim}> = 
     const router = useRouter();
 
     const handleShowCourseDetail = (course: CourseDefinition) => () => {
-        router.push(`/courses/${course.raw_id}`);
+        router.push(`courses/${course.raw_id}`);
     }
     return ( 
     <div 

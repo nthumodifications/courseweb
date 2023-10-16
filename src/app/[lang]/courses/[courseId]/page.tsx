@@ -1,5 +1,7 @@
 import supabase from "@/config/supabase";
+import { getDictionary } from "@/dictionaries/dictionaries";
 import {getCourse, getCoursePTTReview} from '@/lib/course';
+import { LangProps } from "@/types/pages";
 import { Accordion, AccordionDetails, AccordionGroup, AccordionSummary, Alert, Chip, Divider } from "@mui/joy";
 import { format } from "date-fns";
 import { NextPage, ResolvingMetadata } from "next";
@@ -17,11 +19,12 @@ export async function generateMetadata({ params }: PageProps, parent: ResolvingM
     }
 }
 
-const CourseDetailPage = async ({ params }: PageProps) => {
+const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
     const courseId = decodeURI(params.courseId as string);
     const course = await getCourse(courseId);
 
     const reviews = await getCoursePTTReview(courseId);
+    const dict = await getDictionary(params.lang);
 
     return <div className="grid grid-cols-1 lg:grid-cols-[auto_320px]  py-6 px-4">
         <div className="space-y-2">
@@ -29,24 +32,22 @@ const CourseDetailPage = async ({ params }: PageProps) => {
             <h2 className="font-semibold text-3xl text-gray-500 mb-2">{course!.name_zh} - {course?.teacher_zh?.join(',')?? ""}</h2>
             <h2 className="font-semibold text-xl text-gray-500">{course!.name_en} - {course?.teacher_en?.join(',')?? ""}</h2>
 
-            <p>Semester ID: {course?.raw_id} • Credits: {course?.credits}</p>
-            <p>Language: {course?.language == '英' ? 'English' : 'Chinese'}</p>
-            <p>Capacity: {course?.capacity} • Reserve: {course?.reserve}</p>
-            <p>Class: {course?.class}</p>
+            <p>{dict.course.details.semesterid}: {course?.raw_id} • {dict.course.credits}: {course?.credits}</p>
+            <p>{dict.course.details.language}: {course?.language == '英' ? 'English' : 'Chinese'}</p>
+            <p>{dict.course.details.capacity}: {course?.capacity} • {dict.course.details.reserved}: {course?.reserve}</p>
+            <p>{dict.course.details.class}: {course?.class}</p>
             <Divider/>
             <div className="grid grid-cols-1 md:grid-cols-[auto_320px] gap-6">
                 <div className="space-y-4">
                     <div className="">
-                        <h3 className="font-semibold text-xl mb-2">Description</h3>
+                        <h3 className="font-semibold text-xl mb-2">{dict.course.details.description}</h3>
                         <p>{course?.備註}</p>
                     </div>
                     <Divider/>
                     {reviews.length > 0 && <div className="">
-                    <h3 className="font-semibold text-xl mb-2">PTT Reviews</h3>
+                    <h3 className="font-semibold text-xl mb-2">{dict.course.details.ptt_title}</h3>
                         <Alert variant="soft" color="warning" className="mb-4" startDecorator={<AlertTriangle/>}>
-                            PTT 評論來自於 NTHU_Course 版，並非由 NTHUMods 審核。評論並不代表 NTHUMods 的立場。若您發現任何不當內容，請向板本檢舉。
-                            <br/>
-                            PTT reviews are from the NTHU_Course board and are not moderated by NTHUMods. The reviews do not represent the views of NTHUMods. If you find any inappropriate content, please report to the board itself.
+                            {dict.course.details.ptt_disclaimer}
                         </Alert>
                         <AccordionGroup>
                         {reviews.map((m, index) => 
@@ -62,35 +63,35 @@ const CourseDetailPage = async ({ params }: PageProps) => {
                 </div>
                 <div className="space-y-2">
                     <div>
-                        <h3 className="font-semibold text-base mb-2">課程限制</h3>
+                        <h3 className="font-semibold text-base mb-2">{dict.course.details.restrictions}</h3>
                         <p>{course?.課程限制說明}</p>
                     </div>
                     <div>
-                        <h3 className="font-semibold text-base mb-2">必修</h3>
+                        <h3 className="font-semibold text-base mb-2">{dict.course.details.compulsory}</h3>
                         <div className="flex flex-row gap-2 flex-wrap">
                             {course?.compulsory_for?.map((m, index) => <Chip key={index}>{m}</Chip>)}
                         </div>
                     </div>
                     <div>
-                        <h3 className="font-semibold text-base mb-2">選修</h3>
+                        <h3 className="font-semibold text-base mb-2">{dict.course.details.elective}</h3>
                         <div className="flex flex-row gap-2 flex-wrap">
                             {course?.elective_for?.map((m, index) => <Chip key={index}>{m}</Chip>)}
                         </div>
                     </div>
                     <div>
-                        <h3 className="font-semibold text-base mb-2">跨領域</h3>
+                        <h3 className="font-semibold text-base mb-2">{dict.course.details.cross_discipline}</h3>
                         <div className="flex flex-row gap-2 flex-wrap">
                             {course?.cross_discipline?.map((m, index) => <Chip key={index}>{m}</Chip>)}
                         </div>
                     </div>
                     <div>
-                        <h3 className="font-semibold text-base mb-2">一專</h3>
+                        <h3 className="font-semibold text-base mb-2">{dict.course.details.first_specialization}</h3>
                         <div className="flex flex-row gap-2 flex-wrap">
                             {course?.first_specialization?.map((m, index) => <Chip key={index}>{m}</Chip>)}
                         </div>
                     </div>
                     <div>
-                        <h3 className="font-semibold text-base mb-2">二專</h3>
+                        <h3 className="font-semibold text-base mb-2">{dict.course.details.second_specialization}</h3>
                         <div className="flex flex-row gap-2 flex-wrap">
                             {course?.second_specialization?.map((m, index) => <Chip key={index}>{m}</Chip>)}
                         </div>

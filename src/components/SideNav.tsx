@@ -2,40 +2,44 @@
 import * as I from 'react-feather';
 import Link from "next/link";
 import { FC } from "react";
-import { usePathname } from 'next/navigation';
+import { useParams, usePathname } from 'next/navigation';
 import { useMediaQuery } from 'usehooks-ts';
 import { Route } from 'next';
+import { useSettings } from '@/hooks/contexts/settings';
+import useDictionary from '@/dictionaries/useDictionary';
 
 const SideNav:FC = () => {
     const pathname = usePathname();
+    const { language } = useSettings();
+    const dict = useDictionary();
     const links: {
         title: string;
         href: Route;
         icon: JSX.Element;
     }[] = [
         {
-            title: 'Today',
-            href: '/today',
+            title: dict.navigation.today,
+            href: `/${language}/today`,
             icon: <I.Clock strokeWidth="1"/>
         },
         {
-            title: 'Timetable',
-            href: '/timetable',
+            title: dict.navigation.timetable,
+            href: `/${language}/timetable`,
             icon: <I.Calendar strokeWidth="1"/>
         },
         {
-            title: 'Courses',
-            href: '/courses',
+            title: dict.navigation.courses,
+            href: `/${language}/courses`,
             icon: <I.BookOpen strokeWidth="1"/>
         },
         {
-            title: 'Venues',
-            href: '/venues',
+            title: dict.navigation.venues,
+            href: `/${language}/venues`,
             icon: <I.Map strokeWidth="1"/>
         },
         {
-            title: 'Settings',
-            href: '/settings',
+            title: dict.navigation.settings,
+            href: `/${language}/settings`,
             icon: <I.Settings strokeWidth="1"/>
         }
     ]

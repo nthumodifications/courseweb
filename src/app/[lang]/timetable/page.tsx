@@ -27,7 +27,7 @@ const TimetablePage: NextPage = () => {
             openModal({
                 children: <ShareRecievedDialog onClose={closeModal} courseCodes={courseCodes!} />
             });
-            router.push('/timetable');
+            router.replace('timetable');
         }
     }, []);
     return (

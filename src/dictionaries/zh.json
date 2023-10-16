@@ -1,0 +1,68 @@
+{
+    "today": {
+        "noclass": "今天沒有課喔！",
+        "noclass_sub": "放假吧~"
+    },
+    "course": {
+        "credits": "學分",
+        "list": {
+            "courses": "課程",
+            "found": "收到",
+            "search_placeholder": "Search for your course (Name, Class, Anything)"
+        },
+        "item": {
+            "add_to_semester": "加入這學期",
+            "remove_from_semester": "退掉這學期"
+        },
+        "refine": {
+            "title": "Refine",
+            "level": "Level",
+            "language": "Instruction Language",
+            "department": "Departments",
+            "specialization": "Specialization",
+            "firstSpecialization": "First Specialization",
+            "secondSpecialization": "Second Specialization",
+            "compulsory_elective": "Compulsory & Elective",
+            "class": "Class",
+            "x-class": "X-Class",
+            "clear": "Clear All"
+        },
+        "details": {
+            "semesterid": "本學期課號",
+            "language": "授課語言",
+            "reserved": "新生保留",
+            "capacity": "名額",
+            "class": "系班",
+            "description": "簡介",
+            "restrictions": "課程限制",
+            "compulsory": "必修",
+            "elective": "選修",
+            "cross_discipline": "跨領域",
+            "first_specialization": "一專",
+            "second_specialization": "二專",
+            "ptt_title": "PTT Reviews",
+            "ptt_disclaimer": "PTT 評論來自於 NTHU_Course 版，並非由 NTHUMods 審核。評論並不代表 NTHUMods 的立場。若您發現任何不當內容，請向板本檢舉。"
+        }
+    },
+    "navigation": {
+        "today": "行事曆",
+        "courses": "課表",
+        "timetable": "時間表",
+        "settings": "設定",
+        "venues": "地點"
+    },
+    "settings": {
+        "title": "設定",
+        "dark_mode": {
+            "title": "Dark Mode",
+            "description": "Night mode turns the light surfaces of the page dark, creating an experience ideal for the dark. Try it out!"
+        },
+        "language": {
+            "title": "Language",
+            "description": "Select your preferred language."
+        }
+    },
+    "venues": {
+        "placeholder": "Select a Venue from the list"
+    }
+}

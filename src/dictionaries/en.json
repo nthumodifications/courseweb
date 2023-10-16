@@ -1,0 +1,68 @@
+{
+    "today": {
+        "noclass": "No Classes Today",
+        "noclass_sub": "Enjoy your day off!"
+    },
+    "course": {
+        "credits": "Credits",
+        "list": {
+            "courses": "Courses",
+            "found": "Found",
+            "search_placeholder": "Search for your course (Name, Class, Anything)"
+        },
+        "item": {
+            "add_to_semester": "Add to this Semester",
+            "remove_from_semester": "Remove from this Semester"
+        },
+        "refine": {
+            "title": "Refine",
+            "level": "Level",
+            "language": "Instruction Language",
+            "department": "Departments",
+            "specialization": "Specialization",
+            "firstSpecialization": "First Specialization",
+            "secondSpecialization": "Second Specialization",
+            "compulsory_elective": "Compulsory & Elective",
+            "class": "Class",
+            "x-class": "X-Class",
+            "clear": "Clear All"
+        },
+        "details": {
+            "semesterid": "Semester ID",
+            "language": "Instruction Language",
+            "reserved": "Reserved",
+            "capacity": "Capacity",
+            "class": "Class",
+            "description": "Description",
+            "restrictions": "Restrictions",
+            "compulsory": "Compulsory",
+            "elective": "Elective",
+            "cross_discipline": "Cross Discipline",
+            "first_specialization": "First Specialization",
+            "second_specialization": "Second Specialization",
+            "ptt_title": "PTT Reviews",
+            "ptt_disclaimer": "PTT reviews are from the NTHU_Course board and are not moderated by NTHUMods. The reviews do not represent the views of NTHUMods. If you find any inappropriate content, please report to the board itself."
+        }
+    },
+    "navigation": {
+        "today": "Today",
+        "courses": "Courses",
+        "timetable": "Timetable",
+        "settings": "Settings",
+        "venues": "Venues"
+    },
+    "settings": {
+        "title": "Settings",
+        "dark_mode": {
+            "title": "Dark Mode",
+            "description": "Night mode turns the light surfaces of the page dark, creating an experience ideal for the dark. Try it out!"
+        },
+        "language": {
+            "title": "Language",
+            "description": "Select your preferred language."
+        }
+    },
+    "venues": {
+        "placeholder": "Select a Venue from the list"
+    }
+}

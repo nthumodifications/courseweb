@@ -11,10 +11,11 @@ import { useDebouncedCallback } from "use-debounce";
 import { useMediaQuery } from 'usehooks-ts';
 import { arrayRange } from '@/helpers/array';
 import RefineControls, { RefineControlFormTypes } from '@/components/Courses/RefineControls';
+import useDictionary from "@/dictionaries/useDictionary";
 
 
 const CoursePage: NextPage = () => {
-
+    const dict = useDictionary();
     const [courses, setCourses] = useState<CourseDefinition[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [totalCount, setTotalCount] = useState<number>(0);
@@ -137,7 +138,7 @@ const CoursePage: NextPage = () => {
                 <InputControl
                     control={control}
                     name="textSearch"
-                    placeholder="Search for your course (Name, Class, Anything)"
+                    placeholder={dict.course.list.search_placeholder}
                     variant="soft"
                     endDecorator={
                         <Fragment>
@@ -157,8 +158,8 @@ const CoursePage: NextPage = () => {
                 />
                 <div className="flex flex-col w-full h-full overflow-auto space-y-5 pb-8 scroll-smooth" ref={scrollRef}>
                     <div className="flex flex-row justify-between px-3 py-1 border-b">
-                        <h6 className="text-gray-600">Courses</h6>
-                        <h6 className="text-gray-600">Found: {totalCount} Courses</h6>
+                        <h6 className="text-gray-600">{dict.course.list.courses}</h6>
+                        <h6 className="text-gray-600">{dict.course.list.found}: {totalCount} {dict.course.list.courses}</h6>
                     </div>
                     {loading && <div className="w-full"><LinearProgress /> </div>}
                     {courses.map((course, index) => (

@@ -7,7 +7,7 @@ export const generateMetadata = () => ({
 })
 
 const LocationLayout: FC<PropsWithChildren> = async ({ children }) => {
-    return <div className="h-full grid grid-cols-[auto_820px] grid-rows-1">
+    return <div className="h-full grid grid-cols-[2fr_3fr]">
         <VenueList/>
         <main className='overflow-auto'>
             {children}
