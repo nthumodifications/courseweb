@@ -45,10 +45,12 @@ const TimetableCourseList = () => {
                     <div className="grid grid-cols-2 gap-4">
                         <div className="flex flex-col">
                             <h3 className="text-lg font-semibold">QR Code</h3>
-                            <QRCodeSVG value={shareLink} />
+                            <div className='p-2 bg-white rounded-md w-min'>
+                                <QRCodeSVG value={shareLink} />
+                            </div>
                         </div>
-                        <div className="flex flex-col">
-                            <h3 className="text-lg font-semibold">Email</h3>
+                        <div className="flex flex-col space-y-2">
+                            <h3 className="text-lg font-semibold">Links</h3>
                             <Button
                                 component="a"
                                 // Subject: Here is My Timetable, Body: My Timetable can be found on NTHUMODS at {shareLink}
@@ -57,9 +59,6 @@ const TimetableCourseList = () => {
                                 variant="outlined"
                                 startDecorator={<Mail className="w-4 h-4" />}
                             >Send Email</Button>
-                        </div>
-                        <div className="flex flex-col">
-                            <h3 className="text-lg font-semibold">Calendar</h3>
                             <Button
                                 component="a"
                                 href={webcalLink}
