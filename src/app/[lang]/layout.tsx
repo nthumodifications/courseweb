@@ -36,7 +36,7 @@ export default function RootLayout({
   const theme = cookies().get("theme");
 
   return (
-    <html lang={params.lang} className={`${theme?.value ?? ''} overflow-hidden`}>
+    <html lang={params.lang} className={`${theme?.value ?? ''} overflow-x-hidden`}>
       <CssVarsProvider defaultMode={(theme?.value as any) ?? 'light'}>
         <ModalProvider>
           <SettingsProvider>

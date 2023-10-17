@@ -26,6 +26,7 @@
     "autoprefixer": "10.4.16",
     "date-fns": "^2.30.0",
     "fuse.js": "^6.6.2",
+    "ics": "^3.5.0",
     "leaflet": "^1.9.4",
     "negotiator": "^0.6.3",
     "next": "13.5.2",

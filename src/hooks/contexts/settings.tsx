@@ -41,6 +41,7 @@ const useSettingsProvider = () => {
     };
 
     useEffect(() => {
+        if(typeof window  == "undefined") return ;
         //check theme from cookie
         const theme = cookies.theme;
         if(theme == undefined) {
@@ -56,6 +57,7 @@ const useSettingsProvider = () => {
     }, [cookies]);
 
     const setDarkMode = (val: boolean) => {
+        if(typeof window  == "undefined") return ;
         removeCookie("theme");
         setCookie("theme", val ? "dark" : "light")
         window.localStorage.removeItem("joy-mode")

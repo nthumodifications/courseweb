@@ -1,5 +1,5 @@
 import { Button, ButtonGroup, DialogContent, DialogTitle, IconButton, Input, ModalClose, ModalDialog } from '@mui/joy';
-import { Download, EyeOff, Mail, Search, Share, Trash } from 'react-feather';
+import { Calendar, Download, EyeOff, Image, Mail, Search, Share, Trash } from 'react-feather';
 import { QRCodeSVG } from 'qrcode.react';
 import { useSettings } from '@/hooks/contexts/settings';
 import useUserTimetable from '@/hooks/useUserTimetable';
@@ -20,7 +20,8 @@ const TimetableCourseList = () => {
 
 
     const handleShowShareDialog = () => {
-        const shareLink = `https://nthumods.imjustchew.com/timetable?courses=${courses.map(id => encodeURIComponent(id)).join(',')}`
+        const shareLink = `https://nthumods.imjustchew.com/timetable?semester_1121=${courses.map(id => encodeURI(id)).join(',')}`
+        const webcalLink = `webcal://nthumods.imjustchew.com/timetable/calendar.ics?semester_1121=${courses.map(id => encodeURI(id)).join(',')}`
         const handleCopy = () => {
             navigator.clipboard.writeText(shareLink);
         }
@@ -51,11 +52,49 @@ const TimetableCourseList = () => {
                             <Button
                                 component="a"
                                 // Subject: Here is My Timetable, Body: My Timetable can be found on NTHUMODS at {shareLink}
-                                href={`mailto:?subject=Here is My Timetable&body=My Timetable can be found on NTHUMODS at ${shareLink}`}
+                                href={`mailto:?subject=Here is My Timetable&body=<div style='padding: 0;'>My Timetable can be found on NTHUMODS at <${shareLink}></div>`}
+                                target='_blank'
                                 variant="outlined"
                                 startDecorator={<Mail className="w-4 h-4" />}
                             >Send Email</Button>
                         </div>
+                        <div className="flex flex-col">
+                            <h3 className="text-lg font-semibold">Calendar</h3>
+                            <Button
+                                component="a"
+                                href={webcalLink}
+                                target='_blank'
+                                variant="outlined"
+                                startDecorator={<Calendar className="w-4 h-4" />}
+                            >Sync To Calendar</Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </ModalDialog>
+        });
+    }
+
+    const handleDownloadDialog = () => {
+        const icsfileLink = `https://nthumods.imjustchew.com/timetable/calendar.ics?semester_1121=${courses.map(id => encodeURI(id)).join(',')}`
+        openModal({
+            children: <ModalDialog>
+                <ModalClose />
+                <DialogTitle>Download Your Timetable</DialogTitle>
+                <DialogContent>
+                    <p>Download as Image is stll in the works~</p>
+                    <div className="grid grid-cols-2 gap-4 pt-4">
+                        <Button
+                            component="a"
+                            href={icsfileLink}
+                            target='_blank'
+                            variant="outlined"
+                            startDecorator={<Download className="w-4 h-4" />}
+                        >Download .ics</Button>
+                        <Button
+                            disabled={true}
+                            variant="outlined"
+                            startDecorator={<Image className="w-4 h-4" />}
+                        >Download Image</Button>
                     </div>
                 </DialogContent>
             </ModalDialog>
@@ -101,7 +140,7 @@ const TimetableCourseList = () => {
             </div>
         )}
         <div className="grid grid-cols-2 grid-rows-2 gap-2">
-            <Button variant="outlined" startDecorator={<Download className="w-4 h-4" />}>Download</Button>
+            <Button variant="outlined" startDecorator={<Download className="w-4 h-4" />} onClick={handleDownloadDialog}>Download</Button>
             <Button variant="outlined" startDecorator={<Share className="w-4 h-4" />} onClick={handleShowShareDialog}>Share/Sync</Button>
         </div>
     </div>

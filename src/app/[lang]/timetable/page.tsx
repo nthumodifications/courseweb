@@ -21,8 +21,8 @@ const TimetablePage: NextPage = () => {
 
     //Check if URL has course code array, display share dialog.
     useEffect(() => {
-        if (searchParams.has('courses')) {
-            const courseCodes = searchParams.get('courses')?.split(',');
+        if (searchParams.has('semester_1121')) {
+            const courseCodes = searchParams.get('semester_1121')?.split(',');
             console.log(courseCodes);
             openModal({
                 children: <ShareRecievedDialog onClose={closeModal} courseCodes={courseCodes!} />

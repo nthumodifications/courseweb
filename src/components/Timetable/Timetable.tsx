@@ -25,6 +25,7 @@ const Timetable: FC<{ timetableData: CourseTimeslotData[] }> = ({ timetableData 
     }
   
     useLayoutEffect(() => {
+      if(typeof window  == "undefined") return ;
       updateSize();
       window.addEventListener("resize", updateSize);
       return () => 
