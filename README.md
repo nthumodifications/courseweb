@@ -11,7 +11,7 @@ We are a passionate team of students dedicated to improving the technological st
 > This Repository is under heavy development, expect to have breaking changes!
 
 ## Usage
-Currently, everyone can access the website at [NTHUMods](https://nthumods.imjustchew.com). However, this URL is bound to change in the near future as the project matures.
+Currently, everyone can access the website at [NTHUMods](https://nthumods.imjustchew.com).
 
 ## Development
 You can clone the repository and start the development server via `npm run dev`
