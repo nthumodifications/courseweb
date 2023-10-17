@@ -6,10 +6,11 @@ import supabase from '@/config/supabase';
 import { routes, stops } from '@/const/bus';
 import useDictionary from '@/dictionaries/useDictionary';
 import { useSettings } from '@/hooks/contexts/settings';
-import { Button, Divider } from '@mui/joy';
+import { Button, Divider, LinearProgress } from '@mui/joy';
 import { format, add, formatDistanceStrict } from 'date-fns';
 import { useEffect, useState, useMemo } from 'react';
 import { ChevronLeft, MapPin } from 'react-feather';
+import useSWR from 'swr';
 type PageProps = {
     params: { busId: string }
 }
@@ -39,10 +40,13 @@ type BusDetails = {
 const BusStop = ({ params: { busId } }: PageProps) => {
     const dict = useDictionary();
     const [date, setDate] = useState(new Date());
-    const [busData, setBusData] = useState<BusDetails>();
 
     const { language } = useSettings();
-
+    const { data: busSchedule, error, isLoading } = useSWR(['bus_schedule', busId], async ([table, busId]) => {
+        const { data: busses, error } = await supabase.from('bus_schedule').select('*').eq('id', busId);
+        if(error || !busses[0]) throw error;
+        return busses[0];
+    })
 
     //update time every 30 seconds
     useEffect(() => {
@@ -53,38 +57,27 @@ const BusStop = ({ params: { busId } }: PageProps) => {
     }, []);
 
     //get list of routes that pass this stop
-    useEffect(() => {
-    (async () => {
-        const { data: busses } = await supabase.from('bus_schedule').select('*').eq('id', busId);
-        const bus = busses![0];
-        const route = routes.find(route => route.code == bus.route_name)!;
+
+    const busData = useMemo(() => {
+        if(!busSchedule) return undefined;
+        const route = routes.find(route => route.code == busSchedule.route_name)!;
         const stopSchedule = route!.path.map((stop, index) => {
             const stopDef = stops.find(stopDef => stop.includes(stopDef.code))!;
-            const time = bus.schedule![index];
+            const time = busSchedule.schedule![index];
             return {stopDef, arrival: new Date(format(date, "yyyy-MM-dd ") + time)};
         })
-        const finalData = {
-            ...bus,
+        return {
+            ...busSchedule,
             route,
             stopSchedule
         }
-        console.log(finalData)
-        setBusData(finalData)
-
-        // setSchedules(routes!.map(mod => {
-        //     //get the time of arrival at this stop
-        //     const route = routesPassingStop.find(route => route.code == mod.route_name)
-        //     const time = mod.schedule![route!.stopIndex];
-        //     return {...mod, arrival: new Date(format(date, "yyyy-MM-dd ") + time), route: route! }
-        // }).sort((a, b) => a.arrival.getTime() - b.arrival.getTime()));
-    })();
-    }, [busId]);
-
-    if(busData == undefined) return <div>Loading...</div>
+    }, [busSchedule, date]);
 
     return <Fade>
+        {isLoading && <LinearProgress/>}
         <div>
             <Button variant='plain' startDecorator={<ChevronLeft/>} onClick={() => history.back()}>Back</Button>
+            {busData && <>
             <div className='flex flex-row gap-4 items-center px-6 py-4'>
                 {busData.route_name?.startsWith('G') ? <GreenLineIcon/>: <RedLineIcon/>}
                 <div className="flex flex-col">
@@ -111,6 +104,7 @@ const BusStop = ({ params: { busId } }: PageProps) => {
                     </p>
                 </div>)}
             </div>
+            </>}
         </div>
     </Fade>
 }

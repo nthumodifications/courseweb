@@ -45,6 +45,7 @@ const BusPage = () => {
                 <h2 className="text-4xl font-semibold pl-6 text-gray-600 py-6"></h2>
                 <h2 className="text-4xl font-semibold bg-gray-200 dark:bg-neutral-800 pr-6 text-end py-6"></h2>
             </div>
+            <p className="text-xs text-gray-400 dark:text-gray-600">*資訊版本為 校園公車時刻表1121016-1130113. 如有差異請按<a href="mailto:chewtzihwee@gmail.com?subject=公車資訊錯誤" className="hover:underline" target="_blank">這裏</a></p>
         </div>
     )
 }

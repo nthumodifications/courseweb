@@ -2,16 +2,18 @@
 import Fade from '@/components/Animation/Fade';
 import GreenLineIcon from '@/components/BusIcons/GreenLineIcon';
 import RedLineIcon from '@/components/BusIcons/RedLineIcon';
-import supabase from '@/config/supabase';
+import supabase, { BusScheduleDefinition } from '@/config/supabase';
 import { routes, stops } from '@/const/bus';
 import useDictionary from '@/dictionaries/useDictionary';
 import { useSettings } from '@/hooks/contexts/settings';
-import { Button, Divider } from '@mui/joy';
+import { Button, Divider, LinearProgress } from '@mui/joy';
 import { format, add, formatDistanceStrict } from 'date-fns';
 import { enUS, zhTW } from 'date-fns/locale';
 import Link from 'next/link';
 import { useEffect, useState, useMemo } from 'react';
 import { ChevronLeft, MapPin } from 'react-feather';
+import useSWR from 'swr'
+
 type PageProps = {
     params: { stopId: string }
 }
@@ -37,8 +39,23 @@ type ScheduleItem = {
 const BusStop = ({ params: { stopId } }: PageProps) => {
     const dict = useDictionary();
     const [date, setDate] = useState(new Date());
-    const [schedules, setSchedules] = useState<ScheduleItem[]>([]);
     const { language } = useSettings();
+
+    const routesPassingStop = routes.filter(route => route.path.includes(stopId)).map(route => ({...route, stopIndex: route.path.indexOf(stopId)}));
+    const routeCodes = routesPassingStop.map(route => route.code);
+
+    const { data = [], error, isLoading } = useSWR(['bus_schedule', stopId], async ([table, stopId]) => {
+        const { data: _data = [], error } = await supabase.from('bus_schedule').select('*').in('route_name', routeCodes);
+        if(error) throw error;
+        return _data;
+    })
+
+    const schedules = useMemo(() => data!.map(mod => {
+        //get the time of arrival at this stop
+        const route = routesPassingStop.find(route => route.code == mod.route_name)
+        const time = mod.schedule![route!.stopIndex];
+        return {...mod, arrival: new Date(format(date, "yyyy-MM-dd ") + time), route: route! }
+    }).sort((a, b) => a.arrival.getTime() - b.arrival.getTime()), [data, date]);
 
     const stopDef = stops.find(stop => stopId.includes(stop.code));
 
@@ -49,21 +66,6 @@ const BusStop = ({ params: { stopId } }: PageProps) => {
         }, 1 * 1000);
         return () => clearInterval(interval);
     }, []);
-
-    //get list of routes that pass this stop
-    useEffect(() => {
-        const routesPassingStop = routes.filter(route => route.path.includes(stopId)).map(route => ({...route, stopIndex: route.path.indexOf(stopId)}));
-        const routeCodes = routesPassingStop.map(route => route.code);
-    (async () => {
-        const { data: routes } = await supabase.from('bus_schedule').select('*').in('route_name', routeCodes);
-        setSchedules(routes!.map(mod => {
-            //get the time of arrival at this stop
-            const route = routesPassingStop.find(route => route.code == mod.route_name)
-            const time = mod.schedule![route!.stopIndex];
-            return {...mod, arrival: new Date(format(date, "yyyy-MM-dd ") + time), route: route! }
-        }).sort((a, b) => a.arrival.getTime() - b.arrival.getTime()));
-    })();
-    }, [stopId]);
 
     const schedulesToDisplay = useMemo(() => 
         schedules.filter(mod => mod.arrival.getTime() > date.getTime()), 
@@ -81,6 +83,7 @@ const BusStop = ({ params: { stopId } }: PageProps) => {
 
     return <Fade>
         <div>
+            {isLoading && <LinearProgress/>}
             <Button variant='plain' startDecorator={<ChevronLeft/>} onClick={() => history.back()}>Back</Button>
             <div className='flex flex-row gap-4 items-center px-6 py-4'>
                 <MapPin/>
