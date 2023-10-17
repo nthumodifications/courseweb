@@ -98,7 +98,7 @@ const TodaySchedule: FC<{ weather: any, alerts: AlertDefinition[] }> = ({ weathe
         const classesThisDay = timetableData.filter(t => t.dayOfWeek == [6,0,1,2,3,4,5][getDay(day)]);
 
         if(classesThisDay.length == 0) return (
-            <div className="flex flex-col items-center">
+            <div className="flex flex-col items-center text-gray-800 dark:text-gray-500">
                 <span className="text-sm font-semibold">{dict.today.noclass}</span>
                 <span className="text-xs">{dict.today.noclass_sub}</span>
             </div>
@@ -140,9 +140,9 @@ const TodaySchedule: FC<{ weather: any, alerts: AlertDefinition[] }> = ({ weathe
                 <div className="flex flex-row gap-2 justify-between border-b border-gray-400 pb-2">
                     <div className="flex flex-col flex-1">
                         {/* 6TH OCTOBER */}
-                        <div className="text-sm font-semibold text-gray-400">{format(day, 'EEEE, do MMMM', { locale: zhTW })}</div>
+                        <div className="text-sm font-semibold text-gray-400 dark:text-gray-500">{format(day, 'EEEE, do MMMM', { locale: zhTW })}</div>
                         {/* WEDNESDAY */}
-                        <div className="text-xl font-semibold text-gray-600">{formatRelative(day, Date.now(), { locale: customLocale })}</div>
+                        <div className="text-xl font-semibold text-gray-600 dark:text-gray-300">{formatRelative(day, Date.now(), { locale: customLocale })}</div>
                     </div>
                     <WeatherIcon date={day} weather={weather?.records?.locations[0]?.location[0]?.weatherElement}/>
                 </div>

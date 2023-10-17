@@ -20,9 +20,9 @@ const Header: FC = () => {
 
 
     return (
-        <header className="h-14 w-screen bg-gray-100 px-8 py-4 md:col-span-2 flex flex-row justify-between">
+        <header className="h-14 w-screen bg-gray-100 dark:bg-neutral-800 shadow-md bg-neu px-8 py-4 md:col-span-2 flex flex-row justify-between items-center">
             <h1 className="font-bold text-lg">NTHUMods</h1>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
             {language == 'en' &&
                 (currentSemester ?`AC${currentSemester.year} Sem ${currentSemester.semester}, Week ${currentWeek}`: `No Active Semester`)}
             {language == 'zh' &&

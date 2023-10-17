@@ -51,7 +51,7 @@ const SideNav:FC = () => {
     return (<>
         <nav className="md:hidden w-screen flex flex-row h-10 gap-4 justify-evenly">
             {links.map((link, index) => (
-                <Link className={`flex items-center gap-4 hover:text-fuchsia-600 hover:underline transition-colors ${link.href == pathname ? "text-fuchsia-600":"text-gray-600"}`}
+                <Link className={`flex items-center gap-4 hover:text-fuchsia-600 hover:underline transition-colors ${link.href == pathname ? "text-fuchsia-600":"text-gray-600 dark:text-gray-400"}`}
                     key={index} href={link.href}>
                     <span className="w-6">
                         {link.icon}
@@ -61,7 +61,7 @@ const SideNav:FC = () => {
         </nav>
         <nav className="hidden h-screen md:flex flex-col w-max gap-4 p-6">
             {links.map((link, index) => (
-                <Link className={`flex items-center gap-4 hover:text-fuchsia-600 hover:underline transition-colors ${link.href == pathname ? "text-fuchsia-600":"text-gray-600"}`}
+                <Link className={`flex items-center gap-4 hover:text-fuchsia-600 hover:underline transition-colors ${link.href == pathname ? "text-fuchsia-600":"text-gray-600 dark:text-gray-400"}`}
                     key={index} href={link.href}>
 
                     <span className="w-6">

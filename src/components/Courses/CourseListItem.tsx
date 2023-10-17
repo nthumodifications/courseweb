@@ -15,8 +15,8 @@ const CourseListItem: FC<{ course: CourseDefinition }> = ({ course }) => {
         <div className="grid grid-cols-1 lg:grid-rows-none lg:grid-cols-[auto_224px]">
             <div className='flex-1'>
                 <div className="mb-3">
-                    <Link className="font-semibold text-lg text-fuchsia-800" href={'courses/'+course.raw_id}>{course.department} {course.course}-{course.class} {course.name_zh} - {course.raw_teacher_zh}</Link>
-                    <h3 className="text-base text-gray-800 mt-0 break-words">{course.name_en} - <span className='w-max'>{course.raw_teacher_en}</span></h3>
+                    <Link className="font-semibold text-lg text-fuchsia-800 dark:text-fuchsia-500" href={'courses/'+course.raw_id}>{course.department} {course.course}-{course.class} {course.name_zh} - {course.raw_teacher_zh}</Link>
+                    <h3 className="text-base text-gray-800 dark:text-gray-300 mt-0 break-words">{course.name_en} - <span className='w-max'>{course.raw_teacher_en}</span></h3>
                 </div>
                 <div className="space-y-1">
                     <p>{course.venues?.join(', ') || "No Venue"} • {course.credits} {dict.course.credits}</p>

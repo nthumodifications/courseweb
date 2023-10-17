@@ -29,8 +29,8 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
     return <div className="grid grid-cols-1 lg:grid-cols-[auto_320px]  py-6 px-4">
         <div className="space-y-2">
             <h1 className="font-bold text-3xl mb-4 text-fuchsia-800">{`${course?.department} ${course?.course}-${course?.class}`}</h1>
-            <h2 className="font-semibold text-3xl text-gray-500 mb-2">{course!.name_zh} - {course?.teacher_zh?.join(',')?? ""}</h2>
-            <h2 className="font-semibold text-xl text-gray-500">{course!.name_en} - {course?.teacher_en?.join(',')?? ""}</h2>
+            <h2 className="font-semibold text-3xl text-gray-500 dark:text-gray-300 mb-2">{course!.name_zh} - {course?.teacher_zh?.join(',')?? ""}</h2>
+            <h2 className="font-semibold text-xl text-gray-500 dark:text-gray-300">{course!.name_en} - {course?.teacher_en?.join(',')?? ""}</h2>
 
             <p>{dict.course.details.semesterid}: {course?.raw_id} • {dict.course.credits}: {course?.credits}</p>
             <p>{dict.course.details.language}: {course?.language == '英' ? 'English' : 'Chinese'}</p>

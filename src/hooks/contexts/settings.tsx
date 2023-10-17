@@ -1,7 +1,10 @@
 "use client";
 import { useParams, usePathname, useRouter } from "next/navigation";
-import { FC, PropsWithChildren, createContext, useContext, useState } from "react";
+import { FC, PropsWithChildren, createContext, useContext, useEffect, useState } from "react";
 import { useLocalStorage } from 'usehooks-ts';
+import { useCookies } from 'react-cookie';
+import { useColorScheme } from "@mui/joy";
+
 type Languages = "zh" | "en";
 
 type SettingsType = {
@@ -24,11 +27,11 @@ const useSettingsProvider = () => {
     const language = useParams().lang as Languages;
     const router = useRouter();
     const pathname = usePathname();
-    const [darkMode, setDarkMode] = useLocalStorage("darkMode",false);
+    const [cookies, setCookie, removeCookie] = useCookies(['theme']);
     const [courses, setCourses] = useLocalStorage<string[]>("courses", []);
 
+
     const setSettings = (settings: SettingsType) => {
-        setDarkMode(settings.darkMode);
         setCourses(settings.courses);
     };
 
@@ -37,9 +40,33 @@ const useSettingsProvider = () => {
         router.push(`/${newLang}/`+pathname.split('/').slice(2).join('/'));
     };
 
+    useEffect(() => {
+        //check theme from cookie
+        const theme = cookies.theme;
+        if(theme == undefined) {
+            if(window.matchMedia('(prefers-color-scheme: dark)').matches){
+                setCookie("theme", "dark");
+            }
+            else {
+                setCookie("theme", "light");
+            }
+            window.localStorage.removeItem("joy-mode")
+            window.location.reload();
+        }
+    }, [cookies]);
+
+    const setDarkMode = (val: boolean) => {
+        removeCookie("theme");
+        setCookie("theme", val ? "dark" : "light")
+        window.localStorage.removeItem("joy-mode")
+        window.location.reload();
+    }
+
     return {
         language,
-        darkMode,
+        get darkMode() {
+            return cookies.theme == "dark";
+        },
         courses,
         setSettings,
         setCourses,

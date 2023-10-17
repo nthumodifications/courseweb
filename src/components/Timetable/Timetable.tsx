@@ -41,11 +41,11 @@ const Timetable: FC<{ timetableData: CourseTimeslotData[] }> = ({ timetableData 
             <thead>
               <tr>
                 <td className="w-[40px] min-w-[40px]" ref={headerRow}></td>
-                <td className='text-xs font-semibold w-28 py-2 border border-gray-300'>MON</td>
-                <td className='text-xs font-semibold w-28 py-2 border border-gray-300'>TUE</td>
-                <td className='text-xs font-semibold w-28 py-2 border border-gray-300'>WED</td>
-                <td className='text-xs font-semibold w-28 py-2 border border-gray-300'>THU</td>
-                <td className='text-xs font-semibold w-28 py-2 border border-gray-300'>FRI</td>
+                <td className='text-xs font-semibold w-28 py-2 border border-gray-300 dark:border-neutral-700'>MON</td>
+                <td className='text-xs font-semibold w-28 py-2 border border-gray-300 dark:border-neutral-700'>TUE</td>
+                <td className='text-xs font-semibold w-28 py-2 border border-gray-300 dark:border-neutral-700'>WED</td>
+                <td className='text-xs font-semibold w-28 py-2 border border-gray-300 dark:border-neutral-700'>THU</td>
+                <td className='text-xs font-semibold w-28 py-2 border border-gray-300 dark:border-neutral-700'>FRI</td>
               </tr>
             </thead>
             <tbody>
