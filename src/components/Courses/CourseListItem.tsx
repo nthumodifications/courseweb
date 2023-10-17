@@ -11,7 +11,7 @@ const CourseListItem: FC<{ course: CourseDefinition }> = ({ course }) => {
     const dict = useDictionary();
     const isCourseSelected = useMemo(() => courses.includes(course.raw_id ?? ""), [courses, course]);
 
-    return <div className="text-gray-600 px-4">
+    return <div className="text-gray-600 dark:text-gray-400 px-4">
         <div className="grid grid-cols-1 lg:grid-rows-none lg:grid-cols-[auto_224px]">
             <div className='flex-1'>
                 <div className="mb-3">

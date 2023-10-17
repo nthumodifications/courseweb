@@ -1,7 +1,7 @@
 'use client';
 import useDictionary from "@/dictionaries/useDictionary";
 import { useSettings } from "@/hooks/contexts/settings";
-import { Divider, Option, Select, Slider, Switch } from "@mui/joy";
+import { Divider, Option, Select, Switch } from "@mui/joy";
 
 
 const SettingsPage = () => {
@@ -15,8 +15,8 @@ const SettingsPage = () => {
             <Divider/>
             <div className="flex flex-row gap-4 py-4">
                 <div className="flex flex-col flex-1">
-                    <h2 className="font-semibold text-xl text-gray-600 pb-2">{dict.settings.dark_mode.title}</h2>
-                    <p className="text-gray-600">{dict.settings.dark_mode.description}</p>
+                    <h2 className="font-semibold text-xl text-gray-600 dark:text-gray-400 pb-2">{dict.settings.dark_mode.title}</h2>
+                    <p className="text-gray-600 dark:text-gray-400">{dict.settings.dark_mode.description}</p>
                 </div>
                 <div className="flex items-center">
                     <Switch checked={darkMode} onChange={(e) => setDarkMode(e.target.checked)}/>
@@ -25,8 +25,8 @@ const SettingsPage = () => {
             <Divider/>
             <div className="flex flex-row gap-4 py-4">
                 <div className="flex flex-col flex-1">
-                    <h2 className="font-semibold text-xl text-gray-600 pb-2">{dict.settings.language.title}</h2>
-                    <p className="text-gray-600">{dict.settings.language.description}</p>
+                    <h2 className="font-semibold text-xl text-gray-600 dark:text-gray-400 pb-2">{dict.settings.language.title}</h2>
+                    <p className="text-gray-600 dark:text-gray-400">{dict.settings.language.description}</p>
                 </div>
                 <div className="flex items-center">
                 <Select defaultValue={language} value={language} onChange={(e,v) => setLanguage(v!)}>
