@@ -41,7 +41,7 @@ export default function RootLayout({
       <CssVarsProvider defaultMode={(theme?.value as any) ?? 'light'}>
         <ModalProvider>
           <SettingsProvider>
-              <body className={`${inter.className} grid grid-cols-1 grid-rows-[64px_40px_calc(100vh-108px)] md:grid-cols-[12rem_auto] md:grid-rows-[64px_calc(100vh-64px)_10rem] bg-white dark:bg-neutral-900 dark:text-white`}>
+              <body className={`${inter.className} grid grid-cols-1 grid-rows-[64px_40px_calc(100vh-108px)] md:grid-cols-[12rem_auto] md:grid-rows-[64px_calc(100vh-64px)_12rem] bg-white dark:bg-neutral-900 dark:text-white`}>
                 <Header/>
                 <SideNav/>
                 <main className='overflow-auto'>

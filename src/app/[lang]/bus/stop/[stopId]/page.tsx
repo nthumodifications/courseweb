@@ -1,4 +1,5 @@
 'use client';
+import Fade from '@/components/Animation/Fade';
 import GreenLineIcon from '@/components/BusIcons/GreenLineIcon';
 import RedLineIcon from '@/components/BusIcons/RedLineIcon';
 import supabase from '@/config/supabase';
@@ -78,38 +79,40 @@ const BusStop = ({ params: { stopId } }: PageProps) => {
         }
     }
 
-    return <div>
-        <Button variant='plain' startDecorator={<ChevronLeft/>} onClick={() => history.back()}>Back</Button>
-        <div className='flex flex-row gap-4 items-center px-6 py-4'>
-            <MapPin/>
-            <div className="flex flex-col">
-                <span className="text-lg font-bold">{stopDef?.name_zh} {stopId.endsWith('U') ? "上山": "下山"}</span>
-                <span className="text-xs">{stopDef?.name_en} - {stopId.endsWith('U') ? "Up": "Down"}</span>
-            </div>
-            <p className='text-right flex-1'>
-                Now: {format(date, 'HH:mm')}
-            </p>
-        </div>
-        <Divider/>
-        <div className='flex flex-col divide-y divide-gray-200 dark:divide-neutral-800'>
-            {schedules.length == 0 && <div className='text-center text-gray-500 py-4'>No buses scheduled today</div>}
-            {schedulesToDisplay.map(mod => 
-            <Link key={mod.id} href={`/${language}/bus/bus/${mod.id}`}>
-                <div key={mod.id} className='grid grid-cols-[50px_auto_102px] px-2 py-2'>
-                    <div className='px-3 py-1'>
-                        {mod.route_name?.startsWith('G') ? <GreenLineIcon/>: <RedLineIcon/>}
-                    </div>
-                    <div className='flex flex-col px-2 pt-1'>
-                        <h4 className='font-bold'>{language == 'zh' ? mod.route.title_zh: mod.route.title_en}</h4>
-                        <h5 className='text-sm text-gray-500'>Scheduled</h5>
-                    </div>
-                    <p className="font-semibold text-end pr-3 self-center">
-                    {getDisplayTime(mod)}
-                    </p>
+    return <Fade>
+        <div>
+            <Button variant='plain' startDecorator={<ChevronLeft/>} onClick={() => history.back()}>Back</Button>
+            <div className='flex flex-row gap-4 items-center px-6 py-4'>
+                <MapPin/>
+                <div className="flex flex-col">
+                    <span className="text-lg font-bold">{stopDef?.name_zh} {stopId.endsWith('U') ? "上山": "下山"}</span>
+                    <span className="text-xs">{stopDef?.name_en} - {stopId.endsWith('U') ? "Up": "Down"}</span>
                 </div>
-            </Link>)}
+                <p className='text-right flex-1'>
+                    Now: {format(date, 'HH:mm')}
+                </p>
+            </div>
+            <Divider/>
+            <div className='flex flex-col divide-y divide-gray-200 dark:divide-neutral-800'>
+                {schedulesToDisplay.length == 0 && <div className='text-center text-gray-500 py-4'>No buses scheduled for today</div>}
+                {schedulesToDisplay.map(mod => 
+                <Link key={mod.id} href={`/${language}/bus/bus/${mod.id}`}>
+                    <div key={mod.id} className='grid grid-cols-[50px_auto_102px] px-2 py-2'>
+                        <div className='px-3 py-1'>
+                            {mod.route_name?.startsWith('G') ? <GreenLineIcon/>: <RedLineIcon/>}
+                        </div>
+                        <div className='flex flex-col px-2 pt-1'>
+                            <h4 className='font-bold'>{language == 'zh' ? mod.route.title_zh: mod.route.title_en}</h4>
+                            <h5 className='text-sm text-gray-500'>Scheduled</h5>
+                        </div>
+                        <p className="font-semibold text-end pr-3 self-center">
+                        {getDisplayTime(mod)}
+                        </p>
+                    </div>
+                </Link>)}
+            </div>
         </div>
-    </div>
+    </Fade>
 }
 
 export default BusStop;

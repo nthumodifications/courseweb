@@ -45,7 +45,6 @@ const BusPage = () => {
                 <h2 className="text-4xl font-semibold pl-6 text-gray-600 py-6"></h2>
                 <h2 className="text-4xl font-semibold bg-gray-200 dark:bg-neutral-800 pr-6 text-end py-6"></h2>
             </div>
-
         </div>
     )
 }
