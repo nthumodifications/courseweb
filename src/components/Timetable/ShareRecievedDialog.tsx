@@ -1,8 +1,10 @@
 import { useSettings } from '@/hooks/contexts/settings';
 import { Button, DialogActions, DialogContent, DialogTitle, ModalClose, ModalDialog } from '@mui/joy';
+import { useRouter } from 'next/navigation';
 
-const ShareRecievedDialog = ({ onClose, courseCodes }: { onClose: () => void, courseCodes: string[] }) => {
-    const { courses, setCourses } = useSettings();
+const ShareRecievedDialog = ({ onClose, courseCodes, semester }: { onClose: () => void, courseCodes: string[], semester: string }) => {
+    const { language, setCourses } = useSettings();
+    const router = useRouter();
     return (
         <ModalDialog>
             <ModalClose />
@@ -18,6 +20,7 @@ const ShareRecievedDialog = ({ onClose, courseCodes }: { onClose: () => void, co
                     onClose();
                 }} color="danger">Import</Button>
                 <Button variant="outlined" onClick={() => {
+                    router.push('/'+language+'/timetable/view?'+semester+'='+courseCodes.join(','));
                     onClose();
                 }}>View</Button>
             </DialogActions>

@@ -26,7 +26,7 @@ const TimetablePage: NextPage = () => {
             const courseCodes = searchParams.get('semester_1121')?.split(',');
             console.log(courseCodes);
             openModal({
-                children: <ShareRecievedDialog onClose={closeModal} courseCodes={courseCodes!} />
+                children: <ShareRecievedDialog onClose={closeModal} semester={'semester_1121'} courseCodes={courseCodes!} />
             });
             router.replace('timetable');
         }

@@ -28,8 +28,7 @@ const useSettingsProvider = () => {
     const router = useRouter();
     const pathname = usePathname();
     const [cookies, setCookie, removeCookie] = useCookies(['theme']);
-    const [courses, setCourses] = useLocalStorage<string[]>("courses", []);
-
+    const [courses, setCourses] = useLocalStorage<string[]>("semester_1121", []);
 
     const setSettings = (settings: SettingsType) => {
         setCourses(settings.courses);

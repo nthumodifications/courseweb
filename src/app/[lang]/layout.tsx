@@ -37,21 +37,21 @@ export default function RootLayout({
   const theme = cookies().get("theme");
 
   return (
-    <html lang={params.lang} className={`${theme?.value ?? ''} overflow-x-hidden`}>
       <CssVarsProvider defaultMode={(theme?.value as any) ?? 'light'}>
-        <ModalProvider>
-          <SettingsProvider>
-              <body className={`${inter.className} grid grid-cols-1 grid-rows-[64px_40px_calc(100vh-108px)] md:grid-cols-[12rem_auto] md:grid-rows-[64px_calc(100vh-64px)_12rem] bg-white dark:bg-neutral-900 dark:text-white`}>
-                <Header/>
-                <SideNav/>
-                <main className='overflow-auto'>
-                  {children}
-                </main>
-                <Footer/>
-              </body>
-          </SettingsProvider>
-        </ModalProvider>
+        <SettingsProvider>
+          <ModalProvider>
+              <html lang={params.lang} className={`${theme?.value ?? ''} overflow-x-hidden`}>
+                <body className={`${inter.className} grid grid-cols-1 grid-rows-[64px_40px_calc(100vh-108px)] md:grid-cols-[12rem_auto] md:grid-rows-[64px_calc(100vh-64px)_12rem] bg-white dark:bg-neutral-900 dark:text-white`}>
+                  <Header/>
+                  <SideNav/>
+                  <main className='overflow-auto'>
+                    {children}
+                  </main>
+                  <Footer/>
+                </body>
+              </html>
+          </ModalProvider>
+        </SettingsProvider>
       </CssVarsProvider>
-    </html>
   )
 }
