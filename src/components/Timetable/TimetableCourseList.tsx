@@ -20,8 +20,8 @@ const TimetableCourseList = () => {
 
 
     const handleShowShareDialog = () => {
-        const shareLink = `https://nthumods.imjustchew.com/timetable?semester_1121=${courses.map(id => encodeURI(id)).join(',')}`
-        const webcalLink = `webcal://nthumods.imjustchew.com/timetable/calendar.ics?semester_1121=${courses.map(id => encodeURI(id)).join(',')}`
+        const shareLink = `https://nthumods.com/timetable?semester_1121=${courses.map(id => encodeURI(id)).join(',')}`
+        const webcalLink = `webcal://nthumods.com/timetable/calendar.ics?semester_1121=${courses.map(id => encodeURI(id)).join(',')}`
         const handleCopy = () => {
             navigator.clipboard.writeText(shareLink);
         }
@@ -75,7 +75,7 @@ const TimetableCourseList = () => {
     }
 
     const handleDownloadDialog = () => {
-        const icsfileLink = `https://nthumods.imjustchew.com/timetable/calendar.ics?semester_1121=${courses.map(id => encodeURI(id)).join(',')}`
+        const icsfileLink = `https://nthumods.com/timetable/calendar.ics?semester_1121=${courses.map(id => encodeURI(id)).join(',')}`
         openModal({
             children: <ModalDialog>
                 <ModalClose />
