@@ -4,6 +4,7 @@ import { createTimetableFromCourses } from "@/helpers/timetable";
 import { differenceInMinutes, getHours, getMinutes, parse } from "date-fns";
 import * as ics from 'ics';
 import { NextResponse } from "next/server";
+import { zonedTimeToUtc } from 'date-fns-tz'
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
@@ -15,17 +16,16 @@ export async function GET(request: Request) {
         else {
             const timetableData = createTimetableFromCourses(data!);
             const icss = ics.createEvents(timetableData.map(course => {
-                const start = parse(
+                const start = zonedTimeToUtc(parse(
                     scheduleTimeSlots[course.startTime]!.start,
                     'HH:mm',
-                    new Date()
-                );
-                const end = parse(
+                    new Date(),
+                ), 'Asia/Taipei');
+                const end = zonedTimeToUtc(parse(
                     scheduleTimeSlots[course.startTime]!.end,
                     'HH:mm',
                     new Date()
-                );
-                const duration = differenceInMinutes(end, start);
+                ), 'Asia/Taipei');
                 const day = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'][course.dayOfWeek];
 
                 return {
