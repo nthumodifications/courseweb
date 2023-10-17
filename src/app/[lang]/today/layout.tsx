@@ -1,3 +1,4 @@
+import Fade from '@/components/Animation/Fade'
 import { PropsWithChildren } from 'react'
 
 export const metadata = {
@@ -5,5 +6,5 @@ export const metadata = {
 }
 
 export default function ClientLayout({ children }: PropsWithChildren<{}>) {
-    return children
+    return <Fade>{children}</Fade>
 }

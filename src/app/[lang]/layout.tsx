@@ -11,6 +11,7 @@ import { cookies } from 'next/headers'
 import ModalProvider from '@/hooks/contexts/useModal';
 import { LangProps } from '@/types/pages';
 import { CssVarsProvider } from '@mui/joy';
+import Fade from '@/components/Animation/Fade';
 
 const inter = Inter({ subsets: ['latin'] })
 

@@ -11,9 +11,17 @@ We are a passionate team of students dedicated to improving the technological st
 > This Repository is under heavy development, expect to have breaking changes!
 
 ## Usage
-Currently, everyone can access the website at [NTHUMods](https://nthumods.com). 
+Currently, everyone can access the website at [NTHUMods](https://nthumods.com). If theres any issues/features you would like to see, feel free to open an issue [here](https://github.com/nthumodifications/courseweb/issues/new/choose).
 
 ## Development
 You can clone the repository and start the development server via `npm run dev`
 
 If you wish to participate in this development, feel free to email [chewtzihwee@gmail.com](mailto:chewtzihwee@gmail.com) in the meantime while we figure out the system for contributing.
+
+## Contributors
+- [Chew Tzi Hwee](@ImJustChew)
+- [Joshua Lean](@Joshimello)
+
+
+## Inspiration
+[NUSMods](https://nusmods.com) - The National University of Singapore's Website. The obvious lack of spirit in NTHU's website is what inspired us to create this project.

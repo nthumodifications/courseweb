@@ -8,7 +8,7 @@ import { useEffect } from "react";
 import { useModal } from "@/hooks/contexts/useModal";
 import TimetableCourseList from "@/components/Timetable/TimetableCourseList";
 import ShareRecievedDialog from "@/components/Timetable/ShareRecievedDialog";
-
+import Fade from "@/components/Animation/Fade";
 
 const TimetablePage: NextPage = () => {
 
@@ -18,6 +18,7 @@ const TimetablePage: NextPage = () => {
     const searchParams = useSearchParams();
 
     const [openModal, closeModal] = useModal();
+
 
     //Check if URL has course code array, display share dialog.
     useEffect(() => {
@@ -30,6 +31,7 @@ const TimetablePage: NextPage = () => {
             router.replace('timetable');
         }
     }, []);
+      
     return (
         <div className="grid grid-cols-1 grid-rows-2 md:grid-rows-1 md:grid-cols-[3fr_2fr] px-1 py-4 md:p-4">
             <Timetable timetableData={timetableData} />
