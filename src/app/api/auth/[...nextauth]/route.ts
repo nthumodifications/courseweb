@@ -10,7 +10,7 @@ const handler = NextAuth({
             clientSecret:"unknown",
             authorization: {
                 url: "https://oauth.ccxp.nthu.edu.tw/v1.1/authorize.php",
-                params: { scope: "email" }
+                params: { scope: "uuid,inschool,email,userid,name" }
             },
             token: "https://oauth.ccxp.nthu.edu.tw/v1.1/token.php",
             userinfo: "https://oauth.ccxp.nthu.edu.tw/v1.1/resource.php",
