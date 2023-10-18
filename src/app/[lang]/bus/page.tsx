@@ -29,18 +29,18 @@ const BusPage = () => {
                 <h2 className="text-4xl font-semibold pl-6 text-gray-600 py-6">上</h2>
                 <h2 className="text-4xl font-semibold bg-gray-200 dark:bg-neutral-800 pr-6 text-end py-6">下</h2>
                 {stops.map((stop, index) => (<>
-                    <Link key={index} href={`/${language}/bus/stop/${stop.code}U`}>
+                    <Link key={index*2} href={`/${language}/bus/stop/${stop.code}U`}>
                         <div className="flex flex-col pb-4 pl-6" key={index}>
                             <span className="text-lg font-bold">{stop.name_zh}</span>
                             <span className="text-xs">{stop.name_en}</span>
                         </div>
                     </Link>
-                    <Link key={index} href={`/${language}/bus/stop/${stop.code}D`}>
+                    <Link key={index*2+1} href={`/${language}/bus/stop/${stop.code}D`}>
                         <div className="flex flex-col pb-4 bg-gray-200 dark:bg-neutral-800 pr-6 items-end" key={index}>
                             <span className="text-lg font-bold">{stop.name_zh}</span>
                             <span className="text-xs">{stop.name_en}</span>
                         </div>
-                    </Link>
+                    </Link> 
                 </>))}
                 <h2 className="text-4xl font-semibold pl-6 text-gray-600 py-6"></h2>
                 <h2 className="text-4xl font-semibold bg-gray-200 dark:bg-neutral-800 pr-6 text-end py-6"></h2>
