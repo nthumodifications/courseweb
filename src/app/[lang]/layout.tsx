@@ -1,3 +1,4 @@
+import { Analytics } from '@vercel/analytics/react';
 import {SettingsProvider} from '@/hooks/contexts/settings';
 import { Inter } from 'next/font/google'
 import './globals.css'
@@ -46,6 +47,7 @@ export default function RootLayout({
                   <SideNav/>
                   <main className='overflow-auto'>
                     {children}
+                    <Analytics />
                   </main>
                   <Footer/>
                 </body>

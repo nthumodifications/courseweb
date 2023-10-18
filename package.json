@@ -25,6 +25,7 @@
     "@types/react": "18.2.22",
     "@types/react-dom": "18.2.7",
     "@types/react-transition-group": "^4.4.7",
+    "@vercel/analytics": "^1.1.1",
     "autoprefixer": "10.4.16",
     "date-fns": "^2.30.0",
     "date-fns-tz": "^2.0.0",
