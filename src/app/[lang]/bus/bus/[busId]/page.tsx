@@ -6,11 +6,13 @@ import supabase from '@/config/supabase';
 import { routes, stops } from '@/const/bus';
 import useDictionary from '@/dictionaries/useDictionary';
 import { useSettings } from '@/hooks/contexts/settings';
-import { Button, Divider, LinearProgress } from '@mui/joy';
+import { Button, Checkbox, Chip, Divider, LinearProgress } from '@mui/joy';
 import { format, add, formatDistanceStrict } from 'date-fns';
 import { useEffect, useState, useMemo } from 'react';
 import { ChevronLeft, MapPin } from 'react-feather';
 import useSWR from 'swr';
+import NandaLineIcon from '@/components/BusIcons/NandaLineIcon';
+import RouteIcon from '@/components/BusIcons/RouteIcon';
 type PageProps = {
     params: { busId: string }
 }
@@ -79,7 +81,7 @@ const BusStop = ({ params: { busId } }: PageProps) => {
             <Button variant='plain' startDecorator={<ChevronLeft/>} onClick={() => history.back()}>Back</Button>
             {busData && <>
             <div className='flex flex-row gap-4 items-center px-6 py-4'>
-                {busData.route_name?.startsWith('G') ? <GreenLineIcon/>: <RedLineIcon/>}
+                <RouteIcon route_name={busData.route_name!} />
                 <div className="flex flex-col">
                     <span className="text-lg font-bold">{busData.route.title_zh}</span>
                     <span className="text-xs">{busData.route.title_en}</span>
