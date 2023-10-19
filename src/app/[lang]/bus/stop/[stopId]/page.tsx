@@ -1,85 +1,29 @@
-'use client';
+'use client';;
 import Fade from '@/components/Animation/Fade';
-import GreenLineIcon from '@/components/BusIcons/GreenLineIcon';
-import NandaLineIcon from '@/components/BusIcons/NandaLineIcon';
-import RedLineIcon from '@/components/BusIcons/RedLineIcon';
-import supabase, { BusScheduleDefinition } from '@/config/supabase';
-import { routes, stops } from '@/const/bus';
+import supabase from '@/config/supabase';
+import { ScheduleItem, routes, stops } from '@/const/bus';
 import useDictionary from '@/dictionaries/useDictionary';
 import { useSettings } from '@/hooks/contexts/settings';
 import {Button, Divider, LinearProgress, Checkbox, Chip} from '@mui/joy';
-import { format, add, formatDistanceStrict } from 'date-fns';
+import { format, formatDistanceStrict } from 'date-fns';
 import { enUS, zhTW } from 'date-fns/locale';
 import Link from 'next/link';
 import { useEffect, useState, useMemo } from 'react';
 import { ChevronLeft, MapPin } from 'react-feather';
 import useSWR from 'swr'
 import RouteIcon from '@/components/BusIcons/RouteIcon';
+import RoutesFilterChips from './RoutesFilterChips';
+import useTime from '@/hooks/useTime';
 
 type PageProps = {
     params: { stopId: string }
 }
-type ScheduleItem = {
-    arrival: Date;
-    id: number;
-    route_name: string | null;
-    schedule: string[] | null;
-    vehicle: string | null;
-    route: typeof routes[0];
-}
-
-const RoutesFilterChips = ({ enabledRoutes, setFilter }: { enabledRoutes: string[], setFilter: (routes: string[]) => void }) => {
-    const [selected, setSelected] = useState<string[]>(enabledRoutes);
-
-    useEffect(() => {
-        setFilter(selected);
-    }, [selected])
-
-    const handleFilter = (route: string) => {
-        if(selected.includes(route)) {
-            setSelected(selected.filter(r => r != route));
-        } else {
-            setSelected([...selected, route]);
-        }
-    }
-    return <div className='flex flex-row flex-wrap gap-2 px-4 py-2'>
-        {enabledRoutes.includes('G') && <Chip startDecorator={<div className='w-2 h-2 rounded-full bg-[#00CA2C]'></div>}>
-            <Checkbox
-                overlay
-                disableIcon
-                label="綠線"
-                variant="outlined"
-                checked={selected.includes('G')}
-                onChange={() => handleFilter('G')}
-            />
-        </Chip>}
-        {enabledRoutes.includes('R') && <Chip startDecorator={<div className='w-2 h-2 rounded-full bg-[#E4280E]'></div>}>
-            <Checkbox
-                overlay
-                disableIcon
-                label="紅線"
-                variant="outlined"
-                checked={selected.includes('R')}
-                onChange={() => handleFilter('R')}
-            />
-        </Chip>}
-        {enabledRoutes.includes('N') && <Chip startDecorator={<div className='w-2 h-2 rounded-full bg-[#8A00DE]'></div>}>
-            <Checkbox
-                overlay
-                disableIcon
-                variant="outlined"
-                label="南大線"
-                checked={selected.includes('N')}
-                onChange={() => handleFilter('N')}
-            />
-        </Chip>}
-    </div>
-}
 
 const BusStop = ({ params: { stopId } }: PageProps) => {
     const dict = useDictionary();
-    const [date, setDate] = useState(new Date());
     const { language } = useSettings();
+    //update time every 30 seconds
+    const date = useTime();
 
     const routesPassingStop = routes.filter(route => route.path.includes(stopId)).map(route => ({...route, stopIndex: route.path.indexOf(stopId)}));
     const routeCodes = routesPassingStop.map(route => route.code);
@@ -103,13 +47,6 @@ const BusStop = ({ params: { stopId } }: PageProps) => {
 
     const stopDef = stops.find(stop => stopId.includes(stop.code));
 
-    //update time every 30 seconds
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setDate(new Date());
-        }, 1 * 1000);
-        return () => clearInterval(interval);
-    }, []);
 
     const schedulesToDisplay = useMemo(() => 
         schedules.filter(mod => displayRoutes.includes(mod.route_name![0]))

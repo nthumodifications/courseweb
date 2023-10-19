@@ -1,4 +1,6 @@
-export const stops = [
+import { BusScheduleDefinition } from "@/config/supabase";
+
+export const stops: Stop[] = [
     { name_zh: '北校門口', name_en: 'North Gate', code: 'A1' },
     { name_zh: '綜二館', name_en: 'Gen II Building', code: 'A2' },
     { name_zh: '楓林小徑', name_en: 'Maple Path', code: 'A3' },
@@ -9,14 +11,13 @@ export const stops = [
     { name_zh: '南大校區', name_en: 'Nanda Campus', code: 'A8' },
 ];
 
-export const nandaStops = [
-    { name_zh: '北校門口', name_en: 'North Gate', code: 'A1' },
-    { name_zh: '綜二館', name_en: 'Gen II Building', code: 'A2' },
-    { name_zh: '人社院/生科館', name_en: 'CHSS/CLS Building', code: 'A4' },
-    { name_zh: '台積館', name_en: 'TSMC Building', code: 'A7' },
-];
+export interface Stop {
+    name_zh: string;
+    name_en: string;
+    code: string;
+}
 
-export const routes = [
+export const routes: Route[] = [
     { title_zh: '綠 - 台積館', title_en: 'Green - TSMC Build.', color: '#1CC34B', code: 'GU', path: ['A1U', 'A2U', 'A3U', 'A6U', 'A5U', 'A7D'] },
     { title_zh: '綠 - 台積館', title_en: 'Green - TSMC Build.', color: '#1CC34B', code: 'GUS', path: ['A2U', 'A3U', 'A6U', 'A5U', 'A7D'] },
     { title_zh: '綠 - 北校門口', title_en: 'Green - North Gate', color: '#1CC34B', code: 'GD', path: ['A7D', 'A4D', 'A3D', 'A2D', 'A1D'] },
@@ -29,7 +30,15 @@ export const routes = [
     { title_zh: '往校本部', title_en: 'To Main Campus', color: '#E71212', code: 'NB', path: ['A8', 'A7D', 'A4D', 'A2D', 'A1D'] },
 ]
 
-export const nandaRoutes = [
-    { title_zh: '往南大校區', title_en: 'To Nanda Campus', color: '#1CC34B', code: 'NG', path: ['A1U', 'A2U', 'A4U', 'A7U', 'A8'] },
-    { title_zh: '往校本部', title_en: 'To Main Campus', color: '#E71212', code: 'NB', path: ['A8', 'A7D', 'A4D', 'A2D', 'A1D'] },
-]
+export interface Route {
+    title_zh: string;
+    title_en: string;
+    color: string;
+    code: string;
+    path: string[];
+}
+
+export type ScheduleItem = {
+    arrival: Date;
+    route: Route;
+} & BusScheduleDefinition;

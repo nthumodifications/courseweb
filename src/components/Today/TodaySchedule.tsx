@@ -4,85 +4,18 @@ import {Alert, ColorPaletteProp, Divider, Tooltip} from '@mui/joy';
 import {format, formatRelative, getDay} from 'date-fns';
 import useUserTimetable from '@/hooks/useUserTimetable';
 import {scheduleTimeSlots} from '@/const/timetable';
-import { enUS, zhTW } from 'date-fns/esm/locale';
 import { FC } from "react";
 import { useSettings } from '@/hooks/contexts/settings';
 import { AlertDefinition } from '@/config/supabase';
 import useDictionary from '@/dictionaries/useDictionary';
-
-const WeatherIcon: FC<{ date: Date, weather: [
-    {
-        description: "天氣現象",
-        elementName: "Wx" ,
-        time:{
-            elementValue: {value: string, measures: string}[],
-            startTime: string,
-            endTime: string
-        }[]
-    },
-    {
-        description:  "天氣預報綜合描述",
-        elementName: "WeatherDescription",
-        time:{
-            elementValue: {value: string, measures: string}[],
-            startTime: string,
-            endTime: string
-        }[]
-    }
-]}> = ({ date, weather }) => {
-    if(!weather) return <></>;
-
-    const weatherData = weather[0].time.find(t => new Date(t.startTime) <= date && new Date(t.endTime) >= date);
-    const weatherDescription = weather[1].time.find(t => new Date(t.startTime) <= date && new Date(t.endTime) >= date);
-
-
-    if(!weatherData || !weatherDescription) return <></>;
-
-    return (
-        <Tooltip title={weatherDescription?.elementValue?.[0].value} placement="bottom" sx={{maxWidth: '180px'}}>
-            <img 
-                className="w-12 h-12"
-                src={`https://www.cwa.gov.tw/V8/assets/img/weather_icons/weathers/svg_icon/day/${weatherData!.elementValue?.[1].value}.svg`} 
-            />
-        </Tooltip>    
-    )
-
-}
+import { CWBWeather } from '@/types/weather';
+import WeatherIcon from './WeatherIcon';
+import { getLocale } from '@/helpers/dateLocale';
 
 const TodaySchedule: FC<{ weather: any, alerts: AlertDefinition[] }> = ({ weather, alerts }) => {
     const { timetableData, allCourseData, deleteCourse } = useUserTimetable();
     const { language } = useSettings();
     const dict = useDictionary();
-
-    // WARN: Day is formatted by MTWRFSS (0-7)
-
-    const enLocale: { [x: string]: string } = {
-        lastWeek: "'last' eeee 'at' p",
-        yesterday: "'Yesterday'",
-        today: "'Today'",
-        tomorrow: "'Tomorrow'",
-        nextWeek: "EEEE",
-        other: 'P'
-    };
-
-    
-    const zhLocale: { [x: string]: string } = {
-        lastWeek: "'last' eeee 'at' p",
-        yesterday: "'昨天'",
-        today: "'今天'",
-        tomorrow: "'明天'",
-        nextWeek: "EEEE",
-        other: 'P'
-    };
-
-    const customLocale = language == 'en' ? {
-        ...enUS,
-        formatRelative: (token: string) => enLocale[token],
-    }: {
-        ...zhTW,
-        formatRelative: (token: string) => zhLocale[token],
-    }
-      
 
     const getRangeOfDays = (start: Date, end: Date) => {
         const days = [];
@@ -140,9 +73,9 @@ const TodaySchedule: FC<{ weather: any, alerts: AlertDefinition[] }> = ({ weathe
                 <div className="flex flex-row gap-2 justify-between border-b border-gray-400 pb-2">
                     <div className="flex flex-col flex-1">
                         {/* 6TH OCTOBER */}
-                        <div className="text-sm font-semibold text-gray-400 dark:text-gray-500">{format(day, 'EEEE, do MMMM', { locale: zhTW })}</div>
+                        <div className="text-sm font-semibold text-gray-400 dark:text-gray-500">{format(day, 'EEEE, do MMMM', { locale: getLocale(language) })}</div>
                         {/* WEDNESDAY */}
-                        <div className="text-xl font-semibold text-gray-600 dark:text-gray-300">{formatRelative(day, Date.now(), { locale: customLocale })}</div>
+                        <div className="text-xl font-semibold text-gray-600 dark:text-gray-300">{formatRelative(day, Date.now(), { locale: getLocale(language) })}</div>
                     </div>
                     <WeatherIcon date={day} weather={weather?.records?.locations[0]?.location[0]?.weatherElement}/>
                 </div>

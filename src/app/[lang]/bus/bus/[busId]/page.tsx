@@ -2,8 +2,8 @@
 import Fade from '@/components/Animation/Fade';
 import GreenLineIcon from '@/components/BusIcons/GreenLineIcon';
 import RedLineIcon from '@/components/BusIcons/RedLineIcon';
-import supabase from '@/config/supabase';
-import { routes, stops } from '@/const/bus';
+import supabase, { BusScheduleDefinition } from '@/config/supabase';
+import { Route, Stop, routes, stops } from '@/const/bus';
 import useDictionary from '@/dictionaries/useDictionary';
 import { useSettings } from '@/hooks/contexts/settings';
 import { Button, Checkbox, Chip, Divider, LinearProgress } from '@mui/joy';
@@ -13,35 +13,13 @@ import { ChevronLeft, MapPin } from 'react-feather';
 import useSWR from 'swr';
 import NandaLineIcon from '@/components/BusIcons/NandaLineIcon';
 import RouteIcon from '@/components/BusIcons/RouteIcon';
+import useTime from '@/hooks/useTime';
 type PageProps = {
     params: { busId: string }
 }
 
-type BusDetails = {
-    route: {
-        title_zh: string;
-        title_en: string;
-        color: string;
-        code: string;
-        path: string[];
-    };
-    stopSchedule: {
-        stopDef: {
-            name_zh: string;
-            name_en: string;
-            code: string;
-        };
-        arrival: Date;
-    }[];
-    id: number;
-    route_name: string | null;
-    schedule: string[] | null;
-    vehicle: string | null;
-}
-
 const BusStop = ({ params: { busId } }: PageProps) => {
     const dict = useDictionary();
-    const [date, setDate] = useState(new Date());
 
     const { language } = useSettings();
     const { data: busSchedule, error, isLoading } = useSWR(['bus_schedule', busId], async ([table, busId]) => {
@@ -51,12 +29,7 @@ const BusStop = ({ params: { busId } }: PageProps) => {
     })
 
     //update time every 30 seconds
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setDate(new Date());
-        }, 1 * 1000);
-        return () => clearInterval(interval);
-    }, []);
+    const date = useTime();
 
     //get list of routes that pass this stop
 
