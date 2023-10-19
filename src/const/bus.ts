@@ -1,5 +1,7 @@
 import { BusScheduleDefinition } from "@/config/supabase";
 
+export const busDays = ["SUN", "MON", "TUE", "WED", "THUR", "FRI", "SAT"];
+
 export const stops: Stop[] = [
     { name_zh: '北校門口', name_en: 'North Gate', code: 'A1' },
     { name_zh: '綜二館', name_en: 'Gen II Building', code: 'A2' },
@@ -42,3 +44,14 @@ export type ScheduleItem = {
     arrival: Date;
     route: Route;
 } & BusScheduleDefinition;
+
+
+export const getVehicleDescription = (vehicle: string) => {
+    const vehicleTypes = {
+        '83': '83公車 $',
+        'B': '游覽車',
+        'S': '小巴'
+    }
+    if(!Object.keys(vehicleTypes).includes(vehicle)) return vehicle;
+    return vehicleTypes[vehicle as keyof typeof vehicleTypes];
+}

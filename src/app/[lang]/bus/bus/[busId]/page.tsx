@@ -3,7 +3,7 @@ import Fade from '@/components/Animation/Fade';
 import GreenLineIcon from '@/components/BusIcons/GreenLineIcon';
 import RedLineIcon from '@/components/BusIcons/RedLineIcon';
 import supabase, { BusScheduleDefinition } from '@/config/supabase';
-import { Route, Stop, routes, stops } from '@/const/bus';
+import { Route, Stop, getVehicleDescription, routes, stops } from '@/const/bus';
 import useDictionary from '@/dictionaries/useDictionary';
 import { useSettings } from '@/hooks/contexts/settings';
 import { Button, Checkbox, Chip, Divider, LinearProgress } from '@mui/joy';
@@ -53,7 +53,8 @@ const BusStop = ({ params: { busId } }: PageProps) => {
         <div>
             <Button variant='plain' startDecorator={<ChevronLeft/>} onClick={() => history.back()}>Back</Button>
             {busData && <>
-            <div className='flex flex-row gap-4 items-center px-6 py-4'>
+            <div className='px-6 py-4'>
+            <div className='flex flex-row gap-4 items-center '>
                 <RouteIcon route_name={busData.route_name!} />
                 <div className="flex flex-col">
                     <span className="text-lg font-bold">{busData.route.title_zh}</span>
@@ -62,6 +63,8 @@ const BusStop = ({ params: { busId } }: PageProps) => {
                 <p className='text-right flex-1'>
                     Now: {format(date, 'HH:mm')}
                 </p>
+            </div>
+            <p className='mt-2 first-letter:text-sm text-gray-500'>Scheduled • {getVehicleDescription(busData.vehicle)}</p>
             </div>
             <Divider/>
             <div className='flex flex-col divide-y divide-gray-200 dark:divide-neutral-800'>

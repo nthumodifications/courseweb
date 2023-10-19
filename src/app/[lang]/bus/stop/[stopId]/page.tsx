@@ -1,11 +1,11 @@
 'use client';;
 import Fade from '@/components/Animation/Fade';
 import supabase from '@/config/supabase';
-import { ScheduleItem, routes, stops } from '@/const/bus';
+import { ScheduleItem, busDays, getVehicleDescription, routes, stops } from '@/const/bus';
 import useDictionary from '@/dictionaries/useDictionary';
 import { useSettings } from '@/hooks/contexts/settings';
 import {Button, Divider, LinearProgress, Checkbox, Chip} from '@mui/joy';
-import { format, formatDistanceStrict } from 'date-fns';
+import { format, formatDistanceStrict, getDay } from 'date-fns';
 import { enUS, zhTW } from 'date-fns/locale';
 import Link from 'next/link';
 import { useEffect, useState, useMemo } from 'react';
@@ -49,8 +49,10 @@ const BusStop = ({ params: { stopId } }: PageProps) => {
 
 
     const schedulesToDisplay = useMemo(() => 
-        schedules.filter(mod => displayRoutes.includes(mod.route_name![0]))
-        .filter(mod => mod.arrival.getTime() > date.getTime()), 
+        schedules
+            .filter(mod => mod.days.includes(busDays[getDay(date)]))
+            .filter(mod => displayRoutes.includes(mod.route_name![0])) //Only show routes that are enabled
+            .filter(mod => mod.arrival.getTime() > date.getTime()), //Only show buses that are not yet arrived
     [schedules, date]);
 
     const getDisplayTime = (mod: ScheduleItem) => {
@@ -62,7 +64,7 @@ const BusStop = ({ params: { stopId } }: PageProps) => {
             return formatDistanceStrict(mod.arrival, date, { locale: language == 'zh' ? zhTW: enUS });
         }
     }
-
+    
     return <Fade>
         <div>
             {isLoading && <LinearProgress/>}
@@ -89,7 +91,7 @@ const BusStop = ({ params: { stopId } }: PageProps) => {
                         </div>
                         <div className='flex flex-col px-2 pt-1'>
                             <h4 className='font-bold'>{language == 'zh' ? mod.route.title_zh: mod.route.title_en}</h4>
-                            <h5 className='text-sm text-gray-500'>Scheduled</h5>
+                            <h5 className='text-sm text-gray-500'>Scheduled • {getVehicleDescription(mod.vehicle)}</h5>
                         </div>
                         <p className="font-semibold text-end pr-3 self-center">
                         {getDisplayTime(mod)}
