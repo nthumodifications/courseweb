@@ -239,6 +239,7 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes> }> = ({ cont
                         name="others"
                         options={[
                             { value: 'xclass', label: dict.course.refine['x-class'] },
+                            { value: 'extra_selection', label: 'Allows Extra Selection'}
                         ]}
                         label="Others"
                     />
