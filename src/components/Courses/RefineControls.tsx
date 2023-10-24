@@ -1,16 +1,27 @@
 import MultiSelectControl from '@/components/FormComponents/MultiSelectControl';
 import supabase from '@/config/supabase';
-import { departments } from '@/const/departments';
-import { scheduleTimeSlots } from '@/const/timetable';
 import useDictionary from '@/dictionaries/useDictionary';
-import { Accordion, AccordionDetails, AccordionSummary, Autocomplete, AutocompleteOption, Button, Chip, FormControl, FormLabel, List, ListItem, ListItemContent, ListItemDecorator, Sheet, Typography } from '@mui/joy';
-import { useEffect, useState, FC, use } from 'react';
-import { Controller, Control } from 'react-hook-form';
+import {
+    Accordion,
+    AccordionDetails,
+    AccordionSummary,
+    Button,
+    FormControl,
+    FormLabel,
+    List,
+    ListItem,
+    Sheet,
+    Typography,
+} from '@mui/joy';
+import { FC } from 'react';
+import { Control } from 'react-hook-form';
 import TimeslotSelectorControl from '../FormComponents/TimeslotSelectorControl';
 import useSWR from 'swr';
 import AutocompleteControl from '../FormComponents/AutocompleteControl';
 import DepartmentControl from '../FormComponents/DepartmentControl';
 import { useMediaQuery } from 'usehooks-ts';
+import { GECTypes, GETargetCodes } from '@/const/ge_target';
+import { useSettings } from '@/hooks/contexts/settings';
 
 export type RefineControlFormTypes = {
     textSearch: string,
@@ -24,10 +35,13 @@ export type RefineControlFormTypes = {
     timeslots: string[],
     venues: string[],
     disciplines: string[],
+    geTarget: {value: string, label: string}[],
+    gecDimensions: string[],
 }
 
-const RefineControls: FC<{ control: Control<RefineControlFormTypes> }> = ({ control }) => {
+const RefineControls: FC<{ control: Control<RefineControlFormTypes>, onClear: () => void }> = ({ control, onClear }) => {
     const dict = useDictionary();
+    const { language } = useSettings();
     const { data: firstSpecial = [], error: error1, isLoading: load1 } = useSWR('distinct_first_specialization', async () => {
         const { data = [], error } = await supabase.from('distinct_first_specialization').select('unique_first_specialization');
         if (error) throw error;
@@ -173,6 +187,31 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes> }> = ({ cont
                     </FormControl>
                 </ListItem>
                 <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
+                    <FormControl>
+                        <FormLabel>{"GE Target"}</FormLabel>
+                        <AutocompleteControl
+                            control={control}
+                            name="geTarget"
+                            multiple
+                            placeholder={"GE Target"}
+                            isOptionEqualToValue={(option, value) => option.value === value.value}
+                            options={GETargetCodes.map(code => ({ value: code.code, label: language == 'zh'? code.short_zh: code.short_en  }))}
+                        />
+                    </FormControl>
+                </ListItem>
+                <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
+                    <FormControl>
+                        <FormLabel>{"GEC Dimensions"}</FormLabel>
+                        <AutocompleteControl
+                            control={control}
+                            name="gecDimensions"
+                            multiple
+                            placeholder={"GE Dimensions"}
+                            options={GECTypes}
+                        />
+                    </FormControl>
+                </ListItem>
+                <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
                     <MultiSelectControl
                         control={control}
                         name="others"
@@ -189,8 +228,7 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes> }> = ({ cont
             variant="outlined"
             color="neutral"
             size="sm"
-            onClick={() => { }
-            }
+            onClick={onClear}
             sx={{ px: 1.5, mt: 1 }}
         >
             {dict.course.refine.clear}
