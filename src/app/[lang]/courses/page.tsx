@@ -47,18 +47,9 @@ const CoursePage: NextPage = () => {
     const { control, watch, setValue, reset } = useForm<RefineControlFormTypes>({
         defaultValues: useMemo(() => {
             if (searchParams.size > 0) { 
-                //Since we have to handle geTarget and department differently, special cases where have nested objects
+                //Since we have to handle department differently, special cases where have nested objects
                 //change them back to object
                 let params = queryString.parse(searchParams.toString(), { arrayFormat: 'index', parseNumbers: true })
-                if (params.geTarget && params.geTarget instanceof Array) 
-                //@ts-ignore
-                    params.geTarget = params.geTarget
-                        .map(code => {
-                            const getarget = GETargetCodes.find(mod => mod.code == code)
-                            return getarget ? { value: getarget?.code , label: getarget?.short_zh} : undefined
-                        })
-                        .filter(mod => !!mod) ?? []
-
                 if (params.department && params.department instanceof Array) {
                     //@ts-ignore
                     params.department = params.department
@@ -179,7 +170,6 @@ const CoursePage: NextPage = () => {
         //change them to string
         router.replace('?' + queryString.stringify({
             ...filters,
-            geTarget: filters.geTarget.map(mod => mod.value),
             department: filters.department.map(mod => mod.code),
         }, { arrayFormat: 'index' }))
 

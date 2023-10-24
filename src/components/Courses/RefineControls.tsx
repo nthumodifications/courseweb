@@ -187,29 +187,20 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes>, onClear: ()
                     </FormControl>
                 </ListItem>
                 <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
-                    <FormControl>
-                        <FormLabel>{"GE Target"}</FormLabel>
-                        <AutocompleteControl
-                            control={control}
-                            name="geTarget"
-                            multiple
-                            placeholder={"GE Target"}
-                            isOptionEqualToValue={(option, value) => option.value === value.value}
-                            options={GETargetCodes.map(code => ({ value: code.code, label: language == 'zh'? code.short_zh: code.short_en  }))}
-                        />
-                    </FormControl>
+                    <MultiSelectControl
+                        control={control}
+                        name="geTarget"
+                        options={GETargetCodes.map(code => ({ value: code.code, label: `${code.code} ${language == 'zh'? code.short_zh: code.short_en}`  }))}
+                        label={"GE Target"}
+                    />
                 </ListItem>
                 <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
-                    <FormControl>
-                        <FormLabel>{"GEC Dimensions"}</FormLabel>
-                        <AutocompleteControl
-                            control={control}
-                            name="gecDimensions"
-                            multiple
-                            placeholder={"GE Dimensions"}
-                            options={GECTypes}
-                        />
-                    </FormControl>
+                    <MultiSelectControl
+                        control={control}
+                        name="gecDimensions"
+                        options={GECTypes.map(type => ({ value: type, label: type}))}
+                        label={"GEC Dimensions"}
+                    />
                 </ListItem>
                 <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
                     <MultiSelectControl
