@@ -143,6 +143,10 @@ const CoursePage: NextPage = () => {
                     temp = temp
                         .or(`first_specialization.cs.{"${filters.firstSpecialization ?? ""}"},second_specialization.cs.{"${filters.secondSpecialization ?? ""}"}`)
                 }
+                if (filters.venues.length) {
+                    temp = temp
+                        .containedBy('venues', filters.venues)
+                }
                 if (filters.disciplines.length) {
                     temp = temp
                         .containedBy('cross_discipline', filters.disciplines)
@@ -155,6 +159,13 @@ const CoursePage: NextPage = () => {
                     temp = temp
                         .in('ge_target', filters.geTarget)
                 }
+                if (filters.timeslots.length) {
+                    console.log(filters.timeslots)
+                    temp = temp
+                        .containedBy('time_slots', filters.timeslots)
+                        // .overlaps('time_slots', filters.timeslots) //Overlap works if only one of their timeslots is selected
+                }
+
                 let { data: courses, error, count } = await temp.order('raw_id', { ascending: true }).range(index, index + 29)
                 // move scroll to top
                 setTotalCount(count ?? 0)
