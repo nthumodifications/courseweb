@@ -128,6 +128,58 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes>, onClear: ()
                     </AccordionDetails>
                 </Accordion>
                 <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
+                    <MultiSelectControl
+                        control={control}
+                        name="geTarget"
+                        options={GETargetCodes.map(code => ({ value: code.code, label: `${code.code} ${language == 'zh'? code.short_zh: code.short_en}`  }))}
+                        label={dict.course.refine.geTarget}
+                    />
+                </ListItem>
+                <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
+                    <MultiSelectControl
+                        control={control}
+                        name="gecDimensions"
+                        options={GECTypes.map(type => ({ value: type, label: type}))}
+                        label={dict.course.refine.gecDimensions}
+                    />
+                </ListItem>
+                <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
+                    <FormControl>
+                        <FormLabel>{dict.course.refine.compulsory_elective}</FormLabel>
+                        <AutocompleteControl
+                            control={control}
+                            name="className"
+                            placeholder={dict.course.refine.class}
+                            loading={load3}
+                            options={classList}
+                        />
+                    </FormControl>
+                </ListItem>
+                <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
+                    <MultiSelectControl
+                        control={control}
+                        name="others"
+                        options={[
+                            { value: 'xclass', label: dict.course.refine['x-class'] },
+                            { value: 'extra_selection', label: dict.course.refine['extra_selection']}
+                        ]}
+                        label={dict.course.refine.others}
+                    />
+                </ListItem>
+                <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
+                    <FormControl>
+                        <FormLabel>{dict.course.refine.venues}</FormLabel>
+                        <AutocompleteControl
+                            control={control}
+                            name="venues"
+                            multiple
+                            placeholder={dict.course.refine.venues}
+                            loading={load4}
+                            options={venues}
+                        />
+                    </FormControl>
+                </ListItem>
+                <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
                     <FormControl>
                         <FormLabel>{dict.course.refine.specialization}</FormLabel>
                         <AutocompleteControl
@@ -150,31 +202,6 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes>, onClear: ()
                 
                 <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
                     <FormControl>
-                        <FormLabel>{dict.course.refine.compulsory_elective}</FormLabel>
-                        <AutocompleteControl
-                            control={control}
-                            name="className"
-                            placeholder={dict.course.refine.class}
-                            loading={load3}
-                            options={classList}
-                        />
-                    </FormControl>
-                </ListItem>
-                <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
-                    <FormControl>
-                        <FormLabel>{dict.course.refine.venues}</FormLabel>
-                        <AutocompleteControl
-                            control={control}
-                            name="venues"
-                            multiple
-                            placeholder={dict.course.refine.venues}
-                            loading={load4}
-                            options={venues}
-                        />
-                    </FormControl>
-                </ListItem>
-                <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
-                    <FormControl>
                         <FormLabel>{dict.course.refine.cross_discipline}</FormLabel>
                         <AutocompleteControl
                             control={control}
@@ -185,33 +212,6 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes>, onClear: ()
                             options={disciplines}
                         />
                     </FormControl>
-                </ListItem>
-                <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
-                    <MultiSelectControl
-                        control={control}
-                        name="geTarget"
-                        options={GETargetCodes.map(code => ({ value: code.code, label: `${code.code} ${language == 'zh'? code.short_zh: code.short_en}`  }))}
-                        label={dict.course.refine.geTarget}
-                    />
-                </ListItem>
-                <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
-                    <MultiSelectControl
-                        control={control}
-                        name="gecDimensions"
-                        options={GECTypes.map(type => ({ value: type, label: type}))}
-                        label={dict.course.refine.gecDimensions}
-                    />
-                </ListItem>
-                <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
-                    <MultiSelectControl
-                        control={control}
-                        name="others"
-                        options={[
-                            { value: 'xclass', label: dict.course.refine['x-class'] },
-                            { value: 'extra_selection', label: dict.course.refine['extra_selection']}
-                        ]}
-                        label={dict.course.refine.others}
-                    />
                 </ListItem>
             </List>
         </div>
