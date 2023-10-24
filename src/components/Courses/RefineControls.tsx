@@ -1,10 +1,12 @@
 import MultiSelectControl from '@/components/FormComponents/MultiSelectControl';
 import supabase from '@/config/supabase';
 import { departments } from '@/const/departments';
+import { scheduleTimeSlots } from '@/const/timetable';
 import useDictionary from '@/dictionaries/useDictionary';
-import { Autocomplete, AutocompleteOption, Button, Chip, FormControl, FormLabel, List, ListItem, ListItemContent, ListItemDecorator, Sheet, Typography } from '@mui/joy';
+import { Accordion, AccordionDetails, AccordionSummary, Autocomplete, AutocompleteOption, Button, Chip, FormControl, FormLabel, List, ListItem, ListItemContent, ListItemDecorator, Sheet, Typography } from '@mui/joy';
 import { useEffect, useState, FC } from 'react';
 import { Controller, Control } from 'react-hook-form';
+import TimeslotSelectorControl from '../FormComponents/TimeslotSelectorControl';
 
 export type RefineControlFormTypes = {
     textSearch: string,
@@ -15,6 +17,7 @@ export type RefineControlFormTypes = {
     department: { code: string; name_zh: string; name_en: string; }[],
     firstSpecialization: string | null,
     secondSpecialization: string | null,
+    timeslots: string[]
 }
 
 const RefineControls: FC<{ control: Control<RefineControlFormTypes> }> = ({ control }) => {
@@ -46,7 +49,7 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes> }> = ({ cont
 
 
 
-    return <Sheet variant="outlined" sx={{ p: 2, borderRadius: 'sm', width: 300, height: '100%', overflow: 'auto' }}>
+    return <Sheet variant="outlined" sx={{ p: 2, borderRadius: 'sm', width: 300, height: '100%', maxHeight:'90vh', overflow: 'auto' }}>
         <Typography
             id="filter-status"
             sx={{
@@ -132,6 +135,12 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes> }> = ({ cont
                             )} />
                     </FormControl>
                 </ListItem>
+                <Accordion>
+                    <AccordionSummary>Time</AccordionSummary>
+                    <AccordionDetails>
+                        <TimeslotSelectorControl control={control} />
+                    </AccordionDetails>
+                </Accordion>
                 <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
                     <FormControl>
                         <FormLabel>{dict.course.refine.specialization}</FormLabel>
