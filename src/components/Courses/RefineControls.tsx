@@ -35,7 +35,7 @@ export type RefineControlFormTypes = {
     timeslots: string[],
     venues: string[],
     disciplines: string[],
-    geTarget: {value: string, label: string}[],
+    geTarget: string[],
     gecDimensions: string[],
 }
 

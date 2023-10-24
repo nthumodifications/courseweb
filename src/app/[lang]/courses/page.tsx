@@ -136,9 +136,24 @@ const CoursePage: NextPage = () => {
                 if (filters.others.includes('xclass'))
                     temp = temp
                         .textSearch(`備註`, `'X-Class'`)
+                if (filters.others.includes('extra_selection'))
+                        temp = temp
+                            .eq('no_extra_selection', false)
                 if (filters.firstSpecialization || filters.secondSpecialization) {
                     temp = temp
                         .or(`first_specialization.cs.{"${filters.firstSpecialization ?? ""}"},second_specialization.cs.{"${filters.secondSpecialization ?? ""}"}`)
+                }
+                if (filters.disciplines.length) {
+                    temp = temp
+                        .containedBy('cross_discipline', filters.disciplines)
+                }
+                if (filters.gecDimensions.length) {
+                    temp = temp
+                        .in('ge_type', filters.gecDimensions) //TODO: should consider changing name to gec_type
+                }
+                if (filters.geTarget.length) {
+                    temp = temp
+                        .in('ge_target', filters.geTarget)
                 }
                 let { data: courses, error, count } = await temp.order('raw_id', { ascending: true }).range(index, index + 29)
                 // move scroll to top
