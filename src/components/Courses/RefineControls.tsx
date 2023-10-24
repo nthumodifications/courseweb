@@ -122,7 +122,7 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes>, onClear: ()
                     </FormControl>
                 </ListItem>
                 <Accordion>
-                    <AccordionSummary>Time</AccordionSummary>
+                    <AccordionSummary>{dict.course.refine.time}</AccordionSummary>
                     <AccordionDetails>
                         <TimeslotSelectorControl control={control} />
                     </AccordionDetails>
@@ -162,12 +162,12 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes>, onClear: ()
                 </ListItem>
                 <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
                     <FormControl>
-                        <FormLabel>{"Venues"}</FormLabel>
+                        <FormLabel>{dict.course.refine.venues}</FormLabel>
                         <AutocompleteControl
                             control={control}
                             name="venues"
                             multiple
-                            placeholder={"Venues"}
+                            placeholder={dict.course.refine.venues}
                             loading={load4}
                             options={venues}
                         />
@@ -175,12 +175,12 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes>, onClear: ()
                 </ListItem>
                 <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
                     <FormControl>
-                        <FormLabel>{"Cross Discipline"}</FormLabel>
+                        <FormLabel>{dict.course.refine.cross_discipline}</FormLabel>
                         <AutocompleteControl
                             control={control}
                             name="disciplines"
                             multiple
-                            placeholder={"Cross Discipline"}
+                            placeholder={dict.course.refine.cross_discipline}
                             loading={load5}
                             options={disciplines}
                         />
@@ -191,7 +191,7 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes>, onClear: ()
                         control={control}
                         name="geTarget"
                         options={GETargetCodes.map(code => ({ value: code.code, label: `${code.code} ${language == 'zh'? code.short_zh: code.short_en}`  }))}
-                        label={"GE Target"}
+                        label={dict.course.refine.geTarget}
                     />
                 </ListItem>
                 <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
@@ -199,7 +199,7 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes>, onClear: ()
                         control={control}
                         name="gecDimensions"
                         options={GECTypes.map(type => ({ value: type, label: type}))}
-                        label={"GEC Dimensions"}
+                        label={dict.course.refine.gecDimensions}
                     />
                 </ListItem>
                 <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
@@ -208,9 +208,9 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes>, onClear: ()
                         name="others"
                         options={[
                             { value: 'xclass', label: dict.course.refine['x-class'] },
-                            { value: 'extra_selection', label: 'Allows Extra Selection'}
+                            { value: 'extra_selection', label: dict.course.refine['extra_selection']}
                         ]}
-                        label="Others"
+                        label={dict.course.refine.others}
                     />
                 </ListItem>
             </List>
