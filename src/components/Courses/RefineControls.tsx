@@ -1,10 +1,27 @@
 import MultiSelectControl from '@/components/FormComponents/MultiSelectControl';
 import supabase from '@/config/supabase';
-import { departments } from '@/const/departments';
 import useDictionary from '@/dictionaries/useDictionary';
-import { Autocomplete, AutocompleteOption, Button, Chip, FormControl, FormLabel, List, ListItem, ListItemContent, ListItemDecorator, Sheet, Typography } from '@mui/joy';
-import { useEffect, useState, FC } from 'react';
-import { Controller, Control } from 'react-hook-form';
+import {
+    Accordion,
+    AccordionDetails,
+    AccordionSummary,
+    Button,
+    FormControl,
+    FormLabel,
+    List,
+    ListItem,
+    Sheet,
+    Typography,
+} from '@mui/joy';
+import { FC } from 'react';
+import { Control } from 'react-hook-form';
+import TimeslotSelectorControl from '../FormComponents/TimeslotSelectorControl';
+import useSWR from 'swr';
+import AutocompleteControl from '../FormComponents/AutocompleteControl';
+import DepartmentControl from '../FormComponents/DepartmentControl';
+import { useMediaQuery } from 'usehooks-ts';
+import { GECTypes, GETargetCodes } from '@/const/ge_target';
+import { useSettings } from '@/hooks/contexts/settings';
 
 export type RefineControlFormTypes = {
     textSearch: string,
@@ -15,38 +32,46 @@ export type RefineControlFormTypes = {
     department: { code: string; name_zh: string; name_en: string; }[],
     firstSpecialization: string | null,
     secondSpecialization: string | null,
+    timeslots: string[],
+    venues: string[],
+    disciplines: string[],
+    geTarget: string[],
+    gecDimensions: string[],
 }
 
-const RefineControls: FC<{ control: Control<RefineControlFormTypes> }> = ({ control }) => {
+const RefineControls: FC<{ control: Control<RefineControlFormTypes>, onClear: () => void }> = ({ control, onClear }) => {
     const dict = useDictionary();
-    const [firstSpecial, setFirstSpecial] = useState<string[]>([]);
-    const [secondSpecial, setSecondSpecial] = useState<string[]>([]);
-    const [classList, setClassList] = useState<string[]>([]);
+    const { language } = useSettings();
+    const { data: firstSpecial = [], error: error1, isLoading: load1 } = useSWR('distinct_first_specialization', async () => {
+        const { data = [], error } = await supabase.from('distinct_first_specialization').select('unique_first_specialization');
+        if (error) throw error;
+        return data!.map(({ unique_first_specialization }) => unique_first_specialization!);
+    });
+    const { data: secondSpecial = [], error: error2, isLoading: load2 } = useSWR('distinct_second_specialization', async () => {
+        const { data = [], error } = await supabase.from('distinct_second_specialization').select('unique_second_specialization');
+        if (error) throw error;
+        return data!.map(({ unique_second_specialization }) => unique_second_specialization!);
+    });
+    const { data: classList = [], error: error3, isLoading: load3 } = useSWR('distinct_classes', async () => {
+        const { data = [], error } = await supabase.from('distinct_classes').select('class');
+        if (error) throw error;
+        return data!.map(({ class: className }) => className!);
+    });
+    const { data: venues = [], error: error4, isLoading: load4 } = useSWR('venues', async () => {
+        const { data = [], error } = await supabase.from('distinct_venues').select('venue');
+        if (error) throw error;
+        return data!.map(({ venue }) => venue!);
+    });
+    
+    const { data: disciplines = [], error: error5, isLoading: load5 } = useSWR('disciplines', async () => {
+        const { data = [], error } = await supabase.from('distinct_cross_discipline').select('discipline');
+        if (error) throw error;
+        return data!.map(({ discipline }) => discipline!);
+    });
 
-    useEffect(() => {
-        (async () => {
-            try {
-                const { data: firstSpecial = [], error: error1 } = await supabase.from('distinct_first_specialization').select('unique_first_specialization');
-                if (error1) throw error1;
-                else setFirstSpecial(firstSpecial?.map(({ unique_first_specialization }) => unique_first_specialization!) ?? []);
+    const isMobile = useMediaQuery('(max-width: 768px)');
 
-                const { data: secondSpecial = [], error: error2 } = await supabase.from('distinct_second_specialization').select('unique_second_specialization');
-                if (error2) throw error2;
-                else setSecondSpecial(secondSpecial?.map(({ unique_second_specialization }) => unique_second_specialization!) ?? []);
-
-                const { data: classList = [], error: error3 } = await supabase.from('distinct_classes').select('class');
-                if (error3) throw error3;
-                else setClassList(classList?.map(({ class: className }) => className!) ?? []);
-            }
-            catch (e) {
-                console.error(e);
-            }
-        })();
-    }, []);
-
-
-
-    return <Sheet variant="outlined" sx={{ p: 2, borderRadius: 'sm', width: 300, height: '100%', overflow: 'auto' }}>
+    return <Sheet variant="outlined" sx={{ p: isMobile?3:2, borderRadius: 'sm', width: isMobile?400:300, height: '100%', maxHeight:isMobile?'100vh':'90vh', overflow: 'auto', position: isMobile?'':'absolute', bottom: '8px', right: '8px' }}>
         <Typography
             id="filter-status"
             sx={{
@@ -93,91 +118,41 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes> }> = ({ cont
                 <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
                     <FormControl>
                         <FormLabel>{dict.course.refine.department}</FormLabel>
-                        <Controller
-                            control={control}
-                            name="department"
-                            render={({ field: { value, onChange } }) => (
-                                <Autocomplete
-                                    placeholder={dict.course.refine.department}
-                                    value={value}
-                                    onChange={(e, v) => onChange(v)}
-                                    multiple={true}
-                                    getOptionLabel={(option) => `${option.code} ${option.name_zh} ${option.name_en}`}
-                                    isOptionEqualToValue={(option, value) => option.code === value.code}
-                                    renderTags={(value, getTagProps) =>
-                                        value.map((option, index) =>
-                                            <Chip
-                                                variant="soft"
-                                                {...getTagProps({ index })}
-                                            >
-                                                {`${option.code}`}
-                                            </Chip>
-                                        )
-                                    }
-                                    renderOption={(props, option) => (
-                                        <AutocompleteOption {...props}>
-                                            <ListItemDecorator>
-                                                <span className="text-sm font-semibold">{option.code}</span>
-                                            </ListItemDecorator>
-                                            <ListItemContent sx={{ fontSize: 'sm' }}>
-                                                <Typography level="body-xs">
-                                                    {option.name_zh} {option.name_en}
-                                                </Typography>
-                                            </ListItemContent>
-                                        </AutocompleteOption>
-                                    )}
-                                    options={departments}
-                                    sx={{ width: 250 }}
-                                />
-                            )} />
+                        <DepartmentControl control={control} />
                     </FormControl>
+                </ListItem>
+                <Accordion>
+                    <AccordionSummary>{dict.course.refine.time}</AccordionSummary>
+                    <AccordionDetails>
+                        <TimeslotSelectorControl control={control} />
+                    </AccordionDetails>
+                </Accordion>
+                <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
+                    <MultiSelectControl
+                        control={control}
+                        name="geTarget"
+                        options={GETargetCodes.map(code => ({ value: code.code, label: `${code.code} ${language == 'zh'? code.short_zh: code.short_en}`  }))}
+                        label={dict.course.refine.geTarget}
+                    />
                 </ListItem>
                 <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
-                    <FormControl>
-                        <FormLabel>{dict.course.refine.specialization}</FormLabel>
-                        <Controller
-                            control={control}
-                            name="firstSpecialization"
-                            render={({ field: { value, onChange } }) => (
-                                <Autocomplete
-                                    placeholder={dict.course.refine.firstSpecialization}
-                                    value={value}
-                                    onChange={(e, v) => onChange(v)}
-                                    options={firstSpecial}
-                                    sx={{ width: 250 }}
-                                />
-                            )} />
-                        <Controller
-                            control={control}
-                            name="secondSpecialization"
-                            render={({ field: { value, onChange } }) => (
-                                <Autocomplete
-                                    placeholder={dict.course.refine.secondSpecialization}
-                                    value={value}
-                                    onChange={(e, v) => onChange(v)}
-                                    options={secondSpecial}
-                                    sx={{ width: 250 }}
-                                />
-                            )} />
-
-                    </FormControl>
+                    <MultiSelectControl
+                        control={control}
+                        name="gecDimensions"
+                        options={GECTypes.map(type => ({ value: type, label: type}))}
+                        label={dict.course.refine.gecDimensions}
+                    />
                 </ListItem>
-                
                 <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
                     <FormControl>
                         <FormLabel>{dict.course.refine.compulsory_elective}</FormLabel>
-                        <Controller
+                        <AutocompleteControl
                             control={control}
                             name="className"
-                            render={({ field: { value, onChange } }) => (
-                                <Autocomplete
-                                    placeholder={dict.course.refine.class}
-                                    value={value}
-                                    onChange={(e, v) => onChange(v)}
-                                    options={classList}
-                                    sx={{ width: 250 }}
-                                />
-                            )} />
+                            placeholder={dict.course.refine.class}
+                            loading={load3}
+                            options={classList}
+                        />
                     </FormControl>
                 </ListItem>
                 <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
@@ -186,9 +161,57 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes> }> = ({ cont
                         name="others"
                         options={[
                             { value: 'xclass', label: dict.course.refine['x-class'] },
+                            { value: 'extra_selection', label: dict.course.refine['extra_selection']}
                         ]}
-                        label="Others"
+                        label={dict.course.refine.others}
                     />
+                </ListItem>
+                <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
+                    <FormControl>
+                        <FormLabel>{dict.course.refine.venues}</FormLabel>
+                        <AutocompleteControl
+                            control={control}
+                            name="venues"
+                            multiple
+                            placeholder={dict.course.refine.venues}
+                            loading={load4}
+                            options={venues}
+                        />
+                    </FormControl>
+                </ListItem>
+                <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
+                    <FormControl>
+                        <FormLabel>{dict.course.refine.specialization}</FormLabel>
+                        <AutocompleteControl
+                            control={control}
+                            name="firstSpecialization"
+                            placeholder={dict.course.refine.firstSpecialization}
+                            loading={load1}
+                            options={firstSpecial}
+                        />
+                        <AutocompleteControl
+                            control={control}
+                            name="secondSpecialization"
+                            placeholder={dict.course.refine.secondSpecialization}
+                            loading={load2}
+                            options={secondSpecial}
+                        />
+
+                    </FormControl>
+                </ListItem>
+                
+                <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
+                    <FormControl>
+                        <FormLabel>{dict.course.refine.cross_discipline}</FormLabel>
+                        <AutocompleteControl
+                            control={control}
+                            name="disciplines"
+                            multiple
+                            placeholder={dict.course.refine.cross_discipline}
+                            loading={load5}
+                            options={disciplines}
+                        />
+                    </FormControl>
                 </ListItem>
             </List>
         </div>
@@ -196,8 +219,7 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes> }> = ({ cont
             variant="outlined"
             color="neutral"
             size="sm"
-            onClick={() => { }
-            }
+            onClick={onClear}
             sx={{ px: 1.5, mt: 1 }}
         >
             {dict.course.refine.clear}

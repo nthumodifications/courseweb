@@ -24,7 +24,14 @@
             "secondSpecialization": "Second Specialization",
             "compulsory_elective": "Compulsory & Elective",
             "class": "Class",
+            "venues": "Venues",
+            "time": "Time",
+            "cross_discipline": "Cross Discipline",
+            "geTarget": "GE Target",
+            "gecDimensions": "GEC Dimensions",
+            "extra_selection": "Allows Extra Selection",
             "x-class": "X-Class",
+            "others": "Others",
             "clear": "Clear All"
         },
         "details": {

@@ -4,7 +4,7 @@ import InputControl from "@/components/FormComponents/InputControl";
 import supabase, { CourseDefinition } from "@/config/supabase";
 import { Button, Divider, Drawer, IconButton, LinearProgress, Stack } from "@mui/joy";
 import { NextPage } from "next";
-import { useEffect, useState, Fragment, useRef } from "react";
+import { useEffect, useState, Fragment, useRef, use, useMemo } from "react";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter, X } from "react-feather";
 import { useForm } from "react-hook-form";
 import { useDebouncedCallback } from "use-debounce";
@@ -12,7 +12,26 @@ import { useMediaQuery } from 'usehooks-ts';
 import { arrayRange } from '@/helpers/array';
 import RefineControls, { RefineControlFormTypes } from '@/components/Courses/RefineControls';
 import useDictionary from "@/dictionaries/useDictionary";
+import { useRouter, useSearchParams } from "next/navigation";
+import queryString from 'query-string';
+import { GETargetCodes } from "@/const/ge_target";
+import { departments } from "@/const/departments";
 
+const emptyFilters: RefineControlFormTypes = {
+    textSearch: '',
+    level: [],
+    others: [],
+    language: [],
+    department: [],
+    venues: [],
+    timeslots: [],
+    disciplines: [],
+    gecDimensions: [],
+    geTarget: [],
+    className: null,
+    firstSpecialization: null,
+    secondSpecialization: null,
+}
 
 const CoursePage: NextPage = () => {
     const dict = useDictionary();
@@ -22,21 +41,33 @@ const CoursePage: NextPage = () => {
     const [headIndex, setHeadIndex] = useState<number>(0);
     const [open, setOpen] = useState<boolean>(false);
     const scrollRef = useRef<HTMLDivElement>(null);
-    const { control, watch, setValue } = useForm<RefineControlFormTypes>({
-        defaultValues: {
-            textSearch: '',
-            level: [],
-            others: [],
-            language: [],
-            department: [],
-            className: null,
-            firstSpecialization: null,
-            secondSpecialization: null,
-        }
+    const router = useRouter();
+    const searchParams = useSearchParams();
+
+    const { control, watch, setValue, reset } = useForm<RefineControlFormTypes>({
+        defaultValues: useMemo(() => {
+            if (searchParams.size > 0) { 
+                //Since we have to handle department differently, special cases where have nested objects
+                //change them back to object
+                let params = queryString.parse(searchParams.toString(), { arrayFormat: 'index', parseNumbers: true })
+                if (params.department && params.department instanceof Array) {
+                    //@ts-ignore
+                    params.department = params.department
+                        .map(code => {
+                            const department = departments.find(mod => mod.code == code)
+                            return department ? { code: department?.code, name_zh: department?.name_zh, name_en: department?.name_en } : undefined
+                        })
+                        .filter(mod => !!mod) ?? []
+                }
+                return Object.assign({}, emptyFilters, params)
+            }
+            else return emptyFilters;
+        }, [])
     })
 
     const isMobile = useMediaQuery('(max-width: 768px)');
 
+    //Pagination
     const paginationRange = (current: number, total: number, max: number = 7) => {
         if (total <= max) return arrayRange(1, total);
         let start = Math.max(1, current - Math.floor(max / 2));
@@ -81,6 +112,7 @@ const CoursePage: NextPage = () => {
         scrollRef.current?.scrollTo(0, 0);
         (async () => {
             setLoading(true);
+            //Query for courses
             try {
                 let temp = supabase
                     .from('courses')
@@ -104,10 +136,36 @@ const CoursePage: NextPage = () => {
                 if (filters.others.includes('xclass'))
                     temp = temp
                         .textSearch(`備註`, `'X-Class'`)
-                if(filters.firstSpecialization || filters.secondSpecialization) {
+                if (filters.others.includes('extra_selection'))
+                        temp = temp
+                            .eq('no_extra_selection', false)
+                if (filters.firstSpecialization || filters.secondSpecialization) {
                     temp = temp
-                        .or(`first_specialization.cs.{"${filters.firstSpecialization?? ""}"},second_specialization.cs.{"${filters.secondSpecialization ?? ""}"}`)
+                        .or(`first_specialization.cs.{"${filters.firstSpecialization ?? ""}"},second_specialization.cs.{"${filters.secondSpecialization ?? ""}"}`)
                 }
+                if (filters.venues.length) {
+                    temp = temp
+                        .containedBy('venues', filters.venues)
+                }
+                if (filters.disciplines.length) {
+                    temp = temp
+                        .containedBy('cross_discipline', filters.disciplines)
+                }
+                if (filters.gecDimensions.length) {
+                    temp = temp
+                        .in('ge_type', filters.gecDimensions) //TODO: should consider changing name to gec_type
+                }
+                if (filters.geTarget.length) {
+                    temp = temp
+                        .in('ge_target', filters.geTarget)
+                }
+                if (filters.timeslots.length) {
+                    console.log(filters.timeslots)
+                    temp = temp
+                        .containedBy('time_slots', filters.timeslots)
+                        // .overlaps('time_slots', filters.timeslots) //Overlap works if only one of their timeslots is selected
+                }
+
                 let { data: courses, error, count } = await temp.order('raw_id', { ascending: true }).range(index, index + 29)
                 // move scroll to top
                 setTotalCount(count ?? 0)
@@ -126,9 +184,21 @@ const CoursePage: NextPage = () => {
     }
     const searchQueryFunc = useDebouncedCallback(searchQuery, 1000);
 
-    //filters
+    const handleClear = () => {
+        reset(emptyFilters)
+    }
+
+    //Trigger Search When Filters Change
     useEffect(() => {
         searchQueryFunc(filters);
+        //Save filters to URL
+        //But we have to handle geTarget and department differently, special cases where have nested objects
+        //change them to string
+        router.replace('?' + queryString.stringify({
+            ...filters,
+            department: filters.department.map(mod => mod.code),
+        }, { arrayFormat: 'index' }))
+
     }, [JSON.stringify(filters)])
 
 
@@ -185,7 +255,7 @@ const CoursePage: NextPage = () => {
                     </Stack>
                 </div>
             </div>
-            {!isMobile && <RefineControls control={control} />}
+            {!isMobile && <RefineControls control={control} onClear={handleClear} />}
             {isMobile && <Drawer
                 size="md"
                 variant="plain"
@@ -201,7 +271,7 @@ const CoursePage: NextPage = () => {
                     },
                 }}
             >
-                <RefineControls control={control} />
+                <RefineControls control={control} onClear={handleClear}/>
             </Drawer>}
         </div>
 
