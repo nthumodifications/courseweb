@@ -20,6 +20,7 @@ export type RefineControlFormTypes = {
     secondSpecialization: string | null,
     timeslots: string[],
     venues: string[],
+    disciplines: string[],
 }
 
 const RefineControls: FC<{ control: Control<RefineControlFormTypes> }> = ({ control }) => {
@@ -43,6 +44,12 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes> }> = ({ cont
         const { data = [], error } = await supabase.from('distinct_venues').select('venue');
         if (error) throw error;
         return data!.map(({ venue }) => venue!);
+    });
+    
+    const { data: disciplines = [], error: error5, isLoading: load5 } = useSWR('disciplines', async () => {
+        const { data = [], error } = await supabase.from('distinct_cross_discipline').select('discipline');
+        if (error) throw error;
+        return data!.map(({ discipline }) => discipline!);
     });
 
     return <Sheet variant="outlined" sx={{ p: 2, borderRadius: 'sm', width: 300, height: '100%', maxHeight:'90vh', overflow: 'auto' }}>
@@ -202,6 +209,25 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes> }> = ({ cont
                                     loading={load4}
                                     onChange={(e, v) => onChange(v)}
                                     options={venues}
+                                    sx={{ width: 250 }}
+                                />
+                            )} />
+                    </FormControl>
+                </ListItem>
+                <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
+                    <FormControl>
+                        <FormLabel>{"Cross Discipline"}</FormLabel>
+                        <Controller
+                            control={control}
+                            name="disciplines"
+                            render={({ field: { value, onChange } }) => (
+                                <Autocomplete
+                                    multiple
+                                    placeholder={"Cross Discipline"}
+                                    value={value}
+                                    loading={load5}
+                                    onChange={(e, v) => onChange(v)}
+                                    options={disciplines}
                                     sx={{ width: 250 }}
                                 />
                             )} />

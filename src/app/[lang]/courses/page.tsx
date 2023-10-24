@@ -31,6 +31,7 @@ const CoursePage: NextPage = () => {
             department: [],
             venues: [],
             timeslots: [],
+            disciplines: [],
             className: null,
             firstSpecialization: null,
             secondSpecialization: null,
