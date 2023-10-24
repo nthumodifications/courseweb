@@ -1,5 +1,6 @@
 import {scheduleTimeSlots} from '@/const/timetable';
 import {FC} from 'react';
+
 const TimeslotSelector: FC<{ value: string[], onChange: (newvalue: string[]) => void }> = ({ value = [], onChange }) => {
     const days = ['M', 'T', 'W', 'R', 'F', 'S'];
 
@@ -8,10 +9,8 @@ const TimeslotSelector: FC<{ value: string[], onChange: (newvalue: string[]) => 
     }
 
     const handleChange = (timecode: string) => () => {
-        console.log(timecode)
-
         if(isSelected(timecode)) {
-            onChange(value.filter(tc => tc == timecode))
+            onChange(value.filter(tc => tc != timecode))
         } else {
             onChange([...value, timecode])
         }
