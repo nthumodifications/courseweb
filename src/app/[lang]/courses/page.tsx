@@ -29,6 +29,8 @@ const CoursePage: NextPage = () => {
             others: [],
             language: [],
             department: [],
+            venues: [],
+            timeslots: [],
             className: null,
             firstSpecialization: null,
             secondSpecialization: null,

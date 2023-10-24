@@ -7,6 +7,7 @@ import { Accordion, AccordionDetails, AccordionSummary, Autocomplete, Autocomple
 import { useEffect, useState, FC } from 'react';
 import { Controller, Control } from 'react-hook-form';
 import TimeslotSelectorControl from '../FormComponents/TimeslotSelectorControl';
+import useSWR from 'swr';
 
 export type RefineControlFormTypes = {
     textSearch: string,
@@ -17,37 +18,32 @@ export type RefineControlFormTypes = {
     department: { code: string; name_zh: string; name_en: string; }[],
     firstSpecialization: string | null,
     secondSpecialization: string | null,
-    timeslots: string[]
+    timeslots: string[],
+    venues: string[],
 }
 
 const RefineControls: FC<{ control: Control<RefineControlFormTypes> }> = ({ control }) => {
     const dict = useDictionary();
-    const [firstSpecial, setFirstSpecial] = useState<string[]>([]);
-    const [secondSpecial, setSecondSpecial] = useState<string[]>([]);
-    const [classList, setClassList] = useState<string[]>([]);
-
-    useEffect(() => {
-        (async () => {
-            try {
-                const { data: firstSpecial = [], error: error1 } = await supabase.from('distinct_first_specialization').select('unique_first_specialization');
-                if (error1) throw error1;
-                else setFirstSpecial(firstSpecial?.map(({ unique_first_specialization }) => unique_first_specialization!) ?? []);
-
-                const { data: secondSpecial = [], error: error2 } = await supabase.from('distinct_second_specialization').select('unique_second_specialization');
-                if (error2) throw error2;
-                else setSecondSpecial(secondSpecial?.map(({ unique_second_specialization }) => unique_second_specialization!) ?? []);
-
-                const { data: classList = [], error: error3 } = await supabase.from('distinct_classes').select('class');
-                if (error3) throw error3;
-                else setClassList(classList?.map(({ class: className }) => className!) ?? []);
-            }
-            catch (e) {
-                console.error(e);
-            }
-        })();
-    }, []);
-
-
+    const { data: firstSpecial = [], error: error1, isLoading: load1 } = useSWR('distinct_first_specialization', async () => {
+        const { data = [], error } = await supabase.from('distinct_first_specialization').select('unique_first_specialization');
+        if (error) throw error;
+        return data!.map(({ unique_first_specialization }) => unique_first_specialization!);
+    });
+    const { data: secondSpecial = [], error: error2, isLoading: load2 } = useSWR('distinct_second_specialization', async () => {
+        const { data = [], error } = await supabase.from('distinct_second_specialization').select('unique_second_specialization');
+        if (error) throw error;
+        return data!.map(({ unique_second_specialization }) => unique_second_specialization!);
+    });
+    const { data: classList = [], error: error3, isLoading: load3 } = useSWR('distinct_classes', async () => {
+        const { data = [], error } = await supabase.from('distinct_classes').select('class');
+        if (error) throw error;
+        return data!.map(({ class: className }) => className!);
+    });
+    const { data: venues = [], error: error4, isLoading: load4 } = useSWR('venues', async () => {
+        const { data = [], error } = await supabase.from('distinct_venues').select('venue');
+        if (error) throw error;
+        return data!.map(({ venue }) => venue!);
+    });
 
     return <Sheet variant="outlined" sx={{ p: 2, borderRadius: 'sm', width: 300, height: '100%', maxHeight:'90vh', overflow: 'auto' }}>
         <Typography
@@ -152,6 +148,7 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes> }> = ({ cont
                                     placeholder={dict.course.refine.firstSpecialization}
                                     value={value}
                                     onChange={(e, v) => onChange(v)}
+                                    loading={load1}
                                     options={firstSpecial}
                                     sx={{ width: 250 }}
                                 />
@@ -164,6 +161,7 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes> }> = ({ cont
                                     placeholder={dict.course.refine.secondSpecialization}
                                     value={value}
                                     onChange={(e, v) => onChange(v)}
+                                    loading={load2}
                                     options={secondSpecial}
                                     sx={{ width: 250 }}
                                 />
@@ -183,7 +181,27 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes> }> = ({ cont
                                     placeholder={dict.course.refine.class}
                                     value={value}
                                     onChange={(e, v) => onChange(v)}
+                                    loading={load3}
                                     options={classList}
+                                    sx={{ width: 250 }}
+                                />
+                            )} />
+                    </FormControl>
+                </ListItem>
+                <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
+                    <FormControl>
+                        <FormLabel>{"Venues"}</FormLabel>
+                        <Controller
+                            control={control}
+                            name="venues"
+                            render={({ field: { value, onChange } }) => (
+                                <Autocomplete
+                                    multiple
+                                    placeholder={"Venues"}
+                                    value={value}
+                                    loading={load4}
+                                    onChange={(e, v) => onChange(v)}
+                                    options={venues}
                                     sx={{ width: 250 }}
                                 />
                             )} />
