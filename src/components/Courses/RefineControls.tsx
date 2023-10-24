@@ -4,10 +4,13 @@ import { departments } from '@/const/departments';
 import { scheduleTimeSlots } from '@/const/timetable';
 import useDictionary from '@/dictionaries/useDictionary';
 import { Accordion, AccordionDetails, AccordionSummary, Autocomplete, AutocompleteOption, Button, Chip, FormControl, FormLabel, List, ListItem, ListItemContent, ListItemDecorator, Sheet, Typography } from '@mui/joy';
-import { useEffect, useState, FC } from 'react';
+import { useEffect, useState, FC, use } from 'react';
 import { Controller, Control } from 'react-hook-form';
 import TimeslotSelectorControl from '../FormComponents/TimeslotSelectorControl';
 import useSWR from 'swr';
+import AutocompleteControl from '../FormComponents/AutocompleteControl';
+import DepartmentControl from '../FormComponents/DepartmentControl';
+import { useMediaQuery } from 'usehooks-ts';
 
 export type RefineControlFormTypes = {
     textSearch: string,
@@ -52,7 +55,9 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes> }> = ({ cont
         return data!.map(({ discipline }) => discipline!);
     });
 
-    return <Sheet variant="outlined" sx={{ p: 2, borderRadius: 'sm', width: 300, height: '100%', maxHeight:'90vh', overflow: 'auto' }}>
+    const isMobile = useMediaQuery('(max-width: 768px)');
+
+    return <Sheet variant="outlined" sx={{ p: isMobile?3:2, borderRadius: 'sm', width: isMobile?400:300, height: '100%', maxHeight:isMobile?'100vh':'90vh', overflow: 'auto', position: isMobile?'':'absolute', bottom: '8px', right: '8px' }}>
         <Typography
             id="filter-status"
             sx={{
@@ -99,43 +104,7 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes> }> = ({ cont
                 <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
                     <FormControl>
                         <FormLabel>{dict.course.refine.department}</FormLabel>
-                        <Controller
-                            control={control}
-                            name="department"
-                            render={({ field: { value, onChange } }) => (
-                                <Autocomplete
-                                    placeholder={dict.course.refine.department}
-                                    value={value}
-                                    onChange={(e, v) => onChange(v)}
-                                    multiple={true}
-                                    getOptionLabel={(option) => `${option.code} ${option.name_zh} ${option.name_en}`}
-                                    isOptionEqualToValue={(option, value) => option.code === value.code}
-                                    renderTags={(value, getTagProps) =>
-                                        value.map((option, index) =>
-                                            <Chip
-                                                variant="soft"
-                                                {...getTagProps({ index })}
-                                            >
-                                                {`${option.code}`}
-                                            </Chip>
-                                        )
-                                    }
-                                    renderOption={(props, option) => (
-                                        <AutocompleteOption {...props}>
-                                            <ListItemDecorator>
-                                                <span className="text-sm font-semibold">{option.code}</span>
-                                            </ListItemDecorator>
-                                            <ListItemContent sx={{ fontSize: 'sm' }}>
-                                                <Typography level="body-xs">
-                                                    {option.name_zh} {option.name_en}
-                                                </Typography>
-                                            </ListItemContent>
-                                        </AutocompleteOption>
-                                    )}
-                                    options={departments}
-                                    sx={{ width: 250 }}
-                                />
-                            )} />
+                        <DepartmentControl control={control} />
                     </FormControl>
                 </ListItem>
                 <Accordion>
@@ -147,32 +116,20 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes> }> = ({ cont
                 <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
                     <FormControl>
                         <FormLabel>{dict.course.refine.specialization}</FormLabel>
-                        <Controller
+                        <AutocompleteControl
                             control={control}
                             name="firstSpecialization"
-                            render={({ field: { value, onChange } }) => (
-                                <Autocomplete
-                                    placeholder={dict.course.refine.firstSpecialization}
-                                    value={value}
-                                    onChange={(e, v) => onChange(v)}
-                                    loading={load1}
-                                    options={firstSpecial}
-                                    sx={{ width: 250 }}
-                                />
-                            )} />
-                        <Controller
+                            placeholder={dict.course.refine.firstSpecialization}
+                            loading={load1}
+                            options={firstSpecial}
+                        />
+                        <AutocompleteControl
                             control={control}
                             name="secondSpecialization"
-                            render={({ field: { value, onChange } }) => (
-                                <Autocomplete
-                                    placeholder={dict.course.refine.secondSpecialization}
-                                    value={value}
-                                    onChange={(e, v) => onChange(v)}
-                                    loading={load2}
-                                    options={secondSpecial}
-                                    sx={{ width: 250 }}
-                                />
-                            )} />
+                            placeholder={dict.course.refine.secondSpecialization}
+                            loading={load2}
+                            options={secondSpecial}
+                        />
 
                     </FormControl>
                 </ListItem>
@@ -180,57 +137,39 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes> }> = ({ cont
                 <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
                     <FormControl>
                         <FormLabel>{dict.course.refine.compulsory_elective}</FormLabel>
-                        <Controller
+                        <AutocompleteControl
                             control={control}
                             name="className"
-                            render={({ field: { value, onChange } }) => (
-                                <Autocomplete
-                                    placeholder={dict.course.refine.class}
-                                    value={value}
-                                    onChange={(e, v) => onChange(v)}
-                                    loading={load3}
-                                    options={classList}
-                                    sx={{ width: 250 }}
-                                />
-                            )} />
+                            placeholder={dict.course.refine.class}
+                            loading={load3}
+                            options={classList}
+                        />
                     </FormControl>
                 </ListItem>
                 <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
                     <FormControl>
                         <FormLabel>{"Venues"}</FormLabel>
-                        <Controller
+                        <AutocompleteControl
                             control={control}
                             name="venues"
-                            render={({ field: { value, onChange } }) => (
-                                <Autocomplete
-                                    multiple
-                                    placeholder={"Venues"}
-                                    value={value}
-                                    loading={load4}
-                                    onChange={(e, v) => onChange(v)}
-                                    options={venues}
-                                    sx={{ width: 250 }}
-                                />
-                            )} />
+                            multiple
+                            placeholder={"Venues"}
+                            loading={load4}
+                            options={venues}
+                        />
                     </FormControl>
                 </ListItem>
                 <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
                     <FormControl>
                         <FormLabel>{"Cross Discipline"}</FormLabel>
-                        <Controller
+                        <AutocompleteControl
                             control={control}
                             name="disciplines"
-                            render={({ field: { value, onChange } }) => (
-                                <Autocomplete
-                                    multiple
-                                    placeholder={"Cross Discipline"}
-                                    value={value}
-                                    loading={load5}
-                                    onChange={(e, v) => onChange(v)}
-                                    options={disciplines}
-                                    sx={{ width: 250 }}
-                                />
-                            )} />
+                            multiple
+                            placeholder={"Cross Discipline"}
+                            loading={load5}
+                            options={disciplines}
+                        />
                     </FormControl>
                 </ListItem>
                 <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
