@@ -1,6 +1,6 @@
 "use client";
 import { useParams, usePathname, useRouter } from "next/navigation";
-import { FC, PropsWithChildren, createContext, useContext, useEffect, useState } from "react";
+import { FC, PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useLocalStorage } from 'usehooks-ts';
 import { useCookies } from 'react-cookie';
 import { Language, SettingsType } from "@/types/settings";
@@ -55,11 +55,11 @@ const useSettingsProvider = () => {
         window.location.reload();
     }
 
+    const darkMode = useMemo(() => cookies.theme == "dark", [cookies]);
+
     return {
         language,
-        get darkMode() {
-            return cookies.theme == "dark";
-        },
+        darkMode,
         courses,
         setSettings,
         setCourses,
