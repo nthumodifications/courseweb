@@ -3,7 +3,9 @@ import TimeslotHeader from '@/components/Timetable/TimeslotHeader';
 import TimetableSlot from '@/components/Timetable/TimetableSlot';
 import { scheduleTimeSlots } from '@/const/timetable';
 import {CourseTimeslotData, TimeSlot} from '@/types/timetable';
-import {FC, useLayoutEffect, useRef, useState} from 'react';
+import {FC, useLayoutEffect, useMemo, useRef, useState} from 'react';
+
+type CourseTimeslotDataWithFraction = CourseTimeslotData & { fraction: number, fractionIndex: number, timeSlots: string[] };
 
 const Timetable: FC<{ timetableData: CourseTimeslotData[] }> = ({ timetableData = [] }) => {
     const headerRow = useRef<HTMLTableCellElement>(null);
@@ -23,7 +25,7 @@ const Timetable: FC<{ timetableData: CourseTimeslotData[] }> = ({ timetableData 
         }
       })
     }
-  
+    
     useLayoutEffect(() => {
       if(typeof window  == "undefined") return ;
       updateSize();
@@ -31,8 +33,38 @@ const Timetable: FC<{ timetableData: CourseTimeslotData[] }> = ({ timetableData 
       return () => 
         window.removeEventListener("resize", updateSize);
     }, []);
+    
+    const timetableDataWithFraction = useMemo(() => {
+      const slotSums = timetableData.reduce((acc, cur) => {
+        // get the array of [${dayofWeek}${starttime}, ${dayofWeek}${starttime+1}, ...${dayofWeek}${endtime}]
+        const timeSlots = Array.from({ length: cur.endTime - cur.startTime + 1 }, (_, i) => `${'MTWRFS'[cur.dayOfWeek]}${cur.startTime + i}`);
+        // add the array to the accumulator
+        acc.push(...timeSlots);
+        return acc;
+      }, [] as string[]);
 
+      // calculate slots that are overlapped
+      const slotCounts = slotSums.reduce((acc, cur) => {
+        acc[cur] = (acc[cur] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
 
+      // reduce through the courses, get the maximum of the sum of overlapped slots, which is their fraction.
+      // if this is the first course with this fraction, set the fractionIndex to 1
+      // else if there is a previous course that has at least one of timeslots overlapping, set the fractionIndex to the previous course's fractionIndex + 1
+      // else set the fractionIndex to 1
+      const timetableDataWithFraction = timetableData.reduce((acc, cur) => {
+        const timeSlots = Array.from({ length: cur.endTime - cur.startTime + 1 }, (_, i) => `${'MTWRFS'[cur.dayOfWeek]}${cur.startTime + i}`);
+        const fraction = Math.max(...timeSlots.map(slot => slotCounts[slot]));
+        const fractionIndex = acc.filter(course => timeSlots.some(slot => course.timeSlots.includes(slot))).length > 0 
+          ? acc.filter(course => timeSlots.some(slot => course.timeSlots.includes(slot)))[0].fractionIndex + 1
+          : 1;
+        acc.push({ ...cur, fraction, fractionIndex, timeSlots });
+        return acc;
+      }, [] as CourseTimeslotDataWithFraction[]);
+
+      return timetableDataWithFraction
+    }, [timetableData]);    
 
     return (
         <div className="mb-32 text-center lg:mb-0 w-full">
@@ -56,7 +88,15 @@ const Timetable: FC<{ timetableData: CourseTimeslotData[] }> = ({ timetableData 
             </tbody>
           </table>
           <div className='absolute top-0 left-0 w-full h-full'>
-            {timetableData.map((data, index) => (<TimetableSlot key={index} course={data} tableDim={tableDim}/>))}
+            {timetableDataWithFraction.map((data, index) => (
+              <TimetableSlot 
+                key={index} 
+                course={data} 
+                tableDim={tableDim} 
+                fraction={data.fraction} 
+                fractionIndex={data.fractionIndex} 
+              />
+            ))}
           </div>
         </div>
       </div>

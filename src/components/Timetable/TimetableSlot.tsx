@@ -6,8 +6,14 @@ import { ModalClose, ModalDialog } from '@mui/joy';
 import { useRouter } from 'next/navigation';
 import {FC} from 'react';
 
-const TimetableSlot: FC<{course: CourseTimeslotData, tableDim: TimetableDim}> = ({ course, tableDim}) => {
-    const [openModal, closeModal] = useModal();
+type TimetableSlotProps = {
+    course: CourseTimeslotData, 
+    tableDim: TimetableDim, 
+    fraction?: number,
+    fractionIndex?: number
+}
+
+const TimetableSlot: FC<TimetableSlotProps> = ({ course, tableDim, fraction = 1, fractionIndex = 1 }) => {
     const router = useRouter();
     const { language } = useSettings();
 
@@ -19,9 +25,9 @@ const TimetableSlot: FC<{course: CourseTimeslotData, tableDim: TimetableDim}> = 
         className={`absolute rounded-md shadow-lg transform translate-y-0.5 cursor-pointer`}
         onClick={handleShowCourseDetail(course.course)}
         style={{ 
-            left: tableDim.header.width + course.dayOfWeek * tableDim.timetable.width, 
+            left: tableDim.header.width + course.dayOfWeek * tableDim.timetable.width + (fractionIndex - 1) * (tableDim.timetable.width/fraction), 
             top: tableDim.header.height + (course.startTime) * tableDim.timetable.height, 
-            width: tableDim.timetable.width - 4, 
+            width: (tableDim.timetable.width/fraction) - 4, 
             height: (course.endTime - course.startTime + 1) * tableDim.timetable.height,
             backgroundColor: course.color
         }}
