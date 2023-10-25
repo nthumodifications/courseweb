@@ -37,10 +37,10 @@ const useSettingsProvider = () => {
         const theme = cookies.theme;
         if(theme == undefined) {
             if(window.matchMedia('(prefers-color-scheme: dark)').matches){
-                setCookie("theme", "dark");
+                setCookie("theme", "dark", { path: '/' });
             }
             else {
-                setCookie("theme", "light");
+                setCookie("theme", "light", { path: '/' });
             }
             window.localStorage.removeItem("joy-mode")
             window.location.reload();
@@ -50,7 +50,7 @@ const useSettingsProvider = () => {
     const setDarkMode = (val: boolean) => {
         if(typeof window  == "undefined") return ;
         removeCookie("theme");
-        setCookie("theme", val ? "dark" : "light")
+        setCookie("theme", val ? "dark" : "light", { path: '/' })
         window.localStorage.removeItem("joy-mode")
         window.location.reload();
     }
