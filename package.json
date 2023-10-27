@@ -34,7 +34,7 @@
     "ics": "^3.5.0",
     "leaflet": "^1.9.4",
     "negotiator": "^0.6.3",
-    "next": "13.5.2",
+    "next": "13.5.6",
     "next-pwa": "^5.6.0",
     "node-html-parser": "^6.1.11",
     "postcss": "8.4.30",
