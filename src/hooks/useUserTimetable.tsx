@@ -1,12 +1,14 @@
 import { useLocalStorage } from "usehooks-ts";
 import { useSettings } from "./contexts/settings";
 import { useState, useEffect } from "react";
-import supabase, { CourseDefinition } from "@/config/supabase";
 import { createTimetableFromCourses } from "@/helpers/timetable";
 import { CourseTimeslotData } from "@/types/timetable";
+import useSupabaseClient from '@/config/supabase_client';
+import { CourseDefinition } from "@/config/supabase.types";
 
 const useUserTimetable = (loadCourse = true) => {
     const { courses, setCourses } = useSettings();
+    const supabase = useSupabaseClient();
     const [localCourseCache, setLocalCourseCache] = useLocalStorage<CourseDefinition[]>("cached_courses", []);
 
     const [timetableData, setTimetableData] = useState<CourseTimeslotData[]>([]);

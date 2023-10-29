@@ -1,7 +1,8 @@
-import supabase from '@/config/supabase';
+import getSupabaseServer from '@/config/supabase_server';
 import { addDays, formatISO, set } from 'date-fns';
 
 export const getAlerts = async () => {
+    const supabase = await getSupabaseServer();
     //get starting from today morning 00:00 to 6 days later 23:59
     const { data, error } = await supabase
         .from('alerts')

@@ -1,13 +1,14 @@
 'use client';
 import NTHUBirdIcon from "@/components/NTHUBirdIcon"
 import CourseSearchbar from "@/components/Timetable/CourseSearchbar";
-import supabase from "@/config/supabase";
+import getSupabaseServer from "@/config/supabase_server";
 import { Alert, Button, CircularProgress, DialogActions, DialogContent, Divider, Modal, ModalClose, ModalDialog } from "@mui/joy"
 import { signIn, useSession } from "next-auth/react"
 import { FC, useState } from "react"
 import useSWR from "swr";
 
 const getCdsCourses = async () => {
+    const supabase = await getSupabaseServer();
     const { data: _data = [], error } = await supabase.from('cds_courses').select('*');
     if(error) throw error;
     return _data;

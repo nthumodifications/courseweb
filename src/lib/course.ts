@@ -1,7 +1,8 @@
-import supabase from '@/config/supabase';
+import getSupabaseServer from '@/config/supabase_server';
 import { parse } from 'node-html-parser';
 
 export const getCourse = async (courseId: string) => {
+    const supabase = await getSupabaseServer();
     const { data, error } = await supabase.from('courses').select('*').eq('raw_id', courseId);
     if(error) {
         console.error(error)
@@ -46,6 +47,7 @@ export const getCoursePTTReview = async (courseId: string) => {
 }
 
 export const getClassList = async () => {
+    const supabase = await getSupabaseServer();
     const { data, error } = await supabase.from('distinct_classes').select('class');
     if(error) {
         console.error(error)

@@ -1,6 +1,5 @@
 'use client';;
 import Fade from '@/components/Animation/Fade';
-import supabase from '@/config/supabase';
 import { ScheduleItem, busDays, getVehicleDescription, routes, stops } from '@/const/bus';
 import useDictionary from '@/dictionaries/useDictionary';
 import { useSettings } from '@/hooks/contexts/settings';
@@ -14,6 +13,7 @@ import useSWR from 'swr'
 import RouteIcon from '@/components/BusIcons/RouteIcon';
 import RoutesFilterChips from './RoutesFilterChips';
 import useTime from '@/hooks/useTime';
+import useSupabaseClient from '@/config/supabase_client';
 
 type PageProps = {
     params: { stopId: string }
@@ -22,6 +22,8 @@ type PageProps = {
 const BusStop = ({ params: { stopId } }: PageProps) => {
     const dict = useDictionary();
     const { language } = useSettings();
+    const supabase = useSupabaseClient();
+
     //update time every 30 seconds
     const date = useTime();
 
