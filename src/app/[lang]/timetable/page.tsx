@@ -8,7 +8,6 @@ import { useEffect } from "react";
 import { useModal } from "@/hooks/contexts/useModal";
 import TimetableCourseList from "@/components/Timetable/TimetableCourseList";
 import ShareRecievedDialog from "@/components/Timetable/ShareRecievedDialog";
-import Fade from "@/components/Animation/Fade";
 
 const TimetablePage: NextPage = () => {
 

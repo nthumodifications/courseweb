@@ -3,6 +3,12 @@
         "noclass": "今天沒有課喔！",
         "noclass_sub": "放假吧~"
     },
+    "timetable":{
+        "actions": {
+            "download": "下載",
+            "share": "分享/同步"
+        }
+    },
     "course": {
         "credits": "學分",
         "list": {
@@ -79,8 +85,27 @@
     },
     "alerts": {
         "TimetableCourseList": {
-            "action": "Go Settings",
-            "text": "You can change your theme in the settings page!"
+            "action": "前往設定",
+            "text": "時間表可以在設定頁面客制化哦！"
+        }
+    },
+    "dialogs": {
+        "DownloadTimetableDialog": {
+            "title": "下載你的課表",
+            "description": "我們還在開發圖片下載，敬請期待！",
+            "buttons": {
+                "image": "圖片",
+                "ICS": "下載 .ics"
+            }
+        },
+        "ShareSyncTimetableDialog": {
+            "title": "分享/同步你的課表",
+            "description": "把你的課表分享給朋友，或是同步到其他裝置上吧！",
+            "category:qr": "QR 碼",
+            "category:links": "鏈接",
+            "links": {
+                "email": "發送郵件"
+            }
         }
     }
 }
