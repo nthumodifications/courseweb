@@ -6,7 +6,7 @@ const MultiSelectControl = <T extends FieldValues>({ control, name, options, lab
         control={control}
         name={name}
         render={({ field: {value, onChange} }) => (
-            <FormControl>
+            <div role="group">
                 <FormLabel sx={{ margin: '0.125rem 0 0 0'}}>{label}</FormLabel>
                 <List size="sm">
                     {options.map(op => <ListItem key={op.value} variant="plain" sx={{ minHeight: '1.5rem' }}>
@@ -22,7 +22,7 @@ const MultiSelectControl = <T extends FieldValues>({ control, name, options, lab
                     />
                     </ListItem>)}
                 </List>
-            </FormControl>
+            </div>
         )}
     />
 }

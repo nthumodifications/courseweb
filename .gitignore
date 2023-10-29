@@ -34,4 +34,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 public/sw.js.map
+
+# Sentry Config File
 .sentryclirc

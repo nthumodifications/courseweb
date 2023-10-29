@@ -91,22 +91,61 @@ export interface Database {
       }
       bus_schedule: {
         Row: {
+          days: string
           id: number
-          route_name: string | null
-          schedule: string[] | null
-          vehicle: string | null
+          route_name: string
+          schedule: string[]
+          vehicle: string
         }
         Insert: {
+          days?: string
           id?: number
-          route_name?: string | null
-          schedule?: string[] | null
-          vehicle?: string | null
+          route_name: string
+          schedule: string[]
+          vehicle: string
         }
         Update: {
+          days?: string
           id?: number
-          route_name?: string | null
-          schedule?: string[] | null
-          vehicle?: string | null
+          route_name?: string
+          schedule?: string[]
+          vehicle?: string
+        }
+        Relationships: []
+      }
+      cds_courses: {
+        Row: {
+          class: number | null
+          course: number | null
+          credits: number | null
+          department: string | null
+          id: number
+          name_en: string | null
+          name_zh: string | null
+          teacher_en: string[] | null
+          teacher_zh: string[] | null
+        }
+        Insert: {
+          class?: number | null
+          course?: number | null
+          credits?: number | null
+          department?: string | null
+          id?: number
+          name_en?: string | null
+          name_zh?: string | null
+          teacher_en?: string[] | null
+          teacher_zh?: string[] | null
+        }
+        Update: {
+          class?: number | null
+          course?: number | null
+          credits?: number | null
+          department?: string | null
+          id?: number
+          name_en?: string | null
+          name_zh?: string | null
+          teacher_en?: string[] | null
+          teacher_zh?: string[] | null
         }
         Relationships: []
       }
@@ -125,8 +164,8 @@ export interface Database {
           ge_type: string | null
           id: number
           language: string | null
-          name_en: string | null
-          name_zh: string | null
+          name_en: string
+          name_zh: string
           no_extra_selection: boolean | null
           raw_1_2_specialization: string | null
           raw_cross_discipline: string | null
@@ -164,8 +203,8 @@ export interface Database {
           ge_type?: string | null
           id: number
           language?: string | null
-          name_en?: string | null
-          name_zh?: string | null
+          name_en: string
+          name_zh: string
           no_extra_selection?: boolean | null
           raw_1_2_specialization?: string | null
           raw_cross_discipline?: string | null
@@ -202,8 +241,8 @@ export interface Database {
           ge_type?: string | null
           id?: number
           language?: string | null
-          name_en?: string | null
-          name_zh?: string | null
+          name_en?: string
+          name_zh?: string
           no_extra_selection?: boolean | null
           raw_1_2_specialization?: string | null
           raw_cross_discipline?: string | null

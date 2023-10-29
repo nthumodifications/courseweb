@@ -2,6 +2,7 @@ import { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
     return {
+        id: 'nthumods',
         name: 'NTHUMods',
         short_name: 'NTHUMods',
         description: '🏫 National Tsing Hua University Course Selection for students by students with ❤️',

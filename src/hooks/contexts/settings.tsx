@@ -1,17 +1,9 @@
 "use client";
 import { useParams, usePathname, useRouter } from "next/navigation";
-import { FC, PropsWithChildren, createContext, useContext, useEffect, useState } from "react";
+import { FC, PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useLocalStorage } from 'usehooks-ts';
 import { useCookies } from 'react-cookie';
-import { useColorScheme } from "@mui/joy";
-
-type Languages = "zh" | "en";
-
-type SettingsType = {
-    language: Languages;
-    darkMode: boolean;
-    courses: string[];
-};
+import { Language, SettingsType } from "@/types/settings";
 
 const settingsContext = createContext<ReturnType<typeof useSettingsProvider>>({
     language: "zh",
@@ -24,7 +16,7 @@ const settingsContext = createContext<ReturnType<typeof useSettingsProvider>>({
 });
 
 const useSettingsProvider = () => {
-    const language = useParams().lang as Languages;
+    const language = useParams().lang as Language;
     const router = useRouter();
     const pathname = usePathname();
     const [cookies, setCookie, removeCookie] = useCookies(['theme']);
@@ -34,7 +26,7 @@ const useSettingsProvider = () => {
         setCourses(settings.courses);
     };
 
-    const setLanguage = (newLang: Languages) => {
+    const setLanguage = (newLang: Language) => {
         console.log(pathname);
         router.push(`/${newLang}/`+pathname.split('/').slice(2).join('/'));
     };
@@ -45,10 +37,10 @@ const useSettingsProvider = () => {
         const theme = cookies.theme;
         if(theme == undefined) {
             if(window.matchMedia('(prefers-color-scheme: dark)').matches){
-                setCookie("theme", "dark");
+                setCookie("theme", "dark", { path: '/' });
             }
             else {
-                setCookie("theme", "light");
+                setCookie("theme", "light", { path: '/' });
             }
             window.localStorage.removeItem("joy-mode")
             window.location.reload();
@@ -58,16 +50,16 @@ const useSettingsProvider = () => {
     const setDarkMode = (val: boolean) => {
         if(typeof window  == "undefined") return ;
         removeCookie("theme");
-        setCookie("theme", val ? "dark" : "light")
+        setCookie("theme", val ? "dark" : "light", { path: '/' })
         window.localStorage.removeItem("joy-mode")
         window.location.reload();
     }
 
+    const darkMode = useMemo(() => cookies.theme == "dark", [cookies]);
+
     return {
         language,
-        get darkMode() {
-            return cookies.theme == "dark";
-        },
+        darkMode,
         courses,
         setSettings,
         setCourses,

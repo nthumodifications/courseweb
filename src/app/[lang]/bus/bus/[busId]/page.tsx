@@ -2,44 +2,24 @@
 import Fade from '@/components/Animation/Fade';
 import GreenLineIcon from '@/components/BusIcons/GreenLineIcon';
 import RedLineIcon from '@/components/BusIcons/RedLineIcon';
-import supabase from '@/config/supabase';
-import { routes, stops } from '@/const/bus';
+import supabase, { BusScheduleDefinition } from '@/config/supabase';
+import { Route, Stop, getVehicleDescription, routes, stops } from '@/const/bus';
 import useDictionary from '@/dictionaries/useDictionary';
 import { useSettings } from '@/hooks/contexts/settings';
-import { Button, Divider, LinearProgress } from '@mui/joy';
+import { Button, Checkbox, Chip, Divider, LinearProgress } from '@mui/joy';
 import { format, add, formatDistanceStrict } from 'date-fns';
 import { useEffect, useState, useMemo } from 'react';
 import { ChevronLeft, MapPin } from 'react-feather';
 import useSWR from 'swr';
+import NandaLineIcon from '@/components/BusIcons/NandaLineIcon';
+import RouteIcon from '@/components/BusIcons/RouteIcon';
+import useTime from '@/hooks/useTime';
 type PageProps = {
     params: { busId: string }
 }
 
-type BusDetails = {
-    route: {
-        title_zh: string;
-        title_en: string;
-        color: string;
-        code: string;
-        path: string[];
-    };
-    stopSchedule: {
-        stopDef: {
-            name_zh: string;
-            name_en: string;
-            code: string;
-        };
-        arrival: Date;
-    }[];
-    id: number;
-    route_name: string | null;
-    schedule: string[] | null;
-    vehicle: string | null;
-}
-
 const BusStop = ({ params: { busId } }: PageProps) => {
     const dict = useDictionary();
-    const [date, setDate] = useState(new Date());
 
     const { language } = useSettings();
     const { data: busSchedule, error, isLoading } = useSWR(['bus_schedule', busId], async ([table, busId]) => {
@@ -49,12 +29,7 @@ const BusStop = ({ params: { busId } }: PageProps) => {
     })
 
     //update time every 30 seconds
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setDate(new Date());
-        }, 1 * 1000);
-        return () => clearInterval(interval);
-    }, []);
+    const date = useTime();
 
     //get list of routes that pass this stop
 
@@ -78,8 +53,9 @@ const BusStop = ({ params: { busId } }: PageProps) => {
         <div>
             <Button variant='plain' startDecorator={<ChevronLeft/>} onClick={() => history.back()}>Back</Button>
             {busData && <>
-            <div className='flex flex-row gap-4 items-center px-6 py-4'>
-                {busData.route_name?.startsWith('G') ? <GreenLineIcon/>: <RedLineIcon/>}
+            <div className='px-6 py-4'>
+            <div className='flex flex-row gap-4 items-center '>
+                <RouteIcon route_name={busData.route_name!} />
                 <div className="flex flex-col">
                     <span className="text-lg font-bold">{busData.route.title_zh}</span>
                     <span className="text-xs">{busData.route.title_en}</span>
@@ -87,6 +63,8 @@ const BusStop = ({ params: { busId } }: PageProps) => {
                 <p className='text-right flex-1'>
                     Now: {format(date, 'HH:mm')}
                 </p>
+            </div>
+            <p className='mt-2 first-letter:text-sm text-gray-500'>Scheduled • {getVehicleDescription(busData.vehicle)}</p>
             </div>
             <Divider/>
             <div className='flex flex-col divide-y divide-gray-200 dark:divide-neutral-800'>
