@@ -6,7 +6,7 @@ import { createTimetableFromCourses } from "@/helpers/timetable";
 import { CourseTimeslotData } from "@/types/timetable";
 
 const useUserTimetable = (loadCourse = true) => {
-    const { courses, setCourses } = useSettings();
+    const { courses, timetableTheme, setCourses } = useSettings();
     const [localCourseCache, setLocalCourseCache] = useLocalStorage<CourseDefinition[]>("cached_courses", []);
 
     const [timetableData, setTimetableData] = useState<CourseTimeslotData[]>([]);
@@ -16,7 +16,7 @@ const useUserTimetable = (loadCourse = true) => {
         if(!loadCourse) return;
         console.info('Loading from Cache')
         setAllCourseData(localCourseCache!);
-        setTimetableData(createTimetableFromCourses(localCourseCache));
+        setTimetableData(createTimetableFromCourses(localCourseCache, timetableTheme));
     }, []);
 
     useEffect(() => {
@@ -28,7 +28,7 @@ const useUserTimetable = (loadCourse = true) => {
                 if(error) console.error(error);
                 else {
                     setAllCourseData(data!);
-                    setTimetableData(createTimetableFromCourses(data!));
+                    setTimetableData(createTimetableFromCourses(data!, timetableTheme));
                     setLocalCourseCache(data!);
                 }
             } catch(e) {

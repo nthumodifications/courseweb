@@ -68,9 +68,19 @@
         "language": {
             "title": "Language",
             "description": "Select your preferred language."
+        },
+        "theme": {
+            "title": "Theme",
+            "description": "Personalize your timetable to make it yours."
         }
     },
     "venues": {
         "placeholder": "Select a Venue from the list"
+    },
+    "alerts": {
+        "TimetableCourseList": {
+            "action": "Go Settings",
+            "text": "You can change your theme in the settings page!"
+        }
     }
 }

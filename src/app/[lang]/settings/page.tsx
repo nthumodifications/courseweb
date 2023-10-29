@@ -1,8 +1,34 @@
 'use client';
 import useDictionary from "@/dictionaries/useDictionary";
+import { timetableColors } from "@/helpers/timetable";
 import { useSettings } from "@/hooks/contexts/settings";
 import { Divider, Option, Select, Switch } from "@mui/joy";
-import { useEffect, useState } from "react";
+import {  useEffect, useState } from "react";
+
+const TimetableThemePreview = ({ theme, onClick = () => {}, selected = false }: { theme: string, selected?: boolean, onClick?: () => void}) => {
+    return <div 
+        onClick={onClick}
+        className={`flex flex-col rounded-lg p-3 hover:dark:bg-neutral-800 hover:bg-gray-100 transition cursor-pointer space-y-2 ${selected? "bg-gray-100 dark: bg-neutral-800":""}`}>
+        <div className="flex flex-row">
+            {timetableColors[theme].map((color, index) => (
+                <div className="flex-1 h-6 w-6" style={{background: color}} key={index}/>
+            ))}
+        </div>
+        <span className="text-sm">{theme}</span>
+    </div>
+}
+
+const TimetableThemeList = () => {
+    const { timetableTheme, setTimetableTheme } = useSettings();
+    return <div className="flex flex-row flex-wrap gap-2">
+        {
+            Object.keys(timetableColors).map((theme, index) => (
+                <TimetableThemePreview key={index} theme={theme} onClick={() => setTimetableTheme(theme)} selected={timetableTheme == theme} />
+            ))
+        }
+    </div>
+    
+}
 
 
 const SettingsPage = () => {
@@ -43,6 +69,15 @@ const SettingsPage = () => {
                     <Option value="en">English</Option>
                 </Select>
                 </div>
+            </div>
+            <Divider/>
+            <div className="flex flex-col gap-4 py-4">
+                <div className="flex flex-col flex-1">
+                    <h2 className="font-semibold text-xl text-gray-600 dark:text-gray-400 pb-2">{dict.settings.theme.title}</h2>
+                    <p className="text-gray-600 dark:text-gray-400">{dict.settings.theme.description}</p>
+                </div>
+                {/* TODO: Timetable Preview */}
+                <TimetableThemeList/>
             </div>
         </div>
     )

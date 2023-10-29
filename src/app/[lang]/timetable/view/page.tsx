@@ -6,11 +6,13 @@ import { useSearchParams } from 'next/navigation'
 import supabase from "@/config/supabase";
 import useSWR from "swr";
 import { createTimetableFromCourses, timetableColors } from "@/helpers/timetable";
+import { useSettings } from "@/hooks/contexts/settings";
 
 const ViewTimetablePage: NextPage = () => {
     const router = useRouter();
     const searchParams = useSearchParams();
     const courseCodes = searchParams.get('semester_1121')?.split(',');
+    const { timetableTheme } = useSettings();
 
     if(!courseCodes) router.back();
     
@@ -22,7 +24,7 @@ const ViewTimetablePage: NextPage = () => {
         return data;
     })
 
-    const timetableData = courses? createTimetableFromCourses(courses) : [];
+    const timetableData = courses? createTimetableFromCourses(courses, timetableTheme) : [];
       
     return (
         <div className="grid grid-cols-1 grid-rows-2 md:grid-rows-1 md:grid-cols-[3fr_2fr] px-1 py-4 md:p-4">
@@ -30,7 +32,7 @@ const ViewTimetablePage: NextPage = () => {
             <div className="flex flex-col gap-4 px-4">
             {courses && courses.map((course, index) => (
                 <div key={index} className="flex flex-row gap-4 items-center">
-                    <div className="w-4 h-4 rounded-full" style={{ backgroundColor: timetableColors['tsinghuarian'][index] }}></div>
+                    <div className="w-4 h-4 rounded-full" style={{ backgroundColor: timetableColors[timetableTheme][index] }}></div>
                     <div className="flex flex-col flex-1">
                         <span className="text-sm">{course.name_zh}</span>
                         <span className="text-xs">{course.name_en}</span>

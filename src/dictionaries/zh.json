@@ -68,9 +68,19 @@
         "language": {
             "title": "語言 Language",
             "description": "選擇您想要的語言。"
+        },
+        "theme": {
+            "title": "時間表顔色",
+            "description": "客制化你的時間表的顔色，讓你的時間表更有個性！"
         }
     },
     "venues": {
         "placeholder": "Select a Venue from the list"
+    },
+    "alerts": {
+        "TimetableCourseList": {
+            "action": "Go Settings",
+            "text": "You can change your theme in the settings page!"
+        }
     }
 }

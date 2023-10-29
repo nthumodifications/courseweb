@@ -1,4 +1,4 @@
-import { Button, ButtonGroup, DialogContent, DialogTitle, IconButton, Input, ModalClose, ModalDialog } from '@mui/joy';
+import { Alert, Button, ButtonGroup, DialogContent, DialogTitle, IconButton, Input, ModalClose, ModalDialog } from '@mui/joy';
 import { Calendar, Download, EyeOff, Image, Mail, Search, Share, Trash } from 'react-feather';
 import { QRCodeSVG } from 'qrcode.react';
 import { useSettings } from '@/hooks/contexts/settings';
@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useModal } from '@/hooks/contexts/useModal';
 import CourseSearchbar from './CourseSearchbar';
 import { timetableColors } from '@/helpers/timetable';
+import ThemeChangableAlert from '../Alerts/ThemeChangableAlert';
 
 const TimetableCourseList = () => {
     const { courses, setCourses } = useSettings();
@@ -54,7 +55,7 @@ const TimetableCourseList = () => {
                             <Button
                                 component="a"
                                 // Subject: Here is My Timetable, Body: My Timetable can be found on NTHUMODS at {shareLink}
-                                href={`mailto:?subject=Here is My Timetable&body=<div style='padding: 0;'>My Timetable can be found on NTHUMODS at <${shareLink}></div>`}
+                                href={`mailto:?subject=Here is My Timetable&body=My Timetable can be found on NTHUMODS at ${shareLink}`}
                                 target='_blank'
                                 variant="outlined"
                                 startDecorator={<Mail className="w-4 h-4" />}
@@ -138,6 +139,7 @@ const TimetableCourseList = () => {
                 </div>
             </div>
         )}
+        <ThemeChangableAlert />
         <div className="grid grid-cols-2 grid-rows-2 gap-2">
             <Button variant="outlined" startDecorator={<Download className="w-4 h-4" />} onClick={handleDownloadDialog}>Download</Button>
             <Button variant="outlined" startDecorator={<Share className="w-4 h-4" />} onClick={handleShowShareDialog}>Share/Sync</Button>
