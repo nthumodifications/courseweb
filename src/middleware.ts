@@ -46,6 +46,7 @@ export const config = {
     '/settings/:path*',
     '/timetable/:path*',
     '/today/:path*',
-    '/venues/:path*'
+    '/venues/:path*',
+    '/issues/:path*'
   ],
 }
