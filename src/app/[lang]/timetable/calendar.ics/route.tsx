@@ -11,12 +11,13 @@ export async function GET(request: Request) {
     
     const supabase = await getSupabaseServer();
     const courses_ids = searchParams.get('semester_1121')?.split(',')!;
+    const theme = searchParams.get('theme') || 'tsinghuarian';
 
     try {
         let { data = [], error } = await supabase.from('courses').select("*").in('raw_id', courses_ids);
         if (error) throw error;
         else {
-            const timetableData = createTimetableFromCourses(data!);
+            const timetableData = createTimetableFromCourses(data!, theme);
             const icss = ics.createEvents(timetableData.map(course => {
                 const start = zonedTimeToUtc(parse(
                     scheduleTimeSlots[course.startTime]!.start,

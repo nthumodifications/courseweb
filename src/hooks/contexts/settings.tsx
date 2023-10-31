@@ -4,15 +4,18 @@ import { FC, PropsWithChildren, createContext, useContext, useEffect, useMemo, u
 import { useLocalStorage } from 'usehooks-ts';
 import { useCookies } from 'react-cookie';
 import { Language, SettingsType } from "@/types/settings";
+import type { timetableColors } from "@/helpers/timetable";
 
 const settingsContext = createContext<ReturnType<typeof useSettingsProvider>>({
     language: "zh",
     darkMode: false,
     courses: [],
+    timetableTheme: "tsinghuarian",
     setSettings: () => {},
     setCourses: () => {},
     setLanguage: () => {},
-    setDarkMode: () => {}
+    setDarkMode: () => {},
+    setTimetableTheme: () => {}
 });
 
 const useSettingsProvider = () => {
@@ -21,6 +24,7 @@ const useSettingsProvider = () => {
     const pathname = usePathname();
     const [cookies, setCookie, removeCookie] = useCookies(['theme']);
     const [courses, setCourses] = useLocalStorage<string[]>("semester_1121", []);
+    const [timetableTheme, setTimetableTheme] = useLocalStorage<string>("timetable_theme", "tsinghuarian");
 
     const setSettings = (settings: SettingsType) => {
         setCourses(settings.courses);
@@ -61,10 +65,12 @@ const useSettingsProvider = () => {
         language,
         darkMode,
         courses,
+        timetableTheme,
         setSettings,
         setCourses,
         setLanguage,
-        setDarkMode
+        setDarkMode,
+        setTimetableTheme
     };
 }
 

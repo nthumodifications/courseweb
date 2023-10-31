@@ -1,4 +1,4 @@
-import { Button, ButtonGroup, DialogContent, DialogTitle, IconButton, Input, ModalClose, ModalDialog } from '@mui/joy';
+import { Alert, Button, ButtonGroup, DialogContent, DialogTitle, IconButton, Input, ModalClose, ModalDialog } from '@mui/joy';
 import { Calendar, Download, EyeOff, Image, Mail, Search, Share, Trash } from 'react-feather';
 import { QRCodeSVG } from 'qrcode.react';
 import { useSettings } from '@/hooks/contexts/settings';
@@ -7,9 +7,14 @@ import { useRouter } from 'next/navigation';
 import { useModal } from '@/hooks/contexts/useModal';
 import CourseSearchbar from './CourseSearchbar';
 import { timetableColors } from '@/helpers/timetable';
+import ThemeChangableAlert from '../Alerts/ThemeChangableAlert';
+import useDictionary from '@/dictionaries/useDictionary';
+import ShareSyncTimetableDialog from './ShareSyncTimetableDialog';
+import DownloadTimetableDialog from './DownloadTimetableDialog';
 
 const TimetableCourseList = () => {
     const { courses, setCourses } = useSettings();
+    const dict = useDictionary();
 
     const { allCourseData, deleteCourse, addCourse } = useUserTimetable();
 
@@ -27,76 +32,14 @@ const TimetableCourseList = () => {
         }
 
         openModal({
-            children: <ModalDialog>
-                <ModalClose />
-                <DialogTitle>Share & Sync Your Timetable</DialogTitle>
-                <DialogContent>
-                    <p>
-                        Send this link to your friends to share your timetable or to yourself to keep your timetable synced on all devices.
-                    </p>
-                    <Input
-                        size="lg"
-                        value={shareLink}
-                        endDecorator={
-                            <IconButton variant="solid" onClick={handleCopy}>
-                                <Share className="w-5 h-5" />
-                            </IconButton>
-                        } />
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="flex flex-col">
-                            <h3 className="text-lg font-semibold">QR Code</h3>
-                            <div className='p-2 bg-white rounded-md w-min'>
-                                <QRCodeSVG value={shareLink} />
-                            </div>
-                        </div>
-                        <div className="flex flex-col space-y-2">
-                            <h3 className="text-lg font-semibold">Links</h3>
-                            <Button
-                                component="a"
-                                // Subject: Here is My Timetable, Body: My Timetable can be found on NTHUMODS at {shareLink}
-                                href={`mailto:?subject=Here is My Timetable&body=<div style='padding: 0;'>My Timetable can be found on NTHUMODS at <${shareLink}></div>`}
-                                target='_blank'
-                                variant="outlined"
-                                startDecorator={<Mail className="w-4 h-4" />}
-                            >Send Email</Button>
-                            <Button
-                                component="a"
-                                href={webcalLink}
-                                target='_blank'
-                                variant="outlined"
-                                startDecorator={<Calendar className="w-4 h-4" />}
-                            >Sync To Calendar</Button>
-                        </div>
-                    </div>
-                </DialogContent>
-            </ModalDialog>
+            children: <ShareSyncTimetableDialog onClose={closeModal} shareLink={shareLink} webcalLink={webcalLink} onCopy={handleCopy} />
         });
     }
 
     const handleDownloadDialog = () => {
         const icsfileLink = `https://nthumods.com/timetable/calendar.ics?semester_1121=${courses.map(id => encodeURI(id)).join(',')}`
         openModal({
-            children: <ModalDialog>
-                <ModalClose />
-                <DialogTitle>Download Your Timetable</DialogTitle>
-                <DialogContent>
-                    <p>Download as Image is stll in the works~</p>
-                    <div className="grid grid-cols-2 gap-4 pt-4">
-                        <Button
-                            component="a"
-                            href={icsfileLink}
-                            target='_blank'
-                            variant="outlined"
-                            startDecorator={<Download className="w-4 h-4" />}
-                        >Download .ics</Button>
-                        <Button
-                            disabled={true}
-                            variant="outlined"
-                            startDecorator={<Image className="w-4 h-4" />}
-                        >Download Image</Button>
-                    </div>
-                </DialogContent>
-            </ModalDialog>
+            children: <DownloadTimetableDialog onClose={closeModal} icsfileLink={icsfileLink} />
         });
     }
 
@@ -138,9 +81,10 @@ const TimetableCourseList = () => {
                 </div>
             </div>
         )}
+        <ThemeChangableAlert />
         <div className="grid grid-cols-2 grid-rows-2 gap-2">
-            <Button variant="outlined" startDecorator={<Download className="w-4 h-4" />} onClick={handleDownloadDialog}>Download</Button>
-            <Button variant="outlined" startDecorator={<Share className="w-4 h-4" />} onClick={handleShowShareDialog}>Share/Sync</Button>
+            <Button variant="outlined" startDecorator={<Download className="w-4 h-4" />} onClick={handleDownloadDialog}>{dict.timetable.actions.download}</Button>
+            <Button variant="outlined" startDecorator={<Share className="w-4 h-4" />} onClick={handleShowShareDialog}>{dict.timetable.actions.share}</Button>
         </div>
     </div>
 }
