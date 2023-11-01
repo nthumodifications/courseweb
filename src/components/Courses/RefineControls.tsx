@@ -161,6 +161,7 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes>, onClear: ()
                         name="others"
                         options={[
                             { value: 'xclass', label: dict.course.refine['x-class'] },
+                            { value: '16_weeks', label: dict.course.refine['16_weeks']},
                             { value: 'extra_selection', label: dict.course.refine['extra_selection']}
                         ]}
                         label={dict.course.refine.others}
