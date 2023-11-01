@@ -19,7 +19,7 @@
     "@fortawesome/fontawesome-svg-core": "^6.4.2",
     "@fortawesome/free-regular-svg-icons": "^6.4.2",
     "@fortawesome/react-fontawesome": "^0.2.0",
-    "@mui/joy": "^5.0.0-beta.7",
+    "@mui/joy": "^5.0.0-beta.12",
     "@mui/material": "^5.14.14",
     "@sentry/nextjs": "^7.74.1",
     "@supabase/supabase-js": "^2.38.4",
@@ -41,7 +41,7 @@
     "next-auth": "^4.23.2",
     "next-pwa": "^5.6.0",
     "node-html-parser": "^6.1.11",
-    "postcss": "8.4.30",
+    "postcss": "8.4.31",
     "qrcode.react": "^3.1.0",
     "query-string": "^8.1.0",
     "react": "18.2.0",
@@ -60,7 +60,7 @@
   },
   "devDependencies": {
     "@types/leaflet": "^1.9.4",
-    "@types/negotiator": "^0.6.1",
+    "@types/negotiator": "^0.6.2",
     "supabase": "^1.99.5",
     "webpack": "^5.89.0"
   }

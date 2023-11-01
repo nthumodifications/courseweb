@@ -34,7 +34,7 @@ const MapPage = async ({
 
     console.log(courses)
     return (
-        <div className='py-4 flex flex-col items-center space-y-2 px-6'>
+        <div className='py-4 flex flex-col items-center space-y-2 px-2 md:px-6'>
             <h2 className='font-semibold text-xl'>{venueId}</h2>
             <Timetable timetableData={timetable} />
             <Suspense fallback={<h1>Map failed to load</h1>}>

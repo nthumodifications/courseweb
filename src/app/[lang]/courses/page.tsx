@@ -115,13 +115,9 @@ const CoursePage: NextPage = () => {
         setLoading(true);
         //Query for courses
         try {
-            let temp = supabase
-                .from('courses')
-                .select('*', { count: 'exact' })
-            if (filters.textSearch) {
-                temp = temp
-                    .textSearch('multilang_search', `'${filters.textSearch.split(' ').join("' & '")}'`)
-            }
+            let temp = supabase.rpc('search_courses', {
+                    keyword: filters.textSearch,
+                }, { count: 'exact' })
             if (filters.level.length)
                 temp = temp
                     .or(filters.level.map(level => `and(course.gte.${level}000,course.lte.${level}999)`).join(','))
@@ -173,7 +169,7 @@ const CoursePage: NextPage = () => {
             if (error) console.error(error);
             else {
                 console.log(courses)
-                setCourses(courses!);
+                setCourses(courses as CourseDefinition[]);
                 setHeadIndex(index);
             }
         }

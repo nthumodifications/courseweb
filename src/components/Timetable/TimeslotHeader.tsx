@@ -2,8 +2,8 @@ import { TimeSlot } from '@/types/timetable';
 import {forwardRef} from 'react';
 
 
-const TimeslotHeader = forwardRef<HTMLTableCellElement, TimeSlot & { firstRow: boolean }>(
-    ({ start, end, time, firstRow }, ref) => {
+const TimeslotHeader = forwardRef<HTMLTableCellElement, TimeSlot & { firstRow: boolean, showSaturday?: boolean }>(
+    ({ start, end, time, firstRow, showSaturday = false }, ref) => {
         return (
             <tr>
                 <td className='flex flex-col py-2'>
@@ -16,6 +16,7 @@ const TimeslotHeader = forwardRef<HTMLTableCellElement, TimeSlot & { firstRow: b
                 <td className='border border-gray-300 dark:border-neutral-700'></td>
                 <td className='border border-gray-300 dark:border-neutral-700'></td>
                 <td className='border border-gray-300 dark:border-neutral-700'></td>
+                {showSaturday && <td className='border border-gray-300 dark:border-neutral-700'></td>}
             </tr>
         )
     })

@@ -30,7 +30,7 @@ const VenueList = () => {
 
     return <div className="h-full w-full px-8 py-4 space-y-4 overflow-auto">
             <Input placeholder="Search..." value={textSearch} onChange={(e) => setTextSearch(e.target.value)}/>
-            <div className="grid sm:grid-cols-2 md:grid-cols-3">
+            <div className="grid grid-cols-2 md:grid-cols-3">
                 {(textSearch == '' ? venues: filtered.map(mod => mod.item)).map((venue, i) => <Link 
                     key={i} 
                     href={`/${language}/venues/${venue}`}>
