@@ -66,6 +66,8 @@ const Timetable: FC<{ timetableData: CourseTimeslotData[] }> = ({ timetableData 
       return timetableDataWithFraction
     }, [timetableData]);    
 
+    const showSaturday = timetableData.some(course => course.dayOfWeek == 5);
+
     return (
         <div className="mb-32 text-center lg:mb-0 w-full">
         {/* Timetable, Relative overlay */}
@@ -79,11 +81,12 @@ const Timetable: FC<{ timetableData: CourseTimeslotData[] }> = ({ timetableData 
                 <td className='text-xs font-semibold w-28 py-2 border border-gray-300 dark:border-neutral-700'>WED</td>
                 <td className='text-xs font-semibold w-28 py-2 border border-gray-300 dark:border-neutral-700'>THU</td>
                 <td className='text-xs font-semibold w-28 py-2 border border-gray-300 dark:border-neutral-700'>FRI</td>
+                {showSaturday && <td className='text-xs font-semibold w-28 py-2 border border-gray-300 dark:border-neutral-700'>SAT</td>}
               </tr>
             </thead>
             <tbody>
               {scheduleTimeSlots.map((time, index) => (
-                <TimeslotHeader key={index} time={time.time} start={time.start} end={time.end} firstRow={index == 0} ref={timetableCell} />
+                <TimeslotHeader key={index} time={time.time} start={time.start} end={time.end} firstRow={index == 0} ref={timetableCell} showSaturday={showSaturday} />
               ))}
             </tbody>
           </table>
