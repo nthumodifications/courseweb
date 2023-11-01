@@ -4,6 +4,7 @@ import { useSettings } from "@/hooks/contexts/settings";
 import Link from "next/link";
 import { stops } from "@/const/bus";
 import { Alert } from "@mui/joy";
+import BusDelayAlert from "./BusDelayAlert";
 
 const BusPage = () => {
 //北校門口	綜二館	楓林小徑	奕園停車場	南門停車場	台積館 人社院/生科館	楓林小徑	綜二館	北校門口
@@ -31,6 +32,7 @@ const BusPage = () => {
     return (
         <div className="py-4 flex flex-col">
             <h1 className="text-4xl font-semibold pl-4">校内公車</h1>
+            <BusDelayAlert/>
             <div className="grid grid-cols-2">
                 <h2 className="text-4xl font-semibold pl-6 text-gray-600 py-6">上</h2>
                 <h2 className="text-4xl font-semibold bg-gray-200 dark:bg-neutral-800 pr-6 text-end py-6">下</h2>

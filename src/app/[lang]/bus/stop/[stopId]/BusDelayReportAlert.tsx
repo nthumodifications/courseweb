@@ -10,7 +10,7 @@ const BusDelayReportAlert = () => {
     const [openModal, closeModal] = useModal();
     // Wait for 30 seconds before showing the alert
     useEffect(() => {
-        const WAIT_TIME = 30 * 1000;
+        const WAIT_TIME = 10 * 1000;
         // const WAIT_TIME = 1 * 1000;
         const timeout = setTimeout(() => setShow(true), WAIT_TIME);
         return () => clearTimeout(timeout);
