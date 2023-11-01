@@ -31,6 +31,7 @@
     "date-fns": "^2.30.0",
     "date-fns-tz": "^2.0.0",
     "fuse.js": "^6.6.2",
+    "html-entities": "^2.4.0",
     "ics": "^3.5.0",
     "leaflet": "^1.9.4",
     "negotiator": "^0.6.3",

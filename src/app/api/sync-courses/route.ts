@@ -1,4 +1,28 @@
-import { CourseDefinition } from "@/config/supabase";
+import supabase, { CourseDefinition } from "@/config/supabase";
+import { Database } from "@/types/supabase";
+import { writeFile } from "fs/promises";
+import {decode} from 'html-entities';
+
+const fullWidthToHalfWidth = (str: string) => {
+    //check if its a full width 0-9A-Za-z
+    const isFullWidth = (char: string) => {
+        const code = char.charCodeAt(0);
+        if(code >= 65296 && code <= 65305) return true;
+        if(code >= 65313 && code <= 65338) return true;
+        if(code >= 65345 && code <= 65370) return true;
+        return false;
+    }
+    let result = '';
+    for(const char of str) {
+        if(isFullWidth(char)) {
+            result += String.fromCharCode(char.charCodeAt(0) - 65248);
+        }
+        else {
+            result += char;
+        }
+    }
+    return result;
+}
 
 const baseUrl = `https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/OPENDATA/open_course_data.json`;
 
@@ -25,15 +49,39 @@ type APIResponse = {
 }[]
 
 export const GET = async() => {
+
+    // return not imlemented error
+    return { status: 501, body: { error: 'Not implemented' } };
     
     const fetchCourses = async () => {
-        const response = await fetch(baseUrl);
+        const response = await fetch(baseUrl, { cache: 'no-cache' });
         const data = await response.json() as APIResponse;
         return data;
     }
 
+    // fetch existing courses from supabase, max is 1000 so we need to loop
+    const fetchExistingCourses = async () => {
+        // count the number of courses
+        const { count, error } = await supabase.from('courses').select('*', { count: 'exact' });
+        if(error) throw error;
+        if(count === null) throw new Error('count is null');
+        const courses: CourseDefinition[] = [];
+        const limit = 1000;
+        for(let offset = 0; offset < count; offset += limit) {
+            const { data, error } = await supabase.from('courses').select('*').range(offset, offset + limit - 1);
+            if(error) throw error;
+            if(data === null) throw new Error('data is null');
+            courses.push(...data);
+        }
+        return courses;
+    }
+
     const courses = await fetchCourses();
-    const normalizedCourses: CourseDefinition[] = [];
+    const existingCourses = await fetchExistingCourses();
+
+    let lastId = existingCourses.length;
+
+    const normalizedCourses: Database['public']['Tables']['courses']['Update'][] = [];
     for(const course of courses) {
         const comp: string[] = [];
         const elect: string[] = [];   
@@ -52,9 +100,9 @@ export const GET = async() => {
         
         const venues: string[] = [];
         const times: string[] = [];   
-        course.教室與上課時間
+        fullWidthToHalfWidth(course.教室與上課時間)
         .split('\n')
-        .slice(0,-1)
+        .filter(text => text.trim() !== '')
         .map(code => {
             const [venue, time] = code.split('\t')
             venues.push(venue)
@@ -66,6 +114,7 @@ export const GET = async() => {
 
         course['第一二專長對應']
         .split('\t')
+        .filter(text => text.trim() !== '')
         .forEach(text => {
             if(text.endsWith('(第二專長)')) {
                 second_specialty.push(text.replace('(第二專長)', ''))
@@ -77,30 +126,93 @@ export const GET = async() => {
                 throw 'sumting wong'
             }
         })
+        const tags = [];
+        const normalizedNote = fullWidthToHalfWidth(course['備註'])
+        const weeks = normalizedNote.includes('16') ? 16:
+                        normalizedNote.includes('18') ? 18: 0;
+        if(weeks != 0) tags.push(weeks+'周')
+        const hasXClass = normalizedNote.includes('X-Class') ? true: false;
+        if(hasXClass) tags.push('X-Class')
+        const no_extra_selection = course['不可加簽說明'].includes('《不接受加簽 No extra selection》')
+        if(no_extra_selection) tags.push('不可加簽')
 
+        const cross_discipline: string[] = [];
+        course['學分學程對應']
+        .split('\\')
+        .filter(text => text.trim() !== '')
+        .forEach(text => {
+            cross_discipline.push(text.replace('(跨領域)', ''))
+        });
+
+        const teacher_en: string[] = [];
+        const teacher_zh: string[] = [];   
+        course.授課教師
+        .split('\n')
+        .filter(text => text.trim() !== '')
+        .map(code => {
+            const [zh, en] = code.split('\t')
+            teacher_zh.push(decode(zh))
+            teacher_en.push(en)
+        })
+        if(!existingCourses.find(c => c.raw_id === course['科號'])) console.log(course['科號']);
         normalizedCourses.push({
+            id: existingCourses.find(c => c.raw_id === course['科號'])?.id ?? ++lastId,
             capacity: parseInt(course['人限']),
             course: course['科號'].slice(9, 13),
             department: course['科號'].slice(5, 9).trim(),
             semester: course['科號'].slice(0, 5),
-            class: course['科號'].slice(13, 15),
-            name_en: course['課程英文名稱'],
-            name_zh: course['課程中文名稱'],
+            class: parseInt(course['科號'].slice(13, 15)).toString(),
+            name_en: decode(course['課程英文名稱']),
+            name_zh: decode(course['課程中文名稱']),
+            teacher_en: teacher_en,
+            teacher_zh: teacher_zh,
             credits: parseInt(course['學分數']),
             reserve: parseInt(course['新生保留人數']),
             ge_type: course['通識類別'],
             ge_target: course['通識對象'],
             language: course['授課語言'],
-            '備註': course['備註'],
-            '停開註記': course['停開註記'],
             compulsory_for: comp,
             elective_for: elect,
             venues: venues,
             times: times,
             first_specialization: first_specialty,
             second_specialization: second_specialty,
+            cross_discipline: cross_discipline,
+            tags: tags,
+            no_extra_selection: course['不可加簽說明'].includes('《不接受加簽 No extra selection》'),
+            '備註': normalizedNote,
+            '停開註記': course['停開註記'],
+            必選修說明: course['必選修說明'],
+            擋修說明: course['擋修說明'],
+            課程限制說明: course['課程限制說明'],
+            raw_1_2_specialization: course['第一二專長對應'],
+            raw_extra_selection: course['不可加簽說明'],
+            raw_cross_discipline: course['學分學程對應'],
+            raw_id: course['科號'],
+            raw_teacher_en: course['授課教師'],
+            raw_teacher_zh: course['授課教師'],
+            raw_time: course['教室與上課時間'],
+            raw_venue: course['教室與上課時間'],
         });
-
     }
+
+    // write to file
+    await writeFile('courses.json', JSON.stringify(normalizedCourses, null, 4));
+
+    // update supabase, check if the course with the same raw_id exists, if so, update it, otherwise insert it
+    //split array into chunks of 1000
+    const chunked = normalizedCourses.reduce((acc, cur, i) => {
+        const index = Math.floor(i / 500);
+        acc[index] = acc[index] || [];
+        acc[index].push(cur);
+        return acc;
+    }, [] as Database['public']['Tables']['courses']['Update'][][]);
+    for(const chunk of chunked) {
+        const { error } = await supabase.from('courses').upsert(chunk);
+        if(error) throw error;
+    }
+
+    
+    return normalizedCourses;
 
 }
