@@ -18,7 +18,7 @@ const LocationLayout: FC<PropsWithChildren> = ({ children,...anything }) => {
             {showVenueList && <VenueList/>}
             <main className='overflow-y-auto overflow-x-hidden'>
                 <div className='pl-4 pt-2'>
-                    {showVenueList && <Button variant='plain' onClick={() => router.back()} startDecorator={<ArrowLeft/>}>Back</Button>}
+                    {!showVenueList && <Button variant='plain' onClick={() => router.back()} startDecorator={<ArrowLeft/>}>Back</Button>}
                 </div>
                 {children}
             </main>
