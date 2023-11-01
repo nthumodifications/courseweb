@@ -10,7 +10,7 @@ type Props = {
 }
 
 const getCoursesWithVenue = async (venueId: string) => {
-    const { data, error } = await supabase.from('courses').select('*').containedBy('venues', [venueId]);
+    const { data, error } = await supabase.from('courses').select('*').contains('venues', [venueId]);
     if (error) throw error;
     else return data;
 }
