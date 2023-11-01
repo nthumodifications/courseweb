@@ -15,15 +15,14 @@ const CourseSearchbar = ({ onAddCourse }: { onAddCourse: (course: CourseDefiniti
         console.log(text)
         try {
             setLoading(true);
-            let temp = supabase
-                .from('courses')
-                .select('*')
-            if(text.length > 0) temp = temp.textSearch('multilang_search', `'${text.split(' ').join("' & '")}'`)
+            let temp = supabase.rpc('search_courses', {
+                keyword: text
+            });
             const { data = [], error } = await temp
                 .order('raw_id', { ascending: true })
                 .limit(10);
             if(error) console.error(error);
-            else setOptions(data ?? []);
+            else setOptions(data as CourseDefinition[] ?? []);
         } catch (e) {
             console.error(e);
         }
