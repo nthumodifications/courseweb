@@ -56,7 +56,7 @@
   },
   "devDependencies": {
     "@types/leaflet": "^1.9.4",
-    "@types/negotiator": "^0.6.1",
+    "@types/negotiator": "^0.6.2",
     "supabase": "^1.99.5",
     "webpack": "^5.89.0"
   }
