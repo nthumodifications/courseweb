@@ -14,7 +14,7 @@ import useSWR from 'swr'
 import RouteIcon from '@/components/BusIcons/RouteIcon';
 import RoutesFilterChips from './RoutesFilterChips';
 import useTime from '@/hooks/useTime';
-import BusDelayAlert from './BusDelayAlert';
+import BusDelayAlert from '../../BusDelayAlert';
 import BusDelayReportAlert from './BusDelayReportAlert';
 
 type PageProps = {
