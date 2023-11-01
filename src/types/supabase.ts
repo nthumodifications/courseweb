@@ -32,6 +32,153 @@ export interface Database {
       [_ in never]: never
     }
   }
+  next_auth: {
+    Tables: {
+      accounts: {
+        Row: {
+          access_token: string | null
+          expires_at: number | null
+          id: string
+          id_token: string | null
+          oauth_token: string | null
+          oauth_token_secret: string | null
+          provider: string
+          providerAccountId: string
+          refresh_token: string | null
+          scope: string | null
+          session_state: string | null
+          token_type: string | null
+          type: string
+          userId: string | null
+        }
+        Insert: {
+          access_token?: string | null
+          expires_at?: number | null
+          id?: string
+          id_token?: string | null
+          oauth_token?: string | null
+          oauth_token_secret?: string | null
+          provider: string
+          providerAccountId: string
+          refresh_token?: string | null
+          scope?: string | null
+          session_state?: string | null
+          token_type?: string | null
+          type: string
+          userId?: string | null
+        }
+        Update: {
+          access_token?: string | null
+          expires_at?: number | null
+          id?: string
+          id_token?: string | null
+          oauth_token?: string | null
+          oauth_token_secret?: string | null
+          provider?: string
+          providerAccountId?: string
+          refresh_token?: string | null
+          scope?: string | null
+          session_state?: string | null
+          token_type?: string | null
+          type?: string
+          userId?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounts_userId_fkey"
+            columns: ["userId"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      sessions: {
+        Row: {
+          expires: string
+          id: string
+          sessionToken: string
+          userId: string | null
+        }
+        Insert: {
+          expires: string
+          id?: string
+          sessionToken: string
+          userId?: string | null
+        }
+        Update: {
+          expires?: string
+          id?: string
+          sessionToken?: string
+          userId?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sessions_userId_fkey"
+            columns: ["userId"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      users: {
+        Row: {
+          email: string | null
+          emailVerified: string | null
+          id: string
+          image: string | null
+          name: string | null
+        }
+        Insert: {
+          email?: string | null
+          emailVerified?: string | null
+          id?: string
+          image?: string | null
+          name?: string | null
+        }
+        Update: {
+          email?: string | null
+          emailVerified?: string | null
+          id?: string
+          image?: string | null
+          name?: string | null
+        }
+        Relationships: []
+      }
+      verification_tokens: {
+        Row: {
+          expires: string
+          identifier: string | null
+          token: string
+        }
+        Insert: {
+          expires: string
+          identifier?: string | null
+          token: string
+        }
+        Update: {
+          expires?: string
+          identifier?: string | null
+          token?: string
+        }
+        Relationships: []
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      uid: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   pgbouncer: {
     Tables: {
       [_ in never]: never
@@ -188,6 +335,7 @@ export interface Database {
           擋修說明: string | null
           課程限制說明: string | null
           multilang_search: string | null
+          time_slots: unknown | null
         }
         Insert: {
           capacity?: number | null
@@ -267,11 +415,72 @@ export interface Database {
         }
         Relationships: []
       }
+      delay_reports: {
+        Row: {
+          created_at: string
+          id: number
+          other_problem: string | null
+          problem: string
+          route: string
+          time: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          other_problem?: string | null
+          problem: string
+          route: string
+          time: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          other_problem?: string | null
+          problem?: string
+          route?: string
+          time?: string
+        }
+        Relationships: []
+      }
+      users: {
+        Row: {
+          email: string | null
+          id: string
+          image: string | null
+          name: string | null
+        }
+        Insert: {
+          email?: string | null
+          id: string
+          image?: string | null
+          name?: string | null
+        }
+        Update: {
+          email?: string | null
+          id?: string
+          image?: string | null
+          name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "users_id_fkey"
+            columns: ["id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       distinct_classes: {
         Row: {
           class: string | null
+        }
+        Relationships: []
+      }
+      distinct_cross_discipline: {
+        Row: {
+          discipline: string | null
         }
         Relationships: []
       }
@@ -300,6 +509,18 @@ export interface Database {
           "": unknown
         }
         Returns: string
+      }
+      split_times: {
+        Args: {
+          times_arr: string[]
+        }
+        Returns: unknown
+      }
+      time_slots: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
       }
     }
     Enums: {

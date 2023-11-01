@@ -15,7 +15,7 @@ const MultiSelectControl = <T extends FieldValues>({ control, name, options, lab
                         color="neutral"
                         size="sm"
                         overlay
-                        checked={value.includes(op.value)}
+                        checked={value?.includes(op.value)}
                         onChange={(event) => {
                             onChange(event.target.checked? [...value, op.value] : value.filter((v: any) => v !== op.value))
                         }}
