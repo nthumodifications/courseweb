@@ -153,8 +153,8 @@ export const createTimetableFromCourses = (data: CourseDefinition[], theme = 'ts
                 //get the start and end time
                 const startTime = Math.min(...times);
                 const endTime = Math.max(...times);
-                //get the color
-                const color = timetableColors[theme][data!.indexOf(course)];
+                //get the color, mod the index by the length of the color array so that it loops
+                const color = timetableColors[theme][data!.indexOf(course) % timetableColors[theme].length];
                 //push to scheduleData
                 newTimetableData.push({
                     course: course,
