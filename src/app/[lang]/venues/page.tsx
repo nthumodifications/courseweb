@@ -1,6 +1,10 @@
 import { getDictionary } from "@/dictionaries/dictionaries";
 import {LangProps} from '@/types/pages';
 
+export const metadata = ({
+    title: '地點 Venues | NTHUMods'
+})
+
 const VenuesPage = async ({
     params: {
         lang

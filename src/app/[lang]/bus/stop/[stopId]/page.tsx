@@ -4,16 +4,18 @@ import supabase from '@/config/supabase';
 import { ScheduleItem, busDays, getVehicleDescription, routes, stops } from '@/const/bus';
 import useDictionary from '@/dictionaries/useDictionary';
 import { useSettings } from '@/hooks/contexts/settings';
-import {Button, Divider, LinearProgress, Checkbox, Chip} from '@mui/joy';
+import { Button, Divider, LinearProgress } from '@mui/joy';
 import { format, formatDistanceStrict, getDay } from 'date-fns';
 import { enUS, zhTW } from 'date-fns/locale';
 import Link from 'next/link';
-import { useEffect, useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { ChevronLeft, MapPin } from 'react-feather';
 import useSWR from 'swr'
 import RouteIcon from '@/components/BusIcons/RouteIcon';
 import RoutesFilterChips from './RoutesFilterChips';
 import useTime from '@/hooks/useTime';
+import BusDelayAlert from '../../BusDelayAlert';
+import BusDelayReportAlert from './BusDelayReportAlert';
 
 type PageProps = {
     params: { stopId: string }
@@ -59,7 +61,7 @@ const BusStop = ({ params: { stopId } }: PageProps) => {
         if(mod.arrival.getTime() - date.getTime() > 30 * 60 * 1000) {
             return format(mod.arrival, 'HH:mm');
         } else if(mod.arrival.getTime() - date.getTime() < 60 * 1000) {
-            return 'Arriving';
+            return '即將抵達';
         } else {
             return formatDistanceStrict(mod.arrival, date, { locale: language == 'zh' ? zhTW: enUS });
         }
@@ -69,20 +71,24 @@ const BusStop = ({ params: { stopId } }: PageProps) => {
         <div>
             {isLoading && <LinearProgress/>}
             <Button variant='plain' startDecorator={<ChevronLeft/>} onClick={() => history.back()}>Back</Button>
-            <div className='flex flex-row gap-4 items-center px-6 py-4'>
-                <MapPin/>
-                <div className="flex flex-col">
-                    <span className="text-lg font-bold">{stopDef?.name_zh} {stopId.endsWith('U') ? "上山": stopId.endsWith('D')?"下山": ""}</span>
-                    <span className="text-xs">{stopDef?.name_en} - {stopId.endsWith('U') ? "Up": stopId.endsWith('D')?"Down": ""}</span>
+            <div className='sticky top-0 bg-white dark:bg-neutral-900 shadow-md z-50'>
+                <BusDelayAlert/>
+                <div className='flex flex-row gap-4 items-center px-6 py-4'>
+                    <MapPin/>
+                    <div className="flex flex-col">
+                        <span className="text-lg font-bold">{stopDef?.name_zh} {stopId.endsWith('U') ? "上山": stopId.endsWith('D')?"下山": ""}</span>
+                        <span className="text-xs">{stopDef?.name_en} - {stopId.endsWith('U') ? "Up": stopId.endsWith('D')?"Down": ""}</span>
+                    </div>
+                    <p className='text-right flex-1'>
+                        Now: {format(date, 'HH:mm')}
+                    </p>
                 </div>
-                <p className='text-right flex-1'>
-                    Now: {format(date, 'HH:mm')}
-                </p>
             </div>
+            
             <Divider/>
             <RoutesFilterChips enabledRoutes={routeCodesFirstLetter} setFilter={setDisplayRoutes}/>
             <div className='flex flex-col divide-y divide-gray-200 dark:divide-neutral-800'>
-                {schedulesToDisplay.length == 0 && <div className='text-center text-gray-500 py-4'>No buses scheduled for today</div>}
+                {schedulesToDisplay.length == 0 && <div className='text-center text-gray-500 py-4'>末班車已過 😥</div>}
                 {schedulesToDisplay.map(mod => 
                 <Link key={mod.id} href={`/${language}/bus/bus/${mod.id}`}>
                     <div key={mod.id} className='grid grid-cols-[50px_auto_102px] px-2 py-2'>
@@ -91,7 +97,7 @@ const BusStop = ({ params: { stopId } }: PageProps) => {
                         </div>
                         <div className='flex flex-col px-2 pt-1'>
                             <h4 className='font-bold'>{language == 'zh' ? mod.route.title_zh: mod.route.title_en}</h4>
-                            <h5 className='text-sm text-gray-500'>Scheduled • {getVehicleDescription(mod.vehicle)}</h5>
+                            <h5 className='text-sm text-gray-500'>預計 • {getVehicleDescription(mod.vehicle)}</h5>
                         </div>
                         <p className="font-semibold text-end pr-3 self-center">
                         {getDisplayTime(mod)}
@@ -99,6 +105,8 @@ const BusStop = ({ params: { stopId } }: PageProps) => {
                     </div>
                 </Link>)}
             </div>
+            {/* gradient from slight gray botttom of screen to middle */}
+            <BusDelayReportAlert/>
         </div>
     </Fade>
 }
