@@ -31,8 +31,8 @@ const BusDelayReportAlert = () => {
 
     if(!show) return <></>;
     
-    return <div className='absolute bottom-0 p-3 w-full bg-gradient-to-t from-gray-500/50 dark:from-neutral-900/50 to-transparent'>
-        <Alert variant='outlined' color='neutral' sx={{ width: '100%' }}>
+    return <div className='absolute bottom-0 p-3 w-full bg-gradient-to-t from-gray-500/50 dark:from-neutral-900/50 to-transparent flex flex-row'>
+        <Alert variant='outlined' color='neutral' sx={{ width: '100%', maxWidth: '28rem' }}>
             <div className='flex flex-col w-full'>
                 <h3 className='font-bold text-lg'>誤點嗎？</h3>
                 <p className='text-sm'>如果有看到嚴重的誤點，系統會自動提醒其他同學哦</p>
