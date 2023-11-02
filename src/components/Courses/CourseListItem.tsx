@@ -18,8 +18,8 @@ const CourseListItem: FC<{ course: CourseDefinition }> = ({ course }) => {
     const dict = useDictionary();
     const isCourseSelected = useMemo(() => courses.includes(course.raw_id ?? ""), [courses, course]);
 
-    return <div className="text-gray-600 dark:text-gray-400 px-4">
-        <div className="grid grid-cols-1 lg:grid-rows-none lg:grid-cols-[auto_224px]">
+    return <div className="text-gray-600 dark:text-gray-400 px-4 border-b border-gray-200 pb-4">
+        <div className="grid grid-cols-1 lg:grid-rows-none lg:grid-cols-[auto_250px]">
             <div className='flex-1 space-y-4'>
                 <div className="mb-3 space-y-1">
                     <Link className="font-semibold text-lg text-[#AF7BE4]" href={'courses/'+course.raw_id}>{course.department} {course.course}-{course.class} {course.name_zh} - {(course.teacher_zh ?? []).join(',')}</Link>
@@ -79,9 +79,9 @@ const CourseListItem: FC<{ course: CourseDefinition }> = ({ course }) => {
                     </div>
             </div>
             <div className='flex flex-col space-y-3'>
-                <p>{course.semester} 學期</p>
+                <p className='text-black dark:text-white text-sm'>{course.semester} 學期</p>
                 {course.venues? 
-                    course.venues.map((vn, i) => <p className='text-blue-600 dark:text-blue-400'>{vn} <span className='text-black dark:text-white'>{course.times![i]}</span></p>) : 
+                    course.venues.map((vn, i) => <p className='text-blue-600 dark:text-blue-400 text-sm'>{vn} <span className='text-black dark:text-white'>{course.times![i]}</span></p>) : 
                     <p>No Venues</p>
                 }
                 <div className='flex flex-row space-x-1 text-sm'>
@@ -89,8 +89,7 @@ const CourseListItem: FC<{ course: CourseDefinition }> = ({ course }) => {
                         <span className="">
                             {course.capacity ?? '-'} 
                             {(course.reserve ?? 0) > 0 && <>
-                                <br/>
-                                {`保 ${course.reserve}`}
+                                {` 保 ${course.reserve}`}
                             </>}
                         </span>
                         
