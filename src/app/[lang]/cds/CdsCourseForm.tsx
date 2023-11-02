@@ -5,7 +5,7 @@ import { CdsCourseDefinition } from '@/config/supabase.types';
 import { scheduleTimeSlots } from '@/const/timetable';
 import { CourseTimeslotData } from '@/types/timetable';
 import { timetableColors } from '@/helpers/timetable';
-import { Accordion, Button, ButtonGroup, CircularProgress, DialogContent, DialogTitle, Divider, Drawer, IconButton, ModalClose, Sheet, FormControl, FormLabel, AccordionDetails, AccordionSummary, Stack, Alert, Chip, Tooltip, Typography, Switch, Dropdown, MenuButton, Menu, MenuItem } from '@mui/joy';
+import { Accordion, Button, ButtonGroup, CircularProgress, DialogContent, DialogTitle, Divider, Drawer, IconButton, ModalClose, Sheet, FormControl, FormLabel, AccordionDetails, AccordionSummary, Stack, Alert, Chip, Tooltip, Typography, Switch, Dropdown, MenuButton, Menu, MenuItem, Badge } from '@mui/joy';
 import {
     EyeOff,
     Filter,
@@ -101,7 +101,7 @@ const CdsCoursesForm: FC<{
         department: [],
         timeslots: []
     }
-    const { control, watch, setValue, reset } = useForm<CdsCoursesFormFields>({
+    const { control, watch, setValue, reset, formState: { isDirty } } = useForm<CdsCoursesFormFields>({
         defaultValues: emptyFilters
     });
 
@@ -411,7 +411,9 @@ const CdsCoursesForm: FC<{
                                     </IconButton>}
                                     <Divider orientation="vertical" />
                                     <IconButton onClick={handleFilterPressed} aria-pressed={showFilters ? 'true' : 'false'}>
-                                        <Filter className="text-gray-400 p-1" />
+                                        <Badge invisible={!isDirty}>
+                                            <Filter className="text-gray-400 p-1" />
+                                        </Badge>
                                     </IconButton>
                                 </Fragment>
                             }
@@ -493,7 +495,13 @@ const CdsCoursesForm: FC<{
                                             </FormControl>
                                         </AccordionDetails>
                                     </Accordion> */}
-                                    <Button variant="outlined" onClick={handleClear} startDecorator={<Trash2 />}>Clear Filters</Button>
+                                    <Button 
+                                        variant="outlined"
+                                        color="danger" 
+                                        startDecorator={<Trash2 />} 
+                                        disabled={!isDirty}
+                                        onClick={handleClear} 
+                                    >Clear Filters</Button>
                                     <Divider />
                                 </div>
                             </AccordionDetails>
@@ -514,7 +522,7 @@ const CdsCoursesForm: FC<{
                                         <p className='text-sm'>{course.note}</p>
                                         <p>{course.credits} 學分</p>
                                         {course.venues ?
-                                            course.venues.map((vn, i) => <p className='text-blue-600 font-mono'>{normalizeRoomName(vn)} <span className='text-black'>{course.times![i]}</span></p>) :
+                                            course.venues.map((vn, i) => <p className='text-blue-600 dark:text-blue-400 font-mono'>{normalizeRoomName(vn)} <span className='text-black dark:text-white'>{course.times![i]}</span></p>) :
                                             <p>No Venues</p>
                                         }
                                         <div className='flex flex-row flex-wrap gap-1'>
