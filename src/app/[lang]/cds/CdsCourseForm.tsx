@@ -1,25 +1,37 @@
-import CourseSearchbar from '@/components/Timetable/CourseSearchbar';
 import Timetable from '@/components/Timetable/Timetable';
 import useSupabaseClient from '@/config/supabase_client';
-import {FC, Fragment, useState, useRef, useEffect, useMemo} from 'react';
-import useSWR from 'swr';
-import { CdsCourseDefinition, CourseDefinition } from '@/config/supabase.types';
+import { FC, Fragment, useState, useRef, useEffect, useMemo } from 'react';
+import { CdsCourseDefinition } from '@/config/supabase.types';
 import { scheduleTimeSlots } from '@/const/timetable';
 import { CourseTimeslotData } from '@/types/timetable';
 import { timetableColors } from '@/helpers/timetable';
-import {Accordion, Button, ButtonGroup, CircularProgress, DialogContent, DialogTitle, Divider, Drawer, IconButton, ModalClose, Sheet, FormControl, FormLabel, AccordionDetails, AccordionSummary, Stack, Alert, Chip, Tooltip} from '@mui/joy';
-import {Download, EyeOff, Filter, Plus, Search, Share, Trash, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, AlertTriangle, Save, Trash2, Copy} from 'react-feather';
-import ThemeChangableAlert from '@/components/Alerts/ThemeChangableAlert';
+import { Accordion, Button, ButtonGroup, CircularProgress, DialogContent, DialogTitle, Divider, Drawer, IconButton, ModalClose, Sheet, FormControl, FormLabel, AccordionDetails, AccordionSummary, Stack, Alert, Chip, Tooltip, Typography, Switch, Dropdown, MenuButton, Menu, MenuItem } from '@mui/joy';
+import {
+    EyeOff,
+    Filter,
+    Plus,
+    Search,
+    Trash,
+    X,
+    ChevronLeft,
+    ChevronRight,
+    ChevronsLeft,
+    ChevronsRight,
+    AlertTriangle,
+    Save,
+    Trash2,
+    Copy,
+    Settings,
+    Send,
+} from 'react-feather';
 import { useForm } from 'react-hook-form';
 import InputControl from '@/components/FormComponents/InputControl';
 import MultiSelectControl from '@/components/FormComponents/MultiSelectControl';
 import DepartmentControl from '@/components/FormComponents/DepartmentControl';
 import TimeslotSelectorControl from '@/components/FormComponents/TimeslotSelectorControl';
-import AutocompleteControl from '@/components/FormComponents/AutocompleteControl';
 import { arrayRange } from '@/helpers/array';
 import { useDebouncedCallback } from 'use-debounce';
-import Link from 'next/link';
-import {normalizeRoomName} from '@/const/venues';
+import { normalizeRoomName } from '@/const/venues';
 import { useMediaQuery } from 'usehooks-ts';
 import { useSettings } from '@/hooks/contexts/settings';
 
@@ -76,12 +88,13 @@ const CdsCoursesForm: FC<{
     const [searchCourses, setSearchCourses] = useState<CdsCourseDefinition[]>([]);
     const [totalCount, setTotalCount] = useState<number>(0);
     const [headIndex, setHeadIndex] = useState<number>(0);
+    const [showTimetable, setShowTimetable] = useState(true);
     const { timetableTheme } = useSettings();
     const [displayToggles, setDisplayToggles] = useState<{ [key: string]: boolean }>({});
     const scrollRef = useRef<HTMLDivElement>(null);
     const emptyFilters = {
         textSearch: "",
-        level: [1,2,3,4],
+        level: [1, 2, 3, 4],
         language: [],
         department: [],
         timeslots: []
@@ -139,8 +152,8 @@ const CdsCoursesForm: FC<{
         //Query for courses
         try {
             let temp = supabase.rpc('search_cds_courses', {
-                    keyword: filters.textSearch,
-                }, { count: 'exact' })
+                keyword: filters.textSearch,
+            }, { count: 'exact' })
                 .eq('semester', '11120')
             if (filters.level.length)
                 temp = temp
@@ -187,7 +200,7 @@ const CdsCoursesForm: FC<{
                 console.log(filters.timeslots)
                 temp = temp
                     .containedBy('cds_time_slots', filters.timeslots)
-                    // .overlaps('time_slots', filters.timeslots) //Overlap works if only one of their timeslots is selected
+                // .overlaps('time_slots', filters.timeslots) //Overlap works if only one of their timeslots is selected
             }
 
             let { data: courses, error, count } = await temp.order('raw_id', { ascending: true }).range(index, index + 29)
@@ -226,7 +239,7 @@ const CdsCoursesForm: FC<{
     const timetableData = useMemo(() => createTimetableFromCdsCourses(selectedCourses, timetableTheme), [selectedCourses]);
 
     //check if there are conflicting timeslots
-    const hasConflictingTimeslots = useMemo(() =>timetableData.filter((timeslot, index, self) => {
+    const hasConflictingTimeslots = useMemo(() => timetableData.filter((timeslot, index, self) => {
         const otherTimeslots = self.filter((ts, i) => i != index);
         return otherTimeslots.find(ts => ts.dayOfWeek == timeslot.dayOfWeek && ts.startTime <= timeslot.endTime && ts.endTime >= timeslot.startTime) != undefined;
     }), [timetableData]);
@@ -262,24 +275,41 @@ const CdsCoursesForm: FC<{
     }
 
     return <div className='w-full'>
-        <div className='flex flex-row justify-between'>
-            <h1 className='font-bold text-3xl mb-3'>選課意願調查</h1>
+        <div className='flex flex-col md:flex-row justify-between mb-4'>
+            <h1 className='font-bold text-3xl mb-3'>選課意願調查 <Chip variant="outlined" color='primary'>112-2 學期</Chip></h1>
             <div>
-                <div className='flex flex-row gap-2'>
-                    <Button color='neutral' variant='outlined' startDecorator={<Save/>}>Save</Button>
-                    <Button color='success'>Submit</Button>
+                <div className='flex flex-row gap-2 justify-end'>
+                    <Button color='neutral' variant='outlined' startDecorator={<Save />}>Save</Button>
+                    <Button color='success' startDecorator={<Send />}>Submit</Button>
                 </div>
             </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-sm">
-            <Timetable timetableData={timetableData} />
-            <div className="flex flex-col gap-4 px-4">
-                <Alert color='danger' startDecorator={<AlertTriangle/>}>
+            {showTimetable && <Timetable timetableData={timetableData} />}
+            <div className="flex flex-col gap-4 px-4 -mt-28 md:-mt-0">
+                <Alert color='danger' startDecorator={<AlertTriangle />}>
                     提供篩選的課程都是上學年 （111-2學期）的課程，除了課號&課名之外，其他資訊可能會有變動。
                 </Alert>
-                <Button startDecorator={<Plus />} variant="outlined" onClick={e => setOpen(true)}>Add Course</Button>
+                <ButtonGroup buttonFlex={1}>
+                    <Button startDecorator={<Plus />} variant="outlined" onClick={e => setOpen(true)}>Add Course</Button>
+                    <Dropdown>
+                        <MenuButton
+                            slots={{ root: IconButton }}
+                            slotProps={{ root: { variant: 'outlined', color: 'neutral' } }}
+                        >
+                            <Settings className='w-4 h-4' />
+                        </MenuButton>
+                        <Menu>
+                            <MenuItem>
+                                <Typography component="label" endDecorator={<Switch sx={{ ml: 1 }} checked={showTimetable} onChange={(e) => setShowTimetable(e.target.checked)} />}>
+                                    時間表
+                                </Typography>
+                            </MenuItem>
+                        </Menu>
+                    </Dropdown>
+                </ButtonGroup>
                 <div className='grid grid-cols-2 text-center'>
-                <div className='space-x-2'>
+                    <div className='space-x-2'>
                         <span className='text-2xl'>{selectedCourses.length}</span>
                         <span className='text-gray-600'>課程</span>
                     </div>
@@ -288,7 +318,7 @@ const CdsCoursesForm: FC<{
                         <span className='text-gray-600'>縂學分</span>
                     </div>
                 </div>
-                <Divider/>
+                <Divider />
                 {selectedCourses.map((course, index) => (
                     <div key={index} className="flex flex-row gap-4 items-center">
                         <div className="w-4 h-4 rounded-full" style={{ backgroundColor: timetableColors[timetableTheme][index % timetableColors[timetableTheme].length] }}></div>
@@ -306,21 +336,21 @@ const CdsCoursesForm: FC<{
                             </div>
                         </div>
                         <div className="flex flex-row space-x-2 items-center">
-                        {hasConflictingTimeslots.find(ts => ts.course.raw_id == course.raw_id) && <Tooltip title="衝堂">
-                            <AlertTriangle className="w-6 h-6 text-red-500" />
-                        </Tooltip>}
-                        {hasSameCourse.includes(course.raw_id) && <Tooltip title="重複"> 
-                            <Copy className="w-6 h-6 text-yellow-500" />
-                        </Tooltip>}
-                        
-                        <ButtonGroup>
-                            <IconButton onClick={() => deleteCourse(course)}>
-                                <Trash className="w-4 h-4" />
-                            </IconButton>
-                            <IconButton disabled>
-                                <EyeOff className="w-4 h-4" />
-                            </IconButton>
-                        </ButtonGroup>
+                            {hasConflictingTimeslots.find(ts => ts.course.raw_id == course.raw_id) && <Tooltip title="衝堂">
+                                <AlertTriangle className="w-6 h-6 text-red-500" />
+                            </Tooltip>}
+                            {hasSameCourse.includes(course.raw_id) && <Tooltip title="重複">
+                                <Copy className="w-6 h-6 text-yellow-500" />
+                            </Tooltip>}
+
+                            <ButtonGroup>
+                                <IconButton onClick={() => deleteCourse(course)}>
+                                    <Trash className="w-4 h-4" />
+                                </IconButton>
+                                <IconButton disabled>
+                                    <EyeOff className="w-4 h-4" />
+                                </IconButton>
+                            </ButtonGroup>
                         </div>
                     </div>
                 ))}
@@ -416,14 +446,14 @@ const CdsCoursesForm: FC<{
                                             <DepartmentControl control={control} />
                                         </FormControl>
                                     </div>
-                                    <Accordion sx={{ flex: 1, minWidth: '200px', marginBottom: '1rem' }} expanded={isMobile? undefined: true}>
+                                    <Accordion sx={{ flex: 1, minWidth: '200px', marginBottom: '1rem' }} expanded={isMobile ? undefined : true}>
                                         <AccordionSummary slotProps={{
                                             button: {
                                                 sx: { padding: '0.5rem' }
                                             }
                                         }}>時間</AccordionSummary>
                                         <AccordionDetails>
-                                        {/* @ts-ignore */}
+                                            {/* @ts-ignore */}
                                             <TimeslotSelectorControl control={control} />
                                         </AccordionDetails>
                                     </Accordion>
@@ -461,7 +491,7 @@ const CdsCoursesForm: FC<{
                                             </FormControl>
                                         </AccordionDetails>
                                     </Accordion> */}
-                                    <Button variant="outlined" onClick={handleClear} startDecorator={<Trash2/>}>Clear Filters</Button>
+                                    <Button variant="outlined" onClick={handleClear} startDecorator={<Trash2 />}>Clear Filters</Button>
                                     <Divider />
                                 </div>
                             </AccordionDetails>
@@ -470,7 +500,7 @@ const CdsCoursesForm: FC<{
                             <p>結果</p>
                             <p>{totalCount} 課</p>
                         </div>
-                        <Divider/>
+                        <Divider />
                         <div className='flex flex-col space-y-6'>
                             {searchCourses.map((course, index) => (
                                 <div className='flex flex-row' key={index}>
@@ -481,8 +511,8 @@ const CdsCoursesForm: FC<{
                                         </div>
                                         <p className='text-sm'>{course.note}</p>
                                         <p>{course.credits} 學分</p>
-                                        {course.venues? 
-                                            course.venues.map((vn, i) => <p className='text-blue-600 font-mono'>{normalizeRoomName(vn)} <span className='text-black'>{course.times![i]}</span></p>) : 
+                                        {course.venues ?
+                                            course.venues.map((vn, i) => <p className='text-blue-600 font-mono'>{normalizeRoomName(vn)} <span className='text-black'>{course.times![i]}</span></p>) :
                                             <p>No Venues</p>
                                         }
                                         <div className='flex flex-row flex-wrap gap-1'>
@@ -493,10 +523,10 @@ const CdsCoursesForm: FC<{
                                     </div>
                                     {!hasCourse(course) ? <IconButton variant='soft' onClick={() => addCourse(course)}>
                                         <Plus className="w-4 h-4" />
-                                    </IconButton>:
-                                    <IconButton variant='soft' onClick={() => deleteCourse(course)}>
-                                        <Trash className="w-4 h-4" />
-                                    </IconButton>}
+                                    </IconButton> :
+                                        <IconButton variant='soft' onClick={() => deleteCourse(course)}>
+                                            <Trash className="w-4 h-4" />
+                                        </IconButton>}
                                 </div>
                             ))}
                             {searchCourses.length == 0 && (
