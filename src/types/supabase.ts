@@ -458,36 +458,60 @@ export interface Database {
       cds_courses: {
         Row: {
           class: number | null
-          course: number | null
+          course: string | null
           credits: number | null
+          cross_discipline: string[] | null
           department: string | null
+          first_specialization: string[] | null
           id: number
+          language: string | null
           name_en: string | null
           name_zh: string | null
-          teacher_en: string[] | null
+          note: string | null
+          raw_id: string
+          second_specialization: string[] | null
+          semester: string | null
           teacher_zh: string[] | null
+          times: string[] | null
+          venues: string[] | null
         }
         Insert: {
           class?: number | null
-          course?: number | null
+          course?: string | null
           credits?: number | null
+          cross_discipline?: string[] | null
           department?: string | null
-          id?: number
+          first_specialization?: string[] | null
+          id: number
+          language?: string | null
           name_en?: string | null
           name_zh?: string | null
-          teacher_en?: string[] | null
+          note?: string | null
+          raw_id: string
+          second_specialization?: string[] | null
+          semester?: string | null
           teacher_zh?: string[] | null
+          times?: string[] | null
+          venues?: string[] | null
         }
         Update: {
           class?: number | null
-          course?: number | null
+          course?: string | null
           credits?: number | null
+          cross_discipline?: string[] | null
           department?: string | null
+          first_specialization?: string[] | null
           id?: number
+          language?: string | null
           name_en?: string | null
           name_zh?: string | null
-          teacher_en?: string[] | null
+          note?: string | null
+          raw_id?: string
+          second_specialization?: string[] | null
+          semester?: string | null
           teacher_zh?: string[] | null
+          times?: string[] | null
+          venues?: string[] | null
         }
         Relationships: []
       }
@@ -512,7 +536,7 @@ export interface Database {
           raw_1_2_specialization: string | null
           raw_cross_discipline: string | null
           raw_extra_selection: string | null
-          raw_id: string | null
+          raw_id: string
           raw_teacher_en: string | null
           raw_teacher_zh: string | null
           raw_time: string | null
@@ -520,6 +544,7 @@ export interface Database {
           reserve: number | null
           second_specialization: string[] | null
           semester: string | null
+          tags: string[]
           teacher_en: string[] | null
           teacher_zh: string[] | null
           times: string[] | null
@@ -552,7 +577,7 @@ export interface Database {
           raw_1_2_specialization?: string | null
           raw_cross_discipline?: string | null
           raw_extra_selection?: string | null
-          raw_id?: string | null
+          raw_id: string
           raw_teacher_en?: string | null
           raw_teacher_zh?: string | null
           raw_time?: string | null
@@ -560,6 +585,7 @@ export interface Database {
           reserve?: number | null
           second_specialization?: string[] | null
           semester?: string | null
+          tags?: string[]
           teacher_en?: string[] | null
           teacher_zh?: string[] | null
           times?: string[] | null
@@ -590,7 +616,7 @@ export interface Database {
           raw_1_2_specialization?: string | null
           raw_cross_discipline?: string | null
           raw_extra_selection?: string | null
-          raw_id?: string | null
+          raw_id?: string
           raw_teacher_en?: string | null
           raw_teacher_zh?: string | null
           raw_time?: string | null
@@ -598,6 +624,7 @@ export interface Database {
           reserve?: number | null
           second_specialization?: string[] | null
           semester?: string | null
+          tags?: string[]
           teacher_en?: string[] | null
           teacher_zh?: string[] | null
           times?: string[] | null
@@ -1226,6 +1253,30 @@ export interface Database {
             }
             Returns: number
           }
+      search_cds_courses: {
+        Args: {
+          keyword: string
+        }
+        Returns: {
+          class: number | null
+          course: string | null
+          credits: number | null
+          cross_discipline: string[] | null
+          department: string | null
+          first_specialization: string[] | null
+          id: number
+          language: string | null
+          name_en: string | null
+          name_zh: string | null
+          note: string | null
+          raw_id: string
+          second_specialization: string[] | null
+          semester: string | null
+          teacher_zh: string[] | null
+          times: string[] | null
+          venues: string[] | null
+        }[]
+      }
       search_courses: {
         Args: {
           keyword: string
@@ -1250,7 +1301,7 @@ export interface Database {
           raw_1_2_specialization: string | null
           raw_cross_discipline: string | null
           raw_extra_selection: string | null
-          raw_id: string | null
+          raw_id: string
           raw_teacher_en: string | null
           raw_teacher_zh: string | null
           raw_time: string | null
@@ -1258,6 +1309,7 @@ export interface Database {
           reserve: number | null
           second_specialization: string[] | null
           semester: string | null
+          tags: string[]
           teacher_en: string[] | null
           teacher_zh: string[] | null
           times: string[] | null

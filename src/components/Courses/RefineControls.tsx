@@ -29,7 +29,7 @@ export type RefineControlFormTypes = {
     language: string[],
     others: string[],
     className: string | null,
-    department: { code: string; name_zh: string; name_en: string; }[],
+    department: Department[],
     firstSpecialization: string | null,
     secondSpecialization: string | null,
     timeslots: string[],

@@ -38,7 +38,7 @@
     "leaflet": "^1.9.4",
     "negotiator": "^0.6.3",
     "next": "13.5.6",
-    "next-auth": "^4.23.2",
+    "next-auth": "^4.24.4",
     "next-pwa": "^5.6.0",
     "node-html-parser": "^6.1.11",
     "postcss": "8.4.31",

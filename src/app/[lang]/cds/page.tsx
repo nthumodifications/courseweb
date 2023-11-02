@@ -1,67 +1,13 @@
 'use client';
 import NTHUBirdIcon from "@/components/NTHUBirdIcon"
 import CourseSearchbar from "@/components/Timetable/CourseSearchbar";
+import Timetable from "@/components/Timetable/Timetable";
 import getSupabaseServer from "@/config/supabase_server";
 import { Alert, Button, CircularProgress, DialogActions, DialogContent, Divider, Modal, ModalClose, ModalDialog } from "@mui/joy"
 import { signIn, useSession } from "next-auth/react"
 import { FC, useState } from "react"
 import useSWR from "swr";
-
-const getCdsCourses = async () => {
-    const supabase = await getSupabaseServer();
-    const { data: _data = [], error } = await supabase.from('cds_courses').select('*');
-    if(error) throw error;
-    return _data;
-}
-
-type CdsPreferences = {
-    courseTitle: string;
-    courseId: string;
-    courseCredits: number;
-}
-type CdsSubmission = {
-    studentId?: string;
-    name_zh?: string;
-    preferences: Array<CdsPreferences>;
-}
-
-type CdsCoursesDefinition = any;
-
-
-const CdsCoursesForm:FC<{
-    initialSubmission:  CdsSubmission;
-    cdsCoursesList: CdsCoursesDefinition[];
-}> = ({ initialSubmission, cdsCoursesList }) => {
-    const [preferences, setPreferences] = useState<CdsPreferences[]>(initialSubmission.preferences);
-
-    return <div className="flex flex-col rounded-sm border border-gray-400">
-        <CourseSearchbar onAddCourse={console.log}/>
-    </div>
-}
-
-
-const CdsFormContainer = () => {
-    const { data: cdsCoursesList = [], error, isLoading } = useSWR(['cds_courses'], getCdsCourses)
-    
-    if(isLoading) return <CircularProgress/>
-
-    if(error) return <Modal open>
-        <ModalDialog>
-            <ModalClose/>
-            
-            <DialogContent>
-                Error occurred while loading courses.
-            </DialogContent>
-            <DialogActions>
-                <Button>Close</Button>
-            </DialogActions>
-        </ModalDialog>
-    </Modal>
-
-    return (
-        <CdsCoursesForm initialSubmission={{ preferences: [] }} cdsCoursesList={cdsCoursesList!}/>
-    )
-}
+import CdsFormContainer from "./CdsFormContainer";
 
 const CdsFormBeforeSignIn: FC<{ isLoggingIn: boolean }> = ({ isLoggingIn }) => {
     return <div className="text-center space-y-3 py-4 w-full">
@@ -71,7 +17,11 @@ const CdsFormBeforeSignIn: FC<{ isLoggingIn: boolean }> = ({ isLoggingIn }) => {
 
 const CourseDemandSurvey = () => {
     const { data, status, update } = useSession();
-    return <div className="flex flex-col items-center justify-center h-full w-full">
+
+
+    if(true) return <CdsFormContainer/>
+
+    return <div className="flex flex-col items-center justify-center h-full w-full" style={{background: "radial-gradient(159.94% 110.75% at 82.76% -5.79%, #FBA5FF 0%, #FFF 51.64%)", backdropFilter: 'blur(4px)'}}>
         <div className="flex flex-col items-center justify-center max-w-xl space-y-2 w-[64rem]">
             <div className="text-left space-y-3 py-4 w-full text-gray-700">
                 <h1 className="text-4xl font-bold">選課意願調查</h1>
@@ -86,9 +36,9 @@ const CourseDemandSurvey = () => {
                 <p>開放時間：2021/10/18 00:00 ~ 2021/10/24 23:59</p>
             </div>
             <Divider />
-            <CdsFormContainer/>
-            {/* {status == 'authenticated' ? <CdsFormContainer/> : <CdsFormBeforeSignIn isLoggingIn={status == 'loading'}/>} */}
+            <CdsFormBeforeSignIn isLoggingIn={status == 'loading'}/>
         </div>
+        <CdsFormContainer/>
     </div>
 }
 
