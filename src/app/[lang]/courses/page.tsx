@@ -132,10 +132,13 @@ const CoursePage: NextPage = () => {
                     .or(`compulsory_for.cs.{"${filters.className}"},elective_for.cs.{"${filters.className}"}`);
             if (filters.others.includes('xclass'))
                 temp = temp
-                    .textSearch(`備註`, `'X-Class'`)
+                    .contains('tags', ['X-Class'])
+            if (filters.others.includes('16_weeks')) 
+                temp = temp
+                    .contains('tags', ['16周'])
             if (filters.others.includes('extra_selection'))
-                    temp = temp
-                        .eq('no_extra_selection', false)
+                temp = temp
+                    .not('tags', 'cs', '{"不可加簽"}')
             if (filters.firstSpecialization || filters.secondSpecialization) {
                 temp = temp
                     .or(`first_specialization.cs.{"${filters.firstSpecialization ?? ""}"},second_specialization.cs.{"${filters.secondSpecialization ?? ""}"}`)
