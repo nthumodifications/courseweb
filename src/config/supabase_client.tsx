@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useContext, useRef } from 'react';
 import {createContext, useState, FC, PropsWithChildren} from 'react';
 
-export const supabaseContext = createContext<SupabaseClient>({} as any);
+export const supabaseContext = createContext<SupabaseClient<Database>>({} as any);
 
 const { Provider } = supabaseContext;
 

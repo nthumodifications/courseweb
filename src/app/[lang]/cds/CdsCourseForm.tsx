@@ -54,6 +54,8 @@ const createTimetableFromCdsCourses = (data: CdsCourseDefinition[], theme = 'tsi
                 const color = timetableColors[theme][data!.indexOf(course) % timetableColors[theme].length];
                 //push to scheduleData
                 newTimetableData.push({
+                    //TODO: properly type the timetable to enable for multiple course types
+                    // @ts-ignore
                     course: course,
                     venue: course.venues![index]!,
                     dayOfWeek: 'MTWRFS'.indexOf(day),
