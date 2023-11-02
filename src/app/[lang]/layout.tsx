@@ -13,6 +13,7 @@ import ModalProvider from '@/hooks/contexts/useModal';
 import { LangProps } from '@/types/pages';
 import { CssVarsProvider } from '@mui/joy';
 import NextAuthProvider from '@/components/NextAuthProvider';
+import { SupabaseProvider } from '@/config/supabase_client';
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -40,21 +41,23 @@ export default function RootLayout({
   return (
       <CssVarsProvider defaultMode={(theme?.value as any) ?? 'light'}>
         <NextAuthProvider>
-          <SettingsProvider>
-            <ModalProvider>
-                <html lang={params.lang} className={`${theme?.value ?? ''} overflow-x-hidden`}>
-                  <body className={`${inter.className} grid grid-cols-1 grid-rows-[64px_40px_calc(100vh-108px)] md:grid-cols-[12rem_auto] md:grid-rows-[64px_calc(100vh-64px)_12rem] bg-white dark:bg-neutral-900 dark:text-white`}>
-                    <Header/>
-                    <SideNav/>
-                    <main className='overflow-y-auto overflow-x-hidden h-full w-full'>
-                      {children}
-                      <Analytics />
-                    </main>
-                    <Footer/>
-                  </body>
-                </html>
-            </ModalProvider>
-          </SettingsProvider>
+          <SupabaseProvider>
+            <SettingsProvider>
+              <ModalProvider>
+                  <html lang={params.lang} className={`${theme?.value ?? ''} overflow-x-hidden`}>
+                    <body className={`${inter.className} grid grid-cols-1 grid-rows-[64px_40px_calc(100vh-108px)] md:grid-cols-[12rem_auto] md:grid-rows-[64px_calc(100vh-64px)_12rem] bg-white dark:bg-neutral-900 dark:text-white`}>
+                      <Header/>
+                      <SideNav/>
+                      <main className='overflow-y-auto overflow-x-hidden h-full w-full'>
+                        {children}
+                        <Analytics />
+                      </main>
+                      <Footer/>
+                    </body>
+                  </html>
+              </ModalProvider>
+            </SettingsProvider>
+          </SupabaseProvider>
         </NextAuthProvider>
       </CssVarsProvider>
   )

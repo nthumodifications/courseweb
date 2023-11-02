@@ -8,7 +8,7 @@ import { scheduleTimeSlots } from '@/const/timetable';
 import { CourseTimeslotData } from '@/types/timetable';
 import { timetableColors } from '@/helpers/timetable';
 import {Accordion, Button, ButtonGroup, CircularProgress, DialogContent, DialogTitle, Divider, Drawer, IconButton, ModalClose, Sheet, FormControl, FormLabel, AccordionDetails, AccordionSummary, Stack, Alert, Chip, Tooltip} from '@mui/joy';
-import {Download, EyeOff, Filter, Plus, Search, Share, Trash, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, AlertTriangle, Save, Trash2} from 'react-feather';
+import {Download, EyeOff, Filter, Plus, Search, Share, Trash, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, AlertTriangle, Save, Trash2, Copy} from 'react-feather';
 import ThemeChangableAlert from '@/components/Alerts/ThemeChangableAlert';
 import { useForm } from 'react-hook-form';
 import InputControl from '@/components/FormComponents/InputControl';
@@ -21,6 +21,7 @@ import { useDebouncedCallback } from 'use-debounce';
 import Link from 'next/link';
 import {normalizeRoomName} from '@/const/venues';
 import { useMediaQuery } from 'usehooks-ts';
+import { useSettings } from '@/hooks/contexts/settings';
 
 const createTimetableFromCdsCourses = (data: CdsCourseDefinition[], theme = 'tsinghuarian') => {
     const newTimetableData: CourseTimeslotData[] = [];
@@ -75,6 +76,7 @@ const CdsCoursesForm: FC<{
     const [searchCourses, setSearchCourses] = useState<CdsCourseDefinition[]>([]);
     const [totalCount, setTotalCount] = useState<number>(0);
     const [headIndex, setHeadIndex] = useState<number>(0);
+    const { timetableTheme } = useSettings();
     const [displayToggles, setDisplayToggles] = useState<{ [key: string]: boolean }>({});
     const scrollRef = useRef<HTMLDivElement>(null);
     const emptyFilters = {
@@ -221,13 +223,22 @@ const CdsCoursesForm: FC<{
 
     }, [JSON.stringify(filters)])
 
-    const timetableData = useMemo(() => createTimetableFromCdsCourses(selectedCourses), [selectedCourses]);
+    const timetableData = useMemo(() => createTimetableFromCdsCourses(selectedCourses, timetableTheme), [selectedCourses]);
 
     //check if there are conflicting timeslots
     const hasConflictingTimeslots = useMemo(() =>timetableData.filter((timeslot, index, self) => {
         const otherTimeslots = self.filter((ts, i) => i != index);
         return otherTimeslots.find(ts => ts.dayOfWeek == timeslot.dayOfWeek && ts.startTime <= timeslot.endTime && ts.endTime >= timeslot.startTime) != undefined;
     }), [timetableData]);
+
+    //check if there is same dept same course but different class, return course codes
+    const hasSameCourse = useMemo(() => {
+        const sameCourse = selectedCourses.filter((course, index, self) => {
+            const otherCourses = self.filter((c, i) => i != index);
+            return otherCourses.find(c => c.department == course.department && c.course == course.course) != undefined;
+        });
+        return sameCourse.map(course => course.raw_id);
+    }, [selectedCourses]);
 
     const totalCredits = useMemo(() => {
         return selectedCourses.reduce((acc, cur) => acc + (cur.credits || 0), 0);
@@ -243,6 +254,11 @@ const CdsCoursesForm: FC<{
 
     const hasCourse = (course: CdsCourseDefinition) => {
         return selectedCourses.find(c => c.raw_id == course.raw_id) != undefined;
+    }
+
+    const handleFilterPressed = () => {
+        setShowFilters(!showFilters)
+        scrollRef.current?.scrollTo(0, 0);
     }
 
     return <div className='w-full'>
@@ -275,7 +291,7 @@ const CdsCoursesForm: FC<{
                 <Divider/>
                 {selectedCourses.map((course, index) => (
                     <div key={index} className="flex flex-row gap-4 items-center">
-                        <div className="w-4 h-4 rounded-full" style={{ backgroundColor: timetableColors['tsinghuarian'][index] }}></div>
+                        <div className="w-4 h-4 rounded-full" style={{ backgroundColor: timetableColors[timetableTheme][index % timetableColors[timetableTheme].length] }}></div>
                         <div className="flex flex-col flex-1">
                             <span className="text-sm">{course.name_zh}</span>
                             <span className="text-xs">{course.name_en}</span>
@@ -292,6 +308,9 @@ const CdsCoursesForm: FC<{
                         <div className="flex flex-row space-x-2 items-center">
                         {hasConflictingTimeslots.find(ts => ts.course.raw_id == course.raw_id) && <Tooltip title="衝堂">
                             <AlertTriangle className="w-6 h-6 text-red-500" />
+                        </Tooltip>}
+                        {hasSameCourse.includes(course.raw_id) && <Tooltip title="重複"> 
+                            <Copy className="w-6 h-6 text-yellow-500" />
                         </Tooltip>}
                         
                         <ButtonGroup>
@@ -359,7 +378,7 @@ const CdsCoursesForm: FC<{
                                         <X className="text-gray-400 p-1" />
                                     </IconButton>}
                                     <Divider orientation="vertical" />
-                                    <IconButton onClick={() => setShowFilters(!showFilters)} aria-pressed={showFilters ? 'true' : 'false'}>
+                                    <IconButton onClick={handleFilterPressed} aria-pressed={showFilters ? 'true' : 'false'}>
                                         <Filter className="text-gray-400 p-1" />
                                     </IconButton>
                                 </Fragment>
