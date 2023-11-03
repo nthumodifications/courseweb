@@ -11,10 +11,10 @@ const handler = NextAuth({
             clientId: process.env.NTHU_OAUTH_CLIENT_ID,
             clientSecret: process.env.NTHU_OAUTH_SECRET_KEY,
             authorization: {
-                url: "https://oauth.nthumods.com/v1.1/authorize.php",
-                params: { scope: "uuid,inschool,email,userid,name" }
+                url: "https://oauth.ccxp.nthu.edu.tw/v1.1/authorize.php",
+                params: { scope: "inschool email userid name" }
             },
-            token: "https://oauth.nthumods.com/v1.1/token.php",
+            token: "https://oauth.ccxp.nthu.edu.tw/v1.1/token.php",
             userinfo: "https://oauth.nthumods.com/v1.1/resource.php",
             profile(profile) {
               return {
