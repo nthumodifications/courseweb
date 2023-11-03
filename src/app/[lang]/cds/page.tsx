@@ -19,7 +19,7 @@ const CourseDemandSurvey = () => {
     const { data, status, update } = useSession();
 
 
-    if(true) return <CdsFormContainer/>
+    // if(true) return <CdsFormContainer/>
 
     return <div className="flex flex-col items-center justify-center h-full w-full" style={{background: "radial-gradient(159.94% 110.75% at 82.76% -5.79%, #FBA5FF 0%, #FFF 51.64%)", backdropFilter: 'blur(4px)'}}>
         <div className="flex flex-col items-center justify-center max-w-xl space-y-2 w-[64rem]">

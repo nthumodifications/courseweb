@@ -8,14 +8,14 @@ const handler = NextAuth({
             id: "nthu",
             name: "NTHU",
             type: "oauth",
-            clientId: "nthumods",
-            clientSecret:"unknown",
+            clientId: process.env.NTHU_OAUTH_CLIENT_ID,
+            clientSecret: process.env.NTHU_OAUTH_SECRET_KEY,
             authorization: {
-                url: "https://oauth.ccxp.nthu.edu.tw/v1.1/authorize.php",
+                url: "https://oauth.nthumods.com/v1.1/authorize.php",
                 params: { scope: "uuid,inschool,email,userid,name" }
             },
-            token: "https://oauth.ccxp.nthu.edu.tw/v1.1/token.php",
-            userinfo: "https://oauth.ccxp.nthu.edu.tw/v1.1/resource.php",
+            token: "https://oauth.nthumods.com/v1.1/token.php",
+            userinfo: "https://oauth.nthumods.com/v1.1/resource.php",
             profile(profile) {
               return {
                 id: profile.id,
