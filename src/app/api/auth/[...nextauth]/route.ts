@@ -17,8 +17,9 @@ const handler = NextAuth({
             token: "https://oauth.nthumods.com/v1.1/token.php",
             userinfo: "https://oauth.nthumods.com/v1.1/resource.php",
             profile(profile) {
+              console.log(profile);
               return {
-                id: profile.id,
+                id: profile.uuid,
                 userid: profile.userid,
                 inschool: profile.inschool,
                 name_zh: profile.name,
