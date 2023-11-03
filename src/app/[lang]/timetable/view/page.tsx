@@ -3,14 +3,15 @@ import Timetable from "@/components/Timetable/Timetable";
 import { NextPage } from "next";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from 'next/navigation'
-import supabase from "@/config/supabase";
 import useSWR from "swr";
 import { createTimetableFromCourses, timetableColors } from "@/helpers/timetable";
+import useSupabaseClient from '@/config/supabase_client';
 import { useSettings } from "@/hooks/contexts/settings";
 
 const ViewTimetablePage: NextPage = () => {
     const router = useRouter();
     const searchParams = useSearchParams();
+    const supabase = useSupabaseClient();
     const courseCodes = searchParams.get('semester_1121')?.split(',');
     const { timetableTheme } = useSettings();
 

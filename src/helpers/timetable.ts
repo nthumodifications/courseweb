@@ -1,4 +1,4 @@
-import { CourseDefinition } from "@/config/supabase";
+import { CourseDefinition } from "@/config/supabase.types";
 import { scheduleTimeSlots } from "@/const/timetable";
 import { CourseTimeslotData } from "@/types/timetable";
 

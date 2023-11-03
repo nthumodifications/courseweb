@@ -1,7 +1,6 @@
 'use client';;
 import CourseListItem from "@/components/Courses/CourseListItem";
 import InputControl from "@/components/FormComponents/InputControl";
-import supabase, { CourseDefinition } from "@/config/supabase";
 import { Button, CircularProgress, Divider, Drawer, IconButton, LinearProgress, Stack } from "@mui/joy";
 import { NextPage } from "next";
 import { useEffect, useState, Fragment, useRef, use, useMemo } from "react";
@@ -16,6 +15,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import queryString from 'query-string';
 import { GETargetCodes } from "@/const/ge_target";
 import { departments } from "@/const/departments";
+import useSupabaseClient from '@/config/supabase_client';
+import { CourseDefinition } from "@/config/supabase.types";
 
 const emptyFilters: RefineControlFormTypes = {
     textSearch: '',
@@ -35,6 +36,7 @@ const emptyFilters: RefineControlFormTypes = {
 
 const CoursePage: NextPage = () => {
     const dict = useDictionary();
+    const supabase = useSupabaseClient();
     const [courses, setCourses] = useState<CourseDefinition[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [totalCount, setTotalCount] = useState<number>(0);

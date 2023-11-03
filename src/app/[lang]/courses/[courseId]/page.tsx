@@ -1,5 +1,4 @@
 import Fade from "@/components/Animation/Fade";
-import supabase from "@/config/supabase";
 import { getDictionary } from "@/dictionaries/dictionaries";
 import {getCourse, getCoursePTTReview} from '@/lib/course';
 import { LangProps } from "@/types/pages";

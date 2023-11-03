@@ -1,4 +1,3 @@
-import supabase from '@/config/supabase';
 import {Button, ModalDialog, DialogTitle, DialogContent, ListItem, ListItemDecorator, FormControl, FormLabel, RadioGroup, Radio, FormHelperText, CircularProgress} from '@mui/joy';
 import {format} from 'date-fns';
 import {Controller, useForm} from 'react-hook-form';
@@ -7,6 +6,7 @@ import AutocompleteControl from '@/components/FormComponents/AutocompleteControl
 import RedLineIcon from '@/components/BusIcons/RedLineIcon';
 import GreenLineIcon from '@/components/BusIcons/GreenLineIcon';
 import NandaLineIcon from '@/components/BusIcons/NandaLineIcon';
+import useSupabaseClient from '@/config/supabase_client';
 
 type SchoolBusType = { 
     label_zh: string, 
@@ -30,6 +30,7 @@ const BusDelayReportDialog = ({ onClose }: { onClose: () => void }) => {
         },
         mode: 'onChange'
     });
+    const supabase = useSupabaseClient();
 
     const handleTimeNow = () => {
         setValue('time', format(new Date(), 'HH:mm'));

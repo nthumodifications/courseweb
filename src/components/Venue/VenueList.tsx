@@ -1,16 +1,17 @@
 'use client';
 import {Button, Input} from '@mui/joy';
-import supabase from '@/config/supabase';
 import Link from 'next/link';
 import { useEffect, useState, useRef } from 'react';
 import Fuse from 'fuse.js'
 import { useSettings } from '@/hooks/contexts/settings';
+import useSupabaseClient from '@/config/supabase_client';
 
 const VenueList = () => {
     const [venues, setVenues] = useState<string[]>([]);
     const [filtered, setFiltered] = useState<Fuse.FuseResult<string>[]>([]);
     const [textSearch, setTextSearch] = useState<string>('');
     const fuse = useRef(new Fuse(venues));
+    const supabase = useSupabaseClient();
     const { language } = useSettings();
     useEffect(() => {
         (async () => {

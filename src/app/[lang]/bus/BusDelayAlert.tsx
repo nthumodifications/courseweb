@@ -1,4 +1,3 @@
-import supabase from '@/config/supabase';
 import {routes} from '@/const/bus';
 import {Alert} from '@mui/joy';
 import {formatISO, parseISO, sub} from 'date-fns';
@@ -7,12 +6,14 @@ import {AlertTriangle} from 'react-feather';
 import useTime from '@/hooks/useTime';
 import {Database} from '@/types/supabase';
 import {RealtimePostgresInsertPayload} from '@supabase/supabase-js';
+import useSupabaseClient from '@/config/supabase_client';
 
 const BusDelayAlert = () => {
     const [show, setShow] = useState(false);
     const [reports, setReports] = useState<Database['public']['Tables']['delay_reports']['Row'][]>([]);
     const [text, setText] = useState<string>('');
     const time = useTime();
+    const supabase = useSupabaseClient();
 
     useEffect(() => {
         //get all delay reports in the last 30 minutes

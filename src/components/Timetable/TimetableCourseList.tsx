@@ -1,6 +1,5 @@
-import { Alert, Button, ButtonGroup, DialogContent, DialogTitle, IconButton, Input, ModalClose, ModalDialog } from '@mui/joy';
-import { Calendar, Download, EyeOff, Image, Mail, Search, Share, Trash } from 'react-feather';
-import { QRCodeSVG } from 'qrcode.react';
+import { Button, ButtonGroup, IconButton } from '@mui/joy';
+import { Download, EyeOff, Search, Share, Trash } from 'react-feather';
 import { useSettings } from '@/hooks/contexts/settings';
 import useUserTimetable from '@/hooks/useUserTimetable';
 import { useRouter } from 'next/navigation';

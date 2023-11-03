@@ -1,3 +1,1 @@
-import { CourseDefinition } from "@/config/supabase";
-import { Database } from "./supabase";
-
+type Department = { code: string; name_zh: string; name_en: string; };
