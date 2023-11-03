@@ -18,6 +18,8 @@ const CdsFormBeforeSignIn: FC<{ isLoggingIn: boolean }> = ({ isLoggingIn }) => {
 const CourseDemandSurvey = () => {
     const { data, status, update } = useSession();
 
+    console.log(data, status);
+
 
     // if(true) return <CdsFormContainer/>
 
