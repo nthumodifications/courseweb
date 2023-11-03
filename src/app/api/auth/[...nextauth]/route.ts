@@ -17,9 +17,9 @@ const handler = NextAuth({
             token: "https://oauth.nthumods.com/v1.1/token.php",
             userinfo: "https://oauth.nthumods.com/v1.1/resource.php",
             profile(profile) {
+              if(profile.status !== "ok") throw new Error("Failed to fetch user profile");
               return {
-                id: profile.id,
-                userid: profile.userid,
+                id: profile.userid,
                 inschool: profile.inschool,
                 name_zh: profile.name,
                 name_en: profile.name_en,
