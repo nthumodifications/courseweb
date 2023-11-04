@@ -66,13 +66,29 @@ const handler = NextAuth({
 
       if (account) {
         token.id = user.id,
-        token.name = user.name_zh,
+        token.name_zh = user.name_zh,
         token.name_en = user.name_en,
         token.inschool = user.inschool,
         token.email = user.email
       }
       return token
-    }
+    },
+    async session({ session, token }) {
+      session.user = {
+        ...session.user,
+        //@ts-ignore
+        id: token.id,
+        //@ts-ignore
+        name_zh: token.name_zh,
+        //@ts-ignore
+        name_en: token.name_en,
+        //@ts-ignore
+        inschool: token.inschool,
+        //@ts-ignore
+        email: token.email
+      }
+      return session;
+    },
   }
 })
 
