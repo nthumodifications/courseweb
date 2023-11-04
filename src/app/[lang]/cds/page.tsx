@@ -8,6 +8,7 @@ import { signIn, useSession } from "next-auth/react"
 import { FC, useState } from "react"
 import useSWR from "swr";
 import CdsFormContainer from "./CdsFormContainer";
+import { useSettings } from "@/hooks/contexts/settings";
 
 const CdsFormBeforeSignIn: FC<{ isLoggingIn: boolean }> = ({ isLoggingIn }) => {
     return <div className="text-center space-y-3 py-4 w-full">
@@ -17,13 +18,14 @@ const CdsFormBeforeSignIn: FC<{ isLoggingIn: boolean }> = ({ isLoggingIn }) => {
 
 const CourseDemandSurvey = () => {
     const { data, status, update } = useSession();
+    const { darkMode } = useSettings();
 
     console.log(data, status);
 
 
     // if(true) return <CdsFormContainer/>
 
-    return <div className="flex flex-col items-center justify-center h-full w-full" style={{background: "radial-gradient(159.94% 110.75% at 82.76% -5.79%, #FBA5FF 0%, #FFF 51.64%)", backdropFilter: 'blur(4px)'}}>
+    return <div className="flex flex-col items-center justify-center h-full w-full" style={{background: darkMode ? "radial-gradient(213.94% 85.75% at 93.76% -9.79%, rgb(251, 165, 255) 0%, rgb(23, 23, 23) 29.64%)":"radial-gradient(213.94% 85.75% at 93.76% -9.79%, rgb(251, 165, 255) 0%, rgb(255, 255, 255) 29.64%)", backdropFilter: 'blur(4px)'}}>
         <div className="flex flex-col items-center justify-center max-w-xl space-y-2 w-[64rem]">
             <div className="text-left space-y-3 py-4 w-full text-gray-700">
                 <h1 className="text-4xl font-bold">選課意願調查</h1>

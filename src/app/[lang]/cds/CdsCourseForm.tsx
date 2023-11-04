@@ -80,8 +80,7 @@ type CdsCoursesFormFields = {
 
 const CdsCoursesForm: FC<{
     initialSubmission: { preferences: CdsCourseDefinition[] };
-    cdsCoursesList: CdsCourseDefinition[];
-}> = ({ initialSubmission, cdsCoursesList }) => {
+}> = ({ initialSubmission }) => {
     const supabase = useSupabaseClient();
     const [selectedCourses, setSelectedCourses] = useState<CdsCourseDefinition[]>(initialSubmission.preferences);
     const [open, setOpen] = useState(false);

@@ -6,20 +6,19 @@ import { useMemo } from 'react';
 
 const CdsFormContainer = () => {
     const supabase = useSupabaseClient();
-    const { data: courses, error, isLoading } = useSWR(['cds_courses'], async () => {
-        const { data = [], error } = await supabase.from('cds_courses').select('*');
-        if(error) throw error;
-        return data;
-    })
-    
     //assuming preferences is a string of raw_id
     const preferences: string[] = [];
-    const preferenceCourses = useMemo(() => courses?.filter(course => preferences.includes(course.raw_id!)) ?? [], [courses]);
+
+    const { data: preferenceCourses = [], error, isLoading } = useSWR(['cds_courses'], async () => {
+        const { data = [], error } = await supabase.from('cds_courses').select('*').in('raw_id', preferences);
+        if(error) throw error;
+        return data ?? [];
+    })
     
 
     if(isLoading) return <CircularProgress/>
     return ( <div className='p-4'>
-        <CdsCoursesForm initialSubmission={{ preferences: preferenceCourses }} cdsCoursesList={courses ?? []}/>
+        <CdsCoursesForm initialSubmission={{ preferences: preferenceCourses }}/>
     </div>)
 }
 
