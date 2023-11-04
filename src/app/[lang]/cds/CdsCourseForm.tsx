@@ -22,6 +22,7 @@ import {
     Copy,
     Settings,
     Send,
+    LogOut,
 } from 'react-feather';
 import { useForm } from 'react-hook-form';
 import InputControl from '@/components/FormComponents/InputControl';
@@ -34,7 +35,7 @@ import { normalizeRoomName } from '@/const/venues';
 import { useMediaQuery } from 'usehooks-ts';
 import { useSettings } from '@/hooks/contexts/settings';
 import supabase, { CdsCourseDefinition } from '@/config/supabase';
-import { useSession } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 import { saveUserSelections } from '@/lib/cds_actions';
 
 const createTimetableFromCdsCourses = (data: CdsCourseDefinition[], theme = 'tsinghuarian') => {
@@ -283,6 +284,7 @@ const CdsCoursesForm: FC<{
 
     const deleteCourse = async (course: CdsCourseDefinition) => {
         setSelectedCourses(selectedCourses.filter(c => c != course));
+        saveSelectionDebounced();
     }
 
     const hasCourse = (course: CdsCourseDefinition) => {
@@ -302,6 +304,9 @@ const CdsCoursesForm: FC<{
                     {isSaving && <span className='text-gray-400 dark:text-neutral-600 text-sm'>Saving...</span>}
                     <Button color='neutral' variant='outlined' startDecorator={<Save />} onClick={handleSaveSelection}>Save</Button>
                     <Button color='success' variant='solid' startDecorator={<Send />} disabled={hasErrors}>Submit</Button>
+                    <IconButton color='danger' onClick={() => signOut()} >
+                        <LogOut/>
+                    </IconButton>
                 </div>
             </div>
         </div>
@@ -363,7 +368,11 @@ const CdsCoursesForm: FC<{
                             {hasSameCourse.includes(course.raw_id) && <Tooltip title="重複">
                                 <Copy className="w-6 h-6 text-yellow-500" />
                             </Tooltip>}
-
+                            {/* Credits */}
+                            <div className="flex flex-row items-center space-x-1">
+                                <span className="text-lg">{course.credits}</span>
+                                <span className="text-xs text-gray-400">學分</span>
+                            </div>
                             <ButtonGroup>
                                 <IconButton onClick={() => deleteCourse(course)}>
                                     <Trash className="w-4 h-4" />
