@@ -8,7 +8,7 @@ import { useSettings } from "@/hooks/contexts/settings";
 
 const CdsFormBeforeSignIn: FC<{ isLoggingIn: boolean }> = ({ isLoggingIn }) => {
     return <div className="text-center space-y-3 py-4 w-full">
-        <Button startDecorator={<NTHUBirdIcon/>} variant="outlined" color="neutral" onClick={() => signIn('nthu')}>Login with NTHU</Button>
+        <Button startDecorator={<NTHUBirdIcon />} variant="outlined" color="neutral" onClick={() => signIn('nthu')}>Login with NTHU</Button>
     </div>
 }
 
@@ -21,7 +21,7 @@ const CourseDemandSurvey = () => {
 
     // if(true) return <CdsFormContainer/>
 
-    return <div className="flex flex-col items-center justify-center h-full w-full" style={{background: darkMode ? "radial-gradient(213.94% 85.75% at 93.76% -9.79%, rgb(251, 165, 255) 0%, rgb(23, 23, 23) 29.64%)":"radial-gradient(213.94% 85.75% at 93.76% -9.79%, rgb(251, 165, 255) 0%, rgb(255, 255, 255) 29.64%)", backdropFilter: 'blur(4px)'}}>
+    return <div className="flex flex-col items-center justify-center h-full w-full" style={{ background: darkMode ? "radial-gradient(213.94% 85.75% at 93.76% -9.79%, rgb(251, 165, 255) 0%, rgb(23, 23, 23) 29.64%)" : "radial-gradient(213.94% 85.75% at 93.76% -9.79%, rgb(251, 165, 255) 0%, rgb(255, 255, 255) 29.64%)", backdropFilter: 'blur(4px)' }}>
         <div className="flex flex-col items-center justify-center max-w-xl space-y-2 w-[64rem]">
             <div className="text-left space-y-3 py-4 w-full text-gray-700">
                 <h1 className="text-4xl font-bold">選課意願調查</h1>
@@ -36,9 +36,9 @@ const CourseDemandSurvey = () => {
                 <p>開放時間：2021/10/18 00:00 ~ 2021/10/24 23:59</p>
             </div>
             <Divider />
-            <CdsFormBeforeSignIn isLoggingIn={status == 'loading'}/>
+            <CdsFormBeforeSignIn isLoggingIn={status == 'loading'} />
         </div>
-        <CdsFormContainer/>
+        <CdsFormContainer />
     </div>
 }
 
