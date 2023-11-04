@@ -316,7 +316,7 @@ const CdsCoursesForm: FC<{
                     </div>
                     <div className='space-x-2'>
                         <span className='text-2xl'>{totalCredits}</span>
-                        <span className='text-gray-600'>縂學分</span>
+                        <span className='text-gray-600'>總學分</span>
                     </div>
                 </div>
                 <Divider />
