@@ -7,6 +7,7 @@ import supabase from "@/config/supabase";
 import useSWR from "swr";
 import { createTimetableFromCourses, timetableColors } from "@/helpers/timetable";
 import { useSettings } from "@/hooks/contexts/settings";
+import { MinimalCourse } from "@/types/courses";
 
 const ViewTimetablePage: NextPage = () => {
     const router = useRouter();
@@ -24,7 +25,7 @@ const ViewTimetablePage: NextPage = () => {
         return data;
     })
 
-    const timetableData = courses? createTimetableFromCourses(courses, timetableTheme) : [];
+    const timetableData = courses? createTimetableFromCourses(courses as MinimalCourse[], timetableTheme) : [];
       
     return (
         <div className="grid grid-cols-1 grid-rows-2 md:grid-rows-1 md:grid-cols-[3fr_2fr] px-1 py-4 md:p-4">
