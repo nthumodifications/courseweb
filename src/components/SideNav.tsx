@@ -58,8 +58,12 @@ const SideNav:FC = () => {
     return (<>
         <nav className="md:hidden w-screen flex flex-row h-10 gap-4 justify-evenly">
             {links.map((link, index) => (
-                <Link className={`flex items-center gap-4 hover:text-fuchsia-600 hover:underline transition-colors ${link.href == pathname ? "text-fuchsia-600":"text-gray-600 dark:text-gray-400"}`}
-                    key={index} href={link.href}>
+                <Link 
+                    className={`flex items-center gap-4 hover:opacity-80 hover:underline transition text-gray-600 dark:text-gray-400`}
+                    key={index} 
+                    href={link.href}
+                    style={{ color: link.href == pathname ? link.color: '' }}
+                >
                     <span className="w-6">
                         {link.icon}
                     </span>
@@ -68,8 +72,12 @@ const SideNav:FC = () => {
         </nav>
         <nav className="hidden h-screen md:flex flex-col w-max gap-4 p-6">
             {links.map((link, index) => (
-                <Link className={`flex items-center gap-3 hover:text-fuchsia-600 hover:underline transition-colors ${link.href == pathname ? "text-fuchsia-600":"text-gray-600 dark:text-gray-400"}`}
-                    key={index} href={link.href}>
+                <Link 
+                    className={`flex items-center gap-3 hover:opacity-80 hover:underline transition text-gray-600 dark:text-gray-400`}
+                    key={index} 
+                    href={link.href}
+                    style={{ color: link.href == pathname ? link.color: '' }}
+                >
                     <div className={`w-[6px] h-7 ${link.href != pathname ? 'max-h-1': 'max-h-6'} transition`} style={{backgroundColor: link.color}}></div>
                     <span className="w-6">
                         {link.icon}
