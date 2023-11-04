@@ -72,7 +72,20 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes>, onClear: ()
 
     const isMobile = useMediaQuery('(max-width: 768px)');
 
-    return <Sheet variant="outlined" sx={{ p: isMobile?3:2, borderRadius: 'sm', width: isMobile?400:300, height: '100%', maxHeight:isMobile?'100vh':'90vh', overflow: 'auto', position: isMobile?'':'absolute', bottom: '8px', right: '8px' }}>
+    return <Sheet 
+        variant="outlined" 
+        sx={{ 
+            p: isMobile?3:2, 
+            borderRadius: 'sm', 
+            width: isMobile?`min(35rem, 100%)`:300, 
+            height: '100%', 
+            maxHeight:isMobile?'100vh':'90vh', 
+            overflowY: 'auto', 
+            overflowX: 'hidden', 
+            position: isMobile?'':'absolute', 
+            bottom: '8px', 
+            right: '8px' 
+        }}>
         <Typography
             id="filter-status"
             sx={{
