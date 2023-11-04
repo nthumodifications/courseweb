@@ -4,11 +4,17 @@ import { cookies } from "next/headers";
 import NTHULoginButton from "./NTHULoginButton";
 import { isUserSubmitted } from '@/lib/cds_actions';
 import { SubmissionStatus } from "@/types/cds_courses";
+import { getServerSession } from "next-auth";
+import { signOut } from "next-auth/react";
+import LogoutButton from "./LogoutButton";
+import authConfig from "@/app/api/auth/[...nextauth]/authConfig";
 
 const CourseDemandSurvey = async () => {
     const cookieStore = cookies()
     const theme = cookieStore.get('theme');
     const darkMode = theme?.value == 'dark';
+    const session = await getServerSession(authConfig);
+    const user = session?.user;
 
     //TODO: change according to actual term
     const term = '112-2';
@@ -34,6 +40,8 @@ const CourseDemandSurvey = async () => {
                 <h2 className="text-2xl font-semibold">已提交</h2>
                 <p>感謝您的填寫~</p>
                 <br/>
+                <p>目前登入的是 <span className="font-bold">{user?.name_zh} ({user?.id})</span>.</p>
+                <LogoutButton />
             </div>}
             {submitState == SubmissionStatus.NOT_LOGGED_IN && <NTHULoginButton />}
 
