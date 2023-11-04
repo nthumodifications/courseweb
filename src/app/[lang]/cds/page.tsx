@@ -1,12 +1,8 @@
-'use client';
+'use client';;
 import NTHUBirdIcon from "@/components/NTHUBirdIcon"
-import CourseSearchbar from "@/components/Timetable/CourseSearchbar";
-import Timetable from "@/components/Timetable/Timetable";
-import getSupabaseServer from "@/config/supabase_server";
-import { Alert, Button, CircularProgress, DialogActions, DialogContent, Divider, Modal, ModalClose, ModalDialog } from "@mui/joy"
+import { Alert, Button, Divider } from "@mui/joy";
 import { signIn, useSession } from "next-auth/react"
-import { FC, useState } from "react"
-import useSWR from "swr";
+import { FC } from "react";
 import CdsFormContainer from "./CdsFormContainer";
 import { useSettings } from "@/hooks/contexts/settings";
 

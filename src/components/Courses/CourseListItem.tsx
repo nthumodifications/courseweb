@@ -1,4 +1,4 @@
-import { CourseDefinition } from '@/config/supabase.types';
+import { CourseDefinition } from '@/config/supabase';
 import useDictionary from '@/dictionaries/useDictionary';
 import { useSettings } from '@/hooks/contexts/settings';
 import { Button, Chip, Tooltip } from '@mui/joy';

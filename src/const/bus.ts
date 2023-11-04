@@ -1,4 +1,4 @@
-import { BusScheduleDefinition } from "@/config/supabase.types";
+import { BusScheduleDefinition } from "@/config/supabase";
 
 export const busDays = ["SUN", "MON", "TUE", "WED", "THUR", "FRI", "SAT"];
 

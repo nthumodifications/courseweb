@@ -1,5 +1,4 @@
-import { CourseDefinition } from "@/config/supabase.types";
-
+import {CourseDefinition} from '@/config/supabase';
 export type TimeSlot = {
     time: string;
     start: string;

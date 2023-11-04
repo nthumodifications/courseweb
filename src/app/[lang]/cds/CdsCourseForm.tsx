@@ -1,7 +1,5 @@
 import Timetable from '@/components/Timetable/Timetable';
-import useSupabaseClient from '@/config/supabase_client';
 import { FC, Fragment, useState, useRef, useEffect, useMemo } from 'react';
-import { CdsCourseDefinition } from '@/config/supabase.types';
 import { scheduleTimeSlots } from '@/const/timetable';
 import { CourseTimeslotData } from '@/types/timetable';
 import { timetableColors } from '@/helpers/timetable';
@@ -34,6 +32,7 @@ import { useDebouncedCallback } from 'use-debounce';
 import { normalizeRoomName } from '@/const/venues';
 import { useMediaQuery } from 'usehooks-ts';
 import { useSettings } from '@/hooks/contexts/settings';
+import supabase, { CdsCourseDefinition } from '@/config/supabase';
 
 const createTimetableFromCdsCourses = (data: CdsCourseDefinition[], theme = 'tsinghuarian') => {
     const newTimetableData: CourseTimeslotData[] = [];
@@ -81,7 +80,6 @@ type CdsCoursesFormFields = {
 const CdsCoursesForm: FC<{
     initialSubmission: { preferences: CdsCourseDefinition[] };
 }> = ({ initialSubmission }) => {
-    const supabase = useSupabaseClient();
     const [selectedCourses, setSelectedCourses] = useState<CdsCourseDefinition[]>(initialSubmission.preferences);
     const [open, setOpen] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
@@ -494,12 +492,12 @@ const CdsCoursesForm: FC<{
                                             </FormControl>
                                         </AccordionDetails>
                                     </Accordion> */}
-                                    <Button 
+                                    <Button
                                         variant="outlined"
-                                        color="danger" 
-                                        startDecorator={<Trash2 />} 
+                                        color="danger"
+                                        startDecorator={<Trash2 />}
                                         disabled={!isDirty}
-                                        onClick={handleClear} 
+                                        onClick={handleClear}
                                     >Clear Filters</Button>
                                     <Divider />
                                 </div>

@@ -1,11 +1,9 @@
-import useSupabaseClient from '@/config/supabase_client';
 import {CircularProgress} from '@mui/joy';
 import useSWR from 'swr';
 import CdsCoursesForm from './CdsCourseForm';
-import { useMemo } from 'react';
+import supabase from '@/config/supabase';
 
 const CdsFormContainer = () => {
-    const supabase = useSupabaseClient();
     //assuming preferences is a string of raw_id
     const preferences: string[] = [];
 

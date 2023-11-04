@@ -1,5 +1,5 @@
 import { Analytics } from '@vercel/analytics/react';
-import {SettingsProvider} from '@/hooks/contexts/settings';
+import { SettingsProvider } from '@/hooks/contexts/settings';
 import { Inter } from 'next/font/google'
 import './globals.css'
 
@@ -13,7 +13,6 @@ import ModalProvider from '@/hooks/contexts/useModal';
 import { LangProps } from '@/types/pages';
 import { CssVarsProvider } from '@mui/joy';
 import NextAuthProvider from '@/components/NextAuthProvider';
-import { SupabaseProvider } from '@/config/supabase_client';
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -39,26 +38,24 @@ export default function RootLayout({
   const theme = cookies().get("theme");
 
   return (
-      <CssVarsProvider defaultMode={(theme?.value as any) ?? 'light'}>
-        <NextAuthProvider>
-          <SupabaseProvider>
-            <SettingsProvider>
-              <ModalProvider>
-                  <html lang={params.lang} className={`${theme?.value ?? ''} overflow-x-hidden`}>
-                    <body className={`${inter.className} grid grid-cols-1 grid-rows-[64px_48px_calc(100vh-112px)] md:grid-cols-[12rem_auto] md:grid-rows-[56px_calc(100vh-56px)_12rem] bg-white dark:bg-neutral-900 dark:text-white`}>
-                      <Header/>
-                      <SideNav/>
-                      <main className='overflow-y-auto overflow-x-hidden h-full w-full'>
-                        {children}
-                        <Analytics />
-                      </main>
-                      <Footer/>
-                    </body>
-                  </html>
-              </ModalProvider>
-            </SettingsProvider>
-          </SupabaseProvider>
-        </NextAuthProvider>
-      </CssVarsProvider>
+    <CssVarsProvider defaultMode={(theme?.value as any) ?? 'light'}>
+      <NextAuthProvider>
+        <SettingsProvider>
+          <ModalProvider>
+            <html lang={params.lang} className={`${theme?.value ?? ''} overflow-x-hidden`}>
+              <body className={`${inter.className} grid grid-cols-1 grid-rows-[64px_48px_calc(100vh-112px)] md:grid-cols-[12rem_auto] md:grid-rows-[56px_calc(100vh-56px)_12rem] bg-white dark:bg-neutral-900 dark:text-white`}>
+                <Header />
+                <SideNav />
+                <main className='overflow-y-auto overflow-x-hidden h-full w-full'>
+                  {children}
+                  <Analytics />
+                </main>
+                <Footer />
+              </body>
+            </html>
+          </ModalProvider>
+        </SettingsProvider>
+      </NextAuthProvider>
+    </CssVarsProvider>
   )
 }
