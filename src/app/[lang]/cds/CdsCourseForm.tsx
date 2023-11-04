@@ -353,7 +353,7 @@ const CdsCoursesForm: FC<{
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-sm">
             {showTimetable && <Timetable timetableData={timetableData} />}
-            <div className="flex flex-col gap-4 px-4 -mt-28 md:-mt-0">
+            <div className="flex flex-col gap-4 px-4">
                 <Alert color='danger' startDecorator={<AlertTriangle />}>
                     提供篩選的課程都是上學年 （111-2學期）的課程，除了課號&課名之外，其他資訊可能會有變動。
                 </Alert>

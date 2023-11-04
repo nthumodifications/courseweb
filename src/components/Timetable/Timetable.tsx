@@ -69,7 +69,7 @@ const Timetable: FC<{ timetableData: CourseTimeslotData[] }> = ({ timetableData 
     const showSaturday = timetableData.some(course => course.dayOfWeek == 5);
 
     return (
-        <div className="mb-32 text-center lg:mb-0 w-full">
+        <div className="text-center lg:mb-0 w-full">
         {/* Timetable, Relative overlay */}
         <div className="relative w-full">
           <table className="table-auto w-full">

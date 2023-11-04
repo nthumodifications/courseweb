@@ -22,7 +22,7 @@ const CourseDemandSurvey = async () => {
 
     if (submitState == SubmissionStatus.NOT_SUBMITTED) return <CdsFormContainer term={term} />
     else return <div className="flex flex-col items-center justify-center h-full w-full" style={{ background: darkMode ? "" : "radial-gradient(213.94% 85.75% at 93.76% -9.79%, rgb(251, 165, 255) 0%, rgb(255, 255, 255) 29.64%)", backdropFilter: 'blur(4px)' }}>
-        <div className="flex flex-col items-center justify-center max-w-xl space-y-2 w-[64rem]">
+        <div className="flex flex-col items-center justify-center max-w-xl space-y-2 w-[min(100vw,64rem)] px-2 py-4">
             <div className="text-left space-y-3 py-4 w-full text-gray-700 dark:text-gray-200">
                 <h1 className="text-4xl font-bold">選課意願調查</h1>
                 <h2 className="text-2xl font-semibold">112-2 學期</h2>
