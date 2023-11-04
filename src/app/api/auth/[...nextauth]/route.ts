@@ -20,7 +20,7 @@ const handler = NextAuth({
           return {
             id: "b07901001",
             inschool: true,
-            name: "王小明",
+            name_zh: "王小明",
             name_en: "Wang, Xiao-Ming",
             email: "chewtzihwee@gmail.com"
           }
@@ -38,6 +38,7 @@ const handler = NextAuth({
         },
         token: "https://oauth.nthumods.com/v1.1/token.php",
         userinfo: "https://oauth.nthumods.com/v1.1/resource.php",
+        
         profile(profile, tokens) {
           if (profile.success == false) throw new Error("Failed to fetch user profile");
           return {
@@ -51,7 +52,7 @@ const handler = NextAuth({
       }
   ],
   callbacks: {
-    async jwt({ token, account, profile }) {
+    async jwt({ token, account, profile, user }) {
       if (process.env.NODE_ENV == 'development') {
         return {
           ...token,
@@ -63,12 +64,12 @@ const handler = NextAuth({
         }
       }
 
-      if (account && profile) {
-        token.id = profile.id,
-        token.name = profile.name_zh,
-        token.name_en = profile.name_en,
-        token.inschool = profile.inschool,
-        token.email = profile.email
+      if (account) {
+        token.id = user.id,
+        token.name = user.name_zh,
+        token.name_en = user.name_en,
+        token.inschool = user.inschool,
+        token.email = user.email
       }
       return token
     }

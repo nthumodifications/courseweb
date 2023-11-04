@@ -1,7 +1,7 @@
 import NextAuth, { DefaultSession } from "next-auth"
 
 declare module "next-auth" {
-    interface Profile {
+    interface User {
         id: string,
         inschool: boolean,
         name_zh: string,
