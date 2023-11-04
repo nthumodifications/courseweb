@@ -13,20 +13,25 @@ import ModalProvider from '@/hooks/contexts/useModal';
 import { LangProps } from '@/types/pages';
 import { CssVarsProvider } from '@mui/joy';
 import NextAuthProvider from '@/components/NextAuthProvider';
+import { Viewport } from 'next'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'NTHUMods',
   description: 'NTHUMods is a course selection system for National Tsing Hua University, Made with ❤️ by Students',
-  themeColor: "#7e1083",
   applicationName: "NTHUMods",
   appleWebApp: {
     title: "NTHUMods",
     statusBarStyle: "black-translucent",
-  },
-  manifest: '/manifest.json'
+  }
 }
+ 
+export const viewport: Viewport = {
+  themeColor: "#7e1083",
+}
+
+
 
 export default function RootLayout({
   children,

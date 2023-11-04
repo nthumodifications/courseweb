@@ -468,7 +468,6 @@ export default function manifest(): MetadataRoute.Manifest {
                 "sizes": "1024x1024"
             }
         ],
-        theme_color: '#7e1083',
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'any',
