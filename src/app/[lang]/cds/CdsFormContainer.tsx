@@ -1,27 +1,17 @@
-import {CircularProgress} from '@mui/joy';
-import useSWR from 'swr';
 import CdsCoursesForm from './CdsCourseForm';
-import supabase from '@/config/supabase';
 import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
+import supabase_server from '@/config/supabase_server';
+import { getUserCdsSelections } from '@/lib/cds_actions';
 
-const getUserPreferences = async () => {
-    const session = await getServerSession();
-    if(session == null || !session.user) return redirect('/');
-    const preferences: string[] = [];
-
-    //get user preferences
-    const { data: preferenceCourses = [], error } = await supabase.from('cds_courses').select('*').in('raw_id', preferences);
-    if(error) throw error;
-    
-    return preferenceCourses ?? [];
-}
+//TODO: change according to actual term
+const term = '112-2';
 
 const CdsFormContainer = async () => {
-    const preferenceCourses = await getUserPreferences();
+    const selectedCourses = await getUserCdsSelections(term);
 
     return ( <div className='p-4'>
-        <CdsCoursesForm initialSubmission={{ preferences: preferenceCourses }}/>
+        <CdsCoursesForm term={term} initialSubmission={{ selection: selectedCourses }}/>
     </div>)
 }
 

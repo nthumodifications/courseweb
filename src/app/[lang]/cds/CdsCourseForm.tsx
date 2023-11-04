@@ -1,6 +1,6 @@
 'use client';
 import Timetable from '@/components/Timetable/Timetable';
-import { FC, Fragment, useState, useRef, useEffect, useMemo } from 'react';
+import { FC, Fragment, useState, useRef, useEffect, useMemo, startTransition, useTransition } from 'react';
 import { scheduleTimeSlots } from '@/const/timetable';
 import { CourseTimeslotData } from '@/types/timetable';
 import { timetableColors } from '@/helpers/timetable';
@@ -35,6 +35,7 @@ import { useMediaQuery } from 'usehooks-ts';
 import { useSettings } from '@/hooks/contexts/settings';
 import supabase, { CdsCourseDefinition } from '@/config/supabase';
 import { useSession } from 'next-auth/react';
+import { saveUserSelections } from '@/lib/cds_actions';
 
 const createTimetableFromCdsCourses = (data: CdsCourseDefinition[], theme = 'tsinghuarian') => {
     const newTimetableData: CourseTimeslotData[] = [];
@@ -80,9 +81,10 @@ type CdsCoursesFormFields = {
 }
 
 const CdsCoursesForm: FC<{
-    initialSubmission: { preferences: CdsCourseDefinition[] };
-}> = ({ initialSubmission }) => {
-    const [selectedCourses, setSelectedCourses] = useState<CdsCourseDefinition[]>(initialSubmission.preferences);
+    term: string;
+    initialSubmission: { selection: CdsCourseDefinition[] };
+}> = ({ term, initialSubmission }) => {
+    const [selectedCourses, setSelectedCourses] = useState<CdsCourseDefinition[]>(initialSubmission.selection);
     const [open, setOpen] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -241,7 +243,7 @@ const CdsCoursesForm: FC<{
 
     }, [JSON.stringify(filters)])
 
-    const timetableData = useMemo(() => createTimetableFromCdsCourses(selectedCourses, timetableTheme), [selectedCourses]);
+    const timetableData = useMemo(() => createTimetableFromCdsCourses(selectedCourses, timetableTheme), [selectedCourses, timetableTheme]);
 
     //check if there are conflicting timeslots
     const hasConflictingTimeslots = useMemo(() => timetableData.filter((timeslot, index, self) => {
@@ -258,12 +260,25 @@ const CdsCoursesForm: FC<{
         return sameCourse.map(course => course.raw_id);
     }, [selectedCourses]);
 
+    const hasErrors = useMemo(() => {
+        return hasConflictingTimeslots.length > 0 || hasSameCourse.length > 0;
+    }
+    , [hasConflictingTimeslots, hasSameCourse]);
+
     const totalCredits = useMemo(() => {
         return selectedCourses.reduce((acc, cur) => acc + (cur.credits || 0), 0);
     }, [selectedCourses]);
 
+    const [isSaving, startTransition] = useTransition();
+
+    const handleSaveSelection = async () => {
+        startTransition(() => saveUserSelections(term, selectedCourses.map(course => course.raw_id)));
+    }
+    const saveSelectionDebounced = useDebouncedCallback(handleSaveSelection, 2000);
+
     const addCourse = async (course: CdsCourseDefinition) => {
         setSelectedCourses([...selectedCourses, course]);
+        saveSelectionDebounced();
     }
 
     const deleteCourse = async (course: CdsCourseDefinition) => {
@@ -281,11 +296,12 @@ const CdsCoursesForm: FC<{
 
     return <div className='w-full'>
         <div className='flex flex-col md:flex-row justify-between mb-4'>
-            <h1 className='font-bold text-3xl mb-3'>選課意願調查 <Chip variant="outlined" color='primary'>112-2 學期</Chip></h1>
+            <h1 className='font-bold text-3xl mb-3'>選課意願調查 <Chip variant="outlined" color='primary'>{term} 學期</Chip></h1>
             <div>
-                <div className='flex flex-row gap-2 justify-end'>
-                    <Button color='neutral' variant='outlined' startDecorator={<Save />}>Save</Button>
-                    <Button color='success' startDecorator={<Send />}>Submit</Button>
+                <div className='flex flex-row gap-2 justify-end items-center'>
+                    {isSaving && <span className='text-gray-400 dark:text-neutral-600 text-sm'>Saving...</span>}
+                    <Button color='neutral' variant='outlined' startDecorator={<Save />} onClick={handleSaveSelection}>Save</Button>
+                    <Button color='success' variant='solid' startDecorator={<Send />} disabled={hasErrors}>Submit</Button>
                 </div>
             </div>
         </div>

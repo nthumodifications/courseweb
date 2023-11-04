@@ -1,7 +1,7 @@
-import NextAuth from "next-auth"
+import NextAuth, { AuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 
-const handler = NextAuth({
+export const authConfig: AuthOptions = {
   session: { strategy: "jwt" },
   providers: [
     process.env.NODE_ENV === "development"
@@ -53,6 +53,17 @@ const handler = NextAuth({
   ],
   callbacks: {
     async jwt({ token, account, profile, user }) {
+      if (process.env.NODE_ENV == 'development') {
+        token = {
+          ...token,
+          id: "b07901001",
+          inschool: true,
+          name_zh: "王小明",
+          name_en: "Wang, Xiao-Ming",
+          email: "chewtzihwee@gmail.com"
+        }
+        return token;
+      }
       if (account) {
         token = {
           ...token,
@@ -92,7 +103,9 @@ const handler = NextAuth({
       return session;
     },
   }
-})
+}
+
+const handler = NextAuth(authConfig)
 
 export { handler as GET, handler as POST }
 

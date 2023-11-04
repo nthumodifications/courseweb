@@ -474,6 +474,7 @@ export interface Database {
           teacher_zh: string[] | null
           times: string[] | null
           venues: string[] | null
+          cds_time_slots: unknown | null
         }
         Insert: {
           class?: number | null
@@ -512,6 +513,33 @@ export interface Database {
           teacher_zh?: string[] | null
           times?: string[] | null
           venues?: string[] | null
+        }
+        Relationships: []
+      }
+      cds_saves: {
+        Row: {
+          created_at: string
+          id: number
+          selection: string[]
+          term: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          selection: string[]
+          term: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          selection?: string[]
+          term?: string
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -726,6 +754,12 @@ export interface Database {
       }
     }
     Functions: {
+      cds_time_slots: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
       gtrgm_compress: {
         Args: {
           "": unknown
