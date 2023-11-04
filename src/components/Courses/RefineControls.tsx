@@ -22,6 +22,7 @@ import DepartmentControl from '../FormComponents/DepartmentControl';
 import { useMediaQuery } from 'usehooks-ts';
 import { GECTypes, GETargetCodes } from '@/const/ge_target';
 import { useSettings } from '@/hooks/contexts/settings';
+import { Department } from '@/types/courses';
 
 export type RefineControlFormTypes = {
     textSearch: string,

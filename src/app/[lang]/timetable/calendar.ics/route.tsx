@@ -5,6 +5,7 @@ import { differenceInMinutes, getHours, getMinutes, parse } from "date-fns";
 import * as ics from 'ics';
 import { NextResponse } from "next/server";
 import { zonedTimeToUtc } from 'date-fns-tz'
+import { MinimalCourse } from "@/types/courses";
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
@@ -15,7 +16,7 @@ export async function GET(request: Request) {
         let { data = [], error } = await supabase.from('courses').select("*").in('raw_id', courses_ids);
         if (error) throw error;
         else {
-            const timetableData = createTimetableFromCourses(data!, theme);
+            const timetableData = createTimetableFromCourses(data! as MinimalCourse[], theme);
             const icss = ics.createEvents(timetableData.map(course => {
                 const start = zonedTimeToUtc(parse(
                     scheduleTimeSlots[course.startTime]!.start,
@@ -31,7 +32,7 @@ export async function GET(request: Request) {
 
                 return {
                     title: course.course.name_zh!,
-                    description: `${course.course.name_zh!}\n${course.course.name_en!}\n${course.course.raw_teacher_zh!}\n${course.course.raw_teacher_en!}}\n${course.course.raw_id}`,
+                    description: `${course.course.name_zh!}\n${course.course.name_en!}}\n${course.course.raw_id}`,
                     location: course.venue,
                     start: [2023, 9, 10+course.dayOfWeek, getHours(start), getMinutes(start)],
                     end: [2023, 9, 10+course.dayOfWeek, getHours(end), getMinutes(end)],

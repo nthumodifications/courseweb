@@ -3,6 +3,7 @@ import NTHUMap from '@/components/Venue/NTHUMap'
 import {createTimetableFromCourses} from '@/helpers/timetable';
 import Timetable from '@/components/Timetable/Timetable';
 import { Suspense } from 'react';
+import {MinimalCourse} from '@/types/courses';
 type Props = {
     params: {
         locationId: string;
@@ -29,7 +30,7 @@ const MapPage = async ({
 }: Props) => {
     const venueId = decodeURI(params.locationId)
     const courses = await getCoursesWithVenue(venueId);
-    const timetable = createTimetableFromCourses(courses);
+    const timetable = createTimetableFromCourses(courses as MinimalCourse[]);
 
     console.log(courses)
     return (

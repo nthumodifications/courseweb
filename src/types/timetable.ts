@@ -1,4 +1,5 @@
 import {CourseDefinition} from '@/config/supabase';
+import {MinimalCourse} from '@/types/courses';
 export type TimeSlot = {
     time: string;
     start: string;
@@ -18,7 +19,7 @@ export type TimetableDim = {
 }
 
 export type CourseTimeslotData = {
-    course: CourseDefinition,
+    course: MinimalCourse,
     venue: string,
     dayOfWeek: number,
     startTime: number,

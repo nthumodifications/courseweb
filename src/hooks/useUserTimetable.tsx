@@ -4,6 +4,7 @@ import supabase, { CourseDefinition } from "@/config/supabase";
 import { createTimetableFromCourses } from "@/helpers/timetable";
 import { CourseTimeslotData } from "@/types/timetable";
 import useSWR from "swr";
+import {MinimalCourse} from '@/types/courses';
 
 const useUserTimetable = (loadCourse = true) => {
     const { courses, timetableTheme, setCourses } = useSettings();
@@ -26,7 +27,7 @@ const useUserTimetable = (loadCourse = true) => {
             console.log('loading')
             return;
         }
-        setTimetableData(createTimetableFromCourses(allCourseData!, timetableTheme));
+        setTimetableData(createTimetableFromCourses(allCourseData! as MinimalCourse[], timetableTheme));
     }, [allCourseData, isLoading, error, timetableTheme]);
 
     const deleteCourse = async (course: CourseDefinition) => {

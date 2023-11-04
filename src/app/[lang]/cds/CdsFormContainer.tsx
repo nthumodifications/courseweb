@@ -4,10 +4,7 @@ import { redirect } from 'next/navigation';
 import supabase_server from '@/config/supabase_server';
 import { getUserCdsSelections } from '@/lib/cds_actions';
 
-//TODO: change according to actual term
-const term = '112-2';
-
-const CdsFormContainer = async () => {
+const CdsFormContainer = async ({ term }: { term: string }) => {
     const selectedCourses = await getUserCdsSelections(term);
 
     return ( <div className='p-4'>

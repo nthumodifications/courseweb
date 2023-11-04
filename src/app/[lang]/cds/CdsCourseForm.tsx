@@ -4,7 +4,7 @@ import { FC, Fragment, useState, useRef, useEffect, useMemo, startTransition, us
 import { scheduleTimeSlots } from '@/const/timetable';
 import { CourseTimeslotData } from '@/types/timetable';
 import { timetableColors } from '@/helpers/timetable';
-import { Accordion, Button, ButtonGroup, CircularProgress, DialogContent, DialogTitle, Divider, Drawer, IconButton, ModalClose, Sheet, FormControl, FormLabel, AccordionDetails, AccordionSummary, Stack, Alert, Chip, Tooltip, Typography, Switch, Dropdown, MenuButton, Menu, MenuItem, Badge } from '@mui/joy';
+import { Accordion, Button, ButtonGroup, CircularProgress, DialogContent, DialogTitle, Divider, Drawer, IconButton, ModalClose, Sheet, FormControl, FormLabel, AccordionDetails, AccordionSummary, Stack, Alert, Chip, Tooltip, Typography, Switch, Dropdown, MenuButton, Menu, MenuItem, Badge, ModalDialog, DialogActions } from '@mui/joy';
 import {
     EyeOff,
     Filter,
@@ -36,7 +36,11 @@ import { useMediaQuery } from 'usehooks-ts';
 import { useSettings } from '@/hooks/contexts/settings';
 import supabase, { CdsCourseDefinition } from '@/config/supabase';
 import { signOut, useSession } from 'next-auth/react';
-import { saveUserSelections } from '@/lib/cds_actions';
+import { saveUserSelections, submitUserSelections } from '@/lib/cds_actions';
+import { Department, MinimalCourse } from '@/types/courses';
+import { hasConflictingTimeslots, hasSameCourse } from '@/helpers/courses';
+import { useModal } from '@/hooks/contexts/useModal';
+import { useRouter } from 'next/navigation';
 
 const createTimetableFromCdsCourses = (data: CdsCourseDefinition[], theme = 'tsinghuarian') => {
     const newTimetableData: CourseTimeslotData[] = [];
@@ -98,7 +102,6 @@ const CdsCoursesForm: FC<{
     const scrollRef = useRef<HTMLDivElement>(null);
 
     const session = useSession();
-    console.log(session)
 
     const emptyFilters = {
         textSearch: "",
@@ -220,7 +223,6 @@ const CdsCoursesForm: FC<{
                 setHeadIndex(0);
             }
             else {
-                console.log(courses)
                 setSearchCourses(courses as CdsCourseDefinition[]);
                 setHeadIndex(index);
             }
@@ -246,36 +248,62 @@ const CdsCoursesForm: FC<{
 
     const timetableData = useMemo(() => createTimetableFromCdsCourses(selectedCourses, timetableTheme), [selectedCourses, timetableTheme]);
 
-    //check if there are conflicting timeslots
-    const hasConflictingTimeslots = useMemo(() => timetableData.filter((timeslot, index, self) => {
-        const otherTimeslots = self.filter((ts, i) => i != index);
-        return otherTimeslots.find(ts => ts.dayOfWeek == timeslot.dayOfWeek && ts.startTime <= timeslot.endTime && ts.endTime >= timeslot.startTime) != undefined;
-    }), [timetableData]);
-
-    //check if there is same dept same course but different class, return course codes
-    const hasSameCourse = useMemo(() => {
-        const sameCourse = selectedCourses.filter((course, index, self) => {
-            const otherCourses = self.filter((c, i) => i != index);
-            return otherCourses.find(c => c.department == course.department && c.course == course.course) != undefined;
-        });
-        return sameCourse.map(course => course.raw_id);
-    }, [selectedCourses]);
-
+    const timeConflicts = useMemo(() => hasConflictingTimeslots(selectedCourses as MinimalCourse[]), [selectedCourses]);
+    const duplicates = useMemo(() => hasSameCourse(selectedCourses as MinimalCourse[]), [selectedCourses]);
+    
     const hasErrors = useMemo(() => {
-        return hasConflictingTimeslots.length > 0 || hasSameCourse.length > 0;
+        return timeConflicts.length > 0 || duplicates.length > 0;
     }
-    , [hasConflictingTimeslots, hasSameCourse]);
+    , [timeConflicts, duplicates]);
 
     const totalCredits = useMemo(() => {
         return selectedCourses.reduce((acc, cur) => acc + (cur.credits || 0), 0);
     }, [selectedCourses]);
 
-    const [isSaving, startTransition] = useTransition();
+    const [openModal, closeModal] = useModal();
+
+    const [isSaving, startSaveTransition] = useTransition();
 
     const handleSaveSelection = async () => {
-        startTransition(() => saveUserSelections(term, selectedCourses.map(course => course.raw_id)));
+        startSaveTransition(() => saveUserSelections(term, selectedCourses.map(course => course.raw_id)));
     }
     const saveSelectionDebounced = useDebouncedCallback(handleSaveSelection, 2000);
+    
+    const [isSubmitting, startSubmitTransition] = useTransition();
+    const handleUserSubmit = async () => {
+        openModal({
+            children: <ModalDialog variant="outlined" role="alertdialog">
+            <DialogTitle>
+              <AlertTriangle />
+              提交確認
+            </DialogTitle>
+            <Divider />
+            <DialogContent>
+              確定要提交選課意願嗎？提交後將無法再修改。
+            </DialogContent>
+            <DialogActions>
+              <Button variant="solid" color="success" onClick={() => {
+                    startSubmitTransition(() => submitUserSelections(term, selectedCourses.map(course => course.raw_id)));
+                    closeModal();
+              }}>
+                提交
+              </Button>
+              <Button variant="plain" color="neutral" onClick={closeModal}>
+                取消
+              </Button>
+            </DialogActions>
+          </ModalDialog>
+        })
+    }
+
+    //Handle Finish Submitting, redirect to /cds and refresh
+    const [prevSubmitting, setPrevSubmitting] = useState(false);
+    useEffect(() => {
+        if (prevSubmitting && !isSubmitting) {
+            window.location.reload();
+        }
+        setPrevSubmitting(isSubmitting);
+    }, [isSubmitting]);
 
     const addCourse = async (course: CdsCourseDefinition) => {
         setSelectedCourses([...selectedCourses, course]);
@@ -302,8 +330,21 @@ const CdsCoursesForm: FC<{
             <div>
                 <div className='flex flex-row gap-2 justify-end items-center'>
                     {isSaving && <span className='text-gray-400 dark:text-neutral-600 text-sm'>Saving...</span>}
-                    <Button color='neutral' variant='outlined' startDecorator={<Save />} onClick={handleSaveSelection}>Save</Button>
-                    <Button color='success' variant='solid' startDecorator={<Send />} disabled={hasErrors}>Submit</Button>
+                    <Button 
+                        color='neutral' 
+                        variant='outlined' 
+                        startDecorator={<Save />} 
+                        onClick={handleSaveSelection} 
+                        loading={isSaving}
+                    >暫存</Button>
+                    <Button 
+                        color='success' 
+                        variant='solid' 
+                        startDecorator={<Send />} 
+                        disabled={hasErrors} 
+                        onClick={handleUserSubmit} 
+                        loading={isSubmitting}
+                    >提交</Button>
                     <IconButton color='danger' onClick={() => signOut()} >
                         <LogOut/>
                     </IconButton>
@@ -362,10 +403,10 @@ const CdsCoursesForm: FC<{
                             </div>
                         </div>
                         <div className="flex flex-row space-x-2 items-center">
-                            {hasConflictingTimeslots.find(ts => ts.course.raw_id == course.raw_id) && <Tooltip title="衝堂">
+                            {timeConflicts.find(ts => ts.course.raw_id == course.raw_id) && <Tooltip title="衝堂">
                                 <AlertTriangle className="w-6 h-6 text-red-500" />
                             </Tooltip>}
-                            {hasSameCourse.includes(course.raw_id) && <Tooltip title="重複">
+                            {duplicates.includes(course.raw_id) && <Tooltip title="重複">
                                 <Copy className="w-6 h-6 text-yellow-500" />
                             </Tooltip>}
                             {/* Credits */}

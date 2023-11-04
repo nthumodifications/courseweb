@@ -1,6 +1,7 @@
 import { CourseDefinition } from '@/config/supabase';
 import { useSettings } from '@/hooks/contexts/settings';
 import { useModal } from '@/hooks/contexts/useModal';
+import { MinimalCourse } from '@/types/courses';
 import { CourseTimeslotData, TimetableDim } from '@/types/timetable';
 import { ModalClose, ModalDialog } from '@mui/joy';
 import { useRouter } from 'next/navigation';
@@ -17,7 +18,7 @@ const TimetableSlot: FC<TimetableSlotProps> = ({ course, tableDim, fraction = 1,
     const router = useRouter();
     const { language } = useSettings();
 
-    const handleShowCourseDetail = (course: CourseDefinition) => () => {
+    const handleShowCourseDetail = (course: MinimalCourse) => () => {
         router.push(`/${language}/courses/${course.raw_id}`);
     }
     return ( 

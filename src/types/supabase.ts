@@ -457,62 +457,62 @@ export interface Database {
       }
       cds_courses: {
         Row: {
-          class: number | null
-          course: string | null
-          credits: number | null
+          class: string
+          course: string
+          credits: number
           cross_discipline: string[] | null
-          department: string | null
+          department: string
           first_specialization: string[] | null
           id: number
-          language: string | null
-          name_en: string | null
-          name_zh: string | null
+          language: string
+          name_en: string
+          name_zh: string
           note: string | null
           raw_id: string
           second_specialization: string[] | null
-          semester: string | null
-          teacher_zh: string[] | null
-          times: string[] | null
-          venues: string[] | null
+          semester: string
+          teacher_zh: string[]
+          times: string[]
+          venues: string[]
           cds_time_slots: unknown | null
         }
         Insert: {
-          class?: number | null
-          course?: string | null
-          credits?: number | null
+          class: string
+          course: string
+          credits: number
           cross_discipline?: string[] | null
-          department?: string | null
+          department: string
           first_specialization?: string[] | null
           id: number
-          language?: string | null
-          name_en?: string | null
-          name_zh?: string | null
+          language: string
+          name_en: string
+          name_zh: string
           note?: string | null
           raw_id: string
           second_specialization?: string[] | null
-          semester?: string | null
-          teacher_zh?: string[] | null
-          times?: string[] | null
-          venues?: string[] | null
+          semester: string
+          teacher_zh?: string[]
+          times?: string[]
+          venues?: string[]
         }
         Update: {
-          class?: number | null
-          course?: string | null
-          credits?: number | null
+          class?: string
+          course?: string
+          credits?: number
           cross_discipline?: string[] | null
-          department?: string | null
+          department?: string
           first_specialization?: string[] | null
           id?: number
-          language?: string | null
-          name_en?: string | null
-          name_zh?: string | null
+          language?: string
+          name_en?: string
+          name_zh?: string
           note?: string | null
           raw_id?: string
           second_specialization?: string[] | null
-          semester?: string | null
-          teacher_zh?: string[] | null
-          times?: string[] | null
-          venues?: string[] | null
+          semester?: string
+          teacher_zh?: string[]
+          times?: string[]
+          venues?: string[]
         }
         Relationships: []
       }
@@ -543,21 +543,54 @@ export interface Database {
         }
         Relationships: []
       }
+      cds_submissions: {
+        Row: {
+          created_at: string
+          email: string
+          id: number
+          name_en: string | null
+          name_zh: string
+          selections: string[]
+          term: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: number
+          name_en?: string | null
+          name_zh: string
+          selections: string[]
+          term: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: number
+          name_en?: string | null
+          name_zh?: string
+          selections?: string[]
+          term?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       courses: {
         Row: {
           capacity: number | null
-          class: string | null
+          class: string
           compulsory_for: string[] | null
-          course: string | null
-          credits: number | null
+          course: string
+          credits: number
           cross_discipline: string[] | null
-          department: string | null
+          department: string
           elective_for: string[] | null
           first_specialization: string[] | null
           ge_target: string | null
           ge_type: string | null
           id: number
-          language: string | null
+          language: string
           name_en: string
           name_zh: string
           no_extra_selection: boolean | null
@@ -571,12 +604,12 @@ export interface Database {
           raw_venue: string | null
           reserve: number | null
           second_specialization: string[] | null
-          semester: string | null
+          semester: string
           tags: string[]
           teacher_en: string[] | null
-          teacher_zh: string[] | null
-          times: string[] | null
-          venues: string[] | null
+          teacher_zh: string[]
+          times: string[]
+          venues: string[]
           停開註記: string | null
           備註: string | null
           必選修說明: string | null
@@ -587,18 +620,18 @@ export interface Database {
         }
         Insert: {
           capacity?: number | null
-          class?: string | null
+          class: string
           compulsory_for?: string[] | null
-          course?: string | null
-          credits?: number | null
+          course: string
+          credits?: number
           cross_discipline?: string[] | null
-          department?: string | null
+          department: string
           elective_for?: string[] | null
           first_specialization?: string[] | null
           ge_target?: string | null
           ge_type?: string | null
           id: number
-          language?: string | null
+          language: string
           name_en: string
           name_zh: string
           no_extra_selection?: boolean | null
@@ -612,12 +645,12 @@ export interface Database {
           raw_venue?: string | null
           reserve?: number | null
           second_specialization?: string[] | null
-          semester?: string | null
+          semester: string
           tags?: string[]
           teacher_en?: string[] | null
-          teacher_zh?: string[] | null
-          times?: string[] | null
-          venues?: string[] | null
+          teacher_zh: string[]
+          times: string[]
+          venues: string[]
           停開註記?: string | null
           備註?: string | null
           必選修說明?: string | null
@@ -626,18 +659,18 @@ export interface Database {
         }
         Update: {
           capacity?: number | null
-          class?: string | null
+          class?: string
           compulsory_for?: string[] | null
-          course?: string | null
-          credits?: number | null
+          course?: string
+          credits?: number
           cross_discipline?: string[] | null
-          department?: string | null
+          department?: string
           elective_for?: string[] | null
           first_specialization?: string[] | null
           ge_target?: string | null
           ge_type?: string | null
           id?: number
-          language?: string | null
+          language?: string
           name_en?: string
           name_zh?: string
           no_extra_selection?: boolean | null
@@ -651,12 +684,12 @@ export interface Database {
           raw_venue?: string | null
           reserve?: number | null
           second_specialization?: string[] | null
-          semester?: string | null
+          semester?: string
           tags?: string[]
           teacher_en?: string[] | null
-          teacher_zh?: string[] | null
-          times?: string[] | null
-          venues?: string[] | null
+          teacher_zh?: string[]
+          times?: string[]
+          venues?: string[]
           停開註記?: string | null
           備註?: string | null
           必選修說明?: string | null
@@ -1292,23 +1325,23 @@ export interface Database {
           keyword: string
         }
         Returns: {
-          class: number | null
-          course: string | null
-          credits: number | null
+          class: string
+          course: string
+          credits: number
           cross_discipline: string[] | null
-          department: string | null
+          department: string
           first_specialization: string[] | null
           id: number
-          language: string | null
-          name_en: string | null
-          name_zh: string | null
+          language: string
+          name_en: string
+          name_zh: string
           note: string | null
           raw_id: string
           second_specialization: string[] | null
-          semester: string | null
-          teacher_zh: string[] | null
-          times: string[] | null
-          venues: string[] | null
+          semester: string
+          teacher_zh: string[]
+          times: string[]
+          venues: string[]
         }[]
       }
       search_courses: {
@@ -1317,18 +1350,18 @@ export interface Database {
         }
         Returns: {
           capacity: number | null
-          class: string | null
+          class: string
           compulsory_for: string[] | null
-          course: string | null
-          credits: number | null
+          course: string
+          credits: number
           cross_discipline: string[] | null
-          department: string | null
+          department: string
           elective_for: string[] | null
           first_specialization: string[] | null
           ge_target: string | null
           ge_type: string | null
           id: number
-          language: string | null
+          language: string
           name_en: string
           name_zh: string
           no_extra_selection: boolean | null
@@ -1342,12 +1375,12 @@ export interface Database {
           raw_venue: string | null
           reserve: number | null
           second_specialization: string[] | null
-          semester: string | null
+          semester: string
           tags: string[]
           teacher_en: string[] | null
-          teacher_zh: string[] | null
-          times: string[] | null
-          venues: string[] | null
+          teacher_zh: string[]
+          times: string[]
+          venues: string[]
           停開註記: string | null
           備註: string | null
           必選修說明: string | null
