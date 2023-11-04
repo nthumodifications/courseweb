@@ -13,7 +13,7 @@ function getLocale(request: NextRequest) {
     
     return match(languages, locales, defaultLocale)
  }
- 
+
 export function middleware(request: NextRequest) {
   // Check if there is any supported locale in the pathname
   const { pathname } = request.nextUrl

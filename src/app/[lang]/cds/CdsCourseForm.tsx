@@ -1,3 +1,4 @@
+'use client';
 import Timetable from '@/components/Timetable/Timetable';
 import { FC, Fragment, useState, useRef, useEffect, useMemo } from 'react';
 import { scheduleTimeSlots } from '@/const/timetable';
