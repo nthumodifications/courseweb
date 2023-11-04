@@ -56,7 +56,7 @@ const SideNav:FC = () => {
         }
     ]
     return (<>
-        <nav className="md:hidden w-screen flex flex-row h-10 gap-4 justify-evenly">
+        <nav className="md:hidden w-screen flex flex-row h-10 gap-4 justify-evenly py-3">
             {links.map((link, index) => (
                 <Link 
                     className={`flex items-center gap-4 hover:opacity-80 hover:underline transition text-gray-600 dark:text-gray-400`}
