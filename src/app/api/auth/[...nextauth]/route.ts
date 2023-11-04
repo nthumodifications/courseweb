@@ -25,7 +25,20 @@ const handler = NextAuth({
               }
             },
           }
-    ]
+    ],
+    callbacks: {
+      async jwt({ token, account, profile }) {
+        // Persist the OAuth access_token and or the user id to the token right after signin
+        if (account && profile) {
+          token.id = profile.id,
+          token.name = profile.name_zh,
+          token.name_en = profile.name_en,
+          token.inschool = profile.inschool,
+          token.email = profile.email
+        }
+        return token
+      }    
+    }
 })
 
 export { handler as GET, handler as POST }
