@@ -1,8 +1,8 @@
+import supabase from '@/config/supabase'
 import NTHUMap from '@/components/Venue/NTHUMap'
 import {createTimetableFromCourses} from '@/helpers/timetable';
 import Timetable from '@/components/Timetable/Timetable';
 import { Suspense } from 'react';
-import getSupabaseServer from '@/config/supabase_server';
 type Props = {
     params: {
         locationId: string;
@@ -10,7 +10,6 @@ type Props = {
 }
 
 const getCoursesWithVenue = async (venueId: string) => {
-    const supabase = await getSupabaseServer();
     const { data, error } = await supabase.from('courses').select('*').containedBy('venues', [venueId]);
     if (error) throw error;
     else return data;

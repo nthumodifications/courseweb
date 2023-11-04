@@ -1,4 +1,5 @@
 import MultiSelectControl from '@/components/FormComponents/MultiSelectControl';
+import supabase from '@/config/supabase';
 import useDictionary from '@/dictionaries/useDictionary';
 import {
     Accordion,
@@ -21,7 +22,6 @@ import DepartmentControl from '../FormComponents/DepartmentControl';
 import { useMediaQuery } from 'usehooks-ts';
 import { GECTypes, GETargetCodes } from '@/const/ge_target';
 import { useSettings } from '@/hooks/contexts/settings';
-import useSupabaseClient from '@/config/supabase_client';
 
 export type RefineControlFormTypes = {
     textSearch: string,
@@ -40,7 +40,6 @@ export type RefineControlFormTypes = {
 }
 
 const RefineControls: FC<{ control: Control<RefineControlFormTypes>, onClear: () => void }> = ({ control, onClear }) => {
-    const supabase = useSupabaseClient();
     const dict = useDictionary();
     const { language } = useSettings();
     const { data: firstSpecial = [], error: error1, isLoading: load1 } = useSWR('distinct_first_specialization', async () => {

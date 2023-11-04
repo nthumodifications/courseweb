@@ -1,8 +1,7 @@
 'use client';
 import NTHUBirdIcon from "@/components/NTHUBirdIcon"
 import CourseSearchbar from "@/components/Timetable/CourseSearchbar";
-import Timetable from "@/components/Timetable/Timetable";
-import getSupabaseServer from "@/config/supabase_server";
+import supabase from "@/config/supabase";
 import { Alert, Button, CircularProgress, DialogActions, DialogContent, Divider, Modal, ModalClose, ModalDialog } from "@mui/joy"
 import { signIn, useSession } from "next-auth/react"
 import { FC, useState } from "react"

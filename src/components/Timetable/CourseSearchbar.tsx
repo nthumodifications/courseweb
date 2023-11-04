@@ -1,16 +1,14 @@
 import {Autocomplete, AutocompleteOption, CircularProgress, ListItemContent} from '@mui/joy';
 import {useEffect, useState} from 'react';
 import {useDebouncedCallback} from 'use-debounce';
-import useSupabaseClient from '@/config/supabase_client';
-import { CourseDefinition } from '@/config/supabase.types';
-
+import supabase from '@/config/supabase';
+import {CourseDefinition} from '@/config/supabase';
 const CourseSearchbar = ({ onAddCourse }: { onAddCourse: (course: CourseDefinition) => void }) => {
     const [open, setOpen] = useState(false);
     const [options, setOptions] = useState<CourseDefinition[]>([]);
     const [loading, setLoading] = useState(false);
     const [textSearch, setTextSearch] = useState('');
     const [refreshKey, setRefreshKey] = useState<string>("init");
-    const supabase = useSupabaseClient();
 
 
     const search = useDebouncedCallback(async (text: string) => {

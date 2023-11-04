@@ -1,15 +1,13 @@
+import supabase from "@/config/supabase";
 import { scheduleTimeSlots } from "@/const/timetable";
 import { createTimetableFromCourses } from "@/helpers/timetable";
-import { getHours, getMinutes, parse } from "date-fns";
+import { differenceInMinutes, getHours, getMinutes, parse } from "date-fns";
 import * as ics from 'ics';
 import { NextResponse } from "next/server";
 import { zonedTimeToUtc } from 'date-fns-tz'
-import getSupabaseServer from "@/config/supabase_server";
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
-    
-    const supabase = await getSupabaseServer();
     const courses_ids = searchParams.get('semester_1121')?.split(',')!;
     const theme = searchParams.get('theme') || 'tsinghuarian';
 

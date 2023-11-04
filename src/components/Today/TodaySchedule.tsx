@@ -1,14 +1,16 @@
-'use client';;
-import { Alert, ColorPaletteProp, Divider } from '@mui/joy';
+'use client';
+
+import {Alert, ColorPaletteProp, Divider, Tooltip} from '@mui/joy';
 import {format, formatRelative, getDay} from 'date-fns';
 import useUserTimetable from '@/hooks/useUserTimetable';
 import {scheduleTimeSlots} from '@/const/timetable';
 import { FC } from "react";
 import { useSettings } from '@/hooks/contexts/settings';
+import { AlertDefinition } from '@/config/supabase';
 import useDictionary from '@/dictionaries/useDictionary';
+import { CWBWeather } from '@/types/weather';
 import WeatherIcon from './WeatherIcon';
 import { getLocale } from '@/helpers/dateLocale';
-import { AlertDefinition } from '@/config/supabase.types';
 
 const TodaySchedule: FC<{ weather: any, alerts: AlertDefinition[] }> = ({ weather, alerts }) => {
     const { timetableData, allCourseData, deleteCourse } = useUserTimetable();

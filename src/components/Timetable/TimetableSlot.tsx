@@ -1,4 +1,4 @@
-import { CourseDefinition } from '@/config/supabase.types';
+import { CourseDefinition } from '@/config/supabase';
 import { useSettings } from '@/hooks/contexts/settings';
 import { useModal } from '@/hooks/contexts/useModal';
 import { CourseTimeslotData, TimetableDim } from '@/types/timetable';
