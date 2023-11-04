@@ -34,6 +34,7 @@ import { normalizeRoomName } from '@/const/venues';
 import { useMediaQuery } from 'usehooks-ts';
 import { useSettings } from '@/hooks/contexts/settings';
 import supabase, { CdsCourseDefinition } from '@/config/supabase';
+import { useSession } from 'next-auth/react';
 
 const createTimetableFromCdsCourses = (data: CdsCourseDefinition[], theme = 'tsinghuarian') => {
     const newTimetableData: CourseTimeslotData[] = [];
@@ -92,6 +93,10 @@ const CdsCoursesForm: FC<{
     const { timetableTheme } = useSettings();
     const [displayToggles, setDisplayToggles] = useState<{ [key: string]: boolean }>({});
     const scrollRef = useRef<HTMLDivElement>(null);
+
+    const session = useSession();
+    console.log(session)
+
     const emptyFilters = {
         textSearch: "",
         level: [1, 2, 3, 4],
