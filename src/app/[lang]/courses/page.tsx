@@ -17,6 +17,7 @@ import { GETargetCodes } from "@/const/ge_target";
 import { departments } from "@/const/departments";
 import useSupabaseClient from '@/config/supabase_client';
 import { CourseDefinition } from "@/config/supabase.types";
+import useUserTimetable from "@/hooks/useUserTimetable";
 
 const emptyFilters: RefineControlFormTypes = {
     textSearch: '',
@@ -46,7 +47,7 @@ const CoursePage: NextPage = () => {
     const router = useRouter();
     const searchParams = useSearchParams();
 
-    const { control, watch, setValue, reset } = useForm<RefineControlFormTypes>({
+    const { control, watch, setValue, reset, formState: { isDirty } } = useForm<RefineControlFormTypes>({
         defaultValues: useMemo(() => {
             if (searchParams.size > 0) { 
                 //Since we have to handle department differently, special cases where have nested objects
@@ -202,6 +203,13 @@ const CoursePage: NextPage = () => {
 
     }, [JSON.stringify(filters)])
 
+    const { allCourseData } = useUserTimetable();
+
+    const renderExistingSelection = () => {
+        if(isDirty) return <></>;
+        return allCourseData.map((course) => <CourseListItem key={course.raw_id} course={course}/>)
+    }
+
 
     return (<>
         {/* <div className="grid grid-cols-1 md:grid-cols-[auto_320px] w-full h-full overflow-hidden"> */}
@@ -241,6 +249,7 @@ const CoursePage: NextPage = () => {
                             <h6 className="text-gray-600">{dict.course.list.found}: {totalCount} {dict.course.list.courses}</h6>
                         </div>
                         <div className="flex flex-col w-full h-full space-y-5">
+                            {renderExistingSelection()}
                             {courses.map((course, index) => (
                                 <CourseListItem key={index} course={course} />
                             ))}
