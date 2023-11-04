@@ -53,27 +53,29 @@ const handler = NextAuth({
   ],
   callbacks: {
     async jwt({ token, account, profile, user }) {
-      if (process.env.NODE_ENV == 'development') {
-        return {
+      if (account) {
+        token = {
           ...token,
+          id: user.id,
+          inschool: user.inschool,
+          name_zh: user.name_zh,
+          name_en: user.name_en,
+          email: user.email
+        }
+      }
+      return token
+    },
+    async session({ session, token }) {
+      if (process.env.NODE_ENV == 'development') {
+        session.user = {
           id: "b07901001",
           inschool: true,
           name_zh: "王小明",
           name_en: "Wang, Xiao-Ming",
           email: "chewtzihwee@gmail.com"
         }
+        return session;
       }
-
-      if (account) {
-        token.id = user.id,
-        token.name_zh = user.name_zh,
-        token.name_en = user.name_en,
-        token.inschool = user.inschool,
-        token.email = user.email
-      }
-      return token
-    },
-    async session({ session, token }) {
       session.user = {
         ...session.user,
         //@ts-ignore
