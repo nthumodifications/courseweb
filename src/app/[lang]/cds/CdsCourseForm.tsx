@@ -103,11 +103,15 @@ const CdsCoursesForm: FC<{
 
     const session = useSession();
 
-    const emptyFilters = {
+    const emptyFilters: CdsCoursesFormFields = {
         textSearch: "",
         level: [1, 2, 3, 4],
         language: [],
-        department: [],
+        department: [
+            { code: 'EECS', name_en: 'Interdisplinary Program of College of Electrical Engineering and Computer Science', name_zh: '電機資訊學院學士班' },
+            { code: 'CS' , name_en: 'Department of Computer Science', name_zh: '資訊工程學系' },
+            { code: 'EE', name_en: 'Department of Electrical Engineering', name_zh: '電機工程學系'}
+        ],
         timeslots: []
     }
     const { control, watch, setValue, reset, formState: { isDirty } } = useForm<CdsCoursesFormFields>({

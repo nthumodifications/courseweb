@@ -9,7 +9,7 @@ import { SubmissionStatus } from '@/types/cds_courses';
 
 export const getUserCdsSelections = async (term: string) => {
     const session = await getServerSession(authConfig);
-    if(session == null || !session.user) return redirect('/');
+    if(session == null || !session.user || !session.user.inschool) return redirect('/');
 
     //get user cds saves
     const { data: cdsSaves, error: error1 } = await supabase_server
@@ -31,7 +31,7 @@ export const getUserCdsSelections = async (term: string) => {
 
 export const saveUserSelections = async (term: string, selections: string[]) => {
     const session = await getServerSession(authConfig);
-    if(session == null || !session.user) return redirect('/');
+    if(session == null || !session.user || !session.user.inschool) return redirect('/');
 
     //get user cds saves
     const { data: cdsSaves, error: error1 } = await supabase_server
@@ -62,6 +62,8 @@ export const isUserSubmitted = async (term: string) => {
     const session = await getServerSession(authConfig);
     if(session == null || !session.user) return SubmissionStatus.NOT_LOGGED_IN;
 
+    if(!session.user.inschool) return SubmissionStatus.NOT_ALLOWED;
+
     //get user cds saves
     const { data: cdsSubmissions, error: error1 } = await supabase_server
         .from('cds_submissions')
@@ -76,7 +78,7 @@ export const isUserSubmitted = async (term: string) => {
 
 export const submitUserSelections = async (term: string, selections: string[]) => {
     const session = await getServerSession(authConfig);
-    if(session == null || !session.user) return redirect('/');
+    if(session == null || !session.user || !session.user.inschool) return redirect('/');
 
     //get course datas
     const { data: courses, error: error1 } = await supabase_server.from('cds_courses').select('*').in('raw_id', selections);

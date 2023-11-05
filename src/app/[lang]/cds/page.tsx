@@ -36,6 +36,10 @@ const CourseDemandSurvey = async () => {
                 <p>開放時間：2021/10/18 00:00 ~ 2021/10/24 23:59</p>
             </div>
             <Divider />
+            {submitState == SubmissionStatus.NOT_ALLOWED && <div className="text-left space-y-3 py-4 w-full text-gray-700 dark:text-gray-200">
+                <h2 className="text-2xl font-semibold">此賬號無法填寫</h2>
+                <LogoutButton />
+            </div>}
             {submitState == SubmissionStatus.SUBMITTED && <div className="text-left space-y-3 py-4 w-full text-gray-700 dark:text-gray-200">
                 <h2 className="text-2xl font-semibold">已提交</h2>
                 <p>感謝您的填寫~</p>
