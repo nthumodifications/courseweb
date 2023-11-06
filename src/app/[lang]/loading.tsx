@@ -5,6 +5,7 @@ const LoadingPage = () => {
         <div className="grid place-items-center w-full h-screen">
             <div className="flex flex-col items-center">
                 <LinearProgress />
+                <span className="mt-2 text-gray-500">載入中...</span>
             </div>
         </div>
     )
