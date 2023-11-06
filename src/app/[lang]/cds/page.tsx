@@ -24,15 +24,22 @@ const CourseDemandSurvey = async () => {
     else return <div className="flex flex-col items-center justify-center h-full w-full" style={{ background: darkMode ? "" : "radial-gradient(213.94% 85.75% at 93.76% -9.79%, rgb(251, 165, 255) 0%, rgb(255, 255, 255) 29.64%)", backdropFilter: 'blur(4px)' }}>
         <div className="flex flex-col items-center justify-center max-w-xl space-y-2 w-[min(100vw,64rem)] px-2 py-4">
             <div className="text-left space-y-3 py-4 w-full text-gray-700 dark:text-gray-200">
-                <h1 className="text-4xl font-bold">選課意願調查</h1>
-                <h2 className="text-2xl font-semibold">112-2 學期</h2>
+                <h1 className="text-4xl font-bold">選課規劃調查</h1>
+                <h2 className="text-2xl font-semibold">{term} 學期</h2>
             </div>
             <Divider />
             <div className="text-left space-y-3 py-4 w-full text-gray-700 dark:text-gray-200">
                 <h2 className="text-2xl font-semibold">宗旨</h2>
-                <p>電機資訊學院學士班的系辦爲了更瞭解熱門的課程，協助調整内部的資源，因此推動了選課意願調查。</p>
-                <p>同學們請務必填寫，可以在選項中填寫這學期想修的課程（最多5們）。</p>
-                <Alert>這裏的調查并不會提供選課優先權，但是依據教授需求可能會參考名單。</Alert>
+                <p>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris semper condimentum neque quis cursus. Sed sollicitudin neque ac nisl scelerisque, ac faucibus urna euismod. 
+                <br/>
+                Praesent vulputate dignissim velit, quis rutrum elit. Curabitur non tellus nisl. Mauris a vehicula orci. Integer ornare auctor orci, vitae varius elit commodo eget.
+                <br/>
+                Nullam accumsan vel leo sed pulvinar. Vestibulum ut elit sit amet urna bibendum porta. Mauris id nulla consequat, mollis ipsum facilisis, lobortis lectus. Morbi mattis dolor felis, non consequat mi dignissim ut. Pellentesque vestibulum tempus gravida. Nunc porttitor nibh dictum ante accumsan, facilisis sodales tellus condimentum. Praesent dolor magna, viverra a vulputate vitae, hendrerit nec neque. Phasellus volutpat convallis justo. Integer ornare ultrices justo, non ultricies lacus molestie nec.
+                <br/>
+
+
+                </p>
                 <p>開放時間：2021/10/18 00:00 ~ 2021/10/24 23:59</p>
             </div>
             <Divider />
