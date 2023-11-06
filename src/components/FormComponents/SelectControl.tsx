@@ -14,7 +14,7 @@ const SelectControl = <T extends FieldValues, OptionValue extends {}>({ control,
                 onChange={(e,v) => onChange(v)}
                 {...rest}
             >
-                {options.map(option => <Option key={option.value} value={option.value}>{option.label}</Option>)}
+                {options.map((option, i) => <Option key={i} value={option.value}>{option.label}</Option>)}
             </Select>
         )}
     />
