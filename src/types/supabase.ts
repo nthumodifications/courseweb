@@ -576,10 +576,42 @@ export interface Database {
         }
         Relationships: []
       }
+      course_syllabus: {
+        Row: {
+          brief: string | null
+          content: string | null
+          has_file: boolean
+          keywords: string | null
+          raw_id: string
+        }
+        Insert: {
+          brief?: string | null
+          content?: string | null
+          has_file: boolean
+          keywords?: string | null
+          raw_id: string
+        }
+        Update: {
+          brief?: string | null
+          content?: string | null
+          has_file?: boolean
+          keywords?: string | null
+          raw_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_syllabus_raw_id_fkey"
+            columns: ["raw_id"]
+            referencedRelation: "courses"
+            referencedColumns: ["raw_id"]
+          }
+        ]
+      }
       courses: {
         Row: {
           capacity: number | null
           class: string
+          closed_mark: string | null
           compulsory_for: string[] | null
           course: string
           credits: number
@@ -589,12 +621,14 @@ export interface Database {
           first_specialization: string[] | null
           ge_target: string | null
           ge_type: string | null
-          id: number
           language: string
           name_en: string
           name_zh: string
           no_extra_selection: boolean | null
+          note: string | null
+          prerequisites: string | null
           raw_1_2_specialization: string | null
+          raw_compulsory_elective: string | null
           raw_cross_discipline: string | null
           raw_extra_selection: string | null
           raw_id: string
@@ -603,6 +637,7 @@ export interface Database {
           raw_time: string | null
           raw_venue: string | null
           reserve: number | null
+          restrictions: string | null
           second_specialization: string[] | null
           semester: string
           tags: string[]
@@ -610,17 +645,13 @@ export interface Database {
           teacher_zh: string[]
           times: string[]
           venues: string[]
-          closed_mark: string | null
-          note: string | null
-          raw_compulsory_elective: string | null
-          prerequisites: string | null
-          restrictions: string | null
           multilang_search: string | null
           time_slots: unknown | null
         }
         Insert: {
           capacity?: number | null
           class: string
+          closed_mark?: string | null
           compulsory_for?: string[] | null
           course: string
           credits?: number
@@ -630,12 +661,14 @@ export interface Database {
           first_specialization?: string[] | null
           ge_target?: string | null
           ge_type?: string | null
-          id: number
           language: string
           name_en: string
           name_zh: string
           no_extra_selection?: boolean | null
+          note?: string | null
+          prerequisites?: string | null
           raw_1_2_specialization?: string | null
+          raw_compulsory_elective?: string | null
           raw_cross_discipline?: string | null
           raw_extra_selection?: string | null
           raw_id: string
@@ -644,6 +677,7 @@ export interface Database {
           raw_time?: string | null
           raw_venue?: string | null
           reserve?: number | null
+          restrictions?: string | null
           second_specialization?: string[] | null
           semester: string
           tags?: string[]
@@ -651,15 +685,11 @@ export interface Database {
           teacher_zh: string[]
           times: string[]
           venues: string[]
-          closed_mark?: string | null
-          note?: string | null
-          raw_compulsory_elective?: string | null
-          prerequisites?: string | null
-          restrictions?: string | null
         }
         Update: {
           capacity?: number | null
           class?: string
+          closed_mark?: string | null
           compulsory_for?: string[] | null
           course?: string
           credits?: number
@@ -669,12 +699,14 @@ export interface Database {
           first_specialization?: string[] | null
           ge_target?: string | null
           ge_type?: string | null
-          id?: number
           language?: string
           name_en?: string
           name_zh?: string
           no_extra_selection?: boolean | null
+          note?: string | null
+          prerequisites?: string | null
           raw_1_2_specialization?: string | null
+          raw_compulsory_elective?: string | null
           raw_cross_discipline?: string | null
           raw_extra_selection?: string | null
           raw_id?: string
@@ -683,6 +715,7 @@ export interface Database {
           raw_time?: string | null
           raw_venue?: string | null
           reserve?: number | null
+          restrictions?: string | null
           second_specialization?: string[] | null
           semester?: string
           tags?: string[]
@@ -690,11 +723,6 @@ export interface Database {
           teacher_zh?: string[]
           times?: string[]
           venues?: string[]
-          closed_mark?: string | null
-          note?: string | null
-          raw_compulsory_elective?: string | null
-          prerequisites?: string | null
-          restrictions?: string | null
         }
         Relationships: []
       }
@@ -1351,6 +1379,7 @@ export interface Database {
         Returns: {
           capacity: number | null
           class: string
+          closed_mark: string | null
           compulsory_for: string[] | null
           course: string
           credits: number
@@ -1360,12 +1389,14 @@ export interface Database {
           first_specialization: string[] | null
           ge_target: string | null
           ge_type: string | null
-          id: number
           language: string
           name_en: string
           name_zh: string
           no_extra_selection: boolean | null
+          note: string | null
+          prerequisites: string | null
           raw_1_2_specialization: string | null
+          raw_compulsory_elective: string | null
           raw_cross_discipline: string | null
           raw_extra_selection: string | null
           raw_id: string
@@ -1374,6 +1405,7 @@ export interface Database {
           raw_time: string | null
           raw_venue: string | null
           reserve: number | null
+          restrictions: string | null
           second_specialization: string[] | null
           semester: string
           tags: string[]
@@ -1381,11 +1413,6 @@ export interface Database {
           teacher_zh: string[]
           times: string[]
           venues: string[]
-          closed_mark: string | null
-          note: string | null
-          raw_compulsory_elective: string | null
-          prerequisites: string | null
-          restrictions: string | null
         }[]
       }
       set_limit: {

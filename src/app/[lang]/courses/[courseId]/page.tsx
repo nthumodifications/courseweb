@@ -46,8 +46,14 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                         <div className="space-y-2">
                             <h4 className="font-semibold text-base text-gray-300">{course.semester} 學期</h4>
                             <h1 className="font-bold text-3xl mb-4 text-[#AF7BE4]">{`${course?.department} ${course?.course}-${course?.class}`}</h1>
-                            <h2 className="font-semibold text-3xl text-gray-500 dark:text-gray-300 mb-2">{course!.name_zh} - {course?.teacher_zh?.join(',')?? ""}</h2>
-                            <h2 className="font-semibold text-xl text-gray-500 dark:text-gray-300">{course!.name_en} - {course?.teacher_en?.join(',')?? ""}</h2>
+                            <h2 className="font-semibold text-3xl text-gray-500 dark:text-gray-300 mb-2 flex flex-row flex-wrap gap-1">
+                                <span>{course!.name_zh}</span> 
+                                <span className="font-normal">{course?.teacher_zh?.join(',')?? ""}</span>
+                            </h2>
+                            <h2 className="font-semibold text-xl text-gray-500 dark:text-gray-300 flex flex-row flex-wrap gap-1">
+                                <span>{course!.name_en}</span> 
+                                <span className="font-normal">{course?.teacher_en?.join(',')?? ""}</span>
+                            </h2>
                         </div>
                         <CourseTagList course={course}/>
                     </div>
@@ -69,6 +75,10 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                             <h3 className="font-semibold text-xl mb-2">{dict.course.details.description}</h3>
                             <p>{course?.note}</p>
                         </div>
+                        {course?.prerequisites && <div className="">
+                            <h3 className="font-semibold text-xl mb-2">儅修</h3>
+                            <div dangerouslySetInnerHTML={{ __html: course.prerequisites }} />
+                        </div>}
                         <div className="">
                             <h3 className="font-semibold text-xl mb-2">時間表</h3>
                             <Timetable timetableData={timetableData}/>
@@ -93,36 +103,42 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                     <div className="space-y-2">
                         <div>
                             <h3 className="font-semibold text-base mb-2">{dict.course.details.restrictions}</h3>
-                            <p>{course?.restrictions}</p>
+                            <p>{course.restrictions}</p>
                         </div>
                         <div>
                             <h3 className="font-semibold text-base mb-2">{dict.course.details.compulsory}</h3>
                             <div className="flex flex-row gap-2 flex-wrap">
-                                {course?.compulsory_for?.map((m, index) => <Chip key={index}>{m}</Chip>)}
+                                {course.compulsory_for?.map((m, index) => <Chip key={index}>{m}</Chip>)}
+                                {course.compulsory_for?.length == 0 && <p>無</p>}
                             </div>
                         </div>
                         <div>
                             <h3 className="font-semibold text-base mb-2">{dict.course.details.elective}</h3>
                             <div className="flex flex-row gap-2 flex-wrap">
-                                {course?.elective_for?.map((m, index) => <Chip key={index}>{m}</Chip>)}
+                                {course.elective_for?.map((m, index) => <Chip key={index}>{m}</Chip>)}
+                                {course.elective_for?.length == 0 && <p>無</p>}
                             </div>
                         </div>
                         <div>
                             <h3 className="font-semibold text-base mb-2">{dict.course.details.cross_discipline}</h3>
                             <div className="flex flex-row gap-2 flex-wrap">
-                                {course?.cross_discipline?.map((m, index) => <Chip key={index}>{m}</Chip>)}
+                                {course.cross_discipline?.map((m, index) => <Chip key={index}>{m}</Chip>)}
+                                {course.cross_discipline?.length == 0 && <p>無</p>}
+                                
                             </div>
                         </div>
                         <div>
                             <h3 className="font-semibold text-base mb-2">{dict.course.details.first_specialization}</h3>
                             <div className="flex flex-row gap-2 flex-wrap">
-                                {course?.first_specialization?.map((m, index) => <Chip key={index}>{m}</Chip>)}
+                                {course.first_specialization?.map((m, index) => <Chip key={index}>{m}</Chip>)}
+                                {course.first_specialization?.length == 0 && <p>無</p>}
                             </div>
                         </div>
                         <div>
                             <h3 className="font-semibold text-base mb-2">{dict.course.details.second_specialization}</h3>
                             <div className="flex flex-row gap-2 flex-wrap">
-                                {course?.second_specialization?.map((m, index) => <Chip key={index}>{m}</Chip>)}
+                                {course.second_specialization?.map((m, index) => <Chip key={index}>{m}</Chip>)}
+                                {course.second_specialization?.length == 0 && <p>無</p>}
                             </div>
                         </div>
                     </div>
