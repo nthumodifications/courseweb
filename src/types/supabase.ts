@@ -610,11 +610,11 @@ export interface Database {
           teacher_zh: string[]
           times: string[]
           venues: string[]
-          停開註記: string | null
-          備註: string | null
-          必選修說明: string | null
-          擋修說明: string | null
-          課程限制說明: string | null
+          closed_mark: string | null
+          note: string | null
+          raw_compulsory_elective: string | null
+          prerequisites: string | null
+          restrictions: string | null
           multilang_search: string | null
           time_slots: unknown | null
         }
@@ -651,11 +651,11 @@ export interface Database {
           teacher_zh: string[]
           times: string[]
           venues: string[]
-          停開註記?: string | null
-          備註?: string | null
-          必選修說明?: string | null
-          擋修說明?: string | null
-          課程限制說明?: string | null
+          closed_mark?: string | null
+          note?: string | null
+          raw_compulsory_elective?: string | null
+          prerequisites?: string | null
+          restrictions?: string | null
         }
         Update: {
           capacity?: number | null
@@ -690,11 +690,11 @@ export interface Database {
           teacher_zh?: string[]
           times?: string[]
           venues?: string[]
-          停開註記?: string | null
-          備註?: string | null
-          必選修說明?: string | null
-          擋修說明?: string | null
-          課程限制說明?: string | null
+          closed_mark?: string | null
+          note?: string | null
+          raw_compulsory_elective?: string | null
+          prerequisites?: string | null
+          restrictions?: string | null
         }
         Relationships: []
       }
@@ -1381,11 +1381,11 @@ export interface Database {
           teacher_zh: string[]
           times: string[]
           venues: string[]
-          停開註記: string | null
-          備註: string | null
-          必選修說明: string | null
-          擋修說明: string | null
-          課程限制說明: string | null
+          closed_mark: string | null
+          note: string | null
+          raw_compulsory_elective: string | null
+          prerequisites: string | null
+          restrictions: string | null
         }[]
       }
       set_limit: {

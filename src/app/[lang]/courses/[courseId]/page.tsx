@@ -1,12 +1,19 @@
 import Fade from "@/components/Animation/Fade";
-import supabase from "@/config/supabase";
 import { getDictionary } from "@/dictionaries/dictionaries";
 import {getCourse, getCoursePTTReview} from '@/lib/course';
 import { LangProps } from "@/types/pages";
-import { Accordion, AccordionDetails, AccordionGroup, AccordionSummary, Alert, Chip, Divider } from "@mui/joy";
+import {Accordion, AccordionDetails, AccordionGroup, AccordionSummary, Alert, Chip, Divider, Button} from '@mui/joy';
 import { format } from "date-fns";
-import { NextPage, ResolvingMetadata } from "next";
-import { AlertTriangle } from "react-feather";
+import { ResolvingMetadata } from "next";
+import {AlertTriangle, Minus, Plus} from 'react-feather';
+import { redirect } from 'next/navigation'
+import CourseTagList from "@/components/Courses/CourseTagsList";
+import {useSettings} from '@/hooks/contexts/settings';
+import { useMemo } from "react";
+import SelectCourseButton from '@/components/Courses/SelectCourseButton';
+import { createTimetableFromCourses } from "@/helpers/timetable";
+import Timetable from "@/components/Timetable/Timetable";
+import { MinimalCourse } from "@/types/courses";
 
 type PageProps = { 
     params: { courseId? : string } 
@@ -27,25 +34,45 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
     const reviews = await getCoursePTTReview(courseId);
     const dict = await getDictionary(params.lang);
 
-    return <Fade>
-        <div className="grid grid-cols-1 lg:grid-cols-[auto_320px]  py-6 px-4">
-            <div className="space-y-2">
-                <h1 className="font-bold text-3xl mb-4 text-fuchsia-800">{`${course?.department} ${course?.course}-${course?.class}`}</h1>
-                <h2 className="font-semibold text-3xl text-gray-500 dark:text-gray-300 mb-2">{course!.name_zh} - {course?.teacher_zh?.join(',')?? ""}</h2>
-                <h2 className="font-semibold text-xl text-gray-500 dark:text-gray-300">{course!.name_en} - {course?.teacher_en?.join(',')?? ""}</h2>
+    if(!course) return redirect('/');
 
-                <p>{dict.course.details.semesterid}: {course?.raw_id} • {dict.course.credits}: {course?.credits}</p>
-                <p>{dict.course.details.language}: {course?.language == '英' ? 'English' : 'Chinese'}</p>
-                <p>{dict.course.details.capacity}: {course?.capacity} • {dict.course.details.reserved}: {course?.reserve}</p>
-                <p>{dict.course.details.class}: {course?.class}</p>
+    const timetableData = createTimetableFromCourses([course as MinimalCourse]);
+
+    return <Fade>
+        <div className="grid grid-cols-1 lg:grid-cols-[auto_320px] py-6 px-4 text-gray-500 dark:text-gray-300">
+            <div className="space-y-2">
+                <div className="flex flex-row items-end">
+                    <div className="space-y-4 flex-1">
+                        <div className="space-y-2">
+                            <h4 className="font-semibold text-base text-gray-300">{course.semester} 學期</h4>
+                            <h1 className="font-bold text-3xl mb-4 text-[#AF7BE4]">{`${course?.department} ${course?.course}-${course?.class}`}</h1>
+                            <h2 className="font-semibold text-3xl text-gray-500 dark:text-gray-300 mb-2">{course!.name_zh} - {course?.teacher_zh?.join(',')?? ""}</h2>
+                            <h2 className="font-semibold text-xl text-gray-500 dark:text-gray-300">{course!.name_en} - {course?.teacher_en?.join(',')?? ""}</h2>
+                        </div>
+                        <CourseTagList course={course}/>
+                    </div>
+                    <div className="space-y-4 w-[min(100vh,320px)]">
+                        <div className="">
+                            <h3 className="font-semibold text-base mb-2">時間地點</h3>
+                        {course.venues? 
+                            course.venues.map((vn, i) => <p key={vn} className='text-blue-600 dark:text-blue-400 text-sm'>{vn} <span className='text-black dark:text-white'>{course.times![i]}</span></p>) : 
+                            <p>No Venues</p>
+                        }
+                        </div>
+                        <SelectCourseButton courseId={course.raw_id}/>
+                    </div>
+                </div>
                 <Divider/>
-                <div className="grid grid-cols-1 md:grid-cols-[auto_320px] gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-[auto_320px] gap-6 ">
                     <div className="space-y-4">
                         <div className="">
                             <h3 className="font-semibold text-xl mb-2">{dict.course.details.description}</h3>
-                            <p>{course?.備註}</p>
+                            <p>{course?.note}</p>
                         </div>
-                        <Divider/>
+                        <div className="">
+                            <h3 className="font-semibold text-xl mb-2">時間表</h3>
+                            <Timetable timetableData={timetableData}/>
+                        </div>
                         {reviews.length > 0 && <div className="">
                         <h3 className="font-semibold text-xl mb-2">{dict.course.details.ptt_title}</h3>
                             <Alert variant="soft" color="warning" className="mb-4" startDecorator={<AlertTriangle/>}>
@@ -66,7 +93,7 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                     <div className="space-y-2">
                         <div>
                             <h3 className="font-semibold text-base mb-2">{dict.course.details.restrictions}</h3>
-                            <p>{course?.課程限制說明}</p>
+                            <p>{course?.restrictions}</p>
                         </div>
                         <div>
                             <h3 className="font-semibold text-base mb-2">{dict.course.details.compulsory}</h3>
