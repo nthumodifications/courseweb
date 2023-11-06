@@ -23,22 +23,7 @@ import { useMediaQuery } from 'usehooks-ts';
 import { GECTypes, GETargetCodes } from '@/const/ge_target';
 import { useSettings } from '@/hooks/contexts/settings';
 import { Department } from '@/types/courses';
-
-export type RefineControlFormTypes = {
-    textSearch: string,
-    level: string[],
-    language: string[],
-    others: string[],
-    className: string | null,
-    department: Department[],
-    firstSpecialization: string | null,
-    secondSpecialization: string | null,
-    timeslots: string[],
-    venues: string[],
-    disciplines: string[],
-    geTarget: string[],
-    gecDimensions: string[],
-}
+import { RefineControlFormTypes } from '@/app/[lang]/courses/page';
 
 const RefineControls: FC<{ control: Control<RefineControlFormTypes>, onClear: () => void }> = ({ control, onClear }) => {
     const dict = useDictionary();

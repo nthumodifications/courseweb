@@ -41,6 +41,7 @@ import { Department, MinimalCourse } from '@/types/courses';
 import { hasConflictingTimeslots, hasSameCourse } from '@/helpers/courses';
 import { useModal } from '@/hooks/contexts/useModal';
 import { useRouter } from 'next/navigation';
+import {TimeFilterType} from '@/components/FormComponents/TimeslotSelectorControl';
 
 const createTimetableFromCdsCourses = (data: CdsCourseDefinition[], theme = 'tsinghuarian') => {
     const newTimetableData: CourseTimeslotData[] = [];
@@ -83,6 +84,7 @@ type CdsCoursesFormFields = {
     language: string[];
     department: Department[];
     timeslots: string[];
+    timeFilter: TimeFilterType;
 }
 
 const CdsCoursesForm: FC<{
@@ -112,7 +114,8 @@ const CdsCoursesForm: FC<{
             { code: 'CS' , name_en: 'Department of Computer Science', name_zh: '資訊工程學系' },
             { code: 'EE', name_en: 'Department of Electrical Engineering', name_zh: '電機工程學系'}
         ],
-        timeslots: []
+        timeslots: [],
+        timeFilter: TimeFilterType.Within
     }
     const { control, watch, setValue, reset, formState: { isDirty } } = useForm<CdsCoursesFormFields>({
         defaultValues: emptyFilters
@@ -212,10 +215,15 @@ const CdsCoursesForm: FC<{
             //         .in('ge_target', filters.geTarget)
             // }
             if (filters.timeslots.length) {
-                console.log(filters.timeslots)
+                if(filters.timeFilter == TimeFilterType.Within)
+                    temp = temp
+                        .containedBy('cds_time_slots', filters.timeslots)
+                else if(filters.timeFilter == TimeFilterType.Includes)
+                    temp = temp
+                        .overlaps('cds_time_slots', filters.timeslots) //Overlap works if only one of their timeslots is selected
+                //don't include the timeslot filter if it is empty array
                 temp = temp
-                    .containedBy('cds_time_slots', filters.timeslots)
-                // .overlaps('time_slots', filters.timeslots) //Overlap works if only one of their timeslots is selected
+                    .not('cds_time_slots', 'eq', '{}')
             }
 
             let { data: courses, error, count } = await temp.order('raw_id', { ascending: true }).range(index, index + 29)

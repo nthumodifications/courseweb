@@ -10,13 +10,32 @@ import { useForm } from "react-hook-form";
 import { useDebouncedCallback } from "use-debounce";
 import { useMediaQuery } from 'usehooks-ts';
 import { arrayRange } from '@/helpers/array';
-import RefineControls, { RefineControlFormTypes } from '@/components/Courses/RefineControls';
+import RefineControls from '@/components/Courses/RefineControls';
 import useDictionary from "@/dictionaries/useDictionary";
 import { useRouter, useSearchParams } from "next/navigation";
 import queryString from 'query-string';
 import { GETargetCodes } from "@/const/ge_target";
 import { departments } from "@/const/departments";
 import useUserTimetable from "@/hooks/useUserTimetable";
+import {Department} from '@/types/courses';
+import { TimeFilterType } from "@/components/FormComponents/TimeslotSelectorControl";
+
+export type RefineControlFormTypes = {
+    textSearch: string,
+    level: string[],
+    language: string[],
+    others: string[],
+    className: string | null,
+    department: Department[],
+    firstSpecialization: string | null,
+    secondSpecialization: string | null,
+    timeslots: string[],
+    timeFilter: TimeFilterType,
+    venues: string[],
+    disciplines: string[],
+    geTarget: string[],
+    gecDimensions: string[],
+}
 
 const emptyFilters: RefineControlFormTypes = {
     textSearch: '',
@@ -26,6 +45,7 @@ const emptyFilters: RefineControlFormTypes = {
     department: [],
     venues: [],
     timeslots: [],
+    timeFilter: TimeFilterType.Within,
     disciplines: [],
     gecDimensions: [],
     geTarget: [],
@@ -159,10 +179,15 @@ const CoursePage: NextPage = () => {
                     .in('ge_target', filters.geTarget)
             }
             if (filters.timeslots.length) {
-                console.log(filters.timeslots)
+                if(filters.timeFilter == TimeFilterType.Within)
+                    temp = temp
+                        .containedBy('time_slots', filters.timeslots)
+                else if(filters.timeFilter == TimeFilterType.Includes)
+                    temp = temp
+                        .overlaps('time_slots', filters.timeslots) //Overlap works if only one of their timeslots is selected
+                //don't include the timeslot filter if it is empty array
                 temp = temp
-                    .containedBy('time_slots', filters.timeslots)
-                    // .overlaps('time_slots', filters.timeslots) //Overlap works if only one of their timeslots is selected
+                    .not('time_slots', 'eq', '{}')
             }
 
             let { data: courses, error, count } = await temp.order('raw_id', { ascending: true }).range(index, index + 29)
