@@ -64,7 +64,7 @@ const BusPage = () => {
                     Bus Times are Scheduled and may not be accurate during peak hours.
                 </Alert>
             </div>
-            <p className="text-xs text-gray-400 dark:text-gray-600">*資訊版本為 校園公車時刻表1121016-1130113. 如有差異請按<a href="mailto:chewtzihwee@gmail.com?subject=公車資訊錯誤" className="hover:underline" target="_blank">這裏</a></p>
+            <p className="text-xs text-gray-400 dark:text-gray-600">*資訊版本為 校園公車時刻表1121016-1130113,  南大校區區間車時刻表1121106-1130114. 如有差異請按<a href="mailto:chewtzihwee@gmail.com?subject=公車資訊錯誤" className="hover:underline" target="_blank">這裏</a></p>
         </div>
     )
 }
