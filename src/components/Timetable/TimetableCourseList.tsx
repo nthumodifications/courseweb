@@ -49,7 +49,7 @@ const TimetableCourseList = () => {
 
 
     return <div className="flex flex-col gap-4 px-4">
-        <CourseSearchbar onAddCourse={course => addCourse(course)} />
+        <CourseSearchbar onAddCourse={course => addCourse(course.raw_id)} />
         <div className='grid grid-cols-2 text-center'>
             <div className='space-x-2'>
                 <span className='text-2xl'>{allCourseData.length}</span>
@@ -78,7 +78,7 @@ const TimetableCourseList = () => {
                     </div>
                 </div>
                 <ButtonGroup>
-                    <IconButton onClick={() => deleteCourse(course)}>
+                    <IconButton onClick={() => deleteCourse(course.raw_id)}>
                         <Trash className="w-4 h-4" />
                     </IconButton>
                     <IconButton>

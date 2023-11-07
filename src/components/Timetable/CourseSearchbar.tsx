@@ -56,7 +56,7 @@ const CourseSearchbar = ({ onAddCourse }: { onAddCourse: (course: CourseDefiniti
             setRefreshKey(newValue!.raw_id! ?? Date.now());
             if(newValue) onAddCourse(newValue!);
         }}
-        isOptionEqualToValue={(option, value) => option.id === value.id}
+        isOptionEqualToValue={(option, value) => option.raw_id === value.raw_id}
         getOptionLabel={(option) => `${option.department} ${option.course}-${option.class} ${option.name_zh} ${option.name_en} ${option.raw_teacher_zh} ${option.raw_teacher_en}`}
         renderOption={(props, option) => (
             <AutocompleteOption {...props}>

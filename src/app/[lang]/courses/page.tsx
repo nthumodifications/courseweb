@@ -196,7 +196,7 @@ const CoursePage: NextPage = () => {
             if (error) console.error(error);
             else {
                 console.log(courses)
-                setCourses(courses as CourseSyllabusView[]);
+                setCourses(courses as unknown as CourseSyllabusView[]);
                 setHeadIndex(index);
             }
         }
