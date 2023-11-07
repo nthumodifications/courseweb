@@ -74,7 +74,7 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                 <div className="grid grid-cols-1 md:grid-cols-[auto_320px] gap-6 ">
                     <div className="space-y-4">
                         <div className="">
-                            <h3 className="font-semibold text-xl mb-2">Brief</h3>
+                            <h3 className="font-semibold text-xl mb-2">簡介</h3>
                             <p className="whitespace-pre-line text-sm">{course.course_syllabus.brief}</p>
                         </div>
                         <div className="">
@@ -100,7 +100,7 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                             <AccordionGroup>
                             {reviews.map((m, index) => 
                                 <Accordion key={index}>
-                                    <AccordionSummary>{index + 1}. Review from {format(new Date(m.date), 'yyyy-MM-dd')}</AccordionSummary>
+                                    <AccordionSummary>{index + 1}. {format(new Date(m.date), 'yyyy-MM-dd')} 的心得</AccordionSummary>
                                     <AccordionDetails>
                                         <p className="whitespace-pre-line text-sm">{m.content}</p>
                                     </AccordionDetails>
@@ -111,7 +111,7 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                     </div>
                     <div className="space-y-2">
                         <div>
-                            <h3 className="font-semibold text-base mb-2">Note</h3>
+                            <h3 className="font-semibold text-base mb-2">備注</h3>
                             <p>{course.note ?? "無"}</p>
                         </div>
                         <div>

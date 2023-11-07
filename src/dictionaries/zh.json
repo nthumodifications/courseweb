@@ -82,7 +82,7 @@
         }
     },
     "venues": {
-        "placeholder": "Select a Venue from the list"
+        "placeholder": "從選項中選一個地點"
     },
     "alerts": {
         "TimetableCourseList": {

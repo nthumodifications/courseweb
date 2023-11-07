@@ -35,7 +35,7 @@ const CourseSearchbar = ({ onAddCourse }: { onAddCourse: (course: CourseDefiniti
 
     return <Autocomplete
         key={refreshKey} 
-        placeholder="Search for a course..."
+        placeholder="尋找你要的課..."
         open={open}
         onOpen={() => {
             setLoading(true);
