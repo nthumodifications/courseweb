@@ -2,6 +2,7 @@
 import { FC } from "react";
 import { useSettings } from "@/hooks/contexts/settings";
 import FullLogo from "./Branding/FullLogo";
+import Link from "next/link";
 const Header: FC = () => {
 
     const { language } = useSettings();
@@ -21,7 +22,9 @@ const Header: FC = () => {
 
     return (
         <header className="h-14 w-screen bg-gray-100 dark:bg-neutral-800 shadow-md px-4 md:px-8 py-4 md:col-span-2 flex flex-row justify-between items-center z-50">
-            <FullLogo />
+            <Link href={"/"+language+"/timetable"}>
+                <FullLogo />
+            </Link>
             <p className="text-sm text-gray-600 dark:text-gray-400">
             {language == 'en' &&
                 (currentSemester ?`AC${currentSemester.year} Sem ${currentSemester.semester}, Week ${currentWeek}`: `No Active Semester`)}
