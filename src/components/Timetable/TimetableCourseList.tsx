@@ -1,5 +1,5 @@
-import {Button, ButtonGroup, IconButton, Divider} from '@mui/joy';
-import { Download, EyeOff, Search, Share, Trash } from 'react-feather';
+import {Button, ButtonGroup, IconButton, Divider, Tooltip} from '@mui/joy';
+import {Download, EyeOff, Search, Share, Trash, AlertTriangle, Copy} from 'react-feather';
 import { useSettings } from '@/hooks/contexts/settings';
 import useUserTimetable from '@/hooks/useUserTimetable';
 import { useRouter } from 'next/navigation';
@@ -11,6 +11,8 @@ import useDictionary from '@/dictionaries/useDictionary';
 import ShareSyncTimetableDialog from './ShareSyncTimetableDialog';
 import DownloadTimetableDialog from './DownloadTimetableDialog';
 import { useMemo } from 'react';
+import { hasConflictingTimeslots, hasSameCourse } from '@/helpers/courses';
+import { MinimalCourse } from '@/types/courses';
 
 const TimetableCourseList = () => {
     const { courses, setCourses, language, timetableTheme } = useSettings();
@@ -47,6 +49,11 @@ const TimetableCourseList = () => {
         return allCourseData.reduce((acc, cur) => acc + (cur?.credits ?? 0), 0);
     }, [allCourseData]);
 
+    const duplicates = useMemo(() => hasSameCourse(allCourseData as MinimalCourse[]), [allCourseData]);
+
+    const timeConflicts = useMemo(() => hasConflictingTimeslots(allCourseData as MinimalCourse[]), [allCourseData]); 
+        
+
 
     return <div className="flex flex-col gap-4 px-4">
         <CourseSearchbar onAddCourse={course => addCourse(course.raw_id)} />
@@ -77,14 +84,28 @@ const TimetableCourseList = () => {
                         }) || <span className="text-gray-400 text-xs">No Venue</span>}
                     </div>
                 </div>
-                <ButtonGroup>
-                    <IconButton onClick={() => deleteCourse(course.raw_id)}>
-                        <Trash className="w-4 h-4" />
-                    </IconButton>
-                    <IconButton>
-                        <EyeOff className="w-4 h-4" />
-                    </IconButton>
-                </ButtonGroup>
+                <div className="flex flex-row space-x-2 items-center">
+                    {timeConflicts.find(ts => ts.course.raw_id == course.raw_id) && <Tooltip title="衝堂">
+                        <AlertTriangle className="w-6 h-6 text-red-500" />
+                    </Tooltip>}
+                    {duplicates.includes(course.raw_id) && <Tooltip title="重複">
+                        <Copy className="w-6 h-6 text-yellow-500" />
+                    </Tooltip>}
+                    {/* Credits */}
+                    <div className="flex flex-row items-center space-x-1">
+                        <span className="text-lg">{course.credits}</span>
+                        <span className="text-xs text-gray-400">學分</span>
+                    </div>
+                    <ButtonGroup>
+                        <IconButton onClick={() => deleteCourse(course.raw_id)}>
+                            <Trash className="w-4 h-4" />
+                        </IconButton>
+                        {/* TOOD: Has no plans to implement now */}
+                        {/* <IconButton>
+                            <EyeOff className="w-4 h-4" />
+                        </IconButton> */}
+                    </ButtonGroup>
+                </div>
             </div>
         ))}
         {allCourseData.length == 0 && (
