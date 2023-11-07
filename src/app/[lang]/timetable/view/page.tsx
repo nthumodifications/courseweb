@@ -21,7 +21,6 @@ const ViewTimetablePage: NextPage = () => {
         const { data = [], error } = await supabase.from('courses').select("*").in('raw_id', courseCodes);
         if(error) throw error;
         if(!data) throw new Error('No data');
-        if(data.length != courseCodes.length) throw new Error('Data length mismatch');
         return data;
     })
 
