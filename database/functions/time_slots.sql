@@ -1,4 +1,4 @@
-create function time_slots(courses) returns text[] as $$
+create function time_slots(courses_with_syllabus) returns text[] as $$
   select split_times($1.times);
 $$ language sql immutable;
 
