@@ -2,8 +2,9 @@ import useDictionary from '@/dictionaries/useDictionary';
 import {Button, DialogContent, DialogTitle, ModalClose, ModalDialog} from '@mui/joy';
 import {Download, Image} from 'react-feather';
 
-const DownloadTimetableDialog = ({ onClose, icsfileLink }: { onClose: () => void, icsfileLink: string }) => {
+const DownloadTimetableDialog = ({ onClose, icsfileLink, imageLink }: { onClose: () => void, icsfileLink: string, imageLink: string }) => {
     const dict = useDictionary();
+
     return <ModalDialog>
         <ModalClose />
         <DialogTitle>{dict.dialogs.DownloadTimetableDialog.title}</DialogTitle>
@@ -18,7 +19,9 @@ const DownloadTimetableDialog = ({ onClose, icsfileLink }: { onClose: () => void
                     startDecorator={<Download className="w-4 h-4" />}
                 >{dict.dialogs.DownloadTimetableDialog.buttons.ICS}</Button>
                 <Button
-                    disabled={true}
+                    component="a"
+                    href={imageLink}
+                    target='_blank'
                     variant="outlined"
                     startDecorator={<Image className="w-4 h-4" />}
                 >{dict.dialogs.DownloadTimetableDialog.buttons.image}</Button>
