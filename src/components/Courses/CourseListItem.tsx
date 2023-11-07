@@ -1,5 +1,5 @@
 'use client';
-import { CourseDefinition } from '@/config/supabase';
+import {CourseDefinition, CourseSyllabusView} from '@/config/supabase';
 import useDictionary from '@/dictionaries/useDictionary';
 import { useSettings } from '@/hooks/contexts/settings';
 import { Button, Tooltip } from '@mui/joy';
@@ -9,8 +9,7 @@ import Link from 'next/link';
 import CourseTagList from './CourseTagsList';
 import SelectCourseButton from './SelectCourseButton';
 
-
-const CourseListItem: FC<{ course: CourseDefinition }> = ({ course }) => {
+const CourseListItem: FC<{ course: CourseSyllabusView }> = ({ course }) => {
     const dict = useDictionary();
 
     return <div className="text-gray-600 dark:text-gray-400 px-4 border-b border-gray-200 dark:border-neutral-800 pb-4">
@@ -21,6 +20,7 @@ const CourseListItem: FC<{ course: CourseDefinition }> = ({ course }) => {
                     <h3 className="text-sm text-gray-800 dark:text-gray-300 mt-0 break-words">{course.name_en} - <span className='w-max'>{(course.teacher_en ?? []).join(',')}</span></h3>
                 </div>
                 <div className="space-y-1 text-black dark:text-neutral-200">
+                    <p className='text-sm whitespace-pre-line'>{course.brief}</p>
                     <p className='text-sm whitespace-pre-line'>{course.restrictions}</p>
                     <p className='text-sm whitespace-pre-line'>{course.note}</p>
                     {course.prerequisites && 
@@ -40,8 +40,8 @@ const CourseListItem: FC<{ course: CourseDefinition }> = ({ course }) => {
                     <p>No Venues</p>
                 }
                 </div>
-                <CourseTagList course={course}/>
-                <SelectCourseButton courseId={course.raw_id}/>
+                <CourseTagList course={course as unknown as CourseDefinition}/>
+                <SelectCourseButton courseId={course.raw_id as string}/>
             </div>
         </div>
     </div>

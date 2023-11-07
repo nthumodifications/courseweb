@@ -10,7 +10,7 @@ const useUserTimetable = (loadCourse = true) => {
     const { courses, timetableTheme, setCourses } = useSettings();
     
     const { data: allCourseData = [], error, isLoading } = useSWR(['courses', courses], async ([table, courseCodes]) => {
-        const { data = [], error } = await supabase.from('courses').select("*").in('raw_id', courseCodes);
+        const { data = [], error } = await supabase.from('courses_with_syllabus').select("*").in('raw_id', courseCodes);
         if(error) throw error;
         if(!data) throw new Error('No data');
         return data;

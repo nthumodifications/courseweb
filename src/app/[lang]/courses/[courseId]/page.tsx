@@ -1,11 +1,11 @@
 import Fade from "@/components/Animation/Fade";
 import { getDictionary } from "@/dictionaries/dictionaries";
-import {getCourse, getCoursePTTReview} from '@/lib/course';
+import {getCourse, getCoursePTTReview, getCourseWithSyllabus} from '@/lib/course';
 import { LangProps } from "@/types/pages";
 import {Accordion, AccordionDetails, AccordionGroup, AccordionSummary, Alert, Chip, Divider, Button} from '@mui/joy';
 import { format } from "date-fns";
 import { ResolvingMetadata } from "next";
-import {AlertTriangle, Minus, Plus} from 'react-feather';
+import {AlertTriangle, DownloadCloud, Minus, Plus} from 'react-feather';
 import { redirect } from 'next/navigation'
 import CourseTagList from "@/components/Courses/CourseTagsList";
 import {useSettings} from '@/hooks/contexts/settings';
@@ -14,6 +14,7 @@ import SelectCourseButton from '@/components/Courses/SelectCourseButton';
 import { createTimetableFromCourses } from "@/helpers/timetable";
 import Timetable from "@/components/Timetable/Timetable";
 import { MinimalCourse } from "@/types/courses";
+import DownloadSyllabus from "./DownloadSyllabus";
 
 type PageProps = { 
     params: { courseId? : string } 
@@ -29,7 +30,7 @@ export async function generateMetadata({ params }: PageProps, parent: ResolvingM
 
 const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
     const courseId = decodeURI(params.courseId as string);
-    const course = await getCourse(courseId);
+    const course = await getCourseWithSyllabus(courseId);
 
     const reviews = await getCoursePTTReview(courseId);
     const dict = await getDictionary(params.lang);
@@ -72,8 +73,15 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                 <div className="grid grid-cols-1 md:grid-cols-[auto_320px] gap-6 ">
                     <div className="space-y-4">
                         <div className="">
+                            <h3 className="font-semibold text-xl mb-2">Brief</h3>
+                            <p className="whitespace-pre-line text-sm">{course.course_syllabus.brief}</p>
+                        </div>
+                        <div className="">
                             <h3 className="font-semibold text-xl mb-2">{dict.course.details.description}</h3>
-                            <p>{course?.note}</p>
+                            <p className="whitespace-pre-line text-sm">
+                            {course.course_syllabus.content ?? <>
+                                <DownloadSyllabus courseId={course.raw_id}/>
+                            </>}</p>
                         </div>
                         {course?.prerequisites && <div className="">
                             <h3 className="font-semibold text-xl mb-2">儅修</h3>
@@ -102,8 +110,12 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                     </div>
                     <div className="space-y-2">
                         <div>
+                            <h3 className="font-semibold text-base mb-2">Note</h3>
+                            <p>{course.note}</p>
+                        </div>
+                        <div>
                             <h3 className="font-semibold text-base mb-2">{dict.course.details.restrictions}</h3>
-                            <p>{course.restrictions}</p>
+                            <p>{course.restrictions ?? "無"}</p>
                         </div>
                         <div>
                             <h3 className="font-semibold text-base mb-2">{dict.course.details.compulsory}</h3>

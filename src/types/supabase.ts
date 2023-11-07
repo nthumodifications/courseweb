@@ -604,6 +604,12 @@ export interface Database {
             columns: ["raw_id"]
             referencedRelation: "courses"
             referencedColumns: ["raw_id"]
+          },
+          {
+            foreignKeyName: "course_syllabus_raw_id_fkey"
+            columns: ["raw_id"]
+            referencedRelation: "courses_with_syllabus"
+            referencedColumns: ["raw_id"]
           }
         ]
       }
@@ -783,6 +789,51 @@ export interface Database {
       }
     }
     Views: {
+      courses_with_syllabus: {
+        Row: {
+          brief: string | null
+          capacity: number | null
+          class: string | null
+          closed_mark: string | null
+          compulsory_for: string[] | null
+          content: string | null
+          course: string | null
+          credits: number | null
+          cross_discipline: string[] | null
+          department: string | null
+          elective_for: string[] | null
+          first_specialization: string[] | null
+          ge_target: string | null
+          ge_type: string | null
+          has_file: boolean | null
+          keywords: string | null
+          language: string | null
+          name_en: string | null
+          name_zh: string | null
+          no_extra_selection: boolean | null
+          note: string | null
+          prerequisites: string | null
+          raw_1_2_specialization: string | null
+          raw_compulsory_elective: string | null
+          raw_cross_discipline: string | null
+          raw_extra_selection: string | null
+          raw_id: string | null
+          raw_teacher_en: string | null
+          raw_teacher_zh: string | null
+          raw_time: string | null
+          raw_venue: string | null
+          reserve: number | null
+          restrictions: string | null
+          second_specialization: string[] | null
+          semester: string | null
+          tags: string[] | null
+          teacher_en: string[] | null
+          teacher_zh: string[] | null
+          times: string[] | null
+          venues: string[] | null
+        }
+        Relationships: []
+      }
       distinct_classes: {
         Row: {
           class: string | null
@@ -1413,6 +1464,53 @@ export interface Database {
           teacher_zh: string[]
           times: string[]
           venues: string[]
+        }[]
+      }
+      search_courses_with_syllabus: {
+        Args: {
+          keyword: string
+        }
+        Returns: {
+          brief: string | null
+          capacity: number | null
+          class: string | null
+          closed_mark: string | null
+          compulsory_for: string[] | null
+          content: string | null
+          course: string | null
+          credits: number | null
+          cross_discipline: string[] | null
+          department: string | null
+          elective_for: string[] | null
+          first_specialization: string[] | null
+          ge_target: string | null
+          ge_type: string | null
+          has_file: boolean | null
+          keywords: string | null
+          language: string | null
+          name_en: string | null
+          name_zh: string | null
+          no_extra_selection: boolean | null
+          note: string | null
+          prerequisites: string | null
+          raw_1_2_specialization: string | null
+          raw_compulsory_elective: string | null
+          raw_cross_discipline: string | null
+          raw_extra_selection: string | null
+          raw_id: string | null
+          raw_teacher_en: string | null
+          raw_teacher_zh: string | null
+          raw_time: string | null
+          raw_venue: string | null
+          reserve: number | null
+          restrictions: string | null
+          second_specialization: string[] | null
+          semester: string | null
+          tags: string[] | null
+          teacher_en: string[] | null
+          teacher_zh: string[] | null
+          times: string[] | null
+          venues: string[] | null
         }[]
       }
       set_limit: {

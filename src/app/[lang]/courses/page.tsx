@@ -1,7 +1,7 @@
 'use client';;
 import CourseListItem from "@/components/Courses/CourseListItem";
 import InputControl from "@/components/FormComponents/InputControl";
-import supabase, { CourseDefinition } from "@/config/supabase";
+import supabase, {CourseDefinition, CourseSyllabusView} from '@/config/supabase';
 import { Button, CircularProgress, Divider, Drawer, IconButton, LinearProgress, Stack } from "@mui/joy";
 import { NextPage } from "next";
 import { useEffect, useState, Fragment, useRef, use, useMemo } from "react";
@@ -56,7 +56,7 @@ const emptyFilters: RefineControlFormTypes = {
 
 const CoursePage: NextPage = () => {
     const dict = useDictionary();
-    const [courses, setCourses] = useState<CourseDefinition[]>([]);
+    const [courses, setCourses] = useState<CourseSyllabusView[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [totalCount, setTotalCount] = useState<number>(0);
     const [headIndex, setHeadIndex] = useState<number>(0);
@@ -134,7 +134,7 @@ const CoursePage: NextPage = () => {
         setLoading(true);
         //Query for courses
         try {
-            let temp = supabase.rpc('search_courses', {
+            let temp = supabase.rpc('search_courses_with_syllabus', {
                     keyword: filters.textSearch,
                 }, { count: 'exact' })
             if (filters.level.length)
@@ -196,7 +196,7 @@ const CoursePage: NextPage = () => {
             if (error) console.error(error);
             else {
                 console.log(courses)
-                setCourses(courses as CourseDefinition[]);
+                setCourses(courses as CourseSyllabusView[]);
                 setHeadIndex(index);
             }
         }
