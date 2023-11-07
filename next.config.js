@@ -2,24 +2,19 @@
 const withPWA = require('@ducanh2912/next-pwa').default({
     dest: 'public',
     disable: process.env.NODE_ENV === 'development',
+    cacheStartUrl: true,
+    
+    dynamicStartUrlRedirect: '/zh/today',
 })
   
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    experimental: {
-        serverActions: true,
-    },
 }
-
-module.exports = withPWA(nextConfig);
-
-
-// Injected content via Sentry wizard below
 
 const { withSentryConfig } = require("@sentry/nextjs");
 
 module.exports = withSentryConfig(
-  module.exports,
+  withPWA(nextConfig),
   {
     // For all available options, see:
     // https://github.com/getsentry/sentry-webpack-plugin#options

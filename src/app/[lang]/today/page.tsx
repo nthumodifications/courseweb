@@ -11,7 +11,7 @@ const TodayPage: NextPage = async () => {
     const alerts = await getAlerts();
 
     return (
-        <div className="h-full grid grid-cols-1 grid-rows-2 md:grid-cols-[380px_auto] md:grid-rows-1">
+        <div className="h-full grid grid-cols-1 md:grid-cols-[380px_auto] md:grid-rows-1">
             <TodaySchedule weather={weatherData} alerts={alerts}/>
             <main className='overflow-auto'>
                 {/* {children} */}

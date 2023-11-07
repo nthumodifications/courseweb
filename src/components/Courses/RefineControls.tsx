@@ -22,22 +22,8 @@ import DepartmentControl from '../FormComponents/DepartmentControl';
 import { useMediaQuery } from 'usehooks-ts';
 import { GECTypes, GETargetCodes } from '@/const/ge_target';
 import { useSettings } from '@/hooks/contexts/settings';
-
-export type RefineControlFormTypes = {
-    textSearch: string,
-    level: string[],
-    language: string[],
-    others: string[],
-    className: string | null,
-    department: { code: string; name_zh: string; name_en: string; }[],
-    firstSpecialization: string | null,
-    secondSpecialization: string | null,
-    timeslots: string[],
-    venues: string[],
-    disciplines: string[],
-    geTarget: string[],
-    gecDimensions: string[],
-}
+import { Department } from '@/types/courses';
+import { RefineControlFormTypes } from '@/app/[lang]/courses/page';
 
 const RefineControls: FC<{ control: Control<RefineControlFormTypes>, onClear: () => void }> = ({ control, onClear }) => {
     const dict = useDictionary();
@@ -71,7 +57,20 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes>, onClear: ()
 
     const isMobile = useMediaQuery('(max-width: 768px)');
 
-    return <Sheet variant="outlined" sx={{ p: isMobile?3:2, borderRadius: 'sm', width: isMobile?400:300, height: '100%', maxHeight:isMobile?'100vh':'90vh', overflow: 'auto', position: isMobile?'':'absolute', bottom: '8px', right: '8px' }}>
+    return <Sheet 
+        variant="outlined" 
+        sx={{ 
+            p: isMobile?3:2, 
+            borderRadius: 'sm', 
+            width: isMobile?`min(35rem, 100%)`:300, 
+            height: '100%', 
+            maxHeight:isMobile?'100vh':'90vh', 
+            overflowY: 'auto', 
+            overflowX: 'hidden', 
+            position: isMobile?'':'absolute', 
+            bottom: '8px', 
+            right: '8px' 
+        }}>
         <Typography
             id="filter-status"
             sx={{
@@ -161,6 +160,7 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes>, onClear: ()
                         name="others"
                         options={[
                             { value: 'xclass', label: dict.course.refine['x-class'] },
+                            { value: '16_weeks', label: dict.course.refine['16_weeks']},
                             { value: 'extra_selection', label: dict.course.refine['extra_selection']}
                         ]}
                         label={dict.course.refine.others}

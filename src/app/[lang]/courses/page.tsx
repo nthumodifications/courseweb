@@ -1,7 +1,7 @@
 'use client';;
 import CourseListItem from "@/components/Courses/CourseListItem";
 import InputControl from "@/components/FormComponents/InputControl";
-import supabase, { CourseDefinition } from "@/config/supabase";
+import supabase, {CourseDefinition, CourseSyllabusView} from '@/config/supabase';
 import { Button, CircularProgress, Divider, Drawer, IconButton, LinearProgress, Stack } from "@mui/joy";
 import { NextPage } from "next";
 import { useEffect, useState, Fragment, useRef, use, useMemo } from "react";
@@ -10,12 +10,32 @@ import { useForm } from "react-hook-form";
 import { useDebouncedCallback } from "use-debounce";
 import { useMediaQuery } from 'usehooks-ts';
 import { arrayRange } from '@/helpers/array';
-import RefineControls, { RefineControlFormTypes } from '@/components/Courses/RefineControls';
+import RefineControls from '@/components/Courses/RefineControls';
 import useDictionary from "@/dictionaries/useDictionary";
 import { useRouter, useSearchParams } from "next/navigation";
 import queryString from 'query-string';
 import { GETargetCodes } from "@/const/ge_target";
 import { departments } from "@/const/departments";
+import useUserTimetable from "@/hooks/useUserTimetable";
+import {Department} from '@/types/courses';
+import { TimeFilterType } from "@/components/FormComponents/TimeslotSelectorControl";
+
+export type RefineControlFormTypes = {
+    textSearch: string,
+    level: string[],
+    language: string[],
+    others: string[],
+    className: string | null,
+    department: Department[],
+    firstSpecialization: string | null,
+    secondSpecialization: string | null,
+    timeslots: string[],
+    timeFilter: TimeFilterType,
+    venues: string[],
+    disciplines: string[],
+    geTarget: string[],
+    gecDimensions: string[],
+}
 
 const emptyFilters: RefineControlFormTypes = {
     textSearch: '',
@@ -25,6 +45,7 @@ const emptyFilters: RefineControlFormTypes = {
     department: [],
     venues: [],
     timeslots: [],
+    timeFilter: TimeFilterType.Within,
     disciplines: [],
     gecDimensions: [],
     geTarget: [],
@@ -35,7 +56,7 @@ const emptyFilters: RefineControlFormTypes = {
 
 const CoursePage: NextPage = () => {
     const dict = useDictionary();
-    const [courses, setCourses] = useState<CourseDefinition[]>([]);
+    const [courses, setCourses] = useState<CourseSyllabusView[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [totalCount, setTotalCount] = useState<number>(0);
     const [headIndex, setHeadIndex] = useState<number>(0);
@@ -44,7 +65,7 @@ const CoursePage: NextPage = () => {
     const router = useRouter();
     const searchParams = useSearchParams();
 
-    const { control, watch, setValue, reset } = useForm<RefineControlFormTypes>({
+    const { control, watch, setValue, reset, formState: { isDirty } } = useForm<RefineControlFormTypes>({
         defaultValues: useMemo(() => {
             if (searchParams.size > 0) { 
                 //Since we have to handle department differently, special cases where have nested objects
@@ -113,7 +134,7 @@ const CoursePage: NextPage = () => {
         setLoading(true);
         //Query for courses
         try {
-            let temp = supabase.rpc('search_courses', {
+            let temp = supabase.rpc('search_courses_with_syllabus', {
                     keyword: filters.textSearch,
                 }, { count: 'exact' })
             if (filters.level.length)
@@ -130,10 +151,13 @@ const CoursePage: NextPage = () => {
                     .or(`compulsory_for.cs.{"${filters.className}"},elective_for.cs.{"${filters.className}"}`);
             if (filters.others.includes('xclass'))
                 temp = temp
-                    .textSearch(`備註`, `'X-Class'`)
+                    .contains('tags', ['X-Class'])
+            if (filters.others.includes('16_weeks')) 
+                temp = temp
+                    .contains('tags', ['16周'])
             if (filters.others.includes('extra_selection'))
-                    temp = temp
-                        .eq('no_extra_selection', false)
+                temp = temp
+                    .not('tags', 'cs', '{"不可加簽"}')
             if (filters.firstSpecialization || filters.secondSpecialization) {
                 temp = temp
                     .or(`first_specialization.cs.{"${filters.firstSpecialization ?? ""}"},second_specialization.cs.{"${filters.secondSpecialization ?? ""}"}`)
@@ -155,10 +179,15 @@ const CoursePage: NextPage = () => {
                     .in('ge_target', filters.geTarget)
             }
             if (filters.timeslots.length) {
-                console.log(filters.timeslots)
+                if(filters.timeFilter == TimeFilterType.Within)
+                    temp = temp
+                        .containedBy('time_slots', filters.timeslots)
+                else if(filters.timeFilter == TimeFilterType.Includes)
+                    temp = temp
+                        .overlaps('time_slots', filters.timeslots) //Overlap works if only one of their timeslots is selected
+                //don't include the timeslot filter if it is empty array
                 temp = temp
-                    .containedBy('time_slots', filters.timeslots)
-                    // .overlaps('time_slots', filters.timeslots) //Overlap works if only one of their timeslots is selected
+                    .not('time_slots', 'eq', '{}')
             }
 
             let { data: courses, error, count } = await temp.order('raw_id', { ascending: true }).range(index, index + 29)
@@ -167,7 +196,7 @@ const CoursePage: NextPage = () => {
             if (error) console.error(error);
             else {
                 console.log(courses)
-                setCourses(courses as CourseDefinition[]);
+                setCourses(courses as unknown as CourseSyllabusView[]);
                 setHeadIndex(index);
             }
         }
@@ -196,6 +225,13 @@ const CoursePage: NextPage = () => {
         }, { arrayFormat: 'index' }))
 
     }, [JSON.stringify(filters)])
+
+    const { allCourseData } = useUserTimetable();
+
+    const renderExistingSelection = () => {
+        if(isDirty) return <></>;
+        return allCourseData.map((course) => <CourseListItem key={course.raw_id} course={course}/>)
+    }
 
 
     return (<>
@@ -230,14 +266,17 @@ const CoursePage: NextPage = () => {
                 <div className="relative">
                     {/* loading covers all with white cover */}
                     {loading && <div className="absolute inset-0 bg-white/60 dark:bg-neutral-900/60 z-10"></div>}
-                    <div className="flex flex-col w-full h-full space-y-5 pb-8">
-                        <div className="flex flex-row justify-between px-3 py-1 border-b">
-                            <h6 className="text-gray-600">{dict.course.list.courses}</h6>
-                            <h6 className="text-gray-600">{dict.course.list.found}: {totalCount} {dict.course.list.courses}</h6>
+                    <div className="flex flex-col w-full h-full space-y-4 pb-8">
+                        <div className="flex flex-row justify-between px-3 py-1 border-b dark:border-neutral-800">
+                            <h6 className="text-gray-600 dark:text-neutral-400">{dict.course.list.courses}</h6>
+                            <h6 className="text-gray-600 dark:text-neutral-400">{dict.course.list.found}: {totalCount} {dict.course.list.courses}</h6>
                         </div>
-                        {courses.map((course, index) => (
-                            <CourseListItem key={index} course={course} />
-                        ))}
+                        <div className="flex flex-col w-full h-full space-y-5">
+                            {renderExistingSelection()}
+                            {courses.map((course, index) => (
+                                <CourseListItem key={index} course={course} />
+                            ))}
+                        </div>
                         <Stack
                             direction="row"
                             justifyContent="center"

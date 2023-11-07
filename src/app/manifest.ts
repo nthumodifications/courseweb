@@ -5,7 +5,14 @@ export default function manifest(): MetadataRoute.Manifest {
         id: 'nthumods',
         name: 'NTHUMods',
         short_name: 'NTHUMods',
-        description: '🏫 National Tsing Hua University Course Selection for students by students with ❤️',
+        description: '🏫 國立清華大學課表、校車時間表、資料整合平臺，學生主導、學生自主開發。',
+        background_color: '#ffffff',
+        display: 'standalone',
+        orientation: 'any',
+        start_url: 'https://nthumods.com',
+        lang: 'zh',
+        dir: 'auto',
+        theme_color: '#7e1083',
         icons: [
             {
                 src: '/favicon.ico',
@@ -467,13 +474,6 @@ export default function manifest(): MetadataRoute.Manifest {
                 "src": "/ios/1024.png",
                 "sizes": "1024x1024"
             }
-        ],
-        theme_color: '#7e1083',
-        background_color: '#ffffff',
-        display: 'standalone',
-        orientation: 'any',
-        start_url: 'https://nthumods.com',
-        lang: 'zh-TW',
-        dir: 'auto',
+        ]
     }
 }

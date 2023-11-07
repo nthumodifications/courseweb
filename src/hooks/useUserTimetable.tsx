@@ -1,20 +1,20 @@
 import { useSettings } from "./contexts/settings";
 import { useState, useEffect } from "react";
-import supabase, { CourseDefinition } from "@/config/supabase";
+import supabase, { CourseDefinition, CourseSyllabusView } from "@/config/supabase";
 import { createTimetableFromCourses } from "@/helpers/timetable";
 import { CourseTimeslotData } from "@/types/timetable";
 import useSWR from "swr";
+import {MinimalCourse, RawCourseID} from '@/types/courses';
 
 const useUserTimetable = (loadCourse = true) => {
     const { courses, timetableTheme, setCourses } = useSettings();
     
     const { data: allCourseData = [], error, isLoading } = useSWR(['courses', courses], async ([table, courseCodes]) => {
-        const { data = [], error } = await supabase.from('courses').select("*").in('raw_id', courseCodes);
+        const { data = [], error } = await supabase.from('courses_with_syllabus').select("*").in('raw_id', courseCodes);
         if(error) throw error;
         if(!data) throw new Error('No data');
-        return data;
+        return data as unknown as CourseSyllabusView[];
     });
-
     const [timetableData, setTimetableData] = useState<CourseTimeslotData[]>([]);
 
     useEffect(() => {
@@ -27,15 +27,15 @@ const useUserTimetable = (loadCourse = true) => {
             console.log('loading')
             return;
         }
-        setTimetableData(createTimetableFromCourses(allCourseData!, timetableTheme));
+        setTimetableData(createTimetableFromCourses(allCourseData! as MinimalCourse[], timetableTheme));
     }, [allCourseData, isLoading, error, timetableTheme]);
 
-    const deleteCourse = async (course: CourseDefinition) => {
-        setCourses(courses.filter(c => c != course.raw_id));
+    const deleteCourse = async (courseID: RawCourseID) => {
+        setCourses(courses.filter(c => c != courseID));
     }
 
-    const addCourse = async (course: CourseDefinition) => {
-        setCourses([...courses, course.raw_id!]);
+    const addCourse = async (courseID: RawCourseID) => {
+        setCourses([...courses, courseID!]);
     }
 
     return { timetableData, allCourseData, deleteCourse, addCourse, isLoading, error };

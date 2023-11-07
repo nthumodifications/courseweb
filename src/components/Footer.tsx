@@ -1,11 +1,12 @@
 import { Chip, IconButton } from "@mui/joy";
 import { GitHub, Mail } from "react-feather";
+import FullLogo from "./Branding/FullLogo";
 
 const Footer = () => {
     return (
         <footer className="hidden md:grid w-screen dark:bg-neutral-800 bg-neutral-50 p-6 rounded-lg shadow-lg grid-cols-2">
             <div className="">
-                <h1 className="font-bold text-3xl">NTHUMods <Chip variant="outlined">ALPHA</Chip></h1>
+                <h1 className="font-bold text-3xl flex flex-row space-x-3 mb-2"><FullLogo/> <Chip variant="outlined">ALPHA</Chip></h1>
                 <p className="text-gray-600 dark:text-gray-400">Made with ❤️ by students for students</p>
                 <div className="py-2">
                 <p className="text-xs text-gray-600 dark:text-gray-400">We desperately need more contributers, join us if you're interested</p>

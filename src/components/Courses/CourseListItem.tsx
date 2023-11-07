@@ -1,64 +1,45 @@
-import { CourseDefinition } from '@/config/supabase';
+'use client';;
+import {CourseDefinition, CourseSyllabusView} from '@/config/supabase';
 import useDictionary from '@/dictionaries/useDictionary';
-import { useSettings } from '@/hooks/contexts/settings';
-import { Button, Chip } from '@mui/joy';
+import { Tooltip } from '@mui/joy';
+import { FC } from 'react';
 import Link from 'next/link';
-import { FC, useMemo } from 'react';
-import { Users } from 'react-feather';
+import CourseTagList from './CourseTagsList';
+import SelectCourseButton from './SelectCourseButton';
 
-const CourseListItem: FC<{ course: CourseDefinition }> = ({ course }) => {
-    const { courses, setCourses } = useSettings();
+const CourseListItem: FC<{ course: CourseSyllabusView }> = ({ course }) => {
     const dict = useDictionary();
-    const isCourseSelected = useMemo(() => courses.includes(course.raw_id ?? ""), [courses, course]);
 
-    return <div className="text-gray-600 dark:text-gray-400 px-4">
-        <div className="grid grid-cols-1 lg:grid-rows-none lg:grid-cols-[auto_224px]">
-            <div className='flex-1'>
-                <div className="mb-3">
-                    <Link className="font-semibold text-lg text-fuchsia-800 dark:text-fuchsia-500" href={'courses/'+course.raw_id}>{course.department} {course.course}-{course.class} {course.name_zh} - {course.raw_teacher_zh}</Link>
-                    <h3 className="text-base text-gray-800 dark:text-gray-300 mt-0 break-words">{course.name_en} - <span className='w-max'>{course.raw_teacher_en}</span></h3>
+    return <div className="text-gray-600 dark:text-gray-400 px-4 border-b border-gray-200 dark:border-neutral-800 pb-4">
+        <div className="grid grid-cols-1 lg:grid-rows-none lg:grid-cols-[auto_250px] gap-4">
+            <div className='flex-1 space-y-4'>
+                <div className="mb-3 space-y-1">
+                    <Link className="font-semibold text-lg text-[#AF7BE4]" href={'courses/'+course.raw_id}>{course.department} {course.course}-{course.class} {course.name_zh} - {(course.teacher_zh ?? []).join(',')}</Link>
+                    <h3 className="text-sm text-gray-800 dark:text-gray-300 mt-0 break-words">{course.name_en} - <span className='w-max'>{(course.teacher_en ?? []).join(',')}</span></h3>
                 </div>
-                <div className="space-y-1">
-                    <p>{course.venues?.join(', ') || "No Venue"} • {course.credits} {dict.course.credits}</p>
-                    <p>{course.課程限制說明}</p>
-                    {isCourseSelected ?
-                        <Button color="danger" variant="outlined" onClick={() => setCourses(courses => courses.filter(m => m != course.raw_id))}>
-                            {dict.course.item.remove_from_semester}
-                        </Button> :
-                        <Button variant="outlined" onClick={() => setCourses(courses => [...courses, course.raw_id ?? ""])}>
-                            {dict.course.item.add_to_semester}
-                        </Button>}
+                <div className="space-y-2 ">
+                    <p className='text-sm whitespace-pre-line line-clamp-4 text-black dark:text-neutral-200'>{course.brief}</p>
+                    <p className='text-sm whitespace-pre-line text-gray-400 dark:text-neutral-600'>{course.restrictions}</p>
+                    <p className='text-sm whitespace-pre-line text-gray-400 dark:text-neutral-600'>{course.note}</p>
+                    {course.prerequisites && 
+                    <Tooltip 
+                        placement='bottom-start'
+                        title={<p dangerouslySetInnerHTML={{ __html: course.prerequisites}}></p>}
+                    >
+                        <p className='text-sm underline text-orange-600 select-none'>有儅修</p>
+                    </Tooltip>}
                 </div>
             </div>
-            <div className='flex flex-col'>
-                {course.capacity && <div className="flex flex-row space-x-1 mb-2">
-                    <Users />
-                    <span className="">{course.capacity}{course.reserve == 0 ? '' : ` / ${course.reserve}R`}</span>
-                </div>}
-                <div>
-                    <div className="space-x-2 justify-end">
-                        {course.備註?.includes('X-Class') && <Chip
-                            color="danger"
-                            disabled={false}
-                            size="md"
-                            variant="outlined"
-                        >X-Class</Chip>}
-                        {course.language == '英' ? <Chip
-                            color="primary"
-                            disabled={false}
-                            size="md"
-                            variant="outlined"
-                        >English</Chip> :
-                            <Chip
-                                color="success"
-                                disabled={false}
-                                size="md"
-                                variant="outlined"
-                            >國語</Chip>}
-                    </div>
-                    <div>
-                    </div>
+            <div className='flex flex-col space-y-3'>
+                <p className='text-black dark:text-white text-sm'>{course.semester} 學期</p>
+                <div className='space-y-1'>
+                {course.venues? 
+                    course.venues.map((vn, i) => <p className='text-blue-600 dark:text-blue-400 text-sm'>{vn} <span className='text-black dark:text-white'>{course.times![i]}</span></p>) : 
+                    <p>No Venues</p>
+                }
                 </div>
+                <CourseTagList course={course as unknown as CourseDefinition}/>
+                <SelectCourseButton courseId={course.raw_id as string}/>
             </div>
         </div>
     </div>

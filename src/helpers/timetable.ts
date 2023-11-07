@@ -1,6 +1,7 @@
 import { CourseDefinition } from "@/config/supabase";
 import { scheduleTimeSlots } from "@/const/timetable";
 import { CourseTimeslotData } from "@/types/timetable";
+import { MinimalCourse } from '@/types/courses';
 
 export const timetableColors: { [theme: string]: string[] } = {
     'harmonyBlossom': [
@@ -138,7 +139,7 @@ export const timetableColors: { [theme: string]: string[] } = {
 }
 
 
-export const createTimetableFromCourses = (data: CourseDefinition[], theme = 'tsinghuarian') => {
+export const createTimetableFromCourses = (data: MinimalCourse[], theme = 'tsinghuarian') => {
     const newTimetableData: CourseTimeslotData[] = [];
     data!.forEach(course => {
         //get unique days first
@@ -153,8 +154,8 @@ export const createTimetableFromCourses = (data: CourseDefinition[], theme = 'ts
                 //get the start and end time
                 const startTime = Math.min(...times);
                 const endTime = Math.max(...times);
-                //get the color
-                const color = timetableColors[theme][data!.indexOf(course)];
+                //get the color, mod the index by the length of the color array so that it loops
+                const color = timetableColors[theme][data!.indexOf(course) % timetableColors[theme].length];
                 //push to scheduleData
                 newTimetableData.push({
                     course: course,
@@ -166,7 +167,7 @@ export const createTimetableFromCourses = (data: CourseDefinition[], theme = 'ts
                 });
             });
         });
-        
+
     });
     return newTimetableData;
 }

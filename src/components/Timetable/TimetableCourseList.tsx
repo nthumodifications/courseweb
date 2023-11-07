@@ -1,6 +1,5 @@
-import { Alert, Button, ButtonGroup, DialogContent, DialogTitle, IconButton, Input, ModalClose, ModalDialog } from '@mui/joy';
-import { Calendar, Download, EyeOff, Image, Mail, Search, Share, Trash } from 'react-feather';
-import { QRCodeSVG } from 'qrcode.react';
+import {Button, ButtonGroup, IconButton, Divider} from '@mui/joy';
+import { Download, EyeOff, Search, Share, Trash } from 'react-feather';
 import { useSettings } from '@/hooks/contexts/settings';
 import useUserTimetable from '@/hooks/useUserTimetable';
 import { useRouter } from 'next/navigation';
@@ -11,9 +10,10 @@ import ThemeChangableAlert from '../Alerts/ThemeChangableAlert';
 import useDictionary from '@/dictionaries/useDictionary';
 import ShareSyncTimetableDialog from './ShareSyncTimetableDialog';
 import DownloadTimetableDialog from './DownloadTimetableDialog';
+import { useMemo } from 'react';
 
 const TimetableCourseList = () => {
-    const { courses, setCourses } = useSettings();
+    const { courses, setCourses, language, timetableTheme } = useSettings();
     const dict = useDictionary();
 
     const { allCourseData, deleteCourse, addCourse } = useUserTimetable();
@@ -21,7 +21,6 @@ const TimetableCourseList = () => {
     const router = useRouter();
 
     const [openModal, closeModal] = useModal();
-    const { language } = useSettings();
 
 
     const handleShowShareDialog = () => {
@@ -38,17 +37,33 @@ const TimetableCourseList = () => {
 
     const handleDownloadDialog = () => {
         const icsfileLink = `https://nthumods.com/timetable/calendar.ics?semester_1121=${courses.map(id => encodeURI(id)).join(',')}`
+        const imageLink = `https://nthumods.com/timetable/image?theme=${timetableTheme}&semester_1121=${courses.map(id => encodeURI(id)).join(',')}`
         openModal({
-            children: <DownloadTimetableDialog onClose={closeModal} icsfileLink={icsfileLink} />
+            children: <DownloadTimetableDialog onClose={closeModal} icsfileLink={icsfileLink} imageLink={imageLink} />
         });
     }
 
+    const totalCredits = useMemo(() => {
+        return allCourseData.reduce((acc, cur) => acc + (cur?.credits ?? 0), 0);
+    }, [allCourseData]);
+
 
     return <div className="flex flex-col gap-4 px-4">
-        <CourseSearchbar onAddCourse={course => addCourse(course)} />
+        <CourseSearchbar onAddCourse={course => addCourse(course.raw_id)} />
+        <div className='grid grid-cols-2 text-center'>
+            <div className='space-x-2'>
+                <span className='text-2xl'>{allCourseData.length}</span>
+                <span className='text-gray-600'>課程</span>
+            </div>
+            <div className='space-x-2'>
+                <span className='text-2xl'>{totalCredits}</span>
+                <span className='text-gray-600'>總學分</span>
+            </div>
+        </div>
+        <Divider />
         {allCourseData.map((course, index) => (
             <div key={index} className="flex flex-row gap-4 items-center">
-                <div className="w-4 h-4 rounded-full" style={{ backgroundColor: timetableColors['tsinghuarian'][index] }}></div>
+                <div className="w-4 h-4 rounded-full" style={{ backgroundColor: timetableColors[timetableTheme][index] }}></div>
                 <div className="flex flex-col flex-1">
                     <span className="text-sm">{course.name_zh}</span>
                     <span className="text-xs">{course.name_en}</span>
@@ -63,7 +78,7 @@ const TimetableCourseList = () => {
                     </div>
                 </div>
                 <ButtonGroup>
-                    <IconButton onClick={() => deleteCourse(course)}>
+                    <IconButton onClick={() => deleteCourse(course.raw_id)}>
                         <Trash className="w-4 h-4" />
                     </IconButton>
                     <IconButton>

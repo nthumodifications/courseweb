@@ -1,6 +1,7 @@
 import { CourseDefinition } from '@/config/supabase';
 import { useSettings } from '@/hooks/contexts/settings';
 import { useModal } from '@/hooks/contexts/useModal';
+import { MinimalCourse } from '@/types/courses';
 import { CourseTimeslotData, TimetableDim } from '@/types/timetable';
 import { ModalClose, ModalDialog } from '@mui/joy';
 import { useRouter } from 'next/navigation';
@@ -17,7 +18,7 @@ const TimetableSlot: FC<TimetableSlotProps> = ({ course, tableDim, fraction = 1,
     const router = useRouter();
     const { language } = useSettings();
 
-    const handleShowCourseDetail = (course: CourseDefinition) => () => {
+    const handleShowCourseDetail = (course: MinimalCourse) => () => {
         router.push(`/${language}/courses/${course.raw_id}`);
     }
     return ( 
@@ -32,12 +33,13 @@ const TimetableSlot: FC<TimetableSlotProps> = ({ course, tableDim, fraction = 1,
             backgroundColor: course.color
         }}
         >
-        <div className='flex flex-col justify-start items-start text-left h-full text-black/70 p-1'>
-            <span className='text-xs lg:text-sm font-bold'>{course.course.name_zh}</span>
-            {/* {<span className='text-xs'>{course.course.name_en}</span>} */}
+        <div className='flex flex-col justify-start items-start text-left h-full text-black/70 p-1 select-none'>
+            {language == 'zh' ? 
+            <span className='text-xs line-clamp-2 font-bold'>{course.course.name_zh}</span>:
+            <span className='text-xs line-clamp-2 font-bold'>{course.course.name_en}</span>
+            }
             <span className='text-[10px]'>{course.venue}</span>
-            <span className='text-[10px]'>{course.course.raw_teacher_zh}</span>
-            {/* <span className='text-xs'>{course.course.raw_teacher_en}</span> */}
+            {course.course.teacher_zh && <span className='text-[10px]'>{course.course.teacher_zh?.join(',')}</span>}
         </div>
     </div>
     );

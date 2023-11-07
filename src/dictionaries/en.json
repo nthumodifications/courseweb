@@ -14,7 +14,7 @@
         "list": {
             "courses": "Courses",
             "found": "Found",
-            "search_placeholder": "Search for your course (Name, Class, Anything)"
+            "search_placeholder": "Search for your course..."
         },
         "item": {
             "add_to_semester": "Add to this Semester",
@@ -37,6 +37,7 @@
             "gecDimensions": "GEC Dimensions",
             "extra_selection": "Allows Extra Selection",
             "x-class": "X-Class",
+            "16_weeks": "16 Weeks",
             "others": "Others",
             "clear": "Clear All"
         },
@@ -92,10 +93,10 @@
     "dialogs": {
         "DownloadTimetableDialog": {
             "title": "Download Your Timetable",
-            "description": "Download as Image is stll in the works~",
+            "description": "You can download the calendar file (.ics) and import it to your calendar app, or download the image!",
             "buttons": {
                 "image": "Image",
-                "ICS": "Download .ics"
+                "ICS": "Calendar .ics"
             }
         },
         "ShareSyncTimetableDialog": {

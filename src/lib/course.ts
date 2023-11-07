@@ -1,8 +1,41 @@
 import supabase from '@/config/supabase';
 import { parse } from 'node-html-parser';
+import {CourseJoinWithSyllabus} from '@/config/supabase';
+
+
+export const getCourseWithSyllabus = async (courseId: string) => {
+    const { data, error } = await supabase
+        .from('courses')
+        .select(`
+        *,
+        course_syllabus (
+            *
+        )
+        `)
+        .eq('raw_id', courseId);
+    if(error) {
+        console.error(error)
+        return null;
+    }
+    else return data![0] as unknown as CourseJoinWithSyllabus;
+}
+
 
 export const getCourse = async (courseId: string) => {
     const { data, error } = await supabase.from('courses').select('*').eq('raw_id', courseId);
+    if(error) {
+        console.error(error)
+        return null;
+    }
+    else return data![0];
+}
+
+
+export const getMinimalCourse = async (courseId: string) => {
+    const { data, error } = await supabase
+        .from('courses')
+        .select('raw_id, name_zh, name_en, department, course, class, credits, venues, times, teacher_zh, language')
+        .eq('raw_id', courseId);
     if(error) {
         console.error(error)
         return null;

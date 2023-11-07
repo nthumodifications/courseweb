@@ -14,7 +14,7 @@
         "list": {
             "courses": "課程",
             "found": "收到",
-            "search_placeholder": "Search for your course (Name, Class, Anything)"
+            "search_placeholder": "尋找你要的課程..."
         },
         "item": {
             "add_to_semester": "加入這學期",
@@ -37,6 +37,7 @@
             "gecDimensions": "核通向度",
             "extra_selection": "允許加簽",
             "x-class": "X-Class",
+            "16_weeks": "16 週課程",
             "others": "其他",
             "clear": "清除"
         },
@@ -92,10 +93,10 @@
     "dialogs": {
         "DownloadTimetableDialog": {
             "title": "下載你的課表",
-            "description": "我們還在開發圖片下載，敬請期待！",
+            "description": "把課表下載成圖片或是 .ics 導入到行事曆吧！",
             "buttons": {
                 "image": "圖片",
-                "ICS": "下載 .ics"
+                "ICS": "行事曆 .ics"
             }
         },
         "ShareSyncTimetableDialog": {
