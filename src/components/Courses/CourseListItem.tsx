@@ -1,10 +1,8 @@
-'use client';
+'use client';;
 import {CourseDefinition, CourseSyllabusView} from '@/config/supabase';
 import useDictionary from '@/dictionaries/useDictionary';
-import { useSettings } from '@/hooks/contexts/settings';
-import { Button, Tooltip } from '@mui/joy';
-import { FC, useMemo } from 'react';
-import { Minus, Plus } from 'react-feather';
+import { Tooltip } from '@mui/joy';
+import { FC } from 'react';
 import Link from 'next/link';
 import CourseTagList from './CourseTagsList';
 import SelectCourseButton from './SelectCourseButton';
@@ -19,10 +17,10 @@ const CourseListItem: FC<{ course: CourseSyllabusView }> = ({ course }) => {
                     <Link className="font-semibold text-lg text-[#AF7BE4]" href={'courses/'+course.raw_id}>{course.department} {course.course}-{course.class} {course.name_zh} - {(course.teacher_zh ?? []).join(',')}</Link>
                     <h3 className="text-sm text-gray-800 dark:text-gray-300 mt-0 break-words">{course.name_en} - <span className='w-max'>{(course.teacher_en ?? []).join(',')}</span></h3>
                 </div>
-                <div className="space-y-1 text-black dark:text-neutral-200">
-                    <p className='text-sm whitespace-pre-line'>{course.brief}</p>
-                    <p className='text-sm whitespace-pre-line'>{course.restrictions}</p>
-                    <p className='text-sm whitespace-pre-line'>{course.note}</p>
+                <div className="space-y-2 ">
+                    <p className='text-sm whitespace-pre-line line-clamp-4 text-black dark:text-neutral-200'>{course.brief}</p>
+                    <p className='text-sm whitespace-pre-line text-gray-400 dark:text-neutral-600'>{course.restrictions}</p>
+                    <p className='text-sm whitespace-pre-line text-gray-400 dark:text-neutral-600'>{course.note}</p>
                     {course.prerequisites && 
                     <Tooltip 
                         placement='bottom-start'
