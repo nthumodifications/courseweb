@@ -13,7 +13,7 @@ import DownloadTimetableDialog from './DownloadTimetableDialog';
 import { useMemo } from 'react';
 
 const TimetableCourseList = () => {
-    const { courses, setCourses } = useSettings();
+    const { courses, setCourses, language, timetableTheme } = useSettings();
     const dict = useDictionary();
 
     const { allCourseData, deleteCourse, addCourse } = useUserTimetable();
@@ -21,7 +21,6 @@ const TimetableCourseList = () => {
     const router = useRouter();
 
     const [openModal, closeModal] = useModal();
-    const { language, timetableTheme } = useSettings();
 
 
     const handleShowShareDialog = () => {
@@ -38,8 +37,9 @@ const TimetableCourseList = () => {
 
     const handleDownloadDialog = () => {
         const icsfileLink = `https://nthumods.com/timetable/calendar.ics?semester_1121=${courses.map(id => encodeURI(id)).join(',')}`
+        const imageLink = `https://nthumods.com/timetable/image?theme=${timetableTheme}&semester_1121=${courses.map(id => encodeURI(id)).join(',')}`
         openModal({
-            children: <DownloadTimetableDialog onClose={closeModal} icsfileLink={icsfileLink} />
+            children: <DownloadTimetableDialog onClose={closeModal} icsfileLink={icsfileLink} imageLink={imageLink} />
         });
     }
 
