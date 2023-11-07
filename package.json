@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "gentype": "supabase gen types typescript",
+    "gentype": "npx supabase gen types typescript --project-id \"cmzdlrqfpuktcczvsobs\" --schema public > src/types/supabase.ts",
     "checkts": "tsc --noEmit"
   },
   "dependencies": {
