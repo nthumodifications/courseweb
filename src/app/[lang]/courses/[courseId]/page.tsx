@@ -112,11 +112,11 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                     <div className="space-y-2">
                         <div>
                             <h3 className="font-semibold text-base mb-2">備注</h3>
-                            <p>{course.note ?? "無"}</p>
+                            <p className="text-sm">{course.note ?? "無"}</p>
                         </div>
                         <div>
                             <h3 className="font-semibold text-base mb-2">{dict.course.details.restrictions}</h3>
-                            <p>{course.restrictions ?? "無"}</p>
+                            <p className="text-sm">{course.restrictions ?? "無"}</p>
                         </div>
                         <div>
                             <h3 className="font-semibold text-base mb-2">{dict.course.details.compulsory}</h3>
