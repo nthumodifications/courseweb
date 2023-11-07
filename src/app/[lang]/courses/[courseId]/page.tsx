@@ -42,7 +42,7 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
     return <Fade>
         <div className="grid grid-cols-1 lg:grid-cols-[auto_320px] py-6 px-4 text-gray-500 dark:text-gray-300">
             <div className="space-y-2">
-                <div className="flex flex-row items-end">
+                <div className="flex flex-col md:flex-row md:items-end gap-4">
                     <div className="space-y-4 flex-1">
                         <div className="space-y-2">
                             <h4 className="font-semibold text-base text-gray-300">{course.semester} 學期</h4>
@@ -111,7 +111,7 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                     <div className="space-y-2">
                         <div>
                             <h3 className="font-semibold text-base mb-2">Note</h3>
-                            <p>{course.note}</p>
+                            <p>{course.note ?? "無"}</p>
                         </div>
                         <div>
                             <h3 className="font-semibold text-base mb-2">{dict.course.details.restrictions}</h3>
