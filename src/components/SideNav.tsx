@@ -21,37 +21,37 @@ const SideNav:FC = () => {
         {
             title: dict.navigation.today,
             href: `/${language}/today`,
-            icon: <I.Clock strokeWidth="1"/>,
+            icon: <I.Clock strokeWidth="2"/>,
             color: '#7EC96D'
         },
         {
             title: dict.navigation.timetable,
             href: `/${language}/timetable`,
-            icon: <I.Calendar strokeWidth="1"/>,
+            icon: <I.Calendar strokeWidth="2"/>,
             color: '#E47B86'
         },
         {
             title: dict.navigation.courses,
             href: `/${language}/courses`,
-            icon: <I.BookOpen strokeWidth="1"/>,
+            icon: <I.BookOpen strokeWidth="2"/>,
             color: '#7BC2CF'
         },
         {
             title: dict.navigation.venues,
             href: `/${language}/venues`,
-            icon: <I.Map strokeWidth="1"/>,
+            icon: <I.Map strokeWidth="2"/>,
             color: '#AEA3C9'
         },
         {
             title: dict.navigation.bus,
             href: `/${language}/bus`,
-            icon: <I.Navigation strokeWidth="1"/>,
+            icon: <I.Navigation strokeWidth="2"/>,
             color: '#EB8751'
         },
         {
             title: dict.navigation.settings,
             href: `/${language}/settings`,
-            icon: <I.Settings strokeWidth="1"/>,
+            icon: <I.Settings strokeWidth="2"/>,
             color: '#B46DD6'
         }
     ]
@@ -59,7 +59,7 @@ const SideNav:FC = () => {
         <nav className="md:hidden w-screen flex flex-row h-10 gap-4 justify-evenly py-3">
             {links.map((link, index) => (
                 <Link 
-                    className={`flex items-center gap-4 hover:opacity-80 hover:underline transition text-gray-600 dark:text-gray-400`}
+                    className={`flex items-center gap-4 hover:opacity-80 hover:underline transition text-gray-400 dark:text-gray-600`}
                     key={index} 
                     href={link.href}
                     style={{ color: link.href == pathname ? link.color: '' }}
@@ -73,7 +73,7 @@ const SideNav:FC = () => {
         <nav className="hidden h-screen md:flex flex-col w-max gap-4 p-6">
             {links.map((link, index) => (
                 <Link 
-                    className={`flex items-center gap-3 hover:opacity-80 hover:underline transition text-gray-600 dark:text-gray-400`}
+                    className={`flex items-center gap-3 hover:opacity-80 hover:underline transition text-gray-400 dark:text-gray-600`}
                     key={index} 
                     href={link.href}
                     style={{ color: link.href == pathname ? link.color: '' }}
