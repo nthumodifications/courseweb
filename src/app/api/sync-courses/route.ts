@@ -1,28 +1,9 @@
-import supabase, { CourseDefinition } from "@/config/supabase";
+import supabase_server from "@/config/supabase_server";
+import { fullWidthToHalfWidth } from "@/helpers/characters";
 import { Database } from "@/types/supabase";
 import { writeFile } from "fs/promises";
 import {decode} from 'html-entities';
-
-const fullWidthToHalfWidth = (str: string) => {
-    //check if its a full width 0-9A-Za-z
-    const isFullWidth = (char: string) => {
-        const code = char.charCodeAt(0);
-        if(code >= 65296 && code <= 65305) return true;
-        if(code >= 65313 && code <= 65338) return true;
-        if(code >= 65345 && code <= 65370) return true;
-        return false;
-    }
-    let result = '';
-    for(const char of str) {
-        if(isFullWidth(char)) {
-            result += String.fromCharCode(char.charCodeAt(0) - 65248);
-        }
-        else {
-            result += char;
-        }
-    }
-    return result;
-}
+import { NextResponse } from "next/server";
 
 const baseUrl = `https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/OPENDATA/open_course_data.json`;
 
@@ -50,6 +31,7 @@ type APIResponse = {
 
 export const GET = async() => {
 
+    //TODO: Replace with cron secure https://dev.to/chrisnowicki/how-to-secure-vercel-cron-job-routes-in-nextjs-13-9g8
     // return not imlemented error
     return { status: 501, body: { error: 'Not implemented' } };
     
@@ -58,36 +40,16 @@ export const GET = async() => {
         const data = await response.json() as APIResponse;
         return data;
     }
-
-    // fetch existing courses from supabase, max is 1000 so we need to loop
-    const fetchExistingCourses = async () => {
-        // count the number of courses
-        const { count, error } = await supabase.from('courses').select('*', { count: 'exact' });
-        if(error) throw error;
-        if(count === null) throw new Error('count is null');
-        const courses: CourseDefinition[] = [];
-        const limit = 1000;
-        for(let offset = 0; offset < count; offset += limit) {
-            const { data, error } = await supabase.from('courses').select('*').range(offset, offset + limit - 1);
-            if(error) throw error;
-            if(data === null) throw new Error('data is null');
-            courses.push(...data);
-        }
-        return courses;
-    }
-
     const courses = await fetchCourses();
-    const existingCourses = await fetchExistingCourses();
 
-    let lastId = existingCourses.length;
-
-    const normalizedCourses: Database['public']['Tables']['courses']['Update'][] = [];
+    const normalizedCourses: Database['public']['Tables']['courses']['Insert'][] = [];
     for(const course of courses) {
         const comp: string[] = [];
         const elect: string[] = [];   
         course.必選修說明
         .split('\t')
         .slice(0,-1)
+        .filter(text => text.trim() !== '')
         .map(code => {
             const code_ = code.replace('  ', " ")
             const [classs, type] = code_.split(' ')
@@ -138,7 +100,7 @@ export const GET = async() => {
 
         const cross_discipline: string[] = [];
         course['學分學程對應']
-        .split('\\')
+        .split('/')
         .filter(text => text.trim() !== '')
         .forEach(text => {
             cross_discipline.push(text.replace('(跨領域)', ''))
@@ -154,9 +116,7 @@ export const GET = async() => {
             teacher_zh.push(decode(zh))
             teacher_en.push(en)
         })
-        if(!existingCourses.find(c => c.raw_id === course['科號'])) console.log(course['科號']);
         normalizedCourses.push({
-            id: existingCourses.find(c => c.raw_id === course['科號'])?.id ?? ++lastId,
             capacity: parseInt(course['人限']),
             course: course['科號'].slice(9, 13),
             department: course['科號'].slice(5, 9).trim(),
@@ -180,11 +140,11 @@ export const GET = async() => {
             cross_discipline: cross_discipline,
             tags: tags,
             no_extra_selection: course['不可加簽說明'].includes('《不接受加簽 No extra selection》'),
-            '備註': normalizedNote,
-            '停開註記': course['停開註記'],
-            必選修說明: course['必選修說明'],
-            擋修說明: course['擋修說明'],
-            課程限制說明: course['課程限制說明'],
+            note: normalizedNote,
+            closed_mark: course['停開註記'],
+            raw_compulsory_elective: course['必選修說明'],
+            prerequisites: course['擋修說明'],
+            restrictions: course['課程限制說明'],
             raw_1_2_specialization: course['第一二專長對應'],
             raw_extra_selection: course['不可加簽說明'],
             raw_cross_discipline: course['學分學程對應'],
@@ -206,13 +166,13 @@ export const GET = async() => {
         acc[index] = acc[index] || [];
         acc[index].push(cur);
         return acc;
-    }, [] as Database['public']['Tables']['courses']['Update'][][]);
+    }, [] as Database['public']['Tables']['courses']['Insert'][][]);
     for(const chunk of chunked) {
-        const { error } = await supabase.from('courses').upsert(chunk);
+        const { error } = await supabase_server.from('courses').upsert(chunk);
         if(error) throw error;
     }
 
     
-    return normalizedCourses;
+    return NextResponse.json({ status: 200, body: { message: 'success' } })
 
 }
