@@ -96,7 +96,7 @@ export default function RootLayout({
         <SettingsProvider>
           <ModalProvider>
             <html lang={params.lang} className={`${theme?.value ?? ''} overflow-x-hidden`}>
-              <body className={`${inter.className} grid grid-cols-1 grid-rows-[64px_48px_calc(100vh-112px)] md:grid-cols-[12rem_auto] md:grid-rows-[56px_calc(100vh-56px)_12rem] bg-white dark:bg-neutral-900 dark:text-white`}>
+              <body className={`${inter.className} grid grid-cols-1 grid-rows-[56px_50px_calc(100vh-106px)] md:grid-cols-[12rem_auto] md:grid-rows-[56px_calc(100vh-56px)_12rem] bg-white dark:bg-neutral-900 dark:text-white`}>
                 <Header />
                 <SideNav />
                 <main className='overflow-y-auto overflow-x-hidden h-full w-full'>

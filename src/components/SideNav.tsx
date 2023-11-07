@@ -56,10 +56,10 @@ const SideNav:FC = () => {
         }
     ]
     return (<>
-        <nav className="md:hidden w-screen flex flex-row h-10 gap-4 justify-evenly py-3">
+        <nav className="md:hidden w-screen flex flex-row h-full gap-4 justify-evenly shadow-sm">
             {links.map((link, index) => (
                 <Link 
-                    className={`flex items-center gap-4 hover:opacity-80 hover:underline transition text-gray-400 dark:text-gray-600`}
+                    className={`flex flex-col items-center justify-between hover:opacity-80 hover:underline transition text-gray-400 dark:text-gray-600 pt-3`}
                     key={index} 
                     href={link.href}
                     style={{ color: link.href == pathname ? link.color: '' }}
@@ -67,6 +67,7 @@ const SideNav:FC = () => {
                     <span className="w-6">
                         {link.icon}
                     </span>
+                    <div className={`h-[4px]  ${link.href != pathname ? '': 'w-7'} transition rounded-t-full`} style={{backgroundColor: link.color}}></div>
                 </Link>
             ))}
         </nav>
