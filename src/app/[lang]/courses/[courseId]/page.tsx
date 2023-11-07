@@ -21,10 +21,11 @@ type PageProps = {
 }
 
 export async function generateMetadata({ params }: PageProps, parent: ResolvingMetadata) {
-    const course = await getCourse(decodeURI(params.courseId as string));
+    const course = await getCourseWithSyllabus(decodeURI(params.courseId as string));
     return {
+        ...parent,
         title: `${course?.department} ${course?.course}-${course?.class} ${course!.name_zh} ${course!.name_en} | NTHUMods`,
-        description: `${course!.name_zh} ${course!.name_en} | ${course!.teacher_zh?.join(',')} ${course!.teacher_en?.join(',')} `
+        description: `${course!.teacher_zh?.join(',')} ${course!.teacher_en?.join(',')} \n ${course!.course_syllabus.brief}`
     }
 }
 

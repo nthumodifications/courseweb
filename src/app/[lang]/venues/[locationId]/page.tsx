@@ -4,6 +4,7 @@ import {createTimetableFromCourses} from '@/helpers/timetable';
 import Timetable from '@/components/Timetable/Timetable';
 import { Suspense } from 'react';
 import {MinimalCourse} from '@/types/courses';
+import {ResolvingMetadata} from 'next';
 type Props = {
     params: {
         locationId: string;
@@ -18,9 +19,10 @@ const getCoursesWithVenue = async (venueId: string) => {
 
 export const generateMetadata = ({
     params
-}: Props) => {
+}: Props, parent: ResolvingMetadata) => {
     const venueId = decodeURI(params.locationId)
     return {
+        ...parent,
         title: `${venueId} | NTHUMods`
     }
 }
