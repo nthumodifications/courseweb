@@ -8,10 +8,12 @@ import { useEffect } from "react";
 import { useModal } from "@/hooks/contexts/useModal";
 import TimetableCourseList from "@/components/Timetable/TimetableCourseList";
 import ShareRecievedDialog from "@/components/Timetable/ShareRecievedDialog";
+import { useLocalStorage } from "usehooks-ts";
 
 const TimetablePage: NextPage = () => {
 
     const { timetableData } = useUserTimetable();
+    const [vertical, setVertical] = useLocalStorage('timetable_vertical', false);
 
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -32,9 +34,11 @@ const TimetablePage: NextPage = () => {
     }, []);
       
     return (
-        <div className="grid grid-cols-1 md:grid-rows-1 md:grid-cols-[3fr_2fr] px-1 py-4 md:p-4 gap-4 md:gap-2">
-            <Timetable timetableData={timetableData} />
-            <TimetableCourseList />
+        <div className={`grid grid-cols-1 md:grid-rows-1 ${vertical? '':'md:grid-cols-[3fr_2fr]'} px-1 py-4 md:p-4 gap-4 md:gap-2`}>
+            <div className="w-full h-full overflow-x-auto">
+                <Timetable timetableData={timetableData} vertical={vertical} />
+            </div>
+            <TimetableCourseList vertical={vertical} setVertical={setVertical} />
         </div>
     )
 }
