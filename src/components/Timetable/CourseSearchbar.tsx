@@ -57,13 +57,13 @@ const CourseSearchbar = ({ onAddCourse }: { onAddCourse: (course: CourseDefiniti
             if(newValue) onAddCourse(newValue!);
         }}
         isOptionEqualToValue={(option, value) => option.raw_id === value.raw_id}
-        getOptionLabel={(option) => `${option.department} ${option.course}-${option.class} ${option.name_zh} ${option.name_en} ${option.raw_teacher_zh} ${option.raw_teacher_en}`}
+        getOptionLabel={(option) => `${option.department} ${option.course}-${option.class} ${option.name_zh} ${option.name_en}`}
         renderOption={(props, option) => (
             <AutocompleteOption {...props}>
                 <ListItemContent sx={{ fontSize: 'sm' }}>
                     <p className="font-semibold">{option.department} {option.course}-{option.class} {option.name_zh}</p>
                     <p className="text-xs">{option.name_en}</p>
-                    <p className="text-xs text-gray-400">{option.raw_teacher_zh} {option.raw_teacher_en} </p>
+                    <p className="text-xs text-gray-400">{option.teacher_zh.join(',')} {option.teacher_en?.join(',')} </p>
                     {option.venues?.map((venue, index) => {
                         const time = option.times![index];
                         return <div key={index} className="flex flex-row items-center space-x-2 text-gray-400">

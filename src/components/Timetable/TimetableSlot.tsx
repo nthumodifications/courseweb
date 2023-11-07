@@ -34,11 +34,12 @@ const TimetableSlot: FC<TimetableSlotProps> = ({ course, tableDim, fraction = 1,
         }}
         >
         <div className='flex flex-col justify-start items-start text-left h-full text-black/70 p-1 select-none'>
-            <span className='text-xs lg:text-sm font-bold'>{course.course.name_zh}</span>
-            {/* {<span className='text-xs'>{course.course.name_en}</span>} */}
+            {language == 'zh' ? 
+            <span className='text-xs line-clamp-2 font-bold'>{course.course.name_zh}</span>:
+            <span className='text-xs line-clamp-2 font-bold'>{course.course.name_en}</span>
+            }
             <span className='text-[10px]'>{course.venue}</span>
             {course.course.teacher_zh && <span className='text-[10px]'>{course.course.teacher_zh?.join(',')}</span>}
-            {/* <span className='text-xs'>{course.course.raw_teacher_en}</span> */}
         </div>
     </div>
     );
