@@ -24,6 +24,7 @@ import { GECTypes, GETargetCodes } from '@/const/ge_target';
 import { useSettings } from '@/hooks/contexts/settings';
 import { Department } from '@/types/courses';
 import { RefineControlFormTypes } from '@/app/[lang]/courses/page';
+import SelectControl from '../FormComponents/SelectControl';
 
 const RefineControls: FC<{ control: Control<RefineControlFormTypes>, onClear: () => void }> = ({ control, onClear }) => {
     const dict = useDictionary();
@@ -53,6 +54,12 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes>, onClear: ()
         const { data = [], error } = await supabase.from('distinct_cross_discipline').select('discipline');
         if (error) throw error;
         return data!.map(({ discipline }) => discipline!);
+    });
+
+    const { data: semesters = [], error: error6, isLoading: load6 } = useSWR('semesters', async () => {
+        const { data = [], error } = await supabase.from('distinct_semesters').select('semester');
+        if (error) throw error;
+        return data!.map(({ semester }) => semester!);
     });
 
     const isMobile = useMediaQuery('(max-width: 768px)');
@@ -85,6 +92,18 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes>, onClear: ()
         </Typography>
         <div role="group" aria-labelledby="filter-status">
             <List>
+                <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
+                    <FormControl>
+                        <FormLabel>{dict.course.refine.semester}</FormLabel>
+                        <SelectControl
+                            control={control}
+                            sx={{ width: '250px' }}
+                            name="semester"
+                            options={semesters.map(semester => ({ value: semester, label: semester }))}
+                            placeholder={dict.course.refine.semester}
+                        />
+                    </FormControl>
+                </ListItem>
                 <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
                     <MultiSelectControl
                         control={control}

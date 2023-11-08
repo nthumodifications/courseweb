@@ -31,6 +31,7 @@ export type RefineControlFormTypes = {
     secondSpecialization: string | null,
     timeslots: string[],
     timeFilter: TimeFilterType,
+    semester: string,
     venues: string[],
     disciplines: string[],
     geTarget: string[],
@@ -46,6 +47,7 @@ const emptyFilters: RefineControlFormTypes = {
     venues: [],
     timeslots: [],
     timeFilter: TimeFilterType.Within,
+    semester: '11210',
     disciplines: [],
     gecDimensions: [],
     geTarget: [],
@@ -137,6 +139,7 @@ const CoursePage: NextPage = () => {
             let temp = supabase.rpc('search_courses_with_syllabus', {
                     keyword: filters.textSearch,
                 }, { count: 'exact' })
+                .eq('semester', filters.semester)
             if (filters.level.length)
                 temp = temp
                     .or(filters.level.map(level => `and(course.gte.${level}000,course.lte.${level}999)`).join(','))
