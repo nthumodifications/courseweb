@@ -81,7 +81,7 @@ export const viewport: Viewport = {
   userScalable: false,
 }
 
-
+export const runtime = 'edge' 
 
 export default function RootLayout({
   children,
