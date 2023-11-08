@@ -54,12 +54,12 @@ RETURNS TABLE(
     teacher_zh text[],
     first_specialization text[],
     second_specialization text[],
-    time_slots text[],
+    times text[],
     compulsory_for text[],
     elective_for text[],
     tags text[],
     venues text[],
-    times text[],
+    time_slots text[],
     brief text,
     keywords text[]
   ) AS
