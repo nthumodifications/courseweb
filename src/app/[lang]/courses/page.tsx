@@ -73,6 +73,8 @@ const CoursePage: NextPage = () => {
                 //Since we have to handle department differently, special cases where have nested objects
                 //change them back to object
                 let params = queryString.parse(searchParams.toString(), { arrayFormat: 'index', parseNumbers: true })
+                //@ts-ignore
+                params.semester = params.semester?.toString()
                 if (params.department && params.department instanceof Array) {
                     //@ts-ignore
                     params.department = params.department
@@ -82,6 +84,7 @@ const CoursePage: NextPage = () => {
                         })
                         .filter(mod => !!mod) ?? []
                 }
+                console.log('help',Object.assign({}, emptyFilters, params))
                 return Object.assign({}, emptyFilters, params)
             }
             else return emptyFilters;
