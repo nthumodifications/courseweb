@@ -142,17 +142,9 @@ export const GET = async() => {
             no_extra_selection: course['不可加簽說明'].includes('《不接受加簽 No extra selection》'),
             note: normalizedNote,
             closed_mark: course['停開註記'],
-            raw_compulsory_elective: course['必選修說明'],
             prerequisites: course['擋修說明'],
             restrictions: course['課程限制說明'],
-            raw_1_2_specialization: course['第一二專長對應'],
-            raw_extra_selection: course['不可加簽說明'],
-            raw_cross_discipline: course['學分學程對應'],
             raw_id: course['科號'],
-            raw_teacher_en: course['授課教師'],
-            raw_teacher_zh: course['授課教師'],
-            raw_time: course['教室與上課時間'],
-            raw_venue: course['教室與上課時間'],
         });
     }
 
