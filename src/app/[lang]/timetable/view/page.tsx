@@ -8,6 +8,8 @@ import useSWR from "swr";
 import { createTimetableFromCourses, timetableColors } from "@/helpers/timetable";
 import { useSettings } from "@/hooks/contexts/settings";
 import { MinimalCourse } from "@/types/courses";
+import {Divider} from '@mui/joy';
+import {useMemo} from 'react';
 
 const ViewTimetablePage: NextPage = () => {
     const router = useRouter();
@@ -17,16 +19,20 @@ const ViewTimetablePage: NextPage = () => {
 
     if(!courseCodes) router.back();
     
-    const { data: courses, error, isLoading } = useSWR(['courses', courseCodes!], async ([table, courseCodes]) => {
+    const { data: courses = [], error, isLoading } = useSWR(['courses', courseCodes!], async ([table, courseCodes]) => {
         const { data = [], error } = await supabase.from('courses').select("*").in('raw_id', courseCodes);
         if(error) throw error;
         if(!data) throw new Error('No data');
-        if(data.length != courseCodes.length) throw new Error('Data length mismatch');
         return data;
     })
 
-    const timetableData = courses? createTimetableFromCourses(courses as MinimalCourse[], timetableTheme) : [];
+    const timetableData = createTimetableFromCourses(courses as MinimalCourse[], timetableTheme);
       
+    const totalCredits = useMemo(() => {
+        if(!courses) return 0;
+        return courses.reduce((acc, cur) => acc + (cur?.credits ?? 0), 0);
+    }, [courses]);
+
     return (
         <div className="grid grid-cols-1 grid-rows-2 md:grid-rows-1 md:grid-cols-[3fr_2fr] px-1 py-4 md:p-4">
             <Timetable timetableData={timetableData} />
@@ -49,6 +55,17 @@ const ViewTimetablePage: NextPage = () => {
                     </div>
                 </div>
             ))}
+                <Divider/>
+                <div className='flex flex-row gap-4 justify-end'>
+                    <div className='space-x-2'>
+                        <span className='font-bold'>{courses.length}</span>
+                        <span className='text-gray-600'>課</span>
+                    </div>
+                    <div className='space-x-2'>
+                        <span className='font-bold'>{totalCredits}</span>
+                        <span className='text-gray-600'>總學分</span>
+                    </div>
+                </div>
             </div>
         </div>
     )

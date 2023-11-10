@@ -22,6 +22,7 @@
         },
         "refine": {
             "title": "篩選",
+            "semester": "學期",
             "level": "修習年紀",
             "language": "授課語言",
             "department": "系所",
@@ -82,7 +83,7 @@
         }
     },
     "venues": {
-        "placeholder": "Select a Venue from the list"
+        "placeholder": "從選項中選一個地點"
     },
     "alerts": {
         "TimetableCourseList": {

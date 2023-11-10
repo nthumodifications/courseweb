@@ -5,10 +5,10 @@ import Link from "next/link";
 import { DownloadCloud } from "react-feather";
 
 const DownloadSyllabus = ({ courseId }: { courseId: RawCourseID }) => {
-    const fileURL = `${process.env.NEXT_PUBLIC_SUPABASE_URL}storage/v1/object/public/syllabus/${encodeURIComponent(courseId)}.pdf`;
+    const fileURL = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/syllabus/${encodeURIComponent(courseId)}.pdf`;
 
     return <Link href={fileURL} target="_blank">
-        <Button variant="outlined" startDecorator={<DownloadCloud />}>Download PDF</Button>
+        <Button variant="outlined" startDecorator={<DownloadCloud />}>下載 PDF</Button>
     </Link>
 }
 

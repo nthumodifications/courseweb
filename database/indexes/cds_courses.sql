@@ -18,7 +18,6 @@ BEGIN
     RETURN QUERY SELECT * FROM cds_courses
       WHERE name_zh &@~ keyword
          OR teacher_zh &@~ keyword
-         OR venues &@~ keyword
          OR name_en &@~ keyword
          OR raw_id &@ keyword;
   END IF;

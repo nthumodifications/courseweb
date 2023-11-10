@@ -10,7 +10,7 @@ const SelectControl = <T extends FieldValues, OptionValue extends {}>({ control,
         render={({field: { value, onChange}}) => (
             <Select
                 value={value}
-                defaultValue={options[0].value}
+                defaultValue={options[0]?.value}
                 onChange={(e,v) => onChange(v)}
                 {...rest}
             >

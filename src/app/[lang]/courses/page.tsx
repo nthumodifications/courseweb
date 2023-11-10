@@ -31,6 +31,7 @@ export type RefineControlFormTypes = {
     secondSpecialization: string | null,
     timeslots: string[],
     timeFilter: TimeFilterType,
+    semester: string,
     venues: string[],
     disciplines: string[],
     geTarget: string[],
@@ -46,6 +47,7 @@ const emptyFilters: RefineControlFormTypes = {
     venues: [],
     timeslots: [],
     timeFilter: TimeFilterType.Within,
+    semester: '11210',
     disciplines: [],
     gecDimensions: [],
     geTarget: [],
@@ -71,6 +73,8 @@ const CoursePage: NextPage = () => {
                 //Since we have to handle department differently, special cases where have nested objects
                 //change them back to object
                 let params = queryString.parse(searchParams.toString(), { arrayFormat: 'index', parseNumbers: true })
+                //@ts-ignore
+                params.semester = params.semester?.toString()
                 if (params.department && params.department instanceof Array) {
                     //@ts-ignore
                     params.department = params.department
@@ -80,6 +84,7 @@ const CoursePage: NextPage = () => {
                         })
                         .filter(mod => !!mod) ?? []
                 }
+                console.log('help',Object.assign({}, emptyFilters, params))
                 return Object.assign({}, emptyFilters, params)
             }
             else return emptyFilters;
@@ -137,6 +142,7 @@ const CoursePage: NextPage = () => {
             let temp = supabase.rpc('search_courses_with_syllabus', {
                     keyword: filters.textSearch,
                 }, { count: 'exact' })
+                .eq('semester', filters.semester)
             if (filters.level.length)
                 temp = temp
                     .or(filters.level.map(level => `and(course.gte.${level}000,course.lte.${level}999)`).join(','))
