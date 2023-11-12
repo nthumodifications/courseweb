@@ -17,6 +17,7 @@ const userTimetableContext = createContext<ReturnType<typeof useUserTimetablePro
     allCourseData: [],
     semesterCourses: [],
     courses: {},
+    setCourses: () => { },
     clearCourses: () => { },
     deleteCourse: () => { },
     addCourse: () => { },
