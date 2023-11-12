@@ -11,6 +11,7 @@ import useDictionary from '@/dictionaries/useDictionary';
 import { CWBWeather } from '@/types/weather';
 import WeatherIcon from './WeatherIcon';
 import { getLocale } from '@/helpers/dateLocale';
+import { Info } from 'react-feather';
 
 const TodaySchedule: FC<{ weather: any, alerts: AlertDefinition[] }> = ({ weather, alerts }) => {
     const { timetableData, allCourseData, deleteCourse } = useUserTimetable();
@@ -55,7 +56,7 @@ const TodaySchedule: FC<{ weather: any, alerts: AlertDefinition[] }> = ({ weathe
 
     const renderAlerts = (day: Date) => {
         return alerts.filter(alert => new Date(alert.start_date) <= day && new Date(alert.end_date) >= day).map((alert, index) => (
-            <Alert key={index} className="mb-4" color={alert.severity as ColorPaletteProp}>
+            <Alert key={index} className="mb-4" color={alert.severity as ColorPaletteProp} startDecorator={<Info/>}>
                 <div className="flex flex-row justify-between">
                     <div className="flex flex-col">
                         <span className="text-sm font-semibold">{alert.title}</span>

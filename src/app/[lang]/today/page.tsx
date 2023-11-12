@@ -1,10 +1,9 @@
-'use server';
 import { NextPage } from "next";
 import {getWeatherData} from '@/lib/weather';
 import TodaySchedule from "@/components/Today/TodaySchedule";
 import {getAlerts} from '@/lib/alerts';
 
-// export const revalidate = 3600;
+export const revalidate = 3600;
 
 const TodayPage: NextPage = async () => {
     const weatherData = await getWeatherData();

@@ -19,8 +19,8 @@ const VenueList = ({ venues }: { venues: string[]}) => {
         setFiltered(fuse.current.search(textSearch));
     }, [textSearch])
 
-    return <div className="h-full w-full px-8 py-4 space-y-4 overflow-auto">
-            <Input placeholder="Search..." value={textSearch} onChange={(e) => setTextSearch(e.target.value)}/>
+    return <div className="px-8 py-4 space-y-4">
+            <Input className='sticky top-0' placeholder="Search..." value={textSearch} onChange={(e) => setTextSearch(e.target.value)}/>
             <div className="grid grid-cols-2 md:grid-cols-3">
                 {(textSearch == '' ? venues: filtered.map(mod => mod.item)).map((venue, i) => <Link 
                     key={i} 
