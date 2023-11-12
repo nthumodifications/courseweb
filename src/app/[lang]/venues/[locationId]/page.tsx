@@ -42,7 +42,7 @@ const MapPage = async ({
     console.log(courses)
     return (
         <div className='flex flex-col w-full h-full'>
-            <div className='pl-4 pt-2 hidden md:block'>
+            <div className='pl-4 pt-2 md:hidden'>
                 <Link href="./">
                     <Button variant='plain' startDecorator={<ArrowLeft/>}>Back</Button>
                 </Link>
