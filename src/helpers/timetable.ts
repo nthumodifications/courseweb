@@ -115,16 +115,16 @@ export const timetableColors: { [theme: string]: string[] } = {
         "#4F2D4A", // Midnight Plum
     ],
     'pastelColors': [
-        "#ffffed", // lavender
-        "#fff5ee", // seashell
-        "#fff0f5", // snow
-        "#f5f5f5", // white smoke
-        "#f0fff0", // honeydew
-        "#e6ffe6", // pale green
-        "#d3ffd3", // light blue
-        "#c0ffc0", // mint cream
-        "#add8e6", // light blue
-        "#98f5ff", // sky blue
+        '#E8CACA',
+        '#FFE5A8',
+        '#F8FF97',
+        '#BCFFA4',
+        '#A6FFD3',
+        '#B9E3FF',
+        '#C1CCFF',
+        '#E4CFFF',
+        '#F1CEF4',
+        '#F8D9E8'
     ],
     'tsinghuarian': [
         '#845EC2',
