@@ -21,7 +21,6 @@ const TimetableSlotVertical: FC<TimetableSlotProps> = ({ course, tableDim, fract
     const handleShowCourseDetail = (course: MinimalCourse) => () => {
         router.push(`/${language}/courses/${course.raw_id}`);
     }
-    console.log(tableDim)
     return ( 
     <div 
         className={`absolute rounded-md shadow-lg transform translate-y-0.5 cursor-pointer`}

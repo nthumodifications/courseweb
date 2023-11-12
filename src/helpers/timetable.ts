@@ -161,7 +161,6 @@ export const createTimetableFromCourses = (data: MinimalCourse[], theme = 'tsing
 
                 //Determine the text color
                 const brightness = getBrightness(color);
-                console.log(brightness)
                 //From the brightness, using the adjustBrightness function, create a complementary color that is legible
                 const textColor = adjustBrightness(color, brightness > 100 ? -50 : 90);
                 

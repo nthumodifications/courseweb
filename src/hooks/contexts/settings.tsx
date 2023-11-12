@@ -23,7 +23,6 @@ const useSettingsProvider = () => {
     const [timetableTheme, setTimetableTheme] = useLocalStorage<string>("timetable_theme", "tsinghuarian");
 
     const setLanguage = (newLang: Language) => {
-        console.log(pathname);
         router.push(`/${newLang}/`+pathname.split('/').slice(2).join('/'));
     };
 

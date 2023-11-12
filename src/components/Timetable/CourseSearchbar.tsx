@@ -15,7 +15,6 @@ const CourseSearchbar = ({ onAddCourse, semester = lastSemester.id}: { onAddCour
 
 
     const search = useDebouncedCallback(async (text: string) => {
-        console.log(text)
         try {
             setLoading(true);
             let temp = supabase.rpc('search_courses', {

@@ -39,7 +39,6 @@ const MapPage = async ({
     const courses = await getCoursesWithVenue(venueId);
     const timetable = createTimetableFromCourses(courses as MinimalCourse[]);
 
-    console.log(courses)
     return (
         <div className='flex flex-col w-full h-full'>
             <div className='pl-4 pt-2 md:hidden'>
