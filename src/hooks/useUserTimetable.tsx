@@ -52,6 +52,12 @@ const useUserTimetableProvider = (loadCourse = true) => {
         const oldCoursesArray = JSON.parse(oldCourses) as RawCourseID[];
         oldCoursesArray.forEach(addCourse);
 
+        setCourses(courses => {
+            const newCourses = { ...courses };
+            delete newCourses['11210'];
+            return newCourses;
+        });
+
         //remove old data
         window.localStorage.removeItem("semester_1121");
     }, []);
