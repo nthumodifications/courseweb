@@ -3,6 +3,7 @@ import { type } from "os";
 export type Department = { code: string; name_zh: string; name_en: string; };
 
 export type RawCourseID = string;
+export type Semester = string;
 export type DepartmentCode = string;
 export type CourseCode = string;
 export type ClassCode = string;
@@ -16,6 +17,7 @@ export interface MinimalCourse {
     raw_id: RawCourseID;
     name_zh: string;
     name_en: string;
+    semester: Semester;
     department: DepartmentCode;
     course: CourseCode;
     class: ClassCode;

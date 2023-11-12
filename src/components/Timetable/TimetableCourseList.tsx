@@ -1,5 +1,5 @@
-import {Button, ButtonGroup, IconButton, Divider, Tooltip} from '@mui/joy';
-import {Download, EyeOff, Search, Share, Trash, AlertTriangle, Copy, Columns, Repeat} from 'react-feather';
+import { Button, ButtonGroup, IconButton, Divider, Tooltip } from '@mui/joy';
+import { Download, EyeOff, Search, Share, Trash, AlertTriangle, Copy, Columns, Repeat } from 'react-feather';
 import { useSettings } from '@/hooks/contexts/settings';
 import useUserTimetable from '@/hooks/useUserTimetable';
 import { useRouter } from 'next/navigation';
@@ -14,11 +14,17 @@ import { useMemo } from 'react';
 import { hasConflictingTimeslots, hasSameCourse } from '@/helpers/courses';
 import { MinimalCourse } from '@/types/courses';
 
-const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, setVertical: (v: boolean) => void}) => {
-    const { courses, setCourses, language, timetableTheme } = useSettings();
+const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, setVertical: (v: boolean) => void }) => {
+    const { language, timetableTheme } = useSettings();
     const dict = useDictionary();
 
-    const { allCourseData, deleteCourse, addCourse } = useUserTimetable();
+    const {
+        semester, 
+        allCourseData, 
+        courses, 
+        deleteCourse, 
+        addCourse 
+    } = useUserTimetable();
 
     const router = useRouter();
 
@@ -26,8 +32,8 @@ const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, set
 
 
     const handleShowShareDialog = () => {
-        const shareLink = `https://nthumods.com/timetable?semester_1121=${courses.map(id => encodeURI(id)).join(',')}`
-        const webcalLink = `webcal://nthumods.com/timetable/calendar.ics?semester_1121=${courses.map(id => encodeURI(id)).join(',')}`
+        const shareLink = `https://nthumods.com/timetable?${Object.keys(courses).map(sem => `semester_${sem}=${courses[sem].map(id => encodeURI(id)).join(',')}`).join('&')}`
+        const webcalLink = ``
         const handleCopy = () => {
             navigator.clipboard.writeText(shareLink);
         }
@@ -38,8 +44,8 @@ const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, set
     }
 
     const handleDownloadDialog = () => {
-        const icsfileLink = `https://nthumods.com/timetable/calendar.ics?semester_1121=${courses.map(id => encodeURI(id)).join(',')}`
-        const imageLink = `https://nthumods.com/timetable/image?theme=${timetableTheme}&semester_1121=${courses.map(id => encodeURI(id)).join(',')}`
+        const icsfileLink = `https://nthumods.com/timetable/calendar.ics?semester=${semester}&${Object.keys(courses).map(sem => `semester_${sem}=${courses[sem].map(id => encodeURI(id)).join(',')}`).join('&')}`
+        const imageLink = `https://nthumods.com/timetable/image?semester=${semester}&theme=${timetableTheme}&${Object.keys(courses).map(sem => `semester_${sem}=${courses[sem].map(id => encodeURI(id)).join(',')}`).join('&')}`
         openModal({
             children: <DownloadTimetableDialog onClose={closeModal} icsfileLink={icsfileLink} imageLink={imageLink} />
         });
@@ -51,11 +57,11 @@ const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, set
 
     const duplicates = useMemo(() => hasSameCourse(allCourseData as MinimalCourse[]), [allCourseData]);
 
-    const timeConflicts = useMemo(() => hasConflictingTimeslots(allCourseData as MinimalCourse[]), [allCourseData]); 
-        
+    const timeConflicts = useMemo(() => hasConflictingTimeslots(allCourseData as MinimalCourse[]), [allCourseData]);
+
     const renderButtons = () => {
         return <div className="grid grid-cols-2 grid-rows-2 gap-2">
-            <Button variant="outlined" startDecorator={<Repeat className="w-4 h-4" />} onClick={() => setVertical(!vertical)}>{vertical? 'Horizontal View': 'Vertical View'}</Button>
+            <Button variant="outlined" startDecorator={<Repeat className="w-4 h-4" />} onClick={() => setVertical(!vertical)}>{vertical ? 'Horizontal View' : 'Vertical View'}</Button>
             <Button variant="outlined" startDecorator={<Download className="w-4 h-4" />} onClick={handleDownloadDialog}>{dict.timetable.actions.download}</Button>
             <Button variant="outlined" startDecorator={<Share className="w-4 h-4" />} onClick={handleShowShareDialog}>{dict.timetable.actions.share}</Button>
         </div>
@@ -63,8 +69,8 @@ const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, set
 
     return <div className="flex flex-col gap-4 px-4">
         {renderButtons()}
-        <CourseSearchbar onAddCourse={course => addCourse(course.raw_id)} />
-        <div className={`${vertical? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ':'flex flex-col'} gap-4 px-4 flex-wrap`}>
+        <CourseSearchbar onAddCourse={course => addCourse(course.raw_id)} semester={semester} />
+        <div className={`${vertical ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ' : 'flex flex-col'} gap-4 px-4 flex-wrap`}>
             {allCourseData.map((course, index) => (
                 <div key={index} className="flex flex-row gap-4 items-center max-w-3xl">
                     <div className="w-4 h-4 rounded-full" style={{ backgroundColor: timetableColors[timetableTheme][index] }}></div>
@@ -115,7 +121,7 @@ const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, set
                 </div>
             )}
         </div>
-        <Divider/>
+        <Divider />
         <div className='flex flex-row gap-4 justify-end'>
             <div className='space-x-2'>
                 <span className='font-bold'>{allCourseData.length}</span>

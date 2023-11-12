@@ -191,7 +191,8 @@ const TimetableSlot: FC<TimetableSlotProps> = ({ course, tableDim, fraction = 1,
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
-    const courses_ids = searchParams.get('semester_1121')?.split(',')!;
+    const semester = searchParams.get('semester');
+    const courses_ids = searchParams.get('semester_'+semester)?.split(',')!;
     const theme = searchParams.get('theme') || 'tsinghuarian';
 
 

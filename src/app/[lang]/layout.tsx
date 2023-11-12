@@ -16,6 +16,7 @@ import NextAuthProvider from '@/components/NextAuthProvider';
 import { Viewport } from 'next'
 import Script from 'next/script';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
+import {UserTimetableProvider} from '@/hooks/useUserTimetable';
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -96,20 +97,22 @@ export default function RootLayout({
     <CssVarsProvider defaultMode={(theme?.value as any) ?? 'light'}>
       <NextAuthProvider>
         <SettingsProvider>
-          <ModalProvider>
-            <html lang={params.lang} className={`${theme?.value ?? ''} overflow-x-hidden`}>
-              <GoogleAnalytics/>
-              <body className={`${inter.className} grid grid-cols-1 grid-rows-[56px_50px_calc(100vh-106px)] md:grid-cols-[12rem_auto] md:grid-rows-[56px_calc(100vh-56px)_12rem] bg-white dark:bg-neutral-900 dark:text-white`}>
-                <Header />
-                <SideNav />
-                <main className='overflow-y-auto overflow-x-hidden h-full w-full'>
-                  {children}
-                  <Analytics />
-                </main>
-                <Footer />
-              </body>
-            </html>
-          </ModalProvider>
+          <UserTimetableProvider>
+            <ModalProvider>
+              <html lang={params.lang} className={`${theme?.value ?? ''} overflow-x-hidden`}>
+                <GoogleAnalytics/>
+                <body className={`${inter.className} grid grid-cols-1 grid-rows-[56px_50px_calc(100vh-106px)] md:grid-cols-[12rem_auto] md:grid-rows-[56px_calc(100vh-56px)_12rem] bg-white dark:bg-neutral-900 dark:text-white`}>
+                  <Header />
+                  <SideNav />
+                  <main className='overflow-y-auto overflow-x-hidden h-full w-full'>
+                    {children}
+                    <Analytics />
+                  </main>
+                  <Footer />
+                </body>
+              </html>
+            </ModalProvider>
+          </UserTimetableProvider>
         </SettingsProvider>
       </NextAuthProvider>
     </CssVarsProvider>

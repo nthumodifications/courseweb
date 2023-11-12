@@ -1,10 +1,23 @@
 import { useSettings } from '@/hooks/contexts/settings';
+import useUserTimetable from '@/hooks/useUserTimetable';
 import { Button, DialogActions, DialogContent, DialogTitle, ModalClose, ModalDialog } from '@mui/joy';
 import { useRouter } from 'next/navigation';
+import { use } from 'react';
 
-const ShareRecievedDialog = ({ onClose, courseCodes, semester }: { onClose: () => void, courseCodes: string[], semester: string }) => {
-    const { language, setCourses } = useSettings();
+const ShareRecievedDialog = ({ onClose, courseCodes }: { onClose: () => void, courseCodes: {[sem: string]: string[]} }) => {
+    const { language } = useSettings();
+    const { addCourse, clearCourses } = useUserTimetable();
     const router = useRouter();
+
+    const setCourses = (courseCodes: {[sem: string]: string[]}) => {
+        clearCourses();
+        for (const sem in courseCodes) {
+            courseCodes[sem].forEach(courseCode => {
+                addCourse(courseCode);
+            })
+        }
+    }
+
     return (
         <ModalDialog>
             <ModalClose />
@@ -20,7 +33,7 @@ const ShareRecievedDialog = ({ onClose, courseCodes, semester }: { onClose: () =
                     onClose();
                 }} color="danger">Import</Button>
                 <Button variant="outlined" onClick={() => {
-                    router.push('/'+language+'/timetable/view?'+semester+'='+courseCodes.join(','));
+                    router.push('/'+language+'/timetable/view?' + Object.keys(courseCodes).map(sem => `semester_${sem}=${courseCodes[sem].map(id => encodeURI(id)).join(',')}`).join('&'));
                     onClose();
                 }}>View</Button>
             </DialogActions>
