@@ -5,6 +5,7 @@ import Timetable from '@/components/Timetable/Timetable';
 import { Suspense } from 'react';
 import {MinimalCourse} from '@/types/courses';
 import {ResolvingMetadata} from 'next';
+import { lastSemester } from '@/const/semester';
 type Props = {
     params: {
         locationId: string;
@@ -12,7 +13,7 @@ type Props = {
 }
 
 const getCoursesWithVenue = async (venueId: string) => {
-    const { data, error } = await supabase.from('courses').select('*').containedBy('venues', [venueId]);
+    const { data, error } = await supabase.from('courses').select('*').eq('semester', lastSemester.id).containedBy('venues', [venueId]);
     if (error) throw error;
     else return data;
 }

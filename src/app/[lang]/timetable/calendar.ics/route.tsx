@@ -1,16 +1,26 @@
 import supabase from "@/config/supabase";
 import { scheduleTimeSlots } from "@/const/timetable";
 import { createTimetableFromCourses } from "@/helpers/timetable";
-import { differenceInMinutes, getHours, getMinutes, parse } from "date-fns";
+import { differenceInMinutes, formatISO, getHours, getMinutes, parse } from "date-fns";
 import * as ics from 'ics';
 import { NextResponse } from "next/server";
 import { zonedTimeToUtc } from 'date-fns-tz'
 import { MinimalCourse } from "@/types/courses";
+import { semesterInfo } from "@/const/semester";
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
-    const courses_ids = searchParams.get('semester_1121')?.split(',')!;
+    const semester = searchParams.get('semester');
+    const semesterObj = semesterInfo.find(sem => sem.id == semester);
+    const courses_ids = searchParams.get('semester_'+semester)?.split(',')!;
     const theme = searchParams.get('theme') || 'tsinghuarian';
+
+    if (!semester || !semesterObj || !courses_ids) return NextResponse.redirect('https://nthumods.com', { status: 500 });
+
+
+    //server runs on UTC, convert time to GMT+8 (Asia/Taipei)
+    const semStart = zonedTimeToUtc(semesterObj.begins, 'Asia/Taipei');
+    const semEnd = zonedTimeToUtc(semesterObj.ends, 'Asia/Taipei');
 
     try {
         let { data = [], error } = await supabase.from('courses').select("*").in('raw_id', courses_ids);
@@ -34,10 +44,10 @@ export async function GET(request: Request) {
                     title: course.course.name_zh!,
                     description: `${course.course.name_zh!}\n${course.course.name_en!}}\n${course.course.raw_id}`,
                     location: course.venue,
-                    start: [2023, 9, 10+course.dayOfWeek, getHours(start), getMinutes(start)],
-                    end: [2023, 9, 10+course.dayOfWeek, getHours(end), getMinutes(end)],
+                    start: [semStart.getFullYear(), semStart.getMonth(), semStart.getDate()+course.dayOfWeek, getHours(start), getMinutes(start)],
+                    end: [semStart.getFullYear(), semStart.getMonth(), semStart.getDate()+course.dayOfWeek, getHours(end), getMinutes(end)],
                     calName: 'NTHUMods',
-                    recurrenceRule: `FREQ=WEEKLY;BYDAY=${day};INTERVAL=1;UNTIL=20240112T000000Z`
+                    recurrenceRule: `FREQ=WEEKLY;BYDAY=${day};INTERVAL=1;UNTIL=${formatISO(semEnd, { representation: 'date' })}`
                 }
             }))
             if(icss.error) throw icss.error;

@@ -1,9 +1,12 @@
-import {Autocomplete, AutocompleteOption, CircularProgress, ListItemContent} from '@mui/joy';
-import {useEffect, useState} from 'react';
-import {useDebouncedCallback} from 'use-debounce';
+import { Autocomplete, AutocompleteOption, CircularProgress, ListItemContent } from '@mui/joy';
+import { useEffect, useState } from 'react';
+import { useDebouncedCallback } from 'use-debounce';
 import supabase from '@/config/supabase';
-import {CourseDefinition} from '@/config/supabase';
-const CourseSearchbar = ({ onAddCourse }: { onAddCourse: (course: CourseDefinition) => void }) => {
+import { CourseDefinition } from '@/config/supabase';
+import {lastSemester} from '@/const/semester';
+import { Semester } from '@/types/courses';
+
+const CourseSearchbar = ({ onAddCourse, semester = lastSemester.id}: { onAddCourse: (course: CourseDefinition) => void, semester?: Semester }) => {
     const [open, setOpen] = useState(false);
     const [options, setOptions] = useState<CourseDefinition[]>([]);
     const [loading, setLoading] = useState(false);
@@ -19,9 +22,10 @@ const CourseSearchbar = ({ onAddCourse }: { onAddCourse: (course: CourseDefiniti
                 keyword: text
             });
             const { data = [], error } = await temp
+                .eq('semester', semester)
                 .order('raw_id', { ascending: true })
                 .limit(10);
-            if(error) console.error(error);
+            if (error) console.error(error);
             else setOptions(data as CourseDefinition[] ?? []);
         } catch (e) {
             console.error(e);
@@ -30,11 +34,11 @@ const CourseSearchbar = ({ onAddCourse }: { onAddCourse: (course: CourseDefiniti
     }, 500);
 
     useEffect(() => {
-        if(open) search("");
-    },[open]);
+        if (open) search("");
+    }, [open]);
 
     return <Autocomplete
-        key={refreshKey} 
+        key={refreshKey}
         placeholder="尋找你要的課..."
         open={open}
         onOpen={() => {
@@ -54,7 +58,7 @@ const CourseSearchbar = ({ onAddCourse }: { onAddCourse: (course: CourseDefiniti
         value={null}
         onChange={(event, newValue) => {
             setRefreshKey(newValue!.raw_id! ?? Date.now());
-            if(newValue) onAddCourse(newValue!);
+            if (newValue) onAddCourse(newValue!);
         }}
         isOptionEqualToValue={(option, value) => option.raw_id === value.raw_id}
         getOptionLabel={(option) => `${option.department} ${option.course}-${option.class} ${option.name_zh} ${option.name_en}`}
@@ -77,9 +81,9 @@ const CourseSearchbar = ({ onAddCourse }: { onAddCourse: (course: CourseDefiniti
         options={options}
         loading={loading}
         endDecorator={
-        loading ? (
-            <CircularProgress size="sm" sx={{ bgcolor: 'background.surface' }} />
-        ) : null
+            loading ? (
+                <CircularProgress size="sm" sx={{ bgcolor: 'background.surface' }} />
+            ) : null
         }
     />
 }
