@@ -31,10 +31,11 @@ const TimetableSlotVertical: FC<TimetableSlotProps> = ({ course, tableDim, fract
             top: tableDim.header.height + (course.dayOfWeek) * tableDim.timetable.height, 
             width: tableDim.timetable.width * (course.endTime - course.startTime + 1) - 4, 
             height: tableDim.timetable.height/fraction,
-            backgroundColor: course.color
+            backgroundColor: course.color,
+            color: course.textColor
         }}
         >
-        <div className='flex flex-col justify-start items-start text-left h-full text-black/70 p-1 select-none'>
+        <div className='flex flex-col justify-start items-start text-left h-full p-1 select-none'>
             {language == 'zh' ? 
             <span className='text-xs line-clamp-2 font-bold'>{course.course.name_zh}</span>:
             <span className='text-xs line-clamp-2 font-bold'>{course.course.name_en}</span>

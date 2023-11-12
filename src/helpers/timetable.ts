@@ -2,6 +2,8 @@ import { CourseDefinition } from "@/config/supabase";
 import { scheduleTimeSlots } from "@/const/timetable";
 import { CourseTimeslotData } from "@/types/timetable";
 import { MinimalCourse } from '@/types/courses';
+import { getBrightness } from "./colors";
+import {adjustBrightness} from '@/helpers/colors';
 
 export const timetableColors: { [theme: string]: string[] } = {
     'harmonyBlossom': [
@@ -156,6 +158,15 @@ export const createTimetableFromCourses = (data: MinimalCourse[], theme = 'tsing
                 const endTime = Math.max(...times);
                 //get the color, mod the index by the length of the color array so that it loops
                 const color = timetableColors[theme][data!.indexOf(course) % timetableColors[theme].length];
+
+                //Determine the text color
+                const brightness = getBrightness(color);
+                console.log(brightness)
+                //From the brightness, using the adjustBrightness function, create a complementary color that is legible
+                const textColor = adjustBrightness(color, brightness > 100 ? -50 : 90);
+                
+
+
                 //push to scheduleData
                 newTimetableData.push({
                     course: course,
@@ -163,7 +174,8 @@ export const createTimetableFromCourses = (data: MinimalCourse[], theme = 'tsing
                     dayOfWeek: 'MTWRFS'.indexOf(day),
                     startTime: startTime,
                     endTime: endTime,
-                    color: color
+                    color: color,
+                    textColor: textColor,
                 });
             });
         });
