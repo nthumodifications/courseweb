@@ -126,7 +126,21 @@ const useUserTimetableProvider = (loadCourse = true) => {
     }
 
 
-    return { timetableData, allCourseData, deleteCourse, addCourse, isCourseSelected, isLoading, error, semester, setSemester, semesterCourses, clearCourses, courses };
+    return {
+        timetableData, 
+        allCourseData, 
+        semester, 
+        setSemester, 
+        semesterCourses, 
+        setCourses,
+        addCourse, 
+        deleteCourse, 
+        clearCourses, 
+        isCourseSelected, 
+        isLoading, 
+        error, 
+        courses
+    };
 }
 
 const useUserTimetable = () => useContext(userTimetableContext);

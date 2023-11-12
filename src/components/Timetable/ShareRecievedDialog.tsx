@@ -6,17 +6,8 @@ import { use } from 'react';
 
 const ShareRecievedDialog = ({ onClose, courseCodes }: { onClose: () => void, courseCodes: {[sem: string]: string[]} }) => {
     const { language } = useSettings();
-    const { addCourse, clearCourses } = useUserTimetable();
+    const { setCourses } = useUserTimetable();
     const router = useRouter();
-
-    const setCourses = (courseCodes: {[sem: string]: string[]}) => {
-        clearCourses();
-        for (const sem in courseCodes) {
-            courseCodes[sem].forEach(courseCode => {
-                addCourse(courseCode);
-            })
-        }
-    }
 
     return (
         <ModalDialog>
