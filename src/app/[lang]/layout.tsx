@@ -21,7 +21,10 @@ import {UserTimetableProvider} from '@/hooks/useUserTimetable';
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'NTHUMods',
+  title: {
+    template: '%s | NTHUMods',
+    default: 'NTHUMods',
+  },
   description: '國立清華大學課表、校車時間表、資料整合平臺，學生主導、學生自主開發。',
   applicationName: "NTHUMods",
   metadataBase: new URL("https://nthumods.com"),

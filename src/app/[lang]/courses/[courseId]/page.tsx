@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: PageProps, parent: ResolvingM
     const course = await getCourseWithSyllabus(decodeURI(params.courseId as string));
     return {
         ...parent,
-        title: `${course?.department} ${course?.course}-${course?.class} ${course!.name_zh} ${course!.name_en} | NTHUMods`,
+        title: `${course?.department} ${course?.course}-${course?.class} ${course!.name_zh} ${course!.name_en}`,
         description: `${course!.teacher_zh?.join(',')} ${course!.teacher_en?.join(',')} \n ${course!.course_syllabus.brief}`
     }
 }

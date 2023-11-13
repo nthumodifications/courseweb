@@ -5,7 +5,7 @@ import Fade from '@/components/Animation/Fade';
 import { getVenues } from '@/lib/venues';
 
 export const metadata = ({
-    title: '地點 Venues | NTHUMods'
+    title: '地點 Venues'
 })
 
 const VenuesPage = async ({

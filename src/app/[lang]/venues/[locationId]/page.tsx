@@ -28,7 +28,7 @@ export const generateMetadata = ({
     const venueId = decodeURI(params.locationId)
     return {
         ...parent,
-        title: `${venueId} | NTHUMods`
+        title: `${venueId}`
     }
 }
 
