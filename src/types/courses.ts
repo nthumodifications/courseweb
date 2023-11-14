@@ -27,3 +27,5 @@ export interface MinimalCourse {
     teacher_zh: TeacherZH[];
     language: Language;
 }
+
+export const selectMinimalStr = `raw_id, name_zh, name_en, semester, department, course, class, credits, venues, times, teacher_zh, language`;
