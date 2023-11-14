@@ -1,9 +1,7 @@
-'use client';
+'use client';;
 import Timetable from '@/components/Timetable/Timetable';
-import { FC, Fragment, useState, useRef, useEffect, useMemo, startTransition, useTransition } from 'react';
-import { scheduleTimeSlots } from '@/const/timetable';
-import { CourseTimeslotData } from '@/types/timetable';
-import { timetableColors } from '@/helpers/timetable';
+import { FC, Fragment, useState, useRef, useEffect, useMemo, useTransition } from 'react';
+import { createTimetableFromCourses, timetableColors } from '@/helpers/timetable';
 import { Accordion, Button, ButtonGroup, CircularProgress, DialogContent, DialogTitle, Divider, Drawer, IconButton, ModalClose, Sheet, FormControl, FormLabel, AccordionDetails, AccordionSummary, Stack, Alert, Chip, Tooltip, Typography, Switch, Dropdown, MenuButton, Menu, MenuItem, Badge, ModalDialog, DialogActions } from '@mui/joy';
 import {
     EyeOff,
@@ -34,49 +32,13 @@ import { useDebouncedCallback } from 'use-debounce';
 import { normalizeRoomName } from '@/const/venues';
 import { useMediaQuery } from 'usehooks-ts';
 import { useSettings } from '@/hooks/contexts/settings';
-import supabase, { CdsCourseDefinition } from '@/config/supabase';
+import supabase, { CourseDefinition } from '@/config/supabase';
 import { signOut, useSession } from 'next-auth/react';
 import { saveUserSelections, submitUserSelections } from '@/lib/cds_actions';
 import { Department, MinimalCourse } from '@/types/courses';
 import { hasConflictingTimeslots, hasSameCourse } from '@/helpers/courses';
 import { useModal } from '@/hooks/contexts/useModal';
-import { useRouter } from 'next/navigation';
 import {TimeFilterType} from '@/components/FormComponents/TimeslotSelectorControl';
-
-const createTimetableFromCdsCourses = (data: CdsCourseDefinition[], theme = 'tsinghuarian') => {
-    const newTimetableData: CourseTimeslotData[] = [];
-    data!.forEach(course => {
-        //get unique days first
-        if (!course.times) {
-            return;
-        };
-        course.times.forEach((time_str, index) => {
-            const timeslots = time_str.match(/.{1,2}/g)?.map(day => ({ day: day[0], time: day[1] }));
-            const days = timeslots!.map(time => time.day).filter((day, index, self) => self.indexOf(day) === index);
-            days.forEach(day => {
-                const times = timeslots!.filter(time => time.day == day).map(time => scheduleTimeSlots.map(m => m.time).indexOf(time.time));
-                //get the start and end time
-                const startTime = Math.min(...times);
-                const endTime = Math.max(...times);
-                //get the color, mod the index by the length of the color array so that it loops
-                const color = timetableColors[theme][data!.indexOf(course) % timetableColors[theme].length];
-                //push to scheduleData
-                newTimetableData.push({
-                    //TODO: properly type the timetable to enable for multiple course types
-                    // @ts-ignore
-                    course: course,
-                    venue: course.venues![index]!,
-                    dayOfWeek: 'MTWRFS'.indexOf(day),
-                    startTime: startTime,
-                    endTime: endTime,
-                    color: color
-                });
-            });
-        });
-
-    });
-    return newTimetableData;
-}
 
 type CdsCoursesFormFields = {
     textSearch: string;
@@ -89,13 +51,13 @@ type CdsCoursesFormFields = {
 
 const CdsCoursesForm: FC<{
     term: string;
-    initialSubmission: { selection: CdsCourseDefinition[] };
+    initialSubmission: { selection: CourseDefinition[] };
 }> = ({ term, initialSubmission }) => {
-    const [selectedCourses, setSelectedCourses] = useState<CdsCourseDefinition[]>(initialSubmission.selection);
+    const [selectedCourses, setSelectedCourses] = useState<CourseDefinition[]>(initialSubmission.selection);
     const [open, setOpen] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [searchCourses, setSearchCourses] = useState<CdsCourseDefinition[]>([]);
+    const [searchCourses, setSearchCourses] = useState<CourseDefinition[]>([]);
     const [totalCount, setTotalCount] = useState<number>(0);
     const [headIndex, setHeadIndex] = useState<number>(0);
     const [showTimetable, setShowTimetable] = useState(true);
@@ -169,7 +131,7 @@ const CdsCoursesForm: FC<{
         setLoading(true);
         //Query for courses
         try {
-            let temp = supabase.rpc('search_cds_courses', {
+            let temp = supabase.rpc('search_courses_with_syllabus', {
                 keyword: filters.textSearch,
             }, { count: 'exact' })
                 .eq('semester', '11120')
@@ -217,13 +179,13 @@ const CdsCoursesForm: FC<{
             if (filters.timeslots.length) {
                 if(filters.timeFilter == TimeFilterType.Within)
                     temp = temp
-                        .containedBy('cds_time_slots', filters.timeslots)
+                        .containedBy('time_slots', filters.timeslots)
                 else if(filters.timeFilter == TimeFilterType.Includes)
                     temp = temp
-                        .overlaps('cds_time_slots', filters.timeslots) //Overlap works if only one of their timeslots is selected
+                        .overlaps('time_slots', filters.timeslots) //Overlap works if only one of their timeslots is selected
                 //don't include the timeslot filter if it is empty array
                 temp = temp
-                    .not('cds_time_slots', 'eq', '{}')
+                    .not('time_slots', 'eq', '{}')
             }
 
             let { data: courses, error, count } = await temp.order('raw_id', { ascending: true }).range(index, index + 29)
@@ -235,7 +197,7 @@ const CdsCoursesForm: FC<{
                 setHeadIndex(0);
             }
             else {
-                setSearchCourses(courses as CdsCourseDefinition[]);
+                setSearchCourses(courses as CourseDefinition[]);
                 setHeadIndex(index);
             }
         }
@@ -258,7 +220,7 @@ const CdsCoursesForm: FC<{
 
     }, [JSON.stringify(filters)])
 
-    const timetableData = useMemo(() => createTimetableFromCdsCourses(selectedCourses, timetableTheme), [selectedCourses, timetableTheme]);
+    const timetableData = useMemo(() => createTimetableFromCourses(selectedCourses as MinimalCourse[], timetableTheme), [selectedCourses, timetableTheme]);
 
     const timeConflicts = useMemo(() => hasConflictingTimeslots(selectedCourses as MinimalCourse[]), [selectedCourses]);
     const duplicates = useMemo(() => hasSameCourse(selectedCourses as MinimalCourse[]), [selectedCourses]);
@@ -317,17 +279,17 @@ const CdsCoursesForm: FC<{
         setPrevSubmitting(isSubmitting);
     }, [isSubmitting]);
 
-    const addCourse = async (course: CdsCourseDefinition) => {
+    const addCourse = async (course: CourseDefinition) => {
         setSelectedCourses([...selectedCourses, course]);
         saveSelectionDebounced();
     }
 
-    const deleteCourse = async (course: CdsCourseDefinition) => {
+    const deleteCourse = async (course: CourseDefinition) => {
         setSelectedCourses(selectedCourses.filter(c => c != course));
         saveSelectionDebounced();
     }
 
-    const hasCourse = (course: CdsCourseDefinition) => {
+    const hasCourse = (course: CourseDefinition) => {
         return selectedCourses.find(c => c.raw_id == course.raw_id) != undefined;
     }
 

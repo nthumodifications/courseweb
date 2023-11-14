@@ -23,7 +23,7 @@ export const getUserCdsSelections = async (term: string) => {
     const selection = cdsSaves.length > 0 ? cdsSaves[0].selection : [];
 
     //get user selections
-    const { data: preferenceCourses = [], error: error2 } = await supabase_server.from('cds_courses').select('*').in('raw_id', selection);
+    const { data: preferenceCourses = [], error: error2 } = await supabase_server.from('courses').select('*').in('raw_id', selection);
     if(error2) throw error2;
     
     return preferenceCourses ?? [];
@@ -81,7 +81,7 @@ export const submitUserSelections = async (term: string, selections: string[]) =
     if(session == null || !session.user || !session.user.inschool) return redirect('/');
 
     //get course datas
-    const { data: courses, error: error1 } = await supabase_server.from('cds_courses').select('*').in('raw_id', selections);
+    const { data: courses, error: error1 } = await supabase_server.from('courses').select('*').in('raw_id', selections);
     if(error1) throw error1;
 
     const timeConflicts = hasConflictingTimeslots(courses as MinimalCourse[]);
