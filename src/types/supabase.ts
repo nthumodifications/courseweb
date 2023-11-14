@@ -63,6 +63,29 @@ export interface Database {
         }
         Relationships: []
       }
+      cds_counts: {
+        Row: {
+          code: string
+          count: number
+        }
+        Insert: {
+          code: string
+          count?: number
+        }
+        Update: {
+          code?: string
+          count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cds_counts_code_fkey"
+            columns: ["code"]
+            isOneToOne: true
+            referencedRelation: "courses"
+            referencedColumns: ["raw_id"]
+          }
+        ]
+      }
       cds_courses: {
         Row: {
           class: string
@@ -470,12 +493,12 @@ export interface Database {
           teacher_zh: string[]
           first_specialization: string[]
           second_specialization: string[]
-          time_slots: string[]
+          times: string[]
           compulsory_for: string[]
           elective_for: string[]
           tags: string[]
           venues: string[]
-          times: string[]
+          time_slots: string[]
           brief: string
           keywords: string[]
         }[]
