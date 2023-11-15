@@ -6,7 +6,7 @@ import { PropsWithChildren } from 'react'
 export const runtime = "nodejs"
 
 export const metadata = {
-    title: '選課意願調查 Course Demand Survey',
+    title: '選課規劃調查 Course Demand Survey',
 }
 
 export default function ClientLayout({ children }: PropsWithChildren<{}>) {
