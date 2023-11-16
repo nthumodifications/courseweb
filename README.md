@@ -16,7 +16,7 @@ Currently, everyone can access the website at [NTHUMods](https://nthumods.com). 
 ## Development
 You can clone the repository and start the development server via `npm run dev`
 
-If you wish to participate in this development, feel free to email [chewtzihwee@gmail.com](mailto:chewtzihwee@gmail.com) in the meantime while we figure out the system for contributing.
+If you wish to participate in this development, feel free to email [nthumods@googlegroups.com](mailto:nthumods@googlegroups.com) in the meantime while we figure out the system for contributing.
 
 ## Contributors
 - [Chew Tzi Hwee](@ImJustChew)
