@@ -4,7 +4,7 @@ import {redirect} from 'next/navigation';
 import supabase_server from '@/config/supabase_server';
 import authConfig from '@/app/api/auth/[...nextauth]/authConfig';
 import { hasConflictingTimeslots, hasSameCourse } from '@/helpers/courses';
-import { MinimalCourse } from '@/types/courses';
+import {MinimalCourse, selectMinimalStr} from '@/types/courses';
 import { SubmissionStatus } from '@/types/cds_courses';
 
 export const getUserCdsSelections = async (term: string) => {
@@ -103,4 +103,32 @@ export const submitUserSelections = async (term: string, selections: string[]) =
         });
 
     if(error2) throw error2;
+}
+
+export const getSubmissionDetails = async (courseId: string) => {
+    const { data, error } = await supabase_server
+        .from('cds_submissions')
+        .select('*')
+        .contains('selections', [courseId])
+
+    if (error) {
+        console.log(error);
+        throw error;
+    }
+    return data;
+}
+
+export const getCDSCourseSubmissions = async (term: string) => {
+    //get all courses where count exists and > 0
+    const { data: courses, error: coursesError } = await supabase_server
+        .from('courses')
+        .select(`${selectMinimalStr}, capacity ,cds_counts!inner(count)`)
+        .gt('cds_counts.count', 0)
+
+    if (coursesError) {
+        console.log(coursesError);
+        throw coursesError;
+    }
+
+    return courses;
 }
