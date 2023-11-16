@@ -1,24 +1,7 @@
-import supabase_server from "@/config/supabase_server";
-import { MinimalCourse, selectMinimalStr } from '@/types/courses';
+import { getCDSCourseSubmissions } from "@/lib/cds_actions";
 import { List, ListItem, ListItemButton, ListItemContent } from "@mui/joy";
 import Link from "next/link";
 import { ChevronRight } from "react-feather";
-
-const getCDSCourseSubmissions = async (term: string) => {
-    //get all courses where count exists and > 0
-    const { data: courses, error: coursesError } = await supabase_server
-        .from('courses')
-        .select(`${selectMinimalStr}, capacity ,cds_counts!inner(count)`)
-        .gt('cds_counts.count', 0)
-
-    if (coursesError) {
-        console.log(coursesError);
-        throw coursesError;
-    }
-
-    return courses;
-}
-
 
 const CDSAdmin = async ({
     params: { lang }

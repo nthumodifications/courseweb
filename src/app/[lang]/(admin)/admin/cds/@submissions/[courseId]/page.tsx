@@ -1,23 +1,6 @@
-import supabase_server from "@/config/supabase_server"
+import { getSubmissionDetails } from "@/lib/cds_actions";
 import { getCourse } from "@/lib/course";
 import { Table } from "@mui/joy";
-
-const getSubmissionDetails = async (courseId: string) => {
-    // TODO: Authentication is not implemented yet so this must not be public
-    return [];
-    const { data, error } = await supabase_server
-        .from('cds_submissions')
-        .select('*')
-        .contains('selections', [courseId])
-
-    if (error) {
-        console.log(error);
-        throw error;
-    }
-
-    
-    return data;
-}
 
 const CourseSubmissions = async ({ params: { courseId } }: { params: { courseId: string }}) => {
     const submissions = await getSubmissionDetails(decodeURI(courseId));
