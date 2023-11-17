@@ -2,8 +2,10 @@
 import useDictionary from "@/dictionaries/useDictionary";
 import { timetableColors } from "@/helpers/timetable";
 import { useSettings } from "@/hooks/contexts/settings";
-import { Divider, Option, Select, Switch } from "@mui/joy";
+import { Button, Divider, Option, Select, Switch } from "@mui/joy";
 import {  useEffect, useState } from "react";
+import NTHULoginButton from "../cds/NTHULoginButton";
+import { signOut, useSession } from "next-auth/react";
 
 const TimetableThemePreview = ({ theme, onClick = () => {}, selected = false }: { theme: string, selected?: boolean, onClick?: () => void}) => {
     return <div 
@@ -35,6 +37,7 @@ const SettingsPage = () => {
 
     const { darkMode, setDarkMode, language, setLanguage } = useSettings();
     const [dummy, setDummy] = useState(0);
+    const { data, status } = useSession();
 
     
     const dict = useDictionary();
@@ -78,6 +81,21 @@ const SettingsPage = () => {
                 </div>
                 {/* TODO: Timetable Preview */}
                 <TimetableThemeList/>
+            </div>
+            <Divider/>
+            <div className="flex flex-row gap-4 py-4">
+                <div className="flex flex-col flex-1">
+                    <h2 className="font-semibold text-xl text-gray-600 dark:text-gray-400 pb-2">Account</h2>
+                    <p className="text-gray-600 dark:text-gray-400">NTHUMods can be connected to your NTHU AIS account for more features!</p>
+                </div>
+                <div className="flex flex-col items-center justify-center gap-2">
+                    {status == "loading" && <span className="text-gray-600 dark:text-gray-400">Loading...</span>}
+                    {status == "authenticated" && <>
+                        <span className="text-gray-600 dark:text-gray-400">Logged in as {data.user.name_zh}</span>
+                        <Button variant="soft" onClick={() => signOut()}>Logout</Button>
+                    </>}
+                    {status == "unauthenticated" && <span className="text-gray-600 dark:text-gray-400"><NTHULoginButton/></span>}
+                </div>
             </div>
         </div>
     )
