@@ -1,6 +1,7 @@
 import supabase from '@/config/supabase';
 import { parse } from 'node-html-parser';
 import {CourseJoinWithSyllabus} from '@/config/supabase';
+import {selectMinimalStr} from '@/types/courses';
 
 
 export const getCourseWithSyllabus = async (courseId: string) => {
@@ -34,7 +35,7 @@ export const getCourse = async (courseId: string) => {
 export const getMinimalCourse = async (courseId: string) => {
     const { data, error } = await supabase
         .from('courses')
-        .select('raw_id, name_zh, name_en, department, course, class, credits, venues, times, teacher_zh, language')
+        .select(selectMinimalStr)
         .eq('raw_id', courseId);
     if(error) {
         console.error(error)
