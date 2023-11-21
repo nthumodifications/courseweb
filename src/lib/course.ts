@@ -2,6 +2,8 @@ import supabase from '@/config/supabase';
 import { parse } from 'node-html-parser';
 import {CourseJoinWithSyllabus} from '@/config/supabase';
 import {selectMinimalStr} from '@/types/courses';
+import { getServerSession } from 'next-auth';
+import authConfig from '@/app/api/auth/[...nextauth]/authConfig';
 
 
 export const getCourseWithSyllabus = async (courseId: string) => {

@@ -207,6 +207,41 @@ export interface Database {
         }
         Relationships: []
       }
+      course_students: {
+        Row: {
+          course: string
+          email: string | null
+          id: number
+          name_en: string | null
+          name_zh: string | null
+          user_id: string
+        }
+        Insert: {
+          course: string
+          email?: string | null
+          id?: number
+          name_en?: string | null
+          name_zh?: string | null
+          user_id: string
+        }
+        Update: {
+          course?: string
+          email?: string | null
+          id?: number
+          name_en?: string | null
+          name_zh?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_students_course_fkey"
+            columns: ["course"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["raw_id"]
+          }
+        ]
+      }
       course_syllabus: {
         Row: {
           brief: string | null

@@ -11,20 +11,17 @@ type TimetableSlotProps = {
     course: CourseTimeslotData, 
     tableDim: TimetableDim, 
     fraction?: number,
-    fractionIndex?: number
+    fractionIndex?: number,
+    onClick?: () => void
 }
 
-const TimetableSlotVertical: FC<TimetableSlotProps> = ({ course, tableDim, fraction = 1, fractionIndex = 1 }) => {
-    const router = useRouter();
+const TimetableSlotVertical: FC<TimetableSlotProps> = ({ course, tableDim, fraction = 1, fractionIndex = 1, onClick }) => {
     const { language } = useSettings();
 
-    const handleShowCourseDetail = (course: MinimalCourse) => () => {
-        router.push(`/${language}/courses/${course.raw_id}`);
-    }
     return ( 
     <div 
         className={`absolute rounded-md shadow-lg transform translate-y-0.5 cursor-pointer`}
-        onClick={handleShowCourseDetail(course.course)}
+        onClick={onClick}
         style={{ 
             left: tableDim.header.width + course.startTime * tableDim.timetable.width + (fractionIndex - 1) * (tableDim.timetable.width/fraction), 
             top: tableDim.header.height + (course.dayOfWeek) * tableDim.timetable.height, 

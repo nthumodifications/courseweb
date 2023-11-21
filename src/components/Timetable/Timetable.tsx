@@ -2,16 +2,22 @@
 import TimeslotHeader from '@/components/Timetable/TimeslotHeader';
 import TimetableSlot from '@/components/Timetable/TimetableSlot';
 import { scheduleTimeSlots } from '@/const/timetable';
-import {CourseTimeslotData, TimeSlot} from '@/types/timetable';
-import {FC, useLayoutEffect, useMemo, useRef, useState} from 'react';
+import {CourseTimeslotData, CourseTimeslotDataWithFraction, TimeSlot, TimetableDim} from '@/types/timetable';
+import {FC, ReactNode, useLayoutEffect, useMemo, useRef, useState} from 'react';
 import TimetableSlotVertical from '@/components/Timetable/TimetableSlotVertical';
+import Link from 'next/link';
+import { useSettings } from '@/hooks/contexts/settings';
 
-type CourseTimeslotDataWithFraction = CourseTimeslotData & { fraction: number, fractionIndex: number, timeSlots: string[] };
 
-const Timetable: FC<{ timetableData: CourseTimeslotData[], vertical?: boolean }> = ({ timetableData = [], vertical = false }) => {
+const Timetable: FC<{ 
+  timetableData: CourseTimeslotData[], 
+  vertical?: boolean, 
+  renderTimetableSlot?: (course: CourseTimeslotDataWithFraction, tableDim: TimetableDim, vertical?: boolean) => ReactNode 
+}> = ({ timetableData = [], vertical = false, renderTimetableSlot }) => {
     const headerRow = useRef<HTMLTableCellElement>(null);
     const timetableCell = useRef<HTMLTableCellElement>(null);
     const [tableDim, setTableDim] = useState({ header: { width: 0, height: 0 }, timetable: { width: 0, height: 0 } });
+    const { language } = useSettings();
   
 
     const updateSize = () => {
@@ -33,7 +39,7 @@ const Timetable: FC<{ timetableData: CourseTimeslotData[], vertical?: boolean }>
       window.addEventListener("resize", updateSize);
       return () => 
         window.removeEventListener("resize", updateSize);
-    }, [vertical]);
+    }, [vertical, timetableData]);
     
     const timetableDataWithFraction = useMemo(() => {
       const slotSums = timetableData.reduce((acc, cur) => {
@@ -71,6 +77,24 @@ const Timetable: FC<{ timetableData: CourseTimeslotData[], vertical?: boolean }>
 
     const days = showSaturday ? ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']: ['MON', 'TUE', 'WED', 'THU', 'FRI'];
 
+    const _renderTimetableSlot = (course: CourseTimeslotDataWithFraction, tableDim: TimetableDim, vertical: boolean) => {
+      return <Link href={`/${language}/courses/${course.course.raw_id}`}>
+      {vertical ? 
+        <TimetableSlotVertical 
+          course={course} 
+          tableDim={tableDim} 
+          fraction={course.fraction} 
+          fractionIndex={course.fractionIndex} />
+        :
+        <TimetableSlot 
+          course={course} 
+          tableDim={tableDim} 
+          fraction={course.fraction} 
+          fractionIndex={course.fractionIndex} />
+      }
+      </Link>
+    }
+
     if(vertical) return (
       <div className="text-center lg:mb-0 w-full">
         {/* Timetable, Relative overlay */}
@@ -101,15 +125,10 @@ const Timetable: FC<{ timetableData: CourseTimeslotData[], vertical?: boolean }>
             </tbody>
           </table>
           <div className='absolute top-0 left-0 w-full h-full'>
-            {timetableDataWithFraction.map((data, index) => (
-              <TimetableSlotVertical 
-                key={index} 
-                course={data} 
-                tableDim={tableDim} 
-                fraction={data.fraction} 
-                fractionIndex={data.fractionIndex} 
-              />
-            ))}
+            {timetableDataWithFraction.map((data, index) => renderTimetableSlot ? 
+              renderTimetableSlot(data, tableDim, vertical): 
+              _renderTimetableSlot(data, tableDim, vertical)
+            )}
           </div>
         </div>
       </div>
@@ -139,15 +158,10 @@ const Timetable: FC<{ timetableData: CourseTimeslotData[], vertical?: boolean }>
             </tbody>
           </table>
           <div className='absolute top-0 left-0 w-full h-full'>
-            {timetableDataWithFraction.map((data, index) => (
-              <TimetableSlot 
-                key={index} 
-                course={data} 
-                tableDim={tableDim} 
-                fraction={data.fraction} 
-                fractionIndex={data.fractionIndex} 
-              />
-            ))}
+          {timetableDataWithFraction.map((data, index) => renderTimetableSlot ? 
+              renderTimetableSlot(data, tableDim, vertical): 
+              _renderTimetableSlot(data, tableDim, vertical)
+            )}
           </div>
         </div>
       </div>
