@@ -37,16 +37,16 @@ const SideNav:FC = () => {
             color: '#7BC2CF'
         },
         {
-            title: dict.navigation.venues,
-            href: `/${language}/venues`,
-            icon: <I.Map strokeWidth="2"/>,
-            color: '#AEA3C9'
-        },
-        {
             title: dict.navigation.bus,
             href: `/${language}/bus`,
             icon: <I.Navigation strokeWidth="2"/>,
             color: '#EB8751'
+        },
+        {
+            title: dict.applist.title,
+            href: `/${language}/apps`,
+            icon: <I.Folder strokeWidth="2"/>,
+            color: '#AEA3C9'
         },
         {
             title: dict.navigation.settings,

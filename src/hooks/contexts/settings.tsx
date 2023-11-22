@@ -5,14 +5,17 @@ import { useLocalStorage } from 'usehooks-ts';
 import { useCookies } from 'react-cookie';
 import { Language } from "@/types/settings";
 import { RawCourseID } from "@/types/courses";
+import { apps } from "@/const/apps";
 
 const settingsContext = createContext<ReturnType<typeof useSettingsProvider>>({
     language: "zh",
     darkMode: false,
     timetableTheme: "tsinghuarian",
+    pinnedApps: [],
     setLanguage: () => {},
     setDarkMode: () => {},
-    setTimetableTheme: () => {}
+    setTimetableTheme: () => {},
+    toggleApp: () => {}
 });
 
 const useSettingsProvider = () => {
@@ -21,6 +24,7 @@ const useSettingsProvider = () => {
     const pathname = usePathname();
     const [cookies, setCookie, removeCookie] = useCookies(['theme', 'locale']);
     const [timetableTheme, setTimetableTheme] = useLocalStorage<string>("timetable_theme", "tsinghuarian");
+    const [pinnedApps, setPinnedApps] = useLocalStorage<string[]>("pinned_apps", []);
 
     const setLanguage = (newLang: Language) => {
         //set cookie of 'locale'
@@ -64,13 +68,31 @@ const useSettingsProvider = () => {
 
     const darkMode = useMemo(() => cookies.theme == "dark", [cookies]);
 
+    const toggleApp = (app: string) => {
+        if(pinnedApps.includes(app)) {
+            setPinnedApps(pinnedApps.filter(appId => appId != app));
+        }
+        else {
+            setPinnedApps([...pinnedApps, app]);
+        }
+    }
+
+    //cleanup pinned apps, remove apps that are not in the app list
+    useEffect(() => {
+        if(typeof window  == "undefined") return ;
+        setPinnedApps(pinnedApps.filter(appId => apps.some(app => app.id == appId)));
+    }, []);
+    
+
     return {
         language,
         darkMode,
         timetableTheme,
+        pinnedApps,
         setLanguage,
         setDarkMode,
-        setTimetableTheme
+        setTimetableTheme,
+        toggleApp
     };
 }
 
