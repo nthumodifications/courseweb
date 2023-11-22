@@ -33,13 +33,14 @@ import { useDebouncedCallback } from 'use-debounce';
 import { normalizeRoomName } from '@/const/venues';
 import { useMediaQuery } from 'usehooks-ts';
 import { useSettings } from '@/hooks/contexts/settings';
-import supabase, { CourseDefinition } from '@/config/supabase';
+import supabase, { CourseDefinition, CourseJoinWithSyllabus, CourseSyllabusDefinition, CourseSyllabusView } from '@/config/supabase';
 import { signOut, useSession } from 'next-auth/react';
 import { saveUserSelections, submitUserSelections } from '@/lib/cds_actions';
 import { Department, MinimalCourse } from '@/types/courses';
 import { hasConflictingTimeslots, hasSameCourse } from '@/helpers/courses';
 import { useModal } from '@/hooks/contexts/useModal';
 import {TimeFilterType} from '@/components/FormComponents/TimeslotSelectorControl';
+import Link from 'next/link';
 
 type CdsCoursesFormFields = {
     textSearch: string;
@@ -58,7 +59,7 @@ const CdsCoursesForm: FC<{
     const [open, setOpen] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [searchCourses, setSearchCourses] = useState<CourseDefinition[]>([]);
+    const [searchCourses, setSearchCourses] = useState<CourseSyllabusView[]>([]);
     const [totalCount, setTotalCount] = useState<number>(0);
     const [headIndex, setHeadIndex] = useState<number>(0);
     const [showTimetable, setShowTimetable] = useState(true);
@@ -67,6 +68,7 @@ const CdsCoursesForm: FC<{
     const scrollRef = useRef<HTMLDivElement>(null);
 
     const session = useSession();
+    const { language } = useSettings();
 
     const emptyFilters: CdsCoursesFormFields = {
         textSearch: "",
@@ -145,46 +147,13 @@ const CdsCoursesForm: FC<{
             if (filters.department.length)
                 temp = temp
                     .in('department', filters.department.map(({ code }) => code))
-            // if (filters.className)
-            //     temp = temp
-            //         .or(`compulsory_for.cs.{"${filters.className}"},elective_for.cs.{"${filters.className}"}`);
-            // if (filters.others.includes('xclass'))
-            //     temp = temp
-            //         .contains('tags', ['X-Class'])
-            // if (filters.others.includes('16_weeks')) 
-            //     temp = temp
-            //         .contains('tags', ['16周'])
-            // if (filters.others.includes('extra_selection'))
-            //     temp = temp
-            //         .not('tags', 'cs', '{"不可加簽"}')
-            // if (filters.firstSpecialization || filters.secondSpecialization) {
-            //     temp = temp
-            //         .or(`first_specialization.cs.{"${filters.firstSpecialization ?? ""}"},second_specialization.cs.{"${filters.secondSpecialization ?? ""}"}`)
-            // }
-            // if (filters.venues.length) {
-            //     temp = temp
-            //         .containedBy('venues', filters.venues)
-            // }
-            // if (filters.disciplines.length) {
-            //     temp = temp
-            //         .containedBy('cross_discipline', filters.disciplines)
-            // }
-            // if (filters.gecDimensions.length) {
-            //     temp = temp
-            //         .in('ge_type', filters.gecDimensions) //TODO: should consider changing name to gec_type
-            // }
-            // if (filters.geTarget.length) {
-            //     temp = temp
-            //         .in('ge_target', filters.geTarget)
-            // }
             if (filters.timeslots.length) {
                 if(filters.timeFilter == TimeFilterType.Within)
                     temp = temp
                         .containedBy('time_slots', filters.timeslots)
                 else if(filters.timeFilter == TimeFilterType.Includes)
                     temp = temp
-                        .overlaps('time_slots', filters.timeslots) //Overlap works if only one of their timeslots is selected
-                //don't include the timeslot filter if it is empty array
+                        .overlaps('time_slots', filters.timeslots)
                 temp = temp
                     .not('time_slots', 'eq', '{}')
             }
@@ -198,7 +167,7 @@ const CdsCoursesForm: FC<{
                 setHeadIndex(0);
             }
             else {
-                setSearchCourses(courses as CourseDefinition[]);
+                setSearchCourses(courses as unknown as CourseSyllabusView[]);
                 setHeadIndex(index);
             }
         }
@@ -299,6 +268,216 @@ const CdsCoursesForm: FC<{
     const handleFilterPressed = () => {
         setShowFilters(!showFilters)
         scrollRef.current?.scrollTo(0, 0);
+    }
+
+    const renderDrawer = () => {
+        return <Drawer
+            size="lg"
+            variant="plain"
+            open={open}
+            onClose={() => setOpen(false)}
+            anchor="right"
+            slotProps={{
+                content: {
+                    sx: {
+                        width: 'min(35rem, 100%)',
+                        bgcolor: 'transparent',
+                        p: { md: 3, sm: 0 },
+                        boxShadow: 'none',
+                    },
+                },
+            }}
+        >
+            <Sheet
+                sx={{
+                    borderRadius: 'md',
+                    p: 2,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 2,
+                    height: '100%',
+                    overflow: 'auto',
+                }}
+            >
+                <DialogTitle>Courses</DialogTitle>
+                <ModalClose />
+                <Divider sx={{ mt: 'auto' }} />
+                <DialogContent sx={{ gap: 2, scrollBehavior: 'smooth' }} ref={scrollRef}>
+                    <InputControl
+                        control={control}
+                        name="textSearch"
+                        placeholder={'Seach for a course...'}
+                        variant="soft"
+                        size="lg"
+                        sx={{ position: 'sticky', top: 0, zIndex: 10 }}
+                        startDecorator={
+                            loading ? <CircularProgress size="sm" /> : <Search />
+                        }
+                        endDecorator={
+                            <Fragment>
+                                {filters.textSearch.length > 0 && <IconButton onClick={() => setValue('textSearch', "")}>
+                                    <X className="text-gray-400 p-1" />
+                                </IconButton>}
+                                <Divider orientation="vertical" />
+                                <IconButton onClick={handleFilterPressed} aria-pressed={showFilters ? 'true' : 'false'}>
+                                    <Badge invisible={!isDirty}>
+                                        <Filter className="text-gray-400 p-1" />
+                                    </Badge>
+                                </IconButton>
+                            </Fragment>
+                        }
+                    />
+                    <Accordion expanded={showFilters}>
+                        <AccordionDetails>
+                            <div className='flex flex-row flex-wrap'>
+                                <div className='flex flex-col flex-1 gap-4 mb-4'>
+                                    <MultiSelectControl
+                                        control={control}
+                                        name="level"
+                                        options={[
+                                            { value: 1, label: '1xxx' },
+                                            { value: 2, label: '2xxx' },
+                                            { value: 3, label: '3xxx' },
+                                            { value: 4, label: '4xxx' },
+                                            { value: 5, label: '5xxx' },
+                                            { value: 6, label: '6xxx' },
+                                        ]}
+                                        label={"修習年紀"}
+                                    />
+                                    <MultiSelectControl
+                                        control={control}
+                                        name="language"
+                                        options={[
+                                            { value: '英', label: 'English' },
+                                            { value: '中', label: '國語' },
+                                        ]}
+                                        label="授課語言"
+                                    />
+                                    <FormControl>
+                                        <FormLabel>開課院系</FormLabel>
+                                        {/* @ts-ignore */}
+                                        <DepartmentControl control={control} />
+                                    </FormControl>
+                                </div>
+                                <Accordion sx={{ flex: 1, minWidth: '200px', marginBottom: '1rem' }} expanded={isMobile ? undefined : true}>
+                                    <AccordionSummary slotProps={{
+                                        button: {
+                                            sx: { padding: '0.5rem' }
+                                        }
+                                    }}>時間</AccordionSummary>
+                                    <AccordionDetails>
+                                        {/* @ts-ignore */}
+                                        <TimeslotSelectorControl control={control} />
+                                    </AccordionDetails>
+                                </Accordion>
+                                {/* <Accordion>
+                                    <AccordionSummary>Specialization</AccordionSummary>
+                                    <AccordionDetails>
+                                        <FormControl>
+                                            <FormLabel>{dict.course.refine.specialization}</FormLabel>
+                                            <AutocompleteControl
+                                                control={control}
+                                                name="firstSpecialization"
+                                                placeholder={dict.course.refine.firstSpecialization}
+                                                loading={load1}
+                                                options={firstSpecial}
+                                            />
+                                            <AutocompleteControl
+                                                control={control}
+                                                name="secondSpecialization"
+                                                placeholder={dict.course.refine.secondSpecialization}
+                                                loading={load2}
+                                                options={secondSpecial}
+                                            />
+
+                                        </FormControl>
+                                        <FormControl>
+                                            <FormLabel>{dict.course.refine.cross_discipline}</FormLabel>
+                                            <AutocompleteControl
+                                                control={control}
+                                                name="disciplines"
+                                                multiple
+                                                placeholder={dict.course.refine.cross_discipline}
+                                                loading={load5}
+                                                options={disciplines}
+                                            />
+                                        </FormControl>
+                                    </AccordionDetails>
+                                </Accordion> */}
+                                <Button
+                                    variant="outlined"
+                                    color="danger"
+                                    startDecorator={<Trash2 />}
+                                    disabled={!isDirty}
+                                    onClick={handleClear}
+                                >Clear Filters</Button>
+                                <Divider />
+                            </div>
+                        </AccordionDetails>
+                    </Accordion>
+                    <div className="flex flex-row justify-between items-center">
+                        <p>結果</p>
+                        <p>{totalCount} 課</p>
+                    </div>
+                    <Divider />
+                    <div className='flex flex-col space-y-6'>
+                        {searchCourses.map((course, index) => (
+                            <div className='flex flex-row' key={index}>
+                                <div className='flex-1 space-y-2'>
+                                    <div className="mb-3 space-y-1">
+                                        <Link href={`/${language}/courses/${course.raw_id}`}>
+                                            <h1 className="font-semibold text-lg text-[#AF7BE4]">{course.department} {course.course}-{course.class} {course.name_zh} - {(course.teacher_zh ?? []).join(',')}</h1>
+                                        </Link>
+                                        <h3 className="text-sm text-gray-800 dark:text-gray-300 mt-0 break-words">{course.name_en}</h3>
+                                    </div>
+                                    <p className='text-sm'>{course.brief}</p>
+                                    <p className='text-sm'>{course.note}</p>
+                                    <p>{course.credits} 學分</p>
+                                    {course.venues ?
+                                        course.venues.map((vn, i) => <p className='text-blue-600 dark:text-blue-400 font-mono'>{normalizeRoomName(vn)} <span className='text-black dark:text-white'>{course.times![i]}</span></p>) :
+                                        <p>No Venues</p>
+                                    }
+                                    <div className='flex flex-row flex-wrap gap-1'>
+                                        {(course.cross_discipline ?? []).map((discipline, index) => (
+                                            <Chip variant="outlined">{discipline}</Chip>
+                                        ))}
+                                    </div>
+                                </div>
+                                {!hasCourse(course) ? <IconButton variant='soft' onClick={() => addCourse(course)}>
+                                    <Plus className="w-4 h-4" />
+                                </IconButton> :
+                                    <IconButton variant='soft' onClick={() => deleteCourse(course)}>
+                                        <Trash className="w-4 h-4" />
+                                    </IconButton>}
+                            </div>
+                        ))}
+                        {searchCourses.length == 0 && (
+                            <div className="flex flex-col items-center space-y-4">
+                                <span className="text-lg font-semibold text-gray-400">{"No Courses Found"}</span>
+                            </div>
+                        )}
+                    </div>
+                    <Stack
+                        direction="row"
+                        justifyContent="center"
+                    >
+                        {currentPage != 1 && <IconButton onClick={() => searchQuery(filters, 0)}>
+                            <ChevronsLeft />
+                        </IconButton>}
+                        {currentPage != 1 && <IconButton onClick={() => searchQuery(filters, headIndex - 30)}>
+                            <ChevronLeft />
+                        </IconButton>}
+                        {renderPagination()}
+                        {currentPage != totalPage && <IconButton onClick={() => searchQuery(filters, headIndex + 30)}>
+                            <ChevronRight />
+                        </IconButton>}
+                        {currentPage != totalPage && <IconButton onClick={() => searchQuery(filters, (totalPage - 1) * 30)}>
+                            <ChevronsRight />
+                        </IconButton>}
+                    </Stack>
+                </DialogContent>
+            </Sheet>
+        </Drawer>
     }
 
     return <div className='w-full'>
@@ -421,210 +600,7 @@ const CdsCoursesForm: FC<{
                     </div>
                 )}
             </div>
-            <Drawer
-                size="lg"
-                variant="plain"
-                open={open}
-                onClose={() => setOpen(false)}
-                anchor="right"
-                slotProps={{
-                    content: {
-                        sx: {
-                            width: 'min(35rem, 100%)',
-                            bgcolor: 'transparent',
-                            p: { md: 3, sm: 0 },
-                            boxShadow: 'none',
-                        },
-                    },
-                }}
-            >
-                <Sheet
-                    sx={{
-                        borderRadius: 'md',
-                        p: 2,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: 2,
-                        height: '100%',
-                        overflow: 'auto',
-                    }}
-                >
-                    <DialogTitle>Courses</DialogTitle>
-                    <ModalClose />
-                    <Divider sx={{ mt: 'auto' }} />
-                    <DialogContent sx={{ gap: 2, scrollBehavior: 'smooth' }} ref={scrollRef}>
-                        <InputControl
-                            control={control}
-                            name="textSearch"
-                            placeholder={'Seach for a course...'}
-                            variant="soft"
-                            size="lg"
-                            sx={{ position: 'sticky', top: 0, zIndex: 10 }}
-                            startDecorator={
-                                loading ? <CircularProgress size="sm" /> : <Search />
-                            }
-                            endDecorator={
-                                <Fragment>
-                                    {filters.textSearch.length > 0 && <IconButton onClick={() => setValue('textSearch', "")}>
-                                        <X className="text-gray-400 p-1" />
-                                    </IconButton>}
-                                    <Divider orientation="vertical" />
-                                    <IconButton onClick={handleFilterPressed} aria-pressed={showFilters ? 'true' : 'false'}>
-                                        <Badge invisible={!isDirty}>
-                                            <Filter className="text-gray-400 p-1" />
-                                        </Badge>
-                                    </IconButton>
-                                </Fragment>
-                            }
-                        />
-                        <Accordion expanded={showFilters}>
-                            <AccordionDetails>
-                                <div className='flex flex-row flex-wrap'>
-                                    <div className='flex flex-col flex-1 gap-4 mb-4'>
-                                        <MultiSelectControl
-                                            control={control}
-                                            name="level"
-                                            options={[
-                                                { value: 1, label: '1xxx' },
-                                                { value: 2, label: '2xxx' },
-                                                { value: 3, label: '3xxx' },
-                                                { value: 4, label: '4xxx' },
-                                                { value: 5, label: '5xxx' },
-                                                { value: 6, label: '6xxx' },
-                                            ]}
-                                            label={"修習年紀"}
-                                        />
-                                        <MultiSelectControl
-                                            control={control}
-                                            name="language"
-                                            options={[
-                                                { value: '英', label: 'English' },
-                                                { value: '中', label: '國語' },
-                                            ]}
-                                            label="授課語言"
-                                        />
-                                        <FormControl>
-                                            <FormLabel>開課院系</FormLabel>
-                                            {/* @ts-ignore */}
-                                            <DepartmentControl control={control} />
-                                        </FormControl>
-                                    </div>
-                                    <Accordion sx={{ flex: 1, minWidth: '200px', marginBottom: '1rem' }} expanded={isMobile ? undefined : true}>
-                                        <AccordionSummary slotProps={{
-                                            button: {
-                                                sx: { padding: '0.5rem' }
-                                            }
-                                        }}>時間</AccordionSummary>
-                                        <AccordionDetails>
-                                            {/* @ts-ignore */}
-                                            <TimeslotSelectorControl control={control} />
-                                        </AccordionDetails>
-                                    </Accordion>
-                                    {/* <Accordion>
-                                        <AccordionSummary>Specialization</AccordionSummary>
-                                        <AccordionDetails>
-                                            <FormControl>
-                                                <FormLabel>{dict.course.refine.specialization}</FormLabel>
-                                                <AutocompleteControl
-                                                    control={control}
-                                                    name="firstSpecialization"
-                                                    placeholder={dict.course.refine.firstSpecialization}
-                                                    loading={load1}
-                                                    options={firstSpecial}
-                                                />
-                                                <AutocompleteControl
-                                                    control={control}
-                                                    name="secondSpecialization"
-                                                    placeholder={dict.course.refine.secondSpecialization}
-                                                    loading={load2}
-                                                    options={secondSpecial}
-                                                />
-
-                                            </FormControl>
-                                            <FormControl>
-                                                <FormLabel>{dict.course.refine.cross_discipline}</FormLabel>
-                                                <AutocompleteControl
-                                                    control={control}
-                                                    name="disciplines"
-                                                    multiple
-                                                    placeholder={dict.course.refine.cross_discipline}
-                                                    loading={load5}
-                                                    options={disciplines}
-                                                />
-                                            </FormControl>
-                                        </AccordionDetails>
-                                    </Accordion> */}
-                                    <Button
-                                        variant="outlined"
-                                        color="danger"
-                                        startDecorator={<Trash2 />}
-                                        disabled={!isDirty}
-                                        onClick={handleClear}
-                                    >Clear Filters</Button>
-                                    <Divider />
-                                </div>
-                            </AccordionDetails>
-                        </Accordion>
-                        <div className="flex flex-row justify-between items-center">
-                            <p>結果</p>
-                            <p>{totalCount} 課</p>
-                        </div>
-                        <Divider />
-                        <div className='flex flex-col space-y-6'>
-                            {searchCourses.map((course, index) => (
-                                <div className='flex flex-row' key={index}>
-                                    <div className='flex-1 space-y-2'>
-                                        <div className="mb-3 space-y-1">
-                                            <h1 className="font-semibold text-lg text-fuchsia-800 dark:text-fuchsia-500">{course.department} {course.course}-{course.class} {course.name_zh} - {(course.teacher_zh ?? []).join(',')}</h1>
-                                            <h3 className="text-sm text-gray-800 dark:text-gray-300 mt-0 break-words">{course.name_en}</h3>
-                                        </div>
-                                        <p className='text-sm'>{course.note}</p>
-                                        <p>{course.credits} 學分</p>
-                                        {course.venues ?
-                                            course.venues.map((vn, i) => <p className='text-blue-600 dark:text-blue-400 font-mono'>{normalizeRoomName(vn)} <span className='text-black dark:text-white'>{course.times![i]}</span></p>) :
-                                            <p>No Venues</p>
-                                        }
-                                        <div className='flex flex-row flex-wrap gap-1'>
-                                            {(course.cross_discipline ?? []).map((discipline, index) => (
-                                                <Chip variant="outlined">{discipline}</Chip>
-                                            ))}
-                                        </div>
-                                    </div>
-                                    {!hasCourse(course) ? <IconButton variant='soft' onClick={() => addCourse(course)}>
-                                        <Plus className="w-4 h-4" />
-                                    </IconButton> :
-                                        <IconButton variant='soft' onClick={() => deleteCourse(course)}>
-                                            <Trash className="w-4 h-4" />
-                                        </IconButton>}
-                                </div>
-                            ))}
-                            {searchCourses.length == 0 && (
-                                <div className="flex flex-col items-center space-y-4">
-                                    <span className="text-lg font-semibold text-gray-400">{"No Courses Found"}</span>
-                                </div>
-                            )}
-                        </div>
-                        <Stack
-                            direction="row"
-                            justifyContent="center"
-                        >
-                            {currentPage != 1 && <IconButton onClick={() => searchQuery(filters, 0)}>
-                                <ChevronsLeft />
-                            </IconButton>}
-                            {currentPage != 1 && <IconButton onClick={() => searchQuery(filters, headIndex - 30)}>
-                                <ChevronLeft />
-                            </IconButton>}
-                            {renderPagination()}
-                            {currentPage != totalPage && <IconButton onClick={() => searchQuery(filters, headIndex + 30)}>
-                                <ChevronRight />
-                            </IconButton>}
-                            {currentPage != totalPage && <IconButton onClick={() => searchQuery(filters, (totalPage - 1) * 30)}>
-                                <ChevronsRight />
-                            </IconButton>}
-                        </Stack>
-                    </DialogContent>
-                </Sheet>
-            </Drawer>
+            {renderDrawer()}
         </div>
     </div>
 }
