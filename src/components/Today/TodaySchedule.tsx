@@ -8,12 +8,13 @@ import { FC } from "react";
 import { useSettings } from '@/hooks/contexts/settings';
 import { AlertDefinition } from '@/config/supabase';
 import useDictionary from '@/dictionaries/useDictionary';
-import { CWBWeather } from '@/types/weather';
 import WeatherIcon from './WeatherIcon';
 import { getLocale } from '@/helpers/dateLocale';
 import { Info } from 'react-feather';
+import {WeatherData} from '@/types/weather';
 
-const TodaySchedule: FC<{ weather: any, alerts: AlertDefinition[] }> = ({ weather, alerts }) => {
+const TodaySchedule: FC<{ weather: WeatherData, alerts: AlertDefinition[] }> = ({ weather, alerts }) => {
+    console.log(weather);
     const { timetableData, allCourseData, deleteCourse } = useUserTimetable();
     const { language } = useSettings();
     const dict = useDictionary();
@@ -44,7 +45,7 @@ const TodaySchedule: FC<{ weather: any, alerts: AlertDefinition[] }> = ({ weathe
                     <p>{scheduleTimeSlots[t.startTime].start}</p>
                     <p>{scheduleTimeSlots[t.endTime].end}</p>
                 </div>
-                <div className="flex flex-col rounded-md p-2 flex-1 text-black/70" style={{background: t.color}}>
+                <div className="flex flex-col rounded-md p-2 flex-1" style={{background: t.color, color: t.textColor}}>
                     <p className="font-semibold">{t.course.name_zh}</p>
                     <p className="text-xs">{t.course.name_en}</p>
                     <Divider/>
@@ -78,7 +79,7 @@ const TodaySchedule: FC<{ weather: any, alerts: AlertDefinition[] }> = ({ weathe
                         {/* WEDNESDAY */}
                         <div className="text-xl font-semibold text-gray-600 dark:text-gray-300">{formatRelative(day, Date.now(), { locale: getLocale(language) })}</div>
                     </div>
-                    <WeatherIcon date={day} weather={weather?.records?.locations[0]?.location[0]?.weatherElement}/>
+                    <WeatherIcon date={day} weather={weather.find(w => w.date == format(day, 'yyyy-MM-dd'))!}/>
                 </div>
                 {renderAlerts(day)}
                 {renderDayTimetable(day)}
