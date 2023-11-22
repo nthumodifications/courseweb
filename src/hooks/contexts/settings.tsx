@@ -19,12 +19,24 @@ const useSettingsProvider = () => {
     const language = useParams().lang as Language;
     const router = useRouter();
     const pathname = usePathname();
-    const [cookies, setCookie, removeCookie] = useCookies(['theme']);
+    const [cookies, setCookie, removeCookie] = useCookies(['theme', 'locale']);
     const [timetableTheme, setTimetableTheme] = useLocalStorage<string>("timetable_theme", "tsinghuarian");
 
     const setLanguage = (newLang: Language) => {
+        //set cookie of 'locale'
+        setCookie("locale", newLang, { path: '/' });
         router.push(`/${newLang}/`+pathname.split('/').slice(2).join('/'));
     };
+
+    //check if cookies 'locale' exists, else set it
+    useEffect(() => {
+        if(typeof window  == "undefined") return ;
+        //check locale from cookie
+        const locale = cookies.locale;
+        if(locale == undefined) {
+            setCookie("locale", language, { path: '/' });
+        }
+    }, [cookies, language]);
 
     useEffect(() => {
         if(typeof window  == "undefined") return ;
