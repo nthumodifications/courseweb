@@ -21,6 +21,7 @@ import {
     Settings,
     Send,
     LogOut,
+    Info,
 } from 'react-feather';
 import { useForm } from 'react-hook-form';
 import InputControl from '@/components/FormComponents/InputControl';
@@ -224,11 +225,13 @@ const CdsCoursesForm: FC<{
 
     const timeConflicts = useMemo(() => hasConflictingTimeslots(selectedCourses as MinimalCourse[]), [selectedCourses]);
     const duplicates = useMemo(() => hasSameCourse(selectedCourses as MinimalCourse[]), [selectedCourses]);
+    const MAX_COURSES = 5;
+    const exceedesMaxCourses = useMemo(() => selectedCourses.length > MAX_COURSES, [selectedCourses]);
     
     const hasErrors = useMemo(() => {
-        return timeConflicts.length > 0 || duplicates.length > 0;
+        return timeConflicts.length > 0 || duplicates.length > 0 || exceedesMaxCourses;
     }
-    , [timeConflicts, duplicates]);
+    , [timeConflicts, duplicates, exceedesMaxCourses]);
 
     const totalCredits = useMemo(() => {
         return selectedCourses.reduce((acc, cur) => acc + (cur.credits || 0), 0);
@@ -328,7 +331,17 @@ const CdsCoursesForm: FC<{
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-sm">
             {showTimetable && <Timetable timetableData={timetableData} />}
             <div className="flex flex-col gap-4 px-4">
-                <Alert color='danger' startDecorator={<AlertTriangle />}>
+                <Alert color='success' startDecorator={<Info />}>
+                    <div className='flex flex-col'>
+                        <h3 className='text-xl font-bold'>調查規則</h3>
+                        <ul className='list-disc list-inside'>
+                            <li>調查結果僅供參考，不代表實際開課情況。</li>
+                            <li>提交時最多能提交 5門課。請把你最想選的課留下來交</li>
+                            <li>繳交后，您的姓名，學號，電郵將提交至系統内，並只會提供系辦人員參考</li>
+                        </ul>
+                    </div>
+                </Alert>
+                <Alert color='warning' startDecorator={<AlertTriangle />}>
                     提供篩選的課程都是上學年 （111-2學期）的課程，除了課號&課名之外，其他資訊可能會有變動。
                 </Alert>
                 <ButtonGroup buttonFlex={1}>
@@ -360,6 +373,9 @@ const CdsCoursesForm: FC<{
                     </div>
                 </div>
                 <Divider />
+                {exceedesMaxCourses && <Alert color='danger' startDecorator={<AlertTriangle />}>
+                    最多只能選 {MAX_COURSES} 門課
+                </Alert>}
                 {selectedCourses.map((course, index) => (
                     <div key={index} className="flex flex-row gap-4 items-center">
                         <div className="w-4 h-4 rounded-full" style={{ backgroundColor: timetableColors[timetableTheme][index % timetableColors[timetableTheme].length] }}></div>

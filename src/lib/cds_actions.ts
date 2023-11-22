@@ -90,6 +90,10 @@ export const submitUserSelections = async (term: string, selections: string[]) =
     const duplicateCourses = hasSameCourse(courses as MinimalCourse[]);
     if(duplicateCourses.length > 0) throw new Error('Duplicate courses detected');
 
+    const MAX_COURSES = 5;
+    const exceededMaxCourses = courses.length > MAX_COURSES;
+    if(exceededMaxCourses) throw new Error('Exceeded max courses');
+
     //save user selections
     const { error: error2 } = await supabase_server
         .from('cds_submissions')
