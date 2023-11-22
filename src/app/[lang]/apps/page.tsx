@@ -1,7 +1,7 @@
 import { apps } from "@/const/apps";
 import { getDictionary } from "@/dictionaries/dictionaries";
 import { LangProps } from "@/types/pages";
-import { IconButton } from "@mui/joy";
+import { Alert, IconButton } from "@mui/joy";
 import Link from "next/link";
 import { Map, MapPin, Star } from "react-feather";
 import FavouriteApp from "./Favorite";
@@ -27,6 +27,12 @@ const AppList = async ({
                         <FavouriteApp appId={app.id}/>
                     </div>
                 </div>))}
+                <Alert color="neutral">
+                    <div className="flex flex-col gap-1">
+                        <h4 className="font-bold text-base">沒有你要的功能？</h4>
+                        <p>快到<Link href="https://github.com/nthumodifications/courseweb/issues/new" className="underline text-indigo-600">這裏</Link>提出你的想法吧</p>
+                    </div>
+                </Alert>
             </div>
         </div>
     );
