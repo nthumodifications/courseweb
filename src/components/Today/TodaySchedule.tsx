@@ -14,7 +14,6 @@ import { Info } from 'react-feather';
 import {WeatherData} from '@/types/weather';
 
 const TodaySchedule: FC<{ weather: WeatherData, alerts: AlertDefinition[] }> = ({ weather, alerts }) => {
-    console.log(weather);
     const { timetableData, allCourseData, deleteCourse } = useUserTimetable();
     const { language } = useSettings();
     const dict = useDictionary();

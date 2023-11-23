@@ -7,12 +7,6 @@ const Layout = async ({ children }: PropsWithChildren) => {
     const session = await getServerSession(authConfig);
 
     if (!session) redirect('/');
-    
-    // allowed-admins
-    const allowedAdmins = ['111060062']
-    const isAdmin = allowedAdmins?.includes(session.user.id);
-
-    if (!isAdmin) redirect('/');
     else return <>{children}</>;
 }
 
