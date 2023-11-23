@@ -34,12 +34,16 @@ export async function getWeatherData() {
       if(element.elementName === 'Wx' && data) {
         return {
           element: element.elementName,
-          value: data!.elementValue[1].value
+          value: data.elementValue[1].value
         }
+      }
+      else if(data) return {
+        element: element.elementName,
+        value: data.elementValue[0].value
       }
       else return {
         element: element.elementName,
-        value: data!.elementValue[0].value
+        value: undefined
       }
     })
     const weatherData = {
