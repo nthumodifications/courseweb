@@ -14,7 +14,7 @@ const AppList = async ({
         <div className="h-full w-full">
             <div className="flex flex-col">
                 <h1 className="text-xl font-bold px-4 py-2">{dict.applist.title}</h1>
-                {apps.map(app => (<div className="flex flex-row items-center space-x-2 py-2 px-4 hover:bg-gray-100 dark:hover:bg-neutral-800">
+                {apps.map(app => (<div key={app.id} className="flex flex-row items-center space-x-2 py-2 px-4 hover:bg-gray-100 dark:hover:bg-neutral-800">
                     <Link href={app.href} className="flex flex-row flex-1 items-center space-x-2">
                         <div className="p-3 rounded-full bg-indigo-100 text-indigo-800 grid place-items-center">
                             <app.Icon size={16}/>
