@@ -57,6 +57,7 @@ export const config = {
     '/today/:path*',
     '/venues/:path*',
     '/issues/:path*',
-    '/cds/:path*'
+    '/cds/:path*',
+    '/apps/:path*'
   ],
 }

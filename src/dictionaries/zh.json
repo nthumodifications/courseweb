@@ -91,6 +91,9 @@
             "text": "時間表可以在設定頁面客制化哦！"
         }
     },
+    "applist": {
+        "title": "功能列表"
+    },
     "dialogs": {
         "DownloadTimetableDialog": {
             "title": "下載你的課表",
