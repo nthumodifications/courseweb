@@ -5,6 +5,8 @@ import { PropsWithChildren } from "react";
 import AdminHeader from "./AdminHeader";
 import NTHULoginButton from "../../cds/NTHULoginButton";
 
+export const runtime = "nodejs";
+
 const Layout = async ({ children }: PropsWithChildren) => {
     const session = await getServerSession(authConfig);
 

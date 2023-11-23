@@ -33,7 +33,7 @@ import { useDebouncedCallback } from 'use-debounce';
 import { normalizeRoomName } from '@/const/venues';
 import { useMediaQuery } from 'usehooks-ts';
 import { useSettings } from '@/hooks/contexts/settings';
-import supabase, { CourseDefinition, CourseJoinWithSyllabus, CourseSyllabusDefinition, CourseSyllabusView } from '@/config/supabase';
+import supabase, { CourseDefinition, CourseSyllabusView, CdsTermDefinition } from '@/config/supabase';
 import { signOut, useSession } from 'next-auth/react';
 import { saveUserSelections, submitUserSelections } from '@/lib/cds_actions';
 import { Department, MinimalCourse } from '@/types/courses';
@@ -52,9 +52,9 @@ type CdsCoursesFormFields = {
 }
 
 const CdsCoursesForm: FC<{
-    term: string;
+    termObj: CdsTermDefinition;
     initialSubmission: { selection: CourseDefinition[] };
-}> = ({ term, initialSubmission }) => {
+}> = ({ termObj, initialSubmission }) => {
     const [selectedCourses, setSelectedCourses] = useState<CourseDefinition[]>(initialSubmission.selection);
     const [open, setOpen] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
@@ -137,7 +137,7 @@ const CdsCoursesForm: FC<{
             let temp = supabase.rpc('search_courses_with_syllabus', {
                 keyword: filters.textSearch,
             }, { count: 'exact' })
-                .eq('semester', '11120')
+                .eq('semester', termObj.ref_sem)
             if (filters.level.length)
                 temp = temp
                     .or(filters.level.map(level => `and(course.gte.${level}000,course.lte.${level}999)`).join(','))
@@ -211,7 +211,7 @@ const CdsCoursesForm: FC<{
     const [isSaving, startSaveTransition] = useTransition();
 
     const handleSaveSelection = async () => {
-        startSaveTransition(() => saveUserSelections(term, selectedCourses.map(course => course.raw_id)));
+        startSaveTransition(() => saveUserSelections(termObj.term, selectedCourses.map(course => course.raw_id)));
     }
     const saveSelectionDebounced = useDebouncedCallback(handleSaveSelection, 2000);
     
@@ -229,7 +229,7 @@ const CdsCoursesForm: FC<{
             </DialogContent>
             <DialogActions>
               <Button variant="solid" color="success" onClick={() => {
-                    startSubmitTransition(() => submitUserSelections(term, selectedCourses.map(course => course.raw_id)));
+                    startSubmitTransition(() => submitUserSelections(termObj.term, selectedCourses.map(course => course.raw_id)));
                     closeModal();
               }}>
                 提交
@@ -482,7 +482,7 @@ const CdsCoursesForm: FC<{
 
     return <div className='w-full'>
         <div className='flex flex-col md:flex-row justify-between mb-4'>
-            <h1 className='font-bold text-3xl mb-3'>選課規劃調查 <Chip variant="outlined" color='primary'>{term} 學期</Chip></h1>
+            <h1 className='font-bold text-3xl mb-3'>選課規劃調查 <Chip variant="outlined" color='primary'>{termObj.term} 學期</Chip></h1>
             <div>
                 <div className='flex flex-row gap-2 justify-end items-center'>
                     {isSaving && <span className='text-gray-400 dark:text-neutral-600 text-sm'>Saving...</span>}

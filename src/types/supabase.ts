@@ -207,6 +207,27 @@ export interface Database {
         }
         Relationships: []
       }
+      cds_terms: {
+        Row: {
+          ends: string
+          ref_sem: string
+          starts: string
+          term: string
+        }
+        Insert: {
+          ends: string
+          ref_sem: string
+          starts: string
+          term: string
+        }
+        Update: {
+          ends?: string
+          ref_sem?: string
+          starts?: string
+          term?: string
+        }
+        Relationships: []
+      }
       course_students: {
         Row: {
           course: string

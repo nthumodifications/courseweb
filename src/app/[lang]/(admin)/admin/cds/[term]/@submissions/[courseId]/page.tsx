@@ -1,10 +1,11 @@
-import { getSubmissionDetails } from "@/lib/cds_actions";
+import {getSubmissionDetails, getCDSTerm} from '@/lib/cds_actions';
 import { getCourse } from "@/lib/course";
 import { Table } from "@mui/joy";
 import DownloadCSV from "./DownloadCSV";
 
-const CourseSubmissions = async ({ params: { courseId } }: { params: { courseId: string }}) => {
-    const submissions = await getSubmissionDetails(decodeURI(courseId));
+const CourseSubmissions = async ({ params: { courseId, term } }: { params: { courseId: string, term: string }}) => {
+    const termObj = await getCDSTerm(term);
+    const submissions = await getSubmissionDetails(decodeURI(courseId), termObj);
     const course = await getCourse(decodeURI(courseId));
 
     return (
