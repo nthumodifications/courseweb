@@ -14,7 +14,8 @@ declare module "next-auth" {
         inschool: boolean,
         name_zh: string,
         name_en: string,
-        email: string
+        email: string,
+        roles: string[]
     }
     interface Session {
         user: {
@@ -22,7 +23,8 @@ declare module "next-auth" {
             inschool: boolean,
             name_zh: string,
             name_en: string,
-            email: string
+            email: string,
+            roles: string[]
         } & DefaultSession["user"]
     }
 }

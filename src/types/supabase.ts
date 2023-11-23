@@ -207,6 +207,62 @@ export interface Database {
         }
         Relationships: []
       }
+      cds_terms: {
+        Row: {
+          ends: string
+          ref_sem: string
+          starts: string
+          term: string
+        }
+        Insert: {
+          ends: string
+          ref_sem: string
+          starts: string
+          term: string
+        }
+        Update: {
+          ends?: string
+          ref_sem?: string
+          starts?: string
+          term?: string
+        }
+        Relationships: []
+      }
+      course_students: {
+        Row: {
+          course: string
+          email: string | null
+          id: number
+          name_en: string | null
+          name_zh: string | null
+          user_id: string
+        }
+        Insert: {
+          course: string
+          email?: string | null
+          id?: number
+          name_en?: string | null
+          name_zh?: string | null
+          user_id: string
+        }
+        Update: {
+          course?: string
+          email?: string | null
+          id?: number
+          name_en?: string | null
+          name_zh?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_students_course_fkey"
+            columns: ["course"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["raw_id"]
+          }
+        ]
+      }
       course_syllabus: {
         Row: {
           brief: string | null
@@ -357,6 +413,21 @@ export interface Database {
           problem?: string
           route?: string
           time?: string
+        }
+        Relationships: []
+      }
+      users: {
+        Row: {
+          roles: string[]
+          user_id: string
+        }
+        Insert: {
+          roles: string[]
+          user_id: string
+        }
+        Update: {
+          roles?: string[]
+          user_id?: string
         }
         Relationships: []
       }

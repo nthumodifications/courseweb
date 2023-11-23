@@ -1,14 +1,15 @@
-import { getCDSCourseSubmissions } from "@/lib/cds_actions";
+import { getCDSCourseSubmissions, getCDSTerm } from "@/lib/cds_actions";
 import { List, ListItem, ListItemButton, ListItemContent } from "@mui/joy";
 import Link from "next/link";
 import { ChevronRight } from "react-feather";
 
 const CDSAdmin = async ({
-    params: { lang }
+    params: { lang, term }
 }: {
-    params: { lang: string }
+    params: { lang: string, term: string }
 }) => {
-    const courses = await getCDSCourseSubmissions('');
+    const termObj = await getCDSTerm(term);
+    const courses = await getCDSCourseSubmissions(termObj);
 
     const getColor = (count: number, capacity: number) => {
         // capacity = 0 is gray
@@ -40,7 +41,7 @@ const CDSAdmin = async ({
         <List>
             {courses.map((course) => (
                 <ListItem key={course.raw_id}>
-                    <Link href={`${course.raw_id}`} passHref>
+                    <Link href={`/${lang}/admin/cds/${term}/${course.raw_id}`} >
                         <ListItemButton>
                             <ListItemContent>
                                 <h2 className="text-xl font-bold text-gray-700 dark:text-neutral-200">{course.department} {course.course}-{course.class} {course.name_zh}</h2>
