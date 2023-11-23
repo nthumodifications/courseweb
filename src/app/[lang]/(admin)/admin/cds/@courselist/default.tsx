@@ -40,7 +40,7 @@ const CDSAdmin = async ({
         <List>
             {courses.map((course) => (
                 <ListItem key={course.raw_id}>
-                    <Link href={`/${lang}/admin/cds/${course.raw_id}`} passHref>
+                    <Link href={`/${lang}/admin/cds/${course.raw_id}`} >
                         <ListItemButton>
                             <ListItemContent>
                                 <h2 className="text-xl font-bold text-gray-700 dark:text-neutral-200">{course.department} {course.course}-{course.class} {course.name_zh}</h2>

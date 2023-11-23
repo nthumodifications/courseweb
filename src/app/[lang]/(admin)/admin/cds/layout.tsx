@@ -19,10 +19,10 @@ const CDSAdmin = async ({children, courselist, submissions}: {
 
     return (
         <div className="flex flex-col gap-4 h-full w-full">
-            <h1 className="text-3xl font-bold py-4 px-3">選課規劃調查 Admin</h1>
-            <div className="w-full h-full grid grid-cols-[2fr_3fr] gap-4">
+            <h1 className="text-3xl font-bold py-4 px-3">選課規劃調查 - 全部回覆</h1>
+            <div className="w-full h-full grid grid-cols-[2fr_3fr] gap-4 divide-x divide-gray-200">
                 <div className='w-full h-full overflow-y-auto'>{courselist}</div>
-                <div className='w-full h-full overflow-y-auto'>{submissions}</div>
+                <div className='w-full h-full overflow-y-auto pl-4'>{submissions}</div>
             </div>
             {children}
         </div>

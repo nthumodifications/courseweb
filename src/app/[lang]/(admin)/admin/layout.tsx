@@ -1,13 +1,20 @@
 import authConfig from "@/app/api/auth/[...nextauth]/authConfig";
 import { getServerSession } from "next-auth";
-import { redirect } from "next/navigation";
+import { signIn } from "next-auth/react";
 import { PropsWithChildren } from "react";
+import AdminHeader from "./AdminHeader";
+import NTHULoginButton from "../../cds/NTHULoginButton";
 
 const Layout = async ({ children }: PropsWithChildren) => {
     const session = await getServerSession(authConfig);
 
-    if (!session) redirect('/');
-    else return <>{children}</>;
+    if (!session) return <div className="grid place-items-center">
+        <NTHULoginButton/>
+    </div>
+    else return <div className="flex flex-col flex-1">
+        <AdminHeader/>
+        {children}
+    </div>;
 }
 
 export default Layout;
