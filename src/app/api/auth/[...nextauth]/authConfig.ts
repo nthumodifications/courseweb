@@ -54,8 +54,8 @@ export const authConfig: AuthOptions = {
     ],
     callbacks: {
         async jwt({ token, account, profile, user }) {
-            const { data, error } = await supabase_server.from("users").select("roles").eq("user_id", process.env.NODE_ENV == 'development'? "b07901001": user.id).limit(1).single();
             if (process.env.NODE_ENV == 'development') {
+                const { data, error } = await supabase_server.from("users").select("roles").eq("user_id", "b07901001").limit(1).single();
                 token = {
                     ...token,
                     id: "b07901001",
@@ -68,6 +68,7 @@ export const authConfig: AuthOptions = {
                 return token;
             }
             if (account) {
+                const { data, error } = await supabase_server.from("users").select("roles").eq("user_id", user.id).limit(1).single();
                 token = {
                     ...token,
                     id: user.id,
