@@ -23,7 +23,7 @@
     "@sentry/nextjs": "^7.77.0",
     "@supabase/supabase-js": "^2.38.4",
     "@types/node": "20.9.2",
-    "@types/react": "18.2.35",
+    "@types/react": "18.2.38",
     "@types/react-dom": "18.2.7",
     "@types/react-transition-group": "^4.4.9",
     "@vercel/analytics": "^1.1.1",
