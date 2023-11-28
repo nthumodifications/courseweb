@@ -3,7 +3,7 @@ import { scheduleTimeSlots } from "@/const/timetable";
 import { CourseTimeslotData } from "@/types/timetable";
 import { MinimalCourse } from '@/types/courses';
 import { getBrightness } from "./colors";
-import {adjustBrightness} from '@/helpers/colors';
+import { adjustLuminance} from '@/helpers/colors';
 
 export const timetableColors: { [theme: string]: string[] } = {
     'harmonyBlossom': [
@@ -162,8 +162,8 @@ export const createTimetableFromCourses = (data: MinimalCourse[], theme = 'tsing
                 //Determine the text color
                 const brightness = getBrightness(color);
                 //From the brightness, using the adjustBrightness function, create a complementary color that is legible
-                const textColor = adjustBrightness(color, brightness > 100 ? -50 : 90);
-                
+                const textColor = adjustLuminance(color, brightness > 186 ? 0.2 : 0.95);
+                console.log(textColor)
 
 
                 //push to scheduleData
