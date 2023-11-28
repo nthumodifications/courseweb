@@ -1,6 +1,5 @@
 import { Analytics } from '@vercel/analytics/react';
 import { SettingsProvider } from '@/hooks/contexts/settings';
-import { Inter } from 'next/font/google'
 import './globals.css'
 
 import Header from '@/components/Header'
@@ -14,11 +13,8 @@ import { LangProps } from '@/types/pages';
 import { CssVarsProvider } from '@mui/joy';
 import NextAuthProvider from '@/components/NextAuthProvider';
 import { Viewport } from 'next'
-import Script from 'next/script';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
 import {UserTimetableProvider} from '@/hooks/useUserTimetable';
-
-const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: {
@@ -85,7 +81,7 @@ export const viewport: Viewport = {
   userScalable: false,
 }
 
-export const runtime = 'edge' 
+export const runtime = 'edge'
 
 export default function RootLayout({
   children,
@@ -102,9 +98,9 @@ export default function RootLayout({
         <SettingsProvider>
           <UserTimetableProvider>
             <ModalProvider>
-              <html lang={params.lang} className={`${theme?.value ?? ''} overflow-x-hidden`}>
+              <html lang={params.lang} className={`${theme?.value ?? ''}`}>
                 <GoogleAnalytics/>
-                <body className={`${inter.className} grid grid-cols-1 grid-rows-[56px_50px_calc(100vh-106px)] md:grid-cols-[12rem_auto] md:grid-rows-[56px_calc(100vh-56px)_12rem] bg-white dark:bg-neutral-900 dark:text-white`}>
+                <body className={`grid grid-cols-1 grid-rows-[56px_50px_calc(100vh-106px)] md:grid-cols-[12rem_auto] md:grid-rows-[56px_calc(100vh-56px)_12rem]`}>
                   <Header />
                   <SideNav />
                   <main className='overflow-y-auto overflow-x-hidden h-full w-full'>
