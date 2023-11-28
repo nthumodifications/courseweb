@@ -14,7 +14,7 @@
     "@ducanh2912/next-pwa": "^9.7.2",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
-    "@formatjs/intl-localematcher": "^0.4.2",
+    "@formatjs/intl-localematcher": "^0.5.2",
     "@fortawesome/fontawesome-svg-core": "^6.4.2",
     "@fortawesome/free-regular-svg-icons": "^6.4.2",
     "@fortawesome/react-fontawesome": "^0.2.0",
@@ -23,7 +23,7 @@
     "@sentry/nextjs": "^7.77.0",
     "@supabase/supabase-js": "^2.38.4",
     "@types/node": "20.9.2",
-    "@types/react": "18.2.35",
+    "@types/react": "18.2.38",
     "@types/react-dom": "18.2.7",
     "@types/react-transition-group": "^4.4.9",
     "@vercel/analytics": "^1.1.1",
@@ -57,7 +57,7 @@
   },
   "devDependencies": {
     "@types/leaflet": "^1.9.8",
-    "@types/negotiator": "^0.6.2",
+    "@types/negotiator": "^0.6.3",
     "supabase": "^1.110.1",
     "webpack": "^5.89.0"
   }
