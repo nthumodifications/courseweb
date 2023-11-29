@@ -1,9 +1,6 @@
 import { TimeSlot } from '@/types/timetable';
 import {forwardRef} from 'react';
-
-const BlankTimeslotBody = () => {
-    return <div className='h-full w-full bg-gray-100 dark:bg-neutral-800 rounded-md'></div>
-}
+import { BlankTimeslotBody } from './BlankTimeslotBody';
 
 const TimeslotHeader = forwardRef<HTMLTableCellElement, TimeSlot & { firstRow: boolean, showSaturday?: boolean }>(
     ({ start, end, time, firstRow, showSaturday = false }, ref) => {

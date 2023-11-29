@@ -44,7 +44,7 @@ const TimetablePage: NextPage = () => {
         <div className="flex flex-col w-full h-full">
             <SemesterSwitcher semester={semester} setSemester={setSemester}/>
             <div className={`grid grid-cols-1 md:grid-rows-1 ${vertical ? '' : 'md:grid-cols-[3fr_2fr]'} px-1 py-4 md:p-4 gap-4 md:gap-2`}>
-                <div className="w-full h-full overflow-hidden">
+                <div className="w-full h-full">
                     <Timetable timetableData={timetableData} vertical={vertical} />
                 </div>
                 <TimetableCourseList vertical={vertical} setVertical={setVertical} />

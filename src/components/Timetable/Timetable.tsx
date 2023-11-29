@@ -5,6 +5,7 @@ import { scheduleTimeSlots } from '@/const/timetable';
 import {CourseTimeslotData, TimeSlot} from '@/types/timetable';
 import {FC, useLayoutEffect, useMemo, useRef, useState} from 'react';
 import TimetableSlotVertical from '@/components/Timetable/TimetableSlotVertical';
+import { BlankTimeslotBody } from './BlankTimeslotBody';
 
 type CourseTimeslotDataWithFraction = CourseTimeslotData & { fraction: number, fractionIndex: number, timeSlots: string[] };
 
@@ -72,7 +73,7 @@ const Timetable: FC<{ timetableData: CourseTimeslotData[], vertical?: boolean }>
     const days = showSaturday ? ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']: ['MON', 'TUE', 'WED', 'THU', 'FRI'];
 
     if(vertical) return (
-      <div className="text-center lg:mb-0 w-full">
+      <div className="text-center lg:mb-0 w-full overflow-x-auto overflow-y-hidden">
         {/* Timetable, Relative overlay */}
         <div className="relative w-full">
           <table className="table-auto w-full">
@@ -82,20 +83,27 @@ const Timetable: FC<{ timetableData: CourseTimeslotData[], vertical?: boolean }>
                 </td>
               {scheduleTimeSlots.map((time, index) => (
                 <td className="min-w-[120px] px-2">
-                  <div className='flex flex-row justify-between items-baseline'>
-                    <span className='text-xs font-bold text-gray-400'>{time.start}</span>
-                    <span className='text-sm font-bold text-gray-400'>{time.time}</span>
-                    <span className='text-xs font-bold text-gray-400'>{time.end}</span>
+                  <div className='flex flex-row justify-between items-baseline  text-gray-400'>
+                    <span className='text-xs'>{time.start}</span>
+                    <span className='text-sm font-bold'>{time.time}</span>
+                    <span className='text-xs'>{time.end}</span>
                   </div>
                 </td>
               ))}
               </tr>
             </thead>
             <tbody>
-              {days.map((dayStr, index) => <tr key={index}>
-                <td className='sticky left-0 z-10 bg-white dark:bg-neutral-900 text-xs font-semibold py-2 border border-gray-300 dark:border-neutral-700 h-20'>{dayStr}</td>
+              {days.map((dayStr, index) => <tr key={index} className='h-0.5'>
+                
+                <td className='sticky left-0 z-10 w-28 p-0.5 h-[inherit]'>
+                  <div className='w-full text-xs font-semibold bg-gray-100 dark:bg-neutral-800 rounded-md h-20 flex flex-col justify-center'>
+                    {dayStr}
+                  </div>
+                </td>
                 {scheduleTimeSlots.map((time, slot) => (
-                  <td key={time.time} className='text-xs font-semibold w-28 py-2 border border-gray-300 dark:border-neutral-700' ref={timetableCell}></td>
+                  <td key={time.time} className='w-28 p-0.5 h-[inherit]' ref={timetableCell}>
+                    <BlankTimeslotBody/>
+                  </td>
                 ))}
               </tr>)}
             </tbody>
@@ -117,7 +125,7 @@ const Timetable: FC<{ timetableData: CourseTimeslotData[], vertical?: boolean }>
     )
 
     return (
-        <div className="text-center lg:mb-0 w-full">
+        <div className="text-center lg:mb-0 w-full overflow-hidden">
         {/* Timetable, Relative overlay */}
         <div className="relative w-full">
           <table className="table-auto w-full">
