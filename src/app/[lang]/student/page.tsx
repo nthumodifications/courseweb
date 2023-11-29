@@ -31,10 +31,10 @@ const StudentIDCard = () => {
                     <h3 className="text-base font-bold">{data.user.id}</h3>
                 </div>
             </div>
-            <div className="flex flex-col">
+            {/* <div className="flex flex-col">
                 <h3 className="text-lg font-bold">電機資訊學院學士班</h3>
                 <h3 className="text-base font-bold">Bachelor Program of Electrical Engineering and Computer Science</h3>
-            </div>
+            </div> */}
         </div>
         <div className="flex flex-col items-center">
             <div className="p-4 bg-white rounded-md">
