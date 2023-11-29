@@ -242,15 +242,6 @@ const CdsCoursesForm: FC<{
         })
     }
 
-    //Handle Finish Submitting, redirect to /cds and refresh
-    const [prevSubmitting, setPrevSubmitting] = useState(false);
-    useEffect(() => {
-        if (prevSubmitting && !isSubmitting) {
-            window.location.reload();
-        }
-        setPrevSubmitting(isSubmitting);
-    }, [isSubmitting]);
-
     const addCourse = async (course: CourseDefinition) => {
         setSelectedCourses([...selectedCourses, course]);
         saveSelectionDebounced();

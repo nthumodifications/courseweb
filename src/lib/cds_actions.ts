@@ -7,6 +7,7 @@ import { hasConflictingTimeslots, hasSameCourse } from '@/helpers/courses';
 import {MinimalCourse, selectMinimalStr} from '@/types/courses';
 import { SubmissionStatus } from '@/types/cds_courses';
 import { CdsTermDefinition } from '@/config/supabase';
+import { revalidatePath } from 'next/cache';
 
 export const getUserCdsSelections = async (term: string) => {
     const session = await getServerSession(authConfig);
@@ -115,6 +116,7 @@ export const submitUserSelections = async (term: string, selections: string[]) =
         });
 
     if(error2) throw error2;
+    revalidatePath('/[lang]/cds', 'page');
 }
 
 export const getSubmissionDetails = async (courseId: string, termObj: CdsTermDefinition) => {
