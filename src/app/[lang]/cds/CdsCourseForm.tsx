@@ -248,7 +248,7 @@ const CdsCoursesForm: FC<{
     }
 
     const deleteCourse = async (course: CourseDefinition) => {
-        setSelectedCourses(selectedCourses.filter(c => c != course));
+        setSelectedCourses(selectedCourses.filter(c => c.raw_id != course.raw_id));
         saveSelectionDebounced();
     }
 
@@ -550,7 +550,7 @@ const CdsCoursesForm: FC<{
                     <div key={index} className="flex flex-row gap-4 items-center">
                         <div className="w-4 h-4 rounded-full" style={{ backgroundColor: timetableColors[timetableTheme][index % timetableColors[timetableTheme].length] }}></div>
                         <div className="flex flex-col flex-1">
-                            <span className="text-sm">{course.name_zh}</span>
+                            <span className="text-sm">{course.department}{course.course}-{course.class} {course.name_zh} - {(course.teacher_zh ?? []).join(',')}</span>
                             <span className="text-xs">{course.name_en}</span>
                             <div className="mt-1">
                                 {course.venues?.map((venue, index) => {
