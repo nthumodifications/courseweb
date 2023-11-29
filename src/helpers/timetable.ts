@@ -125,23 +125,11 @@ export const timetableColors: { [theme: string]: string[] } = {
         '#E4CFFF',
         '#F1CEF4',
         '#F8D9E8'
-    ],
-    'tsinghuarian': [
-        '#845EC2',
-        '#D65DB1',
-        '#FF6F91',
-        '#FF9671',
-        '#FFC75F',
-        '#A8BB5C',
-        '#5CA46E',
-        '#20887A',
-        '#1C6873',
-        '#2F4858'
     ]
 }
 
 
-export const createTimetableFromCourses = (data: MinimalCourse[], theme = 'tsinghuarian') => {
+export const createTimetableFromCourses = (data: MinimalCourse[], theme = 'pastelColors') => {
     const newTimetableData: CourseTimeslotData[] = [];
     data!.forEach(course => {
         //get unique days first

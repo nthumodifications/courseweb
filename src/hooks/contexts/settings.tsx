@@ -10,7 +10,7 @@ import { apps } from "@/const/apps";
 const settingsContext = createContext<ReturnType<typeof useSettingsProvider>>({
     language: "zh",
     darkMode: false,
-    timetableTheme: "tsinghuarian",
+    timetableTheme: "pastelColors",
     pinnedApps: [],
     setLanguage: () => {},
     setDarkMode: () => {},
@@ -23,7 +23,7 @@ const useSettingsProvider = () => {
     const router = useRouter();
     const pathname = usePathname();
     const [cookies, setCookie, removeCookie] = useCookies(['theme', 'locale']);
-    const [timetableTheme, setTimetableTheme] = useLocalStorage<string>("timetable_theme", "tsinghuarian");
+    const [timetableTheme, setTimetableTheme] = useLocalStorage<string>("timetable_theme", "pastelColors");
     const [pinnedApps, setPinnedApps] = useLocalStorage<string[]>("pinned_apps", []);
 
     const setLanguage = (newLang: Language) => {
