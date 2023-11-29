@@ -2,14 +2,12 @@ import supabase_server from "@/config/supabase_server";
 import { NextResponse } from "next/server";
 import iconv from 'iconv-lite';
 import jsdom from 'jsdom';
-import fs from 'fs';
-import https from 'https';
 
 const fetchCourses = async () => {
     const { data, error } = await supabase_server
         .from('courses')
         .select('raw_id')
-        .eq('semester', '11120')
+        .eq('semester', '11210')
         .order('raw_id', { ascending: true })
     if(error) throw error;
     return data;
@@ -17,7 +15,6 @@ const fetchCourses = async () => {
 
 const downloadPDF = async (url: string, c_key: string) => {
     //get url+c_key file as a arrayBuffer
-    console.log(url)
     const file = await fetch(url, {cache: 'no-cache'})
                         .then(res => res.arrayBuffer())
                         .then(arrayBuffer => Buffer.from(arrayBuffer))
@@ -50,14 +47,26 @@ const parseContent = async (html: string, c_key: string) => {
     return {brief, keywords, content};
 }
 
+const getAnonACIX = async () => {
+    const url = 'https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/6/6.2/6.2.6/JH626001.php';
+    //the url should return a 302 redirect to a url with ACIXSTORE as `JH626001.php?ACIXSTORE=xxxx`
+    const ACIXSTORE = await fetch(url, {redirect: 'manual'})
+                            .then(res => res.headers.get('location'))
+                            .then(location => location?.split('=')[1])
+    return ACIXSTORE;
+}
 
 export const GET = async (request: Request) => {
-    // return not imlemented error
-    return { status: 501, body: { error: 'Not implemented' } };
+    const authHeader = request.headers.get('authorization');
+    if (process.env.NODE_ENV == 'production' && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+      return new Response('Unauthorized', {
+        status: 401,
+      });
+    }
     
-    const { searchParams } = new URL(request.url)
-    const ACIXSTORE = searchParams.get('ACIXSTORE');
-    if(ACIXSTORE === null) return NextResponse.json({ error: 'ACIXSTORE not provided' }, { status: 400 });
+    const ACIXSTORE = await getAnonACIX();
+
+    if(ACIXSTORE === null) return NextResponse.json({ error: 'ACIXSTORE not found' }, { status: 400 });
 
     const baseURL = `https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/common/Syllabus/1.php?ACIXSTORE=${ACIXSTORE}&c_key=`;
 
@@ -68,7 +77,7 @@ export const GET = async (request: Request) => {
         return text;
     }
     const courses = await fetchCourses();   
-    for(const course of courses) {
+    await Promise.all(courses.map(async course => {
         const { raw_id } = course;
         const html = await fetchSyllabusHTML(raw_id);
         const {brief, keywords, content} = await parseContent(html, raw_id);
@@ -82,8 +91,7 @@ export const GET = async (request: Request) => {
         });
 
         if(error) throw error;
-
-    }
+    }))
     return NextResponse.json({ message: 'success' }, { status: 200 });
 }
 

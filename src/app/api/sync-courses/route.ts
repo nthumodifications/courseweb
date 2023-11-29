@@ -1,9 +1,8 @@
 import supabase_server from "@/config/supabase_server";
 import { fullWidthToHalfWidth } from "@/helpers/characters";
 import { Database } from "@/types/supabase";
-import { writeFile } from "fs/promises";
 import {decode} from 'html-entities';
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 const baseUrl = `https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/OPENDATA/open_course_data.json`;
 
@@ -29,11 +28,13 @@ type APIResponse = {
     '必選修說明': string
 }[]
 
-export const GET = async() => {
-
-    //TODO: Replace with cron secure https://dev.to/chrisnowicki/how-to-secure-vercel-cron-job-routes-in-nextjs-13-9g8
-    // return not imlemented error
-    return { status: 501, body: { error: 'Not implemented' } };
+export const GET = async (request: NextRequest) => {
+    const authHeader = request.headers.get('authorization');
+    if (process.env.NODE_ENV == 'production' && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+      return new Response('Unauthorized', {
+        status: 401,
+      });
+    }
     
     const fetchCourses = async () => {
         const response = await fetch(baseUrl, { cache: 'no-cache' });
@@ -148,8 +149,8 @@ export const GET = async() => {
         });
     }
 
-    // write to file
-    await writeFile('courses.json', JSON.stringify(normalizedCourses, null, 4));
+    // [DEBUG]: write to file
+    // await writeFile('courses.json', JSON.stringify(normalizedCourses, null, 4));
 
     // update supabase, check if the course with the same raw_id exists, if so, update it, otherwise insert it
     //split array into chunks of 1000
