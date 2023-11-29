@@ -38,6 +38,8 @@ const BusStop = ({ params: { stopId } }: PageProps) => {
         const { data: _data = [], error } = await supabase.from('bus_schedule').select('*').in('route_name', routeCodes);
         if(error) throw error;
         return _data;
+    }, {
+        keepPreviousData: true,
     })
 
     const schedules = useMemo(() => data!.map(mod => {

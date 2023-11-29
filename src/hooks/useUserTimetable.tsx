@@ -40,6 +40,8 @@ const useUserTimetableProvider = (loadCourse = true) => {
         if (error) throw error;
         if (!data) throw new Error('No data');
         return data as unknown as CourseSyllabusView[];
+    }, {
+        keepPreviousData: true,
     });
 
     //migration from old localStorage key "semester_1121"
