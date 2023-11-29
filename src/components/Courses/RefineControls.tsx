@@ -33,33 +33,45 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes>, onClear: ()
         const { data = [], error } = await supabase.from('distinct_first_specialization').select('unique_first_specialization');
         if (error) throw error;
         return data!.map(({ unique_first_specialization }) => unique_first_specialization!);
+    }, {
+        keepPreviousData: true,
     });
     const { data: secondSpecial = [], error: error2, isLoading: load2 } = useSWR('distinct_second_specialization', async () => {
         const { data = [], error } = await supabase.from('distinct_second_specialization').select('unique_second_specialization');
         if (error) throw error;
         return data!.map(({ unique_second_specialization }) => unique_second_specialization!);
+    }, {
+        keepPreviousData: true,
     });
     const { data: classList = [], error: error3, isLoading: load3 } = useSWR('distinct_classes', async () => {
         const { data = [], error } = await supabase.from('distinct_classes').select('class');
         if (error) throw error;
         return data!.map(({ class: className }) => className!);
+    }, {
+        keepPreviousData: true,
     });
     const { data: venues = [], error: error4, isLoading: load4 } = useSWR('venues', async () => {
         const { data = [], error } = await supabase.from('distinct_venues').select('venue');
         if (error) throw error;
         return data!.map(({ venue }) => venue!);
+    }, {
+        keepPreviousData: true,
     });
     
     const { data: disciplines = [], error: error5, isLoading: load5 } = useSWR('disciplines', async () => {
         const { data = [], error } = await supabase.from('distinct_cross_discipline').select('discipline');
         if (error) throw error;
         return data!.map(({ discipline }) => discipline!);
+    }, {
+        keepPreviousData: true,
     });
 
     const { data: semesters = [], error: error6, isLoading: load6 } = useSWR('semesters', async () => {
         const { data = [], error } = await supabase.from('distinct_semesters').select('semester');
         if (error) throw error;
         return data!.map(({ semester }) => semester!);
+    }, {
+        keepPreviousData: true,
     });
 
     const isMobile = useMediaQuery('(max-width: 768px)');
