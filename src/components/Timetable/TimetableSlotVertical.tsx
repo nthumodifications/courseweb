@@ -6,6 +6,8 @@ import { CourseTimeslotData, TimetableDim } from '@/types/timetable';
 import { ModalClose, ModalDialog } from '@mui/joy';
 import { useRouter } from 'next/navigation';
 import {FC} from 'react';
+import { VenueChip } from './VenueChip';
+import { scheduleTimeSlots } from '@/const/timetable';
 
 type TimetableSlotProps = {
     course: CourseTimeslotData, 
@@ -35,12 +37,15 @@ const TimetableSlotVertical: FC<TimetableSlotProps> = ({ course, tableDim, fract
         }}
         >
         <div className='flex flex-col justify-start items-start text-left h-full p-1 select-none'>
-            {language == 'zh' ? 
-            <span className='text-xs line-clamp-2 font-bold'>{course.course.name_zh}</span>:
-            <span className='text-xs line-clamp-2 font-bold'>{course.course.name_en}</span>
-            }
-            <span className='text-[10px]'>{course.venue}</span>
-            {course.course.teacher_zh && <span className='text-[10px]'>{course.course.teacher_zh?.join(',')}</span>}
+            <div className='flex-1 flex flex-col justify-start items-start text-left w-full'>
+                {language == 'zh' ? 
+                    <span className='text-xs md:text-sm line-clamp-2 font-medium'>{course.course.name_zh}</span>:
+                    <span className='text-xs line-clamp-2 font-medium'>{course.course.name_en}</span>
+                }
+                <span className='text-xs line-clamp-2'>{scheduleTimeSlots[course.startTime].start} - {scheduleTimeSlots[course.endTime].end}</span>
+
+            </div>
+            <VenueChip venue={course.venue} color={course.textColor} textColor={course.color} />
         </div>
     </div>
     );
