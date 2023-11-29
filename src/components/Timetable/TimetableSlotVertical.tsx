@@ -42,7 +42,7 @@ const TimetableSlotVertical: FC<TimetableSlotProps> = ({ course, tableDim, fract
                     <span className='text-xs md:text-sm line-clamp-2 font-medium'>{course.course.name_zh}</span>:
                     <span className='text-xs line-clamp-2 font-medium'>{course.course.name_en}</span>
                 }
-                <span className='text-xs line-clamp-2 font-medium'>{scheduleTimeSlots[course.startTime].start} - {scheduleTimeSlots[course.endTime].end}</span>
+                <span className='text-xs line-clamp-2'>{scheduleTimeSlots[course.startTime].start} - {scheduleTimeSlots[course.endTime].end}</span>
 
             </div>
             <VenueChip venue={course.venue} color={course.textColor} textColor={course.color} />
