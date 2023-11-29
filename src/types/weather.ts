@@ -1,23 +1,36 @@
-export type CWBWeather = [
-    WeatherPrediction,
-    WeatherDescription
-]
+export type WeatherAPIResponse = {
+    locations: {
+        datasetDescription: string;
+        locationsName: string;
+        dataid: string;
+        location: {
+            locationName: string;
+            geocode: string;
+            lat: string;
+            lon: string;
+            weatherElement: {
+                elementName: string;
+                description: string;
+                time: {
+                    startTime: string;
+                    endTime: string;
+                    elementValue: {
+                        value: string;
+                        measures: string;
+                    }[];
+                }[];
+            }[];
+        }[];
+    }[];
+};
 
-export interface WeatherPrediction {
-    description: "天氣現象",
-    elementName: "Wx" ,
-    time:{
-        elementValue: {value: string, measures: string}[],
-        startTime: string,
-        endTime: string
-    }[]
-}
-export interface WeatherDescription {
-    description:  "天氣預報綜合描述",
-    elementName: "WeatherDescription",
-    time:{
-        elementValue: {value: string, measures: string}[],
-        startTime: string,
-        endTime: string
-    }[]
-}
+export type WeatherData = {
+    date: string;
+    weatherData: {
+        MinT: string;
+        MaxT: string;
+        PoP12h: string;
+        Wx: string;
+        WeatherDescription: string;
+    };
+}[]

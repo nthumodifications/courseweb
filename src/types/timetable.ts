@@ -24,5 +24,6 @@ export type CourseTimeslotData = {
     dayOfWeek: number,
     startTime: number,
     endTime: number,
-    color: string
+    color: string,
+    textColor: string,
 };

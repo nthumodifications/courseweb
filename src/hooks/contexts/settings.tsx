@@ -1,39 +1,46 @@
-"use client";
+"use client";;
 import { useParams, usePathname, useRouter } from "next/navigation";
-import { FC, PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from "react";
+import { FC, PropsWithChildren, createContext, useContext, useEffect, useMemo } from "react";
 import { useLocalStorage } from 'usehooks-ts';
 import { useCookies } from 'react-cookie';
-import { Language, SettingsType } from "@/types/settings";
-import type { timetableColors } from "@/helpers/timetable";
+import { Language } from "@/types/settings";
+import { RawCourseID } from "@/types/courses";
+import { apps } from "@/const/apps";
 
 const settingsContext = createContext<ReturnType<typeof useSettingsProvider>>({
     language: "zh",
     darkMode: false,
-    courses: [],
     timetableTheme: "tsinghuarian",
-    setSettings: () => {},
-    setCourses: () => {},
+    pinnedApps: [],
     setLanguage: () => {},
     setDarkMode: () => {},
-    setTimetableTheme: () => {}
+    setTimetableTheme: () => {},
+    toggleApp: () => {}
 });
 
 const useSettingsProvider = () => {
     const language = useParams().lang as Language;
     const router = useRouter();
     const pathname = usePathname();
-    const [cookies, setCookie, removeCookie] = useCookies(['theme']);
-    const [courses, setCourses] = useLocalStorage<string[]>("semester_1121", []);
+    const [cookies, setCookie, removeCookie] = useCookies(['theme', 'locale']);
     const [timetableTheme, setTimetableTheme] = useLocalStorage<string>("timetable_theme", "tsinghuarian");
-
-    const setSettings = (settings: SettingsType) => {
-        setCourses(settings.courses);
-    };
+    const [pinnedApps, setPinnedApps] = useLocalStorage<string[]>("pinned_apps", []);
 
     const setLanguage = (newLang: Language) => {
-        console.log(pathname);
+        //set cookie of 'locale'
+        setCookie("locale", newLang, { path: '/' });
         router.push(`/${newLang}/`+pathname.split('/').slice(2).join('/'));
     };
+
+    //check if cookies 'locale' exists, else set it
+    useEffect(() => {
+        if(typeof window  == "undefined") return ;
+        //check locale from cookie
+        const locale = cookies.locale;
+        if(locale == undefined) {
+            setCookie("locale", language, { path: '/' });
+        }
+    }, [cookies, language]);
 
     useEffect(() => {
         if(typeof window  == "undefined") return ;
@@ -61,18 +68,34 @@ const useSettingsProvider = () => {
 
     const darkMode = useMemo(() => cookies.theme == "dark", [cookies]);
 
+    const toggleApp = (app: string) => {
+        if(pinnedApps.includes(app)) {
+            setPinnedApps(pinnedApps.filter(appId => appId != app));
+        }
+        else {
+            setPinnedApps([...pinnedApps, app]);
+        }
+    }
+
+    //cleanup pinned apps, remove apps that are not in the app list
+    useEffect(() => {
+        if(typeof window  == "undefined") return ;
+        setPinnedApps(pinnedApps.filter(appId => apps.some(app => app.id == appId)));
+    }, []);
+    
+
     return {
         language,
         darkMode,
-        courses,
         timetableTheme,
-        setSettings,
-        setCourses,
+        pinnedApps,
         setLanguage,
         setDarkMode,
-        setTimetableTheme
+        setTimetableTheme,
+        toggleApp
     };
 }
+
 
 const useSettings = () => useContext(settingsContext);
 

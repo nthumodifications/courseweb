@@ -84,7 +84,6 @@ const CoursePage: NextPage = () => {
                         })
                         .filter(mod => !!mod) ?? []
                 }
-                console.log('help',Object.assign({}, emptyFilters, params))
                 return Object.assign({}, emptyFilters, params)
             }
             else return emptyFilters;
@@ -201,7 +200,6 @@ const CoursePage: NextPage = () => {
             setTotalCount(count ?? 0)
             if (error) console.error(error);
             else {
-                console.log(courses)
                 setCourses(courses as unknown as CourseSyllabusView[]);
                 setHeadIndex(index);
             }

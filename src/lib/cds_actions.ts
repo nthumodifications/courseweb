@@ -4,8 +4,9 @@ import {redirect} from 'next/navigation';
 import supabase_server from '@/config/supabase_server';
 import authConfig from '@/app/api/auth/[...nextauth]/authConfig';
 import { hasConflictingTimeslots, hasSameCourse } from '@/helpers/courses';
-import { MinimalCourse } from '@/types/courses';
+import {MinimalCourse, selectMinimalStr} from '@/types/courses';
 import { SubmissionStatus } from '@/types/cds_courses';
+import { CdsTermDefinition } from '@/config/supabase';
 
 export const getUserCdsSelections = async (term: string) => {
     const session = await getServerSession(authConfig);
@@ -23,7 +24,7 @@ export const getUserCdsSelections = async (term: string) => {
     const selection = cdsSaves.length > 0 ? cdsSaves[0].selection : [];
 
     //get user selections
-    const { data: preferenceCourses = [], error: error2 } = await supabase_server.from('cds_courses').select('*').in('raw_id', selection);
+    const { data: preferenceCourses = [], error: error2 } = await supabase_server.from('courses').select('*').in('raw_id', selection);
     if(error2) throw error2;
     
     return preferenceCourses ?? [];
@@ -81,7 +82,7 @@ export const submitUserSelections = async (term: string, selections: string[]) =
     if(session == null || !session.user || !session.user.inschool) return redirect('/');
 
     //get course datas
-    const { data: courses, error: error1 } = await supabase_server.from('cds_courses').select('*').in('raw_id', selections);
+    const { data: courses, error: error1 } = await supabase_server.from('courses').select('*').in('raw_id', selections);
     if(error1) throw error1;
 
     const timeConflicts = hasConflictingTimeslots(courses as MinimalCourse[]);
@@ -89,6 +90,17 @@ export const submitUserSelections = async (term: string, selections: string[]) =
     
     const duplicateCourses = hasSameCourse(courses as MinimalCourse[]);
     if(duplicateCourses.length > 0) throw new Error('Duplicate courses detected');
+
+    const MAX_COURSES = 5;
+    const exceededMaxCourses = courses.length > MAX_COURSES;
+    if(exceededMaxCourses) throw new Error('Exceeded max courses');
+
+    //check if term is open
+    const termObj = await getCurrentCdsTerm();
+    const termOpen = new Date(termObj.starts) <= new Date() && new Date(termObj.ends) >= new Date();
+    if(!termOpen) throw new Error('Term is not open');
+    //check if term is same
+    const termSame = termObj.term === term;
 
     //save user selections
     const { error: error2 } = await supabase_server
@@ -103,4 +115,50 @@ export const submitUserSelections = async (term: string, selections: string[]) =
         });
 
     if(error2) throw error2;
+}
+
+export const getSubmissionDetails = async (courseId: string, termObj: CdsTermDefinition) => {
+    const { data, error } = await supabase_server
+        .from('cds_submissions')
+        .select('*')
+        .eq('term', termObj.term)
+        .overlaps('selections', [courseId])
+
+    if (error) {
+        console.log(error);
+        throw error;
+    }
+    return data;
+}
+
+export const getCDSCourseSubmissions = async (termObj: CdsTermDefinition) => {
+    //get all courses where count exists and > 0
+    const { data: courses, error: coursesError } = await supabase_server
+        .from('courses')
+        .select(`${selectMinimalStr}, capacity ,cds_counts!inner(count)`)
+        .eq('semester', termObj.ref_sem)
+        .gt('cds_counts.count', 0)
+
+    if (coursesError) {
+        console.log(coursesError);
+        throw coursesError;
+    }
+
+    return courses;
+}
+
+
+export const getCurrentCdsTerm = async () => {
+    // get last added term
+    const { data, error } = await supabase_server.from('cds_terms').select('*').order('ends', { ascending: false }).limit(1).single();
+    if (error) throw error;
+    if (!data) throw new Error('No term data');
+    return data;
+}
+
+export const getCDSTerm = async (term: string) => {
+    const { data, error } = await supabase_server.from('cds_terms').select('*').eq('term', term).single();
+    if (error) throw error;
+    if (!data) throw new Error('No term data');
+    return data;
 }

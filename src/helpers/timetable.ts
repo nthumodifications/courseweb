@@ -2,6 +2,8 @@ import { CourseDefinition } from "@/config/supabase";
 import { scheduleTimeSlots } from "@/const/timetable";
 import { CourseTimeslotData } from "@/types/timetable";
 import { MinimalCourse } from '@/types/courses';
+import { getBrightness } from "./colors";
+import { adjustLuminance} from '@/helpers/colors';
 
 export const timetableColors: { [theme: string]: string[] } = {
     'harmonyBlossom': [
@@ -113,16 +115,16 @@ export const timetableColors: { [theme: string]: string[] } = {
         "#4F2D4A", // Midnight Plum
     ],
     'pastelColors': [
-        "#ffffed", // lavender
-        "#fff5ee", // seashell
-        "#fff0f5", // snow
-        "#f5f5f5", // white smoke
-        "#f0fff0", // honeydew
-        "#e6ffe6", // pale green
-        "#d3ffd3", // light blue
-        "#c0ffc0", // mint cream
-        "#add8e6", // light blue
-        "#98f5ff", // sky blue
+        '#E8CACA',
+        '#FFE5A8',
+        '#F8FF97',
+        '#BCFFA4',
+        '#A6FFD3',
+        '#B9E3FF',
+        '#C1CCFF',
+        '#E4CFFF',
+        '#F1CEF4',
+        '#F8D9E8'
     ],
     'tsinghuarian': [
         '#845EC2',
@@ -156,6 +158,14 @@ export const createTimetableFromCourses = (data: MinimalCourse[], theme = 'tsing
                 const endTime = Math.max(...times);
                 //get the color, mod the index by the length of the color array so that it loops
                 const color = timetableColors[theme][data!.indexOf(course) % timetableColors[theme].length];
+
+                //Determine the text color
+                const brightness = getBrightness(color);
+                //From the brightness, using the adjustBrightness function, create a complementary color that is legible
+                const textColor = adjustLuminance(color, brightness > 186 ? 0.2 : 0.95);
+                console.log(textColor)
+
+
                 //push to scheduleData
                 newTimetableData.push({
                     course: course,
@@ -163,7 +173,8 @@ export const createTimetableFromCourses = (data: MinimalCourse[], theme = 'tsing
                     dayOfWeek: 'MTWRFS'.indexOf(day),
                     startTime: startTime,
                     endTime: endTime,
-                    color: color
+                    color: color,
+                    textColor: textColor,
                 });
             });
         });

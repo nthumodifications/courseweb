@@ -16,7 +16,20 @@ Currently, everyone can access the website at [NTHUMods](https://nthumods.com). 
 ## Development
 You can clone the repository and start the development server via `npm run dev`
 
-If you wish to participate in this development, feel free to email [chewtzihwee@gmail.com](mailto:chewtzihwee@gmail.com) in the meantime while we figure out the system for contributing.
+If you wish to participate in this development, feel free to email [nthumods@googlegroups.com](mailto:nthumods@googlegroups.com) in the meantime while we figure out the system for contributing.
+
+## Deployment
+We are currently using [Vercel](https://vercel.com) to deploy our website. If you wish to deploy your own version, you can do so by forking this repository and deploying it on Vercel. You will need to set up the following environment variables:
+
+```
+CWA_API_KEY=
+NEXTAUTH_SECRET=
+SUPABASE_SERVICE_ROLE_KEY=
+NTHU_OAUTH_SECRET_KEY=
+```
+
+
+```
 
 ## Contributors
 - [Chew Tzi Hwee](@ImJustChew)

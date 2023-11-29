@@ -1,6 +1,5 @@
 import { Analytics } from '@vercel/analytics/react';
 import { SettingsProvider } from '@/hooks/contexts/settings';
-import { Inter } from 'next/font/google'
 import './globals.css'
 
 import Header from '@/components/Header'
@@ -14,13 +13,14 @@ import { LangProps } from '@/types/pages';
 import { CssVarsProvider } from '@mui/joy';
 import NextAuthProvider from '@/components/NextAuthProvider';
 import { Viewport } from 'next'
-import Script from 'next/script';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
-
-const inter = Inter({ subsets: ['latin'] })
+import {UserTimetableProvider} from '@/hooks/useUserTimetable';
 
 export const metadata: Metadata = {
-  title: 'NTHUMods',
+  title: {
+    template: '%s | NTHUMods',
+    default: 'NTHUMods',
+  },
   description: '國立清華大學課表、校車時間表、資料整合平臺，學生主導、學生自主開發。',
   applicationName: "NTHUMods",
   metadataBase: new URL("https://nthumods.com"),
@@ -81,7 +81,7 @@ export const viewport: Viewport = {
   userScalable: false,
 }
 
-export const runtime = 'edge' 
+export const runtime = 'edge'
 
 export default function RootLayout({
   children,
@@ -96,20 +96,22 @@ export default function RootLayout({
     <CssVarsProvider defaultMode={(theme?.value as any) ?? 'light'}>
       <NextAuthProvider>
         <SettingsProvider>
-          <ModalProvider>
-            <html lang={params.lang} className={`${theme?.value ?? ''} overflow-x-hidden`}>
-              <GoogleAnalytics/>
-              <body className={`${inter.className} grid grid-cols-1 grid-rows-[56px_50px_calc(100vh-106px)] md:grid-cols-[12rem_auto] md:grid-rows-[56px_calc(100vh-56px)_12rem] bg-white dark:bg-neutral-900 dark:text-white`}>
-                <Header />
-                <SideNav />
-                <main className='overflow-y-auto overflow-x-hidden h-full w-full'>
-                  {children}
-                  <Analytics />
-                </main>
-                <Footer />
-              </body>
-            </html>
-          </ModalProvider>
+          <UserTimetableProvider>
+            <ModalProvider>
+              <html lang={params.lang} className={`${theme?.value ?? ''}`}>
+                <GoogleAnalytics/>
+                <body className={`grid grid-cols-1 grid-rows-[56px_50px_calc(100vh-106px)] md:grid-cols-[12rem_auto] md:grid-rows-[56px_calc(100vh-56px)_12rem]`}>
+                  <Header />
+                  <SideNav />
+                  <main className='overflow-y-auto overflow-x-hidden h-full w-full'>
+                    {children}
+                    <Analytics />
+                  </main>
+                  <Footer />
+                </body>
+              </html>
+            </ModalProvider>
+          </UserTimetableProvider>
         </SettingsProvider>
       </NextAuthProvider>
     </CssVarsProvider>

@@ -24,3 +24,7 @@ export const hasSameCourse = (courses: MinimalCourse[]) => {
     });
     return sameCourse.map(course => course.raw_id) as RawCourseID[];
 }
+
+export const getSemesterFromID = (id: string) => {
+    return id.slice(0, 5) as RawCourseID;
+}

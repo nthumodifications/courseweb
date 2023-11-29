@@ -1,13 +1,13 @@
-import { Alert, Divider } from "@mui/joy";
+import { Divider } from "@mui/joy";
 import CdsFormContainer from "./CdsFormContainer";
 import { cookies } from "next/headers";
 import NTHULoginButton from "./NTHULoginButton";
-import { isUserSubmitted } from '@/lib/cds_actions';
+import { getCurrentCdsTerm, isUserSubmitted } from '@/lib/cds_actions';
 import { SubmissionStatus } from "@/types/cds_courses";
 import { getServerSession } from "next-auth";
-import { signOut } from "next-auth/react";
 import LogoutButton from "./LogoutButton";
 import authConfig from "@/app/api/auth/[...nextauth]/authConfig";
+import { format } from "date-fns";
 
 const CourseDemandSurvey = async () => {
     const cookieStore = cookies()
@@ -15,17 +15,18 @@ const CourseDemandSurvey = async () => {
     const darkMode = theme?.value == 'dark';
     const session = await getServerSession(authConfig);
     const user = session?.user;
+    const termObj = await getCurrentCdsTerm();
 
-    //TODO: change according to actual term
-    const term = '112-2';
-    const submitState = await isUserSubmitted(term);
+    const isOpen = new Date(termObj.starts) <= new Date() && new Date(termObj.ends) >= new Date();
 
-    if (submitState == SubmissionStatus.NOT_SUBMITTED) return <CdsFormContainer term={term} />
+    const submitState = await isUserSubmitted(termObj.term);
+
+    if (submitState == SubmissionStatus.NOT_SUBMITTED) return <CdsFormContainer termObj={termObj} />
     else return <div className="flex flex-col items-center justify-center h-full w-full" style={{ background: darkMode ? "" : "radial-gradient(213.94% 85.75% at 93.76% -9.79%, rgb(251, 165, 255) 0%, rgb(255, 255, 255) 29.64%)", backdropFilter: 'blur(4px)' }}>
         <div className="flex flex-col items-center justify-center max-w-xl space-y-2 w-[min(100vw,64rem)] px-2 py-4">
             <div className="text-left space-y-3 py-4 w-full text-gray-700 dark:text-gray-200">
                 <h1 className="text-4xl font-bold">選課規劃調查</h1>
-                <h2 className="text-2xl font-semibold">{term} 學期</h2>
+                <h2 className="text-2xl font-semibold">{termObj.term} 學期</h2>
             </div>
             <Divider />
             <div className="text-left space-y-3 py-4 w-full text-gray-700 dark:text-gray-200">
@@ -40,22 +41,27 @@ const CourseDemandSurvey = async () => {
 
 
                 </p>
-                <p>開放時間：2021/10/18 00:00 ~ 2021/10/24 23:59</p>
+                <p>開放時間：{format(new Date(termObj.starts), 'yyyy/MM/dd HH:mm')} ~ {format(new Date(termObj.ends), 'yyyy/MM/dd HH:mm')}</p>
+                
             </div>
             <Divider />
-            {submitState == SubmissionStatus.NOT_ALLOWED && <div className="text-left space-y-3 py-4 w-full text-gray-700 dark:text-gray-200">
-                <h2 className="text-2xl font-semibold">此賬號無法填寫</h2>
-                <LogoutButton />
+            {!isOpen && <div className="text-left space-y-3 py-4 w-full text-gray-700 dark:text-gray-200">
+                <h2 className="text-2xl font-semibold">尚未開放</h2>
             </div>}
-            {submitState == SubmissionStatus.SUBMITTED && <div className="text-left space-y-3 py-4 w-full text-gray-700 dark:text-gray-200">
-                <h2 className="text-2xl font-semibold">已提交</h2>
-                <p>感謝您的填寫~</p>
-                <br/>
-                <p>目前登入的是 <span className="font-bold">{user?.name_zh} ({user?.id})</span>.</p>
-                <LogoutButton />
-            </div>}
-            {submitState == SubmissionStatus.NOT_LOGGED_IN && <NTHULoginButton />}
-
+            {isOpen && <>
+                {submitState == SubmissionStatus.NOT_ALLOWED && <div className="text-left space-y-3 py-4 w-full text-gray-700 dark:text-gray-200">
+                    <h2 className="text-2xl font-semibold">此賬號無法填寫</h2>
+                    <LogoutButton />
+                </div>}
+                {submitState == SubmissionStatus.SUBMITTED && <div className="text-left space-y-3 py-4 w-full text-gray-700 dark:text-gray-200">
+                    <h2 className="text-2xl font-semibold">已提交</h2>
+                    <p>感謝您的填寫~</p>
+                    <br/>
+                    <p>目前登入的是 <span className="font-bold">{user?.name_zh} ({user?.id})</span>.</p>
+                    <LogoutButton />
+                </div>}
+                {submitState == SubmissionStatus.NOT_LOGGED_IN && <NTHULoginButton />}
+            </>}
         </div>
         {/* <CdsFormContainer /> */}
     </div>

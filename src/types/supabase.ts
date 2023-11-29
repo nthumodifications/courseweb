@@ -63,6 +63,29 @@ export interface Database {
         }
         Relationships: []
       }
+      cds_counts: {
+        Row: {
+          code: string
+          count: number
+        }
+        Insert: {
+          code: string
+          count?: number
+        }
+        Update: {
+          code?: string
+          count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cds_counts_code_fkey"
+            columns: ["code"]
+            isOneToOne: true
+            referencedRelation: "courses"
+            referencedColumns: ["raw_id"]
+          }
+        ]
+      }
       cds_courses: {
         Row: {
           class: string
@@ -183,6 +206,62 @@ export interface Database {
           user_id?: string
         }
         Relationships: []
+      }
+      cds_terms: {
+        Row: {
+          ends: string
+          ref_sem: string
+          starts: string
+          term: string
+        }
+        Insert: {
+          ends: string
+          ref_sem: string
+          starts: string
+          term: string
+        }
+        Update: {
+          ends?: string
+          ref_sem?: string
+          starts?: string
+          term?: string
+        }
+        Relationships: []
+      }
+      course_students: {
+        Row: {
+          course: string
+          email: string | null
+          id: number
+          name_en: string | null
+          name_zh: string | null
+          user_id: string
+        }
+        Insert: {
+          course: string
+          email?: string | null
+          id?: number
+          name_en?: string | null
+          name_zh?: string | null
+          user_id: string
+        }
+        Update: {
+          course?: string
+          email?: string | null
+          id?: number
+          name_en?: string | null
+          name_zh?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_students_course_fkey"
+            columns: ["course"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["raw_id"]
+          }
+        ]
       }
       course_syllabus: {
         Row: {
@@ -337,6 +416,21 @@ export interface Database {
         }
         Relationships: []
       }
+      users: {
+        Row: {
+          roles: string[]
+          user_id: string
+        }
+        Insert: {
+          roles: string[]
+          user_id: string
+        }
+        Update: {
+          roles?: string[]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       distinct_classes: {
@@ -470,12 +564,12 @@ export interface Database {
           teacher_zh: string[]
           first_specialization: string[]
           second_specialization: string[]
-          time_slots: string[]
+          times: string[]
           compulsory_for: string[]
           elective_for: string[]
           tags: string[]
           venues: string[]
-          times: string[]
+          time_slots: string[]
           brief: string
           keywords: string[]
         }[]

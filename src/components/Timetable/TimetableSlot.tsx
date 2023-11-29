@@ -33,7 +33,7 @@ const TimetableSlot: FC<TimetableSlotProps> = ({ course, tableDim, fraction = 1,
             backgroundColor: course.color
         }}
         >
-        <div className='flex flex-col justify-start items-start text-left h-full text-black/70 p-1 select-none'>
+        <div className='flex flex-col justify-start items-start text-left h-full p-1 select-none' style={{ color: course.textColor }}>
             {language == 'zh' ? 
             <span className='text-xs line-clamp-2 font-bold'>{course.course.name_zh}</span>:
             <span className='text-xs line-clamp-2 font-bold'>{course.course.name_en}</span>

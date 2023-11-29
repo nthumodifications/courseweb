@@ -16,7 +16,21 @@
   }
 }
 
-body {
+@font-face {
+  font-family: "CustomFont";
+  src: url("/fonts/Inter-VariableFont_slnt,wght.ttf") format("truetype");
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "CustomFont";
+  src: url("/fonts/SourceHanSansTC-VF.ttf") format("truetype");
+  font-style: normal;
+  unicode-range: U+4E00-9FFF;
+}
+
+html, body {
+  @apply overflow-x-hidden font-[CustomFont] bg-white dark:bg-neutral-900 dark:text-white
 }
 
 @layer utilities {

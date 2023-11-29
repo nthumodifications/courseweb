@@ -1,14 +1,12 @@
 import CdsCoursesForm from './CdsCourseForm';
-import { getServerSession } from 'next-auth';
-import { redirect } from 'next/navigation';
-import supabase_server from '@/config/supabase_server';
 import { getUserCdsSelections } from '@/lib/cds_actions';
+import { CdsTermDefinition } from '@/config/supabase';
 
-const CdsFormContainer = async ({ term }: { term: string }) => {
-    const selectedCourses = await getUserCdsSelections(term);
+const CdsFormContainer = async ({ termObj }: { termObj: CdsTermDefinition }) => {
+    const selectedCourses = await getUserCdsSelections(termObj.term);
 
     return ( <div className='p-4'>
-        <CdsCoursesForm term={term} initialSubmission={{ selection: selectedCourses }}/>
+        <CdsCoursesForm termObj={termObj} initialSubmission={{ selection: selectedCourses }}/>
     </div>)
 }
 

@@ -57,8 +57,6 @@ const BusDelayAlert = () => {
             return;
         }
         else {
-
-            console.log(reports)
             const routes = Array.from(new Set(reports.map(mod => mod.route)));
             const routeNames = routes.map(route => {
                 switch (route) {

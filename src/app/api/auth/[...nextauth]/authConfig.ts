@@ -1,3 +1,4 @@
+import supabase_server from "@/config/supabase_server";
 import { AuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials"
 
@@ -54,24 +55,28 @@ export const authConfig: AuthOptions = {
     callbacks: {
         async jwt({ token, account, profile, user }) {
             if (process.env.NODE_ENV == 'development') {
+                const { data, error } = await supabase_server.from("users").select("roles").eq("user_id", "b07901001").limit(1).single();
                 token = {
                     ...token,
                     id: "b07901001",
                     inschool: true,
                     name_zh: "王小明",
                     name_en: "Wang, Xiao-Ming",
-                    email: "chewtzihwee@gmail.com"
+                    email: "chewtzihwee@gmail.com",
+                    roles: data?.roles ?? []
                 }
                 return token;
             }
             if (account) {
+                const { data, error } = await supabase_server.from("users").select("roles").eq("user_id", user.id).limit(1).single();
                 token = {
                     ...token,
                     id: user.id,
                     inschool: user.inschool,
                     name_zh: user.name_zh,
                     name_en: user.name_en,
-                    email: user.email
+                    email: user.email,
+                    roles: data?.roles ?? []
                 }
             }
             return token
@@ -83,7 +88,9 @@ export const authConfig: AuthOptions = {
                     inschool: true,
                     name_zh: "王小明",
                     name_en: "Wang, Xiao-Ming",
-                    email: "chewtzihwee@gmail.com"
+                    email: "chewtzihwee@gmail.com",
+                    //@ts-ignore
+                    roles: token?.roles ?? []
                 }
                 return session;
             }
@@ -98,7 +105,9 @@ export const authConfig: AuthOptions = {
                 //@ts-ignore
                 inschool: token.inschool,
                 //@ts-ignore
-                email: token.email
+                email: token.email,
+                //@ts-ignore
+                roles: token?.roles ?? []
             }
             return session;
         },

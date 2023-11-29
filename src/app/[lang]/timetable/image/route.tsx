@@ -170,17 +170,20 @@ const TimetableSlot: FC<TimetableSlotProps> = ({ course, tableDim, fraction = 1,
                         fontSize: 12 * size,
                         fontWeight: 700,
                         lineClamp: 2,
+                        color: course.textColor
                     }}
                 >{course.course.name_zh}</span>
                 <span
                     className='text-[10px]'
                     style={{
                         fontSize: 10 * size,
+                        color: course.textColor
                     }}
                 >{course.venue}</span>
                 {course.course.teacher_zh && <span className='text-[10px]'
                     style={{
                         fontSize: 10 * size,
+                        color: course.textColor
                     }}
                 >{course.course.teacher_zh?.join(',')}</span>}
             </div>
@@ -191,7 +194,8 @@ const TimetableSlot: FC<TimetableSlotProps> = ({ course, tableDim, fraction = 1,
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
-    const courses_ids = searchParams.get('semester_1121')?.split(',')!;
+    const semester = searchParams.get('semester');
+    const courses_ids = searchParams.get('semester_'+semester)?.split(',')!;
     const theme = searchParams.get('theme') || 'tsinghuarian';
 
 
