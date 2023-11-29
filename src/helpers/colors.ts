@@ -76,6 +76,5 @@ export function adjustLuminance(color: string, luminance: number) {
     var hsl = rgbToHsl(r, g, b);
     hsl[2] = luminance;
     var rgb = hslToRgb(hsl[0], hsl[1], hsl[2]);
-    console.log(rgb)
     return rgbToHex(rgb[0], rgb[1], rgb[2]);
 }
