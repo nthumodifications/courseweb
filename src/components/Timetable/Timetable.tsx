@@ -122,14 +122,27 @@ const Timetable: FC<{ timetableData: CourseTimeslotData[], vertical?: boolean }>
         <div className="relative w-full">
           <table className="table-auto w-full">
             <thead>
-              <tr>
+              <tr className='h-1'>
                 <td className="w-[40px] min-w-[40px]" ref={headerRow}></td>
-                <td className='text-xs font-semibold w-28 py-2 border border-gray-300 dark:border-neutral-700'>MON</td>
-                <td className='text-xs font-semibold w-28 py-2 border border-gray-300 dark:border-neutral-700'>TUE</td>
-                <td className='text-xs font-semibold w-28 py-2 border border-gray-300 dark:border-neutral-700'>WED</td>
-                <td className='text-xs font-semibold w-28 py-2 border border-gray-300 dark:border-neutral-700'>THU</td>
-                <td className='text-xs font-semibold w-28 py-2 border border-gray-300 dark:border-neutral-700'>FRI</td>
-                {showSaturday && <td className='text-xs font-semibold w-28 py-2 border border-gray-300 dark:border-neutral-700'>SAT</td>}
+                <td className='w-28 p-0.5 h-[inherit]'>
+                  <div className='h-full w-full text-xs font-semibold bg-gray-100 dark:bg-neutral-800 rounded-md py-2'>MON</div>
+                </td>
+                <td className='w-28 p-0.5 h-[inherit]'>
+                  <div className='h-full w-full text-xs font-semibold bg-gray-100 dark:bg-neutral-800 rounded-md py-2'>TUE</div>
+                </td>
+                <td className='w-28 p-0.5 h-[inherit]'>
+                  <div className='h-full w-full text-xs font-semibold bg-gray-100 dark:bg-neutral-800 rounded-md py-2'>WED</div>
+                </td>
+                <td className='w-28 p-0.5 h-[inherit]'>
+                  <div className='h-full w-full text-xs font-semibold bg-gray-100 dark:bg-neutral-800 rounded-md py-2'>THU</div>
+                </td>
+                <td className='w-28 p-0.5 h-[inherit]'>
+                  <div className='h-full w-full text-xs font-semibold bg-gray-100 dark:bg-neutral-800 rounded-md py-2'>FRI</div>
+                </td>
+
+                {showSaturday && <td className='w-28 p-0.5 h-[inherit]'>
+                  <div className='h-full w-full text-xs font-semibold bg-gray-100 dark:bg-neutral-800 rounded-md py-2'>SAT</div>
+                </td>}
               </tr>
             </thead>
             <tbody>
