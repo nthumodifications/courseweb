@@ -22,7 +22,7 @@ import {
     Send,
     LogOut,
     Info,
-} from 'react-feather';
+} from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import InputControl from '@/components/FormComponents/InputControl';
 import MultiSelectControl from '@/components/FormComponents/MultiSelectControl';

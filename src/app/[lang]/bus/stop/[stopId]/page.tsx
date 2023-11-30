@@ -9,7 +9,7 @@ import { format, formatDistanceStrict, getDay } from 'date-fns';
 import { enUS, zhTW } from 'date-fns/locale';
 import Link from 'next/link';
 import { useState, useMemo } from 'react';
-import { ChevronLeft, MapPin } from 'react-feather';
+import { ChevronLeft, MapPin } from 'lucide-react';
 import useSWR from 'swr'
 import RouteIcon from '@/components/BusIcons/RouteIcon';
 import RoutesFilterChips from './RoutesFilterChips';

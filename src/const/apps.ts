@@ -1,4 +1,4 @@
-import {Map, MapPin} from 'react-feather';
+import {Map, MapPin} from 'lucide-react';
 
 export const apps = [
     {

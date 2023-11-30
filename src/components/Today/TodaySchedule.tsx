@@ -10,7 +10,7 @@ import { AlertDefinition } from '@/config/supabase';
 import useDictionary from '@/dictionaries/useDictionary';
 import WeatherIcon from './WeatherIcon';
 import { getLocale } from '@/helpers/dateLocale';
-import { Info } from 'react-feather';
+import { Info } from 'lucide-react';
 import {WeatherData} from '@/types/weather';
 import { apps } from '@/const/apps';
 import Link from 'next/link';

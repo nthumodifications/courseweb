@@ -1,5 +1,5 @@
 'use client';
-import * as I from 'react-feather';
+import * as I from 'lucide-react';
 import Link from "next/link";
 import { FC } from "react";
 import { useParams, usePathname } from 'next/navigation';

@@ -3,7 +3,7 @@ import { getDictionary } from "@/dictionaries/dictionaries";
 import { LangProps } from "@/types/pages";
 import { Alert, IconButton } from "@mui/joy";
 import Link from "next/link";
-import { Map, MapPin, Star } from "react-feather";
+import { Map, MapPin, Star } from "lucide-react";
 import FavouriteApp from "./Favorite";
 
 const AppList = async ({

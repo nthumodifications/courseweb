@@ -1,7 +1,7 @@
 import { Alert } from '@mui/joy';
 import { formatISO, parseISO, sub } from 'date-fns';
 import { useState, useEffect } from 'react';
-import { AlertTriangle } from 'react-feather';
+import { AlertTriangle } from 'lucide-react';
 import useTime from '@/hooks/useTime';
 import { Database } from '@/types/supabase';
 import { RealtimePostgresInsertPayload } from '@supabase/supabase-js';
