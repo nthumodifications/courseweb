@@ -1,4 +1,4 @@
-import {Map, MapPin} from 'lucide-react';
+import { Bus, MapPin} from 'lucide-react';
 
 export const apps = [
     {
@@ -6,13 +6,13 @@ export const apps = [
         title_zh: '地點',
         title_en: 'Venues',
         href: '/venues',
-        Icon: Map,
+        Icon: MapPin,
     },
     {
         id: 'bus',
         title_zh: '公車',
         title_en: 'Bus',
         href: '/bus',
-        Icon: MapPin,
+        Icon: Bus,
     }
 ]
