@@ -1,6 +1,6 @@
 "use client";;
 import { useParams, usePathname, useRouter } from "next/navigation";
-import { FC, PropsWithChildren, createContext, useContext, useEffect, useMemo } from "react";
+import { FC, PropsWithChildren, createContext, useContext, useEffect, useLayoutEffect, useMemo } from "react";
 import { useLocalStorage } from 'usehooks-ts';
 import { useCookies } from 'react-cookie';
 import { Language } from "@/types/settings";
@@ -31,6 +31,14 @@ const useSettingsProvider = () => {
         setCookie("locale", newLang, { path: '/' });
         router.push(`/${newLang}/`+pathname.split('/').slice(2).join('/'));
     };
+
+    //migrate from old timetable theme to new one
+    useLayoutEffect(() => {
+        if(typeof window  == "undefined") return ;
+        if(timetableTheme == "tsinghuarian") {
+            setTimetableTheme("pastelColors");
+        }
+    }, [timetableTheme]);
 
     //check if cookies 'locale' exists, else set it
     useEffect(() => {
