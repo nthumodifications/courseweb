@@ -20,7 +20,7 @@ const AppList = async ({
                             <app.Icon size={16}/>
                         </div>
                         <div className="flex flex-col gap-1 flex-1">
-                            <h2 className="text-base font-medium text-gray-600">{lang == 'zh' ? app.title_zh: app.title_en}</h2>
+                            <h2 className="text-base font-medium text-gray-600 dark:text-neutral-400">{lang == 'zh' ? app.title_zh: app.title_en}</h2>
                         </div>
                     </Link>
                     <div className="items-center px-3">

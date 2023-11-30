@@ -10,7 +10,7 @@ const FavouriteApp = ({ appId }: { appId: string }) => {
     const isPinned = pinnedApps.includes(appId);
 
     return  <IconButton onClick={() => toggleApp(appId)}>
-        <Star className={isPinned? 'text-yellow-500':'text-gray-700'}/>
+        <Star className={isPinned? 'text-yellow-500':'text-gray-700 dark:text-neutral-400'}/>
     </IconButton>
 }
 
