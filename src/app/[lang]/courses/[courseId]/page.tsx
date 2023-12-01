@@ -110,7 +110,7 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                             </>}</p>
                         </div>
                         {course?.prerequisites && <div className="">
-                            <h3 className="font-semibold text-xl mb-2" id="prerequesites">儅修</h3>
+                            <h3 className="font-semibold text-xl mb-2" id="prerequesites">擋修</h3>
                             <div dangerouslySetInnerHTML={{ __html: course.prerequisites }} />
                         </div>}
                         <div className="">
@@ -201,13 +201,13 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                     <div className="flex flex-col">
                         {/* <a href="#brief" className="text-sm">簡介</a>
                         <a href="#description" className="text-sm">課程大綱</a>
-                        {course?.prerequisites && <a href="#prerequesites" className="text-sm">儅修</a>}
+                        {course?.prerequisites && <a href="#prerequesites" className="text-sm">擋修</a>}
                         <a href="#timetable" className="text-sm">時間表</a>
                         <a href="#ptt" className="text-sm">PTT心得</a>
                         <a href="#other" className="text-sm">相同課號資料</a> */}
                         <TOCNavItem href="#brief">簡介</TOCNavItem>
                         <TOCNavItem href="#description">課程大綱</TOCNavItem>
-                        {course?.prerequisites && <TOCNavItem href="#prerequesites">儅修</TOCNavItem>}
+                        {course?.prerequisites && <TOCNavItem href="#prerequesites">擋修</TOCNavItem>}
                         <TOCNavItem href="#timetable">時間表</TOCNavItem>
                         {reviews.length > 0 && <TOCNavItem href="#ptt">PTT心得</TOCNavItem>}
                         <TOCNavItem href="#other">相同課號資料</TOCNavItem>

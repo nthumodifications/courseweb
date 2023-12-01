@@ -26,7 +26,7 @@ const CourseListItem: FC<{ course: CourseSyllabusView }> = ({ course }) => {
                         placement='bottom-start'
                         title={<p dangerouslySetInnerHTML={{ __html: course.prerequisites}}></p>}
                     >
-                        <p className='text-sm underline text-orange-600 select-none'>有儅修</p>
+                        <p className='text-sm underline text-orange-600 select-none'>有擋修</p>
                     </Tooltip>}
                 </div>
             </div>
