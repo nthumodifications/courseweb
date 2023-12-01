@@ -507,7 +507,7 @@ const CdsCoursesForm: FC<{
                         <ul className='list-disc list-inside'>
                             <li>調查結果僅供參考，不代表實際開課情況。</li>
                             <li>提交時最多能提交 5門課。請把你最想選的課留下來交</li>
-                            <li>繳交后，您的姓名，學號，電郵將提交至系統内，並只會提供系辦人員參考</li>
+                            <li>繳交後，您的姓名，學號，電郵將提交至系統内，並只會提供系辦人員參考</li>
                         </ul>
                     </div>
                 </Alert>
