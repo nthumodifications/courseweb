@@ -9,7 +9,7 @@ import { useSettings } from '@/hooks/contexts/settings';
 import { Button, Checkbox, Chip, Divider, LinearProgress } from '@mui/joy';
 import { format, add, formatDistanceStrict } from 'date-fns';
 import { useEffect, useState, useMemo } from 'react';
-import { ChevronLeft, MapPin } from 'react-feather';
+import { ChevronLeft, MapPin } from 'lucide-react';
 import useSWR from 'swr';
 import NandaLineIcon from '@/components/BusIcons/NandaLineIcon';
 import RouteIcon from '@/components/BusIcons/RouteIcon';

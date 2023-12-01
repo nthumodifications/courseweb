@@ -6,9 +6,9 @@ import { Suspense } from 'react';
 import {MinimalCourse} from '@/types/courses';
 import {ResolvingMetadata} from 'next';
 import { lastSemester } from '@/const/semester';
-import { ArrowLeft } from 'react-feather';
 import { Button } from '@mui/joy';
 import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 
 type Props = {
     params: {

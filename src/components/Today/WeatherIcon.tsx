@@ -1,7 +1,7 @@
 import { WeatherData } from '@/types/weather';
 import {Badge, Tooltip} from '@mui/joy';
 import {FC} from 'react';
-import { Umbrella } from 'react-feather';
+import { Umbrella } from 'lucide-react';
 
 interface WeatherIconProps { date: Date, weather: WeatherData[number] }
 

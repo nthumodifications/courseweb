@@ -1,11 +1,9 @@
 'use client' // Error components must be Client Components
 import * as Sentry from "@sentry/nextjs";
-
 import { Alert, Box, Button, Typography } from '@mui/joy'
 import { useEffect } from 'react'
-import { AlertOctagon } from "react-feather";
 import Link from "next/link";
- 
+import { AlertOctagon } from 'lucide-react';
 export default function Error({
   error,
   reset,

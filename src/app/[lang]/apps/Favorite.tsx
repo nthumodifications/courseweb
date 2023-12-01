@@ -2,7 +2,7 @@
 
 import { useSettings } from "@/hooks/contexts/settings";
 import { IconButton } from "@mui/joy";
-import { Star } from "react-feather";
+import { Star } from "lucide-react";
 
 const FavouriteApp = ({ appId }: { appId: string }) => {
     const { pinnedApps, toggleApp } = useSettings();

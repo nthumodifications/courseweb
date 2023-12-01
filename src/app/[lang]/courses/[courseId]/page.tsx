@@ -5,7 +5,7 @@ import { LangProps } from "@/types/pages";
 import {Accordion, AccordionDetails, AccordionGroup, AccordionSummary, Alert, Chip, Divider, Button} from '@mui/joy';
 import { format } from "date-fns";
 import { ResolvingMetadata } from "next";
-import {AlertTriangle, DownloadCloud, Minus, Plus} from 'react-feather';
+import {AlertTriangle, DownloadCloud, Minus, Plus} from 'lucide-react';
 import { redirect } from 'next/navigation'
 import CourseTagList from "@/components/Courses/CourseTagsList";
 import {useSettings} from '@/hooks/contexts/settings';
