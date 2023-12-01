@@ -18,13 +18,13 @@
 
 @font-face {
   font-family: "CustomFont";
-  src: url("/fonts/Inter-VariableFont_slnt,wght.ttf") format("truetype");
+  src: url("/fonts/InterVariable.woff2") format("woff2");
   font-style: normal;
 }
 
 @font-face {
   font-family: "CustomFont";
-  src: url("/fonts/SourceHanSansTC-VF.ttf") format("truetype");
+  src: url("/fonts/SourceHanSansTW-VF.otf") format("opentype"), url("/fonts/SourceHanSansTW-VF.ttf") format("truetype");
   font-style: normal;
   unicode-range: U+4E00-9FFF;
 }
