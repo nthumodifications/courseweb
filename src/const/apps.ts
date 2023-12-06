@@ -30,6 +30,7 @@ export const apps = [
         href: '/ais-redirect/JH/8/R/6.3/JH8R63002.php',
         Icon: Bus,
         target: '_blank',
+        ais: true,
     },
     {
         id: 'reach',
@@ -38,6 +39,7 @@ export const apps = [
         href: '/ais-redirect/SSO_LINK/campusnotice.php',
         Icon: AlertOctagon,
         target: '_blank',
+        ais: true,
     },
     {
         id: 'park',
@@ -46,6 +48,7 @@ export const apps = [
         href: '/ais-redirect/SSO_LINK/park.php',
         Icon: Car,
         target: '_blank',
+        ais: true,
     },
     {
         id: 'card',
@@ -54,6 +57,7 @@ export const apps = [
         href: '/ais-redirect/SSO_LINK/card.php',
         Icon: CreditCard,
         target: '_blank',
+        ais: true,
     },
     {
         id: 'nthuclub',
@@ -62,6 +66,7 @@ export const apps = [
         href: '/ais-redirect/SSO_LINK/nthuclub.php',
         Icon: Club,
         target: '_blank',
+        ais: true,
     },
     {
         id: 'netsys',
@@ -70,5 +75,6 @@ export const apps = [
         href: '/ais-redirect/netsys.php',
         Icon: Network,
         target: '_blank',
+        ais: true,
     }
 ]

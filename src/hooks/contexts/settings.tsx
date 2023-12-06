@@ -95,6 +95,7 @@ const useSettingsProvider = () => {
     //Headless AIS
     const setAISCredentials = (username?: string, password?: string) => {
         if(!username || !password) {
+            removeCookie("ACIXSTORE", { path: '/' });
             setHeadlessAIS({
                 enabled: false
             });
@@ -136,7 +137,7 @@ const useSettingsProvider = () => {
                     ACIXSTORE: undefined
                 });
                 //remove cookie
-                removeCookie("ACIXSTORE");
+                removeCookie("ACIXSTORE", { path: '/'});
             }
         })
     }
