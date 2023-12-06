@@ -5,17 +5,23 @@ import { Alert, IconButton } from "@mui/joy";
 import Link from "next/link";
 import { Map, MapPin, Star } from "lucide-react";
 import FavouriteApp from "./Favorite";
+import { cookies } from "next/headers";
+
+export const dynamic = 'force-dynamic'
 
 const AppList = async ({
     params: { lang }
 }: LangProps) => {
     const dict = await getDictionary(lang);
+    const cookie = await cookies();
+    const ACIXSTORE = cookie.get('ACIXSTORE')?.value || undefined;
+
     return (
         <div className="h-full w-full">
             <div className="flex flex-col">
                 <h1 className="text-xl font-bold px-4 py-2">{dict.applist.title}</h1>
-                {apps.map(app => (<div key={app.id} className="flex flex-row items-center space-x-2 py-2 px-4 hover:bg-gray-100 dark:hover:bg-neutral-800">
-                    <Link href={app.href} className="flex flex-row flex-1 items-center space-x-2">
+                {apps.filter(m => m.ais ? !!ACIXSTORE: true ).map(app => (<div key={app.id} className="flex flex-row items-center space-x-2 py-2 px-4 hover:bg-gray-100 dark:hover:bg-neutral-800">
+                    <Link href={app.href} className="flex flex-row flex-1 items-center space-x-2" target={app.target}>
                         <div className="p-3 rounded-full bg-indigo-100 text-indigo-800 grid place-items-center">
                             <app.Icon size={16}/>
                         </div>
