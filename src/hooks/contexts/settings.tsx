@@ -28,7 +28,7 @@ const useSettingsProvider = () => {
     const language = useParams().lang as Language;
     const router = useRouter();
     const pathname = usePathname();
-    const [cookies, setCookie, removeCookie] = useCookies(['theme', 'locale']);
+    const [cookies, setCookie, removeCookie] = useCookies(['theme', 'locale', 'ACIXSTORE']);
     const [timetableTheme, setTimetableTheme] = useLocalStorage<string>("timetable_theme", "pastelColors");
     const [headlessAIS, setHeadlessAIS] = useLocalStorage<HeadlessAISStorage>("headless_ais", { enabled: false });
     const [pinnedApps, setPinnedApps] = useLocalStorage<string[]>("pinned_apps", []);
@@ -128,11 +128,15 @@ const useSettingsProvider = () => {
                     ACIXSTORE: res.body.ACIXSTORE,
                     lastUpdated: Date.now()
                 });
+                //set cookie
+                setCookie("ACIXSTORE", res.body.ACIXSTORE, { path: '/', expires: new Date(Date.now() + 15 * 60 * 1000) });
             } else {
                 setHeadlessAIS({
                     ...headlessAIS,
                     ACIXSTORE: undefined
                 });
+                //remove cookie
+                removeCookie("ACIXSTORE");
             }
         })
     }

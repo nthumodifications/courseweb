@@ -109,7 +109,7 @@ export const POST = async (req: NextRequest) => {
                 "mode": "cors",
                 "credentials": "include"
             });
-            await fetch(`https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/top.php?account=${studentid}&ACIXSTORE==${ACIXSTORE}`, {
+            await fetch(`https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/top.php?account=${studentid}&ACIXSTORE=${ACIXSTORE}`, {
                 "headers": {
                     "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
                     "accept-language": "en-US,en;q=0.9",
@@ -165,6 +165,25 @@ export const POST = async (req: NextRequest) => {
                 "mode": "cors",
                 "credentials": "include"
               });
+            await fetch(`https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/time.php?account=${studentid}&ACIXSTORE=${ACIXSTORE}`, {
+                "headers": {
+                  "accept": "*/*",
+                  "accept-language": "en-US,en;q=0.9",
+                  "sec-ch-ua": "\"Microsoft Edge\";v=\"119\", \"Chromium\";v=\"119\", \"Not?A_Brand\";v=\"24\"",
+                  "sec-ch-ua-mobile": "?0",
+                  "sec-ch-ua-platform": "\"Windows\"",
+                  "sec-fetch-dest": "empty",
+                  "sec-fetch-mode": "cors",
+                  "sec-fetch-site": "same-origin",
+                  "x-requested-with": "XMLHttpRequest"
+                },
+                "referrer": `https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/top.php?account=${studentid}&ACIXSTORE=${ACIXSTORE}`,
+                "referrerPolicy": "strict-origin-when-cross-origin",
+                "body": null,
+                "method": "GET",
+                "mode": "cors",
+                "credentials": "include"
+            });
             return ACIXSTORE;
         }
     }
