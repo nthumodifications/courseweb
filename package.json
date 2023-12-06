@@ -19,6 +19,7 @@
     "@fortawesome/free-regular-svg-icons": "^6.4.2",
     "@fortawesome/react-fontawesome": "^0.2.0",
     "@google-cloud/vision": "^4.0.2",
+    "@img/sharp-linux-arm64": "^0.33.0",
     "@img/sharp-linux-x64": "^0.33.0",
     "@mui/joy": "^5.0.0-beta.12",
     "@mui/material": "^5.14.14",
