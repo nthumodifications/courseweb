@@ -1,4 +1,4 @@
-import { AlertOctagon, Bus, Car, Club, CreditCard, MapPin, Network} from 'lucide-react';
+import { AlertOctagon, Bus, Car, Clipboard, Club, CreditCard, MapPin, Network, WalletCards} from 'lucide-react';
 
 export const apps = [
     {
@@ -15,6 +15,14 @@ export const apps = [
         href: '/bus',
         Icon: Bus,
     },
+    {
+        id: 'bus',
+        title_zh: '學生證',
+        title_en: 'Student Card',
+        href: '/student',
+        Icon: WalletCards,
+        auth: true,
+    },
     // {
     //     id: 'working_hours',
     //     title_zh: '工讀',
@@ -28,7 +36,7 @@ export const apps = [
         title_zh: '成績查詢',
         title_en: 'Grade Announcement',
         href: '/ais-redirect/JH/8/R/6.3/JH8R63002.php',
-        Icon: Bus,
+        Icon: Clipboard,
         target: '_blank',
         ais: true,
     },
@@ -53,7 +61,7 @@ export const apps = [
     {
         id: 'card',
         title_zh: '校園電子票證掛失/補發/密碼變更系統',
-        title_en: 'Student ID System',
+        title_en: 'Student ID Management',
         href: '/ais-redirect/SSO_LINK/card.php',
         Icon: CreditCard,
         target: '_blank',
