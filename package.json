@@ -36,6 +36,7 @@
     "iconv-lite": "^0.6.3",
     "ics": "^3.5.0",
     "jsdom": "^22.1.0",
+    "jsonwebtoken": "^9.0.2",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.294.0",
     "negotiator": "^0.6.3",
@@ -62,6 +63,7 @@
   },
   "devDependencies": {
     "@types/jsdom": "^21.1.5",
+    "@types/jsonwebtoken": "^9.0.5",
     "@types/leaflet": "^1.9.8",
     "@types/negotiator": "^0.6.3",
     "supabase": "^1.115.4",
