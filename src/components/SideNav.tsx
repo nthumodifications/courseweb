@@ -1,5 +1,5 @@
 'use client';
-import * as I from 'react-feather';
+import * as I from 'lucide-react';
 import Link from "next/link";
 import { FC } from "react";
 import { useParams, usePathname } from 'next/navigation';
@@ -21,7 +21,7 @@ const SideNav:FC = () => {
         {
             title: dict.navigation.today,
             href: `/${language}/today`,
-            icon: <I.Clock strokeWidth="2"/>,
+            icon: <I.LayoutList strokeWidth="2"/>,
             color: '#7EC96D'
         },
         {
@@ -39,13 +39,13 @@ const SideNav:FC = () => {
         {
             title: dict.navigation.bus,
             href: `/${language}/bus`,
-            icon: <I.Navigation strokeWidth="2"/>,
+            icon: <I.Bus strokeWidth="2"/>,
             color: '#EB8751'
         },
         {
             title: dict.applist.title,
             href: `/${language}/apps`,
-            icon: <I.Folder strokeWidth="2"/>,
+            icon: <I.LayoutGrid strokeWidth="2"/>,
             color: '#AEA3C9'
         },
         {

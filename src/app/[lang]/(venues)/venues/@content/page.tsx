@@ -7,7 +7,7 @@ const Placeholder = async ({
     }
 }: LangProps) => {
     const dict = await getDictionary(lang)
-    return <div className="h-full max-h-screen min-h-[500px] w-full grid place-content-center">
+    return <div className="hidden h-full max-h-screen min-h-[500px] w-full md:grid place-content-center">
         <h1 className="text-xl font-semibold text-gray-400">{dict.venues.placeholder}</h1>
     </div>
 }

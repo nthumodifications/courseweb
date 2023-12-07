@@ -3,7 +3,7 @@ import { CourseDefinition } from '@/config/supabase';
 import useDictionary from '@/dictionaries/useDictionary';
 import { getGECType } from '@/helpers/courses';
 import { DetailedHTMLProps, FC, HTMLAttributes, PropsWithChildren } from 'react';
-import { Users } from 'react-feather';
+import { Users } from 'lucide-react';
 
 const HighlightItem: FC<PropsWithChildren<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>>> = ({
     children,

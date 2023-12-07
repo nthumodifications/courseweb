@@ -1,6 +1,6 @@
 import {Button, Alert} from '@mui/joy';
 import {useState, useEffect} from 'react';
-import {Check, X} from 'react-feather';
+import {Check, X} from 'lucide-react';
 import {useModal} from '@/hooks/contexts/useModal';
 import BusDelayReportDialog from './BusDelayReportDialog';
 

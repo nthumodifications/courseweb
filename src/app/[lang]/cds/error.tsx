@@ -3,7 +3,7 @@ import * as Sentry from "@sentry/nextjs";
 
 import { Alert, Box, Button, Typography } from '@mui/joy'
 import { useEffect } from 'react'
-import { AlertOctagon } from "react-feather";
+import { AlertOctagon } from "lucide-react";
 import Link from "next/link";
  
 export default function Error({

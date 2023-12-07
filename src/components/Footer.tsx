@@ -1,5 +1,5 @@
 import { Chip, IconButton } from "@mui/joy";
-import { GitHub, Mail } from "react-feather";
+import { Github, Mail } from "lucide-react";
 import FullLogo from "./Branding/FullLogo";
 
 const Footer = () => {
@@ -14,7 +14,7 @@ const Footer = () => {
                 </div>
                 {/* Github */}
                 <IconButton component="a" href="https://github.com/nthumodifications/courseweb">
-                    <GitHub/>
+                    <Github/>
                 </IconButton>
                 <IconButton component="a" href="mailto:chewtzihwee@gmail.com" target='_blank'>
                     <Mail/>

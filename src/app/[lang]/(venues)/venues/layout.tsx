@@ -12,7 +12,7 @@ export const metadata = ({
 })
 
 const LocationLayout: FC<LocationLayoutProps> = async ({ content, sidebar, children, ...anything }) => {
-    return <div className="h-full grid grid-cols-1 md:grid-cols-[2fr_3fr] overflow-hidden">
+    return <div className="h-full grid grid-cols-1 md:grid-cols-[500px_auto] overflow-hidden">
         {sidebar}
         <div className='h-full overflow-y-auto overflow-x-hidden'>
         <Fade>

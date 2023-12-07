@@ -1,7 +1,8 @@
 'use client';
 import {SubmissionDefinition} from '@/config/supabase';
 import { Button } from '@mui/joy';
-import { Download } from 'react-feather';
+import { Download } from 'lucide-react';
+
 const DownloadCSV = ({ submissions, filename }: { submissions: SubmissionDefinition[], filename: string }) => {
     return <Button variant="outlined" color="primary" startDecorator={<Download/>} onClick={() => {
         const csv = submissions.map((submission) => {

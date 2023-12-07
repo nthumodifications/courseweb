@@ -1,7 +1,7 @@
 import { getCDSCourseSubmissions, getCDSTerm } from "@/lib/cds_actions";
 import { List, ListItem, ListItemButton, ListItemContent } from "@mui/joy";
+import { ChevronRight } from "lucide-react";
 import Link from "next/link";
-import { ChevronRight } from "react-feather";
 
 const CDSAdmin = async ({
     params: { lang, term }

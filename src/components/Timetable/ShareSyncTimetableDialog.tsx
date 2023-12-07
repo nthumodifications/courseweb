@@ -7,7 +7,7 @@ import {
     ModalClose,
     ModalDialog,
 } from '@mui/joy';
-import { Calendar, Mail, Share } from 'react-feather';
+import { Calendar, Mail, Share } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import useDictionary from '@/dictionaries/useDictionary';
 

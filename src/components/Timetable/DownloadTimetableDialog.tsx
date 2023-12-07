@@ -1,6 +1,6 @@
 import useDictionary from '@/dictionaries/useDictionary';
 import {Button, DialogContent, DialogTitle, ModalClose, ModalDialog} from '@mui/joy';
-import {Download, Image} from 'react-feather';
+import {Download, Image} from 'lucide-react';
 
 const DownloadTimetableDialog = ({ onClose, icsfileLink, imageLink }: { onClose: () => void, icsfileLink: string, imageLink: string }) => {
     const dict = useDictionary();

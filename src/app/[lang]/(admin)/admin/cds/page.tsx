@@ -1,8 +1,8 @@
 import supabase_server from "@/config/supabase_server"
 import { LangProps } from "@/types/pages";
 import { Button, Table } from "@mui/joy"
+import { ExternalLink } from "lucide-react";
 import Link from "next/link";
-import { ExternalLink, Link as LinkIcon } from "react-feather";
 
 export const runtime = "nodejs";
 

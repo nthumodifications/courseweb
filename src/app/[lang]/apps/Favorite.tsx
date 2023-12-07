@@ -2,7 +2,7 @@
 
 import { useSettings } from "@/hooks/contexts/settings";
 import { IconButton } from "@mui/joy";
-import { Star } from "react-feather";
+import { Star } from "lucide-react";
 
 const FavouriteApp = ({ appId }: { appId: string }) => {
     const { pinnedApps, toggleApp } = useSettings();
@@ -10,7 +10,7 @@ const FavouriteApp = ({ appId }: { appId: string }) => {
     const isPinned = pinnedApps.includes(appId);
 
     return  <IconButton onClick={() => toggleApp(appId)}>
-        <Star className={isPinned? 'text-yellow-500':'text-gray-700'}/>
+        <Star className={isPinned? 'text-yellow-500':'text-gray-700 dark:text-neutral-400'}/>
     </IconButton>
 }
 

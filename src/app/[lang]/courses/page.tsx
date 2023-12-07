@@ -5,7 +5,7 @@ import supabase, {CourseDefinition, CourseSyllabusView} from '@/config/supabase'
 import { Button, CircularProgress, Divider, Drawer, IconButton, LinearProgress, Stack } from "@mui/joy";
 import { NextPage } from "next";
 import { useEffect, useState, Fragment, useRef, use, useMemo } from "react";
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter, Search, X } from "react-feather";
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter, Search, X } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useDebouncedCallback } from "use-debounce";
 import { useMediaQuery } from 'usehooks-ts';
