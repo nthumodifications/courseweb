@@ -35,7 +35,7 @@ const useSettingsProvider = () => {
 
     const setLanguage = (newLang: Language) => {
         //set cookie of 'locale'
-        setCookie("locale", newLang, { path: '/' });
+        setCookie("locale", newLang, { path: '/', expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) });
         router.push(`/${newLang}/`+pathname.split('/').slice(2).join('/'));
     };
 
@@ -53,7 +53,7 @@ const useSettingsProvider = () => {
         //check locale from cookie
         const locale = cookies.locale;
         if(locale == undefined) {
-            setCookie("locale", language, { path: '/' });
+            setCookie("locale", language, { path: '/', expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) });
         }
     }, [cookies, language]);
 
@@ -63,10 +63,10 @@ const useSettingsProvider = () => {
         const theme = cookies.theme;
         if(theme == undefined) {
             if(window.matchMedia('(prefers-color-scheme: dark)').matches){
-                setCookie("theme", "dark", { path: '/' });
+                setCookie("theme", "dark", { path: '/', expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) });
             }
             else {
-                setCookie("theme", "light", { path: '/' });
+                setCookie("theme", "light", { path: '/', expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) });
             }
             window.localStorage.removeItem("joy-mode")
             window.location.reload();
@@ -76,7 +76,7 @@ const useSettingsProvider = () => {
     const setDarkMode = (val: boolean) => {
         if(typeof window  == "undefined") return ;
         removeCookie("theme");
-        setCookie("theme", val ? "dark" : "light", { path: '/' })
+        setCookie("theme", val ? "dark" : "light", { path: '/', expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) })
         window.localStorage.removeItem("joy-mode")
         window.location.reload();
     }
