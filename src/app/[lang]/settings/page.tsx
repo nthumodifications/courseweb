@@ -90,7 +90,7 @@ const SettingsPage = () => {
         <div className="flex flex-col max-w-2xl px-4">
             <h1 className="font-semibold text-3xl text-gray-400 py-3">{dict.settings.title}</h1>
             <Divider/>
-            <div className="flex flex-row gap-4 py-4">
+            <div className="flex flex-row gap-4 py-4" id="darkmode">
                 <div className="flex flex-col flex-1">
                     <h2 className="font-semibold text-xl text-gray-600 dark:text-gray-400 pb-2">{dict.settings.dark_mode.title}</h2>
                     <p className="text-gray-600 dark:text-gray-400">{dict.settings.dark_mode.description}</p>
@@ -100,7 +100,7 @@ const SettingsPage = () => {
                 </div>}
             </div>
             <Divider/>
-            <div className="flex flex-row gap-4 py-4">
+            <div className="flex flex-row gap-4 py-4" id="language">
                 <div className="flex flex-col flex-1">
                     <h2 className="font-semibold text-xl text-gray-600 dark:text-gray-400 pb-2">{dict.settings.language.title}</h2>
                     <p className="text-gray-600 dark:text-gray-400">{dict.settings.language.description}</p>
@@ -113,7 +113,7 @@ const SettingsPage = () => {
                 </div>
             </div>
             <Divider/>
-            <div className="flex flex-col gap-4 py-4">
+            <div className="flex flex-col gap-4 py-4" id="theme">
                 <div className="flex flex-col flex-1">
                     <h2 className="font-semibold text-xl text-gray-600 dark:text-gray-400 pb-2">{dict.settings.theme.title}</h2>
                     <p className="text-gray-600 dark:text-gray-400">{dict.settings.theme.description}</p>
@@ -122,7 +122,7 @@ const SettingsPage = () => {
                 <TimetableThemeList/>
             </div>
             <Divider/>
-            <div className="flex flex-row gap-4 py-4">
+            <div className="flex flex-row gap-4 py-4" id="headless_ais">
                 <div className="flex flex-col flex-1">
                     <h2 className="font-semibold text-xl text-gray-600 dark:text-gray-400 pb-2">連接校務資訊系統</h2>
                     <p className="text-gray-600 dark:text-gray-400">系統會用代理登入方式，讓學生們可以在NTHUMods 上輕鬆鏈接校務系統功能。</p>

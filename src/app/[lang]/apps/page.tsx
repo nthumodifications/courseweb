@@ -1,11 +1,12 @@
 import { apps } from "@/const/apps";
 import { getDictionary } from "@/dictionaries/dictionaries";
 import { LangProps } from "@/types/pages";
-import { Alert, IconButton } from "@mui/joy";
+import {Alert, IconButton, Button} from '@mui/joy';
 import Link from "next/link";
-import { Map, MapPin, Star } from "lucide-react";
+import {Map, MapPin, Star, Info, X, ArrowRight} from 'lucide-react';
 import FavouriteApp from "./Favorite";
 import { cookies } from "next/headers";
+import React from 'react';
 
 export const dynamic = 'force-dynamic'
 
@@ -33,6 +34,25 @@ const AppList = async ({
                         <FavouriteApp appId={app.id}/>
                     </div>
                 </div>))}
+                {!ACIXSTORE && <Alert 
+                    variant="outlined" 
+                    color="success" 
+                    startDecorator={
+                        <Info/>
+                    }
+                    endDecorator={
+                        <React.Fragment>
+                            <Link href={`/${lang}/settings#headless_ais`}>
+                                <Button variant="plain" color="success" sx={{ mr: 1 }} endDecorator={<ArrowRight/>}>前往開通</Button>
+                            </Link>
+                        </React.Fragment>
+                    }
+                >
+                    <div className="flex flex-col">
+                        <h4 className="font-bold mb-1">還有更多功能！</h4>
+                        <p>到設定同步校務資訊系統后，可以直接在這裏使用校務資訊系統的功能！</p>
+                    </div>
+                </Alert>}
                 <Alert color="neutral">
                     <div className="flex flex-col gap-1">
                         <h4 className="font-bold text-base">沒有你要的功能？</h4>

@@ -64,12 +64,12 @@ const TodaySchedule: FC<{ weather: WeatherData, alerts: AlertDefinition[] }> = (
             <div className='flex flex-row flex-wrap gap-2 pb-2'>
                 {applist.map((app, index) => (
                     <Link href={app.href} key={index}>
-                        <div className='flex flex-col items-center justify-center p-2 gap-2'>
+                        <div className='flex flex-col items-center justify-center p-2 gap-2 w-16'>
                             <div className="p-3 rounded-full bg-indigo-100 text-indigo-800 grid place-items-center">
                                 <app.Icon size={20}/>
                             </div>
                             <div className="flex flex-col gap-1 flex-1">
-                                <h2 className="text-xs font-medium text-gray-600">{language == 'zh' ? app.title_zh: app.title_en}</h2>
+                                <h2 className="text-xs font-medium text-gray-600 text-center line-clamp-2 break-all">{language == 'zh' ? app.title_zh: app.title_en}</h2>
                             </div>
                         </div>
                     </Link>
