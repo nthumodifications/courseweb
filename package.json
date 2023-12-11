@@ -20,7 +20,7 @@
     "@fortawesome/react-fontawesome": "^0.2.0",
     "@google-cloud/vision": "^4.0.2",
     "@mui/joy": "^5.0.0-beta.12",
-    "@mui/material": "^5.14.14",
+    "@mui/material": "^5.14.20",
     "@sentry/nextjs": "^7.84.0",
     "@supabase/supabase-js": "^2.38.4",
     "@types/node": "20.9.2",
