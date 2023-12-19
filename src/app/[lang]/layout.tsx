@@ -109,7 +109,7 @@ export default function RootLayout({
         <SettingsProvider>
           <UserTimetableProvider>
             <ModalProvider>
-              <html lang={params.lang} className={`${theme?.value ?? ''} ${inter.variable} ${noto.variable}`}>
+              <html lang={params.lang} className={`${theme?.value ?? ''} ${inter.variable} ${noto.variable}`} suppressHydrationWarning>
                 <GoogleAnalytics/>
                 <body className={`grid grid-cols-1 grid-rows-[56px_50px_calc(100vh-106px)] md:grid-cols-[12rem_auto] md:grid-rows-[56px_calc(100vh-56px)_12rem]`}>
                   <Header />
