@@ -91,6 +91,9 @@
             "text": "You can change your theme in the settings page!"
         }
     },
+    "applist": {
+        "title": "Apps"
+    },
     "dialogs": {
         "DownloadTimetableDialog": {
             "title": "Download Your Timetable",

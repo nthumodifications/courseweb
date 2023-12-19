@@ -12,7 +12,7 @@ const Header: FC = () => {
 
 
     return (
-        <header className="h-14 w-screen bg-gray-100 dark:bg-neutral-800 shadow-md px-4 md:px-8 py-4 md:col-span-2 flex flex-row justify-between items-center z-50">
+        <header className="h-14 w-screen bg-white dark:bg-neutral-900 shadow-md px-4 md:px-8 py-4 md:col-span-2 flex flex-row justify-between items-center z-50">
             <Link href={"/"+language+"/timetable"}>
                 <FullLogo />
             </Link>

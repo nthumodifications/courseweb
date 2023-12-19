@@ -8,14 +8,16 @@ import { FC } from "react";
 import { useSettings } from '@/hooks/contexts/settings';
 import { AlertDefinition } from '@/config/supabase';
 import useDictionary from '@/dictionaries/useDictionary';
-import { CWBWeather } from '@/types/weather';
 import WeatherIcon from './WeatherIcon';
 import { getLocale } from '@/helpers/dateLocale';
-import { Info } from 'react-feather';
+import { Info } from 'lucide-react';
+import {WeatherData} from '@/types/weather';
+import { apps } from '@/const/apps';
+import Link from 'next/link';
 
-const TodaySchedule: FC<{ weather: any, alerts: AlertDefinition[] }> = ({ weather, alerts }) => {
+const TodaySchedule: FC<{ weather: WeatherData, alerts: AlertDefinition[] }> = ({ weather, alerts }) => {
     const { timetableData, allCourseData, deleteCourse } = useUserTimetable();
-    const { language } = useSettings();
+    const { language, pinnedApps } = useSettings();
     const dict = useDictionary();
 
     const getRangeOfDays = (start: Date, end: Date) => {
@@ -44,7 +46,7 @@ const TodaySchedule: FC<{ weather: any, alerts: AlertDefinition[] }> = ({ weathe
                     <p>{scheduleTimeSlots[t.startTime].start}</p>
                     <p>{scheduleTimeSlots[t.endTime].end}</p>
                 </div>
-                <div className="flex flex-col rounded-md p-2 flex-1 text-black/70" style={{background: t.color}}>
+                <div className="flex flex-col rounded-md p-2 flex-1" style={{background: t.color, color: t.textColor}}>
                     <p className="font-semibold">{t.course.name_zh}</p>
                     <p className="text-xs">{t.course.name_en}</p>
                     <Divider/>
@@ -52,6 +54,28 @@ const TodaySchedule: FC<{ weather: any, alerts: AlertDefinition[] }> = ({ weathe
                 </div>
             </div>
         ))
+    }
+    
+    const applist = apps.filter(app => pinnedApps.includes(app.id));
+    const renderPinnedApps = () => {
+        if(applist.length == 0) return <></>;
+        return <div className='flex flex-col gap-1'>
+            <h1 className='text-xs font-bold text-gray-500'>{dict.applist.title}</h1>
+            <div className='flex flex-row flex-wrap gap-2 pb-2'>
+                {applist.map((app, index) => (
+                    <Link href={app.href} key={index}>
+                        <div className='flex flex-col items-center justify-center p-2 gap-2 w-16'>
+                            <div className="p-3 rounded-full bg-indigo-100 text-indigo-800 grid place-items-center">
+                                <app.Icon size={20}/>
+                            </div>
+                            <div className="flex flex-col gap-1 flex-1">
+                                <h2 className="text-xs font-medium text-gray-600 text-center line-clamp-2 break-all">{language == 'zh' ? app.title_zh: app.title_en}</h2>
+                            </div>
+                        </div>
+                    </Link>
+                ))}
+            </div>
+        </div>
     }
 
     const renderAlerts = (day: Date) => {
@@ -69,6 +93,7 @@ const TodaySchedule: FC<{ weather: any, alerts: AlertDefinition[] }> = ({ weathe
 
 
     return <div className="h-full w-full px-3 md:px-8 py-4">
+        {renderPinnedApps()}
         {days.map(day => (
             <div className="flex flex-col gap-2 pb-8" key={day.getTime()}>
                 <div className="flex flex-row gap-2 justify-between border-b border-gray-400 pb-2">
@@ -78,7 +103,7 @@ const TodaySchedule: FC<{ weather: any, alerts: AlertDefinition[] }> = ({ weathe
                         {/* WEDNESDAY */}
                         <div className="text-xl font-semibold text-gray-600 dark:text-gray-300">{formatRelative(day, Date.now(), { locale: getLocale(language) })}</div>
                     </div>
-                    <WeatherIcon date={day} weather={weather?.records?.locations[0]?.location[0]?.weatherElement}/>
+                    <WeatherIcon date={day} weather={weather.find(w => w.date == format(day, 'yyyy-MM-dd'))!}/>
                 </div>
                 {renderAlerts(day)}
                 {renderDayTimetable(day)}

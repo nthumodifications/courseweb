@@ -395,6 +395,21 @@ export interface Database {
         }
         Relationships: []
       }
+      users: {
+        Row: {
+          roles: string[]
+          user_id: string
+        }
+        Insert: {
+          roles: string[]
+          user_id: string
+        }
+        Update: {
+          roles?: string[]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       distinct_classes: {

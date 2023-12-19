@@ -2,7 +2,7 @@ import useDictionary from "@/dictionaries/useDictionary";
 import { Alert, Button, IconButton } from "@mui/joy"
 import Link from "next/link";
 import React from "react";
-import { Info, X } from "react-feather"
+import { Info, X } from "lucide-react"
 import { useLocalStorage } from "usehooks-ts"
 
 const ThemeChangableAlert = () => {

@@ -1,6 +1,6 @@
 import {Divider, Switch} from '@mui/joy';
+import { Codepen, Database, Globe } from 'lucide-react';
 import Link from 'next/link';
-import { Codepen, Database, Globe } from 'react-feather';
 
 const IssueButton = ({title, description, icon, href}: {title: string, description: string, icon: any, href: string}) => {
     return (

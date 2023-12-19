@@ -10,4 +10,6 @@ export type CourseSyllabusView = CourseDefinition & { brief: string | null, keyw
 export type AlertDefinition = Database['public']['Tables']['alerts']['Row'];
 export type BusScheduleDefinition = Database['public']['Tables']['bus_schedule']['Row'];
 export type CdsCourseDefinition = Database['public']['Tables']['cds_courses']['Row'];
+export type SubmissionDefinition = Database['public']['Tables']['cds_submissions']['Row'];
+export type CdsTermDefinition = Database['public']['Tables']['cds_terms']['Row'];
 export default supabase;

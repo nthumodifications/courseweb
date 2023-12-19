@@ -3,7 +3,7 @@ import { scheduleTimeSlots } from "@/const/timetable";
 import { CourseTimeslotData } from "@/types/timetable";
 import { MinimalCourse } from '@/types/courses';
 import { getBrightness } from "./colors";
-import {adjustBrightness} from '@/helpers/colors';
+import { adjustLuminance} from '@/helpers/colors';
 
 export const timetableColors: { [theme: string]: string[] } = {
     'harmonyBlossom': [
@@ -125,23 +125,11 @@ export const timetableColors: { [theme: string]: string[] } = {
         '#E4CFFF',
         '#F1CEF4',
         '#F8D9E8'
-    ],
-    'tsinghuarian': [
-        '#845EC2',
-        '#D65DB1',
-        '#FF6F91',
-        '#FF9671',
-        '#FFC75F',
-        '#A8BB5C',
-        '#5CA46E',
-        '#20887A',
-        '#1C6873',
-        '#2F4858'
     ]
 }
 
 
-export const createTimetableFromCourses = (data: MinimalCourse[], theme = 'tsinghuarian') => {
+export const createTimetableFromCourses = (data: MinimalCourse[], theme = 'pastelColors') => {
     const newTimetableData: CourseTimeslotData[] = [];
     data!.forEach(course => {
         //get unique days first
@@ -162,9 +150,7 @@ export const createTimetableFromCourses = (data: MinimalCourse[], theme = 'tsing
                 //Determine the text color
                 const brightness = getBrightness(color);
                 //From the brightness, using the adjustBrightness function, create a complementary color that is legible
-                const textColor = adjustBrightness(color, brightness > 100 ? -50 : 90);
-                
-
+                const textColor = adjustLuminance(color, brightness > 186 ? 0.2 : 0.95);
 
                 //push to scheduleData
                 newTimetableData.push({

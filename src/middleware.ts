@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { match } from '@formatjs/intl-localematcher'
 import Negotiator, { Headers } from 'negotiator'
+import { cookies } from 'next/headers'
 
 let locales = ['en', 'zh']
  
@@ -22,10 +23,18 @@ export function middleware(request: NextRequest) {
   )
  
   if (pathnameHasLocale) return
+
+  //check if cookies('locale') exists
+  const cookieLocale = cookies().get('locale')?.value
+  
+  if(cookieLocale && locales.includes(cookieLocale)) {
+    request.nextUrl.pathname = `/${cookieLocale}${pathname}`
+    return NextResponse.redirect(request.nextUrl)
+  }
  
   // Redirect if there is no locale
   const locale = getLocale(request)
-  // console.log(locale)
+
   request.nextUrl.pathname = `/${locale}${pathname}`
   // e.g. incoming request is /products
   // The new URL is now /en-US/products
@@ -48,6 +57,8 @@ export const config = {
     '/today/:path*',
     '/venues/:path*',
     '/issues/:path*',
-    '/cds/:path*'
+    '/cds/:path*',
+    '/apps/:path*',
+    '/student/:path*'
   ],
 }

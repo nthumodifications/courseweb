@@ -1,5 +1,5 @@
 import { Button, ButtonGroup, IconButton, Divider, Tooltip } from '@mui/joy';
-import { Download, EyeOff, Search, Share, Trash, AlertTriangle, Copy, Columns, Repeat } from 'react-feather';
+import { Download, EyeOff, Search, Share, Trash, AlertTriangle, Copy, Columns, Repeat } from 'lucide-react';
 import { useSettings } from '@/hooks/contexts/settings';
 import useUserTimetable from '@/hooks/useUserTimetable';
 import { useRouter } from 'next/navigation';

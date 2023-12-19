@@ -196,7 +196,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const semester = searchParams.get('semester');
     const courses_ids = searchParams.get('semester_'+semester)?.split(',')!;
-    const theme = searchParams.get('theme') || 'tsinghuarian';
+    const theme = searchParams.get('theme') || 'pastelColors';
 
 
     try {

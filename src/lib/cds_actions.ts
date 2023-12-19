@@ -6,6 +6,8 @@ import authConfig from '@/app/api/auth/[...nextauth]/authConfig';
 import { hasConflictingTimeslots, hasSameCourse } from '@/helpers/courses';
 import {MinimalCourse, selectMinimalStr} from '@/types/courses';
 import { SubmissionStatus } from '@/types/cds_courses';
+import { CdsTermDefinition } from '@/config/supabase';
+import { revalidatePath } from 'next/cache';
 
 export const getUserCdsSelections = async (term: string) => {
     const session = await getServerSession(authConfig);
@@ -90,6 +92,17 @@ export const submitUserSelections = async (term: string, selections: string[]) =
     const duplicateCourses = hasSameCourse(courses as MinimalCourse[]);
     if(duplicateCourses.length > 0) throw new Error('Duplicate courses detected');
 
+    const MAX_COURSES = 5;
+    const exceededMaxCourses = courses.length > MAX_COURSES;
+    if(exceededMaxCourses) throw new Error('Exceeded max courses');
+
+    //check if term is open
+    const termObj = await getCurrentCdsTerm();
+    const termOpen = new Date(termObj.starts) <= new Date() && new Date(termObj.ends) >= new Date();
+    if(!termOpen) throw new Error('Term is not open');
+    //check if term is same
+    const termSame = termObj.term === term;
+
     //save user selections
     const { error: error2 } = await supabase_server
         .from('cds_submissions')
@@ -103,13 +116,15 @@ export const submitUserSelections = async (term: string, selections: string[]) =
         });
 
     if(error2) throw error2;
+    revalidatePath('/[lang]/cds', 'page');
 }
 
-export const getSubmissionDetails = async (courseId: string) => {
+export const getSubmissionDetails = async (courseId: string, termObj: CdsTermDefinition) => {
     const { data, error } = await supabase_server
         .from('cds_submissions')
         .select('*')
-        .contains('selections', [courseId])
+        .eq('term', termObj.term)
+        .overlaps('selections', [courseId])
 
     if (error) {
         console.log(error);
@@ -118,11 +133,12 @@ export const getSubmissionDetails = async (courseId: string) => {
     return data;
 }
 
-export const getCDSCourseSubmissions = async (term: string) => {
+export const getCDSCourseSubmissions = async (termObj: CdsTermDefinition) => {
     //get all courses where count exists and > 0
     const { data: courses, error: coursesError } = await supabase_server
         .from('courses')
         .select(`${selectMinimalStr}, capacity ,cds_counts!inner(count)`)
+        .eq('semester', termObj.ref_sem)
         .gt('cds_counts.count', 0)
 
     if (coursesError) {
@@ -131,4 +147,20 @@ export const getCDSCourseSubmissions = async (term: string) => {
     }
 
     return courses;
+}
+
+
+export const getCurrentCdsTerm = async () => {
+    // get last added term
+    const { data, error } = await supabase_server.from('cds_terms').select('*').order('ends', { ascending: false }).limit(1).single();
+    if (error) throw error;
+    if (!data) throw new Error('No term data');
+    return data;
+}
+
+export const getCDSTerm = async (term: string) => {
+    const { data, error } = await supabase_server.from('cds_terms').select('*').eq('term', term).single();
+    if (error) throw error;
+    if (!data) throw new Error('No term data');
+    return data;
 }

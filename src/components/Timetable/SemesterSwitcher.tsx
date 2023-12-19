@@ -1,7 +1,7 @@
 'use client';
 import useUserTimetable from '@/hooks/useUserTimetable';
 import { IconButton } from '@mui/joy';
-import { ChevronLeft, ChevronRight } from 'react-feather';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { semesterInfo } from '@/const/semester';
 import { rocYear } from '@/helpers/roc';
 import { Semester } from '@/types/courses';

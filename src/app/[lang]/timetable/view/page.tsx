@@ -39,6 +39,8 @@ const ViewTimetablePage: NextPage = () => {
         if(error) throw error;
         if(!data) throw new Error('No data');
         return data;
+    }, {
+        keepPreviousData: true,
     })
 
     const timetableData = createTimetableFromCourses(courses as MinimalCourse[], timetableTheme);

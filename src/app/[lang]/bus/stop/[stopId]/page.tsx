@@ -9,7 +9,7 @@ import { format, formatDistanceStrict, getDay } from 'date-fns';
 import { enUS, zhTW } from 'date-fns/locale';
 import Link from 'next/link';
 import { useState, useMemo } from 'react';
-import { ChevronLeft, MapPin } from 'react-feather';
+import { ChevronLeft, MapPin } from 'lucide-react';
 import useSWR from 'swr'
 import RouteIcon from '@/components/BusIcons/RouteIcon';
 import RoutesFilterChips from './RoutesFilterChips';
@@ -38,6 +38,8 @@ const BusStop = ({ params: { stopId } }: PageProps) => {
         const { data: _data = [], error } = await supabase.from('bus_schedule').select('*').in('route_name', routeCodes);
         if(error) throw error;
         return _data;
+    }, {
+        keepPreviousData: true,
     })
 
     const schedules = useMemo(() => data!.map(mod => {
