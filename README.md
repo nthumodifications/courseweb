@@ -21,15 +21,18 @@ If you wish to participate in this development, feel free to email [nthumods@goo
 ## Deployment
 We are currently using [Vercel](https://vercel.com) to deploy our website. If you wish to deploy your own version, you can do so by forking this repository and deploying it on Vercel. You will need to set up the following environment variables:
 
+
+.env.local
 ```
 CWA_API_KEY=
 NEXTAUTH_SECRET=
 SUPABASE_SERVICE_ROLE_KEY=
 NTHU_OAUTH_SECRET_KEY=
+STUDENT_ID_PRIVATE_KEY=
+STUDENT_ID_PUBLIC_KEY=
+GOOGLE_SERVICE_KEY=<base64 of google service account file>
 ```
 
-
-```
 
 ## Contributors
 - [Chew Tzi Hwee](@ImJustChew)
