@@ -47,8 +47,22 @@ const TimetablePage: NextPage = () => {
     }, []);
 
     const renderTimetableSlot = (course: CourseTimeslotDataWithFraction, tableDim: TimetableDim, vertical?: boolean) => {
-        return <Link href={`/${language}/timetable/${course.course.raw_id}`}>
-        {vertical ? 
+        // return <Link href={`/${language}/timetable/${course.course.raw_id}`}>
+        // {vertical ? 
+        //   <TimetableSlotVertical 
+        //     course={course} 
+        //     tableDim={tableDim} 
+        //     fraction={course.fraction} 
+        //     fractionIndex={course.fractionIndex} />
+        //   :
+        //   <TimetableSlot 
+        //     course={course} 
+        //     tableDim={tableDim} 
+        //     fraction={course.fraction} 
+        //     fractionIndex={course.fractionIndex} />
+        // }
+        // </Link>
+        return vertical ? 
           <TimetableSlotVertical 
             course={course} 
             tableDim={tableDim} 
@@ -60,8 +74,7 @@ const TimetablePage: NextPage = () => {
             tableDim={tableDim} 
             fraction={course.fraction} 
             fractionIndex={course.fractionIndex} />
-        }
-        </Link>
+        
       }
 
     return (
