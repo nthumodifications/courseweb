@@ -27,3 +27,5 @@ export type CourseTimeslotData = {
     color: string,
     textColor: string,
 };
+
+export type CourseTimeslotDataWithFraction = CourseTimeslotData & { fraction: number, fractionIndex: number, timeSlots: string[],  };

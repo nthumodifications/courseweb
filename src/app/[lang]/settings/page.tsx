@@ -1,75 +1,19 @@
 'use client';
 import useDictionary from "@/dictionaries/useDictionary";
-import { timetableColors } from "@/helpers/timetable";
 import { useSettings } from "@/hooks/contexts/settings";
 import { useModal } from "@/hooks/contexts/useModal";
-import { Button, DialogActions, DialogContent, DialogTitle, Divider, Input, ModalClose, ModalDialog, Option, Select, Switch } from "@mui/joy";
+import { Button, Divider, Option, Select, Switch } from "@mui/joy";
 import {  useEffect, useState } from "react";
-
-const TimetableThemePreview = ({ theme, onClick = () => {}, selected = false }: { theme: string, selected?: boolean, onClick?: () => void}) => {
-    return <div 
-        onClick={onClick}
-        className={`flex flex-col rounded-lg p-3 hover:dark:bg-neutral-800 hover:bg-gray-100 transition cursor-pointer space-y-2 ${selected? "bg-gray-100 dark:bg-neutral-800":""}`}>
-        <div className="flex flex-row">
-            {timetableColors[theme].map((color, index) => (
-                <div className="flex-1 h-6 w-6" style={{background: color}} key={index}/>
-            ))}
-        </div>
-        <span className="text-sm">{theme}</span>
-    </div>
-}
-
-const TimetableThemeList = () => {
-    const { timetableTheme, setTimetableTheme } = useSettings();
-    return <div className="flex flex-row flex-wrap gap-2">
-        {
-            Object.keys(timetableColors).map((theme, index) => (
-                <TimetableThemePreview key={index} theme={theme} onClick={() => setTimetableTheme(theme)} selected={timetableTheme == theme} />
-            ))
-        }
-    </div>
-}
-
-const HeadlessLoginDialog = ({ onClose }: { onClose: () => void}) => {
-    const [studentid, setStudentid] = useState('');
-    const [password, setPassword] = useState('');
-    const { setAISCredentials } = useSettings();
-     
-    const onSubmit = () => {
-        setAISCredentials(studentid, password);
-        onClose();
-    }
-
-    const onCancel = () => {
-        setAISCredentials(undefined, undefined);
-        onClose();
-    }
-
-    return <ModalDialog>
-        <DialogTitle>
-            連接校務資訊系統
-        </DialogTitle>
-        <ModalClose/>
-        <DialogContent>
-            <p>
-                學號密碼僅會用於登入校務資訊系統，並只會儲存在本地端，傳輸過程會使用HTTPS加密連線。
-            </p>
-            <div className="flex flex-col gap-2">
-                <Input placeholder="學號" name="studentid" value={studentid} onChange={(e) => setStudentid(e.target.value)}/>
-                <Input placeholder="密碼" name="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)}/>
-            </div>
-        </DialogContent>
-        <DialogActions>
-            <Button variant="outlined" color="success" onClick={onSubmit}>連接</Button>
-            <Button variant="outlined" color="danger" onClick={onCancel}>取消</Button>
-        </DialogActions>
-    </ModalDialog>
-}
+import NTHULoginButton from "../cds/NTHULoginButton";
+import { signOut, useSession } from "next-auth/react";
+import { HeadlessLoginDialog } from "./HeadlessLoginDialog";
+import { TimetableThemeList } from "./TimetableThemeList";
 
 const SettingsPage = () => {
 
     const { darkMode, setDarkMode, language, setLanguage, ais } = useSettings();
     const [dummy, setDummy] = useState(0);
+    const { data, status } = useSession();
 
     
     const dict = useDictionary();
@@ -122,12 +66,29 @@ const SettingsPage = () => {
                 <TimetableThemeList/>
             </div>
             <Divider/>
+            <div className="flex flex-row gap-4 py-4">
+                <div className="flex flex-col flex-1">
+                    <h2 className="font-semibold text-xl text-gray-600 dark:text-gray-400 pb-2">清華大學OAuth 賬號</h2>
+                    <p className="text-gray-600 dark:text-gray-400">
+                        NTHUMods 使用清華大學OAuth 賬號登入，以便獲取學生的學號、姓名等資訊。
+                    </p>
+                </div>
+                <div className="flex flex-col items-center justify-center gap-2 w-52">
+                    {status == "loading" && <span className="text-gray-600 dark:text-gray-400">Loading...</span>}
+                    {status == "authenticated" && <>
+                        <span className="text-gray-600 dark:text-gray-400">登入為 {data.user.name_zh}</span>
+                        <Button variant="soft" onClick={() => signOut()}>登出</Button>
+                    </>}
+                    {status == "unauthenticated" && <span className="text-gray-600 dark:text-gray-400"><NTHULoginButton/></span>}
+                </div>
+            </div>
+            <Divider/>
             <div className="flex flex-row gap-4 py-4" id="headless_ais">
                 <div className="flex flex-col flex-1">
-                    <h2 className="font-semibold text-xl text-gray-600 dark:text-gray-400 pb-2">連接校務資訊系統</h2>
+                    <h2 className="font-semibold text-xl text-gray-600 dark:text-gray-400 pb-2">代理登入校務資訊系統</h2>
                     <p className="text-gray-600 dark:text-gray-400">系統會用代理登入方式，讓學生們可以在NTHUMods 上輕鬆鏈接校務系統功能。</p>
                 </div>
-                <div className="flex flex-col justify-center items-center space-y-2">
+                <div className="flex flex-col justify-center items-center space-y-2 w-52">
                     <Button variant="outlined" color="primary" onClick={handleOpenHeadlessLogin}>連接</Button>
                     {ais.enabled && <span className="text-gray-600 dark:text-gray-400 text-sm">已連接</span>}
                     {ais.enabled && !ais.ACIXSTORE && <span className="text-red-600 dark:text-red-400 text-sm">登入失敗</span>}
