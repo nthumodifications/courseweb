@@ -1,3 +1,9 @@
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+    title: '隱私權政策 Privacy Policy',
+}
+
 const PrivacyPolicyPage = () => {
     return (
         <div className="px-4 py-8">
