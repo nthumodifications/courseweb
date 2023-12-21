@@ -24,16 +24,16 @@ async function getFonts() {
     // when deployed to vercel.
     const [interRegular, interMedium, interSemiBold, interBold] =
         await Promise.all([
-            fetch(`https://rsms.me/inter/font-files/Inter-Regular.woff`).then((res) =>
+            fetch(`https://unpkg.com/@fontsource/inter@4.5.12/files/inter-all-400-normal.woff`).then((res) =>
                 res.arrayBuffer()
             ),
-            fetch(`https://rsms.me/inter/font-files/Inter-Medium.woff`).then((res) =>
+            fetch(`https://unpkg.com/@fontsource/inter@4.5.12/files/inter-all-500-normal.woff`).then((res) =>
                 res.arrayBuffer()
             ),
-            fetch(`https://rsms.me/inter/font-files/Inter-SemiBold.woff`).then(
+            fetch(`https://unpkg.com/@fontsource/inter@4.5.12/files/inter-all-600-normal.woff`).then(
                 (res) => res.arrayBuffer()
             ),
-            fetch(`https://rsms.me/inter/font-files/Inter-Bold.woff`).then((res) =>
+            fetch(`https://unpkg.com/@fontsource/inter@4.5.12/files/inter-all-700-normal.woff`).then((res) =>
                 res.arrayBuffer()
             ),
         ]);
