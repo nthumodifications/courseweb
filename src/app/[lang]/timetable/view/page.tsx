@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { useSearchParams } from 'next/navigation'
 import supabase from "@/config/supabase";
 import useSWR from "swr";
-import { createTimetableFromCourses, timetableColors } from "@/helpers/timetable";
+import { createTimetableFromCourses } from "@/helpers/timetable";
+import { timetableColors } from "@/const/timetableColors";
 import { useSettings } from "@/hooks/contexts/settings";
 import { MinimalCourse } from "@/types/courses";
 import {Divider} from '@mui/joy';

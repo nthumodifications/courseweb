@@ -1,5 +1,5 @@
 'use client';
-import { timetableColors } from "@/helpers/timetable";
+import { timetableColors } from "@/const/timetableColors";
 import { useSettings } from "@/hooks/contexts/settings";
 import { TimetableThemePreview } from "./TimetableThemePreview";
 

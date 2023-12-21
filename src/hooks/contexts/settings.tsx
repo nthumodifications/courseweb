@@ -6,6 +6,7 @@ import { useCookies } from 'react-cookie';
 import { Language } from "@/types/settings";
 import { RawCourseID } from "@/types/courses";
 import { apps } from "@/const/apps";
+import { timetableColors } from "@/const/timetableColors";
 
 const settingsContext = createContext<ReturnType<typeof useSettingsProvider>>({
     language: "zh",
@@ -42,8 +43,12 @@ const useSettingsProvider = () => {
     //migrate from old timetable theme to new one
     useLayoutEffect(() => {
         if(typeof window  == "undefined") return ;
-        if(timetableTheme == "tsinghuarian") {
-            setTimetableTheme("pastelColors");
+        // if(timetableTheme == "tsinghuarian") {
+        //     setTimetableTheme("pastelColors");
+        // }
+        const themes = Object.keys(timetableColors);
+        if(!themes.includes(timetableTheme)) {
+            setTimetableTheme(themes[0]);
         }
     }, [timetableTheme]);
 
