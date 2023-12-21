@@ -2,8 +2,8 @@ import Button from '@mui/joy/Button';
 
 export default () => {
   return (
-    <div class="flex flex-col gap-2">
-      <div class="flex justify-center mb-4">
+    <div className="flex flex-col gap-2">
+      <div className="flex justify-center mb-4">
         <img src="/images/crane.gif" className="w-48 h-48" />
       </div>
       <span className="font-bold text-2xl">
