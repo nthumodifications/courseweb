@@ -16,7 +16,7 @@ export const apps = [
         Icon: Bus,
     },
     {
-        id: 'bus',
+        id: 'student_card',
         title_zh: '學生證',
         title_en: 'Student Card',
         href: '/student',
