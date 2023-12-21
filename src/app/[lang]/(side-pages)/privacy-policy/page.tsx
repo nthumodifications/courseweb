@@ -9,7 +9,7 @@ const PrivacyPolicyPage = () => {
         <div className="px-4 py-8">
             <div id="hero" className="flex flex-col gap-4 py-8">
                 <h1 className="text-5xl font-bold">隱私權政策</h1>
-                <p className="text-gray-600 dark:text-gray-400">跟新時間: 2023/12/21</p>
+                <p className="text-gray-600 dark:text-gray-400">更新時間: 2023/12/21</p>
             </div>
             <article className="prose prose-neutral dark:prose-invert">
                 <p>非常歡迎您光臨NTHUMods(以下簡稱本網站)，為了讓您能夠安心的使用本網站的各項服務與資訊，特此向您說明本網站的隱私權保護政策，以保障您的權益，請您詳閱下列內容：</p>
