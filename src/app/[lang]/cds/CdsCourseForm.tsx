@@ -1,7 +1,8 @@
 'use client';;
 import Timetable from '@/components/Timetable/Timetable';
 import { FC, Fragment, useState, useRef, useEffect, useMemo, useTransition } from 'react';
-import { createTimetableFromCourses, timetableColors } from '@/helpers/timetable';
+import { createTimetableFromCourses } from '@/helpers/timetable';
+import { timetableColors } from "@/const/timetableColors";
 import { Accordion, Button, ButtonGroup, CircularProgress, DialogContent, DialogTitle, Divider, Drawer, IconButton, ModalClose, Sheet, FormControl, FormLabel, AccordionDetails, AccordionSummary, Stack, Alert, Chip, Tooltip, Typography, Switch, Dropdown, MenuButton, Menu, MenuItem, Badge, ModalDialog, DialogActions } from '@mui/joy';
 import {
     EyeOff,

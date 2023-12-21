@@ -1,5 +1,5 @@
 'use client';
-import { timetableColors } from "@/helpers/timetable";
+import { timetableColors } from "@/const/timetableColors";
 
 
 export const TimetableThemePreview = ({ theme, onClick = () => { }, selected = false }: { theme: string; selected?: boolean; onClick?: () => void; }) => {

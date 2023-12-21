@@ -8,6 +8,7 @@ import NTHULoginButton from "../cds/NTHULoginButton";
 import { signOut, useSession } from "next-auth/react";
 import { HeadlessLoginDialog } from "./HeadlessLoginDialog";
 import { TimetableThemeList } from "./TimetableThemeList";
+import TimetablePreview from "./TimetablePreview";
 
 const SettingsPage = () => {
 
@@ -63,6 +64,7 @@ const SettingsPage = () => {
                     <p className="text-gray-600 dark:text-gray-400">{dict.settings.theme.description}</p>
                 </div>
                 {/* TODO: Timetable Preview */}
+                <TimetablePreview/>
                 <TimetableThemeList/>
             </div>
             <Divider/>

@@ -5,7 +5,7 @@ import useUserTimetable from '@/hooks/useUserTimetable';
 import { useRouter } from 'next/navigation';
 import { useModal } from '@/hooks/contexts/useModal';
 import CourseSearchbar from './CourseSearchbar';
-import { timetableColors } from '@/helpers/timetable';
+import { timetableColors } from "@/const/timetableColors";
 import ThemeChangableAlert from '../Alerts/ThemeChangableAlert';
 import useDictionary from '@/dictionaries/useDictionary';
 import ShareSyncTimetableDialog from './ShareSyncTimetableDialog';
