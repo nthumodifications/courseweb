@@ -23,7 +23,7 @@ const Help = () => {
     const hasVisitedBefore = localStorage.getItem("hasVisitedBefore");
     if (!hasVisitedBefore) {
       setOpen(true);
-      localStorage.setItem("hasVisitedBefore", true);
+      localStorage.setItem("hasVisitedBefore", "mhm");
     }
   }, []);
 
