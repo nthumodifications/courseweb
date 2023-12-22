@@ -243,10 +243,11 @@ const CoursePage: NextPage = () => {
     const { allCourseData } = useUserTimetable();
 
     const renderExistingSelection = () => {
-        // if(isDirty) return <></>;
-        //check if current filters is same as emptyFilters, if not, return empty
-        if(JSON.stringify(filters) != JSON.stringify(emptyFilters)) return <></>;
-        return allCourseData.map((course) => <CourseListItem key={course.raw_id} course={course}/>)
+        //TODO: existing selection logic doesn't work well with semester switching, so turn it off for now
+        // // if(isDirty) return <></>;
+        // //check if current filters is same as emptyFilters, if not, return empty
+        // if(JSON.stringify(filters) != JSON.stringify(emptyFilters)) return <></>;
+        // return allCourseData.map((course) => <CourseListItem key={course.raw_id} course={course}/>)
     }
 
 
