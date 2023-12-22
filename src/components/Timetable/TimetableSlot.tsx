@@ -35,10 +35,10 @@ const TimetableSlot: FC<TimetableSlotProps> = ({ course, tableDim, fraction = 1,
             <div className='flex flex-col justify-start items-center h-full p-1 select-none' style={{ color: course.textColor }}>
                 <div className='flex-1 w-full flex flex-col items-center'>
                 {language == 'zh' ?
-                    <span className='text-xs md:text-sm line-clamp-2 font-medium text-center'>{course.course.name_zh}</span> :
-                    <span className='text-xs line-clamp-2 font-medium text-center'>{course.course.name_en}</span>
+                    <span className='text-xs md:text-sm line-clamp-1 font-medium text-center'>{course.course.name_zh}</span> :
+                    <span className='text-xs line-clamp-1 font-medium text-center'>{course.course.name_en}</span>
                 }
-                <span className='hidden md:inline text-xs line-clamp-2'>{scheduleTimeSlots[course.startTime].start} - {scheduleTimeSlots[course.endTime].end}</span>
+                <span className='hidden md:inline text-xs line-clamp-1'>{scheduleTimeSlots[course.startTime].start} - {scheduleTimeSlots[course.endTime].end}</span>
                 </div>
                 <div className='flex flex-row justify-end items-center space-x-1'>
                     <VenueChip venue={course.venue} color={course.textColor} textColor={course.color} />
