@@ -18,7 +18,7 @@ const Header: FC = () => {
     return (
         <header className="h-14 w-screen bg-white dark:bg-neutral-900 shadow-md px-4 md:px-8 py-4 md:col-span-2 flex flex-row items-center z-50 gap-4">
             
-            <div className="flex flex-col md:flex-row mr-auto md:items-center md:gap-4">
+            <div className="flex flex-col md:flex-row mr-auto md:items-center gap-1 mt-1 md:gap-4">
                 <Link href={"/"+language+"/timetable"}>
                     <FullLogo />
                 </Link>
