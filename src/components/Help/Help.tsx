@@ -23,9 +23,13 @@ const Help = () => {
     const hasVisitedBefore = localStorage.getItem("hasVisitedBefore");
     if (!hasVisitedBefore) {
       setOpen(true);
-      localStorage.setItem("hasVisitedBefore", "mhm");
     }
   }, []);
+
+  const handleClose = () => {
+    setOpen(false)
+    localStorage.setItem("hasVisitedBefore", "mhm");
+  }
 
   return (<>
     <Button
@@ -41,10 +45,10 @@ const Help = () => {
       Help
     </Button>
 
-    <Modal open={open} onClose={() => setOpen(false)}>
+    <Modal open={open} onClose={handleClose}>
       <ModalDialog className="flex flex-col w-[400px]">
         <div>
-          <Button color="neutral" variant="plain" size="sm" onClick={() => { setOpen(false) }}>
+          <Button color="neutral" variant="plain" size="sm" onClick={handleClose}>
             Skip
           </Button>
         </div>
@@ -78,9 +82,7 @@ const Help = () => {
             endDecorator={<ChevronRight />}
             color="primary"
             variant="solid"
-            onClick={() => {
-              setOpen(false)
-            }}
+            onClick={handleClose}
           >
             Jump in
           </Button>
