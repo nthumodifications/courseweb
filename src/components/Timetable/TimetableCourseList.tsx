@@ -1,5 +1,5 @@
 import { Button, ButtonGroup, IconButton, Divider, Tooltip } from '@mui/joy';
-import { Download, EyeOff, Search, Share, Trash, AlertTriangle, Copy, Columns, Repeat } from 'lucide-react';
+import { Download, EyeOff, Search, Share, Trash, AlertTriangle, Copy, Columns, Repeat, ExternalLink } from 'lucide-react';
 import { useSettings } from '@/hooks/contexts/settings';
 import useUserTimetable from '@/hooks/useUserTimetable';
 import { useRouter } from 'next/navigation';
@@ -12,7 +12,7 @@ import ShareSyncTimetableDialog from './ShareSyncTimetableDialog';
 import DownloadTimetableDialog from './DownloadTimetableDialog';
 import { useMemo } from 'react';
 import { hasConflictingTimeslots, hasSameCourse } from '@/helpers/courses';
-import { MinimalCourse } from '@/types/courses';
+import { MinimalCourse, RawCourseID } from '@/types/courses';
 
 const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, setVertical: (v: boolean) => void }) => {
     const { language, timetableTheme } = useSettings();
@@ -67,6 +67,10 @@ const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, set
         </div>
     }
 
+    const handleCopyClipboard = (id: RawCourseID) => {
+        navigator.clipboard.writeText(id);
+    }
+
     return <div className="flex flex-col gap-4 px-4">
         {renderButtons()}
         <CourseSearchbar onAddCourse={course => addCourse(course.raw_id)} semester={semester} />
@@ -100,7 +104,13 @@ const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, set
                             <span className="text-xs text-gray-400">學分</span>
                         </div>
                         <ButtonGroup>
-                            <IconButton onClick={() => deleteCourse(course.raw_id)}>
+                            <IconButton onClick={() => handleCopyClipboard(course.raw_id)}>
+                                <Copy className="w-4 h-4" />
+                            </IconButton>
+                            <IconButton onClick={() => router.push(`/${language}/courses/${course.raw_id}`)}>
+                                <ExternalLink className="w-4 h-4" />
+                            </IconButton>
+                            <IconButton color="danger" onClick={() => deleteCourse(course.raw_id)}>
                                 <Trash className="w-4 h-4" />
                             </IconButton>
                             {/* TOOD: Has no plans to implement now */}
