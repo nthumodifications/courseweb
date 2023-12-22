@@ -4,9 +4,9 @@ import { useSettings } from "@/hooks/contexts/settings";
 import FullLogo from "./Branding/FullLogo";
 import Link from "next/link";
 import { currentSemester} from '@/const/semester';
-// import Button from '@mui/joy/Button';
-// import { HelpCircle, MessageCircle } from 'lucide-react'
-// import Help from '@/components/Help/Help'
+import Button from '@mui/joy/Button';
+import { HelpCircle, MessageCircle } from 'lucide-react'
+import Help from '@/components/Help/Help'
 
 const Header: FC = () => {
 
@@ -28,12 +28,12 @@ const Header: FC = () => {
                 (currentSemester ?`${currentSemester.year-1911}-${currentSemester.semester} 學期, 第${currentWeek}周`: `假期`)}
             </p>
             
-{/*            <div className="flex gap-2">
+            <div className="flex gap-2">
                 <Help/>
                 <Button component="a" target="_blank" href="https://forms.gle/LKYiVhLVwRGL44pz6" size="sm" startDecorator={<MessageCircle size={16} />} variant="outlined" color="neutral">
                     Feedback
                 </Button>
-            </div>*/}
+            </div>
 
         </header>
     )
