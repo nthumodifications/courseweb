@@ -8,7 +8,7 @@ import { useEffect, useState, Fragment, useRef, use, useMemo } from "react";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter, Search, X } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useDebouncedCallback } from "use-debounce";
-import { useMediaQuery } from 'usehooks-ts';
+import { useLocalStorage, useMediaQuery } from 'usehooks-ts';
 import { arrayRange } from '@/helpers/array';
 import RefineControls from '@/components/Courses/RefineControls';
 import useDictionary from "@/dictionaries/useDictionary";
@@ -66,6 +66,7 @@ const CoursePage: NextPage = () => {
     const scrollRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
     const searchParams = useSearchParams();
+    const [filtersState, setFiltersState] = useLocalStorage<RefineControlFormTypes>('course_filters', emptyFilters);
 
     const { control, watch, setValue, reset, formState: { isDirty } } = useForm<RefineControlFormTypes>({
         defaultValues: useMemo(() => {
@@ -84,7 +85,15 @@ const CoursePage: NextPage = () => {
                         })
                         .filter(mod => !!mod) ?? []
                 }
-                return Object.assign({}, emptyFilters, params)
+                const final = Object.assign({}, emptyFilters, params)
+                //if final is same as emptyFilters, then it means there is no filters, return filterstate, check if filtersState is same as emptyFilters, if not, reset to emptyFilters
+                if(JSON.stringify(final) == JSON.stringify(emptyFilters)) {
+                    if(JSON.stringify(filtersState) != JSON.stringify(emptyFilters)) {
+                        return emptyFilters;
+                    }
+                    return filtersState;
+                }
+                else return final;
             }
             else return emptyFilters;
         }, [])
@@ -227,13 +236,16 @@ const CoursePage: NextPage = () => {
             ...filters,
             department: filters.department.map(mod => mod.code),
         }, { arrayFormat: 'index' }))
+        setFiltersState(filters);
 
     }, [JSON.stringify(filters)])
 
     const { allCourseData } = useUserTimetable();
 
     const renderExistingSelection = () => {
-        if(isDirty) return <></>;
+        // if(isDirty) return <></>;
+        //check if current filters is same as emptyFilters, if not, return empty
+        if(JSON.stringify(filters) != JSON.stringify(emptyFilters)) return <></>;
         return allCourseData.map((course) => <CourseListItem key={course.raw_id} course={course}/>)
     }
 
@@ -302,7 +314,7 @@ const CoursePage: NextPage = () => {
                     </div>
                 </div>
             </div>
-            {!isMobile && <RefineControls control={control} onClear={handleClear} />}
+            {!isMobile && <RefineControls control={control} onClear={handleClear} setValue={setValue}/>}
             {isMobile && <Drawer
                 size="md"
                 variant="plain"
@@ -318,7 +330,7 @@ const CoursePage: NextPage = () => {
                     },
                 }}
             >
-                <RefineControls control={control} onClear={handleClear}/>
+                <RefineControls control={control} onClear={handleClear} setValue={setValue}/>
             </Drawer>}
         {/* </div> */}
         </>

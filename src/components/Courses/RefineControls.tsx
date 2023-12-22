@@ -14,7 +14,7 @@ import {
     Typography,
 } from '@mui/joy';
 import { FC } from 'react';
-import { Control } from 'react-hook-form';
+import { Control, UseFormSetValue } from 'react-hook-form';
 import TimeslotSelectorControl from '../FormComponents/TimeslotSelectorControl';
 import useSWR from 'swr';
 import AutocompleteControl from '../FormComponents/AutocompleteControl';
@@ -25,8 +25,10 @@ import { useSettings } from '@/hooks/contexts/settings';
 import { Department } from '@/types/courses';
 import { RefineControlFormTypes } from '@/app/[lang]/courses/page';
 import SelectControl from '../FormComponents/SelectControl';
+import useUserTimetable from '@/hooks/useUserTimetable';
+import {scheduleTimeSlots} from '@/const/timetable';
 
-const RefineControls: FC<{ control: Control<RefineControlFormTypes>, onClear: () => void }> = ({ control, onClear }) => {
+const RefineControls: FC<{ control: Control<RefineControlFormTypes>, setValue: UseFormSetValue<RefineControlFormTypes>, onClear: () => void }> = ({ control, setValue, onClear }) => {
     const dict = useDictionary();
     const { language } = useSettings();
     const { data: firstSpecial = [], error: error1, isLoading: load1 } = useSWR('distinct_first_specialization', async () => {
@@ -76,6 +78,24 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes>, onClear: ()
 
     const isMobile = useMediaQuery('(max-width: 768px)');
 
+    const { allCourseData } = useUserTimetable();
+    const handleFillTimes = () => {
+        const timeslots = allCourseData.map(course => course.times.map(time => time.match(/.{1,2}/g) ?? [] as unknown as string[]).flat()).flat();
+        const timeslotSet = new Set(timeslots);
+        const timeslotList = Array.from(timeslotSet);
+        const days = ['M', 'T', 'W', 'R', 'F', 'S'];
+        const selectDays: string[] = [];
+        scheduleTimeSlots.forEach(timeSlot => {
+            days.forEach(day => {
+                if(!timeslotList.includes(day+timeSlot.time)) {
+                    selectDays.push(day+timeSlot.time);
+                }
+            })
+        })
+        setValue('timeslots', selectDays);
+    }
+
+
     return <Sheet 
         variant="outlined" 
         sx={{ 
@@ -102,6 +122,15 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes>, onClear: ()
         >
             {dict.course.refine.title}
         </Typography>
+        <Button
+            variant="outlined"
+            color="neutral"
+            size="sm"
+            onClick={onClear}
+            sx={{ px: 1.5, mt: 1 }}
+        >
+            {dict.course.refine.clear}
+        </Button>
         <div role="group" aria-labelledby="filter-status">
             <List>
                 <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
@@ -154,6 +183,9 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes>, onClear: ()
                 <Accordion>
                     <AccordionSummary>{dict.course.refine.time}</AccordionSummary>
                     <AccordionDetails>
+                        <Button variant="outlined" color="neutral" size="sm" onClick={handleFillTimes}>
+                            找沒課的時間
+                        </Button>
                         <TimeslotSelectorControl control={control} />
                     </AccordionDetails>
                 </Accordion>
