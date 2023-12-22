@@ -9,6 +9,7 @@ import { MinimalCourse, RawCourseID } from '@/types/courses';
 import { useLocalStorage } from 'usehooks-ts';
 import { lastSemester, semesterInfo, currentSemester } from "@/const/semester";
 import { getSemesterFromID } from '@/helpers/courses';
+import { event } from "@/lib/gtag";
 
 type CourseLocalStorage = { [sem: string]: RawCourseID[] };
 
@@ -106,6 +107,11 @@ const useUserTimetableProvider = (loadCourse = true) => {
                 [semester]: [...oldSemesterCourses, courseID]
             }
         });
+        event({
+            action: "add_course",
+            category: "timetable",
+            label: courseID,
+        })
     }
 
     const deleteCourse = (courseID: string) => {
@@ -123,6 +129,11 @@ const useUserTimetableProvider = (loadCourse = true) => {
                 [semester]: oldSemesterCourses.filter(c => c != courseID)
             }
         });
+        event({
+            action: "delete_course",
+            category: "timetable",
+            label: courseID,
+        })
     }
 
     const isCourseSelected = useCallback((courseID: string) => {
