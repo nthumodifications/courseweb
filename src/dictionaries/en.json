@@ -48,6 +48,7 @@
             "reserved": "Reserved",
             "capacity": "Capacity",
             "class": "Class",
+            "brief": "Brief",
             "description": "Description",
             "restrictions": "Restrictions",
             "compulsory": "Compulsory",

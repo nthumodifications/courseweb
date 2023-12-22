@@ -1,15 +1,21 @@
 import Fade from "@/components/Animation/Fade";
 import { getDictionary } from "@/dictionaries/dictionaries";
-import {getCourse, getCoursePTTReview, getCourseWithSyllabus} from '@/lib/course';
+import { getCoursePTTReview, getCourseWithSyllabus } from '@/lib/course';
 import { LangProps } from "@/types/pages";
-import {Accordion, AccordionDetails, AccordionGroup, AccordionSummary, Alert, Chip, Divider, Button} from '@mui/joy';
+import {
+    Accordion,
+    AccordionDetails,
+    AccordionGroup,
+    AccordionSummary,
+    Alert,
+    Chip,
+    Divider,
+} from '@mui/joy';
 import { format } from "date-fns";
 import { ResolvingMetadata } from "next";
-import {AlertTriangle, DownloadCloud, Minus, Plus} from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { redirect } from 'next/navigation'
 import CourseTagList from "@/components/Courses/CourseTagsList";
-import {useSettings} from '@/hooks/contexts/settings';
-import { useMemo } from "react";
 import SelectCourseButton from '@/components/Courses/SelectCourseButton';
 import { createTimetableFromCourses } from "@/helpers/timetable";
 import Timetable from "@/components/Timetable/Timetable";
@@ -99,7 +105,7 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                 <div className="grid grid-cols-1 md:grid-cols-[auto_320px] gap-6 ">
                     <div className="space-y-4">
                         <div className="">
-                            <h3 className="font-semibold text-xl mb-2" id="brief">簡介</h3>
+                            <h3 className="font-semibold text-xl mb-2" id="brief">{dict.course.details.brief}</h3>
                             <p className="whitespace-pre-line text-sm">{course.course_syllabus.brief}</p>
                         </div>
                         <div className="">
@@ -194,19 +200,13 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                 </div>
                 
             </div>
-            <div className="flex flex-col gap-1 px-2">
+            <div className="hidden md:flex flex-col gap-1 px-2">
                 {/* Table of Contents */}
                 <div className="flex flex-col gap-1 sticky top-0 py-4">
                     <h3 className="font-semibold text-base mb-2 pl-3">目錄</h3>
                     <div className="flex flex-col">
-                        {/* <a href="#brief" className="text-sm">簡介</a>
-                        <a href="#description" className="text-sm">課程大綱</a>
-                        {course?.prerequisites && <a href="#prerequesites" className="text-sm">擋修</a>}
-                        <a href="#timetable" className="text-sm">時間表</a>
-                        <a href="#ptt" className="text-sm">PTT心得</a>
-                        <a href="#other" className="text-sm">相同課號資料</a> */}
-                        <TOCNavItem href="#brief">簡介</TOCNavItem>
-                        <TOCNavItem href="#description">課程大綱</TOCNavItem>
+                        <TOCNavItem href="#brief">{dict.course.details.brief}</TOCNavItem>
+                        <TOCNavItem href="#description">{dict.course.details.description}</TOCNavItem>
                         {course?.prerequisites && <TOCNavItem href="#prerequesites">擋修</TOCNavItem>}
                         <TOCNavItem href="#timetable">時間表</TOCNavItem>
                         {reviews.length > 0 && <TOCNavItem href="#ptt">PTT心得</TOCNavItem>}
