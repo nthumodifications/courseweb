@@ -17,16 +17,19 @@ const Header: FC = () => {
 
     return (
         <header className="h-14 w-screen bg-white dark:bg-neutral-900 shadow-md px-4 md:px-8 py-4 md:col-span-2 flex flex-row items-center z-50 gap-4">
-            <Link href={"/"+language+"/timetable"} className="mr-auto">
-                <FullLogo />
-            </Link>
+            
+            <div className="flex flex-col md:flex-row mr-auto md:items-center md:gap-4">
+                <Link href={"/"+language+"/timetable"}>
+                    <FullLogo />
+                </Link>
 
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-            {language == 'en' &&
-                (currentSemester ?`AC${currentSemester.year} Sem ${currentSemester.semester}, Week ${currentWeek}`: `Holiday`)}
-            {language == 'zh' &&
-                (currentSemester ?`${currentSemester.year-1911}-${currentSemester.semester} 學期, 第${currentWeek}周`: `假期`)}
-            </p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                {language == 'en' &&
+                    (currentSemester ?`AC${currentSemester.year} Sem ${currentSemester.semester}, Week ${currentWeek}`: `Holiday`)}
+                {language == 'zh' &&
+                    (currentSemester ?`${currentSemester.year-1911}-${currentSemester.semester} 學期, 第${currentWeek}周`: `假期`)}
+                </p>
+            </div>
             
             <div className="flex gap-2">
                 <Help/>
