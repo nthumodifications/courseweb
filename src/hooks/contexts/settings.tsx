@@ -7,6 +7,7 @@ import { Language } from "@/types/settings";
 import { RawCourseID } from "@/types/courses";
 import { apps } from "@/const/apps";
 import { timetableColors } from "@/const/timetableColors";
+import { event } from "@/lib/gtag";
 
 const settingsContext = createContext<ReturnType<typeof useSettingsProvider>>({
     language: "zh",
@@ -50,6 +51,11 @@ const useSettingsProvider = () => {
         if(!themes.includes(timetableTheme)) {
             setTimetableTheme(themes[0]);
         }
+        event({
+            action: "selected_theme",
+            category: "theme",
+            label: !themes.includes(timetableTheme) ? themes[0] : timetableTheme
+        });
     }, [timetableTheme]);
 
     //check if cookies 'locale' exists, else set it
