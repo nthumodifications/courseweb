@@ -16,6 +16,7 @@ import { Viewport } from 'next'
 import GoogleAnalytics from '@/components/GoogleAnalytics';
 import {UserTimetableProvider} from '@/hooks/useUserTimetable';
 import { Inter, Noto_Sans_TC } from 'next/font/google';
+import { Suspense } from 'react';
 
 export const metadata: Metadata = {
   title: {
@@ -116,7 +117,9 @@ export default function RootLayout({
                   <SideNav />
                   <main className='overflow-y-auto overflow-x-hidden h-full w-full scroll-smooth'>
                     {children}
-                    <Analytics />
+                    <Suspense fallback={null}>
+                      <Analytics />
+                    </Suspense>
                   </main>
                   <Footer />
                 </body>

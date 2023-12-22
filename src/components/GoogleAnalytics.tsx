@@ -1,22 +1,41 @@
 'use client';
 import Script from 'next/script';
+import * as gtag from "@/lib/gtag";
+import { useEffect } from 'react';
+import { usePathname, useSearchParams } from 'next/navigation';
 
 
 const GoogleAnalytics = () => {
-
     if(process.env.NODE_ENV !== 'production') return <></>;
+
+    const pathname = usePathname()
+    const searchParams = useSearchParams()
+
+    useEffect(() => {
+        const url = `${pathname}?${searchParams}`
+        gtag.pageview(url);
+    }, [pathname, searchParams]);
+
     return (
         <>
-            <Script src="https://www.googletagmanager.com/gtag/js?id=G-WX2Y030ZGR" />
-            <Script id="google-analytics">
-            {`
-                window.dataLayer = window.dataLayer || [];
-                function gtag(){dataLayer.push(arguments);}
-                gtag('js', new Date());
-    
-                gtag('config', 'G-WX2Y030ZGR');
-            `}
-            </Script>
+            <Script
+                strategy='afterInteractive'
+                src={`https://www.googletagmanager.com/gtag/js?id=${gtag.GA_TRACKING_ID}`}
+            />
+            <Script
+                id='gtag-init'
+                strategy='afterInteractive'
+                dangerouslySetInnerHTML={{
+                __html: `
+                    window.dataLayer = window.dataLayer || [];
+                    function gtag(){dataLayer.push(arguments);}
+                    gtag('js', new Date());
+                    gtag('config', '${gtag.GA_TRACKING_ID}', {
+                    page_path: window.location.pathname,
+                    });
+                    `,
+                }}
+            />
         </>
     )
 }
