@@ -18,6 +18,7 @@ import { departments } from "@/const/departments";
 import useUserTimetable from "@/hooks/useUserTimetable";
 import {Department} from '@/types/courses';
 import { TimeFilterType } from "@/components/FormComponents/TimeslotSelectorControl";
+import { event } from "@/lib/gtag";
 
 export type RefineControlFormTypes = {
     textSearch: string,
@@ -145,6 +146,14 @@ const CoursePage: NextPage = () => {
         scrollRef.current?.scrollTo(0, 0);
         setLoading(true);
         //Query for courses
+        event({
+            action: "search_courses",
+            category: "courses",
+            label: "popular_filters",
+            data: {
+                filters: filters,
+            }
+        })
         try {
             let temp = supabase.rpc('search_courses_with_syllabus', {
                     keyword: filters.textSearch,
