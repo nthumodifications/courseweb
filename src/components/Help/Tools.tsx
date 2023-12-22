@@ -39,7 +39,7 @@ const HeadlessLoginDialog = ({ onClose }: { onClose: () => void}) => {
     </ModalDialog>
 }
 
-export default () => {
+const Tools = () => {
 
   const { ais } = useSettings();
   const [openModal, closeModal] = useModal();
@@ -61,11 +61,13 @@ export default () => {
       <span className="">
         Link your NTHU account to NTHUMODS and open the door to a treasure trove of additional tools. Seamlessly integrate your academic life by accessing exclusive features tailored to NTHU students.
       </span>
-      <div className="">
-        <Button onClick={handleOpenHeadlessLogin}>Connect now</Button>
-        {ais.enabled && <span className="text-gray-600 dark:text-gray-400 text-sm">已連接</span>}
-        {ais.enabled && !ais.ACIXSTORE && <span className="text-red-600 dark:text-red-400 text-sm">登入失敗</span>}
+      <div>
+        <Button variant="outlined" color="neutral" onClick={handleOpenHeadlessLogin}>Connect now</Button>
       </div>
+      {ais.enabled && <span className="text-gray-600 dark:text-gray-400 text-sm">已連接</span>}
+      {ais.enabled && !ais.ACIXSTORE && <span className="text-red-600 dark:text-red-400 text-sm">登入失敗</span>}
     </div>
   )
 }
+
+export default Tools

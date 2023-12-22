@@ -1,4 +1,4 @@
-export default () => {
+const Intro = () => {
   return (
     <div className="flex flex-col gap-2">
       <div className="flex justify-center mb-4">
@@ -14,3 +14,5 @@ export default () => {
     </div>
   )
 }
+
+export default Intro
