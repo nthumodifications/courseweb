@@ -36,6 +36,7 @@ const useUserTimetableProvider = (loadCourse = true) => {
 
 
     const { data: allCourseData = [], error, isLoading } = useSWR(['courses', courses[semester]], async ([table, courseCodes]) => {
+        if(!courseCodes) return [];
         const { data = [], error } = await supabase.rpc('search_courses_with_syllabus', { keyword: "" }).in('raw_id', courseCodes);
         if (error) throw error;
         if (!data) throw new Error('No data');
