@@ -91,11 +91,23 @@ const TodaySchedule: FC<{ weather: WeatherData, alerts: AlertDefinition[] }> = (
         ))
     }
 
+    const NoClassPickedReminder = () => {
+        return <Alert>
+            <div className='flex flex-col space-y-1'>
+                <h1 className='text-xl font-bold'>還沒選到課嗎？</h1>
+                <ul className='list-decimal list-inside'>
+                    <li className='text-base'>先到 <Link className='text-[#AF7BE4] font-medium' href='/zh/courses'>課表</Link> 選擇課程</li>
+                    <li className='text-base'>後到 <Link className='text-[#AF7BE4] font-medium' href='/zh/timetable'>時間表</Link> 查看時間表</li>
+                </ul>
+            </div>
+        </Alert>
+    }
 
-    return <div className="h-full w-full px-3 md:px-8 py-4">
+    return <div className="h-full w-full px-3 md:px-8 py-4 space-y-4">
+        {timetableData.length == 0 && <NoClassPickedReminder/>}
         {renderPinnedApps()}
         {days.map(day => (
-            <div className="flex flex-col gap-2 pb-8" key={day.getTime()}>
+            <div className="flex flex-col gap-2 pb-4" key={day.getTime()}>
                 <div className="flex flex-row gap-2 justify-between border-b border-gray-400 pb-2">
                     <div className="flex flex-col flex-1">
                         {/* 6TH OCTOBER */}
