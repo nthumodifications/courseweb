@@ -67,7 +67,7 @@ const SettingsPage = () => {
                 <TimetablePreview/>
                 <TimetableThemeList/>
             </div>
-            <Divider/>
+            {/* <Divider/>
             <div className="flex flex-row gap-4 py-4">
                 <div className="flex flex-col flex-1">
                     <h2 className="font-semibold text-xl text-gray-600 dark:text-gray-400 pb-2">清華大學OAuth 賬號</h2>
@@ -83,7 +83,7 @@ const SettingsPage = () => {
                     </>}
                     {status == "unauthenticated" && <span className="text-gray-600 dark:text-gray-400"><NTHULoginButton/></span>}
                 </div>
-            </div>
+            </div> */}
             <Divider/>
             <div className="flex flex-row gap-4 py-4" id="headless_ais">
                 <div className="flex flex-col flex-1">
