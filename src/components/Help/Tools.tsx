@@ -2,7 +2,8 @@ import { useSettings } from "@/hooks/contexts/settings"
 import { useModal } from "@/hooks/contexts/useModal"
 import { Button, DialogActions, DialogContent, DialogTitle, Input, ModalClose, ModalDialog } from "@mui/joy";
 import { useState } from "react";
-
+import useDictionary from '@/dictionaries/useDictionary';
+  
 const HeadlessLoginDialog = ({ onClose }: { onClose: () => void}) => {
     const [studentid, setStudentid] = useState('');
     const [password, setPassword] = useState('');
@@ -41,6 +42,7 @@ const HeadlessLoginDialog = ({ onClose }: { onClose: () => void}) => {
 
 const Tools = () => {
 
+  const dict = useDictionary();
   const { ais } = useSettings();
   const [openModal, closeModal] = useModal();
 
@@ -56,13 +58,15 @@ const Tools = () => {
         <img src="/images/toolbox.gif" className="w-48 h-48" />
       </div>
       <span className="font-bold text-2xl">
-        Need more features?
+        {dict.help.tools.title}
       </span>
       <span className="">
-        Link your NTHU account to NTHUMODS and open the door to a treasure trove of additional tools. Seamlessly integrate your academic life by accessing exclusive features tailored to NTHU students.
+        {dict.help.tools.description}
       </span>
       <div>
-        <Button variant="outlined" color="neutral" onClick={handleOpenHeadlessLogin}>Connect now</Button>
+        <Button variant="outlined" color="neutral" onClick={handleOpenHeadlessLogin}>
+          {dict.help.tools.connect}
+        </Button>
       </div>
       {ais.enabled && <span className="text-gray-600 dark:text-gray-400 text-sm">已連接</span>}
       {ais.enabled && !ais.ACIXSTORE && <span className="text-red-600 dark:text-red-400 text-sm">登入失敗</span>}

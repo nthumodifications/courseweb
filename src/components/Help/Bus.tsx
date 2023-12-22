@@ -1,14 +1,19 @@
+import useDictionary from '@/dictionaries/useDictionary';
+
 const Bus = () => {
+
+  const dict = useDictionary();
+
   return (
     <div className="flex flex-col gap-2">
       <div className="flex justify-center mb-4">
         <img src="/images/bus.gif" className="w-48 h-48" />
       </div>
       <span className="font-bold text-2xl">
-        Bus Schedules
+        {dict.help.bus.title}
       </span>
       <span className="">
-        Navigating NTHU's campus is a breeze with access to bus routes, timings, and stops to plan your daily commute efficiently. No more waiting in uncertainty.
+        {dict.help.bus.description}
       </span>
     </div>
   )

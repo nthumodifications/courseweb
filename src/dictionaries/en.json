@@ -112,5 +112,33 @@
                 "email": "Send Email"
             }
         }
+    },
+    "help": {
+        "intro": {
+            "title": "Welcome to NTHUMODS",
+            "description": "NTHUMODS might just be your ultimate companion for academic success at National Tsing Hua University! Here's a quick guide to get you started."
+        },
+        "courses": {
+            "title": "Explore Courses",
+            "description": "Discover a wide range of courses tailored to your academic journey. From core subjects to electives, NTHUMODS has you covered. Dive in and find the perfect fit for your schedule."
+        },
+        "dashboard": {
+            "title": "Personalized Dashboard",
+            "description": "Your personalized dashboard awaits! Track your courses, assignments (coming soon), and exams (coming soon) all in one place. Stay organized, stay on top."
+        },
+        "bus": {
+            "title": "Bus Schedules",
+            "description": "Navigating NTHU's campus is a breeze with access to bus routes, timings, and stops to plan your daily commute efficiently. No more waiting in uncertainty."
+        },
+        "tools": {
+            "title": "Need more features?",
+            "description": "Link your NTHU account to NTHUMODS and open the door to a treasure trove of additional tools. Seamlessly integrate your academic life by accessing exclusive features tailored to NTHU students.",
+            "connect": "Connect now"
+        },
+        "dev": {
+            "title": "Growing together",
+            "description": "We're committed to continuous improvement to offer you the best possible experience. Please note that the app is still in development, and while we strive for perfection, there may be occasional hiccups along the way. We value your input extremely, share your ideas, feedback, and features you'd love to see.",
+            "feedback": "Give feedback"
+        }
     }
 }
