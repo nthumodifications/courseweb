@@ -243,6 +243,7 @@ const CoursePage: NextPage = () => {
     const { allCourseData } = useUserTimetable();
 
     const renderExistingSelection = () => {
+        return <></>
         //TODO: existing selection logic doesn't work well with semester switching, so turn it off for now
         // // if(isDirty) return <></>;
         // //check if current filters is same as emptyFilters, if not, return empty
