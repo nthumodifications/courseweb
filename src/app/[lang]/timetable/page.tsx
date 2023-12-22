@@ -15,18 +15,22 @@ import { useSettings } from "@/hooks/contexts/settings";
 import Link from "next/link";
 import TimetableSlotVertical from "@/components/Timetable/TimetableSlotVertical";
 import TimetableSlot from "@/components/Timetable/TimetableSlot";
+import { createTimetableFromCourses } from "@/helpers/timetable";
+import { MinimalCourse } from "@/types/courses";
 
 
 const TimetablePage: NextPage = () => {
 
-    const { timetableData, semester, setSemester } = useUserTimetable();
-    const { language } = useSettings();
+    const { displayCourseData, semester, setSemester } = useUserTimetable();
+    const { language, timetableTheme } = useSettings();
     const [vertical, setVertical] = useLocalStorage('timetable_vertical', false);
 
     const router = useRouter();
     const searchParams = useSearchParams();
 
     const [openModal, closeModal] = useModal();
+
+    const timetableData = createTimetableFromCourses(displayCourseData as MinimalCourse[], timetableTheme)
 
 
     //Check if URL has course code array, display share dialog.
