@@ -52,8 +52,7 @@ const getOtherClasses = async (course: MinimalCourse) => {
         .eq('department', course.department)
         .eq('course', course.course)
         .not('raw_id', 'eq', course.raw_id)
-        .order('class', { ascending: true })
-        .order('semester', { ascending: false })
+        .order('raw_id', { ascending: false })
     
     if(error) throw error;
     if(!data) throw new Error('No data');
@@ -140,9 +139,9 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                             </AccordionGroup>
                         </div>}
                         <h3 className="font-semibold text-xl mb-2" id="other">相同課號資料</h3>
-                        <div className="flex flex-row items-center space-x-2">
+                        <div className="flex flex-row items-center gap-2 overflow-hidden flex-wrap">
                             {otherClasses.map((m, index) =>
-                                <Link key={index}  className="flex flex-col flex-1" href={`/courses/${m.raw_id}`}>
+                                <Link key={index}  className="flex flex-col w-[240px]" href={`/courses/${m.raw_id}`}>
                                     <h2 className="text-base font-medium text-gray-800 dark:text-neutral-200">{toPrettySemester(m.semester)} 學期</h2>
                                     <h2 className="text-base font-medium text-gray-600 dark:text-neutral-400">{m.department} {m.course}-{m.class} {m.name_zh}</h2>
                                     <h2 className="text-sm font-medium text-gray-600 dark:text-neutral-400">{m.name_en}</h2>
