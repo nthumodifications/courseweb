@@ -240,7 +240,7 @@ const CoursePage: NextPage = () => {
 
     }, [JSON.stringify(filters)])
 
-    const { allCourseData } = useUserTimetable();
+    const { displayCourseData } = useUserTimetable();
 
     const renderExistingSelection = () => {
         return <></>
@@ -248,7 +248,7 @@ const CoursePage: NextPage = () => {
         // // if(isDirty) return <></>;
         // //check if current filters is same as emptyFilters, if not, return empty
         // if(JSON.stringify(filters) != JSON.stringify(emptyFilters)) return <></>;
-        // return allCourseData.map((course) => <CourseListItem key={course.raw_id} course={course}/>)
+        // return displayCourseData.map((course) => <CourseListItem key={course.raw_id} course={course}/>)
     }
 
 

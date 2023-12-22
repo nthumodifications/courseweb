@@ -20,7 +20,7 @@ const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, set
 
     const {
         semester, 
-        allCourseData, 
+        displayCourseData, 
         courses, 
         deleteCourse, 
         addCourse 
@@ -52,12 +52,12 @@ const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, set
     }
 
     const totalCredits = useMemo(() => {
-        return allCourseData.reduce((acc, cur) => acc + (cur?.credits ?? 0), 0);
-    }, [allCourseData]);
+        return displayCourseData.reduce((acc, cur) => acc + (cur?.credits ?? 0), 0);
+    }, [displayCourseData]);
 
-    const duplicates = useMemo(() => hasSameCourse(allCourseData as MinimalCourse[]), [allCourseData]);
+    const duplicates = useMemo(() => hasSameCourse(displayCourseData as MinimalCourse[]), [displayCourseData]);
 
-    const timeConflicts = useMemo(() => hasConflictingTimeslots(allCourseData as MinimalCourse[]), [allCourseData]);
+    const timeConflicts = useMemo(() => hasConflictingTimeslots(displayCourseData as MinimalCourse[]), [displayCourseData]);
 
     const renderButtons = () => {
         return <div className="grid grid-cols-2 grid-rows-2 gap-2">
@@ -75,7 +75,7 @@ const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, set
         {renderButtons()}
         <CourseSearchbar onAddCourse={course => addCourse(course.raw_id)} semester={semester} />
         <div className={`${vertical ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ' : 'flex flex-col'} gap-4 px-4 flex-wrap`}>
-            {allCourseData.map((course, index) => (
+            {displayCourseData.map((course, index) => (
                 <div key={index} className="flex flex-row gap-4 items-center max-w-3xl">
                     <div className="w-4 h-4 rounded-full" style={{ backgroundColor: timetableColors[timetableTheme][index] }}></div>
                     <div className="flex flex-col flex-1">
@@ -121,7 +121,7 @@ const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, set
                     </div>
                 </div>
             ))}
-            {allCourseData.length == 0 && (
+            {displayCourseData.length == 0 && (
                 <div className="flex flex-col items-center space-y-4">
                     <span className="text-lg font-semibold text-gray-400">{"No Courses Added (yet)"}</span>
                     <div className="flex flex-row gap-2">
@@ -134,7 +134,7 @@ const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, set
         <Divider />
         <div className='flex flex-row gap-4 justify-end'>
             <div className='space-x-2'>
-                <span className='font-bold'>{allCourseData.length}</span>
+                <span className='font-bold'>{displayCourseData.length}</span>
                 <span className='text-gray-600'>課</span>
             </div>
             <div className='space-x-2'>

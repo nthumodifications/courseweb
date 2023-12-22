@@ -16,7 +16,7 @@ import { apps } from '@/const/apps';
 import Link from 'next/link';
 
 const TodaySchedule: FC<{ weather: WeatherData, alerts: AlertDefinition[] }> = ({ weather, alerts }) => {
-    const { timetableData, allCourseData, deleteCourse } = useUserTimetable();
+    const { timetableData, deleteCourse } = useUserTimetable();
     const { language, pinnedApps } = useSettings();
     const dict = useDictionary();
 

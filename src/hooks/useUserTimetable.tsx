@@ -7,14 +7,15 @@ import { CourseTimeslotData } from "@/types/timetable";
 import useSWR from "swr";
 import { MinimalCourse, RawCourseID } from '@/types/courses';
 import { useLocalStorage } from 'usehooks-ts';
-import { lastSemester, semesterInfo } from "@/const/semester";
+import { lastSemester, semesterInfo, currentSemester } from "@/const/semester";
 import { getSemesterFromID } from '@/helpers/courses';
 
 type CourseLocalStorage = { [sem: string]: RawCourseID[] };
 
 const userTimetableContext = createContext<ReturnType<typeof useUserTimetableProvider>>({
     timetableData: [],
-    allCourseData: [],
+    displayCourseData: [],
+    semesterCourseData: [],
     semesterCourses: [],
     courses: {},
     setCourses: () => { },
@@ -35,7 +36,17 @@ const useUserTimetableProvider = (loadCourse = true) => {
     const [timetableData, setTimetableData] = useState<CourseTimeslotData[]>([]);
 
 
-    const { data: allCourseData = [], error, isLoading } = useSWR(['courses', courses[semester]], async ([table, courseCodes]) => {
+    const { data: displayCourseData = [], error, isLoading } = useSWR(['courses', courses[semester]], async ([table, courseCodes]) => {
+        if(!courseCodes) return [];
+        const { data = [], error } = await supabase.rpc('search_courses_with_syllabus', { keyword: "" }).in('raw_id', courseCodes);
+        if (error) throw error;
+        if (!data) throw new Error('No data');
+        return data as unknown as CourseSyllabusView[];
+    }, {
+        keepPreviousData: true,
+    });
+
+    const { data: semesterCourseData = [], error: semesterError, isLoading: semesterLoading } = useSWR(['courses', currentSemester ? courses[currentSemester.id] : null], async ([table, courseCodes]) => {
         if(!courseCodes) return [];
         const { data = [], error } = await supabase.rpc('search_courses_with_syllabus', { keyword: "" }).in('raw_id', courseCodes);
         if (error) throw error;
@@ -76,8 +87,8 @@ const useUserTimetableProvider = (loadCourse = true) => {
             console.log('loading')
             return;
         }
-        setTimetableData(createTimetableFromCourses(allCourseData! as MinimalCourse[], timetableTheme));
-    }, [allCourseData, isLoading, error, timetableTheme]);
+        setTimetableData(createTimetableFromCourses(semesterCourseData! as MinimalCourse[], timetableTheme));
+    }, [displayCourseData, isLoading, error, timetableTheme]);
 
     //handlers for courses
     const addCourse = (courseID: string) => {
@@ -132,7 +143,8 @@ const useUserTimetableProvider = (loadCourse = true) => {
 
     return {
         timetableData, 
-        allCourseData, 
+        displayCourseData, 
+        semesterCourseData,
         semester, 
         setSemester, 
         semesterCourses, 

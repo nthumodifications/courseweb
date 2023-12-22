@@ -78,9 +78,9 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes>, setValue: U
 
     const isMobile = useMediaQuery('(max-width: 768px)');
 
-    const { allCourseData } = useUserTimetable();
+    const { displayCourseData } = useUserTimetable();
     const handleFillTimes = () => {
-        const timeslots = allCourseData.map(course => course.times.map(time => time.match(/.{1,2}/g) ?? [] as unknown as string[]).flat()).flat();
+        const timeslots = displayCourseData.map(course => course.times.map(time => time.match(/.{1,2}/g) ?? [] as unknown as string[]).flat()).flat();
         const timeslotSet = new Set(timeslots);
         const timeslotList = Array.from(timeslotSet);
         const days = ['M', 'T', 'W', 'R', 'F', 'S'];
