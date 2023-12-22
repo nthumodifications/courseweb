@@ -93,7 +93,7 @@ const SettingsPage = () => {
                 <div className="flex flex-col justify-center items-center space-y-2 w-52">
                     <Button variant="outlined" color="primary" onClick={handleOpenHeadlessLogin}>連接</Button>
                     {ais.enabled && <span className="text-gray-600 dark:text-gray-400 text-sm">已連接</span>}
-                    {ais.enabled && !ais.ACIXSTORE && <span className="text-red-600 dark:text-red-400 text-sm">登入失敗</span>}
+                    {ais.enabled && !ais.ACIXSTORE && <span className="text-red-600 dark:text-red-400 text-sm">連接著/登入異常</span>}
                 </div>
             </div>
         </div>
