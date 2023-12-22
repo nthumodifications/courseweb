@@ -139,6 +139,10 @@
             "title": "Growing together",
             "description": "We're committed to continuous improvement to offer you the best possible experience. Please note that the app is still in development, and while we strive for perfection, there may be occasional hiccups along the way. We value your input extremely, share your ideas, feedback, and features you'd love to see.",
             "feedback": "Give feedback"
-        }
+        },
+        "prev": "Prev",
+        "next": "Next",
+        "skip": "Skip",
+        "jump": "Jump in"
     }
 }

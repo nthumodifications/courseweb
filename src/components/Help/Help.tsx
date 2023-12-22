@@ -2,6 +2,7 @@
 import { Modal, ModalDialog, ModalClose, Typography, Box, Button } from "@mui/joy";
 import { useState, useEffect } from "react";
 import { ChevronRight, ChevronLeft, ExternalLink, HelpCircle } from 'lucide-react';
+import useDictionary from '@/dictionaries/useDictionary';
 
 import Intro from './Intro'
 import Courses from './Courses'
@@ -18,6 +19,8 @@ const Help = () => {
 
   const [open, setOpen] = useState(false);
   const [page, setPage] = useState(0);
+
+  const dict = useDictionary();
 
   useEffect(() => {
     const hasVisitedBefore = localStorage.getItem("hasVisitedBefore");
@@ -49,7 +52,7 @@ const Help = () => {
       <ModalDialog className="flex flex-col w-[400px]">
         <div>
           <Button color="neutral" variant="plain" size="sm" onClick={handleClose}>
-            Skip
+            {dict.help.skip}
           </Button>
         </div>
         {pages[page]}
@@ -63,7 +66,7 @@ const Help = () => {
               setPage(page - 1)
             }}
           >
-            Prev
+            {dict.help.prev}
           </Button>
 
           {page != pages.length - 1 ?
@@ -75,7 +78,7 @@ const Help = () => {
               setPage(page + 1)
             }}
           >
-            Next
+            {dict.help.next}
           </Button>
           :
           <Button
@@ -84,7 +87,7 @@ const Help = () => {
             variant="solid"
             onClick={handleClose}
           >
-            Jump in
+            {dict.help.jump}
           </Button>
           }
 
