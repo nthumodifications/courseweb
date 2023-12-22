@@ -6,7 +6,7 @@ import { Button, Divider, Option, Select, Switch } from "@mui/joy";
 import {  useEffect, useState } from "react";
 import NTHULoginButton from "../cds/NTHULoginButton";
 import { signOut, useSession } from "next-auth/react";
-import { HeadlessLoginDialog } from "./HeadlessLoginDialog";
+import { HeadlessLoginDialog } from "../../../components/Forms/HeadlessLoginDialog";
 import { TimetableThemeList } from "./TimetableThemeList";
 import TimetablePreview from "./TimetablePreview";
 
