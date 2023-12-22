@@ -61,9 +61,9 @@ const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, set
 
     const renderButtons = () => {
         return <div className="grid grid-cols-2 grid-rows-2 gap-2">
-            <Button variant="outlined" startDecorator={<Repeat className="w-4 h-4" />} onClick={() => setVertical(!vertical)}>{vertical ? 'Horizontal View' : 'Vertical View'}</Button>
-            <Button variant="outlined" startDecorator={<Download className="w-4 h-4" />} onClick={handleDownloadDialog}>{dict.timetable.actions.download}</Button>
-            <Button variant="outlined" startDecorator={<Share className="w-4 h-4" />} onClick={handleShowShareDialog}>{dict.timetable.actions.share}</Button>
+            <Button variant="outlined" color="neutral" startDecorator={<Repeat className="w-4 h-4" />} onClick={() => setVertical(!vertical)}>{vertical ? 'Horizontal View' : 'Vertical View'}</Button>
+            <Button variant="outlined" color="neutral" startDecorator={<Download className="w-4 h-4" />} onClick={handleDownloadDialog}>{dict.timetable.actions.download}</Button>
+            <Button variant="outlined" color="neutral" startDecorator={<Share className="w-4 h-4" />} onClick={handleShowShareDialog}>{dict.timetable.actions.share}</Button>
         </div>
     }
 
