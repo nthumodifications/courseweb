@@ -334,7 +334,7 @@ const CdsCoursesForm: FC<{
                                             { value: 5, label: '5xxx' },
                                             { value: 6, label: '6xxx' },
                                         ]}
-                                        label={"修習年紀"}
+                                        label={"修習年級"}
                                     />
                                     <MultiSelectControl
                                         control={control}
