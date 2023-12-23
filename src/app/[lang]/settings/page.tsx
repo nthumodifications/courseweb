@@ -88,7 +88,7 @@ const SettingsPage = () => {
             <div className="flex flex-row gap-4 py-4" id="headless_ais">
                 <div className="flex flex-col flex-1">
                     <h2 className="font-semibold text-xl text-gray-600 dark:text-gray-400 pb-2">代理登入校務資訊系統</h2>
-                    <p className="text-gray-600 dark:text-gray-400">系統會用代理登入方式，讓學生們可以在NTHUMods 上輕鬆鏈接校務系統功能。</p>
+                    <p className="text-gray-600 dark:text-gray-400">系統會用代理登入方式，讓學生們可以在NTHUMods 上輕鬆連結校務系統功能。</p>
                 </div>
                 <div className="flex flex-col justify-center items-center space-y-2 w-52">
                     <Button variant="outlined" color="primary" onClick={handleOpenHeadlessLogin}>連接</Button>

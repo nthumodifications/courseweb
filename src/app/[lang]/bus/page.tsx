@@ -60,7 +60,7 @@ const BusPage = () => {
             </div>
             <div className="p-4">
                 <Alert variant="outlined" color="warning">
-                    公車時間非及時跟新，因此尖峰時間可能會有誤差。
+                    公車時間非即時更新，因此尖峰時間可能會有誤差。
                     Bus Times are Scheduled and may not be accurate during peak hours.
                 </Alert>
             </div>

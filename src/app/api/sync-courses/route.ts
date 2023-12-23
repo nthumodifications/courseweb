@@ -93,7 +93,7 @@ export const GET = async (request: NextRequest) => {
         const normalizedNote = fullWidthToHalfWidth(course['備註'])
         const weeks = normalizedNote.includes('16') ? 16:
                         normalizedNote.includes('18') ? 18: 0;
-        if(weeks != 0) tags.push(weeks+'周')
+        if(weeks != 0) tags.push(weeks+'週')
         const hasXClass = normalizedNote.includes('X-Class') ? true: false;
         if(hasXClass) tags.push('X-Class')
         const no_extra_selection = course['不可加簽說明'].includes('《不接受加簽 No extra selection》')
