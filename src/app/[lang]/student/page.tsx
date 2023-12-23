@@ -3,6 +3,7 @@ import FullLogo from "@/components/Branding/FullLogo";
 import { useSession } from "next-auth/react";
 import QRCode, { QRCodeSVG } from "qrcode.react";
 import useSWR from "swr";
+import NTHULoginButton from "@/app/[lang]/cds/NTHULoginButton"
 
 export const runtime = 'nodejs';
 
@@ -18,8 +19,8 @@ const StudentIDCard = () => {
 
     if(status != 'authenticated') return <></>;
 
-    return <div className="flex flex-col md:flex-row w-full max-w-3xl rounded-xl bg-neutral-800 p-6 gap-8">
-        <div className="flex flex-col w-full rounded-xl bg-neutral-800 gap-8">
+    return <div className="flex flex-col md:flex-row w-full max-w-3xl rounded-xl border-2 border-neutral-800 p-6 gap-8">
+        <div className="flex flex-col w-full rounded-xl gap-8">
             <FullLogo/>
             <div className="flex flex-row">
                 <div className="flex flex-col flex-1">
@@ -47,6 +48,10 @@ const StudentIDCard = () => {
 const StudentPage = () => {
     return <div className="flex flex-col w-full h-full p-4">
         <StudentIDCard/>
+
+        <div>
+            <NTHULoginButton/>
+        </div>
     </div>
 }
 
