@@ -1,4 +1,4 @@
-import { Autocomplete, AutocompleteOption, CircularProgress, ListItemContent } from '@mui/joy';
+import { Autocomplete, AutocompleteOption, CircularProgress, ListItemContent, createFilterOptions } from '@mui/joy';
 import { useEffect, useState } from 'react';
 import { useDebouncedCallback } from 'use-debounce';
 import supabase from '@/config/supabase';
@@ -36,6 +36,11 @@ const CourseSearchbar = ({ onAddCourse, semester = lastSemester.id}: { onAddCour
         if (open) search("");
     }, [open]);
 
+    const filterOptions = createFilterOptions({
+        matchFrom: 'any',
+        stringify: (option: CourseDefinition) => `${option.name_zh} ${option.name_en} ${option.teacher_zh.join(' ')} ${option.teacher_en?.join(' ')} ${option.raw_id}`
+    });
+
     return <Autocomplete
         key={refreshKey}
         placeholder="尋找你要的課..."
@@ -60,6 +65,7 @@ const CourseSearchbar = ({ onAddCourse, semester = lastSemester.id}: { onAddCour
             if (newValue) onAddCourse(newValue!);
         }}
         isOptionEqualToValue={(option, value) => option.raw_id === value.raw_id}
+        
         getOptionLabel={(option) => `${option.department} ${option.course}-${option.class} ${option.name_zh} ${option.name_en}`}
         renderOption={(props, option) => (
             <AutocompleteOption {...props}>
@@ -79,6 +85,7 @@ const CourseSearchbar = ({ onAddCourse, semester = lastSemester.id}: { onAddCour
         )}
         options={options}
         loading={loading}
+        filterOptions={filterOptions}
         endDecorator={
             loading ? (
                 <CircularProgress size="sm" sx={{ bgcolor: 'background.surface' }} />
