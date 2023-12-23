@@ -25,8 +25,8 @@ const TimetableSlotVertical: FC<TimetableSlotProps> = ({ course, tableDim, fract
         className={`absolute rounded-md shadow-lg transform translate-y-0.5 cursor-pointer`}
         onClick={onClick}
         style={{ 
-            left: tableDim.header.width + course.startTime * tableDim.timetable.width + (fractionIndex - 1) * (tableDim.timetable.width/fraction), 
-            top: tableDim.header.height + (course.dayOfWeek) * tableDim.timetable.height, 
+            left: tableDim.header.width + course.startTime * tableDim.timetable.width , 
+            top: tableDim.header.height + (course.dayOfWeek) * tableDim.timetable.height + (fractionIndex - 1) * (tableDim.timetable.height/fraction), 
             width: tableDim.timetable.width * (course.endTime - course.startTime + 1) - 4, 
             height: tableDim.timetable.height/fraction,
             backgroundColor: course.color,
