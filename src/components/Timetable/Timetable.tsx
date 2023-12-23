@@ -64,8 +64,13 @@ const Timetable: FC<{
       const timetableDataWithFraction = timetableData.reduce((acc, cur) => {
         const timeSlots = Array.from({ length: cur.endTime - cur.startTime + 1 }, (_, i) => `${'MTWRFS'[cur.dayOfWeek]}${cur.startTime + i}`);
         const fraction = Math.max(...timeSlots.map(slot => slotCounts[slot]));
+        // const fractionIndex = acc.filter(course => timeSlots.some(slot => course.timeSlots.includes(slot))).length > 0 
+        //   ? acc.filter(course => timeSlots.some(slot => course.timeSlots.includes(slot)))[0].fractionIndex + 1
+        //   : 1;
+        // the code above doesn't assign fractionIndex > 2 because it always checks the first course in the array, which is always 1
+        // the code below checks if there is any course with the same fraction and fractionIndex > 1, if there is, then the fractionIndex will be the maximum of the fractionIndex + 1
         const fractionIndex = acc.filter(course => timeSlots.some(slot => course.timeSlots.includes(slot))).length > 0 
-          ? acc.filter(course => timeSlots.some(slot => course.timeSlots.includes(slot)))[0].fractionIndex + 1
+          ? Math.max(...acc.filter(course => timeSlots.some(slot => course.timeSlots.includes(slot))).map(course => course.fractionIndex)) + 1
           : 1;
         acc.push({ ...cur, fraction, fractionIndex, timeSlots });
         return acc;
@@ -73,6 +78,8 @@ const Timetable: FC<{
 
       return timetableDataWithFraction
     }, [timetableData]);    
+
+    console.log(timetableDataWithFraction)
 
     const showSaturday = timetableData.some(course => course.dayOfWeek == 5);
 
