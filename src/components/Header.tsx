@@ -27,7 +27,7 @@ const Header: FC = () => {
                 {language == 'en' &&
                     (currentSemester ?`AC${currentSemester.year} Sem ${currentSemester.semester}, Week ${currentWeek}`: `Holiday`)}
                 {language == 'zh' &&
-                    (currentSemester ?`${currentSemester.year-1911}-${currentSemester.semester} 學期, 第${currentWeek}周`: `假期`)}
+                    (currentSemester ?`${currentSemester.year-1911}-${currentSemester.semester} 學期, 第${currentWeek}週`: `假期`)}
                 </p>
             </div>
             
