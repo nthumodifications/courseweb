@@ -7,7 +7,7 @@ const fetchCourses = async () => {
     const { data, error } = await supabase_server
         .from('courses')
         .select('raw_id')
-        .eq('semester', '11210')
+        .eq('semester', '11220')
         .order('raw_id', { ascending: true })
     if(error) throw error;
     return data;
@@ -77,7 +77,22 @@ export const GET = async (request: Request) => {
         return text;
     }
     const courses = await fetchCourses();   
-    await Promise.all(courses.map(async course => {
+    // await Promise.all(courses.map(async course => {
+    //     const { raw_id } = course;
+    //     const html = await fetchSyllabusHTML(raw_id);
+    //     const {brief, keywords, content} = await parseContent(html, raw_id);
+    //     console.log('scrapped', raw_id, brief)
+    //     const { error } = await supabase_server.from('course_syllabus').upsert({
+    //         raw_id, 
+    //         brief, 
+    //         keywords: keywords?.split(',') ?? [], 
+    //         content, 
+    //         has_file: content === null ? true : false
+    //     });
+
+    //     if(error) throw error;
+    // }))
+    for(const course of courses) {
         const { raw_id } = course;
         const html = await fetchSyllabusHTML(raw_id);
         const {brief, keywords, content} = await parseContent(html, raw_id);
@@ -91,7 +106,7 @@ export const GET = async (request: Request) => {
         });
 
         if(error) throw error;
-    }))
+    }
     return NextResponse.json({ message: 'success' }, { status: 200 });
 }
 
