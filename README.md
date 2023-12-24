@@ -1,4 +1,4 @@
-![Frame 3](https://github.com/nthumodifications/courseweb/assets/74640729/223a4560-0474-4b04-bdd8-566a192b2bad)
+![Frame 3](https://github.com/nthumodifications/courseweb/assets/74640729/c810b72f-e428-47bc-8f5b-22a49c4eb1a0)
 
 國立清華大學非公式的開源預排，選課，課表網站.   
 The unofficial open-source course preselection, timetable builder, and course catalog website!
