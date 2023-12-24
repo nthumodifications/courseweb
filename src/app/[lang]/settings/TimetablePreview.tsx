@@ -24,10 +24,10 @@ const TimetablePreview = () => {
     const sampleCourses = createTimetableFromCourses([
         {
             raw_id: "22210ABCD123402",
-            name_zh: "惡夢的課程",
-            name_en: "Nightmare Course",
+            name_zh: "大學交往導論",
+            name_en: "Introduction to get a relasionship in uni",
             semester: "110-1",
-            department: "CS",
+            department: "GEC",
             course: "1234",
             class: "02",
             credits: 3,
