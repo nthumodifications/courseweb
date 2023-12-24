@@ -80,16 +80,16 @@ const useUserTimetableProvider = (loadCourse = true) => {
 
     useEffect(() => {
         if (!loadCourse) return;
-        if (error) {
+        if (semesterError) {
             console.error(error);
             return;
         }
-        if (isLoading) {
+        if (semesterLoading) {
             console.log('loading')
             return;
         }
         setTimetableData(createTimetableFromCourses(semesterCourseData! as MinimalCourse[], timetableTheme));
-    }, [displayCourseData, isLoading, error, timetableTheme]);
+    }, [semesterCourseData, semesterLoading, semesterError, timetableTheme]);
 
     //handlers for courses
     const addCourse = (courseID: string) => {
