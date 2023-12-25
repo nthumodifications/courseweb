@@ -50,7 +50,7 @@ const Help = () => {
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen} className="w-[300px]">  
+    <Dialog open={open} onOpenChange={setOpen}>  
       <DialogTrigger asChild>
         <Button variant="outline" className="flex gap-1" onClick={handleOpen}>
           <HelpCircle size="16" />
