@@ -1,8 +1,18 @@
-'use client';
-import { Modal, ModalDialog, ModalClose, Typography, Box, Button } from "@mui/joy";
-import { useState, useEffect } from "react";
-import { ChevronRight, ChevronLeft, ExternalLink, HelpCircle } from 'lucide-react';
-import useDictionary from '@/dictionaries/useDictionary';
+'use client'
+
+import { ChevronRight, ChevronLeft, HelpCircle } from "lucide-react"
+import useDictionary from "@/dictionaries/useDictionary"
+import { useState, useEffect } from "react"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter
+} from "@/scomponents/ui/dialog"
+import { Button } from "@/scomponents/ui/button"
 
 import Intro from './Intro'
 import Courses from './Courses'
@@ -29,72 +39,44 @@ const Help = () => {
     }
   }, []);
 
+  const handleOpen = () => {
+    setOpen(true)
+    setPage(0)
+  }
+
   const handleClose = () => {
     setOpen(false)
     localStorage.setItem("hasVisitedBefore", "mhm");
   }
 
-  return (<>
-    <Button
-      size="sm"
-      color="neutral"
-      variant="outlined"
-      startDecorator={<HelpCircle size={16} />}
-      onClick={() => {
-        setOpen(true)
-        setPage(0)
-      }}
-    >
-      Help
-    </Button>
-
-    <Modal open={open} onClose={handleClose}>
-      <ModalDialog className="flex flex-col w-[400px]">
-        <div>
-          <Button color="neutral" variant="plain" size="sm" onClick={handleClose}>
-            {dict.help.skip}
-          </Button>
-        </div>
+  return (
+    <Dialog open={open} onOpenChange={setOpen} className="w-[300px]">  
+      <DialogTrigger asChild>
+        <Button variant="outline" className="flex gap-1" onClick={handleOpen}>
+          <HelpCircle size="16" />
+          Help
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
         {pages[page]}
-        <div className="pt-8 w-full flex justify-between">
-          <Button
-            disabled={page == 0}
-            startDecorator={<ChevronLeft />}
-            color="neutral"
-            variant="plain"
-            onClick={() => {
-              setPage(page - 1)
-            }}
-          >
-            {dict.help.prev}
+        <DialogFooter className="sm:justify-between flex-col">
+          <Button variant="ghost" className="flex gap-1" disabled={page == 0} onClick={() => {setPage(page - 1)}}>
+            <ChevronLeft size="16" /> {dict.help.prev}
           </Button>
 
           {page != pages.length - 1 ?
-          <Button
-            endDecorator={<ChevronRight />}
-            color="neutral"
-            variant="plain"
-            onClick={() => {
-              setPage(page + 1)
-            }}
-          >
-            {dict.help.next}
+          <Button variant="ghost" className="flex gap-1" onClick={() => {setPage(page + 1)}}>
+            {dict.help.next} <ChevronRight size="16" />
           </Button>
           :
-          <Button
-            endDecorator={<ChevronRight />}
-            color="primary"
-            variant="solid"
-            onClick={handleClose}
-          >
-            {dict.help.jump}
+          <Button variant="ghost" className="flex gap-1" onClick={handleClose}>
+            {dict.help.jump} <ChevronRight size="16" />
           </Button>
           }
-
-        </div>
-      </ModalDialog>
-    </Modal>
-  </>)
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
 }
 
 export default Help;
