@@ -1,10 +1,10 @@
 'use client';
 import TimeslotHeader from '@/components/Timetable/TimeslotHeader';
-import TimetableSlot from '@/components/Timetable/TimetableSlot';
+import TimetableSlotVertical from '@/components/Timetable/TimetableSlotVertical';
 import { scheduleTimeSlots } from '@/const/timetable';
 import {CourseTimeslotData, CourseTimeslotDataWithFraction, TimeSlot, TimetableDim} from '@/types/timetable';
 import {FC, ReactNode, useLayoutEffect, useMemo, useRef, useState} from 'react';
-import TimetableSlotVertical from '@/components/Timetable/TimetableSlotVertical';
+import TimetableSlotHorizontal from '@/components/Timetable/TimetableSlotHorizontal';
 import Link from 'next/link';
 import { useSettings } from '@/hooks/contexts/settings';
 import { BlankTimeslotBody } from './BlankTimeslotBody';
@@ -14,7 +14,7 @@ const Timetable: FC<{
   timetableData: CourseTimeslotData[], 
   vertical?: boolean, 
   renderTimetableSlot?: (course: CourseTimeslotDataWithFraction, tableDim: TimetableDim, vertical?: boolean) => ReactNode 
-}> = ({ timetableData = [], vertical = false, renderTimetableSlot }) => {
+}> = ({ timetableData = [], vertical = true, renderTimetableSlot }) => {
     const headerRow = useRef<HTMLTableCellElement>(null);
     const timetableCell = useRef<HTMLTableCellElement>(null);
     const [tableDim, setTableDim] = useState({ header: { width: 0, height: 0 }, timetable: { width: 0, height: 0 } });
@@ -86,24 +86,21 @@ const Timetable: FC<{
     const days = showSaturday ? ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']: ['MON', 'TUE', 'WED', 'THU', 'FRI'];
 
     const _renderTimetableSlot = (course: CourseTimeslotDataWithFraction, tableDim: TimetableDim, vertical: boolean) => {
-      return <Link href={`/${language}/courses/${course.course.raw_id}`}>
-      {vertical ? 
+      return vertical ? 
         <TimetableSlotVertical 
           course={course} 
           tableDim={tableDim} 
           fraction={course.fraction} 
           fractionIndex={course.fractionIndex} />
         :
-        <TimetableSlot 
+        <TimetableSlotHorizontal 
           course={course} 
           tableDim={tableDim} 
           fraction={course.fraction} 
           fractionIndex={course.fractionIndex} />
-      }
-      </Link>
     }
 
-    if(vertical) return (
+    if(!vertical) return (
       <div className="text-center lg:mb-0 w-full overflow-x-auto overflow-y-hidden">
         {/* Timetable, Relative overlay */}
         <div className="relative w-full">

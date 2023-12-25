@@ -74,7 +74,7 @@ const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, set
     return <div className="flex flex-col gap-4 px-4">
         {renderButtons()}
         <CourseSearchbar onAddCourse={course => addCourse(course.raw_id)} semester={semester} />
-        <div className={`${vertical ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ' : 'flex flex-col'} gap-4 px-4 flex-wrap`}>
+        <div className={`${!vertical ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ' : 'flex flex-col'} gap-4 px-4 flex-wrap`}>
             {displayCourseData.map((course, index) => (
                 <div key={index} className="flex flex-row gap-4 items-center max-w-3xl">
                     <div className="w-4 h-4 rounded-full" style={{ backgroundColor: timetableColors[timetableTheme][index % timetableColors[timetableTheme].length] }}></div>

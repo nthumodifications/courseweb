@@ -9,6 +9,7 @@ import { lastSemester } from '@/const/semester';
 import { Button } from '@mui/joy';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import { renderTimetableSlot } from '@/helpers/timetable_course';
 
 type Props = {
     params: {
@@ -48,7 +49,7 @@ const MapPage = async ({
             </div>
             <div className='py-4 flex flex-col items-center space-y-2 px-2 md:px-6'>
                 <h2 className='font-semibold text-xl'>{venueId}</h2>
-                <Timetable timetableData={timetable} />
+                <Timetable timetableData={timetable} renderTimetableSlot={renderTimetableSlot}/>
                 <Suspense fallback={<h1>Map failed to load</h1>}>
                     <NTHUMap marker={[24.791513, 120.994123]}/>
                 </Suspense>
