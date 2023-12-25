@@ -42,6 +42,7 @@ import { hasConflictingTimeslots, hasSameCourse } from '@/helpers/courses';
 import { useModal } from '@/hooks/contexts/useModal';
 import {TimeFilterType} from '@/components/FormComponents/TimeslotSelectorControl';
 import Link from 'next/link';
+import {renderTimetableSlot} from '@/helpers/timetable_course';
 
 type CdsCoursesFormFields = {
     textSearch: string;
@@ -500,7 +501,7 @@ const CdsCoursesForm: FC<{
             </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-sm">
-            {showTimetable && <Timetable timetableData={timetableData} />}
+            {showTimetable && <Timetable timetableData={timetableData} renderTimetableSlot={renderTimetableSlot} />}
             <div className="flex flex-col gap-4 px-4">
                 <Alert color='success' startDecorator={<Info />}>
                     <div className='flex flex-col'>

@@ -72,7 +72,7 @@ const TimetablePreview = () => {
     return <div className="max-h-[320px] overflow-y-hidden">
         <Timetable
             timetableData={sampleCourses}
-            vertical
+            vertical={false}
         />
     </div>
 }

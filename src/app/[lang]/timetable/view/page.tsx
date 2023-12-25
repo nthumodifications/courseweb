@@ -13,6 +13,7 @@ import {Divider} from '@mui/joy';
 import {useMemo, useState} from 'react';
 import { lastSemester } from "@/const/semester";
 import SemesterSwitcher from "@/components/Timetable/SemesterSwitcher";
+import {renderTimetableSlot} from '@/helpers/timetable_course';
 
 const ViewTimetablePage: NextPage = () => {
     const router = useRouter();
@@ -56,7 +57,7 @@ const ViewTimetablePage: NextPage = () => {
         <div className="flex flex-col w-full h-full">
             <SemesterSwitcher semester={semester} setSemester={setSemester}/>
             <div className="grid grid-cols-1 grid-rows-2 md:grid-rows-1 md:grid-cols-[3fr_2fr] px-1 py-4 md:p-4">
-                <Timetable timetableData={timetableData} />
+                <Timetable timetableData={timetableData} renderTimetableSlot={renderTimetableSlot} />
                 <div className="flex flex-col gap-4 px-4">
                 {courses && courses.map((course, index) => (
                     <div key={index} className="flex flex-row gap-4 items-center">
