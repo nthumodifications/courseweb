@@ -85,7 +85,10 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
     const otherClasses = await getOtherClasses(course as MinimalCourse);
     const dict = await getDictionary(params.lang);
 
-    const timetableData = createTimetableFromCourses([course as MinimalCourse]);
+    // times might not be available, check if it is empty list or its items are all empty strings
+    const hasTimes = course.times.length > 0 && !course.times.every((m) => m.trim() == "");
+
+    const timetableData = hasTimes ? createTimetableFromCourses([course as MinimalCourse]): [];
 
     return <Fade>
         <div className="grid grid-cols-1 xl:grid-cols-[auto_240px] py-6 px-4 text-gray-500 dark:text-gray-300">
@@ -135,10 +138,10 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                             <h3 className="font-semibold text-xl mb-2" id="prerequesites">擋修</h3>
                             <div dangerouslySetInnerHTML={{ __html: course.prerequisites }} />
                         </div>}
-                        <div className="">
+                        {hasTimes && <div className="">
                             <h3 className="font-semibold text-xl mb-2" id="timetable">時間表</h3>
                             <Timetable timetableData={timetableData}/>
-                        </div>
+                        </div>}
                         {reviews.length > 0 && <div className="">
                         <h3 className="font-semibold text-xl mb-2" id="ptt">{dict.course.details.ptt_title}</h3>
                             <Alert variant="soft" color="warning" className="mb-4" startDecorator={<AlertTriangle/>}>
@@ -224,7 +227,7 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                         <TOCNavItem href="#brief">{dict.course.details.brief}</TOCNavItem>
                         <TOCNavItem href="#description">{dict.course.details.description}</TOCNavItem>
                         {course?.prerequisites && <TOCNavItem href="#prerequesites">擋修</TOCNavItem>}
-                        <TOCNavItem href="#timetable">時間表</TOCNavItem>
+                        {hasTimes && <TOCNavItem href="#timetable">時間表</TOCNavItem>}
                         {reviews.length > 0 && <TOCNavItem href="#ptt">PTT心得</TOCNavItem>}
                         <TOCNavItem href="#other">相同課號資料</TOCNavItem>
                     </div>
