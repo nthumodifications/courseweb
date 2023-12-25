@@ -43,7 +43,7 @@ const CourseSearchbar = ({ onAddCourse, semester = lastSemester.id}: { onAddCour
 
     return <Autocomplete
         key={refreshKey}
-        placeholder="尋找你要的課..."
+        placeholder="尋找想要的課..."
         open={open}
         onOpen={() => {
             setLoading(true);
