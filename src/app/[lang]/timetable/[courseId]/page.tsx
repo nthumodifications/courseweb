@@ -51,8 +51,8 @@ const ParticipatingStudents = async ({ courseId }: { courseId: RawCourseID}) => 
     const renderParticipationAlert = () => {
         return <Alert color="neutral">
             <div className='flex flex-col gap-2'>
-                <h4 className="font-semibold text-base">是否想把自己放到名單上嗎？</h4>
-                <p>經過你的同意后將會把你的<pre className='inline mono'>名字</pre>,<pre className='inline'>學號</pre>,<pre className='inline'>Email</pre>,公開給其他有登入的同學</p>
+                <h4 className="font-semibold text-base">是否把自己加到名單中？</h4>
+                <p>經過你的同意后將會把你的<pre className='inline mono'>名字</pre>,<pre className='inline'>學號</pre>,<pre className='inline'>Email</pre>,公開給其他有加入的同學</p>
                 <div className="flex flex-row gap-2">
                     <Button variant="outlined" color="danger">不同意</Button>
                     <Button variant="outlined" color="success">同意</Button>
@@ -156,7 +156,7 @@ const TimetableCoursePage = async ({ params: { courseId }}: Props) => {
                 <Divider/>
                 {session ?<ParticipatingStudents courseId={course.raw_id} />:
                 <div className="flex flex-col space-y-1 items-center py-4">
-                    <h3 className='font-bold text-xl'>登入后才能開啓更多修課功能</h3>
+                    <h3 className='font-bold text-xl'>登入后才能開啓更多功能</h3>
                     <NTHULoginButton/>
                 </div>}
             </div>
