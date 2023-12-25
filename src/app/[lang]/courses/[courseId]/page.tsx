@@ -1,3 +1,8 @@
+import { format } from "date-fns";
+import { ResolvingMetadata } from "next";
+import { AlertTriangle, ChevronLeft } from 'lucide-react';
+import Link from "next/link";
+import DownloadSyllabus from "./DownloadSyllabus";
 import Fade from "@/components/Animation/Fade";
 import { getDictionary } from "@/dictionaries/dictionaries";
 import { getCoursePTTReview, getCourseWithSyllabus } from '@/lib/course';
@@ -8,22 +13,17 @@ import {
     AccordionGroup,
     AccordionSummary,
     Alert,
+    Button,
     Chip,
     Divider,
 } from '@mui/joy';
-import { format } from "date-fns";
-import { ResolvingMetadata } from "next";
-import { AlertTriangle } from 'lucide-react';
-import { redirect } from 'next/navigation'
+import supabase, { CourseDefinition } from "@/config/supabase";
+import {toPrettySemester} from '@/helpers/semester';
 import CourseTagList from "@/components/Courses/CourseTagsList";
 import SelectCourseButton from '@/components/Courses/SelectCourseButton';
 import { createTimetableFromCourses } from "@/helpers/timetable";
 import Timetable from "@/components/Timetable/Timetable";
 import { MinimalCourse } from "@/types/courses";
-import DownloadSyllabus from "./DownloadSyllabus";
-import supabase, { CourseDefinition } from "@/config/supabase";
-import Link from "next/link";
-import {toPrettySemester} from '@/helpers/semester';
 
 type PageProps = { 
     params: { courseId? : string } 
@@ -31,6 +31,13 @@ type PageProps = {
 
 export async function generateMetadata({ params }: PageProps, parent: ResolvingMetadata) {
     const course = await getCourseWithSyllabus(decodeURI(params.courseId as string));
+
+    if(!course) return {
+        ...parent,
+        title: '404',
+        description: '找不到課程'
+    }
+
     return {
         ...parent,
         title: `${course?.department} ${course?.course}-${course?.class} ${course!.name_zh} ${course!.name_en}`,
@@ -62,11 +69,21 @@ const getOtherClasses = async (course: MinimalCourse) => {
 const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
     const courseId = decodeURI(params.courseId as string);
     const course = await getCourseWithSyllabus(courseId);
+
+    if(!course) return <div className="py-6 px-4">
+        <div className="flex flex-col gap-2 border-l border-neutral-500 pl-4 pr-6">
+            <h1 className="text-2xl font-bold">404</h1>
+            <p className="text-xl">找不到課程</p>
+            
+            <Link href="../">
+                <Button size="sm" variant="outlined" color="neutral" startDecorator={<ChevronLeft/> }>Back</Button>
+            </Link>
+        </div>
+    </div>
+
     const reviews = await getCoursePTTReview(courseId);
     const otherClasses = await getOtherClasses(course as MinimalCourse);
     const dict = await getDictionary(params.lang);
-
-    if(!course) return redirect('/');
 
     const timetableData = createTimetableFromCourses([course as MinimalCourse]);
 
