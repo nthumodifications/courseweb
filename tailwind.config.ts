@@ -14,6 +14,9 @@ const config: Config = {
   },
   plugins: [
     require('@tailwindcss/typography'),
+    function ({ addVariant }: any) {
+      addVariant('hover', '@media (any-hover: hover) and (any-pointer: fine) { &:hover }')
+    }
   ],
   future: {
     hoverOnlyWhenSupported: true,
