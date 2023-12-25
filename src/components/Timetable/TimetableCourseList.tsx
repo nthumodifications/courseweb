@@ -11,7 +11,7 @@ import useDictionary from '@/dictionaries/useDictionary';
 import ShareSyncTimetableDialog from './ShareSyncTimetableDialog';
 import DownloadTimetableDialog from './DownloadTimetableDialog';
 import { useMemo } from 'react';
-import { hasConflictingTimeslots, hasSameCourse } from '@/helpers/courses';
+import { hasConflictingTimeslots, hasSameCourse, hasTimes } from '@/helpers/courses';
 import { MinimalCourse, RawCourseID } from '@/types/courses';
 
 const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, setVertical: (v: boolean) => void }) => {
@@ -86,7 +86,7 @@ const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, set
                                 const time = course.times![index];
                                 return <div key={index} className="flex flex-row items-center space-x-2 font-mono text-gray-400">
                                     <span className="text-xs">{venue}</span>
-                                    <span className="text-xs">{time}</span>
+                                    {hasTimes(course as MinimalCourse) ? <span className="text-xs">{time}</span>: <span className="text-xs text-red-500">缺時間</span>}
                                 </div>
                             }) || <span className="text-gray-400 text-xs">No Venue</span>}
                         </div>

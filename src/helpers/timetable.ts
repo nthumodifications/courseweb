@@ -4,6 +4,7 @@ import { MinimalCourse } from '@/types/courses';
 import { getBrightness } from "./colors";
 import { adjustLuminance} from '@/helpers/colors';
 import { timetableColors } from "../const/timetableColors";
+import { hasTimes } from "./courses";
 
 export const createTimetableFromCourses = (data: MinimalCourse[], theme = 'ashes') => {
     if(Object.keys(timetableColors).indexOf(theme) === -1) {
@@ -12,7 +13,7 @@ export const createTimetableFromCourses = (data: MinimalCourse[], theme = 'ashes
     const newTimetableData: CourseTimeslotData[] = [];
     data!.forEach(course => {
         //get unique days first
-        if (!course.times) {
+        if (!hasTimes(course)) {
             return;
         };
         course.times.forEach((time_str, index) => {
