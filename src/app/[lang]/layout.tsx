@@ -105,12 +105,12 @@ export default function RootLayout({
   const theme = cookies().get("theme");
 
   return (
-    <CssVarsProvider defaultMode={(theme?.value as any) ?? 'light'}>
-      <NextAuthProvider>
-        <SettingsProvider>
-          <UserTimetableProvider>
-            <ModalProvider>
-              <html lang={params.lang} className={`${theme?.value ?? ''} ${inter.variable} ${noto.variable}`} suppressHydrationWarning>
+    <html lang={params.lang} className={`${theme?.value ?? ''} ${inter.variable} ${noto.variable}`} suppressHydrationWarning>
+      <CssVarsProvider defaultMode={(theme?.value as any) ?? 'light'}>
+        <NextAuthProvider>
+          <SettingsProvider>
+            <UserTimetableProvider>
+              <ModalProvider>
                 <GoogleAnalytics/>
                 <body className={`grid grid-cols-1 grid-rows-[56px_50px_calc(100vh-106px)] md:grid-cols-[12rem_auto] md:grid-rows-[56px_calc(100vh-56px)_12rem]`}>
                   <Header />
@@ -123,11 +123,11 @@ export default function RootLayout({
                   </main>
                   <Footer />
                 </body>
-              </html>
-            </ModalProvider>
-          </UserTimetableProvider>
-        </SettingsProvider>
-      </NextAuthProvider>
-    </CssVarsProvider>
+              </ModalProvider>
+            </UserTimetableProvider>
+          </SettingsProvider>
+        </NextAuthProvider>
+      </CssVarsProvider>
+    </html>
   )
 }
