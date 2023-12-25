@@ -33,7 +33,7 @@ const TimetableSlotHorizontal: FC<TimetableSlotProps> = ({ course, tableDim, fra
                     <span className='text-xs md:text-sm line-clamp-1 font-medium'>{course.course.name_zh}</span>:
                     <span className='text-xs line-clamp-1 font-medium'>{course.course.name_en}</span>
                 }
-                <span className='text-xs line-clamp-1'>{scheduleTimeSlots[course.startTime].start} - {scheduleTimeSlots[course.endTime].end}</span>
+                <span className='text-xs line-clamp-1' id="time_slot">{scheduleTimeSlots[course.startTime].start} - {scheduleTimeSlots[course.endTime].end}</span>
 
             </div>
             <VenueChip venue={course.venue} color={course.textColor} textColor={course.color} />
