@@ -11,8 +11,8 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter
-} from "@/scomponents/ui/dialog"
-import { Button } from "@/scomponents/ui/button"
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
 
 import Intro from './Intro'
 import Courses from './Courses'

@@ -1,6 +1,6 @@
 import { Github, Mail, Instagram, Facebook } from "lucide-react"
-import { Button } from "@/scomponents/ui/button"
-import { Badge } from "@/scomponents/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import FullLogo from "./Branding/FullLogo"
 import Link from "next/link"
 

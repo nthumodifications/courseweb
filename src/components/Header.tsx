@@ -3,7 +3,7 @@
 import { HelpCircle, MessageCircle } from "lucide-react"
 import { useSettings } from "@/hooks/contexts/settings"
 import { currentSemester} from "@/const/semester"
-import { Button } from "@/scomponents/ui/button"
+import { Button } from "@/components/ui/button"
 import FullLogo from "./Branding/FullLogo"
 import Help from "@/components/Help/Help"
 import Link from "next/link"

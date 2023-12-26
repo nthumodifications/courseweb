@@ -6,7 +6,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/scomponents/ui/card"
+} from "@/components/ui/card"
 import { useState, useEffect } from 'react'
 
 
