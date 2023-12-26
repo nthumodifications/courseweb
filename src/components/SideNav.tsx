@@ -59,7 +59,7 @@ const SideNav:FC = () => {
         <nav className="md:hidden w-screen flex flex-row h-full gap-4 justify-evenly shadow-sm">
             {links.map((link, index) => (
                 <Link 
-                    className={`flex flex-col items-center justify-between hover:opacity-80 hover:underline transition text-gray-400 dark:text-gray-600 pt-3`}
+                    className={`flex flex-col items-center justify-between transition text-gray-400 dark:text-gray-600 pt-3`}
                     key={index} 
                     href={link.href}
                     style={{ color: link.href == pathname ? link.color: '' }}
@@ -74,7 +74,7 @@ const SideNav:FC = () => {
         <nav className="hidden h-screen md:flex flex-col w-max gap-6 p-6">
             {links.map((link, index) => (
                 <Link 
-                    className={`flex items-center gap-3 hover:opacity-80 hover:underline transition text-gray-400 dark:text-gray-600`}
+                    className={`flex items-center gap-3 transition text-gray-400 dark:text-gray-600`}
                     key={index} 
                     href={link.href}
                     style={{ color: link.href == pathname ? link.color: '' }}

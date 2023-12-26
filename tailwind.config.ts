@@ -76,8 +76,14 @@ const config = {
   },
   plugins: [
     require("tailwindcss-animate"),
-    require('@tailwindcss/typography')
+    require('@tailwindcss/typography'),
+    function ({ addVariant }: any) {
+      addVariant('hover', '@media (any-hover: hover) and (any-pointer: fine) { &:hover }')
+    }
   ],
+  future: {
+    hoverOnlyWhenSupported: true,
+  },
 } satisfies Config
 
 export default config
