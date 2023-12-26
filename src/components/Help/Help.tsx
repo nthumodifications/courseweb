@@ -52,7 +52,7 @@ const Help = () => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>  
       <DialogTrigger asChild>
-        <Button variant="outline" className="flex gap-1" onClick={handleOpen}>
+        <Button size="sm" variant="outline" className="flex gap-1" onClick={handleOpen}>
           <HelpCircle size="16" />
           Help
         </Button>

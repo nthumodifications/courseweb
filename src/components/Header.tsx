@@ -27,7 +27,7 @@ const Header = () => {
       </div>
       <div className="flex gap-2">
         <Help/>
-        <Button variant="outline" asChild>
+        <Button size="sm" variant="outline" asChild>
           <Link className="flex gap-1" target="_blank" href="https://forms.gle/LKYiVhLVwRGL44pz6">
             <MessageCircle size="16" />
             Feedback
