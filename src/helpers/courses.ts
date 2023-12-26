@@ -28,3 +28,7 @@ export const hasSameCourse = (courses: MinimalCourse[]) => {
 export const getSemesterFromID = (id: string) => {
     return id.slice(0, 5) as RawCourseID;
 }
+
+export const hasTimes = (course: MinimalCourse) => {
+    return course.times.length > 0 && !course.times.every((m) => m.trim() == "");
+}

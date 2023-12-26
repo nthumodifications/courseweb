@@ -20,7 +20,7 @@ const TimetablePage: NextPage = () => {
 
     const { displayCourseData, semester, setSemester } = useUserTimetable();
     const { language, timetableTheme } = useSettings();
-    const [vertical, setVertical] = useLocalStorage('timetable_vertical', false);
+    const [vertical, setVertical] = useLocalStorage('timetable_vertical', true);
 
     const router = useRouter();
     const searchParams = useSearchParams();

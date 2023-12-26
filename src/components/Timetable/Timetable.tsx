@@ -151,27 +151,27 @@ const Timetable: FC<{
         <div className="text-center lg:mb-0 w-full overflow-hidden">
         {/* Timetable, Relative overlay */}
         <div className="relative w-full">
-          <table className="table-auto w-full">
+          <table className="table-fixed w-full">
             <thead>
               <tr className='h-1'>
                 <td className="w-[40px] min-w-[40px]" ref={headerRow}></td>
-                <td className='w-28 p-0.5 h-[inherit]'>
+                <td className='p-0.5 h-[inherit]'>
                   <div className='h-full w-full text-xs font-semibold bg-gray-100 dark:bg-neutral-800 rounded-md py-2'>MON</div>
                 </td>
-                <td className='w-28 p-0.5 h-[inherit]'>
+                <td className='p-0.5 h-[inherit]'>
                   <div className='h-full w-full text-xs font-semibold bg-gray-100 dark:bg-neutral-800 rounded-md py-2'>TUE</div>
                 </td>
-                <td className='w-28 p-0.5 h-[inherit]'>
+                <td className='p-0.5 h-[inherit]'>
                   <div className='h-full w-full text-xs font-semibold bg-gray-100 dark:bg-neutral-800 rounded-md py-2'>WED</div>
                 </td>
-                <td className='w-28 p-0.5 h-[inherit]'>
+                <td className='p-0.5 h-[inherit]'>
                   <div className='h-full w-full text-xs font-semibold bg-gray-100 dark:bg-neutral-800 rounded-md py-2'>THU</div>
                 </td>
-                <td className='w-28 p-0.5 h-[inherit]'>
+                <td className='p-0.5 h-[inherit]'>
                   <div className='h-full w-full text-xs font-semibold bg-gray-100 dark:bg-neutral-800 rounded-md py-2'>FRI</div>
                 </td>
 
-                {showSaturday && <td className='w-28 p-0.5 h-[inherit]'>
+                {showSaturday && <td className='p-0.5 h-[inherit]'>
                   <div className='h-full w-full text-xs font-semibold bg-gray-100 dark:bg-neutral-800 rounded-md py-2'>SAT</div>
                 </td>}
               </tr>
