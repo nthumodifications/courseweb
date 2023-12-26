@@ -159,8 +159,8 @@ const useSettingsProvider = () => {
         //every 15 minutes
         if(typeof window  == "undefined") return ;
         if(!headlessAIS.enabled) return ;
-        //only update when pathname starts with /apps or /settings
-        if(!pathname.startsWith("/apps") && !pathname.startsWith("/settings")) return ;
+        // only update when pathname starts with /apps or /settings
+        // if(!pathname.startsWith("/apps") && !pathname.startsWith("/settings")) return ;
         const interval = setInterval(updateACIXSTORE, 15 * 60 * 1000);
         updateACIXSTORE();
         return () => clearInterval(interval);
