@@ -8,11 +8,14 @@ import CourseSearchbar from './CourseSearchbar';
 import { timetableColors } from "@/const/timetableColors";
 import ThemeChangableAlert from '../Alerts/ThemeChangableAlert';
 import useDictionary from '@/dictionaries/useDictionary';
-import ShareSyncTimetableDialog from './ShareSyncTimetableDialog';
-import DownloadTimetableDialog from './DownloadTimetableDialog';
 import { useMemo } from 'react';
 import { hasConflictingTimeslots, hasSameCourse, hasTimes } from '@/helpers/courses';
 import { MinimalCourse, RawCourseID } from '@/types/courses';
+import dynamic from 'next/dynamic';
+
+const DownloadTimetableDialogDynamic = dynamic(() => import('./DownloadTimetableDialog'), { ssr: false  })
+const ShareSyncTimetableDialogDynamic = dynamic(() => import('./ShareSyncTimetableDialog'), { ssr: false  })
+
 
 const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, setVertical: (v: boolean) => void }) => {
     const { language, timetableTheme } = useSettings();
@@ -39,15 +42,14 @@ const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, set
         }
 
         openModal({
-            children: <ShareSyncTimetableDialog onClose={closeModal} shareLink={shareLink} webcalLink={webcalLink} onCopy={handleCopy} />
+            children: <ShareSyncTimetableDialogDynamic onClose={closeModal} shareLink={shareLink} webcalLink={webcalLink} onCopy={handleCopy} />
         });
     }
 
     const handleDownloadDialog = () => {
         const icsfileLink = `https://nthumods.com/timetable/calendar.ics?semester=${semester}&${Object.keys(courses).map(sem => `semester_${sem}=${courses[sem].map(id => encodeURI(id)).join(',')}`).join('&')}`
-        const imageLink = `https://nthumods.com/timetable/image?semester=${semester}&theme=${timetableTheme}&${Object.keys(courses).map(sem => `semester_${sem}=${courses[sem].map(id => encodeURI(id)).join(',')}`).join('&')}`
         openModal({
-            children: <DownloadTimetableDialog onClose={closeModal} icsfileLink={icsfileLink} imageLink={imageLink} />
+            children: <DownloadTimetableDialogDynamic onClose={closeModal} icsfileLink={icsfileLink} />
         });
     }
 

@@ -1,9 +1,71 @@
 import useDictionary from '@/dictionaries/useDictionary';
 import {Button, DialogContent, DialogTitle, ModalClose, ModalDialog} from '@mui/joy';
 import {Download, Image} from 'lucide-react';
+import Timetable from './Timetable';
+import useUserTimetable from '@/hooks/useUserTimetable';
+import { toPng } from 'html-to-image';
+import { useCallback, useRef, useState } from 'react';
+import { createTimetableFromCourses } from '@/helpers/timetable';
+import { useSettings } from '@/hooks/contexts/settings';
+import { MinimalCourse } from '@/types/courses';
 
-const DownloadTimetableDialog = ({ onClose, icsfileLink, imageLink }: { onClose: () => void, icsfileLink: string, imageLink: string }) => {
+const DownloadTimetableComponent = () => {
     const dict = useDictionary();
+    const { timetableTheme } = useSettings();
+    const { displayCourseData } = useUserTimetable();
+    const ref = useRef<HTMLDivElement>(null);
+    const [loading, setLoading] = useState(false);
+
+    const timetableData = createTimetableFromCourses(displayCourseData as MinimalCourse[], timetableTheme);
+
+    const handleConvert = useCallback(() => {
+        if (ref.current === null) {
+          return
+        }
+        setLoading(true);
+        toPng(ref.current!, { cacheBust: true, pixelRatio: 3, filter: (node: HTMLElement) => node.id !== 'time_slot'})
+        .then((dataUrl) => {
+            navigator.clipboard.writeText(dataUrl);
+            const link = document.createElement('a');
+            link.download = 'timetable.png';
+            link.href = dataUrl;
+            link.click();
+        })
+        .catch((err) => {
+            console.error('oops, something went wrong!', err);
+        })
+        .finally(() => {
+            setLoading(false);
+        });
+        
+    }, [ref])
+    
+    return <>
+        <Button
+            onClick={handleConvert}
+            variant="outlined"
+            startDecorator={<Image className="w-4 h-4" />}
+            loading={loading}
+        >{dict.dialogs.DownloadTimetableDialog.buttons.image}</Button>
+        <div className='relative overflow-hidden'>
+            <div className='absolute h-[915px] w-[539px] px-2 pt-4 pb-8 grid place-items-center bg-white dark:bg-neutral-900' ref={ref}>
+                <div className='h-[915px] w-[414px]'>
+                    <Timetable timetableData={timetableData} vertical/>
+                </div>
+            </div>
+        </div>
+    </>
+}
+
+const DownloadTimetableDialog = ({ onClose, icsfileLink }: { onClose: () => void, icsfileLink: string }) => {
+    const dict = useDictionary();
+
+    const handleDownloadCalendar = () => {
+        const link = document.createElement('a');
+        link.download = 'calendar.ics';
+        link.href = icsfileLink;
+        link.click();
+    }
 
     return <ModalDialog>
         <ModalClose />
@@ -12,19 +74,11 @@ const DownloadTimetableDialog = ({ onClose, icsfileLink, imageLink }: { onClose:
             <p>{dict.dialogs.DownloadTimetableDialog.description}</p>
             <div className="grid grid-cols-2 gap-4 pt-4">
                 <Button
-                    component="a"
-                    href={icsfileLink}
-                    target='_blank'
+                    onClick={handleDownloadCalendar}
                     variant="outlined"
                     startDecorator={<Download className="w-4 h-4" />}
                 >{dict.dialogs.DownloadTimetableDialog.buttons.ICS}</Button>
-                <Button
-                    component="a"
-                    href={imageLink}
-                    target='_blank'
-                    variant="outlined"
-                    startDecorator={<Image className="w-4 h-4" />}
-                >{dict.dialogs.DownloadTimetableDialog.buttons.image}</Button>
+                <DownloadTimetableComponent/>
             </div>
         </DialogContent>
     </ModalDialog>
