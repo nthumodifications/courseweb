@@ -83,8 +83,6 @@ export const viewport: Viewport = {
   userScalable: false,
 }
 
-export const runtime = 'edge'
-
 const inter = Inter({
   subsets: ['latin', 'latin-ext'],
   variable: '--font-inter',
