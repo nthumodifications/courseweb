@@ -49,7 +49,7 @@ export type ScheduleItem = {
 export const getVehicleDescription = (vehicle: string) => {
     const vehicleTypes = {
         '83': '83公車 $',
-        'B': '游覽車',
+        'B': '遊覽車',
         'S': '小巴'
     }
     if(!Object.keys(vehicleTypes).includes(vehicle)) return vehicle;
