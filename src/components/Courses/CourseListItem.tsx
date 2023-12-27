@@ -6,6 +6,9 @@ import { FC } from 'react';
 import Link from 'next/link';
 import CourseTagList from './CourseTagsList';
 import SelectCourseButton from './SelectCourseButton';
+import { HoverCard } from '@radix-ui/react-hover-card';
+import { HoverCardContent, HoverCardTrigger } from '../ui/hover-card';
+import { Button } from '../ui/button';
 
 const CourseListItem: FC<{ course: CourseSyllabusView }> = ({ course }) => {
     const dict = useDictionary();
@@ -22,12 +25,16 @@ const CourseListItem: FC<{ course: CourseSyllabusView }> = ({ course }) => {
                     <p className='text-sm whitespace-pre-line text-gray-400 dark:text-neutral-600'>{course.restrictions}</p>
                     <p className='text-sm whitespace-pre-line text-gray-400 dark:text-neutral-600'>{course.note}</p>
                     {course.prerequisites && 
-                    <Tooltip 
-                        placement='bottom-start'
-                        title={<p dangerouslySetInnerHTML={{ __html: course.prerequisites}}></p>}
-                    >
-                        <p className='text-sm underline text-orange-600 select-none'>有擋修</p>
-                    </Tooltip>}
+                    <div className='flex flex-row'>
+                        <HoverCard openDelay={0}>
+                            <HoverCardTrigger asChild>
+                                <Button size={'sm'} variant="link" className='text-orange-600'>有擋修</Button>
+                            </HoverCardTrigger>
+                            <HoverCardContent>
+                                <p dangerouslySetInnerHTML={{ __html: course.prerequisites}}></p>
+                            </HoverCardContent>
+                        </HoverCard>
+                    </div>}
                 </div>
             </div>
             <div className='flex flex-col space-y-3'>
