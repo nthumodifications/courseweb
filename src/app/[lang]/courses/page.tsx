@@ -190,7 +190,7 @@ const CoursePage: NextPage = () => {
             }
             if (filters.disciplines.length) {
                 temp = temp
-                    .containedBy('cross_discipline', filters.disciplines)
+                    .overlaps('cross_discipline', filters.disciplines)
             }
             if (filters.gecDimensions.length) {
                 temp = temp
