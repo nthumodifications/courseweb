@@ -25,11 +25,11 @@ const DownloadTimetableComponent = () => {
         setLoading(true);
         toPng(ref.current!, { cacheBust: true, pixelRatio: 3, filter: (node: HTMLElement) => node.id !== 'time_slot'})
         .then((dataUrl) => {
-            navigator.clipboard.writeText(dataUrl);
             const link = document.createElement('a');
             link.download = 'timetable.png';
             link.href = dataUrl;
             link.click();
+            // navigator.clipboard.writeText(dataUrl);
         })
         .catch((err) => {
             console.error('oops, something went wrong!', err);
