@@ -17,6 +17,7 @@ const CourseListItem: FC<{ course: CourseSyllabusView }> = ({ course }) => {
         <div className="grid grid-cols-1 lg:grid-rows-none lg:grid-cols-[auto_250px] gap-4">
             <div className='flex-1 space-y-4'>
                 <div className="mb-3 space-y-1">
+                    {course.closed_mark && <p className='text-sm text-red-600 dark:text-red-400'>{course.closed_mark}</p>}
                     <Link className="font-semibold text-lg text-[#AF7BE4]" href={'courses/'+course.raw_id}>{course.department} {course.course}-{course.class} {course.name_zh} - {(course.teacher_zh ?? []).join(',')}</Link>
                     <h3 className="text-sm text-gray-800 dark:text-gray-300 mt-0 break-words">{course.name_en} - <span className='w-max'>{(course.teacher_en ?? []).join(',')}</span></h3>
                 </div>
@@ -38,7 +39,6 @@ const CourseListItem: FC<{ course: CourseSyllabusView }> = ({ course }) => {
                 </div>
             </div>
             <div className='flex flex-col space-y-3'>
-                <p className='text-black dark:text-white text-sm'>{course.semester} 學期</p>
                 <div className='space-y-1'>
                 {course.venues? 
                     course.venues.map((vn, i) => <p className='text-blue-600 dark:text-blue-400 text-sm'>{vn} <span className='text-black dark:text-white'>{course.times![i]}</span></p>) : 
