@@ -56,6 +56,12 @@
             "prerequesites": "Prerequisites",
             "timetable": "Timetable",
             "scores": "Scores",
+            "average": "Average",
+            "standard_deviation": "Std. Deviation",
+            "score_types": {
+                "gpa": "GPA",
+                "percent": "Percentage"
+            },
             "ptt": "PTT Reviews",
             "related_courses": "Related Courses",
             "compulsory": "Compulsory",

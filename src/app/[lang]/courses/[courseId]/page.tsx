@@ -142,7 +142,11 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                         </div>}
                         {course.course_scores && <div className="">
                             <h3 className="font-semibold text-xl mb-2" id="scores">{dict.course.details.scores}</h3>
-                            <p></p>
+                            {/* TODO: make scores prettier with a graph */}
+                            <div className="flex flex-row gap-1 text-sm font-medium text-gray-600 dark:text-neutral-400">
+                                <p>{dict.course.details.average} {dict.course.details.score_types[course.course_scores.type as 'gpa' | 'percent']} {course.course_scores.average}</p>
+                                <p>{dict.course.details.standard_deviation} {course.course_scores.std_dev}</p>
+                            </div>
                         </div>}
                         {reviews.length > 0 && <div className="">
                         <h3 className="font-semibold text-xl mb-2" id="ptt">{dict.course.details.ptt_title}</h3>
