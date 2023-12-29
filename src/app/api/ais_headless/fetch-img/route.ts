@@ -1,17 +1,22 @@
 import { NextRequest } from "next/server";
+import {decaptcha} from '@/app/api/ais_headless/login/decaptcha';
+import sharp from "sharp";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
-export const GET = async (req: NextRequest) => {
-    const pwdstr = req.nextUrl.searchParams.get('pwdstr');
-    if (!pwdstr) {
-        return new Response('pwdstr is required', { status: 400 });
-    }
-    const imgResponse = await fetch('http://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/auth_img.php?pwdstr=' + pwdstr);
-    return new Response(await imgResponse.arrayBuffer(), {
-        headers: {
-            'Content-Type': 'image/jpeg',
-            'Cache-Control': 'public, max-age=86400',
-        },
-    });
+export const POST = async (req: NextRequest) => {
+    const imgResponse = await req.arrayBuffer();
+    
+    const imgBuffer = await sharp(await imgResponse)
+    .resize(320,120)
+    .greyscale() // make it greyscale
+    .linear(1.2, 0) // increase the contrast
+    .toBuffer()
+    
+    //OCR
+    const text = await decaptcha(imgBuffer);
+    const answer = text.replace(/[^0-9]/g, "") || "";
+    
+    console.log("Answer: ",answer)
+    return new Response(answer);
 };

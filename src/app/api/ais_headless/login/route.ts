@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import sharp from 'sharp';
-import { decaptcha } from "./decaptcha";
 
-export const runtime = "nodejs";
+export const runtime = "edge";
 
 export const POST = async (req: NextRequest) => {
     const form = await req.formData();
@@ -28,18 +26,9 @@ export const POST = async (req: NextRequest) => {
             }
             pwdstr = bodyMatch[1];
             //fetch the image from the url and send as base64
-            console.log("pwdstr: ",pwdstr)
-            const imgRawResponse = await (await fetch(`https://courseweb-git-ccxp-fucked-us-nthumods.vercel.app/api/ais_headless/fetch-img?pwdstr=${pwdstr}`)).arrayBuffer();
-            const imgBuffer = await sharp(imgRawResponse)
-                                    .resize(320,120)
-                                    .greyscale() // make it greyscale
-                                    .linear(1.2, 0) // increase the contrast
-                                    .toBuffer()
-            //OCR
-            const text = await decaptcha(imgBuffer);
-            answer = text.replace(/[^0-9]/g, "") || "";
-            
-            console.log("Answer: ",answer)
+            const imgResponse = await fetch('http://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/auth_img.php?pwdstr=' + pwdstr);
+            answer = await (await fetch('https://courseweb-git-ccxp-fucked-us-nthumods.vercel.app', { method: 'POST', body: await imgResponse.arrayBuffer() })).text();
+
             if(answer.length == 6) break;
         } while (tries <= 5);
         if(tries == 6 || answer.length != 6) {
