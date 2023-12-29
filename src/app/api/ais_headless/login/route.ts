@@ -28,13 +28,14 @@ export const POST = async (req: NextRequest) => {
             }
             pwdstr = bodyMatch[1];
             //fetch the image from the url and send as base64
+            console.log("pwdstr: ",pwdstr)
             const imgResponse = await fetch('http://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/auth_img.php?pwdstr=' + pwdstr);
+            console.log("imgBuffer: ", (await imgResponse.arrayBuffer()).byteLength);
             const imgBuffer = await sharp(await imgResponse.arrayBuffer())
                                         .resize(320,120)
                                         .greyscale() // make it greyscale
                                         .linear(1.2, 0) // increase the contrast
                                         .toBuffer()
-
             //OCR
             const text = await decaptcha(imgBuffer);
             answer = text.replace(/[^0-9]/g, "") || "";
