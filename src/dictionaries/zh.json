@@ -43,14 +43,27 @@
             "clear": "清除"
         },
         "details": {
-            "semesterid": "本學期課號",
+            "semester": "學期",
             "language": "授課語言",
             "reserved": "新生保留",
             "capacity": "名額",
+            "venue_time": "時間地點",
             "class": "系班",
             "brief": "簡介",
+            "remarks": "備注",
             "description": "課程大綱",
             "restrictions": "課程限制",
+            "prerequesites": "擋修",
+            "timetable": "時間表",
+            "scores": "成績",
+            "average": "平均",
+            "standard_deviation": "標準差",
+            "score_types": {
+                "gpa": "GPA",
+                "percent": "百分比"
+            },
+            "ptt": "PTT心得",
+            "related_courses": "相同課號資料",
             "compulsory": "必修",
             "elective": "選修",
             "cross_discipline": "跨領域",

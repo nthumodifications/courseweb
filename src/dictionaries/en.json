@@ -43,14 +43,27 @@
             "clear": "Clear All"
         },
         "details": {
-            "semesterid": "Semester ID",
+            "semester": "Semester",
             "language": "Instruction Language",
             "reserved": "Reserved",
             "capacity": "Capacity",
+            "venue_time": "Venue & Time",
             "class": "Class",
             "brief": "Brief",
+            "remarks": "Remarks",
             "description": "Description",
             "restrictions": "Restrictions",
+            "prerequesites": "Prerequisites",
+            "timetable": "Timetable",
+            "scores": "Scores",
+            "average": "Average",
+            "standard_deviation": "Std. Deviation",
+            "score_types": {
+                "gpa": "GPA",
+                "percent": "Percentage"
+            },
+            "ptt": "PTT Reviews",
+            "related_courses": "Related Courses",
             "compulsory": "Compulsory",
             "elective": "Elective",
             "cross_discipline": "Cross Discipline",

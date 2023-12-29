@@ -32,3 +32,12 @@ export const getSemesterFromID = (id: string) => {
 export const hasTimes = (course: MinimalCourse) => {
     return course.times.length > 0 && !course.times.every((m) => m.trim() == "");
 }
+
+export const getScoreType = (score: string) => {
+    // 'gpa' | 'percent'
+    switch(score){
+        case 'gpa': return 'GPA';
+        case 'percent': return '百分制';
+        default: return 'GPA';
+    }
+}
