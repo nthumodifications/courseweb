@@ -47,7 +47,9 @@ export const POST = async (req: NextRequest) => {
             });
             const imgBuffer = await imgResponse.arrayBuffer()
             console.log("imgBuff length: ", imgBuffer.byteLength)
-            answer = await (await fetch('https://courseweb-git-ccxp-fucked-us-nthumods.vercel.app', { method: 'POST', body: imgBuffer })).text();
+            //to base64 log
+            console.log("imgBuff: ", Buffer.from(imgBuffer).toString('base64'))
+            answer = await (await fetch('https://courseweb-git-ccxp-fucked-us-nthumods.vercel.app/api/ais_headless/fetch-img', { method: 'POST', body: imgBuffer })).text();
 
             if(answer.length == 6) break;
         } while (tries <= 5);
