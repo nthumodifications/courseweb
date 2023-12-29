@@ -38,8 +38,8 @@ export const POST = async (req: NextRequest) => {
                     "sec-fetch-mode": "no-cors",
                     "sec-fetch-site": "same-origin"
                 },
-                "referrer": "https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/",
-                "referrerPolicy": "strict-origin-when-cross-origin",
+                // "referrer": "https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/",
+                // "referrerPolicy": "strict-origin-when-cross-origin",
                 "body": null,
                 "method": "GET",
                 "mode": "cors",
