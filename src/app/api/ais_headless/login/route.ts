@@ -47,8 +47,6 @@ export const POST = async (req: NextRequest) => {
             });
             const imgBuffer = await imgResponse.arrayBuffer()
             console.log("imgBuff length: ", imgBuffer.byteLength)
-            //to base64 log
-            console.log("imgBuff: ", Buffer.from(imgBuffer).toString('base64'))
             answer = await (await fetch('https://courseweb-git-ccxp-fucked-us-nthumods.vercel.app/api/ais_headless/fetch-img', { method: 'POST', body: imgBuffer })).text();
 
             if(answer.length == 6) break;
@@ -69,9 +67,6 @@ export const POST = async (req: NextRequest) => {
                 "sec-fetch-mode": "navigate",
                 "sec-fetch-site": "same-origin",
                 "upgrade-insecure-requests": "1",
-                "cookie": "TS01860c62=01dba9d2283c80dfc9c2e63410d8f99f7eb373994552ce9bfb51853db6546fcd200f80d8b73c0239df883c58bcf7477f86cb9ae228",
-                "Referer": "https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/",
-                "Referrer-Policy": "strict-origin-when-cross-origin"
             },
             "body": `account=${studentid}&passwd=${password}&passwd2=${answer}&Submit=%B5n%A4J&fnstr=${pwdstr}`,
             "method": "POST"
@@ -113,8 +108,6 @@ export const POST = async (req: NextRequest) => {
                     "sec-fetch-user": "?1",
                     "upgrade-insecure-requests": "1"
                 },
-                "referrer": `https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/select_entry.php?ACIXSTORE=${ACIXSTORE}&hint=${studentid}`,
-                "referrerPolicy": "strict-origin-when-cross-origin",
                 "body": null,
                 "method": "GET",
                 "mode": "cors",
@@ -132,8 +125,6 @@ export const POST = async (req: NextRequest) => {
                     "sec-fetch-site": "same-origin",
                     "upgrade-insecure-requests": "1"
                 },
-                "referrer": `https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/select_entry.php?ACIXSTORE=${ACIXSTORE}&hint=${studentid}`,
-                "referrerPolicy": "strict-origin-when-cross-origin",
                 "body": null,
                 "method": "GET",
                 "mode": "cors",
@@ -151,8 +142,6 @@ export const POST = async (req: NextRequest) => {
                     "sec-fetch-mode": "navigate",
                     "sec-fetch-site": "same-origin",
                     "upgrade-insecure-requests": "1",
-                    "Referer": `https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/select_entry.php?ACIXSTORE=${ACIXSTORE}&hint=${studentid}`,
-                    "Referrer-Policy": "strict-origin-when-cross-origin"
                 },
                 "body": null,
                 "method": "GET"
@@ -169,8 +158,6 @@ export const POST = async (req: NextRequest) => {
                   "sec-fetch-site": "same-origin",
                   "upgrade-insecure-requests": "1"
                 },
-                "referrer": `https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/select_entry.php?ACIXSTORE=${ACIXSTORE}&hint=${studentid}`,
-                "referrerPolicy": "strict-origin-when-cross-origin",
                 "body": null,
                 "method": "GET",
                 "mode": "cors",
@@ -188,8 +175,6 @@ export const POST = async (req: NextRequest) => {
                   "sec-fetch-site": "same-origin",
                   "x-requested-with": "XMLHttpRequest"
                 },
-                "referrer": `https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/top.php?account=${studentid}&ACIXSTORE=${ACIXSTORE}`,
-                "referrerPolicy": "strict-origin-when-cross-origin",
                 "body": null,
                 "method": "GET",
                 "mode": "cors",
