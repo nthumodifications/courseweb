@@ -106,65 +106,67 @@ const useSettingsProvider = () => {
 
     //Headless AIS
     const setAISCredentials = (username?: string, password?: string) => {
-        if(!username || !password) {
-            removeCookie("ACIXSTORE", { path: '/' });
-            setHeadlessAIS({
-                enabled: false
-            });
-            return ;
-        }
-        setHeadlessAIS({
-            enabled: true,
-            studentid: username,
-            password: password,
-            ACIXSTORE: "",
-            lastUpdated: 0
-        });
+        return;
+        // if(!username || !password) {
+        //     removeCookie("ACIXSTORE", { path: '/' });
+        //     setHeadlessAIS({
+        //         enabled: false
+        //     });
+        //     return ;
+        // }
+        // setHeadlessAIS({
+        //     enabled: true,
+        //     studentid: username,
+        //     password: password,
+        //     ACIXSTORE: "",
+        //     lastUpdated: 0
+        // });
     }
 
     const updateACIXSTORE = () => {
-        if(!headlessAIS.enabled) return ;
-        if(headlessAIS.lastUpdated + 15 * 60 * 1000 > Date.now()) return ;
-        //fetch /api/ais_headless to get ACIXSTORE
-        const form = new FormData();
-        form.append("studentid", headlessAIS.studentid);
-        form.append("password", headlessAIS.password);
-        fetch("/api/ais_headless/login", {
-            method: "POST",
-            body: form
-        })
-        .then(res => res.json())
-        .then(res => {
-            if(res.success) {
-                setHeadlessAIS({
-                    ...headlessAIS,
-                    ACIXSTORE: res.body.ACIXSTORE,
-                    lastUpdated: Date.now()
-                });
-                //set cookie
-                setCookie("ACIXSTORE", res.body.ACIXSTORE, { path: '/', expires: new Date(Date.now() + 15 * 60 * 1000) });
-            } else {
-                setHeadlessAIS({
-                    ...headlessAIS,
-                    ACIXSTORE: undefined
-                });
-                //remove cookie
-                removeCookie("ACIXSTORE", { path: '/'});
-            }
-        })
+        return;
+        // if(!headlessAIS.enabled) return ;
+        // if(headlessAIS.lastUpdated + 15 * 60 * 1000 > Date.now()) return ;
+        // //fetch /api/ais_headless to get ACIXSTORE
+        // const form = new FormData();
+        // form.append("studentid", headlessAIS.studentid);
+        // form.append("password", headlessAIS.password);
+        // fetch("/api/ais_headless/login", {
+        //     method: "POST",
+        //     body: form
+        // })
+        // .then(res => res.json())
+        // .then(res => {
+        //     if(res.success) {
+        //         setHeadlessAIS({
+        //             ...headlessAIS,
+        //             ACIXSTORE: res.body.ACIXSTORE,
+        //             lastUpdated: Date.now()
+        //         });
+        //         //set cookie
+        //         setCookie("ACIXSTORE", res.body.ACIXSTORE, { path: '/', expires: new Date(Date.now() + 15 * 60 * 1000) });
+        //     } else {
+        //         setHeadlessAIS({
+        //             ...headlessAIS,
+        //             ACIXSTORE: undefined
+        //         });
+        //         //remove cookie
+        //         removeCookie("ACIXSTORE", { path: '/'});
+        //     }
+        // })
     }
 
-    //update ACIXSTORE
-    useEffect(() => {
-        //every 15 minutes
-        if(typeof window  == "undefined") return ;
-        if(!headlessAIS.enabled) return ;
-        // only update when pathname starts with /apps or /settings
-        // if(!pathname.startsWith("/apps") && !pathname.startsWith("/settings")) return ;
-        const interval = setInterval(updateACIXSTORE, 15 * 60 * 1000);
-        updateACIXSTORE();
-        return () => clearInterval(interval);
-    }, [headlessAIS]);
+    // //update ACIXSTORE
+    // useEffect(() => {
+    //     //every 15 minutes
+    //     if(typeof window  == "undefined") return ;
+    //     if(!headlessAIS.enabled) return ;
+    //     // only update when pathname starts with /apps or /settings
+    //     // if(!pathname.startsWith("/apps") && !pathname.startsWith("/settings")) return ;
+    //     const interval = setInterval(updateACIXSTORE, 15 * 60 * 1000);
+    //     updateACIXSTORE();
+    //     return () => clearInterval(interval);
+    // }, [headlessAIS]);
 
     //cleanup pinned apps, remove apps that are not in the app list
     useEffect(() => {
