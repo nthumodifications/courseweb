@@ -26,8 +26,28 @@ export const POST = async (req: NextRequest) => {
             }
             pwdstr = bodyMatch[1];
             //fetch the image from the url and send as base64
-            const imgResponse = await fetch('http://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/auth_img.php?pwdstr=' + pwdstr);
-            answer = await (await fetch('https://courseweb-git-ccxp-fucked-us-nthumods.vercel.app', { method: 'POST', body: await imgResponse.arrayBuffer() })).text();
+            console.log("pwdstr: ", pwdstr)
+            const imgResponse = await fetch("https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/auth_img.php?pwdstr=" + pwdstr, {
+                "headers": {
+                    "accept": "image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+                    "accept-language": "en-US,en;q=0.9",
+                    "sec-ch-ua": "\"Not_A Brand\";v=\"8\", \"Chromium\";v=\"120\", \"Microsoft Edge\";v=\"120\"",
+                    "sec-ch-ua-mobile": "?0",
+                    "sec-ch-ua-platform": "\"Windows\"",
+                    "sec-fetch-dest": "image",
+                    "sec-fetch-mode": "no-cors",
+                    "sec-fetch-site": "same-origin"
+                },
+                "referrer": "https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/",
+                "referrerPolicy": "strict-origin-when-cross-origin",
+                "body": null,
+                "method": "GET",
+                "mode": "cors",
+                "credentials": "include"
+            });
+            const imgBuffer = await imgResponse.arrayBuffer()
+            console.log("imgBuff length: ", imgBuffer.byteLength)
+            answer = await (await fetch('https://courseweb-git-ccxp-fucked-us-nthumods.vercel.app', { method: 'POST', body: imgBuffer })).text();
 
             if(answer.length == 6) break;
         } while (tries <= 5);
