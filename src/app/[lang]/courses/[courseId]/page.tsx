@@ -7,24 +7,20 @@ import Fade from "@/components/Animation/Fade";
 import { getDictionary } from "@/dictionaries/dictionaries";
 import { getCoursePTTReview, getCourseWithSyllabus } from '@/lib/course';
 import { LangProps } from "@/types/pages";
-import {
-    Accordion,
-    AccordionDetails,
-    AccordionGroup,
-    AccordionSummary,
-    Alert,
-    Button,
-    Chip,
-    Divider,
-} from '@mui/joy';
-import supabase, { CourseDefinition } from "@/config/supabase";
 import {toPrettySemester} from '@/helpers/semester';
 import CourseTagList from "@/components/Courses/CourseTagsList";
 import SelectCourseButton from '@/components/Courses/SelectCourseButton';
 import { createTimetableFromCourses } from "@/helpers/timetable";
 import Timetable from "@/components/Timetable/Timetable";
 import { MinimalCourse } from "@/types/courses";
-import {hasTimes} from '@/helpers/courses';
+import {hasTimes, getScoreType} from '@/helpers/courses';
+import supabase_server from "@/config/supabase_server";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator"
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Badge } from "@/components/ui/badge"
+
 
 type PageProps = { 
     params: { courseId? : string } 
@@ -54,17 +50,17 @@ const TOCNavItem = ({ href, children, active = false }: { href: string, children
 }
 
 const getOtherClasses = async (course: MinimalCourse) => {
-    const { data, error } = await supabase
+    const { data, error } = await supabase_server
         .from('courses')
-        .select('*')
+        .select('*, course_scores(*)')
         .eq('department', course.department)
         .eq('course', course.course)
         .not('raw_id', 'eq', course.raw_id)
         .order('raw_id', { ascending: false })
-    
+
     if(error) throw error;
     if(!data) throw new Error('No data');
-    return data as unknown as CourseDefinition[];
+    return data;
 }
 
 const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
@@ -77,7 +73,7 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
             <p className="text-xl">找不到課程</p>
             
             <Link href="../">
-                <Button size="sm" variant="outlined" color="neutral" startDecorator={<ChevronLeft/> }>Back</Button>
+                <Button size="sm" variant="outline"><ChevronLeft/> Back</Button>
             </Link>
         </div>
     </div>
@@ -121,7 +117,7 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                         <SelectCourseButton courseId={course.raw_id}/>
                     </div>
                 </div>
-                <Divider/>
+                <Separator/>
                 <div className="grid grid-cols-1 md:grid-cols-[auto_320px] gap-6 ">
                     <div className="space-y-4">
                         <div className="">
@@ -145,19 +141,22 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                         </div>}
                         {reviews.length > 0 && <div className="">
                         <h3 className="font-semibold text-xl mb-2" id="ptt">{dict.course.details.ptt_title}</h3>
-                            <Alert variant="soft" color="warning" className="mb-4" startDecorator={<AlertTriangle/>}>
-                                {dict.course.details.ptt_disclaimer}
+                            <Alert>
+                                <AlertTriangle/>
+                                <AlertDescription>
+                                    {dict.course.details.ptt_disclaimer}
+                                </AlertDescription>
                             </Alert>
-                            <AccordionGroup>
+                            <Accordion type="single" collapsible className="w-full">
                             {reviews.map((m, index) => 
-                                <Accordion key={index}>
-                                    <AccordionSummary>{index + 1}. {format(new Date(m.date), 'yyyy-MM-dd')} 的心得</AccordionSummary>
-                                    <AccordionDetails>
+                                <AccordionItem key={index} value={m.date}>
+                                    <AccordionTrigger>{index + 1}. {format(new Date(m.date), 'yyyy-MM-dd')} 的心得</AccordionTrigger>
+                                    <AccordionContent>
                                         <p className="whitespace-pre-line text-sm">{m.content}</p>
-                                    </AccordionDetails>
-                                </Accordion>
+                                    </AccordionContent>
+                                </AccordionItem>
                             )}
-                            </AccordionGroup>
+                            </Accordion>
                         </div>}
                         <h3 className="font-semibold text-xl mb-2" id="other">相同課號資料</h3>
                         <div className="flex flex-row items-center gap-2 overflow-hidden flex-wrap">
@@ -167,6 +166,13 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                                     <h2 className="text-base font-medium text-gray-600 dark:text-neutral-400">{m.department} {m.course}-{m.class} {m.name_zh}</h2>
                                     <h2 className="text-sm font-medium text-gray-600 dark:text-neutral-400">{m.name_en}</h2>
                                     <h3 className="text-sm font-medium text-gray-600 dark:text-neutral-400">{m.teacher_zh?.join(',')}</h3>
+                                    {m.course_scores && <div>
+                                        <Separator/>
+                                        <div className="flex flex-row gap-1 text-sm font-medium text-gray-600 dark:text-neutral-400">
+                                            <p>平均{getScoreType(m.course_scores.type)} {m.course_scores.average}</p>
+                                            <p>標準差 {m.course_scores.std_dev}</p>
+                                        </div>
+                                    </div>}
                                 </Link>
                             )}
                         </div>
@@ -183,21 +189,21 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                         <div>
                             <h3 className="font-semibold text-base mb-2">{dict.course.details.compulsory}</h3>
                             <div className="flex flex-row gap-2 flex-wrap">
-                                {course.compulsory_for?.map((m, index) => <Chip key={index}>{m}</Chip>)}
+                                {course.compulsory_for?.map((m, index) => <Badge key={index}>{m}</Badge>)}
                                 {course.compulsory_for?.length == 0 && <p>-</p>}
                             </div>
                         </div>
                         <div>
                             <h3 className="font-semibold text-base mb-2">{dict.course.details.elective}</h3>
                             <div className="flex flex-row gap-2 flex-wrap">
-                                {course.elective_for?.map((m, index) => <Chip key={index}>{m}</Chip>)}
+                                {course.elective_for?.map((m, index) => <Badge key={index}>{m}</Badge>)}
                                 {course.elective_for?.length == 0 && <p>-</p>}
                             </div>
                         </div>
                         <div>
                             <h3 className="font-semibold text-base mb-2">{dict.course.details.cross_discipline}</h3>
                             <div className="flex flex-row gap-2 flex-wrap">
-                                {course.cross_discipline?.map((m, index) => <Chip key={index}>{m}</Chip>)}
+                                {course.cross_discipline?.map((m, index) => <Badge key={index}>{m}</Badge>)}
                                 {course.cross_discipline?.length == 0 && <p>-</p>}
                                 
                             </div>
@@ -205,14 +211,14 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                         <div>
                             <h3 className="font-semibold text-base mb-2">{dict.course.details.first_specialization}</h3>
                             <div className="flex flex-row gap-2 flex-wrap">
-                                {course.first_specialization?.map((m, index) => <Chip key={index}>{m}</Chip>)}
+                                {course.first_specialization?.map((m, index) => <Badge key={index}>{m}</Badge>)}
                                 {course.first_specialization?.length == 0 && <p>-</p>}
                             </div>
                         </div>
                         <div>
                             <h3 className="font-semibold text-base mb-2">{dict.course.details.second_specialization}</h3>
                             <div className="flex flex-row gap-2 flex-wrap">
-                                {course.second_specialization?.map((m, index) => <Chip key={index}>{m}</Chip>)}
+                                {course.second_specialization?.map((m, index) => <Badge key={index}>{m}</Badge>)}
                                 {course.second_specialization?.length == 0 && <p>-</p>}
                             </div>
                         </div>
