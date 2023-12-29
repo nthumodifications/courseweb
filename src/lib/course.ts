@@ -13,6 +13,9 @@ export const getCourseWithSyllabus = async (courseId: string) => {
         *,
         course_syllabus (
             *
+        ),
+        course_scores (
+            *
         )
         `)
         .eq('raw_id', courseId);

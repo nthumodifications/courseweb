@@ -20,6 +20,7 @@ import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from "@/components/ui/badge"
+import {CourseDefinition, CourseScoreDefinition} from '@/config/supabase';
 
 
 type PageProps = { 
@@ -60,7 +61,7 @@ const getOtherClasses = async (course: MinimalCourse) => {
 
     if(error) throw error;
     if(!data) throw new Error('No data');
-    return data;
+    return data as unknown as (CourseDefinition & { course_scores: CourseScoreDefinition | undefined})[];
 }
 
 const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
@@ -108,7 +109,7 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                     </div>
                     <div className="space-y-4 w-[min(100vh,320px)]">
                         <div className="">
-                            <h3 className="font-semibold text-base mb-2">時間地點</h3>
+                            <h3 className="font-semibold text-base mb-2">{dict.course.details.venue_time}</h3>
                         {course.venues? 
                             course.venues.map((vn, i) => <p key={vn} className='text-blue-600 dark:text-blue-400 text-sm'>{vn} <span className='text-black dark:text-white'>{course.times![i]}</span></p>) : 
                             <p>No Venues</p>
@@ -132,12 +133,16 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                             </>}</p>
                         </div>
                         {course?.prerequisites && <div className="">
-                            <h3 className="font-semibold text-xl mb-2" id="prerequesites">擋修</h3>
+                            <h3 className="font-semibold text-xl mb-2" id="prerequesites">{dict.course.details.prerequesites}</h3>
                             <div dangerouslySetInnerHTML={{ __html: course.prerequisites }} />
                         </div>}
                         {showTimetable && <div className="">
-                            <h3 className="font-semibold text-xl mb-2" id="timetable">時間表</h3>
+                            <h3 className="font-semibold text-xl mb-2" id="timetable">{dict.course.details.timetable}</h3>
                             <Timetable timetableData={timetableData}/>
+                        </div>}
+                        {course.course_scores && <div className="">
+                            <h3 className="font-semibold text-xl mb-2" id="scores">{dict.course.details.scores}</h3>
+                            <p></p>
                         </div>}
                         {reviews.length > 0 && <div className="">
                         <h3 className="font-semibold text-xl mb-2" id="ptt">{dict.course.details.ptt_title}</h3>
@@ -158,7 +163,7 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                             )}
                             </Accordion>
                         </div>}
-                        <h3 className="font-semibold text-xl mb-2" id="other">相同課號資料</h3>
+                        <h3 className="font-semibold text-xl mb-2" id="other">{dict.course.details.related_courses}</h3>
                         <div className="flex flex-row items-center gap-2 overflow-hidden flex-wrap">
                             {otherClasses.map((m, index) =>
                                 <Link key={index}  className="flex flex-col w-[240px]" href={`/courses/${m.raw_id}`}>
@@ -179,7 +184,7 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                     </div>
                     <div className="space-y-2">
                         <div>
-                            <h3 className="font-semibold text-base mb-2">備注</h3>
+                            <h3 className="font-semibold text-base mb-2">{dict.course.details.remarks}</h3>
                             <p className="text-sm">{course.note ?? "-"}</p>
                         </div>
                         <div>
@@ -233,10 +238,11 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                     <div className="flex flex-col">
                         <TOCNavItem href="#brief">{dict.course.details.brief}</TOCNavItem>
                         <TOCNavItem href="#description">{dict.course.details.description}</TOCNavItem>
-                        {course?.prerequisites && <TOCNavItem href="#prerequesites">擋修</TOCNavItem>}
-                        {showTimetable && <TOCNavItem href="#timetable">時間表</TOCNavItem>}
-                        {reviews.length > 0 && <TOCNavItem href="#ptt">PTT心得</TOCNavItem>}
-                        <TOCNavItem href="#other">相同課號資料</TOCNavItem>
+                        {course?.prerequisites && <TOCNavItem href="#prerequesites">{dict.course.details.prerequesites}</TOCNavItem>}
+                        {showTimetable && <TOCNavItem href="#timetable">{dict.course.details.timetable}</TOCNavItem>}
+                        {course.course_scores && <TOCNavItem href="#scores">{dict.course.details.scores}</TOCNavItem>}
+                        {reviews.length > 0 && <TOCNavItem href="#ptt">{dict.course.details.ptt}</TOCNavItem>}
+                        <TOCNavItem href="#other">{dict.course.details.related_courses}</TOCNavItem>
                     </div>
                 </div>
             </div>
