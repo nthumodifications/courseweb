@@ -29,7 +29,7 @@ export const POST = async (req: NextRequest) => {
             pwdstr = bodyMatch[1];
             //fetch the image from the url and send as base64
             console.log("pwdstr: ",pwdstr)
-            const imgRawResponse = await (await fetch(`http://localhost:3000/api/ais_headless/fetch-img?pwdstr=${pwdstr}`)).arrayBuffer();
+            const imgRawResponse = await (await fetch(`https://courseweb-git-ccxp-fucked-us-nthumods.vercel.app/api/ais_headless/fetch-img?pwdstr=${pwdstr}`)).arrayBuffer();
             const imgBuffer = await sharp(imgRawResponse)
                                     .resize(320,120)
                                     .greyscale() // make it greyscale
