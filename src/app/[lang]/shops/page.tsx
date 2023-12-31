@@ -1,32 +1,13 @@
-'use client';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { useState, useEffect } from 'react'
+import Shops from './Shops'
 
+const Page = async () => {
+  
+  const res = await fetch('https://api.nthusa.tw/dining')
+  if(!res.ok) throw new Error('Failed to fetch data')
+  const data = (await res.json()).reduce((a, i) => a.concat(i.restaurants), [])
+  
+  return <Shops data={data} />
 
-const Shops = () => {
-  return (
-    <div className="p-8">
-      <Card>
-        <CardHeader>
-          <CardTitle>Card Title</CardTitle>
-          <CardDescription>Card Description</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p>Card Content</p>
-        </CardContent>
-        <CardFooter>
-          <p>Card Footer</p>
-        </CardFooter>
-      </Card>
-    </div>
-  )
 }
 
-export default Shops
+export default Page
