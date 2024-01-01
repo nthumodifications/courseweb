@@ -11,7 +11,7 @@
     "checkts": "tsc --noEmit"
   },
   "dependencies": {
-    "@ducanh2912/next-pwa": "^10.0.0",
+    "@ducanh2912/next-pwa": "^10.0.2",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "@formatjs/intl-localematcher": "^0.5.2",
