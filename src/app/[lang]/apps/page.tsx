@@ -1,13 +1,12 @@
 import { apps } from "@/const/apps";
 import { getDictionary } from "@/dictionaries/dictionaries";
 import { LangProps } from "@/types/pages";
-import {Alert, IconButton, Button} from '@mui/joy';
+import { Alert, Button } from '@mui/joy';
 import Link from "next/link";
-import {Map, MapPin, Star, Info, X, ArrowRight} from 'lucide-react';
+import { Info, ArrowRight } from 'lucide-react';
 import FavouriteApp from "./Favorite";
-import { cookies } from "next/headers";
 import React from 'react';
-import CCXPDownAlert from "@/components/CCXPDownAlert";
+import {getACIXSTORE} from '@/types/headless_ais';
 
 export const dynamic = 'force-dynamic'
 
@@ -15,8 +14,7 @@ const AppList = async ({
     params: { lang }
 }: LangProps) => {
     const dict = await getDictionary(lang);
-    const cookie = await cookies();
-    const ACIXSTORE = undefined;
+    const ACIXSTORE = await getACIXSTORE();
 
     return (
         <div className="h-full w-full">
@@ -35,8 +33,8 @@ const AppList = async ({
                         <FavouriteApp appId={app.id}/>
                     </div>
                 </div>))}
-                <CCXPDownAlert/>
-                {/* {!ACIXSTORE && <Alert 
+                {/* <CCXPDownAlert/> */}
+                {!ACIXSTORE && <Alert 
                     variant="outlined" 
                     color="success" 
                     startDecorator={
@@ -54,7 +52,7 @@ const AppList = async ({
                         <h4 className="font-bold mb-1">還有更多功能！</h4>
                         <p>到設定同步校務資訊系統后，可以直接在這裏使用校務資訊系統的功能！</p>
                     </div>
-                </Alert>} */}
+                </Alert>}
                 <Alert color="neutral">
                     <div className="flex flex-col gap-1">
                         <h4 className="font-bold text-base">沒有你要的功能？</h4>
