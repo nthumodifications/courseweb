@@ -244,6 +244,41 @@ export interface Database {
         }
         Relationships: []
       }
+      course_scores: {
+        Row: {
+          average: number
+          created_at: string
+          enrollment: number | null
+          raw_id: string
+          std_dev: number
+          type: string
+        }
+        Insert: {
+          average: number
+          created_at?: string
+          enrollment?: number | null
+          raw_id: string
+          std_dev: number
+          type: string
+        }
+        Update: {
+          average?: number
+          created_at?: string
+          enrollment?: number | null
+          raw_id?: string
+          std_dev?: number
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_scores_raw_id_fkey"
+            columns: ["raw_id"]
+            isOneToOne: true
+            referencedRelation: "courses"
+            referencedColumns: ["raw_id"]
+          }
+        ]
+      }
       course_students: {
         Row: {
           course: string
