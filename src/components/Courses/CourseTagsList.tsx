@@ -7,11 +7,11 @@ import { Users } from 'lucide-react';
 
 const HighlightItem: FC<PropsWithChildren<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>>> = ({
     children,
-    className = "",
+    className,
     ...props
 }) => {
     return <div
-        className={`flex flex-row items-center justify-center min-w-[65px] space-x-2 px-2 py-2 select-none rounded-md bg-indigo-50 text-indigo-900 dark:bg-indigo-950 dark:text-indigo-100 ${className}`}
+        className={`flex flex-row items-center justify-center min-w-[65px] space-x-2 px-2 py-2 select-none rounded-md ${className ?? 'bg-indigo-50 text-indigo-900 dark:bg-indigo-950 dark:text-indigo-100'}`}
         {...props}
     >
         {children}
@@ -21,7 +21,7 @@ const CourseTagList = ({ course }: { course: CourseDefinition }) => {
     const dict = useDictionary();
     return (
         <div className='flex flex-row flex-wrap gap-1 text-sm'>
-            <HighlightItem>
+            <HighlightItem className='bg-purple-50 text-purple-900 dark:bg-purple-950 dark:text-purple-100'>
                 <span className="">
                     {course.capacity ?? '-'}
                     {(course.reserve ?? 0) > 0 && <>
@@ -35,10 +35,10 @@ const CourseTagList = ({ course }: { course: CourseDefinition }) => {
                 <span className="">{course.credits}</span>
                 <span className="">{dict.course.credits}</span>
             </HighlightItem>
-            {course.tags.includes('16周') && <HighlightItem>
+            {course.tags.includes('16周') && <HighlightItem className='bg-green-50 text-green-900 dark:bg-green-950 dark:text-green-100'>
                 <span className="">16 週</span>
             </HighlightItem>}
-            {course.tags.includes('18周') && <HighlightItem>
+            {course.tags.includes('18周') && <HighlightItem className='bg-red-50 text-red-900 dark:bg-red-950 dark:text-red-100'>
                 <span className="">18 週</span>
             </HighlightItem>}
             {course.language == '英' ?
