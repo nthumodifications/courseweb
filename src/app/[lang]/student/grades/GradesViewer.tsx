@@ -23,20 +23,28 @@ import { toPrettySemester } from "@/helpers/semester";
 import { useState } from "react";
 
 const GradesViewer = ({ grades }: { grades: GradeObject }) => {
-    const [selectedSemester, setSelectedSemester] = useState<string>("");
+    const [selectedSemester, setSelectedSemester] = useState<string>("All");
+
+    console.log(selectedSemester);
 
     // get unique semesters
     const semesters = Array.from(new Set(grades.grades.map(grade => grade.year+grade.semester)));
+
+    const displayGrades = grades.grades.filter(grade => {
+        if (selectedSemester == "All") return true;
+        return grade.year+grade.semester == selectedSemester;
+    });
     
     return <div className="flex flex-col gap-2">
         <h1 className="font-bold text-2xl">成績</h1>
         <h2 className="text-4xl font-bold">{grades.ranking.cumulative.letter.gpa}</h2>
         <h2>Year {grades.ranking.cumulative.letter.gpa_cum_year_tw}</h2>
-        <Select>
+        <Select value={selectedSemester} onValueChange={(e: string) => setSelectedSemester(e)}>
             <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Semesters" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent >
+                <SelectItem value={"All"}>All</SelectItem>
                 {semesters.map(sem_id => <SelectItem key={sem_id} value={sem_id}>{toPrettySemester(sem_id)}</SelectItem>)}
             </SelectContent>
         </Select>
@@ -53,7 +61,7 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {grades.grades.map((grade, index) => (
+                {displayGrades.map((grade, index) => (
                     <TableRow key={index}>
                         <TableCell>{grade.raw_id}</TableCell>
                         <TableCell>
