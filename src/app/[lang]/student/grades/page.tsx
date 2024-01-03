@@ -1,6 +1,8 @@
 import {getACIXSTORE} from '@/types/headless_ais';
 import jsdom from 'jsdom';
 import iconv from 'iconv-lite';
+import GradesViewer from './GradesViewer';
+import { GradeObject } from '@/types/grades';
 
 const getStudentGrades = async (ACIXSTORE: string) => {
     const baseURL = 'https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/8/R/6.3/JH8R63002.php?ACIXSTORE=';
@@ -175,14 +177,16 @@ const getStudentGrades = async (ACIXSTORE: string) => {
     };
 }
 
+
+
 const StudentGradesPage = async () => {
     const ACIXSTORE = await getACIXSTORE();
     if(!ACIXSTORE) return <div>Not Logged In</div>;
-    const grades = await getStudentGrades(ACIXSTORE);
+    const grades = await getStudentGrades(ACIXSTORE) as GradeObject;
 
     // console.log(JSON.stringify(grades))
 
-    return <div>Grades</div>;
+    return <GradesViewer grades={grades}/>
 }
 
 export default StudentGradesPage;
