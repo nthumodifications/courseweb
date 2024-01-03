@@ -1,3 +1,4 @@
+'use client'
 import { Badge } from "@/components/ui/badge";
 import {
     Table,
@@ -9,14 +10,37 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+  } from "@/components/ui/select"
 
 import { GradeObject } from "@/types/grades";
+import { toPrettySemester } from "@/helpers/semester";
+import { useState } from "react";
 
 const GradesViewer = ({ grades }: { grades: GradeObject }) => {
+    const [selectedSemester, setSelectedSemester] = useState<string>("");
+
+    // get unique semesters
+    const semesters = Array.from(new Set(grades.grades.map(grade => grade.year+grade.semester)));
+    
     return <div className="flex flex-col gap-2">
         <h1 className="font-bold text-2xl">成績</h1>
         <h2 className="text-4xl font-bold">{grades.ranking.cumulative.letter.gpa}</h2>
         <h2>Year {grades.ranking.cumulative.letter.gpa_cum_year_tw}</h2>
+        <Select>
+            <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Semesters" />
+            </SelectTrigger>
+            <SelectContent>
+                {semesters.map(sem_id => <SelectItem key={sem_id} value={sem_id}>{toPrettySemester(sem_id)}</SelectItem>)}
+            </SelectContent>
+        </Select>
+
         <Table className="w-full">
             <TableHeader>
                 <TableRow>

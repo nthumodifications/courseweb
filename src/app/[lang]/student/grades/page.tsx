@@ -52,7 +52,8 @@ const getStudentGrades = async (ACIXSTORE: string) => {
         const name_zh = course_name_raw?.[0]?.trim() ?? "";
         const name_en = course_name_raw?.[2]?.trim() ?? "";
         const credits = parseInt(cells[4].textContent?.trim() ?? "0");
-        const grade = cells[5].textContent?.trim();
+        const grade_text = cells[5].textContent?.trim();
+        const grade = !grade_text?.startsWith('成績未到') ? grade_text : '成績未到';
         const ge_type = cells[6].textContent?.trim();
         const ranking = cells[7].querySelector('div')?.textContent?.trim();
         // console.log(cells[7].firstChild);
