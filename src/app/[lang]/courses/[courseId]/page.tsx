@@ -14,13 +14,12 @@ import { createTimetableFromCourses } from "@/helpers/timetable";
 import Timetable from "@/components/Timetable/Timetable";
 import { MinimalCourse } from "@/types/courses";
 import { hasTimes, getScoreType } from '@/helpers/courses';
-import supabase_server from "@/config/supabase_server";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from "@/components/ui/badge"
-import { CourseDefinition, CourseScoreDefinition } from '@/config/supabase';
+import supabase, { CourseDefinition, CourseScoreDefinition } from '@/config/supabase';
 import { ScrollArea } from "@/components/ui/scroll-area"
 
 
@@ -52,7 +51,7 @@ const TOCNavItem = ({ href, children, label, active }: { href: string, children?
 }
 
 const getOtherClasses = async (course: MinimalCourse) => {
-    const { data, error } = await supabase_server
+    const { data, error } = await supabase
         .from('courses')
         .select('*, course_scores(*)')
         .eq('department', course.department)
