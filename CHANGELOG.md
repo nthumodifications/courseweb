@@ -1,6 +1,6 @@
-something change...(editing)
+development is still going stay tuned
 
-# [Website/App Name] Patch Report
+# [NTHUmods] Patch Report
 Date: [Date of Release]
 
 ## Introduction
