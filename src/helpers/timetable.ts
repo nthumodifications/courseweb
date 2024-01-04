@@ -6,7 +6,7 @@ import { adjustLuminance} from '@/helpers/colors';
 import { timetableColors } from "../const/timetableColors";
 import { hasTimes } from "./courses";
 
-export const createTimetableFromCourses = (data: MinimalCourse[], currentColors = timetableColors[Object.keys(timetableColors)[0]]) => {
+export const createTimetableFromCourses = (data: MinimalCourse[], colorMap: {[courseId: string]: string} = colorMapFromCourses(data.map(i => i.raw_id), timetableColors[Object.keys(timetableColors)[0]])) => {
     const newTimetableData: CourseTimeslotData[] = [];
     data!.forEach(course => {
         //get unique days first
@@ -22,7 +22,7 @@ export const createTimetableFromCourses = (data: MinimalCourse[], currentColors 
                 const startTime = Math.min(...times);
                 const endTime = Math.max(...times);
                 //get the color, mod the index by the length of the color array so that it loops
-                const color = currentColors[data!.indexOf(course) % currentColors.length];
+                const color = colorMap[course.raw_id] || '#555555';
 
                 //Determine the text color
                 const brightness = getBrightness(color);
@@ -45,3 +45,12 @@ export const createTimetableFromCourses = (data: MinimalCourse[], currentColors 
     });
     return newTimetableData;
 }
+
+export const colorMapFromCourses = (courseIds: string[], colors: string[]) => {
+    const colorMap: { [id: string]: string } = {};
+    courseIds.forEach((id, index) => {
+        colorMap[id] = colors[index % colors.length];
+    });
+    return colorMap;
+}
+    

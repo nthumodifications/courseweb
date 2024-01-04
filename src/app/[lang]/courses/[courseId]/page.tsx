@@ -10,7 +10,7 @@ import { LangProps } from "@/types/pages";
 import { toPrettySemester } from '@/helpers/semester';
 import CourseTagList from "@/components/Courses/CourseTagsList";
 import SelectCourseButton from '@/components/Courses/SelectCourseButton';
-import { createTimetableFromCourses } from "@/helpers/timetable";
+import { colorMapFromCourses, createTimetableFromCourses } from "@/helpers/timetable";
 import Timetable from "@/components/Timetable/Timetable";
 import { MinimalCourse } from "@/types/courses";
 import { hasTimes, getScoreType } from '@/helpers/courses';
@@ -21,6 +21,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Badge } from "@/components/ui/badge"
 import supabase, { CourseDefinition, CourseScoreDefinition } from '@/config/supabase';
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { timetableColors } from "@/const/timetableColors";
 
 
 type PageProps = {
@@ -86,7 +87,8 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
     // times might not be available, check if it is empty list or its items are all empty strings
     const showTimetable = hasTimes(course as MinimalCourse);
 
-    const timetableData = showTimetable ? createTimetableFromCourses([course as MinimalCourse]) : [];
+    const colorMap = colorMapFromCourses([course as MinimalCourse].map(c => c.raw_id), timetableColors[Object.keys(timetableColors)[0]]);
+    const timetableData = showTimetable ? createTimetableFromCourses([course as MinimalCourse], colorMap) : [];
 
     return <Fade>
         <div className="grid grid-cols-1 xl:grid-cols-[auto_240px] py-6 px-4 text-gray-500 dark:text-gray-300">

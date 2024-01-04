@@ -5,18 +5,18 @@ import Timetable from './Timetable';
 import useUserTimetable from '@/hooks/contexts/useUserTimetable';
 import { toPng } from 'html-to-image';
 import { useCallback, useRef, useState } from 'react';
-import { createTimetableFromCourses } from '@/helpers/timetable';
+import {createTimetableFromCourses, colorMapFromCourses} from '@/helpers/timetable';
 import { useSettings } from '@/hooks/contexts/settings';
 import { MinimalCourse } from '@/types/courses';
 
 const DownloadTimetableComponent = () => {
     const dict = useDictionary();
     const { currentColors } = useSettings();
-    const { displayCourseData } = useUserTimetable();
+    const { displayCourseData, colorMap } = useUserTimetable();
     const ref = useRef<HTMLDivElement>(null);
     const [loading, setLoading] = useState(false);
 
-    const timetableData = createTimetableFromCourses(displayCourseData as MinimalCourse[], currentColors);
+    const timetableData = createTimetableFromCourses(displayCourseData as MinimalCourse[], colorMap);
 
     const handleConvert = useCallback(() => {
         if (ref.current === null) {

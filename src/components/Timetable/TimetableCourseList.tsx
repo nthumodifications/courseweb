@@ -18,7 +18,7 @@ const ShareSyncTimetableDialogDynamic = dynamic(() => import('./ShareSyncTimetab
 
 
 const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, setVertical: (v: boolean) => void }) => {
-    const { language, currentColors } = useSettings();
+    const { language } = useSettings();
     const dict = useDictionary();
 
     const {
@@ -26,7 +26,8 @@ const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, set
         displayCourseData, 
         courses, 
         deleteCourse, 
-        addCourse 
+        addCourse,
+        colorMap
     } = useUserTimetable();
 
     const router = useRouter();
@@ -79,7 +80,7 @@ const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, set
         <div className={`${!vertical ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ' : 'flex flex-col'} gap-4 px-4 flex-wrap`}>
             {displayCourseData.map((course, index) => (
                 <div key={index} className="flex flex-row gap-4 items-center max-w-3xl">
-                    <div className="w-4 h-4 rounded-full" style={{ backgroundColor: currentColors[index % currentColors.length] }}></div>
+                    <div className="w-4 h-4 rounded-full" style={{ backgroundColor: colorMap[course.raw_id] }}></div>
                     <div className="flex flex-col flex-1">
                         <span className="text-sm">{course.department} {course.course}-{course.class} {course.name_zh} - {course.teacher_zh.join(',')}</span>
                         <span className="text-xs">{course.name_en}</span>

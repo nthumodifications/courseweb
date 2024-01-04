@@ -5,8 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSearchParams } from 'next/navigation'
 import supabase from "@/config/supabase";
 import useSWR from "swr";
-import { createTimetableFromCourses } from "@/helpers/timetable";
-import { timetableColors } from "@/const/timetableColors";
+import {createTimetableFromCourses, colorMapFromCourses} from '@/helpers/timetable';
 import { useSettings } from "@/hooks/contexts/settings";
 import { MinimalCourse } from "@/types/courses";
 import {Divider} from '@mui/joy';
@@ -44,8 +43,8 @@ const ViewTimetablePage: NextPage = () => {
     }, {
         keepPreviousData: true,
     })
-
-    const timetableData = createTimetableFromCourses(courses as MinimalCourse[], currentColors);
+    const colorMap = colorMapFromCourses(courses.map(c => c.raw_id), currentColors);
+    const timetableData = createTimetableFromCourses(courses as MinimalCourse[], colorMap);
       
     const totalCredits = useMemo(() => {
         if(!courses) return 0;
@@ -61,7 +60,7 @@ const ViewTimetablePage: NextPage = () => {
                 <div className="flex flex-col gap-4 px-4">
                 {courses && courses.map((course, index) => (
                     <div key={index} className="flex flex-row gap-4 items-center">
-                        <div className="w-4 h-4 rounded-full" style={{ backgroundColor: currentColors[index] }}></div>
+                        <div className="w-4 h-4 rounded-full" style={{ backgroundColor: colorMap[course.raw_id] }}></div>
                         <div className="flex flex-col flex-1">
                             <span className="text-sm">{course.name_zh}</span>
                             <span className="text-xs">{course.name_en}</span>

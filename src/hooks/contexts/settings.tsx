@@ -56,12 +56,13 @@ const useSettingsProvider = () => {
         if(!themes.includes(timetableTheme)) {
             setTimetableTheme(themes[0]);
         }
+        console.log("timetable theme", timetableTheme);
         event({
             action: "selected_theme",
             category: "theme",
             label: !themes.includes(timetableTheme) ? themes[0] : timetableTheme
         });
-    }, [timetableTheme, userDefinedColors]);
+    }, [timetableTheme, Object.keys(userDefinedColors).length]);
 
     //check if cookies 'locale' exists, else set it
     useEffect(() => {
