@@ -1,35 +1,40 @@
-# Development is still going, stay tuned
+## Development is still going, stay tuned
 
 # [NTHUMods] Patch Report
 Date: 01/05/2024 - 12/23/2023[First Launch]
 
 ## Introduction
-- This patch report outlines the latest updates and enhancements for [NTHUMods] as of [01/05/2024]. Our continuous effort to improve user experience and system performance is reflected in this release, which includes new features, bug fixes, and performance improvements. 
+- This patch report outlines the latest updates and enhancements for NTHUMods in the date range of [12/23/2023 - 01/05/2024]. Our continuous effort to improve user experience and system performance is reflected in this release, which includes new features, bug fixes, and performance improvements.
 
-## Changes and Improvements
-- ### Category 1 - e.g., New Features
-  - Describe the new features or functionalities added in this update.
-- ### Category 2 - e.g., Bug Fixes
-  - Detail the issues that were resolved in this update.
-- ### Category 3 - e.g., Performance Improvements
-  - Explain any performance optimizations or enhancements made.
+## New Features
+- added student id viewer via NthuOAuth
+- added related courses list and past year GPA below 'courses' page
+- added 'clear all' button at searching course tab
+- added semester hint in course search result
 
 ## UI/UX Changes
-- Provide a visual walkthrough or description of any changes to the user interface or user experience. Include screenshots or videos if applicable.
+- added more colour option
+- refactored courses details pages
+- added different colours on course item stats
+- fixed timetable
+
+## Bug Fixes
+- fixed few typos
+- fixed navigation bar need to tap twice to load
+- fixed website language behavior error
+- fixed pages reload twice on first click
+- fixed course detail overflow on x-axis
+- fixed timetable overflow
+- fixed timatable text no colour
+- fixed wrong output of student id and bus id
 
 ## Known Issues
 - List any known issues or limitations that users should be aware of. Include information on when you expect these issues to be resolved.
 
-## Acknowledgments
-- Recognize and thank the team members, developers, designers, or contributors who played a role in making this update possible.
-
 ## Next Steps
 - Offer insights into what users can expect in the next update or any upcoming features or improvements on the roadmap.
 
-## Feedback
-- Encourage users and stakeholders to provide feedback on this update. Include contact information or a link to a feedback form.
-
 Thank you for using [NTHUMods]! We value your feedback and are committed to continuously improving your experience.
 If you want to give feedback or report any bugs, feel free to fill in the Google Forms provided.
-- Feedback: https://forms.gle/khxzuLDtzihjw2Tr5
-- Bug Report: https://forms.gle/qYiYUaGYAs8BLqWT9
+- Feedback : https://forms.gle/khxzuLDtzihjw2Tr5
+- Bug Report : https://forms.gle/qYiYUaGYAs8BLqWT9
