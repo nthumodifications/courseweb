@@ -19,7 +19,7 @@ import { renderTimetableSlot } from "@/helpers/timetable_course";
 const TimetablePage: NextPage = () => {
 
     const { displayCourseData, semester, setSemester } = useUserTimetable();
-    const { language, timetableTheme } = useSettings();
+    const { language, currentColors } = useSettings();
     const [vertical, setVertical] = useLocalStorage('timetable_vertical', true);
 
     const router = useRouter();
@@ -27,7 +27,7 @@ const TimetablePage: NextPage = () => {
 
     const [openModal, closeModal] = useModal();
 
-    const timetableData = createTimetableFromCourses(displayCourseData as MinimalCourse[], timetableTheme)
+    const timetableData = createTimetableFromCourses(displayCourseData as MinimalCourse[], currentColors)
 
 
     //Check if URL has course code array, display share dialog.

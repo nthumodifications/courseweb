@@ -18,7 +18,7 @@ import {renderTimetableSlot} from '@/helpers/timetable_course';
 const ViewTimetablePage: NextPage = () => {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { timetableTheme } = useSettings();
+    const { currentColors } = useSettings();
     const [semester, setSemester] = useState<string>(lastSemester.id);
 
     const courseCodes = useMemo(() => {
@@ -45,7 +45,7 @@ const ViewTimetablePage: NextPage = () => {
         keepPreviousData: true,
     })
 
-    const timetableData = createTimetableFromCourses(courses as MinimalCourse[], timetableTheme);
+    const timetableData = createTimetableFromCourses(courses as MinimalCourse[], currentColors);
       
     const totalCredits = useMemo(() => {
         if(!courses) return 0;
@@ -61,7 +61,7 @@ const ViewTimetablePage: NextPage = () => {
                 <div className="flex flex-col gap-4 px-4">
                 {courses && courses.map((course, index) => (
                     <div key={index} className="flex flex-row gap-4 items-center">
-                        <div className="w-4 h-4 rounded-full" style={{ backgroundColor: timetableColors[timetableTheme][index] }}></div>
+                        <div className="w-4 h-4 rounded-full" style={{ backgroundColor: currentColors[index] }}></div>
                         <div className="flex flex-col flex-1">
                             <span className="text-sm">{course.name_zh}</span>
                             <span className="text-xs">{course.name_en}</span>

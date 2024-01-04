@@ -12,7 +12,9 @@ import { event } from "@/lib/gtag";
 const settingsContext = createContext<ReturnType<typeof useSettingsProvider>>({
     language: "zh",
     darkMode: false,
-    timetableTheme: "pastelColors",
+    timetableTheme: Object.keys(timetableColors)[0],
+    currentColors: [],
+    userDefinedColors: {},
     pinnedApps: [],
     ais: {
         enabled: false,
@@ -21,6 +23,7 @@ const settingsContext = createContext<ReturnType<typeof useSettingsProvider>>({
     setLanguage: () => {},
     setDarkMode: () => {},
     setTimetableTheme: () => {},
+    setUserDefinedColors: () => {},
     setAISCredentials: () => {},
     updateACIXSTORE: () => {},
     toggleApp: () => {}
@@ -33,6 +36,7 @@ const useSettingsProvider = () => {
     const pathname = usePathname();
     const [cookies, setCookie, removeCookie] = useCookies(['theme', 'locale', 'ACIXSTORE']);
     const [timetableTheme, setTimetableTheme] = useLocalStorage<string>("timetable_theme", "pastelColors");
+    const [userDefinedColors, setUserDefinedColors] = useLocalStorage<{[theme_name: string]: string[]}>("user_defined_colors", {});
     const [headlessAIS, setHeadlessAIS] = useLocalStorage<HeadlessAISStorage>("headless_ais", { enabled: false });
     const [pinnedApps, setPinnedApps] = useLocalStorage<string[]>("pinned_apps", []);
 
@@ -48,7 +52,7 @@ const useSettingsProvider = () => {
         // if(timetableTheme == "tsinghuarian") {
         //     setTimetableTheme("pastelColors");
         // }
-        const themes = Object.keys(timetableColors);
+        const themes = [...Object.keys(timetableColors), ...Object.keys(userDefinedColors)];
         if(!themes.includes(timetableTheme)) {
             setTimetableTheme(themes[0]);
         }
@@ -57,7 +61,7 @@ const useSettingsProvider = () => {
             category: "theme",
             label: !themes.includes(timetableTheme) ? themes[0] : timetableTheme
         });
-    }, [timetableTheme]);
+    }, [timetableTheme, userDefinedColors]);
 
     //check if cookies 'locale' exists, else set it
     useEffect(() => {
@@ -178,16 +182,30 @@ const useSettingsProvider = () => {
         ACIXSTORE: headlessAIS.enabled ? headlessAIS.ACIXSTORE : undefined,
         enabled: headlessAIS.enabled,
     }
+
+    const currentColors = useMemo(() => {
+        //merge default colors with user defined colors
+        const colors = {...timetableColors, ...userDefinedColors};
+        //check if timetableTheme exists in colors
+        if(!Object.keys(colors).includes(timetableTheme)) {
+            return colors[Object.keys(colors)[0]];
+        }
+        return colors[timetableTheme];
+    }, [timetableTheme, userDefinedColors]);
+
     
     return {
         language,
         darkMode,
         timetableTheme,
+        currentColors,
+        userDefinedColors,
         pinnedApps,
         ais,
         setLanguage,
         setDarkMode,
         setTimetableTheme,
+        setUserDefinedColors,
         setAISCredentials,
         updateACIXSTORE,
         toggleApp

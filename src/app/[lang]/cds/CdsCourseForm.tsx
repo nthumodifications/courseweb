@@ -65,7 +65,7 @@ const CdsCoursesForm: FC<{
     const [totalCount, setTotalCount] = useState<number>(0);
     const [headIndex, setHeadIndex] = useState<number>(0);
     const [showTimetable, setShowTimetable] = useState(true);
-    const { timetableTheme } = useSettings();
+    const { currentColors } = useSettings();
     const [displayToggles, setDisplayToggles] = useState<{ [key: string]: boolean }>({});
     const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -192,7 +192,7 @@ const CdsCoursesForm: FC<{
 
     }, [JSON.stringify(filters)])
 
-    const timetableData = useMemo(() => createTimetableFromCourses(selectedCourses as MinimalCourse[], timetableTheme), [selectedCourses, timetableTheme]);
+    const timetableData = useMemo(() => createTimetableFromCourses(selectedCourses as MinimalCourse[], currentColors), [selectedCourses, currentColors]);
 
     const timeConflicts = useMemo(() => hasConflictingTimeslots(selectedCourses as MinimalCourse[]), [selectedCourses]);
     const duplicates = useMemo(() => hasSameCourse(selectedCourses as MinimalCourse[]), [selectedCourses]);
@@ -550,7 +550,7 @@ const CdsCoursesForm: FC<{
                 </Alert>}
                 {selectedCourses.map((course, index) => (
                     <div key={index} className="flex flex-row gap-4 items-center">
-                        <div className="w-4 h-4 rounded-full" style={{ backgroundColor: timetableColors[timetableTheme][index % timetableColors[timetableTheme].length] }}></div>
+                        <div className="w-4 h-4 rounded-full" style={{ backgroundColor: currentColors[index % currentColors.length] }}></div>
                         <div className="flex flex-col flex-1">
                             <span className="text-sm">{course.department}{course.course}-{course.class} {course.name_zh} - {(course.teacher_zh ?? []).join(',')}</span>
                             <span className="text-xs">{course.name_en}</span>

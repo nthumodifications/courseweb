@@ -19,7 +19,7 @@ import {RawCourseID, Semester, DepartmentCode, CourseCode, ClassCode, Credits, V
 
 
 const TimetablePreview = () => {
-    const { timetableTheme } = useSettings();
+    const { currentColors } = useSettings();
 
     const sampleCourses = createTimetableFromCourses([
         {
@@ -67,7 +67,7 @@ const TimetablePreview = () => {
             teacher_en: ["Wang, Da-Ming"],
             language: '中',
         },
-    ], timetableTheme);
+    ], currentColors);
 
     return <div className="max-h-[320px] overflow-y-hidden">
         <Timetable

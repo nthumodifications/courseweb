@@ -31,8 +31,9 @@ const userTimetableContext = createContext<ReturnType<typeof useUserTimetablePro
 });
 
 const useUserTimetableProvider = (loadCourse = true) => {
-    const { timetableTheme } = useSettings();
+    const { currentColors } = useSettings();
     const [courses, setCourses] = useLocalStorage<CourseLocalStorage>("courses", {});
+    const [colorMap, setColorMap] = useLocalStorage<{ [courseID: string]: string }>("course_color_map", {}); //map from courseID to color
     const [semester, setSemester] = useState<string>(lastSemester.id);
     const [timetableData, setTimetableData] = useState<CourseTimeslotData[]>([]);
 
@@ -56,6 +57,19 @@ const useUserTimetableProvider = (loadCourse = true) => {
     }, {
         keepPreviousData: true,
     });
+
+    useEffect(() => {
+        //migrate, if colorMap is empty, then populate colorMap with default colors from timetableColors
+        if (Object.keys(colorMap).length === 0) {
+            const newColorMap: { [courseID: string]: string } = {};
+            Object.keys(courses).forEach(sem => {
+                courses[sem].forEach((courseID, i) => {
+                    newColorMap[courseID] = currentColors[i % currentColors.length];
+                });
+            });
+            setColorMap(newColorMap);
+        }
+    }, [colorMap, courses]);
 
     //migration from old localStorage key "semester_1121"
     useEffect(() => {
@@ -88,8 +102,8 @@ const useUserTimetableProvider = (loadCourse = true) => {
             console.log('loading')
             return;
         }
-        setTimetableData(createTimetableFromCourses(semesterCourseData! as MinimalCourse[], timetableTheme));
-    }, [semesterCourseData, semesterLoading, semesterError, timetableTheme]);
+        setTimetableData(createTimetableFromCourses(semesterCourseData! as MinimalCourse[], currentColors));
+    }, [semesterCourseData, semesterLoading, semesterError, currentColors]);
 
     //handlers for courses
     const addCourse = (courseID: string) => {
