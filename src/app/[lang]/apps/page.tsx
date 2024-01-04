@@ -7,6 +7,7 @@ import {Map, MapPin, Star, Info, X, ArrowRight} from 'lucide-react';
 import FavouriteApp from "./Favorite";
 import { cookies } from "next/headers";
 import React from 'react';
+import CCXPDownAlert from "@/components/CCXPDownAlert";
 
 export const dynamic = 'force-dynamic'
 
@@ -15,7 +16,7 @@ const AppList = async ({
 }: LangProps) => {
     const dict = await getDictionary(lang);
     const cookie = await cookies();
-    const ACIXSTORE = cookie.get('ACIXSTORE')?.value || undefined;
+    const ACIXSTORE = undefined;
 
     return (
         <div className="h-full w-full">
@@ -34,7 +35,8 @@ const AppList = async ({
                         <FavouriteApp appId={app.id}/>
                     </div>
                 </div>))}
-                {!ACIXSTORE && <Alert 
+                <CCXPDownAlert/>
+                {/* {!ACIXSTORE && <Alert 
                     variant="outlined" 
                     color="success" 
                     startDecorator={
@@ -52,7 +54,7 @@ const AppList = async ({
                         <h4 className="font-bold mb-1">還有更多功能！</h4>
                         <p>到設定同步校務資訊系統后，可以直接在這裏使用校務資訊系統的功能！</p>
                     </div>
-                </Alert>}
+                </Alert>} */}
                 <Alert color="neutral">
                     <div className="flex flex-col gap-1">
                         <h4 className="font-bold text-base">沒有你要的功能？</h4>

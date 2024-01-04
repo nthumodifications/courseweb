@@ -16,7 +16,7 @@ const TimetableSlotVertical: FC<TimetableSlotProps> = ({ course, tableDim, fract
 
     return (
         <div
-            className={`absolute rounded-md shadow-lg transform translate-y-0.5`}
+            className={`absolute rounded-md transform translate-y-0.5`}
             style={{
                 left: tableDim.header.width + course.dayOfWeek * tableDim.timetable.width + (fractionIndex - 1) * (tableDim.timetable.width / fraction),
                 top: tableDim.header.height + (course.startTime) * tableDim.timetable.height,
