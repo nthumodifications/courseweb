@@ -2,7 +2,7 @@ import useDictionary from '@/dictionaries/useDictionary';
 import {Button, DialogContent, DialogTitle, ModalClose, ModalDialog} from '@mui/joy';
 import {Download, Image} from 'lucide-react';
 import Timetable from './Timetable';
-import useUserTimetable from '@/hooks/useUserTimetable';
+import useUserTimetable from '@/hooks/contexts/useUserTimetable';
 import { toPng } from 'html-to-image';
 import { useCallback, useRef, useState } from 'react';
 import { createTimetableFromCourses } from '@/helpers/timetable';

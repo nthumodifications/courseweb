@@ -25,7 +25,7 @@ import { useSettings } from '@/hooks/contexts/settings';
 import { Department } from '@/types/courses';
 import { RefineControlFormTypes } from '@/app/[lang]/courses/page';
 import SelectControl from '../FormComponents/SelectControl';
-import useUserTimetable from '@/hooks/useUserTimetable';
+import useUserTimetable from '@/hooks/contexts/useUserTimetable';
 import {scheduleTimeSlots} from '@/const/timetable';
 
 const RefineControls: FC<{ control: Control<RefineControlFormTypes>, setValue: UseFormSetValue<RefineControlFormTypes>, onClear: () => void }> = ({ control, setValue, onClear }) => {

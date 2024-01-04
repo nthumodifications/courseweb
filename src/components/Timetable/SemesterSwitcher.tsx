@@ -1,5 +1,5 @@
 'use client';
-import useUserTimetable from '@/hooks/useUserTimetable';
+import useUserTimetable from '@/hooks/contexts/useUserTimetable';
 import { IconButton } from '@mui/joy';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { semesterInfo } from '@/const/semester';

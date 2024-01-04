@@ -1,7 +1,7 @@
 'use client';;
 import Timetable from "@/components/Timetable/Timetable";
 import { NextPage } from "next";
-import useUserTimetable from "@/hooks/useUserTimetable";
+import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from 'next/navigation'
 import { useEffect } from "react";

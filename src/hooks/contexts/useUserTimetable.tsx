@@ -1,5 +1,5 @@
 'use client';
-import { useSettings } from "./contexts/settings";
+import { useSettings } from "./settings";
 import { useState, useEffect, useCallback, createContext, useContext } from "react";
 import supabase, { CourseSyllabusView } from "@/config/supabase";
 import { createTimetableFromCourses } from "@/helpers/timetable";

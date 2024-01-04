@@ -1,7 +1,7 @@
 import { Button, ButtonGroup, IconButton, Divider, Tooltip } from '@mui/joy';
 import { Download, EyeOff, Search, Share, Trash, AlertTriangle, Copy, Columns, Repeat, ExternalLink } from 'lucide-react';
 import { useSettings } from '@/hooks/contexts/settings';
-import useUserTimetable from '@/hooks/useUserTimetable';
+import useUserTimetable from '@/hooks/contexts/useUserTimetable';
 import { useRouter } from 'next/navigation';
 import { useModal } from '@/hooks/contexts/useModal';
 import CourseSearchbar from './CourseSearchbar';
