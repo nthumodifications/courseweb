@@ -31,5 +31,5 @@ Date: 01/05/2024 - 12/23/2023[First Launch]
 
 Thank you for using [NTHUMods]! We value your feedback and are committed to continuously improving your experience.
 If you want to give feedback or report any bugs, feel free to fill in the Google Forms provided.
-- Feedback: (https://forms.gle/khxzuLDtzihjw2Tr5)
-- Bug Report: (https://forms.gle/qYiYUaGYAs8BLqWT9)
+- Feedback: https://forms.gle/khxzuLDtzihjw2Tr5
+- Bug Report: https://forms.gle/qYiYUaGYAs8BLqWT9
