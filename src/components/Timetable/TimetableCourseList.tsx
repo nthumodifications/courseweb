@@ -1,5 +1,5 @@
 import { IconButton, Divider, Tooltip } from '@mui/joy';
-import { Download, EyeOff, Search, Share, Trash, AlertTriangle, Copy, Columns, Repeat, ExternalLink } from 'lucide-react';
+import { Download, EyeOff, Search, Share, Trash, AlertTriangle, Copy, Columns, Repeat, ExternalLink, GripVertical } from 'lucide-react';
 import { useSettings } from '@/hooks/contexts/settings';
 import useUserTimetable from '@/hooks/contexts/useUserTimetable';
 import { useRouter } from 'next/navigation';
@@ -26,12 +26,18 @@ import {
 } from '@dnd-kit/core';
 import {
     arrayMove,
+    rectSwappingStrategy,
     SortableContext,
     sortableKeyboardCoordinates,
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import {useSortable} from '@dnd-kit/sortable';
 import {CSS} from '@dnd-kit/utilities';
+
+import {
+  restrictToVerticalAxis,
+  restrictToWindowEdges,
+} from '@dnd-kit/modifiers';
 
 const DownloadTimetableDialogDynamic = dynamic(() => import('./DownloadTimetableDialog'), { ssr: false })
 const ShareSyncTimetableDialogDynamic = dynamic(() => import('./ShareSyncTimetableDialog'), { ssr: false })
@@ -62,7 +68,8 @@ const TimetableCourseListItem = ({ course, hasConflict, isDuplicate }: { course:
         transition,
     };
 
-    return <div className="flex flex-row gap-4 items-center max-w-3xl" ref={setNodeRef} style={style} {...attributes} {...listeners}>
+    return <div className="flex flex-row gap-4 items-center max-w-3xl" ref={setNodeRef} style={style} >
+        <GripVertical className="w-4 h-4 text-gray-400" {...attributes} {...listeners} />
         <div className="w-4 h-4 rounded-full" style={{ backgroundColor: colorMap[course.raw_id] }}></div>
         <div className="flex flex-col flex-1">
             <span className="text-sm">{course.department} {course.course}-{course.class} {course.name_zh} - {course.teacher_zh.join(',')}</span>
@@ -200,10 +207,11 @@ const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, set
                 sensors={sensors}
                 collisionDetection={closestCenter}
                 onDragEnd={handleDragEnd}
+                modifiers={[vertical? restrictToVerticalAxis: restrictToWindowEdges]}
             >
                 <SortableContext
                     items={displayCourseData.map(course => course.raw_id)}
-                    strategy={verticalListSortingStrategy}
+                    strategy={vertical? verticalListSortingStrategy: rectSwappingStrategy}
                 >
                     {displayCourseData.map((course, index) => (
                         <TimetableCourseListItem
