@@ -1,5 +1,5 @@
 import {Language} from '@/types/settings';
-import { enUS, zhTW } from 'date-fns/esm/locale';
+import { enUS, zhTW } from 'date-fns/locale';
 
 export const getLocale = (lang: Language) => {
     const enLocale: { [x: string]: string } = {
