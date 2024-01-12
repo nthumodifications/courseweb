@@ -8,7 +8,7 @@ const getStudentGrades = async (ACIXSTORE: string) => {
                     .then(arrayBuffer => iconv.decode(Buffer.from(arrayBuffer), 'big5').toString())
     const dom = new jsdom.JSDOM(html);
     const doc = dom.window.document;
-    const table = doc.querySelectorAll('table')[1];
+    const table = doc.querySelectorAll('table')[0];
     //First Row:  學號 Student Number：{studentid}　　姓名 Name：{name_zh}　　班級 Department & Class：{class_name_zh}　　
     //Second Row p:  修習總學分(包含及格,不及格及成績未到) Total credits( including passing, failing, and not submitted grades)：{total_credits}　已修及格畢業學分 Passing grade：{passed_credits}　成績未到畢業學分 Not submitted grade：{pending_credits}
 	//Third Row: Header
@@ -46,7 +46,7 @@ const getStudentGrades = async (ACIXSTORE: string) => {
         const semester = cells[1].textContent?.trim();
         const course_id = cells[2].textContent?.trim();
         const course_name_raw = cells[3].textContent?.trim().split('\n');
-        const name_zh = course_name_raw?.[0]?.trim() ?? "";
+        const name_zh_ge = course_name_raw?.[0]?.trim() ?? "";
         const name_en = course_name_raw?.[2]?.trim() ?? "";
         const credits = parseInt(cells[4].textContent?.trim() ?? "0");
         const grade_text = cells[5].textContent?.trim();
@@ -55,6 +55,7 @@ const getStudentGrades = async (ACIXSTORE: string) => {
         const ranking = cells[7].querySelector('div')?.textContent?.trim();
         // console.log(cells[7].firstChild);
         const t_scores = cells[8].textContent?.trim();
+        const [name_zh, ge_description] = name_zh_ge.split(' -- ');
         grades.push({
             raw_id: `${year}${semester}${course_id}`,
             year,
@@ -65,6 +66,7 @@ const getStudentGrades = async (ACIXSTORE: string) => {
             credits,
             grade,
             ge_type,
+            ge_description,
             ranking,
             t_scores
         });
@@ -81,7 +83,7 @@ const getStudentGrades = async (ACIXSTORE: string) => {
     // T分數學業累計系排名/總人數、T分數成績學業平均成績(至{gpa_cum_year_tw}學年暑期)： {t_scores_cum_dept_rank}、{t_scores_cum_class_rank}、{t_scores_cum}
     // T Scores Cumulative Department ranking/Total number of students、T Scores Average (to the summer classes of Academic Year {gpa_cum_year}): {t_scores_cum_dept_rank}、{t_scores_cum_class_rank}、{t_scores_cum}
     
-    const ranking_table = doc.querySelectorAll('table')[4];
+    const ranking_table = doc.querySelectorAll('table')[3];
     const ranking_rows = ranking_table.querySelectorAll('tr');
     const ranking_data = [];
     for(let i=3; i<ranking_rows.length - 1; i++) {

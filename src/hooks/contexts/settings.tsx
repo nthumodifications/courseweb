@@ -1,6 +1,6 @@
 "use client";;
 import { useParams, usePathname, useRouter } from "next/navigation";
-import { FC, PropsWithChildren, createContext, useContext, useEffect, useLayoutEffect, useMemo } from "react";
+import { FC, PropsWithChildren, createContext, useContext, useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { useLocalStorage } from 'usehooks-ts';
 import { useCookies } from 'react-cookie';
 import { Language } from "@/types/settings";
@@ -18,11 +18,12 @@ const settingsContext = createContext<ReturnType<typeof useSettingsProvider>>({
         enabled: false,
         ACIXSTORE: undefined
     },
+    initializing: true,
     setLanguage: () => {},
     setDarkMode: () => {},
     setTimetableTheme: () => {},
     setAISCredentials: () => {},
-    updateACIXSTORE: () => {},
+    getACIXSTORE: async () => null,
     toggleApp: () => {}
 });
 
@@ -35,6 +36,9 @@ const useSettingsProvider = () => {
     const [timetableTheme, setTimetableTheme] = useLocalStorage<string>("timetable_theme", "pastelColors");
     const [headlessAIS, setHeadlessAIS] = useLocalStorage<HeadlessAISStorage>("headless_ais", { enabled: false });
     const [pinnedApps, setPinnedApps] = useLocalStorage<string[]>("pinned_apps", []);
+    const [initializing, setInitializing] = useState(true);
+
+    useEffect(() => { setInitializing(false) }, []);
 
     const setLanguage = (newLang: Language) => {
         //set cookie of 'locale'
@@ -123,15 +127,20 @@ const useSettingsProvider = () => {
         });
     }
 
-    const updateACIXSTORE = () => {
+    /**
+     * 
+     * @param force force update ACIXSTORE
+     * @returns ACIXSTORE or null if error, undefined if not enabled
+     */
+    const getACIXSTORE = async (force = false) => {
         // return;
-        if(!headlessAIS.enabled) return ;
-        if(headlessAIS.lastUpdated + 15 * 60 * 1000 > Date.now()) return ;
+        if(!headlessAIS.enabled) return undefined;
+        if(headlessAIS.lastUpdated + 15 * 60 * 1000 > Date.now() && !force ) return headlessAIS.ACIXSTORE ?? null;
         //fetch /api/ais_headless to get ACIXSTORE
         const form = new FormData();
         form.append("studentid", headlessAIS.studentid);
         form.append("password", headlessAIS.password);
-        fetch("/api/ais_headless/login", {
+        return await fetch("/api/ais_headless/login", {
             method: "POST",
             body: form
         })
@@ -145,28 +154,23 @@ const useSettingsProvider = () => {
                 });
                 //set cookie
                 setCookie("ACIXSTORE", res.body.ACIXSTORE, { path: '/', expires: new Date(Date.now() + 15 * 60 * 1000) });
+                return res.body.ACIXSTORE as string;
             } else {
                 setHeadlessAIS({
                     ...headlessAIS,
                     ACIXSTORE: undefined
                 });
+                return null;
                 //remove cookie
                 removeCookie("ACIXSTORE", { path: '/'});
             }
         })
     }
 
-    //update ACIXSTORE
     useEffect(() => {
-        //every 15 minutes
-        if(typeof window  == "undefined") return ;
-        if(!headlessAIS.enabled) return ;
-        // only update when pathname starts with /apps or /settings
-        // if(!pathname.startsWith("/apps") && !pathname.startsWith("/settings")) return ;
-        const interval = setInterval(updateACIXSTORE, 15 * 60 * 1000);
-        updateACIXSTORE();
-        return () => clearInterval(interval);
-    }, [headlessAIS]);
+        getACIXSTORE(true);
+    //@ts-ignore
+    }, [headlessAIS.enabled, headlessAIS.studentid, headlessAIS.password]);
 
     //cleanup pinned apps, remove apps that are not in the app list
     useEffect(() => {
@@ -189,8 +193,9 @@ const useSettingsProvider = () => {
         setDarkMode,
         setTimetableTheme,
         setAISCredentials,
-        updateACIXSTORE,
-        toggleApp
+        getACIXSTORE,
+        toggleApp,
+        initializing
     };
 }
 
