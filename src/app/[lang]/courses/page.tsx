@@ -19,6 +19,7 @@ import useUserTimetable from "@/hooks/useUserTimetable";
 import {Department} from '@/types/courses';
 import { TimeFilterType } from "@/components/FormComponents/TimeslotSelectorControl";
 import { event } from "@/lib/gtag";
+import {toPrettySemester} from '@/helpers/semester';
 
 export type RefineControlFormTypes = {
     textSearch: string,
@@ -294,7 +295,7 @@ const CoursePage: NextPage = () => {
                     {loading && <div className="absolute inset-0 bg-white/60 dark:bg-neutral-900/60 z-10"></div>}
                     <div className="flex flex-col w-full h-full space-y-4 pb-8">
                         <div className="flex flex-row justify-between px-3 py-1 border-b dark:border-neutral-800">
-                            <h6 className="text-gray-600 dark:text-neutral-400">{filters.semester} {dict.course.list.courses}</h6>
+                            <h6 className="text-gray-600 dark:text-neutral-400">{toPrettySemester(filters.semester)} {dict.course.list.courses}</h6>
                             <h6 className="text-gray-600 dark:text-neutral-400">{dict.course.list.found}: {totalCount} {dict.course.list.courses}</h6>
                         </div>
                         <div className="flex flex-col w-full h-full space-y-5">

@@ -15,14 +15,14 @@ export const apps = [
         href: '/bus',
         Icon: Bus,
     },
-    {
-        id: 'student_card',
-        title_zh: '學生證',
-        title_en: 'Student Card',
-        href: '/student',
-        Icon: WalletCards,
-        auth: true,
-    },
+    // {
+    //     id: 'student_card',
+    //     title_zh: '學生證',
+    //     title_en: 'Student Card',
+    //     href: '/student',
+    //     Icon: WalletCards,
+    //     auth: true,
+    // },
     // {
     //     id: 'working_hours',
     //     title_zh: '工讀',

@@ -81,7 +81,7 @@ const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, set
                 <div key={index} className="flex flex-row gap-4 items-center max-w-3xl">
                     <div className="w-4 h-4 rounded-full" style={{ backgroundColor: timetableColors[timetableTheme][index % timetableColors[timetableTheme].length] }}></div>
                     <div className="flex flex-col flex-1">
-                        <span className="text-sm">{course.name_zh} - {course.teacher_zh.join(',')}</span>
+                        <span className="text-sm">{course.department} {course.course}-{course.class} {course.name_zh} - {course.teacher_zh.join(',')}</span>
                         <span className="text-xs">{course.name_en}</span>
                         <div className="mt-1">
                             {course.venues?.map((venue, index) => {
