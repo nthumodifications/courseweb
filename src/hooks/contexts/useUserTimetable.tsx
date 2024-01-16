@@ -1,6 +1,6 @@
 'use client';
 import { useSettings } from "./settings";
-import { useState, useEffect, useCallback, createContext, useContext, useMemo } from "react";
+import {useState, useEffect, useCallback, createContext, useContext, useMemo, useLayoutEffect} from 'react';
 import supabase, { CourseSyllabusView } from "@/config/supabase";
 import { createTimetableFromCourses } from "@/helpers/timetable";
 import { CourseTimeslotData } from "@/types/timetable";
@@ -10,6 +10,7 @@ import { useLocalStorage } from 'usehooks-ts';
 import { lastSemester, semesterInfo, currentSemester } from "@/const/semester";
 import { getSemesterFromID } from '@/helpers/courses';
 import { event } from "@/lib/gtag";
+import {timetableColors} from '@/const/timetableColors';
 
 type CourseLocalStorage = { [sem: string]: RawCourseID[] };
 
@@ -18,12 +19,17 @@ const userTimetableContext = createContext<ReturnType<typeof useUserTimetablePro
     displayCourseData: [],
     semesterCourseData: [],
     semesterCourses: [],
+    timetableTheme: Object.keys(timetableColors)[0],
+    currentColors: [],
+    userDefinedColors: {},
     courses: {},
     colorMap: {},
     setCourses: () => { },
     clearCourses: () => { },
     deleteCourse: () => { },
     addCourse: () => { },
+    setTimetableTheme: () => { },
+    setUserDefinedColors: () => {},
     isCourseSelected: () => false,
     isLoading: true,
     error: undefined,
@@ -32,11 +38,43 @@ const userTimetableContext = createContext<ReturnType<typeof useUserTimetablePro
 });
 
 const useUserTimetableProvider = (loadCourse = true) => {
-    const { currentColors, timetableTheme } = useSettings();
     const [courses, setCourses] = useLocalStorage<CourseLocalStorage>("courses", {});
     const [colorMap, setColorMap] = useLocalStorage<{ [courseID: string]: string }>("course_color_map", {}); //map from courseID to color
+    const [timetableTheme, _setTimetableTheme] = useLocalStorage<string>("timetable_theme", "pastelColors");
+    const [userDefinedColors, setUserDefinedColors] = useLocalStorage<{[theme_name: string]: string[]}>("user_defined_colors", {});
     const [semester, setSemester] = useState<string>(lastSemester.id);
     const [timetableData, setTimetableData] = useState<CourseTimeslotData[]>([]);
+
+    const setTimetableTheme = useCallback((theme: string) => {
+        //if theme updated, remap colors and override all
+        const newColors = timetableColors[theme];
+        const newColorMap: { [courseID: string]: string } = {};
+
+        Object.keys(courses).forEach(sem => {
+            courses[sem].forEach((courseID, i) => {
+                newColorMap[courseID] = newColors[i % newColors.length];
+            });
+        });
+        setColorMap(newColorMap);
+        setUserDefinedColors({})
+        console.log('colorMap updated')
+        _setTimetableTheme(theme);
+    }, [_setTimetableTheme]);
+
+    //fix timetableTheme if it is not in timetableColors
+    useLayoutEffect(() => {
+        if(typeof window  == "undefined") return ;
+        const themes = [...Object.keys(timetableColors), ...Object.keys(userDefinedColors)];
+        if(!themes.includes(timetableTheme)) {
+            setTimetableTheme(themes[0]);
+        }
+        console.log("timetable theme", timetableTheme);
+        event({
+            action: "selected_theme",
+            category: "theme",
+            label: !themes.includes(timetableTheme) ? themes[0] : timetableTheme
+        });
+    }, [timetableTheme, Object.keys(userDefinedColors).length]);
 
 
     //sort courses[semester]： string[] and put as key_display_ids
@@ -84,17 +122,6 @@ const useUserTimetableProvider = (loadCourse = true) => {
         if(!semester_courses) return [];
         return (currentSemester ? (courses[currentSemester.id] ?? []) : []).map(courseID => semester_courses.find(c => c.raw_id == courseID)!).filter(c => c);
     }, [semester_courses, courses, currentSemester]);
-
-    useEffect(() => {
-        const newColorMap: { [courseID: string]: string } = {};
-        Object.keys(courses).forEach(sem => {
-            courses[sem].forEach((courseID, i) => {
-                newColorMap[courseID] = currentColors[i % currentColors.length];
-            });
-        });
-        setColorMap(newColorMap);
-        console.log('colorMap updated')
-    }, [timetableTheme]);
 
     //migration from old localStorage key "semester_1121"
     useEffect(() => {
@@ -205,6 +232,17 @@ const useUserTimetableProvider = (loadCourse = true) => {
         setCourses({});
     }
 
+    
+    const currentColors = useMemo(() => {
+        //merge default colors with user defined colors
+        const colors = {...timetableColors, ...userDefinedColors};
+        //check if timetableTheme exists in colors
+        if(!Object.keys(colors).includes(timetableTheme)) {
+            return colors[Object.keys(colors)[0]];
+        }
+        return colors[timetableTheme];
+    }, [timetableTheme, userDefinedColors]);
+
 
     return {
         timetableData, 
@@ -212,6 +250,9 @@ const useUserTimetableProvider = (loadCourse = true) => {
         semesterCourseData,
         colorMap,
         semester, 
+        timetableTheme,
+        currentColors,
+        userDefinedColors,
         setSemester, 
         semesterCourses, 
         setCourses,
@@ -219,6 +260,8 @@ const useUserTimetableProvider = (loadCourse = true) => {
         deleteCourse, 
         clearCourses, 
         isCourseSelected, 
+        setTimetableTheme,
+        setUserDefinedColors,
         isLoading, 
         error, 
         courses

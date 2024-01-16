@@ -12,9 +12,6 @@ import { event } from "@/lib/gtag";
 const settingsContext = createContext<ReturnType<typeof useSettingsProvider>>({
     language: "zh",
     darkMode: false,
-    timetableTheme: Object.keys(timetableColors)[0],
-    currentColors: [],
-    userDefinedColors: {},
     pinnedApps: [],
     ais: {
         enabled: false,
@@ -22,8 +19,6 @@ const settingsContext = createContext<ReturnType<typeof useSettingsProvider>>({
     },
     setLanguage: () => {},
     setDarkMode: () => {},
-    setTimetableTheme: () => {},
-    setUserDefinedColors: () => {},
     setAISCredentials: () => {},
     updateACIXSTORE: () => {},
     toggleApp: () => {}
@@ -35,8 +30,6 @@ const useSettingsProvider = () => {
     const router = useRouter();
     const pathname = usePathname();
     const [cookies, setCookie, removeCookie] = useCookies(['theme', 'locale', 'ACIXSTORE']);
-    const [timetableTheme, setTimetableTheme] = useLocalStorage<string>("timetable_theme", "pastelColors");
-    const [userDefinedColors, setUserDefinedColors] = useLocalStorage<{[theme_name: string]: string[]}>("user_defined_colors", {});
     const [headlessAIS, setHeadlessAIS] = useLocalStorage<HeadlessAISStorage>("headless_ais", { enabled: false });
     const [pinnedApps, setPinnedApps] = useLocalStorage<string[]>("pinned_apps", []);
 
@@ -45,24 +38,6 @@ const useSettingsProvider = () => {
         setCookie("locale", newLang, { path: '/', expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) });
         router.push(`/${newLang}/`+pathname.split('/').slice(2).join('/'));
     };
-
-    //migrate from old timetable theme to new one
-    useLayoutEffect(() => {
-        if(typeof window  == "undefined") return ;
-        // if(timetableTheme == "tsinghuarian") {
-        //     setTimetableTheme("pastelColors");
-        // }
-        const themes = [...Object.keys(timetableColors), ...Object.keys(userDefinedColors)];
-        if(!themes.includes(timetableTheme)) {
-            setTimetableTheme(themes[0]);
-        }
-        console.log("timetable theme", timetableTheme);
-        event({
-            action: "selected_theme",
-            category: "theme",
-            label: !themes.includes(timetableTheme) ? themes[0] : timetableTheme
-        });
-    }, [timetableTheme, Object.keys(userDefinedColors).length]);
 
     //check if cookies 'locale' exists, else set it
     useEffect(() => {
@@ -184,29 +159,14 @@ const useSettingsProvider = () => {
         enabled: headlessAIS.enabled,
     }
 
-    const currentColors = useMemo(() => {
-        //merge default colors with user defined colors
-        const colors = {...timetableColors, ...userDefinedColors};
-        //check if timetableTheme exists in colors
-        if(!Object.keys(colors).includes(timetableTheme)) {
-            return colors[Object.keys(colors)[0]];
-        }
-        return colors[timetableTheme];
-    }, [timetableTheme, userDefinedColors]);
-
     
     return {
         language,
         darkMode,
-        timetableTheme,
-        currentColors,
-        userDefinedColors,
         pinnedApps,
         ais,
         setLanguage,
         setDarkMode,
-        setTimetableTheme,
-        setUserDefinedColors,
         setAISCredentials,
         updateACIXSTORE,
         toggleApp

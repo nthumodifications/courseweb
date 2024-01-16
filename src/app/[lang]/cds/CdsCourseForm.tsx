@@ -43,6 +43,7 @@ import { useModal } from '@/hooks/contexts/useModal';
 import {TimeFilterType} from '@/components/FormComponents/TimeslotSelectorControl';
 import Link from 'next/link';
 import {renderTimetableSlot} from '@/helpers/timetable_course';
+import useUserTimetable from '@/hooks/contexts/useUserTimetable';
 
 type CdsCoursesFormFields = {
     textSearch: string;
@@ -65,12 +66,12 @@ const CdsCoursesForm: FC<{
     const [totalCount, setTotalCount] = useState<number>(0);
     const [headIndex, setHeadIndex] = useState<number>(0);
     const [showTimetable, setShowTimetable] = useState(true);
-    const { currentColors } = useSettings();
     const [displayToggles, setDisplayToggles] = useState<{ [key: string]: boolean }>({});
     const scrollRef = useRef<HTMLDivElement>(null);
 
     const session = useSession();
     const { language } = useSettings();
+    const { currentColors } = useUserTimetable();
 
     const emptyFilters: CdsCoursesFormFields = {
         textSearch: "",

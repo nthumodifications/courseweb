@@ -6,18 +6,18 @@ import { useSearchParams } from 'next/navigation'
 import supabase from "@/config/supabase";
 import useSWR from "swr";
 import {createTimetableFromCourses, colorMapFromCourses} from '@/helpers/timetable';
-import { useSettings } from "@/hooks/contexts/settings";
 import { MinimalCourse } from "@/types/courses";
 import {Divider} from '@mui/joy';
 import {useMemo, useState} from 'react';
 import { lastSemester } from "@/const/semester";
 import SemesterSwitcher from "@/components/Timetable/SemesterSwitcher";
 import {renderTimetableSlot} from '@/helpers/timetable_course';
+import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 
 const ViewTimetablePage: NextPage = () => {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { currentColors } = useSettings();
+    const { currentColors } = useUserTimetable();
     const [semester, setSemester] = useState<string>(lastSemester.id);
 
     const courseCodes = useMemo(() => {

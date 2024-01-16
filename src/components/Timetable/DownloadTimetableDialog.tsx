@@ -11,8 +11,7 @@ import { MinimalCourse } from '@/types/courses';
 
 const DownloadTimetableComponent = () => {
     const dict = useDictionary();
-    const { currentColors } = useSettings();
-    const { displayCourseData, colorMap } = useUserTimetable();
+    const { displayCourseData, colorMap, currentColors } = useUserTimetable();
     const ref = useRef<HTMLDivElement>(null);
     const [loading, setLoading] = useState(false);
 

@@ -1,6 +1,7 @@
 import Timetable from '@/components/Timetable/Timetable';
 import {createTimetableFromCourses, colorMapFromCourses} from '@/helpers/timetable';
 import {useSettings} from '@/hooks/contexts/settings';
+import useUserTimetable from '@/hooks/contexts/useUserTimetable';
 import {RawCourseID, Semester, DepartmentCode, CourseCode, ClassCode, Credits, Venue, Time, TeacherZH, TeacherEN, Language} from '@/types/courses';
 
 // raw_id: RawCourseID;
@@ -20,7 +21,7 @@ import {RawCourseID, Semester, DepartmentCode, CourseCode, ClassCode, Credits, V
 
 
 const TimetablePreview = () => {
-    const { currentColors } = useSettings();
+    const { currentColors } = useUserTimetable();
 
     const sampleCourses = createTimetableFromCourses([
         {
