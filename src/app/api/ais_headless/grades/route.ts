@@ -1,6 +1,7 @@
 import jsdom from 'jsdom';
 import iconv from 'iconv-lite';
 import { NextRequest, NextResponse } from 'next/server';
+
 const getStudentGrades = async (ACIXSTORE: string) => {
     const baseURL = 'https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/8/R/6.3/JH8R63002.php?ACIXSTORE=';
     const html = await fetch(baseURL + ACIXSTORE)
@@ -8,7 +9,11 @@ const getStudentGrades = async (ACIXSTORE: string) => {
                     .then(arrayBuffer => iconv.decode(Buffer.from(arrayBuffer), 'big5').toString())
     const dom = new jsdom.JSDOM(html);
     const doc = dom.window.document;
-    const table = doc.querySelectorAll('table')[0];
+    const table = Array.from(doc.querySelectorAll('table')).find(n => (n.textContent?.trim() ?? "").startsWith('學號 Student Number'))
+
+    if(!table) {
+        return null;
+    }
     //First Row:  學號 Student Number：{studentid}　　姓名 Name：{name_zh}　　班級 Department & Class：{class_name_zh}　　
     //Second Row p:  修習總學分(包含及格,不及格及成績未到) Total credits( including passing, failing, and not submitted grades)：{total_credits}　已修及格畢業學分 Passing grade：{passed_credits}　成績未到畢業學分 Not submitted grade：{pending_credits}
 	//Third Row: Header
@@ -83,7 +88,13 @@ const getStudentGrades = async (ACIXSTORE: string) => {
     // T分數學業累計系排名/總人數、T分數成績學業平均成績(至{gpa_cum_year_tw}學年暑期)： {t_scores_cum_dept_rank}、{t_scores_cum_class_rank}、{t_scores_cum}
     // T Scores Cumulative Department ranking/Total number of students、T Scores Average (to the summer classes of Academic Year {gpa_cum_year}): {t_scores_cum_dept_rank}、{t_scores_cum_class_rank}、{t_scores_cum}
     
-    const ranking_table = doc.querySelectorAll('table')[3];
+    // const ranking_table = doc.querySelectorAll('table')[3];
+    const ranking_table = Array.from(doc.querySelectorAll('table')).find(n => (n.textContent?.trim() ?? "").startsWith('以下各排名僅供參考'));
+
+    if(!ranking_table) {
+        return null;
+    }
+
     const ranking_rows = ranking_table.querySelectorAll('tr');
     const ranking_data = [];
     for(let i=3; i<ranking_rows.length - 1; i++) {

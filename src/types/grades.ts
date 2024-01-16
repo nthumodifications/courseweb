@@ -19,6 +19,7 @@ export type GradeObject = {
         credits: number,
         grade: string,
         ge_type: string,
+        ge_description: string,
         ranking: string,
         t_scores: string
     }[],
