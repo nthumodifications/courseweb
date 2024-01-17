@@ -14,7 +14,7 @@ import { CssVarsProvider } from '@mui/joy';
 import NextAuthProvider from '@/components/NextAuthProvider';
 import { Viewport } from 'next'
 import GoogleAnalytics from '@/components/GoogleAnalytics';
-import {UserTimetableProvider} from '@/hooks/useUserTimetable';
+import {UserTimetableProvider} from '@/hooks/contexts/useUserTimetable';
 import { Inter, Noto_Sans_TC } from 'next/font/google';
 import { Suspense } from 'react';
 

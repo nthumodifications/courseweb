@@ -1,7 +1,7 @@
 'use client';
 import useDictionary from "@/dictionaries/useDictionary";
 import { useSettings } from "@/hooks/contexts/settings"
-import useUserTimetable from "@/hooks/useUserTimetable";
+import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { RawCourseID, Semester } from "@/types/courses";
 import { useMemo } from "react";
 import { Minus, Plus } from "lucide-react";

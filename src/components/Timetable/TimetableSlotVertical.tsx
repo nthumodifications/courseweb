@@ -27,10 +27,10 @@ const TimetableSlotVertical: FC<TimetableSlotProps> = ({ course, tableDim, fract
             {...props}
         >
             <div className='flex flex-col justify-start items-center h-full p-1 select-none' style={{ color: course.textColor }}>
-                <div className='flex-1 w-full flex flex-col items-center'>
+                <div className='flex-1 w-full flex flex-col items-center overflow-hidden'>
                 {language == 'zh' ?
-                    <span className='text-xs md:text-sm line-clamp-1 font-medium text-center'>{course.course.name_zh}</span> :
-                    <span className='text-xs line-clamp-1 font-medium text-center'>{course.course.name_en}</span>
+                    <span className='text-xs md:text-sm font-medium text-center'>{course.course.name_zh}</span> :
+                    <span className='text-xs font-medium text-center'>{course.course.name_en}</span>
                 }
                 <span className='hidden md:inline text-xs line-clamp-1' id="time_slot">{scheduleTimeSlots[course.startTime].start} - {scheduleTimeSlots[course.endTime].end}</span>
                 </div>

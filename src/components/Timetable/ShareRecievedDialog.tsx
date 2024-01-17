@@ -1,5 +1,5 @@
 import { useSettings } from '@/hooks/contexts/settings';
-import useUserTimetable from '@/hooks/useUserTimetable';
+import useUserTimetable from '@/hooks/contexts/useUserTimetable';
 import { Button, DialogActions, DialogContent, DialogTitle, ModalClose, ModalDialog } from '@mui/joy';
 import { useRouter } from 'next/navigation';
 import { use } from 'react';

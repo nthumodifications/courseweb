@@ -1,12 +1,13 @@
 import supabase from "@/config/supabase";
 import { scheduleTimeSlots } from "@/const/timetable";
-import { createTimetableFromCourses } from "@/helpers/timetable";
+import { colorMapFromCourses, createTimetableFromCourses } from "@/helpers/timetable";
 import { differenceInMinutes, formatISO, getHours, getMinutes, parse } from "date-fns";
 import * as ics from 'ics';
 import { NextResponse } from "next/server";
 import { zonedTimeToUtc } from 'date-fns-tz'
 import { MinimalCourse } from "@/types/courses";
 import { semesterInfo } from "@/const/semester";
+import {timetableColors} from '@/const/timetableColors';
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
@@ -26,7 +27,8 @@ export async function GET(request: Request) {
         let { data = [], error } = await supabase.from('courses').select("*").in('raw_id', courses_ids);
         if (error) throw error;
         else {
-            const timetableData = createTimetableFromCourses(data! as MinimalCourse[], theme);
+            const colorMap = colorMapFromCourses(data!.map(m => m.raw_id), timetableColors[theme]);
+            const timetableData = createTimetableFromCourses(data! as MinimalCourse[], colorMap);
             const icss = ics.createEvents(timetableData.map(course => {
                 const start = zonedTimeToUtc(parse(
                     scheduleTimeSlots[course.startTime]!.start,
