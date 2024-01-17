@@ -59,7 +59,7 @@ const useUserTimetableProvider = (loadCourse = true) => {
         setUserDefinedColors({})
         console.log('colorMap updated')
         _setTimetableTheme(theme);
-    }, [_setTimetableTheme]);
+    }, [courses]);
 
     //fix timetableTheme if it is not in timetableColors
     useLayoutEffect(() => {
@@ -75,6 +75,22 @@ const useUserTimetableProvider = (loadCourse = true) => {
             label: !themes.includes(timetableTheme) ? themes[0] : timetableTheme
         });
     }, [timetableTheme, Object.keys(userDefinedColors).length]);
+
+    //check if number of courses in each semester is the same as number of colors
+    useEffect(() => {
+        const semesters = Object.keys(courses);
+        const numCourses = Object.values(courses).flat().length;
+        const numColors = Object.keys(colorMap).length;
+        if(numCourses == numColors) return;
+        //if not the same, reset colorMap
+        const newColorMap: { [courseID: string]: string } = {};
+        semesters.forEach(sem => {
+            courses[sem].forEach((courseID, i) => {
+                newColorMap[courseID] = currentColors[i % currentColors.length];
+            });
+        });
+        setColorMap(newColorMap);
+    }, [courses, colorMap]);
 
 
     //sort courses[semester]： string[] and put as key_display_ids
