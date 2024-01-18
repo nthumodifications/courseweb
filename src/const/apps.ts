@@ -33,11 +33,10 @@ export const apps = [
     // },
     {
         id: 'grades',
-        title_zh: '成績查詢',
-        title_en: 'Grade Announcement',
-        href: '/ais-redirect/JH/8/R/6.3/JH8R63002.php',
+        title_zh: '你的成績',
+        title_en: 'Your Grades',
+        href: '/student/grades',
         Icon: Clipboard,
-        target: '_blank',
         ais: true,
     },
     {
