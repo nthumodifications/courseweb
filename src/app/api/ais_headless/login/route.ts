@@ -27,7 +27,8 @@ export const POST = async (req: NextRequest) => {
             pwdstr = bodyMatch[1];
             //fetch the image from the url and send as base64
             console.log("pwdstr: ", pwdstr)
-            answer = await fetch(`http://api.nthumods.com:5000/?url=https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/auth_img.php?pwdstr=${pwdstr}`).then(res => res.text())
+            answer = await fetch(`https://ocr.nthumods.com/?url=https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/auth_img.php?pwdstr=${pwdstr}`)
+                        .then(res => res.text())
             console.log(answer)
             if(answer.length == 6) break;
         } while (tries <= 5);

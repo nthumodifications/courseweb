@@ -9,7 +9,6 @@ import { signOut, useSession } from "next-auth/react";
 import { HeadlessLoginDialog } from "../../../components/Forms/HeadlessLoginDialog";
 import { TimetableThemeList } from "./TimetableThemeList";
 import TimetablePreview from "./TimetablePreview";
-import CCXPDownAlert from "@/components/CCXPDownAlert";
 
 const SettingsPage = () => {
 
