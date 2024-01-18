@@ -27,26 +27,7 @@ export const POST = async (req: NextRequest) => {
             pwdstr = bodyMatch[1];
             //fetch the image from the url and send as base64
             console.log("pwdstr: ", pwdstr)
-            const imgResponse = await fetch("https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/auth_img.php?pwdstr=" + pwdstr, {
-                "headers": {
-                    "accept": "image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
-                    "accept-language": "en-US,en;q=0.9",
-                    "sec-ch-ua": "\"Not_A Brand\";v=\"8\", \"Chromium\";v=\"120\", \"Microsoft Edge\";v=\"120\"",
-                    "sec-ch-ua-mobile": "?0",
-                    "sec-ch-ua-platform": "\"Windows\"",
-                    "sec-fetch-dest": "image",
-                    "sec-fetch-mode": "no-cors",
-                    "sec-fetch-site": "same-origin"
-                },
-                // "referrer": "https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/",
-                // "referrerPolicy": "strict-origin-when-cross-origin",
-                "body": null,
-                "method": "GET",
-                "mode": "cors",
-                "credentials": "include"
-            });
-            const imgBuffer = await imgResponse.arrayBuffer()
-            answer = await (await fetch('http://localhost:3000/api/ais_headless/fetch-img', { method: 'POST', body: imgBuffer })).text();
+            answer = await fetch(`http://api.nthumods.com:5000/?url=https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/auth_img.php?pwdstr=${pwdstr}`).then(res => res.text())
             console.log(answer)
             if(answer.length == 6) break;
         } while (tries <= 5);

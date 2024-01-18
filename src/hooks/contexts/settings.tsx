@@ -168,9 +168,9 @@ const useSettingsProvider = () => {
     }
 
     useEffect(() => {
-        getACIXSTORE(true);
+        getACIXSTORE();
     //@ts-ignore
-    }, [headlessAIS.enabled, headlessAIS.studentid, headlessAIS.password]);
+    }, [headlessAIS]);
 
     //cleanup pinned apps, remove apps that are not in the app list
     useEffect(() => {
