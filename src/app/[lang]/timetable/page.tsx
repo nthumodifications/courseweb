@@ -1,7 +1,7 @@
 'use client';;
 import Timetable from "@/components/Timetable/Timetable";
 import { NextPage } from "next";
-import useUserTimetable from "@/hooks/useUserTimetable";
+import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from 'next/navigation'
 import { useEffect } from "react";
@@ -18,8 +18,7 @@ import { renderTimetableSlot } from "@/helpers/timetable_course";
 
 const TimetablePage: NextPage = () => {
 
-    const { displayCourseData, semester, setSemester } = useUserTimetable();
-    const { language, timetableTheme } = useSettings();
+    const { displayCourseData, semester, setSemester, colorMap } = useUserTimetable();
     const [vertical, setVertical] = useLocalStorage('timetable_vertical', true);
 
     const router = useRouter();
@@ -27,7 +26,7 @@ const TimetablePage: NextPage = () => {
 
     const [openModal, closeModal] = useModal();
 
-    const timetableData = createTimetableFromCourses(displayCourseData as MinimalCourse[], timetableTheme)
+    const timetableData = createTimetableFromCourses(displayCourseData as MinimalCourse[], colorMap)
 
 
     //Check if URL has course code array, display share dialog.

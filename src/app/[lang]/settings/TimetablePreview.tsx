@@ -1,6 +1,7 @@
 import Timetable from '@/components/Timetable/Timetable';
-import { createTimetableFromCourses } from '@/helpers/timetable';
+import {createTimetableFromCourses, colorMapFromCourses} from '@/helpers/timetable';
 import {useSettings} from '@/hooks/contexts/settings';
+import useUserTimetable from '@/hooks/contexts/useUserTimetable';
 import {RawCourseID, Semester, DepartmentCode, CourseCode, ClassCode, Credits, Venue, Time, TeacherZH, TeacherEN, Language} from '@/types/courses';
 
 // raw_id: RawCourseID;
@@ -18,8 +19,9 @@ import {RawCourseID, Semester, DepartmentCode, CourseCode, ClassCode, Credits, V
 // language: Language;
 
 
+
 const TimetablePreview = () => {
-    const { timetableTheme } = useSettings();
+    const { currentColors } = useUserTimetable();
 
     const sampleCourses = createTimetableFromCourses([
         {
@@ -67,7 +69,11 @@ const TimetablePreview = () => {
             teacher_en: ["Wang, Da-Ming"],
             language: '中',
         },
-    ], timetableTheme);
+    ], colorMapFromCourses([
+        '22210ABCD123402',
+        '22210ABCD123403',
+        '22210ABCD123401',
+    ], currentColors));
 
     return <div className="max-h-[320px] overflow-y-hidden">
         <Timetable

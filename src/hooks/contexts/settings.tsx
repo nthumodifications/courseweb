@@ -12,7 +12,6 @@ import { event } from "@/lib/gtag";
 const settingsContext = createContext<ReturnType<typeof useSettingsProvider>>({
     language: "zh",
     darkMode: false,
-    timetableTheme: "pastelColors",
     pinnedApps: [],
     ais: {
         enabled: false,
@@ -20,7 +19,6 @@ const settingsContext = createContext<ReturnType<typeof useSettingsProvider>>({
     },
     setLanguage: () => {},
     setDarkMode: () => {},
-    setTimetableTheme: () => {},
     setAISCredentials: () => {},
     updateACIXSTORE: () => {},
     toggleApp: () => {}
@@ -32,7 +30,6 @@ const useSettingsProvider = () => {
     const router = useRouter();
     const pathname = usePathname();
     const [cookies, setCookie, removeCookie] = useCookies(['theme', 'locale', 'ACIXSTORE']);
-    const [timetableTheme, setTimetableTheme] = useLocalStorage<string>("timetable_theme", "pastelColors");
     const [headlessAIS, setHeadlessAIS] = useLocalStorage<HeadlessAISStorage>("headless_ais", { enabled: false });
     const [pinnedApps, setPinnedApps] = useLocalStorage<string[]>("pinned_apps", []);
 
@@ -41,23 +38,6 @@ const useSettingsProvider = () => {
         setCookie("locale", newLang, { path: '/', expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) });
         router.push(`/${newLang}/`+pathname.split('/').slice(2).join('/'));
     };
-
-    //migrate from old timetable theme to new one
-    useLayoutEffect(() => {
-        if(typeof window  == "undefined") return ;
-        // if(timetableTheme == "tsinghuarian") {
-        //     setTimetableTheme("pastelColors");
-        // }
-        const themes = Object.keys(timetableColors);
-        if(!themes.includes(timetableTheme)) {
-            setTimetableTheme(themes[0]);
-        }
-        event({
-            action: "selected_theme",
-            category: "theme",
-            label: !themes.includes(timetableTheme) ? themes[0] : timetableTheme
-        });
-    }, [timetableTheme]);
 
     //check if cookies 'locale' exists, else set it
     useEffect(() => {
@@ -178,16 +158,15 @@ const useSettingsProvider = () => {
         ACIXSTORE: headlessAIS.enabled ? headlessAIS.ACIXSTORE : undefined,
         enabled: headlessAIS.enabled,
     }
+
     
     return {
         language,
         darkMode,
-        timetableTheme,
         pinnedApps,
         ais,
         setLanguage,
         setDarkMode,
-        setTimetableTheme,
         setAISCredentials,
         updateACIXSTORE,
         toggleApp

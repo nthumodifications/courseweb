@@ -2,7 +2,7 @@
 
 import {Alert, ColorPaletteProp, Divider, Tooltip} from '@mui/joy';
 import {format, formatRelative, getDay} from 'date-fns';
-import useUserTimetable from '@/hooks/useUserTimetable';
+import useUserTimetable from '@/hooks/contexts/useUserTimetable';
 import {scheduleTimeSlots} from '@/const/timetable';
 import { FC } from "react";
 import { useSettings } from '@/hooks/contexts/settings';
