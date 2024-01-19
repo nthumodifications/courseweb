@@ -1,12 +1,13 @@
 'use client';
 import useDictionary from "@/dictionaries/useDictionary";
 import { useSettings } from "@/hooks/contexts/settings";
-import { useModal } from "@/hooks/contexts/useModal";
+// import { useModal } from "@/hooks/contexts/useModal";
 import { Button, Divider, Option, Select, Switch } from "@mui/joy";
 import {  useEffect, useState } from "react";
 import NTHULoginButton from "../cds/NTHULoginButton";
 import { signOut, useSession } from "next-auth/react";
-import { HeadlessLoginDialog } from "../../../components/Forms/HeadlessLoginDialog";
+// import { HeadlessLoginDialog } from "../../../components/Forms/HeadlessLoginDialog";
+import LoginDialog from "../../../components/Forms/LoginDialog";
 import { TimetableThemeList } from "./TimetableThemeList";
 import TimetablePreview from "./TimetablePreview";
 
@@ -24,13 +25,13 @@ const SettingsPage = () => {
         setDummy(dummy + 1);
     },[darkMode]);
 
-    const [openModal, closeModal] = useModal();
+    // const [openModal, closeModal] = useModal();
 
-    const handleOpenHeadlessLogin = () => {
-        openModal({
-            children: <HeadlessLoginDialog onClose={closeModal}/>,
-        })
-    }
+    // const handleOpenHeadlessLogin = () => {
+    //     openModal({
+    //         children: <HeadlessLoginDialog onClose={closeModal}/>,
+    //     })
+    // }
     return (
         <div className="flex flex-col max-w-2xl px-4">
             <h1 className="font-semibold text-3xl text-gray-400 py-3">{dict.settings.title}</h1>
@@ -92,7 +93,8 @@ const SettingsPage = () => {
                     {/* <CCXPDownAlert/> */}
                 </div>
                 <div className="flex flex-col justify-center items-center space-y-2 w-52">
-                    <Button variant="outlined" color="primary" onClick={handleOpenHeadlessLogin}>連接</Button>
+                    {/*<Button variant="outlined" color="primary" onClick={handleOpenHeadlessLogin}>連接</Button>*/}
+                    <LoginDialog />
                     {ais.enabled && <span className="text-gray-600 dark:text-gray-400 text-sm">已連接</span>}
                     {ais.enabled && !ais.ACIXSTORE && <span className="text-red-600 dark:text-red-400 text-sm">連接著/登入異常</span>}
                 </div>
