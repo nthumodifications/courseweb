@@ -17,6 +17,7 @@ import GoogleAnalytics from '@/components/GoogleAnalytics';
 import {UserTimetableProvider} from '@/hooks/contexts/useUserTimetable';
 import { Inter, Noto_Sans_TC } from 'next/font/google';
 import { Suspense } from 'react';
+import CampaignPopup from '@/components/Forms/CampaignPopup';
 
 export const metadata: Metadata = {
   title: {
@@ -113,6 +114,7 @@ export default function RootLayout({
                 <body className={`grid grid-cols-1 grid-rows-[56px_50px_calc(100vh-106px)] md:grid-cols-[12rem_auto] md:grid-rows-[56px_calc(100vh-56px)_12rem]`}>
                   <Header />
                   <SideNav />
+                  <CampaignPopup />
                   <main className='overflow-y-auto overflow-x-hidden h-full w-full scroll-smooth'>
                     {children}
                     <Suspense fallback={null}>
