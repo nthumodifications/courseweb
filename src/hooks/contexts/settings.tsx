@@ -1,6 +1,6 @@
 "use client";;
 import { useParams, usePathname, useRouter } from "next/navigation";
-import { FC, PropsWithChildren, createContext, useContext, useEffect, useLayoutEffect, useMemo } from "react";
+import { FC, PropsWithChildren, createContext, useContext, useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { useLocalStorage } from 'usehooks-ts';
 import { useCookies } from 'react-cookie';
 import { Language } from "@/types/settings";
@@ -17,10 +17,11 @@ const settingsContext = createContext<ReturnType<typeof useSettingsProvider>>({
         enabled: false,
         ACIXSTORE: undefined
     },
+    initializing: true,
     setLanguage: () => {},
     setDarkMode: () => {},
     setAISCredentials: () => {},
-    updateACIXSTORE: () => {},
+    getACIXSTORE: async () => null,
     toggleApp: () => {}
 });
 
@@ -32,6 +33,9 @@ const useSettingsProvider = () => {
     const [cookies, setCookie, removeCookie] = useCookies(['theme', 'locale', 'ACIXSTORE']);
     const [headlessAIS, setHeadlessAIS] = useLocalStorage<HeadlessAISStorage>("headless_ais", { enabled: false });
     const [pinnedApps, setPinnedApps] = useLocalStorage<string[]>("pinned_apps", []);
+    const [initializing, setInitializing] = useState(true);
+
+    useEffect(() => { setInitializing(false) }, []);
 
     const setLanguage = (newLang: Language) => {
         //set cookie of 'locale'
@@ -86,67 +90,67 @@ const useSettingsProvider = () => {
 
     //Headless AIS
     const setAISCredentials = (username?: string, password?: string) => {
-        return;
-        // if(!username || !password) {
-        //     removeCookie("ACIXSTORE", { path: '/' });
-        //     setHeadlessAIS({
-        //         enabled: false
-        //     });
-        //     return ;
-        // }
-        // setHeadlessAIS({
-        //     enabled: true,
-        //     studentid: username,
-        //     password: password,
-        //     ACIXSTORE: "",
-        //     lastUpdated: 0
-        // });
+        // return;
+        if(!username || !password) {
+            removeCookie("ACIXSTORE", { path: '/' });
+            setHeadlessAIS({
+                enabled: false
+            });
+            return ;
+        }
+        setHeadlessAIS({
+            enabled: true,
+            studentid: username,
+            password: password,
+            ACIXSTORE: "",
+            lastUpdated: 0
+        });
     }
 
-    const updateACIXSTORE = () => {
-        return;
-        // if(!headlessAIS.enabled) return ;
-        // if(headlessAIS.lastUpdated + 15 * 60 * 1000 > Date.now()) return ;
-        // //fetch /api/ais_headless to get ACIXSTORE
-        // const form = new FormData();
-        // form.append("studentid", headlessAIS.studentid);
-        // form.append("password", headlessAIS.password);
-        // fetch("/api/ais_headless/login", {
-        //     method: "POST",
-        //     body: form
-        // })
-        // .then(res => res.json())
-        // .then(res => {
-        //     if(res.success) {
-        //         setHeadlessAIS({
-        //             ...headlessAIS,
-        //             ACIXSTORE: res.body.ACIXSTORE,
-        //             lastUpdated: Date.now()
-        //         });
-        //         //set cookie
-        //         setCookie("ACIXSTORE", res.body.ACIXSTORE, { path: '/', expires: new Date(Date.now() + 15 * 60 * 1000) });
-        //     } else {
-        //         setHeadlessAIS({
-        //             ...headlessAIS,
-        //             ACIXSTORE: undefined
-        //         });
-        //         //remove cookie
-        //         removeCookie("ACIXSTORE", { path: '/'});
-        //     }
-        // })
+    /**
+     * 
+     * @param force force update ACIXSTORE
+     * @returns ACIXSTORE or null if error, undefined if not enabled
+     */
+    const getACIXSTORE = async (force = false) => {
+        // return;
+        if(!headlessAIS.enabled) return undefined;
+        if(headlessAIS.lastUpdated + 15 * 60 * 1000 > Date.now() && !force ) return headlessAIS.ACIXSTORE ?? null;
+        //fetch /api/ais_headless to get ACIXSTORE
+        const form = new FormData();
+        form.append("studentid", headlessAIS.studentid);
+        form.append("password", headlessAIS.password);
+        return await fetch("/api/ais_headless/login", {
+            method: "POST",
+            body: form
+        })
+        .then(res => res.json())
+        .then(res => {
+            if(res.success) {
+                setHeadlessAIS({
+                    ...headlessAIS,
+                    ACIXSTORE: res.body.ACIXSTORE,
+                    lastUpdated: Date.now()
+                });
+                //set cookie
+                setCookie("ACIXSTORE", res.body.ACIXSTORE, { path: '/', expires: new Date(Date.now() + 15 * 60 * 1000) });
+                return res.body.ACIXSTORE as string;
+            } else {
+                setHeadlessAIS({
+                    ...headlessAIS,
+                    ACIXSTORE: undefined
+                });
+                return null;
+                //remove cookie
+                removeCookie("ACIXSTORE", { path: '/'});
+            }
+        })
     }
 
-    // //update ACIXSTORE
-    // useEffect(() => {
-    //     //every 15 minutes
-    //     if(typeof window  == "undefined") return ;
-    //     if(!headlessAIS.enabled) return ;
-    //     // only update when pathname starts with /apps or /settings
-    //     // if(!pathname.startsWith("/apps") && !pathname.startsWith("/settings")) return ;
-    //     const interval = setInterval(updateACIXSTORE, 15 * 60 * 1000);
-    //     updateACIXSTORE();
-    //     return () => clearInterval(interval);
-    // }, [headlessAIS]);
+    useEffect(() => {
+        getACIXSTORE();
+    //@ts-ignore
+    }, [headlessAIS]);
 
     //cleanup pinned apps, remove apps that are not in the app list
     useEffect(() => {
@@ -168,8 +172,9 @@ const useSettingsProvider = () => {
         setLanguage,
         setDarkMode,
         setAISCredentials,
-        updateACIXSTORE,
-        toggleApp
+        getACIXSTORE,
+        toggleApp,
+        initializing
     };
 }
 

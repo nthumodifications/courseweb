@@ -29,13 +29,13 @@ const Tools = () => {
         {dict.help.tools.description}
       </span>
       <div>
-        <CCXPDownAlert/>
-        {/* <Button variant="outlined" color="neutral" onClick={handleOpenHeadlessLogin}>
+        {/* <CCXPDownAlert/> */}
+        <Button variant="outlined" color="neutral" onClick={handleOpenHeadlessLogin}>
           {dict.help.tools.connect}
-        </Button> */}
+        </Button>
       </div>
-      {/* {ais.enabled && <span className="text-gray-600 dark:text-gray-400 text-sm">已連接</span>}
-      {ais.enabled && !ais.ACIXSTORE && <span className="text-red-600 dark:text-red-400 text-sm">連接著/登入異常</span>} */}
+      {ais.enabled && <span className="text-gray-600 dark:text-gray-400 text-sm">已連接</span>}
+      {ais.enabled && !ais.ACIXSTORE && <span className="text-red-600 dark:text-red-400 text-sm">連接著/登入異常</span>}
     </div>
   )
 }

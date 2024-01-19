@@ -1,28 +1,27 @@
+'use client';
 import { apps } from "@/const/apps";
 import { getDictionary } from "@/dictionaries/dictionaries";
 import { LangProps } from "@/types/pages";
-import {Alert, IconButton, Button} from '@mui/joy';
+import { Alert, Button } from '@mui/joy';
 import Link from "next/link";
-import {Map, MapPin, Star, Info, X, ArrowRight} from 'lucide-react';
+import { Info, ArrowRight } from 'lucide-react';
 import FavouriteApp from "./Favorite";
-import { cookies } from "next/headers";
 import React from 'react';
-import CCXPDownAlert from "@/components/CCXPDownAlert";
+import useDictionary from "@/dictionaries/useDictionary";
+import { useSettings } from "@/hooks/contexts/settings";
 
-export const dynamic = 'force-dynamic'
-
-const AppList = async ({
+const AppList = ({
     params: { lang }
 }: LangProps) => {
-    const dict = await getDictionary(lang);
-    const cookie = await cookies();
-    const ACIXSTORE = undefined;
+    const dict = useDictionary();
+    const { ais } = useSettings();
+
 
     return (
         <div className="h-full w-full">
             <div className="flex flex-col">
                 <h1 className="text-xl font-bold px-4 py-2">{dict.applist.title}</h1>
-                {apps.filter(m => m.ais ? !!ACIXSTORE: true ).map(app => (<div key={app.id} className="flex flex-row items-center space-x-2 py-2 px-4 hover:bg-gray-100 dark:hover:bg-neutral-800">
+                {apps.filter(m => m.ais ? !!ais.enabled: true ).map(app => (<div key={app.id} className="flex flex-row items-center space-x-2 py-2 px-4 hover:bg-gray-100 dark:hover:bg-neutral-800">
                     <Link href={app.href} className="flex flex-row flex-1 items-center space-x-2" target={app.target}>
                         <div className="p-3 rounded-full bg-indigo-100 text-indigo-800 grid place-items-center">
                             <app.Icon size={16}/>
@@ -35,8 +34,8 @@ const AppList = async ({
                         <FavouriteApp appId={app.id}/>
                     </div>
                 </div>))}
-                <CCXPDownAlert/>
-                {/* {!ACIXSTORE && <Alert 
+                {/* <CCXPDownAlert/> */}
+                {!ais.enabled && <Alert 
                     variant="outlined" 
                     color="success" 
                     startDecorator={
@@ -54,7 +53,7 @@ const AppList = async ({
                         <h4 className="font-bold mb-1">還有更多功能！</h4>
                         <p>到設定同步校務資訊系統后，可以直接在這裏使用校務資訊系統的功能！</p>
                     </div>
-                </Alert>} */}
+                </Alert>}
                 <Alert color="neutral">
                     <div className="flex flex-col gap-1">
                         <h4 className="font-bold text-base">沒有你要的功能？</h4>

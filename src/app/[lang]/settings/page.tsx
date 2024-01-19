@@ -9,7 +9,6 @@ import { signOut, useSession } from "next-auth/react";
 import { HeadlessLoginDialog } from "../../../components/Forms/HeadlessLoginDialog";
 import { TimetableThemeList } from "./TimetableThemeList";
 import TimetablePreview from "./TimetablePreview";
-import CCXPDownAlert from "@/components/CCXPDownAlert";
 
 const SettingsPage = () => {
 
@@ -90,13 +89,13 @@ const SettingsPage = () => {
                 <div className="flex flex-col flex-1">
                     <h2 className="font-semibold text-xl text-gray-600 dark:text-gray-400 pb-2">代理登入校務資訊系統</h2>
                     <p className="text-gray-600 dark:text-gray-400">系統會用代理登入方式，讓學生們可以在NTHUMods 上輕鬆連結校務系統功能。</p>
-                    <CCXPDownAlert/>
+                    {/* <CCXPDownAlert/> */}
                 </div>
-                {/* <div className="flex flex-col justify-center items-center space-y-2 w-52">
+                <div className="flex flex-col justify-center items-center space-y-2 w-52">
                     <Button variant="outlined" color="primary" onClick={handleOpenHeadlessLogin}>連接</Button>
                     {ais.enabled && <span className="text-gray-600 dark:text-gray-400 text-sm">已連接</span>}
                     {ais.enabled && !ais.ACIXSTORE && <span className="text-red-600 dark:text-red-400 text-sm">連接著/登入異常</span>}
-                </div> */}
+                </div>
             </div>
         </div>
     )
