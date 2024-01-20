@@ -2,14 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "edge";
 
+export enum LoginError {
+    IncorrectCredentials = "IncorrectCredentials",
+    CaptchaError = "CaptchaError",
+    Unknown = "Unknown"
+}
+
 export const POST = async (req: NextRequest) => {
     const form = await req.formData();
     const studentid = form.get('studentid');
     const password = form.get('password');
 
-    const ocrAndLogin: (_try?:number) => Promise<string | null> = async (_try = 0) => {
+    const ocrAndLogin: (_try?:number) => Promise<NextResponse> = async (_try = 0) => {
         if(_try == 3) {
-            return null;
+            return NextResponse.json({ success: false, body: { error: "登入出錯，但不知道爲什麽 :( Something wrong, idk why.", code: LoginError.Unknown }});
         }
         let tries = 0, pwdstr = "", answer = "";
         do {
@@ -63,10 +69,10 @@ export const POST = async (req: NextRequest) => {
             return await ocrAndLogin(_try++);
         }
         if(resHTML.match('帳號或密碼錯誤')) {
-            return null;
+            return NextResponse.json({ success: false, body: { error: "帳號或密碼錯誤 Incorrect Login Credentials", code: LoginError.IncorrectCredentials }});
         }
-        else if(resHTML.match("/ccxp/INQUIRE/index.php")) {
-            return null;
+        if(resHTML.match('15分鐘內登錄錯誤')) {
+            return NextResponse.json({ success: false, body: { error: "解讀CAPTCHA出錯，15分鐘后重試。CAPTCHA Decoding went wrong, Please wait 15 minutes.", code: LoginError.CaptchaError }});
         }
         if(resHTML.match(/ACIXSTORE=([a-zA-Z0-9_-]+)/)?.length == 0) {
             return await ocrAndLogin(_try++);
@@ -161,12 +167,10 @@ export const POST = async (req: NextRequest) => {
                 "mode": "cors",
                 "credentials": "include"
             });
-            return ACIXSTORE;
+            return NextResponse.json({ success: true, body: { ACIXSTORE: ACIXSTORE }});
         }
     }
     const result = await ocrAndLogin();
-    if(!result) {
-        return NextResponse.json({ success: false, body: { error: "Login Failed" }});
-    }
-    return NextResponse.json({ success: true, body: { ACIXSTORE: result }});
+
+    return result;
 }

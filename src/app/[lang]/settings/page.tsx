@@ -9,10 +9,12 @@ import { signOut, useSession } from "next-auth/react";
 import { HeadlessLoginDialog } from "../../../components/Forms/HeadlessLoginDialog";
 import { TimetableThemeList } from "./TimetableThemeList";
 import TimetablePreview from "./TimetablePreview";
+import { useHeadlessAIS } from "@/hooks/contexts/useHeadlessAIS";
 
 const SettingsPage = () => {
 
-    const { darkMode, setDarkMode, language, setLanguage, ais } = useSettings();
+    const { darkMode, setDarkMode, language, setLanguage } = useSettings();
+    const { ais } = useHeadlessAIS();
     const [dummy, setDummy] = useState(0);
     const { data, status } = useSession();
 

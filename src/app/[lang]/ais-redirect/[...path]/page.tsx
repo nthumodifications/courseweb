@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { AISLoading } from '@/components/Pages/AISLoading';
 import { AISError } from '@/components/Pages/AISError';
 import { useParams } from "next/navigation";
+import { useHeadlessAIS } from "@/hooks/contexts/useHeadlessAIS";
+import {AISNotLoggedIn} from '@/components/Pages/AISNotLoggedIn';
 
 // export async function GET(
 //     request: Request,
@@ -24,12 +26,11 @@ import { useParams } from "next/navigation";
 //     })
 // }
 
-const RedirectPage = ({
-}) => {
+const RedirectPage = ({}) => {
     const params = useParams();
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
-    const { getACIXSTORE } = useSettings();
+    const { getACIXSTORE, ais } = useHeadlessAIS();
 
     const path = params.path instanceof Array ? params.path: [params.path];
 
@@ -53,6 +54,7 @@ const RedirectPage = ({
         })();
     }, []);
 
+    if (!ais.enabled) return <AISNotLoggedIn/>
     if(loading) return <AISLoading/>;
     if(error) return <AISError/>;
     return <div>Redirecting...</div>;

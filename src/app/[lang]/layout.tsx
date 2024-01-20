@@ -17,6 +17,8 @@ import GoogleAnalytics from '@/components/GoogleAnalytics';
 import {UserTimetableProvider} from '@/hooks/useUserTimetable';
 import { Inter, Noto_Sans_TC } from 'next/font/google';
 import { Suspense } from 'react';
+import {HeadlessAISProvider} from '@/hooks/contexts/useHeadlessAIS';
+import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
   title: {
@@ -106,24 +108,27 @@ export default function RootLayout({
     <CssVarsProvider defaultMode={(theme?.value as any) ?? 'light'}>
       <NextAuthProvider>
         <SettingsProvider>
-          <UserTimetableProvider>
-            <ModalProvider>
-              <html lang={params.lang} className={`${theme?.value ?? ''} ${inter.variable} ${noto.variable}`} suppressHydrationWarning>
-                <GoogleAnalytics/>
-                <body className={`grid grid-cols-1 grid-rows-[56px_50px_calc(100vh-106px)] md:grid-cols-[12rem_auto] md:grid-rows-[56px_calc(100vh-56px)_12rem]`}>
-                  <Header />
-                  <SideNav />
-                  <main className='overflow-y-auto overflow-x-hidden h-full w-full scroll-smooth [&>div]:h-full'>
-                    {children}
-                    <Suspense fallback={null}>
-                      <Analytics />
-                    </Suspense>
-                  </main>
-                  <Footer />
-                </body>
-              </html>
-            </ModalProvider>
-          </UserTimetableProvider>
+          <HeadlessAISProvider>
+            <UserTimetableProvider>
+              <ModalProvider>
+                <html lang={params.lang} className={`${theme?.value ?? ''} ${inter.variable} ${noto.variable}`} suppressHydrationWarning>
+                  <GoogleAnalytics/>
+                  <body className={`grid grid-cols-1 grid-rows-[56px_50px_calc(100vh-106px)] md:grid-cols-[12rem_auto] md:grid-rows-[56px_calc(100vh-56px)_12rem]`}>
+                    <Header />
+                    <SideNav />
+                    <main className='overflow-y-auto overflow-x-hidden h-full w-full scroll-smooth [&>div]:h-full'>
+                      {children}
+                      <Suspense fallback={null}>
+                        <Analytics />
+                      </Suspense>
+                    </main>
+                    <Footer />
+                    <Toaster />
+                  </body>
+                </html>
+              </ModalProvider>
+            </UserTimetableProvider>
+          </HeadlessAISProvider>
         </SettingsProvider>
       </NextAuthProvider>
     </CssVarsProvider>

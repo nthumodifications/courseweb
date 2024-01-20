@@ -8,13 +8,13 @@ import { Info, ArrowRight } from 'lucide-react';
 import FavouriteApp from "./Favorite";
 import React from 'react';
 import useDictionary from "@/dictionaries/useDictionary";
-import { useSettings } from "@/hooks/contexts/settings";
+import { useHeadlessAIS } from "@/hooks/contexts/useHeadlessAIS";
 
 const AppList = ({
     params: { lang }
 }: LangProps) => {
     const dict = useDictionary();
-    const { ais } = useSettings();
+    const { ais } = useHeadlessAIS();
 
 
     return (
