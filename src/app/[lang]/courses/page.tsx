@@ -15,7 +15,7 @@ import useDictionary from "@/dictionaries/useDictionary";
 import { useRouter, useSearchParams } from "next/navigation";
 import queryString from 'query-string';
 import { departments } from "@/const/departments";
-import useUserTimetable from "@/hooks/useUserTimetable";
+import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import {Department} from '@/types/courses';
 import { TimeFilterType } from "@/components/FormComponents/TimeslotSelectorControl";
 import { event } from "@/lib/gtag";

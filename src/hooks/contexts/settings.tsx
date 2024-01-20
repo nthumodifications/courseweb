@@ -13,13 +13,10 @@ import { useLocalStorage } from 'usehooks-ts';
 import { useCookies } from 'react-cookie';
 import { Language } from "@/types/settings";
 import { apps } from "@/const/apps";
-import { timetableColors } from "@/const/timetableColors";
-import { event } from "@/lib/gtag";
 
 const settingsContext = createContext<ReturnType<typeof useSettingsProvider>>({
     language: "zh",
     darkMode: false,
-    timetableTheme: "pastelColors",
     pinnedApps: [],
     setLanguage: () => {},
     setDarkMode: () => {},
@@ -41,23 +38,6 @@ const useSettingsProvider = () => {
         setCookie("locale", newLang, { path: '/', expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) });
         router.push(`/${newLang}/`+pathname.split('/').slice(2).join('/'));
     };
-
-    //migrate from old timetable theme to new one
-    useLayoutEffect(() => {
-        if(typeof window  == "undefined") return ;
-        // if(timetableTheme == "tsinghuarian") {
-        //     setTimetableTheme("pastelColors");
-        // }
-        const themes = Object.keys(timetableColors);
-        if(!themes.includes(timetableTheme)) {
-            setTimetableTheme(themes[0]);
-        }
-        event({
-            action: "selected_theme",
-            category: "theme",
-            label: !themes.includes(timetableTheme) ? themes[0] : timetableTheme
-        });
-    }, [timetableTheme]);
 
     //check if cookies 'locale' exists, else set it
     useEffect(() => {
@@ -113,7 +93,6 @@ const useSettingsProvider = () => {
     return {
         language,
         darkMode,
-        timetableTheme,
         pinnedApps,
         setLanguage,
         setDarkMode,
