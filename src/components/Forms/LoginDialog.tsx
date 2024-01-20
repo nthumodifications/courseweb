@@ -16,13 +16,15 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { ExternalLinkIcon } from "lucide-react"
 import { useState } from "react"
 import Link from "next/link"
+import { useHeadlessAIS } from "@/hooks/contexts/useHeadlessAIS";
 
 const LoginDialog = () => {
   const [open, setOpen] = useState(false)
   const [studentid, setStudentid] = useState('')
   const [password, setPassword] = useState('')
   const [agreeChecked, setAgreeChecked] = useState(false)
-  const { language, setAISCredentials } = useSettings()
+  const { language } = useSettings()
+  const { setAISCredentials } = useHeadlessAIS();
 
   const onSubmit = () => {
     setAISCredentials(studentid, password)

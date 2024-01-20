@@ -1,14 +1,10 @@
-import { useSettings } from "@/hooks/contexts/settings"
-import { useModal } from "@/hooks/contexts/useModal"
-import { Button, DialogActions, DialogContent, DialogTitle, Input, ModalClose, ModalDialog } from "@mui/joy";
-import { useState } from "react";
 import useDictionary from '@/dictionaries/useDictionary';
 import LoginDialog from "@/components/Forms/LoginDialog";
-import CCXPDownAlert from '@/components/CCXPDownAlert';
+import { useHeadlessAIS } from "@/hooks/contexts/useHeadlessAIS";
 
 const Tools = () => {
   const dict = useDictionary();
-  const { ais } = useSettings();
+  const { ais } = useHeadlessAIS();
 
   return (
     <div className="flex flex-col gap-2">
