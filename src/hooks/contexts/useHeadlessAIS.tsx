@@ -1,5 +1,5 @@
 "use client";
-import { LoginError } from "@/app/api/ais_headless/login/route";
+import { LoginError } from "@/types/headless_ais";
 import { toast } from "@/components/ui/use-toast";
 import { FC, PropsWithChildren, createContext, useContext, useEffect, useState } from "react";
 import { useLocalStorage } from 'usehooks-ts';

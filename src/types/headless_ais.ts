@@ -5,3 +5,9 @@ export const getServerACIXSTORE = async () => {
     const ACIXSTORE = cookie.get('ACIXSTORE')?.value;
     return ACIXSTORE;
 }
+
+export enum LoginError {
+    IncorrectCredentials = "IncorrectCredentials",
+    CaptchaError = "CaptchaError",
+    Unknown = "Unknown"
+}
