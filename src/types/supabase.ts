@@ -63,6 +63,62 @@ export interface Database {
         }
         Relationships: []
       }
+      campaign_response: {
+        Row: {
+          campaign_id: number
+          created_at: string
+          id: number
+          ip: string
+          response: string
+        }
+        Insert: {
+          campaign_id: number
+          created_at?: string
+          id?: number
+          ip: string
+          response: string
+        }
+        Update: {
+          campaign_id?: number
+          created_at?: string
+          id?: number
+          ip?: string
+          response?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_response_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      campaigns: {
+        Row: {
+          actions: string[]
+          created_at: string
+          description: string
+          id: number
+          title: string
+        }
+        Insert: {
+          actions: string[]
+          created_at?: string
+          description: string
+          id?: number
+          title: string
+        }
+        Update: {
+          actions?: string[]
+          created_at?: string
+          description?: string
+          id?: number
+          title?: string
+        }
+        Relationships: []
+      }
       cds_counts: {
         Row: {
           code: string
