@@ -17,18 +17,27 @@ import { ExternalLinkIcon } from "lucide-react"
 import { useState } from "react"
 import Link from "next/link"
 import { useHeadlessAIS } from "@/hooks/contexts/useHeadlessAIS";
+import ButtonSpinner from "../Animation/ButtonSpinner";
 
 const LoginDialog = () => {
   const [open, setOpen] = useState(false)
   const [studentid, setStudentid] = useState('')
   const [password, setPassword] = useState('')
   const [agreeChecked, setAgreeChecked] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | undefined>(undefined)
   const { language } = useSettings()
   const { setAISCredentials } = useHeadlessAIS();
 
-  const onSubmit = () => {
-    setAISCredentials(studentid, password)
-    setOpen(false)
+  const onSubmit = async () => {
+    setLoading(true)
+    const result = await setAISCredentials(studentid, password)
+    if (result) {
+      setOpen(false)
+    } else {
+      setError('學號或密碼錯誤')
+    }
+    setLoading(false)
   }
 
   const onCancel = () => {
@@ -88,6 +97,7 @@ const LoginDialog = () => {
             onChange={(e) => setPassword(e.target.value)}
           />
         </div>
+        {error && <div className="text-sm text-red-500">{error}</div>}
         <div className="items-center gap-2 flex">
           <Checkbox checked={agreeChecked} onCheckedChange={handleCheckboxChange} />
           <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
@@ -97,7 +107,7 @@ const LoginDialog = () => {
       </div>
       <DialogFooter>
         <Button onClick={onCancel} variant="outline">取消</Button>
-        <Button onClick={onSubmit} disabled={!allowed}>連接</Button>
+        <Button onClick={onSubmit} disabled={!allowed || loading}>{loading? <ButtonSpinner/>: "連接"}</Button>
       </DialogFooter>
     </DialogContent>
   </Dialog>

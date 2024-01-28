@@ -59,17 +59,44 @@ export const POST = async (req: NextRequest) => {
                                 const text = decoder.decode(buffer)
                                 return text
                             })
-        
+        const redirectMatch = resHTML.match(/url=(select_entry\.php\?ACIXSTORE=[a-zA-Z0-9_-]+&hint=[0-9]+)/);
+        //Check if login credentials are correct
+        const newHTML = await fetch("https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/" + redirectMatch?.[1], {
+            "headers": {
+                "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+                "accept-language": "en-US,en;q=0.9",
+                "sec-ch-ua": "\"Not_A Brand\";v=\"8\", \"Chromium\";v=\"120\", \"Microsoft Edge\";v=\"120\"",
+                "sec-ch-ua-mobile": "?0",
+                "sec-ch-ua-platform": "\"Windows\"",
+                "sec-fetch-dest": "document",
+                "sec-fetch-mode": "navigate",
+                "sec-fetch-site": "same-origin",
+                "upgrade-insecure-requests": "1"
+            },
+            "referrer": "https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/pre_select_entry.php",
+            "referrerPolicy": "strict-origin-when-cross-origin",
+            "body": null,
+            "method": "GET",
+            "mode": "cors",
+            "credentials": "include"
+        })
+        .then(response => response.arrayBuffer())
+        .then(buffer => {
+            const decoder = new TextDecoder("big5")
+            const text = decoder.decode(buffer)
+            return text
+        })
         if(resHTML.match('驗證碼輸入錯誤!')) {
             return await ocrAndLogin(_try++);
         }
-        if(resHTML.match('帳號或密碼錯誤')) {
-            return NextResponse.json({ success: false, body: { error: "帳號或密碼錯誤 Incorrect Login Credentials", code: LoginError.IncorrectCredentials }});
-        }
-        if(resHTML.match('15分鐘內登錄錯誤')) {
+        else if(resHTML.match('15分鐘內登錄錯誤')) {
             return NextResponse.json({ success: false, body: { error: "解讀CAPTCHA出錯，15分鐘后重試。CAPTCHA Decoding went wrong, Please wait 15 minutes.", code: LoginError.CaptchaError }});
         }
-        if(resHTML.match(/ACIXSTORE=([a-zA-Z0-9_-]+)/)?.length == 0) {
+        //CAPTCHA IS CORRECT: check if select_entry.php is correct  (if not, then login credentials are wrong)
+        else if(newHTML.match('帳號或密碼錯誤')) {
+            return NextResponse.json({ success: false, body: { error: "帳號或密碼錯誤 Incorrect Login Credentials", code: LoginError.IncorrectCredentials }});
+        }
+        else if(resHTML.match(/ACIXSTORE=([a-zA-Z0-9_-]+)/)?.length == 0) {
             return await ocrAndLogin(_try++);
         }
         else {
@@ -77,24 +104,6 @@ export const POST = async (req: NextRequest) => {
             if(!ACIXSTORE) {
                 return await ocrAndLogin(_try++);
             }
-            await fetch(`https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/select_entry.php?ACIXSTORE=${ACIXSTORE}&hint=${studentid}`, {
-                "headers": {
-                    "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-                    "accept-language": "en-US,en;q=0.9",
-                    "sec-ch-ua": "\"Chromium\";v=\"110\", \"Not A(Brand\";v=\"24\", \"Microsoft Edge\";v=\"110\"",
-                    "sec-ch-ua-mobile": "?0",
-                    "sec-ch-ua-platform": "\"Windows\"",
-                    "sec-fetch-dest": "document",
-                    "sec-fetch-mode": "navigate",
-                    "sec-fetch-site": "same-origin",
-                    "sec-fetch-user": "?1",
-                    "upgrade-insecure-requests": "1"
-                },
-                "body": null,
-                "method": "GET",
-                "mode": "cors",
-                "credentials": "include"
-            });
             await fetch(`https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/top.php?account=${studentid}&ACIXSTORE=${ACIXSTORE}`, {
                 "headers": {
                     "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",

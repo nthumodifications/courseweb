@@ -12,7 +12,7 @@ const headlessAISContext = createContext<ReturnType<typeof useHeadlessAISProvide
     loading: true,
     error: undefined,
     initializing: true,
-    setAISCredentials: () => {},
+    setAISCredentials: async () => false,
     getACIXSTORE: async () => undefined,
 });
 
@@ -53,7 +53,7 @@ const useHeadlessAISProvider = () => {
     }
 
     //Headless AIS
-    const setAISCredentials = (username?: string, password?: string) => {
+    const setAISCredentials = async (username?: string, password?: string) => {
         // return;
         if(!username || !password) {
             setHeadlessAIS({
@@ -62,29 +62,31 @@ const useHeadlessAISProvider = () => {
             return ;
         }
         setLoading(true);
-        fetchACIXSTORE(username, password)
-        .then(acixstore => {
-            setHeadlessAIS({
-                enabled: true,
-                studentid: username,
-                password: password,
-                ACIXSTORE: acixstore,
-                lastUpdated: Date.now()
-            });
-            setLoading(false);
-            setError(undefined);
-        })
-        .catch(err => {
-            toast({
-                title: "代理登入失敗",
-                description: err ?? "請檢查學號密碼是否正確",
+        return await fetchACIXSTORE(username, password)
+            .then(acixstore => {
+                setHeadlessAIS({
+                    enabled: true,
+                    studentid: username,
+                    password: password,
+                    ACIXSTORE: acixstore,
+                    lastUpdated: Date.now()
+                });
+                setLoading(false);
+                setError(undefined);
+                return true;
             })
-            setHeadlessAIS({
-                enabled: false
-            });
-            setLoading(false);
-            setError(err);
-        })
+            .catch(err => {
+                toast({
+                    title: "代理登入失敗",
+                    description: err ?? "請檢查學號密碼是否正確",
+                })
+                setHeadlessAIS({
+                    enabled: false
+                });
+                setLoading(false);
+                setError(err);
+                return false;
+            })
     }
 
 
