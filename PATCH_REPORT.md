@@ -1,6 +1,33 @@
 ## Development is still going, stay tuned
 
-# [NTHUMods] Patch Report
+# [NTHUMods] Patch Report 2
+Date: 01/06/2024 - 01/19/2024
+
+## Introduction
+- This patch report outlines the latest updates and enhancements for NTHUMods in the date range of [01/06/2024 to 01/20/2024]. Our continuous effort to improve user experience and system performance is reflected in this release, which includes new features, UI/UX changes, bug fixes, and future updates.
+
+## New Features
+- Added course results from the past year.
+- Added more color customization options.
+
+## UI/UX Changes
+- Improved the loading speed of downloadable timetable images.
+- Made adjustments to a few UI/UX layouts.
+
+## Bug Fixes
+- Corrected a few typos.
+- Fixed abnormal behavior of the timetable image.
+
+## Future Updates
+- Include a list of course prerequisites.
+- Implement data synchronization across different devices.
+- Introduce a schedule for the school's shop opening hours.
+- Provide information about the locations of various school departments.
+- Continue to enhance the UI/UX layout.
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+# [NTHUMods] Patch Report 1
 Date: 01/05/2024 - 12/23/2023 [First Launch]
 
 ## Introduction
