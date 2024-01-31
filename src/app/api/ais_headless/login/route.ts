@@ -73,8 +73,6 @@ export const POST = async (req: NextRequest) => {
                 "sec-fetch-site": "same-origin",
                 "upgrade-insecure-requests": "1"
             },
-            "referrer": "https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/pre_select_entry.php",
-            "referrerPolicy": "strict-origin-when-cross-origin",
             "body": null,
             "method": "GET",
             "mode": "cors",
