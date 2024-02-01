@@ -65,7 +65,7 @@ const SemesterGradeCard = ({ semester }: { semester: GradeObject['ranking']['dat
                 </TableBody>
             </Table>
             <Table className="w-full">
-                <TableHeader className="text-slate-900 text-base font-bold font-['Inter'] leading-normal">
+                <TableHeader className="text-slate-900 text-base font-bold leading-normal">
                     Credit
                 </TableHeader>
                 <TableBody>
@@ -88,7 +88,7 @@ const SemesterGradeCard = ({ semester }: { semester: GradeObject['ranking']['dat
                 </TableBody>
             </Table>
             <Table className="w-full">
-                <TableHeader className="text-slate-900 text-base font-bold font-['Inter'] leading-normal">
+                <TableHeader className="text-slate-900 text-base font-bold leading-normal">
                     Ranking
                 </TableHeader>
                 <TableBody>
@@ -116,16 +116,16 @@ const SemesterGradeCard = ({ semester }: { semester: GradeObject['ranking']['dat
 }
 
 const GradeCard = ({ title, data }: { title: string, data: string }) => <div className=" p-2 bg-white flex-col justify-center items-center gap-2 inline-flex flex-1">
-    <div className="text-center text-zinc-500 text-sm font-medium font-['Inter'] leading-none">{title}</div>
-    <div className="text-center text-zinc-900 text-2xl font-semibold font-['Inter']">{data}</div>
+    <div className="text-center text-zinc-500 text-sm font-medium leading-none">{title}</div>
+    <div className="text-center text-zinc-900 text-2xl font-semibold">{data}</div>
 </div>
 
 const GradeOverview = ({ grades }: { grades: GradeObject }) => {
-    return <div className="w-full rounded-lg shadow border border-slate-200 justify-start items-start inline-flex flex-col md:flex-row flex-wrap divide-y md:divide-y-0 divide-slate-200 overflow-hidden">
+    return <div className="w-full rounded-lg shadow border border-slate-200 justify-start items-start inline-flex flex-col md:flex-row flex-wrap divide-y md:divide-y-0 divide-x-0 md:divide-x divide-slate-200 overflow-hidden">
         <div className="w-full md:w-auto flex-[3] justify-start items-start inline-flex divide-x divide-slate-200">
             <GradeCard title="GPA" data={grades.ranking.cumulative.letter.gpa} />
             <GradeCard title="及格學分" data={grades.credits.passed_credits.toString()} />
-            <GradeCard title="畢業未到學分" data={(128 - grades.credits.passed_credits).toString()} />
+            <GradeCard title="畢業未到學分" data={grades.credits.pending_credits.toString()} />
         </div>
         <div className="w-full md:w-auto flex-[2] justify-start items-start inline-flex divide-x divide-slate-200">
             <GradeCard title="班排名" data={grades.ranking.cumulative.letter.letter_cum_class_rank} />
@@ -276,7 +276,7 @@ const DeptRankChart = ({ lineData }: { lineData: any[] }) => {
                                         </div>
                                         <div className="flex flex-col">
                                             <span className="text-[0.70rem] uppercase text-muted-foreground">
-                                                班排名
+                                            系排名
                                             </span>
                                             <span className="font-bold">
                                                 {payload[0].payload.dept_rank}
@@ -306,9 +306,9 @@ const DeptRankChart = ({ lineData }: { lineData: any[] }) => {
 }
 
 const GradesViewer = ({ grades }: { grades: GradeObject }) => {
-    console.log(grades);
     const isMobile = useMediaQuery('(max-width: 768px)');
     const [selectedSemester, setSelectedSemester] = useState<string>("All");
+    const [semesterSort, setSemesterSort] = useState<"asc" | "desc">("asc");
 
     // get unique semesters
     const semesters = Array.from(new Set(grades.ranking.data.map(grade => grade.year + grade.semester)));
@@ -323,6 +323,8 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
         return semester == selectedSemester;
     });
 
+    const displaySemesterRankings = semesterSort == "asc" ? grades.ranking.data : grades.ranking.data.slice().reverse();
+
     const lineData = grades.ranking.data.map(semester => ({
         semester: semester.year + semester.semester,
         gpa: semester.gpa,
@@ -333,10 +335,10 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
     const [tab, setTab] = useState<"courses" | "semester">("courses");
 
     return <div className="px-6 pb-12 flex-col justify-start items-start gap-12 inline-flex w-full overflow-x-hidden">
-        <div className="w-full py-8 flex-col justify-start items-start gap-4 inline-flex">
+        <div className="w-full pt-8 flex-col justify-start items-start gap-4 inline-flex">
             <div className="w-full self-stretch flex-col justify-center items-center gap-2 flex">
-                <div className="self-stretch text-zinc-900 text-3xl font-semibold font-['Inter'] leading-9">Overview</div>
-                <div className="self-stretch text-zinc-900 text-sm font-normal font-['Inter'] leading-tight">至{grades.ranking.cumulative.letter.gpa_cum_year_tw}</div>
+                <div className="self-stretch text-zinc-900 text-3xl font-semibold leading-9">Overview</div>
+                <div className="self-stretch text-zinc-900 text-sm font-normal leading-tight">至{grades.ranking.cumulative.letter.gpa_cum_year_tw}</div>
             </div>
             <GradeOverview grades={grades} />
         </div>
@@ -359,13 +361,22 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
                         {semesters.map(sem_id => <SelectItem key={sem_id} value={sem_id}>{toPrettySemester(sem_id)}</SelectItem>)}
                     </SelectContent>
                 </Select>}
+                {tab == "semester" && <Select value={semesterSort} onValueChange={(e: string) => setSemesterSort(e as "asc" | "desc")}>
+                    <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Semesters" />
+                    </SelectTrigger>
+                    <SelectContent >
+                        <SelectItem value={"asc"}>由遠到近</SelectItem>
+                        <SelectItem value={"desc"}>由近到遠</SelectItem>
+                    </SelectContent>
+                </Select>}
             </div>
             <TabsContent value="courses">
                 <Table className="w-full">
                     <TableHeader>
-                        <TableRow>
+                        <TableRow className="[&>th]:font-bold [&>th]:text-slate-900">
                             <TableHead>Course Name</TableHead >
-                            <TableHead className="hidden md:table-cell">Grade</TableHead >
+                            <TableHead className="hidden md:table-cell">Credits</TableHead >
                             <TableHead>Grade</TableHead >
                             <TableHead>Ranking</TableHead >
                             <TableHead className="hidden md:table-cell">T-score</TableHead >
@@ -379,11 +390,13 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
                             {displayGrades.filter(c => c.year + c.semester == semester).map((grade, index) => (
                                 <TableRow key={index + index * 10} className="[&>td]:py-2">
                                     <TableCell>
-                                        <div className="flex flex-col">
-                                            <span className="text-xs text-gray-500">{grade.course_id}</span>
-                                            <span>{grade.name_zh}</span>
+                                        <div className="flex-col justify-center items-start gap-2.5 inline-flex">
+                                            <div className="inline-flex flex-col">
+                                                <span className="text-slate-400 text-xs">{grade.course_id}</span>
+                                                <span>{grade.name_zh}</span>
+                                            </div>
                                             {grade.ge_description && <div>
-                                                <Badge className="text-xs min-w-0" variant="default">通識：{grade.ge_type} - {grade.ge_description}</Badge>
+                                                <Badge className="text-xs min-w-0 rounded-lg" variant="default">通識：{grade.ge_type} - {grade.ge_description}</Badge>
                                             </div>}
                                         </div>
                                     </TableCell>
@@ -401,7 +414,7 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
             <TabsContent value="semester">
                 <Table className="w-full">
                     <TableHeader>
-                        <TableRow>
+                        <TableRow className="[&>th]:font-bold [&>th]:text-slate-900">
                             <TableHead className="min-w-[72px] break-all">學期</TableHead>
                             <TableHead>GPA</TableHead>
                             <TableHead className="hidden md:table-cell">T-Score</TableHead>
@@ -418,7 +431,7 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {grades.ranking.data.map((semester, index) => (
+                        {displaySemesterRankings.map((semester, index) => (
                             <TableRow key={index} className="[&>td]:py-2">
                                 <TableCell>{toPrettySemester(semester.year + semester.semester)}</TableCell>
                                 <TableCell>{semester.gpa}</TableCell>
@@ -442,7 +455,7 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
             </TabsContent>
         </Tabs>
         {!isMobile && <div className="w-full flex-col justify-start items-start gap-4 md:inline-flex hidden">
-            <div className="text-zinc-900 text-3xl font-semibold font-['Inter'] leading-9">成績曲線圖</div>
+            <div className="text-zinc-900 text-3xl font-semibold leading-9">成績曲線圖</div>
             <div className="flex flex-row flex-wrap gap-6">
                 <Card className=" min-w-[300px] flex-1">
                     <CardHeader>
