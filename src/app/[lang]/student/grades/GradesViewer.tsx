@@ -242,7 +242,7 @@ const ClassRankChart = ({ lineData }: { lineData: any[] }) => {
                     }}
                 />
                 <XAxis dataKey="semester" />
-                <YAxis />
+                <YAxis reversed/>
             </LineChart>
         </ResponsiveContainer>
     </div>
@@ -299,7 +299,7 @@ const DeptRankChart = ({ lineData }: { lineData: any[] }) => {
                     }}
                 />
                 <XAxis dataKey="semester" />
-                <YAxis />
+                <YAxis reversed/>
             </LineChart>
         </ResponsiveContainer>
     </div>
@@ -343,7 +343,7 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
             <GradeOverview grades={grades} />
         </div>
         <Tabs defaultValue="courses" className="w-full" onValueChange={(e: string) => setTab(e as "courses" | "semester")} value={tab}>
-            <div className="flex flex-row justify-between">
+            <div className="flex flex-row justify-between flex-wrap gap-3">
                 <TabsList>
                     <TabsTrigger value="courses">
                         全部課程
