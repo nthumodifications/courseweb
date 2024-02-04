@@ -81,7 +81,7 @@
     "@types/jsonwebtoken": "^9.0.5",
     "@types/leaflet": "^1.9.8",
     "@types/negotiator": "^0.6.3",
-    "supabase": "^1.123.4",
+    "supabase": "^1.136.3",
     "webpack": "^5.89.0"
   }
 }
