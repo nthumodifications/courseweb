@@ -40,7 +40,16 @@ export async function generateMetadata({ params }: PageProps, parent: ResolvingM
     return {
         ...parent,
         title: `${course?.department} ${course?.course}-${course?.class} ${course!.name_zh} ${course!.name_en}`,
-        description: `${course!.teacher_zh?.join(',')} ${course!.teacher_en?.join(',')} \n ${course!.course_syllabus.brief}`
+        description: `${course!.teacher_zh?.join(',')} ${course!.teacher_en?.join(',')} \n ${course!.course_syllabus.brief}`,
+        openGraph: {
+            type: 'website',
+            title: `${course?.department} ${course?.course}-${course?.class} ${course!.name_zh} ${course!.name_en} | NTHUMods`,
+            description: `${course!.teacher_zh?.join(',')} ${course!.teacher_en?.join(',')} \n ${course!.course_syllabus.brief}`,
+            url: 'https://nthumods.com',
+            siteName: 'NTHUMods',
+            countryName: 'Taiwan',
+            locale: 'en, zh'
+        }
     }
 }
 
