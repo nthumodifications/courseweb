@@ -1,4 +1,4 @@
-## Development is still going, stay tuned.
+## We're still under active development, follow our repo to stay up to date.
 
 # [NTHUMods] Patch Report
 Date: 01/05/2024 - 12/23/2023 [First Launch]
