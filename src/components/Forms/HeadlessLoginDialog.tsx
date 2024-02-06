@@ -1,5 +1,6 @@
 'use client';
 import { useSettings } from "@/hooks/contexts/settings";
+import { useHeadlessAIS } from "@/hooks/contexts/useHeadlessAIS";
 import { Button, Checkbox, DialogActions, DialogContent, DialogTitle, Input, ModalClose, ModalDialog } from "@mui/joy";
 import { ExternalLinkIcon } from "lucide-react";
 import Link from "next/link";
@@ -9,7 +10,8 @@ export const HeadlessLoginDialog = ({ onClose }: { onClose: () => void; }) => {
     const [studentid, setStudentid] = useState('');
     const [password, setPassword] = useState('');
     const [agreeChecked, setAgreeChecked] = useState(false);
-    const { language, setAISCredentials } = useSettings();
+    const { language } = useSettings();
+    const { setAISCredentials } = useHeadlessAIS();
 
     const onSubmit = () => {
         setAISCredentials(studentid, password);

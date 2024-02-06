@@ -13,7 +13,7 @@ const Header = () => {
   const currentWeek = currentSemester? Math.floor((new Date().getTime() - currentSemester.begins.getTime()) / (1000 * 60 * 60 * 24 * 7)) + 1 : null;
 
   return (
-    <header className="h-14 w-screen bg-white dark:bg-neutral-900 shadow-md px-4 md:px-8 py-4 md:col-span-2 flex flex-row items-center z-50 gap-4">
+    <header className="h-[--header-height] w-screen bg-white dark:bg-neutral-900 shadow-md px-4 md:px-8 py-4 md:col-span-2 flex flex-row items-center z-50 gap-4">
       <div className="flex flex-col md:flex-row mr-auto md:items-center gap-1 mt-1 md:mt-0 md:gap-4">
         <Link href={"/"+language+"/timetable"}>
           <FullLogo />
@@ -30,7 +30,7 @@ const Header = () => {
         <Button size="sm" variant="outline" asChild>
           <Link className="flex gap-1" target="_blank" href="https://forms.gle/LKYiVhLVwRGL44pz6">
             <MessageCircle size="16" />
-            Feedback
+            <span className="hidden md:inline-block">Feedback</span>
           </Link>
         </Button>
       </div>

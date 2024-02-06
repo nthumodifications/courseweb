@@ -1,21 +1,10 @@
-import { useSettings } from "@/hooks/contexts/settings"
-import { useModal } from "@/hooks/contexts/useModal"
-import { Button, DialogActions, DialogContent, DialogTitle, Input, ModalClose, ModalDialog } from "@mui/joy";
-import { useState } from "react";
 import useDictionary from '@/dictionaries/useDictionary';
-import { HeadlessLoginDialog } from "../Forms/HeadlessLoginDialog";
-import CCXPDownAlert from '@/components/CCXPDownAlert';
+import LoginDialog from "@/components/Forms/LoginDialog";
+import { useHeadlessAIS } from "@/hooks/contexts/useHeadlessAIS";
 
 const Tools = () => {
   const dict = useDictionary();
-  const { ais } = useSettings();
-  const [openModal, closeModal] = useModal();
-
-  const handleOpenHeadlessLogin = () => {
-      openModal({
-          children: <HeadlessLoginDialog onClose={closeModal}/>,
-      })
-  }
+  const { ais } = useHeadlessAIS();
 
   return (
     <div className="flex flex-col gap-2">
@@ -29,13 +18,11 @@ const Tools = () => {
         {dict.help.tools.description}
       </span>
       <div>
-        <CCXPDownAlert/>
-        {/* <Button variant="outlined" color="neutral" onClick={handleOpenHeadlessLogin}>
-          {dict.help.tools.connect}
-        </Button> */}
+        {/* <CCXPDownAlert/> */}
+        <LoginDialog />
       </div>
-      {/* {ais.enabled && <span className="text-gray-600 dark:text-gray-400 text-sm">已連接</span>}
-      {ais.enabled && !ais.ACIXSTORE && <span className="text-red-600 dark:text-red-400 text-sm">連接著/登入異常</span>} */}
+      {ais.enabled && <span className="text-gray-600 dark:text-gray-400 text-sm">已連接</span>}
+      {ais.enabled && !ais.ACIXSTORE && <span className="text-red-600 dark:text-red-400 text-sm">連接著/登入異常</span>}
     </div>
   )
 }

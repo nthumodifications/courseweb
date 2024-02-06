@@ -110,9 +110,7 @@ const useUserTimetableProvider = (loadCourse = true) => {
         if(!display_courses) return [];
         return (courses[semester] ?? []).map(courseID => display_courses.find(c => c.raw_id == courseID)!).filter(c => c);
     }, [display_courses, courses, semester]);
-
-    console.log('displayCourseData updated', displayCourseData)
-
+    
     // const { data: semesterCourseData = [], error: semesterError, isLoading: semesterLoading } = useSWR(['courses', currentSemester ? courses[currentSemester.id] : null], async ([table, courseCodes]) => {
     //     if(!courseCodes) return [];
     //     const { data = [], error } = await supabase.rpc('search_courses_with_syllabus', { keyword: "" }).in('raw_id', courseCodes);
