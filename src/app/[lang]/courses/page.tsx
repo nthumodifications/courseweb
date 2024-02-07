@@ -20,6 +20,7 @@ import {Department} from '@/types/courses';
 import { TimeFilterType } from "@/components/FormComponents/TimeslotSelectorControl";
 import { event } from "@/lib/gtag";
 import {toPrettySemester} from '@/helpers/semester';
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 
 export type RefineControlFormTypes = {
     textSearch: string,
@@ -27,7 +28,7 @@ export type RefineControlFormTypes = {
     language: string[],
     others: string[],
     className: string | null,
-    department: Department[],
+    department: string[],
     firstSpecialization: string | null,
     secondSpecialization: string | null,
     timeslots: string[],
@@ -69,7 +70,7 @@ const CoursePage: NextPage = () => {
     const searchParams = useSearchParams();
     const [filtersState, setFiltersState] = useLocalStorage<RefineControlFormTypes>('course_filters', emptyFilters);
 
-    const { control, watch, setValue, reset, formState: { isDirty } } = useForm<RefineControlFormTypes>({
+    const form = useForm<RefineControlFormTypes>({
         defaultValues: useMemo(() => {
             if (searchParams.size > 0) { 
                 //Since we have to handle department differently, special cases where have nested objects
@@ -77,15 +78,6 @@ const CoursePage: NextPage = () => {
                 let params = queryString.parse(searchParams.toString(), { arrayFormat: 'index', parseNumbers: true })
                 //@ts-ignore
                 params.semester = params.semester?.toString()
-                if (params.department && params.department instanceof Array) {
-                    //@ts-ignore
-                    params.department = params.department
-                        .map(code => {
-                            const department = departments.find(mod => mod.code == code)
-                            return department ? { code: department?.code, name_zh: department?.name_zh, name_en: department?.name_en } : undefined
-                        })
-                        .filter(mod => !!mod) ?? []
-                }
                 const final = Object.assign({}, emptyFilters, params)
                 //if final is same as emptyFilters, then it means there is no filters, return filterstate, check if filtersState is same as emptyFilters, if not, reset to emptyFilters
                 if(JSON.stringify(final) == JSON.stringify(emptyFilters)) {
@@ -99,6 +91,8 @@ const CoursePage: NextPage = () => {
             else return emptyFilters;
         }, [])
     })
+
+    const { control, watch, setValue, reset, formState: { isDirty } } = form;
 
     const isMobile = useMediaQuery('(max-width: 768px)');
 
@@ -122,24 +116,34 @@ const CoursePage: NextPage = () => {
 
     const renderPagination = () => {
         const range = paginationRange(currentPage, totalPage, PAGNIATION_MAX);
-
-        return range.map((page, index) => {
-            return (
-                <Button
-                    key={index}
-                    variant="soft"
-                    aria-pressed={currentPage == page}
-                    sx={(theme) => ({
-                        [`&[aria-pressed="true"]`]: {
-                            ...theme.variants.outlinedActive.neutral,
-                            borderColor: theme.vars.palette.neutral.outlinedHoverBorder,
-                        },
-                    })}
-                    onClick={() => searchQueryFunc(filters, (page - 1) * 30)}
-                >
-                    {page}
-                </Button>)
-        })
+        return <Pagination>
+            <PaginationContent>
+            <PaginationItem>
+                <PaginationPrevious onClick={() => searchQuery(filters, headIndex - 30)}/>
+            </PaginationItem>
+            {currentPage > 4 && <PaginationItem>
+                <PaginationEllipsis />
+            </PaginationItem>}
+            <PaginationItem>
+                {range.map((page, index) => {
+                    return (
+                        <PaginationLink
+                            key={index}
+                            aria-pressed={currentPage == page}
+                            onClick={() => searchQueryFunc(filters, (page - 1) * 30)}
+                        >
+                            {page}
+                        </PaginationLink>)
+                })}
+            </PaginationItem>
+            {currentPage < totalPage - 3 && <PaginationItem>
+                <PaginationEllipsis />
+            </PaginationItem>}
+            <PaginationItem>
+                <PaginationNext href="#" onClick={() => searchQuery(filters, headIndex + 30)}/>
+            </PaginationItem>
+            </PaginationContent>
+        </Pagination>
     }
 
     const searchQuery = async (filters: RefineControlFormTypes, index: number = 0) => {
@@ -168,7 +172,7 @@ const CoursePage: NextPage = () => {
                     .or(filters.language.map(lang => `language.eq.${lang}`).join(','))
             if (filters.department.length)
                 temp = temp
-                    .in('department', filters.department.map(({ code }) => code))
+                    .in('department', filters.department)
             if (filters.className)
                 temp = temp
                     .or(`compulsory_for.cs.{"${filters.className}"},elective_for.cs.{"${filters.className}"}`);
@@ -243,7 +247,6 @@ const CoursePage: NextPage = () => {
         //change them to string
         router.replace('?' + queryString.stringify({
             ...filters,
-            department: filters.department.map(mod => mod.code),
         }, { arrayFormat: 'index' }))
         setFiltersState(filters);
 
@@ -262,8 +265,8 @@ const CoursePage: NextPage = () => {
 
 
     return (<>
-        {/* <div className="grid grid-cols-1 md:grid-cols-[auto_320px] w-full h-full overflow-hidden"> */}
-            <div className="flex flex-col w-full h-screen overflow-auto space-y-5 px-2 pt-2 md:pr-[320px] no-scrollbar scroll-smooth" ref={scrollRef}>
+        <div className="grid grid-cols-1 md:grid-cols-[auto_320px] overflow-hidden h-[--content-height]">
+            <div className="flex flex-col w-full h-screen overflow-auto space-y-5 px-2 pt-2 no-scrollbar scroll-smooth" ref={scrollRef}>
                 <InputControl
                     control={control}
                     name="textSearch"
@@ -308,24 +311,12 @@ const CoursePage: NextPage = () => {
                             direction="row"
                             justifyContent="center"
                         >
-                            {currentPage != 1 && <IconButton onClick={() => searchQuery(filters, 0)}>
-                                <ChevronsLeft />
-                            </IconButton>}
-                            {currentPage != 1 && <IconButton onClick={() => searchQuery(filters, headIndex - 30)}>
-                                <ChevronLeft />
-                            </IconButton>}
                             {renderPagination()}
-                            {currentPage != totalPage && <IconButton onClick={() => searchQuery(filters, headIndex + 30)}>
-                                <ChevronRight />
-                            </IconButton>}
-                            {currentPage != totalPage && <IconButton onClick={() => searchQuery(filters, (totalPage - 1) * 30)}>
-                                <ChevronsRight />
-                            </IconButton>}
                         </Stack>
                     </div>
                 </div>
             </div>
-            {!isMobile && <RefineControls control={control} onClear={handleClear} setValue={setValue}/>}
+            {!isMobile && <RefineControls form={form} control={control} onClear={handleClear} setValue={setValue}/>}
             {isMobile && <Drawer
                 size="md"
                 variant="plain"
@@ -341,9 +332,9 @@ const CoursePage: NextPage = () => {
                     },
                 }}
             >
-                <RefineControls control={control} onClear={handleClear} setValue={setValue}/>
+                <RefineControls form={form} control={control} onClear={handleClear} setValue={setValue}/>
             </Drawer>}
-        {/* </div> */}
+        </div>
         </>
 
     )
