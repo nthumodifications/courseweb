@@ -103,7 +103,7 @@ const TodaySchedule: FC<{ weather: WeatherData, alerts: AlertDefinition[] }> = (
         </Alert>
     }
 
-    return <div className="h-full w-full px-3 md:px-8 py-4 space-y-4">
+    return <div className="h-full w-full space-y-4">
         {timetableData.length == 0 && <NoClassPickedReminder/>}
         {renderPinnedApps()}
         {days.map(day => (

@@ -115,10 +115,10 @@ export default function RootLayout({
                 <html lang={params.lang} className={`${theme?.value ?? ''} ${inter.variable} ${noto.variable}`} suppressHydrationWarning>
                   <GoogleAnalytics/>
                   <ConsoleLogger/>
-                  <body className={`grid grid-cols-1 grid-rows-[56px_50px_calc(100vh-106px)] md:grid-cols-[12rem_auto] md:grid-rows-[56px_calc(100vh-56px)_12rem]`}>
+                  <body className={`grid grid-cols-1 grid-rows-[56px_calc(100vh-106px)] md:grid-cols-[12rem_auto] md:grid-rows-[56px_calc(100vh-56px)_12rem]`}>
                     <Header />
                     <SideNav />
-                    <main className='overflow-y-auto overflow-x-hidden h-full w-full scroll-smooth [&>div]:h-full'>
+                    <main className='overflow-y-auto overflow-x-hidden h-full w-full scroll-smooth [&>div]:h-full p-0 pr-4 pl-4 md:pl-10 md:pt-8 md:pr-8'>
                       {children}
                       <Suspense fallback={null}>
                         <Analytics />
