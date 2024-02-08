@@ -30,6 +30,7 @@ const userTimetableContext = createContext<ReturnType<typeof useUserTimetablePro
     addCourse: () => { },
     setTimetableTheme: () => { },
     setUserDefinedColors: () => {},
+    setColor: () => {},
     isCourseSelected: () => false,
     isLoading: true,
     error: undefined,
@@ -231,6 +232,15 @@ const useUserTimetableProvider = (loadCourse = true) => {
         })
     }
 
+    const setColor = (courseID: string, color: string) => {
+        setColorMap(colorMap => {
+            return {
+                ...colorMap,
+                [courseID]: color
+            }
+        });
+    }
+
     const isCourseSelected = useCallback((courseID: string) => {
         const semester = getSemesterFromID(courseID);
         if (!semester) throw new Error("Invalid courseID");
@@ -276,6 +286,7 @@ const useUserTimetableProvider = (loadCourse = true) => {
         isCourseSelected, 
         setTimetableTheme,
         setUserDefinedColors,
+        setColor,
         isLoading, 
         error, 
         courses
