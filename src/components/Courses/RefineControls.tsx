@@ -138,7 +138,7 @@ const AutocompleteShadcn = ({ control, name, options, label, placeholder, loadin
 }
 
 
-const RefineControls: FC<{ form: any, control: Control<RefineControlFormTypes>, setValue: UseFormSetValue<RefineControlFormTypes>, onClear: () => void }> = ({ form, control, setValue, onClear }) => {
+const RefineControls: FC<{ control: Control<RefineControlFormTypes>, setValue: UseFormSetValue<RefineControlFormTypes>, onClear: () => void }> = ({ control, setValue, onClear }) => {
     const dict = useDictionary();
     const { language } = useSettings();
     const { data: firstSpecial = [], error: error1, isLoading: load1 } = useSWR('distinct_first_specialization', async () => {
@@ -216,95 +216,92 @@ const RefineControls: FC<{ form: any, control: Control<RefineControlFormTypes>, 
                 {dict.course.refine.clear}
             </Button>
         </div>
-
-        <Form {...form}>
-            <div className='flex flex-col gap-4'>
-                <FormField
-                    control={control}
-                    name="semester"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>{dict.course.refine.semester}</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder={dict.course.refine.semester} />
-                                    </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                    {semesters.map(semester => (<SelectItem value={semester}>{semester}</SelectItem>))}
-                                </SelectContent>
-                            </Select>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                <MultiCheckboxControl control={control} name="level" options={[
-                    { value: 1, label: '1xxx' },
-                    { value: 2, label: '2xxx' },
-                    { value: 3, label: '3xxx' },
-                    { value: 4, label: '4xxx' },
-                    { value: 5, label: '5xxx' },
-                    { value: 6, label: '6xxx' },
-                    { value: 7, label: '7xxx' },
-                    { value: 8, label: '8xxx' },
-                    { value: 9, label: '9xxx' },
-                ]} label={dict.course.refine.level} />
-                <MultiCheckboxControl control={control} name="language" options={[
-                    { value: '英', label: 'English' },
-                    { value: '中', label: '國語' },
-                ]} label={dict.course.refine.language} />
-                <AutocompleteShadcn control={control} name="department" placeholder={dict.course.refine.department} multiple loading={load3} options={departments.map(dept => ({ value: dept.code, label: `${dept.code} - ${dept.name_zh}` }))} label={dict.course.refine.department} />
-                <FormField
-                    control={control}
-                    name="timeslots"
-                    render={() => (
-                        <FormItem>
-                            <FormLabel>{dict.course.refine.time}</FormLabel>
-                            <Collapsible>
-                                <div className="flex items-center justify-between space-x-4 px-4">
-                                    <h4 className="text-sm font-semibold">
-                                    {dict.course.refine.time}
-                                    </h4>
-                                    <CollapsibleTrigger asChild>
-                                    <Button variant="ghost" size="sm" className="w-9 p-0">
-                                        <ChevronsUpDown className="h-4 w-4" />
-                                        <span className="sr-only">Toggle</span>
-                                    </Button>
-                                    </CollapsibleTrigger>
-                                </div>
-                                <CollapsibleContent>
-                                    <Button variant="outline" color="neutral" size="sm" onClick={handleFillTimes}>
-                                        找沒課的時間
-                                    </Button>
-                                    <TimeslotSelectorControl control={control} />
-                                </CollapsibleContent>
-                            </Collapsible>
-                        </FormItem>
-                    )}
-                />
-                <MultiCheckboxControl control={control} name="geTarget" options={GETargetCodes.map(code => ({ value: code.code, label: `${code.code} ${language == 'zh'? code.short_zh: code.short_en}`  }))} label={dict.course.refine.geTarget} />
-                <MultiCheckboxControl control={control} name="gecDimensions" options={GECTypes.map(type => ({ value: type, label: type}))} label={dict.course.refine.gecDimensions} />
-                <AutocompleteShadcn control={control} name="className" placeholder={dict.course.refine.class} loading={load3} options={classList.map(classname => ({ value: classname, label: getFormattedClassCode(classname) }))} label={dict.course.refine.compulsory_elective} />
-                <MultiCheckboxControl control={control} name="others" options={[
-                    { value: 'xclass', label: dict.course.refine['x-class'] },
-                    { value: '16_weeks', label: dict.course.refine['16_weeks']},
-                    { value: 'extra_selection', label: dict.course.refine['extra_selection']}
-                ]} label={dict.course.refine.others} />
-                <AutocompleteShadcn control={control} name="venues" multiple placeholder={dict.course.refine.venues} loading={load4} options={venues.map(venue => ({ value: venue, label: venue }))} label={dict.course.refine.venues} />
-                <AutocompleteShadcn control={control} name="firstSpecialization" placeholder={dict.course.refine.firstSpecialization} loading={load1} options={firstSpecial.map(special => ({ value: special, label: special }))} label={dict.course.refine.specialization} />
-                <AutocompleteShadcn control={control} name="secondSpecialization" placeholder={dict.course.refine.secondSpecialization} loading={load2} options={secondSpecial.map(special => ({ value: special, label: special }))} label={dict.course.refine.specialization} />
-                <AutocompleteShadcn control={control} name="disciplines" multiple placeholder={dict.course.refine.cross_discipline} loading={load5} options={disciplines.map(discipline => ({ value: discipline, label: discipline }))} label={dict.course.refine.cross_discipline} />
-                <Button
-                    variant={'destructive'}
-                    size={'sm'}
-                    onClick={onClear}
-                >
-                    <Trash className='h-4 w-4 mr-2' />
-                    {dict.course.refine.clear}
-                </Button>
-            </div>
-        </Form>
+        <div className='flex flex-col gap-4'>
+            <FormField
+                control={control}
+                name="semester"
+                render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>{dict.course.refine.semester}</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                                <SelectTrigger>
+                                    <SelectValue placeholder={dict.course.refine.semester} />
+                                </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                {semesters.map(semester => (<SelectItem value={semester}>{semester}</SelectItem>))}
+                            </SelectContent>
+                        </Select>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+            <MultiCheckboxControl control={control} name="level" options={[
+                { value: 1, label: '1xxx' },
+                { value: 2, label: '2xxx' },
+                { value: 3, label: '3xxx' },
+                { value: 4, label: '4xxx' },
+                { value: 5, label: '5xxx' },
+                { value: 6, label: '6xxx' },
+                { value: 7, label: '7xxx' },
+                { value: 8, label: '8xxx' },
+                { value: 9, label: '9xxx' },
+            ]} label={dict.course.refine.level} />
+            <MultiCheckboxControl control={control} name="language" options={[
+                { value: '英', label: 'English' },
+                { value: '中', label: '國語' },
+            ]} label={dict.course.refine.language} />
+            <AutocompleteShadcn control={control} name="department" placeholder={dict.course.refine.department} multiple loading={load3} options={departments.map(dept => ({ value: dept.code, label: `${dept.code} - ${dept.name_zh}` }))} label={dict.course.refine.department} />
+            <FormField
+                control={control}
+                name="timeslots"
+                render={() => (
+                    <FormItem>
+                        <FormLabel>{dict.course.refine.time}</FormLabel>
+                        <Collapsible>
+                            <div className="flex items-center justify-between space-x-4 px-4">
+                                <h4 className="text-sm font-semibold">
+                                {dict.course.refine.time}
+                                </h4>
+                                <CollapsibleTrigger asChild>
+                                <Button variant="ghost" size="sm" className="w-9 p-0">
+                                    <ChevronsUpDown className="h-4 w-4" />
+                                    <span className="sr-only">Toggle</span>
+                                </Button>
+                                </CollapsibleTrigger>
+                            </div>
+                            <CollapsibleContent>
+                                <Button variant="outline" color="neutral" size="sm" onClick={handleFillTimes}>
+                                    找沒課的時間
+                                </Button>
+                                <TimeslotSelectorControl control={control} />
+                            </CollapsibleContent>
+                        </Collapsible>
+                    </FormItem>
+                )}
+            />
+            <MultiCheckboxControl control={control} name="geTarget" options={GETargetCodes.map(code => ({ value: code.code, label: `${code.code} ${language == 'zh'? code.short_zh: code.short_en}`  }))} label={dict.course.refine.geTarget} />
+            <MultiCheckboxControl control={control} name="gecDimensions" options={GECTypes.map(type => ({ value: type, label: type}))} label={dict.course.refine.gecDimensions} />
+            <AutocompleteShadcn control={control} name="className" placeholder={dict.course.refine.class} loading={load3} options={classList.map(classname => ({ value: classname, label: getFormattedClassCode(classname) }))} label={dict.course.refine.compulsory_elective} />
+            <MultiCheckboxControl control={control} name="others" options={[
+                { value: 'xclass', label: dict.course.refine['x-class'] },
+                { value: '16_weeks', label: dict.course.refine['16_weeks']},
+                { value: 'extra_selection', label: dict.course.refine['extra_selection']}
+            ]} label={dict.course.refine.others} />
+            <AutocompleteShadcn control={control} name="venues" multiple placeholder={dict.course.refine.venues} loading={load4} options={venues.map(venue => ({ value: venue, label: venue }))} label={dict.course.refine.venues} />
+            <AutocompleteShadcn control={control} name="firstSpecialization" placeholder={dict.course.refine.firstSpecialization} loading={load1} options={firstSpecial.map(special => ({ value: special, label: special }))} label={dict.course.refine.specialization} />
+            <AutocompleteShadcn control={control} name="secondSpecialization" placeholder={dict.course.refine.secondSpecialization} loading={load2} options={secondSpecial.map(special => ({ value: special, label: special }))} label={dict.course.refine.specialization} />
+            <AutocompleteShadcn control={control} name="disciplines" multiple placeholder={dict.course.refine.cross_discipline} loading={load5} options={disciplines.map(discipline => ({ value: discipline, label: discipline }))} label={dict.course.refine.cross_discipline} />
+            <Button
+                variant={'destructive'}
+                size={'sm'}
+                onClick={onClear}
+            >
+                <Trash className='h-4 w-4 mr-2' />
+                {dict.course.refine.clear}
+            </Button>
+        </div>
     </div>
 }
 

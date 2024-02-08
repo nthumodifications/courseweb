@@ -2,7 +2,7 @@
 import CourseListItem from "@/components/Courses/CourseListItem";
 import InputControl from "@/components/FormComponents/InputControl";
 import supabase, { CourseSyllabusView } from '@/config/supabase';
-import { Button, CircularProgress, Divider, Drawer, IconButton, Stack } from "@mui/joy";
+import { CircularProgress, Drawer, Stack } from "@mui/joy";
 import { NextPage } from "next";
 import { useEffect, useState, Fragment, useRef, useMemo } from "react";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter, Search, X } from "lucide-react";
@@ -14,13 +14,15 @@ import RefineControls from '@/components/Courses/RefineControls';
 import useDictionary from "@/dictionaries/useDictionary";
 import { useRouter, useSearchParams } from "next/navigation";
 import queryString from 'query-string';
-import { departments } from "@/const/departments";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
-import {Department} from '@/types/courses';
 import { TimeFilterType } from "@/components/FormComponents/TimeslotSelectorControl";
 import { event } from "@/lib/gtag";
 import {toPrettySemester} from '@/helpers/semester';
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import {FormField, Form} from '@/components/ui/form';
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator"
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 
 export type RefineControlFormTypes = {
     textSearch: string,
@@ -110,7 +112,7 @@ const CoursePage: NextPage = () => {
     const currentPage = headIndex / 30 + 1;
     const totalPage = Math.ceil(totalCount / 30);
 
-    const PAGNIATION_MAX = 7;
+    const PAGNIATION_MAX = 6;
 
     const filters = watch()
 
@@ -265,75 +267,83 @@ const CoursePage: NextPage = () => {
 
 
     return (<>
-        <div className="grid grid-cols-1 md:grid-cols-[auto_320px] overflow-hidden h-[--content-height]">
+        <div className="grid grid-cols-1 md:grid-cols-[auto_320px] overflow-hidden max-h-[--content-height]">
+        <Form {...form}>
             <div className="flex flex-col w-full h-screen overflow-auto space-y-5 px-2 pt-2 no-scrollbar scroll-smooth" ref={scrollRef}>
-                <InputControl
+                <FormField
                     control={control}
                     name="textSearch"
-                    placeholder={dict.course.list.search_placeholder}
-                    variant="soft"
-                    size="lg"
-                    sx={{ position: 'sticky', top: 0, zIndex: 10 }}
-                    startDecorator={
-                        loading? <CircularProgress size="sm"/>: <Search/>
-                    }
-                    endDecorator={
-                        <Fragment>
-                            {filters.textSearch.length > 0 && <IconButton onClick={() => setValue('textSearch', "")}>
-                                <X className="text-gray-400 p-1" />
-                            </IconButton>}
-                            {
-                                isMobile ? <>
-                                    <Divider orientation="vertical" />
-                                    <IconButton onClick={() => setOpen(true)}>
-                                        <Filter className="text-gray-400 p-1" />
-                                    </IconButton>
-                                </> : <></>
-                            }
-                        </Fragment>
-                    }
+                    render={({ field }) => (
+                        <div className="flex flex-row min-h-[44px] items-center rounded-md bg-slate-100 text-slate-400 sticky top-0 z-10">
+                            <div className="px-3">
+                                {loading? <CircularProgress size="sm"/>: 
+                                    <HoverCard>
+                                        <HoverCardTrigger><Search/></HoverCardTrigger>
+                                        <HoverCardContent className="whitespace-pre-wrap">
+                                            You can search by <br/>
+                                            - Course Name <br/>
+                                            - Teacher Name <br/>
+                                            - Course ID
+                                        </HoverCardContent>
+                                    </HoverCard>
+                                }
+                            </div>
+                            <input className="bg-transparent flex-1 text-black" placeholder={dict.course.list.search_placeholder} {...field} />
+                            <Fragment>
+                                {filters.textSearch.length > 0 && <Button size='icon' variant={"ghost"} onClick={() => setValue('textSearch', "")}>
+                                    <X className="text-gray-400 p-1" />
+                                </Button>}
+                                {
+                                    isMobile ? <>
+                                        <Separator orientation="vertical" />
+                                        <Button size='icon' variant={"ghost"} onClick={() => setOpen(true)}>
+                                            <Filter className="text-gray-400 p-1" />
+                                        </Button>
+                                    </> : <></>
+                                }
+                            </Fragment>
+                        </div>
+                    )}
                 />
-                <div className="relative">
-                    {/* loading covers all with white cover */}
-                    {loading && <div className="absolute inset-0 bg-white/60 dark:bg-neutral-900/60 z-10"></div>}
-                    <div className="flex flex-col w-full h-full space-y-4 pb-8">
-                        <div className="flex flex-row justify-between px-3 py-1 border-b dark:border-neutral-800">
-                            <h6 className="text-gray-600 dark:text-neutral-400">{toPrettySemester(filters.semester)} {dict.course.list.courses}</h6>
-                            <h6 className="text-gray-600 dark:text-neutral-400">{dict.course.list.found}: {totalCount} {dict.course.list.courses}</h6>
+                    <div className="relative">
+                        {/* loading covers all with white cover */}
+                        {loading && <div className="absolute inset-0 bg-white/60 dark:bg-neutral-900/60 z-10"></div>}
+                        <div className="flex flex-col w-full h-full space-y-4 pb-14">
+                            <div className="flex flex-row justify-between px-3 py-1 border-b dark:border-neutral-800">
+                                <h6 className="text-gray-600 dark:text-neutral-400">{toPrettySemester(filters.semester)} {dict.course.list.courses}</h6>
+                                <h6 className="text-gray-600 dark:text-neutral-400">{dict.course.list.found}: {totalCount} {dict.course.list.courses}</h6>
+                            </div>
+                            <div className="flex flex-col w-full h-full space-y-5">
+                                {renderExistingSelection()}
+                                {courses.map((course, index) => (
+                                    <CourseListItem key={index} course={course} />
+                                ))}
+                            </div>
+                            <div className="flex flex-row justify-center">
+                                {renderPagination()}
+                            </div>
                         </div>
-                        <div className="flex flex-col w-full h-full space-y-5">
-                            {renderExistingSelection()}
-                            {courses.map((course, index) => (
-                                <CourseListItem key={index} course={course} />
-                            ))}
-                        </div>
-                        <Stack
-                            direction="row"
-                            justifyContent="center"
-                        >
-                            {renderPagination()}
-                        </Stack>
                     </div>
                 </div>
-            </div>
-            {!isMobile && <RefineControls form={form} control={control} onClear={handleClear} setValue={setValue}/>}
-            {isMobile && <Drawer
-                size="md"
-                variant="plain"
-                open={open}
-                onClose={() => setOpen(false)}
-                slotProps={{
-                    content: {
-                        sx: {
-                            bgcolor: 'transparent',
-                            p: { md: 3, sm: 0 },
-                            boxShadow: 'none',
+                {!isMobile && <RefineControls control={control} onClear={handleClear} setValue={setValue}/>}
+                {isMobile && <Drawer
+                    size="md"
+                    variant="plain"
+                    open={open}
+                    onClose={() => setOpen(false)}
+                    slotProps={{
+                        content: {
+                            sx: {
+                                bgcolor: 'transparent',
+                                p: { md: 3, sm: 0 },
+                                boxShadow: 'none',
+                            },
                         },
-                    },
-                }}
-            >
-                <RefineControls form={form} control={control} onClear={handleClear} setValue={setValue}/>
-            </Drawer>}
+                    }}
+                >
+                    <RefineControls control={control} onClear={handleClear} setValue={setValue}/>
+                </Drawer>}
+            </Form>
         </div>
         </>
 
