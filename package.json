@@ -52,7 +52,7 @@
     "html-to-image": "^1.11.11",
     "iconv-lite": "^0.6.3",
     "ics": "^3.5.0",
-    "jsdom": "^22.1.0",
+    "jsdom": "^24.0.0",
     "jsonwebtoken": "^9.0.2",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.294.0",
