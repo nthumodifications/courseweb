@@ -12,7 +12,7 @@ import { useMemo } from 'react';
 import { hasConflictingTimeslots, hasSameCourse, hasTimes } from '@/helpers/courses';
 import { MinimalCourse, RawCourseID } from '@/types/courses';
 import dynamic from 'next/dynamic';
-import { Button } from '../ui/button';
+import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
 import {
@@ -38,7 +38,8 @@ import {
   restrictToVerticalAxis,
   restrictToWindowEdges,
 } from '@dnd-kit/modifiers';
-
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import Compact from '@uiw/react-color-compact';
 const DownloadTimetableDialogDynamic = dynamic(() => import('./DownloadTimetableDialog'), { ssr: false })
 const ShareSyncTimetableDialogDynamic = dynamic(() => import('./ShareSyncTimetableDialog'), { ssr: false })
 
@@ -51,7 +52,8 @@ const TimetableCourseListItem = ({ course, hasConflict, isDuplicate }: { course:
     }
     const {
         deleteCourse,
-        colorMap
+        colorMap,
+        setColor
     } = useUserTimetable();
 
     const {
@@ -70,7 +72,22 @@ const TimetableCourseListItem = ({ course, hasConflict, isDuplicate }: { course:
 
     return <div className="flex flex-row gap-4 items-center max-w-3xl" ref={setNodeRef} style={style} >
         <GripVertical className="w-4 h-4 text-gray-400" {...attributes} {...listeners} />
-        <div className="w-4 h-4 rounded-full" style={{ backgroundColor: colorMap[course.raw_id] }}></div>
+        <Popover>
+            <PopoverTrigger>
+                <div className='px-3 py-2 rounded-md hover:outline outline-1 outline-slate-400'>
+                    <div className="w-4 h-4 rounded-full" style={{ backgroundColor: colorMap[course.raw_id] }}></div>
+                    
+                </div>
+            </PopoverTrigger>
+            <PopoverContent>
+                <Compact
+                    color={colorMap[course.raw_id]}
+                    onChange={(color) => {
+                        setColor(course.raw_id, color.hex);
+                    }}                
+                />
+            </PopoverContent>
+        </Popover>
         <div className="flex flex-col flex-1">
             <span className="text-sm">{course.department} {course.course}-{course.class} {course.name_zh} - {course.teacher_zh.join(',')}</span>
             <span className="text-xs">{course.name_en}</span>
