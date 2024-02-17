@@ -173,63 +173,73 @@ const useUserTimetableProvider = (loadCourse = true) => {
     }, [semesterCourseData, semesterLoading, semesterError, colorMap]);
 
     //handlers for courses
-    const addCourse = (courseID: string) => {
+    const addCourse = (courseID: string | string[]) => {
+        const courseIDs = Array.isArray(courseID) ? courseID : [courseID];
         setCourses(courses => {
             //get first 5 characters of courseID
-            const semester = getSemesterFromID(courseID);
-            if (!semester) throw new Error("Invalid courseID");
-            const oldSemesterCourses = courses[semester] ?? [];
+            let oldCourses = { ...courses };
+            courseIDs.forEach(courseID => {
+                const semester = getSemesterFromID(courseID);
+                if (!semester) throw new Error("Invalid courseID");
+                const oldSemesterCourses = oldCourses[semester] ?? [];
 
-            //check if courseID already exists
-            if (oldSemesterCourses.includes(courseID)) return courses;
+                //check if courseID already exists
+                if (oldSemesterCourses.includes(courseID)) return;
 
-            setColorMap(colorMap => {
-                return {
-                    ...colorMap,
-                    [courseID]: currentColors[oldSemesterCourses.length % currentColors.length]
+                setColorMap(colorMap => {
+                    return {
+                        ...colorMap,
+                        [courseID]: currentColors[oldSemesterCourses.length % currentColors.length]
+                    }
+                });
+                oldCourses = {
+                    ...oldCourses,
+                    [semester]: [...oldSemesterCourses, courseID]
                 }
+                event({
+                    action: "add_course",
+                    category: "timetable",
+                    label: courseID,
+                })
             });
-
-            return {
-                ...courses,
-                [semester]: [...oldSemesterCourses, courseID]
-            }
+            return oldCourses;
+            
         });
-        
-        event({
-            action: "add_course",
-            category: "timetable",
-            label: courseID,
-        })
     }
 
-    const deleteCourse = (courseID: string) => {
+    const deleteCourse = (courseID: string | string[]) => {
+        const courseIDs = Array.isArray(courseID) ? courseID : [courseID];
         setCourses(courses => {
             //get first 5 characters of courseID
-            const semester = getSemesterFromID(courseID);
-            if (!semester) throw new Error("Invalid courseID");
-            const oldSemesterCourses = courses[semester] ?? [];
+            let oldCourses = { ...courses };
+            courseIDs.forEach(courseID => {
+                const semester = getSemesterFromID(courseID);
+                if (!semester) throw new Error("Invalid courseID");
+                const oldSemesterCourses = oldCourses[semester] ?? [];
 
-            //check if courseID already exists
-            if (!oldSemesterCourses.includes(courseID)) return courses;
+                //check if courseID already exists
+                if (!oldSemesterCourses.includes(courseID)) return;
 
-            //remove color from colorMap
-            setColorMap(colorMap => {
-                const newColorMap = { ...colorMap };
-                delete newColorMap[courseID];
-                return newColorMap;
-            });
+                //remove color from colorMap
+                setColorMap(colorMap => {
+                    const newColorMap = { ...colorMap };
+                    delete newColorMap[courseID];
+                    return newColorMap;
+                });
 
-            return {
-                ...courses,
-                [semester]: oldSemesterCourses.filter(c => c != courseID)
-            }
+                oldCourses = {
+                    ...oldCourses,
+                    [semester]: oldSemesterCourses.filter(c => c != courseID)
+                }
+                event({
+                    action: "delete_course",
+                    category: "timetable",
+                    label: courseID,
+                })
+            })
+            return oldCourses;
         });
-        event({
-            action: "delete_course",
-            category: "timetable",
-            label: courseID,
-        })
+        
     }
 
     const setColor = (courseID: string, color: string) => {
