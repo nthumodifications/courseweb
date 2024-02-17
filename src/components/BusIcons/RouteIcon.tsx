@@ -1,19 +1,14 @@
 import GreenLineIcon from "./GreenLineIcon"
 import NandaLineIcon from "./NandaLineIcon"
 import RedLineIcon from "./RedLineIcon"
+import {BusRoute, BusLine} from '@/const/bus';
 
-const RouteIcon = ({ route_name }: { route_name: string }) => {
-    switch(route_name) {
-        case 'GU': return <GreenLineIcon/>
-        case 'GUS': return <GreenLineIcon/>
-        case 'GD': return <GreenLineIcon/>
-        case 'GDS': return <GreenLineIcon/>
-        case 'RU': return <RedLineIcon/>
-        case 'RUS': return <RedLineIcon/>
-        case 'RD': return <RedLineIcon/>
-        case 'RDS': return <RedLineIcon/>
-        case 'NG': return <NandaLineIcon/>
-        case 'NB': return <NandaLineIcon/>
+const RouteIcon = ({ route, line }: { route: BusRoute, line?: BusLine }) => {
+    const routecode = route + (line ?? '');
+    switch(routecode) {
+        case '校園公車red': return <RedLineIcon/>
+        case '校園公車green': return <GreenLineIcon/>
+        case '南大區間車': return <NandaLineIcon/>
         default : return <></>
     }
 }

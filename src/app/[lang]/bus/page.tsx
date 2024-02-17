@@ -2,32 +2,14 @@
 
 import { useSettings } from "@/hooks/contexts/settings";
 import Link from "next/link";
-import { stops } from "@/const/bus";
+import { stops, stops_en } from "@/const/bus";
 import { Alert } from "@mui/joy";
 import BusDelayAlert from "./BusDelayAlert";
 
 const BusPage = () => {
-//北校門口	綜二館	楓林小徑	奕園停車場	南門停車場	台積館 人社院/生科館	楓林小徑	綜二館	北校門口
-// 北校門口
-// North Gate
-// 綜二館
-// Gen II Building
-// 楓林小徑
-// Maple Path
-// 人社院/生科館
-// CHSS/CLS Building
-// 南門停車場
-// South Gate Parking Lot
-// 奕園停車場
-// Yi Pav. Parking Lot
-// 台積館
-// TSMC Building
+    
     const { language } = useSettings();
 
-    //regex to match {any text}{U | D}
-    //U: going up
-    //D: going down
-    // regex is: [UD]{1}$
     
     return (
         <div className="py-4 flex flex-col">
@@ -36,27 +18,20 @@ const BusPage = () => {
             <div className="grid grid-cols-2">
                 <h2 className="text-4xl font-semibold pl-6 text-gray-600 py-6">上</h2>
                 <h2 className="text-4xl font-semibold bg-gray-200 dark:bg-neutral-800 pr-6 text-end py-6">下</h2>
-                {stops.slice(0,-1).map((stop, index) => (<>
-                    <Link key={index*2} href={`/${language}/bus/stop/${stop.code}U`}>
+                {stops.map((stop, index) => (<>
+                    <Link key={index*2} href={`/${language}/bus/stop/${index}_U`}>
                         <div className="flex flex-col pb-4 pl-6" key={index}>
-                            <span className="text-lg font-bold">{stop.name_zh}</span>
-                            <span className="text-xs">{stop.name_en}</span>
+                            <span className="text-lg font-bold">{stop}</span>
+                            <span className="text-xs">{stops_en[index]}</span>
                         </div>
                     </Link>
-                    <Link key={index*2+1} href={`/${language}/bus/stop/${stop.code}D`}>
+                    <Link key={index*2+1} href={`/${language}/bus/stop/${index}_D`}>
                         <div className="flex flex-col pb-4 bg-gray-200 dark:bg-neutral-800 pr-6 items-end" key={index}>
-                            <span className="text-lg font-bold">{stop.name_zh}</span>
-                            <span className="text-xs">{stop.name_en}</span>
+                            <span className="text-lg font-bold">{stop}</span>
+                            <span className="text-xs">{stops_en[index]}</span>
                         </div>
                     </Link> 
                 </>))}
-                <Link href={`/${language}/bus/stop/A8`}>
-                    <div className="flex flex-col pb-4 pl-6">
-                        <span className="text-lg font-bold">南大校區</span>
-                        <span className="text-xs">Nanda Campus</span>
-                    </div>
-                </Link>
-                <h2 className="text-4xl font-semibold bg-gray-200 dark:bg-neutral-800 pr-6 text-end py-6"></h2>
             </div>
             <div className="p-4">
                 <Alert variant="outlined" color="warning">
