@@ -184,8 +184,11 @@ const HeadlessSyncCourseButton = () => {
         setCoursesToAdd(courses_to_add);
         setLoading(false);
     }
-    return <Button variant="outline" onClick={handleSync}>
-        <FolderSync className="w-4 h-4 mr-1" /> {dict.timetable.actions.sync_ccxp}
+    return <Button variant="outline" onClick={handleSync} disabled={loading}>
+        {!loading?
+            <><FolderSync className="w-4 h-4 mr-1" /> {dict.timetable.actions.sync_ccxp}</>:
+            "Loading"
+        }
     </Button>
 }
 
