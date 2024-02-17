@@ -5,7 +5,7 @@ import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { RawCourseID, Semester } from "@/types/courses";
 import { useMemo } from "react";
 import { Minus, Plus } from "lucide-react";
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
 
 const SelectCourseButton = ({ courseId }: { courseId: RawCourseID }) => {
     const { isCourseSelected, addCourse, deleteCourse } = useUserTimetable();

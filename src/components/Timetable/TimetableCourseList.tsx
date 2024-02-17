@@ -49,7 +49,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import Compact from '@uiw/react-color-compact';
 import { useHeadlessAIS } from '@/hooks/contexts/useHeadlessAIS';
-import { toast } from '../ui/use-toast';
+import { toast } from '@/components/ui/use-toast';
 const DownloadTimetableDialogDynamic = dynamic(() => import('./DownloadTimetableDialog'), { ssr: false })
 const ShareSyncTimetableDialogDynamic = dynamic(() => import('./ShareSyncTimetableDialog'), { ssr: false })
 
