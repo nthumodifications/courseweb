@@ -19,6 +19,7 @@ import supabase from '@/config/supabase';
 import useSWR from 'swr';
 import { createTimetableFromCourses } from '@/helpers/timetable';
 import { MinimalCourse } from '@/types/courses';
+import { VenueChip } from '../Timetable/VenueChip';
 
 const TodaySchedule: FC<{ weather: WeatherData, alerts: AlertDefinition[] }> = ({ weather, alerts }) => {
     const { courses, isCoursesEmpty, colorMap, timetableData, deleteCourse } = useUserTimetable();
@@ -76,8 +77,7 @@ const TodaySchedule: FC<{ weather: WeatherData, alerts: AlertDefinition[] }> = (
                 <div className="flex flex-col rounded-md p-2 flex-1" style={{background: t.color, color: t.textColor}}>
                     <p className="font-semibold">{t.course.name_zh}</p>
                     <p className="text-xs">{t.course.name_en}</p>
-                    <Divider/>
-                    <p className="text-xs">{t.venue}</p>
+                    <div className='w-fit mt-1'><VenueChip venue={t.venue} color={t.textColor} textColor={t.color}/></div>
                 </div>
             </div>
         ))
