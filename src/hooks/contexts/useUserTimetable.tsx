@@ -35,6 +35,7 @@ const userTimetableContext = createContext<ReturnType<typeof useUserTimetablePro
     isLoading: true,
     error: undefined,
     semester: lastSemester.id,
+    isCoursesEmpty: true,
     setSemester: () => { }
 });
 
@@ -277,6 +278,10 @@ const useUserTimetableProvider = (loadCourse = true) => {
         return colors[timetableTheme];
     }, [timetableTheme, userDefinedColors]);
 
+    const isCoursesEmpty = useMemo(() => {
+        return Object.keys(courses).length == 0;
+    }, [courses]);
+
 
     return {
         timetableData, 
@@ -298,6 +303,7 @@ const useUserTimetableProvider = (loadCourse = true) => {
         setUserDefinedColors,
         setColor,
         isLoading, 
+        isCoursesEmpty,
         error, 
         courses
     };

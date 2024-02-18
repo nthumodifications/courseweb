@@ -14,4 +14,10 @@ export const currentSemester = semesterInfo.find(semester => {
     return now >= semester.begins && now <= semester.ends;
 });
 
+export const getSemester = (date: Date) => {
+    return semesterInfo.find(semester => {
+        return date >= semester.begins && date <= semester.ends;
+    });
+}
+
 export const lastSemester = semesterInfo[semesterInfo.length- 1];
