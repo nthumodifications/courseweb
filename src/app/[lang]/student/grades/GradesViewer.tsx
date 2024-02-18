@@ -185,13 +185,14 @@ const GPAChart = ({ lineData }: { lineData: any[] }) => {
                     }}
                 />
                 <XAxis dataKey="semester" />
-                <YAxis />
+                <YAxis domain={[0,4.3]}/>
             </LineChart>
         </ResponsiveContainer>
     </div>
 }
 
 const ClassRankChart = ({ lineData }: { lineData: any[] }) => {
+    const max_class_rank = Math.max(...lineData.map(semester => semester.max_class_rank));
     return <div className="h-[200px]">
         <ResponsiveContainer width="100%" height="100%">
             <LineChart
@@ -242,13 +243,14 @@ const ClassRankChart = ({ lineData }: { lineData: any[] }) => {
                     }}
                 />
                 <XAxis dataKey="semester" />
-                <YAxis reversed/>
+                <YAxis reversed domain={[1, max_class_rank]}/>
             </LineChart>
         </ResponsiveContainer>
     </div>
 }
 
 const DeptRankChart = ({ lineData }: { lineData: any[] }) => {
+    const max_dept_rank = Math.max(...lineData.map(semester => semester.max_dept_rank));
     return <div className="h-[200px]">
         <ResponsiveContainer width="100%" height="100%">
             <LineChart
@@ -299,7 +301,7 @@ const DeptRankChart = ({ lineData }: { lineData: any[] }) => {
                     }}
                 />
                 <XAxis dataKey="semester" />
-                <YAxis reversed/>
+                <YAxis reversed domain={[1, max_dept_rank]}/>
             </LineChart>
         </ResponsiveContainer>
     </div>
@@ -329,7 +331,9 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
         semester: semester.year + semester.semester,
         gpa: semester.gpa,
         class_rank: semester.letter_class_rank.split("/")[0] ?? 0,
-        dept_rank: semester.letter_dept_rank.split("/")[0] ?? 0
+        max_class_rank: semester.letter_class_rank.split("/")[1] ?? 0,
+        dept_rank: semester.letter_dept_rank.split("/")[0] ?? 0,
+        max_dept_rank: semester.letter_dept_rank.split("/")[1] ?? 0,
     }));
 
     const [tab, setTab] = useState<"courses" | "semester">("courses");
