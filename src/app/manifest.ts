@@ -12,6 +12,13 @@ export default function manifest(): MetadataRoute.Manifest {
         start_url: 'https://nthumods.com',
         lang: 'zh',
         dir: 'auto',
-        theme_color: '#7e1083'
+        theme_color: '#7e1083',
+        icons: [
+            {
+              src: '/favicon.ico',
+              sizes: 'any',
+              type: 'image/x-icon',
+            },
+        ],
     }
 }
