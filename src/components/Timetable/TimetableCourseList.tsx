@@ -177,10 +177,10 @@ const HeadlessSyncCourseButton = () => {
             courses: string[]
         };
         //remove courses that are not in the latest
-        const courses_to_remove = courses[res.semester].filter(id => !res.courses.includes(id));
+        const courses_to_remove = (courses[res.semester] ?? []).filter(id => !res.courses.includes(id));
         deleteCourse(courses_to_remove);
         //add courses that are not in the current
-        const courses_to_add = res.courses.filter(id => !courses[res.semester].includes(id));
+        const courses_to_add = res.courses.filter(id => !(courses[res.semester] ?? []).includes(id));
         setCoursesToAdd(courses_to_add);
         setLoading(false);
     }
