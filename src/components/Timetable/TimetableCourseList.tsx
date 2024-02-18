@@ -50,6 +50,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import Compact from '@uiw/react-color-compact';
 import { useHeadlessAIS } from '@/hooks/contexts/useHeadlessAIS';
 import { toast } from '../ui/use-toast';
+import {event} from '@/lib/gtag';
 const DownloadTimetableDialogDynamic = dynamic(() => import('./DownloadTimetableDialog'), { ssr: false })
 const ShareSyncTimetableDialogDynamic = dynamic(() => import('./ShareSyncTimetableDialog'), { ssr: false })
 
@@ -162,6 +163,11 @@ const HeadlessSyncCourseButton = () => {
                 title: 'Sync Succesful!',
                 description: 'Courses are added to your timetable.',
             })
+            event({
+                action: "sync_ccxp_courses",
+                category: "ccxp",
+                label: "sync_ccxp_courses",
+            });
         }
     }, [courses, coursesToAdd]);
 
