@@ -96,7 +96,7 @@ const useUserTimetableProvider = (loadCourse = true) => {
 
 
     //sort courses[semester]： string[] and put as key_display_ids
-    const key_display_ids = useMemo(() => (courses[semester] ?? []).toSorted(), [courses, semester]);
+    const key_display_ids = useMemo(() => [...(courses[semester] ?? [])].sort(), [courses, semester]);
 
     const { data: display_courses = [], error, isLoading } = useSWR(['courses', key_display_ids], async ([table, courseCodes]) => {
         if(!courseCodes) return [];
@@ -124,7 +124,7 @@ const useUserTimetableProvider = (loadCourse = true) => {
     // });
 
     //rewrite semesterCourseData like displayCourseData
-    const key_semester_ids = useMemo(() => (currentSemester ? (courses[currentSemester.id] ?? []) : null ?? []).toSorted(), [courses, currentSemester]);
+    const key_semester_ids = useMemo(() => [...(currentSemester ? (courses[currentSemester.id] ?? []) : null ?? [])].sort(), [courses, currentSemester]);
     const { data: semester_courses = [], error: semesterError, isLoading: semesterLoading } = useSWR(['courses', key_semester_ids], async ([table, courseCodes]) => {
         if(!courseCodes) return [];
         const { data = [], error } = await supabase.rpc('search_courses_with_syllabus', { keyword: "" }).in('raw_id', courseCodes);

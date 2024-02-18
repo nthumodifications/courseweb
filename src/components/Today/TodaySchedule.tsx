@@ -27,7 +27,7 @@ const TodaySchedule: FC<{ weather: WeatherData, alerts: AlertDefinition[] }> = (
     const dict = useDictionary();
 
     //sort courses[semester]： string[] and put as key_display_ids
-    const key_display_ids = useMemo(() => (courses[lastSemester.id] ?? []).toSorted(), [courses, lastSemester]);
+    const key_display_ids = useMemo(() => [...([courses[lastSemester.id]] ?? [])].sort(), [courses, lastSemester]);
 
     const { data: display_courses = [], error, isLoading } = useSWR(['courses', key_display_ids], async ([table, courseCodes]) => {
         if(!courseCodes) return [];
