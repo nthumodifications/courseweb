@@ -82,7 +82,7 @@ const TimetableCourseListItem = ({ course, hasConflict, isDuplicate }: { course:
         transition,
     };
 
-    return <div className="flex flex-row gap-4 items-center max-w-3xl" ref={setNodeRef} style={style} >
+    return <div className="flex flex-row gap-2 items-center max-w-3xl" ref={setNodeRef} style={style} >
         <GripVertical className="w-4 h-4 text-gray-400" {...attributes} {...listeners} />
         <Popover>
             <PopoverTrigger>
@@ -129,7 +129,7 @@ const TimetableCourseListItem = ({ course, hasConflict, isDuplicate }: { course:
                 <Button className='rounded-r-none ' variant="outline" size="icon" onClick={() => handleCopyClipboard(course.raw_id)}>
                     <Copy className="w-4 h-4" />
                 </Button>
-                <Button className='rounded-none border-x-0' asChild variant="outline" size="icon" onClick={() => handleCopyClipboard(course.raw_id)}>
+                <Button className='rounded-none border-x-0' asChild variant="outline" size="icon">
                     <Link href={`/${language}/courses/${course.raw_id}`}>
                         <ExternalLink className="w-4 h-4" />
                     </Link>
