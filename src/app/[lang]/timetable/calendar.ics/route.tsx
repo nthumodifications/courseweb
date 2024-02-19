@@ -51,7 +51,7 @@ export async function GET(request: Request) {
                     new Date(),
                 ), 'Asia/Taipei');
                 const end = zonedTimeToUtc(parse(
-                    scheduleTimeSlots[course.startTime]!.end,
+                    scheduleTimeSlots[course.endTime]!.end,
                     'HH:mm',
                     new Date()
                 ), 'Asia/Taipei');
