@@ -61,11 +61,12 @@ export async function GET(request: Request) {
                     title: course.course.name_zh!,
                     description: `${course.course.name_en!}\n${course.course.teacher_zh}\n${course.course.teacher_en}\nhttps://nthumods.com/courses/${course.course.raw_id}`,
                     location: course.venue,
-                    start: [semStart.getFullYear(), semStart.getMonth(), semStart.getDate()+course.dayOfWeek, getHours(start), getMinutes(start)],
-                    end: [semStart.getFullYear(), semStart.getMonth(), semStart.getDate()+course.dayOfWeek, getHours(end), getMinutes(end)],
+                    start: [semStart.getFullYear(), semStart.getMonth()+1, semStart.getDate()+course.dayOfWeek, getHours(start), getMinutes(start)],
+                    end: [semStart.getFullYear(), semStart.getMonth()+1, semStart.getDate()+course.dayOfWeek, getHours(end), getMinutes(end)],
                     calName: 'NTHUMods',
+                    
                     recurrenceRule: `FREQ=WEEKLY;BYDAY=${day};INTERVAL=1;UNTIL=${formatDateTime(semEnd)}`
-                }
+                } 
             }))
             if(icss.error) throw icss.error;
             return new Response(icss.value!, { status: 200, headers: { 'Content-Type': 'text/calendar' } })
