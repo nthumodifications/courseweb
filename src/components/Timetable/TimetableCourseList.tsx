@@ -218,7 +218,7 @@ const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, set
 
 
     const handleShowShareDialog = () => {
-        const shareLink = `https://nthumods.com/timetable?${Object.keys(courses).map(sem => `semester_${sem}=${courses[sem].map(id => encodeURI(id)).join(',')}`).join('&')}`
+        const shareLink = `https://nthumods.com/timetable/view?${Object.keys(courses).map(sem => `semester_${sem}=${courses[sem].map(id => encodeURI(id)).join(',')}`).join('&')}&colorMap=${encodeURIComponent(JSON.stringify(colorMap))}`
         const webcalLink = ``
         const handleCopy = () => {
             navigator.clipboard.writeText(shareLink);
