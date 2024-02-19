@@ -59,10 +59,10 @@ export async function GET(request: Request) {
 
                 return {
                     title: course.course.name_zh!,
-                    description: `${course.course.name_en!}\n${course.course.teacher_zh}\n${course.course.teacher_en}\nhttps://nthumods.com/courses/${course.course.raw_id}`,
+                    description: `${course.course.name_en!}\n${course.course.teacher_zh}\n${course.course.teacher_en}\nhttps://nthumods.com/courses/${encodeURIComponent(course.course.raw_id)}`,
                     location: course.venue,
-                    start: [semStart.getFullYear(), semStart.getMonth()+1, semStart.getDate()+course.dayOfWeek, getHours(start), getMinutes(start)],
-                    end: [semStart.getFullYear(), semStart.getMonth()+1, semStart.getDate()+course.dayOfWeek, getHours(end), getMinutes(end)],
+                    start: [semStart.getFullYear(), semStart.getMonth()+1, semStart.getDate()+1+course.dayOfWeek, getHours(start), getMinutes(start)],
+                    end: [semStart.getFullYear(), semStart.getMonth()+1, semStart.getDate()+1+course.dayOfWeek, getHours(end), getMinutes(end)],
                     calName: 'NTHUMods',
                     
                     recurrenceRule: `FREQ=WEEKLY;BYDAY=${day};INTERVAL=1;UNTIL=${formatDateTime(semEnd)}`
