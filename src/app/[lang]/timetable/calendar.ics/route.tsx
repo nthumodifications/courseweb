@@ -23,6 +23,21 @@ export async function GET(request: Request) {
     const semStart = zonedTimeToUtc(semesterObj.begins, 'Asia/Taipei');
     const semEnd = zonedTimeToUtc(semesterObj.ends, 'Asia/Taipei');
 
+    function formatDateTime(date: Date) {
+        const year = date.getUTCFullYear();
+        const month = pad(date.getUTCMonth() + 1);
+        const day = pad(date.getUTCDate());
+        const hour = pad(date.getUTCHours());
+        const minute = pad(date.getUTCMinutes());
+        const second = pad(date.getUTCSeconds());
+        return `${year}${month}${day}T${hour}${minute}${second}Z`;
+      }
+      
+      function pad(i:number) {
+        return i < 10 ? `0${i}` : `${i}`;
+      }
+      
+
     try {
         let { data = [], error } = await supabase.from('courses').select("*").in('raw_id', courses_ids);
         if (error) throw error;
@@ -44,12 +59,12 @@ export async function GET(request: Request) {
 
                 return {
                     title: course.course.name_zh!,
-                    description: `${course.course.name_zh!}\n${course.course.name_en!}}\n${course.course.raw_id}`,
+                    description: `${course.course.name_en!}\n${course.course.teacher_zh}\n${course.course.teacher_en}\nhttps://nthumods.com/courses/${course.course.raw_id}`,
                     location: course.venue,
                     start: [semStart.getFullYear(), semStart.getMonth(), semStart.getDate()+course.dayOfWeek, getHours(start), getMinutes(start)],
                     end: [semStart.getFullYear(), semStart.getMonth(), semStart.getDate()+course.dayOfWeek, getHours(end), getMinutes(end)],
                     calName: 'NTHUMods',
-                    recurrenceRule: `FREQ=WEEKLY;BYDAY=${day};INTERVAL=1;UNTIL=${formatISO(semEnd, { representation: 'date' })}`
+                    recurrenceRule: `FREQ=WEEKLY;BYDAY=${day};INTERVAL=1;UNTIL=${formatDateTime(semEnd)}`
                 }
             }))
             if(icss.error) throw icss.error;
