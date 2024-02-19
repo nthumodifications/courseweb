@@ -180,7 +180,6 @@ const getStudentGrades = async (ACIXSTORE: string) => {
         cumulative: ranking_cum
     }
     
-    console.log(ranking_cum)
     return {
         student,
         credits,
