@@ -230,7 +230,7 @@ const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, set
     }
 
     const handleDownloadDialog = () => {
-        const icsfileLink = `https://nthumods.com/timetable/calendar.ics?semester=${semester}&${Object.keys(courses).map(sem => `semester_${sem}=${courses[sem].map(id => encodeURI(id)).join(',')}`).join('&')}`
+        const icsfileLink = `https://nthumods.com/timetable/calendar.ics?semester=${semester}&${`semester_${semester}=${courses[semester].map(id => encodeURI(id)).join(',')}`}`
         openModal({
             children: <DownloadTimetableDialogDynamic onClose={closeModal} icsfileLink={icsfileLink} />
         });

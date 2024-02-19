@@ -14,7 +14,7 @@ export async function GET(request: Request) {
     const semester = searchParams.get('semester');
     const semesterObj = semesterInfo.find(sem => sem.id == semester);
     const courses_ids = searchParams.get('semester_'+semester)?.split(',')!;
-    const theme = searchParams.get('theme') || 'pastelColors';
+    const theme = searchParams.get('theme') || Object.keys(timetableColors)[0];
 
     if (!semester || !semesterObj || !courses_ids) return NextResponse.redirect('https://nthumods.com', { status: 500 });
 

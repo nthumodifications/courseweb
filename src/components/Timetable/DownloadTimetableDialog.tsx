@@ -75,7 +75,6 @@ const DownloadTimetableDialog = ({ onClose, icsfileLink }: { onClose: () => void
                 <Button
                     onClick={handleDownloadCalendar}
                     variant="outlined"
-                    disabled
                     startDecorator={<Download className="w-4 h-4" />}
                 >{dict.dialogs.DownloadTimetableDialog.buttons.ICS}</Button>
                 <DownloadTimetableComponent/>
