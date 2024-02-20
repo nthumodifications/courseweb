@@ -21,7 +21,7 @@ interface ShopItemProps {
 
 const checkOpen = (schedule: string) => {
   if (schedule == "24小時") {
-    return [true, '營業中，24小時營業']
+    return [true, '24小時營業']
   }
   if (schedule == "") {
     return [false, '今日休息']
@@ -37,10 +37,10 @@ const checkOpen = (schedule: string) => {
       let startTime = startHour * 60 + startMin
       let endTime = endHour * 60 + endMin
       if (nowTime >= startTime && nowTime <= endTime) {
-        return [true, `營業中，剩餘${endHour - now.getHours()}小時${endMin - now.getMinutes()}分`]
+        return [true, `剩餘${endHour - now.getHours()}小時${endMin - now.getMinutes()}分`]
       }
       else {
-        return [false, `休息中，將於${startHour}點${startMin}分開始營業`]
+        return [false, `將於${startHour}點${startMin}分開始營業`]
       }
     }
   }
@@ -53,10 +53,10 @@ const checkOpen = (schedule: string) => {
     let startTime = startHour * 60 + startMin
     let endTime = endHour * 60 + endMin
     if (nowTime >= startTime && nowTime <= endTime) {
-      return [true, `營業中，剩餘${endHour - now.getHours()}小時${endMin - now.getMinutes()}分`]
+      return [true, `剩餘${endHour - now.getHours()}小時${endMin - now.getMinutes()}分`]
     }
     else {
-      return [false, `休息中，將於${startHour}點${startMin}分開始營業`]
+      return [false, `將於${startHour}點${startMin}分開始營業`]
     }
   }
   return [false, 'No info']
@@ -95,12 +95,12 @@ const ShopItem: React.FC<ShopItemProps> = ({ shop, filter }) => {
           <div className="flex items-center gap-1 mt-2">
             {isOpen ?
               <div className="flex gap-2 items-center">
-                <Badge>Open</Badge>
+                <Badge>營業中</Badge>
                 <span className="text-muted-foreground text-sm">{msg}</span>
               </div>
               :
               <div className="flex gap-2 items-center">
-                <Badge variant="destructive">Closed</Badge> 
+                <Badge variant="destructive">休息中</Badge> 
                 <span className="text-muted-foreground text-sm">{msg}</span>
               </div>
             }
