@@ -11,6 +11,11 @@ interface ShopItemProps {
     phone?: string;
     schedule: { [key: string]: string };
     note?: string;
+  },
+  filter: {
+    search: string;
+    open: boolean;
+    area: string;
   };
 }
 
@@ -57,11 +62,23 @@ const checkOpen = (schedule: string) => {
   return [false, 'No info']
 }
 
-const ShopItem: React.FC<ShopItemProps> = ({ shop }) => {
+const ShopItem: React.FC<ShopItemProps> = ({ shop, filter }) => {
   const days = ['sunday', 'weekday', 'weekday', 'weekday', 'weekday', 'weekday', 'saturday']
   const today = days[new Date().getDay()]
 
   let [isOpen, msg] = checkOpen(shop.schedule[today])
+
+  if (filter && filter.search && !shop.name.toLowerCase().includes(filter.search.toLowerCase())) {
+    return null
+  }
+
+  if (filter && filter.open && !isOpen) {
+    return null
+  }
+
+  if (filter && filter.area && filter.area !== shop.area && filter.area !== 'anywhere') {
+    return null
+  }
 
   return (
     <div className="flex gap-6">

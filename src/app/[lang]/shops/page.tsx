@@ -14,18 +14,17 @@ import {
 } from "@/components/ui/select"
 import shops from "./shops.json"
 import ShopItem from "./ShopItem"
+import areas from "./areas.json"
 
 const Shops = () => {
-
-  const days = ['sunday', 'weekday', 'weekday', 'weekday', 'weekday', 'weekday', 'saturday']
-  const today = days[new Date().getDay()]
-
   const [search, setSearch] = useState('')
+  const [filterOpen, setFilterOpen] = useState(false)
+  const [filterArea, setFilterArea] = useState('')
 
   return (
     <div className="p-8 mb-2">
 
-      <div className="sticky top-8 bg-background">
+      <div className="sticky top-8">
         <div className="flex items-center gap-4 bg-muted px-4 py-2 rounded-lg">
           <Search />
           <Input
@@ -44,15 +43,15 @@ const Shops = () => {
         )}
 
         <div className="flex gap-2 mt-4">
-          <Toggle className="flex items-center gap-2 border bg-background">
+          <Toggle className="flex items-center gap-2 border bg-background" pressed={filterOpen} onPressedChange={setFilterOpen}>
             <AlarmClockCheck size="16" />
             Open now
           </Toggle>
-          <Toggle className="flex items-center gap-2 border bg-background">
+          {/* <Toggle className="flex items-center gap-2 border bg-background">
             <MapPinned size="16" />
             Near me
-          </Toggle>
-          <Select>
+          </Toggle> */}
+          <Select value={filterArea} onValueChange={setFilterArea}>
             <SelectTrigger className="w-[180px]">
               <div className="flex items-center gap-2">
                 <Store size="16" />
@@ -60,9 +59,10 @@ const Shops = () => {
               </div>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="light">a</SelectItem>
-              <SelectItem value="dark">b</SelectItem>
-              <SelectItem value="system">c</SelectItem>
+              <SelectItem value="anywhere">Anywhere</SelectItem>
+              {areas.map((area) => (
+                <SelectItem value={area}>{area}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -70,7 +70,7 @@ const Shops = () => {
 
       <div className="flex flex-col gap-12 py-4">
         {shops.map((shop, index) => (
-          <ShopItem shop={shop} />
+          <ShopItem shop={shop} filter={{ search: search, open: filterOpen, area: filterArea }} />
         ))}
       </div>
 
