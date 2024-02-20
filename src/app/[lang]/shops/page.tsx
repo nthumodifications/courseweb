@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import shops from "./shops.json"
+import ShopItem from "./ShopItem"
 
 const Shops = () => {
 
@@ -69,45 +70,7 @@ const Shops = () => {
 
       <div className="flex flex-col gap-12 py-4">
         {shops.map((shop, index) => (
-          <div className="flex gap-6">
-            <div className="flex flex-col">
-              <img src={shop.image} alt={shop.name} className="w-32 h-32 rounded-3xl object-cover" />
-              <div className="flex justify-center -translate-y-3">
-                <Badge
-                  variant={shop.schedule[today] ? 'default' : 'destructive'}
-                  className="text-sm"
-                >
-                  {shop.schedule[today] ? 'Open' : 'Closed'}
-                </Badge>
-              </div>
-            </div>
-            <div className="flex-1">
-              <div className="flex flex-col">
-                <span className="font-bold text-xl">{shop.name}</span>
-                <div className="flex items-center gap-1">
-                  <MapPin size="14" />
-                  <span className="text-muted-foreground text-sm">{shop.area}</span>
-                </div>
-              </div>
-              <Separator className="my-4" />
-              <div className="flex flex-col">
-                <div className="flex items-center gap-1">
-                  <Phone size="14" />
-                  <span className="text-muted-foreground text-sm">{shop.phone || '無'}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Clock size="14" />
-                  <span className="text-muted-foreground text-sm">{shop.schedule[today] || '今日休息'}</span>
-                </div>
-                {shop.note && (
-                  <div className="flex items-center gap-1">
-                    <Info size="14" />
-                    <span className="text-muted-foreground text-sm">{shop.note}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+          <ShopItem shop={shop} />
         ))}
       </div>
 
