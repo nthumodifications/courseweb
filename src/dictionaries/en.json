@@ -130,6 +130,15 @@
             }
         }
     },
+    "shops": {
+        "search_placeholder": "Search for shops",
+        "search_results_prefix": "Search results for",
+        "open_now": "Open Now",
+        "closed": "Closed",
+        "closed_today": "Closed Today",
+        "area_placeholder": "Select area",
+        "area_all": "Anywhere"
+    },
     "help": {
         "intro": {
             "title": "Welcome to NTHUMODS",

@@ -2,6 +2,7 @@ import React from 'react';
 import { Badge } from "@/components/ui/badge"
 import { MapPin, Phone, Clock, Info } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
+import useDictionary from '@/dictionaries/useDictionary';
 
 interface ShopItemProps {
   shop: {
@@ -65,6 +66,7 @@ const checkOpen = (schedule: string) => {
 const ShopItem: React.FC<ShopItemProps> = ({ shop, filter }) => {
   const days = ['sunday', 'weekday', 'weekday', 'weekday', 'weekday', 'weekday', 'saturday']
   const today = days[new Date().getDay()]
+  const dict = useDictionary();
 
   let [isOpen, msg] = checkOpen(shop.schedule[today])
 
@@ -99,12 +101,12 @@ const ShopItem: React.FC<ShopItemProps> = ({ shop, filter }) => {
           <div className="flex items-center gap-1 mt-2">
             {isOpen ?
               <div className="flex gap-2 flex-col sm:items-center sm:flex-row">
-                <Badge className="w-max">營業中</Badge>
+                <Badge className="w-max">{dict.shops.open_now}</Badge>
                 <span className="text-muted-foreground text-sm">{msg}</span>
               </div>
               :
               <div className="flex gap-2 flex-col sm:items-center sm:flex-row">
-                <Badge className="w-max" variant="destructive">休息中</Badge> 
+                <Badge className="w-max" variant="destructive">{dict.shops.closed}</Badge> 
                 <span className="text-muted-foreground text-sm">{msg}</span>
               </div>
             }
@@ -121,12 +123,12 @@ const ShopItem: React.FC<ShopItemProps> = ({ shop, filter }) => {
                 </span>
               ))
             ) : (
-              <span className="text-muted-foreground text-sm">無</span>
+              <span className="text-muted-foreground text-sm">-</span>
             )}
           </div>
           <div className="grid grid-cols-[1.5rem_auto]">
             <Clock size="14" className="self-center" />
-            <span className="text-muted-foreground text-sm">{shop.schedule[today] || '今日休息'}</span>
+            <span className="text-muted-foreground text-sm">{shop.schedule[today] || dict.shops.closed_today}</span>
           </div>
           {shop.note && (
             <div className="grid grid-cols-[1.5rem_auto]">

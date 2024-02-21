@@ -130,6 +130,15 @@
             }
         }
     },
+    "shops": {
+        "search_placeholder": "你要的店家是？",
+        "search_results_prefix": "找到",
+        "open_now": "營業中",
+        "closed": "休息中",
+        "closed_today": "今日休息",
+        "area_placeholder": "選擇地區",
+        "area_all": "全部"
+    },
     "help": {
         "intro": {
             "title": "歡迎來到NTHUMODS",
