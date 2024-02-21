@@ -83,7 +83,11 @@ const ShopItem: React.FC<ShopItemProps> = ({ shop, filter }) => {
   return (
     <div className="flex gap-6">
       <div className="flex flex-col">
-        <img src={shop.image} alt={shop.name} className="w-32 h-32 rounded-3xl object-cover" />
+        <img 
+          src={shop.image}
+          alt={shop.name}
+          className="w-24 h-24 sm:w-32 sm:h-32 rounded-3xl object-cover"
+        />
       </div>
       <div className="flex-1">
         <div className="flex flex-col">
@@ -94,13 +98,13 @@ const ShopItem: React.FC<ShopItemProps> = ({ shop, filter }) => {
           </div>
           <div className="flex items-center gap-1 mt-2">
             {isOpen ?
-              <div className="flex gap-2 items-center">
-                <Badge>營業中</Badge>
+              <div className="flex gap-2 flex-col sm:items-center sm:flex-row">
+                <Badge className="w-max">營業中</Badge>
                 <span className="text-muted-foreground text-sm">{msg}</span>
               </div>
               :
-              <div className="flex gap-2 items-center">
-                <Badge variant="destructive">休息中</Badge> 
+              <div className="flex gap-2 flex-col sm:items-center sm:flex-row">
+                <Badge className="w-max" variant="destructive">休息中</Badge> 
                 <span className="text-muted-foreground text-sm">{msg}</span>
               </div>
             }
@@ -108,17 +112,25 @@ const ShopItem: React.FC<ShopItemProps> = ({ shop, filter }) => {
         </div>
         <Separator className="my-4" />
         <div className="flex flex-col">
-          <div className="flex items-center gap-1">
-            <Phone size="14" />
-            <span className="text-muted-foreground text-sm">{shop.phone || '無'}</span>
+          <div className="grid grid-cols-[1.5rem_auto]">
+            <Phone size="14" className="self-center" />
+            {shop.phone ? (
+              shop.phone.split(',').map((phone, index) => (
+                <span key={index} className={'text-muted-foreground text-sm ' + (index ? 'col-start-2' : '')}>
+                  {phone}
+                </span>
+              ))
+            ) : (
+              <span className="text-muted-foreground text-sm">無</span>
+            )}
           </div>
-          <div className="flex items-center gap-1">
-            <Clock size="14" />
+          <div className="grid grid-cols-[1.5rem_auto]">
+            <Clock size="14" className="self-center" />
             <span className="text-muted-foreground text-sm">{shop.schedule[today] || '今日休息'}</span>
           </div>
           {shop.note && (
-            <div className="flex items-center gap-1">
-              <Info size="14" />
+            <div className="grid grid-cols-[1.5rem_auto]">
+              <Info size="14" className="mt-[3px]" />
               <span className="text-muted-foreground text-sm">{shop.note}</span>
             </div>
           )}
