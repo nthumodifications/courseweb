@@ -102,7 +102,7 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes>, setValue: U
             p: isMobile?3:2, 
             borderRadius: 'sm', 
             width: isMobile?`min(35rem, 100%)`:300, 
-            height: '100%', 
+            height: isMobile?'100%':'calc(100% - 21rem)', 
             maxHeight:isMobile?'100vh':'90vh', 
             overflowY: 'auto', 
             overflowX: 'hidden', 

@@ -20,6 +20,7 @@ import {Department} from '@/types/courses';
 import { TimeFilterType } from "@/components/FormComponents/TimeslotSelectorControl";
 import { event } from "@/lib/gtag";
 import {toPrettySemester} from '@/helpers/semester';
+import Timetable from "@/components/Courses/Timetable";
 
 export type RefineControlFormTypes = {
     textSearch: string,
@@ -325,6 +326,7 @@ const CoursePage: NextPage = () => {
                     </div>
                 </div>
             </div>
+            {!isMobile && <Timetable />}
             {!isMobile && <RefineControls control={control} onClear={handleClear} setValue={setValue}/>}
             {isMobile && <Drawer
                 size="md"
