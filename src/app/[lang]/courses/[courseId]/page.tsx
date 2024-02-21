@@ -168,7 +168,7 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                             <Accordion type="single" collapsible className="w-full">
                                 {reviews.map((m, index) =>
                                     <AccordionItem key={index} value={m.date}>
-                                        <AccordionTrigger>{index + 1}. {format(new Date(m.date), 'yyyy-MM-dd')} 的心得</AccordionTrigger>
+                                        <AccordionTrigger>{index + 1}. {format(new Date(m.date ?? 0), 'yyyy-MM-dd')} 的心得</AccordionTrigger>
                                         <AccordionContent>
                                             <p className="whitespace-pre-line text-sm">{m.content}</p>
                                         </AccordionContent>

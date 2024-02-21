@@ -6,7 +6,10 @@
     "timetable":{
         "actions": {
             "download": "下載",
-            "share": "分享/同步"
+            "share": "分享/同步",
+            "horizontal_view": "水平視圖",
+            "vertical_view": "垂直視圖",
+            "sync_ccxp": "同步校務系統"
         }
     },
     "course": {

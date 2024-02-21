@@ -143,7 +143,7 @@ const getStudentGrades = async (ACIXSTORE: string) => {
     const ranking_cum_row = ranking_rows[ranking_rows.length - 1];
     const ranking_cum_cells = ranking_cum_row.querySelectorAll('td > div');
     // in each cell, get firstChild textContent which is the chinese text, then regex to extract the ranking and total number of students
-    const letter_cum = ranking_cum_cells[0].firstChild?.textContent?.trim();
+    const letter_cum = Array.from(ranking_cum_cells[0]?.childNodes).find(n => n.textContent?.startsWith('等級制累計系排名'))?.textContent?.trim();
     const letter_cum_regex = /等級制累計系排名\/總人數、累計班排名\/總人數、GPA\(至(?<gpa_cum_year_tw>.+)\)： (?<letter_cum_dept_rank>.+)、(?<letter_cum_class_rank>.+)、(?<gpa>.+)/;
     const letter_cum_match = letter_cum?.match(letter_cum_regex);
     const letter = {
@@ -179,7 +179,7 @@ const getStudentGrades = async (ACIXSTORE: string) => {
         data: ranking_data,
         cumulative: ranking_cum
     }
-
+    
     return {
         student,
         credits,

@@ -115,19 +115,19 @@ const SemesterGradeCard = ({ semester }: { semester: GradeObject['ranking']['dat
     </Dialog>
 }
 
-const GradeCard = ({ title, data }: { title: string, data: string }) => <div className=" p-2 bg-white flex-col justify-center items-center gap-2 inline-flex flex-1">
-    <div className="text-center text-zinc-500 text-sm font-medium leading-none">{title}</div>
-    <div className="text-center text-zinc-900 text-2xl font-semibold">{data}</div>
+const GradeCard = ({ title, data }: { title: string, data: string }) => <div className=" p-2 flex-col justify-center items-center gap-2 inline-flex flex-1">
+    <div className="text-center text-zinc-500 dark:text-zinc-400 text-sm font-medium leading-none">{title}</div>
+    <div className="text-center text-zinc-900 dark:text-zinc-100 text-2xl font-semibold">{data}</div>
 </div>
 
 const GradeOverview = ({ grades }: { grades: GradeObject }) => {
-    return <div className="w-full rounded-lg shadow border border-slate-200 justify-start items-start inline-flex flex-col md:flex-row flex-wrap divide-y md:divide-y-0 divide-x-0 md:divide-x divide-slate-200 overflow-hidden">
-        <div className="w-full md:w-auto flex-[3] justify-start items-start inline-flex divide-x divide-slate-200">
+    return <div className="w-full rounded-lg shadow border border-slate-200 dark:border-slate-800 dark:divide-slate-800 justify-start items-start inline-flex flex-col md:flex-row flex-wrap divide-y md:divide-y-0 divide-x-0 md:divide-x divide-slate-200 overflow-hidden">
+        <div className="w-full md:w-auto flex-[3] justify-start items-start inline-flex divide-x divide-slate-200 dark:divide-slate-800">
             <GradeCard title="GPA" data={grades.ranking.cumulative.letter.gpa} />
             <GradeCard title="及格學分" data={grades.credits.passed_credits.toString()} />
             <GradeCard title="畢業未到學分" data={grades.credits.pending_credits.toString()} />
         </div>
-        <div className="w-full md:w-auto flex-[2] justify-start items-start inline-flex divide-x divide-slate-200">
+        <div className="w-full md:w-auto flex-[2] justify-start items-start inline-flex divide-x divide-slate-200 dark:divide-slate-800">
             <GradeCard title="班排名" data={grades.ranking.cumulative.letter.letter_cum_class_rank} />
             <GradeCard title="系排名" data={grades.ranking.cumulative.letter.letter_cum_dept_rank} />
         </div>
@@ -185,13 +185,14 @@ const GPAChart = ({ lineData }: { lineData: any[] }) => {
                     }}
                 />
                 <XAxis dataKey="semester" />
-                <YAxis />
+                <YAxis domain={[0,4.3]}/>
             </LineChart>
         </ResponsiveContainer>
     </div>
 }
 
 const ClassRankChart = ({ lineData }: { lineData: any[] }) => {
+    const max_class_rank = Math.max(...lineData.map(semester => semester.max_class_rank));
     return <div className="h-[200px]">
         <ResponsiveContainer width="100%" height="100%">
             <LineChart
@@ -242,13 +243,14 @@ const ClassRankChart = ({ lineData }: { lineData: any[] }) => {
                     }}
                 />
                 <XAxis dataKey="semester" />
-                <YAxis reversed/>
+                <YAxis reversed domain={[1, max_class_rank]}/>
             </LineChart>
         </ResponsiveContainer>
     </div>
 }
 
 const DeptRankChart = ({ lineData }: { lineData: any[] }) => {
+    const max_dept_rank = Math.max(...lineData.map(semester => semester.max_dept_rank));
     return <div className="h-[200px]">
         <ResponsiveContainer width="100%" height="100%">
             <LineChart
@@ -299,7 +301,7 @@ const DeptRankChart = ({ lineData }: { lineData: any[] }) => {
                     }}
                 />
                 <XAxis dataKey="semester" />
-                <YAxis reversed/>
+                <YAxis reversed domain={[1, max_dept_rank]}/>
             </LineChart>
         </ResponsiveContainer>
     </div>
@@ -311,7 +313,7 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
     const [semesterSort, setSemesterSort] = useState<"asc" | "desc">("asc");
 
     // get unique semesters
-    const semesters = Array.from(new Set(grades.ranking.data.map(grade => grade.year + grade.semester)));
+    const semesters = Array.from(new Set(grades.ranking.data.map(grade => grade.year + grade.semester))).toReversed();
 
     const displayGrades = grades.grades.filter(grade => {
         if (selectedSemester == "All") return semesters.includes(grade.year + grade.semester);
@@ -329,7 +331,9 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
         semester: semester.year + semester.semester,
         gpa: semester.gpa,
         class_rank: semester.letter_class_rank.split("/")[0] ?? 0,
-        dept_rank: semester.letter_dept_rank.split("/")[0] ?? 0
+        max_class_rank: semester.letter_class_rank.split("/")[1] ?? 0,
+        dept_rank: semester.letter_dept_rank.split("/")[0] ?? 0,
+        max_dept_rank: semester.letter_dept_rank.split("/")[1] ?? 0,
     }));
 
     const [tab, setTab] = useState<"courses" | "semester">("courses");
@@ -337,8 +341,8 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
     return <div className="px-6 pb-12 flex-col justify-start items-start gap-12 inline-flex w-full overflow-x-hidden">
         <div className="w-full pt-8 flex-col justify-start items-start gap-4 inline-flex">
             <div className="w-full self-stretch flex-col justify-center items-center gap-2 flex">
-                <div className="self-stretch text-zinc-900 text-3xl font-semibold leading-9">Overview</div>
-                <div className="self-stretch text-zinc-900 text-sm font-normal leading-tight">至{grades.ranking.cumulative.letter.gpa_cum_year_tw}</div>
+                <div className="self-stretch text-zinc-900 dark:text-zinc-100 text-3xl font-semibold leading-9">Overview</div>
+                <div className="self-stretch text-zinc-900 dark:text-zinc-100 text-sm font-normal leading-tight">至{grades.ranking.cumulative.letter.gpa_cum_year_tw}</div>
             </div>
             <GradeOverview grades={grades} />
         </div>
@@ -374,7 +378,7 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
             <TabsContent value="courses">
                 <Table className="w-full">
                     <TableHeader>
-                        <TableRow className="[&>th]:font-bold [&>th]:text-slate-900">
+                        <TableRow className="[&>th]:font-bold [&>th]:text-slate-900 dark:[&>th]:text-slate-100">
                             <TableHead>Course Name</TableHead >
                             <TableHead className="hidden md:table-cell">Credits</TableHead >
                             <TableHead>Grade</TableHead >
@@ -385,14 +389,14 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
                     <TableBody>
                         {displayedSemesters.map((semester, index) => <>
                             <TableRow key={index}>
-                                <TableCell colSpan={3} className="text-zinc-950 text-2xl font-semibold leading-loose">{toPrettySemester(semester)}</TableCell>
+                                <TableCell colSpan={3} className="text-zinc-950 dark:text-zinc-50 text-2xl font-semibold leading-loose">{toPrettySemester(semester)}</TableCell>
                             </TableRow>
                             {displayGrades.filter(c => c.year + c.semester == semester).map((grade, index) => (
                                 <TableRow key={index + index * 10} className="[&>td]:py-2">
                                     <TableCell>
                                         <div className="flex-col justify-center items-start gap-2.5 inline-flex">
                                             <div className="inline-flex flex-col">
-                                                <span className="text-slate-400 text-xs">{grade.course_id}</span>
+                                                <span className="text-slate-400 dark:text-slate-600 text-xs">{grade.course_id}</span>
                                                 <span>{grade.name_zh}</span>
                                             </div>
                                             {grade.ge_description && <div>
@@ -414,7 +418,7 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
             <TabsContent value="semester">
                 <Table className="w-full">
                     <TableHeader>
-                        <TableRow className="[&>th]:font-bold [&>th]:text-slate-900">
+                        <TableRow className="[&>th]:font-bold [&>th]:text-slate-900 dark:[&>th]:text-slate-100">
                             <TableHead className="min-w-[72px] break-all">學期</TableHead>
                             <TableHead>GPA</TableHead>
                             <TableHead className="hidden md:table-cell">T-Score</TableHead>
@@ -455,7 +459,7 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
             </TabsContent>
         </Tabs>
         {!isMobile && <div className="w-full flex-col justify-start items-start gap-4 md:inline-flex hidden">
-            <div className="text-zinc-900 text-3xl font-semibold leading-9">成績曲線圖</div>
+            <div className="text-zinc-900 dark:text-zinc-100 text-3xl font-semibold leading-9">成績曲線圖</div>
             <div className="flex flex-row flex-wrap gap-6">
                 <Card className=" min-w-[300px] flex-1">
                     <CardHeader>

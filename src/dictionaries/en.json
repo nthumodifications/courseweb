@@ -6,7 +6,10 @@
     "timetable":{
         "actions": {
             "download": "Download",
-            "share": "Share/Sync"
+            "share": "Share/Sync",
+            "horizontal_view": "Horizontal View",
+            "vertical_view": "Vertical View",
+            "sync_ccxp": "Sync from CCXP"
         }
     },
     "course": {
