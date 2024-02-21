@@ -22,6 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {getFormattedClassCode} from '@/helpers/courses';
+import { MultiSelect } from '../ui/custom_multiselect';
 
 const MultiCheckboxControl = ({ control, name, options, label }: { control: any, name: string, options: { value: string | number, label: string }[], label: string }) => {
     return (
@@ -252,7 +253,27 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes>, setValue: U
                 { value: '英', label: 'English' },
                 { value: '中', label: '國語' },
             ]} label={dict.course.refine.language} />
-            <AutocompleteShadcn control={control} name="department" placeholder={dict.course.refine.department} multiple loading={load3} options={departments.map(dept => ({ value: dept.code, label: `${dept.code} - ${dept.name_zh}` }))} label={dict.course.refine.department} />
+            <FormField
+                control={control}
+                name="department"
+                render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>{dict.course.refine.department}</FormLabel>
+                        <FormItem>
+                            <FormControl>
+                            <MultiSelect
+                                label=""
+                                placeholder={dict.course.refine.department}
+                                data={departments.map(dept => ({ value: dept.code, label: `${dept.code} - ${dept.name_zh}` }))}
+                                {...field}
+                            />
+                            </FormControl>
+                        </FormItem>
+                                
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
             <FormField
                 control={control}
                 name="timeslots"
