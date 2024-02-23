@@ -4,12 +4,12 @@ import {getMinimalCourse} from '@/lib/course';
 import { Alert, Button, Divider, FormControl, FormHelperText, FormLabel, Switch, Table } from '@mui/joy';
 import { Session, getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
-import NTHULoginButton from '../../cds/NTHULoginButton';
 import { getParticipatingStudents } from '@/lib/timetable';
 import 'server-only';
 import { RawCourseID } from '@/types/courses';
 import supabase_server from '@/config/supabase_server';
 import { revalidatePath } from 'next/cache';
+import NTHULoginButton from '@/app/[lang]/cds/NTHULoginButton';
 
 type Props = {
     params: { courseId : string } 
