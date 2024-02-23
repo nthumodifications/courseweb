@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">NTHUMods</string>
+    <string name="title_activity_main">NTHUMods</string>
+    <string name="package_name">com.nthumods.courseweb</string>
+    <string name="custom_url_scheme">com.nthumods.courseweb</string>
+</resources>

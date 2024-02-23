@@ -8,9 +8,19 @@
     "start": "next start",
     "lint": "next lint",
     "gentype": "npx supabase gen types typescript --project-id \"cmzdlrqfpuktcczvsobs\" --schema public > src/types/supabase.ts",
-    "checkts": "tsc --noEmit"
+    "checkts": "tsc --noEmit",
+    "ionic:build": "npm run build",
+    "ionic:serve": "npm run start"
   },
   "dependencies": {
+    "@capacitor/android": "^5.6.0",
+    "@capacitor/app": "5.0.7",
+    "@capacitor/cli": "5.6.0",
+    "@capacitor/core": "5.6.0",
+    "@capacitor/haptics": "5.0.7",
+    "@capacitor/ios": "5.6.0",
+    "@capacitor/keyboard": "5.0.8",
+    "@capacitor/status-bar": "5.0.7",
     "@dnd-kit/core": "^6.1.0",
     "@dnd-kit/modifiers": "^7.0.0",
     "@dnd-kit/sortable": "^8.0.0",
@@ -70,7 +80,6 @@
     "react": "18.2.0",
     "react-cookie": "^6.1.1",
     "react-dom": "18.2.0",
-    "react-fade-in": "^2.0.1",
     "react-hook-form": "^7.49.2",
     "react-leaflet": "^4.2.1",
     "react-transition-group": "^4.4.5",
@@ -86,6 +95,7 @@
     "vaul": "^0.8.0"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.4",
     "@tailwindcss/typography": "^0.5.10",
     "@types/jsdom": "^21.1.6",
     "@types/jsonwebtoken": "^9.0.5",
