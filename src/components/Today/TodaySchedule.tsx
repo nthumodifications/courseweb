@@ -4,9 +4,9 @@ import {Alert, ColorPaletteProp, Divider, Tooltip} from '@mui/joy';
 import {format, formatRelative, getDay} from 'date-fns';
 import useUserTimetable from '@/hooks/contexts/useUserTimetable';
 import {scheduleTimeSlots} from '@/const/timetable';
-import { FC } from "react";
+import {FC, useMemo} from 'react';
 import { useSettings } from '@/hooks/contexts/settings';
-import { AlertDefinition } from '@/config/supabase';
+import {AlertDefinition, CourseSyllabusView} from '@/config/supabase';
 import useDictionary from '@/dictionaries/useDictionary';
 import WeatherIcon from './WeatherIcon';
 import { getLocale } from '@/helpers/dateLocale';
@@ -14,11 +14,37 @@ import { Info } from 'lucide-react';
 import {WeatherData} from '@/types/weather';
 import { apps } from '@/const/apps';
 import Link from 'next/link';
+import { getSemester, lastSemester } from '@/const/semester';
+import supabase from '@/config/supabase';
+import useSWR from 'swr';
+import { createTimetableFromCourses } from '@/helpers/timetable';
+import { MinimalCourse } from '@/types/courses';
+import { VenueChip } from '../Timetable/VenueChip';
 
 const TodaySchedule: FC<{ weather: WeatherData, alerts: AlertDefinition[] }> = ({ weather, alerts }) => {
-    const { timetableData, deleteCourse } = useUserTimetable();
+    const { courses, isCoursesEmpty, colorMap, timetableData, deleteCourse } = useUserTimetable();
     const { language, pinnedApps } = useSettings();
     const dict = useDictionary();
+
+    //sort courses[semester]： string[] and put as key_display_ids
+    const key_display_ids = useMemo(() => [...([courses[lastSemester.id]] ?? [])].sort(), [courses, lastSemester]);
+
+    const { data: display_courses = [], error, isLoading } = useSWR(['courses', key_display_ids], async ([table, courseCodes]) => {
+        if(!courseCodes) return [];
+        const { data = [], error } = await supabase.rpc('search_courses_with_syllabus', { keyword: "" }).in('raw_id', courseCodes);
+        if (error) throw error;
+        if (!data) throw new Error('No data');
+        return data as unknown as CourseSyllabusView[];
+    }, {
+        keepPreviousData: true,
+    });
+    //sort display_courses according to courses[semester]
+    const displayCourseData =  useMemo(() => {
+        if(!display_courses) return [];
+        return (courses[lastSemester.id] ?? []).map(courseID => display_courses.find(c => c.raw_id == courseID)!).filter(c => c);
+    }, [display_courses, courses, lastSemester]);
+
+    const nextTimetableData = createTimetableFromCourses(displayCourseData as MinimalCourse[], colorMap);
 
     const getRangeOfDays = (start: Date, end: Date) => {
         const days = [];
@@ -31,7 +57,9 @@ const TodaySchedule: FC<{ weather: WeatherData, alerts: AlertDefinition[] }> = (
     const days = getRangeOfDays(new Date(), new Date(Date.now() + 86400000 * 4));
 
     const renderDayTimetable = (day: Date) => { 
-        const classesThisDay = timetableData.filter(t => t.dayOfWeek == [6,0,1,2,3,4,5][getDay(day)]);
+        const curr_sem = getSemester(day);
+        if(!curr_sem) return <div className='text-gray-500 dark:text-gray-400 text-center text-sm font-semibold'>放假咯！</div>;
+        const classesThisDay = (curr_sem == lastSemester ? nextTimetableData: timetableData).filter(t => t.dayOfWeek == [6,0,1,2,3,4,5][getDay(day)]);
 
         if(classesThisDay.length == 0) return (
             <div className="flex flex-col items-center text-gray-800 dark:text-gray-500">
@@ -49,8 +77,7 @@ const TodaySchedule: FC<{ weather: WeatherData, alerts: AlertDefinition[] }> = (
                 <div className="flex flex-col rounded-md p-2 flex-1" style={{background: t.color, color: t.textColor}}>
                     <p className="font-semibold">{t.course.name_zh}</p>
                     <p className="text-xs">{t.course.name_en}</p>
-                    <Divider/>
-                    <p className="text-xs">{t.venue}</p>
+                    <div className='w-fit mt-1'><VenueChip venue={t.venue} color={t.textColor} textColor={t.color}/></div>
                 </div>
             </div>
         ))
@@ -104,7 +131,7 @@ const TodaySchedule: FC<{ weather: WeatherData, alerts: AlertDefinition[] }> = (
     }
 
     return <div className="h-full w-full px-3 md:px-8 py-4 space-y-4">
-        {timetableData.length == 0 && <NoClassPickedReminder/>}
+        {isCoursesEmpty && <NoClassPickedReminder/>}
         {renderPinnedApps()}
         {days.map(day => (
             <div className="flex flex-col gap-2 pb-4" key={day.getTime()}>

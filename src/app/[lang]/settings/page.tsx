@@ -1,19 +1,21 @@
 'use client';
 import useDictionary from "@/dictionaries/useDictionary";
 import { useSettings } from "@/hooks/contexts/settings";
-import { useModal } from "@/hooks/contexts/useModal";
+// import { useModal } from "@/hooks/contexts/useModal";
 import { Button, Divider, Option, Select, Switch } from "@mui/joy";
 import {  useEffect, useState } from "react";
 import NTHULoginButton from "../cds/NTHULoginButton";
 import { signOut, useSession } from "next-auth/react";
-import { HeadlessLoginDialog } from "../../../components/Forms/HeadlessLoginDialog";
+// import { HeadlessLoginDialog } from "../../../components/Forms/HeadlessLoginDialog";
+import LoginDialog from "../../../components/Forms/LoginDialog";
 import { TimetableThemeList } from "./TimetableThemeList";
 import TimetablePreview from "./TimetablePreview";
-import CCXPDownAlert from "@/components/CCXPDownAlert";
+import { useHeadlessAIS } from "@/hooks/contexts/useHeadlessAIS";
 
 const SettingsPage = () => {
 
-    const { darkMode, setDarkMode, language, setLanguage, ais } = useSettings();
+    const { darkMode, setDarkMode, language, setLanguage } = useSettings();
+    const { ais } = useHeadlessAIS();
     const [dummy, setDummy] = useState(0);
     const { data, status } = useSession();
 
@@ -25,13 +27,13 @@ const SettingsPage = () => {
         setDummy(dummy + 1);
     },[darkMode]);
 
-    const [openModal, closeModal] = useModal();
+    // const [openModal, closeModal] = useModal();
 
-    const handleOpenHeadlessLogin = () => {
-        openModal({
-            children: <HeadlessLoginDialog onClose={closeModal}/>,
-        })
-    }
+    // const handleOpenHeadlessLogin = () => {
+    //     openModal({
+    //         children: <HeadlessLoginDialog onClose={closeModal}/>,
+    //     })
+    // }
     return (
         <div className="flex flex-col max-w-2xl px-4">
             <h1 className="font-semibold text-3xl text-gray-400 py-3">{dict.settings.title}</h1>
@@ -88,15 +90,16 @@ const SettingsPage = () => {
             <Divider/>
             <div className="flex flex-row gap-4 py-4" id="headless_ais">
                 <div className="flex flex-col flex-1">
-                    <h2 className="font-semibold text-xl text-gray-600 dark:text-gray-400 pb-2">代理登入校務資訊系統</h2>
-                    <p className="text-gray-600 dark:text-gray-400">系統會用代理登入方式，讓學生們可以在NTHUMods 上輕鬆連結校務系統功能。</p>
-                    <CCXPDownAlert/>
+                    <h2 className="font-semibold text-xl text-gray-600 dark:text-gray-400 pb-2">{dict.settings.ccxp.title}</h2>
+                    <p className="text-gray-600 dark:text-gray-400">{dict.settings.ccxp.description}</p>
+                    {/* <CCXPDownAlert/> */}
                 </div>
-                {/* <div className="flex flex-col justify-center items-center space-y-2 w-52">
-                    <Button variant="outlined" color="primary" onClick={handleOpenHeadlessLogin}>連接</Button>
-                    {ais.enabled && <span className="text-gray-600 dark:text-gray-400 text-sm">已連接</span>}
-                    {ais.enabled && !ais.ACIXSTORE && <span className="text-red-600 dark:text-red-400 text-sm">連接著/登入異常</span>}
-                </div> */}
+                <div className="flex flex-col justify-center items-center space-y-2 w-52">
+                    {/*<Button variant="outlined" color="primary" onClick={handleOpenHeadlessLogin}>連接</Button>*/}
+                    <LoginDialog />
+                    {ais.enabled && <span className="text-gray-600 dark:text-gray-400 text-sm">{dict.ccxp.connected}</span>}
+                    {ais.enabled && !ais.ACIXSTORE && <span className="text-red-600 dark:text-red-400 text-sm">{dict.ccxp.failed}</span>}
+                </div>
             </div>
         </div>
     )

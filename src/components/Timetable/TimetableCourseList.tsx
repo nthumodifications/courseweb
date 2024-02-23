@@ -1,5 +1,5 @@
 import { IconButton, Divider, Tooltip } from '@mui/joy';
-import { Download, EyeOff, Search, Share, Trash, AlertTriangle, Copy, Columns, Repeat, ExternalLink, GripVertical } from 'lucide-react';
+import { Download, EyeOff, Search, Share, Trash, AlertTriangle, Copy, Columns, Repeat, ExternalLink, GripVertical, FolderSync } from 'lucide-react';
 import { useSettings } from '@/hooks/contexts/settings';
 import useUserTimetable from '@/hooks/contexts/useUserTimetable';
 import { useRouter } from 'next/navigation';
@@ -8,12 +8,20 @@ import CourseSearchbar from './CourseSearchbar';
 import { timetableColors } from "@/const/timetableColors";
 import ThemeChangableAlert from '../Alerts/ThemeChangableAlert';
 import useDictionary from '@/dictionaries/useDictionary';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { hasConflictingTimeslots, hasSameCourse, hasTimes } from '@/helpers/courses';
 import { MinimalCourse, RawCourseID } from '@/types/courses';
 import dynamic from 'next/dynamic';
-import { Button } from '../ui/button';
+import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+  } from "@/components/ui/dialog"
 
 import {
     DndContext, 
@@ -38,9 +46,14 @@ import {
   restrictToVerticalAxis,
   restrictToWindowEdges,
 } from '@dnd-kit/modifiers';
-
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import Compact from '@uiw/react-color-compact';
+import { useHeadlessAIS } from '@/hooks/contexts/useHeadlessAIS';
+import { toast } from '../ui/use-toast';
+import {event} from '@/lib/gtag';
 const DownloadTimetableDialogDynamic = dynamic(() => import('./DownloadTimetableDialog'), { ssr: false })
 const ShareSyncTimetableDialogDynamic = dynamic(() => import('./ShareSyncTimetableDialog'), { ssr: false })
+
 
 
 const TimetableCourseListItem = ({ course, hasConflict, isDuplicate }: { course: MinimalCourse, hasConflict: boolean, isDuplicate: boolean, }) => {
@@ -51,7 +64,8 @@ const TimetableCourseListItem = ({ course, hasConflict, isDuplicate }: { course:
     }
     const {
         deleteCourse,
-        colorMap
+        colorMap,
+        setColor
     } = useUserTimetable();
 
     const {
@@ -68,9 +82,24 @@ const TimetableCourseListItem = ({ course, hasConflict, isDuplicate }: { course:
         transition,
     };
 
-    return <div className="flex flex-row gap-4 items-center max-w-3xl" ref={setNodeRef} style={style} >
+    return <div className="flex flex-row gap-2 items-center max-w-3xl" ref={setNodeRef} style={style} >
         <GripVertical className="w-4 h-4 text-gray-400" {...attributes} {...listeners} />
-        <div className="w-4 h-4 rounded-full" style={{ backgroundColor: colorMap[course.raw_id] }}></div>
+        <Popover>
+            <PopoverTrigger>
+                <div className='px-3 py-2 rounded-md hover:outline outline-1 outline-slate-400'>
+                    <div className="w-4 h-4 rounded-full" style={{ backgroundColor: colorMap[course.raw_id] }}></div>
+                    
+                </div>
+            </PopoverTrigger>
+            <PopoverContent>
+                <Compact
+                    color={colorMap[course.raw_id]}
+                    onChange={(color) => {
+                        setColor(course.raw_id, color.hex);
+                    }}                
+                />
+            </PopoverContent>
+        </Popover>
         <div className="flex flex-col flex-1">
             <span className="text-sm">{course.department} {course.course}-{course.class} {course.name_zh} - {course.teacher_zh.join(',')}</span>
             <span className="text-xs">{course.name_en}</span>
@@ -100,7 +129,7 @@ const TimetableCourseListItem = ({ course, hasConflict, isDuplicate }: { course:
                 <Button className='rounded-r-none ' variant="outline" size="icon" onClick={() => handleCopyClipboard(course.raw_id)}>
                     <Copy className="w-4 h-4" />
                 </Button>
-                <Button className='rounded-none border-x-0' asChild variant="outline" size="icon" onClick={() => handleCopyClipboard(course.raw_id)}>
+                <Button className='rounded-none border-x-0' asChild variant="outline" size="icon">
                     <Link href={`/${language}/courses/${course.raw_id}`}>
                         <ExternalLink className="w-4 h-4" />
                     </Link>
@@ -115,6 +144,58 @@ const TimetableCourseListItem = ({ course, hasConflict, isDuplicate }: { course:
             </div>
         </div>
     </div>
+}
+
+const HeadlessSyncCourseButton = () => {
+    const dict = useDictionary();
+    const { ais, getACIXSTORE } = useHeadlessAIS();
+    const { courses, addCourse, deleteCourse } = useUserTimetable();
+    const [loading, setLoading] = useState(false);
+    const [coursesToAdd, setCoursesToAdd] = useState<string[]>([]);
+
+    if(!ais.enabled) return <></>;
+
+    useEffect(() => {
+        if(coursesToAdd.length > 0) {
+            addCourse(coursesToAdd);
+            setCoursesToAdd([]);
+            toast({
+                title: 'Sync Succesful!',
+                description: 'Courses are added to your timetable.',
+            })
+            event({
+                action: "sync_ccxp_courses",
+                category: "ccxp",
+                label: "sync_ccxp_courses",
+            });
+        }
+    }, [courses, coursesToAdd]);
+
+
+    const handleSync = async () => {
+        setLoading(true);
+        console.log('sync')
+        const ACIXSTORE = await getACIXSTORE();
+        const res = await fetch('/api/ais_headless/courses/sync-latest?ACIXSTORE='+ACIXSTORE).then(res => res.json()) as {
+            semester: string,
+            phase: string,
+            studentid: string,
+            courses: string[]
+        };
+        //remove courses that are not in the latest
+        const courses_to_remove = (courses[res.semester] ?? []).filter(id => !res.courses.includes(id));
+        deleteCourse(courses_to_remove);
+        //add courses that are not in the current
+        const courses_to_add = res.courses.filter(id => !(courses[res.semester] ?? []).includes(id));
+        setCoursesToAdd(courses_to_add);
+        setLoading(false);
+    }
+    return <Button variant="outline" onClick={handleSync} disabled={loading}>
+        {!loading?
+            <><FolderSync className="w-4 h-4 mr-1" /> {dict.timetable.actions.sync_ccxp}</>:
+            "Loading"
+        }
+    </Button>
 }
 
 const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, setVertical: (v: boolean) => void }) => {
@@ -137,7 +218,7 @@ const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, set
 
 
     const handleShowShareDialog = () => {
-        const shareLink = `https://nthumods.com/timetable?${Object.keys(courses).map(sem => `semester_${sem}=${courses[sem].map(id => encodeURI(id)).join(',')}`).join('&')}`
+        const shareLink = `https://nthumods.com/timetable/view?${Object.keys(courses).map(sem => `semester_${sem}=${courses[sem].map(id => encodeURI(id)).join(',')}`).join('&')}&colorMap=${encodeURIComponent(JSON.stringify(colorMap))}`
         const webcalLink = ``
         const handleCopy = () => {
             navigator.clipboard.writeText(shareLink);
@@ -149,7 +230,7 @@ const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, set
     }
 
     const handleDownloadDialog = () => {
-        const icsfileLink = `https://nthumods.com/timetable/calendar.ics?semester=${semester}&${Object.keys(courses).map(sem => `semester_${sem}=${courses[sem].map(id => encodeURI(id)).join(',')}`).join('&')}`
+        const icsfileLink = `https://nthumods.com/timetable/calendar.ics?semester=${semester}&${`semester_${semester}=${courses[semester].map(id => encodeURI(id)).join(',')}`}`
         openModal({
             children: <DownloadTimetableDialogDynamic onClose={closeModal} icsfileLink={icsfileLink} />
         });
@@ -165,9 +246,10 @@ const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, set
 
     const renderButtons = () => {
         return <div className="grid grid-cols-2 grid-rows-2 gap-2">
-            <Button variant="outline" onClick={() => setVertical(!vertical)}><Repeat className="w-4 h-4 mr-1" /> {vertical ? 'Horizontal View' : 'Vertical View'}</Button>
+            <Button variant="outline" onClick={() => setVertical(!vertical)}><Repeat className="w-4 h-4 mr-1" /> {vertical ? dict.timetable.actions.horizontal_view : dict.timetable.actions.vertical_view}</Button>
             <Button variant="outline" onClick={handleDownloadDialog}><Download className="w-4 h-4 mr-1" /> {dict.timetable.actions.download}</Button>
             <Button variant="outline" onClick={handleShowShareDialog}><Share className="w-4 h-4 mr-1" /> {dict.timetable.actions.share}</Button>
+            <HeadlessSyncCourseButton />
         </div>
     }
 
@@ -196,10 +278,7 @@ const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, set
         }
     }
 
-    console.log(courses)
-
-
-    return <div className="flex flex-col gap-4 px-4">
+return <div className="flex flex-col gap-4 px-4">
         {renderButtons()}
         <CourseSearchbar onAddCourse={course => addCourse(course.raw_id)} semester={semester} />
         <div className={`${!vertical ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ' : 'flex flex-col'} gap-4 px-4 flex-wrap`}>

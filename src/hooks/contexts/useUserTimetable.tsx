@@ -27,13 +27,16 @@ const userTimetableContext = createContext<ReturnType<typeof useUserTimetablePro
     setCourses: () => { },
     clearCourses: () => { },
     deleteCourse: () => { },
+    setColorMap: () => { },
     addCourse: () => { },
     setTimetableTheme: () => { },
     setUserDefinedColors: () => {},
+    setColor: () => {},
     isCourseSelected: () => false,
     isLoading: true,
     error: undefined,
     semester: lastSemester.id,
+    isCoursesEmpty: true,
     setSemester: () => { }
 });
 
@@ -94,7 +97,7 @@ const useUserTimetableProvider = (loadCourse = true) => {
 
 
     //sort courses[semester]： string[] and put as key_display_ids
-    const key_display_ids = useMemo(() => (courses[semester] ?? []).toSorted(), [courses, semester]);
+    const key_display_ids = useMemo(() => [...(courses[semester] ?? [])].sort(), [courses, semester]);
 
     const { data: display_courses = [], error, isLoading } = useSWR(['courses', key_display_ids], async ([table, courseCodes]) => {
         if(!courseCodes) return [];
@@ -110,9 +113,7 @@ const useUserTimetableProvider = (loadCourse = true) => {
         if(!display_courses) return [];
         return (courses[semester] ?? []).map(courseID => display_courses.find(c => c.raw_id == courseID)!).filter(c => c);
     }, [display_courses, courses, semester]);
-
-    console.log('displayCourseData updated', displayCourseData)
-
+    
     // const { data: semesterCourseData = [], error: semesterError, isLoading: semesterLoading } = useSWR(['courses', currentSemester ? courses[currentSemester.id] : null], async ([table, courseCodes]) => {
     //     if(!courseCodes) return [];
     //     const { data = [], error } = await supabase.rpc('search_courses_with_syllabus', { keyword: "" }).in('raw_id', courseCodes);
@@ -124,7 +125,7 @@ const useUserTimetableProvider = (loadCourse = true) => {
     // });
 
     //rewrite semesterCourseData like displayCourseData
-    const key_semester_ids = useMemo(() => (currentSemester ? (courses[currentSemester.id] ?? []) : null ?? []).toSorted(), [courses, currentSemester]);
+    const key_semester_ids = useMemo(() => [...(currentSemester ? (courses[currentSemester.id] ?? []) : null ?? [])].sort(), [courses, currentSemester]);
     const { data: semester_courses = [], error: semesterError, isLoading: semesterLoading } = useSWR(['courses', key_semester_ids], async ([table, courseCodes]) => {
         if(!courseCodes) return [];
         const { data = [], error } = await supabase.rpc('search_courses_with_syllabus', { keyword: "" }).in('raw_id', courseCodes);
@@ -174,63 +175,82 @@ const useUserTimetableProvider = (loadCourse = true) => {
     }, [semesterCourseData, semesterLoading, semesterError, colorMap]);
 
     //handlers for courses
-    const addCourse = (courseID: string) => {
+    const addCourse = (courseID: string | string[]) => {
+        const courseIDs = Array.isArray(courseID) ? courseID : [courseID];
         setCourses(courses => {
             //get first 5 characters of courseID
-            const semester = getSemesterFromID(courseID);
-            if (!semester) throw new Error("Invalid courseID");
-            const oldSemesterCourses = courses[semester] ?? [];
+            let oldCourses = { ...courses };
+            courseIDs.forEach(courseID => {
+                const semester = getSemesterFromID(courseID);
+                if (!semester) throw new Error("Invalid courseID");
+                const oldSemesterCourses = oldCourses[semester] ?? [];
 
-            //check if courseID already exists
-            if (oldSemesterCourses.includes(courseID)) return courses;
+                //check if courseID already exists
+                if (oldSemesterCourses.includes(courseID)) return;
 
-            setColorMap(colorMap => {
-                return {
-                    ...colorMap,
-                    [courseID]: currentColors[oldSemesterCourses.length % currentColors.length]
+                setColorMap(colorMap => {
+                    return {
+                        ...colorMap,
+                        [courseID]: currentColors[oldSemesterCourses.length % currentColors.length]
+                    }
+                });
+                oldCourses = {
+                    ...oldCourses,
+                    [semester]: [...oldSemesterCourses, courseID]
                 }
+                event({
+                    action: "add_course",
+                    category: "timetable",
+                    label: courseID,
+                })
             });
-
-            return {
-                ...courses,
-                [semester]: [...oldSemesterCourses, courseID]
-            }
+            return oldCourses;
+            
         });
-        
-        event({
-            action: "add_course",
-            category: "timetable",
-            label: courseID,
-        })
     }
 
-    const deleteCourse = (courseID: string) => {
+    const deleteCourse = (courseID: string | string[]) => {
+        const courseIDs = Array.isArray(courseID) ? courseID : [courseID];
         setCourses(courses => {
             //get first 5 characters of courseID
-            const semester = getSemesterFromID(courseID);
-            if (!semester) throw new Error("Invalid courseID");
-            const oldSemesterCourses = courses[semester] ?? [];
+            let oldCourses = { ...courses };
+            courseIDs.forEach(courseID => {
+                const semester = getSemesterFromID(courseID);
+                if (!semester) throw new Error("Invalid courseID");
+                const oldSemesterCourses = oldCourses[semester] ?? [];
 
-            //check if courseID already exists
-            if (!oldSemesterCourses.includes(courseID)) return courses;
+                //check if courseID already exists
+                if (!oldSemesterCourses.includes(courseID)) return;
 
-            //remove color from colorMap
-            setColorMap(colorMap => {
-                const newColorMap = { ...colorMap };
-                delete newColorMap[courseID];
-                return newColorMap;
-            });
+                //remove color from colorMap
+                setColorMap(colorMap => {
+                    const newColorMap = { ...colorMap };
+                    delete newColorMap[courseID];
+                    return newColorMap;
+                });
 
+                oldCourses = {
+                    ...oldCourses,
+                    [semester]: oldSemesterCourses.filter(c => c != courseID)
+                }
+                event({
+                    action: "delete_course",
+                    category: "timetable",
+                    label: courseID,
+                })
+            })
+            return oldCourses;
+        });
+        
+    }
+
+    const setColor = (courseID: string, color: string) => {
+        setColorMap(colorMap => {
             return {
-                ...courses,
-                [semester]: oldSemesterCourses.filter(c => c != courseID)
+                ...colorMap,
+                [courseID]: color
             }
         });
-        event({
-            action: "delete_course",
-            category: "timetable",
-            label: courseID,
-        })
     }
 
     const isCourseSelected = useCallback((courseID: string) => {
@@ -259,6 +279,10 @@ const useUserTimetableProvider = (loadCourse = true) => {
         return colors[timetableTheme];
     }, [timetableTheme, userDefinedColors]);
 
+    const isCoursesEmpty = useMemo(() => {
+        return Object.keys(courses).length == 0;
+    }, [courses]);
+
 
     return {
         timetableData, 
@@ -272,13 +296,16 @@ const useUserTimetableProvider = (loadCourse = true) => {
         setSemester, 
         semesterCourses, 
         setCourses,
+        setColorMap,
         addCourse, 
         deleteCourse, 
         clearCourses, 
         isCourseSelected, 
         setTimetableTheme,
         setUserDefinedColors,
+        setColor,
         isLoading, 
+        isCoursesEmpty,
         error, 
         courses
     };

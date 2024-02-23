@@ -40,7 +40,16 @@ export async function generateMetadata({ params }: PageProps, parent: ResolvingM
     return {
         ...parent,
         title: `${course?.department} ${course?.course}-${course?.class} ${course!.name_zh} ${course!.name_en}`,
-        description: `${course!.teacher_zh?.join(',')} ${course!.teacher_en?.join(',')} \n ${course!.course_syllabus.brief}`
+        description: `${course!.teacher_zh?.join(',')} ${course!.teacher_en?.join(',')} \n ${course!.course_syllabus.brief}`,
+        openGraph: {
+            type: 'website',
+            title: `${course?.department} ${course?.course}-${course?.class} ${course!.name_zh} ${course!.name_en} | NTHUMods`,
+            description: `${course!.teacher_zh?.join(',')} ${course!.teacher_en?.join(',')} \n ${course!.course_syllabus.brief}`,
+            url: 'https://nthumods.com',
+            siteName: 'NTHUMods',
+            countryName: 'Taiwan',
+            locale: 'en, zh'
+        }
     }
 }
 
@@ -159,7 +168,7 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                             <Accordion type="single" collapsible className="w-full">
                                 {reviews.map((m, index) =>
                                     <AccordionItem key={index} value={m.date}>
-                                        <AccordionTrigger>{index + 1}. {format(new Date(m.date), 'yyyy-MM-dd')} 的心得</AccordionTrigger>
+                                        <AccordionTrigger>{index + 1}. {format(new Date(m.date ?? 0), 'yyyy-MM-dd')} 的心得</AccordionTrigger>
                                         <AccordionContent>
                                             <p className="whitespace-pre-line text-sm">{m.content}</p>
                                         </AccordionContent>

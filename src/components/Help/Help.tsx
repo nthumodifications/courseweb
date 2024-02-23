@@ -54,7 +54,7 @@ const Help = () => {
       <DialogTrigger asChild>
         <Button size="sm" variant="outline" className="flex gap-1" onClick={handleOpen}>
           <HelpCircle size="16" />
-          Help
+          <span className="hidden md:inline-block">Help</span>
         </Button>
       </DialogTrigger>
       <DialogContent>

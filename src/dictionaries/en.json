@@ -6,7 +6,10 @@
     "timetable":{
         "actions": {
             "download": "Download",
-            "share": "Share/Sync"
+            "share": "Share/Sync",
+            "horizontal_view": "Horizontal View",
+            "vertical_view": "Vertical View",
+            "sync_ccxp": "Sync from CCXP"
         }
     },
     "course": {
@@ -94,6 +97,10 @@
         "theme": {
             "title": "Theme",
             "description": "Personalize your timetable to make it yours."
+        },
+        "ccxp": {
+            "title": "Proxy Login into your NTHU AIS Account",
+            "description": "NTHUMods can use proxy login methods such that students can easily connect to the school system functions on NTHUMods."
         }
     },
     "venues": {
@@ -127,6 +134,15 @@
             }
         }
     },
+    "shops": {
+        "search_placeholder": "Search for shops",
+        "search_results_prefix": "Search results for",
+        "open_now": "Open Now",
+        "closed": "Closed",
+        "closed_today": "Closed Today",
+        "area_placeholder": "Select area",
+        "area_all": "Anywhere"
+    },
     "help": {
         "intro": {
             "title": "Welcome to NTHUMODS",
@@ -158,5 +174,21 @@
         "next": "Next",
         "skip": "Skip",
         "jump": "Jump in"
-    }
+    },
+    "ccxp": {
+        "connected": "Connected",
+        "failed": "Failed",
+        "connect": "Connect",
+        "incorrect_credentials": "Incorrect Student ID or Password",
+        "studentid": "Student ID",
+        "password": "Password",
+        "login": {
+            "title": "Proxy Login With NTHU AIS Account",
+            "disclaimer": "Note: Your credentials will only be stored on your device, and will only be transmitted to the server for authentication.",
+            "description": "For every action that requires authenticated data from NTHU AIS, the website will send your credentials to the server for authentication by our web scrapers. The tranmission is protected by HTTPS encryption, and your credentials is never stored on our servers.",
+            "agree": "I've read the privacy policy, and understand the terms of proxy login."
+        }
+    },
+    "cancel": "Cancel",
+    "privacy_policy": "Privacy Policy"
 }

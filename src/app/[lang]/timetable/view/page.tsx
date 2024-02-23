@@ -7,18 +7,22 @@ import supabase from "@/config/supabase";
 import useSWR from "swr";
 import {createTimetableFromCourses, colorMapFromCourses} from '@/helpers/timetable';
 import { MinimalCourse } from "@/types/courses";
-import {Divider} from '@mui/joy';
+import {CardContent, Divider} from '@mui/joy';
 import {useMemo, useState} from 'react';
 import { lastSemester } from "@/const/semester";
 import SemesterSwitcher from "@/components/Timetable/SemesterSwitcher";
 import {renderTimetableSlot} from '@/helpers/timetable_course';
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
+import { Alert } from "@/components/ui/alert";
+import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 const ViewTimetablePage: NextPage = () => {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { currentColors } = useUserTimetable();
+    const { currentColors, setCourses, setColorMap } = useUserTimetable();
     const [semester, setSemester] = useState<string>(lastSemester.id);
+    const colorMap = JSON.parse(decodeURIComponent(searchParams.get('colorMap') ?? "{}"));
 
     const courseCodes = useMemo(() => {
         if(searchParams.size > 0) {
@@ -43,13 +47,28 @@ const ViewTimetablePage: NextPage = () => {
     }, {
         keepPreviousData: true,
     })
-    const colorMap = colorMapFromCourses(courses.map(c => c.raw_id), currentColors);
     const timetableData = createTimetableFromCourses(courses as MinimalCourse[], colorMap);
       
     const totalCredits = useMemo(() => {
         if(!courses) return 0;
         return courses.reduce((acc, cur) => acc + (cur?.credits ?? 0), 0);
     }, [courses]);
+
+    const handleImportCourses = () => {
+        setCourses(courseCodes!);
+        setColorMap(colorMap);
+        router.push('/timetable')
+    }
+
+    const handleImportThisSemester = () => {
+        setCourses(courses => ({ ...courses, [semester]: courseCodes![semester] ?? [] }));
+        const partialColorMap: {[c: string]: string } = {};
+        courseCodes![semester].forEach((code, index) => {
+            partialColorMap[code] = currentColors[index];
+        });
+        setColorMap(colorMap => ({ ...colorMap, ...partialColorMap }));
+        router.push('/timetable')
+    }
 
     return (
         
@@ -58,6 +77,19 @@ const ViewTimetablePage: NextPage = () => {
             <div className="grid grid-cols-1 grid-rows-2 md:grid-rows-1 md:grid-cols-[3fr_2fr] px-1 py-4 md:p-4">
                 <Timetable timetableData={timetableData} renderTimetableSlot={renderTimetableSlot} />
                 <div className="flex flex-col gap-4 px-4">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>把課程導入這個裝置嗎？</CardTitle>
+                        <CardDescription>Importing courses will overwrite all your courses</CardDescription>
+                    </CardHeader>
+                    <CardFooter>
+                        <div className="flex flex-row gap-4 justify-end">
+                            <Button onClick={handleImportThisSemester}>Import this semester</Button>
+                            <Button onClick={handleImportCourses}>Import All</Button>
+                        </div>
+                    </CardFooter>
+                </Card>
+
                 {courses && courses.map((course, index) => (
                     <div key={index} className="flex flex-row gap-4 items-center">
                         <div className="w-4 h-4 rounded-full" style={{ backgroundColor: colorMap[course.raw_id] }}></div>
