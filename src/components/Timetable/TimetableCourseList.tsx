@@ -49,7 +49,8 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import Compact from '@uiw/react-color-compact';
 import { useHeadlessAIS } from '@/hooks/contexts/useHeadlessAIS';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from '../ui/use-toast';
+import {event} from '@/lib/gtag';
 const DownloadTimetableDialogDynamic = dynamic(() => import('./DownloadTimetableDialog'), { ssr: false })
 const ShareSyncTimetableDialogDynamic = dynamic(() => import('./ShareSyncTimetableDialog'), { ssr: false })
 
@@ -81,7 +82,7 @@ const TimetableCourseListItem = ({ course, hasConflict, isDuplicate }: { course:
         transition,
     };
 
-    return <div className="flex flex-row gap-4 items-center max-w-3xl" ref={setNodeRef} style={style} >
+    return <div className="flex flex-row gap-2 items-center max-w-3xl" ref={setNodeRef} style={style} >
         <GripVertical className="w-4 h-4 text-gray-400" {...attributes} {...listeners} />
         <Popover>
             <PopoverTrigger>
@@ -128,7 +129,7 @@ const TimetableCourseListItem = ({ course, hasConflict, isDuplicate }: { course:
                 <Button className='rounded-r-none ' variant="outline" size="icon" onClick={() => handleCopyClipboard(course.raw_id)}>
                     <Copy className="w-4 h-4" />
                 </Button>
-                <Button className='rounded-none border-x-0' asChild variant="outline" size="icon" onClick={() => handleCopyClipboard(course.raw_id)}>
+                <Button className='rounded-none border-x-0' asChild variant="outline" size="icon">
                     <Link href={`/${language}/courses/${course.raw_id}`}>
                         <ExternalLink className="w-4 h-4" />
                     </Link>
@@ -162,6 +163,11 @@ const HeadlessSyncCourseButton = () => {
                 title: 'Sync Succesful!',
                 description: 'Courses are added to your timetable.',
             })
+            event({
+                action: "sync_ccxp_courses",
+                category: "ccxp",
+                label: "sync_ccxp_courses",
+            });
         }
     }, [courses, coursesToAdd]);
 
@@ -177,10 +183,10 @@ const HeadlessSyncCourseButton = () => {
             courses: string[]
         };
         //remove courses that are not in the latest
-        const courses_to_remove = courses[res.semester].filter(id => !res.courses.includes(id));
+        const courses_to_remove = (courses[res.semester] ?? []).filter(id => !res.courses.includes(id));
         deleteCourse(courses_to_remove);
         //add courses that are not in the current
-        const courses_to_add = res.courses.filter(id => !courses[res.semester].includes(id));
+        const courses_to_add = res.courses.filter(id => !(courses[res.semester] ?? []).includes(id));
         setCoursesToAdd(courses_to_add);
         setLoading(false);
     }
@@ -212,7 +218,7 @@ const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, set
 
 
     const handleShowShareDialog = () => {
-        const shareLink = `https://nthumods.com/timetable?${Object.keys(courses).map(sem => `semester_${sem}=${courses[sem].map(id => encodeURI(id)).join(',')}`).join('&')}`
+        const shareLink = `https://nthumods.com/timetable/view?${Object.keys(courses).map(sem => `semester_${sem}=${courses[sem].map(id => encodeURI(id)).join(',')}`).join('&')}&colorMap=${encodeURIComponent(JSON.stringify(colorMap))}`
         const webcalLink = ``
         const handleCopy = () => {
             navigator.clipboard.writeText(shareLink);
@@ -224,7 +230,7 @@ const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, set
     }
 
     const handleDownloadDialog = () => {
-        const icsfileLink = `https://nthumods.com/timetable/calendar.ics?semester=${semester}&${Object.keys(courses).map(sem => `semester_${sem}=${courses[sem].map(id => encodeURI(id)).join(',')}`).join('&')}`
+        const icsfileLink = `https://nthumods.com/timetable/calendar.ics?semester=${semester}&${`semester_${semester}=${courses[semester].map(id => encodeURI(id)).join(',')}`}`
         openModal({
             children: <DownloadTimetableDialogDynamic onClose={closeModal} icsfileLink={icsfileLink} />
         });

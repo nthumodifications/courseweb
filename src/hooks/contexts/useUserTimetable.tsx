@@ -27,6 +27,7 @@ const userTimetableContext = createContext<ReturnType<typeof useUserTimetablePro
     setCourses: () => { },
     clearCourses: () => { },
     deleteCourse: () => { },
+    setColorMap: () => { },
     addCourse: () => { },
     setTimetableTheme: () => { },
     setUserDefinedColors: () => {},
@@ -35,6 +36,7 @@ const userTimetableContext = createContext<ReturnType<typeof useUserTimetablePro
     isLoading: true,
     error: undefined,
     semester: lastSemester.id,
+    isCoursesEmpty: true,
     setSemester: () => { }
 });
 
@@ -95,7 +97,7 @@ const useUserTimetableProvider = (loadCourse = true) => {
 
 
     //sort courses[semester]： string[] and put as key_display_ids
-    const key_display_ids = useMemo(() => (courses[semester] ?? []).toSorted(), [courses, semester]);
+    const key_display_ids = useMemo(() => [...(courses[semester] ?? [])].sort(), [courses, semester]);
 
     const { data: display_courses = [], error, isLoading } = useSWR(['courses', key_display_ids], async ([table, courseCodes]) => {
         if(!courseCodes) return [];
@@ -123,7 +125,7 @@ const useUserTimetableProvider = (loadCourse = true) => {
     // });
 
     //rewrite semesterCourseData like displayCourseData
-    const key_semester_ids = useMemo(() => (currentSemester ? (courses[currentSemester.id] ?? []) : null ?? []).toSorted(), [courses, currentSemester]);
+    const key_semester_ids = useMemo(() => [...(currentSemester ? (courses[currentSemester.id] ?? []) : null ?? [])].sort(), [courses, currentSemester]);
     const { data: semester_courses = [], error: semesterError, isLoading: semesterLoading } = useSWR(['courses', key_semester_ids], async ([table, courseCodes]) => {
         if(!courseCodes) return [];
         const { data = [], error } = await supabase.rpc('search_courses_with_syllabus', { keyword: "" }).in('raw_id', courseCodes);
@@ -277,6 +279,10 @@ const useUserTimetableProvider = (loadCourse = true) => {
         return colors[timetableTheme];
     }, [timetableTheme, userDefinedColors]);
 
+    const isCoursesEmpty = useMemo(() => {
+        return Object.keys(courses).length == 0;
+    }, [courses]);
+
 
     return {
         timetableData, 
@@ -290,6 +296,7 @@ const useUserTimetableProvider = (loadCourse = true) => {
         setSemester, 
         semesterCourses, 
         setCourses,
+        setColorMap,
         addCourse, 
         deleteCourse, 
         clearCourses, 
@@ -298,6 +305,7 @@ const useUserTimetableProvider = (loadCourse = true) => {
         setUserDefinedColors,
         setColor,
         isLoading, 
+        isCoursesEmpty,
         error, 
         courses
     };

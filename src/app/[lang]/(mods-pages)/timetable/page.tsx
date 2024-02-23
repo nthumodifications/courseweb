@@ -4,13 +4,10 @@ import { NextPage } from "next";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from 'next/navigation'
-import { useEffect } from "react";
 import { useModal } from "@/hooks/contexts/useModal";
 import TimetableCourseList from "@/components/Timetable/TimetableCourseList";
-import ShareRecievedDialog from "@/components/Timetable/ShareRecievedDialog";
 import { useLocalStorage } from "usehooks-ts";
 import SemesterSwitcher from "@/components/Timetable/SemesterSwitcher";
-import { useSettings } from "@/hooks/contexts/settings";
 import { createTimetableFromCourses } from "@/helpers/timetable";
 import { MinimalCourse } from "@/types/courses";
 import { renderTimetableSlot } from "@/helpers/timetable_course";
@@ -27,24 +24,6 @@ const TimetablePage: NextPage = () => {
     const [openModal, closeModal] = useModal();
 
     const timetableData = createTimetableFromCourses(displayCourseData as MinimalCourse[], colorMap)
-
-
-    //Check if URL has course code array, display share dialog.
-    useEffect(() => {
-        if (searchParams.size > 0) {
-            //get all entries with the key 'semester_{semesterId}'
-            const courseCodes: { [sem: string]: string[] } = {};
-            searchParams.forEach((value, key) => {
-                if (key.startsWith('semester_')) {
-                    courseCodes[key.replace('semester_', '')] = value.split(',').map(decodeURI);
-                }
-            });
-            openModal({
-                children: <ShareRecievedDialog onClose={closeModal} courseCodes={courseCodes!} />
-            });
-            router.replace('timetable');
-        }
-    }, []);
 
     return (
         <div className="flex flex-col w-full h-full">
