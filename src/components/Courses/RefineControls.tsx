@@ -15,18 +15,18 @@ import {
 } from '@mui/joy';
 import { FC } from 'react';
 import { Control, UseFormSetValue } from 'react-hook-form';
-import TimeslotSelectorControl from '../FormComponents/TimeslotSelectorControl';
+import TimeslotSelectorControl from '@/components/FormComponents/TimeslotSelectorControl';
 import useSWR from 'swr';
-import AutocompleteControl from '../FormComponents/AutocompleteControl';
-import DepartmentControl from '../FormComponents/DepartmentControl';
+import AutocompleteControl from '@/components/FormComponents/AutocompleteControl';
+import DepartmentControl from '@/components/FormComponents/DepartmentControl';
 import { useMediaQuery } from 'usehooks-ts';
 import { GECTypes, GETargetCodes } from '@/const/ge_target';
 import { useSettings } from '@/hooks/contexts/settings';
 import { Department } from '@/types/courses';
-import { RefineControlFormTypes } from '@/app/[lang]/courses/page';
-import SelectControl from '../FormComponents/SelectControl';
+import SelectControl from '@/components/FormComponents/SelectControl';
 import useUserTimetable from '@/hooks/contexts/useUserTimetable';
 import {scheduleTimeSlots} from '@/const/timetable';
+import { RefineControlFormTypes } from '@/app/[lang]/(mods-pages)/courses/page';
 
 const RefineControls: FC<{ control: Control<RefineControlFormTypes>, setValue: UseFormSetValue<RefineControlFormTypes>, onClear: () => void }> = ({ control, setValue, onClear }) => {
     const dict = useDictionary();

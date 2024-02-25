@@ -3,7 +3,7 @@ import { CourseTimeslotData } from "@/types/timetable";
 import { MinimalCourse } from '@/types/courses';
 import { getBrightness } from "./colors";
 import { adjustLuminance} from '@/helpers/colors';
-import { timetableColors } from "../const/timetableColors";
+import { timetableColors } from "@/const/timetableColors";
 import { hasTimes } from "./courses";
 
 export const createTimetableFromCourses = (data: MinimalCourse[], colorMap: {[courseId: string]: string} = colorMapFromCourses(data.map(i => i.raw_id), timetableColors[Object.keys(timetableColors)[0]])) => {

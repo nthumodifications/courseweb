@@ -1,10 +1,8 @@
 import {FC} from 'react';
 import {Controller, Control} from 'react-hook-form';
 import TimeslotSelector from '@/components/Courses/TimeslotSelector';
-import MultiSelectControl from './MultiSelectControl';
-import { RefineControlFormTypes } from '@/app/[lang]/courses/page';
-import AutocompleteControl from './AutocompleteControl';
 import SelectControl from './SelectControl';
+import { RefineControlFormTypes } from '@/app/[lang]/(mods-pages)/courses/page';
 
 export enum TimeFilterType {
     Within,

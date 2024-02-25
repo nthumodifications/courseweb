@@ -6,7 +6,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export interface Database {
+export type Database = {
   public: {
     Tables: {
       alerts: {
@@ -60,6 +60,65 @@ export interface Database {
           route_name?: string
           schedule?: string[]
           vehicle?: string
+        }
+        Relationships: []
+      }
+      campaign_responses: {
+        Row: {
+          campaign_id: number
+          created_at: string
+          id: number
+          ip: string
+          response: string
+        }
+        Insert: {
+          campaign_id: number
+          created_at?: string
+          id?: number
+          ip: string
+          response: string
+        }
+        Update: {
+          campaign_id?: number
+          created_at?: string
+          id?: number
+          ip?: string
+          response?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_responses_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      campaigns: {
+        Row: {
+          actions: string[]
+          active: boolean | null
+          created_at: string
+          description: string
+          id: number
+          title: string
+        }
+        Insert: {
+          actions: string[]
+          active?: boolean | null
+          created_at?: string
+          description: string
+          id?: number
+          title: string
+        }
+        Update: {
+          actions?: string[]
+          active?: boolean | null
+          created_at?: string
+          description?: string
+          id?: number
+          title?: string
         }
         Relationships: []
       }
@@ -227,18 +286,21 @@ export interface Database {
         Row: {
           ends: string
           ref_sem: string
+          ref_sem_2: string
           starts: string
           term: string
         }
         Insert: {
           ends: string
           ref_sem: string
+          ref_sem_2: string
           starts: string
           term: string
         }
         Update: {
           ends?: string
           ref_sem?: string
+          ref_sem_2?: string
           starts?: string
           term?: string
         }
