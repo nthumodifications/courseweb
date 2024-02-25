@@ -20,6 +20,7 @@ import { Suspense } from 'react';
 import {HeadlessAISProvider} from '@/hooks/contexts/useHeadlessAIS';
 import { Toaster } from '@/components/ui/toaster';
 import ConsoleLogger from '@/components/ConsoleLogger';
+import ReactQuery from '@/components/ReactQuery';
 
 export const metadata: Metadata = {
   title: {
@@ -108,20 +109,22 @@ export default function RootLayout({
   return (
     <CssVarsProvider defaultMode={(theme?.value as any) ?? 'light'}>
       <NextAuthProvider>
-        <SettingsProvider>
-          <HeadlessAISProvider>
-            <UserTimetableProvider>
-              <ModalProvider>
-                <html lang={params.lang} className={`${theme?.value ?? ''} ${inter.variable} ${noto.variable}`} suppressHydrationWarning>
-                  <body>
-                    {children}
-                    <Toaster />
-                  </body>
-                </html>
-              </ModalProvider>
-            </UserTimetableProvider>
-          </HeadlessAISProvider>
-        </SettingsProvider>
+        <ReactQuery>
+          <SettingsProvider>
+            <HeadlessAISProvider>
+              <UserTimetableProvider>
+                <ModalProvider>
+                  <html lang={params.lang} className={`${theme?.value ?? ''} ${inter.variable} ${noto.variable}`} suppressHydrationWarning>
+                    <body>
+                      {children}
+                      <Toaster />
+                    </body>
+                  </html>
+                </ModalProvider>
+              </UserTimetableProvider>
+            </HeadlessAISProvider>
+          </SettingsProvider>
+        </ReactQuery>
       </NextAuthProvider>
     </CssVarsProvider>
   )

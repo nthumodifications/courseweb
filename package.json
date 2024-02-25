@@ -49,6 +49,7 @@
     "@radix-ui/react-toggle": "^1.0.3",
     "@sentry/nextjs": "^7.93.0",
     "@supabase/supabase-js": "^2.38.4",
+    "@tanstack/react-query": "^5.24.1",
     "@types/node": "20.10.7",
     "@types/react": "18.2.38",
     "@types/react-dom": "18.2.17",
