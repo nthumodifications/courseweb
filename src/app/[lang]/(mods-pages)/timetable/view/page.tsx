@@ -4,7 +4,6 @@ import { NextPage } from "next";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from 'next/navigation'
 import supabase from "@/config/supabase";
-import useSWR from "swr";
 import {createTimetableFromCourses, colorMapFromCourses} from '@/helpers/timetable';
 import { MinimalCourse } from "@/types/courses";
 import {CardContent, Divider} from '@mui/joy';
@@ -16,6 +15,7 @@ import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { Alert } from "@/components/ui/alert";
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {useQuery} from '@tanstack/react-query';
 
 const ViewTimetablePage: NextPage = () => {
     const router = useRouter();
@@ -39,13 +39,14 @@ const ViewTimetablePage: NextPage = () => {
 
     if(!courseCodes) router.back();
     
-    const { data: courses = [], error, isLoading } = useSWR(['courses', courseCodes![semester]], async ([table, codes]) => {
-        const { data = [], error } = await supabase.from('courses').select("*").in('raw_id', codes);
-        if(error) throw error;
-        if(!data) throw new Error('No data');
-        return data;
-    }, {
-        keepPreviousData: true,
+    const { data: courses = [], error, isLoading } = useQuery({
+        queryKey: ['courses', courseCodes![semester]], 
+        queryFn: async () => {
+            const { data = [], error } = await supabase.from('courses').select("*").in('raw_id', courseCodes![semester]);
+            if(error) throw error;
+            if(!data) throw new Error('No data');
+            return data;
+        }
     })
     const timetableData = createTimetableFromCourses(courses as MinimalCourse[], colorMap);
       

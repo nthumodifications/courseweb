@@ -1,6 +1,5 @@
-'use client';
-
-import {Alert, ColorPaletteProp, Divider, Tooltip} from '@mui/joy';
+'use client';;
+import { Alert, ColorPaletteProp } from '@mui/joy';
 import {format, formatRelative, getDay} from 'date-fns';
 import useUserTimetable from '@/hooks/contexts/useUserTimetable';
 import {scheduleTimeSlots} from '@/const/timetable';
@@ -16,12 +15,12 @@ import { apps } from '@/const/apps';
 import Link from 'next/link';
 import { getSemester, lastSemester } from '@/const/semester';
 import supabase from '@/config/supabase';
-import useSWR from 'swr';
 import { createTimetableFromCourses } from '@/helpers/timetable';
 import { MinimalCourse } from '@/types/courses';
 import { VenueChip } from '../Timetable/VenueChip';
+import { useQuery } from '@tanstack/react-query';
 
-const TodaySchedule: FC<{ weather: WeatherData, alerts: AlertDefinition[] }> = ({ weather, alerts }) => {
+const TodaySchedule: FC<{ weather: WeatherData | undefined, alerts: AlertDefinition[], weatherLoading: boolean, alertLoading: boolean }> = ({ weather, alerts, weatherLoading, alertLoading }) => {
     const { courses, isCoursesEmpty, colorMap, timetableData, deleteCourse } = useUserTimetable();
     const { language, pinnedApps } = useSettings();
     const dict = useDictionary();
@@ -29,15 +28,17 @@ const TodaySchedule: FC<{ weather: WeatherData, alerts: AlertDefinition[] }> = (
     //sort courses[semester]： string[] and put as key_display_ids
     const key_display_ids = useMemo(() => [...([courses[lastSemester.id]] ?? [])].sort(), [courses, lastSemester]);
 
-    const { data: display_courses = [], error, isLoading } = useSWR(['courses', key_display_ids], async ([table, courseCodes]) => {
-        if(!courseCodes) return [];
-        const { data = [], error } = await supabase.rpc('search_courses_with_syllabus', { keyword: "" }).in('raw_id', courseCodes);
-        if (error) throw error;
-        if (!data) throw new Error('No data');
-        return data as unknown as CourseSyllabusView[];
-    }, {
-        keepPreviousData: true,
+    const { data: display_courses = [], error, isLoading } = useQuery({
+        queryKey: ['courses', key_display_ids], 
+        queryFn: async () => {
+            if(!key_display_ids) return [];
+            const { data = [], error } = await supabase.rpc('search_courses_with_syllabus', { keyword: "" }).in('raw_id', key_display_ids);
+            if (error) throw error;
+            if (!data) throw new Error('No data');
+            return data as unknown as CourseSyllabusView[];
+        }
     });
+    
     //sort display_courses according to courses[semester]
     const displayCourseData =  useMemo(() => {
         if(!display_courses) return [];
@@ -142,7 +143,7 @@ const TodaySchedule: FC<{ weather: WeatherData, alerts: AlertDefinition[] }> = (
                         {/* WEDNESDAY */}
                         <div className="text-xl font-semibold text-gray-600 dark:text-gray-300">{formatRelative(day, Date.now(), { locale: getLocale(language) })}</div>
                     </div>
-                    <WeatherIcon date={day} weather={weather.find(w => w.date == format(day, 'yyyy-MM-dd'))!}/>
+                    {!weatherLoading && weather && <WeatherIcon date={day} weather={weather!.find(w => w.date == format(day, 'yyyy-MM-dd'))!}/>}
                 </div>
                 {renderAlerts(day)}
                 {renderDayTimetable(day)}
