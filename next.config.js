@@ -11,6 +11,9 @@ const withPWA = require('@ducanh2912/next-pwa').default({
     workboxOptions: {
       disableDevLogs: true,
     },
+    fallbacks: {
+      document: '/zh/offline',
+    }
 })
   
 /** @type {import('next').NextConfig} */
