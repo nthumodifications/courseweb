@@ -23,7 +23,7 @@ const Timetable = () => {
     }
   }
 
-  return <Card className="absolute top-16 right-2 z-50 w-[300px] h-64 p-4 flex flex-col overflow-auto">
+  return <div className="p-4 flex flex-col overflow-auto">
     <span className="text-xs font-bold">TIMETABLE</span>
     <div className="grid grid-cols-7 gap-1 mt-4">
       <div></div>
@@ -42,7 +42,7 @@ const Timetable = () => {
         })
       })}
     </div>
-  </Card>
+  </div>
 }
 
 export default Timetable

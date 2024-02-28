@@ -21,6 +21,7 @@ import { TimeFilterType } from "@/components/FormComponents/TimeslotSelectorCont
 import { event } from "@/lib/gtag";
 import {toPrettySemester} from '@/helpers/semester';
 import Timetable from "@/components/Courses/Timetable";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 
 export type RefineControlFormTypes = {
     textSearch: string,
@@ -326,7 +327,21 @@ const CoursePage: NextPage = () => {
                     </div>
                 </div>
             </div>
-            {!isMobile && <Timetable />}
+
+            <div className="absolute bottom-2 right-2 w-[300px] h-[90vh]">
+                <ResizablePanelGroup direction="vertical" className="rounded-lg border">
+                    <ResizablePanel defaultSize={25}>
+                        <Timetable />
+                    </ResizablePanel>
+                    <ResizableHandle />
+                    <ResizablePanel defaultSize={75}>
+                        <div className="flex h-full items-center justify-center p-6">
+                        <span className="font-semibold">Content</span>
+                        </div>
+                    </ResizablePanel>
+                </ResizablePanelGroup>
+            </div>
+
             {!isMobile && <RefineControls control={control} onClear={handleClear} setValue={setValue}/>}
             {isMobile && <Drawer
                 size="md"

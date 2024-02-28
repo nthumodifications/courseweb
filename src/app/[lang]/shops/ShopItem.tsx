@@ -21,52 +21,66 @@ interface ShopItemProps {
 
 const checkOpen = (schedule: string) => {
   if (schedule == "24小時") {
-    return [true, '24小時營業']
+    return [true, '營業中', '24小時營業']
   }
   if (schedule == "") {
     return [false, '今日休息']
   }
   if (schedule.includes(',')) {
-    let timeslots = schedule.split(',')
-    let now = new Date()
-    let nowTime = now.getHours() * 60 + now.getMinutes()
-    for (let i = 0; i < timeslots.length; i++) {
-      let [start, end] = timeslots[i].split('-')
-      let [startHour, startMin] = start.split(':').map(Number)
-      let [endHour, endMin] = end.split(':').map(Number)
-      let startTime = startHour * 60 + startMin
-      let endTime = endHour * 60 + endMin
-      if (nowTime >= startTime && nowTime <= endTime) {
-        return [true, `剩餘${endHour - now.getHours()}小時${endMin - now.getMinutes()}分`]
+    let timeslots = schedule.split(',').map(slot => slot.trim())
+    for (let slot of timeslots) {
+      let [start, end] = slot.split('-')
+      let startDate = new Date()
+      startDate.setHours(parseInt(start.split(':')[0]), parseInt(start.split(':')[1]), 0)
+      let endDate = new Date()
+      endDate.setHours(parseInt(end.split(':')[0]), parseInt(end.split(':')[1]), 0)
+
+      let now = new Date()
+      if (now < startDate && startDate.valueOf()-now.valueOf() < 3600*1000) {
+        return [false, '即將開始', start+'開始營業']
       }
-      else {
-        return [false, `將於${startHour}點${startMin}分開始營業`]
+      if (now > startDate && now < endDate && endDate.valueOf()-now.valueOf() < 3600*1000) {
+        return [true, '即將休息', end+'後休息']
       }
+      if (now > startDate && now < endDate) {
+        return [true, '營業中', end+'後休息']
+      }
+      if (now > endDate) {
+        continue
+      }
+      return [false, '無資訊']
     }
   }
   if (schedule.includes('-')) {
     let [start, end] = schedule.split('-')
-    let [startHour, startMin] = start.split(':').map(Number)
-    let [endHour, endMin] = end.split(':').map(Number)
+    let startDate = new Date()
+    startDate.setHours(parseInt(start.split(':')[0]), parseInt(start.split(':')[1]), 0)
+    let endDate = new Date()
+    endDate.setHours(parseInt(end.split(':')[0]), parseInt(end.split(':')[1]), 0)
+
     let now = new Date()
-    let nowTime = now.getHours() * 60 + now.getMinutes()
-    let startTime = startHour * 60 + startMin
-    let endTime = endHour * 60 + endMin
-    if (nowTime >= startTime && nowTime <= endTime) {
-      return [true, `剩餘${endHour - now.getHours()}小時${endMin - now.getMinutes()}分`]
+    if (now < startDate && startDate.valueOf()-now.valueOf() < 3600*1000) {
+      return [false, '即將開始', start+'開始營業']
     }
-    else {
-      return [false, `將於${startHour}點${startMin}分開始營業`]
+    if (now > startDate && now < endDate && endDate.valueOf()-now.valueOf() < 3600*1000) {
+      return [true, '即將休息', end+'後休息']
     }
+    if (now > startDate && now < endDate) {
+      return [true, '營業中', end+'後休息']
+    }
+    if (now > endDate) {
+      return [false, '休息中']
+    }
+    return [false, '無資訊']
   }
-  return [false, 'No info']
+  return [false, '無資訊']
 }
 
 const ShopItem: React.FC<ShopItemProps> = ({ shop, filter }) => {
   const days = ['sunday', 'weekday', 'weekday', 'weekday', 'weekday', 'weekday', 'saturday']
   const today = days[new Date().getDay()]
 
-  let [isOpen, msg] = checkOpen(shop.schedule[today])
+  let [isOpen, status, message] = checkOpen(shop.schedule[today])
 
   if (filter && filter.search && !shop.name.toLowerCase().includes(filter.search.toLowerCase())) {
     return null
@@ -97,17 +111,10 @@ const ShopItem: React.FC<ShopItemProps> = ({ shop, filter }) => {
             <span className="text-muted-foreground text-sm">{shop.area}</span>
           </div>
           <div className="flex items-center gap-1 mt-2">
-            {isOpen ?
-              <div className="flex gap-2 flex-col sm:items-center sm:flex-row">
-                <Badge className="w-max">營業中</Badge>
-                <span className="text-muted-foreground text-sm">{msg}</span>
-              </div>
-              :
-              <div className="flex gap-2 flex-col sm:items-center sm:flex-row">
-                <Badge className="w-max" variant="destructive">休息中</Badge> 
-                <span className="text-muted-foreground text-sm">{msg}</span>
-              </div>
-            }
+            <div className="flex gap-2 flex-col sm:items-center sm:flex-row">
+              <Badge className="w-max" variant={isOpen ? 'default' : 'destructive'}>{status}</Badge> 
+              <span className="text-muted-foreground text-sm">{message}</span>
+            </div>
           </div>
         </div>
         <Separator className="my-4" />
