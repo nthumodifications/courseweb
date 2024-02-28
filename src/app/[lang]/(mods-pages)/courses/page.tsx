@@ -2,7 +2,7 @@
 import CourseListItem from "@/components/Courses/CourseListItem";
 import InputControl from "@/components/FormComponents/InputControl";
 import supabase, { CourseSyllabusView } from '@/config/supabase';
-import { Button, CircularProgress, Divider, Drawer, IconButton, Stack } from "@mui/joy";
+import { CircularProgress, Drawer, Stack } from "@mui/joy";
 import { NextPage } from "next";
 import { useEffect, useState, Fragment, useRef, useMemo } from "react";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter, Search, X } from "lucide-react";
@@ -14,12 +14,17 @@ import RefineControls from '@/components/Courses/RefineControls';
 import useDictionary from "@/dictionaries/useDictionary";
 import { useRouter, useSearchParams } from "next/navigation";
 import queryString from 'query-string';
-import { departments } from "@/const/departments";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
-import {Department} from '@/types/courses';
 import { TimeFilterType } from "@/components/FormComponents/TimeslotSelectorControl";
 import { event } from "@/lib/gtag";
 import {toPrettySemester} from '@/helpers/semester';
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import {FormField, Form} from '@/components/ui/form';
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator"
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import Timetable from "@/components/Courses/Timetable";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 
 export type RefineControlFormTypes = {
     textSearch: string,
@@ -27,7 +32,7 @@ export type RefineControlFormTypes = {
     language: string[],
     others: string[],
     className: string | null,
-    department: Department[],
+    department: string[],
     firstSpecialization: string | null,
     secondSpecialization: string | null,
     timeslots: string[],
@@ -69,7 +74,7 @@ const CoursePage: NextPage = () => {
     const searchParams = useSearchParams();
     const [filtersState, setFiltersState] = useLocalStorage<RefineControlFormTypes>('course_filters', emptyFilters);
 
-    const { control, watch, setValue, reset, formState: { isDirty } } = useForm<RefineControlFormTypes>({
+    const form = useForm<RefineControlFormTypes>({
         defaultValues: useMemo(() => {
             if (searchParams.size > 0) { 
                 //Since we have to handle department differently, special cases where have nested objects
@@ -77,15 +82,6 @@ const CoursePage: NextPage = () => {
                 let params = queryString.parse(searchParams.toString(), { arrayFormat: 'index', parseNumbers: true })
                 //@ts-ignore
                 params.semester = params.semester?.toString()
-                if (params.department && params.department instanceof Array) {
-                    //@ts-ignore
-                    params.department = params.department
-                        .map(code => {
-                            const department = departments.find(mod => mod.code == code)
-                            return department ? { code: department?.code, name_zh: department?.name_zh, name_en: department?.name_en } : undefined
-                        })
-                        .filter(mod => !!mod) ?? []
-                }
                 const final = Object.assign({}, emptyFilters, params)
                 //if final is same as emptyFilters, then it means there is no filters, return filterstate, check if filtersState is same as emptyFilters, if not, reset to emptyFilters
                 if(JSON.stringify(final) == JSON.stringify(emptyFilters)) {
@@ -99,6 +95,8 @@ const CoursePage: NextPage = () => {
             else return emptyFilters;
         }, [])
     })
+
+    const { control, watch, setValue, reset, formState: { isDirty } } = form;
 
     const isMobile = useMediaQuery('(max-width: 768px)');
 
@@ -116,30 +114,40 @@ const CoursePage: NextPage = () => {
     const currentPage = headIndex / 30 + 1;
     const totalPage = Math.ceil(totalCount / 30);
 
-    const PAGNIATION_MAX = 7;
+    const PAGNIATION_MAX = 6;
 
     const filters = watch()
 
     const renderPagination = () => {
         const range = paginationRange(currentPage, totalPage, PAGNIATION_MAX);
-
-        return range.map((page, index) => {
-            return (
-                <Button
-                    key={index}
-                    variant="soft"
-                    aria-pressed={currentPage == page}
-                    sx={(theme) => ({
-                        [`&[aria-pressed="true"]`]: {
-                            ...theme.variants.outlinedActive.neutral,
-                            borderColor: theme.vars.palette.neutral.outlinedHoverBorder,
-                        },
-                    })}
-                    onClick={() => searchQueryFunc(filters, (page - 1) * 30)}
-                >
-                    {page}
-                </Button>)
-        })
+        return <Pagination>
+            <PaginationContent>
+            <PaginationItem>
+                <PaginationPrevious onClick={() => searchQuery(filters, headIndex - 30)}/>
+            </PaginationItem>
+            {currentPage > 4 && <PaginationItem>
+                <PaginationEllipsis />
+            </PaginationItem>}
+            <PaginationItem>
+                {range.map((page, index) => {
+                    return (
+                        <PaginationLink
+                            key={index}
+                            aria-pressed={currentPage == page}
+                            onClick={() => searchQueryFunc(filters, (page - 1) * 30)}
+                        >
+                            {page}
+                        </PaginationLink>)
+                })}
+            </PaginationItem>
+            {currentPage < totalPage - 3 && <PaginationItem>
+                <PaginationEllipsis />
+            </PaginationItem>}
+            <PaginationItem>
+                <PaginationNext href="#" onClick={() => searchQuery(filters, headIndex + 30)}/>
+            </PaginationItem>
+            </PaginationContent>
+        </Pagination>
     }
 
     const searchQuery = async (filters: RefineControlFormTypes, index: number = 0) => {
@@ -168,7 +176,7 @@ const CoursePage: NextPage = () => {
                     .or(filters.language.map(lang => `language.eq.${lang}`).join(','))
             if (filters.department.length)
                 temp = temp
-                    .in('department', filters.department.map(({ code }) => code))
+                    .in('department', filters.department)
             if (filters.className)
                 temp = temp
                     .or(`compulsory_for.cs.{"${filters.className}"},elective_for.cs.{"${filters.className}"}`);
@@ -243,7 +251,6 @@ const CoursePage: NextPage = () => {
         //change them to string
         router.replace('?' + queryString.stringify({
             ...filters,
-            department: filters.department.map(mod => mod.code),
         }, { arrayFormat: 'index' }))
         setFiltersState(filters);
 
@@ -262,88 +269,96 @@ const CoursePage: NextPage = () => {
 
 
     return (<>
-        {/* <div className="grid grid-cols-1 md:grid-cols-[auto_320px] w-full h-full overflow-hidden"> */}
-            <div className="flex flex-col w-full h-screen overflow-auto space-y-5 px-2 pt-2 md:pr-[320px] no-scrollbar scroll-smooth" ref={scrollRef}>
-                <InputControl
+        <div className="grid grid-cols-1 md:grid-cols-[auto_320px] overflow-hidden max-h-[--content-height]">
+        <Form {...form}>
+            <div className="flex flex-col w-full h-screen overflow-auto space-y-5 px-2 pt-2 no-scrollbar scroll-smooth" ref={scrollRef}>
+                <FormField
                     control={control}
                     name="textSearch"
-                    placeholder={dict.course.list.search_placeholder}
-                    variant="soft"
-                    size="lg"
-                    sx={{ position: 'sticky', top: 0, zIndex: 10 }}
-                    startDecorator={
-                        loading? <CircularProgress size="sm"/>: <Search/>
-                    }
-                    endDecorator={
-                        <Fragment>
-                            {filters.textSearch.length > 0 && <IconButton onClick={() => setValue('textSearch', "")}>
-                                <X className="text-gray-400 p-1" />
-                            </IconButton>}
-                            {
-                                isMobile ? <>
-                                    <Divider orientation="vertical" />
-                                    <IconButton onClick={() => setOpen(true)}>
-                                        <Filter className="text-gray-400 p-1" />
-                                    </IconButton>
-                                </> : <></>
-                            }
-                        </Fragment>
-                    }
+                    render={({ field }) => (
+                        <div className="flex flex-row min-h-[44px] items-center rounded-md bg-slate-100 text-slate-400 sticky top-2.5 z-10">
+                            <div className="px-3">
+                                {loading? <CircularProgress size="sm"/>: 
+                                    <HoverCard>
+                                        <HoverCardTrigger><Search/></HoverCardTrigger>
+                                        <HoverCardContent className="whitespace-pre-wrap">
+                                            You can search by <br/>
+                                            - Course Name <br/>
+                                            - Teacher Name <br/>
+                                            - Course ID
+                                        </HoverCardContent>
+                                    </HoverCard>
+                                }
+                            </div>
+                            <input className="bg-transparent outline-none flex-1 text-black" placeholder={dict.course.list.search_placeholder} {...field} />
+                            <Fragment>
+                                {filters.textSearch.length > 0 && <Button size='icon' variant={"ghost"} onClick={() => setValue('textSearch', "")}>
+                                    <X className="text-gray-400 p-1" />
+                                </Button>}
+                                {
+                                    isMobile ? <>
+                                        <Separator orientation="vertical" />
+                                        <Button size='icon' variant={"ghost"} onClick={() => setOpen(true)}>
+                                            <Filter className="text-gray-400 p-1" />
+                                        </Button>
+                                    </> : <></>
+                                }
+                            </Fragment>
+                        </div>
+                    )}
                 />
-                <div className="relative">
-                    {/* loading covers all with white cover */}
-                    {loading && <div className="absolute inset-0 bg-white/60 dark:bg-neutral-900/60 z-10"></div>}
-                    <div className="flex flex-col w-full h-full space-y-4 pb-8">
-                        <div className="flex flex-row justify-between px-3 py-1 border-b dark:border-neutral-800">
-                            <h6 className="text-gray-600 dark:text-neutral-400">{toPrettySemester(filters.semester)} {dict.course.list.courses}</h6>
-                            <h6 className="text-gray-600 dark:text-neutral-400">{dict.course.list.found}: {totalCount} {dict.course.list.courses}</h6>
+                    <div className="relative">
+                        {/* loading covers all with white cover */}
+                        {loading && <div className="absolute inset-0 bg-white/60 dark:bg-neutral-900/60 z-10"></div>}
+                        <div className="flex flex-col w-full h-full space-y-4 pb-14">
+                            <div className="flex flex-row justify-between px-3 py-1 border-b dark:border-neutral-800">
+                                <h6 className="text-gray-600 dark:text-neutral-400">{toPrettySemester(filters.semester)} {dict.course.list.courses}</h6>
+                                <h6 className="text-gray-600 dark:text-neutral-400">{dict.course.list.found}: {totalCount} {dict.course.list.courses}</h6>
+                            </div>
+                            <div className="flex flex-col w-full h-full space-y-5">
+                                {renderExistingSelection()}
+                                {courses.map((course, index) => (
+                                    <CourseListItem key={index} course={course} />
+                                ))}
+                            </div>
+                            <div className="flex flex-row justify-center">
+                                {renderPagination()}
+                            </div>
                         </div>
-                        <div className="flex flex-col w-full h-full space-y-5">
-                            {renderExistingSelection()}
-                            {courses.map((course, index) => (
-                                <CourseListItem key={index} course={course} />
-                            ))}
-                        </div>
-                        <Stack
-                            direction="row"
-                            justifyContent="center"
-                        >
-                            {currentPage != 1 && <IconButton onClick={() => searchQuery(filters, 0)}>
-                                <ChevronsLeft />
-                            </IconButton>}
-                            {currentPage != 1 && <IconButton onClick={() => searchQuery(filters, headIndex - 30)}>
-                                <ChevronLeft />
-                            </IconButton>}
-                            {renderPagination()}
-                            {currentPage != totalPage && <IconButton onClick={() => searchQuery(filters, headIndex + 30)}>
-                                <ChevronRight />
-                            </IconButton>}
-                            {currentPage != totalPage && <IconButton onClick={() => searchQuery(filters, (totalPage - 1) * 30)}>
-                                <ChevronsRight />
-                            </IconButton>}
-                        </Stack>
                     </div>
                 </div>
-            </div>
-            {!isMobile && <RefineControls control={control} onClear={handleClear} setValue={setValue}/>}
-            {isMobile && <Drawer
-                size="md"
-                variant="plain"
-                open={open}
-                onClose={() => setOpen(false)}
-                slotProps={{
-                    content: {
-                        sx: {
-                            bgcolor: 'transparent',
-                            p: { md: 3, sm: 0 },
-                            boxShadow: 'none',
+
+                {!isMobile && <div className="absolute bottom-2 right-2 w-[300px] h-[90vh]">
+                    <ResizablePanelGroup direction="vertical" className="rounded-md border">
+                        <ResizablePanel defaultSize={25} minSize={6} className="!overflow-y-scroll">
+                            <Timetable />
+                        </ResizablePanel>
+                        <ResizableHandle />
+                        <ResizablePanel defaultSize={75} minSize={6} className="!overflow-y-scroll">
+                            <RefineControls control={control} onClear={handleClear} setValue={setValue}/>
+                        </ResizablePanel>
+                    </ResizablePanelGroup>
+                </div>}
+
+                {isMobile && <Drawer
+                    size="md"
+                    variant="plain"
+                    open={open}
+                    onClose={() => setOpen(false)}
+                    slotProps={{
+                        content: {
+                            sx: {
+                                bgcolor: 'transparent',
+                                p: { md: 3, sm: 0 },
+                                boxShadow: 'none',
+                            },
                         },
-                    },
-                }}
-            >
-                <RefineControls control={control} onClear={handleClear} setValue={setValue}/>
-            </Drawer>}
-        {/* </div> */}
+                    }}
+                >
+                    <RefineControls control={control} onClear={handleClear} setValue={setValue}/>
+                </Drawer>}
+            </Form>
+        </div>
         </>
 
     )
