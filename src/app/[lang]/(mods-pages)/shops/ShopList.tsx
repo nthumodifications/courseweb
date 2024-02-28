@@ -16,8 +16,8 @@ import {
 import ShopItem from "./ShopItem"
 import areas from "./areas.json"
 
-const Shops = ({ data }) => {
-  const shops = data.map(area => area.restaurants).flat()
+const Shops = ({ data }: { data: Array<{ restaurants: Array<any> }> }) => {
+  const shops = data.map(area => area.restaurants).flat();
 
   const [search, setSearch] = useState('')
   const [filterOpen, setFilterOpen] = useState(false)
@@ -71,7 +71,7 @@ const Shops = ({ data }) => {
       </div>
 
       <div className="flex flex-col gap-12 py-4">
-        {shops.map((shop, index) => (
+        {shops.map((shop) => (
           <ShopItem shop={shop} filter={{ search: search, open: filterOpen, area: filterArea }} />
         ))}
       </div>

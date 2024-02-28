@@ -11,6 +11,6 @@ async function getData() {
 }
  
 export default async function Page() {
-  const data = await getData()
+  const data: any = await getData()
   return <ShopList data={data} />
 }
