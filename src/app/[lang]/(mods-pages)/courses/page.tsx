@@ -23,7 +23,7 @@ import {FormField, Form} from '@/components/ui/form';
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
-import Timetable from "@/components/Courses/Timetable";
+import MiniTimetable from "@/components/Courses/MiniTimetable";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 
 export type RefineControlFormTypes = {
@@ -331,7 +331,7 @@ const CoursePage: NextPage = () => {
                 {!isMobile && <div className="absolute bottom-2 right-2 w-[300px] h-[90vh]">
                     <ResizablePanelGroup direction="vertical" className="rounded-md border">
                         <ResizablePanel defaultSize={25} minSize={6} className="!overflow-y-scroll">
-                            <Timetable />
+                            <MiniTimetable />
                         </ResizablePanel>
                         <ResizableHandle />
                         <ResizablePanel defaultSize={75} minSize={6} className="!overflow-y-scroll">

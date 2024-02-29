@@ -12,7 +12,7 @@ import { MinimalCourse } from "@/types/courses";
 import { scheduleTimeSlots } from "@/const/timetable"
 import useDictionary from '@/dictionaries/useDictionary';
 
-const Timetable = () => {
+const MiniTimetable = () => {
   const dict = useDictionary();
   const { displayCourseData, semester, setSemester, colorMap } = useUserTimetable();
   const timetableData = createTimetableFromCourses(displayCourseData as MinimalCourse[], colorMap)
@@ -49,4 +49,4 @@ const Timetable = () => {
   </div>
 }
 
-export default Timetable
+export default MiniTimetable
