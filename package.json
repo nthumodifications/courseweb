@@ -10,7 +10,8 @@
     "gentype": "npx supabase gen types typescript --project-id \"cmzdlrqfpuktcczvsobs\" --schema public > src/types/supabase.ts",
     "checkts": "tsc --noEmit",
     "ionic:build": "npm run build",
-    "ionic:serve": "npm run start"
+    "ionic:serve": "npm run start",
+    "sync:ios": "cap sync ios"
   },
   "dependencies": {
     "@capacitor/android": "^5.6.0",
