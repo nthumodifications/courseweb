@@ -10,6 +10,7 @@ brew install node@18
 brew link node@18
 
 # Install dependencies
+npm config set maxsockets 3
 npm ci
 # or `pnpm install --frozen-lockfile` or `yarn install --frozen-lockfile` or bun install
 npm run build
