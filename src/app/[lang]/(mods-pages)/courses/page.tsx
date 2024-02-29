@@ -276,7 +276,7 @@ const CoursePage: NextPage = () => {
                     control={control}
                     name="textSearch"
                     render={({ field }) => (
-                        <div className="flex flex-row min-h-[44px] items-center rounded-md bg-slate-100 text-slate-400 sticky top-2.5 z-10">
+                        <div className="flex flex-row min-h-[44px] items-center rounded-md bg-secondary text-secondary-foreground sticky top-2.5 z-10">
                             <div className="px-3">
                                 {loading? <CircularProgress size="sm"/>: 
                                     <HoverCard>
@@ -290,7 +290,7 @@ const CoursePage: NextPage = () => {
                                     </HoverCard>
                                 }
                             </div>
-                            <input className="bg-transparent outline-none flex-1 text-black" placeholder={dict.course.list.search_placeholder} {...field} />
+                            <input className="bg-transparent outline-none flex-1 text-secondary-foreground" placeholder={dict.course.list.search_placeholder} {...field} />
                             <Fragment>
                                 {filters.textSearch.length > 0 && <Button size='icon' variant={"ghost"} onClick={() => setValue('textSearch', "")}>
                                     <X className="text-gray-400 p-1" />
