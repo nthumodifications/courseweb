@@ -1,16 +1,15 @@
-'use client';
-import { useSettings } from "./settings";
+'use client';;
 import {useState, useEffect, useCallback, createContext, useContext, useMemo, useLayoutEffect} from 'react';
 import supabase, { CourseSyllabusView } from "@/config/supabase";
 import { createTimetableFromCourses } from "@/helpers/timetable";
 import { CourseTimeslotData } from "@/types/timetable";
-import useSWR from "swr";
 import { MinimalCourse, RawCourseID } from '@/types/courses';
 import { useLocalStorage } from 'usehooks-ts';
-import { lastSemester, semesterInfo, currentSemester } from "@/const/semester";
+import { lastSemester, currentSemester } from "@/const/semester";
 import { getSemesterFromID } from '@/helpers/courses';
 import { event } from "@/lib/gtag";
 import {timetableColors} from '@/const/timetableColors';
+import { useQuery } from "@tanstack/react-query";
 
 type CourseLocalStorage = { [sem: string]: RawCourseID[] };
 
@@ -34,7 +33,7 @@ const userTimetableContext = createContext<ReturnType<typeof useUserTimetablePro
     setColor: () => {},
     isCourseSelected: () => false,
     isLoading: true,
-    error: undefined,
+    error: null,
     semester: lastSemester.id,
     isCoursesEmpty: true,
     setSemester: () => { }
@@ -99,14 +98,15 @@ const useUserTimetableProvider = (loadCourse = true) => {
     //sort courses[semester]： string[] and put as key_display_ids
     const key_display_ids = useMemo(() => [...(courses[semester] ?? [])].sort(), [courses, semester]);
 
-    const { data: display_courses = [], error, isLoading } = useSWR(['courses', key_display_ids], async ([table, courseCodes]) => {
-        if(!courseCodes) return [];
-        const { data = [], error } = await supabase.rpc('search_courses_with_syllabus', { keyword: "" }).in('raw_id', courseCodes);
-        if (error) throw error;
-        if (!data) throw new Error('No data');
-        return data as unknown as CourseSyllabusView[];
-    }, {
-        keepPreviousData: true,
+    const { data: display_courses = [], error, isLoading } = useQuery({
+        queryKey: ['courses', key_display_ids], 
+        queryFn: async () => {
+            if(!key_display_ids) return [];
+            const { data = [], error } = await supabase.rpc('search_courses_with_syllabus', { keyword: "" }).in('raw_id', key_display_ids);
+            if (error) throw error;
+            if (!data) throw new Error('No data');
+            return data as unknown as CourseSyllabusView[];
+        }
     });
     //sort display_courses according to courses[semester]
     const displayCourseData =  useMemo(() => {
@@ -114,26 +114,17 @@ const useUserTimetableProvider = (loadCourse = true) => {
         return (courses[semester] ?? []).map(courseID => display_courses.find(c => c.raw_id == courseID)!).filter(c => c);
     }, [display_courses, courses, semester]);
     
-    // const { data: semesterCourseData = [], error: semesterError, isLoading: semesterLoading } = useSWR(['courses', currentSemester ? courses[currentSemester.id] : null], async ([table, courseCodes]) => {
-    //     if(!courseCodes) return [];
-    //     const { data = [], error } = await supabase.rpc('search_courses_with_syllabus', { keyword: "" }).in('raw_id', courseCodes);
-    //     if (error) throw error;
-    //     if (!data) throw new Error('No data');
-    //     return data as unknown as CourseSyllabusView[];
-    // }, {
-    //     keepPreviousData: true,
-    // });
-
     //rewrite semesterCourseData like displayCourseData
     const key_semester_ids = useMemo(() => [...(currentSemester ? (courses[currentSemester.id] ?? []) : null ?? [])].sort(), [courses, currentSemester]);
-    const { data: semester_courses = [], error: semesterError, isLoading: semesterLoading } = useSWR(['courses', key_semester_ids], async ([table, courseCodes]) => {
-        if(!courseCodes) return [];
-        const { data = [], error } = await supabase.rpc('search_courses_with_syllabus', { keyword: "" }).in('raw_id', courseCodes);
-        if (error) throw error;
-        if (!data) throw new Error('No data');
-        return data as unknown as CourseSyllabusView[];
-    }, {
-        keepPreviousData: true,
+    const { data: semester_courses = [], error: semesterError, isLoading: semesterLoading } = useQuery({
+        queryKey: ['courses', key_semester_ids], 
+        queryFn: async () => {
+            if(!key_semester_ids) return [];
+            const { data = [], error } = await supabase.rpc('search_courses_with_syllabus', { keyword: "" }).in('raw_id', key_semester_ids);
+            if (error) throw error;
+            if (!data) throw new Error('No data');
+            return data as unknown as CourseSyllabusView[];
+        }
     });
     const semesterCourseData =  useMemo(() => {
         if(!semester_courses) return [];

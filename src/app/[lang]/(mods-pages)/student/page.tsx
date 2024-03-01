@@ -1,20 +1,21 @@
-'use client';
+'use client';;
 import FullLogo from "@/components/Branding/FullLogo";
 import { useSession } from "next-auth/react";
-import QRCode, { QRCodeSVG } from "qrcode.react";
-import useSWR from "swr";
+import { QRCodeSVG } from "qrcode.react";
 import NTHULoginButton from "@/app/[lang]/cds/NTHULoginButton"
+import {useQuery} from '@tanstack/react-query';
 
 export const runtime = 'nodejs';
 
 const StudentIDCard = () => {
     const { data, status } = useSession();
-    const { data: token , error } = useSWR(data?.user.id, async (id) => {
-        const res = await fetch(`/zh/student/code`)
-        const data = await res.json()
-        return data?.token;
-    }, {
-        refreshInterval: 5 * 60 * 1000,
+    const { data: token , error } = useQuery({
+        queryKey: ['student_code', data?.user.id], 
+        queryFn: async (id) => {
+            const res = await fetch(`/zh/student/code`)
+            const data = await res.json()
+            return data?.token;
+        }
     });
 
     if(status != 'authenticated') return <></>;

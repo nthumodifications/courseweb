@@ -1,19 +1,16 @@
-'use client';
+'use client';;
 import Fade from '@/components/Animation/Fade';
-import GreenLineIcon from '@/components/BusIcons/GreenLineIcon';
-import RedLineIcon from '@/components/BusIcons/RedLineIcon';
-import supabase, { BusScheduleDefinition } from '@/config/supabase';
-import { Route, Stop, getVehicleDescription, routes, stops } from '@/const/bus';
+import supabase from '@/config/supabase';
+import { getVehicleDescription, routes, stops } from '@/const/bus';
 import useDictionary from '@/dictionaries/useDictionary';
 import { useSettings } from '@/hooks/contexts/settings';
-import { Button, Checkbox, Chip, Divider, LinearProgress } from '@mui/joy';
-import { format, add, formatDistanceStrict } from 'date-fns';
-import { useEffect, useState, useMemo } from 'react';
+import { Button, Divider, LinearProgress } from '@mui/joy';
+import { format } from 'date-fns';
+import { useMemo } from 'react';
 import { ChevronLeft, MapPin } from 'lucide-react';
-import useSWR from 'swr';
-import NandaLineIcon from '@/components/BusIcons/NandaLineIcon';
 import RouteIcon from '@/components/BusIcons/RouteIcon';
 import useTime from '@/hooks/useTime';
+import { useQuery } from '@tanstack/react-query';
 type PageProps = {
     params: { busId: string }
 }
@@ -22,11 +19,14 @@ const BusStop = ({ params: { busId } }: PageProps) => {
     const dict = useDictionary();
 
     const { language } = useSettings();
-    const { data: busSchedule, error, isLoading } = useSWR(['bus_schedule', busId], async ([table, busId]) => {
-        const { data: busses, error } = await supabase.from('bus_schedule').select('*').eq('id', busId);
-        if(error || !busses[0]) throw error;
-        return busses[0];
-    })
+    const { data: busSchedule, error, isLoading } = useQuery({
+            queryKey: ['bus_schedule', busId], 
+            queryFn: async () => {
+                const { data: busses, error } = await supabase.from('bus_schedule').select('*').eq('id', busId);
+                if(error || !busses[0]) throw error;
+                return busses[0];
+            }
+        })
 
     //update time every 30 seconds
     const date = useTime();

@@ -10,12 +10,12 @@ import { enUS, zhTW } from 'date-fns/locale';
 import Link from 'next/link';
 import { useState, useMemo } from 'react';
 import { ChevronLeft, MapPin } from 'lucide-react';
-import useSWR from 'swr'
 import RouteIcon from '@/components/BusIcons/RouteIcon';
 import RoutesFilterChips from './RoutesFilterChips';
 import useTime from '@/hooks/useTime';
 import BusDelayAlert from '../../BusDelayAlert';
 import BusDelayReportAlert from './BusDelayReportAlert';
+import {useQuery} from '@tanstack/react-query';
 
 type PageProps = {
     params: { stopId: string }
@@ -34,12 +34,13 @@ const BusStop = ({ params: { stopId } }: PageProps) => {
 
     const [displayRoutes, setDisplayRoutes] = useState<string[]>(routeCodesFirstLetter);
 
-    const { data = [], error, isLoading } = useSWR(['bus_schedule', stopId], async ([table, stopId]) => {
-        const { data: _data = [], error } = await supabase.from('bus_schedule').select('*').in('route_name', routeCodes);
-        if(error) throw error;
-        return _data;
-    }, {
-        keepPreviousData: true,
+    const { data = [], error, isLoading } = useQuery({
+        queryKey: ['bus_schedule', stopId, routeCodes],  
+        queryFn: async () => {
+            const { data: _data = [], error } = await supabase.from('bus_schedule').select('*').in('route_name', routeCodes);
+            if(error) throw error;
+            return _data;
+        }
     })
 
     const schedules = useMemo(() => data!.map(mod => {

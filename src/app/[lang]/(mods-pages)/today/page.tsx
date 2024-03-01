@@ -1,17 +1,34 @@
+'use client';
 import { NextPage } from "next";
-import {getWeatherData} from '@/lib/weather';
 import TodaySchedule from "@/components/Today/TodaySchedule";
-import {getAlerts} from '@/lib/alerts';
+import { useQuery } from "@tanstack/react-query";
+import {WeatherData} from '@/types/weather';
+import { AlertDefinition } from "@/config/supabase";
 
-export const revalidate = 3600;
 
-const TodayPage: NextPage = async () => {
-    const weatherData = await getWeatherData();
-    const alerts = await getAlerts();
+const TodayPage: NextPage = () => {
+
+    const { data: weatherData, error: weatherError, isLoading: weatherLoading } = useQuery<WeatherData>({
+        queryKey: ['weather'], 
+        queryFn: async () => {
+            const res = await fetch('/api/dashboard/weather');
+            const data = await res.json();
+            return data;
+        }
+    });
+
+    const { data: alerts = [], error: alertError, isError: alertLoading } = useQuery<AlertDefinition[]>({
+        queryKey: ['alert'], 
+        queryFn: async () => {
+            const res = await fetch('/api/dashboard/alert');
+            const data = await res.json();
+            return data;
+        }
+    });
 
     return (
         <div className="h-full grid grid-cols-1 md:grid-cols-[380px_auto] md:grid-rows-1">
-            <TodaySchedule weather={weatherData} alerts={alerts}/>
+            <TodaySchedule weather={weatherData} weatherLoading={weatherLoading} alerts={alerts} alertLoading={alertLoading}/>
             <main className='overflow-auto'>
                 {/* {children} */}
             </main>
