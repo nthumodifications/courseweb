@@ -1,5 +1,4 @@
 import {CalendarApiResponse, EventData} from "@/types/calendar_event";
-import {format} from "date-fns";
 
 export const getNTHUCalendar = async () => {
     const CLOUD_API = 'AIzaSyDXDOUpuEDx-aHo7QsK-Exu0IjSfIylWuc'
