@@ -125,7 +125,7 @@ const TodaySchedule: FC<{ weather: WeatherData | undefined, alerts: AlertDefinit
             <div className="flex flex-row items-center rounded-md p-2 flex-1 bg-blue-500 text-gray-300">
                 <Info className="flex pr-1 py-[2px] w-11"/>
                 <div className="flex flex-col">
-                    {event.summary}
+                    <p className="font-semibold">{event.summary}</p>
                 </div>
             </div>
         )
