@@ -86,15 +86,15 @@ export const submitUserSelections = async (term: string, selections: string[]) =
     const { data: courses, error: error1 } = await supabase_server.from('courses').select('*').in('raw_id', selections);
     if(error1) throw error1;
 
-    const timeConflicts = hasConflictingTimeslots(courses as MinimalCourse[]);
-    if(timeConflicts.length > 0) throw new Error('Time conflicts detected');
+    // const timeConflicts = hasConflictingTimeslots(courses as MinimalCourse[]);
+    // if(timeConflicts.length > 0) throw new Error('Time conflicts detected');
     
-    const duplicateCourses = hasSameCourse(courses as MinimalCourse[]);
-    if(duplicateCourses.length > 0) throw new Error('Duplicate courses detected');
+    // const duplicateCourses = hasSameCourse(courses as MinimalCourse[]);
+    // if(duplicateCourses.length > 0) throw new Error('Duplicate courses detected');
 
-    const MAX_COURSES = 5;
-    const exceededMaxCourses = courses.length > MAX_COURSES;
-    if(exceededMaxCourses) throw new Error('Exceeded max courses');
+    // const MAX_COURSES = 5;
+    // const exceededMaxCourses = courses.length > MAX_COURSES;
+    // if(exceededMaxCourses) throw new Error('Exceeded max courses');
 
     //check if term is open
     const termObj = await getCurrentCdsTerm();
@@ -102,6 +102,21 @@ export const submitUserSelections = async (term: string, selections: string[]) =
     if(!termOpen) throw new Error('Term is not open');
     //check if term is same
     const termSame = termObj.term === term;
+
+    const MAX_COURSES = 5;
+    
+    const conflict1 = hasConflictingTimeslots(courses.filter(m => m.semester == termObj.ref_sem) as MinimalCourse[])
+    if (conflict1.length > 0) throw new Error('Time conflicts detected');
+    const conflict2 = hasConflictingTimeslots(courses.filter(m => m.semester == termObj.ref_sem_2) as MinimalCourse[])
+    if (conflict2.length > 0) throw new Error('Time conflicts detected');
+    const duplicates1 = hasSameCourse(courses.filter(m => m.semester == termObj.ref_sem) as MinimalCourse[])
+    if (duplicates1.length > 0) throw new Error('Duplicate courses detected');
+    const duplicates2 = hasSameCourse(courses.filter(m => m.semester == termObj.ref_sem_2) as MinimalCourse[])
+    if (duplicates2.length > 0) throw new Error('Duplicate courses detected');
+    const exceedesMaxCourses1 = courses.filter(m => m.semester == termObj.ref_sem).length > MAX_COURSES;
+    if (exceedesMaxCourses1) throw new Error('Exceeded max courses');
+    const exceedesMaxCourses2 = courses.filter(m => m.semester == termObj.ref_sem_2).length > MAX_COURSES;
+    if (exceedesMaxCourses2) throw new Error('Exceeded max courses');
 
     //save user selections
     const { error: error2 } = await supabase_server
