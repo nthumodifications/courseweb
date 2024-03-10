@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { signIn } from "next-auth/react";
 import { PropsWithChildren } from "react";
 import AdminHeader from "./AdminHeader";
-import NTHULoginButton from "../../cds/NTHULoginButton";
+import NTHULoginButton from "../NTHULoginButton";
 
 export const runtime = "nodejs";
 
@@ -13,7 +13,7 @@ const Layout = async ({ children }: PropsWithChildren) => {
     if (!session) return <div className="grid place-items-center">
         <NTHULoginButton/>
     </div>
-    else return <div className="flex flex-col flex-1">
+    else return <div className="flex flex-col flex-1 min-h-screen">
         <AdminHeader/>
         {children}
     </div>;

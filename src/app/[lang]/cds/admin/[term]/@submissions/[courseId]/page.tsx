@@ -4,7 +4,7 @@ import { Table } from "@mui/joy";
 import DownloadCSV from "./DownloadCSV";
 
 const CourseSubmissions = async ({ params: { courseId, term } }: { params: { courseId: string, term: string }}) => {
-    const termObj = await getCDSTerm(term);
+    const termObj = await getCDSTerm(decodeURI(term));
     const submissions = await getSubmissionDetails(decodeURI(courseId), termObj);
     const course = await getCourse(decodeURI(courseId));
 

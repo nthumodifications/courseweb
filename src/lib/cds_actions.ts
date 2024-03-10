@@ -138,7 +138,7 @@ export const getCDSCourseSubmissions = async (termObj: CdsTermDefinition) => {
     const { data: courses, error: coursesError } = await supabase_server
         .from('courses')
         .select(`${selectMinimalStr}, capacity ,cds_counts!inner(count)`)
-        .eq('semester', termObj.ref_sem)
+        .in('semester', [termObj.ref_sem, termObj.ref_sem_2])
         .gt('cds_counts.count', 0)
 
     if (coursesError) {
