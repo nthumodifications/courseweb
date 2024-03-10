@@ -32,7 +32,7 @@ const MiniTimetable = () => {
     <div className="grid grid-cols-7 gap-1 mt-4">
       <div></div>
       {['M', 'T', 'W', 'R', 'F', 'S'].map(d => {
-        return <div className="text-xs font-bold text-muted-foreground flex items-center justify-center">{d}</div>
+        return <div className="text-xs font-bold text-muted-foreground flex items-center justify-center" key={d}>{d}</div>
       })}
       {timeslots.map((timeslot, i) => {
         return timeslot.map((course, j) => {
