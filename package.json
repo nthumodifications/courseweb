@@ -51,7 +51,7 @@
     "@radix-ui/react-toast": "^1.1.5",
     "@radix-ui/react-toggle": "^1.0.3",
     "@sentry/nextjs": "^7.93.0",
-    "@supabase/supabase-js": "^2.38.4",
+    "@supabase/supabase-js": "^2.39.7",
     "@tanstack/query-sync-storage-persister": "^5.24.1",
     "@tanstack/react-query": "^5.24.1",
     "@tanstack/react-query-persist-client": "^5.24.1",
