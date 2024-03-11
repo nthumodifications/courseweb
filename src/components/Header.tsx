@@ -16,7 +16,7 @@ const SideNavDrawer = () => {
       <SheetTrigger asChild>
         <Button variant='ghost' size='icon' className="md:hidden"><Menu/></Button>
       </SheetTrigger>
-      <SheetContent side={'left'} className="w-[12rem]">
+      <SheetContent side={'left'} className="w-[12rem]" closeIcon={false}>
         <SideNav/>
       </SheetContent>
     </Sheet>
