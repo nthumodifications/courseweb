@@ -9,11 +9,19 @@ import Link from "next/link"
 import NTHUModsLogo from "@/components/Branding/NTHUModsLogo"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import SideNav from "./SideNav"
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 const SideNavDrawer = () => {
+  const pathname = usePathname();
+  const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    setOpen(false)
+  }, [pathname])
   return (
-    <Sheet>
-      <SheetTrigger asChild>
+    <Sheet open={open}>
+      <SheetTrigger asChild onClick={() => setOpen(!open)}>
         <Button variant='ghost' size='icon' className="md:hidden"><Menu/></Button>
       </SheetTrigger>
       <SheetContent side={'left'} className="w-[12rem]" closeIcon={false}>
