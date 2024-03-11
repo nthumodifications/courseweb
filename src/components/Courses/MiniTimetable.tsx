@@ -11,19 +11,22 @@ import { createTimetableFromCourses } from "@/helpers/timetable";
 import { MinimalCourse } from "@/types/courses";
 import { scheduleTimeSlots } from "@/const/timetable"
 import useDictionary from '@/dictionaries/useDictionary';
+import { useMemo } from "react";
 
 const MiniTimetable = () => {
   const dict = useDictionary();
   const { displayCourseData, semester, setSemester, colorMap } = useUserTimetable();
   const timetableData = createTimetableFromCourses(displayCourseData as MinimalCourse[], colorMap)
-  const timeslots = new Array(13).fill([]).map(() => new Array(6).fill(null))
-
-  console.log(timetableData)
-  for (const course of timetableData) {
-    for (let i = course.startTime; i <= course.endTime; i++) {
-      timeslots[i][course.dayOfWeek] = course
+  const timeslots = useMemo(() => {
+    const timeslots = new Array(13).fill([]).map(() => new Array(6).fill(null))
+    for (const course of timetableData) {
+      for (let i = course.startTime; i <= course.endTime; i++) {
+        timeslots[i][course.dayOfWeek] = course
+      }
     }
-  }
+    return timeslots
+  }, [timetableData])
+
 
   return <div className="p-4 flex flex-col overflow-auto">
     <span className="text-xs font-bold">

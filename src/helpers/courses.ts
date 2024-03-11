@@ -44,7 +44,7 @@ export const getScoreType = (score: string) => {
 
 export const getFormattedClassCode = (class_code: string) =>{
     // Define mappings for degree types and class letters
-    const degreeTypes: {[x: string]: string } = { 'B': '大學部', 'M': '碩士班', 'D': '博士班' };
+    const degreeTypes: {[x: string]: string } = { 'B': '大學部', 'M': '碩士班', 'D': '博士班', 'P': '專班' };
     const classLetters: {[x: string]: string } = { 'A': '清班', 'B': '華班', 'C': '梅班', 'D': '班' }; // Assuming 'D' stands for a general class
 
     // Parse the input string

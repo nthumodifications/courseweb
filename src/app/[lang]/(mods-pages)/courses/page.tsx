@@ -25,7 +25,8 @@ import { Separator } from "@/components/ui/separator"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import MiniTimetable from "@/components/Courses/MiniTimetable";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
-
+import { useWhyDidYouUpdate } from "ahooks"
+ 
 export type RefineControlFormTypes = {
     textSearch: string,
     level: string[],
@@ -73,6 +74,7 @@ const CoursePage: NextPage = () => {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [filtersState, setFiltersState] = useLocalStorage<RefineControlFormTypes>('course_filters', emptyFilters);
+    
 
     const form = useForm<RefineControlFormTypes>({
         defaultValues: useMemo(() => {
@@ -95,8 +97,10 @@ const CoursePage: NextPage = () => {
             else return emptyFilters;
         }, [])
     })
+    useWhyDidYouUpdate('form',form)
 
     const { control, watch, setValue, reset, formState: { isDirty } } = form;
+
 
     const isMobile = useMediaQuery('(max-width: 768px)');
 
@@ -335,7 +339,7 @@ const CoursePage: NextPage = () => {
                         </ResizablePanel>
                         <ResizableHandle />
                         <ResizablePanel defaultSize={75} minSize={6} className="!overflow-y-scroll">
-                            <RefineControls control={control} onClear={handleClear} setValue={setValue}/>
+                            <RefineControls form={form}/>
                         </ResizablePanel>
                     </ResizablePanelGroup>
                 </div>}
@@ -355,7 +359,7 @@ const CoursePage: NextPage = () => {
                         },
                     }}
                 >
-                    <RefineControls control={control} onClear={handleClear} setValue={setValue}/>
+                    <RefineControls form={form}/>
                 </Drawer>}
             </Form>
         </div>
