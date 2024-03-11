@@ -1,9 +1,8 @@
-'use client';
+'use client';;
 import * as I from 'lucide-react';
 import Link from "next/link";
 import { FC } from "react";
-import { useParams, usePathname } from 'next/navigation';
-import { useMediaQuery } from 'usehooks-ts';
+import { usePathname, useRouter } from 'next/navigation';
 import { Route } from 'next';
 import { useSettings } from '@/hooks/contexts/settings';
 import useDictionary from '@/dictionaries/useDictionary';
@@ -12,6 +11,7 @@ const SideNav:FC = () => {
     const pathname = usePathname();
     const { language } = useSettings();
     const dict = useDictionary();
+    const router = useRouter();
     const links: {
         title: string;
         href: Route;
@@ -55,13 +55,13 @@ const SideNav:FC = () => {
             color: '#B46DD6'
         }
     ]
-    return (<>
-        <nav className="hidden h-screen md:flex flex-col justify-start items-start gap-3 px-2 pt-8 pl-8">
+    return (
+        <nav className="h-full w-full flex flex-col justify-start items-start gap-3">
             {links.map((link, index) => (
-                <Link 
-                    className={`w-full flex flex-row items-center justify-start gap-2 rounded-md transition dark:text-slate-300 font-semibold px-3 py-1.5 ${link.href == pathname ? 'text-white  bg-purple-700': 'text-slate-700'}`}
+                <div 
+                    className={`w-full flex flex-row items-center justify-start gap-2 rounded-md cursor-pointer transition dark:text-slate-300 font-semibold px-3 py-1.5 ${link.href == pathname ? 'text-white  bg-nthu-600': 'text-slate-700'}`}
                     key={index} 
-                    href={link.href}
+                    onClick={() => router.push(link.href)} 
                 >
                     <span className="w-6 h-6">
                         {link.icon}
@@ -69,10 +69,10 @@ const SideNav:FC = () => {
                     <span className="flex-1 font-semibold">
                         {link.title}
                     </span>
-                </Link>
+                </div>
             ))}
         </nav>
-    </>)
+    )
 }
 
 export default SideNav;
