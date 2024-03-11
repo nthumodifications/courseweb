@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import Help from "@/components/Help/Help"
 import Link from "next/link"
 import NTHUModsLogo from "@/components/Branding/NTHUModsLogo"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetOverlay, SheetTrigger } from "@/components/ui/sheet";
 import SideNav from "./SideNav"
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -20,8 +20,8 @@ const SideNavDrawer = () => {
     setOpen(false)
   }, [pathname])
   return (
-    <Sheet open={open}>
-      <SheetTrigger asChild onClick={() => setOpen(!open)}>
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
         <Button variant='ghost' size='icon' className="md:hidden"><Menu/></Button>
       </SheetTrigger>
       <SheetContent side={'left'} className="w-[12rem]" closeIcon={false}>
