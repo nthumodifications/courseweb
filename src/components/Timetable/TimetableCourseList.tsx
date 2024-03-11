@@ -1,11 +1,9 @@
-import { IconButton, Divider, Tooltip } from '@mui/joy';
 import { Download, EyeOff, Search, Share, Trash, AlertTriangle, Copy, Columns, Repeat, ExternalLink, GripVertical, FolderSync } from 'lucide-react';
 import { useSettings } from '@/hooks/contexts/settings';
 import useUserTimetable from '@/hooks/contexts/useUserTimetable';
 import { useRouter } from 'next/navigation';
 import { useModal } from '@/hooks/contexts/useModal';
 import CourseSearchbar from './CourseSearchbar';
-import { timetableColors } from "@/const/timetableColors";
 import ThemeChangableAlert from '../Alerts/ThemeChangableAlert';
 import useDictionary from '@/dictionaries/useDictionary';
 import { useEffect, useMemo, useState } from 'react';
@@ -14,15 +12,6 @@ import { MinimalCourse, RawCourseID } from '@/types/courses';
 import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-  } from "@/components/ui/dialog"
-
 import {
     DndContext, 
     closestCenter,
@@ -51,6 +40,8 @@ import Compact from '@uiw/react-color-compact';
 import { useHeadlessAIS } from '@/hooks/contexts/useHeadlessAIS';
 import { toast } from '../ui/use-toast';
 import {event} from '@/lib/gtag';
+import { Separator } from '../ui/separator';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '../ui/hover-card';
 const DownloadTimetableDialogDynamic = dynamic(() => import('./DownloadTimetableDialog'), { ssr: false })
 const ShareSyncTimetableDialogDynamic = dynamic(() => import('./ShareSyncTimetableDialog'), { ssr: false })
 
@@ -114,12 +105,22 @@ const TimetableCourseListItem = ({ course, hasConflict, isDuplicate }: { course:
             </div>
         </div>
         <div className="flex flex-row space-x-2 items-center">
-            {hasConflict && <Tooltip title="衝堂">
-                <AlertTriangle className="w-6 h-6 text-red-500" />
-            </Tooltip>}
-            {isDuplicate && <Tooltip title="重複">
-                <Copy className="w-6 h-6 text-yellow-500" />
-            </Tooltip>}
+            <HoverCard>
+                <HoverCardTrigger asChild>
+                    <AlertTriangle className="w-6 h-6 text-red-500" />
+                </HoverCardTrigger>
+                <HoverCardContent>
+                    <span>衝堂</span>
+                </HoverCardContent>
+            </HoverCard>
+            <HoverCard>
+                <HoverCardTrigger asChild>
+                    <Copy className="w-6 h-6 text-yellow-500" />
+                </HoverCardTrigger>
+                <HoverCardContent>
+                    <span>重複</span>
+                </HoverCardContent>
+            </HoverCard>
             {/* Credits */}
             <div className="flex flex-row items-center space-x-1">
                 <span className="text-lg">{course.credits}</span>
@@ -313,7 +314,7 @@ return <div className="flex flex-col gap-4 px-4">
                 </div>
             )}
         </div>
-        <Divider />
+        <Separator orientation='horizontal' />
         <div className='flex flex-row gap-4 justify-end'>
             <div className='space-x-2'>
                 <span className='font-bold'>{displayCourseData.length}</span>

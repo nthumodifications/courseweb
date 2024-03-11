@@ -18,10 +18,6 @@ const TimetablePage: NextPage = () => {
     const { getSemesterCourses, semester, setSemester, colorMap } = useUserTimetable();
     const [vertical, setVertical] = useLocalStorage('timetable_vertical', true);
 
-    const router = useRouter();
-    const searchParams = useSearchParams();
-
-    const [openModal, closeModal] = useModal();
 
     const timetableData = createTimetableFromCourses(getSemesterCourses(semester) as MinimalCourse[], colorMap)
 

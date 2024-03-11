@@ -1,6 +1,5 @@
-'use client';;
+'use client';
 import {EventData} from "@/types/calendar_event";
-import { Alert, ColorPaletteProp } from '@mui/joy';
 import {format, formatRelative, getDay} from 'date-fns';
 import useUserTimetable from '@/hooks/contexts/useUserTimetable';
 import {scheduleTimeSlots} from '@/const/timetable';
@@ -20,6 +19,7 @@ import { createTimetableFromCourses } from '@/helpers/timetable';
 import { MinimalCourse } from '@/types/courses';
 import { VenueChip } from '../Timetable/VenueChip';
 import { useQuery } from '@tanstack/react-query';
+import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 
 const TodaySchedule: FC<{ weather: WeatherData | undefined, alerts: AlertDefinition[], calendar: EventData[], weatherLoading: boolean, alertLoading: boolean, calendarLoading: boolean }> = ({ weather, alerts, calendar, weatherLoading, alertLoading, calendarLoading }) => {
     const { isCoursesEmpty, colorMap, getSemesterCourses, deleteCourse } = useUserTimetable();
@@ -93,13 +93,10 @@ const TodaySchedule: FC<{ weather: WeatherData | undefined, alerts: AlertDefinit
 
     const renderAlerts = (day: Date) => {
         return alerts.filter(alert => new Date(alert.start_date) <= day && new Date(alert.end_date) >= day).map((alert, index) => (
-            <Alert key={index} className="mb-4" color={alert.severity as ColorPaletteProp} startDecorator={<Info/>}>
-                <div className="flex flex-row justify-between">
-                    <div className="flex flex-col">
-                        <span className="text-sm font-semibold">{alert.title}</span>
-                        <span className="text-xs">{alert.description}</span>
-                    </div>
-                </div>
+            <Alert key={index} className="mb-4" color={alert.severity}>
+                <Info className='w-4 h-4'/>
+                <AlertTitle>{alert.title}</AlertTitle>
+                <AlertDescription>{alert.description}</AlertDescription>
             </Alert>
         ))
     }
@@ -117,17 +114,17 @@ const TodaySchedule: FC<{ weather: WeatherData | undefined, alerts: AlertDefinit
 
     const NoClassPickedReminder = () => {
         return <Alert>
-            <div className='flex flex-col space-y-1'>
-                <h1 className='text-xl font-bold'>還沒選到課嗎？</h1>
+            <AlertTitle>還沒選到課嗎？</AlertTitle>
+            <AlertDescription>
                 <ul className='list-decimal list-inside'>
                     <li className='text-base'>先到 <Link className='text-[#AF7BE4] font-medium' href='/zh/courses'>課表</Link> 選擇課程</li>
                     <li className='text-base'>後到 <Link className='text-[#AF7BE4] font-medium' href='/zh/timetable'>時間表</Link> 查看時間表</li>
                 </ul>
-            </div>
+            </AlertDescription>
         </Alert>
     }
 
-    return <div className="h-full w-full space-y-4">
+    return <div className="h-full w-full px-3 md:px-8 space-y-4">
         {isCoursesEmpty && <NoClassPickedReminder/>}
         {renderPinnedApps()}
         {days.map(day => (
