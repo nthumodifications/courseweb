@@ -98,7 +98,7 @@ const useUserTimetableProvider = (loadCourse = true) => {
     //sort courses[semester]： string[] and put as key_display_ids
     const key_display_ids = useMemo(() => [...(courses[semester] ?? [])].sort(), [courses, semester]);
 
-    const { data: display_courses = [], error, isLoading } = useQuery({
+    const { data: displayCourseData = [], error, isLoading } = useQuery({
         queryKey: ['courses', key_display_ids], 
         queryFn: async () => {
             if(!key_display_ids) return [];
@@ -106,17 +106,14 @@ const useUserTimetableProvider = (loadCourse = true) => {
             if (error) throw error;
             if (!data) throw new Error('No data');
             return data as unknown as CourseSyllabusView[];
-        }
+        },
+        placeholderData: (prev) => prev?.filter(c => key_display_ids.includes(c.raw_id)),
+        select: (data) => (courses[semester] ?? []).map(courseID => data.find(c => c.raw_id == courseID)!).filter(c => c)
     });
-    //sort display_courses according to courses[semester]
-    const displayCourseData =  useMemo(() => {
-        if(!display_courses) return [];
-        return (courses[semester] ?? []).map(courseID => display_courses.find(c => c.raw_id == courseID)!).filter(c => c);
-    }, [display_courses, courses, semester]);
     
     //rewrite semesterCourseData like displayCourseData
     const key_semester_ids = useMemo(() => [...(currentSemester ? (courses[currentSemester.id] ?? []) : null ?? [])].sort(), [courses, currentSemester]);
-    const { data: semester_courses = [], error: semesterError, isLoading: semesterLoading } = useQuery({
+    const { data: semesterCourseData = [], error: semesterError, isLoading: semesterLoading } = useQuery({
         queryKey: ['courses', key_semester_ids], 
         queryFn: async () => {
             if(!key_semester_ids) return [];
@@ -124,12 +121,10 @@ const useUserTimetableProvider = (loadCourse = true) => {
             if (error) throw error;
             if (!data) throw new Error('No data');
             return data as unknown as CourseSyllabusView[];
-        }
+        },
+        placeholderData: (prev) => prev?.filter(c => key_semester_ids.includes(c.raw_id)),
+        select: (data) => (currentSemester ? (courses[currentSemester.id] ?? []) : []).map(courseID => data.find(c => c.raw_id == courseID)!).filter(c => c)
     });
-    const semesterCourseData =  useMemo(() => {
-        if(!semester_courses) return [];
-        return (currentSemester ? (courses[currentSemester.id] ?? []) : []).map(courseID => semester_courses.find(c => c.raw_id == courseID)!).filter(c => c);
-    }, [semester_courses, courses, currentSemester]);
 
     //migration from old localStorage key "semester_1121"
     useEffect(() => {
