@@ -2,7 +2,7 @@ import { departments } from '@/const/departments';
 import { Autocomplete, AutocompleteOption, Chip, ListItemContent, ListItemDecorator, Typography } from '@mui/joy';
 import { Controller, Control } from 'react-hook-form';
 import useDictionary from '@/dictionaries/useDictionary';
-import { RefineControlFormTypes } from '@/app/[lang]/courses/page';
+import { RefineControlFormTypes } from '@/app/[lang]/(mods-pages)/courses/page';
 
 const DepartmentControl = ({ control }: { control: Control<RefineControlFormTypes> }) => {
     const dict = useDictionary();

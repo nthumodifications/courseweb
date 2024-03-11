@@ -1,16 +1,15 @@
-'use client';
-import { useSettings } from "./settings";
+'use client';;
 import {useState, useEffect, useCallback, createContext, useContext, useMemo, useLayoutEffect} from 'react';
 import supabase, { CourseSyllabusView } from "@/config/supabase";
 import { createTimetableFromCourses } from "@/helpers/timetable";
 import { CourseTimeslotData } from "@/types/timetable";
-import useSWR from "swr";
 import { MinimalCourse, RawCourseID } from '@/types/courses';
 import { useLocalStorage } from 'usehooks-ts';
-import { lastSemester, semesterInfo, currentSemester } from "@/const/semester";
+import { lastSemester, currentSemester } from "@/const/semester";
 import { getSemesterFromID } from '@/helpers/courses';
 import { event } from "@/lib/gtag";
 import {timetableColors} from '@/const/timetableColors';
+import { useQuery } from "@tanstack/react-query";
 
 type CourseLocalStorage = { [sem: string]: RawCourseID[] };
 
@@ -27,13 +26,16 @@ const userTimetableContext = createContext<ReturnType<typeof useUserTimetablePro
     setCourses: () => { },
     clearCourses: () => { },
     deleteCourse: () => { },
+    setColorMap: () => { },
     addCourse: () => { },
     setTimetableTheme: () => { },
     setUserDefinedColors: () => {},
+    setColor: () => {},
     isCourseSelected: () => false,
     isLoading: true,
-    error: undefined,
+    error: null,
     semester: lastSemester.id,
+    isCoursesEmpty: true,
     setSemester: () => { }
 });
 
@@ -94,16 +96,17 @@ const useUserTimetableProvider = (loadCourse = true) => {
 
 
     //sort courses[semester]： string[] and put as key_display_ids
-    const key_display_ids = useMemo(() => (courses[semester] ?? []).toSorted(), [courses, semester]);
+    const key_display_ids = useMemo(() => [...(courses[semester] ?? [])].sort(), [courses, semester]);
 
-    const { data: display_courses = [], error, isLoading } = useSWR(['courses', key_display_ids], async ([table, courseCodes]) => {
-        if(!courseCodes) return [];
-        const { data = [], error } = await supabase.rpc('search_courses_with_syllabus', { keyword: "" }).in('raw_id', courseCodes);
-        if (error) throw error;
-        if (!data) throw new Error('No data');
-        return data as unknown as CourseSyllabusView[];
-    }, {
-        keepPreviousData: true,
+    const { data: display_courses = [], error, isLoading } = useQuery({
+        queryKey: ['courses', key_display_ids], 
+        queryFn: async () => {
+            if(!key_display_ids) return [];
+            const { data = [], error } = await supabase.rpc('search_courses_with_syllabus', { keyword: "" }).in('raw_id', key_display_ids);
+            if (error) throw error;
+            if (!data) throw new Error('No data');
+            return data as unknown as CourseSyllabusView[];
+        }
     });
     //sort display_courses according to courses[semester]
     const displayCourseData =  useMemo(() => {
@@ -111,26 +114,17 @@ const useUserTimetableProvider = (loadCourse = true) => {
         return (courses[semester] ?? []).map(courseID => display_courses.find(c => c.raw_id == courseID)!).filter(c => c);
     }, [display_courses, courses, semester]);
     
-    // const { data: semesterCourseData = [], error: semesterError, isLoading: semesterLoading } = useSWR(['courses', currentSemester ? courses[currentSemester.id] : null], async ([table, courseCodes]) => {
-    //     if(!courseCodes) return [];
-    //     const { data = [], error } = await supabase.rpc('search_courses_with_syllabus', { keyword: "" }).in('raw_id', courseCodes);
-    //     if (error) throw error;
-    //     if (!data) throw new Error('No data');
-    //     return data as unknown as CourseSyllabusView[];
-    // }, {
-    //     keepPreviousData: true,
-    // });
-
     //rewrite semesterCourseData like displayCourseData
-    const key_semester_ids = useMemo(() => (currentSemester ? (courses[currentSemester.id] ?? []) : null ?? []).toSorted(), [courses, currentSemester]);
-    const { data: semester_courses = [], error: semesterError, isLoading: semesterLoading } = useSWR(['courses', key_semester_ids], async ([table, courseCodes]) => {
-        if(!courseCodes) return [];
-        const { data = [], error } = await supabase.rpc('search_courses_with_syllabus', { keyword: "" }).in('raw_id', courseCodes);
-        if (error) throw error;
-        if (!data) throw new Error('No data');
-        return data as unknown as CourseSyllabusView[];
-    }, {
-        keepPreviousData: true,
+    const key_semester_ids = useMemo(() => [...(currentSemester ? (courses[currentSemester.id] ?? []) : null ?? [])].sort(), [courses, currentSemester]);
+    const { data: semester_courses = [], error: semesterError, isLoading: semesterLoading } = useQuery({
+        queryKey: ['courses', key_semester_ids], 
+        queryFn: async () => {
+            if(!key_semester_ids) return [];
+            const { data = [], error } = await supabase.rpc('search_courses_with_syllabus', { keyword: "" }).in('raw_id', key_semester_ids);
+            if (error) throw error;
+            if (!data) throw new Error('No data');
+            return data as unknown as CourseSyllabusView[];
+        }
     });
     const semesterCourseData =  useMemo(() => {
         if(!semester_courses) return [];
@@ -172,63 +166,82 @@ const useUserTimetableProvider = (loadCourse = true) => {
     }, [semesterCourseData, semesterLoading, semesterError, colorMap]);
 
     //handlers for courses
-    const addCourse = (courseID: string) => {
+    const addCourse = (courseID: string | string[]) => {
+        const courseIDs = Array.isArray(courseID) ? courseID : [courseID];
         setCourses(courses => {
             //get first 5 characters of courseID
-            const semester = getSemesterFromID(courseID);
-            if (!semester) throw new Error("Invalid courseID");
-            const oldSemesterCourses = courses[semester] ?? [];
+            let oldCourses = { ...courses };
+            courseIDs.forEach(courseID => {
+                const semester = getSemesterFromID(courseID);
+                if (!semester) throw new Error("Invalid courseID");
+                const oldSemesterCourses = oldCourses[semester] ?? [];
 
-            //check if courseID already exists
-            if (oldSemesterCourses.includes(courseID)) return courses;
+                //check if courseID already exists
+                if (oldSemesterCourses.includes(courseID)) return;
 
-            setColorMap(colorMap => {
-                return {
-                    ...colorMap,
-                    [courseID]: currentColors[oldSemesterCourses.length % currentColors.length]
+                setColorMap(colorMap => {
+                    return {
+                        ...colorMap,
+                        [courseID]: currentColors[oldSemesterCourses.length % currentColors.length]
+                    }
+                });
+                oldCourses = {
+                    ...oldCourses,
+                    [semester]: [...oldSemesterCourses, courseID]
                 }
+                event({
+                    action: "add_course",
+                    category: "timetable",
+                    label: courseID,
+                })
             });
-
-            return {
-                ...courses,
-                [semester]: [...oldSemesterCourses, courseID]
-            }
+            return oldCourses;
+            
         });
-        
-        event({
-            action: "add_course",
-            category: "timetable",
-            label: courseID,
-        })
     }
 
-    const deleteCourse = (courseID: string) => {
+    const deleteCourse = (courseID: string | string[]) => {
+        const courseIDs = Array.isArray(courseID) ? courseID : [courseID];
         setCourses(courses => {
             //get first 5 characters of courseID
-            const semester = getSemesterFromID(courseID);
-            if (!semester) throw new Error("Invalid courseID");
-            const oldSemesterCourses = courses[semester] ?? [];
+            let oldCourses = { ...courses };
+            courseIDs.forEach(courseID => {
+                const semester = getSemesterFromID(courseID);
+                if (!semester) throw new Error("Invalid courseID");
+                const oldSemesterCourses = oldCourses[semester] ?? [];
 
-            //check if courseID already exists
-            if (!oldSemesterCourses.includes(courseID)) return courses;
+                //check if courseID already exists
+                if (!oldSemesterCourses.includes(courseID)) return;
 
-            //remove color from colorMap
-            setColorMap(colorMap => {
-                const newColorMap = { ...colorMap };
-                delete newColorMap[courseID];
-                return newColorMap;
-            });
+                //remove color from colorMap
+                setColorMap(colorMap => {
+                    const newColorMap = { ...colorMap };
+                    delete newColorMap[courseID];
+                    return newColorMap;
+                });
 
+                oldCourses = {
+                    ...oldCourses,
+                    [semester]: oldSemesterCourses.filter(c => c != courseID)
+                }
+                event({
+                    action: "delete_course",
+                    category: "timetable",
+                    label: courseID,
+                })
+            })
+            return oldCourses;
+        });
+        
+    }
+
+    const setColor = (courseID: string, color: string) => {
+        setColorMap(colorMap => {
             return {
-                ...courses,
-                [semester]: oldSemesterCourses.filter(c => c != courseID)
+                ...colorMap,
+                [courseID]: color
             }
         });
-        event({
-            action: "delete_course",
-            category: "timetable",
-            label: courseID,
-        })
     }
 
     const isCourseSelected = useCallback((courseID: string) => {
@@ -257,6 +270,10 @@ const useUserTimetableProvider = (loadCourse = true) => {
         return colors[timetableTheme];
     }, [timetableTheme, userDefinedColors]);
 
+    const isCoursesEmpty = useMemo(() => {
+        return Object.keys(courses).length == 0;
+    }, [courses]);
+
 
     return {
         timetableData, 
@@ -270,13 +287,16 @@ const useUserTimetableProvider = (loadCourse = true) => {
         setSemester, 
         semesterCourses, 
         setCourses,
+        setColorMap,
         addCourse, 
         deleteCourse, 
         clearCourses, 
         isCourseSelected, 
         setTimetableTheme,
         setUserDefinedColors,
+        setColor,
         isLoading, 
+        isCoursesEmpty,
         error, 
         courses
     };

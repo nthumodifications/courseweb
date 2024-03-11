@@ -15,67 +15,71 @@ import {
 } from '@mui/joy';
 import { FC } from 'react';
 import { Control, UseFormSetValue } from 'react-hook-form';
-import TimeslotSelectorControl from '../FormComponents/TimeslotSelectorControl';
-import useSWR from 'swr';
-import AutocompleteControl from '../FormComponents/AutocompleteControl';
-import DepartmentControl from '../FormComponents/DepartmentControl';
+import TimeslotSelectorControl from '@/components/FormComponents/TimeslotSelectorControl';
+import AutocompleteControl from '@/components/FormComponents/AutocompleteControl';
+import DepartmentControl from '@/components/FormComponents/DepartmentControl';
 import { useMediaQuery } from 'usehooks-ts';
 import { GECTypes, GETargetCodes } from '@/const/ge_target';
 import { useSettings } from '@/hooks/contexts/settings';
 import { Department } from '@/types/courses';
-import { RefineControlFormTypes } from '@/app/[lang]/courses/page';
-import SelectControl from '../FormComponents/SelectControl';
+import SelectControl from '@/components/FormComponents/SelectControl';
 import useUserTimetable from '@/hooks/contexts/useUserTimetable';
 import {scheduleTimeSlots} from '@/const/timetable';
+import { RefineControlFormTypes } from '@/app/[lang]/(mods-pages)/courses/page';
+import { useQuery } from '@tanstack/react-query';
 
 const RefineControls: FC<{ control: Control<RefineControlFormTypes>, setValue: UseFormSetValue<RefineControlFormTypes>, onClear: () => void }> = ({ control, setValue, onClear }) => {
     const dict = useDictionary();
     const { language } = useSettings();
-    const { data: firstSpecial = [], error: error1, isLoading: load1 } = useSWR('distinct_first_specialization', async () => {
-        const { data = [], error } = await supabase.from('distinct_first_specialization').select('unique_first_specialization');
-        if (error) throw error;
-        return data!.map(({ unique_first_specialization }) => unique_first_specialization!);
-    }, {
-        keepPreviousData: true,
-    });
-    const { data: secondSpecial = [], error: error2, isLoading: load2 } = useSWR('distinct_second_specialization', async () => {
-        const { data = [], error } = await supabase.from('distinct_second_specialization').select('unique_second_specialization');
-        if (error) throw error;
-        return data!.map(({ unique_second_specialization }) => unique_second_specialization!);
-    }, {
-        keepPreviousData: true,
-    });
-    const { data: classList = [], error: error3, isLoading: load3 } = useSWR('distinct_classes', async () => {
-        const { data = [], error } = await supabase.from('distinct_classes').select('class');
-        if (error) throw error;
-        return data!.map(({ class: className }) => className!);
-    }, {
-        keepPreviousData: true,
-    });
-    const { data: venues = [], error: error4, isLoading: load4 } = useSWR('venues', async () => {
-        const { data = [], error } = await supabase.from('distinct_venues').select('venue');
-        if (error) throw error;
-        return data!.map(({ venue }) => venue!);
-    }, {
-        keepPreviousData: true,
-    });
     
-    const { data: disciplines = [], error: error5, isLoading: load5 } = useSWR('disciplines', async () => {
-        const { data = [], error } = await supabase.from('distinct_cross_discipline').select('discipline');
-        if (error) throw error;
-        return data!.map(({ discipline }) => discipline!);
-    }, {
-        keepPreviousData: true,
+    const { data: firstSpecial = [], error: error1, isLoading: load1 } = useQuery({
+        queryKey: ['distinct_first_specialization'], 
+        queryFn: async () => {
+            const { data = [], error } = await supabase.from('distinct_first_specialization').select('unique_first_specialization');
+            if (error) throw error;
+            return data!.map(({ unique_first_specialization }) => unique_first_specialization!);
+        }
     });
-
-    const { data: semesters = [], error: error6, isLoading: load6 } = useSWR('semesters', async () => {
-        const { data = [], error } = await supabase.from('distinct_semesters').select('semester');
-        if (error) throw error;
-        return data!.map(({ semester }) => semester!);
-    }, {
-        keepPreviousData: true,
+    const { data: secondSpecial = [], error: error2, isLoading: load2 } = useQuery({
+        queryKey: ['distinct_second_specialization'], 
+        queryFn: async () => {
+            const { data = [], error } = await supabase.from('distinct_second_specialization').select('unique_second_specialization');
+            if (error) throw error;
+            return data!.map(({ unique_second_specialization }) => unique_second_specialization!);
+        }
     });
-
+    const { data: classList = [], error: error3, isLoading: load3 } = useQuery({
+        queryKey: ['distinct_classes'], 
+        queryFn: async () => {
+            const { data = [], error } = await supabase.from('distinct_classes').select('class');
+            if (error) throw error;
+            return data!.map(({ class: className }) => className!);
+        }
+    });
+    const { data: venues = [], error: error4, isLoading: load4 } = useQuery({
+        queryKey: ['distinct_venues'], 
+        queryFn: async () => {
+            const { data = [], error } = await supabase.from('distinct_venues').select('venue');
+            if (error) throw error;
+            return data!.map(({ venue }) => venue!);
+        }
+    });
+    const { data: disciplines = [], error: error5, isLoading: load5 } = useQuery({
+        queryKey: ['distinct_cross_discipline'], 
+        queryFn: async () => {
+            const { data = [], error } = await supabase.from('distinct_cross_discipline').select('discipline');
+            if (error) throw error;
+            return data!.map(({ discipline }) => discipline!);
+        }
+    });
+    const { data: semesters = [], error: error6, isLoading: load6 } = useQuery({
+        queryKey: ['distinct_semesters'], 
+        queryFn: async () => {
+            const { data = [], error } = await supabase.from('distinct_semesters').select('semester');
+            if (error) throw error;
+            return data!.map(({ semester }) => semester!);
+        }
+    });
     const isMobile = useMediaQuery('(max-width: 768px)');
 
     const { displayCourseData } = useUserTimetable();

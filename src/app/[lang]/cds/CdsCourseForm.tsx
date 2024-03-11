@@ -3,7 +3,7 @@ import Timetable from '@/components/Timetable/Timetable';
 import { FC, Fragment, useState, useRef, useEffect, useMemo, useTransition } from 'react';
 import {createTimetableFromCourses, colorMapFromCourses} from '@/helpers/timetable';
 import { timetableColors } from "@/const/timetableColors";
-import { Accordion, Button, ButtonGroup, CircularProgress, DialogContent, DialogTitle, Divider, Drawer, IconButton, ModalClose, Sheet, FormControl, FormLabel, AccordionDetails, AccordionSummary, Stack, Alert, Chip, Tooltip, Typography, Switch, Dropdown, MenuButton, Menu, MenuItem, Badge, ModalDialog, DialogActions } from '@mui/joy';
+import { Accordion, ButtonGroup, CircularProgress, DialogContent, DialogTitle, Divider, Drawer, IconButton, ModalClose, Sheet, FormControl, FormLabel, AccordionDetails, AccordionSummary, Stack, Tooltip, Typography, Switch, Dropdown, MenuButton, Menu, MenuItem, Badge as MUIBadge, ModalDialog, DialogActions } from '@mui/joy';
 import {
     EyeOff,
     Filter,
@@ -44,6 +44,11 @@ import {TimeFilterType} from '@/components/FormComponents/TimeslotSelectorContro
 import Link from 'next/link';
 import {renderTimetableSlot} from '@/helpers/timetable_course';
 import useUserTimetable from '@/hooks/contexts/useUserTimetable';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import ButtonSpinner from '@/components/Animation/ButtonSpinner';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 type CdsCoursesFormFields = {
     textSearch: string;
@@ -67,6 +72,7 @@ const CdsCoursesForm: FC<{
     const [headIndex, setHeadIndex] = useState<number>(0);
     const [showTimetable, setShowTimetable] = useState(true);
     const [displayToggles, setDisplayToggles] = useState<{ [key: string]: boolean }>({});
+    const [semester, setSemester] = useState(termObj.ref_sem);
     const scrollRef = useRef<HTMLDivElement>(null);
 
     const session = useSession();
@@ -116,14 +122,7 @@ const CdsCoursesForm: FC<{
             return (
                 <Button
                     key={index}
-                    variant="soft"
-                    aria-pressed={currentPage == page}
-                    sx={(theme) => ({
-                        [`&[aria-pressed="true"]`]: {
-                            ...theme.variants.outlinedActive.neutral,
-                            borderColor: theme.vars.palette.neutral.outlinedHoverBorder,
-                        },
-                    })}
+                    variant={currentPage == page ? "outline": "ghost"}
                     onClick={() => searchQueryFunc(filters, (page - 1) * 30)}
                 >
                     {page}
@@ -140,7 +139,7 @@ const CdsCoursesForm: FC<{
             let temp = supabase.rpc('search_courses_with_syllabus', {
                 keyword: filters.textSearch,
             }, { count: 'exact' })
-                .eq('semester', termObj.ref_sem)
+                .eq('semester', semester)
             if (filters.level.length)
                 temp = temp
                     .or(filters.level.map(level => `and(course.gte.${level}000,course.lte.${level}999)`).join(','))
@@ -191,24 +190,32 @@ const CdsCoursesForm: FC<{
         setLoading(true);
         searchQueryFunc(filters);
 
-    }, [JSON.stringify(filters)])
+    }, [JSON.stringify(filters), semester])
 
-    const colorMap = colorMapFromCourses(selectedCourses.map(c => c.raw_id), currentColors);
-    const timetableData = useMemo(() => createTimetableFromCourses(selectedCourses as MinimalCourse[], colorMap), [selectedCourses, colorMap]);
+    const semesterSelectedCourses = selectedCourses.filter(m => m.semester == semester);
 
-    const timeConflicts = useMemo(() => hasConflictingTimeslots(selectedCourses as MinimalCourse[]), [selectedCourses]);
-    const duplicates = useMemo(() => hasSameCourse(selectedCourses as MinimalCourse[]), [selectedCourses]);
+    const colorMap = colorMapFromCourses(semesterSelectedCourses.map(c => c.raw_id), currentColors);
+    const timetableData = useMemo(() => createTimetableFromCourses(semesterSelectedCourses as MinimalCourse[], colorMap), [semesterSelectedCourses, colorMap]);
+
+    const timeConflicts = useMemo(() => hasConflictingTimeslots(semesterSelectedCourses as MinimalCourse[]), [semesterSelectedCourses]);
+    const duplicates = useMemo(() => hasSameCourse(semesterSelectedCourses as MinimalCourse[]), [semesterSelectedCourses]);
     const MAX_COURSES = 5;
-    const exceedesMaxCourses = useMemo(() => selectedCourses.length > MAX_COURSES, [selectedCourses]);
+    const exceedesMaxCourses = useMemo(() => semesterSelectedCourses.length > MAX_COURSES, [semesterSelectedCourses]);
     
     const hasErrors = useMemo(() => {
-        return timeConflicts.length > 0 || duplicates.length > 0 || exceedesMaxCourses;
+        const conflict1 = hasConflictingTimeslots(selectedCourses.filter(m => m.semester == termObj.ref_sem) as MinimalCourse[])
+        const conflict2 = hasConflictingTimeslots(selectedCourses.filter(m => m.semester == termObj.ref_sem_2) as MinimalCourse[])
+        const duplicates1 = hasSameCourse(selectedCourses.filter(m => m.semester == termObj.ref_sem) as MinimalCourse[])
+        const duplicates2 = hasSameCourse(selectedCourses.filter(m => m.semester == termObj.ref_sem_2) as MinimalCourse[])
+        const exceedesMaxCourses1 = selectedCourses.filter(m => m.semester == termObj.ref_sem).length > MAX_COURSES;
+        const exceedesMaxCourses2 = selectedCourses.filter(m => m.semester == termObj.ref_sem_2).length > MAX_COURSES;
+        return conflict1.length > 0 || conflict2.length > 0 || duplicates1.length > 0 || duplicates2.length > 0 || exceedesMaxCourses1 || exceedesMaxCourses2;
     }
     , [timeConflicts, duplicates, exceedesMaxCourses]);
 
     const totalCredits = useMemo(() => {
-        return selectedCourses.reduce((acc, cur) => acc + (cur.credits || 0), 0);
-    }, [selectedCourses]);
+        return semesterSelectedCourses.reduce((acc, cur) => acc + (cur.credits || 0), 0);
+    }, [semesterSelectedCourses]);
 
     const [openModal, closeModal] = useModal();
 
@@ -232,13 +239,13 @@ const CdsCoursesForm: FC<{
               確定要提交選課意願嗎？提交後將無法再修改。
             </DialogContent>
             <DialogActions>
-              <Button variant="solid" color="success" onClick={() => {
+              <Button variant="default" className='bg-green-600' onClick={() => {
                     startSubmitTransition(() => submitUserSelections(termObj.term, selectedCourses.map(course => course.raw_id)));
                     closeModal();
               }}>
                 提交
               </Button>
-              <Button variant="plain" color="neutral" onClick={closeModal}>
+              <Button variant="destructive" onClick={closeModal}>
                 取消
               </Button>
             </DialogActions>
@@ -264,6 +271,7 @@ const CdsCoursesForm: FC<{
         setShowFilters(!showFilters)
         scrollRef.current?.scrollTo(0, 0);
     }
+
 
     const renderDrawer = () => {
         return <Drawer
@@ -310,15 +318,15 @@ const CdsCoursesForm: FC<{
                         }
                         endDecorator={
                             <Fragment>
-                                {filters.textSearch.length > 0 && <IconButton onClick={() => setValue('textSearch', "")}>
+                                {filters.textSearch.length > 0 && <Button size={'icon'} variant="ghost" onClick={() => setValue('textSearch', "")}>
                                     <X className="text-gray-400 p-1" />
-                                </IconButton>}
+                                </Button>}
                                 <Divider orientation="vertical" />
-                                <IconButton onClick={handleFilterPressed} aria-pressed={showFilters ? 'true' : 'false'}>
-                                    <Badge invisible={!isDirty}>
+                                <Button size="icon" variant="ghost" onClick={handleFilterPressed} aria-pressed={showFilters ? 'true' : 'false'}>
+                                    <MUIBadge invisible={!isDirty}>
                                         <Filter className="text-gray-400 p-1" />
-                                    </Badge>
-                                </IconButton>
+                                    </MUIBadge>
+                                </Button>
                             </Fragment>
                         }
                     />
@@ -400,12 +408,10 @@ const CdsCoursesForm: FC<{
                                     </AccordionDetails>
                                 </Accordion> */}
                                 <Button
-                                    variant="outlined"
-                                    color="danger"
-                                    startDecorator={<Trash2 />}
+                                    variant="outline"
                                     disabled={!isDirty}
                                     onClick={handleClear}
-                                >Clear Filters</Button>
+                                ><Trash2 />Clear Filters</Button>
                                 <Divider />
                             </div>
                         </AccordionDetails>
@@ -417,7 +423,7 @@ const CdsCoursesForm: FC<{
                     <Divider />
                     <div className='flex flex-col space-y-6'>
                         {searchCourses.map((course, index) => (
-                            <div className='flex flex-row' key={index}>
+                            <div className='flex flex-row items-center' key={index}>
                                 <div className='flex-1 space-y-2'>
                                     <div className="mb-3 space-y-1">
                                         <Link href={`/${language}/courses/${course.raw_id}`}>
@@ -434,16 +440,16 @@ const CdsCoursesForm: FC<{
                                     }
                                     <div className='flex flex-row flex-wrap gap-1'>
                                         {(course.cross_discipline ?? []).map((discipline, index) => (
-                                            <Chip variant="outlined">{discipline}</Chip>
+                                            <Button variant="outline">{discipline}</Button>
                                         ))}
                                     </div>
                                 </div>
-                                {!hasCourse(course) ? <IconButton variant='soft' onClick={() => addCourse(course)}>
+                                {!hasCourse(course) ? <Button size="icon" variant='ghost' className='h-full' onClick={() => addCourse(course)}>
                                     <Plus className="w-4 h-4" />
-                                </IconButton> :
-                                    <IconButton variant='soft' onClick={() => deleteCourse(course)}>
+                                </Button> :
+                                    <Button size="icon" variant='destructive' className='h-full' onClick={() => deleteCourse(course)}>
                                         <Trash className="w-4 h-4" />
-                                    </IconButton>}
+                                    </Button>}
                             </div>
                         ))}
                         {searchCourses.length == 0 && (
@@ -456,147 +462,162 @@ const CdsCoursesForm: FC<{
                         direction="row"
                         justifyContent="center"
                     >
-                        {currentPage != 1 && <IconButton onClick={() => searchQuery(filters, 0)}>
+                        {currentPage != 1 && <Button size="icon" variant='ghost' onClick={() => searchQuery(filters, 0)}>
                             <ChevronsLeft />
-                        </IconButton>}
-                        {currentPage != 1 && <IconButton onClick={() => searchQuery(filters, headIndex - 30)}>
+                        </Button>}
+                        {currentPage != 1 && <Button size="icon" variant='ghost' onClick={() => searchQuery(filters, headIndex - 30)}>
                             <ChevronLeft />
-                        </IconButton>}
+                        </Button>}
                         {renderPagination()}
-                        {currentPage != totalPage && <IconButton onClick={() => searchQuery(filters, headIndex + 30)}>
+                        {currentPage != totalPage && <Button size="icon" variant='ghost' onClick={() => searchQuery(filters, headIndex + 30)}>
                             <ChevronRight />
-                        </IconButton>}
-                        {currentPage != totalPage && <IconButton onClick={() => searchQuery(filters, (totalPage - 1) * 30)}>
+                        </Button>}
+                        {currentPage != totalPage && <Button size="icon" variant='ghost' onClick={() => searchQuery(filters, (totalPage - 1) * 30)}>
                             <ChevronsRight />
-                        </IconButton>}
+                        </Button>}
                     </Stack>
                 </DialogContent>
             </Sheet>
         </Drawer>
     }
 
-    return <div className='w-full'>
+    return <div className='w-full h-full'>
         <div className='flex flex-col md:flex-row justify-between mb-4'>
-            <h1 className='font-bold text-3xl mb-3'>選課規劃調查 <Chip variant="outlined" color='primary'>{termObj.term} 學期</Chip></h1>
+            <h1 className='font-bold text-3xl mb-3'>選課規劃調查 <Badge variant="outline">{termObj.term}</Badge></h1>
             <div>
                 <div className='flex flex-row gap-2 justify-end items-center'>
                     {isSaving && <span className='text-gray-400 dark:text-neutral-600 text-sm'>Saving...</span>}
                     <Button 
-                        color='neutral' 
-                        variant='outlined' 
-                        startDecorator={<Save />} 
+                        variant='outline' 
                         onClick={handleSaveSelection} 
-                        loading={isSaving}
-                    >暫存</Button>
+                    >{isSaving?
+                        <ButtonSpinner/>: 
+                        <><Save className='w-4 h-4 mr-2'/>暫存</>
+                    }</Button>
                     <Button 
-                        color='success' 
-                        variant='outlined' 
-                        startDecorator={<Send />} 
+                        variant='default'
+                        className='bg-green-600 hover:bg-green-700 text-white' 
                         disabled={hasErrors} 
                         onClick={handleUserSubmit} 
-                        loading={isSubmitting}
-                    >提交</Button>
-                    <IconButton color='danger' onClick={() => signOut()} >
-                        <LogOut/>
-                    </IconButton>
+                    >{isSubmitting?
+                        <ButtonSpinner/>: 
+                        <><Send className='w-4 h-4 mr-2'/>提交</>
+                    }</Button>
+                    <Button size="icon" variant='destructive' onClick={() => signOut()} >
+                        <LogOut className='w-4 h-4'/>
+                    </Button>
                 </div>
             </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-sm">
-            {showTimetable && <Timetable timetableData={timetableData} renderTimetableSlot={renderTimetableSlot} />}
-            <div className="flex flex-col gap-4 px-4">
-                <Alert color='success' startDecorator={<Info />}>
-                    <div className='flex flex-col'>
-                        <h3 className='text-xl font-bold'>調查規則</h3>
-                        <ul className='list-disc list-inside'>
-                            <li>調查結果僅供參考，不代表實際開課情況。</li>
-                            <li>提交時最多能提交 5門課。請把你最想選的課留下來交</li>
-                            <li>繳交後，您的姓名，學號，電郵將提交至系統内，並只會提供系辦人員參考</li>
-                        </ul>
+        <Tabs defaultValue={termObj.ref_sem} value={semester} onValueChange={setSemester}>
+            <TabsList>
+                <TabsTrigger value={termObj.ref_sem}>上學期</TabsTrigger>
+                <TabsTrigger value={termObj.ref_sem_2}>下學期</TabsTrigger>
+            </TabsList>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-sm mt-3">
+                {showTimetable && <Timetable timetableData={timetableData} renderTimetableSlot={renderTimetableSlot} />}
+                <div className="flex flex-col gap-4 px-4">
+                    <Alert>
+                        <Info className='w-4 h-4 mr-2'/>
+                        <AlertTitle>調查規則</AlertTitle>
+                        <AlertDescription>
+                            <ul className='list-disc list-inside'>
+                                <li>調查結果僅供參考，不代表實際開課情況。</li>
+                                <li>提交時最多能提交 5門課。請把你最想選的課留下來交</li>
+                                <li>繳交後，您的姓名，學號，電郵將提交至系統内，並只會提供系辦人員參考</li>
+                            </ul>
+                        </AlertDescription>
+                    </Alert>
+                    <Alert className='text-amber-600 border-amber-600'>
+                        <AlertTriangle className='w-4 h-4 mr-2 text-amber-600'/>
+                        <AlertDescription>
+                        提供篩選的課程都是上學年(112學期)的課程，除了課號&課名之外，其他資訊可能會有變動。
+                        </AlertDescription>
+                    </Alert>
+                    <ButtonGroup buttonFlex={1}>
+                        <Button variant="outline" onClick={e => setOpen(true)}><Plus /> Add Course</Button>
+                        <Dropdown>
+                            <MenuButton
+                                slots={{ root: IconButton }}
+                                slotProps={{ root: { variant: 'outlined', color: 'neutral' } }}
+                            >
+                                <Settings className='w-4 h-4' />
+                            </MenuButton>
+                            <Menu>
+                                <MenuItem>
+                                    <Typography component="label" endDecorator={<Switch sx={{ ml: 1 }} checked={showTimetable} onChange={(e) => setShowTimetable(e.target.checked)} />}>
+                                        時間表
+                                    </Typography>
+                                </MenuItem>
+                            </Menu>
+                        </Dropdown>
+                    </ButtonGroup>
+                    <div className='grid grid-cols-2 text-center'>
+                        <div className='space-x-2'>
+                            <span className='text-2xl'>{semesterSelectedCourses.length}</span>
+                            <span className='text-gray-600'>課程</span>
+                        </div>
+                        <div className='space-x-2'>
+                            <span className='text-2xl'>{totalCredits}</span>
+                            <span className='text-gray-600'>總學分</span>
+                        </div>
                     </div>
-                </Alert>
-                <Alert color='warning' startDecorator={<AlertTriangle />}>
-                    提供篩選的課程都是上學年 （111-2學期）的課程，除了課號&課名之外，其他資訊可能會有變動。
-                </Alert>
-                <ButtonGroup buttonFlex={1}>
-                    <Button startDecorator={<Plus />} variant="outlined" onClick={e => setOpen(true)}>Add Course</Button>
-                    <Dropdown>
-                        <MenuButton
-                            slots={{ root: IconButton }}
-                            slotProps={{ root: { variant: 'outlined', color: 'neutral' } }}
-                        >
-                            <Settings className='w-4 h-4' />
-                        </MenuButton>
-                        <Menu>
-                            <MenuItem>
-                                <Typography component="label" endDecorator={<Switch sx={{ ml: 1 }} checked={showTimetable} onChange={(e) => setShowTimetable(e.target.checked)} />}>
-                                    時間表
-                                </Typography>
-                            </MenuItem>
-                        </Menu>
-                    </Dropdown>
-                </ButtonGroup>
-                <div className='grid grid-cols-2 text-center'>
-                    <div className='space-x-2'>
-                        <span className='text-2xl'>{selectedCourses.length}</span>
-                        <span className='text-gray-600'>課程</span>
-                    </div>
-                    <div className='space-x-2'>
-                        <span className='text-2xl'>{totalCredits}</span>
-                        <span className='text-gray-600'>總學分</span>
-                    </div>
+                    <Divider />
+                    {exceedesMaxCourses && <Alert className='text-red-600 border-red-600 bg-red-100'>
+                        <AlertTriangle className='w-4 h-4'/>
+                        <AlertDescription>
+                            最多只能選 {MAX_COURSES} 門課
+                        </AlertDescription>
+                    </Alert>}
+                    {semesterSelectedCourses.map((course, index) => (
+                        <div key={index} className="flex flex-row gap-4 items-center">
+                            <div className="w-4 h-4 rounded-full" style={{ backgroundColor: colorMap[course.raw_id] }}></div>
+                            <div className="flex flex-col flex-1">
+                                <span className="text-sm">{course.department}{course.course}-{course.class} {course.name_zh} - {(course.teacher_zh ?? []).join(',')}</span>
+                                <span className="text-xs">{course.name_en}</span>
+                                <div className="mt-1">
+                                    {course.venues?.map((venue, index) => {
+                                        const time = course.times![index];
+                                        return <div key={index} className="flex flex-row items-center space-x-2 font-mono text-gray-400">
+                                            <span className="text-xs">{venue}</span>
+                                            <span className="text-xs">{time}</span>
+                                        </div>
+                                    }) || <span className="text-gray-400 text-xs">No Venue</span>}
+                                </div>
+                            </div>
+                            <div className="flex flex-row space-x-2 items-center">
+                                {timeConflicts.find(ts => ts.course.raw_id == course.raw_id) && <Tooltip title="衝堂">
+                                    <AlertTriangle className="w-6 h-6 text-red-500" />
+                                </Tooltip>}
+                                {duplicates.includes(course.raw_id) && <Tooltip title="重複">
+                                    <Copy className="w-6 h-6 text-yellow-500" />
+                                </Tooltip>}
+                                {/* Credits */}
+                                <div className="flex flex-row items-center space-x-1">
+                                    <span className="text-lg">{course.credits}</span>
+                                    <span className="text-xs text-gray-400">學分</span>
+                                </div>
+                                <ButtonGroup>
+                                    <IconButton onClick={() => deleteCourse(course)}>
+                                        <Trash className="w-4 h-4" />
+                                    </IconButton>
+                                    <IconButton disabled>
+                                        <EyeOff className="w-4 h-4" />
+                                    </IconButton>
+                                </ButtonGroup>
+                            </div>
+                        </div>
+                    ))}
+                    {semesterSelectedCourses.length == 0 && (
+                        <div className="flex flex-col items-center space-y-4">
+                            <span className="text-lg font-semibold text-gray-400">{"No Courses Added (yet)"}</span>
+                        </div>
+                    )}
                 </div>
-                <Divider />
-                {exceedesMaxCourses && <Alert color='danger' startDecorator={<AlertTriangle />}>
-                    最多只能選 {MAX_COURSES} 門課
-                </Alert>}
-                {selectedCourses.map((course, index) => (
-                    <div key={index} className="flex flex-row gap-4 items-center">
-                        <div className="w-4 h-4 rounded-full" style={{ backgroundColor: colorMap[course.raw_id] }}></div>
-                        <div className="flex flex-col flex-1">
-                            <span className="text-sm">{course.department}{course.course}-{course.class} {course.name_zh} - {(course.teacher_zh ?? []).join(',')}</span>
-                            <span className="text-xs">{course.name_en}</span>
-                            <div className="mt-1">
-                                {course.venues?.map((venue, index) => {
-                                    const time = course.times![index];
-                                    return <div key={index} className="flex flex-row items-center space-x-2 font-mono text-gray-400">
-                                        <span className="text-xs">{venue}</span>
-                                        <span className="text-xs">{time}</span>
-                                    </div>
-                                }) || <span className="text-gray-400 text-xs">No Venue</span>}
-                            </div>
-                        </div>
-                        <div className="flex flex-row space-x-2 items-center">
-                            {timeConflicts.find(ts => ts.course.raw_id == course.raw_id) && <Tooltip title="衝堂">
-                                <AlertTriangle className="w-6 h-6 text-red-500" />
-                            </Tooltip>}
-                            {duplicates.includes(course.raw_id) && <Tooltip title="重複">
-                                <Copy className="w-6 h-6 text-yellow-500" />
-                            </Tooltip>}
-                            {/* Credits */}
-                            <div className="flex flex-row items-center space-x-1">
-                                <span className="text-lg">{course.credits}</span>
-                                <span className="text-xs text-gray-400">學分</span>
-                            </div>
-                            <ButtonGroup>
-                                <IconButton onClick={() => deleteCourse(course)}>
-                                    <Trash className="w-4 h-4" />
-                                </IconButton>
-                                <IconButton disabled>
-                                    <EyeOff className="w-4 h-4" />
-                                </IconButton>
-                            </ButtonGroup>
-                        </div>
-                    </div>
-                ))}
-                {selectedCourses.length == 0 && (
-                    <div className="flex flex-col items-center space-y-4">
-                        <span className="text-lg font-semibold text-gray-400">{"No Courses Added (yet)"}</span>
-                    </div>
-                )}
+                {renderDrawer()}
             </div>
-            {renderDrawer()}
-        </div>
+        </Tabs>
+        
     </div>
 }
 

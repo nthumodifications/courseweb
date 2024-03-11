@@ -7,8 +7,8 @@ import Link from 'next/link';
 import CourseTagList from './CourseTagsList';
 import SelectCourseButton from './SelectCourseButton';
 import { HoverCard } from '@radix-ui/react-hover-card';
-import { HoverCardContent, HoverCardTrigger } from '../ui/hover-card';
-import { Button } from '../ui/button';
+import { HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
+import { Button } from '@/components/ui/button';
 
 const CourseListItem: FC<{ course: CourseSyllabusView }> = ({ course }) => {
     const dict = useDictionary();
