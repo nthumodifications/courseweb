@@ -79,7 +79,7 @@
     "next-auth": "^4.24.5",
     "next-pwa": "^5.6.0",
     "node-html-parser": "^6.1.11",
-    "postcss": "8.4.31",
+    "postcss": "8.4.35",
     "qrcode.react": "^3.1.0",
     "query-string": "^8.1.0",
     "react": "18.2.0",
