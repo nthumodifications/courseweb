@@ -190,7 +190,7 @@ const Calendar = () => {
                 </div>
             </div>
             <div className="overflow-x-auto">
-                <div className="flex flex-col min-w-[1023px] md:min-w-0">
+                <div className="flex flex-col min-w-[580px] md:min-w-0">
                     <div className="flex flex-row justify-evenly h-16">
                         <div className="w-12"></div>
                         {displayWeek.map((day, index) => (
