@@ -10,7 +10,8 @@ import { semesterInfo } from '@/const/semester';
 import { parseSlotTime, scheduleTimeSlots } from '@/const/timetable';
 import useUserTimetable from '@/hooks/contexts/useUserTimetable';
 import { useState } from 'react';
-
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as ShadcnCalendar } from '@/components/ui/calendar';
 interface RepeatDefinition {
     type: 'daily' | 'weekly' | 'monthly' | 'yearly';
     interval?: number;
@@ -56,6 +57,30 @@ const getWeek = (date: Date) => {
         start: start,
         end: end
     });
+}
+
+const WeekSelector = ({ date, setDate }: { date: Date, setDate: (d: Date) => void }) => {
+    const [open, setOpen] = useState(false);
+
+    const handleDateSelect = (d: Date | undefined) => {
+        setDate(d!);
+        setOpen(false);
+    }
+
+    return <Popover open={open} onOpenChange={setOpen}>
+    <PopoverTrigger>
+      <h2 className="text-slate-900 text-2xl font-semibold w-max">March 2024</h2>
+    </PopoverTrigger>
+    <PopoverContent className="w-auto p-0">
+      <ShadcnCalendar
+        mode="single"
+        selected={date}
+        onSelect={handleDateSelect}
+        initialFocus
+      />
+    </PopoverContent>
+  </Popover>
+
 }
 
 const Calendar = () => {
@@ -117,8 +142,6 @@ const Calendar = () => {
         ...timetableToCalendarEvent(timetableData)
     ]
 
-    console.log(events)
-
 
     const renderEventsInDay = (day: Date) => {
         const dayEvents = events.filter(e => {
@@ -171,7 +194,7 @@ const Calendar = () => {
         <div className="flex flex-col gap-6">
             <div className="flex flex-col md:flex-row gap-2 justify-evenly">
                 <div className="flex-1 w-full">
-                    <h2 className="text-slate-900 text-2xl font-semibold w-max">March 2024</h2>
+                    <WeekSelector date={displayWeek[0]} setDate={d => setDisplayWeek(getWeek(d))}/>
                 </div>
                 <div className="flex flex-row items-center gap-2">
                     <Select>
