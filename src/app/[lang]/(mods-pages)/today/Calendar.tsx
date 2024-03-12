@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { addDays, addWeeks, differenceInDays, differenceInWeeks, eachDayOfInterval, eachHourOfInterval, endOfWeek, format, isSameDay, isSameMonth, isToday, set, startOfWeek, subWeeks } from 'date-fns';
+import { addDays, addWeeks, differenceInDays, differenceInWeeks, eachHourOfInterval, endOfDay, format, isSameDay, isSameMonth, isToday, set, startOfDay, subWeeks } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { CourseTimeslotData } from '@/types/timetable';
 import { semesterInfo } from '@/const/semester';
@@ -17,16 +17,10 @@ import { CalendarProvider, useCalendar } from './calendar_hook';
 import { WeekSelector } from './WeekSelector';
 import { AddEventButton } from './AddEventButton';
 import { CurrentTimePointer } from './CurrentTimePointer';
+import { getWeek } from './calendar_utils';
+import {eventsToDisplay} from '@/app/[lang]/(mods-pages)/today/calendar_utils';
+import { adjustLuminance, getBrightness } from '@/helpers/colors';
 
-
-const getWeek = (date: Date) => {
-    const start = startOfWeek(date, { weekStartsOn: 0 });
-    const end = endOfWeek(date, { weekStartsOn: 0 });
-    return eachDayOfInterval({
-        start: start,
-        end: end
-    });
-}
 
 const CalendarContent = () => {
     const { timetableData } = useUserTimetable();
@@ -86,6 +80,19 @@ const CalendarContent = () => {
                 color: '#F3ECFB',
                 tag: 'meeting'
             },
+            {
+                title: 'Discount in 7-11',
+                allDay: true,
+                start: new Date(2024, 2, 14, 0, 0),
+                end: new Date(2024, 2, 15, 0, 0),
+                repeat: {
+                    type: 'weekly',
+                    interval: 1,
+                    count: 7
+                },
+                color: '#F3ECFB',
+                tag: 'discount'
+            },
             ...timetableToCalendarEvent(timetableData)
         ])
     }, [timetableData])
@@ -95,38 +102,15 @@ const CalendarContent = () => {
     }
 
     const renderEventsInDay = (day: Date) => {
-        const dayEvents = events.filter(e => {
-            //check if event is in the day
-            if(e.allDay) return false; //skip all day events as handled in another way
-            if (isSameDay(e.start, day)) return true;
-            //check if event is a repeating event
-            if (e.repeat) {
-                //check if day is past the start date
-                if (day < e.start) return false;
-                if (e.repeat.type == 'weekly') {
-                    //check if is the same day of the week
-                    if (e.start.getDay() != day.getDay()) return false;
-
-                    //get difference in weeks between the start of the event and the day
-                    const weeks = differenceInWeeks(day, e.start);
-                    //check if the difference is a multiple of the interval
-                    if (weeks % (e.repeat.interval ?? 1) == 0) {
-                        //check if the day is before the end date
-                        if ('date' in e.repeat && e.repeat.date >= day) return true;
-                        if ('count' in e.repeat && weeks / (e.repeat.interval ?? 1) <= e.repeat.count) return true;
-                    }
-                }
-                if (e.repeat.type == 'daily') {
-                    //check if is multiple of interval
-                    const days = differenceInDays(day, e.start);
-                    if (days % (e.repeat.interval ?? 1) == 0) {
-                        if ('date' in e.repeat && e.repeat.date >= day) return true;
-                        if ('count' in e.repeat && days / (e.repeat.interval ?? 1) <= e.repeat.count) return true;
-                    }
-                }
-            }
-            return false;
-        });
+        const dayEvents = eventsToDisplay(events, startOfDay(day), endOfDay(day)).filter(e => {
+            return !e.allDay;
+        }).map(event => {
+            //Determine the text color
+            const brightness = getBrightness(event.color);
+            //From the brightness, using the adjustBrightness function, create a complementary color that is legible
+            const textColor = adjustLuminance(event.color, brightness > 186 ? 0.2 : 0.95);
+            return {...event, textColor}
+        })
         return dayEvents.map((event, index) => (
             <Popover>
                 <PopoverTrigger asChild>
@@ -147,13 +131,13 @@ const CalendarContent = () => {
                     <div className='flex flex-col gap-4'>
                         <div className='flex flex-row gap-1'>
                             <div className='w-6 py-1'>
-                                <div className='w-4 h-4 rounded-full' style={{ background: event.color }}></div>
+                                <div className='w-4 h-4 rounded-full' style={{ background: event.color, color: event.textColor }}></div>
                             </div>
                             <div className='flex flex-col gap-1 flex-1'>
                                 <h1 className='text-xl font-semibold'>{event.title}</h1>
                                 {isSameDay(event.start, event.end) ?
-                                    <p className='text-sm text-slate-700'>{format(event.start, 'yyyy-M-d')} ⋅ {format(event.start, 'HH:mm')} - {format(event.end, 'HH:mm')}</p>:
-                                    <p className='text-sm text-slate-700'>{format(event.start, 'yyyy-M-d HH:mm')} - {format(event.end, 'yyyy-LL-dd HH:mm')}</p>
+                                    <p className='text-sm'>{format(event.start, 'yyyy-M-d')} ⋅ {format(event.start, 'HH:mm')} - {format(event.end, 'HH:mm')}</p>:
+                                    <p className='text-sm'>{format(event.start, 'yyyy-M-d HH:mm')} - {format(event.end, 'yyyy-LL-dd HH:mm')}</p>
                                 }
                             </div>
                         </div>
@@ -164,42 +148,25 @@ const CalendarContent = () => {
     }
 
     const renderAllDayEvents = () => {
-        //check if any all day events in the week
-        const weekEvents = events.filter(e => e.allDay).filter((event, index) => {
-            //check if event is in the week
-            if (event.start >= displayWeek[0] && event.start <= displayWeek[6] && event.end >= displayWeek[0] && event.end <= displayWeek[6]) return true;
-            else if (event.repeat) {
-                //check if day is past the start date
-                if (displayWeek[0] <= event.start) return false;
-                if (event.repeat.type == 'weekly') {
-                    //check if is the same day of the week
-                    if (event.start.getDay() != displayWeek[0].getDay()) return false;
-
-                    //get difference in weeks between the start of the event and the day
-                    const weeks = differenceInWeeks(displayWeek[0], event.start);
-                    //check if the difference is a multiple of the interval
-                    if (weeks % (event.repeat.interval ?? 1) == 0) {
-                        //check if the day is before the end date
-                        if ('date' in event.repeat && event.repeat.date >= displayWeek[0]) return true;
-                        if ('count' in event.repeat && weeks / (event.repeat.interval ?? 1) <= event.repeat.count) return true;
-                    }
-                }
-                if (event.repeat.type == 'daily') {
-                    //check if is multiple of interval
-                    const days = differenceInDays(displayWeek[0], event.start);
-                    if (days % (event.repeat.interval ?? 1) == 0) {
-                        if ('date' in event.repeat && event.repeat.date >= displayWeek[0]) return true;
-                        if ('count' in event.repeat && days / (event.repeat.interval ?? 1) <= event.repeat.count) return true;
-                    }
-                }
-
-            }
-            return false;
+        const dayEvents = eventsToDisplay(events, startOfDay(displayWeek[0]), endOfDay(displayWeek[6])).filter(e => {
+            return e.allDay;
+        }).map(event => {
+            //Determine the text color
+            const brightness = getBrightness(event.color);
+            //From the brightness, using the adjustBrightness function, create a complementary color that is legible
+            const textColor = adjustLuminance(event.color, brightness > 186 ? 0.2 : 0.95);
+            const span = differenceInDays(endOfDay(event.end), startOfDay(event.start)) + 1;
+            const gridColumnStart = differenceInDays(event.start, displayWeek[0]) + 1;
+            return {...event, textColor, span, gridColumnStart}
         })
 
-        console.log(weekEvents)
-
-        return <></>
+        return dayEvents.map((event, index) => (
+            <div key={index} style={{ gridColumn: `span ${event.span} / span ${event.span}`, gridColumnStart: event.gridColumnStart }}>
+                <div className="bg-nthu-500 text-black rounded-md h-full p-2 flex flex-col gap-1 hover:shadow-md cursor-pointer transition-shadow select-none" style={{ background: event.color }}>
+                    <div className="text-sm leading-none">{event.title}</div>
+                </div>
+            </div>
+        ))
     }
 
 
@@ -238,7 +205,7 @@ const CalendarContent = () => {
                         </div>
                         <div className="flex flex-row justify-evenly">
                             <div className="w-12"></div>
-                            <div className='grid grid-col-7'>
+                            <div className='grid grid-cols-7 flex-1'>
                                 {renderAllDayEvents()}
                             </div>
                         </div>

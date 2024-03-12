@@ -5,94 +5,10 @@ import { WeatherData } from '@/types/weather';
 import { AlertDefinition } from "@/config/supabase";
 import Calendar from "./Calendar";
 import { useCalendar } from "./calendar_hook";
-import { CalendarEvent } from "./calendar.types";
-import { addDays, isSameDay, eachDayOfInterval, set, addWeeks, addMonths, addYears, format } from 'date-fns';
+import { addDays, isSameDay, eachDayOfInterval, format } from 'date-fns';
 import {getBrightness} from '@/helpers/colors';
 import {adjustLuminance} from '@/helpers/colors';
-
-const getRepeatedStartDays = (event: CalendarEvent) => {
-    const days = [];
-    days.push(event.start);
-    if (event.repeat) {
-        if (event.repeat.type == 'daily') {
-            let currDay = new Date(event.start);
-            if ('count' in event.repeat) {
-                for (let i = 0; i < event.repeat.count; i++) {
-                    currDay = addDays(currDay, event.repeat.interval ?? 1);
-                    days.push(new Date(currDay));
-                }
-            }
-            else if ('date' in event.repeat) {
-                while (currDay < event.repeat.date) {
-                    currDay = addDays(currDay, event.repeat.interval ?? 1);
-                    days.push(new Date(currDay));
-                }
-            }
-        }
-        else if (event.repeat.type == 'weekly') {
-            let currDay = new Date(event.start);
-            if ('count' in event.repeat) {
-                for (let i = 0; i < event.repeat.count; i++) {
-                    currDay = addWeeks(currDay, event.repeat.interval ?? 1);
-                    days.push(new Date(currDay));
-                }
-            }
-            else if ('date' in event.repeat) {
-                while (currDay < event.repeat.date) {
-                    currDay = addWeeks(currDay, event.repeat.interval ?? 1);
-                    days.push(new Date(currDay));
-                }
-            }
-        }
-        else if (event.repeat.type == 'monthly') {
-            let currDay = new Date(event.start);
-            if ('count' in event.repeat) {
-                for (let i = 0; i < event.repeat.count; i++) {
-                    currDay = addMonths(currDay, event.repeat.interval ?? 1);
-                    days.push(new Date(currDay));
-                }
-            }
-            else if ('date' in event.repeat) {
-                while (currDay < event.repeat.date) {
-                    currDay = addMonths(currDay, event.repeat.interval ?? 1);
-                    days.push(new Date(currDay));
-                }
-            }
-        }
-        else if (event.repeat.type == 'yearly') {
-            let currDay = new Date(event.start);
-            if ('count' in event.repeat) {
-                for (let i = 0; i < event.repeat.count; i++) {
-                    currDay = addYears(currDay, event.repeat.interval ?? 1);
-                    days.push(new Date(currDay));
-                }
-            }
-            else if ('date' in event.repeat) {
-                while (currDay < event.repeat.date) {
-                    currDay = addYears(currDay, event.repeat.interval ?? 1);
-                    days.push(new Date(currDay));
-                }
-            }
-        }
-    }
-    return days;
-}
-
-const eventsToDisplay = (events: CalendarEvent[], start: Date, end: Date) => {
-    // keep events that are within the range, if repeated events, create new events for each repeated day, change the start and end date
-    const newEvents = [];
-    for (const event of events) {
-        const repeatedDays = getRepeatedStartDays(event);
-        for (const day of repeatedDays) {
-            const newStart = set(event.start, { year: day.getFullYear(), month: day.getMonth(), date: day.getDate() });
-            const newEnd = set(event.end, { year: day.getFullYear(), month: day.getMonth(), date: day.getDate() });
-            if ((newStart >= start && newStart <= end)) {
-                newEvents.push({ ...event, start: newStart, end: newEnd })
-            }
-        }
-    }
-    return newEvents;
-}
+import { eventsToDisplay } from "./calendar_utils";
 
 const UpcomingEvents = () => {
     const { events } = useCalendar();
