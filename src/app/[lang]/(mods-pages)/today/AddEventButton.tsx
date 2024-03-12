@@ -216,7 +216,10 @@ export const AddEventButton = ({ defaultEvent, onEventAdded = () => { } }: { def
 
     return <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger>
-            <Button className="hidden md:inline-flex"><Plus className="mr-2" /> 新增行程</Button>
+            <>
+                <Button className="hidden md:inline-flex"><Plus className="mr-2" /> 新增行程</Button>
+                <Button className="md:hidden fixed bottom-8 right-8 z-50 rounded-lg shadow-lg" size='icon'><Plus /></Button>
+            </>
         </DialogTrigger>
         <DialogContent>
             <DialogHeader>
