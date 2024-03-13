@@ -37,7 +37,7 @@ const UpcomingEvents = () => {
         })
     }
 
-    return <div className="flex-col justify-start items-start gap-2 inline-flex md:w-[292px] md:h-full">
+    return <div className="flex-col justify-start items-start gap-2 inline-flex md:min-w-[292px] md:h-full">
         <div className="self-stretch text-slate-900 text-lg font-semibold font-['Inter'] leading-7">即將到來的行程</div>
         <div className="self-stretch p-4 bg-slate-50 rounded-lg flex-col justify-start items-start gap-6 flex">
             <div className="self-stretch justify-start items-start gap-6 inline-flex flex-col sm:flex-row md:flex-col">

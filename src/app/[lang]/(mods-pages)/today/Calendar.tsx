@@ -5,7 +5,7 @@ import { CourseTimeslotData } from '@/types/timetable';
 import { semesterInfo } from '@/const/semester';
 import { parseSlotTime, scheduleTimeSlots } from '@/const/timetable';
 import useUserTimetable from '@/hooks/contexts/useUserTimetable';
-import { createContext, useContext, useEffect, useState } from 'react';
+import { FC, PropsWithChildren, createContext, useContext, useEffect, useState } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { FormDescription } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -20,6 +20,31 @@ import { CurrentTimePointer } from './CurrentTimePointer';
 import { getWeek } from './calendar_utils';
 import {eventsToDisplay} from '@/app/[lang]/(mods-pages)/today/calendar_utils';
 import { adjustLuminance, getBrightness } from '@/helpers/colors';
+
+const EventPopover: FC<PropsWithChildren<{event: CalendarEvent}>> = ({ children, event }) => {
+    return <Popover>
+        <PopoverTrigger asChild>
+            {children}
+        </PopoverTrigger>
+        <PopoverContent>
+            <div className='flex flex-col gap-4'>
+                <div className='flex flex-row gap-1'>
+                    <div className='w-6 py-1'>
+                        <div className='w-4 h-4 rounded-full' style={{ background: event.color }}></div>
+                    </div>
+                    <div className='flex flex-col gap-1 flex-1'>
+                        <h1 className='text-xl font-semibold'>{event.title}</h1>
+                        {event.allDay ? <p className='text-sm'>{format(event.start, 'yyyy-M-d')} - {format(event.end, 'yyyy-M-d')}</p>:
+                        isSameDay(event.start, event.end) ?
+                            <p className='text-sm'>{format(event.start, 'yyyy-M-d')} ⋅ {format(event.start, 'HH:mm')} - {format(event.end, 'HH:mm')}</p>:
+                            <p className='text-sm'>{format(event.start, 'yyyy-M-d HH:mm')} - {format(event.end, 'yyyy-LL-dd HH:mm')}</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </PopoverContent>
+    </Popover>
+}
 
 
 const CalendarContent = () => {
@@ -112,38 +137,19 @@ const CalendarContent = () => {
             return {...event, textColor}
         })
         return dayEvents.map((event, index) => (
-            <Popover>
-                <PopoverTrigger asChild>
-                    <div
-                        key={index}
-                        className="absolute left-0 w-full pr-1 "
-                        style={{
-                            top: (event.start.getHours() * HOUR_HEIGHT) + (event.start.getMinutes() * HOUR_HEIGHT / 60),
-                            height: (event.end.getHours() - event.start.getHours()) * HOUR_HEIGHT + (event.end.getMinutes() - event.start.getMinutes()) * HOUR_HEIGHT / 60,
-                        }}>
-                        <div className="bg-nthu-500 text-black rounded-md h-full p-2 flex flex-col gap-1 hover:shadow-md cursor-pointer transition-shadow select-none" style={{ background: event.color }}>
-                            <div className="text-sm leading-none">{event.title}</div>
-                            <div className="text-xs font-normal leading-none">{format(event.start, 'HH:mm')} - {format(event.end, 'HH:mm')}</div>
-                        </div>
+            <EventPopover key={index} event={event}>
+                <div
+                    className="absolute left-0 w-full pr-1 "
+                    style={{
+                        top: (event.start.getHours() * HOUR_HEIGHT) + (event.start.getMinutes() * HOUR_HEIGHT / 60),
+                        height: (event.end.getHours() - event.start.getHours()) * HOUR_HEIGHT + (event.end.getMinutes() - event.start.getMinutes()) * HOUR_HEIGHT / 60,
+                    }}>
+                    <div className="bg-nthu-500 rounded-md h-full p-2 flex flex-col gap-1 hover:shadow-md cursor-pointer transition-shadow select-none" style={{ background: event.color, color: event.textColor }}>
+                        <div className="text-sm leading-none">{event.title}</div>
+                        <div className="text-xs font-normal leading-none">{format(event.start, 'HH:mm')} - {format(event.end, 'HH:mm')}</div>
                     </div>
-                </PopoverTrigger>
-                <PopoverContent>
-                    <div className='flex flex-col gap-4'>
-                        <div className='flex flex-row gap-1'>
-                            <div className='w-6 py-1'>
-                                <div className='w-4 h-4 rounded-full' style={{ background: event.color, color: event.textColor }}></div>
-                            </div>
-                            <div className='flex flex-col gap-1 flex-1'>
-                                <h1 className='text-xl font-semibold'>{event.title}</h1>
-                                {isSameDay(event.start, event.end) ?
-                                    <p className='text-sm'>{format(event.start, 'yyyy-M-d')} ⋅ {format(event.start, 'HH:mm')} - {format(event.end, 'HH:mm')}</p>:
-                                    <p className='text-sm'>{format(event.start, 'yyyy-M-d HH:mm')} - {format(event.end, 'yyyy-LL-dd HH:mm')}</p>
-                                }
-                            </div>
-                        </div>
-                    </div>
-                </PopoverContent>
-            </Popover>
+                </div>
+            </EventPopover>
         ))
     }
 
@@ -161,11 +167,13 @@ const CalendarContent = () => {
         })
 
         return dayEvents.map((event, index) => (
-            <div key={index} style={{ gridColumn: `span ${event.span} / span ${event.span}`, gridColumnStart: event.gridColumnStart }}>
-                <div className="bg-nthu-500 text-black rounded-md h-full p-2 flex flex-col gap-1 hover:shadow-md cursor-pointer transition-shadow select-none" style={{ background: event.color }}>
-                    <div className="text-sm leading-none">{event.title}</div>
+            <EventPopover key={index} event={event}>
+                <div style={{ gridColumn: `span ${event.span} / span ${event.span}`, gridColumnStart: event.gridColumnStart }}>
+                    <div className="bg-nthu-500 rounded-md h-full p-2 flex flex-col gap-1 hover:shadow-md cursor-pointer transition-shadow select-none" style={{ background: event.color, color: event.textColor }}>
+                        <div className="text-sm leading-none">{event.title}</div>
+                    </div>
                 </div>
-            </div>
+            </EventPopover>
         ))
     }
 
