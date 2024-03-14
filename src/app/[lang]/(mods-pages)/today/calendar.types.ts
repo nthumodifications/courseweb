@@ -14,6 +14,7 @@ export interface RepeatByDate extends RepeatDefinition {
 export type Repeat = RepeatByCount | RepeatByDate | RepeatDefinition;
 
 export interface CalendarEvent {
+    id: string;
     title: string;
     details?: string;
     allDay: boolean;

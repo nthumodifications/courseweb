@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export const eventFormSchema = z.object({
+    id: z.string().uuid(),
     title: z.string(),
     details: z.string().optional(),
     allDay: z.boolean(),

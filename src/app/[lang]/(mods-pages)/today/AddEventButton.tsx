@@ -19,15 +19,19 @@ import { HourMinuteInput } from '@/components/ui/hour-minute-picker';
 import { CalendarEvent } from './calendar.types';
 import { eventFormSchema } from './eventFormSchema';
 import { EventLabelPicker } from './EventLabelPicker';
+import useUserTimetable from '@/hooks/contexts/useUserTimetable';
+import { v4 as uuidv4 } from 'uuid';
 
 export const AddEventButton = ({ defaultEvent, onEventAdded = () => { } }: { defaultEvent?: CalendarEvent; onEventAdded?: (data: CalendarEvent) => void; }) => {
     const [open, setOpen] = useState(false);
+    const { currentColors } = useUserTimetable();
     const form = useForm<z.infer<typeof eventFormSchema>>({
         resolver: zodResolver(eventFormSchema),
         defaultValues: defaultEvent ? {
             ...defaultEvent,
             repeat: defaultEvent.repeat ?? { type: null },
         } : {
+            id: uuidv4(),
             title: '',
             details: '',
             allDay: false,
@@ -36,7 +40,7 @@ export const AddEventButton = ({ defaultEvent, onEventAdded = () => { } }: { def
             repeat: {
                 type: null,
             },
-            color: '#f44336',
+            color: currentColors[0],
             tag: 'none'
         },
     });
@@ -53,6 +57,7 @@ export const AddEventButton = ({ defaultEvent, onEventAdded = () => { } }: { def
 
     const repeat = form.watch('repeat.type');
     const allDay = form.watch('allDay');
+
 
     const renderNormalDatePicker = () => {
         return <>
@@ -352,7 +357,10 @@ export const AddEventButton = ({ defaultEvent, onEventAdded = () => { } }: { def
                                                 </FormControl>
                                             </PopoverTrigger>
                                             <PopoverContent>
-                                                <CirclePicker color={field.value} onChangeComplete={(color) => field.onChange(color.hex)} />
+                                                <CirclePicker 
+                                                    color={field.value} 
+                                                    onChangeComplete={(color) => field.onChange(color.hex)} 
+                                                    colors={currentColors} />
                                             </PopoverContent>
                                         </Popover>
                                         <FormMessage />

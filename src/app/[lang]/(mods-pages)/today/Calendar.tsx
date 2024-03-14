@@ -1,12 +1,8 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { addDays, addWeeks, differenceInDays, differenceInWeeks, eachHourOfInterval, endOfDay, format, isSameDay, isSameMonth, isToday, set, startOfDay, subWeeks } from 'date-fns';
+import { addWeeks, differenceInDays, differenceInWeeks, eachHourOfInterval, endOfDay, format, isSameMonth, isToday, startOfDay, subWeeks } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { CourseTimeslotData } from '@/types/timetable';
-import { semesterInfo } from '@/const/semester';
-import { parseSlotTime, scheduleTimeSlots } from '@/const/timetable';
 import useUserTimetable from '@/hooks/contexts/useUserTimetable';
-import { FC, PropsWithChildren, createContext, useContext, useEffect, useState } from 'react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { FormDescription } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -20,37 +16,15 @@ import { CurrentTimePointer } from './CurrentTimePointer';
 import { getWeek } from './calendar_utils';
 import {eventsToDisplay} from '@/app/[lang]/(mods-pages)/today/calendar_utils';
 import { adjustLuminance, getBrightness } from '@/helpers/colors';
-
-const EventPopover: FC<PropsWithChildren<{event: CalendarEvent}>> = ({ children, event }) => {
-    return <Popover>
-        <PopoverTrigger asChild>
-            {children}
-        </PopoverTrigger>
-        <PopoverContent>
-            <div className='flex flex-col gap-4'>
-                <div className='flex flex-row gap-1'>
-                    <div className='w-6 py-1'>
-                        <div className='w-4 h-4 rounded-full' style={{ background: event.color }}></div>
-                    </div>
-                    <div className='flex flex-col gap-1 flex-1'>
-                        <h1 className='text-xl font-semibold'>{event.title}</h1>
-                        {event.allDay ? <p className='text-sm'>{format(event.start, 'yyyy-M-d')} - {format(event.end, 'yyyy-M-d')}</p>:
-                        isSameDay(event.start, event.end) ?
-                            <p className='text-sm'>{format(event.start, 'yyyy-M-d')} ⋅ {format(event.start, 'HH:mm')} - {format(event.end, 'HH:mm')}</p>:
-                            <p className='text-sm'>{format(event.start, 'yyyy-M-d HH:mm')} - {format(event.end, 'yyyy-LL-dd HH:mm')}</p>
-                        }
-                    </div>
-                </div>
-            </div>
-        </PopoverContent>
-    </Popover>
-}
-
+import { EventPopover } from './EventPopover';
+import { timetableToCalendarEvent } from './timetableToCalendarEvent';
+import { useRxCollection, useRxQuery } from 'rxdb-hooks';
+import { v4 as uuidv4 } from 'uuid';
 
 const CalendarContent = () => {
     const { timetableData } = useUserTimetable();
     const [displayWeek, setDisplayWeek] = useState<Date[]>(getWeek(new Date()));
-    const { events, setEvents, weekContainer, HOUR_HEIGHT } = useCalendar();
+    const { events, addEvent, weekContainer, HOUR_HEIGHT } = useCalendar();
 
     const hours = eachHourOfInterval({
         start: new Date(2024, 2, 3, 0),
@@ -70,60 +44,8 @@ const CalendarContent = () => {
         setDisplayWeek(getWeek(new Date()));
     }
 
-    const timetableToCalendarEvent = (timetable: CourseTimeslotData[]): CalendarEvent[] => {
-        return timetable.map(t => {
-            const semester = semesterInfo.find(s => s.id == t.course.semester)!;
-            const startTime = parseSlotTime(scheduleTimeSlots[t.startTime].start);
-            const endTime = parseSlotTime(scheduleTimeSlots[t.endTime].end);
-            const startDate = set(addDays(semester.begins, t.dayOfWeek), { hours: startTime[0], minutes: startTime[1] });
-            const endDate = set(addDays(semester.begins, t.dayOfWeek), { hours: endTime[0], minutes: endTime[1] });
-
-            return {
-                title: t.course.name_zh,
-                allDay: false,
-                start: startDate,
-                end: endDate,
-                repeat: {
-                    type: 'weekly',
-                    interval: 1,
-                    date: semester.ends
-                },
-                color: t.color,
-                tag: 'course'
-            }
-        })
-    }
-
-    useEffect(() => {
-        setEvents([
-            {
-                title: 'NTHUMods Meeting',
-                allDay: false,
-                start: new Date(2024, 2, 13, 9, 0),
-                end: new Date(2024, 2, 13, 10, 30),
-                repeat: null,
-                color: '#F3ECFB',
-                tag: 'meeting'
-            },
-            {
-                title: 'Discount in 7-11',
-                allDay: true,
-                start: new Date(2024, 2, 14, 0, 0),
-                end: new Date(2024, 2, 15, 0, 0),
-                repeat: {
-                    type: 'weekly',
-                    interval: 1,
-                    count: 7
-                },
-                color: '#F3ECFB',
-                tag: 'discount'
-            },
-            ...timetableToCalendarEvent(timetableData)
-        ])
-    }, [timetableData])
-
     const handleAddEvent = (data: CalendarEvent) => {
-        setEvents([...events, data]);
+        addEvent(data)
     }
 
     const renderEventsInDay = (day: Date) => {
