@@ -49,8 +49,16 @@ export function* getRepeatedStartDays(event: CalendarEvent) {
                 throw new Error('Invalid repeat type');
         }
 
-        while ((!('count' in event.repeat) || days.length <= event.repeat.count) && (!('date' in event.repeat) || currDay < event.repeat.date)) {
+        while (true) {
+            //check if count is reached, if so, break
+            if ('count' in event.repeat && days.length >= event.repeat.count) {
+                break;
+            }
             currDay = addFunction(currDay, interval ?? 1);
+            //check if date is later than end date, if so, break
+            if ('date' in event.repeat && currDay > event.repeat.date) {
+                break;
+            }
             days.push(new Date(currDay));
             yield new Date(currDay);
         }
