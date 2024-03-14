@@ -7,7 +7,7 @@ import { Delete, Trash, X } from 'lucide-react';
 import { PopoverClose } from '@radix-ui/react-popover';
 import { useCalendar } from './calendar_hook';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { DialogClose } from '@radix-ui/react-dialog';
+import { DialogClose, DialogDescription } from '@radix-ui/react-dialog';
 
 const ConfirmDeleteEvent:FC<{ event: CalendarEvent }> = ({ event }) => {
     const { removeEvent } = useCalendar();
@@ -15,16 +15,16 @@ const ConfirmDeleteEvent:FC<{ event: CalendarEvent }> = ({ event }) => {
     return <Dialog>
         <DialogTrigger asChild>
             <Button size="icon" variant='ghost'>
-                <Trash />
+                <Trash className='w-4 h-4' />
             </Button>
         </DialogTrigger>
         <DialogContent>
             <DialogHeader>
                 <DialogTitle>確認刪除</DialogTitle>
+                <DialogDescription>
+                    <p>確定要刪除這個事件嗎？</p>
+                </DialogDescription>
             </DialogHeader>
-            <DialogContent>
-                <p>確定要刪除這個事件嗎？</p>
-            </DialogContent>
             <DialogFooter>
                 <DialogClose asChild>
                     <Button variant="outline">取消</Button>
@@ -40,17 +40,17 @@ export const EventPopover: FC<PropsWithChildren<{ event: CalendarEvent; }>> = ({
         <PopoverTrigger asChild>
             {children}
         </PopoverTrigger>
-        <PopoverContent>
-            <div className='flex flex-col gap-4'>
+        <PopoverContent className='p-1'>
+            <div className='flex flex-col'>
                 <div className='flex flex-row justify-end'>
                     <ConfirmDeleteEvent event={event}/>
                     <PopoverClose asChild>
                         <Button size="icon" variant='ghost'>
-                            <X />
+                            <X className='w-4 h-4' />
                         </Button>
                     </PopoverClose>
                 </div>
-                <div className='flex flex-row gap-1'>
+                <div className='flex flex-row gap-1 px-2 pb-4'>
                     <div className='w-6 py-1'>
                         <div className='w-4 h-4 rounded-full' style={{ background: event.color }}></div>
                     </div>

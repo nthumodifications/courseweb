@@ -2,7 +2,7 @@
 import {useContext, useState, createContext, FC, PropsWithChildren, useRef, useMemo} from 'react';
 import {CalendarEvent} from '@/app/[lang]/(mods-pages)/today/calendar.types';
 import useUserTimetable from '@/hooks/contexts/useUserTimetable';
-import {useRxCollection, useRxQuery} from 'rxdb-hooks';
+import {useRxCollection, useRxDB, useRxQuery} from 'rxdb-hooks';
 import { timetableToCalendarEvent } from './timetableToCalendarEvent';
 import { createTimetableFromCourses } from '@/helpers/timetable';
 import supabase from '@/config/supabase';
@@ -17,6 +17,7 @@ export const useCalendar = () => useContext(calendarContext);
 export const useCalendarProvider = () => {
     const HOUR_HEIGHT = 48;
 
+    const db = useRxDB();
     const eventsCol = useRxCollection('events')
     const { result: eventStore } = useRxQuery(eventsCol?.find());
     const events = useMemo(() => {
@@ -60,8 +61,8 @@ export const useCalendarProvider = () => {
         }
     }
 
-
     useMemo(() => {
+        if(!db) return;
         if(!eventsCol)  return;
         (async () => {
             if (courses) {
@@ -77,7 +78,7 @@ export const useCalendarProvider = () => {
                 console.log('sync timetable to events complete')
             }
         })()
-    }, [courses, colorMap, eventsCol])
+    }, [db, courses, colorMap, eventsCol])
 
 
     return {
