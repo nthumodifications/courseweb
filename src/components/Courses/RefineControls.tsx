@@ -157,19 +157,18 @@ const RefineControls: FC<{ form: UseFormReturn<RefineControlFormTypes, any, Refi
                 name="timeslots"
                 render={() => (
                     <FormItem>
-                        <FormLabel>{dict.course.refine.time}</FormLabel>
                         <Collapsible>
-                            <div className="flex items-center justify-between space-x-4 px-4">
-                                <h4 className="text-sm font-semibold">
-                                {dict.course.refine.time}
-                                </h4>
                                 <CollapsibleTrigger asChild>
-                                <Button variant="ghost" size="sm" className="w-9 p-0">
-                                    <ChevronsUpDown className="h-4 w-4" />
-                                    <span className="sr-only">Toggle</span>
-                                </Button>
+                                    <div className="flex items-center justify-between space-x-4 px-4 outline outline-1 outline-primary rounded-lg cursor-pointer">
+                                        <h4 className="text-sm font-semibold">
+                                        {dict.course.refine.time}
+                                        </h4>
+                                        <Button variant="ghost" size="sm" className="w-9 p-0">
+                                            <ChevronsUpDown className="h-4 w-4" />
+                                            <span className="sr-only">Toggle</span>
+                                        </Button>
+                                    </div>
                                 </CollapsibleTrigger>
-                            </div>
                             <CollapsibleContent>
                                 <Button variant="outline" color="neutral" size="sm" onClick={handleFillTimes}>
                                     找沒課的時間
@@ -182,7 +181,14 @@ const RefineControls: FC<{ form: UseFormReturn<RefineControlFormTypes, any, Refi
             />
             <MultiCheckboxControl control={form.control} name="geTarget" options={GETargetCodes.map(code => ({ value: code.code, label: `${code.code} ${language == 'zh'? code.short_zh: code.short_en}`  }))} label={dict.course.refine.geTarget} />
             <MultiCheckboxControl control={form.control} name="gecDimensions" options={GECTypes.map(type => ({ value: type, label: type}))} label={dict.course.refine.gecDimensions} />
-            <AutocompleteShadcn control={form.control} name="className" placeholder={dict.course.refine.class} loading={load3} options={classList.map(classname => ({ value: classname, label: getFormattedClassCode(classname) }))} label={dict.course.refine.compulsory_elective} />
+            <AutocompleteShadcn 
+                control={form.control} 
+                name="className" 
+                placeholder={dict.course.refine.class} 
+                loading={load3} 
+                options={classList.map(classname => ({ value: classname, label: getFormattedClassCode(classname) }))} 
+                label={dict.course.refine.compulsory_elective} 
+                />
             <MultiCheckboxControl control={form.control} name="others" options={[
                 { value: 'xclass', label: dict.course.refine['x-class'] },
                 { value: '16_weeks', label: dict.course.refine['16_weeks']},

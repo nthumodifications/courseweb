@@ -50,7 +50,7 @@ export const getFormattedClassCode = (class_code: string) =>{
     // Parse the input string
     const match = class_code.toUpperCase().match(/(^[^\d]+)(\d+)([BMD])([A-D]?)/);
     if (!match) {
-        return 'Invalid format';
+        return class_code;
     }
 
     // Extract components

@@ -4,7 +4,7 @@ import { X } from "lucide-react";
 import * as React from "react";
 
 import clsx from "clsx";
-import { Command as CommandPrimitive } from "cmdk";
+import { CommandList, Command as CommandPrimitive } from "cmdk";
 import { Badge } from "@/components/ui/badge";
 import { Command, CommandGroup, CommandItem } from "@/components/ui/command";
 import { Label } from "@/components/ui/label";
@@ -110,26 +110,28 @@ export function MultiSelect({
         </div>
         <div className="relative mt-2">
           {open && selectables.length > 0 ? (
-            <div className="absolute w-full top-0 rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in">
-              <CommandGroup className="h-full overflow-auto">
-                {selectables.map((framework) => {
-                  return (
-                    <CommandItem
-                      key={framework.value}
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                      }}
-                      onSelect={(value) => {
-                        setInputValue("");
-                        setSelected((prev) => [...prev, framework]);
-                      }}
-                    >
-                      {framework.label}
-                    </CommandItem>
-                  );
-                })}
-              </CommandGroup>
+            <div className="absolute w-full top-0 rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in z-40">
+              <CommandList>
+                <CommandGroup className="h-full overflow-auto">
+                  {selectables.map((framework) => {
+                    return (
+                      <CommandItem
+                        key={framework.value}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                        onSelect={(value) => {
+                          setInputValue("");
+                          setSelected((prev) => [...prev, framework]);
+                        }}
+                      >
+                        {framework.label}
+                      </CommandItem>
+                    );
+                  })}
+                </CommandGroup>
+              </CommandList>
             </div>
           ) : null}
         </div>
