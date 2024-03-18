@@ -15,7 +15,7 @@ export function MultiSelect({
   label = "Select an item",
   placeholder = "Select an item",
   parentClassName,
-  data,
+  data = [],
 }: {
   label?: string;
   placeholder?: string;

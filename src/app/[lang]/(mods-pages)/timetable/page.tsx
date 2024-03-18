@@ -15,7 +15,7 @@ import { renderTimetableSlot } from "@/helpers/timetable_course";
 
 const TimetablePage: NextPage = () => {
 
-    const { displayCourseData, semester, setSemester, colorMap } = useUserTimetable();
+    const { getSemesterCourses, semester, setSemester, colorMap } = useUserTimetable();
     const [vertical, setVertical] = useLocalStorage('timetable_vertical', true);
 
     const router = useRouter();
@@ -23,7 +23,7 @@ const TimetablePage: NextPage = () => {
 
     const [openModal, closeModal] = useModal();
 
-    const timetableData = createTimetableFromCourses(displayCourseData as MinimalCourse[], colorMap)
+    const timetableData = createTimetableFromCourses(getSemesterCourses(semester) as MinimalCourse[], colorMap)
 
     return (
         <div className="flex flex-col w-full h-full">

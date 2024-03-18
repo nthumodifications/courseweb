@@ -1,8 +1,8 @@
 import supabase from '@/config/supabase';
 import useDictionary from '@/dictionaries/useDictionary';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { FC, useState } from 'react';
-import { UseFormReturn } from 'react-hook-form';
+import { FC, useCallback } from 'react';
+import { UseFormReturn, useWatch } from 'react-hook-form';
 import TimeslotSelectorControl from '../FormComponents/TimeslotSelectorControl';
 import { GECTypes, GETargetCodes } from '@/const/ge_target';
 import { useSettings } from '@/hooks/contexts/settings';
@@ -13,122 +13,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { departments } from '@/const/departments';
-import { Check, ChevronsUpDown, Trash } from 'lucide-react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
-import { cn } from '@/lib/utils';
+import { ChevronsUpDown, Trash } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {getFormattedClassCode} from '@/helpers/courses';
 import { MultiSelect } from '@/components/ui/custom_multiselect';
 import { useQuery } from '@tanstack/react-query';
-
-const MultiCheckboxControl = ({ control, name, options, label }: { control: any, name: string, options: { value: string | number, label: string }[], label: string }) => {
-    return (
-        <FormField
-            control={control}
-            name={name}
-            render={() => (
-                <FormItem>
-                    <FormLabel>{label}</FormLabel>
-                    {options.map(option => (
-                        <FormField
-                            key={option.value}
-                            control={control}
-                            name={name}
-                            render={({ field }) => {
-                                return (
-                                    <FormItem
-                                        key={option.value}
-                                        className="flex flex-row items-start space-x-3 space-y-0"
-                                    >
-                                        <FormControl>
-                                            <Checkbox
-                                                checked={field.value?.includes(option.value)}
-                                                onCheckedChange={(checked) => {
-                                                    return checked
-                                                        ? field.onChange([...field.value, option.value])
-                                                        : field.onChange(
-                                                            field.value?.filter(
-                                                                (value: string) => value != option.value
-                                                            )
-                                                        )
-                                                }}
-                                            />
-                                        </FormControl>
-                                        <FormLabel className="font-normal">
-                                            {option.label}
-                                        </FormLabel>
-                                    </FormItem>
-                                )
-                            }}
-                        />
-                    ))}
-                </FormItem>
-            )}
-        />
-    )
-}
-
-const AutocompleteShadcn = ({ control, name, options, label, placeholder, loading }: { control: any, name: string, options: {value: string, label: string}[], label: string, placeholder: string, loading: boolean }) => {
-    const [open, setOpen] = useState(false)
-    return (
-        <FormField
-            control={control}
-            name={name}
-            render={({ field }) => (
-                <FormItem>
-                    <FormLabel>{label}</FormLabel>
-                    <FormItem>
-                        <Popover open={open} onOpenChange={setOpen}>
-                            <PopoverTrigger asChild>
-                                <Button
-                                variant="outline"
-                                role="combobox"
-                                aria-expanded={open}
-                                className="w-full justify-between"
-                                >
-                                <span className='gap-1 flex flex-row'>
-                                {field.value
-                                    ? field.value
-                                    : placeholder}
-                                </span>
-                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-full p-0" side='bottom'>
-                                <Command className="max-h-60">
-                                <CommandInput placeholder="Search classes   ..." />
-                                <CommandEmpty>No classes found.</CommandEmpty>
-                                <CommandGroup>
-                                    {options.map((dept) => (
-                                    <CommandItem
-                                        key={dept.value}
-                                        value={dept.value}
-                                        onSelect={(currentValue: string) => {
-                                            field.onChange(currentValue === field.value ? '' : currentValue)
-                                            setOpen(false)
-                                        }}
-                                    >
-                                        <Check
-                                        className={cn(
-                                            "mr-2 h-4 w-4",
-                                            field.value == dept.value ? "opacity-100" : "opacity-0"
-                                        )}
-                                        />
-                                        {dept.value}
-                                    </CommandItem>
-                                    ))}
-                                </CommandGroup>
-                                </Command>
-                            </PopoverContent>
-                            </Popover>
-                        </FormItem>
-                </FormItem>
-            )}
-        />
-    )
-}
-
+import { AutocompleteShadcn } from './AutocompleteShadcn';
+import { MultiCheckboxControl } from './MultiCheckboxControl';
 
 const RefineControls: FC<{ form: UseFormReturn<RefineControlFormTypes, any, RefineControlFormTypes>}> = ({ form }) => {
     const dict = useDictionary();
@@ -184,9 +75,10 @@ const RefineControls: FC<{ form: UseFormReturn<RefineControlFormTypes, any, Refi
         }
     });
 
-    const { displayCourseData } = useUserTimetable();
-    const handleFillTimes = () => {
-        const timeslots = displayCourseData.map(course => course.times.map(time => time.match(/.{1,2}/g) ?? [] as unknown as string[]).flat()).flat();
+    const { getSemesterCourses } = useUserTimetable();
+    const semester = useWatch({ control: form.control, name: 'semester' });
+    const handleFillTimes = useCallback(() => {
+        const timeslots = getSemesterCourses(semester).map(course => course.times.map(time => time.match(/.{1,2}/g) ?? [] as unknown as string[]).flat()).flat();
         const timeslotSet = new Set(timeslots);
         const timeslotList = Array.from(timeslotSet);
         const days = ['M', 'T', 'W', 'R', 'F', 'S'];
@@ -199,7 +91,7 @@ const RefineControls: FC<{ form: UseFormReturn<RefineControlFormTypes, any, Refi
             })
         })
         form.setValue('timeslots', selectDays);
-    }
+    }, [getSemesterCourses, semester, form]);
 
     return <div className="p-4 flex flex-col overflow-auto bg-background">
         <span className="text-xs font-bold uppercase">{dict.course.refine.title}</span>
@@ -296,7 +188,6 @@ const RefineControls: FC<{ form: UseFormReturn<RefineControlFormTypes, any, Refi
                 { value: '16_weeks', label: dict.course.refine['16_weeks']},
                 { value: 'extra_selection', label: dict.course.refine['extra_selection']}
             ]} label={dict.course.refine.others} />
-            <MultiSelect control={form.control} name="venues" placeholder={dict.course.refine.venues} loading={load4} options={venues.map(venue => ({ value: venue, label: venue }))} label={dict.course.refine.venues} />
             <FormField
                 control={form.control}
                 name="venues"
@@ -318,7 +209,6 @@ const RefineControls: FC<{ form: UseFormReturn<RefineControlFormTypes, any, Refi
             />
             <AutocompleteShadcn control={form.control} name="firstSpecialization" placeholder={dict.course.refine.firstSpecialization} loading={load1} options={firstSpecial.map(special => ({ value: special, label: special }))} label={dict.course.refine.specialization} />
             <AutocompleteShadcn control={form.control} name="secondSpecialization" placeholder={dict.course.refine.secondSpecialization} loading={load2} options={secondSpecial.map(special => ({ value: special, label: special }))} label={dict.course.refine.specialization} />
-            <MultiSelect control={form.control} name="disciplines" placeholder={dict.course.refine.cross_discipline} loading={load5} options={disciplines.map(discipline => ({ value: discipline, label: discipline }))} label={dict.course.refine.cross_discipline} />
             <FormField
                 control={form.control}
                 name="disciplines"

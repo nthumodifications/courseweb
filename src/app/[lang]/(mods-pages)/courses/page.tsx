@@ -19,13 +19,15 @@ import { TimeFilterType } from "@/components/FormComponents/TimeslotSelectorCont
 import { event } from "@/lib/gtag";
 import {toPrettySemester} from '@/helpers/semester';
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
-import {FormField, Form} from '@/components/ui/form';
+import {FormField, Form, FormControl, FormItem, FormLabel} from '@/components/ui/form';
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import MiniTimetable from "@/components/Courses/MiniTimetable";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 import { useWhyDidYouUpdate } from "ahooks"
+import {MultiCheckboxControl} from '@/components/Courses/MultiCheckboxControl';
+import {Checkbox} from '@/components/ui/checkbox';
  
 export type RefineControlFormTypes = {
     textSearch: string,
@@ -97,7 +99,6 @@ const CoursePage: NextPage = () => {
             else return emptyFilters;
         }, [])
     })
-    useWhyDidYouUpdate('form',form)
 
     const { control, watch, setValue, reset, formState: { isDirty } } = form;
 
@@ -121,6 +122,7 @@ const CoursePage: NextPage = () => {
     const PAGNIATION_MAX = 6;
 
     const filters = watch()
+    // const filters = emptyFilters;
 
     const renderPagination = () => {
         const range = paginationRange(currentPage, totalPage, PAGNIATION_MAX);
@@ -260,18 +262,6 @@ const CoursePage: NextPage = () => {
 
     }, [JSON.stringify(filters)])
 
-    const { displayCourseData } = useUserTimetable();
-
-    const renderExistingSelection = () => {
-        return <></>
-        //TODO: existing selection logic doesn't work well with semester switching, so turn it off for now
-        // // if(isDirty) return <></>;
-        // //check if current filters is same as emptyFilters, if not, return empty
-        // if(JSON.stringify(filters) != JSON.stringify(emptyFilters)) return <></>;
-        // return displayCourseData.map((course) => <CourseListItem key={course.raw_id} course={course}/>)
-    }
-
-
     return (<>
         <div className="grid grid-cols-1 md:grid-cols-[auto_320px] overflow-hidden max-h-[--content-height]">
         <Form {...form}>
@@ -320,7 +310,6 @@ const CoursePage: NextPage = () => {
                                 <h6 className="text-gray-600 dark:text-neutral-400">{dict.course.list.found}: {totalCount} {dict.course.list.courses}</h6>
                             </div>
                             <div className="flex flex-col w-full h-full space-y-5">
-                                {renderExistingSelection()}
                                 {courses.map((course, index) => (
                                     <CourseListItem key={index} course={course} />
                                 ))}
@@ -343,7 +332,6 @@ const CoursePage: NextPage = () => {
                         </ResizablePanel>
                     </ResizablePanelGroup>
                 </div>}
-
                 {isMobile && <Drawer
                     size="md"
                     variant="plain"

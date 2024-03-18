@@ -22,29 +22,14 @@ import { VenueChip } from '../Timetable/VenueChip';
 import { useQuery } from '@tanstack/react-query';
 
 const TodaySchedule: FC<{ weather: WeatherData | undefined, alerts: AlertDefinition[], calendar: EventData[], weatherLoading: boolean, alertLoading: boolean, calendarLoading: boolean }> = ({ weather, alerts, calendar, weatherLoading, alertLoading, calendarLoading }) => {
-    const { courses, isCoursesEmpty, colorMap, timetableData, deleteCourse } = useUserTimetable();
+    const { isCoursesEmpty, colorMap, getSemesterCourses, deleteCourse } = useUserTimetable();
     const { language, pinnedApps } = useSettings();
     const dict = useDictionary();
 
-    //sort courses[semester]： string[] and put as key_display_ids
-    const key_display_ids = useMemo(() => [...([courses[lastSemester.id]] ?? [])].sort(), [courses, lastSemester]);
-
-    const { data: display_courses = [], error, isLoading } = useQuery({
-        queryKey: ['courses', key_display_ids], 
-        queryFn: async () => {
-            if(!key_display_ids) return [];
-            const { data = [], error } = await supabase.rpc('search_courses_with_syllabus', { keyword: "" }).in('raw_id', key_display_ids);
-            if (error) throw error;
-            if (!data) throw new Error('No data');
-            return data as unknown as CourseSyllabusView[];
-        }
-    });
-    
+    const curr_sem = getSemester(new Date());
+    const timetableData = useMemo(() => createTimetableFromCourses(getSemesterCourses(curr_sem?.id) as MinimalCourse[], colorMap), [getSemesterCourses, curr_sem]);
     //sort display_courses according to courses[semester]
-    const displayCourseData =  useMemo(() => {
-        if(!display_courses) return [];
-        return (courses[lastSemester.id] ?? []).map(courseID => display_courses.find(c => c.raw_id == courseID)!).filter(c => c);
-    }, [display_courses, courses, lastSemester]);
+    const displayCourseData =  useMemo(() => getSemesterCourses(lastSemester.id), [getSemesterCourses, lastSemester]);
 
     const nextTimetableData = createTimetableFromCourses(displayCourseData as MinimalCourse[], colorMap);
 
@@ -59,7 +44,6 @@ const TodaySchedule: FC<{ weather: WeatherData | undefined, alerts: AlertDefinit
     const days = getRangeOfDays(new Date(), new Date(Date.now() + 86400000 * 4));
 
     const renderDayTimetable = (day: Date) => { 
-        const curr_sem = getSemester(day);
         if(!curr_sem) return <div className='text-gray-500 dark:text-gray-400 text-center text-sm font-semibold'>放假咯！</div>;
         const classesThisDay = (curr_sem == lastSemester ? nextTimetableData: timetableData).filter(t => t.dayOfWeek == [6,0,1,2,3,4,5][getDay(day)]);
 
