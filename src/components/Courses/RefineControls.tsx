@@ -1,11 +1,9 @@
 import supabase from '@/config/supabase';
 import useDictionary from '@/dictionaries/useDictionary';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { FC, useState } from 'react';
-import { Control, UseFormReturn, UseFormSetValue } from 'react-hook-form';
+import { UseFormReturn } from 'react-hook-form';
 import TimeslotSelectorControl from '../FormComponents/TimeslotSelectorControl';
-import useSWR from 'swr';
-import { useMediaQuery } from 'usehooks-ts';
 import { GECTypes, GETargetCodes } from '@/const/ge_target';
 import { useSettings } from '@/hooks/contexts/settings';
 import { RefineControlFormTypes } from '@/app/[lang]/(mods-pages)/courses/page';
@@ -15,10 +13,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { departments } from '@/const/departments';
-import { Check, ChevronsUpDown, Delete, Trash } from 'lucide-react';
+import { Check, ChevronsUpDown, Trash } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {getFormattedClassCode} from '@/helpers/courses';
