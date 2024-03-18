@@ -23,6 +23,9 @@
             "add_to_semester": "Add to this Semester",
             "remove_from_semester": "Remove from this Semester"
         },
+        "timetable": {
+            "title": "Timetable"
+        },
         "refine": {
             "title": "Refine",
             "semester": "Semester",

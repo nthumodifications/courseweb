@@ -1,37 +1,141 @@
-import MultiSelectControl from '@/components/FormComponents/MultiSelectControl';
 import supabase from '@/config/supabase';
 import useDictionary from '@/dictionaries/useDictionary';
-import {
-    Accordion,
-    AccordionDetails,
-    AccordionSummary,
-    Button,
-    FormControl,
-    FormLabel,
-    List,
-    ListItem,
-    Sheet,
-    Typography,
-} from '@mui/joy';
-import { FC } from 'react';
-import { Control, UseFormSetValue } from 'react-hook-form';
-import TimeslotSelectorControl from '@/components/FormComponents/TimeslotSelectorControl';
-import AutocompleteControl from '@/components/FormComponents/AutocompleteControl';
-import DepartmentControl from '@/components/FormComponents/DepartmentControl';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { FC, useState } from 'react';
+import { Control, UseFormReturn, UseFormSetValue } from 'react-hook-form';
+import TimeslotSelectorControl from '../FormComponents/TimeslotSelectorControl';
+import useSWR from 'swr';
 import { useMediaQuery } from 'usehooks-ts';
 import { GECTypes, GETargetCodes } from '@/const/ge_target';
 import { useSettings } from '@/hooks/contexts/settings';
-import { Department } from '@/types/courses';
-import SelectControl from '@/components/FormComponents/SelectControl';
+import { RefineControlFormTypes } from '@/app/[lang]/(mods-pages)/courses/page';
 import useUserTimetable from '@/hooks/contexts/useUserTimetable';
 import {scheduleTimeSlots} from '@/const/timetable';
-import { RefineControlFormTypes } from '@/app/[lang]/(mods-pages)/courses/page';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { departments } from '@/const/departments';
+import { Check, ChevronsUpDown, Delete, Trash } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import {getFormattedClassCode} from '@/helpers/courses';
+import { MultiSelect } from '@/components/ui/custom_multiselect';
 import { useQuery } from '@tanstack/react-query';
 
-const RefineControls: FC<{ control: Control<RefineControlFormTypes>, setValue: UseFormSetValue<RefineControlFormTypes>, onClear: () => void }> = ({ control, setValue, onClear }) => {
+const MultiCheckboxControl = ({ control, name, options, label }: { control: any, name: string, options: { value: string | number, label: string }[], label: string }) => {
+    return (
+        <FormField
+            control={control}
+            name={name}
+            render={() => (
+                <FormItem>
+                    <FormLabel>{label}</FormLabel>
+                    {options.map(option => (
+                        <FormField
+                            key={option.value}
+                            control={control}
+                            name={name}
+                            render={({ field }) => {
+                                return (
+                                    <FormItem
+                                        key={option.value}
+                                        className="flex flex-row items-start space-x-3 space-y-0"
+                                    >
+                                        <FormControl>
+                                            <Checkbox
+                                                checked={field.value?.includes(option.value)}
+                                                onCheckedChange={(checked) => {
+                                                    return checked
+                                                        ? field.onChange([...field.value, option.value])
+                                                        : field.onChange(
+                                                            field.value?.filter(
+                                                                (value: string) => value != option.value
+                                                            )
+                                                        )
+                                                }}
+                                            />
+                                        </FormControl>
+                                        <FormLabel className="font-normal">
+                                            {option.label}
+                                        </FormLabel>
+                                    </FormItem>
+                                )
+                            }}
+                        />
+                    ))}
+                </FormItem>
+            )}
+        />
+    )
+}
+
+const AutocompleteShadcn = ({ control, name, options, label, placeholder, loading }: { control: any, name: string, options: {value: string, label: string}[], label: string, placeholder: string, loading: boolean }) => {
+    const [open, setOpen] = useState(false)
+    return (
+        <FormField
+            control={control}
+            name={name}
+            render={({ field }) => (
+                <FormItem>
+                    <FormLabel>{label}</FormLabel>
+                    <FormItem>
+                        <Popover open={open} onOpenChange={setOpen}>
+                            <PopoverTrigger asChild>
+                                <Button
+                                variant="outline"
+                                role="combobox"
+                                aria-expanded={open}
+                                className="w-full justify-between"
+                                >
+                                <span className='gap-1 flex flex-row'>
+                                {field.value
+                                    ? field.value
+                                    : placeholder}
+                                </span>
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-full p-0" side='bottom'>
+                                <Command className="max-h-60">
+                                <CommandInput placeholder="Search classes   ..." />
+                                <CommandEmpty>No classes found.</CommandEmpty>
+                                <CommandGroup>
+                                    {options.map((dept) => (
+                                    <CommandItem
+                                        key={dept.value}
+                                        value={dept.value}
+                                        onSelect={(currentValue: string) => {
+                                            field.onChange(currentValue === field.value ? '' : currentValue)
+                                            setOpen(false)
+                                        }}
+                                    >
+                                        <Check
+                                        className={cn(
+                                            "mr-2 h-4 w-4",
+                                            field.value == dept.value ? "opacity-100" : "opacity-0"
+                                        )}
+                                        />
+                                        {dept.value}
+                                    </CommandItem>
+                                    ))}
+                                </CommandGroup>
+                                </Command>
+                            </PopoverContent>
+                            </Popover>
+                        </FormItem>
+                </FormItem>
+            )}
+        />
+    )
+}
+
+
+const RefineControls: FC<{ form: UseFormReturn<RefineControlFormTypes, any, RefineControlFormTypes>}> = ({ form }) => {
     const dict = useDictionary();
     const { language } = useSettings();
-    
     const { data: firstSpecial = [], error: error1, isLoading: load1 } = useQuery({
         queryKey: ['distinct_first_specialization'], 
         queryFn: async () => {
@@ -64,6 +168,7 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes>, setValue: U
             return data!.map(({ venue }) => venue!);
         }
     });
+    
     const { data: disciplines = [], error: error5, isLoading: load5 } = useQuery({
         queryKey: ['distinct_cross_discipline'], 
         queryFn: async () => {
@@ -72,6 +177,7 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes>, setValue: U
             return data!.map(({ discipline }) => discipline!);
         }
     });
+
     const { data: semesters = [], error: error6, isLoading: load6 } = useQuery({
         queryKey: ['distinct_semesters'], 
         queryFn: async () => {
@@ -80,7 +186,6 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes>, setValue: U
             return data!.map(({ semester }) => semester!);
         }
     });
-    const isMobile = useMediaQuery('(max-width: 768px)');
 
     const { displayCourseData } = useUserTimetable();
     const handleFillTimes = () => {
@@ -96,202 +201,156 @@ const RefineControls: FC<{ control: Control<RefineControlFormTypes>, setValue: U
                 }
             })
         })
-        setValue('timeslots', selectDays);
+        form.setValue('timeslots', selectDays);
     }
 
-
-    return <Sheet 
-        variant="outlined" 
-        sx={{ 
-            p: isMobile?3:2, 
-            borderRadius: 'sm', 
-            width: isMobile?`min(35rem, 100%)`:300, 
-            height: '100%', 
-            maxHeight:isMobile?'100vh':'90vh', 
-            overflowY: 'auto', 
-            overflowX: 'hidden', 
-            position: isMobile?'':'absolute', 
-            bottom: '8px', 
-            right: '8px' 
-        }}>
-        <Typography
-            id="filter-status"
-            sx={{
-                textTransform: 'uppercase',
-                fontSize: 'xs',
-                letterSpacing: 'lg',
-                fontWeight: 'lg',
-                color: 'text.secondary',
-            }}
-        >
-            {dict.course.refine.title}
-        </Typography>
-        <Button
-            variant="outlined"
-            color="neutral"
-            size="sm"
-            onClick={onClear}
-            sx={{ px: 1.5, mt: 1 }}
-        >
-            {dict.course.refine.clear}
-        </Button>
-        <div role="group" aria-labelledby="filter-status">
-            <List>
-                <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
-                    <FormControl>
+    return <div className="p-4 flex flex-col overflow-auto bg-background">
+        <span className="text-xs font-bold uppercase">{dict.course.refine.title}</span>
+        <div className='flex flex-col gap-4 mt-4'>
+            <FormField
+                control={form.control}
+                name="semester"
+                render={({ field }) => (
+                    <FormItem>
                         <FormLabel>{dict.course.refine.semester}</FormLabel>
-                        <SelectControl
-                            control={control}
-                            sx={{ width: '250px' }}
-                            name="semester"
-                            options={semesters.map(semester => ({ value: semester, label: semester }))}
-                            placeholder={dict.course.refine.semester}
-                        />
-                    </FormControl>
-                </ListItem>
-                <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
-                    <MultiSelectControl
-                        control={control}
-                        name="level"
-                        options={[
-                            { value: 1, label: '1xxx' },
-                            { value: 2, label: '2xxx' },
-                            { value: 3, label: '3xxx' },
-                            { value: 4, label: '4xxx' },
-                            { value: 5, label: '5xxx' },
-                            { value: 6, label: '6xxx' },
-                            { value: 7, label: '7xxx' },
-                            { value: 8, label: '8xxx' },
-                            { value: 9, label: '9xxx' },
-                        ]}
-                        label={dict.course.refine.level}
-                    />
-                </ListItem>
-                <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
-                    <MultiSelectControl
-                        control={control}
-                        name="language"
-                        options={[
-                            { value: '英', label: 'English' },
-                            { value: '中', label: '國語' },
-                        ]}
-                        label={dict.course.refine.language}
-                    />
-                </ListItem>
-                <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
-                    <FormControl>
+                        <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
+                            <FormControl>
+                                <SelectTrigger>
+                                    <SelectValue placeholder={dict.course.refine.semester} />
+                                </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                {semesters.map(semester => (<SelectItem key={semester} value={semester}>{semester}</SelectItem>))}
+                            </SelectContent>
+                        </Select>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+            <MultiCheckboxControl control={form.control} name="level" options={[
+                { value: 1, label: '1xxx' },
+                { value: 2, label: '2xxx' },
+                { value: 3, label: '3xxx' },
+                { value: 4, label: '4xxx' },
+                { value: 5, label: '5xxx' },
+                { value: 6, label: '6xxx' },
+                { value: 7, label: '7xxx' },
+                { value: 8, label: '8xxx' },
+                { value: 9, label: '9xxx' },
+            ]} label={dict.course.refine.level} />
+            <MultiCheckboxControl control={form.control} name="language" options={[
+                { value: '英', label: 'English' },
+                { value: '中', label: '國語' },
+            ]} label={dict.course.refine.language} />
+            <FormField
+                control={form.control}
+                name="department"
+                render={({ field }) => (
+                    <FormItem>
                         <FormLabel>{dict.course.refine.department}</FormLabel>
-                        <DepartmentControl control={control} />
-                    </FormControl>
-                </ListItem>
-                <Accordion>
-                    <AccordionSummary>{dict.course.refine.time}</AccordionSummary>
-                    <AccordionDetails>
-                        <Button variant="outlined" color="neutral" size="sm" onClick={handleFillTimes}>
-                            找沒課的時間
-                        </Button>
-                        <TimeslotSelectorControl control={control} />
-                    </AccordionDetails>
-                </Accordion>
-                <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
-                    <MultiSelectControl
-                        control={control}
-                        name="geTarget"
-                        options={GETargetCodes.map(code => ({ value: code.code, label: `${code.code} ${language == 'zh'? code.short_zh: code.short_en}`  }))}
-                        label={dict.course.refine.geTarget}
-                    />
-                </ListItem>
-                <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
-                    <MultiSelectControl
-                        control={control}
-                        name="gecDimensions"
-                        options={GECTypes.map(type => ({ value: type, label: type}))}
-                        label={dict.course.refine.gecDimensions}
-                    />
-                </ListItem>
-                <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
-                    <FormControl>
-                        <FormLabel>{dict.course.refine.compulsory_elective}</FormLabel>
-                        <AutocompleteControl
-                            control={control}
-                            name="className"
-                            placeholder={dict.course.refine.class}
-                            loading={load3}
-                            options={classList}
-                        />
-                    </FormControl>
-                </ListItem>
-                <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
-                    <MultiSelectControl
-                        control={control}
-                        name="others"
-                        options={[
-                            { value: 'xclass', label: dict.course.refine['x-class'] },
-                            { value: '16_weeks', label: dict.course.refine['16_weeks']},
-                            { value: 'extra_selection', label: dict.course.refine['extra_selection']}
-                        ]}
-                        label={dict.course.refine.others}
-                    />
-                </ListItem>
-                <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
-                    <FormControl>
+                        <FormItem>
+                            <FormControl>
+                            <MultiSelect
+                                label=""
+                                placeholder={dict.course.refine.department}
+                                data={departments.map(dept => ({ value: dept.code, label: `${dept.code} - ${dept.name_zh}` }))}
+                                {...field}
+                            />
+                            </FormControl>
+                        </FormItem>
+                                
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+            <FormField
+                control={form.control}
+                name="timeslots"
+                render={() => (
+                    <FormItem>
+                        <FormLabel>{dict.course.refine.time}</FormLabel>
+                        <Collapsible>
+                            <div className="flex items-center justify-between space-x-4 px-4">
+                                <h4 className="text-sm font-semibold">
+                                {dict.course.refine.time}
+                                </h4>
+                                <CollapsibleTrigger asChild>
+                                <Button variant="ghost" size="sm" className="w-9 p-0">
+                                    <ChevronsUpDown className="h-4 w-4" />
+                                    <span className="sr-only">Toggle</span>
+                                </Button>
+                                </CollapsibleTrigger>
+                            </div>
+                            <CollapsibleContent>
+                                <Button variant="outline" color="neutral" size="sm" onClick={handleFillTimes}>
+                                    找沒課的時間
+                                </Button>
+                                <TimeslotSelectorControl control={form.control} />
+                            </CollapsibleContent>
+                        </Collapsible>
+                    </FormItem>
+                )}
+            />
+            <MultiCheckboxControl control={form.control} name="geTarget" options={GETargetCodes.map(code => ({ value: code.code, label: `${code.code} ${language == 'zh'? code.short_zh: code.short_en}`  }))} label={dict.course.refine.geTarget} />
+            <MultiCheckboxControl control={form.control} name="gecDimensions" options={GECTypes.map(type => ({ value: type, label: type}))} label={dict.course.refine.gecDimensions} />
+            <AutocompleteShadcn control={form.control} name="className" placeholder={dict.course.refine.class} loading={load3} options={classList.map(classname => ({ value: classname, label: getFormattedClassCode(classname) }))} label={dict.course.refine.compulsory_elective} />
+            <MultiCheckboxControl control={form.control} name="others" options={[
+                { value: 'xclass', label: dict.course.refine['x-class'] },
+                { value: '16_weeks', label: dict.course.refine['16_weeks']},
+                { value: 'extra_selection', label: dict.course.refine['extra_selection']}
+            ]} label={dict.course.refine.others} />
+            <MultiSelect control={form.control} name="venues" placeholder={dict.course.refine.venues} loading={load4} options={venues.map(venue => ({ value: venue, label: venue }))} label={dict.course.refine.venues} />
+            <FormField
+                control={form.control}
+                name="venues"
+                render={({ field }) => (
+                    <FormItem>
                         <FormLabel>{dict.course.refine.venues}</FormLabel>
-                        <AutocompleteControl
-                            control={control}
-                            name="venues"
-                            multiple
-                            placeholder={dict.course.refine.venues}
-                            loading={load4}
-                            options={venues}
-                        />
-                    </FormControl>
-                </ListItem>
-                <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
-                    <FormControl>
-                        <FormLabel>{dict.course.refine.specialization}</FormLabel>
-                        <AutocompleteControl
-                            control={control}
-                            name="firstSpecialization"
-                            placeholder={dict.course.refine.firstSpecialization}
-                            loading={load1}
-                            options={firstSpecial}
-                        />
-                        <AutocompleteControl
-                            control={control}
-                            name="secondSpecialization"
-                            placeholder={dict.course.refine.secondSpecialization}
-                            loading={load2}
-                            options={secondSpecial}
-                        />
-
-                    </FormControl>
-                </ListItem>
-                
-                <ListItem variant="plain" sx={{ borderRadius: 'sm' }}>
-                    <FormControl>
+                        <FormItem>
+                            <FormControl>
+                            <MultiSelect
+                                label=""
+                                placeholder={dict.course.refine.venues}
+                                data={venues.map(venue => ({ value: venue, label: venue }))}
+                                {...field}
+                            />
+                            </FormControl>
+                        </FormItem>
+                    </FormItem>
+                )}
+            />
+            <AutocompleteShadcn control={form.control} name="firstSpecialization" placeholder={dict.course.refine.firstSpecialization} loading={load1} options={firstSpecial.map(special => ({ value: special, label: special }))} label={dict.course.refine.specialization} />
+            <AutocompleteShadcn control={form.control} name="secondSpecialization" placeholder={dict.course.refine.secondSpecialization} loading={load2} options={secondSpecial.map(special => ({ value: special, label: special }))} label={dict.course.refine.specialization} />
+            <MultiSelect control={form.control} name="disciplines" placeholder={dict.course.refine.cross_discipline} loading={load5} options={disciplines.map(discipline => ({ value: discipline, label: discipline }))} label={dict.course.refine.cross_discipline} />
+            <FormField
+                control={form.control}
+                name="disciplines"
+                render={({ field }) => (
+                    <FormItem>
                         <FormLabel>{dict.course.refine.cross_discipline}</FormLabel>
-                        <AutocompleteControl
-                            control={control}
-                            name="disciplines"
-                            multiple
-                            placeholder={dict.course.refine.cross_discipline}
-                            loading={load5}
-                            options={disciplines}
-                        />
-                    </FormControl>
-                </ListItem>
-            </List>
+                        <FormItem>
+                            <FormControl>
+                            <MultiSelect
+                                label=""
+                                placeholder={dict.course.refine.cross_discipline}
+                                data={disciplines.map(discipline => ({ value: discipline, label: discipline }))}
+                                {...field}
+                            />
+                            </FormControl>
+                        </FormItem>
+                    </FormItem>
+                )}
+            />
+            <Button
+                variant={'destructive'}
+                size={'sm'}
+                onClick={() => form.reset()}
+            >
+                <Trash className='h-4 w-4 mr-2' />
+                {dict.course.refine.clear}
+            </Button>
         </div>
-        <Button
-            variant="outlined"
-            color="neutral"
-            size="sm"
-            onClick={onClear}
-            sx={{ px: 1.5, mt: 1 }}
-        >
-            {dict.course.refine.clear}
-        </Button>
-    </Sheet>
+    </div>
 }
 
 export default RefineControls;
