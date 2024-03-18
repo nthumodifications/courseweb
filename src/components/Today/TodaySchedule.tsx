@@ -1,4 +1,5 @@
 'use client';;
+import {EventData} from "@/types/calendar_event";
 import { Alert, ColorPaletteProp } from '@mui/joy';
 import {format, formatRelative, getDay} from 'date-fns';
 import useUserTimetable from '@/hooks/contexts/useUserTimetable';
@@ -20,7 +21,7 @@ import { MinimalCourse } from '@/types/courses';
 import { VenueChip } from '../Timetable/VenueChip';
 import { useQuery } from '@tanstack/react-query';
 
-const TodaySchedule: FC<{ weather: WeatherData | undefined, alerts: AlertDefinition[], weatherLoading: boolean, alertLoading: boolean }> = ({ weather, alerts, weatherLoading, alertLoading }) => {
+const TodaySchedule: FC<{ weather: WeatherData | undefined, alerts: AlertDefinition[], calendar: EventData[], weatherLoading: boolean, alertLoading: boolean, calendarLoading: boolean }> = ({ weather, alerts, calendar, weatherLoading, alertLoading, calendarLoading }) => {
     const { courses, isCoursesEmpty, colorMap, timetableData, deleteCourse } = useUserTimetable();
     const { language, pinnedApps } = useSettings();
     const dict = useDictionary();
@@ -119,6 +120,17 @@ const TodaySchedule: FC<{ weather: WeatherData | undefined, alerts: AlertDefinit
         ))
     }
 
+    const renderCalendars = (day: Date) => {
+        return !calendarLoading && calendar && calendar.filter((event) => event.weekday == day.getDay()).map((event) =>
+            <div className="flex flex-row items-center rounded-md p-2 flex-1 bg-blue-500 text-gray-300">
+                <Info className="flex pr-1 py-[2px] w-11"/>
+                <div className="flex flex-col">
+                    <p className="font-semibold">{event.summary}</p>
+                </div>
+            </div>
+        )
+    }
+
     const NoClassPickedReminder = () => {
         return <Alert>
             <div className='flex flex-col space-y-1'>
@@ -146,6 +158,7 @@ const TodaySchedule: FC<{ weather: WeatherData | undefined, alerts: AlertDefinit
                     {!weatherLoading && weather && <WeatherIcon date={day} weather={weather!.find(w => w.date == format(day, 'yyyy-MM-dd'))!}/>}
                 </div>
                 {renderAlerts(day)}
+                {renderCalendars(day)}
                 {renderDayTimetable(day)}
             </div>
         ))}
