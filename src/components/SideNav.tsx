@@ -1,11 +1,12 @@
 'use client';;
 import * as I from 'lucide-react';
 import Link from "next/link";
-import { FC } from "react";
+import { FC, useEffect } from "react";
 import { usePathname, useRouter } from 'next/navigation';
 import { Route } from 'next';
 import { useSettings } from '@/hooks/contexts/settings';
 import useDictionary from '@/dictionaries/useDictionary';
+import { link } from 'fs';
 
 const SideNav:FC = () => {
     const pathname = usePathname();
@@ -55,6 +56,13 @@ const SideNav:FC = () => {
             color: '#B46DD6'
         }
     ]
+
+    useEffect(() => {
+        links.forEach(link => {
+            router.prefetch(link.href);
+        })
+    }, [links])
+
     return (
         <nav className="h-full w-full flex flex-col justify-start items-start gap-3">
             {links.map((link, index) => (
