@@ -143,7 +143,8 @@ const RefineControls: FC<{ form: UseFormReturn<RefineControlFormTypes, any, Refi
                                 label=""
                                 placeholder={dict.course.refine.department}
                                 data={departments.map(dept => ({ value: dept.code, label: `${dept.code} - ${dept.name_zh}` }))}
-                                {...field}
+                                selected={field.value}
+                                onSelectedChange={field.onChange}
                             />
                             </FormControl>
                         </FormItem>
@@ -206,7 +207,8 @@ const RefineControls: FC<{ form: UseFormReturn<RefineControlFormTypes, any, Refi
                                 label=""
                                 placeholder={dict.course.refine.venues}
                                 data={venues.map(venue => ({ value: venue, label: venue }))}
-                                {...field}
+                                selected={field.value}
+                                onSelectedChange={field.onChange}
                             />
                             </FormControl>
                         </FormItem>

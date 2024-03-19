@@ -16,16 +16,32 @@ export function MultiSelect({
   placeholder = "Select an item",
   parentClassName,
   data = [],
+  selected = [],
+  onSelectedChange,
 }: {
   label?: string;
   placeholder?: string;
   parentClassName?: string;
   data: DataItem[];
+  selected?: string[];
+  onSelectedChange?: (selected: string[]) => void;
 }) {
   const inputRef = React.useRef<HTMLInputElement>(null);
   const [open, setOpen] = React.useState(false);
-  const [selected, setSelected] = React.useState<DataItem[]>([]);
+  const [selected_state, setSelected] = React.useState<DataItem[]>(selected.map((s) => data.find((d) => d.value === s)!));
   const [inputValue, setInputValue] = React.useState("");
+
+  React.useEffect(() => {
+    // check if the selected prop has changed, prevent infinite loop
+    if (selected_state.map((s) => s.value).join() !== selected.join()) {
+      setSelected(selected.map((s) => data.find((d) => d.value === s)!));
+    }
+  }, [selected]);
+
+  React.useEffect(() => {
+    onSelectedChange?.(selected_state.map((s) => s.value));
+    setOpen(false);
+  }, [selected_state]);
 
   const handleUnselect = React.useCallback((item: DataItem) => {
     setSelected((prev) => prev.filter((s) => s.value !== item.value));
@@ -53,7 +69,7 @@ export function MultiSelect({
     []
   );
 
-  const selectables = data.filter((item) => !selected.includes(item));
+  const selectables = data.filter((item) => !selected_state.includes(item));
 
   return (
     <div
@@ -72,7 +88,7 @@ export function MultiSelect({
       >
         <div className="group border border-input px-3 py-2 text-sm ring-offset-background rounded-md focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
           <div className="flex gap-1 flex-wrap">
-            {selected.map((item, index) => {
+            {selected_state.map((item, index) => {
               if (index > 1) return;
               return (
                 <Badge key={item.value} variant="secondary">
@@ -95,7 +111,7 @@ export function MultiSelect({
                 </Badge>
               );
             })}
-            {selected.length > 2 && <p>{`+${selected.length - 2} more`}</p>}
+            {selected_state.length > 2 && <p>{`+${selected_state.length - 2} more`}</p>}
             {/* Avoid having the "Search" Icon */}
             <CommandPrimitive.Input
               ref={inputRef}
