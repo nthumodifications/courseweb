@@ -89,7 +89,7 @@
     "react-hook-form": "^7.49.2",
     "react-leaflet": "^4.2.1",
     "react-transition-group": "^4.4.5",
-    "recharts": "^2.12.0",
+    "recharts": "^2.12.3",
     "sharp": "^0.32.6",
     "swr": "^2.2.4",
     "tailwind-merge": "^2.2.1",
