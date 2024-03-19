@@ -29,7 +29,7 @@ const MiniTimetable = () => {
 
 
   return <div className="p-4 flex flex-col overflow-auto">
-    <span className="text-xs font-bold">
+    <span className="text-xs font-bold uppercase">
       {dict.course.timetable.title}
     </span>
     <div className="grid grid-cols-7 gap-1 mt-4">

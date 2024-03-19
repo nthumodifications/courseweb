@@ -2,10 +2,11 @@
 import CourseListItem from "@/components/Courses/CourseListItem";
 import InputControl from "@/components/FormComponents/InputControl";
 import supabase, { CourseSyllabusView } from '@/config/supabase';
-import { CircularProgress, Drawer, Stack } from "@mui/joy";
+import { CircularProgress } from "@mui/joy";
+import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer"  
 import { NextPage } from "next";
 import { useEffect, useState, Fragment, useRef, useMemo } from "react";
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter, Search, X } from "lucide-react";
+import { Filter, Search, X, CalendarDays } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useDebouncedCallback } from "use-debounce";
 import { useLocalStorage, useMediaQuery } from 'usehooks-ts';
@@ -72,6 +73,7 @@ const CoursePage: NextPage = () => {
     const [totalCount, setTotalCount] = useState<number>(0);
     const [headIndex, setHeadIndex] = useState<number>(0);
     const [open, setOpen] = useState<boolean>(false);
+    const [timetableOpen, setTimetableOpen] = useState<boolean>(false);
     const scrollRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -295,6 +297,10 @@ const CoursePage: NextPage = () => {
                                         <Button size='icon' variant={"ghost"} onClick={() => setOpen(true)}>
                                             <Filter className="text-gray-400 p-1" />
                                         </Button>
+                                        <Separator orientation="vertical" />
+                                        <Button size='icon' variant={"ghost"} onClick={() => setTimetableOpen(true)}>
+                                            <CalendarDays className="text-gray-400 p-1" />
+                                        </Button>
                                     </> : <></>
                                 }
                             </Fragment>
@@ -314,7 +320,7 @@ const CoursePage: NextPage = () => {
                                     <CourseListItem key={index} course={course} />
                                 ))}
                             </div>
-                            <div className="flex flex-row justify-center">
+                            <div className="flex flex-row justify-center pb-4">
                                 {renderPagination()}
                             </div>
                         </div>
@@ -332,7 +338,22 @@ const CoursePage: NextPage = () => {
                         </ResizablePanel>
                     </ResizablePanelGroup>
                 </div>}
-                {isMobile && <Drawer
+                {isMobile && <Drawer open={open} onClose={() => setOpen(false)}>
+                    <DrawerContent>
+                        <div className="max-h-[70vh] overflow-auto">
+                            <RefineControls form={form}/>
+                        </div>
+                    </DrawerContent>
+                </Drawer>}
+                {isMobile && <Drawer open={timetableOpen} onClose={() => setTimetableOpen(false)}>
+                    <DrawerContent>
+                        <div className="max-h-[70vh] overflow-auto">
+                            <MiniTimetable />
+                        </div>
+                    </DrawerContent>
+                </Drawer>}
+
+                {/* {isMobile && <Drawer
                     size="md"
                     variant="plain"
                     open={open}
@@ -348,7 +369,7 @@ const CoursePage: NextPage = () => {
                     }}
                 >
                     <RefineControls form={form}/>
-                </Drawer>}
+                </Drawer>} */}
             </Form>
         </div>
         </>
