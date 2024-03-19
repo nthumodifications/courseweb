@@ -36,9 +36,9 @@ const CDSTermsPage = async ({
                         <td>{termObj.term}</td>
                         <td>{termObj.starts}</td>
                         <td>{termObj.ends}</td>
-                        <td>{termObj.ref_sem}</td>
+                        <td>{termObj.ref_sem},{termObj.ref_sem_2}</td>
                         <td>
-                            <Link href={`/${lang}/admin/cds/${termObj.term}`}>
+                            <Link href={`/${lang}/cds/admin/${termObj.term}`}>
                                 <Button variant="soft" endDecorator={<ExternalLink size={16}/>}>細節</Button>
                             </Link>
                         </td>

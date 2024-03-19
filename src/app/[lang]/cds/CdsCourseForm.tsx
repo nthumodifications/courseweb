@@ -481,9 +481,9 @@ const CdsCoursesForm: FC<{
         </Drawer>
     }
 
-    return <div className='w-full'>
+    return <div className='w-full h-full'>
         <div className='flex flex-col md:flex-row justify-between mb-4'>
-            <h1 className='font-bold text-3xl mb-3'>選課規劃調查 <Badge variant="outline">{termObj.term} 學期</Badge></h1>
+            <h1 className='font-bold text-3xl mb-3'>選課規劃調查 <Badge variant="outline">{termObj.term}</Badge></h1>
             <div>
                 <div className='flex flex-row gap-2 justify-end items-center'>
                     {isSaving && <span className='text-gray-400 dark:text-neutral-600 text-sm'>Saving...</span>}

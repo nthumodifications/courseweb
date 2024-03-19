@@ -28,7 +28,8 @@ const Header = () => {
       <div className="flex gap-2">
         <Help/>
         <Button size="sm" variant="outline" asChild>
-          <Link className="flex gap-1" target="_blank" href="https://forms.gle/LKYiVhLVwRGL44pz6">
+          {/* Old url: https://forms.gle/LKYiVhLVwRGL44pz6 */}
+          <Link className="flex gap-1" target="_blank" href="https://forms.gle/tCjia5u9sWBT2Gca6">
             <MessageCircle size="16" />
             <span className="hidden md:inline-block">Feedback</span>
           </Link>
