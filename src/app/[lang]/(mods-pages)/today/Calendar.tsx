@@ -22,7 +22,6 @@ import { useRxCollection, useRxQuery } from 'rxdb-hooks';
 import { v4 as uuidv4 } from 'uuid';
 
 const CalendarContent = () => {
-    const { timetableData } = useUserTimetable();
     const [displayWeek, setDisplayWeek] = useState<Date[]>(getWeek(new Date()));
     const { events, addEvent, weekContainer, HOUR_HEIGHT } = useCalendar();
 

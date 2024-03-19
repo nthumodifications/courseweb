@@ -1,12 +1,17 @@
 import { z } from "zod";
+const schemaDates = z.object({
+    start: z.date(),
+    end: z.date(),
+}).refine((data) => data.end && data.start && data.end > data.start, {
+    message: "End date cannot be earlier than start date.",
+    path: ["end"],
+});
 
-export const eventFormSchema = z.object({
+const schemaDetails = z.object({
     id: z.string().uuid(),
     title: z.string(),
     details: z.string().optional(),
     allDay: z.boolean(),
-    start: z.date(),
-    end: z.date(),
     repeat: z.union([
         z.object({
             type: z.literal('daily'),
@@ -54,4 +59,6 @@ export const eventFormSchema = z.object({
     ]),
     color: z.string(),
     tag: z.string(),
-});
+})
+
+export const eventFormSchema = z.intersection(schemaDates, schemaDetails);
