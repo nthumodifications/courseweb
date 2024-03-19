@@ -10,6 +10,7 @@ import {getBrightness} from '@/helpers/colors';
 import {adjustLuminance} from '@/helpers/colors';
 import { eventsToDisplay } from "./calendar_utils";
 import { EventPopover } from "./EventPopover";
+import {EventData} from "@/types/calendar_event";
 
 const UpcomingEvents = () => {
     const { events } = useCalendar();
@@ -75,6 +76,15 @@ const TodayPage: NextPage = () => {
         queryKey: ['alert'],
         queryFn: async () => {
             const res = await fetch('/api/dashboard/alert');
+            const data = await res.json();
+            return data;
+        }
+    });
+
+    const {data: calendarData = [], error: calendarError, isLoading: calendarLoading } = useQuery<EventData[]>({
+        queryKey: ['event'],
+        queryFn: async () => {
+            const res = await fetch('/api/dashboard/calendar');
             const data = await res.json();
             return data;
         }

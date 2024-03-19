@@ -11,11 +11,11 @@ import { MinimalCourse } from '@/types/courses';
 
 const DownloadTimetableComponent = () => {
     const dict = useDictionary();
-    const { displayCourseData, colorMap, currentColors } = useUserTimetable();
+    const { getSemesterCourses, semester, colorMap, currentColors } = useUserTimetable();
     const ref = useRef<HTMLDivElement>(null);
     const [loading, setLoading] = useState(false);
 
-    const timetableData = createTimetableFromCourses(displayCourseData as MinimalCourse[], colorMap);
+    const timetableData = createTimetableFromCourses(getSemesterCourses(semester) as MinimalCourse[], colorMap);
 
     const handleConvert = useCallback(() => {
         if (ref.current === null) {

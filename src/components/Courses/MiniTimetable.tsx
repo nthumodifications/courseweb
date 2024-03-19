@@ -15,8 +15,8 @@ import { useMemo } from "react";
 
 const MiniTimetable = () => {
   const dict = useDictionary();
-  const { displayCourseData, semester, setSemester, colorMap } = useUserTimetable();
-  const timetableData = createTimetableFromCourses(displayCourseData as MinimalCourse[], colorMap)
+  const { getSemesterCourses, semester, setSemester, colorMap } = useUserTimetable();
+  const timetableData = createTimetableFromCourses(getSemesterCourses(semester) as MinimalCourse[], colorMap)
   const timeslots = useMemo(() => {
     const timeslots = new Array(13).fill([]).map(() => new Array(6).fill(null))
     for (const course of timetableData) {

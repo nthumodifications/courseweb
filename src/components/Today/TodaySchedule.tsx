@@ -1,5 +1,5 @@
-'use client';;
-import { ColorPaletteProp } from '@mui/joy';
+'use client';
+import {EventData} from "@/types/calendar_event";
 import {format, formatRelative, getDay} from 'date-fns';
 import useUserTimetable from '@/hooks/contexts/useUserTimetable';
 import {scheduleTimeSlots} from '@/const/timetable';
@@ -18,28 +18,17 @@ import supabase from '@/config/supabase';
 import { createTimetableFromCourses } from '@/helpers/timetable';
 import { MinimalCourse } from '@/types/courses';
 import { VenueChip } from '../Timetable/VenueChip';
-import { useQuery } from '@tanstack/react-query';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 
-const TodaySchedule: FC<{ weather: WeatherData | undefined, alerts: AlertDefinition[], weatherLoading: boolean, alertLoading: boolean }> = ({ weather, alerts, weatherLoading, alertLoading }) => {
-    const { courses, isCoursesEmpty, colorMap, timetableData, deleteCourse } = useUserTimetable();
+const TodaySchedule: FC<{ weather: WeatherData | undefined, alerts: AlertDefinition[], calendar: EventData[], weatherLoading: boolean, alertLoading: boolean, calendarLoading: boolean }> = ({ weather, alerts, calendar, weatherLoading, alertLoading, calendarLoading }) => {
+    const { isCoursesEmpty, colorMap, getSemesterCourses, deleteCourse } = useUserTimetable();
     const { language, pinnedApps } = useSettings();
     const dict = useDictionary();
 
-    //sort courses[semester]： string[] and put as key_display_ids
-    const key_display_ids = useMemo(() => [...([courses[lastSemester.id]] ?? [])].sort(), [courses, lastSemester]);
-
-    const { data: displayCourseData = [], error, isLoading } = useQuery({
-        queryKey: ['courses', key_display_ids], 
-        queryFn: async () => {
-            if(!key_display_ids) return [];
-            const { data = [], error } = await supabase.rpc('search_courses_with_syllabus', { keyword: "" }).in('raw_id', key_display_ids);
-            if (error) throw error;
-            if (!data) throw new Error('No data');
-            return data as unknown as CourseSyllabusView[];
-        },
-        select: data => (courses[lastSemester.id] ?? []).map(courseID => data.find(c => c.raw_id == courseID)!).filter(c => c)
-    });
+    const curr_sem = getSemester(new Date());
+    const timetableData = useMemo(() => createTimetableFromCourses(getSemesterCourses(curr_sem?.id) as MinimalCourse[], colorMap), [getSemesterCourses, curr_sem]);
+    //sort display_courses according to courses[semester]
+    const displayCourseData =  useMemo(() => getSemesterCourses(lastSemester.id), [getSemesterCourses, lastSemester]);
 
     const nextTimetableData = createTimetableFromCourses(displayCourseData as MinimalCourse[], colorMap);
 
@@ -54,7 +43,6 @@ const TodaySchedule: FC<{ weather: WeatherData | undefined, alerts: AlertDefinit
     const days = getRangeOfDays(new Date(), new Date(Date.now() + 86400000 * 4));
 
     const renderDayTimetable = (day: Date) => { 
-        const curr_sem = getSemester(day);
         if(!curr_sem) return <div className='text-gray-500 dark:text-gray-400 text-center text-sm font-semibold'>放假咯！</div>;
         const classesThisDay = (curr_sem == lastSemester ? nextTimetableData: timetableData).filter(t => t.dayOfWeek == [6,0,1,2,3,4,5][getDay(day)]);
 
@@ -112,6 +100,17 @@ const TodaySchedule: FC<{ weather: WeatherData | undefined, alerts: AlertDefinit
         ))
     }
 
+    const renderCalendars = (day: Date) => {
+        return !calendarLoading && calendar && calendar.filter((event) => event.weekday == day.getDay()).map((event) =>
+            <div className="flex flex-row items-center rounded-md p-2 flex-1 bg-blue-500 text-gray-300">
+                <Info className="flex pr-1 py-[2px] w-11"/>
+                <div className="flex flex-col">
+                    <p className="font-semibold">{event.summary}</p>
+                </div>
+            </div>
+        )
+    }
+
     const NoClassPickedReminder = () => {
         return <Alert>
             <AlertTitle>還沒選到課嗎？</AlertTitle>
@@ -139,6 +138,7 @@ const TodaySchedule: FC<{ weather: WeatherData | undefined, alerts: AlertDefinit
                     {!weatherLoading && weather && <WeatherIcon date={day} weather={weather!.find(w => w.date == format(day, 'yyyy-MM-dd'))!}/>}
                 </div>
                 {renderAlerts(day)}
+                {renderCalendars(day)}
                 {renderDayTimetable(day)}
             </div>
         ))}

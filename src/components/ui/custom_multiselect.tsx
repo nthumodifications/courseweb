@@ -4,7 +4,7 @@ import { X } from "lucide-react";
 import * as React from "react";
 
 import clsx from "clsx";
-import { Command as CommandPrimitive } from "cmdk";
+import { CommandList, Command as CommandPrimitive } from "cmdk";
 import { Badge } from "@/components/ui/badge";
 import { Command, CommandGroup, CommandItem } from "@/components/ui/command";
 import { Label } from "@/components/ui/label";
@@ -15,17 +15,33 @@ export function MultiSelect({
   label = "Select an item",
   placeholder = "Select an item",
   parentClassName,
-  data,
+  data = [],
+  selected = [],
+  onSelectedChange,
 }: {
   label?: string;
   placeholder?: string;
   parentClassName?: string;
   data: DataItem[];
+  selected?: string[];
+  onSelectedChange?: (selected: string[]) => void;
 }) {
   const inputRef = React.useRef<HTMLInputElement>(null);
   const [open, setOpen] = React.useState(false);
-  const [selected, setSelected] = React.useState<DataItem[]>([]);
+  const [selected_state, setSelected] = React.useState<DataItem[]>(selected.map((s) => data.find((d) => d.value === s)!));
   const [inputValue, setInputValue] = React.useState("");
+
+  React.useEffect(() => {
+    // check if the selected prop has changed, prevent infinite loop
+    if (selected_state.map((s) => s.value).join() !== selected.join()) {
+      setSelected(selected.map((s) => data.find((d) => d.value === s)!));
+    }
+  }, [selected]);
+
+  React.useEffect(() => {
+    onSelectedChange?.(selected_state.map((s) => s.value));
+    setOpen(false);
+  }, [selected_state]);
 
   const handleUnselect = React.useCallback((item: DataItem) => {
     setSelected((prev) => prev.filter((s) => s.value !== item.value));
@@ -53,7 +69,7 @@ export function MultiSelect({
     []
   );
 
-  const selectables = data.filter((item) => !selected.includes(item));
+  const selectables = data.filter((item) => !selected_state.includes(item));
 
   return (
     <div
@@ -72,7 +88,7 @@ export function MultiSelect({
       >
         <div className="group border border-input px-3 py-2 text-sm ring-offset-background rounded-md focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
           <div className="flex gap-1 flex-wrap">
-            {selected.map((item, index) => {
+            {selected_state.map((item, index) => {
               if (index > 1) return;
               return (
                 <Badge key={item.value} variant="secondary">
@@ -95,7 +111,7 @@ export function MultiSelect({
                 </Badge>
               );
             })}
-            {selected.length > 2 && <p>{`+${selected.length - 2} more`}</p>}
+            {selected_state.length > 2 && <p>{`+${selected_state.length - 2} more`}</p>}
             {/* Avoid having the "Search" Icon */}
             <CommandPrimitive.Input
               ref={inputRef}
@@ -110,26 +126,28 @@ export function MultiSelect({
         </div>
         <div className="relative mt-2">
           {open && selectables.length > 0 ? (
-            <div className="absolute w-full top-0 rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in">
-              <CommandGroup className="h-full overflow-auto">
-                {selectables.map((framework) => {
-                  return (
-                    <CommandItem
-                      key={framework.value}
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                      }}
-                      onSelect={(value) => {
-                        setInputValue("");
-                        setSelected((prev) => [...prev, framework]);
-                      }}
-                    >
-                      {framework.label}
-                    </CommandItem>
-                  );
-                })}
-              </CommandGroup>
+            <div className="absolute w-full top-0 rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in z-40">
+              <CommandList>
+                <CommandGroup className="h-full overflow-auto">
+                  {selectables.map((framework) => {
+                    return (
+                      <CommandItem
+                        key={framework.value}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                        onSelect={(value) => {
+                          setInputValue("");
+                          setSelected((prev) => [...prev, framework]);
+                        }}
+                      >
+                        {framework.label}
+                      </CommandItem>
+                    );
+                  })}
+                </CommandGroup>
+              </CommandList>
             </div>
           ) : null}
         </div>

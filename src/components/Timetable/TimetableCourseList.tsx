@@ -205,7 +205,7 @@ const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, set
 
     const {
         semester,
-        displayCourseData,
+        getSemesterCourses,
         courses,
         deleteCourse,
         addCourse,
@@ -236,6 +236,7 @@ const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, set
             children: <DownloadTimetableDialogDynamic onClose={closeModal} icsfileLink={icsfileLink} />
         });
     }
+    const displayCourseData = useMemo(() => getSemesterCourses(semester), [getSemesterCourses,semester]);
 
     const totalCredits = useMemo(() => {
         return displayCourseData.reduce((acc, cur) => acc + (cur?.credits ?? 0), 0);
