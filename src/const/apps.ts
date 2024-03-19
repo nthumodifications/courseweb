@@ -60,7 +60,7 @@ export const apps = [
     },
     {
         id: 'grades',
-        title_zh: '課程學習平台',
+        title_zh: '數位學習平台',
         title_en: 'E-Learning',
         href: '/student/elearning',
         Icon: Book,
