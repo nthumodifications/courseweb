@@ -105,22 +105,22 @@ const TimetableCourseListItem = ({ course, hasConflict, isDuplicate }: { course:
             </div>
         </div>
         <div className="flex flex-row space-x-2 items-center">
-            <HoverCard>
+            {hasConflict && <HoverCard>
                 <HoverCardTrigger asChild>
                     <AlertTriangle className="w-6 h-6 text-red-500" />
                 </HoverCardTrigger>
                 <HoverCardContent>
                     <span>衝堂</span>
                 </HoverCardContent>
-            </HoverCard>
-            <HoverCard>
+            </HoverCard>}
+            {isDuplicate && <HoverCard>
                 <HoverCardTrigger asChild>
                     <Copy className="w-6 h-6 text-yellow-500" />
                 </HoverCardTrigger>
                 <HoverCardContent>
                     <span>重複</span>
                 </HoverCardContent>
-            </HoverCard>
+            </HoverCard>}
             {/* Credits */}
             <div className="flex flex-row items-center space-x-1">
                 <span className="text-lg">{course.credits}</span>
@@ -244,7 +244,7 @@ const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, set
 
     const duplicates = useMemo(() => hasSameCourse(displayCourseData as MinimalCourse[]), [displayCourseData]);
 
-    const timeConflicts = useMemo(() => hasConflictingTimeslots(displayCourseData as MinimalCourse[]), [displayCourseData]);
+    const timeConflicts = useMemo(() => hasConflictingTimeslots(displayCourseData as MinimalCourse[]), [displayCourseData]);    
 
     const renderButtons = () => {
         return <div className="grid grid-cols-2 grid-rows-2 gap-2">

@@ -18,6 +18,7 @@ import supabase from '@/config/supabase';
 import { createTimetableFromCourses } from '@/helpers/timetable';
 import { MinimalCourse } from '@/types/courses';
 import { VenueChip } from '../Timetable/VenueChip';
+import { useQuery } from '@tanstack/react-query';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 
 const TodaySchedule: FC<{ weather: WeatherData | undefined, alerts: AlertDefinition[], calendar: EventData[], weatherLoading: boolean, alertLoading: boolean, calendarLoading: boolean }> = ({ weather, alerts, calendar, weatherLoading, alertLoading, calendarLoading }) => {
