@@ -13,4 +13,5 @@ export type BusScheduleDefinition = Database['public']['Tables']['bus_schedule']
 export type CdsCourseDefinition = Database['public']['Tables']['cds_courses']['Row'];
 export type SubmissionDefinition = Database['public']['Tables']['cds_submissions']['Row'];
 export type CdsTermDefinition = Database['public']['Tables']['cds_terms']['Row'];
+export type CdsCountDefinition = Database['public']['Tables']['cds_counts']['Row'];
 export default supabase;

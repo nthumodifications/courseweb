@@ -1,10 +1,10 @@
 'use client';
+import { Button } from '@/components/ui/button';
 import {SubmissionDefinition} from '@/config/supabase';
-import { Button } from '@mui/joy';
 import { Download } from 'lucide-react';
 
-const DownloadCSV = ({ submissions, filename }: { submissions: SubmissionDefinition[], filename: string }) => {
-    return <Button variant="outlined" color="primary" startDecorator={<Download/>} onClick={() => {
+const DownloadSubmissions = ({ submissions, filename }: { submissions: SubmissionDefinition[], filename: string }) => {
+    return <Button variant="outline" onClick={() => {
         const csv = submissions.map((submission) => {
             return `${submission.user_id},${submission.name_zh},${submission.email},${submission.created_at}`;
         }).join('\n');
@@ -18,7 +18,7 @@ const DownloadCSV = ({ submissions, filename }: { submissions: SubmissionDefinit
         a.click();
         a.remove();
         window.URL.revokeObjectURL(url);
-    }}>下載名單</Button>
+    }}><Download className='mr-2'/> 下載名單</Button>
 }
 
-export default DownloadCSV;
+export default DownloadSubmissions;

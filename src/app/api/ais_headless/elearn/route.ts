@@ -1,3 +1,6 @@
+// Due to the problem of running puppeteer package on AWS server, the e-learn platform supports had been temporarily shut down.
+
+/*
 import {NextRequest, NextResponse} from "next/server";
 import puppeteer from "puppeteer";
 import jsdom from "jsdom";
@@ -25,7 +28,7 @@ export const POST = async (req: NextRequest) => {
     await browser.close()
     await fetch(loginUrl as string, {
         "headers": {
-            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*\/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
             "accept-language": "en-US,en;q=0.9",
             "sec-ch-ua": "\"Not A(Brand\";v=\"99\", \"Microsoft Edge\";v=\"121\", \"Chromium\";v=\"121\"",
             "sec-ch-ua-mobile": "?0",
@@ -53,7 +56,7 @@ export const POST = async (req: NextRequest) => {
         const res = await fetch(`
 https://oauth.ccxp.nthu.edu.tw/v1.1/authorize.php?client_id=elearn&response_type=code&redirect_uri=https%3A%2F%2Felearn.nthu.edu.tw%2Fadmin%2Foauth2callback.php&state=%2Fauth%2Foauth2%2Flogin.php%3Fwantsurl%3Dhttps%253A%252F%252Felearn.nthu.edu.tw%252F%26sesskey%3D${SESSKEY}%26id%3D5&scope=userid+name+email+lmsid&ui_locales=en-US`, {
             "headers": {
-                "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+                "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*\/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
                 "accept-language": "en-US,en;q=0.9",
                 "sec-ch-ua": "\"Not A(Brand\";v=\"99\", \"Microsoft Edge\";v=\"121\", \"Chromium\";v=\"121\"",
                 "sec-ch-ua-mobile": "?0",
@@ -86,7 +89,7 @@ https://oauth.ccxp.nthu.edu.tw/v1.1/authorize.php?client_id=elearn&response_type
 
         const resLogin = await fetch(`https://oauth.ccxp.nthu.edu.tw/v1.1/authorize.php?client_id=elearn&response_type=code&redirect_uri=https%3A%2F%2Felearn.nthu.edu.tw%2Fadmin%2Foauth2callback.php&state=%2Fauth%2Foauth2%2Flogin.php%3Fwantsurl%3Dhttps%253A%252F%252Felearn.nthu.edu.tw%252F%26sesskey%3D${SESSKEY}%26id%3D5&scope=userid+name+email+lmsid&ui_locales=en-US`, {
             "headers": {
-                "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+                "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*\/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
                 "accept-language": "en-US,en;q=0.9",
                 "cache-control": "max-age=0",
                 "content-type": "application/x-www-form-urlencoded",
@@ -124,7 +127,7 @@ https://oauth.ccxp.nthu.edu.tw/v1.1/authorize.php?client_id=elearn&response_type
 
         const resToken = await fetch(resLogin.headers.get("Location") as string, {
             "headers": {
-                "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+                "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*\/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
                 "accept-language": "en-US,en;q=0.9",
                 "cache-control": "max-age=0",
                 "content-type": "application/x-www-form-urlencoded",
@@ -151,7 +154,7 @@ https://oauth.ccxp.nthu.edu.tw/v1.1/authorize.php?client_id=elearn&response_type
 
         const resMoodle = await fetch(resToken.headers.get("Location") as string, {
             "headers": {
-                "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+                "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*\/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
                 "accept-language": "en-US,en;q=0.9",
                 "cache-control": "max-age=0",
                 "content-type": "application/x-www-form-urlencoded",
@@ -178,7 +181,7 @@ https://oauth.ccxp.nthu.edu.tw/v1.1/authorize.php?client_id=elearn&response_type
         cookieMap.set("MoodleSessionM35", resMoodle.headers.getSetCookie().find((cookie: string) => cookie.startsWith("MoodleSessionM35="))?.split(";")[0].split("=")[1] as string)
         await fetch("http://elearn.nthu.edu.tw/", {
             "headers": {
-                "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+                "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*\/*;q=0.8,application/signed-exchange;v=b3;q=0.7",/*
                 "accept-language": "en-US,en;q=0.9",
                 "cache-control": "max-age=0",
                 "content-type": "application/x-www-form-urlencoded",
@@ -190,8 +193,8 @@ https://oauth.ccxp.nthu.edu.tw/v1.1/authorize.php?client_id=elearn&response_type
                 "sec-fetch-site": "same-origin",
                 "sec-fetch-user": "?1",
                 "upgrade-insecure-requests": "1",
-                "cookie": Array.from(cookieMap).map(([key, value]) => `${key}=${value}`).join(";")
-            },
+                "cookie": Array.from(cookieMap).map(([key, value]) => `${key}=${value}`).join(";")*/
+            /*},
             "keepalive": true,
             "referrer": `https://oauth.ccxp.nthu.edu.tw/`,
             "referrerPolicy": "strict-origin-when-cross-origin",

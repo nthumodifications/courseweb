@@ -186,7 +186,7 @@ const useHeadlessAISProvider = () => {
 
     /**
      * @param force force update ACIXSTORE
-     * @returns {elearn: elearnCookie, eeclass: eeclassCookie} or null if error, undefined if not enabled
+     * @returns eeclassCookie or null if error, undefined if not enabled
      */
     const getOauthCookies = async (force = false) => {
         if (!headlessAIS.enabled) return undefined;
@@ -202,19 +202,16 @@ const useHeadlessAISProvider = () => {
         setLoading(true);
 
         //fetch /api/ais_headless to get elearn & eeclass cookies
-        return await Promise.all([
-            fetchElearnCookie(headlessAIS.studentid, headlessAIS.password),
-            fetchEeclassCookie(headlessAIS.studentid, headlessAIS.password)
-        ]).then(([elearnCookie, eeclassCookie]) => {
+        return await fetchEeclassCookie(headlessAIS.studentid, headlessAIS.password).then((eeclassCookie) => {
             setHeadlessAIS({
                 ...headlessAIS,
-                elearnCookie: elearnCookie,
+                elearnCookie: "",
                 eeclassCookie: eeclassCookie,
                 oauthLastUpdated: Date.now()
             });
             setLoading(false);
             setError(undefined);
-            return {elearn: elearnCookie, eeclass: eeclassCookie};
+            return {elearn: "", eeclass: eeclassCookie};
         }).catch(err => {
             toast({
                 title: "代理登入失敗",
