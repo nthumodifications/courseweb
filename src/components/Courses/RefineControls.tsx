@@ -229,7 +229,8 @@ const RefineControls: FC<{ form: UseFormReturn<RefineControlFormTypes, any, Refi
                                 label=""
                                 placeholder={dict.course.refine.cross_discipline}
                                 data={disciplines.map(discipline => ({ value: discipline, label: discipline }))}
-                                {...field}
+                                selected={field.value}
+                                onSelectedChange={field.onChange}
                             />
                             </FormControl>
                         </FormItem>
