@@ -8,14 +8,14 @@ import {
 } from "@/components/ui/card"
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { createTimetableFromCourses } from "@/helpers/timetable";
-import { MinimalCourse } from "@/types/courses";
+import { MinimalCourse, Semester } from "@/types/courses";
 import { scheduleTimeSlots } from "@/const/timetable"
 import useDictionary from '@/dictionaries/useDictionary';
 import { useMemo } from "react";
 
-const MiniTimetable = () => {
+const MiniTimetable = ({ semester }: { semester: Semester }) => {
   const dict = useDictionary();
-  const { getSemesterCourses, semester, setSemester, colorMap } = useUserTimetable();
+  const { getSemesterCourses, colorMap } = useUserTimetable();
   const timetableData = createTimetableFromCourses(getSemesterCourses(semester) as MinimalCourse[], colorMap)
   const timeslots = useMemo(() => {
     const timeslots = new Array(13).fill([]).map(() => new Array(6).fill(null))
@@ -29,7 +29,7 @@ const MiniTimetable = () => {
 
 
   return <div className="p-4 flex flex-col overflow-auto">
-    <span className="text-xs font-bold">
+    <span className="text-xs font-bold uppercase">
       {dict.course.timetable.title}
     </span>
     <div className="grid grid-cols-7 gap-1 mt-4">
