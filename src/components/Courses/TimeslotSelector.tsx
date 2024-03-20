@@ -42,20 +42,20 @@ const TimeslotSelector: FC<{ value: string[], onChange: (newvalue: string[]) => 
         {days.map(day => (
             <div 
                 key={day} 
-                className='rounded-md hover:bg-gray-100 dark:hover:bg-neutral-900 cursor-pointer'
+                className='rounded-md hover:bg-gray-100 dark:hover:bg-background cursor-pointer'
                 onClick={handleSelectColumn(day)}
             >{day}</div>
         ))}
         {scheduleTimeSlots.map(timeSlot => [
             <div 
                 key={timeSlot.time} 
-                className='rounded-md hover:bg-gray-100 dark:hover:bg-neutral-900 cursor-pointer'
+                className='rounded-md hover:bg-gray-100 dark:hover:bg-background cursor-pointer'
                 onClick={handleSelectRow(timeSlot.time)}>{timeSlot.time}
             </div>,
             ...days.map(day => (
                 <div 
                     key={day+timeSlot.time}
-                    className={`${!isSelected(day+timeSlot.time)?"bg-gray-200 hover:bg-gray-100 dark:bg-neutral-800 dark:hover:bg-neutral-900":"bg-gray-400 hover:bg-gray-300 dark:bg-neutral-600 dark:hover:bg-neutral-700"} transition-colors cursor-pointer`}
+                    className={`${!isSelected(day+timeSlot.time)?"bg-gray-200 hover:bg-gray-100 dark:bg-neutral-800 dark:hover:bg-background":"bg-gray-400 hover:bg-gray-300 dark:bg-neutral-600 dark:hover:bg-neutral-700"} transition-colors cursor-pointer`}
                     onClick={handleChange(day+timeSlot.time)}
                 >
                 </div>)

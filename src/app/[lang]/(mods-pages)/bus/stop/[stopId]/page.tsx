@@ -74,7 +74,7 @@ const BusStop = ({ params: { stopId } }: PageProps) => {
         <div>
             {isLoading && <LinearProgress/>}
             <Button variant='plain' startDecorator={<ChevronLeft/>} onClick={() => history.back()}>Back</Button>
-            <div className='sticky top-0 bg-white dark:bg-neutral-900 shadow-md z-50'>
+            <div className='sticky top-0 bg-white dark:bg-background shadow-md z-50'>
                 <BusDelayAlert/>
                 <div className='flex flex-row gap-4 items-center px-6 py-4'>
                     <MapPin/>

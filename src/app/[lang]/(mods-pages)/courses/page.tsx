@@ -263,12 +263,12 @@ const CoursePage: NextPage = () => {
     return (<>
         <div className="grid grid-cols-1 md:grid-cols-[auto_320px] overflow-hidden max-h-[--content-height]">
             <Form {...form}>
-                <div className="flex flex-col w-full h-screen overflow-auto space-y-5 px-2 pt-2 no-scrollbar scroll-smooth" ref={scrollRef}>
+                <div className="flex flex-col w-full h-screen overflow-auto space-y-5 px-2 no-scrollbar scroll-smooth" ref={scrollRef}>
                     <FormField
                         control={control}
                         name="textSearch"
                         render={({ field }) => (
-                            <div className="flex flex-row min-h-[44px] items-center rounded-md bg-secondary text-secondary-foreground sticky top-2.5 z-10">
+                            <div className="flex flex-row min-h-[44px] items-center rounded-md bg-secondary text-secondary-foreground sticky top-0 z-10">
                                 <div className="px-3">
                                     {loading ? <CircularProgress size="sm" /> :
                                         <HoverCard>
@@ -305,7 +305,7 @@ const CoursePage: NextPage = () => {
                     />
                     <div className="relative">
                         {/* loading covers all with white cover */}
-                        {loading && <div className="absolute inset-0 bg-white/60 dark:bg-neutral-900/60 z-10"></div>}
+                        {loading && <div className="absolute inset-0 bg-white/60 dark:bg-background/60 z-10"></div>}
                         <div className="flex flex-col w-full h-full space-y-4 pb-14">
                             <div className="flex flex-row justify-between px-3 py-1 border-b dark:border-neutral-800">
                                 <h6 className="text-gray-600 dark:text-neutral-400">{toPrettySemester(filters.semester)} {dict.course.list.courses}</h6>
