@@ -117,7 +117,8 @@ export const AddEventButton = ({ defaultEvent, onEventAdded = () => { } }: { def
                                     <ShadcnCalendar
                                         mode="single"
                                         selected={field.value}
-                                        onSelect={(d: Date) => {
+                                        onSelect={(d) => {
+                                            if(!d) return;
                                             //dont modify hour and minute
                                             const originalDate = field.value;
                                             const newDate = set(d, {hours: originalDate.getHours(), minutes: originalDate.getMinutes()});
@@ -221,7 +222,7 @@ export const AddEventButton = ({ defaultEvent, onEventAdded = () => { } }: { def
                                     <ShadcnCalendar
                                         mode="single"
                                         selected={field.value}
-                                        onSelect={(d: Date) => {
+                                        onSelect={(d) => {
                                             if(!d) return;
                                             const diffInDays = differenceInDays(form.getValues('end'), form.getValues('start'));
                                             const endDate = endOfDay(addDays(d, diffInDays));
@@ -264,7 +265,7 @@ export const AddEventButton = ({ defaultEvent, onEventAdded = () => { } }: { def
                                     <ShadcnCalendar
                                         mode="single"
                                         selected={field.value}
-                                        onSelect={(d: Date) => {
+                                        onSelect={(d) => {
                                             if(d) field.onChange(endOfDay(d))
                                         }}
                                         initialFocus />
