@@ -1,3 +1,5 @@
+const { withSentryConfig } = require("@sentry/nextjs");
+const million = require("million/compiler");
 
 const withPWA = require('@ducanh2912/next-pwa').default({
     dest: 'public',
@@ -15,14 +17,16 @@ const withPWA = require('@ducanh2912/next-pwa').default({
       document: '/zh/offline',
     }
 })
-  
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
 }
 
-const { withSentryConfig } = require("@sentry/nextjs");
+const millionConfig = {
+  auto: true,// if you're using RSC: auto: { rsc: true },
+};
 
-module.exports = withSentryConfig(
+const sentryConfig = withSentryConfig(
   withPWA(nextConfig),
   {
     // For all available options, see:
@@ -53,3 +57,5 @@ module.exports = withSentryConfig(
     disableLogger: true,
   }
 );
+
+module.exports = million.next(sentryConfig, millionConfig)
