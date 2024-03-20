@@ -15,6 +15,11 @@ const withPWA = require('@ducanh2912/next-pwa').default({
       document: '/zh/offline',
     }
 })
+
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: false,
+})
+
   
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -68,4 +73,4 @@ const sentryConfig = withSentryConfig(
   }
 );
 
-module.exports = sentryConfig
+module.exports = withBundleAnalyzer(sentryConfig)
