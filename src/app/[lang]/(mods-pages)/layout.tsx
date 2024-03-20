@@ -1,4 +1,3 @@
-import { Analytics } from '@vercel/analytics/react';
 import Header from '@/components/Header';
 import SideNav from '@/components/SideNav';
 import Footer from '@/components/Footer';
@@ -23,9 +22,6 @@ const NTHUModsLayout = ({
         </div>
         <main className='overflow-y-auto overflow-x-hidden h-full w-full scroll-smooth [&>div]:h-full pt-8 md:pl-8'>
             {children}
-            <Suspense fallback={null}>
-                <Analytics />
-            </Suspense>
         </main>
         <Footer />
     </div>
