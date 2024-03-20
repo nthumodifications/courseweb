@@ -1,10 +1,11 @@
 'use client';
-import {Button, Input} from '@mui/joy';
 import supabase from '@/config/supabase';
 import Link from 'next/link';
 import { useEffect, useState, useRef } from 'react';
 import Fuse from 'fuse.js'
 import { useSettings } from '@/hooks/contexts/settings';
+import { Input } from '../ui/input';
+import { Button } from '../ui/button';
 
 const VenueList = ({ venues }: { venues: string[]}) => {
     const [filtered, setFiltered] = useState<Fuse.FuseResult<string>[]>([]);
@@ -27,7 +28,7 @@ const VenueList = ({ venues }: { venues: string[]}) => {
                     href={`/${language}/venues/${venue}`}>
                     <Button 
                         className="text-gray-400" 
-                        variant="plain" 
+                        variant="ghost" 
                     >{venue}</Button>
                 </Link>)}
             </div>
