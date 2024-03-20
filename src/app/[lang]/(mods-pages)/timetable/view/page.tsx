@@ -4,18 +4,17 @@ import { NextPage } from "next";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from 'next/navigation'
 import supabase from "@/config/supabase";
-import {createTimetableFromCourses, colorMapFromCourses} from '@/helpers/timetable';
+import { createTimetableFromCourses } from '@/helpers/timetable';
 import { MinimalCourse } from "@/types/courses";
-import {CardContent, Divider} from '@mui/joy';
 import {useMemo, useState} from 'react';
 import { lastSemester } from "@/const/semester";
 import SemesterSwitcher from "@/components/Timetable/SemesterSwitcher";
 import {renderTimetableSlot} from '@/helpers/timetable_course';
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
-import { Alert } from "@/components/ui/alert";
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {useQuery} from '@tanstack/react-query';
+import { Separator } from "@/components/ui/separator";
 
 const ViewTimetablePage: NextPage = () => {
     const router = useRouter();
@@ -109,7 +108,7 @@ const ViewTimetablePage: NextPage = () => {
                         </div>
                     </div>
                 ))}
-                    <Divider/>
+                    <Separator/>
                     <div className='flex flex-row gap-4 justify-end'>
                         <div className='space-x-2'>
                             <span className='font-bold'>{courses.length}</span>
