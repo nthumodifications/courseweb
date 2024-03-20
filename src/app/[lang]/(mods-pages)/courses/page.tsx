@@ -1,10 +1,9 @@
 'use client';;
 import CourseListItem from "@/components/Courses/CourseListItem";
 import supabase, { CourseSyllabusView } from '@/config/supabase';
-import { CircularProgress } from "@mui/joy";
 import { NextPage } from "next";
 import { useEffect, useState, Fragment, useRef, useMemo } from "react";
-import { CalendarDays, Filter, Search, X } from "lucide-react";
+import { CalendarDays, Filter, Loader2Icon, LoaderIcon, Search, X } from "lucide-react";
 import { useForm, useWatch } from "react-hook-form";
 import { useDebouncedCallback } from "use-debounce";
 import { useLocalStorage, useMediaQuery } from 'usehooks-ts';
@@ -270,7 +269,7 @@ const CoursePage: NextPage = () => {
                         render={({ field }) => (
                             <div className="flex flex-row min-h-[44px] items-center rounded-md bg-secondary text-secondary-foreground sticky top-0 z-10">
                                 <div className="px-3">
-                                    {loading ? <CircularProgress size="sm" /> :
+                                    {loading ? <Loader2Icon className="animate-spin" /> :
                                         <HoverCard>
                                             <HoverCardTrigger><Search /></HoverCardTrigger>
                                             <HoverCardContent className="whitespace-pre-wrap">
