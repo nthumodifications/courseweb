@@ -12,7 +12,7 @@ const BusPage = () => {
     // Available values : 北校門口, 綜二館, 楓林小徑, 人社院&生科館, 台積館, 奕園停車場, 南門停車場, 南大校區校門口右側(食品路校牆邊)
 
     return (
-        <div className="py-4 flex flex-col">
+        <div className="pb-4 flex flex-col">
             <h1 className="text-4xl font-semibold pl-4">校内公車</h1>
             <BusDelayAlert/>
             <div className="grid grid-cols-2">
