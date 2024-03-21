@@ -39,7 +39,7 @@ const TodaySchedule: FC<{ weather: WeatherData | undefined, alerts: AlertDefinit
         return days;
     }
     //get a range of 5 days starting from today
-    const days = getRangeOfDays(new Date(), new Date(Date.now() + 86400000 * 4));
+    const days = useMemo(() => getRangeOfDays(new Date(), new Date(Date.now() + 86400000 * 4)),[]);
 
     const renderDayTimetable = (day: Date) => {
         if (!curr_sem) return <div className='text-gray-500 dark:text-gray-400 text-center text-sm font-semibold'>放假咯！</div>;
@@ -126,7 +126,7 @@ const TodaySchedule: FC<{ weather: WeatherData | undefined, alerts: AlertDefinit
         {isCoursesEmpty && <NoClassPickedReminder />}
         {renderPinnedApps()}
         {days.map(day => (
-            <div className="flex flex-col gap-2 pb-4" key={day.getTime()}>
+            <div className="flex flex-col gap-2 pb-4" key={format(day, 'EEEE, do MMMM')}>
                 <div className="flex flex-row gap-2 justify-between border-b border-gray-400 pb-2">
                     <div className="flex flex-col flex-1">
                         {/* 6TH OCTOBER */}
