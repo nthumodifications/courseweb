@@ -1,15 +1,6 @@
-'use client'
+'use client';
 import { Badge } from "@/components/ui/badge";
-import {
-    Table,
-    TableBody,
-    TableCaption,
-    TableCell,
-    TableFooter,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
     Select,
     SelectContent,
@@ -22,21 +13,16 @@ import { GradeObject } from "@/types/grades";
 import { toPrettySemester } from "@/helpers/semester";
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
-import { Class } from "leaflet";
 import { useMediaQuery } from "usehooks-ts";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ExternalLink } from "lucide-react";
+import dynamic from "next/dynamic";
 
-// const CourseScoreCard = ({ c_grades }: { c_grades: GradeObject['grades'][number]} ) => {
-//     return <Card className="w-full flex-col justify-start items-start gap-4">
-
-//     </Card>
-// }
+const GPAChart = dynamic(async () => (await import('./GPAChart')).GPAChart, { ssr: false });
+const ClassRankChart = dynamic(async () => (await import('./ClassRankChart')).ClassRankChart, { ssr: false });
+const DeptRankChart = dynamic(async () => (await import('./DeptRankChart')).DeptRankChart, { ssr: false });
 
 const SemesterGradeCard = ({ semester }: { semester: GradeObject['ranking']['data'][number] }) => {
     return <Dialog>
@@ -131,179 +117,6 @@ const GradeOverview = ({ grades }: { grades: GradeObject }) => {
             <GradeCard title="班排名" data={grades.ranking.cumulative.letter.letter_cum_class_rank} />
             <GradeCard title="系排名" data={grades.ranking.cumulative.letter.letter_cum_dept_rank} />
         </div>
-    </div>
-}
-
-const GPAChart = ({ lineData }: { lineData: any[] }) => {
-    return <div className="h-[200px]">
-        <ResponsiveContainer width="100%" height="100%">
-            <LineChart
-                data={lineData}
-                margin={{
-                    top: 5,
-                    right: 10,
-                    left: 10,
-                    bottom: 0,
-                }}
-            >
-                <Tooltip
-                    content={({ active, payload, content }) => {
-                        if (active && payload && payload.length) {
-                            return (
-                                <div className="rounded-lg border bg-background p-2 shadow-sm">
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <div className="flex flex-col">
-                                            <span className="text-[0.70rem] uppercase text-muted-foreground">
-                                                Semester
-                                            </span>
-                                            <span className="font-bold text-muted-foreground">
-                                                {toPrettySemester(payload[0].payload.semester)}
-                                            </span>
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-[0.70rem] uppercase text-muted-foreground">
-                                                GPA
-                                            </span>
-                                            <span className="font-bold">
-                                                {payload[0].value}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            )
-                        }
-
-                        return null
-                    }}
-                />
-                <Line
-                    type="monotone"
-                    dataKey="gpa"
-                    strokeWidth={2}
-                    activeDot={{
-                        r: 8,
-                    }}
-                />
-                <XAxis dataKey="semester" />
-                <YAxis domain={[0,4.3]}/>
-            </LineChart>
-        </ResponsiveContainer>
-    </div>
-}
-
-const ClassRankChart = ({ lineData }: { lineData: any[] }) => {
-    const max_class_rank = Math.max(...lineData.map(semester => semester.max_class_rank));
-    return <div className="h-[200px]">
-        <ResponsiveContainer width="100%" height="100%">
-            <LineChart
-                data={lineData}
-                margin={{
-                    top: 5,
-                    right: 10,
-                    left: 10,
-                    bottom: 0,
-                }}
-            >
-                <Tooltip
-                    content={({ active, payload, content }) => {
-                        if (active && payload && payload.length) {
-                            return (
-                                <div className="rounded-lg border bg-background p-2 shadow-sm">
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <div className="flex flex-col">
-                                            <span className="text-[0.70rem] uppercase text-muted-foreground">
-                                                Semester
-                                            </span>
-                                            <span className="font-bold text-muted-foreground">
-                                                {toPrettySemester(payload[0].payload.semester)}
-                                            </span>
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-[0.70rem] uppercase text-muted-foreground">
-                                                班排名
-                                            </span>
-                                            <span className="font-bold">
-                                                {payload[0].payload.class_rank}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            )
-                        }
-
-                        return null
-                    }}
-                />
-                <Line
-                    type="monotone"
-                    dataKey="class_rank"
-                    strokeWidth={2}
-                    activeDot={{
-                        r: 8,
-                    }}
-                />
-                <XAxis dataKey="semester" />
-                <YAxis reversed domain={[1, max_class_rank]}/>
-            </LineChart>
-        </ResponsiveContainer>
-    </div>
-}
-
-const DeptRankChart = ({ lineData }: { lineData: any[] }) => {
-    const max_dept_rank = Math.max(...lineData.map(semester => semester.max_dept_rank));
-    return <div className="h-[200px]">
-        <ResponsiveContainer width="100%" height="100%">
-            <LineChart
-                data={lineData}
-                margin={{
-                    top: 5,
-                    right: 10,
-                    left: 10,
-                    bottom: 0,
-                }}
-            >
-                <Tooltip
-                    content={({ active, payload, content }) => {
-                        if (active && payload && payload.length) {
-                            return (
-                                <div className="rounded-lg border bg-background p-2 shadow-sm">
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <div className="flex flex-col">
-                                            <span className="text-[0.70rem] uppercase text-muted-foreground">
-                                                Semester
-                                            </span>
-                                            <span className="font-bold text-muted-foreground">
-                                                {toPrettySemester(payload[0].payload.semester)}
-                                            </span>
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-[0.70rem] uppercase text-muted-foreground">
-                                            系排名
-                                            </span>
-                                            <span className="font-bold">
-                                                {payload[0].payload.dept_rank}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            )
-                        }
-
-                        return null
-                    }}
-                />
-                <Line
-                    type="monotone"
-                    dataKey="dept_rank"
-                    strokeWidth={2}
-                    activeDot={{
-                        r: 8,
-                    }}
-                />
-                <XAxis dataKey="semester" />
-                <YAxis reversed domain={[1, max_dept_rank]}/>
-            </LineChart>
-        </ResponsiveContainer>
     </div>
 }
 
