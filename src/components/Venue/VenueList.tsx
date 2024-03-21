@@ -1,24 +1,23 @@
 'use client';
-import supabase from '@/config/supabase';
 import Link from 'next/link';
 import { useEffect, useState, useRef } from 'react';
-import Fuse from 'fuse.js'
 import { useSettings } from '@/hooks/contexts/settings';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
+import type Fuse from 'fuse.js';
 
 const VenueList = ({ venues }: { venues: string[]}) => {
     const [filtered, setFiltered] = useState<Fuse.FuseResult<string>[]>([]);
     const [textSearch, setTextSearch] = useState<string>('');
-    const fuse = useRef(new Fuse(venues));
     const { language } = useSettings();
-    useEffect(() => {
-            fuse.current = new Fuse(venues ?? []);
-    }, [venues])
 
     useEffect(() => {
-        setFiltered(fuse.current.search(textSearch));
-    }, [textSearch])
+        (async () => {
+            const Fuse = (await import('fuse.js')).default;
+            const fuse = new Fuse(venues);
+            setFiltered(fuse.search(textSearch));
+        })()
+    }, [venues, textSearch])
 
     return <div className="px-8 py-4 space-y-4">
             <Input className='sticky top-0' placeholder="Search..." value={textSearch} onChange={(e) => setTextSearch(e.target.value)}/>
