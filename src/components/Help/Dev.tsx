@@ -1,5 +1,6 @@
-import Button from '@mui/joy/Button';
 import useDictionary from '@/dictionaries/useDictionary';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 const Dev = () => {
   
@@ -17,9 +18,11 @@ const Dev = () => {
         {dict.help.dev.description}
       </span>
       <div>
-        <Button variant="outlined" color="neutral" component="a" target="_blank" href="https://forms.gle/LKYiVhLVwRGL44pz6">
-          {dict.help.dev.feedback}
-        </Button>
+        <Link target="_blank" href="https://forms.gle/LKYiVhLVwRGL44pz6">
+          <Button variant="outline">
+            {dict.help.dev.feedback}
+          </Button>
+        </Link>
       </div>
     </div>
   )

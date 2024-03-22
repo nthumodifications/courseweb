@@ -1,7 +1,6 @@
 'use client';;
 import {CourseDefinition, CourseSyllabusView} from '@/config/supabase';
 import useDictionary from '@/dictionaries/useDictionary';
-import { Tooltip } from '@mui/joy';
 import { FC } from 'react';
 import Link from 'next/link';
 import CourseTagList from './CourseTagsList';

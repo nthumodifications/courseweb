@@ -11,11 +11,11 @@ import { MinimalCourse } from '@/types/courses';
 
 const DownloadTimetableComponent = () => {
     const dict = useDictionary();
-    const { displayCourseData, colorMap, currentColors } = useUserTimetable();
+    const { getSemesterCourses, semester, colorMap, currentColors } = useUserTimetable();
     const ref = useRef<HTMLDivElement>(null);
     const [loading, setLoading] = useState(false);
 
-    const timetableData = createTimetableFromCourses(displayCourseData as MinimalCourse[], colorMap);
+    const timetableData = createTimetableFromCourses(getSemesterCourses(semester) as MinimalCourse[], colorMap);
 
     const handleConvert = useCallback(() => {
         if (ref.current === null) {
@@ -47,7 +47,7 @@ const DownloadTimetableComponent = () => {
             loading={loading}
         >{dict.dialogs.DownloadTimetableDialog.buttons.image}</Button>
         <div className='relative overflow-hidden'>
-            <div className='absolute h-[915px] w-[539px] px-2 pt-4 pb-8 grid place-items-center bg-white dark:bg-neutral-900' ref={ref}>
+            <div className='absolute h-[915px] w-[539px] px-2 pt-4 pb-8 grid place-items-center bg-white dark:bg-background' ref={ref}>
                 <div className='h-[915px] w-[414px]'>
                     <Timetable timetableData={timetableData} vertical/>
                 </div>
