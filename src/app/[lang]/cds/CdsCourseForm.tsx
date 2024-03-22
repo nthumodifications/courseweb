@@ -2,7 +2,6 @@
 import Timetable from '@/components/Timetable/Timetable';
 import { FC, Fragment, useState, useRef, useEffect, useMemo, useTransition } from 'react';
 import {createTimetableFromCourses, colorMapFromCourses} from '@/helpers/timetable';
-import { timetableColors } from "@/const/timetableColors";
 import { Accordion, ButtonGroup, CircularProgress, DialogContent, DialogTitle, Divider, Drawer, IconButton, ModalClose, Sheet, FormControl, FormLabel, AccordionDetails, AccordionSummary, Stack, Tooltip, Typography, Switch, Dropdown, MenuButton, Menu, MenuItem, Badge as MUIBadge, ModalDialog, DialogActions } from '@mui/joy';
 import {
     EyeOff,
@@ -44,7 +43,7 @@ import {TimeFilterType} from '@/components/FormComponents/TimeslotSelectorContro
 import Link from 'next/link';
 import {renderTimetableSlot} from '@/helpers/timetable_course';
 import useUserTimetable from '@/hooks/contexts/useUserTimetable';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import ButtonSpinner from '@/components/Animation/ButtonSpinner';
 import { Badge } from '@/components/ui/badge';
@@ -373,40 +372,6 @@ const CdsCoursesForm: FC<{
                                         <TimeslotSelectorControl control={control} />
                                     </AccordionDetails>
                                 </Accordion>
-                                {/* <Accordion>
-                                    <AccordionSummary>Specialization</AccordionSummary>
-                                    <AccordionDetails>
-                                        <FormControl>
-                                            <FormLabel>{dict.course.refine.specialization}</FormLabel>
-                                            <AutocompleteControl
-                                                control={control}
-                                                name="firstSpecialization"
-                                                placeholder={dict.course.refine.firstSpecialization}
-                                                loading={load1}
-                                                options={firstSpecial}
-                                            />
-                                            <AutocompleteControl
-                                                control={control}
-                                                name="secondSpecialization"
-                                                placeholder={dict.course.refine.secondSpecialization}
-                                                loading={load2}
-                                                options={secondSpecial}
-                                            />
-
-                                        </FormControl>
-                                        <FormControl>
-                                            <FormLabel>{dict.course.refine.cross_discipline}</FormLabel>
-                                            <AutocompleteControl
-                                                control={control}
-                                                name="disciplines"
-                                                multiple
-                                                placeholder={dict.course.refine.cross_discipline}
-                                                loading={load5}
-                                                options={disciplines}
-                                            />
-                                        </FormControl>
-                                    </AccordionDetails>
-                                </Accordion> */}
                                 <Button
                                     variant="outline"
                                     disabled={!isDirty}

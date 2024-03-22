@@ -1,4 +1,4 @@
-import { Button, ModalDialog, DialogTitle, DialogContent, ListItem, ListItemDecorator, FormControl, FormLabel, RadioGroup, Radio, FormHelperText, CircularProgress } from '@mui/joy';
+import { Button, ModalDialog, DialogTitle, DialogContent, ListItem, ListItemDecorator, FormControl, FormLabel, RadioGroup, Radio, FormHelperText } from '@mui/joy';
 import { format } from 'date-fns';
 import { Controller, useForm } from 'react-hook-form';
 import InputControl from '@/components/FormComponents/InputControl';
@@ -7,6 +7,7 @@ import RedLineIcon from '@/components/BusIcons/RedLineIcon';
 import GreenLineIcon from '@/components/BusIcons/GreenLineIcon';
 import NandaLineIcon from '@/components/BusIcons/NandaLineIcon';
 import supabase from '@/config/supabase';
+import {Loader2Icon} from 'lucide-react';
 
 type SchoolBusType = {
     label_zh: string,
@@ -110,7 +111,7 @@ const BusDelayReportDialog = ({ onClose }: { onClose: () => void }) => {
                     謝謝你的通報！
                 </FormHelperText>
                 <Button variant='solid' color='warning' onClick={handleSubmit(onSubmit)} disabled={!isValid || isSubmitting}>
-                    {isSubmitting ? <CircularProgress /> : "提交"}
+                    {isSubmitting ? <Loader2Icon className="animate-spin" /> : "提交"}
                 </Button>
             </div>
         </DialogContent>

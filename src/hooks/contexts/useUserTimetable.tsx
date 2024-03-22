@@ -1,6 +1,6 @@
 'use client';;
 import {useState, useEffect, useCallback, createContext, useContext, useMemo, useLayoutEffect} from 'react';
-import supabase, { CourseSyllabusView } from "@/config/supabase";
+import supabase, { CourseDefinition, CourseSyllabusView } from "@/config/supabase";
 import { createTimetableFromCourses } from "@/helpers/timetable";
 import { CourseTimeslotData } from "@/types/timetable";
 import { MinimalCourse, RawCourseID } from '@/types/courses';
@@ -14,9 +14,7 @@ import { useQuery } from "@tanstack/react-query";
 type CourseLocalStorage = { [sem: string]: RawCourseID[] };
 
 const userTimetableContext = createContext<ReturnType<typeof useUserTimetableProvider>>({
-    timetableData: [],
-    displayCourseData: [],
-    semesterCourseData: [],
+    getSemesterCourses: () => [],
     semesterCourses: [],
     timetableTheme: Object.keys(timetableColors)[0],
     currentColors: [],
@@ -45,7 +43,6 @@ const useUserTimetableProvider = (loadCourse = true) => {
     const [timetableTheme, _setTimetableTheme] = useLocalStorage<string>("timetable_theme", "pastelColors");
     const [userDefinedColors, setUserDefinedColors] = useLocalStorage<{[theme_name: string]: string[]}>("user_defined_colors", {});
     const [semester, setSemester] = useState<string>(lastSemester.id);
-    const [timetableData, setTimetableData] = useState<CourseTimeslotData[]>([]);
 
     const setTimetableTheme = useCallback((theme: string) => {
         //if theme updated, remap colors and override all
@@ -94,42 +91,26 @@ const useUserTimetableProvider = (loadCourse = true) => {
         setColorMap(newColorMap);
     }, [courses, colorMap]);
 
-
-    //sort courses[semester]： string[] and put as key_display_ids
-    const key_display_ids = useMemo(() => [...(courses[semester] ?? [])].sort(), [courses, semester]);
-
-    const { data: display_courses = [], error, isLoading } = useQuery({
-        queryKey: ['courses', key_display_ids], 
+    const { data: user_courses_data = [], error, isLoading } = useQuery({
+        queryKey: ['courses', [...Object.values(courses).flat()].sort()],
         queryFn: async () => {
-            if(!key_display_ids) return [];
-            const { data = [], error } = await supabase.rpc('search_courses_with_syllabus', { keyword: "" }).in('raw_id', key_display_ids);
+            const { data = [], error } = await supabase.from('courses').select('*').in('raw_id', [...Object.values(courses).flat()].sort());
             if (error) throw error;
             if (!data) throw new Error('No data');
-            return data as unknown as CourseSyllabusView[];
-        }
+            return data as CourseDefinition[];
+        },
+        placeholderData: (prev) => prev?.filter((c: CourseDefinition) => Object.values(courses).flat().includes(c.raw_id)) ?? []
     });
-    //sort display_courses according to courses[semester]
-    const displayCourseData =  useMemo(() => {
-        if(!display_courses) return [];
-        return (courses[semester] ?? []).map(courseID => display_courses.find(c => c.raw_id == courseID)!).filter(c => c);
-    }, [display_courses, courses, semester]);
-    
-    //rewrite semesterCourseData like displayCourseData
-    const key_semester_ids = useMemo(() => [...(currentSemester ? (courses[currentSemester.id] ?? []) : null ?? [])].sort(), [courses, currentSemester]);
-    const { data: semester_courses = [], error: semesterError, isLoading: semesterLoading } = useQuery({
-        queryKey: ['courses', key_semester_ids], 
-        queryFn: async () => {
-            if(!key_semester_ids) return [];
-            const { data = [], error } = await supabase.rpc('search_courses_with_syllabus', { keyword: "" }).in('raw_id', key_semester_ids);
-            if (error) throw error;
-            if (!data) throw new Error('No data');
-            return data as unknown as CourseSyllabusView[];
-        }
-    });
-    const semesterCourseData =  useMemo(() => {
-        if(!semester_courses) return [];
-        return (currentSemester ? (courses[currentSemester.id] ?? []) : []).map(courseID => semester_courses.find(c => c.raw_id == courseID)!).filter(c => c);
-    }, [semester_courses, courses, currentSemester]);
+
+    const getSemesterCourses = useCallback((semester: keyof CourseLocalStorage | undefined) => {
+        if(!semester) return [];
+        if(!courses[semester]) return [];
+        const semesterFilteredCourses: CourseDefinition[] = user_courses_data.filter(course => courses[semester].includes(course.raw_id));
+        //sort according to the order in courses[semester]
+        const sortedCourses = courses[semester].map(courseID => semesterFilteredCourses.find(c => c.raw_id == courseID)!).filter(c => c) ;
+        return sortedCourses;
+    }, [courses, user_courses_data]);
+
 
     //migration from old localStorage key "semester_1121"
     useEffect(() => {
@@ -151,19 +132,6 @@ const useUserTimetableProvider = (loadCourse = true) => {
         //remove old data
         window.localStorage.removeItem("semester_1121");
     }, []);
-
-    useEffect(() => {
-        if (!loadCourse) return;
-        if (semesterError) {
-            console.error(error);
-            return;
-        }
-        if (semesterLoading) {
-            console.log('loading')
-            return;
-        }
-        setTimetableData(createTimetableFromCourses(semesterCourseData! as MinimalCourse[], colorMap));
-    }, [semesterCourseData, semesterLoading, semesterError, colorMap]);
 
     //handlers for courses
     const addCourse = (courseID: string | string[]) => {
@@ -276,9 +244,7 @@ const useUserTimetableProvider = (loadCourse = true) => {
 
 
     return {
-        timetableData, 
-        displayCourseData, 
-        semesterCourseData,
+        getSemesterCourses,
         colorMap,
         semester, 
         timetableTheme,
