@@ -12,15 +12,14 @@ import {useState} from "react";
 
 const ElearningPage = () => {
     const {initializing, getOauthCookies, oauth, loading, error: aisError} = useHeadlessAIS()
-    const searchParams = useSearchParams()
     const [requestPage, setRequestPage] = useState(1)
 
     const {data: elearningDatas, isLoading, error} = useQuery<ElearningAnnouncementObject>({
-        queryKey: ['elearning_announcement', initializing, requestPage, searchParams],
+        queryKey: ['elearning_announcement', initializing, requestPage],
         queryFn: async () => {
             if (initializing) return null;
             const token = await getOauthCookies(true);
-            const res = await fetch(`/api/ais_headless/eeclass/announcements?cookie=${token?.eeclass}&page=${requestPage}&courseId=${searchParams.get("courseId")}`);
+            const res = await fetch(`/api/ais_headless/eeclass/announcements?cookie=${token?.eeclass}&page=${requestPage}`);
             return await res.json()
         }
     });

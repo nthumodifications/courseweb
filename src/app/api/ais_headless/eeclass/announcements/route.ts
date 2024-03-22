@@ -97,9 +97,6 @@ export const GET = async (req: NextRequest) => {
             }
         }
     )
-    if (req.nextUrl.searchParams.has("courseId")) {
-        announcements = announcements.filter((announcement) => announcement.courseId === req.nextUrl.searchParams.get("courseId"))
-    }
     return NextResponse.json({
         announcements: await Promise.all(announcements.map(async (announcement) => {
             return {...announcement, details: await getAnnouncementDetails(announcement.details)}

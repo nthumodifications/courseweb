@@ -33,11 +33,7 @@ const ElearningPage = () => {
             {
                 elearningDatas.map((course) => {
                     return <ListItemContent>
-                        <Link href={`elearning/announcements?courseId=${course.courseId}`}>
-                            <ListItemButton>
-                                <div className="text-lg font-bold">{course.grade} {course.courseName}</div>
-                            </ListItemButton>
-                        </Link>
+                        <div className="text-lg font-bold">{course.grade} {course.courseName}</div>
                         <div className="flex text-md text-gray-400">Instructor: {course.instructor}</div>
                     </ListItemContent>
                 })
