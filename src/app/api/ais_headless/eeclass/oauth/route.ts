@@ -88,8 +88,7 @@ export const POST = async (req: NextRequest) => {
         else if (!resLogin.headers.has("Location") || !resLogin.headers.get("Location")?.includes("service/oauth")) {
             return NextResponse.json({ success: false, body: { error: "未知錯誤 Unknown Login Error", code: LoginError.Unknown }});
         }
-
-        const resToken = await fetch(resLogin.headers.get("Location") as string, {
+        const res = await fetch(resLogin.headers.get("Location") as string, {
             "headers": {
                 "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
                 "accept-language": "en-US,en;q=0.9",
@@ -114,58 +113,9 @@ export const POST = async (req: NextRequest) => {
             "credentials": "same-origin",
             "cache": "no-cache"
         });
+        const TS01e4fe74 = res.headers.getSetCookie().find((cookie: string) => cookie.startsWith("TS01e4fe74="))?.split(";")[0].split("=")[1] as string;
 
-        return NextResponse.json({ success: true, cookie: `noteFontSize=100;noteExpand=0;locale=en-us;timezone=%2B0800;PHPSESSID=${PHPSESSID}`, body: { PHPSESSID: PHPSESSID}});
+        return NextResponse.json({ success: true, cookie: `noteFontSize=100;noteExpand=0;locale=en-us;timezone=%2B0800;PHPSESSID=${PHPSESSID};TS01e4fe74=${TS01e4fe74}`, body: { PHPSESSID: PHPSESSID, TS01e4fe74: TS01e4fe74}});
     }
     return await oauthLogin()
-}
-
-// Example
-export const GET = async (req: NextRequest) => {
-    const cookie = req.nextUrl.searchParams.get("cookie") as string
-    const announcementPage = req.nextUrl.searchParams.get("annPage") as string
-    process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
-    const eeclass_dashboard = await fetch(`https://eeclass.nthu.edu.tw/dashboard/latestBulletin?page=${announcementPage}&category=all&condition=0&pageSize=20`, {
-        "headers": {
-            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*\/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-            "accept-language": "en-US,en;q=0.9",
-            "cache-control": "max-age=0",
-            "content-type": "application/x-www-form-urlencoded",
-            "sec-ch-ua": "\"NotA(Brand\";v=\"99\", \"Microsoft Edge\";v=\"121\", \"Chromium\";v=\"121\"",
-            "sec-ch-ua-mobile": "?0",
-            "sec-ch-ua-platform": "\"Windows\"",
-            "sec-fetch-dest": "document",
-            "sec-fetch-mode": "navigate",
-            "sec-fetch-site": "same-origin",
-            "sec-fetch-user": "?1",
-            "upgrade-insecure-requests": "1",
-            "cookie": cookie,
-        },
-        "redirect": "follow",
-        "method": "GET",
-        "referrer": "https://eeclass.nthu.edu.tw/",
-        "referrerPolicy": "strict-origin-when-cross-origin",
-        "body": null,
-        "mode": "cors",
-        "credentials": "same-origin",
-        "cache": "no-cache"
-    })
-    const html = await eeclass_dashboard.text();
-    const dom = new jsdom.JSDOM(html);
-    const doc = dom.window.document;
-    const rawDatas = Array.from(doc.querySelector("#bulletinMgrTable > tbody")!.querySelectorAll("tr"))
-    const announcements = rawDatas.map((element) => element.querySelectorAll("td")).map((map) => {
-        return {
-            courseId: parseInt(map.item(2).querySelector("div > a")?.getAttribute("href")?.substring(8)!),
-            courseName: map.item(2).querySelector("div > a > span")?.innerHTML,
-            date: map.item(3).querySelector("div")?.innerHTML,
-            title: map.item(1).querySelector("div > .afterText > .text-overflow > a > span")?.innerHTML,
-            announcer: ((str) => str.substring(str.indexOf("by ")+3))(map.item(1).querySelector("div > .fs-hint")?.innerHTML!),
-            url: map.item(1).querySelector("div > .afterText > .text-overflow > a")?.getAttribute("data-url")
-        };
-    })
-
-    return NextResponse.json({
-        announcements: announcements
-    })
 }

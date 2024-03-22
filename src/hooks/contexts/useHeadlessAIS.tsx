@@ -63,8 +63,6 @@ const useHeadlessAISProvider = () => {
             })
     }
 
-    //input: studentid, password
-    //output: ACIXSTORE | Error
     const fetchElearnCookie = async (studentid: string, password: string) => {
         const form = new FormData();
         form.append("studentid", studentid);
@@ -87,7 +85,7 @@ const useHeadlessAISProvider = () => {
         const form = new FormData();
         form.append("studentid", studentid);
         form.append("password", password);
-        return await fetch("/api/ais_headless/eeclass", {
+        return await fetch("/api/ais_headless/eeclass/oauth", {
             method: "POST",
             body: form
         })
@@ -196,7 +194,6 @@ const useHeadlessAISProvider = () => {
         }
         if (headlessAIS.oauthLastUpdated !== null && headlessAIS.oauthLastUpdated! + 15 * 60 * 1000 > Date.now() && !force) {
             setLoading(false);
-            console.log(JSON.stringify({elearn: headlessAIS.elearnCookie!, eeclass: headlessAIS.eeclassCookie!}))
             return {elearn: headlessAIS.elearnCookie!, eeclass: headlessAIS.eeclassCookie!};
         }
         setLoading(true);
