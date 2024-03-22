@@ -183,7 +183,7 @@ const useHeadlessAISProvider = () => {
     }
 
     /**
-     * @param force force update ACIXSTORE
+     * @param force force update eeclassCookie
      * @returns eeclassCookie or null if error, undefined if not enabled
      */
     const getOauthCookies = async (force = false) => {
