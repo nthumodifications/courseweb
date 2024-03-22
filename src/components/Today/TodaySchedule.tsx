@@ -18,28 +18,32 @@ import { createTimetableFromCourses } from '@/helpers/timetable';
 import { MinimalCourse } from '@/types/courses';
 import { VenueChip } from '../Timetable/VenueChip';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import useTime from "@/hooks/useTime";
+import { NoClassPickedReminder } from "./NoClassPickedReminder";
+
+const getRangeOfDays = (start: Date, end: Date) => {
+    const days = [];
+    for (let i = start.getTime(); i <= end.getTime(); i += 86400000) {
+        days.push(new Date(i));
+    }
+    return days;
+}
 
 const TodaySchedule: FC<{ weather: WeatherData | undefined, alerts: AlertDefinition[], calendar: EventData[], weatherLoading: boolean, alertLoading: boolean, calendarLoading: boolean }> = ({ weather, alerts, calendar, weatherLoading, alertLoading, calendarLoading }) => {
-    const { isCoursesEmpty, colorMap, getSemesterCourses, deleteCourse } = useUserTimetable();
+    const { isCoursesEmpty, colorMap, getSemesterCourses } = useUserTimetable();
     const { language, pinnedApps } = useSettings();
     const dict = useDictionary();
+    const date = useTime();
 
-    const curr_sem = getSemester(new Date());
+    const curr_sem = useMemo(() => getSemester(date), [date]);
     const timetableData = useMemo(() => createTimetableFromCourses(getSemesterCourses(curr_sem?.id) as MinimalCourse[], colorMap), [getSemesterCourses, curr_sem]);
     //sort display_courses according to courses[semester]
     const displayCourseData = useMemo(() => getSemesterCourses(lastSemester.id), [getSemesterCourses, lastSemester]);
 
-    const nextTimetableData = createTimetableFromCourses(displayCourseData as MinimalCourse[], colorMap);
+    const nextTimetableData = useMemo(() => createTimetableFromCourses(displayCourseData as MinimalCourse[], colorMap), [displayCourseData, colorMap]);
 
-    const getRangeOfDays = (start: Date, end: Date) => {
-        const days = [];
-        for (let i = start.getTime(); i <= end.getTime(); i += 86400000) {
-            days.push(new Date(i));
-        }
-        return days;
-    }
     //get a range of 5 days starting from today
-    const days = useMemo(() => getRangeOfDays(new Date(), new Date(Date.now() + 86400000 * 4)),[]);
+    const days = useMemo(() => getRangeOfDays(date, new Date(date.getTime() + 86400000 * 4)),[date]);
 
     const renderDayTimetable = (day: Date) => {
         if (!curr_sem) return <div className='text-gray-500 dark:text-gray-400 text-center text-sm font-semibold'>放假咯！</div>;
@@ -101,7 +105,7 @@ const TodaySchedule: FC<{ weather: WeatherData | undefined, alerts: AlertDefinit
 
     const renderCalendars = (day: Date) => {
         return !calendarLoading && calendar && calendar.filter((event) => event.weekday == day.getDay()).map((event) =>
-            <div className="flex flex-row items-center rounded-md p-2 flex-1 bg-blue-500 text-gray-300">
+            <div key={event.weekday} className="flex flex-row items-center rounded-md p-2 flex-1 bg-blue-500 text-gray-300">
                 <Info className="flex pr-1 py-[2px] w-11" />
                 <div className="flex flex-col">
                     <p className="font-semibold">{event.summary}</p>
@@ -110,17 +114,7 @@ const TodaySchedule: FC<{ weather: WeatherData | undefined, alerts: AlertDefinit
         )
     }
 
-    const NoClassPickedReminder = () => {
-        return <Alert>
-            <AlertTitle>還沒選到課嗎？</AlertTitle>
-            <AlertDescription>
-                <ul className='list-decimal list-inside'>
-                    <li className='text-base'>先到 <Link className='text-[#AF7BE4] font-medium' href='/zh/courses'>課表</Link> 選擇課程</li>
-                    <li className='text-base'>後到 <Link className='text-[#AF7BE4] font-medium' href='/zh/timetable'>時間表</Link> 查看時間表</li>
-                </ul>
-            </AlertDescription>
-        </Alert>
-    }
+    
 
     return <div className="h-full w-full px-3 md:px-8 space-y-4">
         {isCoursesEmpty && <NoClassPickedReminder />}
