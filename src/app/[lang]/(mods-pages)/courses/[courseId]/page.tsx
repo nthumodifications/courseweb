@@ -100,7 +100,7 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
     const timetableData = showTimetable ? createTimetableFromCourses([course as MinimalCourse], colorMap) : [];
 
     return <Fade>
-        <div className="grid grid-cols-1 xl:grid-cols-[auto_240px] py-6 px-4 text-gray-500 dark:text-gray-300">
+        <div className="grid grid-cols-1 xl:grid-cols-[auto_240px] pb-6 px-4 text-gray-500 dark:text-gray-300">
             <div className="space-y-2">
                 <div className="flex flex-col md:flex-row md:items-end gap-4">
                     <div className="space-y-4 flex-1">

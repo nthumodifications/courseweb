@@ -4,13 +4,18 @@ import { Menu, MessageCircle } from "lucide-react";
 import { useSettings } from "@/hooks/contexts/settings"
 import { currentSemester} from "@/const/semester"
 import { Button } from "@/components/ui/button"
-import Help from "@/components/Help/Help"
 import Link from "next/link"
 import NTHUModsLogo from "@/components/Branding/NTHUModsLogo"
 import { Sheet, SheetContent, SheetOverlay, SheetTrigger } from "@/components/ui/sheet";
 import SideNav from "./SideNav"
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import dynamic from 'next/dynamic';
+
+const HelpDynamic = dynamic
+  (() => import('@/components/Help/Help'),
+  { ssr: false }
+);
 
 const SideNavDrawer = () => {
   const pathname = usePathname();
@@ -36,7 +41,7 @@ const Header = () => {
   const currentWeek = currentSemester? Math.floor((new Date().getTime() - currentSemester.begins.getTime()) / (1000 * 60 * 60 * 24 * 7)) + 1 : null;
 
   return (
-    <header className="h-[--header-height] w-screen bg-white dark:bg-neutral-900 shadow-md px-2 md:px-8 py-4 md:col-span-2 flex flex-row items-center z-50 gap-4">
+    <header className="h-[--header-height] w-screen bg-white dark:bg-background shadow-md px-2 md:px-8 py-4 md:col-span-2 flex flex-row items-center z-50 gap-4">
       <div className="flex flex-row gap-3 flex-1 items-center">
         <SideNavDrawer/>
         <Link href={"/"+language+"/timetable"}>
@@ -51,7 +56,7 @@ const Header = () => {
           (currentSemester ?`${currentSemester.year-1911}-${currentSemester.semester} 學期, 第${currentWeek}週`: `假期`)}
         </p>
       <div className="flex gap-2">
-        <Help/>
+        <HelpDynamic/>
         <Button size="sm" variant="outline" asChild>
           {/* Old url: https://forms.gle/LKYiVhLVwRGL44pz6 */}
           <Link className="flex gap-1" target="_blank" href="https://forms.gle/tCjia5u9sWBT2Gca6">

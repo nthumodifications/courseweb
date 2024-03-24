@@ -22,22 +22,6 @@ export const apps = [
         href: '/shops',
         Icon: Store,
     },
-    // {
-    //     id: 'student_card',
-    //     title_zh: '學生證',
-    //     title_en: 'Student Card',
-    //     href: '/student',
-    //     Icon: WalletCards,
-    //     auth: true,
-    // },
-    // {
-    //     id: 'working_hours',
-    //     title_zh: '工讀',
-    //     title_en: 'Working Hours',
-    //     href: '/ais-redirect/PE/1/14D/PE14D1.php',
-    //     Icon: Bus,
-    //     target: '_blank',
-    // },
     {
         id: 'grades',
         title_zh: '你的成績',
