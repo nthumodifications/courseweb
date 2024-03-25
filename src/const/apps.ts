@@ -1,4 +1,16 @@
-import { AlertOctagon, Store, Bus, Car, Clipboard, Club, CreditCard, MapPin, Network, WalletCards} from 'lucide-react';
+import {
+    AlertOctagon,
+    Store,
+    Bus,
+    Car,
+    Clipboard,
+    Club,
+    CreditCard,
+    MapPin,
+    Network,
+    WalletCards,
+    Book
+} from 'lucide-react';
 
 export const apps = [
     {
@@ -28,6 +40,14 @@ export const apps = [
         title_en: 'Your Grades',
         href: '/student/grades',
         Icon: Clipboard,
+        ais: true,
+    },
+    {
+        id: 'grades',
+        title_zh: '數位學習平台',
+        title_en: 'E-Learning',
+        href: '/student/elearning',
+        Icon: Book,
         ais: true,
     },
     {
