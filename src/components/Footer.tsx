@@ -11,7 +11,6 @@ const Footer = () => {
 
         <h1 className="font-bold text-3xl flex flex-row space-x-3 mb-2">
           <FullLogo/>
-          <Badge variant="outline">ALPHA</Badge>
         </h1>
 
         <p className="text-gray-600 dark:text-gray-400">Made with ❤️ by students for students</p>
