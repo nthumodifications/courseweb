@@ -1,4 +1,4 @@
-import { AlertOctagon, Store, Bus, Car, Clipboard, Club, CreditCard, MapPin, Network, WalletCards} from 'lucide-react';
+import { AlertOctagon, Store, Bus, Car, Clipboard, Club, CreditCard, MapPin, Network, WalletCards, Gamepad} from 'lucide-react';
 
 export const apps = [
     {
@@ -21,6 +21,13 @@ export const apps = [
         title_en: 'Shops',
         href: '/shops',
         Icon: Store,
+    },
+    {
+        id: 'clubs_info',
+        title_zh: '社團資訊',
+        title_en: 'Clubs Information',
+        href: 'https://outrageous-savory-d52.notion.site/d33567eea7814fc6b91744351eb2ba6a',
+        Icon: Gamepad
     },
     {
         id: 'grades',
