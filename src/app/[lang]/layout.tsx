@@ -13,6 +13,7 @@ import { CssVarsProvider } from '@mui/joy';
 import NextAuthProvider from '@/components/NextAuthProvider';
 import { Toaster } from '@/components/ui/toaster';
 import ReactQuery from '@/components/ReactQuery';
+import {RxDBProvider} from '@/config/rxdb';
 
 import './globals.css'
 
@@ -111,24 +112,26 @@ export default function RootLayout({
 
   return (
     <CssVarsProvider defaultMode={(theme?.value as any) ?? 'light'}>
-      <NextAuthProvider>
-        <ReactQuery>
-          <SettingsProvider>
-            <HeadlessAISProvider>
-              <UserTimetableProvider>
-                <ModalProvider>
-                  <html lang={params.lang} className={`${theme?.value ?? ''} ${inter.variable} ${noto.variable}`} suppressHydrationWarning>
-                    <body>
-                      {children}
-                      <Toaster />
-                    </body>
-                  </html>
-                </ModalProvider>
-              </UserTimetableProvider>
-            </HeadlessAISProvider>
-          </SettingsProvider>
-        </ReactQuery>
-      </NextAuthProvider>
+      <RxDBProvider>
+        <NextAuthProvider>
+          <ReactQuery>
+            <SettingsProvider>
+              <HeadlessAISProvider>
+                <UserTimetableProvider>
+                  <ModalProvider>
+                    <html lang={params.lang} className={`${theme?.value ?? ''} ${inter.variable} ${noto.variable}`} suppressHydrationWarning>
+                      <body>
+                        {children}
+                        <Toaster />
+                      </body>
+                    </html>
+                  </ModalProvider>
+                </UserTimetableProvider>
+              </HeadlessAISProvider>
+            </SettingsProvider>
+          </ReactQuery>
+        </NextAuthProvider>
+      </RxDBProvider>
     </CssVarsProvider>
   )
 }
