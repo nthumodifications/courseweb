@@ -1,15 +1,23 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { addWeeks, differenceInDays, differenceInWeeks, eachHourOfInterval, endOfDay, format, isSameMonth, isToday, startOfDay, subWeeks } from 'date-fns';
+import {
+    addWeeks,
+    differenceInDays,
+    eachHourOfInterval,
+    endOfDay,
+    format,
+    isSameMonth,
+    isToday,
+    startOfDay,
+    subWeeks,
+} from 'date-fns';
 import { cn } from '@/lib/utils';
-import useUserTimetable from '@/hooks/contexts/useUserTimetable';
-import { createContext, useContext, useEffect, useState } from 'react';
-import { FormDescription } from '@/components/ui/form';
+import { useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 
 import { Separator } from '@/components/ui/separator';
 import { CalendarEvent } from './calendar.types';
-import { CalendarProvider, useCalendar } from './calendar_hook';
+import { useCalendar } from './calendar_hook';
 import { WeekSelector } from './WeekSelector';
 import { AddEventButton } from './AddEventButton';
 import { CurrentTimePointer } from './CurrentTimePointer';
@@ -17,9 +25,6 @@ import { getWeek } from './calendar_utils';
 import {eventsToDisplay} from '@/app/[lang]/(mods-pages)/today/calendar_utils';
 import { adjustLuminance, getBrightness } from '@/helpers/colors';
 import { EventPopover } from './EventPopover';
-import { timetableToCalendarEvent } from './timetableToCalendarEvent';
-import { useRxCollection, useRxQuery } from 'rxdb-hooks';
-import { v4 as uuidv4 } from 'uuid';
 
 const CalendarContent = () => {
     const [displayWeek, setDisplayWeek] = useState<Date[]>(getWeek(new Date()));

@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, useWatch } from 'react-hook-form';
+import { UseFormReturn, useForm, useWatch } from 'react-hook-form';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as ShadcnCalendar } from '@/components/ui/calendar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
