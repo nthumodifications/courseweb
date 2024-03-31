@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { useLocalStorage } from "usehooks-ts";
 
 const AprilFoolsBanner = () => {
-    const APRILFOOLSURL = 'https://courseweb-git-apr-fools-nthumods.vercel.app/';
+    const APRILFOOLSURL = 'https://aprilfools.nthumods.com';
     const [hasOpenedAprilFools, setHasOpenedAprilFools] = useLocalStorage('hasOpenedAprilFools', false);
 
     useEffect(() => {
