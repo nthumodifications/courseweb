@@ -15,7 +15,7 @@ const NTHUModsLayout = ({
     children: React.ReactNode
 } & LangProps) => {
     return <div className={`bg-[url('https://www.ccxp.nthu.edu.tw/img/back_3.jpg')] grid grid-cols-1 grid-rows-[auto_var(--header-height)_var(--content-height)] md:grid-cols-[12rem_auto]`}>
-        <div className="w-full h-10 col-span-2">
+        <div className="w-full h-10 md:col-span-2">
             <div className="bg-nthu-400 h-full flex flex-row items-center justify-center">
                 <p className="text-black text-sm mr-4">🎉愚人節快樂~ April Fools! 🎉</p>
                 <Link href="https://nthumods.com" className="text-black text-sm flex flex-row gap-2 underline">
