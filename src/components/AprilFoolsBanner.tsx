@@ -1,4 +1,5 @@
 'use client';
+import { event } from "@/lib/gtag";
 import Link from "next/link";
 import { useEffect } from "react";
 import { useLocalStorage } from "usehooks-ts";
@@ -10,6 +11,7 @@ const AprilFoolsBanner = () => {
     useEffect(() => {
         if (!hasOpenedAprilFools && typeof window !== 'undefined') {
             setHasOpenedAprilFools(true);
+            event({ action: 'april_fools_banner', category: 'april_fools', label: 'opened' });
             window.location.replace(APRILFOOLSURL);
         }
     }, [hasOpenedAprilFools, setHasOpenedAprilFools]);
