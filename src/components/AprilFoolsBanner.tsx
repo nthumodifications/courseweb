@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { useLocalStorage } from "usehooks-ts";
 
 const AprilFoolsBanner = () => {
-    const APRILFOOLSURL = 'https://aprilfools.nthumods.com';
+    const APRILFOOLSURL = 'https://courseweb-git-apr-fools-nthumods.vercel.app/';
     const [hasOpenedAprilFools, setHasOpenedAprilFools] = useLocalStorage('hasOpenedAprilFools', false);
 
     useEffect(() => {
@@ -17,7 +17,7 @@ const AprilFoolsBanner = () => {
     }, [hasOpenedAprilFools, setHasOpenedAprilFools]);
 
     return (
-        <div className="w-full h-10 col-span-2">
+        <div className="w-full h-10 md:col-span-2">
             <div className="bg-nthu-400 h-full flex flex-row items-center justify-center">
                 <p className="text-black text-sm mr-4">🎉愚人節快樂~ April Fools! 🎉</p>
                 <Link href={APRILFOOLSURL} className="text-black text-sm flex flex-row gap-2 underline">
