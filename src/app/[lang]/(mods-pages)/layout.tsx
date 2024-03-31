@@ -6,6 +6,7 @@ import { Suspense } from 'react';
 import { Toaster } from '@/components/ui/toaster';
 import ConsoleLogger from '@/components/ConsoleLogger';
 import { LangProps } from '@/types/pages';
+import AprilFoolsBanner from '@/components/AprilFoolsBanner';
 
 const NTHUModsLayout = ({
     children,
@@ -13,7 +14,8 @@ const NTHUModsLayout = ({
 }: {
     children: React.ReactNode
 } & LangProps) => {
-    return <div className={`grid grid-cols-1 grid-rows-[var(--header-height)_var(--content-height)] md:grid-cols-[12rem_auto]`}>
+    return <div className={`grid grid-cols-1 grid-rows-[auto_var(--header-height)_var(--content-height)] md:grid-cols-[12rem_auto]`}>
+        <AprilFoolsBanner/>
         <GoogleAnalytics />
         <ConsoleLogger />
         <Header />

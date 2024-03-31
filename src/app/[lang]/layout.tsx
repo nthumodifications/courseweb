@@ -15,6 +15,7 @@ import { Toaster } from '@/components/ui/toaster';
 import ReactQuery from '@/components/ReactQuery';
 
 import './globals.css'
+import AprilFoolsBanner from '@/components/AprilFoolsBanner';
 
 export const metadata: Metadata = {
   title: {
