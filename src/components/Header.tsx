@@ -41,11 +41,11 @@ const Header = () => {
   const currentWeek = currentSemester? Math.floor((new Date().getTime() - currentSemester.begins.getTime()) / (1000 * 60 * 60 * 24 * 7)) + 1 : null;
 
   return (
-    <header className="h-[--header-height] w-screen bg-white dark:bg-background shadow-md px-2 md:px-8 py-4 md:col-span-2 flex flex-row items-center z-50 gap-4">
-      <div className="flex flex-row gap-3 flex-1 items-center">
+    <header className="bg-[url('https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/images/ccxp_r1_c4.png')] h-[--header-height] w-screen bg-white dark:bg-background shadow-md px-2 md:px-8 py-4 md:col-span-2 flex flex-row items-center z-50 gap-4">
+      <div className=" flex flex-row gap-3 flex-1 items-center">
         <SideNavDrawer/>
-        <Link href={"/"+language+"/timetable"}>
-          <NTHUModsLogo />
+        <Link href={"https://nthumods.com"}>
+          <h1 className="text-5xl">NTHUMods #1 AIS</h1>
         </Link>
       </div>
       
@@ -55,16 +55,6 @@ const Header = () => {
         {language == 'zh' &&
           (currentSemester ?`${currentSemester.year-1911}-${currentSemester.semester} 學期, 第${currentWeek}週`: `假期`)}
         </p>
-      <div className="flex gap-2">
-        <HelpDynamic/>
-        <Button size="sm" variant="outline" asChild>
-          {/* Old url: https://forms.gle/LKYiVhLVwRGL44pz6 */}
-          <Link className="flex gap-1" target="_blank" href="https://forms.gle/tCjia5u9sWBT2Gca6">
-            <MessageCircle size="16" />
-            <span className="hidden md:inline-block">Feedback</span>
-          </Link>
-        </Button>
-      </div>
     </header>
   )
 }

@@ -97,6 +97,9 @@ const config = {
   future: {
     hoverOnlyWhenSupported: true,
   },
+  corePlugins: {
+    preflight: false,
+  }
 } satisfies Config
 
 export default config

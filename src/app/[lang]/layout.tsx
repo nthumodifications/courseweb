@@ -117,7 +117,7 @@ export default function RootLayout({
             <HeadlessAISProvider>
               <UserTimetableProvider>
                 <ModalProvider>
-                  <html lang={params.lang} className={`${theme?.value ?? ''} ${inter.variable} ${noto.variable}`} suppressHydrationWarning>
+                  <html lang={params.lang} className={`font-serif`} suppressHydrationWarning>
                     <body>
                       {children}
                       <Toaster />

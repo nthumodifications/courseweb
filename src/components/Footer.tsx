@@ -7,19 +7,14 @@ import Link from "next/link"
 const Footer = () => {
   return (
     <footer className="hidden md:grid w-screen dark:bg-neutral-800 bg-neutral-50 p-6 rounded-lg shadow-lg grid-cols-2">
-      <div className="">
+      <div className="text-center">
 
-        <h1 className="font-bold text-3xl flex flex-row space-x-3 mb-2">
-          <FullLogo/>
-        </h1>
-
-        <p className="text-gray-600 dark:text-gray-400">Made with ❤️ by students for students</p>
+      <div className="bg-[url('https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/images/bottom_bg.png')] flex items-center justify-center w-full h-12 border-2 border-solid border-black">
+      版權所有 © 2028 &nbsp;&nbsp; <FullLogo/> <br/>
+      </div>
         
-        <div className="py-2">
-          <p className="text-xs text-gray-600 dark:text-gray-400">We desperately need more contributers, join us if you're interested</p>
-          <p className="text-xs text-gray-600 dark:text-gray-400">就是你！我們很需要你加入我們，讓這個平臺更加完善！</p>
-        </div>
-
+        <span className="font-bold">資訊安全政策 個資保護政策</span> <br/>
+        
         <Button variant="ghost" size="icon" asChild>
           <Link target="_blank" href="https://github.com/nthumodifications/courseweb">
             <Github/>
