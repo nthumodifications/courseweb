@@ -1,6 +1,5 @@
 import Header from '@/components/Header';
 import SideNav from '@/components/SideNav';
-import Footer from '@/components/Footer';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
 import { Suspense } from 'react';
 import { Toaster } from '@/components/ui/toaster';
@@ -17,13 +16,12 @@ const NTHUModsLayout = ({
         <GoogleAnalytics />
         <ConsoleLogger />
         <Header />
-        <div className='hidden md:flex h-screen px-2 pt-8 pl-8'>
+        <div className='hidden md:flex h-full px-2 pt-8 pl-8'>
             <SideNav />
         </div>
         <main className='overflow-y-auto overflow-x-hidden h-full w-full scroll-smooth [&>div]:h-full pt-8 md:pl-8'>
             {children}
         </main>
-        <Footer />
     </div>
 }
 

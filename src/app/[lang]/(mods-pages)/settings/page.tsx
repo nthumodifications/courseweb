@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Language } from "@/types/settings";
+import Footer from '@/components/Footer';
 
 const SettingsPage = () => {
 
@@ -79,6 +80,8 @@ const SettingsPage = () => {
                     {ais.enabled && !ais.ACIXSTORE && <span className="text-red-600 dark:text-red-400 text-sm">{dict.ccxp.failed}</span>}
                 </div>
             </div>
+            <Separator orientation="horizontal"/>
+            <Footer/>
         </div>
     )
 };
