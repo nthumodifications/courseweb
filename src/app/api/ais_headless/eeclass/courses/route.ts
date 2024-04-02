@@ -49,7 +49,5 @@ export const GET = async (req: NextRequest) => {
             code: details!.item(3).innerHTML.substring(6)
         };
     })
-    console.log(html)
-    console.log(courses)
     return NextResponse.json(courses.sort(courseComparator))
 }

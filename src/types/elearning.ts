@@ -19,6 +19,5 @@ export type ElearningAnnouncementObject = {
             attachments: string
         },
     }[],
-    ajaxAuth: string,
-    pageCount: number // max page
+    pageCount: number
 }

@@ -2,9 +2,11 @@ import {NextRequest, NextResponse} from "next/server";
 import jsdom from 'jsdom';
 import {parse} from "node-html-parser";
 import {LoginError} from "@/types/headless_ais";
+import {ElearningAnnouncementObject} from "@/types/elearning";
 
 export const GET = async (req: NextRequest) => {
     const cookie = req.nextUrl.searchParams.get("cookie") as string
+    const course = req.nextUrl.searchParams.get("course") as string
     const announcementPage = req.nextUrl.searchParams.get("page") as string
     process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
 
@@ -26,7 +28,6 @@ export const GET = async (req: NextRequest) => {
                 "cookie": cookie,
             },
             "method": "GET",
-            "referrer": "https://eeclass.nthu.edu.tw/dashboard/latestBulletin",
             "referrerPolicy": "strict-origin-when-cross-origin",
             "body": null,
             "mode": "cors",
@@ -52,7 +53,10 @@ export const GET = async (req: NextRequest) => {
             attachments: downloadBlock === null ? "無附加檔案 No attachments" : downloadBlock?.innerHTML
         }
     }
-    const eeclass_dashboard = await fetch(`https://eeclass.nthu.edu.tw/dashboard/latestBulletin?page=${announcementPage}&category=all&condition=0&pageSize=20`, {
+
+    let announcements, pageCount = 2
+    const location = course == "every" ? `dashboard/latestBulletin?page=${announcementPage}&category=all&condition=0&pageSize=20` : `course/bulletin/${course}`
+    const eeclass_bulletin = await fetch(`https://eeclass.nthu.edu.tw/${location}`, {
         "headers": {
             "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*\/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
             "accept-language": "en-US,en;q=0.9",
@@ -77,16 +81,23 @@ export const GET = async (req: NextRequest) => {
         "credentials": "same-origin",
         "cache": "no-cache"
     })
-    if (!eeclass_dashboard.ok) {
+
+    if (!eeclass_bulletin.ok) {
         return NextResponse.error();
     }
-    const html = await eeclass_dashboard.text();
+    const html = await eeclass_bulletin.text();
     const dom = new jsdom.JSDOM(html);
     const doc = dom.window.document;
     const rawDatas = Array.from(doc.querySelector("#bulletinMgrTable > tbody")!.querySelectorAll("tr"))
-    const announcementPageCount = doc.querySelector(".pagination")!.querySelectorAll("li").length
-    let ajaxAuth = ""
-    let announcements = rawDatas.map((element) => element.querySelectorAll("td")).map((tdmap) => {
+    if (rawDatas[0].id == "noData") {
+        return NextResponse.json({
+            announcements: [],
+            pageCount: 0
+        })
+    }
+    const pageBox = doc.querySelector(".pagination")
+    pageCount = pageBox ? pageBox!.querySelectorAll("li").length : 3
+    announcements = rawDatas.map((element) => element.querySelectorAll("td")).map((tdmap) => {
             return {
                 courseId: tdmap.item(2).querySelector("div > a")?.getAttribute("href")?.substring(8)!,
                 courseName: tdmap.item(2).querySelector("div > a > span")?.innerHTML,
@@ -101,7 +112,6 @@ export const GET = async (req: NextRequest) => {
         announcements: await Promise.all(announcements.map(async (announcement) => {
             return {...announcement, details: await getAnnouncementDetails(announcement.details)}
         })),
-        ajaxAuth: ajaxAuth,
-        pageCount: announcementPageCount-2
+        pageCount: pageCount-2
     })
 }
