@@ -41,3 +41,5 @@ public/sw.js.map
 resources/ios/**/*
 resources/android/**/*
 android/private_key.pepk
+
+.idea/
