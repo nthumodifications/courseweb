@@ -4,7 +4,7 @@ import supabase from '@/config/supabase';
 import { ScheduleItem, busDays, getVehicleDescription, routes, stops } from '@/const/bus';
 import useDictionary from '@/dictionaries/useDictionary';
 import { useSettings } from '@/hooks/contexts/settings';
-import { Button, Divider, LinearProgress } from '@mui/joy';
+import { LinearProgress } from '@mui/joy';
 import { format, formatDistanceStrict, getDay } from 'date-fns';
 import { enUS, zhTW } from 'date-fns/locale';
 import Link from 'next/link';
@@ -16,6 +16,8 @@ import useTime from '@/hooks/useTime';
 import BusDelayAlert from '../../BusDelayAlert';
 import BusDelayReportAlert from './BusDelayReportAlert';
 import {useQuery} from '@tanstack/react-query';
+import {Separator} from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
 
 type PageProps = {
     params: { stopId: string }
@@ -73,8 +75,8 @@ const BusStop = ({ params: { stopId } }: PageProps) => {
     return <Fade>
         <div>
             {isLoading && <LinearProgress/>}
-            <Button variant='plain' startDecorator={<ChevronLeft/>} onClick={() => history.back()}>Back</Button>
-            <div className='sticky top-0 bg-white dark:bg-neutral-900 shadow-md z-50'>
+            <div className='sticky -top-8 bg-white dark:bg-background shadow-md z-50'>
+                <Button variant='ghost' onClick={() => history.back()}><ChevronLeft className='w-4 h-4 mr-2' /> Back</Button>
                 <BusDelayAlert/>
                 <div className='flex flex-row gap-4 items-center px-6 py-4'>
                     <MapPin/>
@@ -87,8 +89,7 @@ const BusStop = ({ params: { stopId } }: PageProps) => {
                     </p>
                 </div>
             </div>
-            
-            <Divider/>
+            <Separator />
             <RoutesFilterChips enabledRoutes={routeCodesFirstLetter} setFilter={setDisplayRoutes}/>
             <div className='flex flex-col divide-y divide-gray-200 dark:divide-neutral-800'>
                 {schedulesToDisplay.length == 0 && <div className='text-center text-gray-500 py-4'>末班車已過 😥</div>}

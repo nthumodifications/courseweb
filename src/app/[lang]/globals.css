@@ -31,7 +31,7 @@
 
 html, body {
   font-family: var(--font-inter), var(--font-noto), sans-serif;
-  @apply overflow-x-hidden bg-white dark:bg-neutral-900 dark:text-white
+  @apply overflow-x-hidden bg-white dark:bg-background dark:text-white
 }
 
 @layer utilities {
@@ -76,7 +76,7 @@ html, body {
   }
 
   .dark {
-    --background: 240 10% 3.9%;
+    --background: 0 0% 9%; 
     --foreground: 0 0% 98%;
     --card: 240 10% 3.9%;
     --card-foreground: 0 0% 98%;

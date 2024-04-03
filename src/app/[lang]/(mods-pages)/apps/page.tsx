@@ -2,13 +2,14 @@
 import { apps } from "@/const/apps";
 import { getDictionary } from "@/dictionaries/dictionaries";
 import { LangProps } from "@/types/pages";
-import { Alert, Button } from '@mui/joy';
 import Link from "next/link";
 import { Info, ArrowRight } from 'lucide-react';
 import FavouriteApp from "./Favorite";
 import React from 'react';
 import useDictionary from "@/dictionaries/useDictionary";
 import { useHeadlessAIS } from "@/hooks/contexts/useHeadlessAIS";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 
 const AppList = ({
     params: { lang }
@@ -35,31 +36,26 @@ const AppList = ({
                     </div>
                 </div>))}
                 {/* <CCXPDownAlert/> */}
-                {!ais.enabled && <Alert 
-                    variant="outlined" 
-                    color="success" 
-                    startDecorator={
-                        <Info/>
-                    }
-                    endDecorator={
+                <div className="px-4 py-2 space-y-2">
+                    {!ais.enabled && <Alert 
+                        color="success" 
+                    >
+                        <Info className="mr-2"/>
+                        <div className="flex flex-col">
+                            <h4 className="font-bold mb-1">還有更多功能！</h4>
+                            <p>到設定同步校務資訊系統后，可以直接在這裏使用校務資訊系統的功能！</p>
+                        </div>
                         <React.Fragment>
                             <Link href={`/${lang}/settings#headless_ais`}>
-                                <Button variant="plain" color="success" sx={{ mr: 1 }} endDecorator={<ArrowRight/>}>前往開通</Button>
+                                <Button variant="default">前往開通<ArrowRight className="w-4 h-4"/></Button>
                             </Link>
                         </React.Fragment>
-                    }
-                >
-                    <div className="flex flex-col">
-                        <h4 className="font-bold mb-1">還有更多功能！</h4>
-                        <p>到設定同步校務資訊系統后，可以直接在這裏使用校務資訊系統的功能！</p>
-                    </div>
-                </Alert>}
-                <Alert color="neutral">
-                    <div className="flex flex-col gap-1">
-                        <h4 className="font-bold text-base">沒有你要的功能？</h4>
-                        <p>快到<Link href="https://github.com/nthumodifications/courseweb/issues/new" className="underline text-indigo-600">這裏</Link>提出你的想法吧</p>
-                    </div>
-                </Alert>
+                    </Alert>}
+                    <Alert>
+                        <AlertTitle>沒有你要的功能？</AlertTitle>
+                        <AlertDescription>快到<Link href="https://github.com/nthumodifications/courseweb/issues/new" className="underline text-indigo-600">Github</Link>提出你的想法吧</AlertDescription>
+                    </Alert>
+                </div>
             </div>
         </div>
     );

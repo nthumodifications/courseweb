@@ -15,14 +15,33 @@ const withPWA = require('@ducanh2912/next-pwa').default({
       document: '/zh/offline',
     }
 })
+
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: false,
+})
+
   
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  webpack: (config, { webpack }) => {
+    config.plugins.push(
+      new webpack.DefinePlugin({
+        __SENTRY_DEBUG__: false,
+        __SENTRY_TRACING__: false,
+        __RRWEB_EXCLUDE_IFRAME__: true,
+        __RRWEB_EXCLUDE_SHADOW_DOM__: true,
+        __SENTRY_EXCLUDE_REPLAY_WORKER__: true,
+      })
+    );
+
+    // return the modified config
+    return config;
+  },
 }
 
 const { withSentryConfig } = require("@sentry/nextjs");
 
-module.exports = withSentryConfig(
+const sentryConfig = withSentryConfig(
   withPWA(nextConfig),
   {
     // For all available options, see:
@@ -53,3 +72,5 @@ module.exports = withSentryConfig(
     disableLogger: true,
   }
 );
+
+module.exports = withBundleAnalyzer(sentryConfig)

@@ -1,4 +1,3 @@
-import { Alert, Divider } from "@mui/joy";
 import CdsFormContainer from "./CdsFormContainer";
 import { cookies } from "next/headers";
 import NTHULoginButton from "./NTHULoginButton";
@@ -8,6 +7,7 @@ import { getServerSession } from "next-auth";
 import LogoutButton from "./LogoutButton";
 import authConfig from "@/app/api/auth/[...nextauth]/authConfig";
 import { format } from "date-fns";
+import { Separator } from "@/components/ui/separator";
 
 const CourseDemandSurvey = async () => {
     const cookieStore = cookies()
@@ -27,7 +27,7 @@ const CourseDemandSurvey = async () => {
                 <h1 className="text-4xl font-bold">選課規劃調查</h1>
                 <p className="text-xl">國立清華大學電機資訊學院學士班</p>
             </div>
-            <Divider />
+            <Separator />
             <div className="text-left space-y-3 py-4 w-full text-gray-700 dark:text-gray-200">
                 <h2 className="text-xl font-semibold">宗旨</h2>
                 <p className="text-sm leading-relaxed">
@@ -36,7 +36,7 @@ const CourseDemandSurvey = async () => {
                     <br/>
                     如果您有興趣修讀電機系、資工系或電資學士班的課程，請填寫以下問卷，以協助我們規劃課程。
                 </p>
-                <Divider />
+                <Separator />
                 <p className="text-sm">
                     In order to better understand the course demand of students, the EECS department of National Tsing Hua University will conduct a course demand survey at the beginning of each semester to understand the course demand of students and plan the course offerings.
                     <br/>
@@ -44,7 +44,7 @@ const CourseDemandSurvey = async () => {
                     If you are interested in taking courses offered by the EE, CS and EECS department, please fill out the following questionnaire to help us plan the courses.
                 </p>
             </div>
-            <Divider />
+            <Separator />
             <div className="text-left space-y-3 py-4 w-full text-gray-700 dark:text-gray-200">
                 <h2 className="text-2xl font-semibold">尚未開放</h2>
             </div>
@@ -58,7 +58,7 @@ const CourseDemandSurvey = async () => {
                 <h1 className="text-4xl font-bold">選課規劃調查 - {termObj.term}</h1>
                 <p className="text-xl">國立清華大學電機資訊學院學士班</p>
             </div>
-            <Divider />
+            <Separator />
             <div className="text-left space-y-3 py-4 w-full text-gray-700 dark:text-gray-200">
                 <h2 className="text-xl font-semibold">宗旨</h2>
                 <p className="text-sm leading-relaxed">
@@ -67,7 +67,7 @@ const CourseDemandSurvey = async () => {
                     <br/>
                     如果您有興趣修讀電機系、資工系或電資學士班的課程，請填寫以下問卷，以協助我們規劃課程。
                 </p>
-                <Divider />
+                <Separator />
                 <p className="text-sm">
                     In order to better understand the course demand of students, the EECS department of National Tsing Hua University will conduct a course demand survey at the beginning of each semester to understand the course demand of students and plan the course offerings.
                     <br/>
@@ -78,7 +78,7 @@ const CourseDemandSurvey = async () => {
                 <p>開放時間：{format(new Date(termObj.starts), 'yyyy/MM/dd HH:mm')} ~ {format(new Date(termObj.ends), 'yyyy/MM/dd HH:mm')}</p>
                 
             </div>
-            <Divider />
+            <Separator />
             {isOpen && <>
                 {submitState == SubmissionStatus.NOT_ALLOWED && <div className="text-left space-y-3 py-4 w-full text-gray-700 dark:text-gray-200">
                     <h2 className="text-2xl font-semibold">此賬號無法填寫</h2>

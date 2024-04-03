@@ -7,30 +7,12 @@ import { Alert } from "@mui/joy";
 import BusDelayAlert from "./BusDelayAlert";
 
 const BusPage = () => {
-//北校門口	綜二館	楓林小徑	奕園停車場	南門停車場	台積館 人社院/生科館	楓林小徑	綜二館	北校門口
-// 北校門口
-// North Gate
-// 綜二館
-// Gen II Building
-// 楓林小徑
-// Maple Path
-// 人社院/生科館
-// CHSS/CLS Building
-// 南門停車場
-// South Gate Parking Lot
-// 奕園停車場
-// Yi Pav. Parking Lot
-// 台積館
-// TSMC Building
     const { language } = useSettings();
-
-    //regex to match {any text}{U | D}
-    //U: going up
-    //D: going down
-    // regex is: [UD]{1}$
     
+    // Available values : 北校門口, 綜二館, 楓林小徑, 人社院&生科館, 台積館, 奕園停車場, 南門停車場, 南大校區校門口右側(食品路校牆邊)
+
     return (
-        <div className="py-4 flex flex-col">
+        <div className="pb-4 flex flex-col">
             <h1 className="text-4xl font-semibold pl-4">校内公車</h1>
             <BusDelayAlert/>
             <div className="grid grid-cols-2">

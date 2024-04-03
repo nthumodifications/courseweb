@@ -51,19 +51,19 @@ export const apps = [
     //     target: '_blank',
     // },
     {
+        id: 'elearning',
+        title_zh: 'Elearning 學習平台',
+        title_en: 'Elearning',
+        href: '/student/elearning',
+        Icon: Book,
+        ais: true,
+    },
+    {
         id: 'grades',
         title_zh: '你的成績',
         title_en: 'Your Grades',
         href: '/student/grades',
         Icon: Clipboard,
-        ais: true,
-    },
-    {
-        id: 'grades',
-        title_zh: '數位學習平台',
-        title_en: 'E-Learning',
-        href: '/student/elearning',
-        Icon: Book,
         ais: true,
     },
     {

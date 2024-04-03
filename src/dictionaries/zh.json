@@ -23,6 +23,9 @@
             "add_to_semester": "加入這學期",
             "remove_from_semester": "退掉這學期"
         },
+        "timetable": {
+            "title": "時間表"
+        },
         "refine": {
             "title": "篩選",
             "semester": "學期",
