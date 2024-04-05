@@ -12,6 +12,8 @@ import CourseSwitcher from "@/app/[lang]/(mods-pages)/student/elearning/CourseSw
 import AnnouncementEmpty from "@/app/[lang]/(mods-pages)/student/elearning/AnnouncementEmpty";
 import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from "@/components/ui/accordion";
 import {ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight} from "lucide-react";
+import {useCookies} from "react-cookie";
+import DownloadLink from "@/app/[lang]/(mods-pages)/student/elearning/DownloadLink";
 
 const ElearningPage = () => {
     const {initializing, getOauthCookies, oauth, loading, error: aisError} = useHeadlessAIS();
@@ -39,8 +41,21 @@ const ElearningPage = () => {
             const token = await getOauthCookies(false);
             const res = await fetch(`/api/ais_headless/eeclass/announcements?cookie=${token?.eeclass}&course=${selectedCourse}&page=${announcementPage}`);
             return await res.json()
+
         }
     });
+
+    const getAttachment = async (url: string, text: string) => {
+        if (!oauth.enabled) return
+        const res = await fetch(`/api/ais_headless/eeclass/download?cookie=${encodeURIComponent(oauth.eeclassCookie!)}&url=${encodeURIComponent(url)}`);
+        if (!res.ok) return
+        const blob = await res.blob();
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = text.replace(".", "-");
+        link.click();
+        link.remove();
+    }
 
     if (!oauth.enabled) return <AISNotLoggedIn/>
     if (error || aisError) return <AISError/>
@@ -49,7 +64,8 @@ const ElearningPage = () => {
 
     return (
         <div className="mx-8 md:mx-3">
-            <CourseSwitcher selectedCourse={selectedCourse} setSelectedCourse={setSelectedCourse}
+            <CourseSwitcher selectedCourse={selectedCourse}
+                            setSelectedCourse={setSelectedCourse}
                             courses={elearningDatas}/>
             {(annLoading || !announcementDatas) ? <LoadingPage/> : <div><List>
                 {
@@ -66,8 +82,12 @@ const ElearningPage = () => {
                                     <AccordionContent>
                                         <div className="text-gray-400"
                                              dangerouslySetInnerHTML={{__html: ann.details ? ann.details.content : ""}}></div>
-                                        <div className="text-blue-300"
-                                             dangerouslySetInnerHTML={{__html: ann.details ? ann.details.attachments : ""}}></div>
+                                        {
+                                            ann.details ? ann.details.attachments.map((link) =>
+                                                <DownloadLink text={`${link.text} ${link.filesize}`} onLinkClick={async () => await getAttachment(link.url, link.filename)}/>
+                                            ) : "無附加檔案 No attachments"
+                                        }
+
                                     </AccordionContent>
                                 </AccordionItem>
                             </Accordion>

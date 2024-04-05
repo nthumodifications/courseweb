@@ -16,7 +16,12 @@ export type ElearningAnnouncementObject = {
         announcer: string,
         details: {
             content: string,
-            attachments: string
+            attachments: {
+                text: string,
+                filesize: string,
+                filename: string,
+                url: string
+            }[]
         },
     }[],
     pageCount: number

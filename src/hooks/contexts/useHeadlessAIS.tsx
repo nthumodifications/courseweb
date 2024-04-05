@@ -198,7 +198,7 @@ const useHeadlessAISProvider = () => {
         }
         setLoading(true);
 
-        //fetch /api/ais_headless to get elearn & eeclass cookies
+        //fetch /api/ais_headless to get eeclass cookies
         return await fetchEeclassCookie(headlessAIS.studentid, headlessAIS.password).then((eeclassCookie) => {
             setHeadlessAIS({
                 ...headlessAIS,

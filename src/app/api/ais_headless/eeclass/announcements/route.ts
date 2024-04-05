@@ -1,8 +1,6 @@
 import {NextRequest, NextResponse} from "next/server";
 import jsdom from 'jsdom';
 import {parse} from "node-html-parser";
-import {LoginError} from "@/types/headless_ais";
-import {ElearningAnnouncementObject} from "@/types/elearning";
 
 export const GET = async (req: NextRequest) => {
     const cookie = req.nextUrl.searchParams.get("cookie") as string
@@ -37,7 +35,7 @@ export const GET = async (req: NextRequest) => {
         if (!res.ok) {
             return {
                 content: "",
-                attachments: ""
+                attachments: []
             }
         }
         const html = await res.text()
@@ -45,12 +43,16 @@ export const GET = async (req: NextRequest) => {
         const modalBox = parse(dom.querySelector(".modalBox")?.innerHTML!)
         const contentBlock = modalBox.querySelector(".fs-text-break-word")
         const downloadBlock = modalBox.querySelector(".fs-filelist > ul")
-        downloadBlock?.querySelectorAll("li")
+        const urls = downloadBlock?.querySelectorAll("li")
             .map((element) => element.querySelector("a"))
-            .map((element) => element?.setAttributes({href: `https://eeclass.nthu.edu.tw${element?.getAttribute("href")}`}))
+            .map((element) => {
+                return {text: element?.querySelector(".text > :not(.fs-hint)")?.text, filesize: element?.querySelector(".text > .fs-hint")?.text, url: `https://eeclass.nthu.edu.tw${element?.getAttribute("href")}`}
+            }).map((element) => {
+                return {...element, filename: element.text?.split(".").filter((text, index, arr) => index < arr.length-1).join(".")}
+            })
         return {
             content: contentBlock === null ? "無內容 No content" : contentBlock.innerHTML.replace(/^\s+|\s+$/g, ""),
-            attachments: downloadBlock === null ? "無附加檔案 No attachments" : downloadBlock?.innerHTML
+            attachments: downloadBlock === null ? [] : urls!
         }
     }
 
