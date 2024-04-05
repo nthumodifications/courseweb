@@ -4,7 +4,7 @@ import {AISLoading} from '@/components/Pages/AISLoading';
 import {AISError} from '@/components/Pages/AISError';
 import {useHeadlessAIS} from '@/hooks/contexts/useHeadlessAIS';
 import {AISNotLoggedIn} from '@/components/Pages/AISNotLoggedIn';
-import {useQuery} from '@tanstack/react-query';
+import {useQuery, useQueryClient} from '@tanstack/react-query';
 import {IconButton, List, Stack} from "@mui/joy";
 import LoadingPage from "@/components/Pages/LoadingPage";
 import {useEffect, useState} from "react";

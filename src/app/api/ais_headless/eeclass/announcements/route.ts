@@ -50,6 +50,9 @@ export const GET = async (req: NextRequest) => {
             }).map((element) => {
                 return {...element, filename: element.text?.split(".").filter((text, index, arr) => index < arr.length-1).join(".")}
             })
+        contentBlock!.querySelectorAll("[src]").forEach((element) => (element.getAttribute("src")![0] == "/") && element.setAttribute("src", `https://eeclass.nthu.edu.tw${element.getAttribute("src")}`));
+        contentBlock!.querySelectorAll("[href]").forEach((element) => (element.getAttribute("href")![0] == "/") && element.setAttribute("href", `https://eeclass.nthu.edu.tw${element.getAttribute("href")}`));
+
         return {
             content: contentBlock === null ? "無內容 No content" : contentBlock.innerHTML.replace(/^\s+|\s+$/g, ""),
             attachments: downloadBlock === null ? [] : urls!
