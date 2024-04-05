@@ -1,11 +1,11 @@
-import {NextRequest, NextResponse} from "next/server";
+import {NextRequest} from "next/server";
 
 export const GET = async (req: NextRequest) => {
     const cookie = decodeURI(req.nextUrl.searchParams.get("cookie") as string)
     const url = decodeURI(req.nextUrl.searchParams.get("url") as string)
     process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
 
-    const res = await fetch(url, {
+    return await fetch(url, {
         "headers": {
             "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
             "accept-language": "en-US,en;q=0.9",
@@ -28,8 +28,5 @@ export const GET = async (req: NextRequest) => {
         "mode": "cors",
         "credentials": "same-origin",
         "cache": "no-cache"
-    })
-    if (!res.ok) return NextResponse.error();
-    const blob = await res.blob();
-    return new NextResponse(blob, {status: 200, statusText: "OK"})
+    });
 }

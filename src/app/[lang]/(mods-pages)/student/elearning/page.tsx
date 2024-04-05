@@ -12,7 +12,6 @@ import CourseSwitcher from "@/app/[lang]/(mods-pages)/student/elearning/CourseSw
 import AnnouncementEmpty from "@/app/[lang]/(mods-pages)/student/elearning/AnnouncementEmpty";
 import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from "@/components/ui/accordion";
 import {ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight} from "lucide-react";
-import {useCookies} from "react-cookie";
 import DownloadLink from "@/app/[lang]/(mods-pages)/student/elearning/DownloadLink";
 
 const ElearningPage = () => {
@@ -41,21 +40,8 @@ const ElearningPage = () => {
             const token = await getOauthCookies(false);
             const res = await fetch(`/api/ais_headless/eeclass/announcements?cookie=${token?.eeclass}&course=${selectedCourse}&page=${announcementPage}`);
             return await res.json()
-
         }
     });
-
-    const getAttachment = async (url: string, text: string) => {
-        if (!oauth.enabled) return
-        const res = await fetch(`/api/ais_headless/eeclass/download?cookie=${encodeURIComponent(oauth.eeclassCookie!)}&url=${encodeURIComponent(url)}`);
-        if (!res.ok) return
-        const blob = await res.blob();
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = text.replace(".", "-");
-        link.click();
-        link.remove();
-    }
 
     if (!oauth.enabled) return <AISNotLoggedIn/>
     if (error || aisError) return <AISError/>
@@ -84,7 +70,7 @@ const ElearningPage = () => {
                                              dangerouslySetInnerHTML={{__html: ann.details ? ann.details.content : ""}}></div>
                                         {
                                             ann.details ? ann.details.attachments.map((link) =>
-                                                <DownloadLink text={`${link.text} ${link.filesize}`} onLinkClick={async () => await getAttachment(link.url, link.filename)}/>
+                                                <DownloadLink text={`${link.text} ${link.filesize}`} url={link.url} filename={link.filename}/>
                                             ) : "無附加檔案 No attachments"
                                         }
 
