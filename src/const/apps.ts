@@ -51,6 +51,13 @@ export const apps = [
     //     target: '_blank',
     // },
     {
+        id: 'clubs_info',
+        title_zh: '社團資訊',
+        title_en: 'Clubs Information',
+        href: 'https://outrageous-savory-d52.notion.site/d33567eea7814fc6b91744351eb2ba6a',
+        Icon: Gamepad
+    },
+    {
         id: 'elearning',
         title_zh: 'Elearning 學習平台',
         title_en: 'Elearning',
