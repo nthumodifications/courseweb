@@ -1,4 +1,16 @@
-import { AlertOctagon, Store, Bus, Car, Clipboard, Club, CreditCard, MapPin, Network, WalletCards, Gamepad} from 'lucide-react';
+import {
+    AlertOctagon,
+    Store,
+    Bus,
+    Car,
+    Clipboard,
+    Club,
+    CreditCard,
+    MapPin,
+    Network,
+    WalletCards,
+    Book
+} from 'lucide-react';
 
 export const apps = [
     {
@@ -22,12 +34,36 @@ export const apps = [
         href: '/shops',
         Icon: Store,
     },
+    // {
+    //     id: 'student_card',
+    //     title_zh: '學生證',
+    //     title_en: 'Student Card',
+    //     href: '/student',
+    //     Icon: WalletCards,
+    //     auth: true,
+    // },
+    // {
+    //     id: 'working_hours',
+    //     title_zh: '工讀',
+    //     title_en: 'Working Hours',
+    //     href: '/ais-redirect/PE/1/14D/PE14D1.php',
+    //     Icon: Bus,
+    //     target: '_blank',
+    // },
     {
         id: 'clubs_info',
         title_zh: '社團資訊',
         title_en: 'Clubs Information',
         href: 'https://outrageous-savory-d52.notion.site/d33567eea7814fc6b91744351eb2ba6a',
         Icon: Gamepad
+    },
+    {
+        id: 'elearning',
+        title_zh: 'Elearning 學習平台',
+        title_en: 'Elearning',
+        href: '/student/elearning',
+        Icon: Book,
+        ais: true,
     },
     {
         id: 'grades',

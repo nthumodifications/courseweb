@@ -1,4 +1,4 @@
-'use client';;
+'use client';
 import GradesViewer from './GradesViewer';
 import { GradeObject } from '@/types/grades';
 import { AISLoading } from '@/components/Pages/AISLoading';
