@@ -4,6 +4,7 @@ import { getRxStorageDexie } from 'rxdb/plugins/storage-dexie';
 import { Provider } from 'rxdb-hooks';
 import { FC, PropsWithChildren, useEffect, useState } from 'react';
 import { RxDBMigrationPlugin } from 'rxdb/plugins/migration-schema';
+import { RxDBStatePlugin } from 'rxdb/plugins/state';
 
 export const initializeRxDB = async () => {
     // create RxDB
@@ -13,7 +14,7 @@ export const initializeRxDB = async () => {
       );
     }
     addRxPlugin(RxDBMigrationPlugin);
-
+    addRxPlugin(RxDBStatePlugin);
 
     const db = await createRxDatabase({
       name: 'nthumods-calendar',

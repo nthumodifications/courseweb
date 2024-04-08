@@ -127,7 +127,7 @@ export function TimeSelect({
             )}
         >
             <Command
-                className="overflow-visible bg-transparent"
+                className="overflow-visible bg-transparent w-28"
             >
                 <div className="group border border-input px-3 py-2 text-sm ring-offset-background rounded-md focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
                     <div className="flex gap-1 flex-wrap">
@@ -140,7 +140,7 @@ export function TimeSelect({
                             onBlur={handleInputBlur}
                             onFocus={() => setOpen(true)}
                             placeholder={placeholder}
-                            className="ml-2 bg-transparent outline-none placeholder:text-muted-foreground flex-1"
+                            className="ml-2 bg-transparent outline-none placeholder:text-muted-foreground flex-1 overflow-hidden"
                         />
                     </div>
                 </div>

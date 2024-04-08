@@ -5,11 +5,11 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Button } from '@/components/ui/button';
 
-export const EventLabelPicker = ({ value, setValue }: { value: string | 'none'; setValue: (str: string) => void; }) => {
+export const EventLabelPicker = ({ value, setValue }: { value: string | undefined; setValue: (str: string) => void; }) => {
     const [open, setOpen] = useState(false);
 
     //TODO: user defined labels, should have ability to add new labels
-    const options = ['none', 'Event', 'Meeting', 'Assignment', 'Exam', 'Holiday', 'Birthday', 'Anniversary'];
+    const options = ['Event', 'Meeting', 'Assignment', 'Exam', 'Holiday', 'Birthday', 'Anniversary'];
     return (
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
@@ -19,14 +19,12 @@ export const EventLabelPicker = ({ value, setValue }: { value: string | 'none'; 
                     aria-expanded={open}
                     className="w-full justify-between"
                 >
-                    {value !== "none"
-                        ? options.find((framework) => framework === value)
-                        : "標籤"}
+                    {options.find((framework) => framework === value ?? options[0]) ?? "標籤"}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
             </PopoverTrigger>
             <PopoverContent className="p-0">
-                <Command>
+                <Command defaultValue={options[0]}>
                     <CommandInput placeholder="標籤" />
                     <CommandList>
                         <CommandEmpty>No label found.</CommandEmpty>
