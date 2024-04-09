@@ -1,10 +1,10 @@
 import supabase from "@/config/supabase";
 import { scheduleTimeSlots } from "@/const/timetable";
 import { createTimetableFromCourses } from "@/helpers/timetable";
-import { differenceInMinutes, formatISO, getHours, getMinutes, parse } from "date-fns";
+import { formatISO, getHours, getMinutes, parse } from "date-fns";
 import * as ics from 'ics';
 import { NextResponse } from "next/server";
-import { zonedTimeToUtc } from 'date-fns-tz'
+import { fromZonedTime } from 'date-fns-tz'
 import { MinimalCourse } from "@/types/courses";
 import { semesterInfo } from "@/const/semester";
 
@@ -19,8 +19,8 @@ export async function GET(request: Request) {
 
 
     //server runs on UTC, convert time to GMT+8 (Asia/Taipei)
-    const semStart = zonedTimeToUtc(semesterObj.begins, 'Asia/Taipei');
-    const semEnd = zonedTimeToUtc(semesterObj.ends, 'Asia/Taipei');
+    const semStart = fromZonedTime(semesterObj.begins, 'Asia/Taipei');
+    const semEnd = fromZonedTime(semesterObj.ends, 'Asia/Taipei');
 
     try {
         let { data = [], error } = await supabase.from('courses').select("*").in('raw_id', courses_ids);
@@ -28,12 +28,12 @@ export async function GET(request: Request) {
         else {
             const timetableData = createTimetableFromCourses(data! as MinimalCourse[], theme);
             const icss = ics.createEvents(timetableData.map(course => {
-                const start = zonedTimeToUtc(parse(
+                const start = fromZonedTime(parse(
                     scheduleTimeSlots[course.startTime]!.start,
                     'HH:mm',
                     new Date(),
                 ), 'Asia/Taipei');
-                const end = zonedTimeToUtc(parse(
+                const end = fromZonedTime(parse(
                     scheduleTimeSlots[course.startTime]!.end,
                     'HH:mm',
                     new Date()
