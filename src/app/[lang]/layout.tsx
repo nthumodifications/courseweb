@@ -1,22 +1,20 @@
-import { Analytics } from '@vercel/analytics/react';
-import { SettingsProvider } from '@/hooks/contexts/settings';
-import './globals.css'
-
-import Header from '@/components/Header'
-import SideNav from '@/components/SideNav'
-import Footer from '@/components/Footer'
-
 import type { Metadata } from 'next'
-import { cookies } from 'next/headers'
-import ModalProvider from '@/hooks/contexts/useModal';
 import { LangProps } from '@/types/pages';
+
+import { Viewport } from 'next'
+import { Inter, Noto_Sans_TC } from 'next/font/google';
+import { cookies } from 'next/headers'
+import { SettingsProvider } from '@/hooks/contexts/settings';
+import ModalProvider from '@/hooks/contexts/useModal';
+import {UserTimetableProvider} from '@/hooks/contexts/useUserTimetable';
+import {HeadlessAISProvider} from '@/hooks/contexts/useHeadlessAIS';
+
 import { CssVarsProvider } from '@mui/joy';
 import NextAuthProvider from '@/components/NextAuthProvider';
-import { Viewport } from 'next'
-import GoogleAnalytics from '@/components/GoogleAnalytics';
-import {UserTimetableProvider} from '@/hooks/useUserTimetable';
-import { Inter, Noto_Sans_TC } from 'next/font/google';
-import { Suspense } from 'react';
+import { Toaster } from '@/components/ui/toaster';
+import ReactQuery from '@/components/ReactQuery';
+
+import './globals.css'
 
 export const metadata: Metadata = {
   title: {
@@ -78,12 +76,19 @@ export const metadata: Metadata = {
   }
 }
 
-export const viewport: Viewport = {
-  themeColor: "#7e1083",
-  userScalable: false,
-}
 
-export const runtime = 'edge'
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#171717' },
+  ],
+  userScalable: false,
+  initialScale: 1.0,
+  minimumScale: 1.0,
+  maximumScale: 1.0,
+  width: "device-width",
+  viewportFit: "cover",
+}
 
 const inter = Inter({
   subsets: ['latin', 'latin-ext'],
@@ -107,26 +112,22 @@ export default function RootLayout({
   return (
     <CssVarsProvider defaultMode={(theme?.value as any) ?? 'light'}>
       <NextAuthProvider>
-        <SettingsProvider>
-          <UserTimetableProvider>
-            <ModalProvider>
-              <html lang={params.lang} className={`${theme?.value ?? ''} ${inter.variable} ${noto.variable}`} suppressHydrationWarning>
-                <GoogleAnalytics/>
-                <body className={`grid grid-cols-1 grid-rows-[56px_50px_calc(100vh-106px)] md:grid-cols-[12rem_auto] md:grid-rows-[56px_calc(100vh-56px)_12rem]`}>
-                  <Header />
-                  <SideNav />
-                  <main className='overflow-y-auto overflow-x-hidden h-full w-full scroll-smooth'>
-                    {children}
-                    <Suspense fallback={null}>
-                      <Analytics />
-                    </Suspense>
-                  </main>
-                  <Footer />
-                </body>
-              </html>
-            </ModalProvider>
-          </UserTimetableProvider>
-        </SettingsProvider>
+        <ReactQuery>
+          <SettingsProvider>
+            <HeadlessAISProvider>
+              <UserTimetableProvider>
+                <ModalProvider>
+                  <html lang={params.lang} className={`${theme?.value ?? ''} ${inter.variable} ${noto.variable}`} suppressHydrationWarning>
+                    <body>
+                      {children}
+                      <Toaster />
+                    </body>
+                  </html>
+                </ModalProvider>
+              </UserTimetableProvider>
+            </HeadlessAISProvider>
+          </SettingsProvider>
+        </ReactQuery>
       </NextAuthProvider>
     </CssVarsProvider>
   )

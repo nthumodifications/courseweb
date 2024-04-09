@@ -1,0 +1,686 @@
+[
+  {
+    "area": "小吃部",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/7-11.jpg",
+    "name": "7-ELEVEN",
+    "note": "",
+    "phone": "0920-229-711, 03-5166254",
+    "schedule": {
+      "saturday": "24小時",
+      "sunday": "24小時",
+      "weekday": "24小時"
+    }
+  },
+  {
+    "area": "小吃部",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/493860069.jpg",
+    "name": "麥當勞",
+    "note": "1/15-2/18營業時間調整為8:00-22:00",
+    "phone": "03-5727801",
+    "schedule": {
+      "saturday": "7:00-24:00",
+      "sunday": "7:00-24:00",
+      "weekday": "7:00-24:00"
+    }
+  },
+  {
+    "area": "小吃部",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/394032608.jpg",
+    "name": "瑞斯飯糰",
+    "note": "2月每週日暫停營業，2/15-2/18暫停營業",
+    "phone": "03-5751757",
+    "schedule": {
+      "saturday": "7:00-14:00",
+      "sunday": "",
+      "weekday": "7:00-14:00"
+    }
+  },
+  {
+    "area": "小吃部",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/123484737.jpg",
+    "name": "漢城異國美食",
+    "note": "2月每週六暫停營業，2/7-2/16暫停營業",
+    "phone": "0911-684-701",
+    "schedule": {
+      "saturday": "11:00-14:00, 17:00-20:00",
+      "sunday": "11:00-14:00, 17:00-20:00",
+      "weekday": "11:00-14:00, 17:00-20:00"
+    }
+  },
+  {
+    "area": "小吃部",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/353914610.jpg",
+    "name": "一番快餐",
+    "note": "2月每週六暫停營業，2/6-2/18暫停營業",
+    "phone": "0933-511-522",
+    "schedule": {
+      "saturday": "",
+      "sunday": "11:00-20:00",
+      "weekday": "11:00-20:00"
+    }
+  },
+  {
+    "area": "小吃部",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/777124117.jpg",
+    "name": "快來速飯桶",
+    "note": "2/18試營運 2/19正式營業",
+    "phone": "0916-314-578",
+    "schedule": {
+      "saturday": "",
+      "sunday": "",
+      "weekday": "11:00-20:00"
+    }
+  },
+  {
+    "area": "小吃部",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/830467715.jpg",
+    "name": "品嘉日式料理",
+    "note": "2月每週日暫停營業",
+    "phone": "0976-618-715",
+    "schedule": {
+      "saturday": "",
+      "sunday": "11:00-20:00",
+      "weekday": "11:00-20:00"
+    }
+  },
+  {
+    "area": "小吃部",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/566894801.jpg",
+    "name": "一食一喜",
+    "note": "即將開幕",
+    "phone": "",
+    "schedule": {
+      "saturday": "",
+      "sunday": "",
+      "weekday": ""
+    }
+  },
+  {
+    "area": "小吃部",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/174010305.jpg",
+    "name": "珈名鮮茶",
+    "note": "2月每週六暫停營業，2/7-2/16暫停營業",
+    "phone": "0952-173-353, 0953-173-353",
+    "schedule": {
+      "saturday": "10:30-20:00",
+      "sunday": "",
+      "weekday": "10:30-20:00"
+    }
+  },
+  {
+    "area": "水木生活中心1樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/682936518.jpg",
+    "name": "全家便利商店",
+    "note": "2/19開幕 正式營業",
+    "phone": "0938857197",
+    "schedule": {
+      "saturday": "7:00-24:00",
+      "sunday": "7:00-24:00",
+      "weekday": "7:00-24:00"
+    }
+  },
+  {
+    "area": "水木生活中心1樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/554558480.jpg",
+    "name": "四海遊龍",
+    "note": "2月每週日暫停營業，2/5-2/29暫停營業",
+    "phone": "0906-569-363",
+    "schedule": {
+      "saturday": "",
+      "sunday": "11:00-19:30",
+      "weekday": "11:00-19:30"
+    }
+  },
+  {
+    "area": "水木生活中心1樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/213032630.jpg",
+    "name": "朕的嚐粉",
+    "note": "寒、暑假暫停營業",
+    "phone": "0920-742-168",
+    "schedule": {
+      "saturday": "",
+      "sunday": "11:15-13:30, 16:30-18:45",
+      "weekday": "11:15-13:30, 16:30-18:45"
+    }
+  },
+  {
+    "area": "水木生活中心1樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/217418061.jpg",
+    "name": "軒韻手作茶飲專賣店",
+    "note": "2月每週日暫停營業，2/1-2/18暫停營業",
+    "phone": "0985-695-090",
+    "schedule": {
+      "saturday": "10:30-20:00",
+      "sunday": "",
+      "weekday": "10:30-20:00"
+    }
+  },
+  {
+    "area": "水木生活中心1樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/222917399.jpg",
+    "name": "羴羊肉",
+    "note": "2月每週一、日暫停營業",
+    "phone": "0905-151-501",
+    "schedule": {
+      "saturday": "11:30-20:00",
+      "sunday": "11:30-20:00",
+      "weekday": "11:30-20:00"
+    }
+  },
+  {
+    "area": "水木生活中心1樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/160772776.jpg",
+    "name": "郁百分水果行",
+    "note": "2月每週日暫停營業",
+    "phone": "0913-216-583",
+    "schedule": {
+      "saturday": "",
+      "sunday": "9:00-19:30",
+      "weekday": "9:00-19:30"
+    }
+  },
+  {
+    "area": "水木生活中心1樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/418876141.jpg",
+    "name": "金展自助餐",
+    "note": "2月每週日暫停營業，2/19起每週六、日暫停營業",
+    "phone": "0921-417-797",
+    "schedule": {
+      "saturday": "",
+      "sunday": "10:30-13:30, 16:30-19:15",
+      "weekday": "10:30-13:30, 16:30-19:15"
+    }
+  },
+  {
+    "area": "水木生活中心1樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/818127256.jpg",
+    "name": "A華加湯滷味",
+    "note": "2月每週日暫停營業，2/16暫停營業",
+    "phone": "0917-523-901",
+    "schedule": {
+      "saturday": "",
+      "sunday": "11:00-19:00",
+      "weekday": "11:00-19:00"
+    }
+  },
+  {
+    "area": "水木生活中心1樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/852970130.jpg",
+    "name": "利竫和食",
+    "note": "2月每週日暫停營業",
+    "phone": "0955-520-634",
+    "schedule": {
+      "saturday": "",
+      "sunday": "11:00-19:30",
+      "weekday": "11:00-19:30"
+    }
+  },
+  {
+    "area": "水木生活中心1樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/597459635.jpg",
+    "name": "弘謙食堂",
+    "note": "2月每週日暫停營業",
+    "phone": "0973-633-683",
+    "schedule": {
+      "saturday": "",
+      "sunday": "11:00-19:30",
+      "weekday": "11:00-19:30"
+    }
+  },
+  {
+    "area": "水木生活中心1樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/202923108.jpg",
+    "name": "晨光早午餐",
+    "note": "2月每週日暫停營業",
+    "phone": "0989-382-100",
+    "schedule": {
+      "saturday": "",
+      "sunday": "6:30-14:00",
+      "weekday": "6:30-14:00"
+    }
+  },
+  {
+    "area": "水木生活中心1樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/805536548.jpg",
+    "name": "小木屋鬆餅",
+    "note": "2月每週日暫停營業",
+    "phone": "03-5710188",
+    "schedule": {
+      "saturday": "",
+      "sunday": "10:30-20:00",
+      "weekday": "10:30-20:00"
+    }
+  },
+  {
+    "area": "水木生活中心1樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/642754891.jpg",
+    "name": "眼鏡部",
+    "note": "每週日暫停營業",
+    "phone": "校內分機 36701,03-5727099,0929-750-660",
+    "schedule": {
+      "saturday": "10:00-12:00",
+      "sunday": "",
+      "weekday": "10:00-20:00"
+    }
+  },
+  {
+    "area": "水木生活中心1樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/732874473.jpg",
+    "name": "洗衣部",
+    "note": "每週六、日暫停營業",
+    "phone": "0915-117-809",
+    "schedule": {
+      "saturday": "",
+      "sunday": "",
+      "weekday": "13:00-17:00"
+    }
+  },
+  {
+    "area": "水木生活中心2樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/557083824.jpg",
+    "name": "胖達咖啡",
+    "note": "每週六暫停營業",
+    "phone": "03-5722245,0933-601-323",
+    "schedule": {
+      "saturday": "",
+      "sunday": "12:00-18:00",
+      "weekday": "11:00-20:00"
+    }
+  },
+  {
+    "area": "水木生活中心2樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/476144497.jpg",
+    "name": "馬六甲",
+    "note": "每週日暫停營業，2/15-2/16暫停營業",
+    "phone": "0989-799-911",
+    "schedule": {
+      "saturday": "11:00-16:00",
+      "sunday": "",
+      "weekday": "11:00-19:00"
+    }
+  },
+  {
+    "area": "水木生活中心2樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/759142067.jpg",
+    "name": "理髮部",
+    "note": "第2、4周之週四暫停營業",
+    "phone": "03-5736438",
+    "schedule": {
+      "saturday": "9:00-19:00",
+      "sunday": "9:00-19:00",
+      "weekday": "9:00-19:30"
+    }
+  },
+  {
+    "area": "水木生活中心2樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/161610366.jpg",
+    "name": "利捷打字行",
+    "note": "每週日暫停營業，2/3-2/18暫停營業",
+    "phone": "03-5726848,0910-036-249",
+    "schedule": {
+      "saturday": "10:30-15:00",
+      "sunday": "",
+      "weekday": "7:30-20:00"
+    }
+  },
+  {
+    "area": "風雲1樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/718576782.jpg",
+    "name": "樂菓烘焙坊 (誠實麵包店)",
+    "note": "2/16-2/17暫停營業",
+    "phone": "0987-430-886",
+    "schedule": {
+      "saturday": "10:00-20:00",
+      "sunday": "10:00-20:00",
+      "weekday": "10:00-20:00"
+    }
+  },
+  {
+    "area": "風雲1樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/674952613.jpg",
+    "name": "水木書苑",
+    "note": "每週日暫停營業，2/5-2/16暫停營業，水木咖啡屋1/29-2/19暫停營業",
+    "phone": "校內分機36705,03-5716800,0958-137-850",
+    "schedule": {
+      "saturday": "10:30-19:00",
+      "sunday": "",
+      "weekday": "9:30-19:00"
+    }
+  },
+  {
+    "area": "風雲1樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/straightA.jpg",
+    "name": "Straight A",
+    "note": "每週六、日及國定假日暫停營業，寒假期間1/15-2/16營業時間調整為週一至週五11:00-18:00",
+    "phone": "03-5714647",
+    "schedule": {
+      "saturday": "",
+      "sunday": "",
+      "weekday": "11:00-19:00"
+    }
+  },
+  {
+    "area": "風雲2樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/291072146.jpg",
+    "name": "熊本鍋物",
+    "note": "每週六、日暫停營業，1/8至2/16營業時間調整為11:00至22:00",
+    "phone": "03-5720889,0986-004-599",
+    "schedule": {
+      "saturday": "",
+      "sunday": "",
+      "weekday": "11:00-24:00"
+    }
+  },
+  {
+    "area": "風雲2樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/158166752.jpg",
+    "name": "禾豐蔬食",
+    "note": "2月每週六暫停營業，2/16、2/18暫停營業",
+    "phone": "0909-787-069",
+    "schedule": {
+      "saturday": "",
+      "sunday": "",
+      "weekday": "11:00-14:00, 17:00-20:00"
+    }
+  },
+  {
+    "area": "風雲2樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/834276184.jpg",
+    "name": "禾米餐食",
+    "note": "即將開幕",
+    "phone": "",
+    "schedule": {
+      "saturday": "",
+      "sunday": "",
+      "weekday": ""
+    }
+  },
+  {
+    "area": "風雲2樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/246296740.jpg",
+    "name": "紅燒如意坊",
+    "note": "2月每週六暫停營業",
+    "phone": "0908-018-900",
+    "schedule": {
+      "saturday": "11:00-14:00, 17:00-19:30",
+      "sunday": "",
+      "weekday": "11:00-14:00, 17:00-19:30"
+    }
+  },
+  {
+    "area": "風雲2樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/113200637.jpg",
+    "name": "茗釀茶品",
+    "note": "2月每週六暫停營業",
+    "phone": "0987-003-821",
+    "schedule": {
+      "saturday": "10:00-20:00",
+      "sunday": "",
+      "weekday": "10:00-20:00"
+    }
+  },
+  {
+    "area": "風雲2樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/469944974.jpg",
+    "name": "蘇記食堂",
+    "note": "2月每週六、日暫停營業及每週一~週五之晚餐暫停營業，2/1-2/16暫停營業",
+    "phone": "0911-333-292",
+    "schedule": {
+      "saturday": "",
+      "sunday": "",
+      "weekday": "11:00-14:00, 17:00-20:00"
+    }
+  },
+  {
+    "area": "風雲2樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/127700752.jpg",
+    "name": "友記快餐館",
+    "note": "2月每週六暫停營業，1/30-2/21暫停營業",
+    "phone": "0918-609-833",
+    "schedule": {
+      "saturday": "11:00-14:00, 17:00-20:00",
+      "sunday": "",
+      "weekday": "11:00-14:00, 17:00-20:00"
+    }
+  },
+  {
+    "area": "風雲2樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/671295319.jpg",
+    "name": "蘇記牛肉麵",
+    "note": "2月每週六暫停營業",
+    "phone": "0911-333-292",
+    "schedule": {
+      "saturday": "11:00-14:00, 17:00-20:00",
+      "sunday": "",
+      "weekday": "11:00-14:00, 17:00-20:00"
+    }
+  },
+  {
+    "area": "風雲2樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/156563768.jpg",
+    "name": "帕森義大利麵",
+    "note": "2月每週六暫停營業",
+    "phone": "0963-572-818",
+    "schedule": {
+      "saturday": "11:00-14:00, 17:00-20:00",
+      "sunday": "",
+      "weekday": "11:00-14:00, 17:00-20:00"
+    }
+  },
+  {
+    "area": "風雲2樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/502837416.jpg",
+    "name": "顏記文昌雞",
+    "note": "2月每週六暫停營業",
+    "phone": "0976-475-300",
+    "schedule": {
+      "saturday": "11:00-14:00, 17:00-20:00",
+      "sunday": "",
+      "weekday": "11:00-14:00, 17:00-20:00"
+    }
+  },
+  {
+    "area": "風雲2樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/357970282.jpg",
+    "name": "家味燒臘",
+    "note": "2月每週六暫停營業及每週五晚餐暫停營業",
+    "phone": "0989-208-207",
+    "schedule": {
+      "saturday": "11:00-14:00, 17:00-20:00",
+      "sunday": "",
+      "weekday": "11:00-14:00, 17:00-20:00"
+    }
+  },
+  {
+    "area": "風雲2樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/362318621.jpg",
+    "name": "喜番咖哩",
+    "note": "2月每週六暫停營業，2/16晚餐、2/23晚餐暫停營業",
+    "phone": "0922-870-206",
+    "schedule": {
+      "saturday": "11:00-14:00, 17:00-20:00",
+      "sunday": "",
+      "weekday": "11:00-14:00, 17:00-20:00"
+    }
+  },
+  {
+    "area": "風雲3樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/482487586.jpg",
+    "name": "牛肉先生",
+    "note": "2月每週六暫停營業",
+    "phone": "0928-885-666",
+    "schedule": {
+      "saturday": "11:00-19:30",
+      "sunday": "",
+      "weekday": "11:00-19:30"
+    }
+  },
+  {
+    "area": "風雲3樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/149926002.jpg",
+    "name": "墨尼捲餅",
+    "note": "2月每週六暫停營業，2/1-2/16暫停營業",
+    "phone": "0915-934-275",
+    "schedule": {
+      "saturday": "11:00-19:30",
+      "sunday": "",
+      "weekday": "11:00-19:30"
+    }
+  },
+  {
+    "area": "風雲3樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/461802499.jpg",
+    "name": "珍御品粥麵館",
+    "note": "2月每週六暫停營業，2/1-2/16暫停營業",
+    "phone": "0937-135-706,0911-892-772",
+    "schedule": {
+      "saturday": "10:30-20:00",
+      "sunday": "",
+      "weekday": "10:30-20:00"
+    }
+  },
+  {
+    "area": "風雲3樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/540873740.jpg",
+    "name": "鳴野食蘋早午餐",
+    "note": "2月每週六暫停營業",
+    "phone": "0908-669-248",
+    "schedule": {
+      "saturday": "7:00-13:30",
+      "sunday": "",
+      "weekday": "7:00-13:30"
+    }
+  },
+  {
+    "area": "風雲3樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/399145684.jpg",
+    "name": "瑪尼卡巴",
+    "note": "2月每週六暫停營業，1/20-2/16暫停營業",
+    "phone": "0915-934-275",
+    "schedule": {
+      "saturday": "11:30-14:30, 16:00-19:30",
+      "sunday": "",
+      "weekday": "11:30-14:30, 16:00-19:30"
+    }
+  },
+  {
+    "area": "風雲3樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/103504156.jpg",
+    "name": "完顏南洋料理",
+    "note": "2月每週六暫停營業",
+    "phone": "0911-901-509",
+    "schedule": {
+      "saturday": "11:00-20:00",
+      "sunday": "11:00-21:30",
+      "weekday": "11:00-21:30"
+    }
+  },
+  {
+    "area": "風雲4樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/metime.jpg",
+    "name": "Me Time",
+    "note": "每週日暫停營業，2/1-2/16暫停營業",
+    "phone": "03-5733221",
+    "schedule": {
+      "saturday": "11:15-14:00, 17:00-20:00",
+      "sunday": "11:00-21:30",
+      "weekday": "11:15-14:00, 17:00-20:00"
+    }
+  },
+  {
+    "area": "綜合教學大樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/7-11.jpg",
+    "name": "7-ELEVEN",
+    "note": "",
+    "phone": "03-5622948",
+    "schedule": {
+      "saturday": "24小時",
+      "sunday": "24小時",
+      "weekday": "24小時"
+    }
+  },
+  {
+    "area": "行政大樓(旁)",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/501394483.jpg",
+    "name": "沐食早午餐",
+    "note": "國定假日、寒、暑假暫停營業",
+    "phone": "0925-325-006",
+    "schedule": {
+      "saturday": "",
+      "sunday": "",
+      "weekday": "9:00-18:00"
+    }
+  },
+  {
+    "area": "第二活動中心一樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/394032608.jpg",
+    "name": "瑞斯飯糰",
+    "note": "國定假日、寒、暑假暫停營業",
+    "phone": "0917-002-228",
+    "schedule": {
+      "saturday": "",
+      "sunday": "",
+      "weekday": "7:00-13:00"
+    }
+  },
+  {
+    "area": "旺宏館一樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/435748197.jpg",
+    "name": "路易莎",
+    "note": "",
+    "phone": "03-5721613",
+    "schedule": {
+      "saturday": "8:00-21:00",
+      "sunday": "8:00-21:00",
+      "weekday": "7:00-21:00"
+    }
+  },
+  {
+    "area": "百齡堂",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/316188717.jpg",
+    "name": "清華水漾",
+    "note": "",
+    "phone": "03-5751584, 0936-394-535",
+    "schedule": {
+      "saturday": "9:30-21:00",
+      "sunday": "9:30-21:00",
+      "weekday": "9:30-21:00"
+    }
+  },
+  {
+    "area": "人社院",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/500825332.jpg",
+    "name": "人社院餐廳",
+    "note": "每週六、日，國定假日及寒、暑假暫停營業",
+    "phone": "0932-116-552",
+    "schedule": {
+      "saturday": "",
+      "sunday": "",
+      "weekday": "11:30-13:30"
+    }
+  },
+  {
+    "area": "第二招待所一樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/309370642.jpg",
+    "name": "第二招待所中餐廳",
+    "note": "每週六、日，國定假日暫停營業(以餐廳公告為主)",
+    "phone": "校內分機 35245, 0932-116-552",
+    "schedule": {
+      "saturday": "",
+      "sunday": "",
+      "weekday": "11:30-13:30"
+    }
+  },
+  {
+    "area": "綜四館一樓",
+    "image": "https://ddfm.site.nthu.edu.tw/var/file/494/1494/img/682936518.jpg",
+    "name": "全家便利商店",
+    "note": "1/13-2/18營業時間調整為至22:00",
+    "phone": "0939-226-904",
+    "schedule": {
+      "saturday": "8:00-23:00",
+      "sunday": "8:00-23:00",
+      "weekday": "7:00-23:00"
+    }
+  }
+]

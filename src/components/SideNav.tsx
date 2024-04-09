@@ -1,17 +1,18 @@
-'use client';
+'use client';;
 import * as I from 'lucide-react';
 import Link from "next/link";
-import { FC } from "react";
-import { useParams, usePathname } from 'next/navigation';
-import { useMediaQuery } from 'usehooks-ts';
+import { FC, useEffect } from "react";
+import { usePathname, useRouter } from 'next/navigation';
 import { Route } from 'next';
 import { useSettings } from '@/hooks/contexts/settings';
 import useDictionary from '@/dictionaries/useDictionary';
+import { link } from 'fs';
 
 const SideNav:FC = () => {
     const pathname = usePathname();
     const { language } = useSettings();
     const dict = useDictionary();
+    const router = useRouter();
     const links: {
         title: string;
         href: Route;
@@ -55,41 +56,31 @@ const SideNav:FC = () => {
             color: '#B46DD6'
         }
     ]
-    return (<>
-        <nav className="md:hidden w-screen flex flex-row h-full gap-4 justify-evenly shadow-sm">
+
+    useEffect(() => {
+        links.forEach(link => {
+            router.prefetch(link.href);
+        })
+    }, [links])
+
+    return (
+        <nav className="h-full w-full flex flex-col justify-start items-start gap-3">
             {links.map((link, index) => (
-                <Link 
-                    className={`flex flex-col items-center justify-between hover:opacity-80 hover:underline transition text-gray-400 dark:text-gray-600 pt-3`}
+                <div 
+                    className={`w-full flex flex-row items-center justify-start gap-2 rounded-md cursor-pointer transition dark:text-slate-300 font-semibold px-3 py-1.5 ${link.href == pathname ? 'text-white  bg-nthu-600': 'text-slate-700'}`}
                     key={index} 
-                    href={link.href}
-                    style={{ color: link.href == pathname ? link.color: '' }}
+                    onClick={() => router.push(link.href)} 
                 >
-                    <span className="w-6">
+                    <span className="w-6 h-6">
                         {link.icon}
                     </span>
-                    <div className={`h-[4px]  ${link.href != pathname ? '': 'w-7'} transition rounded-t-full`} style={{backgroundColor: link.color}}></div>
-                </Link>
-            ))}
-        </nav>
-        <nav className="hidden h-screen md:flex flex-col w-max gap-6 p-6">
-            {links.map((link, index) => (
-                <Link 
-                    className={`flex items-center gap-3 hover:opacity-80 hover:underline transition text-gray-400 dark:text-gray-600`}
-                    key={index} 
-                    href={link.href}
-                    style={{ color: link.href == pathname ? link.color: '' }}
-                >
-                    <div className={`w-[6px] h-7 ${link.href != pathname ? 'max-h-1': 'max-h-6'} transition -mr-1 rounded-full`} style={{backgroundColor: link.color}}></div>
-                    <span className="w-6">
-                        {link.icon}
-                    </span>
-                    <span className="font-medium">
+                    <span className="flex-1 font-semibold">
                         {link.title}
                     </span>
-                </Link>
+                </div>
             ))}
         </nav>
-    </>)
+    )
 }
 
 export default SideNav;

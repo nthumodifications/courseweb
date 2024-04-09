@@ -2,7 +2,26 @@ import { departments } from '@/const/departments';
 import { Autocomplete, AutocompleteOption, Chip, ListItemContent, ListItemDecorator, Typography } from '@mui/joy';
 import { Controller, Control } from 'react-hook-form';
 import useDictionary from '@/dictionaries/useDictionary';
-import { RefineControlFormTypes } from '@/app/[lang]/courses/page';
+import {Department} from '@/types/courses';
+import { TimeFilterType } from "@/components/FormComponents/TimeslotSelectorControl";
+
+export type RefineControlFormTypes = {
+    textSearch: string,
+    level: string[],
+    language: string[],
+    others: string[],
+    className: string | null,
+    department: Department[],
+    firstSpecialization: string | null,
+    secondSpecialization: string | null,
+    timeslots: string[],
+    timeFilter: TimeFilterType,
+    semester: string,
+    venues: string[],
+    disciplines: string[],
+    geTarget: string[],
+    gecDimensions: string[],
+}
 
 const DepartmentControl = ({ control }: { control: Control<RefineControlFormTypes> }) => {
     const dict = useDictionary();

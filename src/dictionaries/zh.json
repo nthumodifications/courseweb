@@ -6,7 +6,10 @@
     "timetable":{
         "actions": {
             "download": "下載",
-            "share": "分享/同步"
+            "share": "分享/同步",
+            "horizontal_view": "水平視圖",
+            "vertical_view": "垂直視圖",
+            "sync_ccxp": "同步校務系統"
         }
     },
     "course": {
@@ -19,6 +22,9 @@
         "item": {
             "add_to_semester": "加入這學期",
             "remove_from_semester": "退掉這學期"
+        },
+        "timetable": {
+            "title": "時間表"
         },
         "refine": {
             "title": "篩選",
@@ -43,14 +49,27 @@
             "clear": "清除"
         },
         "details": {
-            "semesterid": "本學期課號",
+            "semester": "學期",
             "language": "授課語言",
             "reserved": "新生保留",
             "capacity": "名額",
+            "venue_time": "時間地點",
             "class": "系班",
             "brief": "簡介",
+            "remarks": "備注",
             "description": "課程大綱",
             "restrictions": "課程限制",
+            "prerequesites": "擋修",
+            "timetable": "時間表",
+            "scores": "成績",
+            "average": "平均",
+            "standard_deviation": "標準差",
+            "score_types": {
+                "gpa": "GPA",
+                "percent": "百分比"
+            },
+            "ptt": "PTT心得",
+            "related_courses": "相同課號資料",
             "compulsory": "必修",
             "elective": "選修",
             "cross_discipline": "跨領域",
@@ -81,6 +100,10 @@
         "theme": {
             "title": "時間表顔色",
             "description": "客制化你的時間表的顔色，讓你的時間表更有個性！"
+        },
+        "ccxp": {
+            "title": "代理登入校務資訊系統",
+            "description": "系統會用代理登入方式，讓學生們可以在NTHUMods 上輕鬆連結校務系統功能。"
         }
     },
     "venues": {
@@ -114,6 +137,15 @@
             }
         }
     },
+    "shops": {
+        "search_placeholder": "你要的店家是？",
+        "search_results_prefix": "找到",
+        "open_now": "營業中",
+        "closed": "休息中",
+        "closed_today": "今日休息",
+        "area_placeholder": "選擇地區",
+        "area_all": "全部"
+    },
     "help": {
         "intro": {
             "title": "歡迎來到NTHUMODS",
@@ -145,5 +177,21 @@
         "next": "下一頁",
         "skip": "跳過",
         "jump": "啓動！"
-    }
+    },
+    "ccxp": {
+        "connected": "已連接",
+        "failed": "連接著/登入異常",
+        "connect": "連接",
+        "incorrect_credentials": "學號或密碼錯誤",
+        "studentid": "學號",
+        "password": "密碼",
+        "login": {
+            "title": "登入校務資訊系統",
+            "disclaimer": "注意：你的學號和密碼僅會儲存在你的設備中，不會儲存在伺服器上。",
+            "description": "每次有接觸到需要登入的功能，網站會重新登入校務資訊系統，並把學號和密碼傳到該伺服器進行身份驗證，傳輸過程會使用HTTPS加密連線，並且在驗證完畢后立即刪除。",
+            "agree": "我同意本網站的隱私權政策及理解代理登入的方法"
+        }
+    },
+    "cancel": "取消",
+    "privacy_policy": "隱私權政策"
 }

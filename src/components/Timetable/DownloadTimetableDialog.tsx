@@ -2,21 +2,20 @@ import useDictionary from '@/dictionaries/useDictionary';
 import {Button, DialogContent, DialogTitle, ModalClose, ModalDialog} from '@mui/joy';
 import {Download, Image} from 'lucide-react';
 import Timetable from './Timetable';
-import useUserTimetable from '@/hooks/useUserTimetable';
+import useUserTimetable from '@/hooks/contexts/useUserTimetable';
 import { toPng } from 'html-to-image';
 import { useCallback, useRef, useState } from 'react';
-import { createTimetableFromCourses } from '@/helpers/timetable';
+import {createTimetableFromCourses, colorMapFromCourses} from '@/helpers/timetable';
 import { useSettings } from '@/hooks/contexts/settings';
 import { MinimalCourse } from '@/types/courses';
 
 const DownloadTimetableComponent = () => {
     const dict = useDictionary();
-    const { timetableTheme } = useSettings();
-    const { displayCourseData } = useUserTimetable();
+    const { getSemesterCourses, semester, colorMap, currentColors } = useUserTimetable();
     const ref = useRef<HTMLDivElement>(null);
     const [loading, setLoading] = useState(false);
 
-    const timetableData = createTimetableFromCourses(displayCourseData as MinimalCourse[], timetableTheme);
+    const timetableData = createTimetableFromCourses(getSemesterCourses(semester) as MinimalCourse[], colorMap);
 
     const handleConvert = useCallback(() => {
         if (ref.current === null) {
@@ -25,11 +24,11 @@ const DownloadTimetableComponent = () => {
         setLoading(true);
         toPng(ref.current!, { cacheBust: true, pixelRatio: 3, filter: (node: HTMLElement) => node.id !== 'time_slot'})
         .then((dataUrl) => {
-            navigator.clipboard.writeText(dataUrl);
             const link = document.createElement('a');
             link.download = 'timetable.png';
             link.href = dataUrl;
             link.click();
+            // navigator.clipboard.writeText(dataUrl);
         })
         .catch((err) => {
             console.error('oops, something went wrong!', err);
@@ -48,7 +47,7 @@ const DownloadTimetableComponent = () => {
             loading={loading}
         >{dict.dialogs.DownloadTimetableDialog.buttons.image}</Button>
         <div className='relative overflow-hidden'>
-            <div className='absolute h-[915px] w-[539px] px-2 pt-4 pb-8 grid place-items-center bg-white dark:bg-neutral-900' ref={ref}>
+            <div className='absolute h-[915px] w-[539px] px-2 pt-4 pb-8 grid place-items-center bg-white dark:bg-background' ref={ref}>
                 <div className='h-[915px] w-[414px]'>
                     <Timetable timetableData={timetableData} vertical/>
                 </div>

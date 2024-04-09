@@ -20,6 +20,8 @@ import Dashboard from './Dashboard'
 import Bus from './Bus'
 import Tools from './Tools'
 import Dev from './Dev'
+import { useLocalStorage } from "usehooks-ts"
+import dynamic from "next/dynamic"
 
 const Help = () => {
 
@@ -29,32 +31,32 @@ const Help = () => {
 
   const [open, setOpen] = useState(false);
   const [page, setPage] = useState(0);
+  const [hasVisitedBefore, setHasVisitedBefore] = useLocalStorage("hasVisitedBefore", false);
 
   const dict = useDictionary();
 
   useEffect(() => {
-    const hasVisitedBefore = localStorage.getItem("hasVisitedBefore");
-    if (!hasVisitedBefore) {
+    if(!hasVisitedBefore) {
       setOpen(true);
     }
-  }, []);
+  }, [hasVisitedBefore])
 
-  const handleOpen = () => {
-    setOpen(true)
-    setPage(0)
-  }
+  useEffect(() => {
+    if(open) {
+      setPage(0);
+    } else {
+      setHasVisitedBefore(true);
+    } 
+  }, [open])
 
-  const handleClose = () => {
-    setOpen(false)
-    localStorage.setItem("hasVisitedBefore", "mhm");
-  }
+
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>  
       <DialogTrigger asChild>
-        <Button size="sm" variant="outline" className="flex gap-1" onClick={handleOpen}>
+        <Button size="sm" variant="outline" className="flex gap-1" onClick={() => setOpen(true)}>
           <HelpCircle size="16" />
-          Help
+          <span className="hidden md:inline-block">Help</span>
         </Button>
       </DialogTrigger>
       <DialogContent>
@@ -69,7 +71,7 @@ const Help = () => {
             {dict.help.next} <ChevronRight size="16" />
           </Button>
           :
-          <Button variant="ghost" className="flex gap-1" onClick={handleClose}>
+          <Button variant="ghost" className="flex gap-1" onClick={() => setOpen(false)}>
             {dict.help.jump} <ChevronRight size="16" />
           </Button>
           }

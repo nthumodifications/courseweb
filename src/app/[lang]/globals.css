@@ -31,7 +31,7 @@
 
 html, body {
   font-family: var(--font-inter), var(--font-noto), sans-serif;
-  @apply overflow-x-hidden bg-white dark:bg-neutral-900 dark:text-white
+  @apply overflow-x-hidden bg-white dark:bg-background dark:text-white
 }
 
 @layer utilities {
@@ -57,7 +57,7 @@ html, body {
     --card-foreground: 240 10% 3.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
+    --primary: 272.1 71.7% 47.1%;
     --primary-foreground: 0 0% 98%;
     --secondary: 240 4.8% 95.9%;
     --secondary-foreground: 240 5.9% 10%;
@@ -71,10 +71,12 @@ html, body {
     --input: 240 5.9% 90%;
     --ring: 240 5% 64.9%;
     --radius: 0.5rem;
+    --header-height: 3.5rem;
+    --content-height: calc(100vh - var(--header-height));
   }
 
   .dark {
-    --background: 240 10% 3.9%;
+    --background: 0 0% 9%; 
     --foreground: 0 0% 98%;
     --card: 240 10% 3.9%;
     --card-foreground: 0 0% 98%;

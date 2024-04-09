@@ -1,10 +1,10 @@
 'use client';
-import useUserTimetable from '@/hooks/useUserTimetable';
-import { IconButton } from '@mui/joy';
+import useUserTimetable from '@/hooks/contexts/useUserTimetable';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { semesterInfo } from '@/const/semester';
 import { rocYear } from '@/helpers/roc';
 import { Semester } from '@/types/courses';
+import { Button } from '@/components/ui/button';
 
 
 const SemesterSwitcher = ({ semester, setSemester }: { semester: Semester, setSemester: (sem: Semester) => void }) => {
@@ -27,13 +27,13 @@ const SemesterSwitcher = ({ semester, setSemester }: { semester: Semester, setSe
 
 
     return <div className="flex flex-row items-center justify-center gap-4 px-4 py-2 w-full">
-        <IconButton color="primary" disabled={!hasPrev} onClick={goPrev}>
+        <Button variant='ghost' size="icon" disabled={!hasPrev} onClick={goPrev}>
             <ChevronLeft />
-        </IconButton>
+        </Button>
         <span className="text-lg font-bold">{rocYear(semesterObj.year)}-{semesterObj.semester} 學期</span>
-        <IconButton color="primary" disabled={!hasNext} onClick={goNext}>
+        <Button variant='ghost' size="icon" disabled={!hasNext} onClick={goNext}>
             <ChevronRight />
-        </IconButton>
+        </Button>
     </div>
 }
 

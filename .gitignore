@@ -37,3 +37,10 @@ public/sw.js.map
 
 # Sentry Config File
 .sentryclirc
+
+resources/ios/**/*
+resources/android/**/*
+android/private_key.pepk
+
+# Sentry Config File
+.sentryclirc

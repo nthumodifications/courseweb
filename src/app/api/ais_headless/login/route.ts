@@ -1,17 +1,16 @@
+import { LoginError } from "@/types/headless_ais";
 import { NextRequest, NextResponse } from "next/server";
-import sharp from 'sharp';
-import { decaptcha } from "./decaptcha";
 
-export const runtime = "nodejs";
+export const runtime = "edge";
 
 export const POST = async (req: NextRequest) => {
     const form = await req.formData();
     const studentid = form.get('studentid');
     const password = form.get('password');
 
-    const ocrAndLogin: (_try?:number) => Promise<string | null> = async (_try = 0) => {
+    const ocrAndLogin: (_try?:number) => Promise<NextResponse> = async (_try = 0) => {
         if(_try == 3) {
-            return null;
+            return NextResponse.json({ success: false, body: { error: "登入出錯，但不知道爲什麽 :( Something wrong, idk why.", code: LoginError.Unknown }});
         }
         let tries = 0, pwdstr = "", answer = "";
         do {
@@ -28,18 +27,10 @@ export const POST = async (req: NextRequest) => {
             }
             pwdstr = bodyMatch[1];
             //fetch the image from the url and send as base64
-            const imgResponse = await fetch('http://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/auth_img.php?pwdstr=' + pwdstr);
-            const imgBuffer = await sharp(await imgResponse.arrayBuffer())
-                                        .resize(320,120)
-                                        .greyscale() // make it greyscale
-                                        .linear(1.2, 0) // increase the contrast
-                                        .toBuffer()
-
-            //OCR
-            const text = await decaptcha(imgBuffer);
-            answer = text.replace(/[^0-9]/g, "") || "";
-            
-            console.log("Answer: ",answer)
+            console.log("pwdstr: ", pwdstr)
+            answer = await fetch(`https://ocr.nthumods.com/?url=https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/auth_img.php?pwdstr=${pwdstr}`)
+                        .then(res => res.text())
+            console.log(answer)
             if(answer.length == 6) break;
         } while (tries <= 5);
         if(tries == 6 || answer.length != 6) {
@@ -58,9 +49,6 @@ export const POST = async (req: NextRequest) => {
                 "sec-fetch-mode": "navigate",
                 "sec-fetch-site": "same-origin",
                 "upgrade-insecure-requests": "1",
-                "cookie": "TS01860c62=01dba9d2283c80dfc9c2e63410d8f99f7eb373994552ce9bfb51853db6546fcd200f80d8b73c0239df883c58bcf7477f86cb9ae228",
-                "Referer": "https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/",
-                "Referrer-Policy": "strict-origin-when-cross-origin"
             },
             "body": `account=${studentid}&passwd=${password}&passwd2=${answer}&Submit=%B5n%A4J&fnstr=${pwdstr}`,
             "method": "POST"
@@ -71,17 +59,42 @@ export const POST = async (req: NextRequest) => {
                                 const text = decoder.decode(buffer)
                                 return text
                             })
-        
+        const redirectMatch = resHTML.match(/url=(select_entry\.php\?ACIXSTORE=[a-zA-Z0-9_-]+&hint=[0-9]+)/);
+        //Check if login credentials are correct
+        const newHTML = await fetch("https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/" + redirectMatch?.[1], {
+            "headers": {
+                "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+                "accept-language": "en-US,en;q=0.9",
+                "sec-ch-ua": "\"Not_A Brand\";v=\"8\", \"Chromium\";v=\"120\", \"Microsoft Edge\";v=\"120\"",
+                "sec-ch-ua-mobile": "?0",
+                "sec-ch-ua-platform": "\"Windows\"",
+                "sec-fetch-dest": "document",
+                "sec-fetch-mode": "navigate",
+                "sec-fetch-site": "same-origin",
+                "upgrade-insecure-requests": "1"
+            },
+            "body": null,
+            "method": "GET",
+            "mode": "cors",
+            "credentials": "include"
+        })
+        .then(response => response.arrayBuffer())
+        .then(buffer => {
+            const decoder = new TextDecoder("big5")
+            const text = decoder.decode(buffer)
+            return text
+        })
         if(resHTML.match('驗證碼輸入錯誤!')) {
             return await ocrAndLogin(_try++);
         }
-        if(resHTML.match('帳號或密碼錯誤')) {
-            return null;
+        else if(resHTML.match('15分鐘內登錄錯誤')) {
+            return NextResponse.json({ success: false, body: { error: "解讀CAPTCHA出錯，15分鐘后重試。CAPTCHA Decoding went wrong, Please wait 15 minutes.", code: LoginError.CaptchaError }});
         }
-        else if(resHTML.match("/ccxp/INQUIRE/index.php")) {
-            return null;
+        //CAPTCHA IS CORRECT: check if select_entry.php is correct  (if not, then login credentials are wrong)
+        else if(newHTML.match('帳號或密碼錯誤')) {
+            return NextResponse.json({ success: false, body: { error: "帳號或密碼錯誤 Incorrect Login Credentials", code: LoginError.IncorrectCredentials }});
         }
-        if(resHTML.match(/ACIXSTORE=([a-zA-Z0-9_-]+)/)?.length == 0) {
+        else if(resHTML.match(/ACIXSTORE=([a-zA-Z0-9_-]+)/)?.length == 0) {
             return await ocrAndLogin(_try++);
         }
         else {
@@ -89,26 +102,6 @@ export const POST = async (req: NextRequest) => {
             if(!ACIXSTORE) {
                 return await ocrAndLogin(_try++);
             }
-            await fetch(`https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/select_entry.php?ACIXSTORE=${ACIXSTORE}&hint=${studentid}`, {
-                "headers": {
-                    "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-                    "accept-language": "en-US,en;q=0.9",
-                    "sec-ch-ua": "\"Chromium\";v=\"110\", \"Not A(Brand\";v=\"24\", \"Microsoft Edge\";v=\"110\"",
-                    "sec-ch-ua-mobile": "?0",
-                    "sec-ch-ua-platform": "\"Windows\"",
-                    "sec-fetch-dest": "document",
-                    "sec-fetch-mode": "navigate",
-                    "sec-fetch-site": "same-origin",
-                    "sec-fetch-user": "?1",
-                    "upgrade-insecure-requests": "1"
-                },
-                "referrer": `https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/select_entry.php?ACIXSTORE=${ACIXSTORE}&hint=${studentid}`,
-                "referrerPolicy": "strict-origin-when-cross-origin",
-                "body": null,
-                "method": "GET",
-                "mode": "cors",
-                "credentials": "include"
-            });
             await fetch(`https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/top.php?account=${studentid}&ACIXSTORE=${ACIXSTORE}`, {
                 "headers": {
                     "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
@@ -121,8 +114,6 @@ export const POST = async (req: NextRequest) => {
                     "sec-fetch-site": "same-origin",
                     "upgrade-insecure-requests": "1"
                 },
-                "referrer": `https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/select_entry.php?ACIXSTORE=${ACIXSTORE}&hint=${studentid}`,
-                "referrerPolicy": "strict-origin-when-cross-origin",
                 "body": null,
                 "method": "GET",
                 "mode": "cors",
@@ -140,8 +131,6 @@ export const POST = async (req: NextRequest) => {
                     "sec-fetch-mode": "navigate",
                     "sec-fetch-site": "same-origin",
                     "upgrade-insecure-requests": "1",
-                    "Referer": `https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/select_entry.php?ACIXSTORE=${ACIXSTORE}&hint=${studentid}`,
-                    "Referrer-Policy": "strict-origin-when-cross-origin"
                 },
                 "body": null,
                 "method": "GET"
@@ -158,8 +147,6 @@ export const POST = async (req: NextRequest) => {
                   "sec-fetch-site": "same-origin",
                   "upgrade-insecure-requests": "1"
                 },
-                "referrer": `https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/select_entry.php?ACIXSTORE=${ACIXSTORE}&hint=${studentid}`,
-                "referrerPolicy": "strict-origin-when-cross-origin",
                 "body": null,
                 "method": "GET",
                 "mode": "cors",
@@ -177,19 +164,15 @@ export const POST = async (req: NextRequest) => {
                   "sec-fetch-site": "same-origin",
                   "x-requested-with": "XMLHttpRequest"
                 },
-                "referrer": `https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/top.php?account=${studentid}&ACIXSTORE=${ACIXSTORE}`,
-                "referrerPolicy": "strict-origin-when-cross-origin",
                 "body": null,
                 "method": "GET",
                 "mode": "cors",
                 "credentials": "include"
             });
-            return ACIXSTORE;
+            return NextResponse.json({ success: true, body: { ACIXSTORE: ACIXSTORE }});
         }
     }
     const result = await ocrAndLogin();
-    if(!result) {
-        return NextResponse.json({ success: false, body: { error: "Login Failed" }});
-    }
-    return NextResponse.json({ success: true, body: { ACIXSTORE: result }});
+
+    return result;
 }

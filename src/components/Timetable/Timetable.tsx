@@ -3,7 +3,7 @@ import TimeslotHeader from '@/components/Timetable/TimeslotHeader';
 import TimetableSlotVertical from '@/components/Timetable/TimetableSlotVertical';
 import { scheduleTimeSlots } from '@/const/timetable';
 import {CourseTimeslotData, CourseTimeslotDataWithFraction, TimeSlot, TimetableDim} from '@/types/timetable';
-import {FC, ReactNode, useLayoutEffect, useMemo, useRef, useState} from 'react';
+import {FC, ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react';
 import TimetableSlotHorizontal from '@/components/Timetable/TimetableSlotHorizontal';
 import Link from 'next/link';
 import { useSettings } from '@/hooks/contexts/settings';
@@ -18,7 +18,6 @@ const Timetable: FC<{
     const headerRow = useRef<HTMLTableCellElement>(null);
     const timetableCell = useRef<HTMLTableCellElement>(null);
     const [tableDim, setTableDim] = useState({ header: { width: 0, height: 0 }, timetable: { width: 0, height: 0 } });
-    const { language } = useSettings();
   
 
     const updateSize = () => {
@@ -34,7 +33,7 @@ const Timetable: FC<{
       })
     }
     
-    useLayoutEffect(() => {
+    useEffect(() => {
       if(typeof window  == "undefined") return ;
       updateSize();
       window.addEventListener("resize", updateSize);
@@ -79,7 +78,7 @@ const Timetable: FC<{
       return timetableDataWithFraction
     }, [timetableData]);    
 
-    console.log(timetableDataWithFraction)
+    // console.log(timetableDataWithFraction)
 
     const showSaturday = timetableData.some(course => course.dayOfWeek == 5);
 
