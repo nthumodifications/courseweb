@@ -24,3 +24,7 @@ export interface CalendarEvent {
     color: string;
     tag: string | 'none';
 }
+
+export interface CalendarEventInternal extends CalendarEvent {
+    displayEnd: Date | null; // actual end of the event, used to determine repeating events
+}

@@ -1,10 +1,75 @@
 'use client';
-import { addRxPlugin, createRxDatabase } from 'rxdb';
+import { ExtractDocumentTypeFromTypedRxJsonSchema, addRxPlugin, createRxDatabase, toTypedRxJsonSchema } from 'rxdb';
 import { getRxStorageDexie } from 'rxdb/plugins/storage-dexie';
 import { Provider } from 'rxdb-hooks';
 import { FC, PropsWithChildren, useEffect, useState } from 'react';
 import { RxDBMigrationPlugin } from 'rxdb/plugins/migration-schema';
 import { RxDBStatePlugin } from 'rxdb/plugins/state';
+import { RxDBQueryBuilderPlugin } from 'rxdb/plugins/query-builder';
+
+// create collection based on CalendarEvent
+const eventsSchema = {
+  version: 0,
+  primaryKey: 'id',
+  type: 'object',
+  properties: {
+    id: {
+      type: 'string',
+      maxLength: 100,
+    },
+    title: {
+      type: 'string',
+    },
+    details: {
+      type: 'string',
+    },
+    allDay: {
+      type: 'boolean',
+    },
+    start: {
+      type: 'string',
+      format: 'date-time',
+    },
+    end: {
+      type: 'string',
+      format: 'date-time',
+    },
+    displayEnd: {
+      type: 'string',
+      format: 'date-time',
+    },
+    repeat: {
+      type: 'object',
+      properties: {
+        type: {
+          type: 'string',
+          enum: ['daily', 'weekly', 'monthly', 'yearly'],
+        },
+        interval: {
+          type: 'number',
+        },
+        count: {
+          type: 'number',
+        },
+        date: {
+          type: 'string',
+          format: 'date-time',
+        },
+      },
+    },
+    color: {
+      type: 'string',
+    },
+    tag: {
+      type: 'string',
+    },
+  },
+  required: ['id', 'title', 'allDay', 'start', 'end', 'displayEnd', 'repeat', 'color', 'tag'],
+  indexes: ['id']
+} as const
+const schemaTyped = toTypedRxJsonSchema(eventsSchema);
+
+export type EventDocType = ExtractDocumentTypeFromTypedRxJsonSchema<typeof schemaTyped>;
 
 export const initializeRxDB = async () => {
     // create RxDB
@@ -15,6 +80,7 @@ export const initializeRxDB = async () => {
     }
     addRxPlugin(RxDBMigrationPlugin);
     addRxPlugin(RxDBStatePlugin);
+    addRxPlugin(RxDBQueryBuilderPlugin);
 
     const db = await createRxDatabase({
       name: 'nthumods-calendar',
@@ -22,61 +88,6 @@ export const initializeRxDB = async () => {
       ignoreDuplicate: true,
     });
   
-    // create collection based on CalendarEvent
-    const eventsSchema = {
-      version: 0,
-      primaryKey: 'id',
-      type: 'object',
-      properties: {
-        id: {
-          type: 'string',
-          maxLength: 100,
-        },
-        title: {
-          type: 'string',
-        },
-        details: {
-          type: 'string',
-        },
-        allDay: {
-          type: 'boolean',
-        },
-        start: {
-          type: 'string',
-          format: 'date-time',
-        },
-        end: {
-          type: 'string',
-          format: 'date-time',
-        },
-        repeat: {
-          type: 'object',
-          properties: {
-            type: {
-              type: 'string',
-              enum: ['daily', 'weekly', 'monthly', 'yearly'],
-            },
-            interval: {
-              type: 'number',
-            },
-            count: {
-              type: 'number',
-            },
-            date: {
-              type: 'string',
-              format: 'date-time',
-            },
-          },
-        },
-        color: {
-          type: 'string',
-        },
-        tag: {
-          type: 'string',
-        },
-      },
-      required: ['id', 'title', 'allDay', 'start', 'end', 'repeat', 'color', 'tag'],
-    }
 
     await db.addCollections({
       events: {

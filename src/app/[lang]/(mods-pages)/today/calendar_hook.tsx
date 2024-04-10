@@ -1,6 +1,6 @@
 'use client';
-import { useContext, createContext, FC, PropsWithChildren, useRef, useMemo, useEffect } from 'react';
-import { CalendarEvent } from '@/app/[lang]/(mods-pages)/today/calendar.types';
+import { useContext, createContext, FC, PropsWithChildren, useRef, useMemo, useEffect, useState } from 'react';
+import {CalendarEvent, CalendarEventInternal} from '@/app/[lang]/(mods-pages)/today/calendar.types';
 import useUserTimetable from '@/hooks/contexts/useUserTimetable';
 import { useRxCollection, useRxDB, useRxQuery } from 'rxdb-hooks';
 import { timetableToCalendarEvent } from './timetableToCalendarEvent';
@@ -8,6 +8,9 @@ import { createTimetableFromCourses } from '@/helpers/timetable';
 import supabase from '@/config/supabase';
 import { MinimalCourse } from '@/types/courses';
 import { toast } from '@/components/ui/use-toast';
+import { getDisplayEndDate } from './calendar_utils';
+import { RxCollection, RxJsonSchema } from 'rxdb';
+import {EventDocType} from '@/config/rxdb';
 
 export const calendarContext = createContext<ReturnType<typeof useCalendarProvider>>({} as any);
 
@@ -21,7 +24,7 @@ export const useCalendarProvider = () => {
     const { result: eventStore } = useRxQuery(eventsCol?.find());
     const events = useMemo(() => {
         return eventStore.map((e) => {
-            const event = e.toJSON() as CalendarEvent;
+            const event = e.toJSON() as CalendarEventInternal;
             return {
                 ...event,
                 start: new Date(event.start),
@@ -33,6 +36,8 @@ export const useCalendarProvider = () => {
             }
         })
     }, [eventStore])
+
+    console.log(events)
 
 
     const { courses, colorMap } = useUserTimetable();
@@ -47,7 +52,8 @@ export const useCalendarProvider = () => {
             repeat: event.repeat ? {
                 ...event.repeat,
                 ...('date' in event.repeat ? { date: event.repeat.date.toISOString() } : {})
-            } : null
+            } : null,
+            displayEnd: getDisplayEndDate(event)
         });
     }
 
@@ -83,6 +89,7 @@ export const useCalendarProvider = () => {
         events,
         addEvent,
         removeEvent,
+        setLoadEndDate,
         weekContainer,
         HOUR_HEIGHT
     }
