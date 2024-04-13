@@ -43,7 +43,7 @@ const Header = () => {
   return (
     <header className="h-[--header-height] w-screen bg-white dark:bg-background shadow-md px-2 md:px-8 py-4 md:col-span-2 flex flex-row items-center z-50 gap-4">
       <div className="flex flex-row gap-3 flex-1 items-center">
-        <SideNavDrawer/>
+        {/* <SideNavDrawer/> */}
         <Link href={"/"+language+"/timetable"}>
           <NTHUModsLogo />
         </Link>
