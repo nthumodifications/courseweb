@@ -61,10 +61,10 @@ const UpdateRepeatedEventDialog: FC<{ open: boolean, onClose: (type?: UpdateType
 
 export const EventPopover: FC<PropsWithChildren<{ event: DisplayCalendarEvent; }>> = ({ children, event }) => {
     const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
-    const [waitingUpdateEvent, setWaitingUpdateEvent] = useState<CalendarEvent | null>(null);
+    const [waitingUpdateEvent, setWaitingUpdateEvent] = useState<DisplayCalendarEvent | null>(null);
     const { updateEvent } = useCalendar();
 
-    const handleEventAdded = (newEvent: CalendarEvent) => {
+    const handleEventAdded = (newEvent: DisplayCalendarEvent) => {
         if(!event.repeat) updateEvent({
             ...newEvent,
         });
@@ -89,7 +89,7 @@ export const EventPopover: FC<PropsWithChildren<{ event: DisplayCalendarEvent; }
             <UpdateRepeatedEventDialog open={updateDialogOpen} onClose={handleRepeatedEventUpdate} />
             <div className='flex flex-col'>
                 <div className='flex flex-row justify-end'>
-                    <AddEventButton defaultEvent={{ ...event, start: event.displayStart, end: event.displayEnd }} onEventAdded={handleEventAdded}>
+                    <AddEventButton defaultEvent={{ ...event, start: event.displayStart, end: event.displayEnd }} onEventAdded={handleEventAdded as unknown as (type: CalendarEvent) => void}>
                         <Button size="icon" variant='ghost'>
                             <Edit className='w-4 h-4' />
                         </Button>

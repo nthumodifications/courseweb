@@ -1,10 +1,10 @@
 import { addDays, addMonths, addWeeks, addYears, compareAsc, differenceInDays, differenceInMonths, differenceInWeeks, differenceInYears, eachDayOfInterval, endOfDay, endOfWeek, isWithinInterval, set, startOfDay, startOfWeek } from "date-fns";
-import { CalendarEvent, CalendarEventInternal } from "./calendar.types";
+import { CalendarEvent, CalendarEventInternal, DisplayCalendarEvent } from "./calendar.types";
 
   
-export const eventsToDisplay = (events: CalendarEvent[], start: Date, end: Date) => {
+export const eventsToDisplay = (events: CalendarEventInternal[], start: Date, end: Date) => {
     // keep events that are within the range, if repeated events, create new events for each repeated day, change the start and end date
-    const newEvents = [];
+    const newEvents = [] as DisplayCalendarEvent[];
     for (const event of events) {
         // use getRepeatedStartDays to see if matches the range, if over end date, break
         const repeatedDays = getRepeatedStartDays(event);
