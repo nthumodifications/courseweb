@@ -1,4 +1,4 @@
-import { addDays, addMonths, addWeeks, addYears, compareAsc, differenceInDays, differenceInMonths, differenceInWeeks, differenceInYears, eachDayOfInterval, endOfDay, endOfWeek, isWithinInterval, set, startOfDay, startOfWeek } from "date-fns";
+import { addDays, addMonths, addWeeks, addYears, compareAsc, differenceInDays, differenceInMonths, differenceInWeeks, differenceInYears, eachDayOfInterval, endOfDay, endOfWeek, isSameDay, isWithinInterval, set, startOfDay, startOfWeek } from "date-fns";
 import { CalendarEvent, CalendarEventInternal, DisplayCalendarEvent } from "./calendar.types";
 
   
@@ -13,7 +13,7 @@ export const eventsToDisplay = (events: CalendarEventInternal[], start: Date, en
             //get original difference
             const diff = event.end.getTime() - event.start.getTime();
             const newEnd = new Date(newStart.getTime() + diff);
-            if ((newStart >= start && newStart <= end)) {
+            if ((newStart >= start && newStart <= end) && (event.excludedDates ?? [])?.every(d => !isSameDay(d, newStart))) {
                 newEvents.push({ ...event, displayStart: newStart, displayEnd: newEnd });
             }
             // if later than end, break

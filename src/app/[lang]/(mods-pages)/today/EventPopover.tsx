@@ -1,4 +1,4 @@
-import { format, isSameDay } from 'date-fns';
+import { format, isSameDay, set } from 'date-fns';
 import { FC, PropsWithChildren, useState } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarEvent, DisplayCalendarEvent } from './calendar.types';
@@ -59,10 +59,34 @@ const UpdateRepeatedEventDialog: FC<{ open: boolean, onClose: (type?: UpdateType
     </Dialog>
 }
 
+const DeleteRepeatedEventDialog: FC<{ open: boolean, onClose: (type?: UpdateType) => void }> = ({ open, onClose }) => {
+    return <Dialog open={open} onOpenChange={v => {if(!v) onClose()}}>
+        <DialogTrigger asChild>
+        </DialogTrigger>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>刪除重複事件</DialogTitle>
+                <DialogDescription>
+                    <p>您要刪除所有重複事件還是只刪除這個事件？</p>
+                </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+                <DialogClose asChild>
+                    <Button variant="outline">取消</Button>
+                </DialogClose>
+                <Button onClick={_ => onClose(UpdateType.THIS)}>只刪除這個事件</Button>
+                <Button onClick={_ => onClose(UpdateType.ALL)}>所有</Button>
+                <Button onClick={_ => onClose(UpdateType.FOLLOWING)}>這個和之後的事件</Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
+}
+
 export const EventPopover: FC<PropsWithChildren<{ event: DisplayCalendarEvent; }>> = ({ children, event }) => {
     const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [waitingUpdateEvent, setWaitingUpdateEvent] = useState<DisplayCalendarEvent | null>(null);
-    const { updateEvent } = useCalendar();
+    const { updateEvent, removeEvent } = useCalendar();
 
     const handleEventAdded = (newEvent: DisplayCalendarEvent) => {
         if(!event.repeat) updateEvent({
@@ -72,6 +96,12 @@ export const EventPopover: FC<PropsWithChildren<{ event: DisplayCalendarEvent; }
             setUpdateDialogOpen(true);
             setWaitingUpdateEvent(newEvent);
         }
+    }
+
+    const handleConfirmedRepeatedDelete = (type?: UpdateType) => {
+        setDeleteDialogOpen(false);
+        if(!type) return;
+        removeEvent(event, type);
     }
 
     const handleRepeatedEventUpdate = (type?: UpdateType) => {
@@ -87,6 +117,7 @@ export const EventPopover: FC<PropsWithChildren<{ event: DisplayCalendarEvent; }
         </PopoverTrigger>
         <PopoverContent className='p-1'>
             <UpdateRepeatedEventDialog open={updateDialogOpen} onClose={handleRepeatedEventUpdate} />
+            <DeleteRepeatedEventDialog open={deleteDialogOpen} onClose={handleConfirmedRepeatedDelete} />
             <div className='flex flex-col'>
                 <div className='flex flex-row justify-end'>
                     <AddEventButton defaultEvent={{ ...event, start: event.displayStart, end: event.displayEnd }} onEventAdded={handleEventAdded as unknown as (type: CalendarEvent) => void}>
@@ -94,7 +125,12 @@ export const EventPopover: FC<PropsWithChildren<{ event: DisplayCalendarEvent; }
                             <Edit className='w-4 h-4' />
                         </Button>
                     </AddEventButton>
-                    <ConfirmDeleteEvent event={event}/>
+                    {event.repeat ? 
+                        <Button size="icon" variant='ghost' onClick={_ => setDeleteDialogOpen(true)}>
+                            <Trash className='w-4 h-4' />
+                        </Button>:
+                        <ConfirmDeleteEvent event={event}/>
+                    }
                     <PopoverClose asChild>
                         <Button size="icon" variant='ghost'>
                             <X className='w-4 h-4' />

@@ -71,6 +71,9 @@ const eventsSchema = {
         format: 'date-time',
       },
     },
+    parentId: {
+      type: 'string',
+    },
   },
   required: ['id', 'title', 'allDay', 'start', 'end', 'displayEnd', 'repeat', 'color', 'tag'],
 } as const

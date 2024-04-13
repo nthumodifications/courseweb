@@ -62,11 +62,47 @@ export const useCalendarProvider = () => {
         });
     }
 
-    const removeEvent = async (event: CalendarEvent) => {
-        const docs = await eventsCol!.findOne(event.id).exec();
-        if (docs) {
-            await docs.remove();
-            toast({ title: '行程已刪除' })
+    const removeEvent = async (event: DisplayCalendarEvent, type?: UpdateType) => {
+        if (!event.repeat) {
+            await eventsCol!.findOne(event.id).remove();
+            return;
+        }
+        else {
+            console.log('remove event', event, type)
+            switch(type) {
+                case UpdateType.THIS:
+                    // add this date to excluded dates
+                    await eventsCol!.findOne(event.id).update({
+                        $set: {
+                            actualEnd: getDisplayEndDate(event),
+                            excludedDates: [...(event.excludedDates || []), event.displayStart]
+                        }
+                    });
+                    break;
+                case UpdateType.FOLLOWING:
+                    //set the repeat end date to the new event start date
+                    const newEvent = {
+                        ...event,
+                        repeat: {
+                            ...event.repeat!,
+                            count: undefined,
+                            date: subDays(event.displayStart, 1),
+                        },
+                    }
+                    await eventsCol!.findOne(event.id).update({
+                        $set: {
+                            ...newEvent,
+                            actualEnd: getDisplayEndDate(newEvent)
+                        }
+                    });
+                    break;
+                case UpdateType.ALL:
+                    //remove all events
+                    //@ts-ignore
+                    await eventsCol!.find({ selector: { parentId: event.id } }).remove();
+                    await eventsCol!.findOne(event.id).remove();
+                    break;
+            }
         }
     }
 
