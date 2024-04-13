@@ -6,6 +6,7 @@ import { FC, PropsWithChildren, useEffect, useState } from 'react';
 import { RxDBMigrationPlugin } from 'rxdb/plugins/migration-schema';
 import { RxDBStatePlugin } from 'rxdb/plugins/state';
 import { RxDBQueryBuilderPlugin } from 'rxdb/plugins/query-builder';
+import { RxDBUpdatePlugin } from 'rxdb/plugins/update';
 
 // create collection based on CalendarEvent
 const eventsSchema = {
@@ -34,7 +35,7 @@ const eventsSchema = {
       type: 'string',
       format: 'date-time',
     },
-    displayEnd: {
+    actualEnd: {
       type: 'string',
       format: 'date-time',
     },
@@ -63,9 +64,15 @@ const eventsSchema = {
     tag: {
       type: 'string',
     },
+    excludedDates: {
+      type: 'array',
+      items: {
+        type: 'string',
+        format: 'date-time',
+      },
+    },
   },
   required: ['id', 'title', 'allDay', 'start', 'end', 'displayEnd', 'repeat', 'color', 'tag'],
-  indexes: ['id']
 } as const
 const schemaTyped = toTypedRxJsonSchema(eventsSchema);
 
@@ -81,6 +88,8 @@ export const initializeRxDB = async () => {
     addRxPlugin(RxDBMigrationPlugin);
     addRxPlugin(RxDBStatePlugin);
     addRxPlugin(RxDBQueryBuilderPlugin);
+    addRxPlugin(RxDBUpdatePlugin);
+
 
     const db = await createRxDatabase({
       name: 'nthumods-calendar',

@@ -9,7 +9,7 @@ export const EventLabelPicker = ({ value, setValue }: { value: string | undefine
     const [open, setOpen] = useState(false);
 
     //TODO: user defined labels, should have ability to add new labels
-    const options = ['Event', 'Meeting', 'Assignment', 'Exam', 'Holiday', 'Birthday', 'Anniversary'];
+    const options = ['Event', 'Course', 'Meeting', 'Assignment', 'Exam', 'Holiday', 'Birthday', 'Anniversary'];
     return (
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>

@@ -8,7 +8,7 @@ const schemaDates = z.object({
 });
 
 const schemaDetails = z.object({
-    id: z.string().uuid(),
+    id: z.string(),
     title: z.string(),
     details: z.string().optional(),
     allDay: z.boolean(),

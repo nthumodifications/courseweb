@@ -23,8 +23,15 @@ export interface CalendarEvent {
     repeat: null | Repeat;
     color: string;
     tag: string | 'none';
+    excludedDates?: Date[];
+    parentId?: string;
 }
 
 export interface CalendarEventInternal extends CalendarEvent {
-    displayEnd: Date | null; // actual end of the event, used to determine repeating events
+    actualEnd: Date | null; // actual end of the event, used to determine repeating events
+}
+
+export interface DisplayCalendarEvent extends CalendarEventInternal {
+    displayStart: Date;
+    displayEnd: Date;
 }

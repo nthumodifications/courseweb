@@ -1,11 +1,12 @@
-import { addDays, addMonths, addWeeks, addYears, eachDayOfInterval, endOfWeek, set, startOfWeek } from "date-fns";
-import { CalendarEvent } from "./calendar.types";
+import { addDays, addMonths, addWeeks, addYears, compareAsc, differenceInDays, differenceInMonths, differenceInWeeks, differenceInYears, eachDayOfInterval, endOfDay, endOfWeek, isWithinInterval, set, startOfDay, startOfWeek } from "date-fns";
+import { CalendarEvent, CalendarEventInternal } from "./calendar.types";
 
-
+  
 export const eventsToDisplay = (events: CalendarEvent[], start: Date, end: Date) => {
     // keep events that are within the range, if repeated events, create new events for each repeated day, change the start and end date
     const newEvents = [];
     for (const event of events) {
+        // use getRepeatedStartDays to see if matches the range, if over end date, break
         const repeatedDays = getRepeatedStartDays(event);
         for (const day of repeatedDays) {
             const newStart = set(event.start, { year: day.getFullYear(), month: day.getMonth(), date: day.getDate() });
@@ -13,18 +14,19 @@ export const eventsToDisplay = (events: CalendarEvent[], start: Date, end: Date)
             const diff = event.end.getTime() - event.start.getTime();
             const newEnd = new Date(newStart.getTime() + diff);
             if ((newStart >= start && newStart <= end)) {
-                newEvents.push({ ...event, start: newStart, end: newEnd });
+                newEvents.push({ ...event, displayStart: newStart, displayEnd: newEnd });
             }
             // if later than end, break
             if (newStart > end) {
                 break;
             }
         }
+
     }
     return newEvents;
 };
 
-const getAddFunc = (type: 'daily' | 'weekly' | 'monthly' | 'yearly') => {
+export const getAddFunc = (type: 'daily' | 'weekly' | 'monthly' | 'yearly') => {
     switch (type) {
         case 'daily':
             return addDays;
@@ -36,6 +38,19 @@ const getAddFunc = (type: 'daily' | 'weekly' | 'monthly' | 'yearly') => {
             return addYears;
     }
 };
+
+export const getDiffFunction = (type: 'daily' | 'weekly' | 'monthly' | 'yearly') => {
+    switch (type) {
+        case 'daily':
+            return differenceInDays;
+        case 'weekly':
+            return differenceInWeeks;
+        case 'monthly':
+            return differenceInMonths;
+        case 'yearly':
+            return differenceInYears;
+    }
+}
 
 export function* getRepeatedStartDays(event: CalendarEvent) {
     const days = [event.start];

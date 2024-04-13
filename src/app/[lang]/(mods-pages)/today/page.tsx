@@ -32,8 +32,8 @@ const UpcomingEvents = () => {
                 <div className="self-stretch px-2 pt-2 pb-6 rounded flex-col justify-start items-start gap-2 flex" style={{background: event.color, color: textColor}}>
                     <div className="text-sm font-medium font-['Inter'] leading-none">{event.title}</div>
                     <div className="justify-start items-start gap-1 inline-flex">
-                        <div className="text-xs font-normal font-['Inter'] leading-none">{format(event.start, 'yyyy LL d')}</div>
-                        <div className="text-xs font-normal font-['Inter'] leading-none">{format(event.start, 'HH:mm')} - {format(event.end, 'HH:mm')}</div>
+                        <div className="text-xs font-normal font-['Inter'] leading-none">{format(event.displayStart, 'yyyy LL d')}</div>
+                        <div className="text-xs font-normal font-['Inter'] leading-none">{format(event.displayStart, 'HH:mm')} - {format(event.displayEnd, 'HH:mm')}</div>
                     </div>
                     <div className="text-slate-500 text-xs font-normal font-['Inter'] leading-none">{event.details}</div>
                 </div>
@@ -76,15 +76,6 @@ const TodayPage: NextPage = () => {
         queryKey: ['alert'],
         queryFn: async () => {
             const res = await fetch('/api/dashboard/alert');
-            const data = await res.json();
-            return data;
-        }
-    });
-
-    const {data: calendarData = [], error: calendarError, isLoading: calendarLoading } = useQuery<EventData[]>({
-        queryKey: ['event'],
-        queryFn: async () => {
-            const res = await fetch('/api/dashboard/calendar');
             const data = await res.json();
             return data;
         }

@@ -1,6 +1,6 @@
-'use client';
-import { useContext, createContext, FC, PropsWithChildren, useRef, useMemo, useEffect, useState } from 'react';
-import {CalendarEvent, CalendarEventInternal} from '@/app/[lang]/(mods-pages)/today/calendar.types';
+'use client';;
+import { useContext, createContext, FC, PropsWithChildren, useRef, useMemo } from 'react';
+import { CalendarEvent, CalendarEventInternal, DisplayCalendarEvent } from '@/app/[lang]/(mods-pages)/today/calendar.types';
 import useUserTimetable from '@/hooks/contexts/useUserTimetable';
 import { useRxCollection, useRxDB, useRxQuery } from 'rxdb-hooks';
 import { timetableToCalendarEvent } from './timetableToCalendarEvent';
@@ -8,9 +8,14 @@ import { createTimetableFromCourses } from '@/helpers/timetable';
 import supabase from '@/config/supabase';
 import { MinimalCourse } from '@/types/courses';
 import { toast } from '@/components/ui/use-toast';
-import { getDisplayEndDate } from './calendar_utils';
-import { RxCollection, RxJsonSchema } from 'rxdb';
-import {EventDocType} from '@/config/rxdb';
+import { getDiffFunction, getDisplayEndDate } from './calendar_utils';
+import { subDays } from 'date-fns';
+
+export enum UpdateType {
+    THIS = 'THIS',
+    FOLLOWING = 'FOLLOWING',
+    ALL = 'ALL'
+}
 
 export const calendarContext = createContext<ReturnType<typeof useCalendarProvider>>({} as any);
 
@@ -53,7 +58,7 @@ export const useCalendarProvider = () => {
                 ...event.repeat,
                 ...('date' in event.repeat ? { date: event.repeat.date.toISOString() } : {})
             } : null,
-            displayEnd: getDisplayEndDate(event)
+            actualEnd: getDisplayEndDate(event)
         });
     }
 
@@ -63,6 +68,103 @@ export const useCalendarProvider = () => {
             await docs.remove();
             toast({ title: '行程已刪除' })
         }
+    }
+
+    const updateEvent = async (newEvent: DisplayCalendarEvent, type?: UpdateType) => {
+        console.log('update event', newEvent, type)
+        const oldEvent = events.find(e => e.id === newEvent.id);
+        if (!oldEvent) return;
+        if(!oldEvent.repeat && !newEvent.repeat) {
+            await eventsCol!.findOne(newEvent.id).update({
+                $set: {
+                    ...newEvent,
+                    actualEnd: getDisplayEndDate(newEvent)
+                }
+            });
+            return;
+        }
+        else if(oldEvent.repeat && newEvent.repeat) {
+            switch(type) {
+                case UpdateType.THIS:
+                    //add this event to the list of excluded dates
+                    await eventsCol!.findOne(newEvent.id).update({
+                        $set: {
+                            actualEnd: getDisplayEndDate(oldEvent),
+                            excludedDates: [...(oldEvent.excludedDates || []), newEvent.displayStart]
+                        }
+                    });
+                    const newEvent1 = {
+                        ...newEvent,
+                        id: newEvent.id + newEvent.start.toISOString(),
+                        parentId: newEvent.id,
+                        repeat: null
+                    }
+                    await eventsCol!.insert({
+                        ...newEvent1,
+                        actualEnd: getDisplayEndDate(newEvent1)
+                    });
+                    break;
+                case UpdateType.FOLLOWING:
+                    //set the repeat end date to the new event start date
+                    const newEvent2 = {
+                        ...oldEvent,
+                        repeat: {
+                            ...oldEvent.repeat!,
+                            count: undefined,
+                            date: subDays(newEvent.start, 1),
+                        },
+                    }
+                    await eventsCol!.findOne(newEvent.id).update({
+                        $set: {
+                            ...newEvent2,
+                            actualEnd: getDisplayEndDate(newEvent2)
+                        }
+                    });
+                    let newEvent3;
+                    if('count' in oldEvent.repeat) {
+                        //if oldEvent was using count, find how many counts to subtract
+                        //oldEvent.start => newEvent.start = x * interval
+                        const interval = oldEvent.repeat.interval || 1;
+                        const x = Math.floor(getDiffFunction(oldEvent.repeat.type)(newEvent.start, oldEvent.start) / interval);
+                        newEvent3 = {
+                            ...newEvent,
+                            id: newEvent.id + newEvent.start.toISOString(),
+                            parentId: newEvent.id,
+                            repeat: {
+                                ...oldEvent.repeat,
+                                count: oldEvent.repeat.count - x
+                            }
+                        }
+                    } else {
+                        newEvent3 = {
+                            ...newEvent,
+                            id: newEvent.id + newEvent.start.toISOString(),
+                            parentId: newEvent.id,
+                            repeat: oldEvent.repeat
+                        }
+                    }
+                    await eventsCol!.insert({
+                        ...newEvent3,
+                        actualEnd: getDisplayEndDate(newEvent3)
+                    });
+                    break;
+                case UpdateType.ALL:
+                    //just update the event
+                    const newEvent4 =  {
+                        ...newEvent,
+                        start: oldEvent.start,
+                        end: oldEvent.end,
+                    }
+                    await eventsCol!.findOne(newEvent.id).update({
+                        $set: {
+                            ...newEvent4,
+                            actualEnd: getDisplayEndDate(newEvent4)
+                        }
+                    });
+                    break;
+            }
+        }
+            
     }
 
     useMemo(() => {
@@ -89,7 +191,7 @@ export const useCalendarProvider = () => {
         events,
         addEvent,
         removeEvent,
-        setLoadEndDate,
+        updateEvent,
         weekContainer,
         HOUR_HEIGHT
     }

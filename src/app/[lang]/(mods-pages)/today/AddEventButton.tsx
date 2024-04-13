@@ -1,7 +1,7 @@
 import { CalendarIcon, ChevronDown, Plus } from 'lucide-react';
 import { addDays, addMinutes, differenceInDays, endOfDay, format, set, startOfDay } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { useEffect, useState } from 'react';
+import { PropsWithChildren, useEffect, useMemo, useState } from 'react';
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { UseFormReturn, useForm, useWatch } from 'react-hook-form';
@@ -22,14 +22,14 @@ import useUserTimetable from '@/hooks/contexts/useUserTimetable';
 import { v4 as uuidv4 } from 'uuid';
 import {TimeSelect, getNearestTime} from '@/components/ui/custom_timeselect';
 
-export const AddEventButton = ({ defaultEvent, onEventAdded = () => { } }: { defaultEvent?: CalendarEvent; onEventAdded?: (data: CalendarEvent) => void; }) => {
+export const AddEventButton = ({ children, defaultEvent, onEventAdded = () => { } }: PropsWithChildren<{ defaultEvent?: CalendarEvent; onEventAdded?: (data: CalendarEvent) => void; }>) => {
     const [open, setOpen] = useState(false);
     const { currentColors } = useUserTimetable();
 
     const minuteStep = 15;
     const form = useForm<z.infer<typeof eventFormSchema>>({
         resolver: zodResolver(eventFormSchema),
-        defaultValues: defaultEvent ? {
+        defaultValues: useMemo(() => defaultEvent ? {
             ...defaultEvent,
             repeat: defaultEvent.repeat ?? { type: null },
         } : {
@@ -44,9 +44,12 @@ export const AddEventButton = ({ defaultEvent, onEventAdded = () => { } }: { def
             },
             color: currentColors[0],
             tag: 'none'
-        },
-        mode: 'onChange'
+        }, [defaultEvent]),
     });
+
+    useEffect(() => {
+        form.trigger();
+    }, [defaultEvent]);
 
     const onSubmit = (data: z.infer<typeof eventFormSchema>) => {
         const eventDef: CalendarEvent = {
@@ -63,7 +66,7 @@ export const AddEventButton = ({ defaultEvent, onEventAdded = () => { } }: { def
 
     const [delayed, setDelayed] = useState(false);
     useEffect(() => {
-        if (delayed) {
+        if (delayed && !defaultEvent) {
             const nearestTime = getNearestTime(new Date(), minuteStep);
             const defaultDiff = 30;
             const defaultStart = set(new Date(), {...nearestTime, seconds: 0, milliseconds: 0});
@@ -73,7 +76,7 @@ export const AddEventButton = ({ defaultEvent, onEventAdded = () => { } }: { def
             form.trigger(['start', 'end'])
             setDelayed(false);
         }
-    }, [delayed]);
+    }, [delayed, defaultEvent]);
 
     //if from normal to all day, set start and end to 00:00 and 23:59
     useEffect(() => {
@@ -246,10 +249,7 @@ export const AddEventButton = ({ defaultEvent, onEventAdded = () => { } }: { def
 
     return <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger>
-            <>
-                <Button className="hidden md:inline-flex"><Plus className="mr-2" /> 新增行程</Button>
-                <Button className="md:hidden fixed bottom-8 right-8 z-50 rounded-lg shadow-lg" size='icon'><Plus /></Button>
-            </>
+            {children}
         </DialogTrigger>
         <DialogContent className='p-0 flex'>
             <div className='p-6 w-full gap-4 flex flex-col'>
@@ -417,7 +417,7 @@ export const AddEventButton = ({ defaultEvent, onEventAdded = () => { } }: { def
                                     </FormItem>
                                 )} />
                         </div>
-                        <Button type="submit">Submit</Button>
+                        <Button type="submit" disabled={!form.formState.isValid}>Submit</Button>
                     </form>
                 </Form>
             </div>

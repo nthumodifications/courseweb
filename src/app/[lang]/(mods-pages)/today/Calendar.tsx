@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import {
     addWeeks,
     differenceInDays,
@@ -67,12 +67,12 @@ const CalendarContent = () => {
                 <div
                     className="absolute left-0 w-full pr-1 "
                     style={{
-                        top: (event.start.getHours() * HOUR_HEIGHT) + (event.start.getMinutes() * HOUR_HEIGHT / 60),
-                        height: (event.end.getHours() - event.start.getHours()) * HOUR_HEIGHT + (event.end.getMinutes() - event.start.getMinutes()) * HOUR_HEIGHT / 60,
+                        top: (event.displayStart.getHours() * HOUR_HEIGHT) + (event.displayStart.getMinutes() * HOUR_HEIGHT / 60),
+                        height: (event.displayEnd.getHours() - event.displayStart.getHours()) * HOUR_HEIGHT + (event.displayEnd.getMinutes() - event.displayStart.getMinutes()) * HOUR_HEIGHT / 60,
                     }}>
                     <div className="bg-nthu-500 rounded-md h-full p-2 flex flex-col gap-1 hover:shadow-md cursor-pointer transition-shadow select-none" style={{ background: event.color, color: event.textColor }}>
                         <div className="text-sm leading-none">{event.title}</div>
-                        <div className="text-xs font-normal leading-none">{format(event.start, 'HH:mm')} - {format(event.end, 'HH:mm')}</div>
+                        <div className="text-xs font-normal leading-none">{format(event.displayStart, 'HH:mm')} - {format(event.displayEnd, 'HH:mm')}</div>
                     </div>
                 </div>
             </EventPopover>
@@ -87,8 +87,8 @@ const CalendarContent = () => {
             const brightness = getBrightness(event.color);
             //From the brightness, using the adjustBrightness function, create a complementary color that is legible
             const textColor = adjustLuminance(event.color, brightness > 186 ? 0.2 : 0.95);
-            const span = differenceInDays(endOfDay(event.end), startOfDay(event.start)) + 1;
-            const gridColumnStart = differenceInDays(event.start, displayWeek[0]) + 1;
+            const span = differenceInDays(endOfDay(event.displayEnd), startOfDay(event.displayStart)) + 1;
+            const gridColumnStart = differenceInDays(event.displayStart, displayWeek[0]) + 1;
             return {...event, textColor, span, gridColumnStart}
         })
 
@@ -123,7 +123,12 @@ const CalendarContent = () => {
                         <Button variant="outline" onClick={backToToday}>Today</Button>
                         <Button variant="outline" onClick={moveBackward}><ChevronLeft /></Button>
                         <Button variant="outline" onClick={moveForward}><ChevronRight /></Button>
-                        <AddEventButton onEventAdded={handleAddEvent} />
+                        <AddEventButton onEventAdded={handleAddEvent}>
+                        <>
+                            <Button className="hidden md:inline-flex"><Plus className="mr-2" /> 新增行程</Button>
+                            <Button className="md:hidden fixed bottom-8 right-8 z-50 rounded-lg shadow-lg" size='icon'><Plus /></Button>
+                        </>
+                        </AddEventButton>
                     </div>
                 </div>
                 <div className="overflow-x-auto">
