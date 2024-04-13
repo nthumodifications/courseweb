@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { DialogClose, DialogDescription } from '@radix-ui/react-dialog';
 import { AddEventButton } from './AddEventButton';
 
-const ConfirmDeleteEvent:FC<{ event: CalendarEvent }> = ({ event }) => {
+const ConfirmDeleteEvent:FC<{ event: DisplayCalendarEvent }> = ({ event }) => {
     const { removeEvent } = useCalendar();
 
     return <Dialog>
@@ -85,16 +85,15 @@ const DeleteRepeatedEventDialog: FC<{ open: boolean, onClose: (type?: UpdateType
 export const EventPopover: FC<PropsWithChildren<{ event: DisplayCalendarEvent; }>> = ({ children, event }) => {
     const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const [waitingUpdateEvent, setWaitingUpdateEvent] = useState<DisplayCalendarEvent | null>(null);
+    const [waitingUpdateEvent, setWaitingUpdateEvent] = useState<CalendarEvent | null>(null);
     const { updateEvent, removeEvent } = useCalendar();
 
-    const handleEventAdded = (newEvent: DisplayCalendarEvent) => {
-        if(!event.repeat) updateEvent({
-            ...newEvent,
-        });
+    const handleEventAdded = (newEvent: CalendarEvent) => {
+        if(!event.repeat) updateEvent(newEvent, event);
         else {
             setUpdateDialogOpen(true);
             setWaitingUpdateEvent(newEvent);
+            console.log('1', newEvent)
         }
     }
 
@@ -106,7 +105,9 @@ export const EventPopover: FC<PropsWithChildren<{ event: DisplayCalendarEvent; }
 
     const handleRepeatedEventUpdate = (type?: UpdateType) => {
         if(!type) return;
-        if(waitingUpdateEvent) updateEvent(waitingUpdateEvent, type);
+        if(waitingUpdateEvent) updateEvent(waitingUpdateEvent, event, type);
+        console.log('2', waitingUpdateEvent)
+        setWaitingUpdateEvent(null);
         setUpdateDialogOpen(false);
     }
 
@@ -120,7 +121,7 @@ export const EventPopover: FC<PropsWithChildren<{ event: DisplayCalendarEvent; }
             <DeleteRepeatedEventDialog open={deleteDialogOpen} onClose={handleConfirmedRepeatedDelete} />
             <div className='flex flex-col'>
                 <div className='flex flex-row justify-end'>
-                    <AddEventButton defaultEvent={{ ...event, start: event.displayStart, end: event.displayEnd }} onEventAdded={handleEventAdded as unknown as (type: CalendarEvent) => void}>
+                    <AddEventButton defaultEvent={{ ...event, start: event.displayStart, end: event.displayEnd }} onEventAdded={handleEventAdded}>
                         <Button size="icon" variant='ghost'>
                             <Edit className='w-4 h-4' />
                         </Button>

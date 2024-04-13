@@ -36,7 +36,7 @@ const eventsSchema = {
       format: 'date-time',
     },
     actualEnd: {
-      type: 'string',
+      type: ['string', 'null'],
       format: 'date-time',
     },
     repeat: {
@@ -75,7 +75,7 @@ const eventsSchema = {
       type: 'string',
     },
   },
-  required: ['id', 'title', 'allDay', 'start', 'end', 'displayEnd', 'repeat', 'color', 'tag'],
+  required: ['id', 'title', 'allDay', 'start', 'end', 'displayEnd', 'repeat', 'color', 'tag', 'actualEnd'],
 } as const
 const schemaTyped = toTypedRxJsonSchema(eventsSchema);
 

@@ -1,5 +1,5 @@
 'use client';;
-import { useContext, createContext, FC, PropsWithChildren, useRef, useMemo } from 'react';
+import { useContext, createContext, FC, PropsWithChildren, useRef, useMemo, useEffect } from 'react';
 import { CalendarEvent, CalendarEventInternal, DisplayCalendarEvent } from '@/app/[lang]/(mods-pages)/today/calendar.types';
 import useUserTimetable from '@/hooks/contexts/useUserTimetable';
 import { useRxCollection, useRxDB, useRxQuery } from 'rxdb-hooks';
@@ -8,8 +8,11 @@ import { createTimetableFromCourses } from '@/helpers/timetable';
 import supabase from '@/config/supabase';
 import { MinimalCourse } from '@/types/courses';
 import { toast } from '@/components/ui/use-toast';
-import { getDiffFunction, getDisplayEndDate } from './calendar_utils';
+import { getDiffFunction, getActualEndDate } from './calendar_utils';
 import { subDays } from 'date-fns';
+import {serializeEvent} from '@/app/[lang]/(mods-pages)/today/calendar_utils';
+import { RxJsonSchema } from 'rxdb';
+import {EventDocType} from '@/config/rxdb';
 
 export enum UpdateType {
     THIS = 'THIS',
@@ -29,25 +32,24 @@ export const useCalendarProvider = () => {
     const { result: eventStore } = useRxQuery(eventsCol?.find());
     const events = useMemo(() => {
         return eventStore.map((e) => {
-            const event = e.toJSON() as CalendarEventInternal;
+            const event = e.toJSON() as Required<EventDocType>;
             return {
                 ...event,
                 start: new Date(event.start),
                 end: new Date(event.end),
                 repeat: event.repeat ? {
                     ...event.repeat,
-                    ...('date' in event.repeat ? { date: new Date(event.repeat.date) } : {})
-                } : null
-            }
+                    ...('date' in event.repeat ? { date: new Date(event.repeat.date!) } : {})
+                } : null,
+                actualEnd: event.actualEnd ? new Date(event.actualEnd): null,
+                ...(event.excludedDates ? { excludedDates: event.excludedDates.map((d) => new Date(d)) } : {})
+            } as CalendarEventInternal
         })
     }, [eventStore])
 
-    console.log(events)
-
-
     const { courses, colorMap } = useUserTimetable();
 
-    const weekContainer = useRef<HTMLDivElement>(null);
+    const displayContainer = useRef<HTMLDivElement>(null);
 
     const addEvent = async (event: CalendarEvent) => {
         await eventsCol!.upsert({
@@ -58,7 +60,7 @@ export const useCalendarProvider = () => {
                 ...event.repeat,
                 ...('date' in event.repeat ? { date: event.repeat.date.toISOString() } : {})
             } : null,
-            actualEnd: getDisplayEndDate(event)
+            actualEnd: getActualEndDate(event)
         });
     }
 
@@ -74,7 +76,7 @@ export const useCalendarProvider = () => {
                     // add this date to excluded dates
                     await eventsCol!.findOne(event.id).update({
                         $set: {
-                            actualEnd: getDisplayEndDate(event),
+                            actualEnd: getActualEndDate(event),
                             excludedDates: [...(event.excludedDates || []), event.displayStart]
                         }
                     });
@@ -91,8 +93,8 @@ export const useCalendarProvider = () => {
                     }
                     await eventsCol!.findOne(event.id).update({
                         $set: {
-                            ...newEvent,
-                            actualEnd: getDisplayEndDate(newEvent)
+                            ...serializeEvent(newEvent),
+                            actualEnd: getActualEndDate(newEvent)
                         }
                     });
                     break;
@@ -106,15 +108,15 @@ export const useCalendarProvider = () => {
         }
     }
 
-    const updateEvent = async (newEvent: DisplayCalendarEvent, type?: UpdateType) => {
+    const updateEvent = async (newEvent: CalendarEvent, operationEvent: DisplayCalendarEvent, type?: UpdateType) => {
         console.log('update event', newEvent, type)
         const oldEvent = events.find(e => e.id === newEvent.id);
         if (!oldEvent) return;
         if(!oldEvent.repeat && !newEvent.repeat) {
             await eventsCol!.findOne(newEvent.id).update({
                 $set: {
-                    ...newEvent,
-                    actualEnd: getDisplayEndDate(newEvent)
+                    ...serializeEvent(newEvent),
+                    actualEnd: getActualEndDate(newEvent)
                 }
             });
             return;
@@ -125,8 +127,10 @@ export const useCalendarProvider = () => {
                     //add this event to the list of excluded dates
                     await eventsCol!.findOne(newEvent.id).update({
                         $set: {
-                            actualEnd: getDisplayEndDate(oldEvent),
-                            excludedDates: [...(oldEvent.excludedDates || []), newEvent.displayStart]
+                            actualEnd: getActualEndDate(oldEvent),
+                            ...serializeEvent({
+                                excludedDates: [...(oldEvent.excludedDates || []), operationEvent.start]
+                            })
                         }
                     });
                     const newEvent1 = {
@@ -136,8 +140,8 @@ export const useCalendarProvider = () => {
                         repeat: null
                     }
                     await eventsCol!.insert({
-                        ...newEvent1,
-                        actualEnd: getDisplayEndDate(newEvent1)
+                        ...serializeEvent(newEvent1),
+                        actualEnd: getActualEndDate(newEvent1)
                     });
                     break;
                 case UpdateType.FOLLOWING:
@@ -147,13 +151,13 @@ export const useCalendarProvider = () => {
                         repeat: {
                             ...oldEvent.repeat!,
                             count: undefined,
-                            date: subDays(newEvent.start, 1),
+                            date: subDays(operationEvent.start, 1),
                         },
                     }
                     await eventsCol!.findOne(newEvent.id).update({
                         $set: {
-                            ...newEvent2,
-                            actualEnd: getDisplayEndDate(newEvent2)
+                            ...serializeEvent(newEvent2),
+                            actualEnd: getActualEndDate(newEvent2)
                         }
                     });
                     let newEvent3;
@@ -180,8 +184,8 @@ export const useCalendarProvider = () => {
                         }
                     }
                     await eventsCol!.insert({
-                        ...newEvent3,
-                        actualEnd: getDisplayEndDate(newEvent3)
+                        ...serializeEvent(newEvent3),
+                        actualEnd: getActualEndDate(newEvent3)
                     });
                     break;
                 case UpdateType.ALL:
@@ -193,8 +197,8 @@ export const useCalendarProvider = () => {
                     }
                     await eventsCol!.findOne(newEvent.id).update({
                         $set: {
-                            ...newEvent4,
-                            actualEnd: getDisplayEndDate(newEvent4)
+                            ...serializeEvent(newEvent4),
+                            actualEnd: getActualEndDate(newEvent4)
                         }
                     });
                     break;
@@ -203,7 +207,7 @@ export const useCalendarProvider = () => {
             
     }
 
-    useMemo(() => {
+    useEffect(() => {
         if (!db) return;
         if (!eventsCol) return;
         (async () => {
@@ -228,7 +232,7 @@ export const useCalendarProvider = () => {
         addEvent,
         removeEvent,
         updateEvent,
-        weekContainer,
+        displayContainer,
         HOUR_HEIGHT
     }
 

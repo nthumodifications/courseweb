@@ -1,4 +1,4 @@
-import { addDays, addMonths, addWeeks, addYears, compareAsc, differenceInDays, differenceInMonths, differenceInWeeks, differenceInYears, eachDayOfInterval, endOfDay, endOfWeek, isSameDay, isWithinInterval, set, startOfDay, startOfWeek } from "date-fns";
+import { addDays, addMonths, addWeeks, addYears, compareAsc, differenceInDays, differenceInMonths, differenceInWeeks, differenceInYears, eachDayOfInterval, endOfDay, endOfMonth, endOfWeek, isSameDay, isWithinInterval, set, startOfDay, startOfMonth, startOfWeek } from "date-fns";
 import { CalendarEvent, CalendarEventInternal, DisplayCalendarEvent } from "./calendar.types";
 
   
@@ -13,13 +13,22 @@ export const eventsToDisplay = (events: CalendarEventInternal[], start: Date, en
             //get original difference
             const diff = event.end.getTime() - event.start.getTime();
             const newEnd = new Date(newStart.getTime() + diff);
-            if ((newStart >= start && newStart <= end) && (event.excludedDates ?? [])?.every(d => !isSameDay(d, newStart))) {
-                newEvents.push({ ...event, displayStart: newStart, displayEnd: newEnd });
+
+            if(event.allDay) {
+                // if any day of start to end is within newStart and newEnd, add the event
+                if(eachDayOfInterval({start: startOfDay(start), end: endOfDay(end)}).some(d => isWithinInterval(d, {start: newStart, end: newEnd}))) {
+                    newEvents.push({...event, displayStart: newStart, displayEnd: newEnd});
+                }
+            } else {
+                if ((newStart >= start && newStart <= end) && (event.excludedDates ?? [])?.every(d => !isSameDay(d, newStart))) {
+                    newEvents.push({ ...event, displayStart: newStart, displayEnd: newEnd });
+                }
+                // if later than end, break
+                if (newStart > end) {
+                    break;
+                }
             }
-            // if later than end, break
-            if (newStart > end) {
-                break;
-            }
+
         }
 
     }
@@ -75,6 +84,11 @@ export function* getRepeatedStartDays(event: CalendarEvent) {
     }
 
     return days;
+}
+
+export const getActualEndDate = (event: CalendarEvent) => {
+    const date = getDisplayEndDate(event);
+    return date ? date.toISOString() : null;
 }
 
 export const getDisplayEndDate = (event: CalendarEvent) => {
@@ -137,3 +151,38 @@ export const getWeek = (date: Date) => {
     });
 };
 
+export const getMonthForDisplay = (date: Date) => {
+    // get all weeks in the month, including the days from the previous and next month
+    const firstDay = startOfWeek(startOfMonth(date), { weekStartsOn: 0 });
+    const lastDay = endOfWeek(endOfMonth(date), { weekStartsOn: 0 });
+    return eachDayOfInterval({
+        start: firstDay,
+        end: lastDay
+    });
+}
+
+export const serializeEvent = (event: Partial<CalendarEventInternal>) => {
+    // convert dates to ISO string
+    console.log('ser', {
+        ...event,
+        ...event.start && { start: event.start.toISOString() },
+        ...event.end && { end: event.end.toISOString() },
+        ...event.repeat && {repeat: event.repeat != null ? {
+            ...event.repeat,
+            ...('date' in event.repeat ? { date: event.repeat.date.toISOString() } : {})
+        } : null},
+        ...event.actualEnd && { actualEnd: event.actualEnd.toISOString() },
+        ...event.excludedDates && { excludedDates: event.excludedDates.filter(m => m && m instanceof Date).map(d => d.toISOString()) }
+    })
+    return {
+        ...event,
+        ...event.start && { start: event.start.toISOString() },
+        ...event.end && { end: event.end.toISOString() },
+        ...event.repeat && {repeat: event.repeat != null ? {
+            ...event.repeat,
+            ...('date' in event.repeat ? { date: event.repeat.date.toISOString() } : {})
+        } : null},
+        ...event.actualEnd && { actualEnd: event.actualEnd.toISOString() },
+        ...event.excludedDates && { excludedDates: event.excludedDates.map(d => d.toISOString()) }
+    };
+}

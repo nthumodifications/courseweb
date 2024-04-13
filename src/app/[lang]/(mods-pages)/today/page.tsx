@@ -28,7 +28,7 @@ const UpcomingEvents = () => {
             const brightness = getBrightness(event.color);
             //From the brightness, using the adjustBrightness function, create a complementary color that is legible
             const textColor = adjustLuminance(event.color, brightness > 186 ? 0.2 : 0.95);
-            return <EventPopover event={event}>
+            return <EventPopover event={event} key={event.id}>
                 <div className="self-stretch px-2 pt-2 pb-6 rounded flex-col justify-start items-start gap-2 flex" style={{background: event.color, color: textColor}}>
                     <div className="text-sm font-medium font-['Inter'] leading-none">{event.title}</div>
                     <div className="justify-start items-start gap-1 inline-flex">
@@ -62,6 +62,7 @@ const UpcomingEvents = () => {
 }
 
 const TodayPage: NextPage = () => {
+    
 
     const { data: weatherData, error: weatherError, isLoading: weatherLoading } = useQuery<WeatherData>({
         queryKey: ['weather'],
@@ -82,8 +83,8 @@ const TodayPage: NextPage = () => {
     });
 
     return (
-        <div className="px-4 md:pr-8 w-full h-full">
-            <div className="flex flex-col md:flex-row-reverse gap-6">
+        <div className="px-4 md:pr-8 w-full h-[--content-height] overflow-y-hidden">
+            <div className="flex flex-col xl:flex-row-reverse gap-6 h-full">
                 <UpcomingEvents />
                 <Calendar />
             </div>

@@ -5,7 +5,7 @@ import { useCalendar } from './calendar_hook';
 
 export const CurrentTimePointer = () => {
     const date = useTime();
-    const { HOUR_HEIGHT, weekContainer } = useCalendar();
+    const { HOUR_HEIGHT, displayContainer } = useCalendar();
 
     useEffect(() => {
         //first load, scroll to current time
@@ -13,7 +13,7 @@ export const CurrentTimePointer = () => {
         const currentHour = date.getHours();
         const currentMinute = date.getMinutes();
         const currentOffset = currentHour * HOUR_HEIGHT + currentMinute * HOUR_HEIGHT / 60;
-        weekContainer.current?.scrollTo({
+        displayContainer.current?.scrollTo({
             top: currentOffset - 200
         });
     }, []);
