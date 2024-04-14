@@ -7,6 +7,7 @@ import { Route } from 'next';
 import { useSettings } from '@/hooks/contexts/settings';
 import useDictionary from '@/dictionaries/useDictionary';
 import { link } from 'fs';
+import { Separator } from '@/components/ui/separator';
 
 const SideNav:FC = () => {
     const pathname = usePathname();
@@ -64,22 +65,27 @@ const SideNav:FC = () => {
     }, [links])
 
     return (
-        <nav className="fixed w-full bottom-0 grid grid-cols-6 bg-background border-y-2 h-[5rem] mb-[1rem] items-center">
-            {links.map((link, index) => (
-                <div
-                    className={`flex flex-col items-center gap-1 ${link.href == pathname ? 'text-primary': 'text-gray-400'}`}
-                    key={index}
-                    onClick={() => router.push(link.href)} 
-                >
-                    <span className="w-6 h-6">
-                        {link.icon}
-                    </span>
-                    <span className="text-xs font-semibold">
-                        {link.title}
-                    </span>
-                </div>
-            ))}
-        </nav>
+        <div className="fixed w-full bottom-0 flex flex-col h-[5rem] bg-background">
+            <Separator/>
+            <nav className="grid grid-cols-6 items-center py-2.5">
+                {links.map((link, index) => (
+                    <div
+                        className={`flex flex-col items-center gap-1 ${link.href == pathname ? 'text-primary': 'text-gray-400'}`}
+                        key={index}
+                        onClick={() => router.push(link.href)} 
+                    >
+                        <span className="w-6 h-6">
+                            {link.icon}
+                        </span>
+                        <span className="text-xs font-semibold">
+                            {link.title}
+                        </span>
+                    </div>
+                ))}
+            </nav>
+            <Separator/>
+        </div>
+        
     )
 }
 
