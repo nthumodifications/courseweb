@@ -1,13 +1,13 @@
 import supabase from "@/config/supabase";
 import { scheduleTimeSlots } from "@/const/timetable";
 import { colorMapFromCourses, createTimetableFromCourses } from "@/helpers/timetable";
-import { differenceInMinutes, formatISO, getHours, getMinutes, parse } from "date-fns";
+import { getHours, getMinutes, parse } from "date-fns";
 import * as ics from 'ics';
 import { NextResponse } from "next/server";
-import { zonedTimeToUtc } from 'date-fns-tz'
+import { fromZonedTime } from 'date-fns-tz';
 import { MinimalCourse } from "@/types/courses";
 import { semesterInfo } from "@/const/semester";
-import {timetableColors} from '@/const/timetableColors';
+import { timetableColors } from '@/const/timetableColors';
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
@@ -20,8 +20,8 @@ export async function GET(request: Request) {
 
 
     //server runs on UTC, convert time to GMT+8 (Asia/Taipei)
-    const semStart = zonedTimeToUtc(semesterObj.begins, 'Asia/Taipei');
-    const semEnd = zonedTimeToUtc(semesterObj.ends, 'Asia/Taipei');
+    const semStart = fromZonedTime(semesterObj.begins, 'Asia/Taipei');
+    const semEnd = fromZonedTime(semesterObj.ends, 'Asia/Taipei');
 
     function formatDateTime(date: Date) {
         const year = date.getUTCFullYear();
@@ -45,12 +45,12 @@ export async function GET(request: Request) {
             const colorMap = colorMapFromCourses(data!.map(m => m.raw_id), timetableColors[theme]);
             const timetableData = createTimetableFromCourses(data! as MinimalCourse[], colorMap);
             const icss = ics.createEvents(timetableData.map(course => {
-                const start = zonedTimeToUtc(parse(
+                const start = fromZonedTime(parse(
                     scheduleTimeSlots[course.startTime]!.start,
                     'HH:mm',
                     new Date(),
                 ), 'Asia/Taipei');
-                const end = zonedTimeToUtc(parse(
+                const end = fromZonedTime(parse(
                     scheduleTimeSlots[course.endTime]!.end,
                     'HH:mm',
                     new Date()
