@@ -51,5 +51,8 @@
 	<true/>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<true/>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Our app needs permission to save your timetable to your gallery</string>
+
 </dict>
 </plist>
