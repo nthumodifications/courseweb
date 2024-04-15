@@ -12,6 +12,7 @@ import { Device } from '@capacitor/device';
 import { Media } from '@capacitor-community/media';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { toast } from '../ui/use-toast';
+import { Capacitor } from '@capacitor/core';
 
 const DownloadTimetableComponent = () => {
     const dict = useDictionary();
@@ -29,8 +30,7 @@ const DownloadTimetableComponent = () => {
         toPng(ref.current!, { cacheBust: true, pixelRatio: 3, filter: (node: HTMLElement) => node.id !== 'time_slot'})
         .then(async (dataUrl) => {
             const filename = new Date().toISOString() + '_timetable.png';
-            const info = await Device.getInfo();
-            if (info.platform === 'web') {
+            if (!Capacitor.isNativePlatform()) {
                 const link = document.createElement('a');
                 link.download = filename;
                 link.href = dataUrl;
@@ -78,7 +78,7 @@ const DownloadTimetableDialog = ({ onClose, icsfileLink }: { onClose: () => void
 
     const handleDownloadCalendar = async () => {
         const filename = `${new Date().toISOString()}_timetable.ics`;
-        if((await Device.getInfo()).platform === 'web') {
+        if(!Capacitor.isNativePlatform()) {
             const link = document.createElement('a');
             link.download = filename
             link.href = icsfileLink;

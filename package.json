@@ -64,6 +64,7 @@
     "@types/react-transition-group": "^4.4.10",
     "@uiw/react-color-compact": "^2.0.6",
     "autoprefixer": "10.4.16",
+    "capacitor-set-version": "^2.2.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
     "cmdk": "^1.0.0",
