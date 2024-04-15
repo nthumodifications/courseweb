@@ -42,7 +42,7 @@ export type RefineControlFormTypes = {
     gecDimensions: string[],
 }
 
-const emptyFilters: RefineControlFormTypes = {
+export const emptyFilters: RefineControlFormTypes = {
     textSearch: '',
     level: [],
     others: [],

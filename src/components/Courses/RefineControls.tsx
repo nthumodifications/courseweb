@@ -6,7 +6,7 @@ import { UseFormReturn, useWatch } from 'react-hook-form';
 import TimeslotSelectorControl from '../FormComponents/TimeslotSelectorControl';
 import { GECTypes, GETargetCodes } from '@/const/ge_target';
 import { useSettings } from '@/hooks/contexts/settings';
-import { RefineControlFormTypes } from '@/app/[lang]/(mods-pages)/courses/page';
+import {RefineControlFormTypes, emptyFilters} from '@/app/[lang]/(mods-pages)/courses/page';
 import useUserTimetable from '@/hooks/contexts/useUserTimetable';
 import {scheduleTimeSlots} from '@/const/timetable';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -16,10 +16,10 @@ import { departments } from '@/const/departments';
 import { ChevronsUpDown, Trash } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {getFormattedClassCode} from '@/helpers/courses';
-import { MultiSelect } from '@/components/ui/custom_multiselect';
 import { useQuery } from '@tanstack/react-query';
 import { AutocompleteShadcn } from './AutocompleteShadcn';
 import { MultiCheckboxControl } from './MultiCheckboxControl';
+import MultiSelectFormField from '../ui/custom_multiselect';
 
 const RefineControls: FC<{ form: UseFormReturn<RefineControlFormTypes>}> = ({ form }) => {
     const dict = useDictionary();
@@ -139,12 +139,12 @@ const RefineControls: FC<{ form: UseFormReturn<RefineControlFormTypes>}> = ({ fo
                         <FormLabel>{dict.course.refine.department}</FormLabel>
                         <FormItem>
                             <FormControl>
-                            <MultiSelect
-                                label=""
+                            <MultiSelectFormField
                                 placeholder={dict.course.refine.department}
-                                data={departments.map(dept => ({ value: dept.code, label: `${dept.code} - ${dept.name_zh}` }))}
-                                selected={field.value}
-                                onSelectedChange={field.onChange}
+                                options={departments.map(dept => ({ value: dept.code, label: `${dept.code} - ${dept.name_zh}` }))}
+                                defaultValue={field.value}
+                                value={field.value}
+                                onValueChange={field.onChange}
                             />
                             </FormControl>
                         </FormItem>
@@ -203,12 +203,12 @@ const RefineControls: FC<{ form: UseFormReturn<RefineControlFormTypes>}> = ({ fo
                         <FormLabel>{dict.course.refine.venues}</FormLabel>
                         <FormItem>
                             <FormControl>
-                            <MultiSelect
-                                label=""
+                            <MultiSelectFormField
                                 placeholder={dict.course.refine.venues}
-                                data={venues.map(venue => ({ value: venue, label: venue }))}
-                                selected={field.value}
-                                onSelectedChange={field.onChange}
+                                options={venues.map(venue => ({ value: venue, label: venue }))}
+                                defaultValue={field.value}
+                                value={field.value}
+                                onValueChange={field.onChange}
                             />
                             </FormControl>
                         </FormItem>
@@ -225,12 +225,12 @@ const RefineControls: FC<{ form: UseFormReturn<RefineControlFormTypes>}> = ({ fo
                         <FormLabel>{dict.course.refine.cross_discipline}</FormLabel>
                         <FormItem>
                             <FormControl>
-                            <MultiSelect
-                                label=""
+                            <MultiSelectFormField
                                 placeholder={dict.course.refine.cross_discipline}
-                                data={disciplines.map(discipline => ({ value: discipline, label: discipline }))}
-                                selected={field.value}
-                                onSelectedChange={field.onChange}
+                                options={disciplines.map(discipline => ({ value: discipline, label: discipline }))}
+                                defaultValue={field.value}
+                                value={field.value}
+                                onValueChange={field.onChange}
                             />
                             </FormControl>
                         </FormItem>
@@ -240,7 +240,7 @@ const RefineControls: FC<{ form: UseFormReturn<RefineControlFormTypes>}> = ({ fo
             <Button
                 variant={'destructive'}
                 size={'sm'}
-                onClick={() => form.reset()}
+                onClick={() => form.reset(emptyFilters)}
             >
                 <Trash className='h-4 w-4 mr-2' />
                 {dict.course.refine.clear}
