@@ -128,14 +128,13 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
     // get unique semesters
     const semesters = Array.from(new Set(grades.ranking.data.map(grade => grade.year + grade.semester))).toReversed();
     // grades might have semesters that are not in ranking
-    const gradesSemesters = grades.grades.map(grade => grade.year + grade.semester);
-
+    const gradesSemesters = Array.from(new Set(grades.grades.map(grade => grade.year + grade.semester))).toReversed();
     const displayGrades = grades.grades.filter(grade => {
         if (selectedSemester == "All") return true;
         return grade.year + grade.semester == selectedSemester;
     });
 
-    const displayedSemesters = semesters.filter(semester => {
+    const displayedSemesters = gradesSemesters.filter(semester => {
         if (selectedSemester == "All") return true;
         return semester == selectedSemester;
     });
