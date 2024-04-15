@@ -21,7 +21,7 @@ import { useQuery } from '@tanstack/react-query';
 import { AutocompleteShadcn } from './AutocompleteShadcn';
 import { MultiCheckboxControl } from './MultiCheckboxControl';
 
-const RefineControls: FC<{ form: UseFormReturn<RefineControlFormTypes, any, RefineControlFormTypes>}> = ({ form }) => {
+const RefineControls: FC<{ form: UseFormReturn<RefineControlFormTypes>}> = ({ form }) => {
     const dict = useDictionary();
     const { language } = useSettings();
     const { data: firstSpecial = [], error: error1, isLoading: load1 } = useQuery({

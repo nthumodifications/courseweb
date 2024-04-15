@@ -15,6 +15,7 @@ import { Toaster } from '@/components/ui/toaster';
 import ReactQuery from '@/components/ReactQuery';
 
 import './globals.css'
+import AppUrlListener from '@/components/AppUrlListener';
 
 export const metadata: Metadata = {
   title: {
@@ -120,6 +121,7 @@ export default function RootLayout({
                   <html lang={params.lang} className={`${theme?.value ?? ''} ${inter.variable} ${noto.variable}`} suppressHydrationWarning>
                     <body>
                       {children}
+                      <AppUrlListener/>
                       <Toaster />
                     </body>
                   </html>

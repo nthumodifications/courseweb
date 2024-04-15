@@ -8,6 +8,11 @@ import { useCallback, useRef, useState } from 'react';
 import {createTimetableFromCourses, colorMapFromCourses} from '@/helpers/timetable';
 import { useSettings } from '@/hooks/contexts/settings';
 import { MinimalCourse } from '@/types/courses';
+import { Device } from '@capacitor/device';
+import { Media } from '@capacitor-community/media';
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+import { toast } from '../ui/use-toast';
+import { Capacitor } from '@capacitor/core';
 
 const DownloadTimetableComponent = () => {
     const dict = useDictionary();
@@ -23,12 +28,24 @@ const DownloadTimetableComponent = () => {
         }
         setLoading(true);
         toPng(ref.current!, { cacheBust: true, pixelRatio: 3, filter: (node: HTMLElement) => node.id !== 'time_slot'})
-        .then((dataUrl) => {
-            const link = document.createElement('a');
-            link.download = 'timetable.png';
-            link.href = dataUrl;
-            link.click();
-            // navigator.clipboard.writeText(dataUrl);
+        .then(async (dataUrl) => {
+            const filename = new Date().toISOString() + '_timetable.png';
+            if (!Capacitor.isNativePlatform()) {
+                const link = document.createElement('a');
+                link.download = filename;
+                link.href = dataUrl;
+                link.click();
+            } else {
+                const albums = await Media.getAlbums();
+                if (albums.albums.every(album => album.name !== 'NTHUMods')) {
+                    await Media.createAlbum({ name: 'NTHUMods' });
+                }
+                await Media.savePhoto({
+                    path: dataUrl,
+                    albumIdentifier: 'NTHUMods',
+                    fileName: filename,
+                });
+            }
         })
         .catch((err) => {
             console.error('oops, something went wrong!', err);
@@ -59,11 +76,33 @@ const DownloadTimetableComponent = () => {
 const DownloadTimetableDialog = ({ onClose, icsfileLink }: { onClose: () => void, icsfileLink: string }) => {
     const dict = useDictionary();
 
-    const handleDownloadCalendar = () => {
-        const link = document.createElement('a');
-        link.download = 'calendar.ics';
-        link.href = icsfileLink;
-        link.click();
+    const handleDownloadCalendar = async () => {
+        const filename = `${new Date().toISOString()}_timetable.ics`;
+        if(!Capacitor.isNativePlatform()) {
+            const link = document.createElement('a');
+            link.download = filename
+            link.href = icsfileLink;
+            link.click();
+        } else {
+            const res = await Filesystem.checkPermissions()
+            if (!res.publicStorage) {
+                const result = await Filesystem.requestPermissions();
+                if (result.publicStorage != 'granted') {
+                    toast({
+                        title: 'Permission Denied',
+                        description: 'Please allow storage permission to download the file.',
+                    });
+                    return;
+                }
+            }
+            Filesystem.downloadFile({
+                path: `ics/${filename}`,
+                url: icsfileLink,
+                directory: Directory.Documents,
+                recursive: true,
+            });
+        }
+
     }
 
     return <ModalDialog>
