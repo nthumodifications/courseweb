@@ -1,4 +1,4 @@
-import { Download, EyeOff, Search, Share, Trash, AlertTriangle, Copy, Columns, Repeat, ExternalLink, GripVertical, FolderSync } from 'lucide-react';
+import { Download, EyeOff, Search, Share, Trash, AlertTriangle, Copy, Columns, Repeat, ExternalLink, GripVertical } from 'lucide-react';
 import { useSettings } from '@/hooks/contexts/settings';
 import useUserTimetable from '@/hooks/contexts/useUserTimetable';
 import { useRouter } from 'next/navigation';
@@ -6,7 +6,7 @@ import { useModal } from '@/hooks/contexts/useModal';
 import CourseSearchbar from './CourseSearchbar';
 import ThemeChangableAlert from '../Alerts/ThemeChangableAlert';
 import useDictionary from '@/dictionaries/useDictionary';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { hasConflictingTimeslots, hasSameCourse, hasTimes } from '@/helpers/courses';
 import { MinimalCourse, RawCourseID } from '@/types/courses';
 import dynamic from 'next/dynamic';
@@ -37,14 +37,11 @@ import {
 } from '@dnd-kit/modifiers';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import Compact from '@uiw/react-color-compact';
-import { useHeadlessAIS } from '@/hooks/contexts/useHeadlessAIS';
-import { toast } from '../ui/use-toast';
-import {event} from '@/lib/gtag';
 import { Separator } from '../ui/separator';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '../ui/hover-card';
 const DownloadTimetableDialogDynamic = dynamic(() => import('./DownloadTimetableDialog'), { ssr: false })
 const ShareSyncTimetableDialogDynamic = dynamic(() => import('./ShareSyncTimetableDialog'), { ssr: false })
-
+const HeadlessSyncCourseButtonDynamic = dynamic(() => import('./HeadlessSyncCourseButton'), { ssr: false })
 
 
 const TimetableCourseListItem = ({ course, hasConflict, isDuplicate }: { course: MinimalCourse, hasConflict: boolean, isDuplicate: boolean, }) => {
@@ -147,58 +144,6 @@ const TimetableCourseListItem = ({ course, hasConflict, isDuplicate }: { course:
     </div>
 }
 
-const HeadlessSyncCourseButton = () => {
-    const dict = useDictionary();
-    const { ais, getACIXSTORE } = useHeadlessAIS();
-    const { courses, addCourse, deleteCourse } = useUserTimetable();
-    const [loading, setLoading] = useState(false);
-    const [coursesToAdd, setCoursesToAdd] = useState<string[]>([]);
-
-    if(!ais.enabled) return <></>;
-
-    useEffect(() => {
-        if(coursesToAdd.length > 0) {
-            addCourse(coursesToAdd);
-            setCoursesToAdd([]);
-            toast({
-                title: 'Sync Succesful!',
-                description: 'Courses are added to your timetable.',
-            })
-            event({
-                action: "sync_ccxp_courses",
-                category: "ccxp",
-                label: "sync_ccxp_courses",
-            });
-        }
-    }, [courses, coursesToAdd]);
-
-
-    const handleSync = async () => {
-        setLoading(true);
-        console.log('sync')
-        const ACIXSTORE = await getACIXSTORE();
-        const res = await fetch('/api/ais_headless/courses/sync-latest?ACIXSTORE='+ACIXSTORE).then(res => res.json()) as {
-            semester: string,
-            phase: string,
-            studentid: string,
-            courses: string[]
-        };
-        //remove courses that are not in the latest
-        const courses_to_remove = (courses[res.semester] ?? []).filter(id => !res.courses.includes(id));
-        deleteCourse(courses_to_remove);
-        //add courses that are not in the current
-        const courses_to_add = res.courses.filter(id => !(courses[res.semester] ?? []).includes(id));
-        setCoursesToAdd(courses_to_add);
-        setLoading(false);
-    }
-    return <Button variant="outline" onClick={handleSync} disabled={loading}>
-        {!loading?
-            <><FolderSync className="w-4 h-4 mr-1" /> {dict.timetable.actions.sync_ccxp}</>:
-            "Loading"
-        }
-    </Button>
-}
-
 const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, setVertical: (v: boolean) => void }) => {
     const { language } = useSettings();
     const dict = useDictionary();
@@ -251,7 +196,7 @@ const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, set
             <Button variant="outline" onClick={() => setVertical(!vertical)}><Repeat className="w-4 h-4 mr-1" /> {vertical ? dict.timetable.actions.horizontal_view : dict.timetable.actions.vertical_view}</Button>
             <Button variant="outline" onClick={handleDownloadDialog}><Download className="w-4 h-4 mr-1" /> {dict.timetable.actions.download}</Button>
             <Button variant="outline" onClick={handleShowShareDialog}><Share className="w-4 h-4 mr-1" /> {dict.timetable.actions.share}</Button>
-            <HeadlessSyncCourseButton />
+            <HeadlessSyncCourseButtonDynamic />
         </div>
     }
 
