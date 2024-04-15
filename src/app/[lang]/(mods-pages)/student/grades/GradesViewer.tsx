@@ -127,9 +127,11 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
 
     // get unique semesters
     const semesters = Array.from(new Set(grades.ranking.data.map(grade => grade.year + grade.semester))).toReversed();
+    // grades might have semesters that are not in ranking
+    const gradesSemesters = grades.grades.map(grade => grade.year + grade.semester);
 
     const displayGrades = grades.grades.filter(grade => {
-        if (selectedSemester == "All") return semesters.includes(grade.year + grade.semester);
+        if (selectedSemester == "All") return true;
         return grade.year + grade.semester == selectedSemester;
     });
 
@@ -175,7 +177,7 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
                     </SelectTrigger>
                     <SelectContent >
                         <SelectItem value={"All"}>全部課程</SelectItem>
-                        {semesters.map(sem_id => <SelectItem key={sem_id} value={sem_id}>{toPrettySemester(sem_id)}</SelectItem>)}
+                        {gradesSemesters.map(sem_id => <SelectItem key={sem_id} value={sem_id}>{toPrettySemester(sem_id)}</SelectItem>)}
                     </SelectContent>
                 </Select>}
                 {tab == "semester" && <Select value={semesterSort} onValueChange={(e: string) => setSemesterSort(e as "asc" | "desc")}>
