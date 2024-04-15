@@ -8,7 +8,7 @@ import { useForm, useWatch } from "react-hook-form";
 import { useDebouncedCallback } from "use-debounce";
 import { useLocalStorage, useMediaQuery } from 'usehooks-ts';
 import { arrayRange } from '@/helpers/array';
-import RefineControls from '@/components/Courses/RefineControls';
+import RefineControls, { RefineControlFormTypes, emptyFilters } from '@/components/Courses/RefineControls';
 import useDictionary from "@/dictionaries/useDictionary";
 import { useRouter, useSearchParams } from "next/navigation";
 import queryString from 'query-string';
@@ -23,42 +23,6 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/h
 import MiniTimetable from "@/components/Courses/MiniTimetable";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
-
-export type RefineControlFormTypes = {
-    textSearch: string,
-    level: string[],
-    language: string[],
-    others: string[],
-    className: string | null,
-    department: string[],
-    firstSpecialization: string | null,
-    secondSpecialization: string | null,
-    timeslots: string[],
-    timeFilter: TimeFilterType,
-    semester: string,
-    venues: string[],
-    disciplines: string[],
-    geTarget: string[],
-    gecDimensions: string[],
-}
-
-const emptyFilters: RefineControlFormTypes = {
-    textSearch: '',
-    level: [],
-    others: [],
-    language: [],
-    department: [],
-    venues: [],
-    timeslots: [],
-    timeFilter: TimeFilterType.Within,
-    semester: '11220',
-    disciplines: [],
-    gecDimensions: [],
-    geTarget: [],
-    className: null,
-    firstSpecialization: null,
-    secondSpecialization: null,
-}
 
 const CoursePage: NextPage = () => {
     const dict = useDictionary();
@@ -336,7 +300,7 @@ const CoursePage: NextPage = () => {
                 {isMobile && <Drawer open={open} onClose={() => setOpen(false)}>
                     <DrawerContent>
                         <div className="max-h-[70vh] overflow-auto">
-                            <RefineControls form={form}/>
+                            <RefineControls form={form} />
                         </div>
                     </DrawerContent>
                 </Drawer>}

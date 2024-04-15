@@ -79,7 +79,7 @@
     "jsdom": "^24.0.0",
     "jsonwebtoken": "^9.0.2",
     "leaflet": "^1.9.4",
-    "lucide-react": "^0.294.0",
+    "lucide-react": "^0.368.0",
     "negotiator": "^0.6.3",
     "next": "^14.2.1",
     "next-auth": "^4.24.5",
