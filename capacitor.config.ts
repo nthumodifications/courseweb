@@ -5,8 +5,8 @@ const config: CapacitorConfig = {
   appName: 'NTHUMods',
   webDir: 'fakeout',
   server: {
-    url: 'https://nthumods.com',
-    androidScheme: 'https',
+    url: process.env.NODE_ENV === 'production' ? 'https://nthumods.com' : 'http://192.168.31.109:3000',
+    androidScheme: process.env.NODE_ENV === 'production' ? 'https' : 'http',
   },
 
 };
