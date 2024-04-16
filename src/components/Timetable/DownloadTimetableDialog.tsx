@@ -5,14 +5,10 @@ import Timetable from './Timetable';
 import useUserTimetable from '@/hooks/contexts/useUserTimetable';
 import { toPng } from 'html-to-image';
 import { useCallback, useRef, useState } from 'react';
-import {createTimetableFromCourses, colorMapFromCourses} from '@/helpers/timetable';
-import { useSettings } from '@/hooks/contexts/settings';
+import { createTimetableFromCourses } from '@/helpers/timetable';
 import { MinimalCourse } from '@/types/courses';
-import { Device } from '@capacitor/device';
-import { Media } from '@capacitor-community/media';
-import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
-import { toast } from '../ui/use-toast';
 import { Capacitor } from '@capacitor/core';
+import { Share } from '@capacitor/share';
 
 const DownloadTimetableComponent = () => {
     const dict = useDictionary();
@@ -36,14 +32,9 @@ const DownloadTimetableComponent = () => {
                 link.href = dataUrl;
                 link.click();
             } else {
-                const albums = await Media.getAlbums();
-                if (albums.albums.every(album => album.name !== 'NTHUMods')) {
-                    await Media.createAlbum({ name: 'NTHUMods' });
-                }
-                await Media.savePhoto({
-                    path: dataUrl,
-                    albumIdentifier: 'NTHUMods',
-                    fileName: filename,
+                await Share.share({
+                    title: 'Share Timetable',
+                    url: dataUrl,
                 });
             }
         })
@@ -84,22 +75,9 @@ const DownloadTimetableDialog = ({ onClose, icsfileLink }: { onClose: () => void
             link.href = icsfileLink;
             link.click();
         } else {
-            const res = await Filesystem.checkPermissions()
-            if (!res.publicStorage) {
-                const result = await Filesystem.requestPermissions();
-                if (result.publicStorage != 'granted') {
-                    toast({
-                        title: 'Permission Denied',
-                        description: 'Please allow storage permission to download the file.',
-                    });
-                    return;
-                }
-            }
-            Filesystem.downloadFile({
-                path: `ics/${filename}`,
+            await Share.share({
                 url: icsfileLink,
-                directory: Directory.Documents,
-                recursive: true,
+                dialogTitle: 'Open in Calendar',
             });
         }
 
