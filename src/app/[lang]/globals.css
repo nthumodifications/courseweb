@@ -31,6 +31,10 @@
 
 html, body {
   font-family: var(--font-inter), var(--font-noto), sans-serif;
+  padding: env(safe-area-inset-top) 
+          env(safe-area-inset-right) 
+          env(safe-area-inset-bottom) 
+          env(safe-area-inset-left);
   @apply overflow-x-hidden bg-white dark:bg-background dark:text-white
 }
 
@@ -73,7 +77,7 @@ html, body {
     --radius: 0.5rem;
     --header-height: 3.5rem;
     --bottom-nav-height: 5rem;
-    --content-height: calc(100vh - var(--header-height) - var(--bottom-nav-height));
+    --content-height: calc(env(safe-area-inset-top) - 100vh - var(--header-height) - var(--bottom-nav-height));
   }
 
   .dark {
