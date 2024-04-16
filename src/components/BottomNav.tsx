@@ -9,7 +9,7 @@ import useDictionary from '@/dictionaries/useDictionary';
 import { link } from 'fs';
 import { Separator } from '@/components/ui/separator';
 
-const SideNav:FC = () => {
+const BottomNav:FC = () => {
     const pathname = usePathname();
     const { language } = useSettings();
     const dict = useDictionary();
@@ -65,7 +65,7 @@ const SideNav:FC = () => {
     }, [links])
 
     return (
-        <div className="fixed w-full bottom-0 flex flex-col h-[5rem] bg-background">
+        <div className="fixed w-full bottom-0 md:hidden flex-col h-[5rem] bg-background z-50 flex">
             <Separator/>
             <nav className="grid grid-cols-6 items-center py-2.5">
                 {links.map((link, index) => (
@@ -89,4 +89,4 @@ const SideNav:FC = () => {
     )
 }
 
-export default SideNav;
+export default BottomNav;

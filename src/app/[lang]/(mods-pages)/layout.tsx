@@ -13,20 +13,21 @@ const NTHUModsLayout = ({
 }: {
     children: React.ReactNode
 } & LangProps) => {
-    return <div className={`grid grid-cols-1 grid-rows-[var(--header-height)_var(--content-height)] md:grid-cols-[12rem_auto]`}>
+    return <>
         <GoogleAnalytics />
         <ConsoleLogger />
-        <Header />
-        <div className='hidden md:flex h-full px-2 pt-8 pl-8'>
-            <SideNav />
+            
+        <div className={`grid grid-cols-1 grid-rows-[var(--header-height)_var(--content-height)_auto] md:grid-cols-[12rem_auto]`}>
+            <Header />
+            <div className='hidden md:flex h-full px-2 pt-8 pl-8'>
+                <SideNav />
+            </div>
+            <main className='overflow-y-auto overflow-x-hidden h-full w-full scroll-smooth [&>div]:h-full pt-8 md:pl-8'>
+                {children}
+            </main>
         </div>
-        <main className='overflow-y-auto overflow-x-hidden h-full w-full scroll-smooth [&>div]:h-full pt-8 md:pl-8'>
-            {children}
-        </main>
-        <div className="flex md:hidden">
-            <BottomNav />
-        </div>
-    </div>
+        <BottomNav />
+    </>
 }
 
 export default NTHUModsLayout;

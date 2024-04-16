@@ -77,7 +77,7 @@ html, body {
     --radius: 0.5rem;
     --header-height: 3.5rem;
     --bottom-nav-height: 5rem;
-    --content-height: calc(env(safe-area-inset-top) - 100vh - var(--header-height) - var(--bottom-nav-height));
+    --content-height: calc(calc(calc(100vh - env(safe-area-inset-top)) - var(--header-height)) - var(--bottom-nav-height));
   }
 
   .dark {
@@ -113,6 +113,6 @@ html, body {
 
 @screen md {
   :root {
-    --content-height: calc(100vh - var(--header-height));
+    --content-height: calc(calc(100vh - env(safe-area-inset-top, 0px)) - var(--header-height));
   }
 }
