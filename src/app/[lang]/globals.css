@@ -29,13 +29,16 @@
   unicode-range: U+4E00-9FFF;
 } */
 
-html, body {
+html {
   font-family: var(--font-inter), var(--font-noto), sans-serif;
-  padding: env(safe-area-inset-top) 
+}
+
+body {
+  padding: env(safe-area-inset-top)
           env(safe-area-inset-right) 
           env(safe-area-inset-bottom) 
           env(safe-area-inset-left);
-  @apply overflow-x-hidden bg-white dark:bg-background dark:text-white
+  @apply overflow-x-hidden
 }
 
 @layer utilities {
@@ -106,7 +109,7 @@ html, body {
   * {
     @apply border-border;
   }
-  body {
+  html, body {
     @apply bg-background text-foreground;
   }
 }
