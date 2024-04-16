@@ -14,4 +14,5 @@ export type CdsCourseDefinition = Database['public']['Tables']['cds_courses']['R
 export type SubmissionDefinition = Database['public']['Tables']['cds_submissions']['Row'];
 export type CdsTermDefinition = Database['public']['Tables']['cds_terms']['Row'];
 export type CdsCountDefinition = Database['public']['Tables']['cds_counts']['Row'];
+export type CourseCommentsDefinition = Database['public']['Tables']['course_comments']['Row'];
 export default supabase;

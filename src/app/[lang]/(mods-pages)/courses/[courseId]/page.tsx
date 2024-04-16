@@ -19,9 +19,11 @@ import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from "@/components/ui/badge"
-import supabase, { CourseDefinition, CourseScoreDefinition } from '@/config/supabase';
+import supabase, { CourseCommentsDefinition, CourseDefinition, CourseScoreDefinition } from '@/config/supabase';
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { timetableColors } from "@/const/timetableColors";
+import supabase_server from "@/config/supabase_server";
+import { CommentsContainer } from "./CommentsContainer";
 
 
 type PageProps = {
@@ -55,7 +57,7 @@ export async function generateMetadata({ params }: PageProps, parent: ResolvingM
 
 const TOCNavItem = ({ href, children, label, active }: { href: string, children?: React.ReactNode, label: string, active?: boolean }) => {
     return <li className="mt-0 pt-2">
-        <a href={href} className={`inline-block no-underline transition-colors hover:text-foreground ${active ? "font-medium text-foreground": "text-muted-foreground"}`}>{label}</a>
+        <a href={href} className={`inline-block no-underline transition-colors hover:text-foreground ${active ? "font-medium text-foreground" : "text-muted-foreground"}`}>{label}</a>
         {children}
     </li>
 }
@@ -242,7 +244,7 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                         </div>
                     </div>
                 </div>
-
+                <CommentsContainer courseId={courseId} />
             </div>
             <div className="hidden xl:block text-sm">
                 <div className="sticky top-0 pl-6">
