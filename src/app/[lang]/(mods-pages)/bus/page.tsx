@@ -12,6 +12,7 @@ import { RedLineIcon } from "@/components/BusIcons/RedLineIcon";
 import { GreenLineIcon } from "@/components/BusIcons/GreenLineIcon";
 import { NandaLineIcon } from "@/components/BusIcons/NandaLineIcon";
 import { useRouter } from "next/navigation";
+import { getTimeOnDate } from "@/helpers/bus";
 
 type BusListingItemProps = { refTime: Date, Icon: FC<HTMLProps<SVGElement>>, line: string, title: string, destination?: string, notes?: string[], arrival: string }
 const BusListingItem = ({ refTime, Icon, line, title, destination, notes = [], arrival }: BusListingItemProps) => {
@@ -52,10 +53,7 @@ const BusListingItem = ({ refTime, Icon, line, title, destination, notes = [], a
     </div>
 }
 
-const getTimeOnDate = (date: Date, time: string) => {
-    const [hour, minute] = time.split(':').map(n => parseInt(n));
-    return set(date, { hours: hour, minutes: minute });
-}
+
 
 const BusPage = () => {
     const { language } = useSettings();
