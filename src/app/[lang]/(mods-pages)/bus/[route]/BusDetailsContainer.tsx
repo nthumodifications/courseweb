@@ -53,10 +53,10 @@ const BusDetailsContainer = ({ routes, up, down }: BusDetailsContainerProps) => 
             <TableBody>
             {transformedBuses.map((bus) => (
                 <TableRow>
-                    <TableCell className="text-slate-800 font-bold">{bus.time}</TableCell>
+                    <TableCell className="text-slate-800 dark:text-neutral-200 font-semibold">{bus.time}</TableCell>
                     <TableCell className="">
-                        {bus.notes.map(note => <div className="h-5 px-2 py-1 bg-slate-100 rounded justify-center items-center gap-2 inline-flex">
-                            <div className="text-center text-black text-sm font-medium">{note}</div>
+                        {bus.notes.map(note => <div className="h-5 px-2 py-1 bg-slate-100 dark:bg-neutral-800 rounded justify-center items-center gap-2 inline-flex">
+                            <div className="text-center text-black dark:text-white text-sm font-medium">{note}</div>
                         </div>)}
                     </TableCell>
                 </TableRow>
@@ -73,7 +73,7 @@ const BusDetailsContainer = ({ routes, up, down }: BusDetailsContainerProps) => 
                 {routes.map(({ Icon, title }) => (
                     <div className="flex flex-row gap-4 items-center">
                         <Icon />
-                        <h3 className="text-slate-800 font-bold">{title}</h3>
+                        <h3 className="text-slate-800 dark:text-neutral-200 font-bold">{title}</h3>
                     </div>
                 ))}
             </div>
@@ -84,8 +84,8 @@ const BusDetailsContainer = ({ routes, up, down }: BusDetailsContainerProps) => 
                 </TabsList>
                 <TabsContent value="up" className="flex flex-col gap-4">
                     <div className="flex flex-col gap-2 mt-2">
-                        <p className="text-slate-500 text-sm" dangerouslySetInnerHTML={{ __html: lang == 'zh' ? up.info.route : up.info.routeEN}}></p>
-                        <p className="text-slate-500 text-xs">有效期限：{up.info.duration}</p>
+                        <p className="text-slate-500 dark:text-neutral-300 text-sm" dangerouslySetInnerHTML={{ __html: lang == 'zh' ? up.info.route : up.info.routeEN}}></p>
+                        <p className="text-slate-500 dark:text-neutral-300 text-xs">有效期限：{up.info.duration}</p>
                     </div>
                     <Tabs defaultValue="weekday">
                         <TabsList className="w-full sticky top-0 z-50 shadow-md">
@@ -102,8 +102,8 @@ const BusDetailsContainer = ({ routes, up, down }: BusDetailsContainerProps) => 
                 </TabsContent>
                 <TabsContent value="down" className="flex flex-col gap-4">
                     <div className="flex flex-col gap-2 mt-2">
-                        <p className="text-slate-500 text-sm" dangerouslySetInnerHTML={{ __html: lang == 'zh' ? down.info.route : down.info.routeEN}}></p>
-                        <p className="text-slate-500 text-xs">有效期限：{down.info.duration}</p>
+                        <p className="text-slate-500 dark:text-neutral-300 text-sm" dangerouslySetInnerHTML={{ __html: lang == 'zh' ? down.info.route : down.info.routeEN}}></p>
+                        <p className="text-slate-500 dark:text-neutral-300 text-xs">有效期限：{down.info.duration}</p>
                     </div>
                     <Tabs defaultValue="weekday">
                         <TabsList className="w-full sticky top-0 z-50 shadow-md">

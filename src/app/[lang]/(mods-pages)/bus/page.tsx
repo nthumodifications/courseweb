@@ -36,16 +36,16 @@ const BusListingItem = ({ refTime, Icon, line, title, destination, notes = [], a
     return <div className={cn("flex flex-row py-4 items-center gap-4 cursor-pointer", arrival == '末班車已過' ? 'opacity-30': '')} onClick={() => router.push(`/${language}/bus/${route}`)}>
         <Icon className="h-7 w-7" />
         <div className="flex flex-row flex-wrap gap-2">
-            <h3 className="text-slate-800 font-bold">
+            <h3 className="text-slate-800 dark:text-neutral-100 font-bold">
                 <span>{title}</span>
                 {destination && <span>-{destination}</span>}
             </h3>
-            {notes.map(note => <div className="h-5 px-2 py-1 bg-slate-100 rounded justify-center items-center gap-2 inline-flex">
-                <div className="text-center text-black text-sm font-medium">{note}</div>
+            {notes.map(note => <div className="h-5 px-2 py-1 bg-slate-100 dark:bg-neutral-800 rounded justify-center items-center gap-2 inline-flex">
+                <div className="text-center text-black dark:text-white text-sm font-medium">{note}</div>
             </div>)}
         </div>
        
-        <div className={cn("flex-1 text-right text-slate-800 font-bold whitespace-nowrap", displayTime == '即將發車' ? 'text-lime-500': '')}>{displayTime}</div>
+        <div className={cn("flex-1 text-right text-slate-800 dark:text-neutral-200 font-bold whitespace-nowrap", displayTime == '即將發車' ? 'text-lime-500': '')}>{displayTime}</div>
         <div className="grid place-items-center">
             <ChevronRight className="w-4 h-4"/>
         </div>
@@ -219,7 +219,7 @@ const BusPage = () => {
                 <TabsTrigger className="flex-1" value="tsmc">台積館</TabsTrigger>
                 <TabsTrigger className="flex-1" value="nanda">南大校區</TabsTrigger>
             </TabsList>
-            <div className="flex flex-col px-2 divide-y divide-slate-100">
+            <div className="flex flex-col px-2 divide-y divide-slate-100 dark:divide-neutral-700">
                 {displayBuses.map((bus, index) => (
                     <BusListingItem key={index} {...bus} refTime={time} />
                 ))}
