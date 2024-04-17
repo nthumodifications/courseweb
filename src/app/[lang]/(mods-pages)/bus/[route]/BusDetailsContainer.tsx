@@ -6,6 +6,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { HTMLProps } from 'react';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
+import { GreenLineIcon } from '@/components/BusIcons/GreenLineIcon';
+import { RedLineIcon } from '@/components/BusIcons/RedLineIcon';
 
 
 const exportNotes = (bus: BusDepartureDetails) => {
@@ -46,6 +48,7 @@ const BusDetailsContainer = ({ routes, up, down }: BusDetailsContainerProps) => 
         return <Table>
             <TableHeader>
                 <TableRow>
+                    {routes.length > 1 && <TableHead className="w-[80px]">路綫</TableHead>}
                     <TableHead className="w-[100px]">出發時間</TableHead>
                     <TableHead className="">備注</TableHead>
                 </TableRow>
@@ -53,6 +56,7 @@ const BusDetailsContainer = ({ routes, up, down }: BusDetailsContainerProps) => 
             <TableBody>
             {transformedBuses.map((bus) => (
                 <TableRow>
+                    {bus.route == '校園公車' && <TableCell className="text-slate-800 dark:text-neutral-200 font-semibold">{bus.line == 'green' ? <GreenLineIcon/>: <RedLineIcon/>}</TableCell>}
                     <TableCell className="text-slate-800 dark:text-neutral-200 font-semibold">{bus.time}</TableCell>
                     <TableCell className="">
                         {bus.notes.map(note => <div className="h-5 px-2 py-1 bg-slate-100 dark:bg-neutral-800 rounded justify-center items-center gap-2 inline-flex">
