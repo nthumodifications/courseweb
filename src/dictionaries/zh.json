@@ -87,6 +87,25 @@
         "venues": "地點",
         "bus": "校車"
     },
+    "bus": {
+        "north_gate": "北校門口",
+        "tsmc": "台積館",
+        "nanda": "南大校區",
+        "main_campus": "校本部",
+        "service_over": "末班車已過",
+        "red_line": "紅線",
+        "green_line": "綠線",
+        "nanda_line": "南大校車",
+        "departing": "即將發車",
+        "departed": "已過站",
+        "validity": "有效期限",
+        "route": "路線",
+        "departure_time": "出發時間",
+        "notes": "備注",
+        "weekdays": "平日",
+        "weekends": "假日",
+        "to": "往"
+    },
     "settings": {
         "title": "設定",
         "dark_mode": {

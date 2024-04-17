@@ -5,6 +5,7 @@ import { RedLineIcon } from "@/components/BusIcons/RedLineIcon";
 import { GreenLineIcon } from "@/components/BusIcons/GreenLineIcon";
 import { NandaLineIcon } from "@/components/BusIcons/NandaLineIcon";
 import { redirect } from "next/navigation";
+import { getDictionary } from "@/dictionaries/dictionaries";
 
 type BusRouteDetailsPageProps = {
     params: {
@@ -13,6 +14,7 @@ type BusRouteDetailsPageProps = {
 }
 
 const BusRouteDetailsPage = async ({ params: { lang, route }}: BusRouteDetailsPageProps & LangProps) => {
+    const dict = await getDictionary(lang);
     if(route == "main") {
         const details = await getMainBuses()
 
@@ -20,21 +22,21 @@ const BusRouteDetailsPage = async ({ params: { lang, route }}: BusRouteDetailsPa
             routes={[
                 {
                     Icon: RedLineIcon,
-                    title: "紅線"
+                    title: dict.bus.red_line
                 },
                 {
                     Icon: GreenLineIcon,
-                    title: "綠線"
+                    title: dict.bus.green_line
                 }
             ]} 
             up={{
-                title: "台積電",
+                title: dict.bus.to + dict.bus.tsmc,
                 info: details.toward_TSMC_building_info,
                 weekday: details.weekday_bus_schedule_toward_TSMC_building,
                 weekend: details.weekend_bus_schedule_toward_TSMC_building,
             }}
             down={{
-                title: "北校門",
+                title: dict.bus.to + dict.bus.north_gate,
                 info: details.toward_main_gate_info,
                 weekday: details.weekday_bus_schedule_toward_main_gate,
                 weekend: details.weekend_bus_schedule_toward_main_gate,
@@ -47,17 +49,17 @@ const BusRouteDetailsPage = async ({ params: { lang, route }}: BusRouteDetailsPa
             routes={[
                 {
                     Icon: NandaLineIcon,
-                    title: "南大區間車"
+                    title: dict.bus.nanda_line
                 },
             ]} 
             up={{
-                title: "南大校區",
+                title: dict.bus.to + dict.bus.nanda,
                 info: details.toward_south_campus_info,
                 weekday: details.weekday_bus_schedule_toward_south_campus,
                 weekend: details.weekend_bus_schedule_toward_south_campus,
             }}
             down={{
-                title: "校本部",
+                title: dict.bus.to + dict.bus.main_campus,
                 info: details.toward_main_campus_info,
                 weekday: details.weekday_bus_schedule_toward_main_campus,
                 weekend: details.weekend_bus_schedule_toward_main_campus,

@@ -10,6 +10,8 @@ import { GreenLineIcon } from '@/components/BusIcons/GreenLineIcon';
 import { RedLineIcon } from '@/components/BusIcons/RedLineIcon';
 import { exportNotes, getTimeOnDate } from '@/helpers/bus';
 import useTime from '@/hooks/useTime';
+import useDictionary from '@/dictionaries/useDictionary';
+import { Language } from '@/types/settings';
 
 type BusDetailsContainerProps = {
     routes: {
@@ -30,19 +32,21 @@ type BusDetailsContainerProps = {
     },
 }
 const BusDetailsContainer = ({ routes, up, down }: BusDetailsContainerProps) => {
-    const { lang } = useParams();
+    const { lang } = useParams() as { lang: Language };
     const [weektab, setWeektab] = useState<'weekday'|'weekend'>('weekday');
     const [direction, setDirection] = useState<'up'|'down'>('up');
     const time = useTime();
+    const dict = useDictionary();
+
 
     const renderBusSchedule = (buses: BusDepartureDetails[]) => {
-        const transformedBuses = buses.map(exportNotes);
+        const transformedBuses = buses.map(m => exportNotes(m, lang));
         return <Table>
             <TableHeader>
                 <TableRow>
-                    {routes.length > 1 && <TableHead className="w-[80px]">路綫</TableHead>}
-                    <TableHead className="w-[100px]">出發時間</TableHead>
-                    <TableHead className="">備注</TableHead>
+                    {routes.length > 1 && <TableHead className="w-[80px]">{dict.bus.route}</TableHead>}
+                    <TableHead className="w-[100px]">{dict.bus.departure_time}</TableHead>
+                    <TableHead className="">{dict.bus.notes}</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
@@ -107,18 +111,18 @@ const BusDetailsContainer = ({ routes, up, down }: BusDetailsContainerProps) => 
             </div>
             <Tabs defaultValue="up" value={direction} onValueChange={v => setDirection(v as "up" | "down")}>
                 <TabsList className="w-full sticky top-0 z-50 shadow-md">
-                    <TabsTrigger className="flex-1" value="up">往{up.title}</TabsTrigger>
-                    <TabsTrigger className="flex-1" value="down">往{down.title}</TabsTrigger>
+                    <TabsTrigger className="flex-1" value="up">{up.title}</TabsTrigger>
+                    <TabsTrigger className="flex-1" value="down">{down.title}</TabsTrigger>
                 </TabsList>
                 <TabsContent value="up" className="flex flex-col gap-4">
                     <div className="flex flex-col gap-2 mt-2">
                         <p className="text-slate-500 dark:text-neutral-300 text-sm" dangerouslySetInnerHTML={{ __html: lang == 'zh' ? up.info.route : up.info.routeEN}}></p>
-                        <p className="text-slate-500 dark:text-neutral-300 text-xs">有效期限：{up.info.duration}</p>
+                        <p className="text-slate-500 dark:text-neutral-300 text-xs">{dict.bus.validity}：{up.info.duration}</p>
                     </div>
                     <Tabs defaultValue="weekday" value={weektab} onValueChange={v => setWeektab(v as "weekday" | "weekend")}>
                         <TabsList className="w-full sticky top-0 z-50 shadow-md">
-                            <TabsTrigger className="flex-1" value="weekday">平日</TabsTrigger>
-                            <TabsTrigger className="flex-1" value="weekend">假日</TabsTrigger>
+                            <TabsTrigger className="flex-1" value="weekday">{dict.bus.weekdays}</TabsTrigger>
+                            <TabsTrigger className="flex-1" value="weekend">{dict.bus.weekends}</TabsTrigger>
                         </TabsList>
                         <TabsContent value="weekday">
                             {renderBusSchedule(up.weekday)}
@@ -131,12 +135,12 @@ const BusDetailsContainer = ({ routes, up, down }: BusDetailsContainerProps) => 
                 <TabsContent value="down" className="flex flex-col gap-4">
                     <div className="flex flex-col gap-2 mt-2">
                         <p className="text-slate-500 dark:text-neutral-300 text-sm" dangerouslySetInnerHTML={{ __html: lang == 'zh' ? down.info.route : down.info.routeEN}}></p>
-                        <p className="text-slate-500 dark:text-neutral-300 text-xs">有效期限：{down.info.duration}</p>
+                        <p className="text-slate-500 dark:text-neutral-300 text-xs">{dict.bus.validity}：{up.info.duration}</p>
                     </div>
                     <Tabs defaultValue="weekday" value={weektab} onValueChange={v => setWeektab(v as "weekday" | "weekend")}>
                         <TabsList className="w-full sticky top-0 z-50 shadow-md">
-                            <TabsTrigger className="flex-1" value="weekday">平日</TabsTrigger>
-                            <TabsTrigger className="flex-1" value="weekend">假日</TabsTrigger>
+                            <TabsTrigger className="flex-1" value="weekday">{dict.bus.weekdays}</TabsTrigger>
+                            <TabsTrigger className="flex-1" value="weekend">{dict.bus.weekends}</TabsTrigger>
                         </TabsList>
                         <TabsContent value="weekday">
                             {renderBusSchedule(down.weekday)}
