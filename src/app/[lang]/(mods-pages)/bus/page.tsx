@@ -59,7 +59,7 @@ const BusListingItem = ({ refTime, Icon, line, title, destination, notes = [], a
 
 const BusPage = () => {
     const { language } = useSettings();
-    const time = addHours(useTime(), 8);
+    const time = useTime();
     const dict = useDictionary();
     const [tab, setTab] = useState('north_gate');
 
