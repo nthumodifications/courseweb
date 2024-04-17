@@ -77,7 +77,7 @@ const BottomNav:FC = () => {
                         <span className="w-6 h-6">
                             {link.icon}
                         </span>
-                        <span className="text-xs font-semibold">
+                        <span className="text-xs font-semibold select-none">
                             {link.title}
                         </span>
                     </div>
