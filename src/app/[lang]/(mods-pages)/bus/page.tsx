@@ -17,6 +17,8 @@ type BusListingItemProps = { refTime: Date, Icon: FC<HTMLProps<SVGElement>>, lin
 const BusListingItem = ({ refTime, Icon, line, title, destination, notes = [], arrival }: BusListingItemProps) => {
     const { language } = useSettings();
     const displayTime = useMemo(() => {
+        // check if is time, else return as is
+        if (!arrival.match(/\d{2}:\d{2}/)) return arrival;
         const time_arr = set(new Date(), { hours: parseInt(arrival.split(":")[0]), minutes: parseInt(arrival.split(":")[1]) });
         // if now - time < 1 minutes, display "即將發車"
         if (time_arr.getTime() < refTime.getTime()) {
@@ -31,7 +33,7 @@ const BusListingItem = ({ refTime, Icon, line, title, destination, notes = [], a
     const router = useRouter();
     const route = line == 'nanda' ? 'nanda' : 'main';
 
-    return <div className="flex flex-row py-4 items-center gap-4 cursor-pointer" onClick={() => router.push(`/${language}/bus/${route}`)}>
+    return <div className={cn("flex flex-row py-4 items-center gap-4 cursor-pointer", arrival == '末班車已過' ? 'opacity-30': '')} onClick={() => router.push(`/${language}/bus/${route}`)}>
         <Icon className="h-7 w-7" />
         <div className="flex flex-row flex-wrap gap-2">
             <h3 className="text-slate-800 font-bold">
@@ -61,12 +63,12 @@ const BusPage = () => {
     const [tab, setTab] = useState('north_gate');
 
     const { data: UphillBuses = [], error } = useQuery({
-        queryKey: ['buses'],
+        queryKey: ['buses_up'],
         queryFn: () => getBusesSchedules('all', 'all', 'up'),
     });
 
     const { data: DownhillBuses = [], error: error2 } = useQuery({
-        queryKey: ['buses'],
+        queryKey: ['buses_down'],
         queryFn: () => getBusesSchedules('all', 'all', 'down'),
     });
     
