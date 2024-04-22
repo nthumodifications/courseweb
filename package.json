@@ -109,7 +109,7 @@
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.10",
     "@types/jsdom": "^21.1.6",
-    "@types/jsonwebtoken": "^9.0.5",
+    "@types/jsonwebtoken": "^9.0.6",
     "@types/leaflet": "^1.9.11",
     "@types/negotiator": "^0.6.3",
     "supabase": "^1.148.6",
