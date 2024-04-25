@@ -1,11 +1,8 @@
-import {useState} from "react";
-import {useHeadlessAIS} from "@/hooks/contexts/useHeadlessAIS";
-import {Box, LinearProgress} from "@mui/joy";
-import {AISNotLoggedIn} from "@/components/Pages/AISNotLoggedIn";
-import {AISError} from "@/components/Pages/AISError";
-import {AISLoading} from "@/components/Pages/AISLoading";
+import { useState } from "react";
+import { useHeadlessAIS } from "@/hooks/contexts/useHeadlessAIS";
+import { Box, LinearProgress } from "@mui/joy";
 
-const DownloadIndicator = ({loaded, total}: {loaded: number, total: number}) => {
+const DownloadIndicator = ({ loaded, total }: { loaded: number, total: number }) => {
     const formatFilesize = (value: number) => {
         let magnitude = "B";
         if (value > 1024 * 1024 * 1024) {
@@ -23,17 +20,17 @@ const DownloadIndicator = ({loaded, total}: {loaded: number, total: number}) => 
 
     return <div className="flex flex-row items-center">
         下載中...
-        <Box className="w-32 m-2"><LinearProgress size="lg" determinate={true} value={total == 0 ? 0 : (loaded / total * 100)}/></Box>
+        <Box className="w-32 m-2"><LinearProgress size="lg" determinate={true} value={total == 0 ? 0 : (loaded / total * 100)} /></Box>
         {`(${formatFilesize(loaded)}/${formatFilesize(total)})`}
     </div>
 }
 
-const DownloadLink = ({text, url, filename}: {
+const DownloadLink = ({ text, url, filename }: {
     text: string,
     url: string,
     filename: string
 }) => {
-    const {initializing, getOauthCookies, oauth, loading, error: aisError} = useHeadlessAIS();
+    const { initializing, getOauthCookies, oauth, loading, error: aisError } = useHeadlessAIS();
     const [clicked, setClicked] = useState(false);
     const [loadedBytes, setLoadedBytes] = useState(0);
     const [totalBytes, setTotalBytes] = useState(0);
@@ -53,7 +50,7 @@ const DownloadLink = ({text, url, filename}: {
             async start(controller) {
                 const reader = download_api.body!.getReader();
                 for (; ;) {
-                    const {done, value} = await reader.read();
+                    const { done, value } = await reader.read();
                     if (done) break;
                     loaded += value.byteLength;
                     setLoadedBytes(loaded);
@@ -62,7 +59,7 @@ const DownloadLink = ({text, url, filename}: {
                 controller.close();
             },
         }));
-        const blob = new Blob([await res.blob()], {type: contentType});
+        const blob = new Blob([await res.blob()], { type: contentType });
 
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
@@ -80,7 +77,7 @@ const DownloadLink = ({text, url, filename}: {
             setClicked(true);
             await getAttachment();
             setClicked(false);
-        }}>{clicked ? <DownloadIndicator loaded={loadedBytes} total={totalBytes}/> : text}</div>
+        }}>{clicked ? <DownloadIndicator loaded={loadedBytes} total={totalBytes} /> : text}</div>
 }
 
 export default DownloadLink;

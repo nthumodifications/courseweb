@@ -1,11 +1,11 @@
 'use client';
-import {IconButton} from '@mui/joy';
-import {Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue} from "@/components/ui/select";
+import { IconButton } from '@mui/joy';
+import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import {ElearningCourseObject} from "@/types/elearning";
+import { ElearningCourse } from "@/types/elearning";
 
 
-const CourseSwitcher = ({ selectedCourse, setSelectedCourse, courses }: { selectedCourse: string, setSelectedCourse: (course: string) => void, courses: ElearningCourseObject[] }) => {
+const CourseSwitcher = ({ selectedCourse, setSelectedCourse, courses }: { selectedCourse: string, setSelectedCourse: (course: string) => void, courses: ElearningCourse[] }) => {
     const courseObj = courses.find(s => s.courseId == selectedCourse)!;
 
     const hasPrev = courses.indexOf(courseObj) > 0;
@@ -28,11 +28,11 @@ const CourseSwitcher = ({ selectedCourse, setSelectedCourse, courses }: { select
         </IconButton>
         <Select value={selectedCourse} onValueChange={setSelectedCourse}>
             <SelectTrigger className="w-1/3">
-                <SelectValue/>
+                <SelectValue />
             </SelectTrigger>
             <SelectContent>
                 <SelectItem value="every">所有課程All Courses</SelectItem>
-                <SelectSeparator/>
+                <SelectSeparator />
                 {
                     courses.map((course) => <SelectItem value={course.courseId}>{course.courseName}</SelectItem>)
                 }
