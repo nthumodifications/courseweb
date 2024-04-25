@@ -1,108 +1,124 @@
-'use client';
-import {ElearningAnnouncementObject, ElearningCourseObject} from "@/types/elearning";
-import {AISLoading} from '@/components/Pages/AISLoading';
-import {AISError} from '@/components/Pages/AISError';
-import {useHeadlessAIS} from '@/hooks/contexts/useHeadlessAIS';
-import {AISNotLoggedIn} from '@/components/Pages/AISNotLoggedIn';
-import {useQuery, useQueryClient} from '@tanstack/react-query';
-import {IconButton, List, Stack} from "@mui/joy";
+'use client';;
+import { Annoucement, ElearningCourse } from "@/types/elearning";
+import { AISLoading } from '@/components/Pages/AISLoading';
+import { AISError } from '@/components/Pages/AISError';
+import { useHeadlessAIS } from '@/hooks/contexts/useHeadlessAIS';
+import { AISNotLoggedIn } from '@/components/Pages/AISNotLoggedIn';
+import { useQuery } from '@tanstack/react-query';
 import LoadingPage from "@/components/Pages/LoadingPage";
-import {useEffect, useState} from "react";
-import CourseSwitcher from "@/app/[lang]/(mods-pages)/student/elearning/CourseSwitcher";
-import AnnouncementEmpty from "@/app/[lang]/(mods-pages)/student/elearning/AnnouncementEmpty";
-import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from "@/components/ui/accordion";
-import {ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight} from "lucide-react";
-import DownloadLink from "@/app/[lang]/(mods-pages)/student/elearning/DownloadLink";
+import { useState } from "react";
+import { getAnnouncements, getCourses } from "@/lib/elearning";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 
-const ElearningPage = () => {
-    const {initializing, getOauthCookies, oauth, loading, error: aisError} = useHeadlessAIS();
-    const [selectedCourse, setSelectedCourse] = useState("every");
-    const [announcementPage, setAnnouncementPage] = useState(1);
+const getCourseColor = (raw_id: string, colorMap: Record<string, string>, currentColors: string[]) => {
+    const color = colorMap[raw_id];
+    if (color) return color;
+    // get a hash of the raw_id
+    const hash = raw_id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return currentColors[hash % currentColors.length];
+}
 
-    useEffect(() => {
-        setAnnouncementPage(1)
-    }, [selectedCourse]);
+const AnnouncementItem = ({ data, course }: { data: Annoucement, course: ElearningCourse }) => {
+    const { colorMap, currentColors } = useUserTimetable();
+    return (
+        <div className="py-2 px-3 flex flex-row gap-1">
+            <div className="flex-1">
+                <div className="font-medium">{data.title}</div>
+                <div className="flex flex-row gap-2 items-center">
+                    <div className="h-3 w-3 rounded-full" style={{ background: getCourseColor(course.raw_id, colorMap, currentColors) }}></div>
+                    <div className="text-sm line-clamp-1 flex-1">{data.courseName}</div>
+                </div>
+            </div>
+            <div className="flex flex-col justify-end items-end text-neutral-400 dark:text-neutral-600">
+                <div className="text-sm">{data.announcer}</div>
+                <div className="text-xs">{data.date}</div>
+            </div>
+        </div>
+    )
+}
 
-    const {data: elearningDatas, isLoading, error} = useQuery<ElearningCourseObject[]>({
+const AnnouncementsContainer = () => {
+    const { initializing, getOauthCookies, oauth, loading, error: aisError } = useHeadlessAIS();
+    const [page, setPage] = useState(1);
+
+    const { data: announcementDatas, isLoading: annLoading, error: annError } = useQuery({
+        queryKey: ['elearning_announcements', initializing],
+        queryFn: async () => {
+            if (initializing) return null;
+            const token = await getOauthCookies(false);
+            return await getAnnouncements(token?.eeclass!, 'all', page);
+        }
+    });
+    
+    const { data: elearningDatas, isLoading, error } = useQuery({
         queryKey: ['elearning', initializing],
         queryFn: async () => {
             if (initializing) return null;
             const token = await getOauthCookies(false);
-            const res = await fetch(`/api/ais_headless/eeclass/courses?cookie=${token?.eeclass}`);
-            return await res.json()
+            return await getCourses(token?.eeclass!);
         }
     });
 
-    const {data: announcementDatas, isLoading: annLoading, error: annError} = useQuery<ElearningAnnouncementObject>({
-        queryKey: ['elearning_announcements', initializing, elearningDatas, selectedCourse, announcementPage],
+    const announcements = announcementDatas?.announcements ?? [];
+
+    return (
+        <ScrollArea className="border-border border rounded-md">
+            <div className="flex flex-col divide-y divide-border">
+                {elearningDatas && announcements.map((data) => <AnnouncementItem key={data.courseId} data={data} course={elearningDatas?.find(d => d.courseId == data.courseId)!}/>)}
+            </div>
+        </ScrollArea>
+    );
+}
+
+const CoursesContainer = () => {
+    const { initializing, getOauthCookies, oauth, loading, error: aisError } = useHeadlessAIS();
+    const { colorMap, currentColors } = useUserTimetable();
+
+    const { data: elearningDatas = [], isLoading, error } = useQuery({
+        queryKey: ['elearning', initializing],
         queryFn: async () => {
             if (initializing) return null;
             const token = await getOauthCookies(false);
-            const res = await fetch(`/api/ais_headless/eeclass/announcements?cookie=${token?.eeclass}&course=${selectedCourse}&page=${announcementPage}`);
-            return await res.json()
+            return await getCourses(token?.eeclass!);
         }
     });
 
-    if (!oauth.enabled) return <AISNotLoggedIn/>
-    if (error || aisError) return <AISError/>
-    if (loading) return <AISLoading isAis={false}/>
-    if (isLoading || !elearningDatas || elearningDatas.length <= 0) return <LoadingPage/>
 
     return (
-        <div className="mx-8 md:mx-3">
-            <CourseSwitcher selectedCourse={selectedCourse}
-                            setSelectedCourse={setSelectedCourse}
-                            courses={elearningDatas}/>
-            {(annLoading || !announcementDatas) ? <LoadingPage/> : <div><List>
-                {
-                    announcementDatas.pageCount == 0 ?
-                        <AnnouncementEmpty/> : announcementDatas.announcements?.map((ann, index) =>
-                            <Accordion type="multiple" className="px-10">
-                                <AccordionItem value={`announcement${index}`}>
-                                    <AccordionTrigger>
-                                        <div className="flex flex-col items-start">
-                                            <span className="text-semibold text-lg text-start">{ann.title}</span>
-                                            <span className="text-sm">{`by ${ann.announcer}, ${ann.date}`}</span>
-                                        </div>
-                                    </AccordionTrigger>
-                                    <AccordionContent>
-                                        <div className="text-gray-400"
-                                             dangerouslySetInnerHTML={{__html: ann.details ? ann.details.content : ""}}></div>
-                                        {
-                                            ann.details ? ann.details.attachments.map((link) =>
-                                                <DownloadLink text={`${link.text} ${link.filesize}`} url={link.url} filename={link.filename}/>
-                                            ) : "無附加檔案 No attachments"
-                                        }
-
-                                    </AccordionContent>
-                                </AccordionItem>
-                            </Accordion>
-                        )
-                }
-            </List>
-                <Stack
-                    direction="row"
-                    justifyContent="center"
-                >
-                    <IconButton disabled={announcementPage == 1} color="primary" onClick={() => setAnnouncementPage(1)}>
-                        <ChevronsLeft/>
-                    </IconButton>
-                    <IconButton disabled={announcementPage == 1} color="primary"
-                                onClick={() => setAnnouncementPage(announcementPage - 1)}>
-                        <ChevronLeft/>
-                    </IconButton>
-                    <IconButton disabled={true} className="text-white">{announcementPage}</IconButton>
-                    <IconButton disabled={announcementPage == announcementDatas.pageCount} color="primary"
-                                onClick={() => setAnnouncementPage(announcementPage + 1)}>
-                        <ChevronRight/>
-                    </IconButton>
-                    <IconButton disabled={announcementPage == announcementDatas.pageCount} color="primary"
-                                onClick={() => setAnnouncementPage(announcementDatas.pageCount)}>
-                        <ChevronsRight/>
-                    </IconButton>
-                </Stack>
+        <ScrollArea className="border-border border rounded-md">
+            <div className="flex flex-col">
+                {elearningDatas && elearningDatas.map((data, index) => (
+                    <div key={data.courseId} className="py-2 px-3 flex flex-row gap-2 items-center">
+                        <div className="w-4 h-4 rounded-md flex items-center justify-center text-white" style={{ background: getCourseColor(data.raw_id, colorMap, currentColors) }}></div>
+                        <div className="flex-1">
+                            <div className="font-medium">{data.courseName}</div>
+                            <div className="flex flex-row justify-between text-neutral-400 dark:text-neutral-600">
+                                <div className="text-sm">{data.raw_id}</div>
+                                <div className="text-sm line-clamp-1">{data.instructor}</div>
+                            </div>
+                        </div>
+                    </div>
+                ))}
             </div>
-            }
+        </ScrollArea>
+    );
+
+}
+
+const ElearningPage = () => {
+    const { oauth, loading, error: aisError } = useHeadlessAIS();
+
+    if (!oauth.enabled) return <AISNotLoggedIn />
+    if (aisError) return <AISError />
+    if (loading) return <AISLoading isAis={false} />
+
+    return (
+        <div className="mx-2 md:mx-2 h-full">
+            <div className="flex flex-row gap-4 h-full">
+                <AnnouncementsContainer />
+                <CoursesContainer />
+            </div>
         </div>
     )
 }

@@ -3,6 +3,7 @@ import {LoginError} from "@/types/headless_ais";
 import {toast} from "@/components/ui/use-toast";
 import {FC, PropsWithChildren, createContext, useContext, useEffect, useState} from "react";
 import {useLocalStorage} from 'usehooks-ts';
+import {signInEeclassOauth} from '@/lib/elearning';
 
 const headlessAISContext = createContext<ReturnType<typeof useHeadlessAISProvider>>({
     ais: {
@@ -68,24 +69,6 @@ const useHeadlessAISProvider = () => {
         form.append("studentid", studentid);
         form.append("password", password);
         return await fetch("/api/ais_headless/elearn", {
-            method: "POST",
-            body: form
-        })
-            .then(res => res.json())
-            .then(res => {
-                if (res.success) {
-                    return res.cookie as string;
-                } else {
-                    throw res.body.code as LoginError;
-                }
-            })
-    }
-
-    const fetchEeclassCookie = async (studentid: string, password: string) => {
-        const form = new FormData();
-        form.append("studentid", studentid);
-        form.append("password", password);
-        return await fetch("/api/ais_headless/eeclass/oauth", {
             method: "POST",
             body: form
         })
@@ -199,16 +182,16 @@ const useHeadlessAISProvider = () => {
         setLoading(true);
 
         //fetch /api/ais_headless to get eeclass cookies
-        return await fetchEeclassCookie(headlessAIS.studentid, headlessAIS.password).then((eeclassCookie) => {
+        return await signInEeclassOauth(headlessAIS.studentid, headlessAIS.password).then((res) => {
             setHeadlessAIS({
                 ...headlessAIS,
                 elearnCookie: "",
-                eeclassCookie: eeclassCookie,
+                eeclassCookie: res.cookie,
                 oauthLastUpdated: Date.now()
             });
             setLoading(false);
             setError(undefined);
-            return {elearn: "", eeclass: eeclassCookie};
+            return {elearn: "", eeclass: res.cookie};
         }).catch(err => {
             toast({
                 title: "代理登入失敗",

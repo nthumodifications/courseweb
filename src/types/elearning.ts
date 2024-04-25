@@ -1,28 +1,31 @@
-// code = courseId in courses page, could be used for syllabus?
-export type ElearningCourseObject = {
+
+export type ElearningCourse = {
     courseId: string,
     courseName: string,
     instructor: string,
     grade: string,
-    code: string
+    raw_id: string
 }
 
-export type ElearningAnnouncementObject = {
-    announcements: {
-        courseId: number,
-        courseName: string,
-        date: string,
-        title: string,
-        announcer: string,
-        details: {
-            content: string,
-            attachments: {
-                text: string,
-                filesize: string,
-                filename: string,
-                url: string
-            }[]
-        },
-    }[],
+export interface AnnouncementDetails {
+    content: string,
+    attachments: {
+        text: string,
+        filesize: string,
+        filename: string,
+        url: string
+    }[]
+}
+
+export interface Annoucement {
+    courseId: string,
+    courseName: string,
+    date: string,
+    title: string,
+    announcer: string,
+}
+
+export type AnnouncementsQuery = {
+    announcements: Annoucement[],
     pageCount: number
 }
