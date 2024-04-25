@@ -5,9 +5,10 @@ import Timetable from './Timetable';
 import useUserTimetable from '@/hooks/contexts/useUserTimetable';
 import { toPng } from 'html-to-image';
 import { useCallback, useRef, useState } from 'react';
-import {createTimetableFromCourses, colorMapFromCourses} from '@/helpers/timetable';
-import { useSettings } from '@/hooks/contexts/settings';
+import { createTimetableFromCourses } from '@/helpers/timetable';
 import { MinimalCourse } from '@/types/courses';
+import { Capacitor } from '@capacitor/core';
+import { Share } from '@capacitor/share';
 
 const DownloadTimetableComponent = () => {
     const dict = useDictionary();
@@ -23,12 +24,19 @@ const DownloadTimetableComponent = () => {
         }
         setLoading(true);
         toPng(ref.current!, { cacheBust: true, pixelRatio: 3, filter: (node: HTMLElement) => node.id !== 'time_slot'})
-        .then((dataUrl) => {
-            const link = document.createElement('a');
-            link.download = 'timetable.png';
-            link.href = dataUrl;
-            link.click();
-            // navigator.clipboard.writeText(dataUrl);
+        .then(async (dataUrl) => {
+            const filename = new Date().toISOString() + '_timetable.png';
+            if (!Capacitor.isNativePlatform()) {
+                const link = document.createElement('a');
+                link.download = filename;
+                link.href = dataUrl;
+                link.click();
+            } else {
+                await Share.share({
+                    title: 'Share Timetable',
+                    url: dataUrl,
+                });
+            }
         })
         .catch((err) => {
             console.error('oops, something went wrong!', err);
@@ -59,11 +67,20 @@ const DownloadTimetableComponent = () => {
 const DownloadTimetableDialog = ({ onClose, icsfileLink }: { onClose: () => void, icsfileLink: string }) => {
     const dict = useDictionary();
 
-    const handleDownloadCalendar = () => {
-        const link = document.createElement('a');
-        link.download = 'calendar.ics';
-        link.href = icsfileLink;
-        link.click();
+    const handleDownloadCalendar = async () => {
+        const filename = `${new Date().toISOString()}_timetable.ics`;
+        if(!Capacitor.isNativePlatform()) {
+            const link = document.createElement('a');
+            link.download = filename
+            link.href = icsfileLink;
+            link.click();
+        } else {
+            await Share.share({
+                url: icsfileLink,
+                dialogTitle: 'Open in Calendar',
+            });
+        }
+
     }
 
     return <ModalDialog>

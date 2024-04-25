@@ -2,7 +2,7 @@
 import { getRangeOfDays } from '@/helpers/dates';
 import {WeatherAPIResponse, WeatherData} from '@/types/weather';
 import { format } from 'date-fns';
-import { utcToZonedTime } from 'date-fns-tz';
+import { toZonedTime } from 'date-fns-tz';
 
 export async function getWeatherData() {
   const res = await fetch(
@@ -24,7 +24,7 @@ export async function getWeatherData() {
   // format data to be simpler
   // MinT, MaxT, PoP12h, Wx, WeatherDescription
   //get a range of 5 days starting from today
-  const days = getRangeOfDays(utcToZonedTime(new Date(), 'Asia/Taipei'), utcToZonedTime(new Date(Date.now() + 86400000 * 4), 'Asia/Taipei'));
+  const days = getRangeOfDays(toZonedTime(new Date(), 'Asia/Taipei'), toZonedTime(new Date(Date.now() + 86400000 * 4), 'Asia/Taipei'));
   
   // for each day, get the the MinT, MaxT, PoP12h, Wx, WeatherDescription for the day
   const weatherData = days.map((day) => {
