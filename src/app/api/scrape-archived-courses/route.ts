@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { Department } from "@/types/courses";
 import { departments } from "@/const/departments";
+import { writeFile } from "fs/promises";
 
 const baseUrl = `https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/6/6.2/6.2.9/JH629002.php`;
 
@@ -62,14 +63,14 @@ export const GET = async (request: NextRequest, _try = 0) => {
         return response;
     }
 
-    const years = [108, 109, 110];
-    const semesters = ['10', '20'];
+    const years = [111];
+    const semesters = ['10'];
     
     for (const year of years) {
 
         for (const semester of semesters) {
-
             const yearSemester = `${year}|${semester}`;
+            if(yearSemester == '11020') continue;
             const normalizedCourses: Database['public']['Tables']['courses']['Insert'][] = [];
 
             for (const department of departments) {
@@ -214,7 +215,9 @@ export const GET = async (request: NextRequest, _try = 0) => {
                     });
         
                     const prerequisites = cells[10].textContent?.trim() ?? '';
-        
+                    
+                    //check if the course is already added
+                    if (normalizedCourses.find(course => course.raw_id === course_id)) continue;
                     normalizedCourses.push({
                         capacity: parseInt(size_limit),
                         course: course_id.slice(9, 13),
@@ -246,15 +249,15 @@ export const GET = async (request: NextRequest, _try = 0) => {
                         raw_id: course_id,
                     });
         
-                    //console.log(normalizedCourses);
+                    // console.log(normalizedCourses)
 
                 }
             }
 
             // [DEBUG]: write to file
             // Write courses data to a JSON file for the current year
-            //const fileName = `courses_${year}${semester}.json`;
-            //await writeFile(fileName, JSON.stringify(normalizedCourses, null, 4));
+            const fileName = `courses_${year}${semester}.json`;
+            await writeFile(fileName, JSON.stringify(normalizedCourses, null, 4));
             
             // update supabase, check if the course with the same raw_id exists, if so, update it, otherwise insert it
             //split array into chunks of 1000
