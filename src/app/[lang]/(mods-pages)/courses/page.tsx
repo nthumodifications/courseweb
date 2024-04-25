@@ -8,7 +8,7 @@ import { useForm, useWatch } from "react-hook-form";
 import { useDebouncedCallback } from "use-debounce";
 import { useLocalStorage, useMediaQuery } from 'usehooks-ts';
 import { arrayRange } from '@/helpers/array';
-import RefineControls from '@/components/Courses/RefineControls';
+import RefineControls, { RefineControlFormTypes, emptyFilters } from '@/components/Courses/RefineControls';
 import useDictionary from "@/dictionaries/useDictionary";
 import { useRouter, useSearchParams } from "next/navigation";
 import queryString from 'query-string';
@@ -23,42 +23,6 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/h
 import MiniTimetable from "@/components/Courses/MiniTimetable";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
-
-export type RefineControlFormTypes = {
-    textSearch: string,
-    level: string[],
-    language: string[],
-    others: string[],
-    className: string | null,
-    department: string[],
-    firstSpecialization: string | null,
-    secondSpecialization: string | null,
-    timeslots: string[],
-    timeFilter: TimeFilterType,
-    semester: string,
-    venues: string[],
-    disciplines: string[],
-    geTarget: string[],
-    gecDimensions: string[],
-}
-
-const emptyFilters: RefineControlFormTypes = {
-    textSearch: '',
-    level: [],
-    others: [],
-    language: [],
-    department: [],
-    venues: [],
-    timeslots: [],
-    timeFilter: TimeFilterType.Within,
-    semester: '11220',
-    disciplines: [],
-    gecDimensions: [],
-    geTarget: [],
-    className: null,
-    firstSpecialization: null,
-    secondSpecialization: null,
-}
 
 const CoursePage: NextPage = () => {
     const dict = useDictionary();
@@ -125,9 +89,9 @@ const CoursePage: NextPage = () => {
         const range = paginationRange(currentPage, totalPage, PAGNIATION_MAX);
         return <Pagination>
             <PaginationContent>
-                <PaginationItem>
+                {currentPage != 1 && <PaginationItem>
                     <PaginationPrevious onClick={() => searchQuery(filters, headIndex - 30)} />
-                </PaginationItem>
+                </PaginationItem>}
                 {currentPage > 4 && <PaginationItem>
                     <PaginationEllipsis />
                 </PaginationItem>}
@@ -137,6 +101,7 @@ const CoursePage: NextPage = () => {
                             <PaginationLink
                                 key={index}
                                 aria-pressed={currentPage == page}
+                                isActive={currentPage == page}
                                 onClick={() => searchQueryFunc(filters, (page - 1) * 30)}
                             >
                                 {page}
@@ -146,9 +111,9 @@ const CoursePage: NextPage = () => {
                 {currentPage < totalPage - 3 && <PaginationItem>
                     <PaginationEllipsis />
                 </PaginationItem>}
-                <PaginationItem>
+                {currentPage != totalPage && <PaginationItem>
                     <PaginationNext href="#" onClick={() => searchQuery(filters, headIndex + 30)} />
-                </PaginationItem>
+                </PaginationItem>}
             </PaginationContent>
         </Pagination>
     }
@@ -260,14 +225,14 @@ const CoursePage: NextPage = () => {
     }, [JSON.stringify(filters)])
 
     return (<>
-        <div className="grid grid-cols-1 md:grid-cols-[auto_320px] overflow-hidden max-h-[--content-height]">
+        <div className="grid grid-cols-1 md:grid-cols-[auto_320px]">
             <Form {...form}>
-                <div className="flex flex-col w-full h-screen overflow-auto space-y-5 px-2 no-scrollbar scroll-smooth" ref={scrollRef}>
+                <div className="flex flex-col w-full space-y-5 px-2 no-scrollbar scroll-smooth" ref={scrollRef}>
                     <FormField
                         control={control}
                         name="textSearch"
                         render={({ field }) => (
-                            <div className="flex flex-row min-h-[44px] items-center rounded-md bg-secondary text-secondary-foreground sticky top-0 z-10">
+                            <div className="flex flex-row min-h-[44px] items-center rounded-md shadow-md bg-secondary text-secondary-foreground sticky top-0 z-10">
                                 <div className="px-3">
                                     {loading ? <Loader2Icon className="animate-spin" /> :
                                         <HoverCard>
@@ -336,7 +301,7 @@ const CoursePage: NextPage = () => {
                 {isMobile && <Drawer open={open} onClose={() => setOpen(false)}>
                     <DrawerContent>
                         <div className="max-h-[70vh] overflow-auto">
-                            <RefineControls form={form}/>
+                            <RefineControls form={form} />
                         </div>
                     </DrawerContent>
                 </Drawer>}
