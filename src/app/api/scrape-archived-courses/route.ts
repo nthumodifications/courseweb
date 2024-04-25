@@ -90,7 +90,8 @@ export const GET = async (request: NextRequest, _try = 0) => {
                     const cells = row.querySelectorAll('td');
         
                     const course_id = cells[0].textContent?.trim() ?? '';
-        
+                    if (course_id === '') { continue; }
+                    
                     const course_name = cells[1].innerHTML.split('<br>').map(text => text.trim());
                     const course_name_zh = course_name[0];
                     const course_name_en = course_name[1];
