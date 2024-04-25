@@ -82,7 +82,7 @@
     "leaflet": "^1.9.4",
     "lucide-react": "^0.368.0",
     "negotiator": "^0.6.3",
-    "next": "^14.2.1",
+    "next": "^14.2.3",
     "next-auth": "^4.24.7",
     "node-html-parser": "^6.1.13",
     "postcss": "8.4.35",
