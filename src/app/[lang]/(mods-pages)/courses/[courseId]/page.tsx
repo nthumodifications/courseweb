@@ -40,11 +40,11 @@ export async function generateMetadata({ params }: PageProps, parent: ResolvingM
     return {
         ...parent,
         title: `${course?.department} ${course?.course}-${course?.class} ${course!.name_zh} ${course!.name_en}`,
-        description: `${course!.teacher_zh?.join(',')} ${course!.teacher_en?.join(',')} \n ${course!.course_syllabus.brief}`,
+        description: `${course!.teacher_zh?.join(',')} ${course!.teacher_en?.join(',')} \n ${course!.course_syllabus ? course!.course_syllabus.brief: ""}`,
         openGraph: {
             type: 'website',
             title: `${course?.department} ${course?.course}-${course?.class} ${course!.name_zh} ${course!.name_en} | NTHUMods`,
-            description: `${course!.teacher_zh?.join(',')} ${course!.teacher_en?.join(',')} \n ${course!.course_syllabus.brief}`,
+            description: `${course!.teacher_zh?.join(',')} ${course!.teacher_en?.join(',')} \n ${course!.course_syllabus ? course!.course_syllabus.brief: ""}`,
             url: 'https://nthumods.com',
             siteName: 'NTHUMods',
             countryName: 'Taiwan',
@@ -88,6 +88,7 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
             </Link>
         </div>
     </div>
+    const missingSyllabus = course.course_syllabus == null;
 
     const reviews = await getCoursePTTReview(courseId);
     const otherClasses = await getOtherClasses(course as MinimalCourse);
@@ -98,6 +99,7 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
 
     const colorMap = colorMapFromCourses([course as MinimalCourse].map(c => c.raw_id), timetableColors[Object.keys(timetableColors)[0]]);
     const timetableData = showTimetable ? createTimetableFromCourses([course as MinimalCourse], colorMap) : [];
+    
 
     return <Fade>
         <div className="grid grid-cols-1 xl:grid-cols-[auto_240px] pb-6 px-4 text-gray-500 dark:text-gray-300">
@@ -132,17 +134,17 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                 <Separator />
                 <div className="grid grid-cols-1 md:grid-cols-[auto_320px] gap-6 ">
                     <div className="space-y-4">
-                        <div className="">
+                        {!missingSyllabus && <div className="">
                             <h3 className="font-semibold text-xl mb-2" id="brief">{dict.course.details.brief}</h3>
                             <p className="whitespace-pre-line text-sm">{course.course_syllabus.brief}</p>
-                        </div>
-                        <div className="">
+                        </div>}
+                        {!missingSyllabus && <div className="">
                             <h3 className="font-semibold text-xl mb-2" id="description">{dict.course.details.description}</h3>
                             <p className="whitespace-pre-line text-sm">
                                 {course.course_syllabus.content ?? <>
                                     <DownloadSyllabus courseId={course.raw_id} />
                                 </>}</p>
-                        </div>
+                        </div>}
                         {course?.prerequisites && <div className="">
                             <h3 className="font-semibold text-xl mb-2" id="prerequesites">{dict.course.details.prerequesites}</h3>
                             <div className="whitespace-pre-line text-sm" dangerouslySetInnerHTML={{ __html: course.prerequisites }} />
@@ -251,8 +253,8 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                             <div className="space-y-2">
                                 <p className="font-medium">目錄</p>
                                 <ul className="m-0 list-none">
-                                    <TOCNavItem href="#brief" label={dict.course.details.brief} />
-                                    <TOCNavItem href="#description" label={dict.course.details.description} />
+                                    {!missingSyllabus && <TOCNavItem href="#brief" label={dict.course.details.brief} />}
+                                    {!missingSyllabus && <TOCNavItem href="#description" label={dict.course.details.description} />}
                                     {course?.prerequisites && <TOCNavItem href="#prerequesites" label={dict.course.details.prerequesites} />}
                                     {showTimetable && <TOCNavItem href="#timetable" label={dict.course.details.timetable} />}
                                     {course.course_scores && <TOCNavItem href="#scores" label={dict.course.details.scores} />}
