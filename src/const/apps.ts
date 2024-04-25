@@ -8,8 +8,8 @@ import {
     CreditCard,
     MapPin,
     Network,
-    WalletCards,
-    Book
+    Book,
+    Gamepad
 } from 'lucide-react';
 
 export const apps = [
