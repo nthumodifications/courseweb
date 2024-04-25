@@ -63,11 +63,14 @@ const AnnouncementsContainer = () => {
     const announcements = announcementDatas?.announcements ?? [];
 
     return (
-        <ScrollArea className="border-border border rounded-md">
-            <div className="flex flex-col divide-y divide-border">
-                {elearningDatas && announcements.map((data) => <AnnouncementItem key={data.courseId} data={data} course={elearningDatas?.find(d => d.courseId == data.courseId)!}/>)}
-            </div>
-        </ScrollArea>
+        <div className="flex flex-col gap-4">
+            <div className="font-bold text-lg pl-2">公告</div>
+            <ScrollArea className="border-border border rounded-md">
+                <div className="flex flex-col divide-y divide-border">
+                    {elearningDatas && announcements.map((data) => <AnnouncementItem key={data.courseId} data={data} course={elearningDatas?.find(d => d.courseId == data.courseId)!}/>)}
+                </div>
+            </ScrollArea>
+        </div>
     );
 }
 
@@ -86,22 +89,25 @@ const CoursesContainer = () => {
 
 
     return (
-        <ScrollArea className="border-border border rounded-md">
-            <div className="flex flex-col">
-                {elearningDatas && elearningDatas.map((data, index) => (
-                    <div key={data.courseId} className="py-2 px-3 flex flex-row gap-2 items-center">
-                        <div className="w-4 h-4 rounded-md flex items-center justify-center text-white" style={{ background: getCourseColor(data.raw_id, colorMap, currentColors) }}></div>
-                        <div className="flex-1">
-                            <div className="font-medium">{data.courseName}</div>
-                            <div className="flex flex-row justify-between text-neutral-400 dark:text-neutral-600">
-                                <div className="text-sm">{data.raw_id}</div>
-                                <div className="text-sm line-clamp-1">{data.instructor}</div>
+        <div className="flex flex-col gap-4">
+            <div className="font-bold text-lg pl-2">課程列表</div>
+            <ScrollArea className="border-border border rounded-md">
+                <div className="flex flex-col">
+                    {elearningDatas && elearningDatas.map((data, index) => (
+                        <div key={data.courseId} className="py-2 px-3 flex flex-row gap-2 items-center">
+                            <div className="w-4 h-4 rounded-md flex items-center justify-center text-white" style={{ background: getCourseColor(data.raw_id, colorMap, currentColors) }}></div>
+                            <div className="flex-1">
+                                <div className="font-medium">{data.courseName}</div>
+                                <div className="flex flex-row justify-between text-neutral-400 dark:text-neutral-600">
+                                    <div className="text-sm">{data.raw_id}</div>
+                                    <div className="text-sm line-clamp-1">{data.instructor}</div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                ))}
-            </div>
-        </ScrollArea>
+                    ))}
+                </div>
+            </ScrollArea>
+        </div>
     );
 
 }
@@ -115,7 +121,7 @@ const ElearningPage = () => {
 
     return (
         <div className="mx-2 md:mx-2 h-full">
-            <div className="flex flex-row gap-4 h-full">
+            <div className="flex flex-col gap-4 h-full md:flex-row">
                 <AnnouncementsContainer />
                 <CoursesContainer />
             </div>
