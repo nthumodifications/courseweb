@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/badge"
 import supabase, { CourseDefinition, CourseScoreDefinition } from '@/config/supabase';
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { timetableColors } from "@/const/timetableColors";
+import NormalDistributionChart from "./NormalDistributionChart";
 
 
 type PageProps = {
@@ -158,6 +159,7 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                             {/* TODO: make scores prettier with a graph */}
                             <p>{dict.course.details.average} {dict.course.details.score_types[course.course_scores.type as 'gpa' | 'percent']} {course.course_scores.average}</p>
                             <p>{dict.course.details.standard_deviation} {course.course_scores.std_dev}</p>
+                            <NormalDistributionChart mean={course.course_scores.average} range={course.course_scores.type as 'gpa' | 'percent'} std={course.course_scores.std_dev}/>
                         </div>}
                         {reviews.length > 0 && <div className="">
                             <h3 className="font-semibold text-xl mb-2" id="ptt">{dict.course.details.ptt_title}</h3>
