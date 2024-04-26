@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useHeadlessAIS } from "@/hooks/contexts/useHeadlessAIS";
-import { Box, LinearProgress } from "@mui/joy";
+import { Progress } from "@/components/ui/progress"
 
 const DownloadIndicator = ({ loaded, total }: { loaded: number, total: number }) => {
     const formatFilesize = (value: number) => {
@@ -20,7 +20,7 @@ const DownloadIndicator = ({ loaded, total }: { loaded: number, total: number })
 
     return <div className="flex flex-row items-center">
         下載中...
-        <Box className="w-32 m-2"><LinearProgress size="lg" determinate={true} value={total == 0 ? 0 : (loaded / total * 100)} /></Box>
+        <div className="w-32 m-2"><Progress value={total == 0 ? 0 : (loaded / total * 100)} /></div>
         {`(${formatFilesize(loaded)}/${formatFilesize(total)})`}
     </div>
 }
@@ -37,6 +37,7 @@ const DownloadLink = ({ text, url, filename }: {
 
     const getAttachment = async () => {
         if (!oauth.enabled) return
+        //Server Actions cannot return Response, so we need to fetch the download link from the server
         const download_api = await fetch(`/api/ais_headless/eeclass/download?cookie=${encodeURIComponent(oauth.eeclassCookie!)}&url=${encodeURIComponent(url)}`);
         if (!download_api.ok) return
 
@@ -72,7 +73,7 @@ const DownloadLink = ({ text, url, filename }: {
     if (!oauth.enabled || aisError || loading) return <div></div>
 
     return <div
-        className="text-blue-300 cursor-pointer"
+        className="text-primary cursor-pointer text-sm"
         onClick={async () => { //
             setClicked(true);
             await getAttachment();
