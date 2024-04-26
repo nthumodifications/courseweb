@@ -5,12 +5,20 @@ import { AISError } from '@/components/Pages/AISError';
 import { useHeadlessAIS } from '@/hooks/contexts/useHeadlessAIS';
 import { AISNotLoggedIn } from '@/components/Pages/AISNotLoggedIn';
 import { useQuery } from '@tanstack/react-query';
-import LoadingPage from "@/components/Pages/LoadingPage";
 import { useState } from "react";
 import { getAnnouncements, getCourses } from "@/lib/elearning";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
-
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+  } from "@/components/ui/dialog"
+import dynamic from "next/dynamic";
+  
 const getCourseColor = (raw_id: string, colorMap: Record<string, string>, currentColors: string[]) => {
     const color = colorMap[raw_id];
     if (color) return color;
@@ -19,22 +27,31 @@ const getCourseColor = (raw_id: string, colorMap: Record<string, string>, curren
     return currentColors[hash % currentColors.length];
 }
 
+const AnnouncementDetailsDynamic = dynamic(() => import('./AnnouncementDetails'), { loading: () => <AISLoading />, ssr: false });
+
 const AnnouncementItem = ({ data, course }: { data: Annoucement, course: ElearningCourse }) => {
     const { colorMap, currentColors } = useUserTimetable();
     return (
-        <div className="py-2 px-3 flex flex-row gap-1">
-            <div className="flex-1">
-                <div className="font-medium">{data.title}</div>
-                <div className="flex flex-row gap-2 items-center">
-                    <div className="h-3 w-3 rounded-full" style={{ background: getCourseColor(course.raw_id, colorMap, currentColors) }}></div>
-                    <div className="text-sm line-clamp-1 flex-1">{data.courseName}</div>
+        <Dialog>
+            <DialogTrigger asChild>
+                <div className="py-2 px-3 flex flex-row gap-1">
+                    <div className="flex-1">
+                        <div className="font-medium mb-1">{data.title}</div>
+                        <div className="flex flex-row gap-2 items-center">
+                            <div className="h-3 w-3 rounded-full" style={{ background: getCourseColor(course.raw_id, colorMap, currentColors) }}></div>
+                            <div className="text-sm line-clamp-1 flex-1 text-neutral-700 dark:text-neutral-300">{data.courseName}</div>
+                        </div>
+                    </div>
+                    <div className="flex flex-col justify-end items-end text-neutral-400 dark:text-neutral-600">
+                        <div className="text-sm">{data.announcer}</div>
+                        <div className="text-xs">{data.date}</div>
+                    </div>
                 </div>
-            </div>
-            <div className="flex flex-col justify-end items-end text-neutral-400 dark:text-neutral-600">
-                <div className="text-sm">{data.announcer}</div>
-                <div className="text-xs">{data.date}</div>
-            </div>
-        </div>
+            </DialogTrigger>
+            <DialogContent>
+                <AnnouncementDetailsDynamic announcement={data} />
+            </DialogContent>
+        </Dialog>
     )
 }
 

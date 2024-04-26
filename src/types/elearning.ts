@@ -23,6 +23,7 @@ export interface Annoucement {
     date: string,
     title: string,
     announcer: string,
+    detailsURL: string
 }
 
 export type AnnouncementsQuery = {

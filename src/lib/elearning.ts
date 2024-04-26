@@ -62,7 +62,7 @@ export const getAnnouncements = async (cookie: string, course: string, announcem
             date: tdmap.item(3).querySelector("div")?.innerHTML ?? "",
             title: tdmap.item(1).querySelector("div > .afterText > .text-overflow > a > span")?.innerHTML ?? "",
             announcer: ((str) => str.substring(str.indexOf("by ") + 3))(tdmap.item(1).querySelector("div > .fs-hint")?.innerHTML!) ?? "",
-            details: tdmap.item(1).querySelector("div > .afterText > .text-overflow > a")?.getAttribute("data-url")!
+            detailsURL: tdmap.item(1).querySelector("div > .afterText > .text-overflow > a")?.getAttribute("data-url")!
         }
     }
     )
@@ -88,9 +88,9 @@ export const getAnnouncementDetails = async (cookie: string, url: string) => {
     const urls = downloadBlock?.querySelectorAll("li")
         .map((element) => element.querySelector("a"))
         .map((element) => {
-            return { text: element?.querySelector(".text > :not(.fs-hint)")?.text, filesize: element?.querySelector(".text > .fs-hint")?.text, url: `https://eeclass.nthu.edu.tw${element?.getAttribute("href")}` }
+            return { text: element?.querySelector(".text > :not(.fs-hint)")?.text!, filesize: element?.querySelector(".text > .fs-hint")?.text!, url: `https://eeclass.nthu.edu.tw${element?.getAttribute("href")}` }
         }).map((element) => {
-            return { ...element, filename: element.text?.split(".").filter((text, index, arr) => index < arr.length - 1).join(".") }
+            return { ...element, filename: element.text?.split(".").filter((text, index, arr) => index < arr.length - 1).join(".")! }
         })
     contentBlock!.querySelectorAll("[src]").forEach((element) => (element.getAttribute("src")![0] == "/") && element.setAttribute("src", `https://eeclass.nthu.edu.tw${element.getAttribute("src")}`));
     contentBlock!.querySelectorAll("[href]").forEach((element) => (element.getAttribute("href")![0] == "/") && element.setAttribute("href", `https://eeclass.nthu.edu.tw${element.getAttribute("href")}`));
