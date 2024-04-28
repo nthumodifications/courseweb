@@ -5,6 +5,26 @@ import CredentialsProvider from "next-auth/providers/credentials"
 export const authConfig: AuthOptions = {
     session: { strategy: "jwt" },
     providers: [
+        {
+            id: "nthumods",
+            name: "NTHUMods",
+            type: "oauth",
+            clientId: 'courseweb',
+            clientSecret: "secretyoursecret",
+            authorization: {
+                url: "http://localhost:3000/oauth/auth",
+                params: { scope: "login" }
+            },
+            token: "http://localhost:3000/oauth/access_token",
+            userinfo: "http://localhost:3000/oauth/userinfo",
+            profile(profile, tokens) {
+                return {
+                    id: profile.id,
+                    name: profile.name,
+                    email: profile.email,
+                }
+            },
+        },
         process.env.NODE_ENV === "development"
             ? CredentialsProvider({
                 id: "dev",
