@@ -1,9 +1,11 @@
 "use client";
-import {LoginError} from "@/types/headless_ais";
-import {toast} from "@/components/ui/use-toast";
-import {FC, PropsWithChildren, createContext, useContext, useEffect, useState} from "react";
-import {useLocalStorage} from 'usehooks-ts';
-import {signInEeclassOauth} from '@/lib/elearning';
+import { LoginError } from "@/types/headless_ais";
+import { toast } from "@/components/ui/use-toast";
+import { FC, PropsWithChildren, createContext, useContext, useEffect, useState } from "react";
+import { useLocalStorage } from 'usehooks-ts';
+import { signInToCCXP } from '@/lib/headless_ais';
+import { signInEeclassOauth } from '@/lib/elearning';
+import useDictionary from "@/dictionaries/useDictionary";
 
 const headlessAISContext = createContext<ReturnType<typeof useHeadlessAISProvider>>({
     ais: {
@@ -34,53 +36,15 @@ type HeadlessAISStorage = { enabled: false } | {
     oauthLastUpdated?: number
 }
 const useHeadlessAISProvider = () => {
-    const [headlessAIS, setHeadlessAIS] = useLocalStorage<HeadlessAISStorage>("headless_ais", {enabled: false});
+    const [headlessAIS, setHeadlessAIS] = useLocalStorage<HeadlessAISStorage>("headless_ais", { enabled: false });
     const [initializing, setInitializing] = useState(true);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<LoginError | undefined>(undefined);
+    const dict = useDictionary();
 
     useEffect(() => {
         setInitializing(false)
     }, []);
-
-
-    //input: studentid, password
-    //output: ACIXSTORE | Error
-    const fetchACIXSTORE = async (studentid: string, password: string) => {
-        const form = new FormData();
-        form.append("studentid", studentid);
-        form.append("password", password);
-        return await fetch("/api/ais_headless/login", {
-            method: "POST",
-            body: form
-        })
-            .then(res => res.json())
-            .then(res => {
-                if (res.success) {
-                    return res.body.ACIXSTORE as string;
-                } else {
-                    throw res.body.code as LoginError;
-                }
-            })
-    }
-
-    const fetchElearnCookie = async (studentid: string, password: string) => {
-        const form = new FormData();
-        form.append("studentid", studentid);
-        form.append("password", password);
-        return await fetch("/api/ais_headless/elearn", {
-            method: "POST",
-            body: form
-        })
-            .then(res => res.json())
-            .then(res => {
-                if (res.success) {
-                    return res.cookie as string;
-                } else {
-                    throw res.body.code as LoginError;
-                }
-            })
-    }
 
     //Headless AIS
     const setAISCredentials = async (username?: string, password?: string) => {
@@ -92,13 +56,14 @@ const useHeadlessAISProvider = () => {
             return;
         }
         setLoading(true);
-        return await fetchACIXSTORE(username, password)
-            .then(acixstore => {
+        return await signInToCCXP(username, password)
+            .then((res) => {
+                if ('error' in res) throw new Error(res.error.message);
                 setHeadlessAIS({
                     enabled: true,
                     studentid: username,
                     password: password,
-                    ACIXSTORE: acixstore,
+                    ACIXSTORE: res.ACIXSTORE,
                     lastUpdated: Date.now()
                 });
                 setLoading(false);
@@ -108,7 +73,7 @@ const useHeadlessAISProvider = () => {
             .catch(err => {
                 toast({
                     title: "代理登入失敗",
-                    description: err ?? "請檢查學號密碼是否正確",
+                    description: dict.ccxp.errors[err.message as keyof typeof dict.ccxp.errors] ?? "請檢查學號密碼是否正確",
                 })
                 setHeadlessAIS({
                     enabled: false
@@ -138,27 +103,26 @@ const useHeadlessAISProvider = () => {
         }
         setLoading(true);
         //fetch /api/ais_headless to get ACIXSTORE
-        return await fetchACIXSTORE(headlessAIS.studentid, headlessAIS.password)
-            .then(acixstore => {
+        return await signInToCCXP(headlessAIS.studentid, headlessAIS.password)
+            .then((res) => {
+                if ('error' in res) throw new Error(res.error.message);
                 setHeadlessAIS({
                     ...headlessAIS,
-                    ACIXSTORE: acixstore,
+                    ACIXSTORE: res.ACIXSTORE,
                     lastUpdated: Date.now()
                 });
                 setLoading(false);
                 setError(undefined);
-                return acixstore;
+                return res.ACIXSTORE;
             })
             .catch(err => {
                 toast({
                     title: "代理登入失敗",
-                    description: err ?? "請檢查學號密碼是否正確",
+                    description: dict.ccxp.errors[err.message as keyof typeof dict.ccxp.errors] ?? "請檢查學號密碼是否正確",
                 })
                 setHeadlessAIS({
-                    ...headlessAIS,
-                    ACIXSTORE: undefined
+                    enabled: false
                 });
-
                 setLoading(false);
                 setError(err);
                 throw err as LoginError;
@@ -177,7 +141,7 @@ const useHeadlessAISProvider = () => {
         }
         if (headlessAIS.oauthLastUpdated !== null && headlessAIS.oauthLastUpdated! + 15 * 60 * 1000 > Date.now() && !force) {
             setLoading(false);
-            return {elearn: headlessAIS.elearnCookie!, eeclass: headlessAIS.eeclassCookie!};
+            return { elearn: headlessAIS.elearnCookie!, eeclass: headlessAIS.eeclassCookie! };
         }
         setLoading(true);
 
@@ -191,18 +155,17 @@ const useHeadlessAISProvider = () => {
             });
             setLoading(false);
             setError(undefined);
-            return {elearn: "", eeclass: res.cookie};
+            return { elearn: "", eeclass: res.cookie };
         }).catch(err => {
             toast({
                 title: "代理登入失敗",
-                description: err ?? "請檢查學號密碼是否正確",
+                description: dict.ccxp.errors[err.message as keyof typeof dict.ccxp.errors] ?? "請檢查學號密碼是否正確",
             })
             setHeadlessAIS({
                 ...headlessAIS,
                 elearnCookie: undefined,
-                eeclassCookie: undefined
+                eeclassCookie: undefined,
             });
-
             setLoading(false);
             setError(err);
             throw err as LoginError;
@@ -235,7 +198,7 @@ const useHeadlessAISProvider = () => {
 
 const useHeadlessAIS = () => useContext(headlessAISContext);
 
-const HeadlessAISProvider: FC<PropsWithChildren> = ({children}) => {
+const HeadlessAISProvider: FC<PropsWithChildren> = ({ children }) => {
     const headlessAIS = useHeadlessAISProvider();
 
     return (
@@ -245,4 +208,4 @@ const HeadlessAISProvider: FC<PropsWithChildren> = ({children}) => {
     );
 };
 
-export {useHeadlessAIS, HeadlessAISProvider};
+export { useHeadlessAIS, HeadlessAISProvider };

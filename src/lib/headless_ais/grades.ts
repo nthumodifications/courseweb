@@ -1,8 +1,8 @@
+'use server';
 import jsdom from 'jsdom';
 import iconv from 'iconv-lite';
-import { NextRequest, NextResponse } from 'next/server';
 
-const getStudentGrades = async (ACIXSTORE: string) => {
+export const getStudentGrades = async (ACIXSTORE: string) => {
     const baseURL = 'https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/8/R/6.3/JH8R63002.php?ACIXSTORE=';
     const html = await fetch(baseURL + ACIXSTORE)
                     .then(res => res.arrayBuffer())
@@ -188,12 +188,3 @@ const getStudentGrades = async (ACIXSTORE: string) => {
     };
 }
 
-
-export const GET = async (req: NextRequest) => {
-    const ACIXSTORE = req.nextUrl.searchParams.get('ACIXSTORE')
-    if(!ACIXSTORE) {
-        return NextResponse.redirect('/');
-    }
-    const data = await getStudentGrades(ACIXSTORE as string);
-    return NextResponse.json(data);
-}
