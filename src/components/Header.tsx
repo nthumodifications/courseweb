@@ -9,7 +9,7 @@ import NTHUModsLogo from "@/components/Branding/NTHUModsLogo"
 import { Sheet, SheetContent, SheetOverlay, SheetTrigger } from "@/components/ui/sheet";
 import SideNav from "./SideNav"
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import dynamic from 'next/dynamic';
 
 const HelpDynamic = dynamic
@@ -38,12 +38,12 @@ const SideNavDrawer = () => {
 
 const Header = () => {
   const { language } = useSettings();
-  const currentWeek = currentSemester? Math.floor((new Date().getTime() - currentSemester.begins.getTime()) / (1000 * 60 * 60 * 24 * 7)) + 1 : null;
+  const currentWeek = useMemo(() => currentSemester? Math.floor((new Date().getTime() - currentSemester.begins.getTime()) / (1000 * 60 * 60 * 24 * 7)) + 1 : null , []);
 
   return (
     <header className="h-[--header-height] w-screen bg-white dark:bg-background shadow-md px-2 md:px-8 py-4 md:col-span-2 flex flex-row items-center z-50 gap-4">
       <div className="flex flex-row gap-3 flex-1 items-center">
-        <SideNavDrawer/>
+        {/* <SideNavDrawer/> */}
         <Link href={"/"+language+"/timetable"}>
           <NTHUModsLogo />
         </Link>

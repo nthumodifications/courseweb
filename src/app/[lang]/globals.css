@@ -29,9 +29,16 @@
   unicode-range: U+4E00-9FFF;
 } */
 
-html, body {
+html {
   font-family: var(--font-inter), var(--font-noto), sans-serif;
-  @apply overflow-x-hidden bg-white dark:bg-background dark:text-white
+}
+
+body {
+  padding: env(safe-area-inset-top)
+          env(safe-area-inset-right) 
+          env(safe-area-inset-bottom) 
+          env(safe-area-inset-left);
+  @apply overflow-x-hidden
 }
 
 @layer utilities {
@@ -72,7 +79,8 @@ html, body {
     --ring: 240 5% 64.9%;
     --radius: 0.5rem;
     --header-height: 3.5rem;
-    --content-height: calc(100vh - var(--header-height));
+    --bottom-nav-height: 5rem;
+    --content-height: calc(calc(calc(100vh - env(safe-area-inset-top)) - var(--header-height)) - var(--bottom-nav-height));
   }
 
   .dark {
@@ -101,7 +109,13 @@ html, body {
   * {
     @apply border-border;
   }
-  body {
+  html, body {
     @apply bg-background text-foreground;
+  }
+}
+
+@screen md {
+  :root {
+    --content-height: calc(calc(100vh - env(safe-area-inset-top, 0px)) - var(--header-height));
   }
 }
