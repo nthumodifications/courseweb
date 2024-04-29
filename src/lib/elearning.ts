@@ -1,7 +1,10 @@
 'use server';
 
+import supabase_server from '@/config/supabase_server';
 import { AnnouncementsQuery, ElearningCourse } from '@/types/elearning';
+import { writeFile } from 'fs/promises';
 import jsdom from 'jsdom';
+import { redirect } from 'next/navigation';
 import { parse } from "node-html-parser";
 
 export const fetchEeClass = async (cookie: string, url: string) => {
@@ -101,6 +104,18 @@ export const getAnnouncementDetails = async (cookie: string, url: string) => {
     }
 }
 
+export const getCoursePlatformId = async (raw_id: string) => {
+    const { data, error } = await supabase_server.from('course_platform').select('*').eq('raw_id', raw_id).maybeSingle()
+    if (error) {
+        throw new Error("Failed to fetch course data")
+    }
+    if (data == null) {
+        redirect("/student/elearning")
+    }
+    return data;
+}
+    
+
 export const getCourses = async (cookie: string) => {
     process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
 
@@ -132,6 +147,22 @@ export const getCourses = async (cookie: string) => {
             raw_id: normalizeRawID(details!.item(3).innerHTML.substring(6))
         };
     })
+
+    const { data, error } = await supabase_server.from('course_platform').select('*').eq('platform', 'eeclass').in('id', courses.map((course) => course.courseId))
+    if (error) {
+        throw new Error("Failed to fetch course data")
+    }
+    const unreportedCourses = courses.filter((course) => !data.find((row) => row.id == course.courseId))
+    if (unreportedCourses.length > 0) {
+        await supabase_server.from('course_platform').upsert(unreportedCourses.map((course) => {
+            return {
+                raw_id: course.raw_id,
+                id: course.courseId,
+                platform: "eeclass",
+            }
+        }))
+    }
+    
     return courses.sort(courseComparator)
 }
 

@@ -18,6 +18,9 @@ import {
     DialogTrigger,
   } from "@/components/ui/dialog"
 import dynamic from "next/dynamic";
+import AnnouncementDetailsDynamic from "./AnnouncementDetailsDynamic.dynamic";
+import { useRouter } from "next/navigation";
+import { useSettings } from "@/hooks/contexts/settings";
   
 const getCourseColor = (raw_id: string, colorMap: Record<string, string>, currentColors: string[]) => {
     const color = colorMap[raw_id];
@@ -27,7 +30,6 @@ const getCourseColor = (raw_id: string, colorMap: Record<string, string>, curren
     return currentColors[hash % currentColors.length];
 }
 
-const AnnouncementDetailsDynamic = dynamic(() => import('./AnnouncementDetails'), { loading: () => <AISLoading />, ssr: false });
 
 const AnnouncementItem = ({ data, course }: { data: Annoucement, course: ElearningCourse }) => {
     const { colorMap, currentColors } = useUserTimetable();
@@ -93,6 +95,7 @@ const AnnouncementsContainer = () => {
 
 const CoursesContainer = () => {
     const { initializing, getOauthCookies, oauth, loading, error: aisError } = useHeadlessAIS();
+    const { language } = useSettings();
     const { colorMap, currentColors } = useUserTimetable();
 
     const { data: elearningDatas = [], isLoading, error } = useQuery({
@@ -104,6 +107,7 @@ const CoursesContainer = () => {
         }
     });
 
+    const router = useRouter();
 
     return (
         <div className="flex flex-col gap-4">
@@ -111,7 +115,7 @@ const CoursesContainer = () => {
             <ScrollArea className="border-border border rounded-md">
                 <div className="flex flex-col">
                     {elearningDatas && elearningDatas.map((data, index) => (
-                        <div key={data.courseId} className="py-2 px-3 flex flex-row gap-2 items-center">
+                        <div key={data.courseId} className="py-2 px-3 flex flex-row gap-2 items-center cursor-pointer" onClick={() => router.push(`/${language}/student/elearning/${data.raw_id}`)}>
                             <div className="w-4 h-4 rounded-md flex items-center justify-center text-white" style={{ background: getCourseColor(data.raw_id, colorMap, currentColors) }}></div>
                             <div className="flex-1">
                                 <div className="font-medium">{data.courseName}</div>
