@@ -13,6 +13,6 @@ brew link node@18
 npm config set maxsockets 3
 npm ci
 # or `pnpm install --frozen-lockfile` or `yarn install --frozen-lockfile` or bun install
-npm run build
+npm run build --legacy-peer-deps
 # or npm run build
 npm run sync:ios
