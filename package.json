@@ -32,7 +32,7 @@
     "@dnd-kit/sortable": "^8.0.0",
     "@ducanh2912/next-pwa": "^10.2.5",
     "@emotion/react": "^11.11.4",
-    "@emotion/styled": "^11.11.0",
+    "@emotion/styled": "^11.11.5",
     "@formatjs/intl-localematcher": "^0.5.2",
     "@hookform/resolvers": "^3.3.4",
     "@mui/joy": "^5.0.0-beta.12",
