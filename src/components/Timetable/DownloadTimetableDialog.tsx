@@ -9,6 +9,7 @@ import { createTimetableFromCourses } from '@/helpers/timetable';
 import { MinimalCourse } from '@/types/courses';
 import { Capacitor } from '@capacitor/core';
 import { Share } from '@capacitor/share';
+import { toast } from '../ui/use-toast';
 
 const DownloadTimetableComponent = () => {
     const dict = useDictionary();
@@ -32,6 +33,9 @@ const DownloadTimetableComponent = () => {
                 link.href = dataUrl;
                 link.click();
             } else {
+                toast({
+                    title: 'Timetable generation successful!',
+                })
                 await Share.share({
                     title: 'Share Timetable',
                     url: dataUrl,
@@ -75,6 +79,9 @@ const DownloadTimetableDialog = ({ onClose, icsfileLink }: { onClose: () => void
             link.href = icsfileLink;
             link.click();
         } else {
+            toast({
+                title: 'ICS File generation successful!',
+            })
             await Share.share({
                 url: icsfileLink,
                 dialogTitle: 'Open in Calendar',
