@@ -6,18 +6,17 @@ import { AISError } from '@/components/Pages/AISError';
 import { useHeadlessAIS } from '@/hooks/contexts/useHeadlessAIS';
 import { AISNotLoggedIn } from '@/components/Pages/AISNotLoggedIn';
 import { useQuery } from '@tanstack/react-query';
+import {getStudentGrades} from '@/lib/headless_ais/grades';
 
 const StudentGradesPage = () => {
     const { initializing, getACIXSTORE, ais, loading, error:  aisError } = useHeadlessAIS();
     
-    const { data: grades, isLoading, error } = useQuery<GradeObject>({
+    const { data: grades, isLoading, error } = useQuery({
         queryKey: ['grades', initializing], 
         queryFn: async () => {
             if(initializing) return null;
             const token = await getACIXSTORE();
-            const res = await fetch('/api/ais_headless/grades?ACIXSTORE='+token);
-            const data = await res.json();
-            return data;
+            return (await getStudentGrades(token!)) as GradeObject;
         }
     });
     if (!ais.enabled) return <AISNotLoggedIn/>
