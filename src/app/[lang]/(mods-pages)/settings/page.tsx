@@ -2,7 +2,7 @@
 import useDictionary from "@/dictionaries/useDictionary";
 import { useSettings } from "@/hooks/contexts/settings";
 import {  useEffect, useState } from "react";
-import { signOut, useSession } from "next-auth/react";
+import { signIn, signOut, useSession } from "next-auth/react";
 import LoginDialog from "@/components/Forms/LoginDialog";
 import { TimetableThemeList } from "./TimetableThemeList";
 import TimetablePreview from "./TimetablePreview";
@@ -12,14 +12,16 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Language } from "@/types/settings";
 import Footer from '@/components/Footer';
+import { Button } from "@/components/ui/button";
 
 const SettingsPage = () => {
 
     const { darkMode, setDarkMode, language, setLanguage } = useSettings();
+    const session = useSession();
     const { ais } = useHeadlessAIS();
     const [dummy, setDummy] = useState(0);
     const dict = useDictionary();
-
+    console.log(session)
     //Workaround for darkmode value not syncing with the MUI state.  
     useEffect(() => {
         setDummy(dummy + 1);
@@ -74,10 +76,7 @@ const SettingsPage = () => {
                     {/* <CCXPDownAlert/> */}
                 </div>
                 <div className="flex flex-col justify-center items-center space-y-2 w-52">
-                    {/*<Button variant="outlined" color="primary" onClick={handleOpenHeadlessLogin}>連接</Button>*/}
-                    <LoginDialog />
-                    {ais.enabled && <span className="text-gray-600 dark:text-gray-400 text-sm">{dict.ccxp.connected}</span>}
-                    {ais.enabled && !ais.ACIXSTORE && <span className="text-red-600 dark:text-red-400 text-sm">{dict.ccxp.failed}</span>}
+                    <Button onClick={() => signIn('nthumods')}>SignIn</Button>
                 </div>
             </div>
             <Separator orientation="horizontal"/>

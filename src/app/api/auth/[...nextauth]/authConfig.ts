@@ -5,6 +5,22 @@ import CredentialsProvider from "next-auth/providers/credentials"
 export const authConfig: AuthOptions = {
     session: { strategy: "jwt" },
     providers: [
+        {
+            id: "nthumods",
+            name: "NTHUMods",
+            type: "oauth",
+            clientId: 'courseweb',
+            clientSecret: "secretyoursecret",
+            authorization: {
+                url: "http://localhost:3000/oauth/auth",
+                params: { scope: "login courses" }
+            },
+            token: "http://localhost:3000/oauth/access_token",
+            userinfo: "http://localhost:3000/oauth/userinfo",
+            profile(profile, tokens) {
+                return profile;
+            },
+        },
         process.env.NODE_ENV === "development"
             ? CredentialsProvider({
                 id: "dev",
@@ -53,63 +69,77 @@ export const authConfig: AuthOptions = {
             }
     ],
     callbacks: {
-        async jwt({ token, account, profile, user }) {
-            if (process.env.NODE_ENV == 'development') {
-                const { data, error } = await supabase_server.from("users").select("roles").eq("user_id", "b07901001").limit(1).single();
-                token = {
-                    ...token,
-                    id: "b07901001",
-                    inschool: true,
-                    name_zh: "王小明",
-                    name_en: "Wang, Xiao-Ming",
-                    email: "chewtzihwee@gmail.com",
-                    roles: data?.roles ?? []
-                }
+        async jwt({ token, account, profile, user,  }) {
+            token.provider = account?.provider;
+            if (account?.provider === "nthumods") {
+                token.id = account.id;
+                token.password = account.password;
                 return token;
-            }
-            if (account) {
-                const { data, error } = await supabase_server.from("users").select("roles").eq("user_id", user.id).limit(1).single();
-                token = {
-                    ...token,
-                    id: user.id,
-                    inschool: user.inschool,
-                    name_zh: user.name_zh,
-                    name_en: user.name_en,
-                    email: user.email,
-                    roles: data?.roles ?? []
+            } else {
+                if (process.env.NODE_ENV == 'development') {
+                    const { data, error } = await supabase_server.from("users").select("roles").eq("user_id", "b07901001").limit(1).single();
+                    token = {
+                        ...token,
+                        id: "b07901001",
+                        inschool: true,
+                        name_zh: "王小明",
+                        name_en: "Wang, Xiao-Ming",
+                        email: "chewtzihwee@gmail.com",
+                        roles: data?.roles ?? []
+                    }
+                    return token;
                 }
+                if (account) {
+                    const { data, error } = await supabase_server.from("users").select("roles").eq("user_id", user.id).limit(1).single();
+                    token = {
+                        ...token,
+                        id: user.id,
+                        inschool: user.inschool,
+                        name_zh: user.name_zh,
+                        name_en: user.name_en,
+                        email: user.email,
+                        roles: data?.roles ?? []
+                    }
+                }
+                return token
             }
-            return token
+            
         },
         async session({ session, token }) {
-            if (process.env.NODE_ENV == 'development') {
+            if (token?.provider === "nthumods") {
                 session.user = {
-                    id: "b07901001",
-                    inschool: true,
-                    name_zh: "王小明",
-                    name_en: "Wang, Xiao-Ming",
-                    email: "chewtzihwee@gmail.com",
+                    id: token.id,
+                    
+            } else {
+                if (process.env.NODE_ENV == 'development') {
+                    session.user = {
+                        id: "b07901001",
+                        inschool: true,
+                        name_zh: "王小明",
+                        name_en: "Wang, Xiao-Ming",
+                        email: "chewtzihwee@gmail.com",
+                        //@ts-ignore
+                        roles: token?.roles ?? []
+                    }
+                    return session;
+                }
+                session.user = {
+                    ...session.user,
+                    //@ts-ignore
+                    id: token.id,
+                    //@ts-ignore
+                    name_zh: token.name_zh,
+                    //@ts-ignore
+                    name_en: token.name_en,
+                    //@ts-ignore
+                    inschool: token.inschool,
+                    //@ts-ignore
+                    email: token.email,
                     //@ts-ignore
                     roles: token?.roles ?? []
                 }
                 return session;
             }
-            session.user = {
-                ...session.user,
-                //@ts-ignore
-                id: token.id,
-                //@ts-ignore
-                name_zh: token.name_zh,
-                //@ts-ignore
-                name_en: token.name_en,
-                //@ts-ignore
-                inschool: token.inschool,
-                //@ts-ignore
-                email: token.email,
-                //@ts-ignore
-                roles: token?.roles ?? []
-            }
-            return session;
         },
     }
 }
