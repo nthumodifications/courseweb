@@ -19,6 +19,7 @@ import { AutocompleteShadcn } from './AutocompleteShadcn';
 import { MultiCheckboxControl } from './MultiCheckboxControl';
 import MultiSelectFormField from '../ui/custom_multiselect';
 import { TimeFilterType } from '@/components/FormComponents/TimeslotSelectorControl';
+import { toPrettySemester } from '@/helpers/semester';
 
 export type RefineControlFormTypes = {
     textSearch: string,
@@ -105,7 +106,7 @@ const RefineControls: FC<{ form: UseFormReturn<RefineControlFormTypes> }> = ({ f
     const { data: semesters = [], error: error6, isLoading: load6 } = useQuery({
         queryKey: ['distinct_semesters'],
         queryFn: async () => {
-            const { data = [], error } = await supabase.from('distinct_semesters').select('semester');
+            const { data = [], error } = await supabase.from('distinct_semesters').select('semester').order('semester', { ascending: false });
             if (error) throw error;
             return data!.map(({ semester }) => semester!);
         }
@@ -145,7 +146,7 @@ const RefineControls: FC<{ form: UseFormReturn<RefineControlFormTypes> }> = ({ f
                                 </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                                {semesters.map(semester => (<SelectItem key={semester} value={semester}>{semester}</SelectItem>))}
+                                {semesters.map(semester => (<SelectItem key={semester} value={semester}>{toPrettySemester(semester)}</SelectItem>))}
                             </SelectContent>
                         </Select>
                         <FormMessage />
