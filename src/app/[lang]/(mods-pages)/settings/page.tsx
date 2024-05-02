@@ -20,6 +20,8 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
+import TimetablePreferences from "./TimetablePreferences";
+import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 
 const DisplaySettingsCard = () => {
     const { darkMode, setDarkMode, language, setLanguage } = useSettings();
@@ -60,6 +62,7 @@ const DisplaySettingsCard = () => {
 }
 
 const TimetableSettingsCard = () => {
+    const { preferences, setPreferences } = useUserTimetable();
     const dict = useDictionary();
     return <Card>
         <CardHeader>
@@ -70,6 +73,7 @@ const TimetableSettingsCard = () => {
             <div className="flex flex-col gap-4 py-4" id="theme">
                 <TimetablePreview />
                 <TimetableThemeList />
+                <TimetablePreferences settings={preferences} onSettingsChange={setPreferences} />
             </div>
         </CardContent>
     </Card>
