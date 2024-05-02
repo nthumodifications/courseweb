@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { ResolvingMetadata } from "next";
-import { AlertTriangle, ChevronLeft } from 'lucide-react';
+import { AlertTriangle, CalendarPlus, ChevronLeft, FileEdit } from 'lucide-react';
 import Link from "next/link";
 import DownloadSyllabus from "./DownloadSyllabus";
 import Fade from "@/components/Animation/Fade";
@@ -22,6 +22,9 @@ import { Badge } from "@/components/ui/badge"
 import supabase, { CourseDefinition, CourseScoreDefinition } from '@/config/supabase';
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { timetableColors } from "@/const/timetableColors";
+import DateContributeForm from "./DateContributeForm";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import ShortNameContributeForm from "./ShortNameContributeForm";
 
 
 type PageProps = {
@@ -129,6 +132,22 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                             }
                         </div>
                         <SelectCourseButton courseId={course.raw_id} />
+                        <Dialog>
+                            <DialogTrigger asChild>
+                                <Button variant="outline" size="icon"><CalendarPlus/></Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DateContributeForm courseId={course.raw_id} />
+                            </DialogContent>
+                        </Dialog>
+                        <Dialog>
+                            <DialogTrigger asChild>
+                                <Button variant="outline" size="icon"><FileEdit/></Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <ShortNameContributeForm courseId={course.raw_id} />
+                            </DialogContent>
+                        </Dialog>
                     </div>
                 </div>
                 <Separator />
