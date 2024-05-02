@@ -88,22 +88,35 @@
         "bus": "Bus"
     },
     "settings": {
-        "title": "Settings",
-        "dark_mode": {
-            "title": "Dark Mode",
-            "description": "Night mode turns the light surfaces of the page dark, creating an experience ideal for the dark. Try it out!"
+        "account": {
+            "title": "Account",
+            "description": "NTHU AIS Login",
+            "ccxp": {
+                "title": "Proxy Login into your NTHU AIS Account",
+                "description": "Access more features by connecting with NTHU AIS securely."
+            }
         },
-        "language": {
-            "title": "Language",
-            "description": "Select your preferred language."
+        "display": {
+            "title": "Display",
+            "description": "Appearance, Language",
+            "dark_mode": {
+                "title": "Dark Mode"
+            },
+            "language": {
+                "title": "Language"
+            }
         },
-        "theme": {
-            "title": "Theme",
-            "description": "Personalize your timetable to make it yours."
+        "timetable": {
+            "title": "Timetable",
+            "description": "Theme, Preview"
         },
-        "ccxp": {
-            "title": "Proxy Login into your NTHU AIS Account",
-            "description": "NTHUMods can use proxy login methods such that students can easily connect to the school system functions on NTHUMods."
+        "privacy": {
+            "title": "Privacy",
+            "description": "Analytics",
+            "analytics": {
+                "title": "Analytics",
+                "description": "Send anonymous usage info to Google Analytics"
+            }
         }
     },
     "venues": {

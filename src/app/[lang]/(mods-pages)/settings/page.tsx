@@ -23,15 +23,16 @@ import {
 
 const DisplaySettingsCard = () => {
     const { darkMode, setDarkMode, language, setLanguage } = useSettings();
+    const dict = useDictionary();
     return <Card>
         <CardHeader>
-            <CardTitle>Display</CardTitle>
-            <CardDescription>Appearance, Language</CardDescription>
+            <CardTitle>{dict.settings.display.title}</CardTitle>
+            <CardDescription>{dict.settings.display.description}</CardDescription>
         </CardHeader>
         <CardContent>
             <div className="flex flex-row gap-4 py-4 items-center" id="darkmode">
                 <div className="flex flex-col flex-1 gap-1">
-                    <h2 className="font-semibold text-base">Dark Mode</h2>
+                    <h2 className="font-semibold text-base">{dict.settings.display.dark_mode.title}</h2>
                 </div>
                 <div className="flex items-center">
                     <Switch checked={darkMode} defaultChecked={darkMode} onCheckedChange={(e) => setDarkMode(e)} />
@@ -40,7 +41,7 @@ const DisplaySettingsCard = () => {
             <Separator orientation="horizontal" />
             <div className="flex flex-row gap-4 py-4 items-center" id="language">
                 <div className="flex flex-col flex-1 gap-1">
-                    <h2 className="font-semibold text-base">Language</h2>
+                    <h2 className="font-semibold text-base">{dict.settings.display.language.title}</h2>
                 </div>
                 <div className="flex items-center">
                     <Select defaultValue={language} value={language} onValueChange={(v) => setLanguage(v as Language)}>
@@ -59,10 +60,11 @@ const DisplaySettingsCard = () => {
 }
 
 const TimetableSettingsCard = () => {
+    const dict = useDictionary();
     return <Card>
         <CardHeader>
-            <CardTitle>Timetable</CardTitle>
-            <CardDescription>Theme, Preview</CardDescription>
+            <CardTitle>{dict.settings.timetable.title}</CardTitle>
+            <CardDescription>{dict.settings.timetable.description}</CardDescription>
         </CardHeader>
         <CardContent>
             <div className="flex flex-col gap-4 py-4" id="theme">
@@ -78,14 +80,14 @@ const AccountInfoSettingsCard = () => {
     const dict = useDictionary();
     return <Card>
         <CardHeader>
-            <CardTitle>Account</CardTitle>
-            <CardDescription>Manual, NTHU AIS Login</CardDescription>
+            <CardTitle>{dict.settings.account.title}</CardTitle>
+            <CardDescription>{dict.settings.account.description}</CardDescription>
         </CardHeader>
         <CardContent>
             <div className="flex flex-row gap-4 py-4" id="account">
                 <div className="flex flex-col flex-1 gap-1">
-                    <h2 className="font-semibold text-base">{dict.settings.ccxp.title}</h2>
-                    <p className="text-gray-600 dark:text-gray-400 text-sm">{dict.settings.ccxp.description}</p>
+                    <h2 className="font-semibold text-base">{dict.settings.account.ccxp.title}</h2>
+                    <p className="text-gray-600 dark:text-gray-400 text-sm">{dict.settings.account.ccxp.description}</p>
                 </div>
                 <div className="flex flex-col justify-center items-center space-y-2 w-max">
                     <LoginDialog />
@@ -99,17 +101,18 @@ const AccountInfoSettingsCard = () => {
 
 const PrivacySettingsCard = () => {
     const { analytics, setAnalytics } = useSettings();
+    const dict = useDictionary();
 
     return <Card>
         <CardHeader>
-            <CardTitle>Privacy</CardTitle>
-            <CardDescription>Analytics</CardDescription>
+            <CardTitle>{dict.settings.privacy.title}</CardTitle>
+            <CardDescription>{dict.settings.privacy.description}</CardDescription>
         </CardHeader>
         <CardContent>
             <div className="flex flex-row gap-4 py-4" id="privacy">
                 <div className="flex flex-col flex-1 gap-1">
-                    <h2 className="font-semibold text-base">Analytics</h2>
-                    <p className="text-gray-600 dark:text-gray-400 text-sm">Send anonymous usage info to Google Analytics</p>
+                    <h2 className="font-semibold text-base">{dict.settings.privacy.analytics.title}</h2>
+                    <p className="text-gray-600 dark:text-gray-400 text-sm">{dict.settings.privacy.analytics.description}</p>
                 </div>
                 <div className="flex flex-col justify-center items-center space-y-2">
                     <Switch checked={analytics} defaultChecked={analytics} onCheckedChange={(e) => setAnalytics(e)} />
