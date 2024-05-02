@@ -19,6 +19,9 @@ const TimetableSlotVertical: FC<TimetableSlotProps> = ({ course, tableDim, fract
 
     const displayLang =  preferences.language == 'app' ? language : preferences.language;
 
+    const flexAlign = preferences.align == 'left' ? 'items-start' : preferences.align == 'center' ? 'items-center' : 'items-end';
+    const textAlign = preferences.align == 'left' ? 'text-left' : preferences.align == 'center' ? 'text-center' : 'text-right';
+
     return (
         <div
             className={`absolute rounded-md transform translate-y-0.5`}
@@ -31,12 +34,12 @@ const TimetableSlotVertical: FC<TimetableSlotProps> = ({ course, tableDim, fract
             }}
             {...props}
         >
-            <div className={cn('flex flex-col justify-start h-full p-1 select-none', preferences.align == 'left' ? 'items-start' : preferences.align == 'center' ? 'items-center' : 'items-end' )} style={{ color: course.textColor }}>
-                <div className={cn('flex-1 w-full flex flex-col items-center overflow-hidden', preferences.align == 'left' ? 'items-start' : preferences.align == 'center' ? 'items-center' : 'items-end' )}>
+            <div className={cn('flex flex-col justify-start h-full p-1 select-none', flexAlign)} style={{ color: course.textColor }}>
+                <div className={cn('flex-1 w-full flex flex-col overflow-hidden', flexAlign, textAlign)}>
                 {preferences.display.code && <span className='text-xs font-medium' id="time_slot">{course.course.department+course.course.course}</span>}
                 {preferences.display.title && (displayLang == 'zh' ?
-                    <span className='text-xs md:text-sm font-medium text-center'>{course.course.name_zh}</span> :
-                    <span className='text-xs font-medium text-center'>{course.course.name_en}</span>
+                    <span className={cn('text-xs md:text-sm font-medium', textAlign)}>{course.course.name_zh}</span> :
+                    <span className={cn('text-xs font-medium', textAlign)}>{course.course.name_en}</span>
                 )}
                 {preferences.display.time && <span className='text-xs' id="time_slot">{scheduleTimeSlots[course.startTime].start} - {scheduleTimeSlots[course.endTime].end}</span>}
                 </div>
