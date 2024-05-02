@@ -83,11 +83,11 @@ const AccountInfoSettingsCard = () => {
         </CardHeader>
         <CardContent>
             <div className="flex flex-row gap-4 py-4" id="account">
-                <div className="flex flex-col flex-1 gap-1 max-w-[70%]">
+                <div className="flex flex-col flex-1 gap-1">
                     <h2 className="font-semibold text-base">{dict.settings.ccxp.title}</h2>
                     <p className="text-gray-600 dark:text-gray-400 text-sm">{dict.settings.ccxp.description}</p>
                 </div>
-                <div className="flex flex-col justify-center items-center space-y-2">
+                <div className="flex flex-col justify-center items-center space-y-2 w-max">
                     <LoginDialog />
                     {ais.enabled && <span className="text-gray-600 dark:text-gray-400 text-sm">{dict.ccxp.connected}</span>}
                     {ais.enabled && !ais.ACIXSTORE && <span className="text-red-600 dark:text-red-400 text-sm">{dict.ccxp.failed}</span>}
@@ -107,7 +107,7 @@ const PrivacySettingsCard = () => {
         </CardHeader>
         <CardContent>
             <div className="flex flex-row gap-4 py-4" id="privacy">
-                <div className="flex flex-col flex-1 gap-1 max-w-[70%]">
+                <div className="flex flex-col flex-1 gap-1">
                     <h2 className="font-semibold text-base">Analytics</h2>
                     <p className="text-gray-600 dark:text-gray-400 text-sm">Send anonymous usage info to Google Analytics</p>
                 </div>
