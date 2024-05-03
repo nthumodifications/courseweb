@@ -140,14 +140,14 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                                 <DateContributeForm courseId={course.raw_id} />
                             </DialogContent>
                         </Dialog>
-                        <Dialog>
+                        {/* <Dialog>
                             <DialogTrigger asChild>
                                 <Button variant="outline" size="icon"><FileEdit/></Button>
                             </DialogTrigger>
                             <DialogContent>
                                 <ShortNameContributeForm courseId={course.raw_id} />
                             </DialogContent>
-                        </Dialog>
+                        </Dialog> */}
                     </div>
                 </div>
                 <Separator />

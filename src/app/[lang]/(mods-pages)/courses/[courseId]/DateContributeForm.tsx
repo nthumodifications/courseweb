@@ -6,7 +6,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { CalendarIcon, Edit2, Minus, MinusCircle, Plus } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
     Select,
     SelectContent,
@@ -21,9 +21,12 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ScrollArea } from "@radix-ui/react-scroll-area";
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { useQuery } from "@tanstack/react-query";
+import { getContribDates, submitContribDates } from "@/lib/contrib_dates";
 
 const schema = z.object({
     dates: z.array(z.object({
+        id: z.number().optional(),
         type: z.union([z.literal("exam"), z.literal("quiz"), z.literal("no_class")]),
         title: z.string().min(1, "Title is required"),
         date: z.date()
@@ -31,11 +34,26 @@ const schema = z.object({
 });
 
 
-const DateContributeForm = () => {
+const DateContributeForm = ({ courseId }: { courseId: string }) => {
+
+    const { data: existingDates, error, isLoading, refetch } = useQuery({
+        queryKey: ["course", courseId, "dates"], 
+        queryFn: async () => {
+            const res = await getContribDates(courseId);
+            if(res == null) throw new Error("Failed to fetch dates");
+            return res.map(d => ({
+                id: d.id,
+                title: d.title,
+                type: d.type as "exam" | "quiz" | "no_class",
+                date: new Date(d.date)
+            }))
+        },
+    });
+
     const form = useForm<z.infer<typeof schema>>({
         resolver: zodResolver(schema),
         defaultValues: {
-            dates: []
+            dates: useMemo(() => existingDates ?? [], [existingDates])
         }
     });
 
@@ -45,8 +63,21 @@ const DateContributeForm = () => {
         name: "dates", // unique name for your Field Array,
     });
 
-    const onSubmit = (data: z.infer<typeof schema>) => {
-        console.log(data);
+    const onSubmit = async (data: z.infer<typeof schema>) => {
+        console.log(data)
+        const submitDates = data.dates.map(d => ({
+            id: d.id,
+            type: d.type,
+            title: d.title,
+            date: format(d.date, "yyyy-MM-dd")
+        }));
+        const result = await submitContribDates(courseId, submitDates);
+        if(result == null) {
+            throw new Error("Failed to submit dates");
+        }
+        const newData = await refetch();
+        console.log(newData.data)
+        form.reset({ dates: newData.data });
     }
 
 

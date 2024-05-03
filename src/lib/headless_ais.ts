@@ -5,6 +5,16 @@ import { cookies } from "next/headers";
 import jsdom from 'jsdom';
 import iconv from 'iconv-lite';
 
+
+export type UserDetails = {
+    studentid: string;
+    name_zh: string;
+    name_en: string;
+    department: string;
+    grade: string;
+    email: string;
+}
+
 export const signInToCCXP = async (studentid: string, password: string) => {
     try {
         const ocrAndLogin: (_try?:number) => Promise<{ ACIXSTORE: string }> = async (_try = 0) => {
@@ -157,5 +167,13 @@ export const signInToCCXP = async (studentid: string, password: string) => {
     } catch (err) {
         if(err instanceof Error) return { error: { message: err.message } };
         throw err;
+    }
+}
+
+export const getUserSession = (accessToken: string) => {
+    try {
+        return jwt.verify(accessToken, process.env.NTHU_HEADLESS_AIS_SIGNING_KEY!) as jwt.JwtPayload & UserDetails;
+    } catch {
+        return null;
     }
 }
