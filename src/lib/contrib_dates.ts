@@ -23,18 +23,30 @@ export const submitContribDates = async (raw_id: string, dates: { id?: number, t
     const accessToken = cookies().get('accessToken')?.value;
     const session = await getUserSession(accessToken ?? '');
     if(!session) {
-        return null;
+        return {
+            error: {
+                message: 'Invalid session'
+            }
+        };
     }
     //check if all dates are in yyyy-mm-dd format (We assume Taipei timezone, so no need to convert timezone)
     if(!dates.every(d => /^\d{4}-\d{2}-\d{2}$/.test(d.date))) {
-        return null;
+        return {
+            error: {
+                message: 'Invalid date format'
+            }
+        }
     }
     const oldContribDates = await getContribDates(raw_id) ?? [];
     // Filter out old unchanged dates
     const newDates = dates.filter(d => !oldContribDates.find(oldd => oldd.type == d.type && oldd.title == d.title && isSameDay(oldd.date, d.date)));
     // Check if updating id's exists in oldContribDates
     if(!newDates.filter(m => m.id).every(d => oldContribDates.find(oldd => oldd.id == d.id))) {
-        return null;
+        return {
+            error: {
+                message: 'Invalid date id'
+            }
+        };
     }
     const { data, error } = await supabase_server.from('course_dates').upsert(newDates.map(d => ({
         ...d.id ? { id: d.id } : {},
@@ -53,13 +65,21 @@ export const submitContribDates = async (raw_id: string, dates: { id?: number, t
         const { data: delData, error: delError } = await supabase_server.from('course_dates').delete().in('id', missingIds);
         if(delError) {
             console.error(delError);
-            return null;
+            return {
+                error: {
+                    message: 'Failed to delete old dates'
+                }
+            };
         }
     }
 
     if(error) {
         console.error(error);
-        return null;
+        return {
+            error: {
+                message: 'Failed to submit dates'
+            }
+        };
     }
     else return true;
 

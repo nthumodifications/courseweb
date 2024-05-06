@@ -23,6 +23,7 @@ import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useQuery } from "@tanstack/react-query";
 import { getContribDates, submitContribDates } from "@/lib/contrib_dates";
+import { toast } from "@/components/ui/use-toast";
 
 const schema = z.object({
     dates: z.array(z.object({
@@ -72,14 +73,19 @@ const DateContributeForm = ({ courseId }: { courseId: string }) => {
             date: format(d.date, "yyyy-MM-dd")
         }));
         const result = await submitContribDates(courseId, submitDates);
-        if(result == null) {
-            throw new Error("Failed to submit dates");
+        if(typeof result == "object" && 'error' in result) {
+            toast({
+                title: "Failed to submit",
+                description: result.error.message,
+            });
+            throw new Error(result.error.message);
         }
         const newData = await refetch();
         console.log(newData.data)
         form.reset({ dates: newData.data });
     }
 
+    const disabled = isLoading || form.formState.isSubmitting;
 
     return <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
@@ -104,7 +110,7 @@ const DateContributeForm = ({ courseId }: { courseId: string }) => {
                         render={({ field }) => (
                             <FormItem>
                                 <FormControl>
-                                    <Select defaultValue={field.value} value={field.value} onValueChange={field.onChange}>
+                                    <Select defaultValue={field.value} value={field.value} onValueChange={field.onChange} disabled={disabled}>
                                         <SelectTrigger className="w-[90px]">
                                             <SelectValue placeholder="Type" />
                                         </SelectTrigger>
@@ -124,7 +130,7 @@ const DateContributeForm = ({ courseId }: { courseId: string }) => {
                             render={({ field }) => (
                                 <FormItem>
                                     <FormControl>
-                                        <Input autoComplete="off" placeholder="Title" {...field}/>
+                                        <Input autoComplete="off" placeholder="Title" disabled={disabled} {...field}/>
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>)}
@@ -136,7 +142,7 @@ const DateContributeForm = ({ courseId }: { courseId: string }) => {
                                 <FormItem>
                                     <FormControl>
                                         <Popover>
-                                            <PopoverTrigger asChild>
+                                            <PopoverTrigger asChild disabled={disabled}>
                                                 <Button
                                                     variant={"outline"}
                                                     className={cn(
@@ -161,12 +167,12 @@ const DateContributeForm = ({ courseId }: { courseId: string }) => {
                                     <FormMessage />
                                 </FormItem>)}
                         />
-                        <Button variant="destructive" size="icon"  onClick={() => remove(index)}><MinusCircle className="w-4 h-4"/></Button>
+                        <Button variant="destructive" size="icon" disabled={disabled} onClick={() => remove(index)}><MinusCircle className="w-4 h-4"/></Button>
                     </div>)}
-                    <Button variant={'outline'} onClick={() => append({ type: "exam", title: "", date: new Date() })}><Plus className="mr-2"/> Add Date</Button>
+                    <Button variant={'outline'} disabled={disabled} onClick={() => append({ type: "exam", title: "", date: new Date() })}><Plus className="mr-2"/> Add Date</Button>
                     <div className="flex flex-row gap-2 justify-end">
-                        <Button variant={'outline'} onClick={() => form.reset()}>Reset</Button>
-                        <Button type="submit" onClick={form.handleSubmit(onSubmit)}>Submit</Button>
+                        <Button variant={'outline'} onClick={() => form.reset()}  disabled={disabled}>Reset</Button>
+                        <Button type="submit" onClick={form.handleSubmit(onSubmit)}  disabled={disabled}>Submit</Button>
                     </div>
                 </div>
             </Form>
