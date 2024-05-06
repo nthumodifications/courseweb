@@ -107,22 +107,35 @@
         "to": "往"
     },
     "settings": {
-        "title": "設定",
-        "dark_mode": {
-            "title": "黑暗模式",
-            "description": "夜間模式會將頁面的亮色調整為暗色，適合在夜間使用。試試看吧！"
+        "account": {
+            "title": "賬號",
+            "description": "校務資訊系統代理登入",
+            "ccxp": {
+                "title": "代理登入校務資訊系統",
+                "description": "系統會用代理登入方式，讓學生們可以在NTHUMods 上輕鬆連結校務系統功能。"
+            }
         },
-        "language": {
-            "title": "語言 Language",
-            "description": "選擇您想要的語言。"
+        "display": {
+            "title": "顯示",
+            "description": "外觀，語言",
+            "dark_mode": {
+                "title": "黑暗模式"
+            },
+            "language": {
+                "title": "語言 Language"
+            }
         },
-        "theme": {
-            "title": "時間表顔色",
-            "description": "客制化你的時間表的顔色，讓你的時間表更有個性！"
+        "timetable": {
+            "title": "時間表",
+            "description": "顔色, 客制化"
         },
-        "ccxp": {
-            "title": "代理登入校務資訊系統",
-            "description": "系統會用代理登入方式，讓學生們可以在NTHUMods 上輕鬆連結校務系統功能。"
+        "privacy": {
+            "title": "隱私",
+            "description": "使用量分析",
+            "analytics": {
+                "title": "分享至 Google Analytics",
+                "description": "傳送匿名使用量統計數據至 Google Analytics，幫助我們了解使用者行為，以改進服務。"
+            }
         }
     },
     "venues": {
@@ -209,6 +222,11 @@
             "disclaimer": "注意：你的學號和密碼僅會儲存在你的設備中，不會儲存在伺服器上。",
             "description": "每次有接觸到需要登入的功能，網站會重新登入校務資訊系統，並把學號和密碼傳到該伺服器進行身份驗證，傳輸過程會使用HTTPS加密連線，並且在驗證完畢后立即刪除。",
             "agree": "我同意本網站的隱私權政策及理解代理登入的方法"
+        },
+        "errors": {
+            "IncorrectCredentials": "學號或密碼錯誤",
+            "CaptchaError": "驗證碼解讀失敗,  請在15分鐘后重試。",
+            "UnknownError": "發生了問題，但不知道爲什麽 :( 請到校務系統登入試試看。"
         }
     },
     "cancel": "取消",
