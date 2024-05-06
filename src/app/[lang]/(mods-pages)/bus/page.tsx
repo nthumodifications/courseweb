@@ -1,13 +1,13 @@
 'use client';;
 import { useSettings } from "@/hooks/contexts/settings";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FC, HTMLProps, useMemo, useState } from "react";
+import { FC, HTMLProps, SVGProps, useMemo, useState } from "react";
 import useTime from "@/hooks/useTime";
 import { useQuery } from "@tanstack/react-query";
 import { getBusesSchedules } from "./page.actions";
 import { addHours, addMinutes, format, set } from "date-fns";
 import { cn } from "@/lib/utils";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Timer } from "lucide-react";
 import { RedLineIcon } from "@/components/BusIcons/RedLineIcon";
 import { GreenLineIcon } from "@/components/BusIcons/GreenLineIcon";
 import { NandaLineIcon } from "@/components/BusIcons/NandaLineIcon";
@@ -15,10 +15,11 @@ import { useRouter } from "next/navigation";
 import { getTimeOnDate } from "@/helpers/bus";
 import useDictionary from '@/dictionaries/useDictionary';
 
-type BusListingItemProps = { refTime: Date, Icon: FC<HTMLProps<SVGElement>>, line: string, title: string, destination?: string, notes?: string[], arrival: string }
+type BusListingItemProps = { refTime: Date, Icon: FC<SVGProps<SVGSVGElement>>, line: string, title: string, destination?: string, notes?: string[], arrival: string }
 const BusListingItem = ({ refTime, Icon, line, title, destination, notes = [], arrival }: BusListingItemProps) => {
     const { language } = useSettings();
     const dict = useDictionary();
+
     const displayTime = useMemo(() => {
         // check if is time, else return as is
         if (!arrival.match(/\d{2}:\d{2}/)) return arrival;
@@ -27,30 +28,37 @@ const BusListingItem = ({ refTime, Icon, line, title, destination, notes = [], a
         if (time_arr.getTime() < refTime.getTime()) {
             return dict.bus.departed;
         }
-        else if (time_arr.getTime() - refTime.getTime() < 1 * 60 * 1000) {
+        else if (time_arr.getTime() - refTime.getTime() < 2 * 60 * 1000) {
             return dict.bus.departing;
         }
         return arrival;
-    }, [arrival, dict]);
+    }, [arrival, refTime, dict]);
 
     const router = useRouter();
     const route = line == 'nanda' ? 'nanda' : 'main';
 
-    return <div className={cn("flex flex-row py-4 items-center gap-4 cursor-pointer", arrival == dict.bus.service_over ? 'opacity-30': '')} onClick={() => router.push(`/${language}/bus/${route}`)}>
-        <Icon className="h-7 w-7" />
-        <div className="flex flex-row flex-wrap gap-2">
-            <h3 className="text-slate-800 dark:text-neutral-100 font-bold">
-                <span>{title}</span>
-                {destination && <span>-{destination}</span>}
-            </h3>
-            {notes.map(note => <div className="h-5 px-2 py-1 bg-slate-100 dark:bg-neutral-800 rounded justify-center items-center gap-2 inline-flex">
-                <div className="text-center text-black dark:text-white text-sm font-medium">{note}</div>
-            </div>)}
+    return  <div className={cn("flex flex-col gap-4 py-4", arrival == dict.bus.service_over ? 'opacity-30': '')}> 
+        <div className={cn("flex flex-row items-center gap-4 cursor-pointer")} onClick={() => router.push(`/${language}/bus/${route}/${line}/${refTime}`)}>
+            <Icon className="h-7 w-7" />
+            <div className="flex flex-row flex-wrap gap-2">
+                <h3 className="text-slate-800 dark:text-neutral-100 font-bold">
+                    <span>{title}</span>
+                    {destination && <span>-{destination}</span>}
+                </h3>
+            </div>
+            <div className={cn("flex-1 text-right text-slate-800 dark:text-neutral-200 font-bold whitespace-nowrap", displayTime == dict.bus.departing ? 'text-nthu-500': '')}>{displayTime}</div>
+            <div className="grid place-items-center">
+                <ChevronRight className="w-4 h-4"/>
+            </div>
         </div>
-       
-        <div className={cn("flex-1 text-right text-slate-800 dark:text-neutral-200 font-bold whitespace-nowrap", displayTime == dict.bus.departing ? 'text-lime-500': '')}>{displayTime}</div>
-        <div className="grid place-items-center">
-            <ChevronRight className="w-4 h-4"/>
+        <div className="flex flex-row gap-2">
+            <div className="justify-center items-center gap-2 inline-flex cursor-pointer" onClick={() => router.push(`/${language}/bus/${route}`)}>
+                <Timer className="w-4 h-4"/>
+                <div className="text-center text-sm font-medium">{"發車時刻表"}</div>
+            </div>
+            {notes.map(note => <div className="justify-center items-center gap-2 inline-flex" key={note}>
+                <div className="text-center text-sm font-medium">・{note}</div>
+            </div>)}
         </div>
     </div>
 }
