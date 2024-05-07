@@ -15,8 +15,8 @@ import { useRouter } from "next/navigation";
 import { getTimeOnDate } from "@/helpers/bus";
 import useDictionary from '@/dictionaries/useDictionary';
 
-type BusListingItemProps = { refTime: Date, Icon: FC<SVGProps<SVGSVGElement>>, line: string, title: string, destination?: string, notes?: string[], arrival: string }
-const BusListingItem = ({ refTime, Icon, line, title, destination, notes = [], arrival }: BusListingItemProps) => {
+type BusListingItemProps = { startTime: string, refTime: Date, Icon: FC<SVGProps<SVGSVGElement>>, line: string, direction: string, title: string, destination?: string, notes?: string[], arrival: string }
+const BusListingItem = ({ startTime, refTime, Icon, line, title, destination, direction, notes = [], arrival }: BusListingItemProps) => {
     const { language } = useSettings();
     const dict = useDictionary();
 
@@ -38,7 +38,7 @@ const BusListingItem = ({ refTime, Icon, line, title, destination, notes = [], a
     const route = line == 'nanda' ? 'nanda' : 'main';
 
     return  <div className={cn("flex flex-col gap-4 py-4", arrival == dict.bus.service_over ? 'opacity-30': '')}> 
-        <div className={cn("flex flex-row items-center gap-4 cursor-pointer")} onClick={() => router.push(`/${language}/bus/${route}/${line}/${refTime}`)}>
+        <div className={cn("flex flex-row items-center gap-4 cursor-pointer")} onClick={() => router.push(`/${language}/bus/${route}/${line}_${direction}?start_time=${startTime}`)}>
             <Icon className="h-7 w-7" />
             <div className="flex flex-row flex-wrap gap-2">
                 <h3 className="text-slate-800 dark:text-neutral-100 font-bold">
@@ -95,7 +95,9 @@ const BusPage = () => {
                         if(returnData.some((bus) => bus.line === 'red')) continue;
                         returnData.push({
                             Icon: RedLineIcon,
+                            startTime: bus.time,
                             line: 'red',
+                            direction: 'up',
                             title: dict.bus.red_line,
                             notes,
                             arrival: bus.time,
@@ -104,7 +106,9 @@ const BusPage = () => {
                         if(returnData.some((bus) => bus.line === 'green')) continue;
                         returnData.push({
                             Icon: GreenLineIcon,
+                            startTime: bus.time,
                             line: 'green',
+                            direction: 'up',
                             title: dict.bus.green_line,
                             notes,
                             arrival: bus.time,
@@ -117,7 +121,9 @@ const BusPage = () => {
                     if(bus.description.includes("83號")) notes.push(language == 'zh' ? "83號": "Bus 83");
                     returnData.push({
                         Icon: NandaLineIcon,
+                        startTime: bus.time,
                         line: 'nanda',
+                        direction: 'up',
                         title: dict.bus.nanda_line,
                         destination: language == 'zh' ? '往南大校區' : 'To Nanda',
                         notes,
@@ -136,7 +142,9 @@ const BusPage = () => {
                         if(returnData.some((bus) => bus.line === 'red')) continue;
                         returnData.push({
                             Icon: RedLineIcon,
+                            startTime: bus.time,
                             line: 'red',
+                            direction: 'up',
                             title: dict.bus.red_line,
                             notes,
                             arrival: bus.time,
@@ -145,7 +153,9 @@ const BusPage = () => {
                         if(returnData.some((bus) => bus.line === 'green')) continue;
                         returnData.push({
                             Icon: GreenLineIcon,
+                            startTime: bus.time,
                             line: 'green',
+                            direction: 'up',
                             title: dict.bus.green_line,
                             notes,
                             arrival: bus.time,
@@ -162,7 +172,9 @@ const BusPage = () => {
                     if(bus.description.includes("83號")) notes.push(language == 'zh' ? "83號": "Bus 83");
                     returnData.push({
                         Icon: NandaLineIcon,
+                        startTime: bus.time,
                         line: 'nanda',
+                        direction: 'up',
                         title: dict.bus.nanda_line,
                         destination: language == 'zh' ? '往南大校區' : 'To Nanda',
                         notes,
@@ -183,7 +195,9 @@ const BusPage = () => {
                 if(bus.description.includes("83號")) notes.push(language == 'zh' ? "83號": "Bus 83");
                 returnData.push({
                     Icon: NandaLineIcon,
+                    startTime: bus.time,
                     line: 'nanda',
+                    direction: 'down',
                     title: dict.bus.nanda_line,
                     destination: language == 'zh' ? '往校本部' : 'To Main Campus',
                     notes,
@@ -196,7 +210,9 @@ const BusPage = () => {
         if(!returnData.some((bus) => bus.line === 'red') && tab != 'nanda') {
             returnData.push({
                 Icon: RedLineIcon,
+                startTime: '0:00',
                 line: 'red',
+                direction: 'up',
                 title: dict.bus.red_line,
                 arrival: dict.bus.service_over,
             });
@@ -204,7 +220,9 @@ const BusPage = () => {
         if(!returnData.some((bus) => bus.line === 'green') && tab != 'nanda') {
             returnData.push({
                 Icon: GreenLineIcon,
+                startTime: '0:00',
                 line: 'green',
+                direction: 'up',
                 title: dict.bus.green_line,
                 arrival: dict.bus.service_over,
             });
@@ -212,7 +230,9 @@ const BusPage = () => {
         if(!returnData.some((bus) => bus.line === 'nanda')) {
             returnData.push({
                 Icon: NandaLineIcon,
+                startTime: '0:00',
                 line: 'nanda',
+                direction: 'up',
                 title: dict.bus.nanda_line,
                 arrival: dict.bus.service_over,
             });
