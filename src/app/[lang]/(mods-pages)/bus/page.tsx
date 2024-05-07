@@ -5,7 +5,7 @@ import { FC, HTMLProps, SVGProps, useMemo, useState } from "react";
 import useTime from "@/hooks/useTime";
 import { useQuery } from "@tanstack/react-query";
 import { getBusesSchedules } from "./page.actions";
-import { addHours, addMinutes, format, set } from "date-fns";
+import { addHours, addMinutes, format, isWeekend, set } from "date-fns";
 import { cn } from "@/lib/utils";
 import { ChevronRight, Timer } from "lucide-react";
 import { RedLineIcon } from "@/components/BusIcons/RedLineIcon";
@@ -70,15 +70,16 @@ const BusPage = () => {
     const time = useTime();
     const dict = useDictionary();
     const [tab, setTab] = useState('north_gate');
+    const weektype = isWeekend(time) ? 'weekend' : 'weekday';
 
     const { data: UphillBuses = [], error } = useQuery({
-        queryKey: ['buses_up'],
-        queryFn: () => getBusesSchedules('all', 'all', 'up'),
+        queryKey: ['buses_up', weektype],
+        queryFn: () => getBusesSchedules('all', weektype, 'up'),
     });
 
     const { data: DownhillBuses = [], error: error2 } = useQuery({
-        queryKey: ['buses_down'],
-        queryFn: () => getBusesSchedules('all', 'all', 'down'),
+        queryKey: ['buses_down', weektype],
+        queryFn: () => getBusesSchedules('all', weektype, 'down'),
     });
     
     const displayBuses = useMemo(() => {

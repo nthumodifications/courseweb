@@ -13,7 +13,7 @@ import useTime from '@/hooks/useTime';
 import useDictionary from '@/dictionaries/useDictionary';
 import { Language } from '@/types/settings';
 import { cn } from '@/lib/utils';
-import { eachHourOfInterval, format, isThisHour, isWeekend } from 'date-fns';
+import { eachHourOfInterval, format, isSameHour, isThisHour, isWeekend } from 'date-fns';
 import { NandaLineIcon } from '@/components/BusIcons/NandaLineIcon';
 
 type BusDetailsContainerProps = {
@@ -37,7 +37,6 @@ type BusDetailsContainerProps = {
 const BusDetailsContainer = ({ routes, up, down }: BusDetailsContainerProps) => {
     const { lang } = useParams() as { lang: Language };
     const [weektab, setWeektab] = useState<'weekday' | 'weekend'>(isWeekend(new Date()) ? 'weekend' : 'weekday');
-    const time = useTime();
     const dict = useDictionary();
 
 
@@ -68,7 +67,7 @@ const BusDetailsContainer = ({ routes, up, down }: BusDetailsContainerProps) => 
             <TableBody>
                 {mergedBuses.map((bus, i) => (
                     <TableRow key={i}>
-                        <TableCell className={cn("text-slate-800 dark:text-neutral-200 border border-border", getTimeOnDate(time, bus.up.time) < time ? 'opacity-30' : '')} data-time={bus.up.time}>
+                        <TableCell className={cn("text-slate-800 dark:text-neutral-200 border border-border")} data-time={bus.up.time}>
                             <div className="flex flex-row gap-2 items-center">
                                 <div className='flex flex-row gap-2 items-center flex-1'>
                                     {bus.up.route == '校園公車' && <div className="text-slate-800 dark:text-neutral-200">
@@ -83,7 +82,7 @@ const BusDetailsContainer = ({ routes, up, down }: BusDetailsContainerProps) => 
                                 <div className="text-slate-800 dark:text-neutral-200">{bus.up.time}</div>
                             </div>
                         </TableCell>
-                        <TableCell className={cn("text-slate-800 dark:text-neutral-200 border border-border", getTimeOnDate(time, bus.down.time) < time ? 'opacity-30' : '')} data-time={bus.down.time}>
+                        <TableCell className={cn("text-slate-800 dark:text-neutral-200 border border-border")} data-time={bus.down.time}>
                             <div className="flex flex-row gap-2 items-center">
                                 <div className='flex flex-row gap-2 items-center flex-1'>
                                     {bus.down.route == '校園公車' && <div className="text-slate-800 dark:text-neutral-200">
@@ -139,7 +138,10 @@ const BusDetailsContainer = ({ routes, up, down }: BusDetailsContainerProps) => 
     const hoursDate = eachHourOfInterval({
         start: new Date().setHours(7, 0, 0, 0),
         end: new Date().setHours(22, 0, 0, 0)
-    });
+    })
+    
+    const filteredHoursDate = hoursDate.filter(h => up[weektab].some(b => isSameHour(getTimeOnDate(h, b.time), h) || down[weektab].some(b => isSameHour(getTimeOnDate(h, b.time), h))));
+
 
     // scroll time selector to the closest time
     const timeSelectorRef = useRef<HTMLDivElement>(null);
@@ -176,7 +178,7 @@ const BusDetailsContainer = ({ routes, up, down }: BusDetailsContainerProps) => 
                     </TabsList>
                     <div className='flex flex-col gap-4 py-2' ref={timeSelectorRef}>
                         <div className="justify-start items-start gap-1.5 inline-flex max-w-full overflow-x-auto">
-                            {hoursDate.map(hd => <div className={cn("px-4 py-2 bg-white rounded-md border-2  justify-center items-center gap-2 flex cursor-pointer", isThisHour(hd) ? "border-violet-500": "border-slate-200")} key={hd.toString()} onClick={() => scrollToClosestTime(hd)}>
+                            {filteredHoursDate.map(hd => <div className={cn("px-4 py-2 bg-white rounded-md border-2  justify-center items-center gap-2 flex cursor-pointer", isThisHour(hd) ? "border-violet-500": "border-slate-200")} key={hd.toString()} onClick={() => scrollToClosestTime(hd)}>
                                 <div className="text-slate-900 text-sm font-medium font-['Inter'] leading-normal w-max">{/* 7 am */}{format(hd, 'h a')}</div>
                             </div>)}
                         </div>

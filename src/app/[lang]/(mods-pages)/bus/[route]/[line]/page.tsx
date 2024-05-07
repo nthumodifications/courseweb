@@ -1,8 +1,11 @@
 'use client';
+import { Button } from "@/components/ui/button";
 import { getTimeOnDate } from "@/helpers/bus";
 import useTime from "@/hooks/useTime";
 import { cn } from "@/lib/utils";
 import { addMinutes, formatDate, isSameMinute, subMinutes } from "date-fns";
+import { ChevronLeft } from "lucide-react";
+import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import { useMemo } from "react";
 
@@ -83,27 +86,36 @@ const LineDisplayPage = () => {
         });
     }, [time, start_time]);
 
-    return <div className="w-full items-start inline-flex px-4">
-    <div className="w-full p-2 flex-col justify-start inline-flex">
-        {displayText.map((m, i) => <div key={m.station} className={cn("items-stretch gap-4 inline-flex")}>
-            <div className="h-auto relative w-3">
-                {i != 0 && (m.state > BusStationState.UNAVAILABLE ?
-                    <div className="absolute top-0 left-[calc(50%-2px)] w-1 h-1/2 bg-nthu-400 z-10" />
-                    :<div className="absolute top-0 left-[calc(50%-2px)] w-1 h-1/2 bg-slate-200 z-10" />)}
-                {m.state >= BusStationState.AT_STATION ? 
-                    <div className="absolute top-[calc(50%-6px)] w-3 h-3 bg-nthu-500 rounded-full z-20" />
-                    :<div className="absolute top-[calc(50%-6px)] w-3 h-3 bg-slate-200 rounded-full z-20" />}
-                {i != (displayText.length - 1) && (m.state > BusStationState.AT_STATION ?
-                    <div className="absolute top-1/2 left-[calc(50%-2px)] w-1 h-1/2 bg-nthu-400 z-10" />
-                    :<div className="absolute top-1/2 left-[calc(50%-2px)] w-1 h-1/2 bg-slate-200 z-10" />)}
+    return <div className="flex flex-col gap-2">
+        <div className="">
+            <Button variant={'ghost'} asChild>
+                <Link href='/bus'>
+                    <ChevronLeft className="w-4 h-4 mr-2" />
+                </Link>
+            </Button>
+        </div>
+        <div className="w-full items-start inline-flex px-4">
+            <div className="w-full p-2 flex-col justify-start inline-flex">
+                {displayText.map((m, i) => <div key={m.station} className={cn("items-stretch gap-4 inline-flex")}>
+                    <div className="h-auto relative w-3">
+                        {i != 0 && (m.state > BusStationState.UNAVAILABLE ?
+                            <div className="absolute top-0 left-[calc(50%-2px)] w-1 h-1/2 bg-nthu-400 z-10" />
+                            :<div className="absolute top-0 left-[calc(50%-2px)] w-1 h-1/2 bg-slate-200 z-10" />)}
+                        {m.state >= BusStationState.AT_STATION ? 
+                            <div className="absolute top-[calc(50%-6px)] w-3 h-3 bg-nthu-500 rounded-full z-20" />
+                            :<div className="absolute top-[calc(50%-6px)] w-3 h-3 bg-slate-200 rounded-full z-20" />}
+                        {i != (displayText.length - 1) && (m.state > BusStationState.AT_STATION ?
+                            <div className="absolute top-1/2 left-[calc(50%-2px)] w-1 h-1/2 bg-nthu-400 z-10" />
+                            :<div className="absolute top-1/2 left-[calc(50%-2px)] w-1 h-1/2 bg-slate-200 z-10" />)}
+                    </div>
+                    <div className={cn("flex-1 py-4 justify-start items-center gap-2 flex border-b border-border", m.state > BusStationState.AT_STATION ? 'opacity-30' : '')}>
+                        <div className="text-slate-800 text-base font-bold">{m.station}</div>
+                        <div className={cn("flex-1 text-right text-base font-bold", m.state == BusStationState.AT_STATION ? 'text-nthu-500' : 'text-slate-500')}>{m.time}</div>
+                    </div>
+                </div>)}
             </div>
-            <div className={cn("flex-1 py-4 justify-start items-center gap-2 flex border-b border-border", m.state > BusStationState.AT_STATION ? 'opacity-30' : '')}>
-                <div className="text-slate-800 text-base font-bold">{m.station}</div>
-                <div className={cn("flex-1 text-right text-base font-bold", m.state == BusStationState.AT_STATION ? 'text-nthu-500' : 'text-slate-500')}>{m.time}</div>
-            </div>
-        </div>)}
+        </div>
     </div>
-</div>
 }
 
 export default LineDisplayPage;
