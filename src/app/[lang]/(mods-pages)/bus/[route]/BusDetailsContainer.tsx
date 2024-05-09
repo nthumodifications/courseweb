@@ -58,13 +58,13 @@ const BusDetailsContainer = ({ routes, up, down }: BusDetailsContainerProps) => 
             return merged;
         }, [transformedBusesUp, transformedBusesDown]);
 
-        return <Table className='border border-border'>
-            <TableHeader>
+        return <Table className='border border-border table-fixed'>
+            {/* <TableHeader>
                 <TableRow>
-                    <TableCell className="font-semibold text-center border border-border py-2">{up.title}</TableCell>
-                    <TableCell className="font-semibold text-center border border-border py-2">{down.title}</TableCell>
+                    <TableCell className="font-semibold text-center border border-border py-2 w-1/2">{up.title}</TableCell>
+                    <TableCell className="font-semibold text-center border border-border py-2 w-1/2">{down.title}</TableCell>
                 </TableRow>
-            </TableHeader>
+            </TableHeader> */}
             <TableBody>
                 {mergedBuses.map((bus, i) => (
                     <TableRow key={i}>
@@ -172,18 +172,18 @@ const BusDetailsContainer = ({ routes, up, down }: BusDetailsContainerProps) => 
     }, [selectedHour]);
 
     return (
-        <div className="flex flex-col px-4 gap-4 h-full">
-            <div className="flex flex-row items-center px-2 gap-4">
-                <Button onClick={() => router.push(`/${lang}/bus`)} size='sm' variant='ghost' className='px-0' ><ChevronLeft /></Button>
-                {routes.map(({ Icon, title }) => (
-                    <div className="flex flex-row gap-4 items-center" key={title}>
-                        <Icon />
-                        <h3 className="text-slate-800 dark:text-neutral-200 font-bold">{title}</h3>
-                    </div>
-                ))}
-            </div>
+        <div className="flex flex-col px-4 h-full">
             <Tabs defaultValue="weekday" value={weektab} onValueChange={v => setWeektab(v as "weekday" | "weekend")}>
-                <div className='w-full sticky top-0 z-50 bg-background'>
+                <div className='w-full flex flex-col gap-4 sticky -top-8 pt-4 z-50 bg-background'>
+                    <div className="flex flex-row items-center px-2 gap-4">
+                        <Button onClick={() => router.push(`/${lang}/bus`)} size='sm' variant='ghost' className='px-0' ><ChevronLeft /></Button>
+                        {routes.map(({ Icon, title }) => (
+                            <div className="flex flex-row gap-4 items-center" key={title}>
+                                <Icon />
+                                <h3 className="text-slate-800 dark:text-neutral-200 font-bold">{title}</h3>
+                            </div>
+                        ))}
+                    </div>
                     <TabsList className="w-full">
                         <TabsTrigger className="flex-1" value="weekday">{dict.bus.weekdays}</TabsTrigger>
                         <TabsTrigger className="flex-1" value="weekend">{dict.bus.weekends}</TabsTrigger>
@@ -195,11 +195,19 @@ const BusDetailsContainer = ({ routes, up, down }: BusDetailsContainerProps) => 
                             </div>)}
                         </div>
                     </div>
+                    <Table className='border border-border table-fixed'>
+                        <TableHeader>
+                            <TableRow>
+                                <TableCell className="font-semibold text-center border border-border py-2 w-1/2">{up.title}</TableCell>
+                                <TableCell className="font-semibold text-center border border-border py-2 w-1/2">{down.title}</TableCell>
+                            </TableRow>
+                        </TableHeader>
+                    </Table>
                 </div>
-                <TabsContent value="weekday">
+                <TabsContent className='-mt-1' value="weekday">
                     {renderBusSchedule(up.weekday, down.weekday)}
                 </TabsContent>
-                <TabsContent value="weekend">
+                <TabsContent className='-mt-1' value="weekend">
                     {renderBusSchedule(up.weekend, down.weekend)}
                 </TabsContent>
             </Tabs>

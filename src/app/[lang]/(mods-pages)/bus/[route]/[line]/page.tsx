@@ -17,6 +17,8 @@ enum BusStationState {
 
 const linesDict: {
     [key: string]: {
+        title_zh: string,
+        title_en: string,
         stations_zh: string[],
         stations_en: string[],
         timings: number[],
@@ -33,31 +35,43 @@ const linesDict: {
     // (Red Line) TSMC Building → South Gate Parking Lot → Yi Pavilion Parking Lot → Maple Path → General Building II → North Main Gate
     // (Green Line) TSMC Building → CHSS/CLS Building → Maple Path → General Building II → North Main Gate"
     'green_up' : {
+        'title_zh': "綠線 往台積館",
+        'title_en': "Green Line To TSMC",
         'stations_zh': ['北校門口', '綜二', '楓林小徑', '奕園停車場', '南門停車場', '台積館'],
         'stations_en': ['North Main Gate', 'General Building II', 'Maple Path', 'Yi Pavilion Parking Lot', 'South Gate Parking Lot', 'TSMC Building'],
         'timings': [0, 2, 1, 2, 1],
     },
     'green_down' : {
+        title_zh: "綠線 往北校門口",
+        title_en: "Green Line To North Gate",
         'stations_zh': ['台積館', '人社院/生科院', '楓林小徑', '綜二', '北校門口'],
         'stations_en': ['TSMC Building', 'South Gate Parking Lot', 'Yi Pavilion Parking Lot', 'Maple Path', 'General Building II', 'North Main Gate'],
         'timings': [0, 2, 1, 2, 1],
     },
     'red_up' : {
+        title_zh: "紅線 往台積館",
+        title_en: "Red Line to TSMC",
         'stations_zh': ['北校門口', '綜二', '楓林小徑', '人社院/生科院', '台積館'],
         'stations_en': ['North Main Gate', 'General Building II', 'Maple Path', 'CHSS/CLS Building', 'TSMC Building'],
         'timings': [0, 2, 1, 2, 1],
     },
     'red_down' : {
+        title_zh: "紅線 往北校門口",
+        title_en: "Red Line to North Gate",
         'stations_zh': ['台積館', '南門停車場', '奕園停車場', '楓林小徑', '綜二', '北校門口'],
         'stations_en': ['TSMC Building', 'South Gate Parking Lot', 'Yi Pavilion Parking Lot', 'Maple Path', 'General Building II', 'North Main Gate'],
         'timings': [0, 2, 1, 2, 1],
     },
     'nanda_up' : {
+        title_zh: "南大校車 往南大校區",
+        title_en: "Nanda Line To Nanda",
         'stations_zh': ['北校門口', '綜二', '人社院/生科院', '台積館', '南大校區'],
         'stations_en': ['Nanda Line', 'General Building II', 'CHSS/CLS Building', 'TSMC Building', 'Nanda Campus'],
         'timings': [0, 2, 1, 2, 10],
     },
     'nanda_down' : {
+        title_zh: "南大校車 往校本部",
+        title_en: "Nanda Line to Main Campus",
         'stations_zh': ['南大校區', '台積館', '人社院/生科院', '綜二', '北校門口'],
         'stations_en': ['Nanda Campus', 'TSMC Building', 'CHSS/CLS Building', 'General Building II', 'North Main Gate'],
         'timings': [10, 2, 1, 2, 0],
