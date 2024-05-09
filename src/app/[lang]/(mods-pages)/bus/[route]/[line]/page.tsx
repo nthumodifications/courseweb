@@ -109,8 +109,8 @@ const LineDisplayPage = () => {
                             :<div className="absolute top-1/2 left-[calc(50%-2px)] w-1 h-1/2 bg-slate-200 z-10" />)}
                     </div>
                     <div className={cn("flex-1 py-4 justify-start items-center gap-2 flex border-b border-border", m.state > BusStationState.AT_STATION ? 'opacity-30' : '')}>
-                        <div className="text-slate-800 text-base font-bold">{m.station}</div>
-                        <div className={cn("flex-1 text-right text-base font-bold", m.state == BusStationState.AT_STATION ? 'text-nthu-500' : 'text-slate-500')}>{m.time}</div>
+                        <div className="text-slate-800 dark:text-slate-200 text-base font-bold">{m.station}</div>
+                        <div className={cn("flex-1 text-right text-base font-bold", m.state == BusStationState.AT_STATION ? 'text-nthu-500' : 'text-slate-600 dark:text-slate-400')}>{m.time}</div>
                     </div>
                 </div>)}
             </div>

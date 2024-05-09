@@ -13,7 +13,7 @@ import useTime from '@/hooks/useTime';
 import useDictionary from '@/dictionaries/useDictionary';
 import { Language } from '@/types/settings';
 import { cn } from '@/lib/utils';
-import { eachHourOfInterval, format, isSameHour, isThisHour, isWeekend } from 'date-fns';
+import { eachHourOfInterval, format, isSameHour, isThisHour, isWeekend, roundToNearestHours } from 'date-fns';
 import { NandaLineIcon } from '@/components/BusIcons/NandaLineIcon';
 
 type BusDetailsContainerProps = {
@@ -37,6 +37,7 @@ type BusDetailsContainerProps = {
 const BusDetailsContainer = ({ routes, up, down }: BusDetailsContainerProps) => {
     const { lang } = useParams() as { lang: Language };
     const [weektab, setWeektab] = useState<'weekday' | 'weekend'>(isWeekend(new Date()) ? 'weekend' : 'weekday');
+    const [selectedHour, setSelectedHour] = useState<Date>(roundToNearestHours(new Date()));
     const dict = useDictionary();
 
 
@@ -130,7 +131,9 @@ const BusDetailsContainer = ({ routes, up, down }: BusDetailsContainerProps) => 
 
         const closestTimeElement = document.querySelector(`[data-time="${closestTime.time}"]`);
         if (closestTimeElement) {
-            closestTimeElement.scrollIntoView({ behavior: 'smooth' });
+            closestTimeElement.scrollIntoView({
+                behavior: 'instant'
+            });
         }
     };
     
@@ -150,14 +153,23 @@ const BusDetailsContainer = ({ routes, up, down }: BusDetailsContainerProps) => 
         const closestHourIndex = hoursDate.indexOf(closestHour);
         const closestHourElement = timeSelectorRef.current?.children[0].children[closestHourIndex] as HTMLElement;
         if (closestHourElement) {
-            closestHourElement.scrollIntoView();
+            closestHourElement.scrollIntoView({
+                behavior: 'auto',
+                block: 'center',
+                inline: 'center'
+            });
+            
         }
     }
 
+    const handleTimeSelected = (hd: Date) => {
+        setSelectedHour(hd);
+        scrollToClosestTime(hd);
+    }
+
     useEffect(() => {
-        scrollToClosestTime(new Date());
-        scrollTimeSelector(new Date());
-    }, [up.weekday, up.weekend, down.weekday, down.weekend]);
+        scrollTimeSelector(selectedHour);
+    }, [selectedHour]);
 
     return (
         <div className="flex flex-col px-4 gap-4 h-full">
@@ -178,8 +190,8 @@ const BusDetailsContainer = ({ routes, up, down }: BusDetailsContainerProps) => 
                     </TabsList>
                     <div className='flex flex-col gap-4 py-2' ref={timeSelectorRef}>
                         <div className="justify-start items-start gap-1.5 inline-flex max-w-full overflow-x-auto">
-                            {filteredHoursDate.map(hd => <div className={cn("px-4 py-2 bg-white rounded-md border-2  justify-center items-center gap-2 flex cursor-pointer", isThisHour(hd) ? "border-violet-500": "border-slate-200")} key={hd.toString()} onClick={() => scrollToClosestTime(hd)}>
-                                <div className="text-slate-900 text-sm font-medium font-['Inter'] leading-normal w-max">{/* 7 am */}{format(hd, 'h a')}</div>
+                            {filteredHoursDate.map(hd => <div className={cn("px-4 py-2 rounded-md border-2 justify-center items-center gap-2 flex cursor-pointer", !isSameHour(hd, selectedHour) ? "border-slate-200 dark:border-slate-700": "border-nthu-500")} key={hd.toString()} onClick={() => handleTimeSelected(hd)}>
+                                <div className="text-slate-900 dark:text-slate-100 text-sm font-medium leading-normal w-max">{/* 7 am */}{format(hd, 'h a')}</div>
                             </div>)}
                         </div>
                     </div>
