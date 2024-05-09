@@ -42,8 +42,9 @@ const BusDetailsContainer = ({ routes, up, down }: BusDetailsContainerProps) => 
 
 
     const renderBusSchedule = (busUp: BusDepartureDetails[], busDown: BusDepartureDetails[]) => {
-        const transformedBusesUp = busUp.map(m => exportNotes(m, lang));
-        const transformedBusesDown = busDown.map(m => exportNotes(m, lang));
+        //only display busses after selected hour
+        const transformedBusesUp = busUp.filter(b => getTimeOnDate(new Date(), b.time) >= selectedHour).map(m => exportNotes(m, lang));
+        const transformedBusesDown = busDown.filter(b => getTimeOnDate(new Date(), b.time) >= selectedHour).map(m => exportNotes(m, lang));
 
         // create a merged list of buses, each row contains both up and down buses, each row {up: BusDepartureDetails, down: BusDepartureDetails
         const mergedBuses = useMemo(() => {
@@ -58,6 +59,8 @@ const BusDetailsContainer = ({ routes, up, down }: BusDetailsContainerProps) => 
             return merged;
         }, [transformedBusesUp, transformedBusesDown]);
 
+        // console.log(mergedBuses)
+
         return <Table className='border border-border table-fixed'>
             {/* <TableHeader>
                 <TableRow>
@@ -68,35 +71,28 @@ const BusDetailsContainer = ({ routes, up, down }: BusDetailsContainerProps) => 
             <TableBody>
                 {mergedBuses.map((bus, i) => (
                     <TableRow key={i}>
-                        <TableCell className={cn("text-slate-800 dark:text-neutral-200 border border-border")} data-time={bus.up.time}>
-                            <div className="flex flex-row gap-2 items-center">
-                                <div className='flex flex-row gap-2 items-center flex-1'>
-                                    {bus.up.route == '校園公車' && <div className="text-slate-800 dark:text-neutral-200">
+                        {bus.up ? <TableCell className={cn("text-slate-800 dark:text-neutral-200 border border-border")} data-time={bus.up.time}>
+                            <div className="flex flex-row gap-2 items-center justify-center">
+                                {bus.up.route == '校園公車' && <div className='flex flex-row gap-2 items-center flex-1'>
+                                    <div className="text-slate-800 dark:text-neutral-200">
                                         {bus.up.line == 'green' ? <GreenLineIcon width={15} height={15} /> : <RedLineIcon width={15} height={15} />}
-                                    </div>}
-                                    {bus.up.route == '南大區間車' && <div className="text-slate-800 dark:text-neutral-200">
-                                        <NandaLineIcon width={15} height={15} />
-                                    </div>}
-                                    <div className="text-slate-800 dark:text-neutral-200">{bus.up.route == '校園公車' ? bus.up.dep_stop : up.title}</div>
-                                </div>
-                                
+                                    </div>
+                                    <div className="text-slate-800 dark:text-neutral-200">{bus.up.dep_stop}</div>
+                                </div>}
                                 <div className="text-slate-800 dark:text-neutral-200">{bus.up.time}</div>
                             </div>
-                        </TableCell>
-                        <TableCell className={cn("text-slate-800 dark:text-neutral-200 border border-border")} data-time={bus.down.time}>
-                            <div className="flex flex-row gap-2 items-center">
-                                <div className='flex flex-row gap-2 items-center flex-1'>
-                                    {bus.down.route == '校園公車' && <div className="text-slate-800 dark:text-neutral-200">
+                        </TableCell> : <TableCell></TableCell>}
+                        {bus.down ? <TableCell className={cn("text-slate-800 dark:text-neutral-200 border border-border")} data-time={bus.down.time}>
+                            <div className="flex flex-row gap-2 items-center justify-center">
+                                {bus.down.route == '校園公車' && <div className='flex flex-row gap-2 items-center flex-1'>
+                                    <div className="text-slate-800 dark:text-neutral-200">
                                         {bus.down.line == 'green' ? <GreenLineIcon width={15} height={15} /> : <RedLineIcon width={15} height={15} />}
-                                    </div>}
-                                    {bus.down.route == '南大區間車' && <div className="text-slate-800 dark:text-neutral-200">
-                                        <NandaLineIcon width={15} height={15} />
-                                    </div>}
-                                    <div className="text-slate-800 dark:text-neutral-200">{bus.down.route == '校園公車' ? bus.down.dep_stop : down.title}</div>
-                                </div>
+                                    </div>
+                                    <div className="text-slate-800 dark:text-neutral-200">{bus.down.dep_stop}</div>
+                                </div>}
                                 <div className="text-slate-800 dark:text-neutral-200">{bus.down.time}</div>
                             </div>
-                        </TableCell>
+                        </TableCell> : <TableCell></TableCell>}
                     </TableRow>
                 ))}
             </TableBody>
@@ -132,7 +128,8 @@ const BusDetailsContainer = ({ routes, up, down }: BusDetailsContainerProps) => 
         const closestTimeElement = document.querySelector(`[data-time="${closestTime.time}"]`);
         if (closestTimeElement) {
             closestTimeElement.scrollIntoView({
-                behavior: 'instant'
+                behavior: 'auto',
+                block: 'nearest'
             });
         }
     };
@@ -171,10 +168,19 @@ const BusDetailsContainer = ({ routes, up, down }: BusDetailsContainerProps) => 
         scrollTimeSelector(selectedHour);
     }, [selectedHour]);
 
+    //when weektab changes, check if is weekend, if so, set the selected hour to the first bus of the weekend
+    useEffect(() => {
+        if (weektab == 'weekend') {
+            setSelectedHour(getTimeOnDate(new Date(), down.weekend[0].time));
+        } else {
+            setSelectedHour(getTimeOnDate(new Date(), up.weekday[0].time));
+        }
+    }, [weektab]);
+
     return (
         <div className="flex flex-col px-4 h-full">
             <Tabs defaultValue="weekday" value={weektab} onValueChange={v => setWeektab(v as "weekday" | "weekend")}>
-                <div className='w-full flex flex-col gap-4 sticky -top-8 pt-4 z-50 bg-background'>
+                <div className='w-full flex flex-col gap-4 sticky -top-8 pt-4 z-10 bg-background'>
                     <div className="flex flex-row items-center px-2 gap-4">
                         <Button onClick={() => router.push(`/${lang}/bus`)} size='sm' variant='ghost' className='px-0' ><ChevronLeft /></Button>
                         {routes.map(({ Icon, title }) => (
@@ -190,7 +196,7 @@ const BusDetailsContainer = ({ routes, up, down }: BusDetailsContainerProps) => 
                     </TabsList>
                     <div className='flex flex-col gap-4 py-2' ref={timeSelectorRef}>
                         <div className="justify-start items-start gap-1.5 inline-flex max-w-full overflow-x-auto">
-                            {filteredHoursDate.map(hd => <div className={cn("px-4 py-2 rounded-md border-2 justify-center items-center gap-2 flex cursor-pointer", !isSameHour(hd, selectedHour) ? "border-slate-200 dark:border-slate-700": "border-nthu-500")} key={hd.toString()} onClick={() => handleTimeSelected(hd)}>
+                            {filteredHoursDate.length > 6 && filteredHoursDate.map(hd => <div className={cn("px-4 py-2 rounded-md border-2 justify-center items-center gap-2 flex cursor-pointer", !isSameHour(hd, selectedHour) ? "border-slate-200 dark:border-slate-700": "border-nthu-500")} key={hd.toString()} onClick={() => handleTimeSelected(hd)}>
                                 <div className="text-slate-900 dark:text-slate-100 text-sm font-medium leading-normal w-max">{/* 7 am */}{format(hd, 'h a')}</div>
                             </div>)}
                         </div>
