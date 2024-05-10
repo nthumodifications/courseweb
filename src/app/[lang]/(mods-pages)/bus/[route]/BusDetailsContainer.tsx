@@ -1,20 +1,18 @@
 'use client';;
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BusDepartureDetails, LineInfo } from '@/app/[lang]/(mods-pages)/bus/[route]/page.actions';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
 import { useParams, useRouter } from 'next/navigation';
-import { HTMLProps, SVGProps, useEffect, useMemo, useRef, useState } from 'react';
+import { SVGProps, useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
 import { GreenLineIcon } from '@/components/BusIcons/GreenLineIcon';
 import { RedLineIcon } from '@/components/BusIcons/RedLineIcon';
 import { exportNotes, getTimeOnDate } from '@/helpers/bus';
-import useTime from '@/hooks/useTime';
 import useDictionary from '@/dictionaries/useDictionary';
 import { Language } from '@/types/settings';
 import { cn } from '@/lib/utils';
-import { eachHourOfInterval, format, isSameHour, isThisHour, isWeekend, roundToNearestHours } from 'date-fns';
-import { NandaLineIcon } from '@/components/BusIcons/NandaLineIcon';
+import { eachHourOfInterval, format, isSameHour, isWeekend, startOfHour } from 'date-fns';
 
 type BusDetailsContainerProps = {
     routes: {
@@ -37,7 +35,7 @@ type BusDetailsContainerProps = {
 const BusDetailsContainer = ({ routes, up, down }: BusDetailsContainerProps) => {
     const { lang } = useParams() as { lang: Language };
     const [weektab, setWeektab] = useState<'weekday' | 'weekend'>(isWeekend(new Date()) ? 'weekend' : 'weekday');
-    const [selectedHour, setSelectedHour] = useState<Date>(roundToNearestHours(new Date()));
+    const [selectedHour, setSelectedHour] = useState<Date>(startOfHour(new Date()));
     const dict = useDictionary();
 
 
@@ -59,15 +57,8 @@ const BusDetailsContainer = ({ routes, up, down }: BusDetailsContainerProps) => 
             return merged;
         }, [transformedBusesUp, transformedBusesDown]);
 
-        // console.log(mergedBuses)
 
         return <Table className='border border-border table-fixed'>
-            {/* <TableHeader>
-                <TableRow>
-                    <TableCell className="font-semibold text-center border border-border py-2 w-1/2">{up.title}</TableCell>
-                    <TableCell className="font-semibold text-center border border-border py-2 w-1/2">{down.title}</TableCell>
-                </TableRow>
-            </TableHeader> */}
             <TableBody>
                 {mergedBuses.map((bus, i) => (
                     <TableRow key={i}>
@@ -171,9 +162,11 @@ const BusDetailsContainer = ({ routes, up, down }: BusDetailsContainerProps) => 
     //when weektab changes, check if is weekend, if so, set the selected hour to the first bus of the weekend
     useEffect(() => {
         if (weektab == 'weekend') {
-            setSelectedHour(getTimeOnDate(new Date(), down.weekend[0].time));
+            const minTime = Math.min(...up.weekend.map(b => getTimeOnDate(new Date(), b.time).getTime()), ...down.weekend.map(b => getTimeOnDate(new Date(), b.time).getTime()));
+            setSelectedHour(startOfHour(new Date(minTime)));
         } else {
-            setSelectedHour(getTimeOnDate(new Date(), up.weekday[0].time));
+            const minTime = Math.min(...up.weekday.map(b => getTimeOnDate(new Date(), b.time).getTime()), ...down.weekday.map(b => getTimeOnDate(new Date(), b.time).getTime()));
+            setSelectedHour(startOfHour(new Date(minTime)));
         }
     }, [weektab]);
 

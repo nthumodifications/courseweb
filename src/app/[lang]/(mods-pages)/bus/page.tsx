@@ -1,11 +1,11 @@
 'use client';;
 import { useSettings } from "@/hooks/contexts/settings";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FC, HTMLProps, SVGProps, useEffect, useMemo, useState } from "react";
+import { FC, SVGProps, useEffect, useMemo, useState } from "react";
 import useTime from "@/hooks/useTime";
 import { useQuery } from "@tanstack/react-query";
 import { getBusesSchedules } from "./page.actions";
-import { addHours, addMinutes, format, isWeekend, set, subHours } from "date-fns";
+import { addMinutes, format, isWeekend, set } from "date-fns";
 import { cn } from "@/lib/utils";
 import { ChevronRight, Timer } from "lucide-react";
 import { RedLineIcon } from "@/components/BusIcons/RedLineIcon";
