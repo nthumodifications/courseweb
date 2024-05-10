@@ -40,37 +40,21 @@ const linesDict: {
     // (綠線) 台積館 → 人社院/生科院 → 楓林小徑 → 綜二館 → 北校門口",
     // (Red Line) TSMC Building → South Gate Parking Lot → Yi Pavilion Parking Lot → Maple Path → General Building II → North Main Gate
     // (Green Line) TSMC Building → CHSS/CLS Building → Maple Path → General Building II → North Main Gate"
-    'green_up': {
+    'green': {
         Icon: GreenLineIcon,
-        'title_zh': "綠線 往台積館",
-        'title_en': "Green Line To TSMC",
-        'stations_zh': ['北校門口', '綜二', '楓林小徑', '奕園停車場', '南門停車場', '台積館'],
-        'stations_en': ['North Main Gate', 'General Building II', 'Maple Path', 'Yi Pavilion Parking Lot', 'South Gate Parking Lot', 'TSMC Building'],
-        'timings': [0, 2, 1, 2, 1],
+        'title_zh': "綠線",
+        'title_en': "Green Line",
+        'stations_zh': ['北校門口', '綜二', '楓林小徑', '奕園停車場', '南門停車場', '台積館', '人社院/生科院', '楓林小徑', '綜二', '北校門口'],
+        'stations_en': ['North Main Gate', 'General Building II', 'Maple Path', 'Yi Pavilion Parking Lot', 'South Gate Parking Lot', 'TSMC Building', 'South Gate Parking Lot', 'Yi Pavilion Parking Lot', 'Maple Path', 'General Building II', 'North Main Gate'],
+        'timings': [1, 2, 2, 1, 1, 2, 3, 2, 1],
     },
-    'green_down': {
-        Icon: GreenLineIcon,
-        title_zh: "綠線 往北校門口",
-        title_en: "Green Line To North Gate",
-        'stations_zh': ['台積館', '人社院/生科院', '楓林小徑', '綜二', '北校門口'],
-        'stations_en': ['TSMC Building', 'South Gate Parking Lot', 'Yi Pavilion Parking Lot', 'Maple Path', 'General Building II', 'North Main Gate'],
-        'timings': [0, 2, 1, 2, 1],
-    },
-    'red_up': {
+    'red': {
         Icon: RedLineIcon,
-        title_zh: "紅線 往台積館",
-        title_en: "Red Line to TSMC",
-        'stations_zh': ['北校門口', '綜二', '楓林小徑', '人社院/生科院', '台積館'],
-        'stations_en': ['North Main Gate', 'General Building II', 'Maple Path', 'CHSS/CLS Building', 'TSMC Building'],
-        'timings': [0, 2, 1, 2, 1],
-    },
-    'red_down': {
-        Icon: RedLineIcon,
-        title_zh: "紅線 往北校門口",
-        title_en: "Red Line to North Gate",
-        'stations_zh': ['台積館', '南門停車場', '奕園停車場', '楓林小徑', '綜二', '北校門口'],
-        'stations_en': ['TSMC Building', 'South Gate Parking Lot', 'Yi Pavilion Parking Lot', 'Maple Path', 'General Building II', 'North Main Gate'],
-        'timings': [0, 2, 1, 2, 1],
+        title_zh: "紅線",
+        title_en: "Red Line",
+        'stations_zh': ['北校門口', '綜二', '楓林小徑', '人社院/生科院', '台積館', '南門停車場', '奕園停車場', '楓林小徑', '綜二', '北校門口'],
+        'stations_en': ['North Main Gate', 'General Building II', 'Maple Path', 'CHSS/CLS Building', 'TSMC Building', 'South Gate Parking Lot', 'Yi Pavilion Parking Lot', 'Maple Path', 'General Building II', 'North Main Gate'],
+        'timings': [1, 2, 3, 2, 1, 1, 2, 2, 1],
     },
     'nanda_up': {
         Icon: NandaLineIcon,
@@ -78,7 +62,7 @@ const linesDict: {
         title_en: "Nanda Line To Nanda",
         'stations_zh': ['北校門口', '綜二', '人社院/生科院', '台積館', '南大校區'],
         'stations_en': ['Nanda Line', 'General Building II', 'CHSS/CLS Building', 'TSMC Building', 'Nanda Campus'],
-        'timings': [0, 2, 1, 2, 10],
+        'timings': [1, 2, 2, 2, 10],
     },
     'nanda_down': {
         Icon: NandaLineIcon,
@@ -86,17 +70,22 @@ const linesDict: {
         title_en: "Nanda Line to Main Campus",
         'stations_zh': ['南大校區', '台積館', '人社院/生科院', '綜二', '北校門口'],
         'stations_en': ['Nanda Campus', 'TSMC Building', 'CHSS/CLS Building', 'General Building II', 'North Main Gate'],
-        'timings': [10, 2, 1, 2, 0],
+        'timings': [10, 2, 2, 2, 1],
     }
 }
 
 const LineDisplayPage = () => {
     const { line } = useParams() as { line: string };
     const searchParams = useSearchParams();
-    const start_time = searchParams.get('start_time');
+    const _start_time = searchParams.get('start_time');
+    const start_index = searchParams.get('start_index');
     const time = useTime();
     if (!(line in linesDict)) return (<div>Invalid Line</div>);
     const lineData = linesDict[line] as typeof linesDict['green_up'];
+
+    // based on the start time at start_index, calculate the first station's time
+    const startDate = subMinutes(getTimeOnDate(time, _start_time as string), lineData.timings.slice(0, parseInt(start_index as string)).reduce((a, b) => a + b, 0));
+
     const { language } = useSettings();
     const dict = useDictionary();
     const returnUrl = searchParams.get('return_url') ?? `/${language}/bus`
@@ -105,7 +94,6 @@ const LineDisplayPage = () => {
         station: string,
         time: string,
     }[]>(() => {
-        const startDate = getTimeOnDate(time, start_time as string);
         return (language == 'zh' ?lineData.stations_zh : lineData.stations_en).map((station, i) => {
             const stationDepTime = addMinutes(startDate, lineData.timings.slice(0, i).reduce((a, b) => a + b, 0));
             if (time < stationDepTime) return { state: BusStationState.UNAVAILABLE, station, time: formatDate(stationDepTime, 'HH:mm') };
@@ -113,7 +101,7 @@ const LineDisplayPage = () => {
             if (time > stationDepTime) return { state: BusStationState.LEFT, station, time: formatDate(stationDepTime, 'HH:mm') };
             return { state: BusStationState.UNAVAILABLE, station, time: formatDate(stationDepTime, 'HH:mm') };
         });
-    }, [time, start_time]);
+    }, [time, startDate]);
 
     return <div className="flex flex-col gap-2">
         <div className="flex flex-row items-center px-2 gap-4">
@@ -130,7 +118,7 @@ const LineDisplayPage = () => {
         </div>
         <div className="w-full items-start inline-flex px-4">
             <div className="w-full p-2 flex-col justify-start inline-flex">
-                {displayText.map((m, i) => <div key={m.station} className={cn("items-stretch gap-4 inline-flex")}>
+                {displayText.map((m, i) => <div key={i} className={cn("items-stretch gap-4 inline-flex")}>
                     <div className="h-auto relative w-3">
                         {i != 0 && (m.state > BusStationState.UNAVAILABLE ?
                             <div className="absolute top-0 left-[calc(50%-2px)] w-1 h-1/2 bg-nthu-400 z-10" />

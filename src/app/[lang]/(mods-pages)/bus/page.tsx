@@ -5,7 +5,7 @@ import { FC, HTMLProps, SVGProps, useEffect, useMemo, useState } from "react";
 import useTime from "@/hooks/useTime";
 import { useQuery } from "@tanstack/react-query";
 import { getBusesSchedules } from "./page.actions";
-import { addHours, addMinutes, format, isWeekend, set } from "date-fns";
+import { addHours, addMinutes, format, isWeekend, set, subHours } from "date-fns";
 import { cn } from "@/lib/utils";
 import { ChevronRight, Timer } from "lucide-react";
 import { RedLineIcon } from "@/components/BusIcons/RedLineIcon";
@@ -39,8 +39,17 @@ const BusListingItem = ({ startTime, refTime, Icon, line, title, destination, di
     const router = useRouter();
     const route = line == 'nanda' ? 'nanda' : 'main';
 
+    // index should start at 0 if is green/up and red/up, but when is down , green/down should start at 5 and red/down at 4
+    // if is nanda, both dir index should start at 0
+    const index = direction == 'up' ? 0 : line == 'green' ? 5 : line == 'red' ? 4 : 0;
+
+    const handleItemClick = () => {
+        if(arrival == dict.bus.service_over) return;
+        router.push(`/${language}/bus/${route}/${line == 'nanda' ? `${line}_${direction}`: line }?start_time=${startTime}&start_index=${index}&return_url=/${language}/bus?tab=${tab}`);
+    }
+
     return  <div className={cn("flex flex-col gap-4 py-4", arrival == dict.bus.service_over ? 'opacity-30': '')}> 
-        <div className={cn("flex flex-row items-center gap-4 cursor-pointer")} onClick={() => router.push(`/${language}/bus/${route}/${line}_${direction}?start_time=${startTime}&return_url=/${language}/bus?tab=${tab}`)}>
+        <div className={cn("flex flex-row items-center gap-4 cursor-pointer")} onClick={handleItemClick}>
             <Icon className="h-7 w-7" />
             <div className="flex flex-row flex-wrap gap-2">
                 <h3 className="text-slate-800 dark:text-neutral-100 font-bold">
@@ -156,7 +165,7 @@ const BusPage = () => {
                             Icon: RedLineIcon,
                             startTime: bus.time,
                             line: 'red',
-                            direction: 'up',
+                            direction: 'down',
                             title: dict.bus.red_line,
                             notes,
                             arrival: bus.time,
@@ -167,7 +176,7 @@ const BusPage = () => {
                             Icon: GreenLineIcon,
                             startTime: bus.time,
                             line: 'green',
-                            direction: 'up',
+                            direction: 'down',
                             title: dict.bus.green_line,
                             notes,
                             arrival: bus.time,
