@@ -1,7 +1,7 @@
 'use client';;
 import { useSettings } from "@/hooks/contexts/settings";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FC, HTMLProps, SVGProps, useMemo, useState } from "react";
+import { FC, HTMLProps, SVGProps, useEffect, useMemo, useState } from "react";
 import useTime from "@/hooks/useTime";
 import { useQuery } from "@tanstack/react-query";
 import { getBusesSchedules } from "./page.actions";
@@ -11,7 +11,7 @@ import { ChevronRight, Timer } from "lucide-react";
 import { RedLineIcon } from "@/components/BusIcons/RedLineIcon";
 import { GreenLineIcon } from "@/components/BusIcons/GreenLineIcon";
 import { NandaLineIcon } from "@/components/BusIcons/NandaLineIcon";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { getTimeOnDate } from "@/helpers/bus";
 import useDictionary from '@/dictionaries/useDictionary';
 
@@ -19,6 +19,8 @@ type BusListingItemProps = { startTime: string, refTime: Date, Icon: FC<SVGProps
 const BusListingItem = ({ startTime, refTime, Icon, line, title, destination, direction, notes = [], arrival }: BusListingItemProps) => {
     const { language } = useSettings();
     const dict = useDictionary();
+    const searchParams = useSearchParams();
+    const tab = searchParams.get('tab');
 
     const displayTime = useMemo(() => {
         // check if is time, else return as is
@@ -38,7 +40,7 @@ const BusListingItem = ({ startTime, refTime, Icon, line, title, destination, di
     const route = line == 'nanda' ? 'nanda' : 'main';
 
     return  <div className={cn("flex flex-col gap-4 py-4", arrival == dict.bus.service_over ? 'opacity-30': '')}> 
-        <div className={cn("flex flex-row items-center gap-4 cursor-pointer")} onClick={() => router.push(`/${language}/bus/${route}/${line}_${direction}?start_time=${startTime}`)}>
+        <div className={cn("flex flex-row items-center gap-4 cursor-pointer")} onClick={() => router.push(`/${language}/bus/${route}/${line}_${direction}?start_time=${startTime}&return_url=/${language}/bus?tab=${tab}`)}>
             <Icon className="h-7 w-7" />
             <div className="flex flex-row flex-wrap gap-2">
                 <h3 className="text-slate-800 dark:text-neutral-100 font-bold">
@@ -69,7 +71,16 @@ const BusPage = () => {
     const { language } = useSettings();
     const time = useTime();
     const dict = useDictionary();
+    const searchParams = useSearchParams();
     const [tab, setTab] = useState('north_gate');
+    const router = useRouter();
+
+    useEffect(() => {
+        if (searchParams.has('tab')) {
+            setTab(searchParams.get('tab') as string);
+        }
+    }, [searchParams]);
+
     const weektype = isWeekend(time) ? 'weekend' : 'weekday';
 
     const { data: UphillBuses = [], error } = useQuery({
@@ -242,8 +253,13 @@ const BusPage = () => {
         return returnData;
     }, [tab, UphillBuses, DownhillBuses]);
 
+    const handleTabChange = (tab: string) => {
+        setTab(tab);
+        router.replace(`?tab=${tab}`)
+    }
+
     return <div className="flex flex-col px-4">
-        <Tabs defaultValue="north_gate" value={tab} onValueChange={setTab}>
+        <Tabs defaultValue="north_gate" value={tab} onValueChange={handleTabChange}>
             <TabsList className="w-full justify-evenly mb-4">
                 <TabsTrigger className="flex-1" value="north_gate">{dict.bus.north_gate}</TabsTrigger>
                 <TabsTrigger className="flex-1" value="tsmc">{dict.bus.tsmc}</TabsTrigger>

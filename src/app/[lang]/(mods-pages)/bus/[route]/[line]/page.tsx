@@ -99,6 +99,7 @@ const LineDisplayPage = () => {
     const lineData = linesDict[line] as typeof linesDict['green_up'];
     const { language } = useSettings();
     const dict = useDictionary();
+    const returnUrl = searchParams.get('return_url') ?? `/${language}/bus`
     const displayText = useMemo<{
         state: BusStationState,
         station: string,
@@ -117,7 +118,7 @@ const LineDisplayPage = () => {
     return <div className="flex flex-col gap-2">
         <div className="flex flex-row items-center px-2 gap-4">
             <Button variant={'ghost'} asChild>
-                <Link href='/bus'>
+                <Link href={returnUrl}>
                     <ChevronLeft className="w-4 h-4 mr-2" />
                 </Link>
             </Button>
