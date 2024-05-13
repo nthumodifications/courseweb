@@ -308,28 +308,40 @@ export type Database = {
       }
       course_comments: {
         Row: {
-          comment: string
-          courses: string
-          ease: number
-          id: number
-          posted_on: string
-          scoring: number
+          courses: string;
+          studentid: string;
+          comment: string;
+          scoring?: number;
+          easiness?: number;
+          attendance?: boolean;
+          workload?: string;
+          engagement?: boolean;
+          pastMaterials?: boolean;
+          posted_on: string;
         }
         Insert: {
-          comment: string
-          courses: string
-          ease: number
-          id?: number
-          posted_on: string
-          scoring: number
+          courses: string;
+          studentid: string;
+          comment: string;
+          scoring?: number;
+          easiness?: number;
+          attendance?: boolean;
+          workload?: string;
+          engagement?: boolean;
+          pastMaterials?: boolean;
+          posted_on: string;
         }
         Update: {
-          comment?: string
-          courses?: string
-          ease?: number
-          id?: number
-          posted_on?: string
-          scoring?: number
+          courses: string;
+          studentid: string;
+          comment: string;
+          scoring?: number;
+          easiness?: number;
+          attendance?: boolean;
+          workload?: string;
+          engagement?: boolean;
+          pastMaterials?: boolean;
+          posted_on: string;
         }
         Relationships: [
           {
