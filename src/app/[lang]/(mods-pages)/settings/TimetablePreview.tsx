@@ -3,6 +3,7 @@ import {createTimetableFromCourses, colorMapFromCourses} from '@/helpers/timetab
 import {useSettings} from '@/hooks/contexts/settings';
 import useUserTimetable from '@/hooks/contexts/useUserTimetable';
 import {RawCourseID, Semester, DepartmentCode, CourseCode, ClassCode, Credits, Venue, Time, TeacherZH, TeacherEN, Language} from '@/types/courses';
+import { useMediaQuery } from 'usehooks-ts';
 
 // raw_id: RawCourseID;
 // name_zh: string;
@@ -75,10 +76,12 @@ const TimetablePreview = () => {
         '22210ABCD123401',
     ], currentColors));
 
+    const isMobile = useMediaQuery('(max-width: 768px)');
+
     return <div className="max-h-[320px] overflow-y-hidden">
         <Timetable
             timetableData={sampleCourses}
-            vertical={false}
+            vertical={isMobile}
         />
     </div>
 }

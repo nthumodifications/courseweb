@@ -7,8 +7,6 @@ import { toPng } from 'html-to-image';
 import { useCallback, useRef, useState } from 'react';
 import { createTimetableFromCourses } from '@/helpers/timetable';
 import { MinimalCourse } from '@/types/courses';
-import { Capacitor } from '@capacitor/core';
-import { Share } from '@capacitor/share';
 
 const DownloadTimetableComponent = () => {
     const dict = useDictionary();
@@ -26,17 +24,11 @@ const DownloadTimetableComponent = () => {
         toPng(ref.current!, { cacheBust: true, pixelRatio: 3, filter: (node: HTMLElement) => node.id !== 'time_slot'})
         .then(async (dataUrl) => {
             const filename = new Date().toISOString() + '_timetable.png';
-            if (!Capacitor.isNativePlatform()) {
-                const link = document.createElement('a');
-                link.download = filename;
-                link.href = dataUrl;
-                link.click();
-            } else {
-                await Share.share({
-                    title: 'Share Timetable',
-                    url: dataUrl,
-                });
-            }
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = dataUrl;
+            link.target = '_blank';
+            link.click();
         })
         .catch((err) => {
             console.error('oops, something went wrong!', err);
@@ -69,18 +61,11 @@ const DownloadTimetableDialog = ({ onClose, icsfileLink }: { onClose: () => void
 
     const handleDownloadCalendar = async () => {
         const filename = `${new Date().toISOString()}_timetable.ics`;
-        if(!Capacitor.isNativePlatform()) {
-            const link = document.createElement('a');
-            link.download = filename
-            link.href = icsfileLink;
-            link.click();
-        } else {
-            await Share.share({
-                url: icsfileLink,
-                dialogTitle: 'Open in Calendar',
-            });
-        }
-
+        const link = document.createElement('a');
+        link.download = filename
+        link.href = icsfileLink;
+        link.target = '_blank';
+        link.click();
     }
 
     return <ModalDialog>
