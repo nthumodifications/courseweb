@@ -92,6 +92,7 @@ const BusDetailsContainer = ({ routes, up, down }: BusDetailsContainerProps) => 
     const router = useRouter();
 
     const scrollToClosestTime = (now: Date) => {
+        console.log(now)
         // what day is today
         const busesUp = weektab == 'weekday' ? up.weekday : up.weekend;
         const busesDown = weektab == 'weekday' ? down.weekday : down.weekend;
@@ -102,27 +103,27 @@ const BusDetailsContainer = ({ routes, up, down }: BusDetailsContainerProps) => 
         if (getTimeOnDate(now, lastBusUp.time) < now && getTimeOnDate(now, lastBusDown.time) < now) {
             return;
         }
-        const latestBus = getTimeOnDate(now, lastBusUp.time) > getTimeOnDate(now, lastBusDown.time) ? busesUp : busesDown;
-        // scan from first to last, if current time is past the bus time, set it as the closest time
-        let closestTime = latestBus[0];
-        for (const bus of latestBus) {
-            const [hour, minute] = bus.time.split(':').map(Number);
-            const busTime = new Date();
-            busTime.setHours(hour, minute);
-            if (busTime < now) {
-                closestTime = bus;
-            } else {
+        const mergedBuses = [...busesUp, ...busesDown].sort((a, b) => getTimeOnDate(now, a.time).getTime() - getTimeOnDate(now, b.time).getTime());
+
+        
+        // find a time that is just after or equal to the selected time
+        let closestTime = mergedBuses[0];
+        for (let i = 0; i < mergedBuses.length; i++) {
+            if (getTimeOnDate(now, mergedBuses[i].time) >= now) {
+                closestTime = mergedBuses[i];
                 break;
             }
         }
 
-        const closestTimeElement = document.querySelector(`[data-time="${closestTime.time}"]`);
-        if (closestTimeElement) {
-            closestTimeElement.scrollIntoView({
-                behavior: 'auto',
-                block: 'nearest'
-            });
-        }
+        setTimeout(() => {
+            const closestTimeElement = document.querySelector(`[data-time="${closestTime.time}"]`);
+            if (closestTimeElement) {
+                closestTimeElement.scrollIntoView({
+                    behavior: 'auto',
+                    block: 'center',
+                });
+            }
+        }, 100);
     };
     
     // generate hours for the day from 7am to 11pm
