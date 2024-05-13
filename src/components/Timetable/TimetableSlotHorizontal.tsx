@@ -18,8 +18,6 @@ const TimetableSlotHorizontal: FC<TimetableSlotProps> = ({ course, tableDim, fra
     const { preferences } = useUserTimetable();
     const displayLang =  preferences.language == 'app' ? language : preferences.language;
 
-    console.log(preferences);
-
     return ( 
     <div 
         className={`absolute rounded-md transform translate-y-0.5`}

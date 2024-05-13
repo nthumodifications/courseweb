@@ -6,6 +6,7 @@ import { isSameDay } from 'date-fns';
 import { id } from 'date-fns/locale';
 
 export const getContribDates = async (raw_id: string) => {
+    cookies();
     const { data, error } = await supabase_server.from('course_dates').select('*').eq('raw_id', raw_id);
     if(error) {
         console.error(error)

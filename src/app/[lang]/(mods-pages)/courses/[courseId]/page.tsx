@@ -131,15 +131,10 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                                 <p>No Venues</p>
                             }
                         </div>
-                        <SelectCourseButton courseId={course.raw_id} />
-                        <Dialog>
-                            <DialogTrigger asChild>
-                                <Button variant="outline" size="icon"><CalendarPlus/></Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                                <DateContributeForm courseId={course.raw_id} />
-                            </DialogContent>
-                        </Dialog>
+                        <div className="flex flex-row gap-2">
+                            <SelectCourseButton courseId={course.raw_id} />
+                            <DateContributeForm courseId={course.raw_id} />
+                        </div>
                         {/* <Dialog>
                             <DialogTrigger asChild>
                                 <Button variant="outline" size="icon"><FileEdit/></Button>

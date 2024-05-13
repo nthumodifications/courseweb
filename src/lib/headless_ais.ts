@@ -1,19 +1,11 @@
 'use server';
-import { LoginError } from "@/types/headless_ais";
+import { LoginError, UserJWT, UserJWTDetails } from "@/types/headless_ais";
 import jwt from 'jsonwebtoken';
 import { cookies } from "next/headers";
 import jsdom from 'jsdom';
 import iconv from 'iconv-lite';
 
 
-export type UserDetails = {
-    studentid: string;
-    name_zh: string;
-    name_en: string;
-    department: string;
-    grade: string;
-    email: string;
-}
 
 export const signInToCCXP = async (studentid: string, password: string) => {
     try {
@@ -155,13 +147,13 @@ export const signInToCCXP = async (studentid: string, password: string) => {
             department: secondRow.querySelector('.class3:nth-child(2)')?.textContent?.trim() ?? "",
             grade: secondRow.querySelector('.class3:nth-child(4)')?.textContent?.trim() ?? "",
             email: form.querySelector('input[name="email"]')?.getAttribute('value') ?? "",
-        };
+        } as UserJWTDetails;
 
         if(form.querySelector('input[name="ACIXSTORE"]')?.getAttribute('value') != result.ACIXSTORE) {
             throw new Error(LoginError.Unknown);
         }
 
-        const token = jwt.sign({ sub: studentid, ...data }, process.env.NTHU_HEADLESS_AIS_SIGNING_KEY!, { expiresIn: '1d' });
+        const token = jwt.sign({ sub: studentid, ...data }, process.env.NTHU_HEADLESS_AIS_SIGNING_KEY!, { expiresIn: '15d' });
         cookies().set('accessToken', token, { path: '/', maxAge: 60 * 60 * 24, sameSite: 'strict', secure: true });
         return result;
     } catch (err) {
@@ -172,7 +164,7 @@ export const signInToCCXP = async (studentid: string, password: string) => {
 
 export const getUserSession = (accessToken: string) => {
     try {
-        return jwt.verify(accessToken, process.env.NTHU_HEADLESS_AIS_SIGNING_KEY!) as jwt.JwtPayload & UserDetails;
+        return jwt.verify(accessToken, process.env.NTHU_HEADLESS_AIS_SIGNING_KEY!) as UserJWT;
     } catch {
         return null;
     }
