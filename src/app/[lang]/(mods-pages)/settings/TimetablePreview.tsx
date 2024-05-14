@@ -1,8 +1,11 @@
 import Timetable from '@/components/Timetable/Timetable';
+import { Switch } from '@/components/ui/switch';
+import useDictionary from '@/dictionaries/useDictionary';
 import {createTimetableFromCourses, colorMapFromCourses} from '@/helpers/timetable';
 import {useSettings} from '@/hooks/contexts/settings';
 import useUserTimetable from '@/hooks/contexts/useUserTimetable';
 import {RawCourseID, Semester, DepartmentCode, CourseCode, ClassCode, Credits, Venue, Time, TeacherZH, TeacherEN, Language} from '@/types/courses';
+import { useState } from 'react';
 import { useMediaQuery } from 'usehooks-ts';
 
 // raw_id: RawCourseID;
@@ -23,6 +26,7 @@ import { useMediaQuery } from 'usehooks-ts';
 
 const TimetablePreview = () => {
     const { currentColors } = useUserTimetable();
+    const dict = useDictionary();
 
     const sampleCourses = createTimetableFromCourses([
         {
@@ -77,12 +81,23 @@ const TimetablePreview = () => {
     ], currentColors));
 
     const isMobile = useMediaQuery('(max-width: 768px)');
+    const [vertical, setVertical] = useState(isMobile);
 
-    return <div className="max-h-[320px] overflow-y-hidden">
-        <Timetable
-            timetableData={sampleCourses}
-            vertical={isMobile}
-        />
+    return <div className='flex flex-col gap-2'>
+        <div className="max-h-[320px] overflow-y-hidden">
+            <Timetable
+                timetableData={sampleCourses}
+                vertical={vertical}
+            />
+        </div>
+        <div className='flex flex-row gap-2 w-full'>
+            <div className='text-medium'>{dict.settings.timetable.vertical_preview}</div>
+            <Switch
+                checked={vertical}
+                onCheckedChange={setVertical}
+            />
+        </div>
+            
     </div>
 }
 
