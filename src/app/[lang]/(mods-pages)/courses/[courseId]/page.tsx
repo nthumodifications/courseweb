@@ -133,16 +133,8 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                         </div>
                         <div className="flex flex-row gap-2">
                             <SelectCourseButton courseId={course.raw_id} />
-                            <DateContributeForm courseId={course.raw_id} />
+                            {/* <DateContributeForm courseId={course.raw_id} /> */}
                         </div>
-                        {/* <Dialog>
-                            <DialogTrigger asChild>
-                                <Button variant="outline" size="icon"><FileEdit/></Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                                <ShortNameContributeForm courseId={course.raw_id} />
-                            </DialogContent>
-                        </Dialog> */}
                     </div>
                 </div>
                 <Separator />
@@ -209,15 +201,6 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                                     </div>}
                                 </Link>
                             )}
-                        </div>
-                        <h3 className="font-semibold text-xl mb-2" id="other">Course Dates</h3>
-                        <div className="flex flex-row gap-2 overflow-hidden flex-wrap">
-                            <Button size='icon' variant='outline'><AlertTriangle /> Report an issue</Button>
-                            {course.course_dates?.map((m, index) => <div className="flex flex-row gap-2" key={index}>
-                                <h3>{m.type}</h3>
-                                <p>{m.title}</p>
-                                <p>{m.date}</p>
-                            </div>)}
                         </div>
                     </div>
                     <div className="space-y-2">
