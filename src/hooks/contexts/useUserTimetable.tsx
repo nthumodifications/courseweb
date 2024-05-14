@@ -54,7 +54,7 @@ const userTimetableContext = createContext<ReturnType<typeof useUserTimetablePro
             title: true,
             code: false,
             time: true,
-            venue: false
+            venue: true
         }
     },
     setPreferences: () => {}
