@@ -26,6 +26,102 @@ const checkOpen = (schedule: string) => {
   if (schedule == "") {
     return [false, '今日休息']
   }
+  if (schedule.includes('、')) {
+    const days = ['sunday', 'weekday', 'weekday', 'weekday', 'weekday', 'weekday', 'saturday']
+    const today = days[new Date().getDay()]
+    if (today == 'weekday') {
+      const timeslot1 = schedule.match(/(?<=(週|周)一(~|至)(週|周)五:?)\d{1,2}:\d{1,2}:\d{1,2}:\d{1,2}(?=、)/)
+      if (timeslot1) {
+        schedule = schedule.replace(/(\d{1,2}:\d{2}):(\d{1,2}:\d{2})/, "$1-$2")
+      }
+
+      const timeslot = schedule.match(/(?<=(週|周)一(~|至)(週|周)五:?)\d{1,2}:\d{1,2}-\d{1,2}:\d{1,2}(?=、)/)
+      if (!timeslot) {
+        return [false, '無資訊']
+      }
+      let [start, end] = timeslot[0].split('-')
+      let startDate = new Date()
+      startDate.setHours(parseInt(start.split(':')[0]), parseInt(start.split(':')[1]), 0)
+      let endDate = new Date()
+      endDate.setHours(parseInt(end.split(':')[0]), parseInt(end.split(':')[1]), 0)
+      
+      let now = new Date()
+      if (now < startDate && startDate.valueOf()-now.valueOf() < 3600*1000) {
+        return [false, '即將開始', start+'開始營業']
+      }
+      if (now > startDate && now < endDate && endDate.valueOf()-now.valueOf() < 3600*1000) {
+        return [true, '即將休息', end+'後休息']
+      }
+      if (now > startDate && now < endDate) {
+        return [true, '營業中', end+'後休息']
+      }
+      if (now > endDate) {
+        return [false, '休息中']
+      }
+      if (now < endDate) {
+        return [false, '即將開始', start+'開始營業']
+      }
+      return [false, '無資訊']
+    }
+    if (today == 'saturday') {
+      const timeslot = schedule.match(/(?<=(週|周)六:?)\d{2}:\d{2}-\d{2}:\d{2}/)
+      if (!timeslot) {
+        return [false, '無資訊']
+      }
+      let [start, end] = timeslot[0].split('-')
+      let startDate = new Date()
+      startDate.setHours(parseInt(start.split(':')[0]), parseInt(start.split(':')[1]), 0)
+      let endDate = new Date()
+      endDate.setHours(parseInt(end.split(':')[0]), parseInt(end.split(':')[1]), 0)
+      
+      let now = new Date()
+      if (now < startDate && startDate.valueOf()-now.valueOf() < 3600*1000) {
+        return [false, '即將開始', start+'開始營業']
+      }
+      if (now > startDate && now < endDate && endDate.valueOf()-now.valueOf() < 3600*1000) {
+        return [true, '即將休息', end+'後休息']
+      }
+      if (now > startDate && now < endDate) {
+        return [true, '營業中', end+'後休息']
+      }
+      if (now > endDate) {
+        return [false, '休息中']
+      }
+      if (now < endDate) {
+        return [false, '即將開始', start+'開始營業']
+      }
+      return [false, '無資訊']
+    }
+    if (today == 'sunday') {
+      const timeslot = schedule.match(/(?<=(週|周)日:?)\d{2}:\d{2}-\d{2}:\d{2}/)
+      if (!timeslot) {
+        return [false, '無資訊']
+      }
+      let [start, end] = timeslot[0].split('-')
+      let startDate = new Date()
+      startDate.setHours(parseInt(start.split(':')[0]), parseInt(start.split(':')[1]), 0)
+      let endDate = new Date()
+      endDate.setHours(parseInt(end.split(':')[0]), parseInt(end.split(':')[1]), 0)
+      
+      let now = new Date()
+      if (now < startDate && startDate.valueOf()-now.valueOf() < 3600*1000) {
+        return [false, '即將開始', start+'開始營業']
+      }
+      if (now > startDate && now < endDate && endDate.valueOf()-now.valueOf() < 3600*1000) {
+        return [true, '即將休息', end+'後休息']
+      }
+      if (now > startDate && now < endDate) {
+        return [true, '營業中', end+'後休息']
+      }
+      if (now > endDate) {
+        return [false, '休息中']
+      }
+      if (now < endDate) {
+        return [false, '即將開始', start+'開始營業']
+      }
+      return [false, '無資訊']
+    }
+  }
   if (schedule.includes(',')) {
     let timeslots = schedule.split(',').map(slot => slot.trim())
     for (let slot of timeslots) {
@@ -47,6 +143,9 @@ const checkOpen = (schedule: string) => {
       }
       if (now > endDate) {
         continue
+      }
+      if (now < endDate) {
+        return [false, '即將開始', start+'開始營業']
       }
       return [false, '無資訊']
     }
@@ -70,6 +169,9 @@ const checkOpen = (schedule: string) => {
     }
     if (now > endDate) {
       return [false, '休息中']
+    }
+    if (now < endDate) {
+      return [false, '即將開始', start+'開始營業']
     }
     return [false, '無資訊']
   }
