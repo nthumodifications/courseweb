@@ -16,6 +16,9 @@ export default async function Page() {
     return <ShopList data={data} />
   }
   catch (err) {
-    return <div>{err.message}</div>
+    if (err instanceof Error) {
+      return <div>{err.message}</div>
+    }
+    return <div>An unknown error occurred.</div>
   }
 }
