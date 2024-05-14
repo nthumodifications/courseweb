@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { cookies } from "next/headers";
 import jsdom from 'jsdom';
 import iconv from 'iconv-lite';
+import supabase_server from "@/config/supabase_server";
 
 
 
@@ -162,10 +163,23 @@ export const signInToCCXP = async (studentid: string, password: string) => {
     }
 }
 
-export const getUserSession = (accessToken: string) => {
+export const getUserSession = () => {
+    const accessToken = cookies().get('accessToken')?.value ?? '';
     try {
         return jwt.verify(accessToken, process.env.NTHU_HEADLESS_AIS_SIGNING_KEY!) as UserJWT;
     } catch {
         return null;
     }
+}
+
+export const isUserBanned = async () => {
+    const session = getUserSession();
+    if(!session) {
+        return false;
+    }
+    const { data, error } = await supabase_server.from('users').select('banned').eq('studentid', session.studentid).maybeSingle();
+    if(error) {
+        return false;
+    }
+    return data?.banned ?? false;
 }

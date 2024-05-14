@@ -379,6 +379,38 @@ export type Database = {
           },
         ]
       }
+      course_logs: {
+        Row: {
+          action: string
+          created_at: string
+          id: number
+          raw_id: string
+          user: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: number
+          raw_id: string
+          user: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: number
+          raw_id?: string
+          user?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_logs_raw_id_fkey"
+            columns: ["raw_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["raw_id"]
+          },
+        ]
+      }
       course_platform: {
         Row: {
           id: string
@@ -630,14 +662,17 @@ export type Database = {
       }
       users: {
         Row: {
+          banned: boolean
           roles: string[]
           user_id: string
         }
         Insert: {
+          banned?: boolean
           roles: string[]
           user_id: string
         }
         Update: {
+          banned?: boolean
           roles?: string[]
           user_id?: string
         }

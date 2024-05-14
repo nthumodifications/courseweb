@@ -210,6 +210,15 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                                 </Link>
                             )}
                         </div>
+                        <h3 className="font-semibold text-xl mb-2" id="other">Course Dates</h3>
+                        <div className="flex flex-row gap-2 overflow-hidden flex-wrap">
+                            <Button size='icon' variant='outline'><AlertTriangle /> Report an issue</Button>
+                            {course.course_dates?.map((m, index) => <div className="flex flex-row gap-2" key={index}>
+                                <h3>{m.type}</h3>
+                                <p>{m.title}</p>
+                                <p>{m.date}</p>
+                            </div>)}
+                        </div>
                     </div>
                     <div className="space-y-2">
                         <div>
