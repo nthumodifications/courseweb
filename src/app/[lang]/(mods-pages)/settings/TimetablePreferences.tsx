@@ -69,7 +69,7 @@ const TimetablePreferences: React.FC<SettingsControlProps> = ({
             </SelectTrigger>
             <SelectContent>
                 <SelectItem value="left">{dict.settings.timetable.align.left}</SelectItem>
-                <SelectItem value="center">[dict.settings.timetable.align.center]</SelectItem>
+                <SelectItem value="center">{dict.settings.timetable.align.center}</SelectItem>
                 <SelectItem value="right">{dict.settings.timetable.align.right}</SelectItem>
             </SelectContent>
             </Select>
