@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {TimetableDisplayPreferences} from '@/hooks/contexts/useUserTimetable';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import useDictionary from '@/dictionaries/useDictionary';
 
 interface SettingsControlProps {
     settings: TimetableDisplayPreferences;
@@ -12,6 +13,7 @@ const TimetablePreferences: React.FC<SettingsControlProps> = ({
     settings,
     onSettingsChange,
 }) => {
+  const dict = useDictionary();
 
   const handleLanguageChange = (value: 'app' | 'zh' | 'en') => {
     onSettingsChange({
@@ -40,7 +42,7 @@ const TimetablePreferences: React.FC<SettingsControlProps> = ({
     <div className="flex flex-col gap-2">
       <div className="flex flex-row">
         <label htmlFor="language" className="block font-bold flex-1">
-          Language:
+          {dict.settings.timetable.language}:
         </label>
         <div className='flex items-center'>
             <Select value={settings.language} onValueChange={handleLanguageChange}>
@@ -49,7 +51,7 @@ const TimetablePreferences: React.FC<SettingsControlProps> = ({
             </SelectTrigger>
             <SelectContent>
                 <SelectItem value="app">App</SelectItem>
-                <SelectItem value="zh">Chinese</SelectItem>
+                <SelectItem value="zh">繁體中文</SelectItem>
                 <SelectItem value="en">English</SelectItem>
             </SelectContent>
             </Select>
@@ -58,7 +60,7 @@ const TimetablePreferences: React.FC<SettingsControlProps> = ({
 
       <div className="flex flex-row">
         <label htmlFor="align" className="block font-bold flex-1">
-          Align:
+          {dict.settings.timetable.align.title}:
         </label>
         <div className='flex items-center'>
             <Select value={settings.align} onValueChange={handleAlignChange}>
@@ -66,38 +68,38 @@ const TimetablePreferences: React.FC<SettingsControlProps> = ({
                 <SelectValue />
             </SelectTrigger>
             <SelectContent>
-                <SelectItem value="left">Left</SelectItem>
-                <SelectItem value="center">Center</SelectItem>
-                <SelectItem value="right">Right</SelectItem>
+                <SelectItem value="left">{dict.settings.timetable.align.left}</SelectItem>
+                <SelectItem value="center">[dict.settings.timetable.align.center]</SelectItem>
+                <SelectItem value="right">{dict.settings.timetable.align.right}</SelectItem>
             </SelectContent>
             </Select>
         </div>
       </div>
       <div className="flex flex-col gap-2">
-        <label className="block font-bold mb-2">Display:</label>
+        <label className="block font-bold mb-2">{dict.settings.timetable.display}:</label>
         <div className="flex items-center mb-2">
-            <div className='flex-1'>Title</div>
+            <div className='flex-1'>{dict.settings.timetable.slot_title}</div>
             <Switch
                 checked={settings.display.title}
                 onCheckedChange={() => handleDisplayChange('title')}
             />
         </div>
         <div className="flex items-center mb-2">
-            <div className='flex-1'>Code</div>
+            <div className='flex-1'>{dict.settings.timetable.slot_code}</div>
           <Switch
             checked={settings.display.code}
             onCheckedChange={() => handleDisplayChange('code')}
           />
         </div>
         <div className="flex items-center mb-2">
-            <div className='flex-1'>Time</div>
+            <div className='flex-1'>{dict.settings.timetable.slot_time}</div>
           <Switch
             checked={settings.display.time}
             onCheckedChange={() => handleDisplayChange('time')}
           />
         </div>
         <div className="flex items-center mb-2">
-            <div className='flex-1'>Venue</div>
+            <div className='flex-1'>{dict.settings.timetable.slot_venue}</div>
           <Switch
             checked={settings.display.venue}
             onCheckedChange={() => handleDisplayChange('venue')}

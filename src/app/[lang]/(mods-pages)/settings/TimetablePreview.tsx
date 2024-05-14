@@ -1,5 +1,6 @@
 import Timetable from '@/components/Timetable/Timetable';
 import { Switch } from '@/components/ui/switch';
+import useDictionary from '@/dictionaries/useDictionary';
 import {createTimetableFromCourses, colorMapFromCourses} from '@/helpers/timetable';
 import {useSettings} from '@/hooks/contexts/settings';
 import useUserTimetable from '@/hooks/contexts/useUserTimetable';
@@ -25,6 +26,7 @@ import { useMediaQuery } from 'usehooks-ts';
 
 const TimetablePreview = () => {
     const { currentColors } = useUserTimetable();
+    const dict = useDictionary();
 
     const sampleCourses = createTimetableFromCourses([
         {
@@ -89,7 +91,7 @@ const TimetablePreview = () => {
             />
         </div>
         <div className='flex flex-row gap-2 w-full'>
-            <div className='text-medium'>Vertical Preview</div>
+            <div className='text-medium'>{dict.settings.timetable.vertical_preview}</div>
             <Switch
                 checked={vertical}
                 onCheckedChange={setVertical}
