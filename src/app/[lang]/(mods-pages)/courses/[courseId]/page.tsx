@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { ResolvingMetadata } from "next";
-import { AlertTriangle, ChevronLeft } from 'lucide-react';
+import { AlertTriangle, CalendarPlus, ChevronLeft, FileEdit } from 'lucide-react';
 import Link from "next/link";
 import DownloadSyllabus from "./DownloadSyllabus";
 import Fade from "@/components/Animation/Fade";
@@ -24,6 +24,9 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { timetableColors } from "@/const/timetableColors";
 import supabase_server from "@/config/supabase_server";
 import { CommentsContainer } from "./CommentsContainer";
+import DateContributeForm from "./DateContributeForm";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import ShortNameContributeForm from "./ShortNameContributeForm";
 
 
 type PageProps = {
@@ -130,7 +133,10 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                                 <p>No Venues</p>
                             }
                         </div>
-                        <SelectCourseButton courseId={course.raw_id} />
+                        <div className="flex flex-row gap-2">
+                            <SelectCourseButton courseId={course.raw_id} />
+                            {/* <DateContributeForm courseId={course.raw_id} /> */}
+                        </div>
                     </div>
                 </div>
                 <Separator />

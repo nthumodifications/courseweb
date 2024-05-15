@@ -308,46 +308,130 @@ export type Database = {
       }
       course_comments: {
         Row: {
-          courses: string;
-          studentid: string;
-          comment: string;
-          scoring?: number;
-          easiness?: number;
-          attendance?: boolean;
-          workload?: string;
-          engagement?: boolean;
-          pastMaterials?: boolean;
-          posted_on: string;
+          comment: string
+          courses: string
+          ease: number
+          id: number
+          posted_on: string
+          scoring: number
         }
         Insert: {
-          courses: string;
-          studentid: string;
-          comment: string;
-          scoring?: number;
-          easiness?: number;
-          attendance?: boolean;
-          workload?: string;
-          engagement?: boolean;
-          pastMaterials?: boolean;
-          posted_on: string;
+          comment: string
+          courses: string
+          ease: number
+          id?: number
+          posted_on: string
+          scoring: number
         }
         Update: {
-          courses: string;
-          studentid: string;
-          comment: string;
-          scoring?: number;
-          easiness?: number;
-          attendance?: boolean;
-          workload?: string;
-          engagement?: boolean;
-          pastMaterials?: boolean;
-          posted_on: string;
+          comment?: string
+          courses?: string
+          ease?: number
+          id?: number
+          posted_on?: string
+          scoring?: number
         }
         Relationships: [
           {
             foreignKeyName: "public_course_comments_course_fkey"
             columns: ["courses"]
             isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["raw_id"]
+          },
+        ]
+      }
+      course_dates: {
+        Row: {
+          created: string
+          date: string
+          id: number
+          raw_id: string
+          submitter: string
+          title: string
+          type: string
+        }
+        Insert: {
+          created?: string
+          date: string
+          id?: number
+          raw_id: string
+          submitter: string
+          title: string
+          type: string
+        }
+        Update: {
+          created?: string
+          date?: string
+          id?: number
+          raw_id?: string
+          submitter?: string
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_dates_raw_id_fkey"
+            columns: ["raw_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["raw_id"]
+          },
+        ]
+      }
+      course_logs: {
+        Row: {
+          action: string
+          created_at: string
+          id: number
+          raw_id: string
+          user: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: number
+          raw_id: string
+          user: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: number
+          raw_id?: string
+          user?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_logs_raw_id_fkey"
+            columns: ["raw_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["raw_id"]
+          },
+        ]
+      }
+      course_platform: {
+        Row: {
+          id: string
+          platform: string
+          raw_id: string
+        }
+        Insert: {
+          id: string
+          platform: string
+          raw_id: string
+        }
+        Update: {
+          id?: string
+          platform?: string
+          raw_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_platform_raw_id_fkey"
+            columns: ["raw_id"]
+            isOneToOne: true
             referencedRelation: "courses"
             referencedColumns: ["raw_id"]
           },
@@ -578,14 +662,17 @@ export type Database = {
       }
       users: {
         Row: {
+          banned: boolean
           roles: string[]
           user_id: string
         }
         Insert: {
+          banned?: boolean
           roles: string[]
           user_id: string
         }
         Update: {
+          banned?: boolean
           roles?: string[]
           user_id?: string
         }

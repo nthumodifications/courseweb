@@ -60,7 +60,7 @@ const LoginDialog = () => {
     <DialogContent className="sm:max-w-[425px]">
       <DialogHeader>
         <DialogTitle>
-          {dict.ccxp.login.title}
+          {dict.settings.account.signin}
         </DialogTitle>
         <DialogDescription>
           <span className="text-red-500">
