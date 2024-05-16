@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { ResolvingMetadata } from "next";
-import { AlertTriangle, CalendarPlus, ChevronLeft, FileEdit } from 'lucide-react';
+import { AlertTriangle, ChevronLeft } from 'lucide-react';
 import Link from "next/link";
 import DownloadSyllabus from "./DownloadSyllabus";
 import Fade from "@/components/Animation/Fade";
@@ -9,9 +9,7 @@ import { getCoursePTTReview, getCourseWithSyllabus } from '@/lib/course';
 import { LangProps } from "@/types/pages";
 import { toPrettySemester } from '@/helpers/semester';
 import CourseTagList from "@/components/Courses/CourseTagsList";
-import SelectCourseButton from '@/components/Courses/SelectCourseButton';
 import { colorMapFromCourses, createTimetableFromCourses } from "@/helpers/timetable";
-import Timetable from "@/components/Timetable/Timetable";
 import { MinimalCourse } from "@/types/courses";
 import { hasTimes, getScoreType } from '@/helpers/courses';
 import { Button } from "@/components/ui/button";
@@ -19,15 +17,15 @@ import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from "@/components/ui/badge"
-import supabase, { CourseCommentsDefinition, CourseDefinition, CourseScoreDefinition } from '@/config/supabase';
+import supabase, { CourseDefinition, CourseScoreDefinition } from '@/config/supabase';
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { timetableColors } from "@/const/timetableColors";
-import supabase_server from "@/config/supabase_server";
 import { CommentsContainer } from "./CommentsContainer";
-import DateContributeForm from "./DateContributeForm";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import ShortNameContributeForm from "./ShortNameContributeForm";
+import {getComments} from '@/app/[lang]/(mods-pages)/courses/[courseId]/page.actions';
+import dynamicFn from "next/dynamic";
 
+const SelectCourseButtonDynamic = dynamicFn(() => import('@/components/Courses/SelectCourseButton'), { ssr: false });
+const TimetableDynamic = dynamicFn(() => import('@/components/Timetable/Timetable'), { ssr: false });
 
 type PageProps = {
     params: { courseId?: string }
@@ -82,6 +80,7 @@ const getOtherClasses = async (course: MinimalCourse) => {
 const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
     const courseId = decodeURI(params.courseId as string);
     const course = await getCourseWithSyllabus(courseId);
+    const fetchedComments = await getComments(courseId, 1);
 
     if (!course) return <div className="py-6 px-4">
         <div className="flex flex-col gap-2 border-l border-neutral-500 pl-4 pr-6">
@@ -134,7 +133,7 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                             }
                         </div>
                         <div className="flex flex-row gap-2">
-                            <SelectCourseButton courseId={course.raw_id} />
+                            <SelectCourseButtonDynamic courseId={course.raw_id} />
                             {/* <DateContributeForm courseId={course.raw_id} /> */}
                         </div>
                     </div>
@@ -159,7 +158,7 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                         </div>}
                         {showTimetable && <div className="">
                             <h3 className="font-semibold text-xl mb-2" id="timetable">{dict.course.details.timetable}</h3>
-                            <Timetable timetableData={timetableData} />
+                            <TimetableDynamic timetableData={timetableData} />
                         </div>}
                         {course.course_scores && <div className="">
                             <h3 className="font-semibold text-xl mb-2" id="scores">{dict.course.details.scores}</h3>
@@ -252,7 +251,7 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                         </div>
                     </div>
                 </div>
-                <CommentsContainer courseId={courseId} />
+                <CommentsContainer courseId={courseId} initialData={fetchedComments} />
             </div>
             <div className="hidden xl:block text-sm">
                 <div className="sticky top-0 pl-6">

@@ -1,5 +1,6 @@
 'use server';
 import supabase_server from '@/config/supabase_server';
+import { getUserSession } from '@/lib/headless_ais';
 
 const getComments = async (courseId: string, page: number = 1) => {
     const { data, error } = await supabase_server
@@ -27,7 +28,11 @@ interface CommentData {
     posted_on: string;
 }
 
-const postComment = async (courseId: string, studentid: string, commentText: string) => {
+const postComment = async (courseId: string, commentText: string) => {
+    const user = getUserSession();
+    if (!user) {
+        throw new Error('User not authenticated');
+    }
     const parsedData = parseTemplate(commentText);
     console.log(parsedData)
     if (!parsedData) {
@@ -36,7 +41,7 @@ const postComment = async (courseId: string, studentid: string, commentText: str
 
     const commentData: CommentData = {
         courses: courseId,
-        studentid,
+        studentid: user.studentid,
         comment: parsedData.comment || '',
         ...parsedData,
         posted_on: new Date().toISOString(),
