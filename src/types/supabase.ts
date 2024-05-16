@@ -309,32 +309,35 @@ export type Database = {
       course_comments: {
         Row: {
           comment: string
-          courses: string
-          ease: number
+          easiness: number
           id: number
           posted_on: string
+          raw_id: string
           scoring: number
+          submitter: string
         }
         Insert: {
           comment: string
-          courses: string
-          ease: number
+          easiness: number
           id?: number
           posted_on: string
+          raw_id: string
           scoring: number
+          submitter?: string
         }
         Update: {
           comment?: string
-          courses?: string
-          ease?: number
+          easiness?: number
           id?: number
           posted_on?: string
+          raw_id?: string
           scoring?: number
+          submitter?: string
         }
         Relationships: [
           {
-            foreignKeyName: "public_course_comments_course_fkey"
-            columns: ["courses"]
+            foreignKeyName: "course_comments_raw_id_fkey"
+            columns: ["raw_id"]
             isOneToOne: false
             referencedRelation: "courses"
             referencedColumns: ["raw_id"]
