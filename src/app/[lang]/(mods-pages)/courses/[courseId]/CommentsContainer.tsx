@@ -212,20 +212,22 @@ const TermsPage = ({ onAcceptTerms }: { onAcceptTerms: (accept: boolean) => void
         <p>同學們好～為了讓大家獲得準確有意義的評價：</p>
         <div className="space-y-4">
             <div className="flex flex-row gap-2">
-                <CheckCircle2 className="text-green-500"/>
-                <div>請確保分享內容的真實與客觀性，並且不要人身攻擊</div>
+                <CheckCircle2 className="text-green-500 w-6 h-6"/>
+                <div className="flex-1">請確保分享內容的真實與客觀性，並且不要人身攻擊</div>
             </div>
             <div className="flex flex-row gap-2">
-                <CheckCircle2 className="text-green-500"/>
-                <div>此為匿名分享，但為了防止有心人士濫用，我們會在後台記錄分享者的學號，若違反規則我們會禁止該學號者留言</div>
+                <CheckCircle2 className="text-green-500 w-6 h-6"/>
+                <div className="flex-1">此為匿名分享，但為了防止有心人士濫用，我們會在後台記錄分享者的學號，若違反規則我們會禁止該學號者留言</div>
             </div>
             <div className="flex flex-row gap-2">
-                <CheckCircle2 className="text-green-500"/>
-                <div>只有成功代理登陸校務系統的同學才能留言和看到他人的留言</div>
+                <CheckCircle2 className="text-green-500 w-6 h-6"/>
+                <div className="flex-1">只有成功代理登陸校務系統的同學才能留言和看到他人的留言</div>
             </div>
         </div>
-        <Button onClick={_ => onAcceptTerms(true)}>我已閱讀並同意</Button>
-        <Button variant='ghost' onClick={_ => onAcceptTerms(false)}>不同意</Button>
+        <div className="flex flex-row gap-2 pt-4">
+            <Button onClick={_ => onAcceptTerms(true)}>我已閱讀並同意</Button>
+            <Button variant='ghost' onClick={_ => onAcceptTerms(false)}>不同意</Button>
+        </div>
     </div>
 }
 
@@ -270,11 +272,11 @@ export const CommentsContainer = ({ course}: { course: MinimalCourse }) => {
     const [isUserTakenCourse, setIsUserTakenCourse] = useState(false);
     const [loading, setLoading] = useState<boolean>(true);
 
-    const { data: comments, fetchNextPage } = useInfiniteQuery<Awaited<ReturnType<typeof getComments>>>({
+    const { data: comments, fetchNextPage, hasNextPage, isLoading } = useInfiniteQuery<Awaited<ReturnType<typeof getComments>>>({
         queryKey: ['comments', course.raw_id],
         queryFn: ({ pageParam }) => getComments(course.raw_id, pageParam as number),
         getNextPageParam: (lastPage, allPages) => {
-            return lastPage.length ? Math.floor(allPages.length / 10) + 1 : undefined;
+            return lastPage.length ? Math.ceil(allPages.length / 10) + 1 : undefined;
         },
         initialPageParam: 1,
     })
@@ -303,6 +305,17 @@ export const CommentsContainer = ({ course}: { course: MinimalCourse }) => {
         })();
     }, [course.raw_id, initializing]);
 
+    // check if reached #comments-end, if so, fetch next page
+    useEffect(() => {
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) {
+                fetchNextPage();
+            }
+        }, { threshold: 1 });
+        observer.observe(document.getElementById('comments-end')!);
+        return () => observer.disconnect();
+    }, [fetchNextPage]);
+
 
     return <div className="space-y-6">
         {isUserTakenCourse && <div className=" flex items-center space-x-4 rounded-md border p-4">
@@ -319,6 +332,9 @@ export const CommentsContainer = ({ course}: { course: MinimalCourse }) => {
         </div>}
         <div className="flex flex-col divide-y divide-border">
             {flatComments.map((m, index) => <CommentsItem key={index} comment={m} />)}
+            <div id="comments-end"/>
         </div>
+        {!hasNextPage && flatComments.length == 0 && <div className="text-center">No comments yet</div>}
+        {!hasNextPage && flatComments.length != 0 && <div className="text-center">No more comments</div>}
     </div>;
 };

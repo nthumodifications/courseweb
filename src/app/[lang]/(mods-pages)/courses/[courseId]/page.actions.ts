@@ -11,7 +11,7 @@ export const getComments = async (courseId: string, page: number = 1) => {
 
     const { data, error } = await supabase_server
         .from('course_comments')
-        .select('scoring, easiness, posted_on, comment, courses(raw_id, name_zh, name_en, teacher_en, teacher_zh)')
+        .select('scoring, easiness, posted_on, comment, courses(semester, raw_id, name_zh, name_en, teacher_en, teacher_zh)')
         .eq('raw_id', courseId)
         .order('posted_on', { ascending: false })
         .range((page - 1) * 10, page * 10 - 1)
