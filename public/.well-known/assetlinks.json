@@ -1,0 +1,5 @@
+[{
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target" : { "namespace": "android_app", "package_name": "com.nthumods.courseweb",
+                 "sha256_cert_fingerprints": ["4E:9C:0E:DA:DC:44:55:3E:97:73:9C:F3:EF:2E:DA:03:49:5E:52:A1:33:1F:23:D4:08:20:F6:31:8A:27:1A:73", "E1:5A:BC:B7:F2:69:5B:8A:15:B9:F1:47:41:8C:C5:30:EF:4A:03:E0:1E:4F:97:1F:88:49:24:8C:7C:C7:5C:4B"] }
+  }]

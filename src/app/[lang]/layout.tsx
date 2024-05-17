@@ -6,16 +6,17 @@ import { Inter, Noto_Sans_TC } from 'next/font/google';
 import { cookies } from 'next/headers'
 import { SettingsProvider } from '@/hooks/contexts/settings';
 import ModalProvider from '@/hooks/contexts/useModal';
-import {UserTimetableProvider} from '@/hooks/contexts/useUserTimetable';
-import {HeadlessAISProvider} from '@/hooks/contexts/useHeadlessAIS';
+import { UserTimetableProvider } from '@/hooks/contexts/useUserTimetable';
+import { HeadlessAISProvider } from '@/hooks/contexts/useHeadlessAIS';
 
 import { CssVarsProvider } from '@mui/joy';
 import NextAuthProvider from '@/components/NextAuthProvider';
 import { Toaster } from '@/components/ui/toaster';
 import ReactQuery from '@/components/ReactQuery';
-import {RxDBProvider} from '@/config/rxdb';
+import { RxDBProvider } from '@/config/rxdb';
 
 import './globals.css'
+import AppUrlListener from '@/components/AppUrlListener';
 
 export const metadata: Metadata = {
   title: {
@@ -31,9 +32,9 @@ export const metadata: Metadata = {
   },
   robots: "index, follow",
   publisher: "@nthumodifications",
-  alternates:  {
-    canonical: "https://nthumods.com", 
-    languages: { 
+  alternates: {
+    canonical: "https://nthumods.com",
+    languages: {
       "en": "https://nthumods.com/en",
       "zh": "https://nthumods.com/zh"
     }
@@ -119,9 +120,10 @@ export default function RootLayout({
               <HeadlessAISProvider>
                 <UserTimetableProvider>
                   <ModalProvider>
-                    <html lang={params.lang} className={`${theme?.value ?? ''} ${inter.variable} ${noto.variable}`} suppressHydrationWarning>
+                    <html lang={params.lang} translate="no" className={`${theme?.value ?? ''} ${inter.variable} ${noto.variable}`} suppressHydrationWarning>
                       <body>
                         {children}
+                        <AppUrlListener />
                         <Toaster />
                       </body>
                     </html>

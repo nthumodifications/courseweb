@@ -1,4 +1,4 @@
-import { Download, EyeOff, Search, Share, Trash, AlertTriangle, Copy, Columns, Repeat, ExternalLink, GripVertical, FolderSync } from 'lucide-react';
+import { Download, EyeOff, Search, Share, Trash, AlertTriangle, Copy, Columns, Repeat, ExternalLink, GripVertical } from 'lucide-react';
 import { useSettings } from '@/hooks/contexts/settings';
 import useUserTimetable from '@/hooks/contexts/useUserTimetable';
 import { useRouter } from 'next/navigation';
@@ -6,14 +6,14 @@ import { useModal } from '@/hooks/contexts/useModal';
 import CourseSearchbar from './CourseSearchbar';
 import ThemeChangableAlert from '../Alerts/ThemeChangableAlert';
 import useDictionary from '@/dictionaries/useDictionary';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { hasConflictingTimeslots, hasSameCourse, hasTimes } from '@/helpers/courses';
 import { MinimalCourse, RawCourseID } from '@/types/courses';
 import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import {
-    DndContext, 
+    DndContext,
     closestCenter,
     KeyboardSensor,
     PointerSensor,
@@ -28,23 +28,23 @@ import {
     sortableKeyboardCoordinates,
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import {useSortable} from '@dnd-kit/sortable';
-import {CSS} from '@dnd-kit/utilities';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 import {
-  restrictToVerticalAxis,
-  restrictToWindowEdges,
+    restrictToVerticalAxis,
+    restrictToWindowEdges,
 } from '@dnd-kit/modifiers';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CompactPicker } from 'react-color';
 import { useHeadlessAIS } from '@/hooks/contexts/useHeadlessAIS';
 import { toast } from '../ui/use-toast';
-import {event} from '@/lib/gtag';
+import { event } from '@/lib/gtag';
 import { Separator } from '../ui/separator';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '../ui/hover-card';
 const DownloadTimetableDialogDynamic = dynamic(() => import('./DownloadTimetableDialog'), { ssr: false })
 const ShareSyncTimetableDialogDynamic = dynamic(() => import('./ShareSyncTimetableDialog'), { ssr: false })
-
+const HeadlessSyncCourseButtonDynamic = dynamic(() => import('./HeadlessSyncCourseButton'), { ssr: false })
 
 
 const TimetableCourseListItem = ({ course, hasConflict, isDuplicate }: { course: MinimalCourse, hasConflict: boolean, isDuplicate: boolean, }) => {
@@ -65,7 +65,7 @@ const TimetableCourseListItem = ({ course, hasConflict, isDuplicate }: { course:
         setNodeRef,
         transform,
         transition,
-    } = useSortable({id: course.raw_id});
+    } = useSortable({ id: course.raw_id });
 
 
     const style = {
@@ -79,7 +79,7 @@ const TimetableCourseListItem = ({ course, hasConflict, isDuplicate }: { course:
             <PopoverTrigger>
                 <div className='px-3 py-2 rounded-md hover:outline outline-1 outline-slate-400'>
                     <div className="w-4 h-4 rounded-full" style={{ backgroundColor: colorMap[course.raw_id] }}></div>
-                    
+
                 </div>
             </PopoverTrigger>
             <PopoverContent>
@@ -87,7 +87,7 @@ const TimetableCourseListItem = ({ course, hasConflict, isDuplicate }: { course:
                     color={colorMap[course.raw_id]}
                     onChange={(color) => {
                         setColor(course.raw_id, color.hex);
-                    }}                
+                    }}
                 />
             </PopoverContent>
         </Popover>
@@ -147,58 +147,6 @@ const TimetableCourseListItem = ({ course, hasConflict, isDuplicate }: { course:
     </div>
 }
 
-const HeadlessSyncCourseButton = () => {
-    const dict = useDictionary();
-    const { ais, getACIXSTORE } = useHeadlessAIS();
-    const { courses, addCourse, deleteCourse } = useUserTimetable();
-    const [loading, setLoading] = useState(false);
-    const [coursesToAdd, setCoursesToAdd] = useState<string[]>([]);
-
-    if(!ais.enabled) return <></>;
-
-    useEffect(() => {
-        if(coursesToAdd.length > 0) {
-            addCourse(coursesToAdd);
-            setCoursesToAdd([]);
-            toast({
-                title: 'Sync Succesful!',
-                description: 'Courses are added to your timetable.',
-            })
-            event({
-                action: "sync_ccxp_courses",
-                category: "ccxp",
-                label: "sync_ccxp_courses",
-            });
-        }
-    }, [courses, coursesToAdd]);
-
-
-    const handleSync = async () => {
-        setLoading(true);
-        console.log('sync')
-        const ACIXSTORE = await getACIXSTORE();
-        const res = await fetch('/api/ais_headless/courses/sync-latest?ACIXSTORE='+ACIXSTORE).then(res => res.json()) as {
-            semester: string,
-            phase: string,
-            studentid: string,
-            courses: string[]
-        };
-        //remove courses that are not in the latest
-        const courses_to_remove = (courses[res.semester] ?? []).filter(id => !res.courses.includes(id));
-        deleteCourse(courses_to_remove);
-        //add courses that are not in the current
-        const courses_to_add = res.courses.filter(id => !(courses[res.semester] ?? []).includes(id));
-        setCoursesToAdd(courses_to_add);
-        setLoading(false);
-    }
-    return <Button variant="outline" onClick={handleSync} disabled={loading}>
-        {!loading?
-            <><FolderSync className="w-4 h-4 mr-1" /> {dict.timetable.actions.sync_ccxp}</>:
-            "Loading"
-        }
-    </Button>
-}
-
 const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, setVertical: (v: boolean) => void }) => {
     const { language } = useSettings();
     const dict = useDictionary();
@@ -236,7 +184,7 @@ const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, set
             children: <DownloadTimetableDialogDynamic onClose={closeModal} icsfileLink={icsfileLink} />
         });
     }
-    const displayCourseData = useMemo(() => getSemesterCourses(semester), [getSemesterCourses,semester]);
+    const displayCourseData = useMemo(() => getSemesterCourses(semester), [getSemesterCourses, semester]);
 
     const totalCredits = useMemo(() => {
         return displayCourseData.reduce((acc, cur) => acc + (cur?.credits ?? 0), 0);
@@ -244,14 +192,14 @@ const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, set
 
     const duplicates = useMemo(() => hasSameCourse(displayCourseData as MinimalCourse[]), [displayCourseData]);
 
-    const timeConflicts = useMemo(() => hasConflictingTimeslots(displayCourseData as MinimalCourse[]), [displayCourseData]);    
+    const timeConflicts = useMemo(() => hasConflictingTimeslots(displayCourseData as MinimalCourse[]), [displayCourseData]);
 
     const renderButtons = () => {
         return <div className="grid grid-cols-2 grid-rows-2 gap-2">
             <Button variant="outline" onClick={() => setVertical(!vertical)}><Repeat className="w-4 h-4 mr-1" /> {vertical ? dict.timetable.actions.horizontal_view : dict.timetable.actions.vertical_view}</Button>
             <Button variant="outline" onClick={handleDownloadDialog}><Download className="w-4 h-4 mr-1" /> {dict.timetable.actions.download}</Button>
             <Button variant="outline" onClick={handleShowShareDialog}><Share className="w-4 h-4 mr-1" /> {dict.timetable.actions.share}</Button>
-            <HeadlessSyncCourseButton />
+            <HeadlessSyncCourseButtonDynamic />
         </div>
     }
 
@@ -264,7 +212,7 @@ const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, set
 
     function handleDragEnd(event: DragEndEvent) {
         const { active, over } = event;
-        if(!over) return;
+        if (!over) return;
         if (active.id !== over.id) {
             // setItems((items) => {
             //     const oldIndex = items.indexOf(active.id);
@@ -276,11 +224,11 @@ const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, set
             const oldIndex = courseCopy.indexOf(active.id as string);
             const newIndex = courseCopy.indexOf(over.id as string);
             const newCourseCopy = arrayMove(courseCopy, oldIndex, newIndex);
-            setCourses({...courses, [semester]: newCourseCopy})
+            setCourses({ ...courses, [semester]: newCourseCopy })
         }
     }
 
-return <div className="flex flex-col gap-4 px-4">
+    return <div className="flex flex-col gap-4 px-4">
         {renderButtons()}
         <CourseSearchbar onAddCourse={course => addCourse(course.raw_id)} semester={semester} />
         <div className={`${!vertical ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ' : 'flex flex-col'} gap-4 px-4 flex-wrap`}>
@@ -288,11 +236,11 @@ return <div className="flex flex-col gap-4 px-4">
                 sensors={sensors}
                 collisionDetection={closestCenter}
                 onDragEnd={handleDragEnd}
-                modifiers={[vertical? restrictToVerticalAxis: restrictToWindowEdges]}
+                modifiers={[vertical ? restrictToVerticalAxis : restrictToWindowEdges]}
             >
                 <SortableContext
                     items={displayCourseData.map(course => course.raw_id)}
-                    strategy={vertical? verticalListSortingStrategy: rectSwappingStrategy}
+                    strategy={vertical ? verticalListSortingStrategy : rectSwappingStrategy}
                 >
                     {displayCourseData.map((course, index) => (
                         <TimetableCourseListItem

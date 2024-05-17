@@ -5,8 +5,7 @@ import Timetable from './Timetable';
 import useUserTimetable from '@/hooks/contexts/useUserTimetable';
 import { toPng } from 'html-to-image';
 import { useCallback, useRef, useState } from 'react';
-import {createTimetableFromCourses, colorMapFromCourses} from '@/helpers/timetable';
-import { useSettings } from '@/hooks/contexts/settings';
+import { createTimetableFromCourses } from '@/helpers/timetable';
 import { MinimalCourse } from '@/types/courses';
 
 const DownloadTimetableComponent = () => {
@@ -23,12 +22,13 @@ const DownloadTimetableComponent = () => {
         }
         setLoading(true);
         toPng(ref.current!, { cacheBust: true, pixelRatio: 3, filter: (node: HTMLElement) => node.id !== 'time_slot'})
-        .then((dataUrl) => {
+        .then(async (dataUrl) => {
+            const filename = new Date().toISOString() + '_timetable.png';
             const link = document.createElement('a');
-            link.download = 'timetable.png';
+            link.download = filename;
             link.href = dataUrl;
+            link.target = '_blank';
             link.click();
-            // navigator.clipboard.writeText(dataUrl);
         })
         .catch((err) => {
             console.error('oops, something went wrong!', err);
@@ -59,10 +59,12 @@ const DownloadTimetableComponent = () => {
 const DownloadTimetableDialog = ({ onClose, icsfileLink }: { onClose: () => void, icsfileLink: string }) => {
     const dict = useDictionary();
 
-    const handleDownloadCalendar = () => {
+    const handleDownloadCalendar = async () => {
+        const filename = `${new Date().toISOString()}_timetable.ics`;
         const link = document.createElement('a');
-        link.download = 'calendar.ics';
+        link.download = filename
         link.href = icsfileLink;
+        link.target = '_blank';
         link.click();
     }
 

@@ -9,7 +9,7 @@ import { AlertDefinition } from '@/config/supabase';
 import useDictionary from '@/dictionaries/useDictionary';
 import WeatherIcon from './WeatherIcon';
 import { getLocale } from '@/helpers/dateLocale';
-import { Info } from 'lucide-react';
+import { Info, CalendarRange } from 'lucide-react';
 import { WeatherData } from '@/types/weather';
 import { apps } from '@/const/apps';
 import Link from 'next/link';
@@ -105,12 +105,12 @@ const TodaySchedule: FC<{ weather: WeatherData | undefined, alerts: AlertDefinit
 
     const renderCalendars = (day: Date) => {
         return !calendarLoading && calendar && calendar.filter((event) => event.weekday == day.getDay()).map((event) =>
-            <div key={event.weekday} className="flex flex-row items-center rounded-md p-2 flex-1 bg-blue-500 text-gray-300">
-                <Info className="flex pr-1 py-[2px] w-11" />
-                <div className="flex flex-col">
-                    <p className="font-semibold">{event.summary}</p>
-                </div>
-            </div>
+            <Alert key={event.weekday}>
+                <CalendarRange className="h-4 w-4" />
+                <AlertDescription>
+                    {event.summary}
+                </AlertDescription>
+            </Alert>
         )
     }
 
