@@ -11,6 +11,7 @@ import SideNav from "./SideNav"
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import dynamic from 'next/dynamic';
+import GenericIssueForm from "./Forms/GenericIssueFormDialog";
 
 const HelpDynamic = dynamic
   (() => import('@/components/Help/Help'),
@@ -57,13 +58,7 @@ const Header = () => {
         </p>
       <div className="flex gap-2">
         <HelpDynamic/>
-        <Button size="sm" variant="outline" asChild>
-          {/* Old url: https://forms.gle/LKYiVhLVwRGL44pz6 */}
-          <Link className="flex gap-1" target="_blank" href="https://forms.gle/tCjia5u9sWBT2Gca6">
-            <MessageCircle size="16" />
-            <span className="hidden md:inline-block">Feedback</span>
-          </Link>
-        </Button>
+        <GenericIssueForm/>
       </div>
     </header>
   )

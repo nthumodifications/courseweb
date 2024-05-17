@@ -37,7 +37,7 @@ const getInstallationAccessToken = async () => {
     return data.token;
 };
 
-export const createIssue = async (title: string, body: string) => {
+export const createIssue = async (title: string, body: string, labels?: string[] = []) => {
     const accessToken = await getInstallationAccessToken();
     const repoOwner = 'nthumodifications';
     const repoName = 'courseweb';
@@ -50,7 +50,7 @@ export const createIssue = async (title: string, body: string) => {
                 Authorization: `token ${accessToken}`,
                 Accept: 'application/vnd.github.v3+json',
             },
-            body: JSON.stringify({ title, body }),
+            body: JSON.stringify({ title, body, labels }),
         }
     );
     const data = await response.json();
