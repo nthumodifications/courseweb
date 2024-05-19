@@ -10,8 +10,6 @@ import {getBrightness} from '@/helpers/colors';
 import {adjustLuminance} from '@/helpers/colors';
 import { eventsToDisplay } from "./calendar_utils";
 import { EventPopover } from "./EventPopover";
-import {EventData} from "@/types/calendar_event";
-
 const UpcomingEvents = () => {
     const { events } = useCalendar();
 
@@ -84,9 +82,11 @@ const TodayPage: NextPage = () => {
 
     return (
         <div className="px-4 md:pr-8 w-full h-[--content-height] overflow-y-hidden">
-            <div className="flex flex-col xl:flex-row-reverse gap-6 h-full">
-                <UpcomingEvents />
+            <div className="flex flex-row-reverse gap-6 h-full">
                 <Calendar />
+                <div className="hidden xl:inline">
+                    <UpcomingEvents />
+                </div>
             </div>
         </div>
 
