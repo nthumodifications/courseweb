@@ -63,6 +63,10 @@ export const postComment = async (courseId: string, scoring: number, easiness: n
     // if (!parsedData) {
     //     throw new Error('Invalid comment data');
     // }
+    
+    if(await hasUserCommented(courseId)){
+        throw new Error('User has already commented');
+    }
 
     const { data, error } = await supabase_server.from('course_comments').insert({
         raw_id: courseId,
