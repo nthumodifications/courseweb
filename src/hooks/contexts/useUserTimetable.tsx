@@ -72,7 +72,7 @@ const useUserTimetableProvider = (loadCourse = true) => {
             title: true,
             code: false,
             time: true,
-            venue: false
+            venue: true
         }
     });
     const [semester, setSemester] = useState<string>(lastSemester.id);

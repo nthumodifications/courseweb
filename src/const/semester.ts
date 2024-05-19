@@ -1,6 +1,6 @@
-import { set } from "date-fns";
-
 export const semesterInfo = [
+    { id: '10910', year: 2020, semester: 1, begins: new Date(2020, 9-1, 14), ends: new Date(2021, 1-1, 29) },
+    { id: '10920', year: 2020, semester: 2, begins: new Date(2021, 2-1, 22), ends: new Date(2021, 6-1, 25) },
     { id: '11010', year: 2021, semester: 1, begins: new Date(2021, 9-1, 13), ends: new Date(2022, 1-1, 14) },
     { id: '11020', year: 2021, semester: 2, begins: new Date(2022, 2-1, 14), ends: new Date(2022, 6-1, 17) },
     { id: '11110', year: 2022, semester: 1, begins: new Date(2022, 9-1, 12), ends: new Date(2023, 1-1, 13) },
