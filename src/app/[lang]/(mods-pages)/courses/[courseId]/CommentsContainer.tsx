@@ -23,6 +23,8 @@ import { toast } from "@/components/ui/use-toast";
 import Link from 'next/link';
 import {Badge} from '@/components/ui/badge';
 import useDictionary from "@/dictionaries/useDictionary";
+import {getStudentCommentState} from '@/app/[lang]/(mods-pages)/courses/[courseId]/page.actions';
+import { CommentState } from "@/types/comments";
 
 // const templateText = `- Scoring 甜度 (On 5 scale, where 1 is low and 5 is high satisfaction):\n
 // - Easiness 涼度 (On 5 scale, where 1 is most difficult and 5 is easiest):\n 
@@ -138,6 +140,7 @@ const CommentEditor = ({ courseId, onEditEnd }: { courseId: string; onEditEnd: (
     const [scoring, setScoring] = useState(0);
     const [freeform, setFreeform] = useState<boolean>(false);
     const [confirmOpen, setConfirmOpen] = useState(false);
+    const { getACIXSTORE } = useHeadlessAIS();
 
     const handleCommentSubmit = async () => {
         if (commentText.trim() === '' || commentText.trim() === templateText.trim()) {
@@ -146,7 +149,16 @@ const CommentEditor = ({ courseId, onEditEnd }: { courseId: string; onEditEnd: (
         }
 
         try {
-            const result = await postComment(courseId, scoring, easiness, commentText);
+            const token = await getACIXSTORE();
+            if (!token) {
+                console.error('Authentication token is missing.');
+                toast({
+                    title: "Authentication Error",
+                    description: "Failed to authenticate user. Please try again.",
+                })
+                return;
+            }
+            const result = await postComment(courseId, token, scoring, easiness, commentText);
             setCommentText(templateText);
             onEditEnd();
             toast({
@@ -272,7 +284,7 @@ export const NewCommentDialog = ({ course }: { course: MinimalCourse }) => {
 
 export const CommentsContainer = ({ course}: { course: MinimalCourse }) => {
     const { initializing, getACIXSTORE } = useHeadlessAIS();
-    const [isUserTakenCourse, setIsUserTakenCourse] = useState(false);
+    const [isUserTakenCourse, setIsUserTakenCourse] = useState<CommentState>(CommentState.Disabled);
     const [loading, setLoading] = useState<boolean>(true);
 
     const { data: comments, fetchNextPage, hasNextPage, isLoading } = useInfiniteQuery<Awaited<ReturnType<typeof getComments>>>({
@@ -295,11 +307,8 @@ export const CommentsContainer = ({ course}: { course: MinimalCourse }) => {
                 if (!token) {
                     throw new Error("Authentication token is missing.");
                 }
-                const res = await getStudentCourses(token);
-                if (!res) {
-                    throw new Error("Failed to fetch student courses.");
-                }
-                setIsUserTakenCourse(res.courses.includes(course.raw_id));
+                const res = await getStudentCommentState(course.raw_id, token);
+                setIsUserTakenCourse(res);
             } catch (error) {
                 console.error("Error loading data:", error);
             } finally {
@@ -321,7 +330,7 @@ export const CommentsContainer = ({ course}: { course: MinimalCourse }) => {
 
 
     return <div className="space-y-6">
-        {isUserTakenCourse && <div className=" flex items-center space-x-4 rounded-md border p-4">
+        {isUserTakenCourse == CommentState.Enabled && <div className=" flex items-center space-x-4 rounded-md border p-4">
           <CheckCircle />
           <div className="flex-1 space-y-1">
             <p className="text-sm font-medium leading-none">
@@ -329,6 +338,18 @@ export const CommentsContainer = ({ course}: { course: MinimalCourse }) => {
             </p>
             <p className="text-sm text-muted-foreground">
                 幫助其他同學做決定，分享你的經驗吧！
+            </p>
+          </div>
+          <NewCommentDialog course={course} />
+        </div>}
+        {isUserTakenCourse == CommentState.Filled && <div className=" flex items-center space-x-4 rounded-md border p-4">
+          <CheckCircle />
+          <div className="flex-1 space-y-1">
+            <p className="text-sm font-medium leading-none">
+              謝謝你的評價！
+            </p>
+            <p className="text-sm text-muted-foreground">
+                你已經評價過這門課啦~
             </p>
           </div>
           <NewCommentDialog course={course} />
