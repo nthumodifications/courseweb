@@ -1,12 +1,14 @@
 "use client";
-import { LoginError } from "@/types/headless_ais";
+import {HeadlessAISStorage, LoginError, UserJWT} from '@/types/headless_ais';
 import { toast } from "@/components/ui/use-toast";
 import { FC, PropsWithChildren, createContext, useContext, useEffect, useState } from "react";
 import { useLocalStorage } from 'usehooks-ts';
 import {signInToCCXP} from '@/lib/headless_ais';
 import useDictionary from "@/dictionaries/useDictionary";
-
+import { useCookies } from "react-cookie";
+import { decode } from 'jsonwebtoken';
 const headlessAISContext = createContext<ReturnType<typeof useHeadlessAISProvider>>({
+    user: undefined,
     ais: {
         enabled: false,
         ACIXSTORE: undefined
@@ -18,21 +20,32 @@ const headlessAISContext = createContext<ReturnType<typeof useHeadlessAISProvide
     getACIXSTORE: async () => undefined,
 });
 
-type HeadlessAISStorage = { enabled: false } | {
-    enabled: true, 
-    studentid: string, 
-    password: string, 
-    ACIXSTORE?: string, 
-    lastUpdated: number,
-}
+
+
 const useHeadlessAISProvider = () => {
     const [headlessAIS, setHeadlessAIS] = useLocalStorage<HeadlessAISStorage>("headless_ais", { enabled: false });
     const [initializing, setInitializing] = useState(true);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<LoginError | undefined>(undefined);
+    const [cookies, setCookies, removeCookies] = useCookies(['accessToken']);
     const dict = useDictionary();
 
     useEffect(() => { setInitializing(false) }, []);
+    
+    // Check if cookies.accessToken exists, if so, check if it's valid, else call getACIXSTORE(true)
+    useEffect(() => {
+        // if logged in but no accesstoken, call getACIXSTORE
+        if(!headlessAIS.enabled) return;
+        if(!cookies.accessToken) {
+            getACIXSTORE(true)
+        }
+        else if(cookies.accessToken){
+            const { exp } = decode(cookies.accessToken ?? '') as { exp: number };
+            if (Date.now() >= exp * 1000) {
+                getACIXSTORE(true)
+            }
+        }
+    }, [cookies.accessToken]);
 
     //Headless AIS
     const setAISCredentials = async (username?: string, password?: string) => {
@@ -41,6 +54,7 @@ const useHeadlessAISProvider = () => {
             setHeadlessAIS({
                 enabled: false
             });
+            removeCookies('accessToken', { path: '/', sameSite: 'strict', secure: true });
             return ;
         }
         setLoading(true);
@@ -90,7 +104,7 @@ const useHeadlessAISProvider = () => {
             return headlessAIS.ACIXSTORE!;
         }
         setLoading(true);
-        //fetch /api/ais_headless to get ACIXSTORE
+        
         return await signInToCCXP(headlessAIS.studentid, headlessAIS.password)
         .then((res) => {
             if('error' in res) throw new Error(res.error.message); 
@@ -127,6 +141,7 @@ const useHeadlessAISProvider = () => {
     }
     
     return {
+        user: cookies.accessToken ? decode(cookies.accessToken, { json: true }) as UserJWT | null : undefined ,
         ais,
         loading,
         error,
