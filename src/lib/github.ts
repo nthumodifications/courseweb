@@ -37,7 +37,7 @@ const getInstallationAccessToken = async () => {
     return data.token;
 };
 
-export const createIssue = async (title: string, body: string, labels?: string[] = []) => {
+export const createIssue = async (title: string, body: string, labels: string[] = []) => {
     const accessToken = await getInstallationAccessToken();
     const repoOwner = 'nthumodifications';
     const repoName = 'courseweb';
