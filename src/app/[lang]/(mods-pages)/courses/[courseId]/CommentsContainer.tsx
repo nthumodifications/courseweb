@@ -343,7 +343,7 @@ export const CommentsContainer = ({ course}: { course: MinimalCourse }) => {
           <NewCommentDialog course={course} />
         </div>}
         {isUserTakenCourse == CommentState.Filled && <div className=" flex items-center space-x-4 rounded-md border p-4">
-          <CheckCircle />
+          <p className="text-xl">🎉</p>
           <div className="flex-1 space-y-1">
             <p className="text-sm font-medium leading-none">
               謝謝你的評價！
@@ -352,7 +352,6 @@ export const CommentsContainer = ({ course}: { course: MinimalCourse }) => {
                 你已經評價過這門課啦~
             </p>
           </div>
-          <NewCommentDialog course={course} />
         </div>}
         <div className="flex flex-col divide-y divide-border">
             {flatComments.map((m, index) => <CommentsItem key={index} comment={m} />)}
