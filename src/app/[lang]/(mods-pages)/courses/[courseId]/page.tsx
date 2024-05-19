@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { ResolvingMetadata } from "next";
-import { AlertTriangle, CalendarPlus, ChevronLeft, FileEdit } from 'lucide-react';
+import {AlertTriangle, ChevronLeft, CheckCircle} from 'lucide-react';
 import Link from "next/link";
 import DownloadSyllabus from "./DownloadSyllabus";
 import Fade from "@/components/Animation/Fade";
@@ -9,9 +9,7 @@ import { getCoursePTTReview, getCourseWithSyllabus } from '@/lib/course';
 import { LangProps } from "@/types/pages";
 import { toPrettySemester } from '@/helpers/semester';
 import CourseTagList from "@/components/Courses/CourseTagsList";
-import SelectCourseButton from '@/components/Courses/SelectCourseButton';
 import { colorMapFromCourses, createTimetableFromCourses } from "@/helpers/timetable";
-import Timetable from "@/components/Timetable/Timetable";
 import { MinimalCourse } from "@/types/courses";
 import { hasTimes, getScoreType } from '@/helpers/courses';
 import { Button } from "@/components/ui/button";
@@ -22,10 +20,11 @@ import { Badge } from "@/components/ui/badge"
 import supabase, { CourseDefinition, CourseScoreDefinition } from '@/config/supabase';
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { timetableColors } from "@/const/timetableColors";
-import DateContributeForm from "./DateContributeForm";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import ShortNameContributeForm from "./ShortNameContributeForm";
+import dynamicFn from "next/dynamic";
 
+const SelectCourseButtonDynamic = dynamicFn(() => import('@/components/Courses/SelectCourseButton'), { ssr: false });
+const TimetableDynamic = dynamicFn(() => import('@/components/Timetable/Timetable'), { ssr: false });
+const CommmentsSectionDynamic = dynamicFn(() => import('@/app/[lang]/(mods-pages)/courses/[courseId]/CommentsContainer').then(m => m.CommmentsSection), { ssr: false });
 
 type PageProps = {
     params: { courseId?: string }
@@ -58,7 +57,7 @@ export async function generateMetadata({ params }: PageProps, parent: ResolvingM
 
 const TOCNavItem = ({ href, children, label, active }: { href: string, children?: React.ReactNode, label: string, active?: boolean }) => {
     return <li className="mt-0 pt-2">
-        <a href={href} className={`inline-block no-underline transition-colors hover:text-foreground ${active ? "font-medium text-foreground": "text-muted-foreground"}`}>{label}</a>
+        <a href={href} className={`inline-block no-underline transition-colors hover:text-foreground ${active ? "font-medium text-foreground" : "text-muted-foreground"}`}>{label}</a>
         {children}
     </li>
 }
@@ -102,7 +101,6 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
 
     const colorMap = colorMapFromCourses([course as MinimalCourse].map(c => c.raw_id), timetableColors[Object.keys(timetableColors)[0]]);
     const timetableData = showTimetable ? createTimetableFromCourses([course as MinimalCourse], colorMap) : [];
-    
 
     return <Fade>
         <div className="grid grid-cols-1 xl:grid-cols-[auto_240px] pb-6 px-4 text-gray-500 dark:text-gray-300">
@@ -132,7 +130,7 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                             }
                         </div>
                         <div className="flex flex-row gap-2">
-                            <SelectCourseButton courseId={course.raw_id} />
+                            <SelectCourseButtonDynamic courseId={course.raw_id} />
                             {/* <DateContributeForm courseId={course.raw_id} /> */}
                         </div>
                     </div>
@@ -157,7 +155,7 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                         </div>}
                         {showTimetable && <div className="">
                             <h3 className="font-semibold text-xl mb-2" id="timetable">{dict.course.details.timetable}</h3>
-                            <Timetable timetableData={timetableData} />
+                            <TimetableDynamic timetableData={timetableData} />
                         </div>}
                         {course.course_scores && <div className="">
                             <h3 className="font-semibold text-xl mb-2" id="scores">{dict.course.details.scores}</h3>
@@ -250,7 +248,7 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                         </div>
                     </div>
                 </div>
-
+                <CommmentsSectionDynamic course={course as MinimalCourse} />
             </div>
             <div className="hidden xl:block text-sm">
                 <div className="sticky top-0 pl-6">

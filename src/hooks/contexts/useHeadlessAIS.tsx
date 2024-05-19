@@ -54,7 +54,7 @@ const useHeadlessAISProvider = () => {
             setHeadlessAIS({
                 enabled: false
             });
-            removeCookies('accessToken');
+            removeCookies('accessToken', { path: '/', sameSite: 'strict', secure: true });
             return ;
         }
         setLoading(true);

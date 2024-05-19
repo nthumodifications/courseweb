@@ -84,13 +84,13 @@ const TimetableSettingsCard = () => {
 const AccountInfoSettingsCard = () => {
     const { user, ais, setAISCredentials } = useHeadlessAIS();
     const dict = useDictionary();
-    return <Card>
+    return <Card id="account">
         <CardHeader>
             <CardTitle>{dict.settings.account.title}</CardTitle>
             <CardDescription>{dict.settings.account.description}</CardDescription>
         </CardHeader>
         <CardContent>
-            {user ? <div className="flex flex-col gap-4 py-4" id="account">
+            {user ? <div className="flex flex-col gap-4 py-4">
                 <div className="grid gap-1">
                     <div className="flex items-center gap-2">
                         <h3 className="text-lg font-medium">{`${user.name_zh} ${user.name_en.length > 0 ? `(${user.name_en})`: ''}`}</h3>

@@ -163,17 +163,17 @@ export const signInToCCXP = async (studentid: string, password: string) => {
     }
 }
 
-export const getUserSession = () => {
+export const getUserSession = async () => {
     const accessToken = cookies().get('accessToken')?.value ?? '';
     try {
-        return jwt.verify(accessToken, process.env.NTHU_HEADLESS_AIS_SIGNING_KEY!) as UserJWT;
+        return await jwt.verify(accessToken, process.env.NTHU_HEADLESS_AIS_SIGNING_KEY!) as UserJWT;
     } catch {
         return null;
     }
 }
 
 export const isUserBanned = async () => {
-    const session = getUserSession();
+    const session = await getUserSession();
     if(!session) {
         return false;
     }

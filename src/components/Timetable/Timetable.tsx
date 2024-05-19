@@ -87,12 +87,14 @@ const Timetable: FC<{
     const _renderTimetableSlot = (course: CourseTimeslotDataWithFraction, tableDim: TimetableDim, vertical: boolean) => {
       return vertical ? 
         <TimetableSlotVertical 
+          key={course.dayOfWeek+course.startTime+course.endTime+course.course.raw_id}
           course={course} 
           tableDim={tableDim} 
           fraction={course.fraction} 
           fractionIndex={course.fractionIndex} />
         :
         <TimetableSlotHorizontal 
+          key={course.dayOfWeek+course.startTime+course.endTime+course.course.raw_id}
           course={course} 
           tableDim={tableDim} 
           fraction={course.fraction} 
