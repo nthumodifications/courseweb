@@ -7,12 +7,12 @@ import { zhTW } from "date-fns/locale";
 import {Rating} from '@/components/ui/rating';
 
 export const CommentsItem = ({ comment }: { comment: Awaited<ReturnType<typeof getComments>>[number]; }) => {
-    console.log(comment)
+    if(!comment.courses) return <></>
     return <Dialog>
         <DialogTrigger asChild>
             <div className="grid gap-2 py-4 px-2">
                 <div className="grid gap-0.5">
-                    <h4 className="text-semibold text-black dark:text-white">在 {toPrettySemester(comment.courses!.semester)} 學期修過 {comment.courses!.teacher_zh.join(',')} 的課</h4>
+                    <h4 className="text-semibold text-black dark:text-white">在 {toPrettySemester(comment.courses?.semester)} 學期修過 {comment.courses!.teacher_zh.join(',')} 的課</h4>
                     <p className="text-sm text-gray-500">{formatDistanceToNow(new Date(comment.posted_on), { locale: zhTW })}發</p>
                     <div className="flex flex-row items-center gap-2 text-sm">
                         <span>甜度: </span><Rating rating={comment.scoring} size={16} variant="yellow" showText={false} disabled/>

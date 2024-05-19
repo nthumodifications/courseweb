@@ -6,7 +6,7 @@ import { useHeadlessAIS } from "@/hooks/contexts/useHeadlessAIS";
 import { getStudentCourses } from "@/lib/headless_ais/courses";
 import { Textarea } from "@/components/ui/textarea"
 import { postComment } from "./page.actions";
-import { CheckCircle, CheckCircle2, Loader2Icon, Plus } from "lucide-react";
+import {CheckCircle, CheckCircle2, Loader2Icon, Plus, AlertTriangle} from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,9 @@ import { MinimalCourse } from "@/types/courses";
 import { Separator } from "@/components/ui/separator";
 import { useLocalStorage } from "usehooks-ts";
 import { toast } from "@/components/ui/use-toast";
+import Link from 'next/link';
+import {Badge} from '@/components/ui/badge';
+import useDictionary from "@/dictionaries/useDictionary";
 
 // const templateText = `- Scoring 甜度 (On 5 scale, where 1 is low and 5 is high satisfaction):\n
 // - Easiness 涼度 (On 5 scale, where 1 is most difficult and 5 is easiest):\n 
@@ -242,11 +245,11 @@ export const NewCommentDialog = ({ course }: { course: MinimalCourse }) => {
     }
     return <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
-            <Button><Plus className="mr-2 h-4 w-4"/> Add</Button>
+            <Button><Plus className="mr-2 h-4 w-4"/> 投稿</Button>
         </DialogTrigger>
         {acceptedTerms ? <DialogContent>
             <DialogHeader>
-                <DialogTitle>Write a review for {course.name_zh} {course.name_en}</DialogTitle>
+                <DialogTitle>評價 {course.name_zh} {course.name_en}</DialogTitle>
                 <DialogDescription>雖然評價是匿名的，但是我們還是會記錄學號哦~</DialogDescription>
             </DialogHeader>
             <div className="flex flex-col max-h-[70vh]">
@@ -322,10 +325,10 @@ export const CommentsContainer = ({ course}: { course: MinimalCourse }) => {
           <CheckCircle />
           <div className="flex-1 space-y-1">
             <p className="text-sm font-medium leading-none">
-              You've taken this course!
+              你曾經修過這門課呢~
             </p>
             <p className="text-sm text-muted-foreground">
-                Share your thoughts. Help others understand the course better.
+                幫助其他同學做決定，分享你的經驗吧！
             </p>
           </div>
           <NewCommentDialog course={course} />
@@ -334,7 +337,35 @@ export const CommentsContainer = ({ course}: { course: MinimalCourse }) => {
             {flatComments.map((m, index) => <CommentsItem key={index} comment={m} />)}
             <div id="comments-end"/>
         </div>
-        {!hasNextPage && flatComments.length == 0 && <div className="text-center">No comments yet</div>}
-        {!hasNextPage && flatComments.length != 0 && <div className="text-center">No more comments</div>}
+        {!hasNextPage && flatComments.length == 0 && <div className="text-center">還沒人來投稿 ╯︿╰</div>}
+        {!hasNextPage && flatComments.length != 0 && <div className="text-center">沒有更多評價了！</div>}
     </div>;
 };
+
+const CommentsNotSignedIn = () => {
+    const dict = useDictionary();
+    return <div className=" flex items-center space-x-4 rounded-md border p-4">
+        <AlertTriangle />
+        <div className="flex-1 space-y-1">
+            <p className="text-sm font-medium leading-none">
+                登入后即可查看和發表評價。
+            </p>
+            <p className="text-sm text-muted-foreground">
+                分享你的修課經驗，幫助其他同學做決定。
+            </p>
+        </div>
+        <Button asChild>
+            <Link href="/settings#account">
+                {dict.settings.account.signin}
+            </Link>
+        </Button>
+    </div>
+}
+
+export const CommmentsSection = ({ course }: { course: MinimalCourse }) => {
+    const { user } = useHeadlessAIS();
+    return <div className="flex flex-col gap-4">
+        <h3 className="text-xl font-bold tracking-tight">修課同學評價 <Badge variant='outline'>ALPHA</Badge></h3>
+        {user ? <CommentsContainer course={course} />: <CommentsNotSignedIn />}
+    </div>
+}

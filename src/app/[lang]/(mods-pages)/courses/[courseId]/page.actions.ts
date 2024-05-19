@@ -9,15 +9,30 @@ export const getComments = async (courseId: string, page: number = 1) => {
         throw new Error('User not authenticated');
     }
 
+    const { data: course } = await supabase_server
+        .from('courses')
+        .select('*')
+        .eq('raw_id', courseId)
+        .single()
+
+    if (!course) {
+        throw new Error('Course not found');
+    }
+
+        
+
     const { data, error } = await supabase_server
         .from('course_comments')
-        .select('scoring, easiness, posted_on, comment, courses(semester, raw_id, name_zh, name_en, teacher_en, teacher_zh)')
-        .eq('raw_id', courseId)
+        .select('scoring, easiness, posted_on, comment, courses!inner(semester, department, course, raw_id, name_zh, name_en, teacher_en, teacher_zh)')
+        .eq('courses.department', course.department)
+        .eq('courses.course', course.course)
+        .containedBy('courses.teacher_zh', course.teacher_zh)
         .order('posted_on', { ascending: false })
         .range((page - 1) * 10, page * 10 - 1)
 
     if (error) throw error;
     if (!data) throw new Error('No data');
+    console.log(data)
     return data;
 }
 

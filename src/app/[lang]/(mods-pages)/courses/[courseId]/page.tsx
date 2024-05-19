@@ -20,14 +20,11 @@ import { Badge } from "@/components/ui/badge"
 import supabase, { CourseDefinition, CourseScoreDefinition } from '@/config/supabase';
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { timetableColors } from "@/const/timetableColors";
-import { CommentsContainer } from "./CommentsContainer";
-import {getComments} from '@/app/[lang]/(mods-pages)/courses/[courseId]/page.actions';
 import dynamicFn from "next/dynamic";
-import { getUserSession } from "@/lib/headless_ais";
-import {NewCommentDialog} from '@/app/[lang]/(mods-pages)/courses/[courseId]/CommentsContainer';
 
 const SelectCourseButtonDynamic = dynamicFn(() => import('@/components/Courses/SelectCourseButton'), { ssr: false });
 const TimetableDynamic = dynamicFn(() => import('@/components/Timetable/Timetable'), { ssr: false });
+const CommmentsSectionDynamic = dynamicFn(() => import('@/app/[lang]/(mods-pages)/courses/[courseId]/CommentsContainer').then(m => m.CommmentsSection), { ssr: false });
 
 type PageProps = {
     params: { courseId?: string }
@@ -104,8 +101,6 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
 
     const colorMap = colorMapFromCourses([course as MinimalCourse].map(c => c.raw_id), timetableColors[Object.keys(timetableColors)[0]]);
     const timetableData = showTimetable ? createTimetableFromCourses([course as MinimalCourse], colorMap) : [];
-
-    const user = await getUserSession();
 
     return <Fade>
         <div className="grid grid-cols-1 xl:grid-cols-[auto_240px] pb-6 px-4 text-gray-500 dark:text-gray-300">
@@ -253,28 +248,7 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                         </div>
                     </div>
                 </div>
-                <div className="flex flex-col gap-4">
-                    <h3 className="text-xl font-bold tracking-tight">修課同學評價</h3>
-                    {user != null ? 
-                        <CommentsContainer course={course as MinimalCourse} /> : 
-                        <div className=" flex items-center space-x-4 rounded-md border p-4">
-                            <AlertTriangle />
-                            <div className="flex-1 space-y-1">
-                                <p className="text-sm font-medium leading-none">
-                                    You must be logged in to view and post comments.
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                    Share your thoughts. Help others understand the course better.
-                                </p>
-                            </div>
-                            <Button asChild>
-                                <Link href="/settings#account">
-                                    Sign In
-                                </Link>
-                            </Button>
-                        </div>
-                    }
-                </div>
+                <CommmentsSectionDynamic course={course as MinimalCourse} />
             </div>
             <div className="hidden xl:block text-sm">
                 <div className="sticky top-0 pl-6">
