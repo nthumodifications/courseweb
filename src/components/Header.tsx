@@ -11,10 +11,14 @@ import SideNav from "./SideNav"
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import dynamic from 'next/dynamic';
-import GenericIssueForm from "./Forms/GenericIssueFormDialog";
 
 const HelpDynamic = dynamic
   (() => import('@/components/Help/Help'),
+  { ssr: false }
+);
+
+const GenericIssueFormDynamic = dynamic
+  (() => import('@/components/Forms/GenericIssueFormDialog'),
   { ssr: false }
 );
 
@@ -58,7 +62,7 @@ const Header = () => {
         </p>
       <div className="flex gap-2">
         <HelpDynamic/>
-        <GenericIssueForm/>
+        <GenericIssueFormDynamic/>
       </div>
     </header>
   )
