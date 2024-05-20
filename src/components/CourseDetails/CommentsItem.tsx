@@ -1,5 +1,5 @@
 import { formatDistanceToNow } from "date-fns";
-import { getComments } from "./page.actions";
+import { getComments } from "../../lib/headless_ais/comments";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toPrettySemester } from "@/helpers/semester";

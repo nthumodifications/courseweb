@@ -9,9 +9,11 @@ import { LangProps } from '@/types/pages';
 
 const NTHUModsLayout = ({
     children,
+    modal,
     params
 }: {
-    children: React.ReactNode
+    children: React.ReactNode,
+    modal?: React.ReactNode,
 } & LangProps) => {
     return <>
         <GoogleAnalytics />
@@ -24,6 +26,7 @@ const NTHUModsLayout = ({
             </div>
             <main className='overflow-y-auto overflow-x-hidden h-full w-full scroll-smooth [&>div]:h-full pt-8 md:pl-8'>
                 {children}
+                {modal}
             </main>
         </div>
         <BottomNav />
