@@ -3,6 +3,9 @@ import { getCourseWithSyllabus } from '@/lib/course';
 import { LangProps } from "@/types/pages";
 import CourseDetailContainer from "@/components/CourseDetails/CourseDetailsContainer";
 import { redirect } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 
 
 type PageProps = {
@@ -33,7 +36,17 @@ export async function generateMetadata({ params }: PageProps, parent: ResolvingM
 const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
     const courseId = decodeURI(params.courseId as string);
     
-    return <CourseDetailContainer lang={params.lang} courseId={courseId}/>
+    return <div className="flex flex-col gap-2">
+        <div className="">
+            <Button variant="ghost" asChild size="sm">
+                <Link href={`/${params.lang}/courses`}>
+                    <ChevronLeft className="w-4 h-4 mr-2" />
+                    回到課程列表
+                </Link>
+            </Button>
+        </div>
+        <CourseDetailContainer lang={params.lang} courseId={courseId}/>
+    </div>
 }
 
 export default CourseDetailPage;

@@ -11,7 +11,7 @@ import { toPrettySemester } from '@/helpers/semester';
 import CourseTagList from "@/components/Courses/CourseTagsList";
 import { colorMapFromCourses, createTimetableFromCourses } from "@/helpers/timetable";
 import { MinimalCourse } from "@/types/courses";
-import { hasTimes, getScoreType } from '@/helpers/courses';
+import { hasTimes, getScoreType, getFormattedClassCode } from '@/helpers/courses';
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -36,6 +36,12 @@ const TOCNavItem = ({ href, children, label, active }: { href: string, children?
         <a href={href} className={`inline-block no-underline transition-colors hover:text-foreground ${active ? "font-medium text-foreground" : "text-muted-foreground"}`}>{label}</a>
         {children}
     </li>
+}
+
+const CrossDisciplineTagList = ({ course }: { course: CourseDefinition }) => {
+    return <div className="flex flex-row gap-2 flex-wrap">
+        {course.cross_discipline?.map((m, index) => <div key={index} className="flex flex-row items-center justify-center min-w-[65px] space-x-2 px-2 py-2 select-none rounded-md text-sm bg-neutral-200 dark:bg-neutral-800">{m}</div>)}
+    </div>
 }
 
 const getOtherClasses = async (course: MinimalCourse) => {
@@ -83,7 +89,7 @@ const CourseDetailContainer = async ({ lang, courseId }: { lang: Language, cours
     const timetableData = showTimetable ? createTimetableFromCourses([course as MinimalCourse], colorMap) : [];
 
     return <Fade>
-        <div className="flex flex-col pb-6 px-4 relative max-w-6xl">
+        <div className="flex flex-col pb-6 relative max-w-6xl">
             <div className="flex flex-col gap-4">
                 <div className="flex flex-col md:flex-row md:items-end gap-4">
                     <div className="space-y-4 flex-1 w-full">
@@ -104,6 +110,7 @@ const CourseDetailContainer = async ({ lang, courseId }: { lang: Language, cours
                             course.venues.map((vn, i) => <p key={vn} className='text-blue-600 dark:text-blue-400 text-sm'>{vn} <span className='text-black dark:text-white'>{course.times![i]}</span></p>) :
                             <p>No Venues</p>
                         }
+                        <CrossDisciplineTagList course={course} />
                     </div>
                     <div className="absolute top-0 right-0 mt-4 mr-4">
                         <SelectCourseButtonDynamic courseId={course.raw_id} />
@@ -183,20 +190,22 @@ const CourseDetailContainer = async ({ lang, courseId }: { lang: Language, cours
                             </div>
                             <Table className="table-fixed">
                                 <TableHeader>
-                                    <TableHead className="w-[60px]">學期</TableHead>
-                                    <TableHead className="w-[120px]">開課教授</TableHead>
-                                    <TableHead className="w-36">歷年成績</TableHead>
-                                    <TableHead className="w-16"></TableHead>
+                                    <TableRow>
+                                        <TableHead className="w-[60px] px-2">學期</TableHead>
+                                        <TableHead className="w-[100px] px-2">開課教授</TableHead>
+                                        <TableHead className="w-36 px-2">歷年成績</TableHead>
+                                        <TableHead className="w-14 p-0"></TableHead>
+                                    </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                 {otherClasses.map((m, index) =>
                                     <TableRow key={index}>
-                                        <TableCell>
+                                        <TableCell className="px-2">
                                             <div className="flex flex-col gap-1">
                                                 <p>{toPrettySemester(m.semester)}</p>
                                             </div>
                                         </TableCell>
-                                        <TableCell>{m.teacher_zh?.join(',')}</TableCell>
+                                        <TableCell className="px-2">{m.teacher_zh?.join(',')}</TableCell>
                                         <TableCell>
                                             {m.course_scores && <div className="flex flex-col gap-1 text-sm font-medium text-gray-600 dark:text-neutral-400">
                                                 <p>平均{getScoreType(m.course_scores.type)} {m.course_scores.average}</p>
@@ -216,7 +225,7 @@ const CourseDetailContainer = async ({ lang, courseId }: { lang: Language, cours
                             </Table>
                         </div>
                     </div>
-                    <div className="w-[284px] flex flex-col gap-4">
+                    <div className="w-[min(100%,284px)] flex flex-col gap-4">
                         <ScrollArea className="hidden lg:flex">
                             <div className="space-y-2">
                                 <ul className="m-0 list-none">
@@ -230,44 +239,36 @@ const CourseDetailContainer = async ({ lang, courseId }: { lang: Language, cours
                                 </ul>
                             </div>
                         </ScrollArea>
-                        <div>
+                        <div className="flex flex-col gap-1">
                             <h3 className="font-semibold text-base">{dict.course.details.remarks}</h3>
                             <p className="text-sm">{course.note ?? "-"}</p>
                         </div>
-                        <div>
+                        <div className="flex flex-col gap-1">
                             <h3 className="font-semibold text-base">{dict.course.details.restrictions}</h3>
                             <p className="text-sm">{course.restrictions ?? "-"}</p>
                         </div>
-                        <div>
+                        <div className="flex flex-col gap-1">
                             <h3 className="font-semibold text-base">{dict.course.details.compulsory}</h3>
                             <div className="flex flex-row gap-2 flex-wrap">
-                                {course.compulsory_for?.map((m, index) => <Badge key={index} variant="outline">{m}</Badge>)}
+                                {course.compulsory_for?.map((m, index) => <Badge key={index} variant="outline">{getFormattedClassCode(m)}</Badge>)}
                                 {course.compulsory_for?.length == 0 && <p>-</p>}
                             </div>
                         </div>
-                        <div>
+                        <div className="flex flex-col gap-1">
                             <h3 className="font-semibold text-base">{dict.course.details.elective}</h3>
                             <div className="flex flex-row gap-2 flex-wrap">
-                                {course.elective_for?.map((m, index) => <Badge key={index} variant="outline">{m}</Badge>)}
+                                {course.elective_for?.map((m, index) => <Badge key={index} variant="outline">{getFormattedClassCode(m)}</Badge>)}
                                 {course.elective_for?.length == 0 && <p>-</p>}
                             </div>
                         </div>
-                        <div>
-                            <h3 className="font-semibold text-base">{dict.course.details.cross_discipline}</h3>
-                            <div className="flex flex-row gap-2 flex-wrap">
-                                {course.cross_discipline?.map((m, index) => <Badge key={index} variant="outline">{m}</Badge>)}
-                                {course.cross_discipline?.length == 0 && <p>-</p>}
-
-                            </div>
-                        </div>
-                        <div>
+                        <div className="flex flex-col gap-1">
                             <h3 className="font-semibold text-base">{dict.course.details.first_specialization}</h3>
                             <div className="flex flex-row gap-2 flex-wrap">
                                 {course.first_specialization?.map((m, index) => <Badge key={index} variant="outline">{m}</Badge>)}
                                 {course.first_specialization?.length == 0 && <p>-</p>}
                             </div>
                         </div>
-                        <div>
+                        <div className="flex flex-col gap-1">
                             <h3 className="font-semibold text-base">{dict.course.details.second_specialization}</h3>
                             <div className="flex flex-row gap-2 flex-wrap">
                                 {course.second_specialization?.map((m, index) => <Badge key={index} variant="outline">{m}</Badge>)}

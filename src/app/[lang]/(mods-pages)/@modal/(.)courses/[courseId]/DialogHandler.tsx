@@ -20,13 +20,14 @@ const DialogHandler = ({ children }: PropsWithChildren) => {
 
     // If the dialog is closed, navigate back
     useEffect(() => {
-        if (!open) {
+        // dialog closed and path matches /{lang}/courses/{courseId}, navigate back
+        if (!open && pathname.match(/\/[a-z]{2}\/courses\/[a-zA-Z0-9-]+/)) {
             router.back();
         }
-    }, [open]);
+    }, [open, pathname]);
 
     return <Dialog open={open} onOpenChange={() => setOpen(false)}>
-        <DialogContent className='max-h-[90vh] max-w-6xl p-0 gap-0'>
+        <DialogContent className='max-w-6xl p-0 gap-0'>
             {children}
         </DialogContent>
     </Dialog>
