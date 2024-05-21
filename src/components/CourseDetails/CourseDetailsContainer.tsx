@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { ResolvingMetadata } from "next";
-import {AlertTriangle, ChevronLeft, CheckCircle} from 'lucide-react';
+import {AlertTriangle, ChevronLeft, CheckCircle, ArrowRight} from 'lucide-react';
 import Link from "next/link";
 import DownloadSyllabus from "./DownloadSyllabus";
 import Fade from "@/components/Animation/Fade";
@@ -18,10 +18,13 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from "@/components/ui/badge"
 import supabase, { CourseDefinition, CourseScoreDefinition } from '@/config/supabase';
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { timetableColors } from "@/const/timetableColors";
 import dynamicFn from "next/dynamic";
 import { Language } from "@/types/settings";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
+import { Dialog, DialogContent, DialogTrigger } from "../ui/dialog";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 
 const SelectCourseButtonDynamic = dynamicFn(() => import('@/components/Courses/SelectCourseButton'), { ssr: false });
 const TimetableDynamic = dynamicFn(() => import('@/components/Timetable/Timetable'), { ssr: false });
@@ -36,11 +39,16 @@ const TOCNavItem = ({ href, children, label, active }: { href: string, children?
 }
 
 const getOtherClasses = async (course: MinimalCourse) => {
+    const semester = parseInt(course.semester.substring(0, 3));
+    const getsemesters = [semester - 1, semester, semester + 1].map(s => [s.toString() + '10', s.toString() + '20']).flat();
+
     const { data, error } = await supabase
         .from('courses')
         .select('*, course_scores(*)')
         .eq('department', course.department)
         .eq('course', course.course)
+        .eq('name_zh', course.name_zh) //due to the way the course ids are arranged, this is the best way to get the same course
+        .in('semester', getsemesters)
         .not('raw_id', 'eq', course.raw_id)
         .order('raw_id', { ascending: false })
 
@@ -50,6 +58,7 @@ const getOtherClasses = async (course: MinimalCourse) => {
 }
 
 const CourseDetailContainer = async ({ lang, courseId }: { lang: Language, courseId: string }) => {
+    const dict = await getDictionary(lang);
     const course = await getCourseWithSyllabus(courseId);
 
     if (!course) return <div className="py-6 px-4">
@@ -66,7 +75,6 @@ const CourseDetailContainer = async ({ lang, courseId }: { lang: Language, cours
 
     const reviews = await getCoursePTTReview(courseId);
     const otherClasses = await getOtherClasses(course as MinimalCourse);
-    const dict = await getDictionary(lang);
 
     // times might not be available, check if it is empty list or its items are all empty strings
     const showTimetable = hasTimes(course as MinimalCourse);
@@ -75,159 +83,142 @@ const CourseDetailContainer = async ({ lang, courseId }: { lang: Language, cours
     const timetableData = showTimetable ? createTimetableFromCourses([course as MinimalCourse], colorMap) : [];
 
     return <Fade>
-        <div className="grid grid-cols-1 xl:grid-cols-[auto_240px] pb-6 px-4 text-gray-500 dark:text-gray-300">
-            <div className="space-y-2">
+        <div className="flex flex-col pb-6 px-4 relative max-w-6xl">
+            <div className="flex flex-col gap-4">
                 <div className="flex flex-col md:flex-row md:items-end gap-4">
-                    <div className="space-y-4 flex-1">
+                    <div className="space-y-4 flex-1 w-full">
                         <div className="space-y-2">
-                            <h4 className="font-semibold text-base text-gray-300">{toPrettySemester(course.semester)} 學期</h4>
-                            <h1 className="font-bold text-3xl mb-4 text-[#AF7BE4]">{`${course?.department} ${course?.course}-${course?.class}`}</h1>
-                            <h2 className="font-semibold text-3xl text-gray-500 dark:text-gray-300 mb-2 flex flex-row flex-wrap gap-1">
+                            <h4 className="font-semibold text-base ">{toPrettySemester(course.semester)} 學期</h4>
+                            <h1 className="font-bold text-3xl mb-4 text-nthu-600">{`${course?.department} ${course?.course}-${course?.class}`}</h1>
+                            <h2 className="font-semibold text-3xl flex flex-row flex-wrap gap-1">
                                 <span>{course!.name_zh}</span>
                                 <span className="font-normal">{course?.teacher_zh?.join(',') ?? ""}</span>
                             </h2>
-                            <h2 className="font-semibold text-xl text-gray-500 dark:text-gray-300 flex flex-row flex-wrap gap-1">
+                            <h2 className="font-semibold text-xl flex flex-row flex-wrap gap-1">
                                 <span>{course!.name_en}</span>
                                 <span className="font-normal">{course?.teacher_en?.join(',') ?? ""}</span>
                             </h2>
                         </div>
                         <CourseTagList course={course} />
+                        {course.venues ?
+                            course.venues.map((vn, i) => <p key={vn} className='text-blue-600 dark:text-blue-400 text-sm'>{vn} <span className='text-black dark:text-white'>{course.times![i]}</span></p>) :
+                            <p>No Venues</p>
+                        }
                     </div>
-                    <div className="space-y-4 w-[min(100vh,320px)]">
-                        <div className="">
-                            <h3 className="font-semibold text-base mb-2">{dict.course.details.venue_time}</h3>
-                            {course.venues ?
-                                course.venues.map((vn, i) => <p key={vn} className='text-blue-600 dark:text-blue-400 text-sm'>{vn} <span className='text-black dark:text-white'>{course.times![i]}</span></p>) :
-                                <p>No Venues</p>
-                            }
-                        </div>
-                        <div className="flex flex-row gap-2">
-                            <SelectCourseButtonDynamic courseId={course.raw_id} />
-                            {/* <DateContributeForm courseId={course.raw_id} /> */}
-                        </div>
+                    <div className="absolute top-0 right-0 mt-4 mr-4">
+                        <SelectCourseButtonDynamic courseId={course.raw_id} />
                     </div>
                 </div>
                 <Separator />
-                <div className="grid grid-cols-1 md:grid-cols-[auto_320px] gap-6 ">
-                    <div className="space-y-4">
-                        {!missingSyllabus && <div className="">
-                            <h3 className="font-semibold text-xl mb-2" id="brief">{dict.course.details.brief}</h3>
+                <div className="flex flex-col-reverse lg:flex-row gap-6 w-full">
+                    <div className="flex flex-col gap-4 min-w-0 lg:max-w-[calc(100%-284px)]">
+                        {!missingSyllabus && <div className="flex flex-col gap-2">
+                            <h3 className="font-semibold text-xl" id="brief">{dict.course.details.brief}</h3>
                             <p className="whitespace-pre-line text-sm">{course.course_syllabus.brief}</p>
                         </div>}
-                        {!missingSyllabus && <div className="">
-                            <h3 className="font-semibold text-xl mb-2" id="description">{dict.course.details.description}</h3>
+                        {!missingSyllabus && <div className="flex flex-col gap-2">
+                            <h3 className="font-semibold text-xl" id="description">{dict.course.details.description}</h3>
                             <p className="whitespace-pre-line text-sm">
                                 {course.course_syllabus.content ?? <>
                                     <DownloadSyllabus courseId={course.raw_id} />
                                 </>}</p>
                         </div>}
-                        {course?.prerequisites && <div className="">
-                            <h3 className="font-semibold text-xl mb-2" id="prerequesites">{dict.course.details.prerequesites}</h3>
+                        {course?.prerequisites && <div className="flex flex-col gap-2">
+                            <h3 className="font-semibold text-xl" id="prerequesites">{dict.course.details.prerequesites}</h3>
                             <div className="whitespace-pre-line text-sm" dangerouslySetInnerHTML={{ __html: course.prerequisites }} />
                         </div>}
-                        {showTimetable && <div className="">
-                            <h3 className="font-semibold text-xl mb-2" id="timetable">{dict.course.details.timetable}</h3>
+                        {showTimetable && <div className="flex flex-col gap-2">
+                            <h3 className="font-semibold text-xl" id="timetable">{dict.course.details.timetable}</h3>
                             <TimetableDynamic timetableData={timetableData} />
                         </div>}
-                        {course.course_scores && <div className="">
-                            <h3 className="font-semibold text-xl mb-2" id="scores">{dict.course.details.scores}</h3>
-                            {/* TODO: make scores prettier with a graph */}
-                            <p>{dict.course.details.average} {dict.course.details.score_types[course.course_scores.type as 'gpa' | 'percent']} {course.course_scores.average}</p>
-                            <p>{dict.course.details.standard_deviation} {course.course_scores.std_dev}</p>
-                        </div>}
-                        {reviews.length > 0 && <div className="">
-                            <h3 className="font-semibold text-xl mb-2" id="ptt">{dict.course.details.ptt_title}</h3>
+                        {reviews.length > 0 && <div className="flex flex-col gap-2">
+                            <h3 className="font-semibold text-xl" id="ptt">{dict.course.details.ptt_title}</h3>
                             <Alert>
                                 <AlertTriangle />
                                 <AlertDescription>
                                     {dict.course.details.ptt_disclaimer}
                                 </AlertDescription>
                             </Alert>
-                            <Accordion type="single" collapsible className="w-full">
-                                {reviews.map((m, index) =>
-                                    <AccordionItem key={index} value={m.date}>
-                                        <AccordionTrigger>{index + 1}. {format(new Date(m.date ?? 0), 'yyyy-MM-dd')} 的心得</AccordionTrigger>
-                                        <AccordionContent>
-                                            <p className="whitespace-pre-line text-sm">{m.content}</p>
-                                        </AccordionContent>
-                                    </AccordionItem>
-                                )}
-                            </Accordion>
+                            <ScrollArea className="w-full whitespace-nowrap">
+                                <div className="flex w-max space-x-4 p-4">
+                                    {reviews.map((m, index) =>
+                                        <Dialog key={index}>
+                                            <DialogTrigger asChild>
+                                                <Card className="max-w-lg shrink-0">
+                                                    <CardHeader>
+                                                        <CardTitle>
+                                                            {index + 1}. {format(new Date(m.date ?? 0), 'yyyy-MM-dd')} 的心得
+                                                        </CardTitle>
+                                                    </CardHeader>
+                                                    <CardContent>
+                                                        <article className="whitespace-pre-line line-clamp-4 text-sm">{m.content}</article>
+                                                    </CardContent>
+                                                </Card>
+                                            </DialogTrigger>
+                                            <DialogContent className="">
+                                                <ScrollArea className="max-h-[90vh] whitespace-nowrap">
+                                                    <p className="whitespace-pre-line text-sm">{m.content}</p>
+                                                </ScrollArea>
+                                            </DialogContent>
+                                        </Dialog>
+                                    )}
+                                </div>
+                                <ScrollBar orientation="horizontal" />
+                            </ScrollArea>
                         </div>}
-                        <h3 className="font-semibold text-xl mb-2" id="other">{dict.course.details.related_courses}</h3>
-                        <div className="flex flex-row gap-2 overflow-hidden flex-wrap">
-                            {otherClasses.map((m, index) =>
-                                <Link key={index} className="flex flex-col w-[220px]" href={`/courses/${m.raw_id}`}>
-                                    <h2 className="text-base font-medium text-gray-800 dark:text-neutral-200">{toPrettySemester(m.semester)} 學期</h2>
-                                    <h2 className="text-base font-medium text-gray-600 dark:text-neutral-400">{m.department} {m.course}-{m.class} {m.name_zh}</h2>
-                                    <h2 className="text-sm font-medium text-gray-600 dark:text-neutral-400">{m.name_en}</h2>
-                                    <h3 className="text-sm font-medium text-gray-600 dark:text-neutral-400">{m.teacher_zh?.join(',')}</h3>
-                                    {m.course_scores && <div>
-                                        <Separator />
-                                        <div className="flex flex-row gap-1 text-sm font-medium text-gray-600 dark:text-neutral-400">
-                                            <p>平均{getScoreType(m.course_scores.type)} {m.course_scores.average}</p>
-                                            <p>標準差 {m.course_scores.std_dev}</p>
-                                        </div>
-                                    </div>}
-                                </Link>
-                            )}
+                        {course.course_scores && <div className="flex flex-col gap-2">
+                            <h3 className="font-semibold text-xl" id="scores">{dict.course.details.scores}</h3>
+                            {/* TODO: make scores prettier with a graph */}
+                            <p>{dict.course.details.average} {dict.course.details.score_types[course.course_scores.type as 'gpa' | 'percent']} {course.course_scores.average}</p>
+                            <p>{dict.course.details.standard_deviation} {course.course_scores.std_dev}</p>
+                        </div>}
+                        <div className="flex flex-col gap-2">
+                            <div className="flex flex-row">
+                                <h3 className="font-semibold text-xl flex-1" id="other">{dict.course.details.related_courses}</h3>
+                                <Button variant="ghost" asChild>
+                                    <Link href={`/${lang}/courses?department[0]=${course.department}&textSearch=${course.department + course.course}`}>
+                                        查看更多 <ArrowRight className="ml-2 w-4 h-4" />
+                                    </Link>
+                                </Button>
+                            </div>
+                            <Table className="table-fixed">
+                                <TableHeader>
+                                    <TableHead className="w-[60px]">學期</TableHead>
+                                    <TableHead className="w-[120px]">開課教授</TableHead>
+                                    <TableHead className="w-36">歷年成績</TableHead>
+                                    <TableHead className="w-16"></TableHead>
+                                </TableHeader>
+                                <TableBody>
+                                {otherClasses.map((m, index) =>
+                                    <TableRow key={index}>
+                                        <TableCell>
+                                            <div className="flex flex-col gap-1">
+                                                <p>{toPrettySemester(m.semester)}</p>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>{m.teacher_zh?.join(',')}</TableCell>
+                                        <TableCell>
+                                            {m.course_scores && <div className="flex flex-col gap-1 text-sm font-medium text-gray-600 dark:text-neutral-400">
+                                                <p>平均{getScoreType(m.course_scores.type)} {m.course_scores.average}</p>
+                                                <p>標準差 {m.course_scores.std_dev}</p>
+                                            </div>}
+                                        </TableCell>
+                                        <TableCell className="p-0">
+                                            <Button variant="ghost" size='icon' asChild>
+                                                <Link href={`/${lang}/courses/${m.raw_id}`}>
+                                                    <ArrowRight />
+                                                </Link>
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                                </TableBody>
+                            </Table>
                         </div>
                     </div>
-                    <div className="space-y-2">
-                        <div>
-                            <h3 className="font-semibold text-base mb-2">{dict.course.details.remarks}</h3>
-                            <p className="text-sm">{course.note ?? "-"}</p>
-                        </div>
-                        <div>
-                            <h3 className="font-semibold text-base mb-2">{dict.course.details.restrictions}</h3>
-                            <p className="text-sm">{course.restrictions ?? "-"}</p>
-                        </div>
-                        <div>
-                            <h3 className="font-semibold text-base mb-2">{dict.course.details.compulsory}</h3>
-                            <div className="flex flex-row gap-2 flex-wrap">
-                                {course.compulsory_for?.map((m, index) => <Badge key={index} variant="outline">{m}</Badge>)}
-                                {course.compulsory_for?.length == 0 && <p>-</p>}
-                            </div>
-                        </div>
-                        <div>
-                            <h3 className="font-semibold text-base mb-2">{dict.course.details.elective}</h3>
-                            <div className="flex flex-row gap-2 flex-wrap">
-                                {course.elective_for?.map((m, index) => <Badge key={index} variant="outline">{m}</Badge>)}
-                                {course.elective_for?.length == 0 && <p>-</p>}
-                            </div>
-                        </div>
-                        <div>
-                            <h3 className="font-semibold text-base mb-2">{dict.course.details.cross_discipline}</h3>
-                            <div className="flex flex-row gap-2 flex-wrap">
-                                {course.cross_discipline?.map((m, index) => <Badge key={index} variant="outline">{m}</Badge>)}
-                                {course.cross_discipline?.length == 0 && <p>-</p>}
-
-                            </div>
-                        </div>
-                        <div>
-                            <h3 className="font-semibold text-base mb-2">{dict.course.details.first_specialization}</h3>
-                            <div className="flex flex-row gap-2 flex-wrap">
-                                {course.first_specialization?.map((m, index) => <Badge key={index} variant="outline">{m}</Badge>)}
-                                {course.first_specialization?.length == 0 && <p>-</p>}
-                            </div>
-                        </div>
-                        <div>
-                            <h3 className="font-semibold text-base mb-2">{dict.course.details.second_specialization}</h3>
-                            <div className="flex flex-row gap-2 flex-wrap">
-                                {course.second_specialization?.map((m, index) => <Badge key={index} variant="outline">{m}</Badge>)}
-                                {course.second_specialization?.length == 0 && <p>-</p>}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <CommmentsSectionDynamic course={course as MinimalCourse} />
-            </div>
-            <div className="hidden xl:block text-sm">
-                <div className="sticky top-0 pl-6">
-                    <ScrollArea>
-                        <div className="sticky top-16 -mt-10 h-[calc(100vh-56px)] py-12">
+                    <div className="w-[284px] flex flex-col gap-4">
+                        <ScrollArea className="hidden lg:flex">
                             <div className="space-y-2">
-                                <p className="font-medium">目錄</p>
                                 <ul className="m-0 list-none">
                                     {!missingSyllabus && <TOCNavItem href="#brief" label={dict.course.details.brief} />}
                                     {!missingSyllabus && <TOCNavItem href="#description" label={dict.course.details.description} />}
@@ -238,9 +229,54 @@ const CourseDetailContainer = async ({ lang, courseId }: { lang: Language, cours
                                     <TOCNavItem href="#other" label={dict.course.details.related_courses} />
                                 </ul>
                             </div>
+                        </ScrollArea>
+                        <div>
+                            <h3 className="font-semibold text-base">{dict.course.details.remarks}</h3>
+                            <p className="text-sm">{course.note ?? "-"}</p>
                         </div>
-                    </ScrollArea>
+                        <div>
+                            <h3 className="font-semibold text-base">{dict.course.details.restrictions}</h3>
+                            <p className="text-sm">{course.restrictions ?? "-"}</p>
+                        </div>
+                        <div>
+                            <h3 className="font-semibold text-base">{dict.course.details.compulsory}</h3>
+                            <div className="flex flex-row gap-2 flex-wrap">
+                                {course.compulsory_for?.map((m, index) => <Badge key={index} variant="outline">{m}</Badge>)}
+                                {course.compulsory_for?.length == 0 && <p>-</p>}
+                            </div>
+                        </div>
+                        <div>
+                            <h3 className="font-semibold text-base">{dict.course.details.elective}</h3>
+                            <div className="flex flex-row gap-2 flex-wrap">
+                                {course.elective_for?.map((m, index) => <Badge key={index} variant="outline">{m}</Badge>)}
+                                {course.elective_for?.length == 0 && <p>-</p>}
+                            </div>
+                        </div>
+                        <div>
+                            <h3 className="font-semibold text-base">{dict.course.details.cross_discipline}</h3>
+                            <div className="flex flex-row gap-2 flex-wrap">
+                                {course.cross_discipline?.map((m, index) => <Badge key={index} variant="outline">{m}</Badge>)}
+                                {course.cross_discipline?.length == 0 && <p>-</p>}
+
+                            </div>
+                        </div>
+                        <div>
+                            <h3 className="font-semibold text-base">{dict.course.details.first_specialization}</h3>
+                            <div className="flex flex-row gap-2 flex-wrap">
+                                {course.first_specialization?.map((m, index) => <Badge key={index} variant="outline">{m}</Badge>)}
+                                {course.first_specialization?.length == 0 && <p>-</p>}
+                            </div>
+                        </div>
+                        <div>
+                            <h3 className="font-semibold text-base">{dict.course.details.second_specialization}</h3>
+                            <div className="flex flex-row gap-2 flex-wrap">
+                                {course.second_specialization?.map((m, index) => <Badge key={index} variant="outline">{m}</Badge>)}
+                                {course.second_specialization?.length == 0 && <p>-</p>}
+                            </div>
+                        </div>
+                    </div>
                 </div>
+                <CommmentsSectionDynamic course={course as MinimalCourse} />
             </div>
         </div>
     </Fade>

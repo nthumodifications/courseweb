@@ -26,7 +26,7 @@ const DialogHandler = ({ children }: PropsWithChildren) => {
     }, [open]);
 
     return <Dialog open={open} onOpenChange={() => setOpen(false)}>
-        <DialogContent className='max-h-[90vh]'>
+        <DialogContent className='max-h-[90vh] max-w-6xl p-0 gap-0'>
             {children}
         </DialogContent>
     </Dialog>
