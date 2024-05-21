@@ -157,7 +157,7 @@ const CourseDetailContainer = async ({ lang, courseId, bottomAware = false }: { 
                                             <DialogTrigger asChild>
                                                 <Card className="max-w-lg shrink-0">
                                                     <CardHeader>
-                                                        <CardTitle>
+                                                        <CardTitle className="text-lg">
                                                             {index + 1}. {format(new Date(m.date ?? 0), 'yyyy-MM-dd')} 的心得
                                                         </CardTitle>
                                                     </CardHeader>
