@@ -91,7 +91,7 @@ const CourseDetailContainer = async ({ lang, courseId, bottomAware = false }: { 
 
     return <Fade>
         <div className="flex flex-col pb-6 relative max-w-6xl">
-            <div className={cn("flex flex-col gap-4", bottomAware ? 'pb-20 md:pb-0': '')}>
+            <div className={cn("flex flex-col gap-4 pb-20 md:pb-0")}>
                 <div className="flex flex-col md:flex-row md:items-end gap-4">
                     <div className="space-y-4 flex-1 w-full">
                         <div className="space-y-2">
@@ -151,7 +151,7 @@ const CourseDetailContainer = async ({ lang, courseId, bottomAware = false }: { 
                                 </AlertDescription>
                             </Alert>
                             <ScrollArea className="w-full whitespace-nowrap">
-                                <div className="flex w-max space-x-4 p-4">
+                                <div className="flex space-x-4 p-4">
                                     {reviews.map((m, index) =>
                                         <Dialog key={index}>
                                             <DialogTrigger asChild>
@@ -195,9 +195,9 @@ const CourseDetailContainer = async ({ lang, courseId, bottomAware = false }: { 
                             <Table className="table-fixed">
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead className="w-[60px] px-2">學期</TableHead>
-                                        <TableHead className="w-[100px] px-2">開課教授</TableHead>
-                                        <TableHead className="w-36 px-2">歷年成績</TableHead>
+                                        <TableHead className="w-[110px] px-2">學期/時間地點</TableHead>
+                                        <TableHead className="w-[80px] px-2">開課教授</TableHead>
+                                        <TableHead className="w-28 px-2">歷年平均成績</TableHead>
                                         <TableHead className="w-14 p-0"></TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -207,12 +207,15 @@ const CourseDetailContainer = async ({ lang, courseId, bottomAware = false }: { 
                                         <TableCell className="px-2">
                                             <div className="flex flex-col gap-1">
                                                 <p>{toPrettySemester(m.semester)}</p>
+                                                <div className="flex flex-col">
+                                                    {m.times.map((t, i) => <p key={i} className="text-xs text-gray-500">{m.venues[i]} {t}</p>)}
+                                                </div>
                                             </div>
                                         </TableCell>
                                         <TableCell className="px-2">{m.teacher_zh?.join(',')}</TableCell>
                                         <TableCell>
-                                            {m.course_scores && <div className="flex flex-col gap-1 text-sm font-medium text-gray-600 dark:text-neutral-400">
-                                                <p>平均{getScoreType(m.course_scores.type)} {m.course_scores.average}</p>
+                                            {m.course_scores && <div className="flex flex-col gap-1 text-xs">
+                                                <p>{getScoreType(m.course_scores.type)} {m.course_scores.average}</p>
                                                 <p>標準差 {m.course_scores.std_dev}</p>
                                             </div>}
                                         </TableCell>
@@ -229,7 +232,7 @@ const CourseDetailContainer = async ({ lang, courseId, bottomAware = false }: { 
                             </Table>
                         </div>
                     </div>
-                    <div className="w-[min(100%,284px)] flex flex-col gap-4">
+                    <div className="w-[284px] flex flex-col gap-4">
                         <ScrollArea className="hidden lg:flex">
                             <div className="space-y-2">
                                 <ul className="m-0 list-none">
