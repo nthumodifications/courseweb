@@ -25,6 +25,7 @@ import { Language } from "@/types/settings";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import { Dialog, DialogContent, DialogTrigger } from "../ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { cn } from "@/lib/utils";
 
 const SelectCourseButtonDynamic = dynamicFn(() => import('@/components/Courses/SelectCourseButton'), { ssr: false });
 const TimetableDynamic = dynamicFn(() => import('@/components/Timetable/Timetable'), { ssr: false });
@@ -63,7 +64,7 @@ const getOtherClasses = async (course: MinimalCourse) => {
     return data as unknown as (CourseDefinition & { course_scores: CourseScoreDefinition | undefined })[];
 }
 
-const CourseDetailContainer = async ({ lang, courseId }: { lang: Language, courseId: string }) => {
+const CourseDetailContainer = async ({ lang, courseId, bottomAware = false }: { lang: Language, courseId: string, bottomAware?: boolean }) => {
     const dict = await getDictionary(lang);
     const course = await getCourseWithSyllabus(courseId);
 
@@ -90,7 +91,7 @@ const CourseDetailContainer = async ({ lang, courseId }: { lang: Language, cours
 
     return <Fade>
         <div className="flex flex-col pb-6 relative max-w-6xl">
-            <div className="flex flex-col gap-4">
+            <div className={cn("flex flex-col gap-4", bottomAware ? 'pb-20 md:pb-0': '')}>
                 <div className="flex flex-col md:flex-row md:items-end gap-4">
                     <div className="space-y-4 flex-1 w-full">
                         <div className="space-y-2">
@@ -112,12 +113,15 @@ const CourseDetailContainer = async ({ lang, courseId }: { lang: Language, cours
                         }
                         <CrossDisciplineTagList course={course} />
                     </div>
-                    <div className="absolute top-0 right-0 mt-4 mr-4">
+                    <div className="hidden md:block absolute top-0 right-0 mt-4 mr-4">
+                        <SelectCourseButtonDynamic courseId={course.raw_id} />
+                    </div>
+                    <div className={cn("md:hidden fixed left-0 pt-2 px-4 shadow-md w-full h-16 flex flex-col bg-background z-50", bottomAware ? 'bottom-20': 'bottom-0')}>
                         <SelectCourseButtonDynamic courseId={course.raw_id} />
                     </div>
                 </div>
                 <Separator />
-                <div className="flex flex-col-reverse lg:flex-row gap-6 w-full">
+                <div className={"flex flex-col-reverse lg:flex-row gap-6 w-full"}>
                     <div className="flex flex-col gap-4 min-w-0 lg:max-w-[calc(100%-284px)]">
                         {!missingSyllabus && <div className="flex flex-col gap-2">
                             <h3 className="font-semibold text-xl" id="brief">{dict.course.details.brief}</h3>

@@ -4,7 +4,7 @@ import { Skeleton } from "../ui/skeleton";
 
 const CourseDetailsSkeleton = () => {
   return (
-    <div className="flex flex-col pb-6 px-4 relative max-w-6xl">
+    <div className="flex flex-col pb-6 relative max-w-6xl">
       <div className="flex flex-col gap-4">
         <div className="flex flex-col md:flex-row md:items-end gap-4">
           <div className="space-y-4 flex-1 w-full">

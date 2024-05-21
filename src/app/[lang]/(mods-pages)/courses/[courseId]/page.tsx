@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: PageProps, parent: ResolvingM
 const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
     const courseId = decodeURI(params.courseId as string);
     
-    return <div className="flex flex-col gap-2">
+    return <div className="flex flex-col gap-2 px-2">
         <div className="">
             <Button variant="ghost" asChild size="sm">
                 <Link href={`/${params.lang}/courses`}>
@@ -45,7 +45,7 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
                 </Link>
             </Button>
         </div>
-        <CourseDetailContainer lang={params.lang} courseId={courseId}/>
+        <CourseDetailContainer lang={params.lang} courseId={courseId} bottomAware/>
     </div>
 }
 

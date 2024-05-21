@@ -17,8 +17,7 @@ const SelectCourseButton = ({ courseId }: { courseId: RawCourseID }) => {
         >
             <Minus/> {dict.course.item.remove_from_semester}
         </Button> 
-    else return <Button 
-            variant={'outline'}
+    else return <Button
             onClick={() => addCourse(courseId)}
         >
             <Plus/> {dict.course.item.add_to_semester}
