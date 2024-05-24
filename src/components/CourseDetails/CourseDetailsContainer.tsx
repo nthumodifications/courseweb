@@ -138,10 +138,10 @@ const CourseDetailContainer = async ({ lang, courseId, bottomAware = false }: { 
                             <h3 className="font-semibold text-xl" id="prerequesites">{dict.course.details.prerequesites}</h3>
                             <div className="whitespace-pre-line text-sm" dangerouslySetInnerHTML={{ __html: course.prerequisites }} />
                         </div>}
-                        {showTimetable && <div className="flex flex-col gap-2">
+                        {/* {showTimetable && <div className="flex flex-col gap-2">
                             <h3 className="font-semibold text-xl" id="timetable">{dict.course.details.timetable}</h3>
                             <TimetableDynamic timetableData={timetableData} />
-                        </div>}
+                        </div>} */}
                         {reviews.length > 0 && <div className="flex flex-col gap-2">
                             <h3 className="font-semibold text-xl" id="ptt">{dict.course.details.ptt_title}</h3>
                             <Alert>
@@ -222,7 +222,7 @@ const CourseDetailContainer = async ({ lang, courseId, bottomAware = false }: { 
                                         <TableCell className="p-0">
                                             <Button variant="ghost" size='icon' asChild>
                                                 <Link href={`/${lang}/courses/${m.raw_id}`}>
-                                                    <ArrowRight />
+                                                    <ArrowRight size={16}/>
                                                 </Link>
                                             </Button>
                                         </TableCell>
@@ -239,7 +239,7 @@ const CourseDetailContainer = async ({ lang, courseId, bottomAware = false }: { 
                                     {!missingSyllabus && <TOCNavItem href="#brief" label={dict.course.details.brief} />}
                                     {!missingSyllabus && <TOCNavItem href="#description" label={dict.course.details.description} />}
                                     {course?.prerequisites && <TOCNavItem href="#prerequesites" label={dict.course.details.prerequesites} />}
-                                    {showTimetable && <TOCNavItem href="#timetable" label={dict.course.details.timetable} />}
+                                    {/* {showTimetable && <TOCNavItem href="#timetable" label={dict.course.details.timetable} />} */}
                                     {course.course_scores && <TOCNavItem href="#scores" label={dict.course.details.scores} />}
                                     {reviews.length > 0 && <TOCNavItem href="#ptt" label={dict.course.details.ptt} />}
                                     <TOCNavItem href="#other" label={dict.course.details.related_courses} />
