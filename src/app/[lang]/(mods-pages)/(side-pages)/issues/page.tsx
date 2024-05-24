@@ -1,6 +1,7 @@
 import {Divider, Switch} from '@mui/joy';
 import { Codepen, Database, Globe } from 'lucide-react';
 import Link from 'next/link';
+import EmptyIssueForm from './EmptyIssueForm';
 
 const IssueButton = ({title, description, icon, href}: {title: string, description: string, icon: any, href: string}) => {
     return (
@@ -37,6 +38,7 @@ const IssuesPage = () => {
                 <p className="text-gray-600 dark:text-gray-400">{"If you find any issues with the data, please report it below."}</p>
                 {/* Data issue form */}
             </div>
+            <EmptyIssueForm />
         </div>
     )
 }

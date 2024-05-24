@@ -108,6 +108,8 @@
     },
     "settings": {
         "account": {
+            "signin": "登入",
+            "signout": "登出",
             "title": "賬號",
             "description": "校務資訊系統代理登入",
             "ccxp": {
@@ -127,7 +129,20 @@
         },
         "timetable": {
             "title": "時間表",
-            "description": "顔色, 客制化"
+            "description": "顔色, 客制化",
+            "vertical_preview": "垂直式顯示",
+            "language": "時間表語言",
+            "align": {
+                "title": "對齊",
+                "left": "左",
+                "center": "中",
+                "right": "右"
+            },
+            "display": "顯示設定",
+            "slot_title": "課程名稱",
+            "slot_code": "課程代碼",
+            "slot_time": "時間",
+            "slot_venue": "地點"
         },
         "privacy": {
             "title": "隱私",

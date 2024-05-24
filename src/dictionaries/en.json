@@ -108,6 +108,8 @@
     },
     "settings": {
         "account": {
+            "signin": "Sign In",
+            "signout": "Sign Out",
             "title": "Account",
             "description": "NTHU AIS Login",
             "ccxp": {
@@ -127,7 +129,20 @@
         },
         "timetable": {
             "title": "Timetable",
-            "description": "Theme, Preview"
+            "description": "Theme, Preview",
+            "vertical_preview": "Vertical Preview",
+            "language": "Language",
+            "align": {
+                "title": "Align",
+                "left": "Left",
+                "center": "Center",
+                "right": "Right"
+            },
+            "display": "Display",
+            "slot_title": "Title",
+            "slot_code": "Code",
+            "slot_time": "Time",
+            "slot_venue": "Venue"
         },
         "privacy": {
             "title": "Privacy",
