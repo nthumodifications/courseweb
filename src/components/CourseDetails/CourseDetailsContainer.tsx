@@ -246,42 +246,38 @@ const CourseDetailContainer = async ({ lang, courseId, bottomAware = false }: { 
                                 </ul>
                             </div>
                         </ScrollArea>
-                        <div className="flex flex-col gap-1">
+                        {(course.note ?? "").trim().length > 0 && <div className="flex flex-col gap-1">
                             <h3 className="font-semibold text-base">{dict.course.details.remarks}</h3>
-                            <p className="text-sm">{course.note ?? "-"}</p>
-                        </div>
-                        <div className="flex flex-col gap-1">
+                            <p className="text-sm">{course.note}</p>
+                        </div>}
+                        {(course.restrictions ?? "").trim().length > 0 && <div className="flex flex-col gap-1">
                             <h3 className="font-semibold text-base">{dict.course.details.restrictions}</h3>
-                            <p className="text-sm">{course.restrictions ?? "-"}</p>
-                        </div>
-                        <div className="flex flex-col gap-1">
+                            <p className="text-sm">{course.restrictions}</p>
+                        </div>}
+                        {(course.compulsory_for ?? []).length > 0 && <div className="flex flex-col gap-1">
                             <h3 className="font-semibold text-base">{dict.course.details.compulsory}</h3>
                             <div className="flex flex-row gap-2 flex-wrap">
                                 {course.compulsory_for?.map((m, index) => <Badge key={index} variant="outline">{getFormattedClassCode(m)}</Badge>)}
-                                {course.compulsory_for?.length == 0 && <p>-</p>}
                             </div>
-                        </div>
-                        <div className="flex flex-col gap-1">
+                        </div>}
+                        {(course.elective_for ?? []).length > 0 && <div className="flex flex-col gap-1">
                             <h3 className="font-semibold text-base">{dict.course.details.elective}</h3>
                             <div className="flex flex-row gap-2 flex-wrap">
                                 {course.elective_for?.map((m, index) => <Badge key={index} variant="outline">{getFormattedClassCode(m)}</Badge>)}
-                                {course.elective_for?.length == 0 && <p>-</p>}
                             </div>
-                        </div>
-                        <div className="flex flex-col gap-1">
+                        </div>}
+                        {(course.first_specialization ?? []).length > 0 && <div className="flex flex-col gap-1">
                             <h3 className="font-semibold text-base">{dict.course.details.first_specialization}</h3>
                             <div className="flex flex-row gap-2 flex-wrap">
                                 {course.first_specialization?.map((m, index) => <Badge key={index} variant="outline">{m}</Badge>)}
-                                {course.first_specialization?.length == 0 && <p>-</p>}
                             </div>
-                        </div>
-                        <div className="flex flex-col gap-1">
+                        </div>}
+                        {(course.second_specialization ?? []).length > 0 && <div className="flex flex-col gap-1">
                             <h3 className="font-semibold text-base">{dict.course.details.second_specialization}</h3>
                             <div className="flex flex-row gap-2 flex-wrap">
                                 {course.second_specialization?.map((m, index) => <Badge key={index} variant="outline">{m}</Badge>)}
-                                {course.second_specialization?.length == 0 && <p>-</p>}
                             </div>
-                        </div>
+                        </div>}
                     </div>
                 </div>
                 <CommmentsSectionDynamic course={course as MinimalCourse} />
