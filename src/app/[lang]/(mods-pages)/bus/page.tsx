@@ -15,12 +15,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { getTimeOnDate } from "@/helpers/bus";
 import useDictionary from '@/dictionaries/useDictionary';
 
-type BusListingItemProps = { startTime: string, refTime: Date, Icon: FC<SVGProps<SVGSVGElement>>, line: string, direction: string, title: string, destination?: string, notes?: string[], arrival: string }
-const BusListingItem = ({ startTime, refTime, Icon, line, title, destination, direction, notes = [], arrival }: BusListingItemProps) => {
+type BusListingItemProps = { tab: string, startTime: string, refTime: Date, Icon: FC<SVGProps<SVGSVGElement>>, line: string, direction: string, title: string, destination?: string, notes?: string[], arrival: string }
+const BusListingItem = ({ tab, startTime, refTime, Icon, line, title, destination, direction, notes = [], arrival }: BusListingItemProps) => {
     const { language } = useSettings();
     const dict = useDictionary();
-    const searchParams = useSearchParams();
-    const tab = searchParams.get('tab');
 
     const displayTime = useMemo(() => {
         // check if is time, else return as is
@@ -45,7 +43,7 @@ const BusListingItem = ({ startTime, refTime, Icon, line, title, destination, di
 
     const handleItemClick = () => {
         if(arrival == dict.bus.service_over) return;
-        router.push(`/${language}/bus/${route}/${line == 'nanda' ? `${line}_${direction}`: line }?start_time=${startTime}&start_index=${index}&return_url=/${language}/bus?tab=${tab}`);
+        router.push(`/${language}/bus/${route}/${line == 'nanda' ? `${line}_${direction}`: line }?return_url=/${language}/bus?tab=${tab}`);
     }
 
     return  <div className={cn("flex flex-col gap-4 py-4", arrival == dict.bus.service_over ? 'opacity-30': '')}> 
@@ -115,6 +113,7 @@ const BusPage = () => {
                     if (bus.line === 'red') {
                         if(returnData.some((bus) => bus.line === 'red')) continue;
                         returnData.push({
+                            tab: 'north_gate',
                             Icon: RedLineIcon,
                             startTime: bus.time,
                             line: 'red',
@@ -126,6 +125,7 @@ const BusPage = () => {
                     } else if (bus.line === 'green') {
                         if(returnData.some((bus) => bus.line === 'green')) continue;
                         returnData.push({
+                            tab: 'north_gate',
                             Icon: GreenLineIcon,
                             startTime: bus.time,
                             line: 'green',
@@ -141,6 +141,7 @@ const BusPage = () => {
                     const notes = [];
                     if(bus.description.includes("83號")) notes.push(language == 'zh' ? "83號": "Bus 83");
                     returnData.push({
+                        tab: 'north_gate',
                         Icon: NandaLineIcon,
                         startTime: bus.time,
                         line: 'nanda',
@@ -162,6 +163,7 @@ const BusPage = () => {
                     if (bus.line === 'red') {
                         if(returnData.some((bus) => bus.line === 'red')) continue;
                         returnData.push({
+                            tab: 'tsmc',
                             Icon: RedLineIcon,
                             startTime: bus.time,
                             line: 'red',
@@ -173,6 +175,7 @@ const BusPage = () => {
                     } else if (bus.line === 'green') {
                         if(returnData.some((bus) => bus.line === 'green')) continue;
                         returnData.push({
+                            tab: 'tsmc',
                             Icon: GreenLineIcon,
                             startTime: bus.time,
                             line: 'green',
@@ -192,6 +195,7 @@ const BusPage = () => {
                     const notes = [];
                     if(bus.description.includes("83號")) notes.push(language == 'zh' ? "83號": "Bus 83");
                     returnData.push({
+                        tab: 'tsmc',
                         Icon: NandaLineIcon,
                         startTime: bus.time,
                         line: 'nanda',
@@ -215,6 +219,7 @@ const BusPage = () => {
                 const notes = [];
                 if(bus.description.includes("83號")) notes.push(language == 'zh' ? "83號": "Bus 83");
                 returnData.push({
+                    tab: 'nanda',
                     Icon: NandaLineIcon,
                     startTime: bus.time,
                     line: 'nanda',
@@ -230,6 +235,7 @@ const BusPage = () => {
         // filler for no service busses
         if(!returnData.some((bus) => bus.line === 'red') && tab != 'nanda') {
             returnData.push({
+                tab: 'north_gate',
                 Icon: RedLineIcon,
                 startTime: '0:00',
                 line: 'red',
@@ -240,6 +246,7 @@ const BusPage = () => {
         }
         if(!returnData.some((bus) => bus.line === 'green') && tab != 'nanda') {
             returnData.push({
+                tab: 'north_gate',
                 Icon: GreenLineIcon,
                 startTime: '0:00',
                 line: 'green',
@@ -250,6 +257,7 @@ const BusPage = () => {
         }
         if(!returnData.some((bus) => bus.line === 'nanda')) {
             returnData.push({
+                tab: 'north_gate',
                 Icon: NandaLineIcon,
                 startTime: '0:00',
                 line: 'nanda',
