@@ -1,10 +1,9 @@
 'use server';
 import supabase_server from '@/config/supabase_server';
 import { cookies } from 'next/headers';
-import { getUserSession } from './headless_ais';
+import { getUserSession, isUserBanned } from './headless_ais/headless_ais';
 import { isSameDay } from 'date-fns';
 import { id } from 'date-fns/locale';
-import {isUserBanned} from '@/lib/headless_ais';
 import { ServerAction } from '@/types/actions';
 
 export const getContribDates = async (raw_id: string) => {

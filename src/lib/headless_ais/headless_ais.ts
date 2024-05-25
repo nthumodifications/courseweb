@@ -5,10 +5,17 @@ import { cookies } from "next/headers";
 import jsdom from 'jsdom';
 import iconv from 'iconv-lite';
 import supabase_server from "@/config/supabase_server";
+import crypto from 'crypto';
 
-
-
-export const signInToCCXP = async (studentid: string, password: string) => {
+type SignInToCCXPResponse = Promise<{ ACIXSTORE: string, encryptedPassword: string } | { error: { message: string } }>;
+/**
+ * Attempts to login user to CCXP, takes in raw studentid and password
+ * ONLY use this for first time login, will return encrypted password and ACIXSTORE
+ * @param studentid 
+ * @param password 
+ * @returns { ACIXSTORE: string, encryptedPassword: string }
+ */
+export const signInToCCXP = async (studentid: string, password: string): SignInToCCXPResponse => {
     try {
         const ocrAndLogin: (_try?:number) => Promise<{ ACIXSTORE: string }> = async (_try = 0) => {
             if(_try == 3) {
@@ -155,12 +162,43 @@ export const signInToCCXP = async (studentid: string, password: string) => {
         }
 
         const token = jwt.sign({ sub: studentid, ...data }, process.env.NTHU_HEADLESS_AIS_SIGNING_KEY!, { expiresIn: '15d' });
-        cookies().set('accessToken', token, { path: '/', maxAge: 60 * 60 * 24, sameSite: 'strict', secure: true });
-        return result;
+        await cookies().set('accessToken', token, { path: '/', maxAge: 60 * 60 * 24, sameSite: 'strict', secure: true });
+
+        // Encrypt user password 
+        const iv = crypto.randomBytes(16);
+        const key = Buffer.from(process.env.NTHU_HEADLESS_AIS_ENCRYPTION_KEY!, 'hex');
+        const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
+        const encrypted = cipher.update(password, 'utf8', 'base64') + cipher.final('base64');
+        const encryptedPassword = iv.toString('base64') + encrypted;
+        
+        return { ...result, encryptedPassword };
     } catch (err) {
         if(err instanceof Error) return { error: { message: err.message } };
         throw err;
     }
+}
+
+type RefreshUserSessionResponse = Promise<{ ACIXSTORE: string } | { error: { message: string } }>;
+export const refreshUserSession = async (studentid: string, encryptedPassword: string): RefreshUserSessionResponse => {
+    // Decrypt password
+    const key = Buffer.from(process.env.NTHU_HEADLESS_AIS_ENCRYPTION_KEY!, 'hex');
+    
+    // Split the IV and the encrypted text
+    const iv = Buffer.from(encryptedPassword.slice(0, 24), 'base64'); // First 24 characters represent the IV
+    const encryptedText = encryptedPassword.slice(24); // The rest is the encrypted text
+    
+    const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
+    let decrypted = decipher.update(encryptedText, 'base64', 'utf8');
+    decrypted += decipher.final('utf8');
+    
+    const password =  decrypted;
+
+    const res = await signInToCCXP(studentid, password);
+    if('error' in res && res.error) {
+        return { error: res.error }
+    }
+    // @ts-ignore - We know that res is not an error
+    return { ACIXSTORE: res.ACIXSTORE };
 }
 
 export const getUserSession = async () => {

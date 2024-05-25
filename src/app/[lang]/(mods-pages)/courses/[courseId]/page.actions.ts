@@ -1,6 +1,6 @@
 'use server';
 import supabase_server from '@/config/supabase_server';
-import { getUserSession } from '@/lib/headless_ais';
+import { getUserSession } from '@/lib/headless_ais/headless_ais';
 import { revalidatePath } from 'next/cache';
 import {getStudentCourses} from '@/lib/headless_ais/courses';
 import { CommentState } from '@/types/comments';
