@@ -7,7 +7,7 @@ import Compact from '@uiw/react-color-compact';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTrigger } from "@/components/ui/drawer";
 import { Button } from '../ui/button';
 import Link from 'next/link';
-import { ExternalLink } from 'lucide-react';
+import { Book, ExternalLink } from 'lucide-react';
 
 export const TimetableItemDrawer = ({ course, children }: PropsWithChildren<{ course: MinimalCourse; }>) => {
     const {
@@ -52,12 +52,20 @@ export const TimetableItemDrawer = ({ course, children }: PropsWithChildren<{ co
                     </div>
                 </div>
             </DrawerHeader>
-            <Button variant='outline' asChild>
-                <Link href={`/courses/${course.raw_id}`}>
-                    <ExternalLink className='w-4 h-4 mr-2' />
-                    課程詳情
-                </Link>
-            </Button>
+            <div className='p-4 flex flex-col gap-4'>
+                <div className='grid grid-cols-2 gap-2'>
+                    <Button variant='outline' asChild>
+                        <Link href={`/courses/${course.raw_id}`}>
+                            <ExternalLink className='w-4 h-4 mr-2' />
+                            課程詳情
+                        </Link>
+                    </Button>
+                    <Button variant='outline' disabled={true}>
+                        <Book className='w-4 h-4 mr-2' />
+                        學習平臺
+                    </Button>
+                </div>
+            </div>
             {/* <DrawerFooter>
             <DrawerClose>
                 <Button variant="outline">Cancel</Button>

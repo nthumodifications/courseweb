@@ -180,8 +180,8 @@ const CourseDetailContainer = async ({ lang, courseId, bottomAware = false }: { 
                         {course.course_scores && <div className="flex flex-col gap-2">
                             <h3 className="font-semibold text-xl" id="scores">{dict.course.details.scores}</h3>
                             {/* TODO: make scores prettier with a graph */}
-                            <p>{dict.course.details.average} {dict.course.details.score_types[course.course_scores.type as 'gpa' | 'percent']} {course.course_scores.average}</p>
-                            <p>{dict.course.details.standard_deviation} {course.course_scores.std_dev}</p>
+                            <p className="text-sm"><span className="font-bold">{dict.course.details.average}{dict.course.details.score_types[course.course_scores.type as 'gpa' | 'percent']}:</span> {course.course_scores.average}</p>
+                            <p className="text-sm"><span className="font-bold">{dict.course.details.standard_deviation}:</span> {course.course_scores.std_dev}</p>
                         </div>}
                         <div className="flex flex-col gap-2">
                             <div className="flex flex-row">
