@@ -20,6 +20,7 @@ import { VenueChip } from '../Timetable/VenueChip';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import useTime from "@/hooks/useTime";
 import { NoClassPickedReminder } from "./NoClassPickedReminder";
+import {TimetableItemDrawer} from '@/components/Timetable/TimetableItemDrawer';
 
 const getRangeOfDays = (start: Date, end: Date) => {
     const days = [];
@@ -57,17 +58,19 @@ const TodaySchedule: FC<{ weather: WeatherData | undefined, alerts: AlertDefinit
         )
 
         return classesThisDay.sort((a, b) => a.startTime - b.startTime).map((t, index) => (
-            <div className="flex flex-row" key={index}>
-                <div className="flex flex-col justify-between text-sm pr-1 py-[2px] text-gray-400 w-11">
-                    <p>{scheduleTimeSlots[t.startTime].start}</p>
-                    <p>{scheduleTimeSlots[t.endTime].end}</p>
+            <TimetableItemDrawer course={t.course} key={index}>
+                <div className="flex flex-row" key={index}>
+                    <div className="flex flex-col justify-between text-sm pr-1 py-[2px] text-gray-400 w-11">
+                        <p>{scheduleTimeSlots[t.startTime].start}</p>
+                        <p>{scheduleTimeSlots[t.endTime].end}</p>
+                    </div>
+                    <div className="flex flex-col rounded-md p-2 flex-1" style={{ background: t.color, color: t.textColor }}>
+                        <p className="font-semibold">{t.course.name_zh}</p>
+                        <p className="text-xs">{t.course.name_en}</p>
+                        <div className='w-fit mt-1'><VenueChip venue={t.venue} color={t.textColor} textColor={t.color} /></div>
+                    </div>
                 </div>
-                <div className="flex flex-col rounded-md p-2 flex-1" style={{ background: t.color, color: t.textColor }}>
-                    <p className="font-semibold">{t.course.name_zh}</p>
-                    <p className="text-xs">{t.course.name_en}</p>
-                    <div className='w-fit mt-1'><VenueChip venue={t.venue} color={t.textColor} textColor={t.color} /></div>
-                </div>
-            </div>
+            </TimetableItemDrawer>
         ))
     }
 
