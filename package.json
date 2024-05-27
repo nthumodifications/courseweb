@@ -56,7 +56,7 @@
     "@sentry/nextjs": "^7.113.0",
     "@supabase/supabase-js": "^2.39.7",
     "@tanstack/query-sync-storage-persister": "^5.24.1",
-    "@tanstack/react-query": "^5.24.1",
+    "@tanstack/react-query": "^5.39.0",
     "@tanstack/react-query-persist-client": "^5.24.1",
     "@types/node": "20.10.7",
     "@types/react": "18.3.2",
