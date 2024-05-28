@@ -1,30 +1,15 @@
-'use client'
-
-import { ChevronRight, ChevronLeft, HelpCircle } from "lucide-react"
+'use client';
+import { HelpCircle } from "lucide-react";
 import useDictionary from "@/dictionaries/useDictionary"
 import { useState, useEffect } from "react"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button"
 
-import Intro from './Intro'
-import Courses from './Courses'
-import Dashboard from './Dashboard'
-import Bus from './Bus'
-import Tools from './Tools'
-import Dev from './Dev'
 import { useLocalStorage } from "usehooks-ts"
-import dynamic from "next/dynamic"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
 import {LoginPage} from '@/components/Forms/LoginPage';
+import { ScrollArea } from "../ui/scroll-area"
 
 type ProgressDisplayProps = { max: number, current: number }
 const ProgressDisplay = ({ current, max }: ProgressDisplayProps) => {
@@ -97,7 +82,7 @@ const Help = () => {
           <span className="hidden md:inline-block">Help</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="h-screen p-0 lg:h-[calc(100vh-48px)]">
+      <DialogContent className="h-screen p-0 w-full lg:h-[calc(100vh-48px)]">
         <div className="flex flex-col items-center gap-8 px-4 py-8 max-h-screen">
           <div className="flex-1 grid place-items-center">
             <div className="w-[254px] h-[254px] max-h-full">
@@ -119,11 +104,13 @@ const Help = () => {
               <DialogTrigger asChild>
                 <Button className="w-full">登入</Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px] h-screen">
-                <LoginPage onClose={() => setOpen(false)} />
+              <DialogContent className="sm:max-w-[425px] h-screen lg:h-auto w-full">
+                <ScrollArea className="h-full">
+                  <LoginPage onClose={() => setOpen(false)} />
+                </ScrollArea>
               </DialogContent>
             </Dialog>
-            <Button variant='outline' className="w-full">略過</Button>
+            <Button variant='outline' className="w-full" onClick={() => setOpen(false)}>略過</Button>
           </div>}
           
         </div>

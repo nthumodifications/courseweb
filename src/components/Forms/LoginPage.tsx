@@ -48,7 +48,7 @@ export const LoginPage = ({ onClose }: { onClose: () => void; }) => {
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-2 items-center">
         <NTHUModsLogo />
-        <h2 className="text-2xl font-bold">Welcome to NTHUMODS</h2>
+        <h2 className="text-2xl font-bold text-center">Welcome to NTHUMODS</h2>
       </div>
 
       <div className="flex flex-col gap-3">
