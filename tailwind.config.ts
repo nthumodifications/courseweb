@@ -90,6 +90,7 @@ const config = {
   plugins: [
     require("tailwindcss-animate"),
     require('@tailwindcss/typography'),
+    require('@tailwindcss/container-queries'),
     function ({ addVariant }: any) {
       addVariant('hover', '@media (any-hover: hover) and (any-pointer: fine) { &:hover }')
     }
