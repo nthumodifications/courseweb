@@ -233,7 +233,7 @@ const LineDisplayPage = () => {
                                 <Bus className="w-3.5 h-3.5 text-white"/>
                             </div>}
                         <div className="absolute left-[calc(50%-6px)] top-[calc(50%-6px)] w-3 h-3 bg-slate-200 rounded-full z-10" />
-                        <div className="absolute top-1/2 left-[calc(50%-2px)] w-1 h-1/2 bg-slate-200 z-10" />
+                        {i != displayText.length - 1 && <div className="absolute top-1/2 left-[calc(50%-2px)] w-1 h-1/2 bg-slate-200 z-10" />}
                         
                     </div>
                     <div className={cn("flex-1 py-4 justify-start items-center gap-2 flex border-b border-border", m.state > BusStationState.AT_STATION ? 'opacity-30' : '')}>
