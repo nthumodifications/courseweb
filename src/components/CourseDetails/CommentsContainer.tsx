@@ -1,11 +1,11 @@
 'use client';;
 import { useEffect, useMemo, useState } from "react";
 import { CommentsItem } from "./CommentsItem";
-import { getComments } from "./page.actions";
+import { getComments } from "../../lib/headless_ais/comments";
 import { useHeadlessAIS } from "@/hooks/contexts/useHeadlessAIS";
 import { getStudentCourses } from "@/lib/headless_ais/courses";
 import { Textarea } from "@/components/ui/textarea"
-import { postComment } from "./page.actions";
+import { postComment } from "../../lib/headless_ais/comments";
 import {CheckCircle, CheckCircle2, Loader2Icon, Plus, AlertTriangle} from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
@@ -23,7 +23,7 @@ import { toast } from "@/components/ui/use-toast";
 import Link from 'next/link';
 import {Badge} from '@/components/ui/badge';
 import useDictionary from "@/dictionaries/useDictionary";
-import {getStudentCommentState} from '@/app/[lang]/(mods-pages)/courses/[courseId]/page.actions';
+import {getStudentCommentState} from '@/lib/headless_ais/comments';
 import { CommentState } from "@/types/comments";
 
 // const templateText = `- Scoring 甜度 (On 5 scale, where 1 is low and 5 is high satisfaction):\n
