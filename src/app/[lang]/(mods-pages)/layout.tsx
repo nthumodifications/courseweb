@@ -19,7 +19,7 @@ const NTHUModsLayout = ({
         <GoogleAnalytics />
         <ConsoleLogger />
             
-        <div className={`grid grid-cols-1 grid-rows-[var(--header-height)_var(--content-height)_auto] md:grid-cols-[12rem_auto]`}>
+        <div className={`grid grid-cols-1 grid-rows-[var(--header-height)_var(--content-height)_auto] md:grid-cols-[12rem_auto] pb-[5rem] md:pb-0`}>
             <Header />
             <div className='hidden md:flex h-full px-2 pt-8 pl-8'>
                 <SideNav />

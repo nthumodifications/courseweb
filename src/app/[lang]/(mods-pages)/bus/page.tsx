@@ -5,7 +5,7 @@ import { FC, SVGProps, useEffect, useMemo, useState } from "react";
 import useTime from "@/hooks/useTime";
 import { useQuery } from "@tanstack/react-query";
 import { getBusesSchedules } from "./page.actions";
-import { addMinutes, format, isWeekend, set } from "date-fns";
+import { addMinutes, differenceInMinutes, format, isWeekend, set } from "date-fns";
 import { cn } from "@/lib/utils";
 import { ChevronRight, Timer } from "lucide-react";
 import { RedLineIcon } from "@/components/BusIcons/RedLineIcon";
@@ -30,6 +30,10 @@ const BusListingItem = ({ tab, startTime, refTime, Icon, line, title, destinatio
         }
         else if (time_arr.getTime() - refTime.getTime() < 2 * 60 * 1000) {
             return dict.bus.departing;
+        }
+        // within 5 minutes, display relative time
+        else if (time_arr.getTime() - refTime.getTime() < 5 * 60 * 1000) {
+            return `${differenceInMinutes(time_arr, refTime)} min`
         }
         return arrival;
     }, [arrival, refTime, dict]);
@@ -105,7 +109,7 @@ const BusPage = () => {
             line: 'red' | 'green' | 'nanda' | 'tld';
         })[] = [];
         if (tab === 'north_gate') {
-            for (const bus of UphillBuses.filter(bus => getTimeOnDate(time, bus.time).getTime() > time.getTime())) {
+            for (const bus of UphillBuses.filter(bus => differenceInMinutes(getTimeOnDate(time, bus.time).getTime(),time.getTime()) >= 0)) {
                 if (bus.route === '校園公車') {
                     const notes = [];
                     if (bus.description) notes.push(bus.description);
