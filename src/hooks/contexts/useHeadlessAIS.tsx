@@ -35,7 +35,13 @@ const useHeadlessAISProvider = () => {
     // Check if cookies.accessToken exists, if so, check if it's valid, else call getACIXSTORE(true)
     useEffect(() => {
         // if logged in but no accesstoken, call getACIXSTORE
-        if(!headlessAIS.enabled) return;
+        if(!headlessAIS.enabled) {
+            // if not enabled, check if cookies.accessToken exists, if so, remove
+            if(cookies.accessToken) {
+                removeCookies('accessToken', { path: '/', sameSite: 'strict', secure: true });
+            }
+            return;
+        };
         if(!cookies.accessToken) {
             getACIXSTORE(true)
         }

@@ -2,6 +2,8 @@
 import supabase_server from '@/config/supabase_server';
 import { getUserSession } from '@/lib/headless_ais';
 import { revalidatePath } from 'next/cache';
+import {getStudentCourses} from '@/lib/headless_ais/courses';
+import { CommentState } from '@/types/comments';
 
 export const getComments = async (courseId: string, page: number = 1) => {
     const user = await getUserSession();
@@ -36,6 +38,17 @@ export const getComments = async (courseId: string, page: number = 1) => {
     return data;
 }
 
+export const getStudentCommentState = async (courseId: string, ACIXSTORE: string) => {
+    const res = await getStudentCourses(ACIXSTORE);
+    if (!res) {
+        throw new Error("Failed to fetch student courses.");
+    }
+    if(await hasUserCommented(courseId)) return CommentState.Filled;
+    if(res.courses.includes(courseId)) return CommentState.Enabled;
+    else return CommentState.Disabled;
+}
+
+
 export const hasUserCommented = async (courseId: string) => {
     const user = await getUserSession();
     if (user == null) {
@@ -52,7 +65,7 @@ export const hasUserCommented = async (courseId: string) => {
     return data?.length > 0;
 }
 
-export const postComment = async (courseId: string, scoring: number, easiness: number, comment: string) => {
+export const postComment = async (courseId: string, ACIXSTORE: string, scoring: number, easiness: number, comment: string) => {
     const user = await getUserSession();
     if (user == null) {
         throw new Error('User not authenticated');
@@ -63,6 +76,20 @@ export const postComment = async (courseId: string, scoring: number, easiness: n
     // if (!parsedData) {
     //     throw new Error('Invalid comment data');
     // }
+    
+    
+    if(await hasUserCommented(courseId)){
+        throw new Error('User has already commented');
+    }
+
+    
+    const res = await getStudentCourses(ACIXSTORE);
+    if (!res) {
+        throw new Error("Failed to fetch student courses.");
+    }
+    if(!res.courses.includes(courseId)) {
+        throw new Error('User has not taken this course');
+    }
 
     const { data, error } = await supabase_server.from('course_comments').insert({
         raw_id: courseId,
