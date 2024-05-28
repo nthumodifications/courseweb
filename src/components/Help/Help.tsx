@@ -24,6 +24,7 @@ import { useLocalStorage } from "usehooks-ts"
 import dynamic from "next/dynamic"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
+import {LoginPage} from '@/components/Forms/LoginPage';
 
 type ProgressDisplayProps = { max: number, current: number }
 const ProgressDisplay = ({ current, max }: ProgressDisplayProps) => {
@@ -84,6 +85,8 @@ const Help = () => {
     } 
   }, [open])
 
+  const [loginOpen, setLoginOpen] = useState(false);
+
 
 
   return (
@@ -112,9 +115,17 @@ const Help = () => {
             繼續
           </Button>:
           <div className="flex flex-col gap-2 w-full">
-            <Button className="w-full">登入</Button>
+            <Dialog open={loginOpen} onOpenChange={setLoginOpen}>
+              <DialogTrigger asChild>
+                <Button className="w-full">登入</Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px] h-screen">
+                <LoginPage onClose={() => setOpen(false)} />
+              </DialogContent>
+            </Dialog>
             <Button variant='outline' className="w-full">略過</Button>
           </div>}
+          
         </div>
       </DialogContent>
     </Dialog>
