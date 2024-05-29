@@ -32,6 +32,12 @@ type GetMainBusesAPIResponse = {
 
 export const getMainBuses = async () => {
     const res = await fetch(`https://api.nthusa.tw/buses/main`);
+
+    if (!res.ok) {
+        const data = await fetch(`https://nthumods.com/fallback_data/bus/main.json`);
+        return await data.json() as GetMainBusesAPIResponse;
+    }
+
     const data = await res.json();
     return data as GetMainBusesAPIResponse;
 }
@@ -47,6 +53,12 @@ type GetNandaBusesAPIResponse = {
 
 export const getNandaBuses = async () => {
     const res = await fetch(`https://api.nthusa.tw/buses/nanda`);
+
+    if (!res.ok) {
+        const data = await fetch(`https://nthumods.com/fallback_data/bus/nanda.json`);
+        return await data.json() as GetNandaBusesAPIResponse;
+    }
+
     const data = await res.json();
     return data as GetNandaBusesAPIResponse;
 }

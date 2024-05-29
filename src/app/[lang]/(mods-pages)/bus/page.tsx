@@ -46,7 +46,6 @@ const BusListingItem = ({ tab, startTime, refTime, Icon, line, title, destinatio
     const index = direction == 'up' ? 0 : line == 'green' ? 5 : line == 'red' ? 4 : 0;
 
     const handleItemClick = () => {
-        if(arrival == dict.bus.service_over) return;
         router.push(`/${language}/bus/${route}/${line == 'nanda' ? `${line}_${direction}`: line }?return_url=/${language}/bus?tab=${tab}`);
     }
 
