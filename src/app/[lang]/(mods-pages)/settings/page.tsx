@@ -24,6 +24,7 @@ import TimetablePreferences from "./TimetablePreferences";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 const DisplaySettingsCard = () => {
     const { darkMode, setDarkMode, language, setLanguage } = useSettings();
@@ -90,7 +91,7 @@ const AccountInfoSettingsCard = () => {
             <CardDescription>{dict.settings.account.description}</CardDescription>
         </CardHeader>
         <CardContent>
-            {user ? <div className="flex flex-col gap-4 py-4">
+            {user && <div className="flex flex-col gap-4 py-4">
                 <div className="grid gap-1">
                     <div className="flex items-center gap-2">
                         <h3 className="text-lg font-medium">{`${user.name_zh} ${user.name_en.length > 0 ? `(${user.name_en})`: ''}`}</h3>
@@ -104,8 +105,8 @@ const AccountInfoSettingsCard = () => {
                 <div className="flex flex-row justify-end items-center w-full">
                     <Button variant="destructive" onClick={() => setAISCredentials()}>{dict.settings.account.signout}</Button>
                 </div>
-            </div>
-            :<div className="flex flex-row gap-4 py-4" id="account">
+            </div>}
+            <div className={cn("flex flex-row gap-4 py-4", user ? 'hidden': '')} id="account">
                 <div className="flex flex-col flex-1 gap-1">
                     <h2 className="font-semibold text-base">{dict.settings.account.ccxp.title}</h2>
                     <p className="text-gray-600 dark:text-gray-400 text-sm">{dict.settings.account.ccxp.description}</p>
@@ -115,7 +116,7 @@ const AccountInfoSettingsCard = () => {
                     {ais.enabled && <span className="text-gray-600 dark:text-gray-400 text-sm">{dict.ccxp.connected}</span>}
                     {ais.enabled && !ais.ACIXSTORE && <span className="text-red-600 dark:text-red-400 text-sm">{dict.ccxp.failed}</span>}
                 </div>
-            </div>}
+            </div>
         </CardContent>
     </Card>
 }

@@ -14,7 +14,7 @@ const LoginDialog = () => {
     <DialogTrigger asChild>
       <Button variant="outline">{dict.ccxp.connect}</Button>
     </DialogTrigger>
-    <DialogContent className="sm:max-w-[425px] h-screen lg:h-auto">
+    <DialogContent className="sm:max-w-[425px] h-screen lg:h-auto w-full ">
       <ScrollArea className="h-full">
         <LoginPage onClose={() => setOpen(false)} />
       </ScrollArea>
