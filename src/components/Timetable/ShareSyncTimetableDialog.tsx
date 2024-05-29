@@ -14,7 +14,7 @@ const ComponentSkeleton = () => {
     return (
         <div className='flex flex-col gap-4'>
             <div className='flex flex-row gap-4'>
-                <Skeleton className="flex-1 p-2 bg-gray-100 rounded-md w-[300px] h-[40px]" />
+                <Skeleton className="flex-1 p-2 bg-gray-100 dark:bg-neutral-800 rounded-md w-[300px] h-[40px]" />
                 <Skeleton className="w-[40px] h-[40px] rounded-full" />
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -74,12 +74,12 @@ const ShareSyncTimetableDialog = ({ shareLink, webcalLink }: { shareLink: string
             </DialogHeader>
             {link ? <div className='flex flex-col gap-4'>
                 <div className='flex flex-row gap-4'>
-                    <input type="text" value={link} readOnly className='flex-1 p-2 bg-gray-100 rounded-md' />
-                    <Button onClick={handleCopy}><Copy/></Button>
+                    <input type="text" value={link} readOnly className='flex-1 p-2 bg-gray-100 dark:bg-neutral-800 rounded-md' />
+                    <Button onClick={handleCopy}><Copy className='w-4 h-4'/></Button>
                 </div><div className="grid grid-cols-2 gap-4">
                     <div className="flex flex-col">
                         <h3 className="text-lg font-semibold">{dict.dialogs.ShareSyncTimetableDialog['category:qr']}</h3>
-                        <div className='p-2 bg-white rounded-md w-min'>
+                        <div className='p-2 bg-white  rounded-md w-min'>
                             <QRCodeSVG value={link} />
                         </div>
                     </div>
@@ -87,10 +87,9 @@ const ShareSyncTimetableDialog = ({ shareLink, webcalLink }: { shareLink: string
                         <h3 className="text-lg font-semibold">{dict.dialogs.ShareSyncTimetableDialog['category:links']}</h3>
                         <Button variant="outline" asChild>
                             <Link 
-                            // Subject: Here is My Timetable, Body: My Timetable can be found on NTHUMODS at {shareLink}
-                            href={`mailto:?subject=Here is My Timetable&body=My Timetable can be found on NTHUMODS at ${shareLink}`}
-                            target='_blank'
-                            
+                                // Subject: Here is My Timetable, Body: My Timetable can be found on NTHUMODS at {shareLink}
+                                href={`mailto:?subject=Here is My Timetable&body=My Timetable can be found on NTHUMODS at ${shareLink}`}
+                                target='_blank'
                             >
                                 <Mail className="w-4 h-4 mr-2" />{dict.dialogs.ShareSyncTimetableDialog.links.email}
                             </Link>
