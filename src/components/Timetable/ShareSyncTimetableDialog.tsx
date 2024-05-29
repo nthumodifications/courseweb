@@ -88,7 +88,7 @@ const ShareSyncTimetableDialog = ({ shareLink, webcalLink }: { shareLink: string
                         <Button variant="outline" asChild>
                             <Link 
                                 // Subject: Here is My Timetable, Body: My Timetable can be found on NTHUMODS at {shareLink}
-                                href={`mailto:?subject=Here is My Timetable&body=My Timetable can be found on NTHUMODS at ${shareLink}`}
+                                href={`mailto:?subject=Here is My Timetable&body=My Timetable can be found on NTHUMODS at ${link}`}
                                 target='_blank'
                             >
                                 <Mail className="w-4 h-4 mr-2" />{dict.dialogs.ShareSyncTimetableDialog.links.email}
