@@ -95,12 +95,8 @@ const AccountInfoSettingsCard = () => {
                 <div className="grid gap-1">
                     <div className="flex items-center gap-2">
                         <h3 className="text-lg font-medium">{`${user.name_zh} ${user.name_en.length > 0 ? `(${user.name_en})`: ''}`}</h3>
-                        <Badge className="rounded-full px-2 py-1 text-xs" variant="outline">
-                            {user.studentid}
-                        </Badge>
                     </div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">{user.department}</div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">{user.email}</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">{user.studentid} {user.department}</div>
                 </div>
                 <div className="flex flex-row justify-end items-center w-full">
                     <Button variant="destructive" onClick={() => setAISCredentials()}>{dict.settings.account.signout}</Button>
