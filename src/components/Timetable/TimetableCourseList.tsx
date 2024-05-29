@@ -155,7 +155,7 @@ const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, set
 
 
     const shareLink = `https://nthumods.com/timetable/view?${Object.keys(courses).map(sem => `semester_${sem}=${courses[sem].map(id => encodeURI(id)).join(',')}`).join('&')}&colorMap=${encodeURIComponent(JSON.stringify(colorMap))}`
-    const webcalLink = `webcal://nthumods.com/timetable/calendar.ics?semester=${semester}&${`semester_${semester}=${courses[semester].map(id => encodeURI(id)).join(',')}`}`
+    const webcalLink = `webcals://nthumods.com/timetable/calendar.ics?semester=${semester}&${`semester_${semester}=${courses[semester].map(id => encodeURI(id)).join(',')}`}`
     const icsfileLink = `https://nthumods.com/timetable/calendar.ics?semester=${semester}&${`semester_${semester}=${courses[semester].map(id => encodeURI(id)).join(',')}`}`
 
     const displayCourseData = useMemo(() => getSemesterCourses(semester), [getSemesterCourses, semester]);
