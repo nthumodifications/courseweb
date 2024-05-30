@@ -87,6 +87,25 @@
         "venues": "Venues",
         "bus": "Bus"
     },
+    "bus": {
+        "north_gate": "North Gate",
+        "tsmc": "TSMC",
+        "nanda": "Nanda Campus",
+        "main_campus": "Main Campus",
+        "service_over": "Service Over",
+        "red_line": "Red Line",
+        "green_line": "Green Line",
+        "nanda_line": "Nanda Line",
+        "departing": "Departing",
+        "departed": "Departed",
+        "validity": "Validity",
+        "route": "Route",
+        "departure_time": "Departure Time",
+        "notes": "Notes",
+        "weekdays": "Weekdays",
+        "weekends": "Weekends",
+        "to": "To "
+    },
     "settings": {
         "account": {
             "signin": "Sign In",
