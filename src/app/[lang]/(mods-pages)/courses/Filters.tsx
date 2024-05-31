@@ -13,7 +13,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 import TimeslotSelector from '@/components/Courses/TimeslotSelector';
-import Timeslotfilteritem from './timeslotfilteritem';
+import Timeslotfilteritem from './TimeslotFilterItem';
 import FilterItem from './FilterItem';
 
 const languageSynonyms: Record<string, string> = {
