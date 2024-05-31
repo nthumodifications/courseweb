@@ -1,7 +1,7 @@
 'use server';
 import supabase_server from '@/config/supabase_server';
 import { cookies } from 'next/headers';
-import { getUserSession, isUserBanned } from './headless_ais/headless_ais';
+import { getUserSession, isUserBanned } from './headless_ais';
 import { isSameDay } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { ServerAction } from '@/types/actions';

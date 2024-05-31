@@ -51,6 +51,7 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
                 const url = 'http://www.ccxp.nthu.edu.tw/ccxp/INQUIRE';
                 const res = await fetch(url);
                 const body = await res.text();
+                console.log(body)
                 if(!body) {
                     continue;
                 }
@@ -138,6 +139,7 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
                 return { ACIXSTORE };
             }
         }
+        console.log('congrats')
         const result = await ocrAndLogin();
 
         const html = await fetch(`https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/4/4.19/JH4j002.php?ACIXSTORE=${result.ACIXSTORE}&user_lang=`, {
@@ -163,6 +165,8 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
             .then(arrayBuffer => iconv.decode(Buffer.from(arrayBuffer), 'big5').toString())
         const dom = new jsdom.JSDOM(html);
         const doc = dom.window.document;
+
+        console.log('what')
 
         const form = doc.querySelector('form[name="register"]');
         if(form == null) {

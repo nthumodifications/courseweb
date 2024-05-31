@@ -3,7 +3,7 @@ import {HeadlessAISStorage, LoginError, UserJWT} from '@/types/headless_ais';
 import { toast } from "@/components/ui/use-toast";
 import { FC, PropsWithChildren, createContext, useContext, useEffect, useState } from "react";
 import { useLocalStorage } from 'usehooks-ts';
-import {refreshUserSession, signInToCCXP} from '@/lib/headless_ais/headless_ais';
+import {refreshUserSession, signInToCCXP} from '@/lib/headless_ais';
 import useDictionary from "@/dictionaries/useDictionary";
 import { useCookies } from "react-cookie";
 import { decode } from 'jsonwebtoken';
