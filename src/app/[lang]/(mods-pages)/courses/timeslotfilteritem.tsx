@@ -53,6 +53,14 @@ export default ({
   const refine = mode == 'exact' ? timesRefine : separateRefine
   const searchForItems = mode == 'exact' ? timesSearchForItems : separateSearchForItems
 
+  const customSort = (a: string, b: string) => {
+    if (a[0] == b[0]) {
+      return parseInt(a.slice(1)) - parseInt(b.slice(1))
+    }
+    const arr = ['M', 'T', 'W', 'R', 'F', 'S']
+    return arr.indexOf(a[0]) - arr.indexOf(b[0])
+  }
+
   useEffect(() => {
     if (timeslotValue.length > 0) {
       clearRefine()
@@ -61,7 +69,7 @@ export default ({
           refine(timeslotValue[i])
         }
       } else {
-        refine([...timeslotValue].sort().join(''))
+        refine([...timeslotValue].sort(customSort).join(''))
       }
     }
   }, [mode])
@@ -78,7 +86,6 @@ export default ({
     setSearchValue(name)
     if (!clientSearch) {
       searchForItems(name)
-      console.log('hello')
     }
     if (name == '') {
       const refinedItems = items.filter((item) => item.isRefined)
@@ -110,15 +117,15 @@ export default ({
         refine(timeslotValue[i])
       }
     } else {
-      refine([...timeslotValue].sort().join(''))
+      refine([...timeslotValue].sort(customSort).join(''))
     }
   }, [timeslotValue])
 
-  return <div className="flex flex-col w-full">
+  return <div className="flex flex-col w-full gap-1">
     <Popover modal={true} onOpenChange={openChange}>
       <PopoverTrigger asChild>
         <Button variant="outline" className={`w-full text-left justify-start h-max`}>
-          <span className="w-56 truncate">
+          <span className="truncate">
           {searching ?
             "Selecting..." :
             (selected.length == 0 ?
@@ -136,7 +143,7 @@ export default ({
       </PopoverContent>
     </Popover>
 
-    <div className="flex">
+    <div className="flex gap-1">
       <Button variant="outline">
         Empty time
       </Button>

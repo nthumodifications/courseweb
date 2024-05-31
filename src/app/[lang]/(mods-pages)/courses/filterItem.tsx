@@ -53,7 +53,6 @@ export default ({
     setSearchValue(name)
     if (!clientSearch) {
       searchForItems(name)
-      console.log('hello')
     }
     if (name == '') {
       const refinedItems = items.filter((item) => item.isRefined)
