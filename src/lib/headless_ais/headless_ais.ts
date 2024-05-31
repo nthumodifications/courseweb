@@ -7,6 +7,29 @@ import iconv from 'iconv-lite';
 import supabase_server from "@/config/supabase_server";
 import crypto from 'crypto';
 
+const encrypt = (text: string) => {
+    const iv = crypto.randomBytes(16);
+    const key = Buffer.from(process.env.NTHU_HEADLESS_AIS_ENCRYPTION_KEY!, 'hex');
+    const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
+    const encrypted = cipher.update(text, 'utf8', 'base64') + cipher.final('base64');
+    const encryptedPassword = iv.toString('base64') + encrypted;
+    return encryptedPassword;
+}
+
+const decrypt = (encryptedPassword: string) => {
+    const key = Buffer.from(process.env.NTHU_HEADLESS_AIS_ENCRYPTION_KEY!, 'hex');
+    
+    // Split the IV and the encrypted text
+    const iv = Buffer.from(encryptedPassword.slice(0, 24), 'base64'); // First 24 characters represent the IV
+    const encryptedText = encryptedPassword.slice(24); // The rest is the encrypted text
+    
+    const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
+    let decrypted = decipher.update(encryptedText, 'base64', 'utf8');
+    decrypted += decipher.final('utf8');
+    return decrypted;
+}
+
+
 type SignInToCCXPResponse = Promise<{ ACIXSTORE: string, encryptedPassword: string } | { error: { message: string } }>;
 /**
  * Attempts to login user to CCXP, takes in raw studentid and password
@@ -165,11 +188,7 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
         await cookies().set('accessToken', token, { path: '/', maxAge: 60 * 60 * 24, sameSite: 'strict', secure: true });
 
         // Encrypt user password 
-        const iv = crypto.randomBytes(16);
-        const key = Buffer.from(process.env.NTHU_HEADLESS_AIS_ENCRYPTION_KEY!, 'hex');
-        const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
-        const encrypted = cipher.update(password, 'utf8', 'base64') + cipher.final('base64');
-        const encryptedPassword = iv.toString('base64') + encrypted;
+        const encryptedPassword = encrypt(password);
         
         return { ...result, encryptedPassword };
     } catch (err) {
@@ -181,17 +200,7 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
 type RefreshUserSessionResponse = Promise<{ ACIXSTORE: string } | { error: { message: string } }>;
 export const refreshUserSession = async (studentid: string, encryptedPassword: string): RefreshUserSessionResponse => {
     // Decrypt password
-    const key = Buffer.from(process.env.NTHU_HEADLESS_AIS_ENCRYPTION_KEY!, 'hex');
-    
-    // Split the IV and the encrypted text
-    const iv = Buffer.from(encryptedPassword.slice(0, 24), 'base64'); // First 24 characters represent the IV
-    const encryptedText = encryptedPassword.slice(24); // The rest is the encrypted text
-    
-    const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
-    let decrypted = decipher.update(encryptedText, 'base64', 'utf8');
-    decrypted += decipher.final('utf8');
-    
-    const password =  decrypted;
+    const password =  decrypt(encryptedPassword);
 
     const res = await signInToCCXP(studentid, password);
     if('error' in res && res.error) {
