@@ -6,9 +6,11 @@ import Link from "next/link";
 const DownloadSyllabus = ({ courseId }: { courseId: RawCourseID }) => {
     const fileURL = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/syllabus/${encodeURIComponent(courseId)}.pdf`;
 
-    return <Link href={fileURL} target="_blank">
-        <Button variant="outline" ><DownloadCloud className="h-4 w-4 mr-2"/> 下載 PDF</Button>
-    </Link>
+    return <Button variant="outline" asChild>
+        <Link href={fileURL} target="_blank">
+            <DownloadCloud className="h-4 w-4 mr-2"/> 下載 PDF
+        </Link>
+    </Button>
 }
 
 export default DownloadSyllabus;
