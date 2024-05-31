@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { ResolvingMetadata } from "next";
-import {AlertTriangle, ChevronLeft, CheckCircle, ArrowRight} from 'lucide-react';
+import {AlertTriangle, ChevronLeft, CheckCircle, ArrowRight, Share, Share2} from 'lucide-react';
 import Link from "next/link";
 import DownloadSyllabus from "./DownloadSyllabus";
 import Fade from "@/components/Animation/Fade";
@@ -26,6 +26,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { Dialog, DialogContent, DialogTrigger } from "../ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { cn } from "@/lib/utils";
+import ShareCourseButton from "./ShareCourseButton";
 
 const SelectCourseButtonDynamic = dynamicFn(() => import('@/components/Courses/SelectCourseButton'), { ssr: false });
 const TimetableDynamic = dynamicFn(() => import('@/components/Timetable/Timetable'), { ssr: false });
@@ -113,11 +114,15 @@ const CourseDetailContainer = async ({ lang, courseId, bottomAware = false }: { 
                         }
                         <CrossDisciplineTagList course={course} />
                     </div>
-                    <div className="hidden md:block absolute top-0 right-0 mt-4 mr-4">
+                    <div className="hidden md:flex flex-col gap-2 absolute top-0 right-0 mt-4 mr-4">
                         <SelectCourseButtonDynamic courseId={course.raw_id} />
+                        <ShareCourseButton link={`https://nthumods.com/courses/${course.raw_id}`} displayName={`${course.name_zh} ${course.teacher_zh.join(',')}`}/>
                     </div>
-                    <div className={cn("md:hidden fixed left-0 pt-2 px-4 shadow-md w-full h-16 flex flex-col bg-background z-50", bottomAware ? 'bottom-20': 'bottom-0')}>
-                        <SelectCourseButtonDynamic courseId={course.raw_id} />
+                    <div className={cn("md:hidden fixed left-0 pt-2 px-4 shadow-md w-full h-16 flex flex-row gap-2 bg-background z-50", bottomAware ? 'bottom-20': 'bottom-0')}>
+                        <ShareCourseButton link={`https://nthumods.com/courses/${course.raw_id}`} displayName={`${course.name_zh} ${course.teacher_zh.join(',')}`}/>
+                        <div className="flex-1 flex flex-col">
+                            <SelectCourseButtonDynamic courseId={course.raw_id} />
+                        </div>
                     </div>
                 </div>
                 <Separator />
