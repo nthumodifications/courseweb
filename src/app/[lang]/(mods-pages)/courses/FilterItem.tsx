@@ -2,7 +2,7 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Check } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button"
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -74,24 +74,35 @@ const FilterItem =  ({
     refine(value)
   }
 
+  const clear = () => {
+    selected.forEach((value) => {
+      refine(value)
+    })
+  }
+
   return <Popover modal={true} onOpenChange={openChange}>
-    <PopoverTrigger asChild>
       <Button variant="outline" className={`w-full justify-start h-max`}>
-        {searching ?
-          "Selecting..." :
-          (selected.length == 0 ? 
-            'All' :
-            <div className="flex flex-col gap-1">
-              {selected.map(i => 
-                <Badge variant="outline" className="">
-                  {synonms[i] ? `${i} - ${synonms[i]}` : i}
-                </Badge>
-              )}
-            </div>
-          )
-        }
+        <PopoverTrigger asChild>
+          <div className="flex-1 text-left">
+          {searching ?
+            "Selecting..." :
+            (selected.length == 0 ? 
+              'All' :
+              <div className="flex flex-col gap-1">
+                {selected.map(i => 
+                  <Badge variant="outline" className="">
+                    {synonms[i] ? `${i} - ${synonms[i]}` : i}
+                  </Badge>
+                )}
+              </div>
+            )
+          }
+          </div>
+        </PopoverTrigger>
+        {selected.length > 0 && <X className="pl-2 w-6 h-6 cursor-pointer" onClick={clear}/>}
       </Button>
-    </PopoverTrigger>
+      
+    
     <PopoverContent className="p-0" align="start">
       <Command shouldFilter={clientSearch}>
         {searchable && 

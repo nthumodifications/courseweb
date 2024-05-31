@@ -41,6 +41,7 @@ import { Button } from '@/components/ui/button';
 import { lastSemester } from '@/const/semester';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import TimetableCourseList from '@/components/Timetable/TimetableCourseList';
+import ClearAllButton from './ClearAllButton';
 
 const SemesterSelector = () => {
   // refine semester for semester selector
@@ -62,7 +63,7 @@ const SemesterSelector = () => {
       // default to the latest semester
       refine(lastSemester.id);
     }
-  }, [canRefine]);
+  }, [canRefine, items]);
 
   const handleSelect = (v: string) => {
     refine(v);
@@ -133,20 +134,27 @@ const CourseSearchContainer = () => {
                 </Button>
               </DrawerTrigger>
               <DrawerContent >
-                <Filters />
+                <ScrollArea className="w-full max-h-[90vh] overflow-auto">
+                  <div className='flex flex-row justify-end px-4 py-2 w-full'>
+                    <ClearAllButton />
+                  </div>
+                  <Filters />
+                </ScrollArea>
               </DrawerContent>
             </Drawer>
           </div>
           <Separator orientation="vertical" className='h-full' />
           <div className='md:hidden'>
-            <Drawer >
+            <Drawer>
               <DrawerTrigger asChild>
                 <Button variant='ghost' size='icon'>
                   <Calendar size="16" />
                 </Button>
               </DrawerTrigger>
-              <DrawerContent >
-                <Timetable timetableData={timetableData} vertical={vertical} renderTimetableSlot={renderTimetableSlot} />
+              <DrawerContent>
+                <ScrollArea className="w-full max-h-[80vh] overflow-auto p-2">
+                  <Timetable timetableData={timetableData} vertical={vertical} renderTimetableSlot={renderTimetableSlot} />
+                </ScrollArea>
               </DrawerContent>
             </Drawer>
           </div>

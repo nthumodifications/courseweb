@@ -1,14 +1,11 @@
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
-import { CalendarDays, FilterIcon, Loader2Icon, LoaderIcon, Search, X } from "lucide-react";
-import { InstantSearch, SearchBox, InfiniteHits } from 'react-instantsearch';
+import { InfiniteHits, useClearRefinements } from 'react-instantsearch';
 import { createInfiniteHitsSessionStorageCache } from 'instantsearch.js/es/lib/infiniteHitsCache';
-import { InstantSearchNext } from 'react-instantsearch-nextjs';
 import algoliasearch from 'algoliasearch/lite';
 import useDictionary from "@/dictionaries/useDictionary";
 import CourseListItem from "@/components/Courses/CourseListItem";
 import Filter from './Filters'
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Button } from "@/components/ui/button";
+import ClearAllButton from '@/app/[lang]/(mods-pages)/courses/ClearAllButton';
 
 type SearchClient = ReturnType<typeof algoliasearch>;
 type InfiniteHitsCache = ReturnType<typeof createInfiniteHitsSessionStorageCache>;
@@ -27,15 +24,14 @@ const SearchContainer = ({
   
   const dict = useDictionary();
 
+
   return <div className="flex w-full gap-4">
     <div className="hidden md:flex flex-col gap-4 w-72">
       <div className="flex justify-between items-end">
         <span className="text-2xl">
           Filters
         </span>
-        <button className="text-xs">
-          Clear all
-        </button>
+        <ClearAllButton />
       </div>
       <ScrollArea className="border rounded-2xl">
         <Filter/>

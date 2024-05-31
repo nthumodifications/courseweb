@@ -2,10 +2,12 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { useClearRefinements } from "react-instantsearch";
 import { Trash } from "lucide-react";
 import { Button } from "@/components/ui/button"
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import TimeslotSelector from "@/components/Courses/TimeslotSelector";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import useCustomRefinementList from "./useCustomRefinementList";
+import useUserTimetable from "@/hooks/contexts/useUserTimetable";
+import { scheduleTimeSlots } from "@/const/timetable";
 
 export default ({
   searchable = false,
@@ -96,6 +98,12 @@ export default ({
     refine(value)
   }
 
+  const clear = () => {
+    setTimeslotValue([])
+    setSelected([])
+    clearRefine()
+  }
+
   const [timeslotValue, setTimeslotValue] = useState<string[]>([])
 
   useEffect(() => {
@@ -109,6 +117,24 @@ export default ({
     }
   }, [timeslotValue])
 
+  const { getSemesterCourses, semester, setSemester } = useUserTimetable();
+
+  const handleFillTimes = useCallback(() => {
+    const timeslots = getSemesterCourses(semester).map(course => course.times.map(time => time.match(/.{1,2}/g) ?? [] as unknown as string[]).flat()).flat();
+    const timeslotSet = new Set(timeslots);
+    const timeslotList = Array.from(timeslotSet);
+    const days = ['M', 'T', 'W', 'R', 'F', 'S'];
+    const selectDays: string[] = [];
+    scheduleTimeSlots.forEach(timeSlot => {
+        days.forEach(day => {
+            if (!timeslotList.includes(day + timeSlot.time)) {
+                selectDays.push(day + timeSlot.time);
+            }
+        })
+    })
+    setTimeslotValue(selectDays);
+  }, [getSemesterCourses, semester]);
+
   return <div className="flex flex-col w-full gap-1">
     <Popover modal={true} onOpenChange={openChange}>
       <PopoverTrigger asChild>
@@ -119,7 +145,8 @@ export default ({
             (selected.length == 0 ?
               'All' :
               <div className="flex flex-col gap-1">
-                {selected.join('')}
+                {[...timeslotValue].sort(customSort).slice(0, 8).join('')}
+                {timeslotValue.length > 8 && '...'}
               </div>
             )
           }
@@ -132,7 +159,7 @@ export default ({
     </Popover>
 
     <div className="flex gap-1">
-      <Button variant="outline">
+      <Button variant="outline" onClick={handleFillTimes}>
         Empty time
       </Button>
 
@@ -147,11 +174,7 @@ export default ({
       </Select>
 
       <div>
-        <Button variant="outline" size="icon" onClick={() => {
-          setTimeslotValue([])
-          setSelected([])
-          clearRefine()
-        }}>
+        <Button variant="outline" size="icon" onClick={clear}>
           <Trash size="16" />
         </Button>
       </div>
