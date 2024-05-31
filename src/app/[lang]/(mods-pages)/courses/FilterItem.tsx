@@ -1,22 +1,12 @@
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
-import { useRefinementList } from "react-instantsearch"
-import type { RefinementListItem } from 'instantsearch.js/es/connectors/refinement-list/connectRefinementList';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-  CommandSeparator, 
-  CommandShortcut,
-} from "@/components/ui/command"
+import { Command, CommandEmpty, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button"
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import useCustomRefinementList from "./useCustomRefinementList";
 
 const FilterItem =  ({
   attribute,
@@ -43,7 +33,7 @@ const FilterItem =  ({
     canToggleShowMore,
     isShowingMore,
     toggleShowMore,
-  } = useRefinementList({
+  } = useCustomRefinementList({
     attribute: attribute,
     limit: limit,
   })

@@ -1,23 +1,11 @@
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
-import { useClearRefinements, useRefinementList } from "react-instantsearch"
-import type { RefinementListItem } from 'instantsearch.js/es/connectors/refinement-list/connectRefinementList';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-  CommandSeparator,
-  CommandShortcut,
-} from "@/components/ui/command"
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
-import { Check, Trash, XIcon } from "lucide-react";
+import { useClearRefinements } from "react-instantsearch";
+import { Trash } from "lucide-react";
 import { Button } from "@/components/ui/button"
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import TimeslotSelector from "@/components/Courses/TimeslotSelector";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import useCustomRefinementList from "./useCustomRefinementList";
 
 export default ({
   searchable = false,
@@ -36,7 +24,7 @@ export default ({
     items: timesItems,
     refine: timesRefine,
     searchForItems: timesSearchForItems,
-  } = useRefinementList({
+  } = useCustomRefinementList({
     attribute: 'times', 
     limit: 500,
   })
@@ -44,7 +32,7 @@ export default ({
     items: separateItems,
     refine: separateRefine,
     searchForItems: separateSearchForItems,
-  } = useRefinementList({
+  } = useCustomRefinementList({
     attribute: 'separate_times', 
     limit: 500,
   })
