@@ -15,7 +15,7 @@ const CourseListItem: FC<{ course: CourseSyllabusView, hasTaken?: boolean }> = (
     return <div className="px-4 border-b border-gray-200 dark:border-neutral-800 pb-4 relative @container">
         <div className="flex flex-row gap-4">
             <div className='flex-1 space-y-4'>
-                <div className="mb-3 space-y-1">
+                <div className="mb-3 space-y-1 pt-3 @md:pt-0">
                     <div className='flex flex-row gap-2 items-center mb-1'>
                         {course.closed_mark && <div className={`flex flex-row items-center justify-center min-w-[65px] py-1 px-2 text-sm select-none rounded-md bg-red-400 dark:bg-red-600`}>{course.closed_mark}</div>}
                         {hasTaken && <div className={`flex flex-row items-center justify-center min-w-[65px] py-1 px-2 text-sm select-none rounded-md bg-nthu-400 dark:bg-nthu-600`}>已修課</div>}
@@ -59,7 +59,7 @@ const CourseListItem: FC<{ course: CourseSyllabusView, hasTaken?: boolean }> = (
                 </div>
             </div>
         </div>
-        <div className='absolute top-2 right-2'>
+        <div className='absolute top-0 right-2'>
             <SelectCourseButton courseId={course.raw_id as string}/>
         </div>
     </div>
