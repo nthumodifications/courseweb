@@ -54,13 +54,6 @@ const Filters = () => {
         />
       </div>
 
-      <div className="w-full flex flex-col gap-2">
-        <span className="text-sm">{dict.course.refine.time}</span>
-        <Timeslotfilteritem
-          clientSearch={true}
-        />
-      </div>
-
       <div className="flex flex-col gap-2">
         <span className="text-sm">
           Tags
@@ -70,6 +63,13 @@ const Filters = () => {
           clientSearch={true}
         />
       </div>
+
+      <div className="w-full flex flex-col gap-2">
+        <span className="text-sm">{dict.course.refine.time}</span>
+        <Timeslotfilteritem
+          clientSearch={true}
+        />
+      </div>      
     </div>
 
     <Accordion type="multiple">
