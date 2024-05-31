@@ -28,6 +28,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { cn } from "@/lib/utils";
 import ShareCourseButton from "./ShareCourseButton";
 
+const PDFViewerDynamic = dynamicFn(() => import('@/components/CourseDetails/PDFViewer'), { ssr: false });
 const SelectCourseButtonDynamic = dynamicFn(() => import('@/components/Courses/SelectCourseButton'), { ssr: false });
 const TimetableDynamic = dynamicFn(() => import('@/components/Timetable/Timetable'), { ssr: false });
 const CommmentsSectionDynamic = dynamicFn(() => import('@/components/CourseDetails/CommentsContainer').then(m => m.CommmentsSection), { ssr: false });
@@ -65,7 +66,7 @@ const getOtherClasses = async (course: MinimalCourse) => {
     return data as unknown as (CourseDefinition & { course_scores: CourseScoreDefinition | undefined })[];
 }
 
-const CourseDetailContainer = async ({ lang, courseId, bottomAware = false }: { lang: Language, courseId: string, bottomAware?: boolean }) => {
+const CourseDetailContainer = async ({ lang, courseId, bottomAware = false, modal = false }: { lang: Language, courseId: string, bottomAware?: boolean, modal?: boolean }) => {
     const dict = await getDictionary(lang);
     const course = await getCourseWithSyllabus(courseId);
 
@@ -91,7 +92,7 @@ const CourseDetailContainer = async ({ lang, courseId, bottomAware = false }: { 
     const timetableData = showTimetable ? createTimetableFromCourses([course as MinimalCourse], colorMap) : [];
 
     return <Fade>
-        <div className="flex flex-col pb-6 relative max-w-[min(72rem,calc(100vw-64px))]">
+        <div className={cn("flex flex-col pb-6 relative", modal ? "max-w-[min(72rem,calc(100vw-52px))]": "max-w-[min(72rem,calc(100vw-16px))]")}>
             <div className={cn("flex flex-col gap-4 pb-20 md:pb-0")}>
                 <div className="flex flex-col md:flex-row md:items-end gap-4">
                     <div className="space-y-4 flex-1 w-full">
@@ -135,9 +136,11 @@ const CourseDetailContainer = async ({ lang, courseId, bottomAware = false }: { 
                         {!missingSyllabus && <div className="flex flex-col gap-2">
                             <h3 className="font-semibold text-xl" id="description">{dict.course.details.description}</h3>
                             <p className="whitespace-pre-line text-sm">
-                                {course.course_syllabus.content ?? <>
-                                    <DownloadSyllabus courseId={course.raw_id} />
-                                </>}</p>
+                            {course.course_syllabus.content ??<div className="flex flex-col gap-2">
+                                <DownloadSyllabus courseId={course.raw_id} />
+                                <PDFViewerDynamic file={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/syllabus/${encodeURIComponent(course.raw_id)}.pdf`}/>
+                            </div>}
+                            </p>
                         </div>}
                         {course?.prerequisites && <div className="flex flex-col gap-2">
                             <h3 className="font-semibold text-xl" id="prerequesites">{dict.course.details.prerequesites}</h3>
@@ -237,7 +240,7 @@ const CourseDetailContainer = async ({ lang, courseId, bottomAware = false }: { 
                             </Table>
                         </div>
                     </div>
-                    <div className="w-[284px] flex flex-col gap-4">
+                    <div className="w-full lg:w-[284px] flex flex-col gap-4">
                         <ScrollArea className="hidden lg:flex">
                             <div className="space-y-2">
                                 <ul className="m-0 list-none">
