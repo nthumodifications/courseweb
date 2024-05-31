@@ -25,7 +25,9 @@ const CourseListItem: FC<{ course: CourseSyllabusView, hasTaken?: boolean }> = (
                     <h3 className="text-sm mt-0 break-words">{course.name_en} - <span className='w-max'>{(course.teacher_en ?? []).join(',')}</span></h3>
                 </div>
                 <div className="space-y-2 ">
-                    <p className='text-sm whitespace-pre-line line-clamp-4 text-black dark:text-neutral-200'>{course.brief}</p>
+                    <p className='text-sm line-clamp-4 text-black dark:text-neutral-200'>
+                        {course.brief}
+                    </p>
                     <p className='text-sm whitespace-pre-line text-gray-400 dark:text-neutral-600'>{course.restrictions}</p>
                     <p className='text-sm whitespace-pre-line text-gray-400 dark:text-neutral-600'>{course.note}</p>
                     <div className='space-y-1 @md:hidden'>

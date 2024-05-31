@@ -4,6 +4,7 @@ import { Database } from "@/types/supabase";
 import {decode} from 'html-entities';
 import { NextRequest, NextResponse } from "next/server";
 import algolia from "@/config/algolia_server";
+import TimeslotHeader from "@/components/Timetable/TimeslotHeader";
 
 const baseUrl = `https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/OPENDATA/open_course_data.json`;
 
@@ -42,7 +43,11 @@ const syncCoursesToAlgolia = async (semester: string) => {
     }, [] as Database['public']['Tables']['courses']['Row'][][]);
 
     for(const chunk of chunked) {
-        const algoliaChunk = chunk.map(course => ({...course, objectID: course.raw_id}))
+        const algoliaChunk = chunk.map(course => ({
+            ...course, 
+            objectID: course.raw_id,
+            separate_times: course.times.flatMap(s => s.match(/.{1,2}/g)),
+        }))
         algolia.saveObjects(algoliaChunk);
     }
 

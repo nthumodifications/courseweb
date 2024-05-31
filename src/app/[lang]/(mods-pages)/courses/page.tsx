@@ -1,6 +1,7 @@
 'use client'
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -9,6 +10,7 @@ import {
 } from "@/components/ui/dialog"
 import { useState } from 'react';
 import Courses from './courses';
+import { Separator } from "@/components/ui/separator";
 
 const CourseDialog = () => {
   const [open, setOpen] = useState(true);
@@ -18,7 +20,7 @@ const CourseDialog = () => {
       <DialogTrigger>
         Open
       </DialogTrigger>
-      <DialogContent className="h-[calc(100vh-2rem)] max-w-[calc(100vw-2rem)] overflow-hidden">
+      <DialogContent className="p-0 h-screen max-w-screen w-screen gap-0">
         <Courses />
       </DialogContent>
     </Dialog>
