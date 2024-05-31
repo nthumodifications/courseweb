@@ -58,7 +58,7 @@ const useHeadlessAISProvider = () => {
         setLoading(true);
         return await signInToCCXP(username, password)
             .then((res) => {
-                console.log(res)
+                if(!res) throw new Error("太多人在使用代理登入，請稍後再試");
                 if('error' in res) throw new Error(res.error.message); 
                 setHeadlessAIS({
                     enabled: true,
