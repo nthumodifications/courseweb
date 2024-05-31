@@ -1,9 +1,8 @@
-import { Search, Trash, AlertTriangle, Copy, Repeat, GripVertical, Loader2 } from 'lucide-react';
+import { Search, Trash, AlertTriangle, Copy, GripVertical, Loader2 } from 'lucide-react';
 import { useSettings } from '@/hooks/contexts/settings';
 import useUserTimetable from '@/hooks/contexts/useUserTimetable';
 import { useRouter } from 'next/navigation';
 import CourseSearchbar from './CourseSearchbar';
-import ThemeChangableAlert from '../Alerts/ThemeChangableAlert';
 import useDictionary from '@/dictionaries/useDictionary';
 import { useMemo } from 'react';
 import { hasConflictingTimeslots, hasSameCourse, hasTimes } from '@/helpers/courses';
@@ -37,10 +36,12 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import Compact from '@uiw/react-color-compact';
 import { Separator } from '../ui/separator';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '../ui/hover-card';
-const DownloadTimetableDialogDynamic = dynamic(() => import('./DownloadTimetableDialog'), { ssr: false, loading: () => <Button variant='outline' disabled><Loader2 className='w-4 h-4 animate-spin'/></Button>  })
-const ShareSyncTimetableDialogDynamic = dynamic(() => import('./ShareSyncTimetableDialog'), { ssr: false, loading: () => <Button variant='outline' disabled><Loader2 className='w-4 h-4 animate-spin'/></Button> })
-const HeadlessSyncCourseButtonDynamic = dynamic(() => import('./HeadlessSyncCourseButton'), { ssr: false, loading: () => <Button variant='outline' disabled><Loader2 className='w-4 h-4 animate-spin'/></Button>  })
 import { TimetableItemDrawer } from './TimetableItemDrawer';
+
+export const DownloadTimetableDialogDynamic = dynamic(() => import('./DownloadTimetableDialog'), { ssr: false, loading: () => <Button variant='outline' disabled><Loader2 className='w-4 h-4 animate-spin'/></Button>  })
+export const ShareSyncTimetableDialogDynamic = dynamic(() => import('./ShareSyncTimetableDialog'), { ssr: false, loading: () => <Button variant='outline' disabled><Loader2 className='w-4 h-4 animate-spin'/></Button> })
+export const HeadlessSyncCourseButtonDynamic = dynamic(() => import('./HeadlessSyncCourseButton'), { ssr: false, loading: () => <Button variant='outline' disabled><Loader2 className='w-4 h-4 animate-spin'/></Button>  })
+export const CourseSearchContainerDynamic = dynamic(() => import('@/app/[lang]/(mods-pages)/courses/CourseSearchContainer'), { ssr: false, loading: () => <Loader2 className='w-4 h-4 animate-spin'/>  })
 
 const TimetableCourseListItem = ({ 
     course, 
@@ -146,33 +147,24 @@ const TimetableCourseListItem = ({
     </div>
 }
 
-const TimetableCourseList = ({ 
-    vertical, 
-    setVertical,
-    hideSettings = false
-}: { 
-    vertical: boolean, 
-    setVertical: (v: boolean) => void,
-    hideSettings?: boolean
+export const TimetableCourseList = ({
+    semester,
+    vertical = true
+}: {
+    semester: string,
+    vertical?: boolean
 }) => {
     const { language } = useSettings();
     const dict = useDictionary();
+    const router = useRouter();
 
     const {
-        semester,
         getSemesterCourses,
         courses,
         addCourse,
         colorMap,
         setCourses
     } = useUserTimetable();
-
-    const router = useRouter();
-
-
-    const shareLink = `https://nthumods.com/timetable/view?${Object.keys(courses).map(sem => `semester_${sem}=${courses[sem].map(id => encodeURI(id)).join(',')}`).join('&')}&colorMap=${encodeURIComponent(JSON.stringify(colorMap))}`
-    const webcalLink = `webcals://nthumods.com/timetable/calendar.ics?semester=${semester}&${`semester_${semester}=${(courses[semester] ?? []).map(id => encodeURI(id)).join(',')}`}`
-    const icsfileLink = `https://nthumods.com/timetable/calendar.ics?semester=${semester}&${`semester_${semester}=${(courses[semester] ?? []).map(id => encodeURI(id)).join(',')}`}`
 
     const displayCourseData = useMemo(() => getSemesterCourses(semester), [getSemesterCourses, semester]);
 
@@ -182,18 +174,7 @@ const TimetableCourseList = ({
 
     const duplicates = useMemo(() => hasSameCourse(displayCourseData as MinimalCourse[]), [displayCourseData]);
 
-    const timeConflicts = useMemo(() => hasConflictingTimeslots(displayCourseData as MinimalCourse[]), [displayCourseData]);
-
-    const renderButtons = () => {
-        return <div className="grid grid-cols-2 grid-rows-2 gap-2">
-            <Button variant="outline" onClick={() => setVertical(!vertical)}><Repeat className="w-4 h-4 mr-1" /> {vertical ? dict.timetable.actions.horizontal_view : dict.timetable.actions.vertical_view}</Button>
-            <DownloadTimetableDialogDynamic icsfileLink={icsfileLink} />
-            <ShareSyncTimetableDialogDynamic shareLink={shareLink} webcalLink={webcalLink} />
-            <HeadlessSyncCourseButtonDynamic />
-        </div>
-    }
-
-    const sensors = useSensors(
+    const timeConflicts = useMemo(() => hasConflictingTimeslots(displayCourseData as MinimalCourse[]), [displayCourseData]);    const sensors = useSensors(
         useSensor(PointerSensor),
         useSensor(KeyboardSensor, {
             coordinateGetter: sortableKeyboardCoordinates,
@@ -218,11 +199,7 @@ const TimetableCourseList = ({
         }
     }
 
-    return <div className="flex flex-col gap-4">
-        {!hideSettings && <>
-            {renderButtons()}
-            <CourseSearchbar onAddCourse={course => addCourse(course.raw_id)} semester={semester} />
-        </>}
+    return <div className='flex flex-col gap-2'>
         <div className={`${!vertical ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ' : 'flex flex-col'} gap-4 px-4 flex-wrap`}>
             <DndContext
                 sensors={sensors}
@@ -265,8 +242,6 @@ const TimetableCourseList = ({
                 <span className='text-gray-600'>總學分</span>
             </div>
         </div>
-        {!hideSettings && <ThemeChangableAlert />}
     </div>
 }
-
 export default TimetableCourseList;

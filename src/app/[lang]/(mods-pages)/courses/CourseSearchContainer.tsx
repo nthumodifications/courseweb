@@ -22,11 +22,9 @@ const sessionStorageCache = createInfiniteHitsSessionStorageCache();
 
 import SearchContainer from './SearchContainer';
 import { Separator } from '@/components/ui/separator';
-import { useEffect, useState } from 'react';
-import type { SearchBoxProps } from 'react-instantsearch';
+import { useEffect } from 'react';
 import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
 import Filters from './Filters';
-import useCustomRefinementList from './useCustomRefinementList';
 import useCustomMenu from './useCustomMenu';
 import {
   Select,
@@ -36,7 +34,6 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { toPrettySemester } from '@/helpers/semester';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { lastSemester } from '@/const/semester';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -48,13 +45,8 @@ const SemesterSelector = () => {
   // refine semester for semester selector
   const { 
     items,
-    createURL,
     refine,
     canRefine,
-    isShowingMore,
-    toggleShowMore,
-    canToggleShowMore,
-    sendEvent,
    } = useCustomMenu({
     attribute: 'semester',
   });
@@ -85,6 +77,34 @@ const SemesterSelector = () => {
 
 }
 
+const TimetableWithSemester = () => {
+  const { getSemesterCourses, setSemester, colorMap } = useUserTimetable();
+  
+  const { 
+    items,
+   } = useCustomMenu({
+    attribute: 'semester',
+  });
+
+  const semester = items.find(item => item.isRefined)?.value ?? lastSemester.id;
+
+  return <Timetable timetableData={createTimetableFromCourses(getSemesterCourses(semester) as MinimalCourse[], colorMap)} renderTimetableSlot={renderTimetableSlot} />
+}
+
+const TimetableCourseListWithSemester = () => {
+  const { getSemesterCourses, setSemester } = useUserTimetable();
+  
+  const { 
+    items,
+   } = useCustomMenu({
+    attribute: 'semester',
+  });
+
+  const semester = items.find(item => item.isRefined)?.value ?? lastSemester.id;
+
+  return <TimetableCourseList semester={semester} vertical={true} />
+}
+
 const CourseSearchContainer = () => {
 
   const { getSemesterCourses, semester, setSemester, colorMap } = useUserTimetable();
@@ -97,7 +117,7 @@ const CourseSearchContainer = () => {
     indexName="nthu_courses"
     routing
   >
-    <div className="flex flex-col h-screen p-4 md:p-8 gap-8">
+    <div className="flex flex-col h-screen px-2 pt-6 md:p-8 gap-8">
 
       <div className="">
         <div className="bg-neutral-100 dark:bg-neutral-950 rounded-2xl flex items-center p-4">
@@ -155,7 +175,7 @@ const CourseSearchContainer = () => {
               </DrawerTrigger>
               <DrawerContent>
                 <ScrollArea className="w-full max-h-[80vh] overflow-auto p-2">
-                  <Timetable timetableData={timetableData} vertical={vertical} renderTimetableSlot={renderTimetableSlot} />
+                  <TimetableWithSemester />
                 </ScrollArea>
               </DrawerContent>
             </Drawer>
@@ -186,14 +206,14 @@ const CourseSearchContainer = () => {
             <TabsContent value="timetable" className="h-full">
               <ScrollArea className="w-full h-[calc(100vh-12.5rem)] overflow-auto border rounded-2xl">
                 <div className="p-4 h-full">
-                  <Timetable timetableData={timetableData} vertical={vertical} renderTimetableSlot={renderTimetableSlot} />
+                  <TimetableWithSemester />
                 </div>
               </ScrollArea>
             </TabsContent>
             <TabsContent value="list">
               <ScrollArea className="w-full h-[calc(100vh-12.5rem)] overflow-auto border rounded-2xl">
                 <div className="p-4 h-full">
-                  <TimetableCourseList vertical={vertical} setVertical={setVertical} hideSettings={true} />
+                  <TimetableCourseListWithSemester />
                 </div>
               </ScrollArea>
             </TabsContent>
