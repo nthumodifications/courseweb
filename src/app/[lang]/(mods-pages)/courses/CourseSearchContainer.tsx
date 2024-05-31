@@ -26,6 +26,8 @@ import { useState } from 'react';
 import type { SearchBoxProps } from 'react-instantsearch';
 import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
 import Filters from './Filters';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import TimetableCourseList from '@/components/Timetable/TimetableCourseList';
 
 const CourseSearchContainer = () => {
 
@@ -102,9 +104,26 @@ const CourseSearchContainer = () => {
         <ResizableHandle className="hidden md:block outline-none self-center px-[2px] h-48 mx-4 my-8 rounded-full bg-muted" />
         
         <ResizablePanel collapsible={true} collapsedSize={0} minSize={30} defaultSize={0} className='hidden md:block'>
-          <ScrollArea className="w-full h-full overflow-auto">
-            <Timetable timetableData={timetableData} vertical={vertical} renderTimetableSlot={renderTimetableSlot} />
-          </ScrollArea>
+          <Tabs defaultValue="timetable">
+            <TabsList className="w-full justify-around">
+              <TabsTrigger value="timetable" className="flex-1">Timetable</TabsTrigger>
+              <TabsTrigger value="list" className="flex-1">List</TabsTrigger>
+            </TabsList>
+            <TabsContent value="timetable" className="h-full">
+              <ScrollArea className="w-full h-[calc(100vh-12.5rem)] overflow-auto border rounded-2xl">
+                <div className="p-4 h-full">
+                  <Timetable timetableData={timetableData} vertical={vertical} renderTimetableSlot={renderTimetableSlot} />
+                </div>
+              </ScrollArea>
+            </TabsContent>
+            <TabsContent value="list">
+              <ScrollArea className="w-full h-[calc(100vh-12.5rem)] overflow-auto border rounded-2xl">
+                <div className="p-4 h-full">
+                  <TimetableCourseList vertical={vertical} setVertical={setVertical} hideSettings={true} />
+                </div>
+              </ScrollArea>
+            </TabsContent>
+          </Tabs>
         </ResizablePanel>
       </ResizablePanelGroup>
       

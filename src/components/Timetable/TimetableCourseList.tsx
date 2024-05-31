@@ -42,7 +42,15 @@ const ShareSyncTimetableDialogDynamic = dynamic(() => import('./ShareSyncTimetab
 const HeadlessSyncCourseButtonDynamic = dynamic(() => import('./HeadlessSyncCourseButton'), { ssr: false, loading: () => <Button variant='outline' disabled><Loader2 className='w-4 h-4 animate-spin'/></Button>  })
 import { TimetableItemDrawer } from './TimetableItemDrawer';
 
-const TimetableCourseListItem = ({ course, hasConflict, isDuplicate }: { course: MinimalCourse, hasConflict: boolean, isDuplicate: boolean, }) => {
+const TimetableCourseListItem = ({ 
+    course, 
+    hasConflict, 
+    isDuplicate,
+}: { 
+    course: MinimalCourse, 
+    hasConflict: boolean, 
+    isDuplicate: boolean,
+}) => {
     const { language } = useSettings();
 
     const handleCopyClipboard = (id: RawCourseID) => {
@@ -138,7 +146,15 @@ const TimetableCourseListItem = ({ course, hasConflict, isDuplicate }: { course:
     </div>
 }
 
-const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, setVertical: (v: boolean) => void }) => {
+const TimetableCourseList = ({ 
+    vertical, 
+    setVertical,
+    hideSettings = false
+}: { 
+    vertical: boolean, 
+    setVertical: (v: boolean) => void,
+    hideSettings?: boolean
+}) => {
     const { language } = useSettings();
     const dict = useDictionary();
 
@@ -203,8 +219,10 @@ const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, set
     }
 
     return <div className="flex flex-col gap-4">
-        {renderButtons()}
-        <CourseSearchbar onAddCourse={course => addCourse(course.raw_id)} semester={semester} />
+        {!hideSettings && <>
+            {renderButtons()}
+            <CourseSearchbar onAddCourse={course => addCourse(course.raw_id)} semester={semester} />
+        </>}
         <div className={`${!vertical ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ' : 'flex flex-col'} gap-4 px-4 flex-wrap`}>
             <DndContext
                 sensors={sensors}
@@ -247,7 +265,7 @@ const TimetableCourseList = ({ vertical, setVertical }: { vertical: boolean, set
                 <span className='text-gray-600'>總學分</span>
             </div>
         </div>
-        <ThemeChangableAlert />
+        {!hideSettings && <ThemeChangableAlert />}
     </div>
 }
 
