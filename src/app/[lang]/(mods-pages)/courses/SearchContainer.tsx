@@ -20,11 +20,9 @@ const Hit = ({ hit }: { hit: any }) => {
 const SearchContainer = ({ 
   searchClient, 
   sessionStorageCache, 
-  queryText 
 } : { 
   searchClient: SearchClient, 
   sessionStorageCache: InfiniteHitsCache 
-  queryText: string
 }) => {
   
   const dict = useDictionary();
@@ -47,7 +45,7 @@ const SearchContainer = ({
     <div className="flex flex-col gap-4 flex-1">
       <div className="flex justify-between items-end ml-4">
         <span className="text-2xl">
-          {queryText || 'All'}
+          Search results
         </span>
         <span className="text-sm">
           {}
@@ -66,21 +64,6 @@ const SearchContainer = ({
       </ScrollArea>
     </div>
   </div>
-  
-
-  // return (
-  //   <div className="">
-  //       <InfiniteHits 
-  //         hitComponent={Hit}
-  //         showPrevious={false}
-  //         cache={sessionStorageCache}
-  //         classNames={{
-  //           list: 'flex flex-col w-full h-full space-y-5',
-  //           loadMore: 'underline mt-5',
-  //         }}
-  //       />
-  //   </div>
-  // )
 }
 
 export default SearchContainer;
