@@ -11,6 +11,7 @@ import SemesterSwitcher from "@/components/Timetable/SemesterSwitcher";
 import { createTimetableFromCourses } from "@/helpers/timetable";
 import { MinimalCourse } from "@/types/courses";
 import { renderTimetableSlot } from "@/helpers/timetable_course";
+import TimetableSidebar from "@/components/Timetable/TimetableSidebar";
 
 
 const TimetablePage: NextPage = () => {
@@ -28,7 +29,7 @@ const TimetablePage: NextPage = () => {
                 <div className="w-full h-full">
                     <Timetable timetableData={timetableData} vertical={vertical} renderTimetableSlot={renderTimetableSlot} />
                 </div>
-                <TimetableCourseList vertical={vertical} setVertical={setVertical} />
+                <TimetableSidebar vertical={vertical} setVertical={setVertical} />
             </div>
         </div>
     )

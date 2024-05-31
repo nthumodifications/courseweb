@@ -27,9 +27,8 @@ const CourseTagList = ({ course }: { course: CourseDefinition }) => {
                     {(course.reserve ?? 0) > 0 && <>
                         {` 保 ${course.reserve}`}
                     </>}
+                    人
                 </span>
-
-                <Users strokeWidth={2.5} className='w-5 h-5' />
             </HighlightItem>
             <HighlightItem>
                 <span className="">{course.credits}</span>

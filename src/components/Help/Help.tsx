@@ -82,7 +82,7 @@ const Help = () => {
           <span className="hidden md:inline-block">Help</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="h-screen p-0 w-full lg:h-[calc(100vh-48px)]">
+      <DialogContent className="h-[100dvh] p-0 w-full lg:h-[calc(100vh-48px)]">
         <div className="flex flex-col items-center gap-8 px-4 py-8 max-h-screen overflow-y-auto">
           <div className="flex-1 grid place-items-center">
             <div className="w-[254px] h-[254px] max-h-full">
@@ -104,7 +104,7 @@ const Help = () => {
               <DialogTrigger asChild>
                 <Button className="w-full">登入</Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px] h-screen lg:h-auto w-full">
+              <DialogContent className="sm:max-w-[425px] h-[100dvh] lg:h-auto w-full">
                 <ScrollArea className="h-full">
                   <LoginPage onClose={() => setOpen(false)} />
                 </ScrollArea>
