@@ -15,7 +15,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button"
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 const FilterItem =  ({
   attribute,
@@ -24,6 +25,7 @@ const FilterItem =  ({
   clientSearch = false,
   synonms = {},
   placeholder = 'Search ...',
+  defaultSearch = '',
 }: {
   attribute: string;
   limit?: number;
@@ -31,6 +33,7 @@ const FilterItem =  ({
   clientSearch?: boolean;
   synonms?: Record<string, string>;
   placeholder?: string;
+  defaultSearch?: string;
 }) => {
 
   const {
@@ -44,7 +47,13 @@ const FilterItem =  ({
     attribute: attribute,
     limit: limit,
   })
-
+  
+  const searchParams = useSearchParams()
+  useEffect(() => {
+    const refinedItems = items.filter((item) => item.isRefined)
+    setSelected(refinedItems.map((item) => item.value))
+  }, [items, searchParams])
+  
   const [searchValue, setSearchValue] = useState('')
   const [searching, setSearching] = useState(false)
   const [selected, setSelected] = useState<string[]>([])

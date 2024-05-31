@@ -15,6 +15,9 @@ import {
 import TimeslotSelector from '@/components/Courses/TimeslotSelector';
 import Timeslotfilteritem from './TimeslotFilterItem';
 import FilterItem from './FilterItem';
+import { semesterInfo } from '@/const/semester';
+
+const latestSemID = semesterInfo[semesterInfo.length - 1].id;
 
 const languageSynonyms: Record<string, string> = {
   "中": "Chinese",
@@ -35,6 +38,7 @@ const Filters = () => {
         <FilterItem
           attribute="semester"
           searchable={false}
+          defaultSearch={latestSemID}
         />
       </div>
 
@@ -123,6 +127,9 @@ const Filters = () => {
               clientSearch={true}
             />
           </div>
+
+          
+
         </AccordionContent>
       </AccordionItem>
     </Accordion>
