@@ -90,7 +90,7 @@ const CourseDetailContainer = async ({ lang, courseId, bottomAware = false }: { 
     const timetableData = showTimetable ? createTimetableFromCourses([course as MinimalCourse], colorMap) : [];
 
     return <Fade>
-        <div className="flex flex-col pb-6 relative max-w-6xl">
+        <div className="flex flex-col pb-6 relative max-w-[min(72rem,calc(100vw-64px))]">
             <div className={cn("flex flex-col gap-4 pb-20 md:pb-0")}>
                 <div className="flex flex-col md:flex-row md:items-end gap-4">
                     <div className="space-y-4 flex-1 w-full">
@@ -151,7 +151,7 @@ const CourseDetailContainer = async ({ lang, courseId, bottomAware = false }: { 
                                 </AlertDescription>
                             </Alert>
                             <ScrollArea className="w-full whitespace-nowrap">
-                                <div className="flex space-x-4 p-4">
+                                <div className="flex space-x-4 pr-4">
                                     {reviews.map((m, index) =>
                                         <Dialog key={index}>
                                             <DialogTrigger asChild>
