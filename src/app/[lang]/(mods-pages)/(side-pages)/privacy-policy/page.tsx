@@ -4,7 +4,7 @@ export const metadata: Metadata = {
     title: '隱私權政策 Privacy Policy',
 }
 
-const PrivacyPolicyPage = () => {
+const PrivacyPolicyZHPage = () => {
     return (
         <div className="px-4 py-8">
             <div id="hero" className="flex flex-col gap-4 py-8">
@@ -44,6 +44,61 @@ const PrivacyPolicyPage = () => {
                 <p>本網站隱私權保護政策將因應需求隨時進行修正，修正後的條款將刊登於網站上。</p>
             </article>
         </div>
+    )
+}
+
+const PrivacyPolicyENPage = () => {
+    return (
+        <div className="px-4 py-8">
+            <div id="hero" className="flex flex-col gap-4 py-8">
+                <h1 className="text-5xl font-bold">Privacy Policy</h1>
+                <p className="text-gray-600 dark:text-gray-400">Last Updated: 2023/12/21</p>
+            </div>
+            <article className="prose prose-neutral dark:prose-invert">
+                <p>Welcome to NTHUMods (hereinafter referred to as "this website"). To ensure you can use the services and information on this website with peace of mind, we hereby explain the privacy protection policy of this website to protect your rights. Please read the following content carefully:</p>
+                <h2>1. Scope of the Privacy Protection Policy</h2>
+                <ul className="list-disc">
+                    <li>This privacy protection policy includes how this website handles personal identification data collected when you use the services of this website.</li>
+                    <li>The privacy protection policy does not apply to related linked websites outside of this website, nor does it apply to personnel not entrusted or involved in the management of this website.</li>
+                </ul>
+                <h2>2. Collection and Use of Data</h2>
+                <p>To provide you with the best interactive services on this website, we may ask you to provide relevant personal data. The scope is as follows:</p>
+                <ul className="list-disc">
+                    <li>When you use interactive features such as service mailboxes and surveys, this website will retain the name, email address, contact information, and usage time you provide.</li>
+                    <li>During general browsing, the server will automatically record related actions, including your IP address, usage time, browser used, browsing and clicking data, etc., as a reference for improving website services. This record is for internal use only and will never be published externally.</li>
+                    <li>To provide accurate services, we will statistically analyze the collected survey content. The statistical data or explanatory text resulting from the analysis may be disclosed as necessary, but it will not involve specific personal data.</li>
+                    <li>After logging in, the server will not store your password and session. The password will be saved on your device for authentication purposes. Unless otherwise specified, this website will not store your other personal data without your consent.</li>
+                    <li>Unless with your consent or otherwise specified by law, this website will never disclose your personal data to third parties or use it for purposes other than collection.</li>
+                </ul>
+                <h2>3. Protection of Data</h2>
+                <ul className="list-disc">
+                    <li>This website's host is equipped with various information security devices such as firewalls and anti-virus systems, and necessary security protection measures to protect the website and your personal data. Strict protection measures are adopted, and only authorized personnel can access your personal data. All related processing personnel have signed confidentiality agreements and will face legal penalties if they violate confidentiality obligations.</li>
+                    <li>If it is necessary to entrust relevant units of this department to provide services due to business needs, this website will also strictly require them to comply with confidentiality obligations and take necessary inspection procedures to ensure compliance.</li>
+                </ul>
+                <h2>4. External Links on the Website</h2>
+                <p>The web pages of this website provide links to other websites. You can also access other websites through the links provided on this website. However, the privacy protection policy of this website does not apply to those linked websites. You must refer to the privacy protection policy of those linked websites.</p>
+                <h2>5. Use of Cookies</h2>
+                <p>To provide you with the best service, this website will place and access our cookies on your computer. If you do not wish to accept the writing of cookies, you can set the privacy level to high in the browser functions you use, which will refuse the writing of cookies, but it may cause some functions of the website to not perform properly.</p>
+                <h2>6. Amendments to the Privacy Protection Policy</h2>
+                <p>The privacy protection policy of this website will be revised at any time according to needs. The revised terms will be published on the website.</p>
+                <br/>
+                <p>This article is translated from the Chinese Version. If any discrepancies are found, please refer to the Chinese Version.</p>
+            </article>
+        </div>
+    )
+}
+
+type LangProps = {
+    params: {
+        lang: string
+    }
+}
+
+const PrivacyPolicyPage = ({ params }: LangProps) => {
+    return (
+        <>
+            {params.lang === 'zh' ? <PrivacyPolicyZHPage /> : <PrivacyPolicyENPage />}
+        </>
     )
 }
 

@@ -15,7 +15,6 @@ const HeadlessSyncCourseButton = () => {
     const [loading, setLoading] = useState(false);
     const [coursesToAdd, setCoursesToAdd] = useState<string[]>([]);
 
-    if (!ais.enabled) return <></>;
 
     useEffect(() => {
         if (coursesToAdd.length > 0) {
@@ -57,6 +56,9 @@ const HeadlessSyncCourseButton = () => {
         console.log('add', courses_to_add, 'remove', courses_to_remove);
         setLoading(false);
     };
+    
+    if (!ais.enabled) return <></>;
+    
     return <Button variant="outline" onClick={handleSync} disabled={loading}>
         {!loading ?
             <><FolderSync className="w-4 h-4 mr-1" /> {dict.timetable.actions.sync_ccxp}</> :
