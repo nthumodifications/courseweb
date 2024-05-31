@@ -41,6 +41,7 @@ import { Button } from '@/components/ui/button';
 import { lastSemester } from '@/const/semester';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import TimetableCourseList from '@/components/Timetable/TimetableCourseList';
+import ClearAllButton from './ClearAllButton';
 
 const SemesterSelector = () => {
   // refine semester for semester selector
@@ -62,7 +63,7 @@ const SemesterSelector = () => {
       // default to the latest semester
       refine(lastSemester.id);
     }
-  }, [canRefine]);
+  }, [canRefine, items]);
 
   const handleSelect = (v: string) => {
     refine(v);
@@ -134,6 +135,9 @@ const CourseSearchContainer = () => {
               </DrawerTrigger>
               <DrawerContent >
                 <ScrollArea className="w-full max-h-[90vh] overflow-auto">
+                  <div className='flex flex-row justify-end px-4 py-2 w-full'>
+                    <ClearAllButton />
+                  </div>
                   <Filters />
                 </ScrollArea>
               </DrawerContent>
