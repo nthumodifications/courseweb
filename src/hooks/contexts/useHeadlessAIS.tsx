@@ -58,6 +58,7 @@ const useHeadlessAISProvider = () => {
         setLoading(true);
         return await signInToCCXP(username, password)
             .then((res) => {
+                console.log(res)
                 if('error' in res) throw new Error(res.error.message); 
                 setHeadlessAIS({
                     enabled: true,

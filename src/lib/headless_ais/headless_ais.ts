@@ -39,6 +39,7 @@ type SignInToCCXPResponse = Promise<{ ACIXSTORE: string, encryptedPassword: stri
  * @returns { ACIXSTORE: string, encryptedPassword: string }
  */
 export const signInToCCXP = async (studentid: string, password: string): SignInToCCXPResponse => {
+    console.log("Signing in to CCXP")
     try {
         const ocrAndLogin: (_try?:number) => Promise<{ ACIXSTORE: string }> = async (_try = 0) => {
             if(_try == 3) {
@@ -193,13 +194,14 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
         return { ...result, encryptedPassword };
     } catch (err) {
         if(err instanceof Error) return { error: { message: err.message } };
-        console.error(err);
+        console.error('CCXP Unknown Err', err);
         throw err;
     }
 }
 
 type RefreshUserSessionResponse = Promise<{ ACIXSTORE: string } | { error: { message: string } }>;
 export const refreshUserSession = async (studentid: string, encryptedPassword: string): RefreshUserSessionResponse => {
+    console.log('Refreshing User Session')
     // Decrypt password
     const password =  decrypt(encryptedPassword);
 
