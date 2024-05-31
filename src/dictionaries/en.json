@@ -232,6 +232,7 @@
         "incorrect_credentials": "Incorrect Student ID or Password",
         "studentid": "Student ID",
         "password": "Password",
+        "fill_in_ccxp_credentials": "Login with NTHU AIS Account",
         "login": {
             "title": "Proxy Login With NTHU AIS Account",
             "disclaimer": "Note: Your credentials will only be stored on your device, and will only be transmitted to the server for authentication.",

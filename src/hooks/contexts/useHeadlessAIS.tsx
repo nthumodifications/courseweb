@@ -3,7 +3,7 @@ import {HeadlessAISStorage, LoginError, UserJWT} from '@/types/headless_ais';
 import { toast } from "@/components/ui/use-toast";
 import { FC, PropsWithChildren, createContext, useContext, useEffect, useState } from "react";
 import { useLocalStorage } from 'usehooks-ts';
-import {signInToCCXP} from '@/lib/headless_ais';
+import {refreshUserSession, signInToCCXP} from '@/lib/headless_ais/headless_ais';
 import useDictionary from "@/dictionaries/useDictionary";
 import { useCookies } from "react-cookie";
 import { decode } from 'jsonwebtoken';
@@ -27,21 +27,13 @@ const useHeadlessAISProvider = () => {
     const [initializing, setInitializing] = useState(true);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<LoginError | undefined>(undefined);
-    const [cookies, setCookies, removeCookies] = useCookies(['accessToken']);
+    const [cookies, setCookies, removeCookies, updateCookies] = useCookies(['accessToken']);
     const dict = useDictionary();
 
     useEffect(() => { setInitializing(false) }, []);
     
     // Check if cookies.accessToken exists, if so, check if it's valid, else call getACIXSTORE(true)
     useEffect(() => {
-        // if logged in but no accesstoken, call getACIXSTORE
-        if(!headlessAIS.enabled) {
-            // if not enabled, check if cookies.accessToken exists, if so, remove
-            if(cookies.accessToken) {
-                removeCookies('accessToken', { path: '/', sameSite: 'strict', secure: true });
-            }
-            return;
-        };
         if(!cookies.accessToken) {
             getACIXSTORE(true)
         }
@@ -70,7 +62,8 @@ const useHeadlessAISProvider = () => {
                 setHeadlessAIS({
                     enabled: true,
                     studentid: username,
-                    password: password,
+                    password: res.encryptedPassword,
+                    encrypted: true,
                     ACIXSTORE: res.ACIXSTORE,
                     lastUpdated: Date.now()
                 });
@@ -81,7 +74,7 @@ const useHeadlessAISProvider = () => {
             .catch(err => {
                 toast({
                     title: "代理登入失敗",
-                    description: dict.ccxp.errors[err.message as keyof typeof dict.ccxp.errors] ?? "請檢查學號密碼是否正確",
+                    description: dict.ccxp.errors[err.message as keyof typeof dict.ccxp.errors] ?? err.message ?? "請檢查學號密碼是否正確",
                 })
                 setHeadlessAIS({
                     enabled: false
@@ -110,14 +103,35 @@ const useHeadlessAISProvider = () => {
             return headlessAIS.ACIXSTORE!;
         }
         setLoading(true);
+
+        // legacy support, if encrypted password is not set, set it
+        if(!headlessAIS.encrypted) {
+            // use signInToCCXP to get encrypted password
+            return await signInToCCXP(headlessAIS.studentid, headlessAIS.password)
+                .then((res) => {
+                    if('error' in res) throw new Error(res.error.message); 
+                    setHeadlessAIS({
+                        enabled: true,
+                        studentid: headlessAIS.studentid,
+                        password: res.encryptedPassword,
+                        encrypted: true,
+                        ACIXSTORE: res.ACIXSTORE,
+                        lastUpdated: Date.now()
+                    });
+                    setLoading(false);
+                    setError(undefined);
+                    return res.ACIXSTORE;
+                })
+        }
         
-        return await signInToCCXP(headlessAIS.studentid, headlessAIS.password)
+        return await refreshUserSession(headlessAIS.studentid, headlessAIS.password)
         .then((res) => {
             if('error' in res) throw new Error(res.error.message); 
             setHeadlessAIS({
                 enabled: true,
                 studentid: headlessAIS.studentid,
                 password: headlessAIS.password,
+                encrypted: true,
                 ACIXSTORE: res.ACIXSTORE,
                 lastUpdated: Date.now()
             });
