@@ -48,24 +48,29 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
             let tries = 0, pwdstr = "", answer = "";
             do {
                 tries++;
-                const url = 'http://www.ccxp.nthu.edu.tw/ccxp/INQUIRE';
-                const res = await fetch(url);
-                const body = await res.text();
-                console.log(body)
-                if(!body) {
-                    continue;
+                try {
+                    const url = 'http://www.ccxp.nthu.edu.tw/ccxp/INQUIRE';
+                    const res = await fetch(url);
+                    const body = await res.text();
+                    console.log(body)
+                    if(!body) {
+                        continue;
+                    }
+                    const bodyMatch = body.match(/auth_img\.php\?pwdstr=([a-zA-Z0-9_-]+)/);
+                    if(!bodyMatch) {
+                        continue;
+                    }
+                    pwdstr = bodyMatch[1];
+                    //fetch the image from the url and send as base64
+                    console.log("pwdstr: ", pwdstr)
+                    answer = await fetch(`https://ocr.nthumods.com/?url=https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/auth_img.php?pwdstr=${pwdstr}`)
+                                .then(res => res.text())
+                    console.log(answer)
+                    if(answer.length == 6) break;
+                } catch (err) { 
+                    console.error('fetch login err',err)
+                    throw new Error(LoginError.Unknown);
                 }
-                const bodyMatch = body.match(/auth_img\.php\?pwdstr=([a-zA-Z0-9_-]+)/);
-                if(!bodyMatch) {
-                    continue;
-                }
-                pwdstr = bodyMatch[1];
-                //fetch the image from the url and send as base64
-                console.log("pwdstr: ", pwdstr)
-                answer = await fetch(`https://ocr.nthumods.com/?url=https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/auth_img.php?pwdstr=${pwdstr}`)
-                            .then(res => res.text())
-                console.log(answer)
-                if(answer.length == 6) break;
             } while (tries <= 5);
             if(tries == 6 || answer.length != 6) {
                 throw new Error("Internal Server Error");
