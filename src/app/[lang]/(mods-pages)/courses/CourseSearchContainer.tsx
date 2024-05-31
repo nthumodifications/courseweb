@@ -14,20 +14,18 @@ import { renderTimetableSlot } from '@/helpers/timetable_course';
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { InstantSearchNext } from 'react-instantsearch-nextjs';
-import { CalendarDays, FilterIcon, Loader2Icon, LoaderIcon, SearchIcon, X } from "lucide-react";
-import { InstantSearch, SearchBox, InfiniteHits } from 'react-instantsearch';
+import { SearchIcon } from "lucide-react";
+import { SearchBox } from 'react-instantsearch';
 
 const searchClient = algoliasearch(process.env.NEXT_PUBLIC_ALGOLIA_APP_ID!, process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY!);
 const sessionStorageCache = createInfiniteHitsSessionStorageCache();
 
-import Search from './search';
-import Filter from './filter';
-import { DialogClose } from '@/components/ui/dialog';
+import SearchContainer from './SearchContainer';
 import { Separator } from '@/components/ui/separator';
 import { useState } from 'react';
 import type { SearchBoxProps } from 'react-instantsearch';
 
-export default () => {
+const CourseSearchContainer = () => {
 
   const { getSemesterCourses, semester, setSemester, colorMap } = useUserTimetable();
   const [vertical, setVertical] = useLocalStorage('timetable_vertical', true);
@@ -78,7 +76,7 @@ export default () => {
 
       <ResizablePanelGroup direction="horizontal" className="h-full w-full">
         <ResizablePanel className="flex gap-4">
-          <Search
+          <SearchContainer
             searchClient={searchClient} 
             sessionStorageCache={sessionStorageCache}
             queryText={queryText}
@@ -123,3 +121,5 @@ export default () => {
     //   </ResizablePanel>
     // </ResizablePanelGroup>
 };
+
+export default CourseSearchContainer;

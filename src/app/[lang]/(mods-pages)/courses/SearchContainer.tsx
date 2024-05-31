@@ -6,7 +6,7 @@ import { InstantSearchNext } from 'react-instantsearch-nextjs';
 import algoliasearch from 'algoliasearch/lite';
 import useDictionary from "@/dictionaries/useDictionary";
 import CourseListItem from "@/components/Courses/CourseListItem";
-import Filter from './filter'
+import Filter from './Filters'
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 
@@ -17,7 +17,7 @@ const Hit = ({ hit }: { hit: any }) => {
   return <CourseListItem course={hit} />;
 }
 
-export default ({ 
+const SearchContainer = ({ 
   searchClient, 
   sessionStorageCache, 
   queryText 
@@ -82,3 +82,5 @@ export default ({
   //   </div>
   // )
 }
+
+export default SearchContainer;

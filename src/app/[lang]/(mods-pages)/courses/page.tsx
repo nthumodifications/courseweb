@@ -9,7 +9,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { useState } from 'react';
-import Courses from './courses';
+import CourseSearchContainer from './CourseSearchContainer';
 import { Separator } from "@/components/ui/separator";
 
 const CourseDialog = () => {
@@ -21,7 +21,7 @@ const CourseDialog = () => {
         Open
       </DialogTrigger>
       <DialogContent className="p-0 h-screen max-w-screen w-screen gap-0">
-        <Courses />
+        <CourseSearchContainer />
       </DialogContent>
     </Dialog>
   );
