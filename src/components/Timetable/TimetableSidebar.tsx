@@ -42,7 +42,7 @@ const TimetableSidebar = ({
                     {dict.course.item.add_to_semester}
                 </Button>
             </DialogTrigger>
-            <DialogContent className="p-0 h-screen max-w-screen w-screen gap-0">
+            <DialogContent className="p-0 h-[100dvh] max-w-screen w-screen gap-0">
                 <CourseSearchContainerDynamic />
             </DialogContent>
         </Dialog>
