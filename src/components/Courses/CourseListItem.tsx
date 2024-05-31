@@ -8,9 +8,11 @@ import SelectCourseButton from './SelectCourseButton';
 import { HoverCard } from '@radix-ui/react-hover-card';
 import { HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { Button } from '@/components/ui/button';
+import { useSettings } from '@/hooks/contexts/settings';
 
 const CourseListItem: FC<{ course: CourseSyllabusView, hasTaken?: boolean }> = ({ course, hasTaken = false }) => {
     const dict = useDictionary();
+    const { language } = useSettings();
 
     return <div className="px-4 border-b border-gray-200 dark:border-neutral-800 pb-4 relative @container">
         <div className="flex flex-row gap-4">
@@ -21,7 +23,7 @@ const CourseListItem: FC<{ course: CourseSyllabusView, hasTaken?: boolean }> = (
                         {hasTaken && <div className={`flex flex-row items-center justify-center min-w-[65px] py-1 px-2 text-sm select-none rounded-md bg-nthu-400 dark:bg-nthu-600`}>已修課</div>}
                         <p className='text-nthu-500'>{course.department} {course.course}-{course.class}</p>
                     </div>
-                    <Link className="font-semibold text-lg" href={'courses/'+course.raw_id}>{course.name_zh} - {(course.teacher_zh ?? []).join(',')}</Link>
+                    <Link className="font-semibold text-lg" href={`/${language}/courses/${course.raw_id}`}>{course.name_zh} - {(course.teacher_zh ?? []).join(',')}</Link>
                     <h3 className="text-sm mt-0 break-words">{course.name_en} - <span className='w-max'>{(course.teacher_en ?? []).join(',')}</span></h3>
                 </div>
                 <div className="space-y-2 ">
