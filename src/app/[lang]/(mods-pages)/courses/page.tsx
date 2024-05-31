@@ -100,9 +100,10 @@ const CoursePage: NextPage = () => {
                         return (
                             <PaginationLink
                                 key={index}
+                                className="cursor-pointer"
                                 aria-pressed={currentPage == page}
                                 isActive={currentPage == page}
-                                onClick={() => searchQueryFunc(filters, (page - 1) * 30)}
+                                onClick={() => searchQuery(filters, (page - 1) * 30)}
                             >
                                 {page}
                             </PaginationLink>)
@@ -204,7 +205,7 @@ const CoursePage: NextPage = () => {
         setLoading(false);
     }
 
-    const searchQueryFunc = useDebouncedCallback(searchQuery, 1000);
+    const searchQueryFunc = useDebouncedCallback(searchQuery, 800);
 
     const handleClear = () => {
         reset(emptyFilters)
