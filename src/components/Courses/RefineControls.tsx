@@ -49,7 +49,7 @@ export const emptyFilters: RefineControlFormTypes = {
     venues: [],
     timeslots: [],
     timeFilter: TimeFilterType.Within,
-    semester: '11220',
+    semester: '11310',
     disciplines: [],
     gecDimensions: [],
     geTarget: [],
