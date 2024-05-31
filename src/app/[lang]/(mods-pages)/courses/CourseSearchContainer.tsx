@@ -131,20 +131,24 @@ const CourseSearchContainer = () => {
                 </Button>
               </DrawerTrigger>
               <DrawerContent >
-                <Filters />
+                <ScrollArea className="w-full max-h-[90vh] overflow-auto">
+                  <Filters />
+                </ScrollArea>
               </DrawerContent>
             </Drawer>
           </div>
           <Separator orientation="vertical" className='h-full' />
           <div className='md:hidden'>
-            <Drawer >
+            <Drawer>
               <DrawerTrigger asChild>
                 <Button variant='ghost' size='icon'>
                   <Calendar size="16" />
                 </Button>
               </DrawerTrigger>
-              <DrawerContent >
-                <Timetable timetableData={timetableData} vertical={vertical} renderTimetableSlot={renderTimetableSlot} />
+              <DrawerContent>
+                <ScrollArea className="w-full max-h-[80vh] overflow-auto p-2">
+                  <Timetable timetableData={timetableData} vertical={vertical} renderTimetableSlot={renderTimetableSlot} />
+                </ScrollArea>
               </DrawerContent>
             </Drawer>
           </div>
