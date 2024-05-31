@@ -82,7 +82,7 @@ const CourseDetailContainer = async ({ lang, courseId, bottomAware = false, moda
     </div>
     const missingSyllabus = course.course_syllabus == null;
 
-    const reviews = await getCoursePTTReview(courseId);
+    const reviews = await getCoursePTTReview(courseId) ?? [];
     const otherClasses = await getOtherClasses(course as MinimalCourse);
 
     // times might not be available, check if it is empty list or its items are all empty strings
