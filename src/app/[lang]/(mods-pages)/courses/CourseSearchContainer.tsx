@@ -44,13 +44,8 @@ const SemesterSelector = () => {
   // refine semester for semester selector
   const { 
     items,
-    createURL,
     refine,
     canRefine,
-    isShowingMore,
-    toggleShowMore,
-    canToggleShowMore,
-    sendEvent,
    } = useCustomMenu({
     attribute: 'semester',
   });
@@ -80,6 +75,24 @@ const SemesterSelector = () => {
   </Select>
 
 }
+
+const TimetableWithSemester = () => {
+  const { getSemesterCourses, setSemester, colorMap } = useUserTimetable();
+  
+  const { 
+    items,
+   } = useCustomMenu({
+    attribute: 'semester',
+  });
+
+  const semester = items.find(item => item.isRefined)?.value ?? lastSemester.id;
+
+  console.log(semester)
+
+  return <Timetable timetableData={createTimetableFromCourses(getSemesterCourses(semester) as MinimalCourse[], colorMap)} renderTimetableSlot={renderTimetableSlot} />
+}
+
+
 
 const CourseSearchContainer = () => {
 
@@ -150,7 +163,7 @@ const CourseSearchContainer = () => {
               </DrawerTrigger>
               <DrawerContent>
                 <ScrollArea className="w-full max-h-[80vh] overflow-auto p-2">
-                  <Timetable timetableData={timetableData} vertical={vertical} renderTimetableSlot={renderTimetableSlot} />
+                  <TimetableWithSemester />
                 </ScrollArea>
               </DrawerContent>
             </Drawer>
@@ -184,7 +197,7 @@ const CourseSearchContainer = () => {
             <TabsContent value="list">
               <ScrollArea className="w-full h-[calc(100vh-12.5rem)] overflow-auto border rounded-2xl">
                 <div className="p-4 h-full">
-                  <TimetableCourseList vertical={vertical} setVertical={setVertical} hideSettings={true} />
+                <TimetableWithSemester />
                 </div>
               </ScrollArea>
             </TabsContent>
