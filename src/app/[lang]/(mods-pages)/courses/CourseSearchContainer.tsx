@@ -22,12 +22,66 @@ const sessionStorageCache = createInfiniteHitsSessionStorageCache();
 
 import SearchContainer from './SearchContainer';
 import { Separator } from '@/components/ui/separator';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { SearchBoxProps } from 'react-instantsearch';
 import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
 import Filters from './Filters';
+import useCustomRefinementList from './useCustomRefinementList';
+import useCustomMenu from './useCustomMenu';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { toPrettySemester } from '@/helpers/semester';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { lastSemester } from '@/const/semester';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import TimetableCourseList from '@/components/Timetable/TimetableCourseList';
+
+const SemesterSelector = () => {
+  // refine semester for semester selector
+  const { 
+    items,
+    createURL,
+    refine,
+    canRefine,
+    isShowingMore,
+    toggleShowMore,
+    canToggleShowMore,
+    sendEvent,
+   } = useCustomMenu({
+    attribute: 'semester',
+  });
+  
+  useEffect(() => {
+    if(canRefine && !items.find(item => item.isRefined)) {
+      // default to the latest semester
+      refine(lastSemester.id);
+    }
+  }, [canRefine]);
+
+  const handleSelect = (v: string) => {
+    refine(v);
+  }
+
+  const selected = items.find(item => item.isRefined)?.value;
+
+  return <Select value={selected} onValueChange={handleSelect}>
+    <SelectTrigger className="w-[200px] border-0 bg-transparent">
+      <SelectValue placeholder="Semester" />
+    </SelectTrigger>
+    <SelectContent>
+      {items.map(item => <SelectItem value={item.value} key={item.value}>
+        {toPrettySemester(item.label)} 學期
+      </SelectItem>)}
+    </SelectContent>
+  </Select>
+
+}
 
 const CourseSearchContainer = () => {
 
@@ -43,10 +97,12 @@ const CourseSearchContainer = () => {
     <div className="flex flex-col h-screen p-4 md:p-8 gap-8">
 
       <div className="">
-        <div className="bg-muted rounded-2xl flex items-center gap-4 p-4">
+        <div className="bg-neutral-100 dark:bg-neutral-950 rounded-2xl flex items-center p-4">
+          <SemesterSelector />
+          <Separator orientation="vertical" className='h-full'/>
           <HoverCard>
-            <HoverCardTrigger>
-              <SearchIcon size="16" />
+            <HoverCardTrigger className='px-2'>
+              <SearchIcon size={16} />
             </HoverCardTrigger>
             <HoverCardContent align="start" className="whitespace-pre-wrap">
               You can search by <br />
@@ -68,22 +124,26 @@ const CourseSearchContainer = () => {
               loadingIndicator: 'hidden',
             }}
           />
-          <Separator orientation="vertical" className="px-4" />
+          <Separator orientation="vertical" className='h-full'/>
           <div className='md:hidden'>
             <Drawer>
               <DrawerTrigger asChild>
-                <FilterIcon size="16" />
+                <Button variant='ghost' size='icon'>
+                  <FilterIcon size="16" />
+                </Button>
               </DrawerTrigger>
               <DrawerContent >
                 <Filters />
               </DrawerContent>
             </Drawer>
           </div>
-          <Separator orientation="vertical" className="px-4" />
+          <Separator orientation="vertical" className='h-full' />
           <div className='md:hidden'>
-            <Drawer>
+            <Drawer >
               <DrawerTrigger asChild>
-                <Calendar size="16" />
+                <Button variant='ghost' size='icon'>
+                  <Calendar size="16" />
+                </Button>
               </DrawerTrigger>
               <DrawerContent >
                 <Timetable timetableData={timetableData} vertical={vertical} renderTimetableSlot={renderTimetableSlot} />
