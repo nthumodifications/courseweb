@@ -83,10 +83,10 @@ const Help = () => {
         </Button>
       </DialogTrigger>
       <DialogContent className="h-screen p-0 w-full lg:h-[calc(100vh-48px)]">
-        <div className="flex flex-col items-center gap-8 px-4 py-8 max-h-screen">
+        <div className="flex flex-col items-center gap-8 px-4 py-8 max-h-screen overflow-y-auto">
           <div className="flex-1 grid place-items-center">
             <div className="w-[254px] h-[254px] max-h-full">
-              <Image src={content[page].img} alt={content[page].title} width={254} height={254} />
+              <Image src={content[page].img} alt={content[page].title} width={254} height={254} unoptimized />
             </div>
           </div>
           <div className="flex flex-row justify-center">

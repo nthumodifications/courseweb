@@ -25,6 +25,7 @@ import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import {GraduationCap, Hash} from 'lucide-react';
 
 const DisplaySettingsCard = () => {
     const { darkMode, setDarkMode, language, setLanguage } = useSettings();
@@ -91,12 +92,16 @@ const AccountInfoSettingsCard = () => {
             <CardDescription>{dict.settings.account.description}</CardDescription>
         </CardHeader>
         <CardContent>
-            {user && <div className="flex flex-col gap-4 py-4">
-                <div className="grid gap-1">
-                    <div className="flex items-center gap-2">
-                        <h3 className="text-lg font-medium">{`${user.name_zh} ${user.name_en.length > 0 ? `(${user.name_en})`: ''}`}</h3>
+            {user && <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-4 w-full">
+                    <div className="flex flex-col gap-2">
+                    <h2 className="text-xl font-semibold">{user.name_zh}</h2>
+                    <h3 className="text-sm">{user.name_en}</h3>
                     </div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">{user.studentid} {user.department}</div>
+                    <div className="flex flex-col gap-1">
+                    <div className="text-gray-500 flex flex-row text-sm"><GraduationCap className="w-4 h-4 mr-2" /> {user.department}</div>
+                    <div className="text-gray-500 flex flex-row text-sm"><Hash className="w-4 h-4 mr-2" /> {user.studentid}</div>
+                    </div>
                 </div>
                 <div className="flex flex-row justify-end items-center w-full">
                     <Button variant="destructive" onClick={() => setAISCredentials()}>{dict.settings.account.signout}</Button>

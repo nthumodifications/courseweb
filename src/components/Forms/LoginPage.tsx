@@ -14,6 +14,7 @@ import HeadlessSyncCourseButton from "../Timetable/HeadlessSyncCourseButton";
 import { Separator } from "../ui/separator";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { cn } from "@/lib/utils";
+import { GraduationCap, Hash, Tag } from "lucide-react";
 
 const WelcomeUserPage = ({ onClose }: { onClose: () => void; }) => {
   const { user } = useHeadlessAIS();
@@ -21,17 +22,20 @@ const WelcomeUserPage = ({ onClose }: { onClose: () => void; }) => {
 
   if (!user) throw new Error("User not found");
 
-  return <div className="flex flex-col gap-8 w-full">
-    <div className="flex flex-col gap-2 w-full pt-2">
+  return <div className="flex flex-col gap-6 w-full">
+    <div className="flex flex-col gap-6 w-full pt-2">
       <div className="flex flex-row items-center gap-2">
         <NTHUModsLogo />
         <FullLogo />
       </div>
-      <div className="flex flex-col gap-6 w-full">
-        <p>{user.studentid} {user.department}</p>
+      <div className="flex flex-col gap-4 w-full">
         <div className="flex flex-col gap-2">
-          <h2 className="text-lg font-semibold">{user.name_zh}</h2>
-          <h3>{user.name_en}</h3>
+          <h2 className="text-xl font-semibold">{user.name_zh}</h2>
+          <h3 className="text-sm">{user.name_en}</h3>
+        </div>
+        <div className="flex flex-col gap-1">
+          <div className="text-gray-500 flex flex-row text-sm"><GraduationCap className="w-4 h-4 mr-2" /> {user.department}</div>
+          <div className="text-gray-500 flex flex-row text-sm"><Hash className="w-4 h-4 mr-2" /> {user.studentid}</div>
         </div>
       </div>
     </div>
