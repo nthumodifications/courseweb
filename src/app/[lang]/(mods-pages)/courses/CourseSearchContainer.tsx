@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/resizable"
 import Timetable from "@/components/Timetable/Timetable";
 import useUserTimetable from '@/hooks/contexts/useUserTimetable';
-import { useLocalStorage } from 'usehooks-ts';
+import { useLocalStorage, useMediaQuery } from 'usehooks-ts';
 import { createTimetableFromCourses } from '@/helpers/timetable';
 import { MinimalCourse } from '@/types/courses';
 import { renderTimetableSlot } from '@/helpers/timetable_course';
@@ -37,7 +37,7 @@ import { toPrettySemester } from '@/helpers/semester';
 import { Button } from '@/components/ui/button';
 import { lastSemester } from '@/const/semester';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import TimetableCourseList from '@/components/Timetable/TimetableCourseList';
+import TimetableCourseList, { DownloadTimetableDialogDynamic, ShareSyncTimetableDialogDynamic } from '@/components/Timetable/TimetableCourseList';
 import ClearAllButton from './ClearAllButton';
 import useDictionary from '@/dictionaries/useDictionary';
 
@@ -105,19 +105,33 @@ const TimetableCourseListWithSemester = () => {
   return <TimetableCourseList semester={semester} vertical={true} />
 }
 
+const TimetableBottomBar = () => {
+  const { semester, courses, colorMap } = useUserTimetable();
+
+  const shareLink = `https://nthumods.com/timetable/view?${Object.keys(courses).map(sem => `semester_${sem}=${courses[sem].map(id => encodeURI(id)).join(',')}`).join('&')}&colorMap=${encodeURIComponent(JSON.stringify(colorMap))}`;
+  const webcalLink = `webcals://nthumods.com/timetable/calendar.ics?semester=${semester}&${`semester_${semester}=${(courses[semester] ?? []).map(id => encodeURI(id)).join(',')}`}`;
+  const icsfileLink = `https://nthumods.com/timetable/calendar.ics?semester=${semester}&${`semester_${semester}=${(courses[semester] ?? []).map(id => encodeURI(id)).join(',')}`}`;
+
+  return <div className='flex flex-row justify-stretch gap-2 pt-2'>
+    <DownloadTimetableDialogDynamic icsfileLink={icsfileLink} />
+    <ShareSyncTimetableDialogDynamic shareLink={shareLink} webcalLink={webcalLink} />
+  </div>
+}
+
 const CourseSearchContainer = () => {
 
   const { getSemesterCourses, semester, setSemester, colorMap } = useUserTimetable();
   const [vertical, setVertical] = useLocalStorage('timetable_vertical', true);
   const timetableData = createTimetableFromCourses(getSemesterCourses(semester) as MinimalCourse[], colorMap);
   const dict = useDictionary();
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
 
   return <InstantSearchNext
     searchClient={searchClient}
     indexName="nthu_courses"
     routing
   >
-    <div className="flex flex-col h-screen px-2 pt-6 md:p-8 gap-8">
+    <div className="flex flex-col h-[100dvh] px-2 pt-6 md:p-8 gap-8">
 
       <div className="">
         <div className="bg-neutral-100 dark:bg-neutral-950 rounded-2xl flex items-center p-4">
@@ -193,7 +207,7 @@ const CourseSearchContainer = () => {
         
         <ResizableHandle className="hidden md:block outline-none self-center px-[2px] h-48 mx-4 my-8 rounded-full bg-muted" />
         
-        <ResizablePanel collapsible={true} collapsedSize={0} minSize={30} defaultSize={0} className='hidden md:block'>
+        <ResizablePanel collapsible={true} collapsedSize={0} minSize={30} defaultSize={isDesktop ? 30: 0} className='hidden md:block'>
           <Tabs defaultValue="timetable">
             <TabsList className="w-full justify-around">
               <TabsTrigger value="timetable" className="flex-1">
@@ -207,6 +221,7 @@ const CourseSearchContainer = () => {
               <ScrollArea className="w-full h-[calc(100vh-12.5rem)] overflow-auto border rounded-2xl">
                 <div className="p-4 h-full">
                   <TimetableWithSemester />
+                  <TimetableBottomBar />
                 </div>
               </ScrollArea>
             </TabsContent>
