@@ -28,7 +28,7 @@ const SearchContainer = ({
   const dict = useDictionary();
 
   return <div className="flex w-full gap-4">
-    <div className="flex flex-col gap-4 w-72">
+    <div className="hidden md:flex flex-col gap-4 w-72">
       <div className="flex justify-between items-end">
         <span className="text-2xl">
           Filters
