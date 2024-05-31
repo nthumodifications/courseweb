@@ -87,12 +87,22 @@ const TimetableWithSemester = () => {
 
   const semester = items.find(item => item.isRefined)?.value ?? lastSemester.id;
 
-  console.log(semester)
-
   return <Timetable timetableData={createTimetableFromCourses(getSemesterCourses(semester) as MinimalCourse[], colorMap)} renderTimetableSlot={renderTimetableSlot} />
 }
 
+const TimetableCourseListWithSemester = () => {
+  const { getSemesterCourses, setSemester } = useUserTimetable();
+  
+  const { 
+    items,
+   } = useCustomMenu({
+    attribute: 'semester',
+  });
 
+  const semester = items.find(item => item.isRefined)?.value ?? lastSemester.id;
+
+  return <TimetableCourseList semester={semester} vertical={true} />
+}
 
 const CourseSearchContainer = () => {
 
@@ -190,14 +200,14 @@ const CourseSearchContainer = () => {
             <TabsContent value="timetable" className="h-full">
               <ScrollArea className="w-full h-[calc(100vh-12.5rem)] overflow-auto border rounded-2xl">
                 <div className="p-4 h-full">
-                  <Timetable timetableData={timetableData} vertical={vertical} renderTimetableSlot={renderTimetableSlot} />
+                  <TimetableWithSemester />
                 </div>
               </ScrollArea>
             </TabsContent>
             <TabsContent value="list">
               <ScrollArea className="w-full h-[calc(100vh-12.5rem)] overflow-auto border rounded-2xl">
                 <div className="p-4 h-full">
-                <TimetableWithSemester />
+                  <TimetableCourseListWithSemester />
                 </div>
               </ScrollArea>
             </TabsContent>
