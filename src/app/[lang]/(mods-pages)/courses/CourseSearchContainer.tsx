@@ -22,11 +22,9 @@ const sessionStorageCache = createInfiniteHitsSessionStorageCache();
 
 import SearchContainer from './SearchContainer';
 import { Separator } from '@/components/ui/separator';
-import { useEffect, useState } from 'react';
-import type { SearchBoxProps } from 'react-instantsearch';
+import { useEffect } from 'react';
 import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
 import Filters from './Filters';
-import useCustomRefinementList from './useCustomRefinementList';
 import useCustomMenu from './useCustomMenu';
 import {
   Select,
@@ -36,7 +34,6 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { toPrettySemester } from '@/helpers/semester';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { lastSemester } from '@/const/semester';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -95,7 +92,7 @@ const CourseSearchContainer = () => {
     indexName="nthu_courses"
     routing
   >
-    <div className="flex flex-col h-screen p-4 md:p-8 gap-8">
+    <div className="flex flex-col h-screen px-2 pt-6 md:p-8 gap-8">
 
       <div className="">
         <div className="bg-neutral-100 dark:bg-neutral-950 rounded-2xl flex items-center p-4">

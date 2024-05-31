@@ -1,4 +1,4 @@
-import { Search, Trash, AlertTriangle, Copy, Repeat, GripVertical, Loader2 } from 'lucide-react';
+import { Search, Trash, AlertTriangle, Copy, Repeat, GripVertical, Loader2, Plus } from 'lucide-react';
 import { useSettings } from '@/hooks/contexts/settings';
 import useUserTimetable from '@/hooks/contexts/useUserTimetable';
 import { useRouter } from 'next/navigation';
@@ -37,10 +37,13 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import Compact from '@uiw/react-color-compact';
 import { Separator } from '../ui/separator';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '../ui/hover-card';
+import { TimetableItemDrawer } from './TimetableItemDrawer';
+import {Dialog, DialogContent, DialogTrigger} from '@/components/ui/dialog';
+
 const DownloadTimetableDialogDynamic = dynamic(() => import('./DownloadTimetableDialog'), { ssr: false, loading: () => <Button variant='outline' disabled><Loader2 className='w-4 h-4 animate-spin'/></Button>  })
 const ShareSyncTimetableDialogDynamic = dynamic(() => import('./ShareSyncTimetableDialog'), { ssr: false, loading: () => <Button variant='outline' disabled><Loader2 className='w-4 h-4 animate-spin'/></Button> })
 const HeadlessSyncCourseButtonDynamic = dynamic(() => import('./HeadlessSyncCourseButton'), { ssr: false, loading: () => <Button variant='outline' disabled><Loader2 className='w-4 h-4 animate-spin'/></Button>  })
-import { TimetableItemDrawer } from './TimetableItemDrawer';
+const CourseSearchContainerDynamic = dynamic(() => import('@/app/[lang]/(mods-pages)/courses/CourseSearchContainer'), { ssr: false, loading: () => <Loader2 className='w-4 h-4 animate-spin'/>  })
 
 const TimetableCourseListItem = ({ 
     course, 
@@ -221,7 +224,17 @@ const TimetableCourseList = ({
     return <div className="flex flex-col gap-4">
         {!hideSettings && <>
             {renderButtons()}
-            <CourseSearchbar onAddCourse={course => addCourse(course.raw_id)} semester={semester} />
+            <Dialog>
+                <DialogTrigger asChild>
+                    <Button variant='outline'>
+                        <Plus className="w-4 h-4 mr-2" />
+                        {dict.course.item.add_to_semester}
+                    </Button>
+                </DialogTrigger>
+                <DialogContent className="p-0 h-screen max-w-screen w-screen gap-0">
+                    <CourseSearchContainerDynamic />
+                </DialogContent>
+            </Dialog>
         </>}
         <div className={`${!vertical ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ' : 'flex flex-col'} gap-4 px-4 flex-wrap`}>
             <DndContext
