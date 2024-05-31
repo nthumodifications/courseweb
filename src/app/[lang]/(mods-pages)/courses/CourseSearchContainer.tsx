@@ -69,7 +69,7 @@ const SemesterSelector = () => {
   const selected = items.find(item => item.isRefined)?.value;
 
   return <Select value={selected} onValueChange={handleSelect}>
-    <SelectTrigger className="w-[200px] border-0 bg-transparent">
+    <SelectTrigger className="w-[200px] border-0 bg-transparent h-0">
       <SelectValue placeholder="Semester" />
     </SelectTrigger>
     <SelectContent>

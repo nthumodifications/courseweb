@@ -54,18 +54,28 @@ const Filters = () => {
         />
       </div>
 
+      <div className="flex flex-col gap-2">
+        <span className="text-sm">
+          Tags
+        </span>
+        <FilterItem
+          attribute="tags"
+          clientSearch={true}
+        />
+      </div>
+
       <div className="w-full flex flex-col gap-2">
         <span className="text-sm">{dict.course.refine.time}</span>
         <Timeslotfilteritem
           clientSearch={true}
         />
-      </div>
+      </div>      
     </div>
 
     <Accordion type="multiple">
-      <AccordionItem value="advanced">
+      <AccordionItem value="semester">
         <AccordionTrigger className="outline-none">
-          Advanced filters
+          GE filters
         </AccordionTrigger>
         <AccordionContent className="flex flex-col gap-6">
           <div className="flex flex-col gap-2">
@@ -84,7 +94,13 @@ const Filters = () => {
               clientSearch={true}
             />
           </div>
-
+        </AccordionContent>
+      </AccordionItem>
+      <AccordionItem value="advanced">
+        <AccordionTrigger className="outline-none">
+          Advanced filters
+        </AccordionTrigger>
+        <AccordionContent className="flex flex-col gap-6">
           <div className="flex flex-col gap-2">
             <span className="text-sm">
               Compulsory for
@@ -111,15 +127,51 @@ const Filters = () => {
 
           <div className="flex flex-col gap-2">
             <span className="text-sm">
-              Tags
+              {dict.course.refine.venues}
             </span>
             <FilterItem
-              attribute="tags"
-              clientSearch={true}
+              attribute="venues"
+              searchable={true}
+              limit={20}
+              placeholder="Search (to display more)..."
             />
           </div>
 
-          
+          <div className="flex flex-col gap-2">
+            <span className="text-sm">
+              {dict.course.refine.firstSpecialization}
+            </span>
+            <FilterItem
+              attribute="first_specialization"
+              searchable={true}
+              limit={20}
+              placeholder="Search (to display more)..."
+            />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <span className="text-sm">
+              {dict.course.refine.secondSpecialization}
+            </span>
+            <FilterItem
+              attribute="second_specialization"
+              searchable={true}
+              limit={20}
+              placeholder="Search (to display more)..."
+            />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <span className="text-sm">
+              {dict.course.refine.cross_discipline}
+            </span>
+            <FilterItem
+              attribute="cross_discipline"
+              searchable={true}
+              limit={20}
+              placeholder="Search (to display more)..."
+            />
+          </div>          
 
         </AccordionContent>
       </AccordionItem>
