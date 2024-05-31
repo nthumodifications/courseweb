@@ -56,7 +56,7 @@ const Filters = () => {
 
       <div className="flex flex-col gap-2">
         <span className="text-sm">
-          Tags
+          {dict.course.refine.special_tags}
         </span>
         <FilterItem
           attribute="tags"
@@ -75,11 +75,13 @@ const Filters = () => {
     <Accordion type="multiple">
       <AccordionItem value="semester">
         <AccordionTrigger className="outline-none">
-          GE filters
+          {dict.course.refine.ge_filters}
         </AccordionTrigger>
         <AccordionContent className="flex flex-col gap-6">
           <div className="flex flex-col gap-2">
-            <span className="text-sm">{dict.course.refine.geTarget}</span>
+            <span className="text-sm">
+              {dict.course.refine.geTarget}
+            </span>
             <FilterItem
               attribute="ge_target"
               clientSearch={true}
@@ -88,7 +90,9 @@ const Filters = () => {
           </div>
 
           <div className="flex flex-col gap-2">
-            <span className="text-sm">{dict.course.refine.gecDimensions}</span>
+            <span className="text-sm">
+              {dict.course.refine.gecDimensions}
+            </span>
             <FilterItem
               attribute="ge_type"
               clientSearch={true}
@@ -98,12 +102,12 @@ const Filters = () => {
       </AccordionItem>
       <AccordionItem value="advanced">
         <AccordionTrigger className="outline-none">
-          Advanced filters
+          {dict.course.refine.advanced_filters}
         </AccordionTrigger>
         <AccordionContent className="flex flex-col gap-6">
           <div className="flex flex-col gap-2">
             <span className="text-sm">
-              Compulsory for
+              {dict.course.details.compulsory}
             </span>
             <FilterItem
               attribute="compulsory_for"
@@ -115,7 +119,7 @@ const Filters = () => {
 
           <div className="flex flex-col gap-2">
             <span className="text-sm">
-              Elective for
+              {dict.course.details.elective}
             </span>
             <FilterItem
               attribute="elective_for"

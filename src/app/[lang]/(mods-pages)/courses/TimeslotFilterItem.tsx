@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import useCustomRefinementList from "./useCustomRefinementList";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { scheduleTimeSlots } from "@/const/timetable";
+import useDictionary from "@/dictionaries/useDictionary";
 
 export default ({
   searchable = false,
@@ -118,6 +119,7 @@ export default ({
   }, [timeslotValue])
 
   const { getSemesterCourses, semester, setSemester } = useUserTimetable();
+  const dict = useDictionary();
 
   const handleFillTimes = useCallback(() => {
     const timeslots = getSemesterCourses(semester).map(course => course.times.map(time => time.match(/.{1,2}/g) ?? [] as unknown as string[]).flat()).flat();
@@ -160,7 +162,7 @@ export default ({
 
     <div className="flex gap-1">
       <Button variant="outline" onClick={handleFillTimes}>
-        Empty time
+        {dict.course.refine.timetable_empty}
       </Button>
 
       <Select value={mode} onValueChange={setMode}>

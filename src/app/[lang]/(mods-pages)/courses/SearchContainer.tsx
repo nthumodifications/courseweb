@@ -29,7 +29,7 @@ const SearchContainer = ({
     <div className="hidden md:flex flex-col gap-4 w-72">
       <div className="flex justify-between items-end">
         <span className="text-2xl">
-          Filters
+          {dict.course.refine.title}
         </span>
         <ClearAllButton />
       </div>
@@ -41,7 +41,7 @@ const SearchContainer = ({
     <div className="flex flex-col gap-4 flex-1">
       <div className="flex justify-between items-end ml-4">
         <span className="text-2xl">
-          Search results
+          {dict.course.refine.search_results}
         </span>
         <span className="text-sm">
           {}

@@ -46,7 +46,12 @@
             "x-class": "X-Class",
             "16_weeks": "16 Weeks",
             "others": "Others",
-            "clear": "Clear All"
+            "clear": "Clear all",
+            "special_tags": "Special tags",
+            "ge_filters": "GE Filters",
+            "timetable_empty": "Find empty",
+            "advanced_filters": "Advanced filters",
+            "search_results": "Search results"
         },
         "details": {
             "semester": "Semester",
@@ -61,6 +66,7 @@
             "restrictions": "Restrictions",
             "prerequesites": "Prerequisites",
             "timetable": "Timetable",
+            "course_list": "Course List",
             "scores": "Scores",
             "average": "Average",
             "standard_deviation": "Std. Deviation",

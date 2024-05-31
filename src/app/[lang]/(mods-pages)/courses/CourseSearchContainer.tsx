@@ -42,6 +42,7 @@ import { lastSemester } from '@/const/semester';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import TimetableCourseList from '@/components/Timetable/TimetableCourseList';
 import ClearAllButton from './ClearAllButton';
+import useDictionary from '@/dictionaries/useDictionary';
 
 const SemesterSelector = () => {
   // refine semester for semester selector
@@ -89,6 +90,7 @@ const CourseSearchContainer = () => {
   const { getSemesterCourses, semester, setSemester, colorMap } = useUserTimetable();
   const [vertical, setVertical] = useLocalStorage('timetable_vertical', true);
   const timetableData = createTimetableFromCourses(getSemesterCourses(semester) as MinimalCourse[], colorMap);
+  const dict = useDictionary();
 
   return <InstantSearchNext
     searchClient={searchClient}
@@ -114,7 +116,7 @@ const CourseSearchContainer = () => {
           </HoverCard>
           <SearchBox
             ignoreCompositionEvents
-            placeholder="Search for your course..."
+            placeholder={dict.course.list.search_placeholder}
             autoFocus
             classNames={{
               root: 'flex w-full',
@@ -174,8 +176,12 @@ const CourseSearchContainer = () => {
         <ResizablePanel collapsible={true} collapsedSize={0} minSize={30} defaultSize={0} className='hidden md:block'>
           <Tabs defaultValue="timetable">
             <TabsList className="w-full justify-around">
-              <TabsTrigger value="timetable" className="flex-1">Timetable</TabsTrigger>
-              <TabsTrigger value="list" className="flex-1">List</TabsTrigger>
+              <TabsTrigger value="timetable" className="flex-1">
+                {dict.course.details.timetable}
+              </TabsTrigger>
+              <TabsTrigger value="list" className="flex-1">
+                {dict.course.details.course_list}
+              </TabsTrigger>
             </TabsList>
             <TabsContent value="timetable" className="h-full">
               <ScrollArea className="w-full h-[calc(100vh-12.5rem)] overflow-auto border rounded-2xl">
