@@ -193,6 +193,7 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
         return { ...result, encryptedPassword };
     } catch (err) {
         if(err instanceof Error) return { error: { message: err.message } };
+        console.error(err);
         throw err;
     }
 }
@@ -204,6 +205,7 @@ export const refreshUserSession = async (studentid: string, encryptedPassword: s
 
     const res = await signInToCCXP(studentid, password);
     if('error' in res && res.error) {
+        console.error(res.error);
         return { error: res.error }
     }
     // @ts-ignore - We know that res is not an error
