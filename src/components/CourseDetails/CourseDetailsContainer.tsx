@@ -49,7 +49,7 @@ const CrossDisciplineTagList = ({ course }: { course: CourseDefinition }) => {
 
 const getOtherClasses = async (course: MinimalCourse) => {
     const semester = parseInt(course.semester.substring(0, 3));
-    const getsemesters = [semester - 1, semester, semester + 1].map(s => [s.toString() + '10', s.toString() + '20']).flat();
+    const getsemesters = [semester - 2, semester - 1, semester, semester + 1].map(s => [s.toString() + '10', s.toString() + '20']).flat();
 
     const { data, error } = await supabase
         .from('courses')
