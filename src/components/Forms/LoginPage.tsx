@@ -64,6 +64,7 @@ export const LoginPage = ({ onClose }: { onClose: () => void; }) => {
   const [error, setError] = useState<string | undefined>(undefined);
   const { user, setAISCredentials } = useHeadlessAIS();
   const dict = useDictionary();
+  const { language } = useSettings();
 
   const onSubmit = async () => {
     setLoading(true);
@@ -90,8 +91,8 @@ export const LoginPage = ({ onClose }: { onClose: () => void; }) => {
   return <>
     {user ? <WelcomeUserPage onClose={onClose} />:
     <div className="flex flex-col gap-8" onKeyDown={handleKeyDown}>
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-2 items-center">
+      <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-3 items-center">
           <NTHUModsLogo />
           <h2 className="text-2xl font-bold text-center">Welcome to NTHUMODS</h2>
         </div>
@@ -106,7 +107,7 @@ export const LoginPage = ({ onClose }: { onClose: () => void; }) => {
               name="studentid"
               disabled={loading}
               value={studentid}
-              placeholder="113010001"
+              placeholder={dict.ccxp.studentid}
               onChange={(e) => setStudentid(e.target.value)} />
           </div>
           <div className="flex flex-col gap-2">
@@ -125,8 +126,8 @@ export const LoginPage = ({ onClose }: { onClose: () => void; }) => {
           {error && <div className="text-sm text-red-500">{error}</div>}
           <div className="items-center gap-2 flex">
             <Checkbox checked={agreeChecked} onCheckedChange={handleCheckboxChange} disabled={loading} />
-            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-              {dict.ccxp.login.agree}
+            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">   
+              我同意本網站的<a href={`/${language}/privacy-policy`} className="underline px-1" target="_blank">隱私權政策</a>及理解<a href={`/${language}/proxy-login`} className="underline px-1" target="_blank">代理登入</a>的方法
             </label>
           </div>
         </div>

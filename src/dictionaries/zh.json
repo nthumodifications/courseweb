@@ -232,6 +232,7 @@
         "incorrect_credentials": "學號或密碼錯誤",
         "studentid": "學號",
         "password": "密碼",
+        "fill_in_ccxp_credentials": "請輸入校務資訊系統密碼",
         "login": {
             "title": "登入校務資訊系統",
             "disclaimer": "注意：你的學號和密碼僅會儲存在你的設備中，不會儲存在伺服器上。",
