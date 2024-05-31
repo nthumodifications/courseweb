@@ -195,7 +195,7 @@ const CourseDetailContainer = async ({ lang, courseId, bottomAware = false, moda
                             <div className="flex flex-row">
                                 <h3 className="font-semibold text-xl flex-1" id="other">{dict.course.details.related_courses}</h3>
                                 <Button variant="ghost" asChild>
-                                    <Link href={`/${lang}/courses?department[0]=${course.department}&textSearch=${course.department + course.course}`}>
+                                    <Link href={`/${lang}/courses?nthu_courses%5BrefinementList%5D%5Bdepartment%5D%5B0%5D=${course.department}&nthu_courses%5Bquery%5D=${course.name_zh} ${course.teacher_zh.join(' ')}`}>
                                         查看更多 <ArrowRight className="ml-2 w-4 h-4" />
                                     </Link>
                                 </Button>

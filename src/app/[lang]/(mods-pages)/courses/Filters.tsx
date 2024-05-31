@@ -33,15 +33,6 @@ const Filters = () => {
 
   return <div className="w-full p-4">
     <div className="w-full flex flex-col gap-6">
-      <div className="flex flex-col gap-2">
-        <span className="text-sm">{dict.course.refine.language}</span>
-        <FilterItem
-          attribute="language"
-          searchable={false}
-          synonms={languageSynonyms}
-          clientSearch={true}
-        />
-      </div>
 
       <div className="flex flex-col gap-2">
         <span className="text-sm">{dict.course.refine.department}</span>
@@ -69,7 +60,17 @@ const Filters = () => {
         <Timeslotfilteritem
           clientSearch={true}
         />
-      </div>      
+      </div>    
+      
+      <div className="flex flex-col gap-2">
+        <span className="text-sm">{dict.course.refine.language}</span>
+        <FilterItem
+          attribute="language"
+          searchable={false}
+          synonms={languageSynonyms}
+          clientSearch={true}
+        />
+      </div>  
     </div>
 
     <Accordion type="multiple">
