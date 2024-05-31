@@ -17,7 +17,7 @@ import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button"
 import { useState } from "react";
 
-export default ({
+const FilterItem =  ({
   attribute,
   limit = 10,
   searchable = false,
@@ -141,3 +141,5 @@ export default ({
     </PopoverContent>
   </Popover>
 }
+
+export default FilterItem;

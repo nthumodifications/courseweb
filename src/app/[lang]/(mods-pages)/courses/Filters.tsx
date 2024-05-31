@@ -1,5 +1,4 @@
 import useDictionary from '@/dictionaries/useDictionary'
-import FilterItem from './filterItem'
 import { departments } from "@/const/departments";
 import { GETargetCodes } from '@/const/ge_target';
 import {
@@ -15,7 +14,7 @@ import {
 } from "@/components/ui/collapsible"
 import TimeslotSelector from '@/components/Courses/TimeslotSelector';
 import Timeslotfilteritem from './timeslotfilteritem';
-
+import FilterItem from './FilterItem';
 
 const languageSynonyms: Record<string, string> = {
   "中": "Chinese",
@@ -24,7 +23,7 @@ const languageSynonyms: Record<string, string> = {
 const departmentSynonyms: Record<string, string> = departments.reduce((a, v) => ({ ...a, [v.code]: v.name_zh }), {})
 const geTargetSynonyms: Record<string, string> = GETargetCodes.reduce((a, v) => ({ ...a, [v.code]: `${v.short_en} ${v.short_zh}` }), {})
 
-export default () => {
+const Filters = () => {
 
   const dict = useDictionary()
 
@@ -129,3 +128,5 @@ export default () => {
     </Accordion>
   </div>
 }
+
+export default Filters;
