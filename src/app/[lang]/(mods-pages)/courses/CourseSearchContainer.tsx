@@ -14,7 +14,7 @@ import { renderTimetableSlot } from '@/helpers/timetable_course';
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { InstantSearchNext } from 'react-instantsearch-nextjs';
-import { SearchIcon } from "lucide-react";
+import { Calendar, FilterIcon, SearchIcon } from "lucide-react";
 import { SearchBox } from 'react-instantsearch';
 
 const searchClient = algoliasearch(process.env.NEXT_PUBLIC_ALGOLIA_APP_ID!, process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY!);
@@ -24,6 +24,8 @@ import SearchContainer from './SearchContainer';
 import { Separator } from '@/components/ui/separator';
 import { useState } from 'react';
 import type { SearchBoxProps } from 'react-instantsearch';
+import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
+import Filters from './Filters';
 
 const CourseSearchContainer = () => {
 
@@ -41,7 +43,7 @@ const CourseSearchContainer = () => {
     searchClient={searchClient}
     indexName="nthu_courses"
   >
-    <div className="flex flex-col h-screen p-8 gap-8">
+    <div className="flex flex-col h-screen p-4 md:p-8 gap-8">
 
       <div className="">
         <div className="bg-muted rounded-2xl flex items-center gap-4 p-4">
@@ -61,7 +63,7 @@ const CourseSearchContainer = () => {
             placeholder="Search for your course..."
             autoFocus
             classNames={{
-              root: 'flex w-max',
+              root: 'flex flex-1',
               input: 'bg-transparent outline-none w-full',
               form: 'w-full',
               submit: 'hidden',
@@ -71,11 +73,32 @@ const CourseSearchContainer = () => {
             // queryHook={queryHook}
           />
           <Separator orientation="vertical" className="px-4" />
+          <div className='md:hidden'>
+            <Drawer>
+              <DrawerTrigger asChild>
+                <FilterIcon size="16" />
+              </DrawerTrigger>
+              <DrawerContent >
+                <Filters />
+              </DrawerContent>
+            </Drawer>
+          </div>
+          <Separator orientation="vertical" className="px-4" />
+          <div className='md:hidden'>
+            <Drawer>
+              <DrawerTrigger asChild>
+                <Calendar size="16" />
+              </DrawerTrigger>
+              <DrawerContent >
+                <Timetable timetableData={timetableData} vertical={vertical} renderTimetableSlot={renderTimetableSlot} />
+              </DrawerContent>
+            </Drawer>
+          </div>
         </div>
       </div>
 
       <ResizablePanelGroup direction="horizontal" className="h-full w-full">
-        <ResizablePanel className="flex gap-4">
+        <ResizablePanel className="flex gap-4" >
           <SearchContainer
             searchClient={searchClient} 
             sessionStorageCache={sessionStorageCache}
@@ -83,9 +106,9 @@ const CourseSearchContainer = () => {
           />
         </ResizablePanel>
         
-        <ResizableHandle className="outline-none self-center px-[2px] h-48 mx-4 my-8 rounded-full bg-muted" />
+        <ResizableHandle className="hidden md:block outline-none self-center px-[2px] h-48 mx-4 my-8 rounded-full bg-muted" />
         
-        <ResizablePanel collapsible={true} collapsedSize={0} minSize={30} defaultSize={0}>
+        <ResizablePanel collapsible={true} collapsedSize={0} minSize={30} defaultSize={0} className='hidden md:block'>
           <ScrollArea className="w-full h-full overflow-auto">
             <Timetable timetableData={timetableData} vertical={vertical} renderTimetableSlot={renderTimetableSlot} />
           </ScrollArea>
