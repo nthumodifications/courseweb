@@ -15,7 +15,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Check, Trash, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button"
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import TimeslotSelector from "@/components/Courses/TimeslotSelector";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -31,34 +31,40 @@ export default ({
   placeholder?: string;
 }) => {
 
-  let {
-    items,
-    refine,
-    searchForItems,
-    canToggleShowMore,
-    isShowingMore,
-    toggleShowMore,
+  const [mode, setMode] = useState('includes')
+  const {
+    items: timesItems,
+    refine: timesRefine,
+    searchForItems: timesSearchForItems,
   } = useRefinementList({
-    attribute: 'separate_times',
+    attribute: 'times', 
+    limit: 500,
+  })
+  const {
+    items: separateItems,
+    refine: separateRefine,
+    searchForItems: separateSearchForItems,
+  } = useRefinementList({
+    attribute: 'separate_times', 
     limit: 500,
   })
 
+  const items = mode == 'exact' ? timesItems : separateItems
+  const refine = mode == 'exact' ? timesRefine : separateRefine
+  const searchForItems = mode == 'exact' ? timesSearchForItems : separateSearchForItems
 
-  const [mode, setMode] = useState('includes')
-
-  // useEffect(() => {
-  //   ({
-  //     items,
-  //     refine,
-  //     searchForItems,
-  //     canToggleShowMore,
-  //     isShowingMore,
-  //     toggleShowMore,
-  //   } = useRefinementList({
-  //     attribute: mode == 'within' ? 'times' : 'separate_times',
-  //     limit: 500,
-  //   }))
-  // }, [mode])
+  useEffect(() => {
+    if (timeslotValue.length > 0) {
+      clearRefine()
+      if(mode == 'includes') {
+        for (let i = 0; i < timeslotValue.length; i++) {
+          refine(timeslotValue[i])
+        }
+      } else {
+        refine([...timeslotValue].sort().join(''))
+      }
+    }
+  }, [mode])
 
   const { canRefine: canClearRefine, refine: clearRefine } = useClearRefinements({
     includedAttributes: ['times', 'separate_times'],
@@ -99,8 +105,12 @@ export default ({
 
   useEffect(() => {
     clearRefine()
-    for (let i = 0; i < timeslotValue.length; i++) {
-      refine(timeslotValue[i])
+    if(mode == 'includes') {
+      for (let i = 0; i < timeslotValue.length; i++) {
+        refine(timeslotValue[i])
+      }
+    } else {
+      refine([...timeslotValue].sort().join(''))
     }
   }, [timeslotValue])
 
@@ -137,7 +147,7 @@ export default ({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="includes">Includes</SelectItem>
-          <SelectItem value="within">Within</SelectItem>
+          <SelectItem value="exact">Exact</SelectItem>
         </SelectContent>
       </Select>
 
