@@ -174,7 +174,7 @@ type EEClassOauthReturn = {
 }
 export const signInEeclassOauth = async (studentid: string, encryptedPassword: string) => {
     try {
-        const password = decrypt(encryptedPassword)
+        const password = await decrypt(encryptedPassword)
 
         const oauthLogin = async (_try = 0): Promise<EEClassOauthReturn> => {
             if(_try == 3) {
