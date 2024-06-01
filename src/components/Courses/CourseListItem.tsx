@@ -9,6 +9,11 @@ import { HoverCard } from '@radix-ui/react-hover-card';
 import { HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { Button } from '@/components/ui/button';
 import { useSettings } from '@/hooks/contexts/settings';
+import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+  } from "@/components/ui/collapsible"  
 
 const CourseListItem: FC<{ course: CourseSyllabusView, hasTaken?: boolean }> = ({ course, hasTaken = false }) => {
     const dict = useDictionary();
@@ -40,16 +45,17 @@ const CourseListItem: FC<{ course: CourseSyllabusView, hasTaken?: boolean }> = (
                     </div>
                     <CourseTagList course={course as unknown as CourseDefinition}/>
                     {course.prerequisites && 
-                    <div className='flex flex-row'>
-                        <HoverCard openDelay={0}>
-                            <HoverCardTrigger asChild>
-                                <Button size={'sm'} variant="link" className='text-orange-600'>有擋修</Button>
-                            </HoverCardTrigger>
-                            <HoverCardContent>
+                        <Collapsible>
+                            <CollapsibleTrigger asChild>
+                                <Button size={'sm'} variant="link" className='text-orange-600'>
+                                    有擋修
+                                </Button>    
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
                                 <p dangerouslySetInnerHTML={{ __html: course.prerequisites}}></p>
-                            </HoverCardContent>
-                        </HoverCard>
-                    </div>}
+                            </CollapsibleContent>
+                        </Collapsible>
+                    }
                 </div>
             </div>
             <div className='@md:flex flex-col space-y-3 justify-end items-end hidden'>
