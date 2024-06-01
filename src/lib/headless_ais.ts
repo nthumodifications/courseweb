@@ -7,7 +7,7 @@ import iconv from 'iconv-lite';
 import supabase_server from "@/config/supabase_server";
 import crypto from 'crypto';
 
-export const encrypt = (text: string) => {
+export const encrypt = async (text: string) => {
     const iv = crypto.randomBytes(16);
     const key = Buffer.from(process.env.NTHU_HEADLESS_AIS_ENCRYPTION_KEY!, 'hex');
     const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
@@ -16,7 +16,7 @@ export const encrypt = (text: string) => {
     return encryptedPassword;
 }
 
-export const decrypt = (encryptedPassword: string) => {
+export const decrypt = async (encryptedPassword: string) => {
     const key = Buffer.from(process.env.NTHU_HEADLESS_AIS_ENCRYPTION_KEY!, 'hex');
     
     // Split the IV and the encrypted text
@@ -26,7 +26,7 @@ export const decrypt = (encryptedPassword: string) => {
     const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
     let decrypted = decipher.update(encryptedText, 'base64', 'utf8');
     decrypted += decipher.final('utf8');
-    return decrypted;
+    return await decrypted;
 }
 
 
@@ -198,7 +198,7 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
         await cookies().set('accessToken', token, { path: '/', maxAge: 60 * 60 * 24, sameSite: 'strict', secure: true });
 
         // Encrypt user password 
-        const encryptedPassword = encrypt(password);
+        const encryptedPassword = await encrypt(password);
         
         return { ...result, encryptedPassword };
     } catch (err) {
@@ -212,7 +212,7 @@ type RefreshUserSessionResponse = Promise<{ ACIXSTORE: string } | { error: { mes
 export const refreshUserSession = async (studentid: string, encryptedPassword: string): RefreshUserSessionResponse => {
     console.log('Refreshing User Session')
     // Decrypt password
-    const password =  decrypt(encryptedPassword);
+    const password =  await decrypt(encryptedPassword);
 
     const res = await signInToCCXP(studentid, password);
     if('error' in res && res.error) {
