@@ -7,7 +7,7 @@ import iconv from 'iconv-lite';
 import supabase_server from "@/config/supabase_server";
 import crypto from 'crypto';
 
-const encrypt = (text: string) => {
+export const encrypt = (text: string) => {
     const iv = crypto.randomBytes(16);
     const key = Buffer.from(process.env.NTHU_HEADLESS_AIS_ENCRYPTION_KEY!, 'hex');
     const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
@@ -16,7 +16,7 @@ const encrypt = (text: string) => {
     return encryptedPassword;
 }
 
-const decrypt = (encryptedPassword: string) => {
+export const decrypt = (encryptedPassword: string) => {
     const key = Buffer.from(process.env.NTHU_HEADLESS_AIS_ENCRYPTION_KEY!, 'hex');
     
     // Split the IV and the encrypted text
