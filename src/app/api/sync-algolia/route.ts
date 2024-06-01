@@ -43,6 +43,4 @@ export const GET = async (request: NextRequest) => {
     return NextResponse.json({ status: 200, body: { message: 'success' } })
 
 }
-
-export default GET;
     

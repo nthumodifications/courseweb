@@ -291,7 +291,7 @@ export const CommentsContainer = ({ course}: { course: MinimalCourse }) => {
         queryKey: ['comments', course.raw_id],
         queryFn: ({ pageParam }) => getComments(course.raw_id, pageParam as number),
         getNextPageParam: (lastPage, allPages) => {
-            return lastPage.length ? Math.ceil(allPages.length / 10) + 1 : undefined;
+            return (lastPage ?? []).length ? Math.ceil((allPages ?? []).length / 10) + 1 : undefined;
         },
         initialPageParam: 1,
     })
