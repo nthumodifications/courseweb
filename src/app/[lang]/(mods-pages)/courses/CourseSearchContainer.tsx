@@ -15,7 +15,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { InstantSearchNext } from 'react-instantsearch-nextjs';
 import { Calendar, FilterIcon, SearchIcon } from "lucide-react";
-import { SearchBox } from 'react-instantsearch';
+import { PoweredBy, SearchBox } from 'react-instantsearch';
 
 const searchClient = algoliasearch(process.env.NEXT_PUBLIC_ALGOLIA_APP_ID!, process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY!);
 const sessionStorageCache = createInfiniteHitsSessionStorageCache();
