@@ -81,9 +81,9 @@ const FilterItem =  ({
   }
 
   return <Popover modal={true} onOpenChange={openChange}>
-      <Button variant="outline" className={`w-full justify-start h-max`}>
+      <Button variant="outline" className={`w-full justify-start h-max p-0`}>
         <PopoverTrigger asChild>
-          <div className="flex-1 text-left">
+          <div className="flex-1 text-left px-4 py-2">
           {searching ?
             "Selecting..." :
             (selected.length == 0 ? 
@@ -99,7 +99,7 @@ const FilterItem =  ({
           }
           </div>
         </PopoverTrigger>
-        {selected.length > 0 && <X className="pl-2 w-6 h-6 cursor-pointer" onClick={clear}/>}
+        {selected.length > 0 && <X className="px-2 w-8 h-6 cursor-pointer" onClick={clear}/>}
       </Button>
       
     
