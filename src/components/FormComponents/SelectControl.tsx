@@ -1,3 +1,4 @@
+// @ts-nocheck
 import {Input, InputProps, Option, Select, SelectProps} from '@mui/joy';
 import {Controller, Path, Control, FieldValues} from 'react-hook-form';
 

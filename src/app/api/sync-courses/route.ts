@@ -3,6 +3,8 @@ import { fullWidthToHalfWidth } from "@/helpers/characters";
 import { Database } from "@/types/supabase";
 import {decode} from 'html-entities';
 import { NextRequest, NextResponse } from "next/server";
+import algolia from "@/config/algolia_server";
+import TimeslotHeader from "@/components/Timetable/TimeslotHeader";
 
 const baseUrl = `https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/OPENDATA/open_course_data.json`;
 
@@ -27,6 +29,29 @@ type APIResponse = {
     '不可加簽說明': string,
     '必選修說明': string
 }[]
+
+const syncCoursesToAlgolia = async (semester: string) => {
+    const query = await supabase_server.from('courses').select('*, course_syllabus(brief, keywords)').eq('semester', semester);
+
+    if(!query.data) throw new Error('no data found');
+
+    const chunked = query.data.map(m => ({...m, ...m.course_syllabus})).reduce((acc, cur, i) => {
+        const index = Math.floor(i / 500);
+        acc[index] = acc[index] || [];
+        acc[index].push(cur);
+        return acc;
+    }, [] as Database['public']['Tables']['courses']['Row'][][]);
+
+    for(const chunk of chunked) {
+        const algoliaChunk = chunk.map(course => ({
+            ...course, 
+            objectID: course.raw_id,
+            separate_times: course.times.flatMap(s => s.match(/.{1,2}/g)),
+        }))
+        algolia.saveObjects(algoliaChunk);
+    }
+
+}
 
 export const GET = async (request: NextRequest) => {
     const authHeader = request.headers.get('authorization');
@@ -165,7 +190,7 @@ export const GET = async (request: NextRequest) => {
         if(error) throw error;
     }
 
-    
+    await syncCoursesToAlgolia(normalizedCourses[0].semester);
     return NextResponse.json({ status: 200, body: { message: 'success' } })
 
 }

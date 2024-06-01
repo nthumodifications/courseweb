@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useHeadlessAIS } from '@/hooks/contexts/useHeadlessAIS';
 import { toast } from '../ui/use-toast';
 import { event } from '@/lib/gtag';
+import {getStudentCourses} from '@/lib/headless_ais/courses';
 
 const HeadlessSyncCourseButton = () => {
     const dict = useDictionary();
@@ -14,7 +15,6 @@ const HeadlessSyncCourseButton = () => {
     const [loading, setLoading] = useState(false);
     const [coursesToAdd, setCoursesToAdd] = useState<string[]>([]);
 
-    if (!ais.enabled) return <></>;
 
     useEffect(() => {
         if (coursesToAdd.length > 0) {
@@ -37,20 +37,28 @@ const HeadlessSyncCourseButton = () => {
         setLoading(true);
         console.log('sync');
         const ACIXSTORE = await getACIXSTORE();
-        const res = await fetch('/api/ais_headless/courses/sync-latest?ACIXSTORE=' + ACIXSTORE).then(res => res.json()) as {
-            semester: string;
-            phase: string;
-            studentid: string;
-            courses: string[];
-        };
+        const res = await getStudentCourses(ACIXSTORE!);
+        if (!res) {
+            setLoading(false);
+            toast({
+                title: 'Sync Failed!',
+                description: 'Please try again later.',
+            });
+            return;
+        }
+        console.log(res.courses);
         //remove courses that are not in the latest
-        const courses_to_remove = (courses[res.semester] ?? []).filter(id => !res.courses.includes(id));
+        const courses_to_remove = Object.values(courses).flat().filter(id => !res.courses.includes(id));
         deleteCourse(courses_to_remove);
         //add courses that are not in the current
-        const courses_to_add = res.courses.filter(id => !(courses[res.semester] ?? []).includes(id));
+        const courses_to_add = res.courses.filter(id => !Object.values(courses).flat().includes(id));
         setCoursesToAdd(courses_to_add);
+        console.log('add', courses_to_add, 'remove', courses_to_remove);
         setLoading(false);
     };
+    
+    if (!ais.enabled) return <></>;
+    
     return <Button variant="outline" onClick={handleSync} disabled={loading}>
         {!loading ?
             <><FolderSync className="w-4 h-4 mr-1" /> {dict.timetable.actions.sync_ccxp}</> :
