@@ -1,4 +1,4 @@
-import { InfiniteHits, useClearRefinements, useStats, PoweredBy } from 'react-instantsearch';
+import { useClearRefinements, useStats, PoweredBy, useInfiniteHits, useInstantSearch } from 'react-instantsearch';
 import { createInfiniteHitsSessionStorageCache } from 'instantsearch.js/es/lib/infiniteHitsCache';
 import algoliasearch from 'algoliasearch/lite';
 import useDictionary from "@/dictionaries/useDictionary";
@@ -6,6 +6,7 @@ import CourseListItem from "@/components/Courses/CourseListItem";
 import Filter from './Filters'
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ClearAllButton from '@/app/[lang]/(mods-pages)/courses/ClearAllButton';
+import { useEffect, useRef } from 'react';
 
 type SearchClient = ReturnType<typeof algoliasearch>;
 type InfiniteHitsCache = ReturnType<typeof createInfiniteHitsSessionStorageCache>;
@@ -13,6 +14,47 @@ type InfiniteHitsCache = ReturnType<typeof createInfiniteHitsSessionStorageCache
 const Hit = ({ hit }: { hit: any }) => {
   return <CourseListItem course={hit} />;
 }
+
+export function InfiniteHits(props: Parameters<typeof useInfiniteHits>[0]) {
+  const { hits, isLastPage, showMore } = useInfiniteHits({
+    showPrevious: false,
+    ...props
+  });
+  const { status } = useInstantSearch();
+  
+  const sentinelRef = useRef(null);
+
+  useEffect(() => {
+    if (sentinelRef.current !== null) {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !isLastPage) {
+            showMore();
+          }
+        });
+      });
+
+      observer.observe(sentinelRef.current);
+
+      return () => {
+        observer.disconnect();
+      };
+    }
+  }, [isLastPage, showMore]);
+
+  return (
+    <ScrollArea className="">
+      <div className="ais-InfiniteHits">
+        <ul className="ais-InfiniteHits-list flex flex-col w-full h-full space-y-5">
+          {hits.map((hit) => <Hit key={hit.objectID} hit={hit} />)}
+          <li ref={sentinelRef} aria-hidden={true} />
+          {status === 'loading' && <li>Loading...</li>}
+        </ul>
+    </div>
+    </ScrollArea>
+  );
+}
+
 
 const SearchContainer = ({ 
   searchClient, 
@@ -24,6 +66,10 @@ const SearchContainer = ({
   
   const dict = useDictionary();
   const { nbHits, processingTimeMS } = useStats();
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // listen i
 
   return <div className="flex w-full gap-4">
     <div className="hidden md:flex flex-col gap-4 w-72">
@@ -53,17 +99,10 @@ const SearchContainer = ({
           </svg>
         </a>
       </div>
-      <ScrollArea className="">
-        <InfiniteHits 
-          hitComponent={Hit}
+        <InfiniteHits
           showPrevious={false}
           cache={sessionStorageCache}
-          classNames={{
-            list: 'flex flex-col w-full h-full space-y-5',
-            loadMore: 'underline mt-5 pb-5',
-          }}
         />
-      </ScrollArea>
     </div>
   </div>
 }
