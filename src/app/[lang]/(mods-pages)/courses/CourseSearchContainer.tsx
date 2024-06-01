@@ -131,10 +131,9 @@ const CourseSearchContainer = () => {
     indexName="nthu_courses"
     routing
   >
-    <div className="flex flex-col h-[100dvh] px-2 pt-6 md:p-8 gap-8">
-
+    <div className="flex flex-col h-full max-h-[100dvh] gap-4 md:gap-8">
       <div className="">
-        <div className="bg-neutral-100 dark:bg-neutral-950 rounded-2xl flex items-center p-4">
+        <div className="bg-neutral-100 dark:bg-neutral-950 rounded-2xl flex items-center py-2 md:p-4">
           <SemesterSelector />
           <Separator orientation="vertical" className='h-full'/>
           <HoverCard>

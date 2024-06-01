@@ -5,30 +5,10 @@ import CourseSearchContainer from './CourseSearchContainer';
 import { useRouter } from "next/navigation";
 
 const CourseDialog = () => {
-  const [open, setOpen] = useState(true);
-  const router = useRouter();
-
-  //first load open dialog
-  useEffect(() => {
-    setOpen(true);
-  }, [])
-
-  //if closed, navigate to timetable page
-  useEffect(() => {
-    if (!open) {
-      router.push('/timetable')
-    }
-  }, [open])
   
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger>
-        Open
-      </DialogTrigger>
-      <DialogContent className="p-0 h-[100dvh] max-w-screen w-screen gap-0">
-        <CourseSearchContainer />
-      </DialogContent>
-    </Dialog>
+  return (<div className="max-h-[calc(var(--content-height)-36px)]">
+    <CourseSearchContainer />
+  </div>
   );
 }
 
