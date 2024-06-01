@@ -7,6 +7,8 @@ import Filter from './Filters'
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ClearAllButton from '@/app/[lang]/(mods-pages)/courses/ClearAllButton';
 import { useEffect, useRef } from 'react';
+import CourseListItemSkeleton from '../../../../components/Courses/CourseListItemSkeleton';
+import { cn } from '@/lib/utils';
 
 type SearchClient = ReturnType<typeof algoliasearch>;
 type InfiniteHitsCache = ReturnType<typeof createInfiniteHitsSessionStorageCache>;
@@ -43,12 +45,19 @@ export function InfiniteHits(props: Parameters<typeof useInfiniteHits>[0]) {
   }, [isLastPage, showMore]);
 
   return (
-    <ScrollArea className="">
+    <ScrollArea className={cn("scroll-smooth", status != 'idle' ? 'opacity-70': '')}>
       <div className="ais-InfiniteHits">
         <ul className="ais-InfiniteHits-list flex flex-col w-full h-full space-y-5">
           {hits.map((hit) => <Hit key={hit.objectID} hit={hit} />)}
           <li ref={sentinelRef} aria-hidden={true} />
-          {status === 'loading' && <li>Loading...</li>}
+          {status === 'stalled' || status === 'loading' && <>
+            <CourseListItemSkeleton/>
+            <CourseListItemSkeleton/>
+            <CourseListItemSkeleton/>
+          </>}
+          {status == 'error' && <li className="text-center text-gray-500">An Error Occured</li>}
+          {isLastPage && <li className="text-center text-gray-500">No more results</li>}
+          <div className='h-32 w-full'></div>
         </ul>
     </div>
     </ScrollArea>
