@@ -97,15 +97,15 @@ const CourseDetailContainer = async ({ lang, courseId, bottomAware = false, moda
                 <div className="flex flex-col md:flex-row md:items-end gap-4">
                     <div className="space-y-4 flex-1 w-full">
                         <div className="space-y-2">
-                            <h4 className="font-semibold text-base ">{toPrettySemester(course.semester)} 學期</h4>
-                            <h1 className="font-bold text-3xl mb-4 text-nthu-600">{`${course?.department} ${course?.course}-${course?.class}`}</h1>
-                            <h2 className="font-semibold text-3xl flex flex-row flex-wrap gap-1">
+                            <div className="font-semibold text-base ">{toPrettySemester(course.semester)} 學期</div>
+                            <div className="font-bold text-xl mb-4 text-nthu-600">{`${course?.department} ${course?.course}-${course?.class}`}</div>
+                            <h1 className="font-semibold text-3xl flex flex-row flex-wrap gap-1">
                                 <span>{course!.name_zh}</span>
-                                <span className="font-normal">{course?.teacher_zh?.join(',') ?? ""}</span>
-                            </h2>
+                                <span>{course?.teacher_zh?.join(',') ?? ""}</span>
+                            </h1>
                             <h2 className="font-semibold text-xl flex flex-row flex-wrap gap-1">
                                 <span>{course!.name_en}</span>
-                                <span className="font-normal">{course?.teacher_en?.join(',') ?? ""}</span>
+                                <span>{course?.teacher_en?.join(',') ?? ""}</span>
                             </h2>
                         </div>
                         <CourseTagList course={course} />
@@ -265,25 +265,33 @@ const CourseDetailContainer = async ({ lang, courseId, bottomAware = false, moda
                         {(course.compulsory_for ?? []).length > 0 && <div className="flex flex-col gap-1">
                             <h3 className="font-semibold text-base">{dict.course.details.compulsory}</h3>
                             <div className="flex flex-row gap-2 flex-wrap">
-                                {course.compulsory_for?.map((m, index) => <Badge key={index} variant="outline">{getFormattedClassCode(m)}</Badge>)}
+                                {course.compulsory_for?.map((m, index) => <Link key={index} href={`/${lang}/courses?nthu_courses%5BrefinementList%5D%5Bcompulsory_for%5D%5B0%5D=${course.compulsory_for}`}>
+                                    <Badge variant="outline">{getFormattedClassCode(m)}</Badge>
+                                </Link>)}
                             </div>
                         </div>}
                         {(course.elective_for ?? []).length > 0 && <div className="flex flex-col gap-1">
                             <h3 className="font-semibold text-base">{dict.course.details.elective}</h3>
                             <div className="flex flex-row gap-2 flex-wrap">
-                                {course.elective_for?.map((m, index) => <Badge key={index} variant="outline">{getFormattedClassCode(m)}</Badge>)}
+                                {course.elective_for?.map((m, index) => <Link key={index} href={`/${lang}/courses?nthu_courses%5BrefinementList%5D%5Belective_for%5D%5B0%5D=${course.elective_for}`}>
+                                    <Badge variant="outline">{getFormattedClassCode(m)}</Badge>
+                                </Link>)}
                             </div>
                         </div>}
                         {(course.first_specialization ?? []).length > 0 && <div className="flex flex-col gap-1">
                             <h3 className="font-semibold text-base">{dict.course.details.first_specialization}</h3>
                             <div className="flex flex-row gap-2 flex-wrap">
-                                {course.first_specialization?.map((m, index) => <Badge key={index} variant="outline">{m}</Badge>)}
+                                {course.first_specialization?.map((m, index) => <Link key={index} href={`/${lang}/courses?nthu_courses%5BrefinementList%5D%5Bfirst_specialization%5D%5B0%5D=${course.first_specialization}`}>
+                                    <Badge variant="outline">{m}</Badge>
+                                </Link>)}
                             </div>
                         </div>}
                         {(course.second_specialization ?? []).length > 0 && <div className="flex flex-col gap-1">
                             <h3 className="font-semibold text-base">{dict.course.details.second_specialization}</h3>
                             <div className="flex flex-row gap-2 flex-wrap">
-                                {course.second_specialization?.map((m, index) => <Badge key={index} variant="outline">{m}</Badge>)}
+                                {course.second_specialization?.map((m, index) => <Link key={index} href={`/${lang}/courses?nthu_courses%5BrefinementList%5D%5Bsecond_specialization%5D%5B0%5D=${course.second_specialization}`}>
+                                    <Badge variant="outline">{m}</Badge>
+                                </Link>)}
                             </div>
                         </div>}
                     </div>
