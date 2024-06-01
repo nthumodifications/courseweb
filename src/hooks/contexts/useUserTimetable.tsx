@@ -11,6 +11,18 @@ import { event } from "@/lib/gtag";
 import {timetableColors} from '@/const/timetableColors';
 import { useQuery } from "@tanstack/react-query";
 
+export interface TimetableDisplayPreferences {
+    language: 'app' | 'zh' | 'en';
+    align: 'left' | 'center' | 'right';
+    display: {
+        title: boolean;
+        code: boolean;
+        time: boolean;
+        venue: boolean;
+    }
+
+}
+
 type CourseLocalStorage = { [sem: string]: RawCourseID[] };
 
 const userTimetableContext = createContext<ReturnType<typeof useUserTimetableProvider>>({
@@ -34,7 +46,18 @@ const userTimetableContext = createContext<ReturnType<typeof useUserTimetablePro
     error: null,
     semester: lastSemester.id,
     isCoursesEmpty: true,
-    setSemester: () => { }
+    setSemester: () => { },
+    preferences: {
+        language: 'app',
+        align: 'center',
+        display: {
+            title: true,
+            code: false,
+            time: true,
+            venue: true
+        }
+    },
+    setPreferences: () => {}
 });
 
 const useUserTimetableProvider = (loadCourse = true) => {
@@ -42,6 +65,16 @@ const useUserTimetableProvider = (loadCourse = true) => {
     const [colorMap, setColorMap] = useLocalStorage<{ [courseID: string]: string }>("course_color_map", {}); //map from courseID to color
     const [timetableTheme, _setTimetableTheme] = useLocalStorage<string>("timetable_theme", "pastelColors");
     const [userDefinedColors, setUserDefinedColors] = useLocalStorage<{[theme_name: string]: string[]}>("user_defined_colors", {});
+    const [preferences, setPreferences] = useLocalStorage<TimetableDisplayPreferences>("timetable_display_preferences", {
+        language: 'app',
+        align: 'center',
+        display: {
+            title: true,
+            code: false,
+            time: true,
+            venue: true
+        }
+    });
     const [semester, setSemester] = useState<string>(lastSemester.id);
 
     const setTimetableTheme = useCallback((theme: string) => {
@@ -264,7 +297,9 @@ const useUserTimetableProvider = (loadCourse = true) => {
         isLoading, 
         isCoursesEmpty,
         error, 
-        courses
+        courses,
+        preferences,
+        setPreferences
     };
 }
 

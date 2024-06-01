@@ -21,7 +21,9 @@ const settingsContext = createContext<ReturnType<typeof useSettingsProvider>>({
     setLanguage: () => {},
     setDarkMode: () => {},
     setTimetableTheme: () => {},
-    toggleApp: () => {}
+    toggleApp: () => {},
+    analytics: true,
+    setAnalytics: () => {}
 });
 
 type HeadlessAISStorage = { enabled: false } | {enabled: true, studentid: string, password: string, ACIXSTORE?: string, lastUpdated: number }
@@ -32,6 +34,7 @@ const useSettingsProvider = () => {
     const [cookies, setCookie, removeCookie] = useCookies(['theme', 'locale', 'ACIXSTORE']);
     const [timetableTheme, setTimetableTheme] = useLocalStorage<string>("timetable_theme", "pastelColors");
     const [pinnedApps, setPinnedApps] = useLocalStorage<string[]>("pinned_apps", []);
+    const [analytics, setAnalytics] = useLocalStorage<boolean>("analytics", true);
 
     const setLanguage = (newLang: Language) => {
         //set cookie of 'locale'
@@ -98,6 +101,8 @@ const useSettingsProvider = () => {
         setDarkMode,
         setTimetableTheme,
         toggleApp,
+        analytics,
+        setAnalytics
     };
 }
 

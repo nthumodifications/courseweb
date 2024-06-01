@@ -309,32 +309,105 @@ export type Database = {
       course_comments: {
         Row: {
           comment: string
-          courses: string
-          ease: number
+          easiness: number
           id: number
           posted_on: string
+          raw_id: string
           scoring: number
+          submitter: string
         }
         Insert: {
           comment: string
-          courses: string
-          ease: number
+          easiness: number
           id?: number
           posted_on: string
+          raw_id: string
           scoring: number
+          submitter?: string
         }
         Update: {
           comment?: string
-          courses?: string
-          ease?: number
+          easiness?: number
           id?: number
           posted_on?: string
+          raw_id?: string
           scoring?: number
+          submitter?: string
         }
         Relationships: [
           {
-            foreignKeyName: "public_course_comments_course_fkey"
-            columns: ["courses"]
+            foreignKeyName: "course_comments_raw_id_fkey"
+            columns: ["raw_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["raw_id"]
+          },
+        ]
+      }
+      course_dates: {
+        Row: {
+          created: string
+          date: string
+          id: number
+          raw_id: string
+          submitter: string
+          title: string
+          type: string
+        }
+        Insert: {
+          created?: string
+          date: string
+          id?: number
+          raw_id: string
+          submitter: string
+          title: string
+          type: string
+        }
+        Update: {
+          created?: string
+          date?: string
+          id?: number
+          raw_id?: string
+          submitter?: string
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_dates_raw_id_fkey"
+            columns: ["raw_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["raw_id"]
+          },
+        ]
+      }
+      course_logs: {
+        Row: {
+          action: string
+          created_at: string
+          id: number
+          raw_id: string
+          user: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: number
+          raw_id: string
+          user: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: number
+          raw_id?: string
+          user?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_logs_raw_id_fkey"
+            columns: ["raw_id"]
             isOneToOne: false
             referencedRelation: "courses"
             referencedColumns: ["raw_id"]
@@ -592,14 +665,17 @@ export type Database = {
       }
       users: {
         Row: {
+          banned: boolean
           roles: string[]
           user_id: string
         }
         Insert: {
+          banned?: boolean
           roles: string[]
           user_id: string
         }
         Update: {
+          banned?: boolean
           roles?: string[]
           user_id?: string
         }

@@ -1,6 +1,7 @@
-import {Divider, Switch} from '@mui/joy';
 import { Codepen, Database, Globe } from 'lucide-react';
 import Link from 'next/link';
+import EmptyIssueForm from './EmptyIssueForm';
+import { Separator } from '@/components/ui/separator';
 
 const IssueButton = ({title, description, icon, href}: {title: string, description: string, icon: any, href: string}) => {
     return (
@@ -25,7 +26,7 @@ const IssuesPage = () => {
                 <IssueButton title="Bug/Feature" description="Report a bug or request a feature" icon={<Codepen className='w-8 h-8'/>} href="https://github.com/nthumodifications/courseweb/issues/new/choose"/>
                 <IssueButton title="Other" description="Report an issue that doesn't fit in the above categories" icon={<Globe className='w-8 h-8'/>} href="mailto:nthumods@googlegroups.com"/>
             </div>
-            <Divider/>
+            <Separator/>
             <div id="dataissue" className="flex flex-col gap-4 py-4">
                 {/* Explainer of the data sources */}
                 <h2 className="font-semibold text-xl text-gray-600 dark:text-gray-400 pb-2">{"Data Sources"}</h2>
@@ -37,6 +38,7 @@ const IssuesPage = () => {
                 <p className="text-gray-600 dark:text-gray-400">{"If you find any issues with the data, please report it below."}</p>
                 {/* Data issue form */}
             </div>
+            <EmptyIssueForm />
         </div>
     )
 }
