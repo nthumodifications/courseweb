@@ -14,7 +14,7 @@ import { renderTimetableSlot } from '@/helpers/timetable_course';
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { InstantSearchNext } from 'react-instantsearch-nextjs';
-import { Calendar, FilterIcon, SearchIcon } from "lucide-react";
+import { Calendar, FilterIcon, Heart, SearchIcon } from "lucide-react";
 import { PoweredBy, SearchBox } from 'react-instantsearch';
 
 const searchClient = algoliasearch(process.env.NEXT_PUBLIC_ALGOLIA_APP_ID!, process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY!);
@@ -40,6 +40,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import TimetableCourseList, { DownloadTimetableDialogDynamic, ShareSyncTimetableDialogDynamic } from '@/components/Timetable/TimetableCourseList';
 import ClearAllButton from './ClearAllButton';
 import useDictionary from '@/dictionaries/useDictionary';
+import FavouritesCourseList from './FavouritesCourseList';
 
 const SemesterSelector = () => {
   // refine semester for semester selector
@@ -215,6 +216,9 @@ const CourseSearchContainer = () => {
               <TabsTrigger value="list" className="flex-1">
                 {dict.course.details.course_list}
               </TabsTrigger>
+              <TabsTrigger value="favourites" className="h-full">
+                <Heart className='w-4 h-4'/>
+              </TabsTrigger>
             </TabsList>
             <TabsContent value="timetable" className="h-full">
               <ScrollArea className="w-full h-[calc(100vh-12.5rem)] overflow-auto border rounded-2xl">
@@ -228,6 +232,13 @@ const CourseSearchContainer = () => {
               <ScrollArea className="w-full h-[calc(100vh-12.5rem)] overflow-auto border rounded-2xl">
                 <div className="p-4 h-full">
                   <TimetableCourseListWithSemester />
+                </div>
+              </ScrollArea>
+            </TabsContent>
+            <TabsContent value="favourites">
+              <ScrollArea className="w-full h-[calc(100vh-12.5rem)] overflow-auto border rounded-2xl">
+                <div className="p-4 h-full">
+                  <FavouritesCourseList />
                 </div>
               </ScrollArea>
             </TabsContent>
