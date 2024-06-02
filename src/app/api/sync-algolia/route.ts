@@ -17,8 +17,9 @@ const syncCoursesToAlgolia = async (semester: string) => {
     }, [] as Database['public']['Tables']['courses']['Row'][][]);
 
     for(const chunk of chunked) {
-        const algoliaChunk = chunk.map(course => ({
+        const algoliaChunk = chunk.map(({ elective_for, compulsory_for , ...course}) => ({
             ...course, 
+            for_class: [...(elective_for || []), ...(compulsory_for || [])],
             objectID: course.raw_id,
             separate_times: course.times.flatMap(s => s.match(/.{1,2}/g)),
         }))

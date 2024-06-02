@@ -26,33 +26,16 @@ const ClassRefinementItem =  ({
 }) => {
 
   const {
-    items: compulsoryItems,
-    refine: refineCompulsory,
-    searchForItems: searchForCompulsory,
-    canToggleShowMore: canToggleShowMoreCompulsory,
-    isShowingMore: isShowingMoreCompulsory,
-    toggleShowMore: toggleShowMoreCompulsory,
+    items,
+    refine,
+    searchForItems,
   } = useCustomRefinementList({
-    attribute: 'compulsory_for',
-    limit: limit,
-  })
-
-  const {
-    items: electiveItems,
-    refine: refineElective,
-    searchForItems: searchForElective,
-    canToggleShowMore: canToggleShowMoreElective,
-    isShowingMore: isShowingMoreElective,
-    toggleShowMore: toggleShowMoreElective,
-  } = useCustomRefinementList({
-    attribute: 'elective_for',
+    attribute: 'for_class',
     limit: limit,
   })
   
   const { 
     items: semesterItem,
-    refine,
-    canRefine,
    } = useCustomMenu({
     attribute: 'semester',
   });
@@ -61,20 +44,9 @@ const ClassRefinementItem =  ({
   
   const searchParams = useSearchParams()
   useEffect(() => {
-    const refinedCompulsory = compulsoryItems.filter((item) => item.isRefined)
-    const refinedElective = electiveItems.filter((item) => item.isRefined)
-    // const merged = [...refinedCompulsory, ...refinedElective]
-    // merge but remove duplicates
-    const merged = [...refinedCompulsory, ...refinedElective.filter((item) => !refinedCompulsory.some((i) => i.value == item.value))]
-    setSelected(merged.map((item) => item.value))
-  }, [compulsoryItems, electiveItems, searchParams])
-
-  //sort by name
-  const items = [...compulsoryItems, ...electiveItems.filter((item) => !compulsoryItems.some((i) => i.value == item.value))].sort((a, b) => {
-    if (a.label < b.label) return -1
-    if (a.label > b.label) return 1
-    return 0
-  })
+    const refinedItems = items.filter((item) => item.isRefined)
+    setSelected(refinedItems.map((item) => item.value))
+  }, [items, searchParams])
   
   const [searchValue, setSearchValue] = useState('')
   const [searching, setSearching] = useState(false)
@@ -83,15 +55,11 @@ const ClassRefinementItem =  ({
   const search = (name: string) => {
     setSearchValue(name)
     if (!clientSearch) {
-    //   searchForItems(name)
-        searchForCompulsory(name)
-        searchForElective(name)
+      searchForItems(name)
     }
     if (name == '') {
-        const refinedCompulsory = compulsoryItems.filter((item) => item.isRefined)
-        const refinedElective = electiveItems.filter((item) => item.isRefined)
-        const merged = [...refinedCompulsory, ...refinedElective.filter((item) => !refinedCompulsory.some((i) => i.value == item.value))]
-        setSelected(merged.map((item) => item.value))
+        const refined = items.filter((item) => item.isRefined)
+        setSelected(refined.map((item) => item.value))
     }
   }
 
@@ -107,16 +75,12 @@ const ClassRefinementItem =  ({
 
   const select = (value: string) => {
     setSearchValue('')
-    // refine(value)
-    refineCompulsory(value)
-    refineElective(value)
+    refine(value)
   }
 
   const clear = () => {
     selected.forEach((value) => {
-    //   refine(value)
-        refineCompulsory(value)
-        refineElective(value)
+      refine(value)
     })
   }
 
