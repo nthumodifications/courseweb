@@ -35,7 +35,7 @@ import {
 } from "@/components/ui/select"
 import { toPrettySemester } from '@/helpers/semester';
 import { Button } from '@/components/ui/button';
-import { lastSemester } from '@/const/semester';
+import { lastSemester, semesterInfo } from '@/const/semester';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import TimetableCourseList, { DownloadTimetableDialogDynamic, ShareSyncTimetableDialogDynamic } from '@/components/Timetable/TimetableCourseList';
 import ClearAllButton from './ClearAllButton';
@@ -69,8 +69,8 @@ const SemesterSelector = () => {
       <SelectValue placeholder="Semester" />
     </SelectTrigger>
     <SelectContent>
-      {items.map(item => <SelectItem value={item.value} key={item.value}>
-        {toPrettySemester(item.label)} 學期
+      {semesterInfo.sort((a, b) => parseInt(b.id) - parseInt(a.id)).map(item => <SelectItem value={item.id} key={item.id}>
+        {toPrettySemester(item.id)} 學期
       </SelectItem>)}
     </SelectContent>
   </Select>
