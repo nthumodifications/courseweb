@@ -75,7 +75,7 @@ export const GET = async (request: NextRequest, _try = 0) => {
         const response = await fetch(baseUrl, {
             body: new URLSearchParams({
                 'ACIXSTORE': `${ACIXSTORE}`,
-                'YS': `${yearSemester}`,
+                'YS': `${yearSemester.slice(0, 3)}|${yearSemester.slice(3, 5)}`,
                 'cond': 'a',
                 'cou_code': `${department.code}`,
                 'auth_num': `${answer}`,
