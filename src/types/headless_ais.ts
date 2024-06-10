@@ -14,6 +14,9 @@ export type HeadlessAISStorage = { enabled: false } | {
     encrypted: boolean,
     ACIXSTORE?: string, 
     lastUpdated: number,
+    elearnCookie?: string,
+    eeclassCookie?: string,
+    oauthLastUpdated?: number
 }
 
 export enum LoginError {
