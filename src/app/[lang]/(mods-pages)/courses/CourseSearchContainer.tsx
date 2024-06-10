@@ -216,8 +216,8 @@ const CourseSearchContainer = () => {
               <TabsTrigger value="list" className="flex-1">
                 {dict.course.details.course_list}
               </TabsTrigger>
-              <TabsTrigger value="favourites" className="h-full">
-                <Heart className='w-4 h-4'/>
+              <TabsTrigger value="favourites" className="flex-1">
+                已收藏課程
               </TabsTrigger>
             </TabsList>
             <TabsContent value="timetable" className="h-full">
