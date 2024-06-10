@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import dynamic from 'next/dynamic';
+import { toPrettySemester } from '@/helpers/semester';
 
 const VenueTimetableDynamic = dynamic(() => import('@/app/[lang]/(mods-pages)/(venues)/venues/@content/[locationId]/VenueTimetable'), { ssr: false });
 
@@ -16,7 +17,7 @@ type Props = {
 }
 
 const getCoursesWithVenue = async (venueId: string) => {
-    const { data, error } = await supabase.from('courses').select('*').eq('semester', lastSemester.id).containedBy('venues', [venueId]);
+    const { data, error } = await supabase.from('courses').select('*').eq('semester', lastSemester.id).contains('venues', [venueId]);
     if (error) throw error;
     else return data;
 }
@@ -45,7 +46,7 @@ const MapPage = async ({
                 </Link>
             </div>
             <div className='py-4 flex flex-col items-center space-y-2 px-2 md:px-6'>
-                <h2 className='font-semibold text-xl'>{venueId}</h2>
+                <h2 className='font-semibold text-xl'>{venueId} - {toPrettySemester(lastSemester.id)}學期</h2>
                 <VenueTimetableDynamic courses={courses as MinimalCourse[]}/>
                 {/* <Suspense fallback={<h1>Map failed to load</h1>}>
                     <NTHUMap marker={[24.791513, 120.994123]}/>
