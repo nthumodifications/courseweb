@@ -69,7 +69,7 @@ const SemesterSelector = () => {
       <SelectValue placeholder="Semester" />
     </SelectTrigger>
     <SelectContent>
-      {semesterInfo.sort((a, b) => parseInt(b.id) - parseInt(a.id)).map(item => <SelectItem value={item.id} key={item.id}>
+      {[...semesterInfo].sort((a, b) => parseInt(b.id) - parseInt(a.id)).map(item => <SelectItem value={item.id} key={item.id}>
         {toPrettySemester(item.id)} 學期
       </SelectItem>)}
     </SelectContent>
