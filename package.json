@@ -115,7 +115,7 @@
   "devDependencies": {
     "@capacitor/cli": "^6.0.0",
     "@tailwindcss/typography": "^0.5.10",
-    "@types/jsdom": "^21.1.6",
+    "@types/jsdom": "^21.1.7",
     "@types/jsonwebtoken": "^9.0.6",
     "@types/leaflet": "^1.9.11",
     "@types/negotiator": "^0.6.3",
