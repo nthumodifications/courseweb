@@ -8,5 +8,5 @@ export const POST = async (req: NextRequest) => {
 
     if(!studentid || !encryptedPassword) return NextResponse.json({ error: { message: "Missing Student ID and Password" }}, { status: 400 })
 
-    return await refreshUserSession(studentid as string, encryptedPassword as string);
+    return NextResponse.json(await refreshUserSession(studentid as string, encryptedPassword as string));
 }

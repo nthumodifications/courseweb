@@ -8,5 +8,5 @@ export const POST = async (req: NextRequest) => {
 
     if(!studentid || !password) return NextResponse.json({ error: { message: "Missing Student ID and Password" }}, { status: 400 })
 
-    return await signInToCCXP(studentid as string, password as string);
+    return NextResponse.json(await signInToCCXP(studentid as string, password as string));
 }
