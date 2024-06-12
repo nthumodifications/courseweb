@@ -209,7 +209,6 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
         })
             .then(res => res.arrayBuffer())
             .then(arrayBuffer => new TextDecoder('big5').decode(new Uint8Array(arrayBuffer)))
-        // const dom = new jsdom.JSDOM(html);
         const { document: doc } = parseHTML(html, 'text/html');
 
         const form = doc.querySelector('form[name="register"]');
