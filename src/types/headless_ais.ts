@@ -1,5 +1,4 @@
 import { cookies } from "next/headers";
-import jwt from 'jsonwebtoken';
 
 export const getServerACIXSTORE = async () => {
     const cookie = await cookies();
@@ -31,4 +30,4 @@ export interface UserJWTDetails {
     email: string;
 }
 
-export type UserJWT = jwt.JwtPayload & UserJWTDetails;
+export type UserJWT = UserJWTDetails;

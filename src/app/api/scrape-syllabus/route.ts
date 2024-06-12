@@ -77,7 +77,7 @@ export const GET = async (request: NextRequest) => {
     const fetchSyllabusHTML = async (c_key: string) => {
         const text = await fetch(baseURL + encodeURIComponent(c_key))
                             .then(res => res.arrayBuffer())
-                            .then(arrayBuffer => iconv.decode(Buffer.from(arrayBuffer), 'big5').toString())
+                            .then(arrayBuffer => new TextDecoder('big5').decode(new Uint8Array(arrayBuffer)))
         return text;
     }
     const courses = await fetchCourses();   
