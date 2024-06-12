@@ -1,34 +1,65 @@
 'use server';
 import { LoginError, UserJWT, UserJWTDetails } from "@/types/headless_ais";
-import jwt from 'jsonwebtoken';
 import { cookies } from "next/headers";
 import jsdom from 'jsdom';
 import iconv from 'iconv-lite';
 import supabase_server from "@/config/supabase_server";
-import crypto from 'crypto';
+import * as jose from 'jose'
 
 export const encrypt = async (text: string) => {
-    const iv = crypto.randomBytes(16);
-    const key = Buffer.from(process.env.NTHU_HEADLESS_AIS_ENCRYPTION_KEY!, 'hex');
-    const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
-    const encrypted = cipher.update(text, 'utf8', 'base64') + cipher.final('base64');
-    const encryptedPassword = iv.toString('base64') + encrypted;
+    const crypto = new Crypto();
+    const key = await crypto.subtle.importKey(
+        'raw',
+        new TextEncoder().encode(process.env.NTHU_HEADLESS_AIS_ENCRYPTION_KEY!),
+        { name: 'AES-CBC', length: 256 }, // Specify algorithm details
+        false,
+        ['encrypt']
+    );
+    const iv = crypto.getRandomValues(new Uint8Array(16));
+    const encrypted = await crypto.subtle.encrypt(
+        { name: 'AES-CBC', iv },
+        key,
+        new TextEncoder().encode(text)
+    );
+    
+    // Correctly handle binary data and Base64 encoding
+    const encryptedData = new Uint8Array(encrypted); // Convert BufferSource to Uint8Array
+    const ivBase64 = btoa(String.fromCharCode(...iv)); // Encode IV as Base64
+    const encryptedDataBase64 = btoa(String.fromCharCode(...encryptedData)); // Encode encrypted data as Base64
+    
+    const encryptedPassword = ivBase64 + encryptedDataBase64; // Concatenate Base64 IV and encrypted data
     return encryptedPassword;
 }
 
 export const decrypt = async (encryptedPassword: string) => {
-    const key = Buffer.from(process.env.NTHU_HEADLESS_AIS_ENCRYPTION_KEY!, 'hex');
-    
-    // Split the IV and the encrypted text
-    const iv = Buffer.from(encryptedPassword.slice(0, 24), 'base64'); // First 24 characters represent the IV
-    const encryptedText = encryptedPassword.slice(24); // The rest is the encrypted text
-    
-    const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
-    let decrypted = decipher.update(encryptedText, 'base64', 'utf8');
-    decrypted += decipher.final('utf8');
-    return await decrypted;
-}
+    const encodedKey = new TextEncoder().encode(process.env.NTHU_HEADLESS_AIS_ENCRYPTION_KEY!);
+    const key = await crypto.subtle.importKey(
+        'raw',
+        encodedKey,
+        { name: 'AES-CBC', length: 256 }, // Specify algorithm details for consistency
+        false,
+        ['decrypt']  // Specify that the key is for decryption
+    );
 
+    // Extract the IV from the first part of the Base64 string
+    const ivBase64 = encryptedPassword.slice(0, 24); // First 24 characters are the Base64 encoded IV
+    const iv = new Uint8Array(atob(ivBase64).split('').map(char => char.charCodeAt(0)));
+
+    // Extract the encrypted data
+    const encryptedData = encryptedPassword.slice(24);
+    const encryptedArrayBuffer = new Uint8Array(atob(encryptedData).split('').map(char => char.charCodeAt(0))).buffer;
+
+    // Decrypt the data
+    const decryptedBuffer = await crypto.subtle.decrypt(
+        { name: 'AES-CBC', iv },
+        key,
+        encryptedArrayBuffer
+    );
+
+    // Convert the decrypted buffer back to text
+    const decryptedText = new TextDecoder().decode(decryptedBuffer);
+    return decryptedText;
+}
 
 type SignInToCCXPResponse = Promise<{ ACIXSTORE: string, encryptedPassword: string } | { error: { message: string } }>;
 /**
@@ -194,8 +225,17 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
             throw new Error(LoginError.Unknown);
         }
 
-        const token = jwt.sign({ sub: studentid, ...data }, process.env.NTHU_HEADLESS_AIS_SIGNING_KEY!, { expiresIn: '15d' });
-        await cookies().set('accessToken', token, { path: '/', maxAge: 60 * 60 * 24, sameSite: 'strict', secure: true });
+        // const token = jwt.sign({ sub: studentid, ...data }, process.env.NTHU_HEADLESS_AIS_SIGNING_KEY!, { expiresIn: '15d' });
+        //use jose to sign the token
+        const secret = new TextEncoder().encode(process.env.NTHU_HEADLESS_AIS_SIGNING_KEY!);
+        const jwt = await new jose.SignJWT({ sub: studentid, ...data })
+            .setProtectedHeader({ alg: 'HS256' })
+            .setIssuedAt()
+            .setIssuer('NTHUMods')
+            .setExpirationTime('15d')
+            .sign(secret);
+
+        await cookies().set('accessToken', jwt, { path: '/', maxAge: 60 * 60 * 24, sameSite: 'strict', secure: true });
 
         // Encrypt user password 
         const encryptedPassword = await encrypt(password);
@@ -226,7 +266,9 @@ export const refreshUserSession = async (studentid: string, encryptedPassword: s
 export const getUserSession = async () => {
     const accessToken = cookies().get('accessToken')?.value ?? '';
     try {
-        return await jwt.verify(accessToken, process.env.NTHU_HEADLESS_AIS_SIGNING_KEY!) as UserJWT;
+        const secret = new TextEncoder().encode(process.env.NTHU_HEADLESS_AIS_SIGNING_KEY!);
+        const { payload } = await jose.jwtVerify(accessToken, secret) as { payload: UserJWT };
+        return payload;
     } catch {
         return null;
     }

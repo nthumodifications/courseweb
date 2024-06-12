@@ -79,6 +79,7 @@
     "iconv-lite": "^0.6.3",
     "ics": "^3.5.0",
     "idb-keyval": "^6.2.1",
+    "jose": "^5.4.0",
     "jsdom": "^24.1.0",
     "jsonwebtoken": "^9.0.2",
     "leaflet": "^1.9.4",
