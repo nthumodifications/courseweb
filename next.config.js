@@ -23,7 +23,7 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
   
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  webpack: (config, { webpack }) => {
+  webpack: (config, { webpack, isServer }) => {
     config.plugins.push(
       new webpack.DefinePlugin({
         __SENTRY_DEBUG__: false,

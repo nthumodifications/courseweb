@@ -6,7 +6,7 @@ export const getStudentGrades = async (ACIXSTORE: string) => {
     const baseURL = 'https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/8/R/6.3/JH8R63002.php?ACIXSTORE=';
     const html = await fetch(baseURL + ACIXSTORE)
                     .then(res => res.arrayBuffer())
-                    .then(arrayBuffer => iconv.decode(Buffer.from(arrayBuffer), 'big5').toString())
+                    .then(arrayBuffer => new TextDecoder('big5').decode(new Uint8Array(arrayBuffer)))
     const dom = new jsdom.JSDOM(html);
     const doc = dom.window.document;
     const table = Array.from(doc.querySelectorAll('table')).find(n => (n.textContent?.trim() ?? "").startsWith('學號 Student Number'))

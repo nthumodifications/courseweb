@@ -1,12 +1,11 @@
 'use server';
 import jsdom from 'jsdom';
-import iconv from 'iconv-lite';
 
 export const getStudentCourses = async (ACIXSTORE: string) => {
     const baseURL = 'https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/8/R/6.3/JH8R63002.php?ACIXSTORE=';
     const html = await fetch(baseURL + ACIXSTORE)
                     .then(res => res.arrayBuffer())
-                    .then(arrayBuffer => iconv.decode(Buffer.from(arrayBuffer), 'big5').toString())
+                    .then(arrayBuffer => new TextDecoder('big5').decode(new Uint8Array(arrayBuffer)))
     const dom = new jsdom.JSDOM(html);
     const doc = dom.window.document;
     const table = Array.from(doc.querySelectorAll('table')).find(n => (n.textContent?.trim() ?? "").startsWith('學號 Student Number'))
@@ -81,7 +80,7 @@ export const getLatestCourses = async (ACIXSTORE: string) => {
             "credentials": "include"
         })
         .then(res => res.arrayBuffer())
-        .then(arrayBuffer => iconv.decode(Buffer.from(arrayBuffer), 'big5').toString())
+        .then(arrayBuffer => new TextDecoder('big5').decode(new Uint8Array(arrayBuffer)))
     const dom1 = new jsdom.JSDOM(html1);
     const doc1 = dom1.window.document;
     const semester = Array.from(doc1.querySelectorAll('select')[0].querySelectorAll('option'))[1].value
@@ -111,7 +110,7 @@ export const getLatestCourses = async (ACIXSTORE: string) => {
             "credentials": "include"
         })
         .then(res => res.arrayBuffer())
-        .then(arrayBuffer => iconv.decode(Buffer.from(arrayBuffer), 'big5').toString())
+        .then(arrayBuffer => new TextDecoder('big5').decode(new Uint8Array(arrayBuffer)))
     const dom = new jsdom.JSDOM(html);
     const doc = dom.window.document;
     const raw_ids = Array.from(doc.querySelectorAll('table')[1].querySelectorAll('tbody > .class3')).map(n => n.children[0].textContent)

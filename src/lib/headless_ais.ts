@@ -1,16 +1,26 @@
 'use server';
 import { LoginError, UserJWT, UserJWTDetails } from "@/types/headless_ais";
 import { cookies } from "next/headers";
-import jsdom from 'jsdom';
-import iconv from 'iconv-lite';
+import { parseHTML } from 'linkedom';
 import supabase_server from "@/config/supabase_server";
 import * as jose from 'jose'
 
+function hexStringToUint8Array(hexString: string) {
+    if (hexString.length % 2 !== 0) {
+        throw new Error("Hex string has an odd length");
+    }
+    const arrayBuffer = new Uint8Array(hexString.length / 2);
+    for (let i = 0; i < hexString.length; i += 2) {
+        const byteValue = parseInt(hexString.substring(i, i + 2), 16);
+        arrayBuffer[i / 2] = byteValue;
+    }
+    return arrayBuffer;
+}
+
 export const encrypt = async (text: string) => {
-    const crypto = new Crypto();
     const key = await crypto.subtle.importKey(
         'raw',
-        new TextEncoder().encode(process.env.NTHU_HEADLESS_AIS_ENCRYPTION_KEY!),
+        hexStringToUint8Array(process.env.NTHU_HEADLESS_AIS_ENCRYPTION_KEY!),
         { name: 'AES-CBC', length: 256 }, // Specify algorithm details
         false,
         ['encrypt']
@@ -32,7 +42,7 @@ export const encrypt = async (text: string) => {
 }
 
 export const decrypt = async (encryptedPassword: string) => {
-    const encodedKey = new TextEncoder().encode(process.env.NTHU_HEADLESS_AIS_ENCRYPTION_KEY!);
+    const encodedKey = hexStringToUint8Array(process.env.NTHU_HEADLESS_AIS_ENCRYPTION_KEY!);
     const key = await crypto.subtle.importKey(
         'raw',
         encodedKey,
@@ -198,11 +208,9 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
             "credentials": "include"
         })
             .then(res => res.arrayBuffer())
-            .then(arrayBuffer => iconv.decode(Buffer.from(arrayBuffer), 'big5').toString())
-        const dom = new jsdom.JSDOM(html);
-        const doc = dom.window.document;
-
-        console.log('what')
+            .then(arrayBuffer => new TextDecoder('big5').decode(new Uint8Array(arrayBuffer)))
+        // const dom = new jsdom.JSDOM(html);
+        const { document: doc } = parseHTML(html, 'text/html');
 
         const form = doc.querySelector('form[name="register"]');
         if(form == null) {
@@ -242,8 +250,8 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
         
         return { ...result, encryptedPassword };
     } catch (err) {
+        console.error('CCXP Login Err', err);
         if(err instanceof Error) return { error: { message: err.message } };
-        console.error('CCXP Unknown Err', err);
         throw err;
     }
 }
