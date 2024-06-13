@@ -182,3 +182,49 @@ export const getLatestCourseEnrollment = async (ACIXSTORE: string, dept: string)
 
     return courses;
 };
+
+export const getHiddenCourseSelectionCode = async (ACIXSTORE: string, dept: string) => {
+
+    const html = await fetch("https://www.ccxp.nthu.edu.tw/ccxp/COURSE/JH/7/7.1/7.1.3/JH713004.php", {
+        "headers": {
+          "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+          "accept-language": "en-US,en;q=0.9",
+          "cache-control": "max-age=0",
+          "content-type": "application/x-www-form-urlencoded",
+          "sec-ch-ua": "\"Microsoft Edge\";v=\"125\", \"Chromium\";v=\"125\", \"Not.A/Brand\";v=\"24\"",
+          "sec-ch-ua-mobile": "?0",
+          "sec-ch-ua-platform": "\"Windows\"",
+          "sec-fetch-dest": "frame",
+          "sec-fetch-mode": "navigate",
+          "sec-fetch-site": "same-origin",
+          "sec-fetch-user": "?1",
+          "upgrade-insecure-requests": "1"
+        },
+        "body": `ACIXSTORE=${ACIXSTORE}&toChk=1&new_dept=${dept}&new_class=EECS111B++&chks=%A5%B2%BF%EF%AD%D7&aspr=&ckey=&code=&div=&real=&cred=&ctime=&num=&glimit=&type=&pre=&range=&chkbtn=`,
+        "method": "POST",
+        "mode": "cors",
+        "credentials": "include"
+    })
+        .then(res => res.arrayBuffer())
+        .then(arrayBuffer => new TextDecoder('big5').decode(new Uint8Array(arrayBuffer)))
+    console.log(html)
+    const window = parseHTML(html);
+    const doc = window.document;
+    const buttons = doc.querySelectorAll('input[type="button"][value="加ADD"]');
+    
+    const courses = Array.from(buttons).map(button => {
+        const onClick = button.getAttribute('onClick')!;
+        const matches = onClick.match(/checks\(this\.form,\s*'([^']+)','([^']+)','([^']+)','([^']+)','([^']+)','([^']+)','([^']+)','([^']*)','([^']*)','([^']*)','([^']*)'\s*\);/);
+        
+        if (matches) {
+            const [
+                , ckey, code, div, real, cred, ctime, num, glimit, type, pre, range
+            ] = matches;
+
+            return { ckey, code, div, real, cred, ctime, num, glimit, type, pre, range };
+        }
+        return null;
+    }).filter(course => course !== null);
+
+    return courses;
+};

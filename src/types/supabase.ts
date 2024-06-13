@@ -382,6 +382,56 @@ export type Database = {
           },
         ]
       }
+      course_hidden: {
+        Row: {
+          ckey: string
+          code: string
+          cred: string
+          ctime: string
+          div: string
+          glimit: string
+          num: string
+          pre: string
+          range: string
+          real: string
+          type: string
+        }
+        Insert: {
+          ckey: string
+          code: string
+          cred: string
+          ctime: string
+          div: string
+          glimit: string
+          num: string
+          pre: string
+          range: string
+          real: string
+          type: string
+        }
+        Update: {
+          ckey?: string
+          code?: string
+          cred?: string
+          ctime?: string
+          div?: string
+          glimit?: string
+          num?: string
+          pre?: string
+          range?: string
+          real?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_hidden_ckey_fkey"
+            columns: ["ckey"]
+            isOneToOne: true
+            referencedRelation: "courses"
+            referencedColumns: ["raw_id"]
+          },
+        ]
+      }
       course_logs: {
         Row: {
           action: string
