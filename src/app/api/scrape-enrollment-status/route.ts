@@ -21,6 +21,8 @@ export const GET = async (request: NextRequest, _try = 0) => {
 
     const {ACIXSTORE} = user;
 
+    console.log('ACIXSTORE', ACIXSTORE)
+
     const courses = (await Promise.all(departments.map(async dept => await getLatestCourseEnrollment(ACIXSTORE, dept.code)))).flat();
     //save into file
     writeFileSync('courses.json', JSON.stringify(courses), 'utf8');

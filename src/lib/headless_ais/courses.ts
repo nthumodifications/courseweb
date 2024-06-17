@@ -1,5 +1,6 @@
 'use server';
 
+import { writeFile } from "fs/promises";
 import { parseHTML } from "linkedom";
 
 export const getStudentCourses = async (ACIXSTORE: string) => {
@@ -151,10 +152,10 @@ export const getLatestCourseEnrollment = async (ACIXSTORE: string, dept: string)
     const window = parseHTML(html);
     const doc = window.document;
 
-    const table = doc.querySelector('table[class=sortable]')
+    const table = doc.querySelector('.sortable')
 
     if (!table) {
-        throw new Error('No table found');
+        throw new Error('No table found on '+ dept);
     }
 
     const headerCells = table.querySelectorAll('tr.class2 td');
