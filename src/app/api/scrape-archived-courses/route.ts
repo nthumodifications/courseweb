@@ -93,7 +93,7 @@ export const GET = async (request: NextRequest, _try = 0) => {
 
         const text = await fetchCourses(department, semester)
             .then(res => res.arrayBuffer())
-            .then(arrayBuffer => iconv.decode(Buffer.from(arrayBuffer), 'big5').toString());
+            .then(arrayBuffer => new TextDecoder('big5').decode(new Uint8Array(arrayBuffer)))
 
         const dom = new jsdom.JSDOM(text);
         const doc = dom.window.document;

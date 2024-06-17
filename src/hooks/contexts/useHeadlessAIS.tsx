@@ -5,8 +5,8 @@ import { FC, PropsWithChildren, createContext, useContext, useEffect, useState }
 import { useLocalStorage } from 'usehooks-ts';
 import useDictionary from "@/dictionaries/useDictionary";
 import { useCookies } from "react-cookie";
-import { decode } from 'jsonwebtoken';
 import {fetchRefreshUserSession, fetchSignInToCCXP} from '@/helpers/headless_ais';
+import { decodeJwt } from 'jose';
 const headlessAISContext = createContext<ReturnType<typeof useHeadlessAISProvider>>({
     user: undefined,
     ais: {
@@ -38,7 +38,7 @@ const useHeadlessAISProvider = () => {
             getACIXSTORE(true)
         }
         else if(cookies.accessToken){
-            const { exp } = decode(cookies.accessToken ?? '') as { exp: number };
+            const { exp } = decodeJwt(cookies.accessToken ?? '') as { exp: number };
             if (Date.now() >= exp * 1000) {
                 getACIXSTORE(true)
             }
@@ -162,7 +162,7 @@ const useHeadlessAISProvider = () => {
     }
     
     return {
-        user: cookies.accessToken ? decode(cookies.accessToken, { json: true }) as UserJWT | null : undefined ,
+        user: cookies.accessToken ? decodeJwt(cookies.accessToken) as UserJWT | null : undefined ,
         ais,
         loading,
         error,
