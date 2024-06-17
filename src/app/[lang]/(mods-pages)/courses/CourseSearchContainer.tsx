@@ -189,7 +189,41 @@ const CourseSearchContainer = () => {
               </DrawerTrigger>
               <DrawerContent>
                 <ScrollArea className="w-full max-h-[80vh] overflow-auto p-2">
-                  <TimetableWithSemester />
+                <Tabs defaultValue="timetable">
+                  <TabsList className="w-full justify-around">
+                    <TabsTrigger value="timetable" className="flex-1">
+                      {dict.course.details.timetable}
+                    </TabsTrigger>
+                    <TabsTrigger value="list" className="flex-1">
+                      {dict.course.details.course_list}
+                    </TabsTrigger>
+                    <TabsTrigger value="favourites" className="flex-1">
+                      已收藏課程
+                    </TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="timetable" className="h-full">
+                    <ScrollArea className="w-full h-[calc(100vh-12.5rem)] overflow-auto border rounded-2xl">
+                      <div className="p-4 h-full">
+                        <TimetableWithSemester />
+                        <TimetableBottomBar />
+                      </div>
+                    </ScrollArea>
+                  </TabsContent>
+                  <TabsContent value="list">
+                    <ScrollArea className="w-full h-[calc(100vh-12.5rem)] overflow-auto border rounded-2xl">
+                      <div className="p-4 h-full">
+                        <TimetableCourseListWithSemester />
+                      </div>
+                    </ScrollArea>
+                  </TabsContent>
+                  <TabsContent value="favourites">
+                    <ScrollArea className="w-full h-[calc(100vh-12.5rem)] overflow-auto border rounded-2xl">
+                      <div className="p-4 h-full">
+                        <FavouritesCourseList />
+                      </div>
+                    </ScrollArea>
+                  </TabsContent>
+                </Tabs>
                 </ScrollArea>
               </DrawerContent>
             </Drawer>

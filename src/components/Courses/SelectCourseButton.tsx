@@ -8,13 +8,16 @@ import { Heart, Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocalStorage } from "usehooks-ts";
 import { toast } from "../ui/use-toast";
+import { lastSemester } from "@/const/semester";
 
 const SelectCourseButton = ({ courseId }: { courseId: RawCourseID }) => {
     const { isCourseSelected, addCourse, deleteCourse } = useUserTimetable();
     const [ favourites, setFavourites ] = useLocalStorage<string[]>('course_favourites', []);
     
     const dict = useDictionary();
-    // const courseSemester = courseId.slice(0, 5) as Semester;
+    const courseSemester = courseId.slice(0, 5) as Semester;
+
+    const isFavouritable = courseSemester == lastSemester.id;
 
     const isInFavourites = favourites.includes(courseId);
     const handleToggleFavourite = () => {
@@ -26,9 +29,9 @@ const SelectCourseButton = ({ courseId }: { courseId: RawCourseID }) => {
     }
 
     return <div className="flex flex-row gap-2 red-500">
-        <Button variant='outline' size='icon' onClick={handleToggleFavourite}>
+        {isFavouritable && <Button variant='outline' size='icon' onClick={handleToggleFavourite}>
             {isInFavourites ? <Heart className="text-red-500 fill-red-500 w-4 h-4"/> :<Heart className="w-4 h-4" /> }
-        </Button>
+        </Button>}
         {isCourseSelected(courseId) ? 
         <Button 
             variant={'destructive'}
