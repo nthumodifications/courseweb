@@ -91,7 +91,7 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
             do {
                 tries++;
                 try {
-                    const url = 'http://www.ccxp.nthu.edu.tw/ccxp/INQUIRE';
+                    const url = 'https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/';
                     const res = await fetch(url, {
                         "headers": {
                             "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
@@ -106,6 +106,7 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
                             "sec-fetch-site": "same-origin",
                             "upgrade-insecure-requests": "1",
                         },
+                        keepalive: true,
                         "body": null,
                         "method": "GET"
                     });
