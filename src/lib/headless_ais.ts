@@ -53,11 +53,12 @@ export const decrypt = async (encryptedPassword: string) => {
 
     // Extract the IV from the first part of the Base64 string
     const ivBase64 = encryptedPassword.slice(0, 24); // First 24 characters are the Base64 encoded IV
-    const iv = new Uint8Array(atob(ivBase64).split('').map(char => char.charCodeAt(0)));
+    const iv = Uint8Array.from(atob(ivBase64).split('').map(char => char.charCodeAt(0)));
 
     // Extract the encrypted data
     const encryptedData = encryptedPassword.slice(24);
-    const encryptedArrayBuffer = new Uint8Array(atob(encryptedData).split('').map(char => char.charCodeAt(0))).buffer;
+    const encryptedArrayBuffer = Uint8Array.from(atob(encryptedData).split('').map(char => char.charCodeAt(0)));
+
 
     // Decrypt the data
     const decryptedBuffer = await crypto.subtle.decrypt(
