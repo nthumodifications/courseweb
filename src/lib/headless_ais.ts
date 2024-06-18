@@ -112,7 +112,6 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
                     });
                     
                     const body = await res.text();
-                    console.log('ccxp:', body)
                     if(!body) {
                         continue;
                     }
@@ -204,9 +203,6 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
             }
         }
         const result = await ocrAndLogin();
-        
-        console.log("result",result)
-
 
         const html = await fetch(`https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/4/4.19/JH4j002.php?ACIXSTORE=${result.ACIXSTORE}&user_lang=`, {
             "headers": {

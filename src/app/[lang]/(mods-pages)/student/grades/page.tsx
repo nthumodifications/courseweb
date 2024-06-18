@@ -16,7 +16,16 @@ const StudentGradesPage = () => {
         queryFn: async () => {
             if(initializing) return null;
             const token = await getACIXSTORE();
-            return (await getStudentGrades(token!)) as GradeObject;
+            // return (await getStudentGrades(token!)) as GradeObject;
+            return await fetch('/api/ais_auth/grades', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    ACIXSTORE: token
+                })
+            }).then(res => res.json()) as GradeObject
         }
     });
     if (!ais.enabled) return <AISNotLoggedIn/>
