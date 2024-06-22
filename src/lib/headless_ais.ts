@@ -127,7 +127,8 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
                     if(answer.length == 6) break;
                 } catch (err) { 
                     console.error('fetch login err',err)
-                    throw new Error(LoginError.Unknown);
+                    // throw new Error(LoginError.Unknown);
+                    continue;
                 }
             } while (tries <= 5);
             if(tries == 6 || answer.length != 6) {
