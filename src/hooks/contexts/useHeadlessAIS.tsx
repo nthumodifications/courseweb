@@ -75,7 +75,7 @@ const useHeadlessAISProvider = () => {
             .catch(err => {
                 toast({
                     title: "代理登入失敗",
-                    description: dict.ccxp.errors[err.message as keyof typeof dict.ccxp.errors] ?? err.message ?? "請檢查學號密碼是否正確",
+                    description: dict.ccxp.errors[err.message as keyof typeof dict.ccxp.errors] ?? "目前認證服务降级，请稍后再试，敬請見諒",
                 })
                 setHeadlessAIS({
                     enabled: false
@@ -143,11 +143,8 @@ const useHeadlessAISProvider = () => {
         .catch(err => {
             toast({
                 title: "代理登入失敗",
-                description: dict.ccxp.errors[err.message as keyof typeof dict.ccxp.errors] ?? "請檢查學號密碼是否正確",
+                description: dict.ccxp.errors[err.message as keyof typeof dict.ccxp.errors] ?? "目前認證服务降级，请稍后再试，敬請見諒",
             })
-            setHeadlessAIS({
-                enabled: false
-            });
             setLoading(false);
             setError(err);
             throw err as LoginError;
