@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { parseHTML } from 'linkedom';
 import supabase_server from "@/config/supabase_server";
 import * as jose from 'jose'
+import {fetchWithTimeout} from '@/helpers/fetch';
 
 function hexStringToUint8Array(hexString: string) {
     if (hexString.length % 2 !== 0) {
@@ -92,7 +93,8 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
                 tries++;
                 try {
                     const url = 'https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/';
-                    const res = await fetch(url, {
+                    const res = await fetchWithTimeout(url, {
+                        timeout: 3000,
                         "headers": {
                             "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
                             "accept-language": "en-US,en;q=0.9",
@@ -108,7 +110,8 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
                         },
                         keepalive: true,
                         "body": null,
-                        "method": "GET"
+                        "method": "GET",
+                        
                     });
                     
                     const body = await res.text();
@@ -134,7 +137,8 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
             if(tries == 6 || answer.length != 6) {
                 throw new Error("Internal Server Error");
             }
-            const response = await fetch("https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/pre_select_entry.php", {
+            const response = await fetchWithTimeout("https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/pre_select_entry.php", {
+                timeout: 3000,
                 "headers": {
                     "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
                     "accept-language": "en-US,en;q=0.9",
