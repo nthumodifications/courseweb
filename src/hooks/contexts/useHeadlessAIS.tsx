@@ -63,8 +63,7 @@ const useHeadlessAISProvider = () => {
                 setHeadlessAIS({
                     enabled: true,
                     studentid: username,
-                    password: res.encryptedPassword,
-                    encrypted: true,
+                    password: password,
                     ACIXSTORE: res.ACIXSTORE,
                     lastUpdated: Date.now()
                 });
@@ -104,35 +103,14 @@ const useHeadlessAISProvider = () => {
             return headlessAIS.ACIXSTORE!;
         }
         setLoading(true);
-
-        // legacy support, if encrypted password is not set, set it
-        if(!headlessAIS.encrypted) {
-            // use signInToCCXP to get encrypted password
-            return await fetchSignInToCCXP(headlessAIS.studentid, headlessAIS.password)
-                .then((res) => {
-                    if('error' in res) throw new Error(res.error.message); 
-                    setHeadlessAIS({
-                        enabled: true,
-                        studentid: headlessAIS.studentid,
-                        password: res.encryptedPassword,
-                        encrypted: true,
-                        ACIXSTORE: res.ACIXSTORE,
-                        lastUpdated: Date.now()
-                    });
-                    setLoading(false);
-                    setError(undefined);
-                    return res.ACIXSTORE;
-                })
-        }
         
-        return await fetchRefreshUserSession(headlessAIS.studentid, headlessAIS.password)
+        return await fetchSignInToCCXP(headlessAIS.studentid, headlessAIS.password)
         .then((res) => {
             if('error' in res) throw new Error(res.error.message); 
             setHeadlessAIS({
                 enabled: true,
                 studentid: headlessAIS.studentid,
                 password: headlessAIS.password,
-                encrypted: true,
                 ACIXSTORE: res.ACIXSTORE,
                 lastUpdated: Date.now()
             });
@@ -145,9 +123,6 @@ const useHeadlessAISProvider = () => {
                 title: "代理登入失敗",
                 description: dict.ccxp.errors[err.message as keyof typeof dict.ccxp.errors] ?? "請檢查學號密碼是否正確",
             })
-            setHeadlessAIS({
-                enabled: false
-            });
             setLoading(false);
             setError(err);
             throw err as LoginError;

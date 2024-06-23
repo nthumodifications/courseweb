@@ -10,7 +10,6 @@ export type HeadlessAISStorage = { enabled: false } | {
     enabled: true, 
     studentid: string, 
     password: string, 
-    encrypted: boolean,
     ACIXSTORE?: string, 
     lastUpdated: number,
 }

@@ -73,13 +73,13 @@ export const decrypt = async (encryptedPassword: string) => {
     return decryptedText;
 }
 
-type SignInToCCXPResponse = Promise<{ ACIXSTORE: string, encryptedPassword: string } | { error: { message: string } }>;
+type SignInToCCXPResponse = Promise<{ ACIXSTORE: string } | { error: { message: string } }>;
 /**
  * Attempts to login user to CCXP, takes in raw studentid and password
  * ONLY use this for first time login, will return encrypted password and ACIXSTORE
  * @param studentid 
  * @param password 
- * @returns { ACIXSTORE: string, encryptedPassword: string }
+ * @returns { ACIXSTORE: string }
  */
 export const signInToCCXP = async (studentid: string, password: string): SignInToCCXPResponse => {
     console.log("Signing in to CCXP")
@@ -266,9 +266,8 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
         await cookies().set('accessToken', jwt, { path: '/', maxAge: 60 * 60 * 24, sameSite: 'strict', secure: true });
 
         // Encrypt user password 
-        const encryptedPassword = await encrypt(password);
         
-        return { ...result, encryptedPassword };
+        return { ...result };
     } catch (err) {
         console.error('CCXP Login Err', err);
         if(err instanceof Error) return { error: { message: err.message } };
@@ -277,11 +276,9 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
 }
 
 type RefreshUserSessionResponse = Promise<{ ACIXSTORE: string } | { error: { message: string } }>;
-export const refreshUserSession = async (studentid: string, encryptedPassword: string): RefreshUserSessionResponse => {
+export const refreshUserSession = async (studentid: string, password: string): RefreshUserSessionResponse => {
     console.log('Refreshing User Session')
     // Decrypt password
-    const password =  await decrypt(encryptedPassword);
-
     const res = await signInToCCXP(studentid, password);
     if('error' in res && res.error) {
         console.error(res.error);
