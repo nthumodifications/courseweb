@@ -59,8 +59,12 @@
     "@supabase/supabase-js": "^2.39.7",
     "@tailwindcss/container-queries": "^0.1.1",
     "@tanstack/query-sync-storage-persister": "^5.40.0",
-    "@tanstack/react-query": "^5.39.0",
+    "@tanstack/react-query": "^5.45.1",
     "@tanstack/react-query-persist-client": "^5.39.0",
+    "@trpc/client": "^11.0.0-rc.421",
+    "@trpc/next": "^11.0.0-rc.421",
+    "@trpc/react-query": "^11.0.0-rc.421",
+    "@trpc/server": "^11.0.0-rc.421",
     "@types/node": "20.10.7",
     "@types/react": "18.3.3",
     "@types/react-dom": "18.3.0",
@@ -114,7 +118,7 @@
     "use-debounce": "^10.0.0",
     "usehooks-ts": "^3.1.0",
     "vaul": "^0.8.9",
-    "zod": "^3.22.4"
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@capacitor/cli": "^6.0.0",
