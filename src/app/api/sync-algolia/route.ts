@@ -2,6 +2,7 @@ import supabase_server from '@/config/supabase_server';
 import {Database} from '@/types/supabase';
 import algolia from '@/config/algolia_server';
 import {NextRequest, NextResponse} from 'next/server';
+import { kv } from "@vercel/kv";
 
 
 const syncCoursesToAlgolia = async (semester: string) => {
@@ -25,6 +26,8 @@ const syncCoursesToAlgolia = async (semester: string) => {
         }))
         algolia.saveObjects(algoliaChunk);
     }
+
+    await kv.set('COURSE_SYNCED_ON', new Date().toISOString());
 
 }
 

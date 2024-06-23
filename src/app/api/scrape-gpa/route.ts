@@ -44,7 +44,8 @@ export const GET = async (request: NextRequest) => {
         "body": `ACIXSTORE=${ACIXSTORE}&qyt=${semester.slice(0, 3)}|${semester.slice(3, 5)}&kwc=&kwt=&sort=ckey&Submit=%BDT%A9w+Submit`,
         "method": "POST",
         "mode": "cors",
-        "credentials": "include"
+        "credentials": "include",
+        "cache": "no-cache"
     })
     .then(res => res.arrayBuffer())
     .then(arrayBuffer => new TextDecoder('big5').decode(new Uint8Array(arrayBuffer)))

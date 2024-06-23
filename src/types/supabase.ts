@@ -382,6 +382,33 @@ export type Database = {
           },
         ]
       }
+      course_enroll_stats: {
+        Row: {
+          confirmed: number
+          limit: number | null
+          raw_id: string
+          remaining: number | null
+          updated_at: string
+          waiting: number
+        }
+        Insert: {
+          confirmed: number
+          limit?: number | null
+          raw_id: string
+          remaining?: number | null
+          updated_at?: string
+          waiting: number
+        }
+        Update: {
+          confirmed?: number
+          limit?: number | null
+          raw_id?: string
+          remaining?: number | null
+          updated_at?: string
+          waiting?: number
+        }
+        Relationships: []
+      }
       course_hidden: {
         Row: {
           ckey: string
@@ -603,6 +630,7 @@ export type Database = {
           cross_discipline: string[] | null
           department: string
           elective_for: string[] | null
+          enrolled: number
           first_specialization: string[] | null
           ge_target: string | null
           ge_type: string | null
@@ -634,6 +662,7 @@ export type Database = {
           cross_discipline?: string[] | null
           department: string
           elective_for?: string[] | null
+          enrolled?: number
           first_specialization?: string[] | null
           ge_target?: string | null
           ge_type?: string | null
@@ -664,6 +693,7 @@ export type Database = {
           cross_discipline?: string[] | null
           department?: string
           elective_for?: string[] | null
+          enrolled?: number
           first_specialization?: string[] | null
           ge_target?: string | null
           ge_type?: string | null
@@ -815,6 +845,7 @@ export type Database = {
           cross_discipline: string[] | null
           department: string
           elective_for: string[] | null
+          enrolled: number
           first_specialization: string[] | null
           ge_target: string | null
           ge_type: string | null
