@@ -41,6 +41,7 @@ import TimetableCourseList, { DownloadTimetableDialogDynamic, ShareSyncTimetable
 import ClearAllButton from './ClearAllButton';
 import useDictionary from '@/dictionaries/useDictionary';
 import FavouritesCourseList from './FavouritesCourseList';
+import GroupByDepartmentButton from '@/components/Timetable/GroupByDepartmentButton';
 
 const SemesterSelector = () => {
   // refine semester for semester selector
@@ -116,6 +117,7 @@ const TimetableBottomBar = () => {
   return <div className='flex flex-row justify-stretch gap-2 pt-2'>
     <DownloadTimetableDialogDynamic icsfileLink={icsfileLink} />
     <ShareSyncTimetableDialogDynamic shareLink={shareLink} webcalLink={webcalLink} />
+    <GroupByDepartmentButton semester={semester} />
   </div>
 }
 
