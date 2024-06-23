@@ -213,7 +213,7 @@ const CourseSearchContainer = () => {
                   </TabsContent>
                   <TabsContent value="list">
                     <ScrollArea className="w-full h-[calc(100vh-12.5rem)] overflow-auto border rounded-2xl">
-                      <div className="p-4 h-full">
+                    <div className="py-4 h-full">
                         <TimetableCourseListWithSemester />
                       </div>
                     </ScrollArea>
@@ -266,7 +266,7 @@ const CourseSearchContainer = () => {
             </TabsContent>
             <TabsContent value="list">
               <ScrollArea className="w-full h-[calc(100vh-12.5rem)] overflow-auto border rounded-2xl">
-                <div className="p-4 h-full">
+                <div className="py-4 h-full">
                   <TimetableCourseListWithSemester />
                 </div>
               </ScrollArea>
