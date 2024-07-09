@@ -12,6 +12,8 @@ type PageProps = {
     }
 }
 
+export const revalidate = 3600;
+
 const CoursePageModalLayout = ({ params, children }: PropsWithChildren<PageProps & LangProps>) => {
     const courseId = decodeURI(params.courseId as string);
 
