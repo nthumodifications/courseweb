@@ -1,14 +1,88 @@
 'use server';
 import { LoginError, UserJWT, UserJWTDetails } from "@/types/headless_ais";
-import jwt from 'jsonwebtoken';
 import { cookies } from "next/headers";
-import jsdom from 'jsdom';
-import iconv from 'iconv-lite';
+import { parseHTML } from 'linkedom';
 import supabase_server from "@/config/supabase_server";
+import * as jose from 'jose'
+import {fetchWithTimeout} from '@/helpers/fetch';
+
+function hexStringToUint8Array(hexString: string) {
+    if (hexString.length % 2 !== 0) {
+        throw new Error("Hex string has an odd length");
+    }
+    const arrayBuffer = new Uint8Array(hexString.length / 2);
+    for (let i = 0; i < hexString.length; i += 2) {
+        const byteValue = parseInt(hexString.substring(i, i + 2), 16);
+        arrayBuffer[i / 2] = byteValue;
+    }
+    return arrayBuffer;
+}
+
+export const encrypt = async (text: string) => {
+    const key = await crypto.subtle.importKey(
+        'raw',
+        hexStringToUint8Array(process.env.NTHU_HEADLESS_AIS_ENCRYPTION_KEY!),
+        { name: 'AES-CBC', length: 256 }, // Specify algorithm details
+        false,
+        ['encrypt']
+    );
+    const iv = crypto.getRandomValues(new Uint8Array(16));
+    const encrypted = await crypto.subtle.encrypt(
+        { name: 'AES-CBC', iv },
+        key,
+        new TextEncoder().encode(text)
+    );
+    
+    // Correctly handle binary data and Base64 encoding
+    const encryptedData = new Uint8Array(encrypted); // Convert BufferSource to Uint8Array
+    const ivBase64 = btoa(String.fromCharCode(...iv)); // Encode IV as Base64
+    const encryptedDataBase64 = btoa(String.fromCharCode(...encryptedData)); // Encode encrypted data as Base64
+    
+    const encryptedPassword = ivBase64 + encryptedDataBase64; // Concatenate Base64 IV and encrypted data
+    return encryptedPassword;
+}
+
+export const decrypt = async (encryptedPassword: string) => {
+    const encodedKey = hexStringToUint8Array(process.env.NTHU_HEADLESS_AIS_ENCRYPTION_KEY!);
+    const key = await crypto.subtle.importKey(
+        'raw',
+        encodedKey,
+        { name: 'AES-CBC', length: 256 }, // Specify algorithm details for consistency
+        false,
+        ['decrypt']  // Specify that the key is for decryption
+    );
+
+    // Extract the IV from the first part of the Base64 string
+    const ivBase64 = encryptedPassword.slice(0, 24); // First 24 characters are the Base64 encoded IV
+    const iv = Uint8Array.from(atob(ivBase64).split('').map(char => char.charCodeAt(0)));
+
+    // Extract the encrypted data
+    const encryptedData = encryptedPassword.slice(24);
+    const encryptedArrayBuffer = Uint8Array.from(atob(encryptedData).split('').map(char => char.charCodeAt(0)));
 
 
+    // Decrypt the data
+    const decryptedBuffer = await crypto.subtle.decrypt(
+        { name: 'AES-CBC', iv },
+        key,
+        encryptedArrayBuffer
+    );
 
-export const signInToCCXP = async (studentid: string, password: string) => {
+    // Convert the decrypted buffer back to text
+    const decryptedText = new TextDecoder().decode(decryptedBuffer);
+    return decryptedText;
+}
+
+type SignInToCCXPResponse = Promise<{ ACIXSTORE: string, encryptedPassword: string } | { error: { message: string } }>;
+/**
+ * Attempts to login user to CCXP, takes in raw studentid and password
+ * ONLY use this for first time login, will return encrypted password and ACIXSTORE
+ * @param studentid 
+ * @param password 
+ * @returns { ACIXSTORE: string, encryptedPassword: string }
+ */
+export const signInToCCXP = async (studentid: string, password: string): SignInToCCXPResponse => {
+    console.log("Signing in to CCXP")
     try {
         const ocrAndLogin: (_try?:number) => Promise<{ ACIXSTORE: string }> = async (_try = 0) => {
             if(_try == 3) {
@@ -17,28 +91,56 @@ export const signInToCCXP = async (studentid: string, password: string) => {
             let tries = 0, pwdstr = "", answer = "";
             do {
                 tries++;
-                const url = 'http://www.ccxp.nthu.edu.tw/ccxp/INQUIRE';
-                const res = await fetch(url);
-                const body = await res.text();
-                if(!body) {
+                try {
+                    const url = 'https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/';
+                    const res = await fetchWithTimeout(url, {
+                        timeout: 3000,
+                        "headers": {
+                            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+                            "accept-language": "en-US,en;q=0.9",
+                            "cache-control": "max-age=0",
+                            "sec-ch-ua": "\"Not/A)Brand\";v=\"8\", \"Chromium\";v=\"126\", \"Microsoft Edge\";v=\"126\"",
+                            "sec-ch-ua-mobile": "?0",
+                            "sec-ch-ua-platform": "\"Windows\"",
+                            "sec-fetch-dest": "document",
+                            "sec-fetch-mode": "navigate",
+                            "sec-fetch-site": "none",
+                            "sec-fetch-user": "?1",
+                            "upgrade-insecure-requests": "1"
+                        },
+                        keepalive: true,
+                        "body": null,
+                        "method": "GET",
+                        "mode": "cors",
+                        "credentials": "include"
+                        
+                    });
+                    
+                    const body = await res.text();
+                    if(!body) {
+                        continue;
+                    }
+                    const bodyMatch = body.match(/auth_img\.php\?pwdstr=([a-zA-Z0-9_-]+)/);
+                    if(!bodyMatch) {
+                        continue;
+                    }
+                    pwdstr = bodyMatch[1];
+                    //fetch the image from the url and send as base64
+                    console.log("pwdstr: ", pwdstr)
+                    answer = await fetch(`https://ocr.nthumods.com/?url=https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/auth_img.php?pwdstr=${pwdstr}`)
+                                .then(res => res.text())
+                    if(answer.length == 6) break;
+                } catch (err) { 
+                    console.error('fetch login err',err)
+                    // throw new Error(LoginError.Unknown);
                     continue;
                 }
-                const bodyMatch = body.match(/auth_img\.php\?pwdstr=([a-zA-Z0-9_-]+)/);
-                if(!bodyMatch) {
-                    continue;
-                }
-                pwdstr = bodyMatch[1];
-                //fetch the image from the url and send as base64
-                console.log("pwdstr: ", pwdstr)
-                answer = await fetch(`https://ocr.nthumods.com/?url=https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/auth_img.php?pwdstr=${pwdstr}`)
-                            .then(res => res.text())
-                console.log(answer)
-                if(answer.length == 6) break;
             } while (tries <= 5);
             if(tries == 6 || answer.length != 6) {
                 throw new Error("Internal Server Error");
             }
-            const response = await fetch("https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/pre_select_entry.php", {
+            const response = await fetchWithTimeout("https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/pre_select_entry.php", {
+                timeout: 3000,
                 "headers": {
                     "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
                     "accept-language": "en-US,en;q=0.9",
@@ -129,9 +231,8 @@ export const signInToCCXP = async (studentid: string, password: string) => {
             "credentials": "include"
         })
             .then(res => res.arrayBuffer())
-            .then(arrayBuffer => iconv.decode(Buffer.from(arrayBuffer), 'big5').toString())
-        const dom = new jsdom.JSDOM(html);
-        const doc = dom.window.document;
+            .then(arrayBuffer => new TextDecoder('big5').decode(new Uint8Array(arrayBuffer)))
+        const { document: doc } = parseHTML(html, 'text/html');
 
         const form = doc.querySelector('form[name="register"]');
         if(form == null) {
@@ -154,26 +255,57 @@ export const signInToCCXP = async (studentid: string, password: string) => {
             throw new Error(LoginError.Unknown);
         }
 
-        const token = jwt.sign({ sub: studentid, ...data }, process.env.NTHU_HEADLESS_AIS_SIGNING_KEY!, { expiresIn: '15d' });
-        cookies().set('accessToken', token, { path: '/', maxAge: 60 * 60 * 24, sameSite: 'strict', secure: true });
-        return result;
+        // const token = jwt.sign({ sub: studentid, ...data }, process.env.NTHU_HEADLESS_AIS_SIGNING_KEY!, { expiresIn: '15d' });
+        //use jose to sign the token
+        const secret = new TextEncoder().encode(process.env.NTHU_HEADLESS_AIS_SIGNING_KEY!);
+        const jwt = await new jose.SignJWT({ sub: studentid, ...data })
+            .setProtectedHeader({ alg: 'HS256' })
+            .setIssuedAt()
+            .setIssuer('NTHUMods')
+            .setExpirationTime('15d')
+            .sign(secret);
+
+        await cookies().set('accessToken', jwt, { path: '/', maxAge: 60 * 60 * 24, sameSite: 'strict', secure: true });
+
+        // Encrypt user password 
+        const encryptedPassword = await encrypt(password);
+        
+        return { ...result, encryptedPassword };
     } catch (err) {
+        console.error('CCXP Login Err', err);
         if(err instanceof Error) return { error: { message: err.message } };
         throw err;
     }
 }
 
-export const getUserSession = () => {
+type RefreshUserSessionResponse = Promise<{ ACIXSTORE: string } | { error: { message: string } }>;
+export const refreshUserSession = async (studentid: string, encryptedPassword: string): RefreshUserSessionResponse => {
+    console.log('Refreshing User Session')
+    // Decrypt password
+    const password =  await decrypt(encryptedPassword);
+
+    const res = await signInToCCXP(studentid, password);
+    if('error' in res && res.error) {
+        console.error(res.error);
+        return { error: res.error }
+    }
+    // @ts-ignore - We know that res is not an error
+    return { ACIXSTORE: res.ACIXSTORE };
+}
+
+export const getUserSession = async () => {
     const accessToken = cookies().get('accessToken')?.value ?? '';
     try {
-        return jwt.verify(accessToken, process.env.NTHU_HEADLESS_AIS_SIGNING_KEY!) as UserJWT;
+        const secret = new TextEncoder().encode(process.env.NTHU_HEADLESS_AIS_SIGNING_KEY!);
+        const { payload } = await jose.jwtVerify(accessToken, secret) as { payload: UserJWT };
+        return payload;
     } catch {
         return null;
     }
 }
 
 export const isUserBanned = async () => {
-    const session = getUserSession();
+    const session = await getUserSession();
     if(!session) {
         return false;
     }

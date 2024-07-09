@@ -43,13 +43,13 @@ export const GETargetCodes = [
     //     description_zh: '開課系(所)之學生不可選修，其他系(所)學生可選修',
     //     description_en: 'Only selectable for students who are not registered in the department which offers the courses and credits are accepted as General Education. '
     // },
-    // {
-    //     code: '*6',
-    //     short_zh: '師資培育中心學生非通識',
-    //     short_en: 'Not GE for Teacher Education Center Students',
-    //     description_zh: '師資培育中心開設課程，非修習教育學程學生可選修且列入通識課程學分',
-    //     description_en: 'Students not registered for the teacher education program can take courses marked with *6 offered by the Teacher Education Center, and the credits are accepted as General Education. '
-    // },
+    {
+        code: '*6',
+        short_zh: '師資培育中心學生非通識',
+        short_en: 'Not GE for Teacher Education Center Students',
+        description_zh: '師資培育中心開設課程，非修習教育學程學生可選修且列入通識課程學分',
+        description_en: 'Students not registered for the teacher education program can take courses marked with *6 offered by the Teacher Education Center, and the credits are accepted as General Education. '
+    },
     {
         code: '*7',
         short_zh: '開課系所學生非通識',

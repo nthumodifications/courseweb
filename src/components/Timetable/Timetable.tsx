@@ -18,6 +18,7 @@ const Timetable: FC<{
     const headerRow = useRef<HTMLTableCellElement>(null);
     const timetableCell = useRef<HTMLTableCellElement>(null);
     const [tableDim, setTableDim] = useState({ header: { width: 0, height: 0 }, timetable: { width: 0, height: 0 } });
+    const containerRef = useRef<HTMLDivElement>(null);
   
 
     const updateSize = () => {
@@ -33,12 +34,13 @@ const Timetable: FC<{
       })
     }
     
-    useEffect(() => {
-      if(typeof window  == "undefined") return ;
+    // Check if containerRef is is resized, then update the size
+    useLayoutEffect(() => {
+      if(typeof window  == "undefined" || !containerRef.current) return ;
       updateSize();
-      window.addEventListener("resize", updateSize);
-      return () => 
-        window.removeEventListener("resize", updateSize);
+      const observer = new ResizeObserver(() => updateSize());
+      observer.observe(containerRef.current);
+      return () => observer.disconnect();
     }, [vertical, timetableData]);
     
     const timetableDataWithFraction = useMemo(() => {
@@ -87,12 +89,14 @@ const Timetable: FC<{
     const _renderTimetableSlot = (course: CourseTimeslotDataWithFraction, tableDim: TimetableDim, vertical: boolean) => {
       return vertical ? 
         <TimetableSlotVertical 
+          key={course.dayOfWeek+course.startTime+course.endTime+course.course.raw_id}
           course={course} 
           tableDim={tableDim} 
           fraction={course.fraction} 
           fractionIndex={course.fractionIndex} />
         :
         <TimetableSlotHorizontal 
+          key={course.dayOfWeek+course.startTime+course.endTime+course.course.raw_id}
           course={course} 
           tableDim={tableDim} 
           fraction={course.fraction} 
@@ -147,7 +151,7 @@ const Timetable: FC<{
     )
 
     return (
-        <div className="text-center lg:mb-0 w-full overflow-hidden">
+        <div className="text-center lg:mb-0 w-full overflow-hidden" ref={containerRef}>
         {/* Timetable, Relative overlay */}
         <div className="relative w-full">
           <table className="table-fixed w-full">

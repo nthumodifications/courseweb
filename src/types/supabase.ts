@@ -309,32 +309,35 @@ export type Database = {
       course_comments: {
         Row: {
           comment: string
-          courses: string
-          ease: number
+          easiness: number
           id: number
           posted_on: string
+          raw_id: string
           scoring: number
+          submitter: string
         }
         Insert: {
           comment: string
-          courses: string
-          ease: number
+          easiness: number
           id?: number
           posted_on: string
+          raw_id: string
           scoring: number
+          submitter?: string
         }
         Update: {
           comment?: string
-          courses?: string
-          ease?: number
+          easiness?: number
           id?: number
           posted_on?: string
+          raw_id?: string
           scoring?: number
+          submitter?: string
         }
         Relationships: [
           {
-            foreignKeyName: "public_course_comments_course_fkey"
-            columns: ["courses"]
+            foreignKeyName: "course_comments_raw_id_fkey"
+            columns: ["raw_id"]
             isOneToOne: false
             referencedRelation: "courses"
             referencedColumns: ["raw_id"]
@@ -374,6 +377,83 @@ export type Database = {
             foreignKeyName: "course_dates_raw_id_fkey"
             columns: ["raw_id"]
             isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["raw_id"]
+          },
+        ]
+      }
+      course_enroll_stats: {
+        Row: {
+          confirmed: number
+          limit: number | null
+          raw_id: string
+          remaining: number | null
+          updated_at: string
+          waiting: number
+        }
+        Insert: {
+          confirmed: number
+          limit?: number | null
+          raw_id: string
+          remaining?: number | null
+          updated_at?: string
+          waiting: number
+        }
+        Update: {
+          confirmed?: number
+          limit?: number | null
+          raw_id?: string
+          remaining?: number | null
+          updated_at?: string
+          waiting?: number
+        }
+        Relationships: []
+      }
+      course_hidden: {
+        Row: {
+          ckey: string
+          code: string
+          cred: string
+          ctime: string
+          div: string
+          glimit: string
+          num: string
+          pre: string
+          range: string
+          real: string
+          type: string
+        }
+        Insert: {
+          ckey: string
+          code: string
+          cred: string
+          ctime: string
+          div: string
+          glimit: string
+          num: string
+          pre: string
+          range: string
+          real: string
+          type: string
+        }
+        Update: {
+          ckey?: string
+          code?: string
+          cred?: string
+          ctime?: string
+          div?: string
+          glimit?: string
+          num?: string
+          pre?: string
+          range?: string
+          real?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_hidden_ckey_fkey"
+            columns: ["ckey"]
+            isOneToOne: true
             referencedRelation: "courses"
             referencedColumns: ["raw_id"]
           },
@@ -550,6 +630,7 @@ export type Database = {
           cross_discipline: string[] | null
           department: string
           elective_for: string[] | null
+          enrolled: number
           first_specialization: string[] | null
           ge_target: string | null
           ge_type: string | null
@@ -581,6 +662,7 @@ export type Database = {
           cross_discipline?: string[] | null
           department: string
           elective_for?: string[] | null
+          enrolled?: number
           first_specialization?: string[] | null
           ge_target?: string | null
           ge_type?: string | null
@@ -611,6 +693,7 @@ export type Database = {
           cross_discipline?: string[] | null
           department?: string
           elective_for?: string[] | null
+          enrolled?: number
           first_specialization?: string[] | null
           ge_target?: string | null
           ge_type?: string | null
@@ -762,6 +845,7 @@ export type Database = {
           cross_discipline: string[] | null
           department: string
           elective_for: string[] | null
+          enrolled: number
           first_specialization: string[] | null
           ge_target: string | null
           ge_type: string | null

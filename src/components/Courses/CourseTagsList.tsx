@@ -11,7 +11,7 @@ const HighlightItem: FC<PropsWithChildren<DetailedHTMLProps<HTMLAttributes<HTMLD
     ...props
 }) => {
     return <div
-        className={`flex flex-row items-center justify-center min-w-[65px] space-x-2 px-2 py-2 select-none rounded-md ${className ?? 'bg-indigo-50 text-indigo-900 dark:bg-indigo-950 dark:text-indigo-100'}`}
+        className={`flex flex-row items-center justify-center min-w-[60px] space-x-2 px-1 py-1.5 select-none rounded-md ${className ?? 'bg-indigo-50 text-indigo-900 dark:bg-indigo-950 dark:text-indigo-100'}`}
         {...props}
     >
         {children}
@@ -27,13 +27,16 @@ const CourseTagList = ({ course }: { course: CourseDefinition }) => {
                     {(course.reserve ?? 0) > 0 && <>
                         {` 保 ${course.reserve}`}
                     </>}
+                    人
                 </span>
-
-                <Users strokeWidth={2.5} className='w-5 h-5' />
+            </HighlightItem>
+            <HighlightItem className='bg-violet-50 text-violet-900 dark:bg-violet-950 dark:text-violet-100'>
+                <span className="">
+                    {`${course.enrolled} 選上 `}
+                </span>
             </HighlightItem>
             <HighlightItem>
-                <span className="">{course.credits}</span>
-                <span className="">{dict.course.credits}</span>
+                <span className="">{course.credits} {dict.course.credits}</span>
             </HighlightItem>
             {course.tags.includes('16周') && <HighlightItem className='bg-green-50 text-green-900 dark:bg-green-950 dark:text-green-100'>
                 <span className="">16 週</span>

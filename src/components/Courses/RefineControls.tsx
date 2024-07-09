@@ -49,7 +49,7 @@ export const emptyFilters: RefineControlFormTypes = {
     venues: [],
     timeslots: [],
     timeFilter: TimeFilterType.Within,
-    semester: '11220',
+    semester: '11310',
     disciplines: [],
     gecDimensions: [],
     geTarget: [],
@@ -224,7 +224,7 @@ const RefineControls: FC<{ form: UseFormReturn<RefineControlFormTypes> }> = ({ f
                 name="className"
                 placeholder={dict.course.refine.class}
                 loading={load3}
-                options={classList.map(classname => ({ value: classname, label: getFormattedClassCode(classname) }))}
+                options={classList.map(classname => ({ value: classname, label: getFormattedClassCode(classname, semester) }))}
                 label={dict.course.refine.compulsory_elective}
             />
             <MultiCheckboxControl control={form.control} name="others" options={[

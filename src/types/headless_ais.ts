@@ -1,5 +1,4 @@
 import { cookies } from "next/headers";
-import jwt from 'jsonwebtoken';
 
 export const getServerACIXSTORE = async () => {
     const cookie = await cookies();
@@ -11,6 +10,7 @@ export type HeadlessAISStorage = { enabled: false } | {
     enabled: true, 
     studentid: string, 
     password: string, 
+    encrypted: boolean,
     ACIXSTORE?: string, 
     lastUpdated: number,
 }
@@ -30,4 +30,4 @@ export interface UserJWTDetails {
     email: string;
 }
 
-export type UserJWT = jwt.JwtPayload & UserJWTDetails;
+export type UserJWT = UserJWTDetails;
