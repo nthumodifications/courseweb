@@ -73,6 +73,35 @@ export const decrypt = async (encryptedPassword: string) => {
     return decryptedText;
 }
 
+async function streamAndMatch(response: Response, regex: RegExp) {
+    if(response.body == null) throw new Error(LoginError.Unknown);
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder("big5");
+    let buffer = '';
+
+    while (true) {
+        const { done, value } = await reader.read();
+
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+
+        const match = buffer.match(regex);
+        if (match) {
+            reader.cancel(); // Cancel the stream
+            return match[1]; // Return the matched group
+        }
+
+        // Optionally, trim the buffer to avoid excessive memory usage
+        if (buffer.length > 10000) {
+            buffer = buffer.slice(-5000);
+        }
+    }
+
+    throw new Error(LoginError.Unknown);
+}
+
 type SignInToCCXPResponse = Promise<{ ACIXSTORE: string, encryptedPassword: string } | { error: { message: string } }>;
 /**
  * Attempts to login user to CCXP, takes in raw studentid and password
@@ -83,6 +112,7 @@ type SignInToCCXPResponse = Promise<{ ACIXSTORE: string, encryptedPassword: stri
  */
 export const signInToCCXP = async (studentid: string, password: string): SignInToCCXPResponse => {
     console.log("Signing in to CCXP")
+    let startTime = Date.now();
     try {
         const ocrAndLogin: (_try?:number) => Promise<{ ACIXSTORE: string }> = async (_try = 0) => {
             if(_try == 3) {
@@ -92,8 +122,8 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
             do {
                 tries++;
                 try {
-                    const url = 'https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/';
-                    const res = await fetchWithTimeout(url, {
+                    console.log('Fetching login page')
+                    const res = await fetchWithTimeout('https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/', {
                         timeout: 3000,
                         "headers": {
                             "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
@@ -115,20 +145,17 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
                         "credentials": "include"
                         
                     });
+                    pwdstr = await streamAndMatch(res, /auth_img\.php\?pwdstr=([a-zA-Z0-9_-]+)/);
+                    console.log('Time taken', Date.now() - startTime);
+                    startTime = Date.now();
                     
-                    const body = await res.text();
-                    if(!body) {
-                        continue;
-                    }
-                    const bodyMatch = body.match(/auth_img\.php\?pwdstr=([a-zA-Z0-9_-]+)/);
-                    if(!bodyMatch) {
-                        continue;
-                    }
-                    pwdstr = bodyMatch[1];
                     //fetch the image from the url and send as base64
                     console.log("pwdstr: ", pwdstr)
+                    console.log('Fetching CAPTCHA')
                     answer = await fetch(`https://ocr.nthumods.com/?url=https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/auth_img.php?pwdstr=${pwdstr}`)
                                 .then(res => res.text())
+                    console.log('Time taken', Date.now() - startTime);
+                    startTime = Date.now();
                     if(answer.length == 6) break;
                 } catch (err) { 
                     console.error('fetch login err',err)
@@ -139,6 +166,7 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
             if(tries == 6 || answer.length != 6) {
                 throw new Error("Internal Server Error");
             }
+            console.log('Attempt Login')
             const response = await fetchWithTimeout("https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/pre_select_entry.php", {
                 timeout: 3000,
                 "headers": {
@@ -154,6 +182,7 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
                     "sec-fetch-site": "same-origin",
                     "upgrade-insecure-requests": "1",
                 },
+                keepalive: true,
                 "body": `account=${studentid}&passwd=${password}&passwd2=${answer}&Submit=%B5n%A4J&fnstr=${pwdstr}`,
                 "method": "POST"
             });
@@ -177,6 +206,7 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
                     "sec-fetch-site": "same-origin",
                     "upgrade-insecure-requests": "1"
                 },
+                keepalive: true,
                 "body": null,
                 "method": "GET",
                 "mode": "cors",
@@ -188,6 +218,8 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
                 const text = decoder.decode(buffer)
                 return text
             })
+            console.log('Time taken', Date.now() - startTime);
+            startTime = Date.now();
             if(resHTML.match('驗證碼輸入錯誤!')) {
                 return await ocrAndLogin(_try++);
             }
@@ -211,6 +243,7 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
         }
         const result = await ocrAndLogin();
 
+        console.log('Fetching user details')
         const html = await fetch(`https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/4/4.19/JH4j002.php?ACIXSTORE=${result.ACIXSTORE}&user_lang=`, {
             "headers": {
               "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
@@ -225,6 +258,7 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
               "sec-fetch-user": "?1",
               "upgrade-insecure-requests": "1"
             },
+            keepalive: true,
             "body": null,
             "method": "GET",
             "mode": "cors",
@@ -238,6 +272,9 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
         if(form == null) {
             throw new Error(LoginError.Unknown);
         }
+
+        console.log('Time taken', Date.now() - startTime);
+        startTime = Date.now();
 
         const firstRow = form.querySelector('tr:nth-child(1)')!;
         const secondRow = form.querySelector('tr:nth-child(2)')!;
