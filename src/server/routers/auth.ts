@@ -10,6 +10,11 @@ export const authRouter = router({
             const { studentid, password } = input;
             
             const res = await signInToCCXP(studentid, password);
+            // check if error exists
+            if('error' in res) throw new Error(res.error.message);
+
+            // set cookie
+            ctx.setCookie('accessToken', res.accessToken, 'path = /; SameSite = Strict; Secure');
             return res;
         }),
     refresh: procedure
@@ -17,6 +22,11 @@ export const authRouter = router({
         .mutation(async ({ input, ctx }) => { // POST
             const { studentid, encryptedPassword } = input;
             const res = await refreshUserSession(studentid, encryptedPassword);
+            // check if error exists
+            if('error' in res) throw new Error(res.error.message);
+            
+            // set cookie
+            ctx.setCookie('accessToken', res.accessToken, 'path = /; SameSite = Strict; Secure');
             return res;
         }),
 

@@ -16,6 +16,7 @@ import ReactQuery from '@/components/ReactQuery';
 
 import './globals.css'
 import AppUrlListener from '@/components/AppUrlListener';
+import TPRCProvider from '../_trpc/TPRCProvider';
 
 export const metadata: Metadata = {
   title: {
@@ -113,23 +114,25 @@ export default function RootLayout({
   return (
     <CssVarsProvider defaultMode={(theme?.value as any) ?? 'light'}>
       <NextAuthProvider>
-        <ReactQuery>
-          <SettingsProvider>
-            <HeadlessAISProvider>
-              <UserTimetableProvider>
-                <ModalProvider>
-                  <html lang={params.lang} translate="no" className={`${theme?.value ?? ''} ${inter.variable} ${noto.variable}`} suppressHydrationWarning={true}>
-                    <body suppressHydrationWarning={true}>
-                      {children}
-                      <AppUrlListener/>
-                      <Toaster />
-                    </body>
-                  </html>
-                </ModalProvider>
-              </UserTimetableProvider>
-            </HeadlessAISProvider>
-          </SettingsProvider>
-        </ReactQuery>
+        <TPRCProvider>
+          <ReactQuery>
+            <SettingsProvider>
+              <HeadlessAISProvider>
+                <UserTimetableProvider>
+                  <ModalProvider>
+                    <html lang={params.lang} translate="no" className={`${theme?.value ?? ''} ${inter.variable} ${noto.variable}`} suppressHydrationWarning={true}>
+                      <body suppressHydrationWarning={true}>
+                        {children}
+                        <AppUrlListener/>
+                        <Toaster />
+                      </body>
+                    </html>
+                  </ModalProvider>
+                </UserTimetableProvider>
+              </HeadlessAISProvider>
+            </SettingsProvider>
+          </ReactQuery>
+        </TPRCProvider>
       </NextAuthProvider>
     </CssVarsProvider>
   )

@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { parseHTML } from 'linkedom';
 import supabase_server from "@/config/supabase_server";
 import * as jose from 'jose'
-import {fetchWithTimeout} from '@/helpers/fetch';
+import { fetchWithTimeout } from '@/helpers/fetch';
 
 function hexStringToUint8Array(hexString: string) {
     if (hexString.length % 2 !== 0) {
@@ -32,12 +32,12 @@ export const encrypt = async (text: string) => {
         key,
         new TextEncoder().encode(text)
     );
-    
+
     // Correctly handle binary data and Base64 encoding
     const encryptedData = new Uint8Array(encrypted); // Convert BufferSource to Uint8Array
     const ivBase64 = btoa(String.fromCharCode(...iv)); // Encode IV as Base64
     const encryptedDataBase64 = btoa(String.fromCharCode(...encryptedData)); // Encode encrypted data as Base64
-    
+
     const encryptedPassword = ivBase64 + encryptedDataBase64; // Concatenate Base64 IV and encrypted data
     return encryptedPassword;
 }
@@ -84,146 +84,173 @@ type SignInToCCXPResponse = Promise<{ ACIXSTORE: string, encryptedPassword: stri
 export const signInToCCXP = async (studentid: string, password: string): Promise<SignInToCCXPResponse> => {
     console.log("Signing in to CCXP")
     try {
-        const ocrAndLogin: (_try?:number) => Promise<{ ACIXSTORE: string }> = async (_try = 0) => {
-            if(_try == 3) {
-                throw new Error(LoginError.Unknown);
-            }
-            let tries = 0, pwdstr = "", answer = "";
-            do {
-                tries++;
-                try {
-                    const url = 'https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/';
-                    const res = await fetchWithTimeout(url, {
-                        timeout: 3000,
-                        "headers": {
-                            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-                            "accept-language": "en-US,en;q=0.9",
-                            "cache-control": "max-age=0",
-                            "sec-ch-ua": "\"Not/A)Brand\";v=\"8\", \"Chromium\";v=\"126\", \"Microsoft Edge\";v=\"126\"",
-                            "sec-ch-ua-mobile": "?0",
-                            "sec-ch-ua-platform": "\"Windows\"",
-                            "sec-fetch-dest": "document",
-                            "sec-fetch-mode": "navigate",
-                            "sec-fetch-site": "none",
-                            "sec-fetch-user": "?1",
-                            "upgrade-insecure-requests": "1"
-                        },
-                        keepalive: true,
-                        "body": null,
-                        "method": "GET",
-                        "mode": "cors",
-                        "credentials": "include"
-                        
-                    });
-                    
-                    const body = await res.text();
-                    if(!body) {
-                        continue;
-                    }
-                    const bodyMatch = body.match(/auth_img\.php\?pwdstr=([a-zA-Z0-9_-]+)/);
-                    if(!bodyMatch) {
-                        continue;
-                    }
-                    pwdstr = bodyMatch[1];
-                    //fetch the image from the url and send as base64
-                    console.log("pwdstr: ", pwdstr)
-                    answer = await fetch(`https://ocr.nthumods.com/?url=https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/auth_img.php?pwdstr=${pwdstr}`)
-                                .then(res => res.text())
-                    if(answer.length == 6) break;
-                } catch (err) { 
-                    console.error('fetch login err',err)
-                    // throw new Error(LoginError.Unknown);
-                    continue;
+        let startTime = Date.now();
+        const headRes = await fetchWithTimeout('https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/', {
+            timeout: 3000,
+            headers:  {
+                "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+                "accept-language": "en-US,en;q=0.9",
+                "cache-control": "max-age=0",
+                "sec-ch-ua": "\"Not/A)Brand\";v=\"8\", \"Chromium\";v=\"126\", \"Microsoft Edge\";v=\"126\"",
+                "sec-ch-ua-mobile": "?0",
+                "sec-ch-ua-platform": "\"Windows\"",
+                "sec-fetch-dest": "document",
+                "sec-fetch-mode": "navigate",
+                "sec-fetch-site": "none",
+                "sec-fetch-user": "?1",
+                "upgrade-insecure-requests": "1"
+            },
+            keepalive: true,
+            method: "GET",
+            mode: "cors",
+            credentials: "include"
+        })
+
+        async function streamAndMatch(response: Response, regex: RegExp) {
+            if(response.body == null) throw new Error(LoginError.Unknown);
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+
+                const match = buffer.match(regex);
+                if (match) {
+                    reader.cancel(); // Cancel the stream
+                    return match[1]; // Return the matched group
                 }
-            } while (tries <= 5);
-            if(tries == 6 || answer.length != 6) {
-                throw new Error("Internal Server Error");
+
+                // Optionally, trim the buffer to avoid excessive memory usage
+                if (buffer.length > 10000) {
+                    buffer = buffer.slice(-5000);
+                }
             }
-            const response = await fetchWithTimeout("https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/pre_select_entry.php", {
-                timeout: 3000,
-                "headers": {
-                    "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-                    "accept-language": "en-US,en;q=0.9",
-                    "cache-control": "max-age=0",
-                    "content-type": "application/x-www-form-urlencoded",
-                    "sec-ch-ua": "\"Chromium\";v=\"110\", \"Not A(Brand\";v=\"24\", \"Microsoft Edge\";v=\"110\"",
-                    "sec-ch-ua-mobile": "?0",
-                    "sec-ch-ua-platform": "\"Windows\"",
-                    "sec-fetch-dest": "document",
-                    "sec-fetch-mode": "navigate",
-                    "sec-fetch-site": "same-origin",
-                    "upgrade-insecure-requests": "1",
-                },
-                "body": `account=${studentid}&passwd=${password}&passwd2=${answer}&Submit=%B5n%A4J&fnstr=${pwdstr}`,
-                "method": "POST"
-            });
-            const resHTML = await response.arrayBuffer()
-                                .then(buffer => {
-                                    const decoder = new TextDecoder("big5")
-                                    const text = decoder.decode(buffer)
-                                    return text
-                                })
-            const redirectMatch = resHTML.match(/url=(select_entry\.php\?ACIXSTORE=[a-zA-Z0-9_-]+&hint=[0-9]+)/);
-            //Check if login credentials are correct
-            const newHTML = await fetch("https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/" + redirectMatch?.[1], {
-                "headers": {
-                    "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-                    "accept-language": "en-US,en;q=0.9",
-                    "sec-ch-ua": "\"Not_A Brand\";v=\"8\", \"Chromium\";v=\"120\", \"Microsoft Edge\";v=\"120\"",
-                    "sec-ch-ua-mobile": "?0",
-                    "sec-ch-ua-platform": "\"Windows\"",
-                    "sec-fetch-dest": "document",
-                    "sec-fetch-mode": "navigate",
-                    "sec-fetch-site": "same-origin",
-                    "upgrade-insecure-requests": "1"
-                },
-                "body": null,
-                "method": "GET",
-                "mode": "cors",
-                "credentials": "include"
+
+            throw new Error(LoginError.Unknown);
+        }
+
+        console.log("Before streamAndMatch");
+        const pwdstr = await streamAndMatch(headRes, /auth_img\.php\?pwdstr=([a-zA-Z0-9_-]+)/);
+        console.log("Found pwdstr:", pwdstr);
+        console.log("After streamAndMatch");
+        console.log("Time taken:", Date.now() - startTime);
+        startTime = Date.now();
+
+        //fetch the image from the url and send as base64
+        console.log("Before OCR fetch");
+        const answer = await fetch(`https://ocr.nthumods.com/?url=https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/auth_img.php?pwdstr=${pwdstr}`)
+            .then(res => res.text())
+        console.log("After OCR fetch");
+        console.log("Time taken:", Date.now() - startTime);
+        startTime = Date.now();
+
+        if (answer.length != 6) {
+            //OCR Failed
+            throw new Error(LoginError.CaptchaError);
+        }
+
+        console.log("Before pre_select_entry fetch");
+        const response = await fetchWithTimeout("https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/pre_select_entry.php", {
+            timeout: 3000,
+            "headers": {
+                "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+                "accept-language": "en-US,en;q=0.9",
+                "cache-control": "max-age=0",
+                "content-type": "application/x-www-form-urlencoded",
+                "sec-ch-ua": "\"Chromium\";v=\"110\", \"Not A(Brand\";v=\"24\", \"Microsoft Edge\";v=\"110\"",
+                "sec-ch-ua-mobile": "?0",
+                "sec-ch-ua-platform": "\"Windows\"",
+                "sec-fetch-dest": "document",
+                "sec-fetch-mode": "navigate",
+                "sec-fetch-site": "same-origin",
+                "upgrade-insecure-requests": "1",
+            },
+            "body": `account=${studentid}&passwd=${password}&passwd2=${answer}&Submit=%B5n%A4J&fnstr=${pwdstr}`,
+            "method": "POST"
+        });
+        console.log("After pre_select_entry fetch");
+        console.log("Time taken:", Date.now() - startTime);
+        startTime = Date.now();
+
+        const resHTML = await response.arrayBuffer()
+            .then(buffer => {
+                const decoder = new TextDecoder("big5")
+                const text = decoder.decode(buffer)
+                return text
             })
+
+        console.log("Before select_entry fetch");
+        const redirectMatch = resHTML.match(/url=(select_entry\.php\?ACIXSTORE=[a-zA-Z0-9_-]+&hint=[0-9]+)/);
+        //Check if login credentials are correct
+        const newHTML = await fetch("https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/" + redirectMatch?.[1], {
+            "headers": {
+                "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+                "accept-language": "en-US,en;q=0.9",
+                "sec-ch-ua": "\"Not_A Brand\";v=\"8\", \"Chromium\";v=\"120\", \"Microsoft Edge\";v=\"120\"",
+                "sec-ch-ua-mobile": "?0",
+                "sec-ch-ua-platform": "\"Windows\"",
+                "sec-fetch-dest": "document",
+                "sec-fetch-mode": "navigate",
+                "sec-fetch-site": "same-origin",
+                "upgrade-insecure-requests": "1"
+            },
+            "body": null,
+            "method": "GET",
+            "mode": "cors",
+            "credentials": "include"
+        })
             .then(response => response.arrayBuffer())
             .then(buffer => {
                 const decoder = new TextDecoder("big5")
                 const text = decoder.decode(buffer)
                 return text
             })
-            if(resHTML.match('驗證碼輸入錯誤!')) {
-                return await ocrAndLogin(_try++);
-            }
-            else if(resHTML.match('15分鐘內登錄錯誤')) {
-                throw new Error(LoginError.CaptchaError);
-            }
-            //CAPTCHA IS CORRECT: check if select_entry.php is correct  (if not, then login credentials are wrong)
-            else if(newHTML.match('帳號或密碼錯誤')) {
-                throw new Error(LoginError.IncorrectCredentials);
-            }
-            else if(resHTML.match(/ACIXSTORE=([a-zA-Z0-9_-]+)/)?.length == 0) {
-                return await ocrAndLogin(_try++);
-            }
-            else {
-                const ACIXSTORE = resHTML.match(/ACIXSTORE=([a-zA-Z0-9_-]+)/)?.[1];
-                if(!ACIXSTORE) {
-                    return await ocrAndLogin(_try++);
-                }
-                return { ACIXSTORE };
-            }
-        }
-        const result = await ocrAndLogin();
+        console.log("After select_entry fetch");
+        console.log("Time taken:", Date.now() - startTime);
+        startTime = Date.now();
 
-        const html = await fetch(`https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/4/4.19/JH4j002.php?ACIXSTORE=${result.ACIXSTORE}&user_lang=`, {
+        if (resHTML.match('驗證碼輸入錯誤!')) {
+            // OCR Failed
+            throw new Error(LoginError.CaptchaError);
+        }
+        else if (resHTML.match('15分鐘內登錄錯誤')) {
+            throw new Error(LoginError.CaptchaError);
+        }
+        //CAPTCHA IS CORRECT: check if select_entry.php is correct  (if not, then login credentials are wrong)
+        else if (newHTML.match('帳號或密碼錯誤')) {
+            throw new Error(LoginError.IncorrectCredentials);
+        }
+        else if (resHTML.match(/ACIXSTORE=([a-zA-Z0-9_-]+)/)?.length == 0) {
+            // No ACIXSTORE
+            throw new Error(LoginError.Unknown);
+        }
+
+        const ACIXSTORE = resHTML.match(/ACIXSTORE=([a-zA-Z0-9_-]+)/)?.[1];
+        if (!ACIXSTORE) {
+            // Not Sure
+            throw new Error(LoginError.Unknown);
+        }
+
+        console.log("Before JH4j002 fetch");
+        const html = await fetch(`https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/4/4.19/JH4j002.php?ACIXSTORE=${ACIXSTORE}&user_lang=`, {
             "headers": {
-              "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-              "accept-language": "en-US,en;q=0.9",
-              "cache-control": "max-age=0",
-              "sec-ch-ua": "\"Chromium\";v=\"124\", \"Microsoft Edge\";v=\"124\", \"Not-A.Brand\";v=\"99\"",
-              "sec-ch-ua-mobile": "?0",
-              "sec-ch-ua-platform": "\"Windows\"",
-              "sec-fetch-dest": "document",
-              "sec-fetch-mode": "navigate",
-              "sec-fetch-site": "same-origin",
-              "sec-fetch-user": "?1",
-              "upgrade-insecure-requests": "1"
+                "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+                "accept-language": "en-US,en;q=0.9",
+                "cache-control": "max-age=0",
+                "sec-ch-ua": "\"Chromium\";v=\"124\", \"Microsoft Edge\";v=\"124\", \"Not-A.Brand\";v=\"99\"",
+                "sec-ch-ua-mobile": "?0",
+                "sec-ch-ua-platform": "\"Windows\"",
+                "sec-fetch-dest": "document",
+                "sec-fetch-mode": "navigate",
+                "sec-fetch-site": "same-origin",
+                "sec-fetch-user": "?1",
+                "upgrade-insecure-requests": "1"
             },
             "body": null,
             "method": "GET",
@@ -232,10 +259,15 @@ export const signInToCCXP = async (studentid: string, password: string): Promise
         })
             .then(res => res.arrayBuffer())
             .then(arrayBuffer => new TextDecoder('big5').decode(new Uint8Array(arrayBuffer)))
+        console.log("After JH4j002 fetch");
+        console.log("Time taken:", Date.now() - startTime);
+        startTime = Date.now();
+
+
         const { document: doc } = parseHTML(html, 'text/html');
 
         const form = doc.querySelector('form[name="register"]');
-        if(form == null) {
+        if (form == null) {
             throw new Error(LoginError.Unknown);
         }
 
@@ -251,7 +283,7 @@ export const signInToCCXP = async (studentid: string, password: string): Promise
             email: form.querySelector('input[name="email"]')?.getAttribute('value') ?? "",
         } as UserJWTDetails;
 
-        if(form.querySelector('input[name="ACIXSTORE"]')?.getAttribute('value') != result.ACIXSTORE) {
+        if (form.querySelector('input[name="ACIXSTORE"]')?.getAttribute('value') != ACIXSTORE) {
             throw new Error(LoginError.Unknown);
         }
 
@@ -267,11 +299,11 @@ export const signInToCCXP = async (studentid: string, password: string): Promise
 
         // Encrypt user password 
         const encryptedPassword = await encrypt(password);
-        
-        return { ...result, encryptedPassword, accessToken: jwt };
+
+        return { ACIXSTORE: ACIXSTORE, encryptedPassword, accessToken: jwt };
     } catch (err) {
         console.error('CCXP Login Err', err);
-        if(err instanceof Error) return { error: { message: err.message } };
+        if (err instanceof Error) return { error: { message: err.message } };
         throw err;
     }
 }
@@ -280,10 +312,10 @@ type RefreshUserSessionResponse = Promise<{ ACIXSTORE: string, accessToken: stri
 export const refreshUserSession = async (studentid: string, encryptedPassword: string): Promise<RefreshUserSessionResponse> => {
     console.log('Refreshing User Session')
     // Decrypt password
-    const password =  await decrypt(encryptedPassword);
+    const password = await decrypt(encryptedPassword);
 
     const res = await signInToCCXP(studentid, password);
-    if('error' in res && res.error) {
+    if ('error' in res && res.error) {
         console.error(res.error);
         return { error: res.error }
     }
@@ -304,11 +336,11 @@ export const getUserSession = async () => {
 
 export const isUserBanned = async () => {
     const session = await getUserSession();
-    if(!session) {
+    if (!session) {
         return false;
     }
     const { data, error } = await supabase_server.from('users').select('banned').eq('studentid', session.studentid).maybeSingle();
-    if(error) {
+    if (error) {
         return false;
     }
     return data?.banned ?? false;

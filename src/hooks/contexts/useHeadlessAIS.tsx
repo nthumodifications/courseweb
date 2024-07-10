@@ -7,6 +7,7 @@ import useDictionary from "@/dictionaries/useDictionary";
 import { useCookies } from "react-cookie";
 import {fetchRefreshUserSession, fetchSignInToCCXP} from '@/helpers/headless_ais';
 import { decodeJwt } from 'jose';
+import { trpc } from '@/app/_trpc/client';
 const headlessAISContext = createContext<ReturnType<typeof useHeadlessAISProvider>>({
     user: undefined,
     ais: {
@@ -29,6 +30,9 @@ const useHeadlessAISProvider = () => {
     const [error, setError] = useState<LoginError | undefined>(undefined);
     const [cookies, setCookies, removeCookies, updateCookies] = useCookies(['accessToken']);
     const dict = useDictionary();
+
+    const login = trpc.auth.login.useMutation();
+    const refresh = trpc.auth.refresh.useMutation();
 
     useEffect(() => { setInitializing(false) }, []);
     
@@ -56,8 +60,9 @@ const useHeadlessAISProvider = () => {
             return ;
         }
         setLoading(true);
-        return await fetchSignInToCCXP(username, password)
+        return await login.mutateAsync({ studentid: username, password })
             .then((res) => {
+                console.log(res)
                 if(!res) throw new Error("太多人在使用代理登入，請稍後再試");
                 if('error' in res) throw new Error(res.error.message); 
                 setHeadlessAIS({
@@ -108,7 +113,7 @@ const useHeadlessAISProvider = () => {
         // legacy support, if encrypted password is not set, set it
         if(!headlessAIS.encrypted) {
             // use signInToCCXP to get encrypted password
-            return await fetchSignInToCCXP(headlessAIS.studentid, headlessAIS.password)
+            return await login.mutateAsync({ studentid: headlessAIS.studentid, password: headlessAIS.password })
                 .then((res) => {
                     if('error' in res) throw new Error(res.error.message); 
                     setHeadlessAIS({
@@ -125,7 +130,7 @@ const useHeadlessAISProvider = () => {
                 })
         }
         
-        return await fetchRefreshUserSession(headlessAIS.studentid, headlessAIS.password)
+        return await refresh.mutateAsync({ studentid: headlessAIS.studentid, encryptedPassword: headlessAIS.password })
         .then((res) => {
             if('error' in res) throw new Error(res.error.message); 
             setHeadlessAIS({
