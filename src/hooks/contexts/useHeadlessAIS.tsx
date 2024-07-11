@@ -64,7 +64,6 @@ const useHeadlessAISProvider = () => {
             .then((res) => {
                 console.log(res)
                 if(!res) throw new Error("太多人在使用代理登入，請稍後再試");
-                if('error' in res) throw new Error(res.error.message); 
                 setHeadlessAIS({
                     enabled: true,
                     studentid: username,
@@ -115,7 +114,6 @@ const useHeadlessAISProvider = () => {
             // use signInToCCXP to get encrypted password
             return await login.mutateAsync({ studentid: headlessAIS.studentid, password: headlessAIS.password })
                 .then((res) => {
-                    if('error' in res) throw new Error(res.error.message); 
                     setHeadlessAIS({
                         enabled: true,
                         studentid: headlessAIS.studentid,
@@ -132,7 +130,6 @@ const useHeadlessAISProvider = () => {
         
         return await refresh.mutateAsync({ studentid: headlessAIS.studentid, encryptedPassword: headlessAIS.password })
         .then((res) => {
-            if('error' in res) throw new Error(res.error.message); 
             setHeadlessAIS({
                 enabled: true,
                 studentid: headlessAIS.studentid,

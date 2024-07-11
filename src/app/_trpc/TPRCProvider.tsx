@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink } from "@trpc/client";
 import React, { useState } from "react";
 import { trpc } from "./client";
+import { getBaseUrl } from "@/helpers/trpc";
 
 
 export default function TPRCProvider({ children }: { children: React.ReactNode }) {
@@ -11,7 +12,17 @@ export default function TPRCProvider({ children }: { children: React.ReactNode }
     trpc.createClient({
       links: [
         httpBatchLink({
-          url: "http://localhost:3000/api/trpc",
+          /**
+           * If you want to use SSR, you need to use the server's full URL
+           * @link https://trpc.io/docs/v11/ssr
+           **/
+          url: `${getBaseUrl()}/api/trpc`,
+          // You can pass any HTTP headers you wish here
+          async headers() {
+            return {
+              // authorization: getAuthCookie(),
+            };
+          },
         }),
       ],
     })
