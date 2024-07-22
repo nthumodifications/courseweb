@@ -1,9 +1,12 @@
 'use server';
-import jwt from 'jsonwebtoken';
+import * as jose from 'jose'
 
-//decode env base64 private key
-const privateKey = Buffer.from(process.env.GITHUB_APP_PRIVATE_KEY!, 'base64').toString('utf-8');
-
+//decode env base64 private key read into uint8array from base64
+const privateKey = atob(process.env.GITHUB_PRIVATE_KEY!);
+const privateKeyUint = new Uint8Array(privateKey.length);
+for (let i = 0; i < privateKey.length; i++) {
+    uint8Array[i] = privateKey.charCodeAt(i);
+}
 const INSTALLATION_ID = process.env.GITHUB_INSTALLATION_ID;
 const CLIENT_ID = process.env.GITHUB_CLIENT_ID;
 
@@ -76,14 +79,15 @@ type GithubIssue = {
     state_reason: null;
 };
 
-const getJwt = () => {
+const getJwt = async () => {
     const payload = {
         iat: Math.floor(Date.now() / 1000),
         exp: Math.floor(Date.now() / 1000) + (10 * 60),
         iss: CLIENT_ID,
     };
-
-    const token = jwt.sign(payload, privateKey, { algorithm: 'RS256' });
+    const token = await new jose.SignJWT(payload)
+        .setProtectedHeader({ alg: 'HS256' })
+        .sign(privateKeyUint);
     return token;
 };
 
