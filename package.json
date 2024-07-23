@@ -12,7 +12,8 @@
     "checkts": "tsc --noEmit",
     "ionic:build": "npm run build",
     "ionic:serve": "npm run start",
-    "sync:ios": "npx cap sync ios"
+    "sync:ios": "npx cap sync ios",
+    "pages:build": "npx @cloudflare/next-on-pages"
   },
   "dependencies": {
     "@capacitor-community/media": "6.0.0",
