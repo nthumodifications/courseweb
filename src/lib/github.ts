@@ -5,7 +5,7 @@ import * as jose from 'jose'
 const privateKey = atob(process.env.GITHUB_PRIVATE_KEY!);
 const privateKeyUint = new Uint8Array(privateKey.length);
 for (let i = 0; i < privateKey.length; i++) {
-    uint8Array[i] = privateKey.charCodeAt(i);
+    privateKeyUint[i] = privateKey.charCodeAt(i);
 }
 const INSTALLATION_ID = process.env.GITHUB_INSTALLATION_ID;
 const CLIENT_ID = process.env.GITHUB_CLIENT_ID;
