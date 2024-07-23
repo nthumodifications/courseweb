@@ -1,0 +1,3 @@
+# wrangler.toml
+name = "courseweb"
+compatibility_flags = ["nodejs_compat"]
