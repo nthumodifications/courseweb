@@ -2,6 +2,7 @@
   "name": "courseweb",
   "version": "0.1.0",
   "private": true,
+  "contributors": ["Chew Tzi Hwee <chewtzihwee@gmail.com>(https://imjustchew.com)"],
   "scripts": {
     "dev": "next dev",
     "dev-turbo": "next dev --turbo",
@@ -118,9 +119,7 @@
     "use-debounce": "^10.0.0",
     "usehooks-ts": "^3.1.0",
     "vaul": "^0.8.9",
-    "zod": "^3.22.4"
-  },
-  "devDependencies": {
+    "zod": "^3.22.4",
     "@capacitor/cli": "^6.0.0",
     "@types/jsdom": "^21.1.7",
     "@types/jsonwebtoken": "^9.0.6",
@@ -129,5 +128,7 @@
     "@types/node-schedule": "^2.1.7",
     "supabase": "^1.148.6",
     "webpack": "^5.89.0"
+  },
+  "devDependencies": {
   }
 }
