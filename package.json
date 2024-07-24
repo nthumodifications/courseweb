@@ -12,7 +12,8 @@
     "checkts": "tsc --noEmit",
     "ionic:build": "npm run build",
     "ionic:serve": "npm run start",
-    "sync:ios": "npx cap sync ios"
+    "sync:ios": "npx cap sync ios",
+    "runner:update-courses": "node --import=tsimp/import runners/update-courses.ts"
   },
   "dependencies": {
     "@capacitor-community/media": "6.0.0",
@@ -58,6 +59,7 @@
     "@sentry/nextjs": "^7.113.0",
     "@supabase/supabase-js": "^2.39.7",
     "@tailwindcss/container-queries": "^0.1.1",
+    "@tailwindcss/typography": "^0.5.10",
     "@tanstack/query-sync-storage-persister": "^5.40.0",
     "@tanstack/react-query": "^5.39.0",
     "@tanstack/react-query-persist-client": "^5.39.0",
@@ -91,6 +93,7 @@
     "next": "^14.2.4",
     "next-auth": "^4.24.7",
     "node-html-parser": "^6.1.13",
+    "node-schedule": "^2.1.1",
     "pdfjs-dist": "^3.4.120",
     "postcss": "8.4.35",
     "qrcode.react": "^3.1.0",
@@ -110,6 +113,7 @@
     "tailwind-merge": "^2.2.1",
     "tailwindcss": "3.3.5",
     "tailwindcss-animate": "^1.0.7",
+    "tsimp": "^2.0.11",
     "typescript": "5.4.4",
     "use-debounce": "^10.0.0",
     "usehooks-ts": "^3.1.0",
@@ -118,11 +122,11 @@
   },
   "devDependencies": {
     "@capacitor/cli": "^6.0.0",
-    "@tailwindcss/typography": "^0.5.10",
     "@types/jsdom": "^21.1.7",
     "@types/jsonwebtoken": "^9.0.6",
     "@types/leaflet": "^1.9.11",
     "@types/negotiator": "^0.6.3",
+    "@types/node-schedule": "^2.1.7",
     "supabase": "^1.148.6",
     "webpack": "^5.89.0"
   }

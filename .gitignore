@@ -44,3 +44,4 @@ android/private_key.pepk
 
 # Sentry Config File
 .sentryclirc
+.tsimp
