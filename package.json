@@ -62,7 +62,7 @@
     "@tailwindcss/container-queries": "^0.1.1",
     "@tailwindcss/typography": "^0.5.10",
     "@tanstack/query-sync-storage-persister": "^5.40.0",
-    "@tanstack/react-query": "^5.39.0",
+    "@tanstack/react-query": "^5.51.11",
     "@tanstack/react-query-persist-client": "^5.39.0",
     "@types/node": "20.10.7",
     "@types/react": "18.3.3",
