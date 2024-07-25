@@ -95,7 +95,7 @@ const ClassRefinementItem =  ({
               <div className="flex flex-col gap-1">
                 {selected.map(i => 
                   <Badge variant="outline" className="">
-                    {getFormattedClassCode(i, selectedSemester)}
+                    {getFormattedClassCode(i, selectedSemester, 'zh')}
                   </Badge>
                 )}
               </div>
@@ -139,7 +139,7 @@ const ClassRefinementItem =  ({
                     <Check size={16} className={`${item.isRefined ? '' : 'opacity-0'}`} />
                   </div>
                   <span className="mr-4">
-                    {getFormattedClassCode(item.label, selectedSemester)}
+                    {getFormattedClassCode(item.label, selectedSemester, 'zh')}
                   </span>
                   <Badge variant="outline">{item.count}</Badge>
                 </div>
