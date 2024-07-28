@@ -66,6 +66,7 @@ const AnnouncementsContainer = () => {
         queryFn: async () => {
             if (initializing) return null;
             const token = await getOauthCookies(false);
+            console.log(token);
             return await getAnnouncements(token?.eeclass!, 'all', page);
         }
     });

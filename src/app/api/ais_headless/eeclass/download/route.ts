@@ -1,4 +1,4 @@
-import { fetchEeClass } from "@/lib/elearning";
+import { fetchElearning } from "@/lib/elearning";
 import {NextRequest} from "next/server";
 
 export const GET = async (req: NextRequest) => {
@@ -6,5 +6,5 @@ export const GET = async (req: NextRequest) => {
     const url = decodeURI(req.nextUrl.searchParams.get("url") as string)
     process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
 
-    return await fetchEeClass(cookie, url);
+    return await fetchElearning(cookie, url);
 }
