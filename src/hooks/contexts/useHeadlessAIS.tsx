@@ -163,9 +163,12 @@ const useHeadlessAISProvider = () => {
     const getOauthCookies = async (force = false) => {
         if (!headlessAIS.enabled) return undefined;
         if (error && !force) {
-
             setLoading(false);
             throw error;
+        }
+        if(headlessAIS.oauthLastUpdated && headlessAIS.oauthLastUpdated + 15 * 60 * 1000 > Date.now() && !force ) {
+            setLoading(false);
+            return { elearn: headlessAIS.elearnCookie, eeclass: headlessAIS.eeclassCookie };
         }
         setLoading(true);
         // legacy support, if encrypted password is not set, set it
@@ -198,6 +201,7 @@ const useHeadlessAISProvider = () => {
                 ...headlessAIS,
                 elearnCookie: undefined,
                 eeclassCookie: undefined,
+                oauthLastUpdated: Date.now()
             });
             setLoading(false);
             setError(err);
