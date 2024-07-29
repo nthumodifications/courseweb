@@ -1,4 +1,4 @@
-import { Repeat, Plus } from 'lucide-react';
+import { Repeat, Plus, EllipsisVertical } from 'lucide-react';
 import useUserTimetable from '@/hooks/contexts/useUserTimetable';
 import { useRouter } from 'next/navigation';
 import ThemeChangableAlert from '../Alerts/ThemeChangableAlert';
@@ -6,6 +6,15 @@ import useDictionary from '@/dictionaries/useDictionary';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { DownloadTimetableDialogDynamic, ShareSyncTimetableDialogDynamic, HeadlessSyncCourseButtonDynamic, CourseSearchContainerDynamic, TimetableCourseList } from './TimetableCourseList';
+import GroupByDepartmentButton from './GroupByDepartmentButton';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+  } from "@/components/ui/dropdown-menu"
 
 const TimetableSidebar = ({
     vertical, setVertical,
@@ -33,7 +42,20 @@ const TimetableSidebar = ({
             <Button variant="outline" onClick={() => setVertical(!vertical)}><Repeat className="w-4 h-4 mr-1" /> {vertical ? dict.timetable.actions.horizontal_view : dict.timetable.actions.vertical_view}</Button>
             <DownloadTimetableDialogDynamic icsfileLink={icsfileLink} />
             <ShareSyncTimetableDialogDynamic shareLink={shareLink} webcalLink={webcalLink} />
-            <HeadlessSyncCourseButtonDynamic />
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant='outline'>
+                        <EllipsisVertical className="w-4 h-4 mr-2" />
+                        更多
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                    <DropdownMenuLabel>Customizations</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild><HeadlessSyncCourseButtonDynamic /></DropdownMenuItem>
+                    <DropdownMenuItem asChild><GroupByDepartmentButton semester={semester} /></DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
         </div>
         <Dialog>
             <DialogTrigger asChild>

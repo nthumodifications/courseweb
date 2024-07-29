@@ -37,8 +37,8 @@ const CourseListItem: FC<{ course: CourseSyllabusView, hasTaken?: boolean }> = (
                     <p className='text-sm line-clamp-4 text-black dark:text-neutral-200'>
                         {course.brief}
                     </p>
-                    <p className='text-sm whitespace-pre-line text-gray-400 dark:text-neutral-600'>{course.restrictions}</p>
-                    <p className='text-sm whitespace-pre-line text-gray-400 dark:text-neutral-600'>{course.note}</p>
+                    <p className='text-sm whitespace-pre-line text-gray-400 dark:text-neutral-500'>{course.restrictions}</p>
+                    <p className='text-sm whitespace-pre-line text-gray-400 dark:text-neutral-500'>{course.note}</p>
                     <div className='space-y-1 @md:hidden'>
                     {course.venues? 
                         course.venues.map((vn, i) => <p className='text-nthu-600 dark:text-nthu-400 text-sm'>{vn} <span className='text-black dark:text-white'>{course.times![i]}</span></p>) : 

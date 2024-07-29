@@ -42,10 +42,30 @@ export const getScoreType = (score: string) => {
     }
 }
 
-export const getFormattedClassCode = (class_code: string) =>{
-    // Define mappings for degree types and class letters
-    const degreeTypes: {[x: string]: string } = { 'B': '大學部', 'M': '碩士班', 'D': '博士班', 'P': '專班' };
-    const classLetters: {[x: string]: string } = { 'A': '清班', 'B': '華班', 'C': '梅班', 'D': '班' }; // Assuming 'D' stands for a general class
+// Define mappings for degree types and class letters
+const degreeTypes: {[x: string]: string } = { 'B': '', 'M': '碩士班', 'D': '博士班', 'P': '專班' };
+const classLetters: {[x: string]: string } = { 'A': '清班', 'B': '華班', 'C': '梅班', 'D': '班' }; // Assuming 'D' stands for a general class
+export const checkValidClassCode = (class_code: string, semester: string) => {
+    // Parse the input string
+    const match = class_code.toUpperCase().match(/(^[^\d]+)(\d+)([BMD])([A-D]?)/);
+    if (!match) {
+        return class_code;
+    }
+
+    const sem = parseInt(semester.slice(0, 3));
+
+    // Extract components
+    const [, deptName, year, degreeType, classLetter] = match;
+
+    //if degreetype = B and year - sem > 4, return false
+    if((sem - parseInt(year)) > 4){
+        return false;
+    }
+    return true;
+}
+    
+
+export const getFormattedClassCode = (class_code: string, semester: string) =>{
 
     // Parse the input string
     const match = class_code.toUpperCase().match(/(^[^\d]+)(\d+)([BMD])([A-D]?)/);
@@ -53,13 +73,20 @@ export const getFormattedClassCode = (class_code: string) =>{
         return class_code;
     }
 
+    const sem = parseInt(semester.slice(0, 3));
+
     // Extract components
     const [, deptName, year, degreeType, classLetter] = match;
 
     // Translate components
-    const readableYear = year + '年';
+    const readableYear = (sem - parseInt(year) + 1) + '年級';
     const readableDegreeType = degreeTypes[degreeType] || '';
     const readableClassLetter = classLetters[classLetter] || '';
+
+    // exception for EECS-GS
+    if(deptName == '電資院學士班' && degreeType == 'B' && classLetter == 'A'){
+        return `電資院學士班${readableYear}國際學程`;
+    }
 
     // Construct the output
     return `${deptName}${readableYear}${readableDegreeType}${readableClassLetter}`;

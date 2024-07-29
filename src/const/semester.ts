@@ -1,4 +1,6 @@
 export const semesterInfo = [
+    { id: '10810', year: 2019, semester: 1, begins: new Date(2019, 9-1, 9), ends: new Date(2020, 1-1, 12) },
+    { id: '10820', year: 2019, semester: 2, begins: new Date(2020, 2-1, 17), ends: new Date(2020, 6-1, 21) },
     { id: '10910', year: 2020, semester: 1, begins: new Date(2020, 9-1, 14), ends: new Date(2021, 1-1, 29) },
     { id: '10920', year: 2020, semester: 2, begins: new Date(2021, 2-1, 22), ends: new Date(2021, 6-1, 25) },
     { id: '11010', year: 2021, semester: 1, begins: new Date(2021, 9-1, 13), ends: new Date(2022, 1-1, 14) },
