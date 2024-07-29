@@ -97,7 +97,7 @@
     "jsdom": "^24.1.0",
     "jsonwebtoken": "^9.0.2",
     "leaflet": "^1.9.4",
-    "linkedom": "^0.18.3",
+    "linkedom": "^0.18.4",
     "lucide-react": "^0.383.0",
     "negotiator": "^0.6.3",
     "next": "^14.2.4",
