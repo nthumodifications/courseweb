@@ -3,7 +3,7 @@ import {HeadlessAISStorage, LoginError, UserJWT} from '@/types/headless_ais';
 import { toast } from "@/components/ui/use-toast";
 import { FC, PropsWithChildren, createContext, useContext, useEffect, useState } from "react";
 import { useLocalStorage } from 'usehooks-ts';
-import { signInEeclassOauth } from '@/lib/elearning';
+import {signInEeclassOauth, signInElearnOauth} from '@/lib/elearning';
 import useDictionary from "@/dictionaries/useDictionary";
 import { useCookies } from "react-cookie";
 import {fetchRefreshUserSession, fetchSignInToCCXP} from '@/helpers/headless_ais';
@@ -159,9 +159,12 @@ const useHeadlessAISProvider = () => {
     const getOauthCookies = async (force = false) => {
         if (!headlessAIS.enabled) return undefined;
         if (error && !force) {
-
             setLoading(false);
             throw error;
+        }
+        if(headlessAIS.oauthLastUpdated && headlessAIS.oauthLastUpdated + 15 * 60 * 1000 > Date.now() && !force ) {
+            setLoading(false);
+            return { elearn: headlessAIS.elearnCookie, eeclass: headlessAIS.eeclassCookie };
         }
         setLoading(true);
         // legacy support, if encrypted password is not set, set it
@@ -169,21 +172,23 @@ const useHeadlessAISProvider = () => {
             //Im sorry, you should not be here if you aren't using encrypted password
             throw new Error('Encrypted password not set');
         }
-        
-        return await signInEeclassOauth(headlessAIS.studentid, headlessAIS.password)
-        .then((res) => {
-            if(!res) throw new Error("太多人在使用代理登入，請稍後再試");
-            if('error' in res) throw new Error(res.error.message); 
-            setHeadlessAIS({
-                ...headlessAIS,
-                elearnCookie: "",
-                eeclassCookie: res.cookie,
-                oauthLastUpdated: Date.now()
-            });
-            setLoading(false);
-            setError(undefined);
-            return { elearn: "", eeclass: res.cookie };
-        }).catch(err => {
+
+        return await Promise.all([signInElearnOauth(headlessAIS.studentid, headlessAIS.password), signInEeclassOauth(headlessAIS.studentid, headlessAIS.password)])
+            .then(([elearn, eeclass]) => {
+                if(!elearn || !eeclass) throw new Error("太多人在使用代理登入，請稍後再試");
+                if('error' in elearn) throw new Error(elearn.error.message);
+                if('error' in eeclass) throw new Error(eeclass.error.message);
+                setHeadlessAIS({
+                    ...headlessAIS,
+                    elearnCookie: elearn.cookie,
+                    eeclassCookie: eeclass.cookie,
+                    oauthLastUpdated: Date.now()
+                });
+                setLoading(false);
+                setError(undefined);
+                return { elearn: elearn.cookie, eeclass: eeclass.cookie };
+            })
+            .catch(err => {
             toast({
                 title: "代理登入失敗",
                 description: dict.ccxp.errors[err.message as keyof typeof dict.ccxp.errors] ?? "請檢查學號密碼是否正確",
@@ -192,14 +197,13 @@ const useHeadlessAISProvider = () => {
                 ...headlessAIS,
                 elearnCookie: undefined,
                 eeclassCookie: undefined,
+                oauthLastUpdated: Date.now()
             });
             setLoading(false);
             setError(err);
             throw err as LoginError;
         });
     }
-
-
 
     const ais = {
         ACIXSTORE: headlessAIS.enabled ? headlessAIS.ACIXSTORE : undefined,
