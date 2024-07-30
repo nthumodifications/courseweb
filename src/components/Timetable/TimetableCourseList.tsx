@@ -33,7 +33,10 @@ import {
     restrictToWindowEdges,
 } from '@dnd-kit/modifiers';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import Compact from '@uiw/react-color-compact';
+import { CompactPicker } from 'react-color';
+import { useHeadlessAIS } from '@/hooks/contexts/useHeadlessAIS';
+import { toast } from '../ui/use-toast';
+import { event } from '@/lib/gtag';
 import { Separator } from '../ui/separator';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '../ui/hover-card';
 import { TimetableItemDrawer } from './TimetableItemDrawer';
@@ -89,7 +92,7 @@ const TimetableCourseListItem = ({
                 </div>
             </PopoverTrigger>
             <PopoverContent className='p-0'>
-                <Compact
+                <CompactPicker
                     color={colorMap[course.raw_id]}
                     onChange={(color) => {
                         setColor(course.raw_id, color.hex);
