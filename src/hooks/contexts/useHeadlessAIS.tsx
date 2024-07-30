@@ -1,12 +1,12 @@
-"use client";;
+"use client";
 import {HeadlessAISStorage, LoginError, UserJWT} from '@/types/headless_ais';
 import { toast } from "@/components/ui/use-toast";
 import { FC, PropsWithChildren, createContext, useContext, useEffect, useState } from "react";
 import { useLocalStorage } from 'usehooks-ts';
 import useDictionary from "@/dictionaries/useDictionary";
 import { useCookies } from "react-cookie";
-import {fetchRefreshUserSession, fetchSignInToCCXP} from '@/helpers/headless_ais';
 import { decodeJwt } from 'jose';
+import { refreshUserSession, signInToCCXP } from '@/lib/headless_ais';
 const headlessAISContext = createContext<ReturnType<typeof useHeadlessAISProvider>>({
     user: undefined,
     ais: {
@@ -56,7 +56,7 @@ const useHeadlessAISProvider = () => {
             return ;
         }
         setLoading(true);
-        return await fetchSignInToCCXP(username, password)
+        return await signInToCCXP(username, password)
             .then((res) => {
                 if(!res) throw new Error("太多人在使用代理登入，請稍後再試");
                 if('error' in res) throw new Error(res.error.message); 
@@ -108,7 +108,7 @@ const useHeadlessAISProvider = () => {
         // legacy support, if encrypted password is not set, set it
         if(!headlessAIS.encrypted) {
             // use signInToCCXP to get encrypted password
-            return await fetchSignInToCCXP(headlessAIS.studentid, headlessAIS.password)
+            return await signInToCCXP(headlessAIS.studentid, headlessAIS.password)
                 .then((res) => {
                     if('error' in res) throw new Error(res.error.message); 
                     setHeadlessAIS({
@@ -125,7 +125,7 @@ const useHeadlessAISProvider = () => {
                 })
         }
         
-        return await fetchRefreshUserSession(headlessAIS.studentid, headlessAIS.password)
+        return await refreshUserSession(headlessAIS.studentid, headlessAIS.password)
         .then((res) => {
             if('error' in res) throw new Error(res.error.message); 
             setHeadlessAIS({

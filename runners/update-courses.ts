@@ -9,13 +9,15 @@ const job = schedule.scheduleJob('0 0 * * *', async () => {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${process.env.CRON_SECRET}`
-            }
+            },
+            signal: AbortSignal.timeout(5*60*1000) // 5 minutes
         });
         const res2 = await fetch('http://localhost:8080/api/scrape-syllabus?semester=11310', {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${process.env.CRON_SECRET}`
-            }
+            },
+            signal: AbortSignal.timeout(20*60*1000) // 20 minutes
         });
         const res3 = await fetch('http://localhost:8080/api/sync-algolia?semester=11310', {
             method: 'GET',

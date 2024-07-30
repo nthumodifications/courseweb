@@ -6,7 +6,7 @@ import { ScrollArea } from '@radix-ui/react-scroll-area';
 import '@react-pdf-viewer/core/lib/styles/index.css';
 
 const PDFViewer = ({ file }: { file: string }) => {
-    return <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
+    return <Worker workerUrl="https://unpkg.com/pdfjs-dist@4.5.136/build/pdf.worker.min.js">
         <ScrollArea className='max-h-screen overflow-y-auto'>
             <Viewer fileUrl={file} />
         </ScrollArea>
