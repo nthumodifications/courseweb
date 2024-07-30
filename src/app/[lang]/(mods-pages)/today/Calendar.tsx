@@ -18,6 +18,8 @@ import { getMonthForDisplay } from '@/app/[lang]/(mods-pages)/today/calendar_uti
 import { CalendarDateSelector } from '@/app/[lang]/(mods-pages)/today/CalendarDateSelector';
 import { CalendarWeekContainer } from './CalendarWeekContainer';
 import { CalendarMonthContainer } from './CalendarMonthContainer';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 const Calendar = () => {
     const [displayDates, setDisplayDates] = useState<Date[]>(getWeek(new Date()));
@@ -123,12 +125,14 @@ const Calendar = () => {
         }
     }, [displayContainer, HOUR_HEIGHT, moveBackward, moveForward])
 
-    return <div className="flex flex-col gap-6 flex-1">
+    return <div className="flex flex-col gap-6 flex-1 w-full">
         <div className="flex flex-col md:flex-row gap-2 justify-evenly">
-            <div className="flex-1 w-full">
+            <div className="flex-1 w-full flex align-middle gap-2">
+                <Button variant="outline" onClick={moveBackward} size="icon"><ChevronLeft /></Button>
                 <CalendarDateSelector date={displayDates[Math.floor(displayDates.length/2)]} setDate={setDate} />
+                <Button variant="outline" onClick={moveForward} size="icon"><ChevronRight /></Button>
             </div>
-            <div className="flex flex-row items-center gap-2">
+            <div className="md:flex flex-row items-center gap-2 hidden ">
                 <Select value={displayMode} onValueChange={(v) => handleSwitchMode(v as 'week' | 'month')}>
                     <SelectTrigger>
                         <SelectValue placeholder="Display" />
@@ -139,8 +143,6 @@ const Calendar = () => {
                     </SelectContent>
                 </Select>
                 <Button variant="outline" onClick={backToToday}>Today</Button>
-                <Button variant="outline" onClick={moveBackward}><ChevronLeft /></Button>
-                <Button variant="outline" onClick={moveForward}><ChevronRight /></Button>
                 <AddEventButton onEventAdded={handleAddEvent}>
                     <>
                         <Button className="hidden md:inline-flex"><Plus className="mr-2" /> 新增行程</Button>
@@ -149,8 +151,17 @@ const Calendar = () => {
                 </AddEventButton>
             </div>
         </div>
-        {displayMode == 'week' && <CalendarWeekContainer displayWeek={displayDates} />}
-        {displayMode == 'month' && <CalendarMonthContainer displayMonth={displayDates} onChangeView={handleOnViewChange} />}
+        <Tabs defaultValue={displayMode} value={displayMode} onValueChange={(v) => handleSwitchMode(v as 'week' | 'month')} className='w-full md:hidden'>
+            <TabsList className='w-full'>
+                <TabsTrigger value='week' className='w-full'>Week</TabsTrigger>
+                <TabsTrigger value='month' className='w-full'>Month</TabsTrigger>
+            </TabsList>
+        </Tabs>
+        <ScrollArea className='w-full'>
+            <ScrollBar orientation="horizontal" />
+            {displayMode == 'week' && <CalendarWeekContainer displayWeek={displayDates} />}
+            {displayMode == 'month' && <CalendarMonthContainer displayMonth={displayDates} onChangeView={handleOnViewChange} />}
+        </ScrollArea>
     </div>
 
 }

@@ -13,7 +13,7 @@ export const CalendarDateSelector = ({ date, setDate }: { date: Date; setDate: (
 
     return <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger>
-            <h2 className="text-slate-900 text-2xl font-semibold w-max">{format(date, 'LLLL yyyy')}</h2>
+            <h2 className="text-slate-900 text-lg md:text-2xl font-semibold w-max">{format(date, 'LLLL yyyy')}</h2>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0">
             <ShadcnCalendar
