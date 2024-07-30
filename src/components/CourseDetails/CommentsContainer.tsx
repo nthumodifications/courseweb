@@ -289,14 +289,14 @@ export const CommentsContainer = ({ course}: { course: MinimalCourse }) => {
 
     const { data: comments, fetchNextPage, hasNextPage, isLoading } = useInfiniteQuery<Awaited<ReturnType<typeof getComments>>>({
         queryKey: ['comments', course.raw_id],
-        queryFn: ({ pageParam }) => getComments(course.raw_id, pageParam as number),
+        queryFn: async ({ pageParam }) => await getComments(course.raw_id, pageParam as number),
         getNextPageParam: (lastPage, allPages) => {
-            return lastPage.length ? Math.ceil(allPages.length / 10) + 1 : undefined;
+            return (lastPage ?? []).length ? Math.ceil((allPages ?? []).length / 10) + 1 : undefined;
         },
         initialPageParam: 1,
     })
 
-    const flatComments = useMemo(() => comments?.pages.flatMap(p => p) ?? [], [comments]);
+    const flatComments = useMemo(() => comments?.pages.flatMap(p => p).filter(m => !!m) ?? [], [comments]);
 
     useEffect(() => {
         (async () => {

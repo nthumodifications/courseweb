@@ -17,6 +17,7 @@ import Timeslotfilteritem from './TimeslotFilterItem';
 import FilterItem from './FilterItem';
 import { semesterInfo } from '@/const/semester';
 import {useClearRefinements} from 'react-instantsearch';
+import ClassRefinementItem from './ClasssRefinementItem';
 
 const latestSemID = semesterInfo[semesterInfo.length - 1].id;
 
@@ -33,7 +34,15 @@ const Filters = () => {
 
   return <div className="w-full p-4">
     <div className="w-full flex flex-col gap-6">
-
+      <div className="flex flex-col gap-2">
+        <span className="text-sm">
+          {dict.course.refine.compulsory_elective}
+        </span>
+        <ClassRefinementItem
+          searchable={true}
+          limit={20}
+        />
+      </div>
       <div className="flex flex-col gap-2">
         <span className="text-sm">{dict.course.refine.department}</span>
         <FilterItem
@@ -106,29 +115,7 @@ const Filters = () => {
           {dict.course.refine.advanced_filters}
         </AccordionTrigger>
         <AccordionContent className="flex flex-col gap-6">
-          <div className="flex flex-col gap-2">
-            <span className="text-sm">
-              {dict.course.details.compulsory}
-            </span>
-            <FilterItem
-              attribute="compulsory_for"
-              searchable={true}
-              limit={20}
-              placeholder="Search (to display more)..."
-            />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <span className="text-sm">
-              {dict.course.details.elective}
-            </span>
-            <FilterItem
-              attribute="elective_for"
-              searchable={true}
-              limit={20}
-              placeholder="Search (to display more)..."
-            />
-          </div>
+          
 
           <div className="flex flex-col gap-2">
             <span className="text-sm">

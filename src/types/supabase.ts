@@ -382,6 +382,83 @@ export type Database = {
           },
         ]
       }
+      course_enroll_stats: {
+        Row: {
+          confirmed: number
+          limit: number | null
+          raw_id: string
+          remaining: number | null
+          updated_at: string
+          waiting: number
+        }
+        Insert: {
+          confirmed: number
+          limit?: number | null
+          raw_id: string
+          remaining?: number | null
+          updated_at?: string
+          waiting: number
+        }
+        Update: {
+          confirmed?: number
+          limit?: number | null
+          raw_id?: string
+          remaining?: number | null
+          updated_at?: string
+          waiting?: number
+        }
+        Relationships: []
+      }
+      course_hidden: {
+        Row: {
+          ckey: string
+          code: string
+          cred: string
+          ctime: string
+          div: string
+          glimit: string
+          num: string
+          pre: string
+          range: string
+          real: string
+          type: string
+        }
+        Insert: {
+          ckey: string
+          code: string
+          cred: string
+          ctime: string
+          div: string
+          glimit: string
+          num: string
+          pre: string
+          range: string
+          real: string
+          type: string
+        }
+        Update: {
+          ckey?: string
+          code?: string
+          cred?: string
+          ctime?: string
+          div?: string
+          glimit?: string
+          num?: string
+          pre?: string
+          range?: string
+          real?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_hidden_ckey_fkey"
+            columns: ["ckey"]
+            isOneToOne: true
+            referencedRelation: "courses"
+            referencedColumns: ["raw_id"]
+          },
+        ]
+      }
       course_logs: {
         Row: {
           action: string
@@ -553,6 +630,7 @@ export type Database = {
           cross_discipline: string[] | null
           department: string
           elective_for: string[] | null
+          enrolled: number
           first_specialization: string[] | null
           ge_target: string | null
           ge_type: string | null
@@ -584,6 +662,7 @@ export type Database = {
           cross_discipline?: string[] | null
           department: string
           elective_for?: string[] | null
+          enrolled?: number
           first_specialization?: string[] | null
           ge_target?: string | null
           ge_type?: string | null
@@ -614,6 +693,7 @@ export type Database = {
           cross_discipline?: string[] | null
           department?: string
           elective_for?: string[] | null
+          enrolled?: number
           first_specialization?: string[] | null
           ge_target?: string | null
           ge_type?: string | null
@@ -765,6 +845,7 @@ export type Database = {
           cross_discipline: string[] | null
           department: string
           elective_for: string[] | null
+          enrolled: number
           first_specialization: string[] | null
           ge_target: string | null
           ge_type: string | null

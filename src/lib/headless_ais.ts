@@ -1,34 +1,106 @@
 'use server';
 import { LoginError, UserJWT, UserJWTDetails } from "@/types/headless_ais";
-import jwt from 'jsonwebtoken';
 import { cookies } from "next/headers";
-import jsdom from 'jsdom';
-import iconv from 'iconv-lite';
+import { parseHTML } from 'linkedom';
 import supabase_server from "@/config/supabase_server";
-import crypto from 'crypto';
+import * as jose from 'jose'
+import {fetchWithTimeout} from '@/helpers/fetch';
+
+function hexStringToUint8Array(hexString: string) {
+    if (hexString.length % 2 !== 0) {
+        throw new Error("Hex string has an odd length");
+    }
+    const arrayBuffer = new Uint8Array(hexString.length / 2);
+    for (let i = 0; i < hexString.length; i += 2) {
+        const byteValue = parseInt(hexString.substring(i, i + 2), 16);
+        arrayBuffer[i / 2] = byteValue;
+    }
+    return arrayBuffer;
+}
 
 export const encrypt = async (text: string) => {
-    const iv = crypto.randomBytes(16);
-    const key = Buffer.from(process.env.NTHU_HEADLESS_AIS_ENCRYPTION_KEY!, 'hex');
-    const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
-    const encrypted = cipher.update(text, 'utf8', 'base64') + cipher.final('base64');
-    const encryptedPassword = iv.toString('base64') + encrypted;
+    const key = await crypto.subtle.importKey(
+        'raw',
+        hexStringToUint8Array(process.env.NTHU_HEADLESS_AIS_ENCRYPTION_KEY!),
+        { name: 'AES-CBC', length: 256 }, // Specify algorithm details
+        false,
+        ['encrypt']
+    );
+    const iv = crypto.getRandomValues(new Uint8Array(16));
+    const encrypted = await crypto.subtle.encrypt(
+        { name: 'AES-CBC', iv },
+        key,
+        new TextEncoder().encode(text)
+    );
+    
+    // Correctly handle binary data and Base64 encoding
+    const encryptedData = new Uint8Array(encrypted); // Convert BufferSource to Uint8Array
+    const ivBase64 = btoa(String.fromCharCode(...iv)); // Encode IV as Base64
+    const encryptedDataBase64 = btoa(String.fromCharCode(...encryptedData)); // Encode encrypted data as Base64
+    
+    const encryptedPassword = ivBase64 + encryptedDataBase64; // Concatenate Base64 IV and encrypted data
     return encryptedPassword;
 }
 
 export const decrypt = async (encryptedPassword: string) => {
-    const key = Buffer.from(process.env.NTHU_HEADLESS_AIS_ENCRYPTION_KEY!, 'hex');
-    
-    // Split the IV and the encrypted text
-    const iv = Buffer.from(encryptedPassword.slice(0, 24), 'base64'); // First 24 characters represent the IV
-    const encryptedText = encryptedPassword.slice(24); // The rest is the encrypted text
-    
-    const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
-    let decrypted = decipher.update(encryptedText, 'base64', 'utf8');
-    decrypted += decipher.final('utf8');
-    return await decrypted;
+    const encodedKey = hexStringToUint8Array(process.env.NTHU_HEADLESS_AIS_ENCRYPTION_KEY!);
+    const key = await crypto.subtle.importKey(
+        'raw',
+        encodedKey,
+        { name: 'AES-CBC', length: 256 }, // Specify algorithm details for consistency
+        false,
+        ['decrypt']  // Specify that the key is for decryption
+    );
+
+    // Extract the IV from the first part of the Base64 string
+    const ivBase64 = encryptedPassword.slice(0, 24); // First 24 characters are the Base64 encoded IV
+    const iv = Uint8Array.from(atob(ivBase64).split('').map(char => char.charCodeAt(0)));
+
+    // Extract the encrypted data
+    const encryptedData = encryptedPassword.slice(24);
+    const encryptedArrayBuffer = Uint8Array.from(atob(encryptedData).split('').map(char => char.charCodeAt(0)));
+
+
+    // Decrypt the data
+    const decryptedBuffer = await crypto.subtle.decrypt(
+        { name: 'AES-CBC', iv },
+        key,
+        encryptedArrayBuffer
+    );
+
+    // Convert the decrypted buffer back to text
+    const decryptedText = new TextDecoder().decode(decryptedBuffer);
+    return decryptedText;
 }
 
+async function streamAndMatch(response: Response, regex: RegExp) {
+    if(response.body == null) throw new Error(LoginError.Unknown);
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder("big5");
+    let buffer = '';
+
+    while (true) {
+        const { done, value } = await reader.read();
+
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+
+        const match = buffer.match(regex);
+        if (match) {
+            reader.cancel(); // Cancel the stream
+            return match[1]; // Return the matched group
+        }
+
+        // Optionally, trim the buffer to avoid excessive memory usage
+        if (buffer.length > 10000) {
+            buffer = buffer.slice(-5000);
+        }
+    }
+
+    throw new Error(LoginError.Unknown);
+}
 
 type SignInToCCXPResponse = Promise<{ ACIXSTORE: string, encryptedPassword: string } | { error: { message: string } }>;
 /**
@@ -40,6 +112,7 @@ type SignInToCCXPResponse = Promise<{ ACIXSTORE: string, encryptedPassword: stri
  */
 export const signInToCCXP = async (studentid: string, password: string): SignInToCCXPResponse => {
     console.log("Signing in to CCXP")
+    let startTime = Date.now();
     try {
         const ocrAndLogin: (_try?:number) => Promise<{ ACIXSTORE: string }> = async (_try = 0) => {
             if(_try == 3) {
@@ -49,33 +122,53 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
             do {
                 tries++;
                 try {
-                    const url = 'http://www.ccxp.nthu.edu.tw/ccxp/INQUIRE';
-                    const res = await fetch(url);
-                    const body = await res.text();
-                    console.log(body)
-                    if(!body) {
-                        continue;
-                    }
-                    const bodyMatch = body.match(/auth_img\.php\?pwdstr=([a-zA-Z0-9_-]+)/);
-                    if(!bodyMatch) {
-                        continue;
-                    }
-                    pwdstr = bodyMatch[1];
+                    console.log('Fetching login page')
+                    const res = await fetchWithTimeout('https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/', {
+                        timeout: 3000,
+                        "headers": {
+                            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+                            "accept-language": "en-US,en;q=0.9",
+                            "cache-control": "max-age=0",
+                            "sec-ch-ua": "\"Not/A)Brand\";v=\"8\", \"Chromium\";v=\"126\", \"Microsoft Edge\";v=\"126\"",
+                            "sec-ch-ua-mobile": "?0",
+                            "sec-ch-ua-platform": "\"Windows\"",
+                            "sec-fetch-dest": "document",
+                            "sec-fetch-mode": "navigate",
+                            "sec-fetch-site": "none",
+                            "sec-fetch-user": "?1",
+                            "upgrade-insecure-requests": "1"
+                        },
+                        keepalive: true,
+                        "body": null,
+                        "method": "GET",
+                        "mode": "cors",
+                        "credentials": "include"
+                        
+                    });
+                    pwdstr = await streamAndMatch(res, /auth_img\.php\?pwdstr=([a-zA-Z0-9_-]+)/);
+                    console.log('Time taken', Date.now() - startTime);
+                    startTime = Date.now();
+                    
                     //fetch the image from the url and send as base64
                     console.log("pwdstr: ", pwdstr)
+                    console.log('Fetching CAPTCHA')
                     answer = await fetch(`https://ocr.nthumods.com/?url=https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/auth_img.php?pwdstr=${pwdstr}`)
                                 .then(res => res.text())
-                    console.log(answer)
+                    console.log('Time taken', Date.now() - startTime);
+                    startTime = Date.now();
                     if(answer.length == 6) break;
                 } catch (err) { 
                     console.error('fetch login err',err)
-                    throw new Error(LoginError.Unknown);
+                    // throw new Error(LoginError.Unknown);
+                    continue;
                 }
             } while (tries <= 5);
             if(tries == 6 || answer.length != 6) {
                 throw new Error("Internal Server Error");
             }
-            const response = await fetch("https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/pre_select_entry.php", {
+            console.log('Attempt Login')
+            const response = await fetchWithTimeout("https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/pre_select_entry.php", {
+                timeout: 3000,
                 "headers": {
                     "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
                     "accept-language": "en-US,en;q=0.9",
@@ -89,6 +182,7 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
                     "sec-fetch-site": "same-origin",
                     "upgrade-insecure-requests": "1",
                 },
+                keepalive: true,
                 "body": `account=${studentid}&passwd=${password}&passwd2=${answer}&Submit=%B5n%A4J&fnstr=${pwdstr}`,
                 "method": "POST"
             });
@@ -112,6 +206,7 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
                     "sec-fetch-site": "same-origin",
                     "upgrade-insecure-requests": "1"
                 },
+                keepalive: true,
                 "body": null,
                 "method": "GET",
                 "mode": "cors",
@@ -123,6 +218,8 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
                 const text = decoder.decode(buffer)
                 return text
             })
+            console.log('Time taken', Date.now() - startTime);
+            startTime = Date.now();
             if(resHTML.match('驗證碼輸入錯誤!')) {
                 return await ocrAndLogin(_try++);
             }
@@ -144,9 +241,9 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
                 return { ACIXSTORE };
             }
         }
-        console.log('congrats')
         const result = await ocrAndLogin();
 
+        console.log('Fetching user details')
         const html = await fetch(`https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/4/4.19/JH4j002.php?ACIXSTORE=${result.ACIXSTORE}&user_lang=`, {
             "headers": {
               "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
@@ -161,22 +258,23 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
               "sec-fetch-user": "?1",
               "upgrade-insecure-requests": "1"
             },
+            keepalive: true,
             "body": null,
             "method": "GET",
             "mode": "cors",
             "credentials": "include"
         })
             .then(res => res.arrayBuffer())
-            .then(arrayBuffer => iconv.decode(Buffer.from(arrayBuffer), 'big5').toString())
-        const dom = new jsdom.JSDOM(html);
-        const doc = dom.window.document;
-
-        console.log('what')
+            .then(arrayBuffer => new TextDecoder('big5').decode(new Uint8Array(arrayBuffer)))
+        const { document: doc } = parseHTML(html, 'text/html');
 
         const form = doc.querySelector('form[name="register"]');
         if(form == null) {
             throw new Error(LoginError.Unknown);
         }
+
+        console.log('Time taken', Date.now() - startTime);
+        startTime = Date.now();
 
         const firstRow = form.querySelector('tr:nth-child(1)')!;
         const secondRow = form.querySelector('tr:nth-child(2)')!;
@@ -194,16 +292,25 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
             throw new Error(LoginError.Unknown);
         }
 
-        const token = jwt.sign({ sub: studentid, ...data }, process.env.NTHU_HEADLESS_AIS_SIGNING_KEY!, { expiresIn: '15d' });
-        await cookies().set('accessToken', token, { path: '/', maxAge: 60 * 60 * 24, sameSite: 'strict', secure: true });
+        // const token = jwt.sign({ sub: studentid, ...data }, process.env.NTHU_HEADLESS_AIS_SIGNING_KEY!, { expiresIn: '15d' });
+        //use jose to sign the token
+        const secret = new TextEncoder().encode(process.env.NTHU_HEADLESS_AIS_SIGNING_KEY!);
+        const jwt = await new jose.SignJWT({ sub: studentid, ...data })
+            .setProtectedHeader({ alg: 'HS256' })
+            .setIssuedAt()
+            .setIssuer('NTHUMods')
+            .setExpirationTime('15d')
+            .sign(secret);
+
+        await cookies().set('accessToken', jwt, { path: '/', maxAge: 60 * 60 * 24, sameSite: 'strict', secure: true });
 
         // Encrypt user password 
         const encryptedPassword = await encrypt(password);
         
         return { ...result, encryptedPassword };
     } catch (err) {
+        console.error('CCXP Login Err', err);
         if(err instanceof Error) return { error: { message: err.message } };
-        console.error('CCXP Unknown Err', err);
         throw err;
     }
 }
@@ -226,7 +333,9 @@ export const refreshUserSession = async (studentid: string, encryptedPassword: s
 export const getUserSession = async () => {
     const accessToken = cookies().get('accessToken')?.value ?? '';
     try {
-        return await jwt.verify(accessToken, process.env.NTHU_HEADLESS_AIS_SIGNING_KEY!) as UserJWT;
+        const secret = new TextEncoder().encode(process.env.NTHU_HEADLESS_AIS_SIGNING_KEY!);
+        const { payload } = await jose.jwtVerify(accessToken, secret) as { payload: UserJWT };
+        return payload;
     } catch {
         return null;
     }

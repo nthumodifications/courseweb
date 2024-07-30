@@ -12,6 +12,10 @@ type PageProps = {
     }
 }
 
+export const revalidate = 3600;
+
+export const dynamic = "force-dynamic";
+
 const CoursePageModalLayout = ({ params, children }: PropsWithChildren<PageProps & LangProps>) => {
     const courseId = decodeURI(params.courseId as string);
 

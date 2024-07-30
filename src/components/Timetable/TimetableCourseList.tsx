@@ -47,10 +47,12 @@ const TimetableCourseListItem = ({
     course, 
     hasConflict, 
     isDuplicate,
+    priority
 }: { 
     course: MinimalCourse, 
     hasConflict: boolean, 
     isDuplicate: boolean,
+    priority: number
 }) => {
     const { language } = useSettings();
 
@@ -98,6 +100,7 @@ const TimetableCourseListItem = ({
         </Popover>
         <TimetableItemDrawer course={course}>
             <div className="flex flex-col flex-1">
+                <p className='mb-1'>{priority != 0 && <span className='px-2 py-0.5 dark:bg-white dark:text-black bg-neutral-700 text-white mr-1 rounded-md text-xs'>{priority} 志願</span>}</p>
                 <span className="text-sm">{course.department} {course.course}-{course.class} {course.name_zh} - {course.teacher_zh.join(',')}</span>
                 <span className="text-xs">{course.name_en}</span>
                 <div className="mt-1">
@@ -181,6 +184,22 @@ export const TimetableCourseList = ({
         })
     );
 
+    const peAndGeAllocation = useMemo(() => {
+        //filter by pe and ge: include PE (exclude PE 1110) and courses with ge_target
+        const peAndGe = displayCourseData.filter(course => {
+            if (course.department == 'PE' && course.course != 'PE 1110') {
+                return true;
+            }
+            if (course.ge_target && course.ge_target != " ") {
+                return true;
+            }
+            return false;
+        });
+        console.log(peAndGe)
+        
+        return peAndGe.map(course => course.raw_id);
+    }, [displayCourseData]);
+
     function handleDragEnd(event: DragEndEvent) {
         const { active, over } = event;
         if (!over) return;
@@ -217,6 +236,7 @@ export const TimetableCourseList = ({
                             course={course as MinimalCourse}
                             hasConflict={!!timeConflicts.find(ts => ts.course.raw_id == course.raw_id)}
                             isDuplicate={duplicates.includes(course.raw_id)}
+                            priority={peAndGeAllocation.indexOf(course.raw_id) + 1}
                         />
                     ))}
                 </SortableContext>
