@@ -122,7 +122,7 @@
     "sharp": "^0.33.4",
     "supabase": "^1.148.6",
     "tailwind-merge": "^2.2.1",
-    "tailwindcss": "3.3.5",
+    "tailwindcss": "3.4.7",
     "tailwindcss-animate": "^1.0.7",
     "tsimp": "^2.0.11",
     "typescript": "5.4.4",
