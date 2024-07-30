@@ -1,17 +1,7 @@
 import supabase_server from "@/config/supabase_server";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import iconv from 'iconv-lite';
 import jsdom from 'jsdom';
-
-const fetchCourses = async () => {
-    const { data, error } = await supabase_server
-        .from('courses')
-        .select('raw_id')
-        .eq('semester', '11220')
-        .order('raw_id', { ascending: true })
-    if(error) throw error;
-    return data;
-}
 
 const downloadPDF = async (url: string, c_key: string) => {
     //get url+c_key file as a arrayBuffer
@@ -56,14 +46,28 @@ const getAnonACIX = async () => {
     return ACIXSTORE;
 }
 
-export const GET = async (request: Request) => {
+export const GET = async (request: NextRequest) => {
     const authHeader = request.headers.get('authorization');
     if (process.env.NODE_ENV == 'production' && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
       return new Response('Unauthorized', {
         status: 401,
       });
     }
+
+    const semester = request.nextUrl.searchParams.get('semester');
+
+    if(!semester) throw new Error('semester is required');
     
+    const fetchCourses = async () => {
+        const { data, error } = await supabase_server
+            .from('courses')
+            .select('raw_id')
+            .eq('semester', semester)
+            .order('raw_id', { ascending: true })
+        if(error) throw error;
+        return data;
+    }
+
     const ACIXSTORE = await getAnonACIX();
 
     if(ACIXSTORE === null) return NextResponse.json({ error: 'ACIXSTORE not found' }, { status: 400 });
@@ -73,7 +77,7 @@ export const GET = async (request: Request) => {
     const fetchSyllabusHTML = async (c_key: string) => {
         const text = await fetch(baseURL + encodeURIComponent(c_key))
                             .then(res => res.arrayBuffer())
-                            .then(arrayBuffer => iconv.decode(Buffer.from(arrayBuffer), 'big5').toString())
+                            .then(arrayBuffer => new TextDecoder('big5').decode(new Uint8Array(arrayBuffer)))
         return text;
     }
     const courses = await fetchCourses();   

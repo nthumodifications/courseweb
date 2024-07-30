@@ -1,13 +1,13 @@
-"use client";
+"use client";;
 import {HeadlessAISStorage, LoginError, UserJWT} from '@/types/headless_ais';
 import { toast } from "@/components/ui/use-toast";
 import { FC, PropsWithChildren, createContext, useContext, useEffect, useState } from "react";
 import { useLocalStorage } from 'usehooks-ts';
 import {signInEeclassOauth, signInElearnOauth} from '@/lib/elearning';
-import {refreshUserSession, signInToCCXP} from '@/lib/headless_ais';
 import useDictionary from "@/dictionaries/useDictionary";
 import { useCookies } from "react-cookie";
-import { decode } from 'jsonwebtoken';
+import {fetchRefreshUserSession, fetchSignInToCCXP} from '@/helpers/headless_ais';
+import { decodeJwt } from 'jose';
 const headlessAISContext = createContext<ReturnType<typeof useHeadlessAISProvider>>({
     user: undefined,
     ais: {
@@ -43,7 +43,7 @@ const useHeadlessAISProvider = () => {
             getACIXSTORE(true)
         }
         else if(cookies.accessToken){
-            const { exp } = decode(cookies.accessToken ?? '') as { exp: number };
+            const { exp } = decodeJwt(cookies.accessToken ?? '') as { exp: number };
             if (Date.now() >= exp * 1000) {
                 getACIXSTORE(true)
             }
@@ -61,7 +61,7 @@ const useHeadlessAISProvider = () => {
             return ;
         }
         setLoading(true);
-        return await signInToCCXP(username, password)
+        return await fetchSignInToCCXP(username, password)
             .then((res) => {
                 if(!res) throw new Error("太多人在使用代理登入，請稍後再試");
                 if('error' in res) throw new Error(res.error.message); 
@@ -80,7 +80,7 @@ const useHeadlessAISProvider = () => {
             .catch(err => {
                 toast({
                     title: "代理登入失敗",
-                    description: dict.ccxp.errors[err.message as keyof typeof dict.ccxp.errors] ?? err.message ?? "請檢查學號密碼是否正確",
+                    description: dict.ccxp.errors[err.message as keyof typeof dict.ccxp.errors] ?? "目前認證服务降级，请稍后再试，敬請見諒",
                 })
                 setHeadlessAIS({
                     enabled: false
@@ -113,7 +113,7 @@ const useHeadlessAISProvider = () => {
         // legacy support, if encrypted password is not set, set it
         if(!headlessAIS.encrypted) {
             // use signInToCCXP to get encrypted password
-            return await signInToCCXP(headlessAIS.studentid, headlessAIS.password)
+            return await fetchSignInToCCXP(headlessAIS.studentid, headlessAIS.password)
                 .then((res) => {
                     if('error' in res) throw new Error(res.error.message); 
                     setHeadlessAIS({
@@ -130,7 +130,7 @@ const useHeadlessAISProvider = () => {
                 })
         }
         
-        return await refreshUserSession(headlessAIS.studentid, headlessAIS.password)
+        return await fetchRefreshUserSession(headlessAIS.studentid, headlessAIS.password)
         .then((res) => {
             if('error' in res) throw new Error(res.error.message); 
             setHeadlessAIS({
@@ -148,17 +148,13 @@ const useHeadlessAISProvider = () => {
         .catch(err => {
             toast({
                 title: "代理登入失敗",
-                description: dict.ccxp.errors[err.message as keyof typeof dict.ccxp.errors] ?? "請檢查學號密碼是否正確",
+                description: dict.ccxp.errors[err.message as keyof typeof dict.ccxp.errors] ?? "目前認證服务降级，请稍后再试，敬請見諒",
             })
-            setHeadlessAIS({
-                enabled: false
-            });
             setLoading(false);
             setError(err);
             throw err as LoginError;
         })
     }
-
     
     const getOauthCookies = async (force = false) => {
         if (!headlessAIS.enabled) return undefined;
@@ -221,7 +217,7 @@ const useHeadlessAISProvider = () => {
     }
 
     return {
-        user: cookies.accessToken ? decode(cookies.accessToken, { json: true }) as UserJWT | null : undefined ,
+        user: cookies.accessToken ? decodeJwt(cookies.accessToken) as UserJWT | null : undefined ,
         ais,
         oauth,
         loading,

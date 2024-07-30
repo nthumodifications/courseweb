@@ -14,7 +14,7 @@ import { renderTimetableSlot } from '@/helpers/timetable_course';
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { InstantSearchNext } from 'react-instantsearch-nextjs';
-import { Calendar, FilterIcon, SearchIcon } from "lucide-react";
+import { Calendar, FilterIcon, Heart, SearchIcon } from "lucide-react";
 import { PoweredBy, SearchBox } from 'react-instantsearch';
 
 const searchClient = algoliasearch(process.env.NEXT_PUBLIC_ALGOLIA_APP_ID!, process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY!);
@@ -35,11 +35,13 @@ import {
 } from "@/components/ui/select"
 import { toPrettySemester } from '@/helpers/semester';
 import { Button } from '@/components/ui/button';
-import { lastSemester } from '@/const/semester';
+import { lastSemester, semesterInfo } from '@/const/semester';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import TimetableCourseList, { DownloadTimetableDialogDynamic, ShareSyncTimetableDialogDynamic } from '@/components/Timetable/TimetableCourseList';
 import ClearAllButton from './ClearAllButton';
 import useDictionary from '@/dictionaries/useDictionary';
+import FavouritesCourseList from './FavouritesCourseList';
+import GroupByDepartmentButton from '@/components/Timetable/GroupByDepartmentButton';
 
 const SemesterSelector = () => {
   // refine semester for semester selector
@@ -69,8 +71,8 @@ const SemesterSelector = () => {
       <SelectValue placeholder="Semester" />
     </SelectTrigger>
     <SelectContent>
-      {items.map(item => <SelectItem value={item.value} key={item.value}>
-        {toPrettySemester(item.label)} 學期
+      {[...semesterInfo].sort((a, b) => parseInt(b.id) - parseInt(a.id)).map(item => <SelectItem value={item.id} key={item.id}>
+        {toPrettySemester(item.id)} 學期
       </SelectItem>)}
     </SelectContent>
   </Select>
@@ -115,6 +117,7 @@ const TimetableBottomBar = () => {
   return <div className='flex flex-row justify-stretch gap-2 pt-2'>
     <DownloadTimetableDialogDynamic icsfileLink={icsfileLink} />
     <ShareSyncTimetableDialogDynamic shareLink={shareLink} webcalLink={webcalLink} />
+    <GroupByDepartmentButton semester={semester} />
   </div>
 }
 
@@ -188,7 +191,41 @@ const CourseSearchContainer = () => {
               </DrawerTrigger>
               <DrawerContent>
                 <ScrollArea className="w-full max-h-[80vh] overflow-auto p-2">
-                  <TimetableWithSemester />
+                <Tabs defaultValue="timetable">
+                  <TabsList className="w-full justify-around">
+                    <TabsTrigger value="timetable" className="flex-1">
+                      {dict.course.details.timetable}
+                    </TabsTrigger>
+                    <TabsTrigger value="list" className="flex-1">
+                      {dict.course.details.course_list}
+                    </TabsTrigger>
+                    <TabsTrigger value="favourites" className="flex-1">
+                      已收藏課程
+                    </TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="timetable" className="h-full">
+                    <ScrollArea className="w-full h-[calc(100vh-12.5rem)] overflow-auto border rounded-2xl">
+                      <div className="p-4 h-full">
+                        <TimetableWithSemester />
+                        <TimetableBottomBar />
+                      </div>
+                    </ScrollArea>
+                  </TabsContent>
+                  <TabsContent value="list">
+                    <ScrollArea className="w-full h-[calc(100vh-12.5rem)] overflow-auto border rounded-2xl">
+                    <div className="py-4 h-full">
+                        <TimetableCourseListWithSemester />
+                      </div>
+                    </ScrollArea>
+                  </TabsContent>
+                  <TabsContent value="favourites">
+                    <ScrollArea className="w-full h-[calc(100vh-12.5rem)] overflow-auto border rounded-2xl">
+                      <div className="p-4 h-full">
+                        <FavouritesCourseList />
+                      </div>
+                    </ScrollArea>
+                  </TabsContent>
+                </Tabs>
                 </ScrollArea>
               </DrawerContent>
             </Drawer>
@@ -215,6 +252,9 @@ const CourseSearchContainer = () => {
               <TabsTrigger value="list" className="flex-1">
                 {dict.course.details.course_list}
               </TabsTrigger>
+              <TabsTrigger value="favourites" className="flex-1">
+                已收藏課程
+              </TabsTrigger>
             </TabsList>
             <TabsContent value="timetable" className="h-full">
               <ScrollArea className="w-full h-[calc(100vh-12.5rem)] overflow-auto border rounded-2xl">
@@ -226,8 +266,15 @@ const CourseSearchContainer = () => {
             </TabsContent>
             <TabsContent value="list">
               <ScrollArea className="w-full h-[calc(100vh-12.5rem)] overflow-auto border rounded-2xl">
-                <div className="p-4 h-full">
+                <div className="py-4 h-full">
                   <TimetableCourseListWithSemester />
+                </div>
+              </ScrollArea>
+            </TabsContent>
+            <TabsContent value="favourites">
+              <ScrollArea className="w-full h-[calc(100vh-12.5rem)] overflow-auto border rounded-2xl">
+                <div className="p-4 h-full">
+                  <FavouritesCourseList />
                 </div>
               </ScrollArea>
             </TabsContent>
