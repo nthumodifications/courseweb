@@ -104,7 +104,7 @@
     "next-auth": "^4.24.7",
     "node-html-parser": "^6.1.13",
     "node-schedule": "^2.1.1",
-    "pdfjs-dist": "^4.5.136",
+    "pdfjs-dist": "^3.4.120",
     "postcss": "8.4.35",
     "qrcode.react": "^3.1.0",
     "query-string": "^8.1.0",
