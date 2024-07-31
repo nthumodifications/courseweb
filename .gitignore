@@ -42,6 +42,7 @@ resources/ios/**/*
 resources/android/**/*
 android/private_key.pepk
 
+.idea/
 # Sentry Config File
 .sentryclirc
 .tsimp
