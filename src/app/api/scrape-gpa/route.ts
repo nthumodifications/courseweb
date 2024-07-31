@@ -1,8 +1,6 @@
 import jsdom from 'jsdom';
 import supabase_server from '@/config/supabase_server';
 import {NextRequest, NextResponse} from 'next/server';
-import iconv from 'iconv-lite';
-import fs from 'fs/promises';
 import {signInToCCXP} from '@/lib/headless_ais';
 
 
