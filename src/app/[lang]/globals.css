@@ -80,7 +80,7 @@ body {
     --radius: 0.5rem;
     --header-height: 3.5rem;
     --bottom-nav-height: 5rem;
-    --content-height: calc(calc(calc(100vh - env(safe-area-inset-top)) - var(--header-height)) - var(--bottom-nav-height));
+    --content-height: calc(calc(calc(100dvh - env(safe-area-inset-top)) - var(--header-height)) - var(--bottom-nav-height));
   }
 
   .dark {
