@@ -30,11 +30,11 @@ const CourseTagList = ({ course }: { course: CourseDefinition }) => {
                     人
                 </span>
             </HighlightItem>
-            <HighlightItem className='bg-violet-50 text-violet-900 dark:bg-violet-950 dark:text-violet-100'>
+            {course.enrolled && <HighlightItem className='bg-violet-50 text-violet-900 dark:bg-violet-950 dark:text-violet-100'>
                 <span className="">
                     {`${course.enrolled} 選上 `}
                 </span>
-            </HighlightItem>
+            </HighlightItem>}
             <HighlightItem>
                 <span className="">{course.credits} {dict.course.credits}</span>
             </HighlightItem>
