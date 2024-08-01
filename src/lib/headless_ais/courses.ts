@@ -247,7 +247,6 @@ export const getClassDetailed = async (ACIXSTORE: string) => {
           "upgrade-insecure-requests": "1",
           "referer": `https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/IN_INQ_STU.php?ACIXSTORE=${ACIXSTORE}`
         },
-        keepalive: true,
         "body": null,
         "method": "GET",
         "mode": "cors",
