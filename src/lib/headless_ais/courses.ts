@@ -229,3 +229,66 @@ export const getHiddenCourseSelectionCode = async (ACIXSTORE: string, dept: stri
 
     return courses;
 };
+ 
+export const getClassDetailed = async (ACIXSTORE: string) => {
+    console.log(ACIXSTORE);
+    const html = await fetch(`https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/TDM/1/1.1/TDM1110.php?ACIXSTORE=${ACIXSTORE}`, {
+        "headers": {
+          "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+          "accept-language": "en-US,en;q=0.9",
+          "cache-control": "max-age=0",
+          "sec-ch-ua": "\"Chromium\";v=\"124\", \"Microsoft Edge\";v=\"124\", \"Not-A.Brand\";v=\"99\"",
+          "sec-ch-ua-mobile": "?0",
+          "sec-ch-ua-platform": "\"Windows\"",
+          "sec-fetch-dest": "document",
+          "sec-fetch-mode": "navigate",
+          "sec-fetch-site": "same-origin",
+          "sec-fetch-user": "?1",
+          "upgrade-insecure-requests": "1",
+          "referer": `https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/IN_INQ_STU.php?ACIXSTORE=${ACIXSTORE}`
+        },
+        "body": null,
+        "method": "GET",
+        "mode": "cors",
+        "credentials": "include"
+    })
+        .then(res => res.arrayBuffer())
+        .then(arrayBuffer => new TextDecoder('big5').decode(new Uint8Array(arrayBuffer)))
+    const { document: doc } = parseHTML(html, 'text/html');
+
+    const targetElement = doc.querySelector('td[height="30"] font[color="#0180FE"]');
+    const targetText = targetElement?.textContent?.trim() ?? 'Text not found';        
+    console.log(doc.documentElement.innerHTML);
+    let degreeType = '';
+    let year = '';
+    let department = '';
+
+    if (targetText !== 'Text not found') {
+        const cleanedText = targetText.replace(/　/g, ' ').trim();
+
+        const degreeTypes = ['大學部', '碩士班', '博士班'];
+
+        for (let type of degreeTypes) {
+            if (cleanedText.includes(type)) {
+                degreeType = type;
+                break;
+            }
+        }
+
+        if (degreeType) {
+            const parts = cleanedText.split(degreeType);
+            department = parts[0].trim();
+
+            const yearMatch = parts[1].match(/\d+/);
+            year = yearMatch ? yearMatch[0] : '';
+        } else {
+            department = cleanedText;
+        }
+    }
+    
+    return { 
+        department: department,
+        degreeType: degreeType,
+        year: year
+    };
+};
