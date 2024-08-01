@@ -102,19 +102,19 @@ async function streamAndMatch(response: Response, regex: RegExp) {
     throw new Error(LoginError.Unknown);
 }
 
-type SignInToCCXPResponse = Promise<{ ACIXSTORE: string, encryptedPassword: string } | { error: { message: string } }>;
+type SignInToCCXPResponse = Promise<{ ACIXSTORE: string, encryptedPassword: string, passwordExpired: boolean } | { error: { message: string } }>;
 /**
  * Attempts to login user to CCXP, takes in raw studentid and password
  * ONLY use this for first time login, will return encrypted password and ACIXSTORE
  * @param studentid 
  * @param password 
- * @returns { ACIXSTORE: string, encryptedPassword: string }
+ * @returns { ACIXSTORE: string, encryptedPassword: string, passwordExpired: boolean }
  */
 export const signInToCCXP = async (studentid: string, password: string): SignInToCCXPResponse => {
     console.log("Signing in to CCXP")
     let startTime = Date.now();
     try {
-        const ocrAndLogin: (_try?:number) => Promise<{ ACIXSTORE: string }> = async (_try = 0) => {
+        const ocrAndLogin: (_try?:number) => Promise<{ ACIXSTORE: string, passwordExpired: boolean }> = async (_try = 0) => {
             if(_try == 3) {
                 throw new Error(LoginError.Unknown);
             }
@@ -220,6 +220,8 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
             })
             console.log('Time taken', Date.now() - startTime);
             startTime = Date.now();
+
+            const passwordExpired = !!newHTML.match('個人密碼修改');
             if(resHTML.match('驗證碼輸入錯誤!')) {
                 return await ocrAndLogin(_try++);
             }
@@ -238,7 +240,7 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
                 if(!ACIXSTORE) {
                     return await ocrAndLogin(_try++);
                 }
-                return { ACIXSTORE };
+                return { ACIXSTORE, passwordExpired };
             }
         }
         const result = await ocrAndLogin();
@@ -258,7 +260,6 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
               "sec-fetch-user": "?1",
               "upgrade-insecure-requests": "1"
             },
-            keepalive: true,
             "body": null,
             "method": "GET",
             "mode": "cors",
@@ -315,7 +316,7 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
     }
 }
 
-type RefreshUserSessionResponse = Promise<{ ACIXSTORE: string } | { error: { message: string } }>;
+type RefreshUserSessionResponse = Promise<{ ACIXSTORE: string, passwordExpired: boolean } | { error: { message: string } }>;
 export const refreshUserSession = async (studentid: string, encryptedPassword: string): RefreshUserSessionResponse => {
     console.log('Refreshing User Session')
     // Decrypt password
@@ -327,7 +328,38 @@ export const refreshUserSession = async (studentid: string, encryptedPassword: s
         return { error: res.error }
     }
     // @ts-ignore - We know that res is not an error
-    return { ACIXSTORE: res.ACIXSTORE };
+    return { ACIXSTORE: res.ACIXSTORE, passwordExpired: res.passwordExpired };
+}
+
+export const updateUserPassword = async (ACIXSTORE: string, oldEncryptedPassword: string, newPassword: string) => {
+    // Decrypt old password
+    const oldPassword = await decrypt(oldEncryptedPassword);
+    fetch("https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/PC/1/1.1/PC11002.php", {
+        "headers": {
+          "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+          "accept-language": "en-US,en;q=0.9",
+          "cache-control": "max-age=0",
+          "content-type": "application/x-www-form-urlencoded",
+          "sec-ch-ua": "\"Not)A;Brand\";v=\"99\", \"Microsoft Edge\";v=\"127\", \"Chromium\";v=\"127\"",
+          "sec-ch-ua-mobile": "?0",
+          "sec-ch-ua-platform": "\"Windows\"",
+          "sec-fetch-dest": "frame",
+          "sec-fetch-mode": "navigate",
+          "sec-fetch-site": "same-origin",
+          "sec-fetch-user": "?1",
+          "upgrade-insecure-requests": "1"
+        },
+        "referrer": "https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/PC/1/1.1/PC11001.php?ACIXSTORE=c3d1ipem8trmvk6gpq5mrv9490",
+        "referrerPolicy": "strict-origin-when-cross-origin",
+        "body": `ACIXSTORE=${ACIXSTORE}&O_PASS=${oldPassword}&N_PASS=${newPassword}&N_PASS2=${newPassword}&choice=確定`,
+        "method": "POST",
+        "mode": "cors",
+        "credentials": "include"
+      });
+
+    // Encrypt new password
+    const newEncryptedPassword = await encrypt(newPassword);
+    return newEncryptedPassword;
 }
 
 export const getUserSession = async () => {

@@ -1,11 +1,3 @@
-import { cookies } from "next/headers";
-
-export const getServerACIXSTORE = async () => {
-    const cookie = await cookies();
-    const ACIXSTORE = cookie.get('ACIXSTORE')?.value;
-    return ACIXSTORE;
-}
-
 export type HeadlessAISStorage = { enabled: false } | {
     enabled: true, 
     studentid: string, 
@@ -13,6 +5,7 @@ export type HeadlessAISStorage = { enabled: false } | {
     encrypted: boolean,
     ACIXSTORE?: string, 
     lastUpdated: number,
+    expired: boolean
 }
 
 export enum LoginError {

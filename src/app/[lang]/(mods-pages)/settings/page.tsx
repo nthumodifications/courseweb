@@ -26,6 +26,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {GraduationCap, Hash} from 'lucide-react';
+import ChangePasswordDialog from "@/components/Forms/ChangePasswordDialog";
 
 const DisplaySettingsCard = () => {
     const { darkMode, setDarkMode, language, setLanguage } = useSettings();
@@ -86,6 +87,8 @@ const TimetableSettingsCard = () => {
 const AccountInfoSettingsCard = () => {
     const { user, ais, setAISCredentials } = useHeadlessAIS();
     const dict = useDictionary();
+    const [openChangePassword, setOpenChangePassword] = useState(false);
+
     return <Card id="account">
         <CardHeader>
             <CardTitle>{dict.settings.account.title}</CardTitle>
@@ -103,7 +106,10 @@ const AccountInfoSettingsCard = () => {
                     <div className="text-gray-500 flex flex-row text-sm"><Hash className="w-4 h-4 mr-2" /> {user.studentid}</div>
                     </div>
                 </div>
-                <div className="flex flex-row justify-end items-center w-full">
+                <div className="flex flex-row justify-end items-center w-full gap-2">
+                    <ChangePasswordDialog open={openChangePassword} setOpen={setOpenChangePassword}>
+                        <Button variant={'ghost'}>更新密碼</Button>
+                    </ChangePasswordDialog>
                     <Button variant="destructive" onClick={() => setAISCredentials()}>{dict.settings.account.signout}</Button>
                 </div>
             </div>}

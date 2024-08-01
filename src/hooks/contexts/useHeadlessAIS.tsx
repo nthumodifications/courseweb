@@ -7,6 +7,7 @@ import useDictionary from "@/dictionaries/useDictionary";
 import { useCookies } from "react-cookie";
 import { decodeJwt } from 'jose';
 import { refreshUserSession, signInToCCXP } from '@/lib/headless_ais';
+import dynamic from 'next/dynamic';
 const headlessAISContext = createContext<ReturnType<typeof useHeadlessAISProvider>>({
     user: undefined,
     ais: {
@@ -18,9 +19,11 @@ const headlessAISContext = createContext<ReturnType<typeof useHeadlessAISProvide
     initializing: true,
     setAISCredentials: async () => false,
     getACIXSTORE: async () => undefined,
+    openChangePassword: false,
+    setOpenChangePassword: () => {}
 });
 
-
+const ChangePasswordDialogDynamic = dynamic(() => import('@/components/Forms/ChangePasswordDialog'), { ssr: false });
 
 const useHeadlessAISProvider = () => {
     const [headlessAIS, setHeadlessAIS] = useLocalStorage<HeadlessAISStorage>("headless_ais", { enabled: false });
@@ -29,6 +32,7 @@ const useHeadlessAISProvider = () => {
     const [error, setError] = useState<LoginError | undefined>(undefined);
     const [cookies, setCookies, removeCookies, updateCookies] = useCookies(['accessToken']);
     const dict = useDictionary();
+    const [openChangePassword, setOpenChangePassword] = useState(false);
 
     useEffect(() => { setInitializing(false) }, []);
     
@@ -66,7 +70,12 @@ const useHeadlessAISProvider = () => {
                     password: res.encryptedPassword,
                     encrypted: true,
                     ACIXSTORE: res.ACIXSTORE,
-                    lastUpdated: Date.now()
+                    lastUpdated: Date.now(),
+                    expired: res.passwordExpired
+                });
+                if(res.passwordExpired) toast({
+                    title: "提醒您校務系統密碼已經過期~ ",
+                    description: "但是NTHUMods 的功能都不會被影響 ヾ(≧▽≦*)o",
                 });
                 setLoading(false);
                 setError(undefined);
@@ -77,9 +86,6 @@ const useHeadlessAISProvider = () => {
                     title: "代理登入失敗",
                     description: dict.ccxp.errors[err.message as keyof typeof dict.ccxp.errors] ?? "目前認證服务降级，请稍后再试，敬請見諒",
                 })
-                setHeadlessAIS({
-                    enabled: false
-                });
                 setLoading(false);
                 setError(err);
                 return false;
@@ -117,7 +123,12 @@ const useHeadlessAISProvider = () => {
                         password: res.encryptedPassword,
                         encrypted: true,
                         ACIXSTORE: res.ACIXSTORE,
-                        lastUpdated: Date.now()
+                        lastUpdated: Date.now(),
+                        expired: res.passwordExpired
+                    });
+                    if(res.passwordExpired) toast({
+                        title: "提醒您校務系統密碼已經過期~ ",
+                        description: "但是NTHUMods 的功能都不會被影響 ヾ(≧▽≦*)o",
                     });
                     setLoading(false);
                     setError(undefined);
@@ -134,13 +145,21 @@ const useHeadlessAISProvider = () => {
                 password: headlessAIS.password,
                 encrypted: true,
                 ACIXSTORE: res.ACIXSTORE,
-                lastUpdated: Date.now()
+                lastUpdated: Date.now(),
+                expired: res.passwordExpired
+            });
+            if(res.passwordExpired) toast({
+                title: "提醒您校務系統密碼已經過期~ ",
+                description: "但是NTHUMods 的功能都不會被影響 ヾ(≧▽≦*)o",
             });
             setLoading(false);
             setError(undefined);
             return res.ACIXSTORE;
         })
         .catch(err => {
+            if(err.message == LoginError.IncorrectCredentials) {
+                setOpenChangePassword(true);
+            }   
             toast({
                 title: "代理登入失敗",
                 description: dict.ccxp.errors[err.message as keyof typeof dict.ccxp.errors] ?? "目前認證服务降级，请稍后再试，敬請見諒",
@@ -166,6 +185,8 @@ const useHeadlessAISProvider = () => {
         setAISCredentials,
         getACIXSTORE,
         initializing,
+        openChangePassword,
+        setOpenChangePassword
     };
 }
 
@@ -178,6 +199,7 @@ const HeadlessAISProvider: FC<PropsWithChildren> = ({ children }) => {
     return (
         <headlessAISContext.Provider value={headlessAIS}>
             {children}
+            <ChangePasswordDialogDynamic open={headlessAIS.openChangePassword} setOpen={headlessAIS.setOpenChangePassword}/>
         </headlessAISContext.Provider>
     );
 };
