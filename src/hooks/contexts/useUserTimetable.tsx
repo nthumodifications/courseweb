@@ -1,5 +1,5 @@
 'use client';;
-import {useState, useEffect, useCallback, createContext, useContext, useMemo, useLayoutEffect} from 'react';
+import { useState, useEffect, useCallback, createContext, useContext, useMemo, useLayoutEffect } from 'react';
 import supabase, { CourseDefinition, CourseSyllabusView } from "@/config/supabase";
 import { createTimetableFromCourses } from "@/helpers/timetable";
 import { CourseTimeslotData } from "@/types/timetable";
@@ -8,8 +8,13 @@ import { useLocalStorage } from 'usehooks-ts';
 import { lastSemester, currentSemester } from "@/const/semester";
 import { getSemesterFromID } from '@/helpers/courses';
 import { event } from "@/lib/gtag";
-import {timetableColors} from '@/const/timetableColors';
+import { timetableColors } from '@/const/timetableColors';
 import { useQuery } from "@tanstack/react-query";
+import { doc, setDoc, Timestamp, updateDoc } from 'firebase/firestore';
+import { auth, db } from '@/config/firebase';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { useDocumentData } from 'react-firebase-hooks/firestore';
+import { userCol } from '@/lib/firebase/firestore';
 
 export interface TimetableDisplayPreferences {
     language: 'app' | 'zh' | 'en';
@@ -23,7 +28,7 @@ export interface TimetableDisplayPreferences {
 
 }
 
-type CourseLocalStorage = { [sem: string]: RawCourseID[] };
+export type CourseLocalStorage = { [sem: string]: RawCourseID[] };
 
 const userTimetableContext = createContext<ReturnType<typeof useUserTimetableProvider>>({
     getSemesterCourses: () => [],
@@ -39,8 +44,8 @@ const userTimetableContext = createContext<ReturnType<typeof useUserTimetablePro
     setColorMap: () => { },
     addCourse: () => { },
     setTimetableTheme: () => { },
-    setUserDefinedColors: () => {},
-    setColor: () => {},
+    setUserDefinedColors: () => { },
+    setColor: () => { },
     isCourseSelected: () => false,
     isLoading: true,
     error: null,
@@ -57,14 +62,15 @@ const userTimetableContext = createContext<ReturnType<typeof useUserTimetablePro
             venue: true
         }
     },
-    setPreferences: () => {}
+    setPreferences: () => { }
 });
+
 
 const useUserTimetableProvider = (loadCourse = true) => {
     const [courses, setCourses] = useLocalStorage<CourseLocalStorage>("courses", {});
     const [colorMap, setColorMap] = useLocalStorage<{ [courseID: string]: string }>("course_color_map", {}); //map from courseID to color
     const [timetableTheme, _setTimetableTheme] = useLocalStorage<string>("timetable_theme", "pastelColors");
-    const [userDefinedColors, setUserDefinedColors] = useLocalStorage<{[theme_name: string]: string[]}>("user_defined_colors", {});
+    const [userDefinedColors, setUserDefinedColors] = useLocalStorage<{ [theme_name: string]: string[] }>("user_defined_colors", {});
     const [preferences, setPreferences] = useLocalStorage<TimetableDisplayPreferences>("timetable_display_preferences", {
         language: 'app',
         align: 'center',
@@ -76,6 +82,21 @@ const useUserTimetableProvider = (loadCourse = true) => {
         }
     });
     const [semester, setSemester] = useState<string>(lastSemester.id);
+    const [user] = useAuthState(auth);
+    const [firebaseDoc, loadFirebaseDoc, firebaseError] = useDocumentData(user && doc(userCol, user.uid));
+    const [docUpdated, setDocUpdated] = useLocalStorage<number>('firestore_doc_updated', -1);
+
+    // update courses from firebase
+    useEffect(() => {
+        if(!user) return; // No user logged in
+        if(!firebaseDoc) return; // not yet loaded
+        
+        // Check if docUpdated is older than firebaseDoc.lastUpdated
+        if (docUpdated < firebaseDoc.lastUpdated.toMillis() ?? 0) {
+            setCourses(firebaseDoc.courses);
+            setDocUpdated(firebaseDoc.lastUpdated.toMillis() ?? 0);
+        }
+    }, [user, docUpdated, firebaseDoc, loadFirebaseDoc]);
 
     const setTimetableTheme = useCallback((theme: string) => {
         //if theme updated, remap colors and override all
@@ -89,15 +110,23 @@ const useUserTimetableProvider = (loadCourse = true) => {
         });
         setColorMap(newColorMap);
         setUserDefinedColors({})
+        if(user) {
+            const lastUpdated = new Date();
+            updateDoc(doc(userCol, user.uid), {
+                colorMap: newColorMap,
+                lastUpdated: lastUpdated
+            });
+            setDocUpdated(lastUpdated.getTime());
+        }
         console.log('colorMap updated')
         _setTimetableTheme(theme);
-    }, [courses]);
+    }, [courses, user]);
 
     //fix timetableTheme if it is not in timetableColors
     useLayoutEffect(() => {
-        if(typeof window  == "undefined") return ;
+        if (typeof window == "undefined") return;
         const themes = [...Object.keys(timetableColors), ...Object.keys(userDefinedColors)];
-        if(!themes.includes(timetableTheme)) {
+        if (!themes.includes(timetableTheme)) {
             setTimetableTheme(themes[0]);
         }
         console.log("timetable theme", timetableTheme);
@@ -113,7 +142,7 @@ const useUserTimetableProvider = (loadCourse = true) => {
         const semesters = Object.keys(courses);
         const numCourses = Object.values(courses).flat().length;
         const numColors = Object.keys(colorMap).length;
-        if(numCourses == numColors) return;
+        if (numCourses == numColors) return;
         //if not the same, reset colorMap
         const newColorMap: { [courseID: string]: string } = {};
         semesters.forEach(sem => {
@@ -136,11 +165,11 @@ const useUserTimetableProvider = (loadCourse = true) => {
     });
 
     const getSemesterCourses = useCallback((semester: keyof CourseLocalStorage | undefined) => {
-        if(!semester) return [];
-        if(!courses[semester]) return [];
+        if (!semester) return [];
+        if (!courses[semester]) return [];
         const semesterFilteredCourses: CourseDefinition[] = user_courses_data.filter(course => courses[semester].includes(course.raw_id));
         //sort according to the order in courses[semester]
-        const sortedCourses = courses[semester].map(courseID => semesterFilteredCourses.find(c => c.raw_id == courseID)!).filter(c => c) ;
+        const sortedCourses = courses[semester].map(courseID => semesterFilteredCourses.find(c => c.raw_id == courseID)!).filter(c => c);
         return sortedCourses;
     }, [courses, user_courses_data]);
 
@@ -196,8 +225,16 @@ const useUserTimetableProvider = (loadCourse = true) => {
                     label: courseID,
                 })
             });
+            if (user) {
+                const lastUpdated = new Date();
+                updateDoc(doc(userCol, user.uid), {
+                    courses: oldCourses,
+                    lastUpdated: lastUpdated
+                });
+                setDocUpdated(lastUpdated.getTime());
+            }
             return oldCourses;
-            
+
         });
     }
 
@@ -231,17 +268,34 @@ const useUserTimetableProvider = (loadCourse = true) => {
                     label: courseID,
                 })
             })
+            if (user) {
+                const lastUpdated = new Date();
+                updateDoc(doc(userCol, user.uid), {
+                    courses: oldCourses,
+                    lastUpdated: lastUpdated
+                });
+                setDocUpdated(lastUpdated.getTime());
+            }
+
             return oldCourses;
         });
-        
     }
 
     const setColor = (courseID: string, color: string) => {
         setColorMap(colorMap => {
-            return {
+            const newColorMap = {
                 ...colorMap,
                 [courseID]: color
             }
+            if (user) {
+                const lastUpdated = new Date();
+                updateDoc(doc(userCol, user.uid), {
+                    colorMap: newColorMap,
+                    lastUpdated: lastUpdated
+                });
+                setDocUpdated(lastUpdated.getTime());
+            }
+            return newColorMap;
         });
     }
 
@@ -258,14 +312,22 @@ const useUserTimetableProvider = (loadCourse = true) => {
 
     const clearCourses = () => {
         setCourses({});
+        if (user) {
+            const lastUpdated = new Date();
+            updateDoc(doc(userCol, user.uid), {
+                courses: {},
+                lastUpdated: lastUpdated
+            });
+            setDocUpdated(lastUpdated.getTime());
+        }
     }
 
-    
+
     const currentColors = useMemo(() => {
         //merge default colors with user defined colors
-        const colors = {...timetableColors, ...userDefinedColors};
+        const colors = { ...timetableColors, ...userDefinedColors };
         //check if timetableTheme exists in colors
-        if(!Object.keys(colors).includes(timetableTheme)) {
+        if (!Object.keys(colors).includes(timetableTheme)) {
             return colors[Object.keys(colors)[0]];
         }
         return colors[timetableTheme];
@@ -279,24 +341,24 @@ const useUserTimetableProvider = (loadCourse = true) => {
     return {
         getSemesterCourses,
         colorMap,
-        semester, 
+        semester,
         timetableTheme,
         currentColors,
         userDefinedColors,
-        setSemester, 
-        semesterCourses, 
+        setSemester,
+        semesterCourses,
         setCourses,
         setColorMap,
-        addCourse, 
-        deleteCourse, 
-        clearCourses, 
-        isCourseSelected, 
+        addCourse,
+        deleteCourse,
+        clearCourses,
+        isCourseSelected,
         setTimetableTheme,
         setUserDefinedColors,
         setColor,
-        isLoading, 
+        isLoading,
         isCoursesEmpty,
-        error, 
+        error,
         courses,
         preferences,
         setPreferences

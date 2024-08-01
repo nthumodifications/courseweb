@@ -8,6 +8,12 @@ import { useCookies } from "react-cookie";
 import { decodeJwt } from 'jose';
 import { refreshUserSession, signInToCCXP } from '@/lib/headless_ais';
 import dynamic from 'next/dynamic';
+import { getFirebaseToken } from '@/lib/firebase/auth';
+import { onAuthStateChanged, signInWithCustomToken, signOut as signOutFirebase } from 'firebase/auth';
+import { auth } from '@/config/firebase';
+import { useAuthState } from 'react-firebase-hooks/auth';
+
+
 const headlessAISContext = createContext<ReturnType<typeof useHeadlessAISProvider>>({
     user: undefined,
     ais: {
@@ -17,7 +23,8 @@ const headlessAISContext = createContext<ReturnType<typeof useHeadlessAISProvide
     loading: true,
     error: undefined,
     initializing: true,
-    setAISCredentials: async () => false,
+    signIn: async () => false,
+    signOut: async () => {},
     getACIXSTORE: async () => undefined,
     openChangePassword: false,
     setOpenChangePassword: () => {}
@@ -33,6 +40,7 @@ const useHeadlessAISProvider = () => {
     const [cookies, setCookies, removeCookies, updateCookies] = useCookies(['accessToken']);
     const dict = useDictionary();
     const [openChangePassword, setOpenChangePassword] = useState(false);
+    const [user, firebaseAuthLoading, firebaseAuthError] = useAuthState(auth);
 
     useEffect(() => { setInitializing(false) }, []);
     
@@ -49,19 +57,23 @@ const useHeadlessAISProvider = () => {
         }
     }, [cookies.accessToken]);
 
+
+    const signOut = async () => {
+        setHeadlessAIS({
+            enabled: false
+        });
+        removeCookies('accessToken', { path: '/', sameSite: 'strict', secure: true });
+        await signOutFirebase(auth);
+    }
+
     //Headless AIS
-    const setAISCredentials = async (username?: string, password?: string) => {
-        // return;
+    const signIn = async (username: string, password: string) => {
         if(!username || !password) {
-            setHeadlessAIS({
-                enabled: false
-            });
-            removeCookies('accessToken', { path: '/', sameSite: 'strict', secure: true });
-            return ;
+            throw 'empty username or password';
         }
         setLoading(true);
         return await signInToCCXP(username, password)
-            .then((res) => {
+            .then(async (res) => {
                 if(!res) throw new Error("太多人在使用代理登入，請稍後再試");
                 if('error' in res) throw new Error(res.error.message); 
                 setHeadlessAIS({
@@ -77,6 +89,11 @@ const useHeadlessAISProvider = () => {
                     title: "提醒您校務系統密碼已經過期~ ",
                     description: "但是NTHUMods 的功能都不會被影響 ヾ(≧▽≦*)o",
                 });
+                
+                // sign user into firebase
+                const firebaseToken = await getFirebaseToken();
+                if(typeof firebaseToken == 'object' && 'error' in firebaseToken) throw new Error(firebaseToken.error!.message);
+                await signInWithCustomToken(auth, firebaseToken as string);
                 setLoading(false);
                 setError(undefined);
                 return true;
@@ -91,8 +108,7 @@ const useHeadlessAISProvider = () => {
                 return false;
             })
     }
-
-
+    
     /**
      * 
      * @param force force update ACIXSTORE
@@ -182,7 +198,8 @@ const useHeadlessAISProvider = () => {
         ais,
         loading,
         error,
-        setAISCredentials,
+        signIn,
+        signOut,
         getACIXSTORE,
         initializing,
         openChangePassword,

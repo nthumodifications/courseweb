@@ -362,6 +362,11 @@ export const updateUserPassword = async (ACIXSTORE: string, oldEncryptedPassword
     return newEncryptedPassword;
 }
 
+/**
+ * Decodes users session and returns the payload
+ * If the session is invalid, returns null
+ * @returns UserJWT | null
+ */
 export const getUserSession = async () => {
     const accessToken = cookies().get('accessToken')?.value ?? '';
     try {

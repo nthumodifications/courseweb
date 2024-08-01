@@ -37,7 +37,7 @@ const formSchema = z.object({
 })
 
 const ChangePasswordDialog = ({ open, setOpen, children }: PropsWithChildren<{ open: boolean, setOpen: (s: boolean) => void }>) => {
-    const { setAISCredentials, user } = useHeadlessAIS();
+    const { signIn, signOut, user } = useHeadlessAIS();
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -47,7 +47,7 @@ const ChangePasswordDialog = ({ open, setOpen, children }: PropsWithChildren<{ o
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         if (!user) return;
-        await setAISCredentials(user.studentid, values.newPassword)
+        await signIn(user.studentid, values.newPassword)
         setOpen(false);
         toast({
             title: "密碼更新成功",
@@ -91,7 +91,7 @@ const ChangePasswordDialog = ({ open, setOpen, children }: PropsWithChildren<{ o
                                 </DialogClose>
                                 <DialogClose asChild>
                                     <Button variant='destructive' onClick={() => {
-                                        setAISCredentials("", "")
+                                        signOut()
                                         setOpen(false)
                                     }}>Logout</Button>
                                 </DialogClose>

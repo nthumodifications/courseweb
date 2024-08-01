@@ -62,13 +62,13 @@ export const LoginPage = ({ onClose }: { onClose: () => void; }) => {
   const [agreeChecked, setAgreeChecked] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
-  const { user, setAISCredentials } = useHeadlessAIS();
+  const { user, signIn } = useHeadlessAIS();
   const dict = useDictionary();
   const { language } = useSettings();
 
   const onSubmit = async () => {
     setLoading(true);
-    const result = await setAISCredentials(studentid, password);
+    const result = await signIn(studentid, password);
     if (!result) {
       setError(dict.ccxp.incorrect_credentials);
     }

@@ -85,7 +85,7 @@ const TimetableSettingsCard = () => {
 }
 
 const AccountInfoSettingsCard = () => {
-    const { user, ais, setAISCredentials } = useHeadlessAIS();
+    const { user, ais, signOut } = useHeadlessAIS();
     const dict = useDictionary();
     const [openChangePassword, setOpenChangePassword] = useState(false);
 
@@ -110,7 +110,7 @@ const AccountInfoSettingsCard = () => {
                     <ChangePasswordDialog open={openChangePassword} setOpen={setOpenChangePassword}>
                         <Button variant={'ghost'}>更新密碼</Button>
                     </ChangePasswordDialog>
-                    <Button variant="destructive" onClick={() => setAISCredentials()}>{dict.settings.account.signout}</Button>
+                    <Button variant="destructive" onClick={() => signOut()}>{dict.settings.account.signout}</Button>
                 </div>
             </div>}
             <div className={cn("flex flex-row gap-4 py-4", user ? 'hidden': '')} id="account">
