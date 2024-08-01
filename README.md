@@ -17,8 +17,7 @@ You can clone the repository and start the development server via `npm run dev`
 If you wish to participate in this development, feel free to email [nthumods@gmail.com](mailto:nthumods@gmail.com) in the meantime while we figure out the system for contributing.
 
 ## Deployment
-We are currently using [Vercel](https://vercel.com) to deploy our website. If you wish to deploy your own version, you can do so by forking this repository and deploying it on Vercel. You will need to set up the following environment variables:
-
+Deployment is currently hosted on DigitalOcean, and tested with Vercel. If you wish to deploy your version, you can do so by forking this repository and deploying it on Vercel. You will need to set up the following environment variables:
 
 .env.local
 ```
@@ -31,10 +30,10 @@ STUDENT_ID_PUBLIC_KEY=
 GOOGLE_SERVICE_KEY=<base64 of google service account file>
 ```
 
-
-## Contributors
+## Authors
 - [Chew Tzi Hwee](@ImJustChew)
 - [Joshua Lean](@Joshimello)
+- [Huang Shi Jie](@SJieNg123)
 
 
 ## Inspiration
