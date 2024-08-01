@@ -21,12 +21,6 @@ export enum LoginError {
     Unknown = "Unknown"
 }
 
-export interface ClassCode {
-    department: string;
-    degreeType: string;
-    year: string;
-}
-
 export interface UserJWTDetails {
     studentid: string;
     name_zh: string;
@@ -34,7 +28,6 @@ export interface UserJWTDetails {
     department: string;
     grade: string;
     email: string;
-    classCode: ClassCode;
 }
 
 export type UserJWT = UserJWTDetails;
