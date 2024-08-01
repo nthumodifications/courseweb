@@ -1,4 +1,4 @@
-import { AlertOctagon, Store, Bus, Car, Clipboard, Club, CreditCard, MapPin, Network, WalletCards, Gamepad} from 'lucide-react';
+import { AlertOctagon, Store, Bus, Car, Clipboard, Club, CreditCard, MapPin, Network, WalletCards, Gamepad, Paperclip} from 'lucide-react';
 
 export const apps = [
     {
@@ -35,6 +35,15 @@ export const apps = [
         title_en: 'Your Grades',
         href: '/student/grades',
         Icon: Clipboard,
+        ais: true,
+    },
+    {
+        id: 'eform',
+        title_zh: '電子表單系統',
+        title_en: 'E-Form System',
+        href: '/ais-redirect/SSO_LINK/oauth_eform.php',
+        Icon: Paperclip,
+        target: '_blank',
         ais: true,
     },
     {
