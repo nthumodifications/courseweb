@@ -113,7 +113,7 @@ const Timetable: FC<{
                 <td className="min-w-[60px]" ref={headerRow}>
                 </td>
               {scheduleTimeSlots.map((time, index) => (
-                <td className="min-w-[120px] px-2">
+                <td className="min-w-[120px] px-2" key={index}>
                   <div className='flex flex-row justify-between items-baseline  text-gray-400'>
                     <span className='text-xs'>{time.start}</span>
                     <span className='text-sm font-bold'>{time.time}</span>
