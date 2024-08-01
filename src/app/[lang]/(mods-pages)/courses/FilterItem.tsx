@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import useCustomRefinementList from "./useCustomRefinementList";
 
-const FilterItem =  ({
+const FilterItem = ({
   attribute,
   limit = 10,
   searchable = false,
@@ -37,13 +37,14 @@ const FilterItem =  ({
     attribute: attribute,
     limit: limit,
   })
-  
+
   const searchParams = useSearchParams()
   useEffect(() => {
     const refinedItems = items.filter((item) => item.isRefined)
     setSelected(refinedItems.map((item) => item.value))
   }, [items, searchParams])
-  
+
+  const [typable, setEnableTyping] = useState(false)
   const [searchValue, setSearchValue] = useState('')
   const [searching, setSearching] = useState(false)
   const [selected, setSelected] = useState<string[]>([])
@@ -60,6 +61,7 @@ const FilterItem =  ({
   }
 
   const openChange = (open: boolean) => {
+    setEnableTyping(false)
     if (open == true) {
       setSearching(true)
     }
@@ -81,15 +83,15 @@ const FilterItem =  ({
   }
 
   return <Popover modal={true} onOpenChange={openChange}>
-      <Button variant="outline" className={`w-full justify-start h-max p-0`}>
-        <PopoverTrigger asChild>
-          <div className="flex-1 text-left px-4 py-2">
+    <Button variant="outline" className={`w-full justify-start h-max p-0`}>
+      <PopoverTrigger asChild>
+        <div className="flex-1 text-left px-4 py-2">
           {searching ?
             "Selecting..." :
-            (selected.length == 0 ? 
+            (selected.length == 0 ?
               'All' :
               <div className="flex flex-col gap-1">
-                {selected.map(i => 
+                {selected.map(i =>
                   <Badge variant="outline" className="">
                     {synonms[i] ? `${i} - ${synonms[i]}` : i}
                   </Badge>
@@ -97,16 +99,18 @@ const FilterItem =  ({
               </div>
             )
           }
-          </div>
-        </PopoverTrigger>
-        {selected.length > 0 && <X className="px-2 w-8 h-6 cursor-pointer" onClick={clear}/>}
-      </Button>
-      
-    
+        </div>
+      </PopoverTrigger>
+      {selected.length > 0 && <X className="px-2 w-8 h-6 cursor-pointer" onClick={clear} />}
+    </Button>
+
+
     <PopoverContent className="p-0" align="start">
       <Command shouldFilter={clientSearch}>
-        {searchable && 
+        {searchable &&
           <CommandInput
+            onClick={() => setEnableTyping(true)}
+            inputMode={typable ? 'text' : 'none'}
             autoComplete="off"
             autoCorrect="off"
             autoCapitalize="off"
@@ -117,7 +121,7 @@ const FilterItem =  ({
             placeholder={placeholder}
           />
         }
-        <ScrollArea className="h-[300px]">
+        <ScrollArea onScrollCapture={() => setEnableTyping(false)} className="h-[300px]">
           <CommandList className="max-h-none">
             <CommandEmpty>No results found.</CommandEmpty>
             {items.sort((a, b) => {
@@ -135,7 +139,7 @@ const FilterItem =  ({
                     <Check size={16} className={`${item.isRefined ? '' : 'opacity-0'}`} />
                   </div>
                   <span className="mr-4">
-                    {synonms[item.label] ? 
+                    {synonms[item.label] ?
                       `${item.label} - ${synonms[item.label]}` :
                       item.label
                     }
