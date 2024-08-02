@@ -10,11 +10,9 @@ import { getSemesterFromID } from '@/helpers/courses';
 import { event } from "@/lib/gtag";
 import { timetableColors } from '@/const/timetableColors';
 import { useQuery } from "@tanstack/react-query";
-import { doc, setDoc, Timestamp, updateDoc } from 'firebase/firestore';
 import { auth, db } from '@/config/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { useDocumentData } from 'react-firebase-hooks/firestore';
-import { userCol } from '@/lib/firebase/firestore';
+import useSyncedStorage from '../useSyncedStorage';
 
 export interface TimetableDisplayPreferences {
     language: 'app' | 'zh' | 'en';
@@ -67,11 +65,11 @@ const userTimetableContext = createContext<ReturnType<typeof useUserTimetablePro
 
 
 const useUserTimetableProvider = (loadCourse = true) => {
-    const [courses, setCourses] = useLocalStorage<CourseLocalStorage>("courses", {});
-    const [colorMap, setColorMap] = useLocalStorage<{ [courseID: string]: string }>("course_color_map", {}); //map from courseID to color
-    const [timetableTheme, _setTimetableTheme] = useLocalStorage<string>("timetable_theme", "pastelColors");
+    const [courses, setCourses] = useSyncedStorage<CourseLocalStorage>("courses", {});
+    const [colorMap, setColorMap] = useSyncedStorage<{ [courseID: string]: string }>("course_color_map", {}); //map from courseID to color
+    const [timetableTheme, _setTimetableTheme] = useSyncedStorage<string>("timetable_theme", "pastelColors");
     const [userDefinedColors, setUserDefinedColors] = useLocalStorage<{ [theme_name: string]: string[] }>("user_defined_colors", {});
-    const [preferences, setPreferences] = useLocalStorage<TimetableDisplayPreferences>("timetable_display_preferences", {
+    const [preferences, setPreferences] = useSyncedStorage<TimetableDisplayPreferences>("timetable_display_preferences", {
         language: 'app',
         align: 'center',
         display: {
@@ -83,33 +81,6 @@ const useUserTimetableProvider = (loadCourse = true) => {
     });
     const [semester, setSemester] = useState<string>(lastSemester.id);
     const [user] = useAuthState(auth);
-    const [firebaseDoc, loadFirebaseDoc, firebaseError] = useDocumentData(user && doc(userCol, user.uid));
-    const [docUpdated, setDocUpdated] = useLocalStorage<number>('firestore_doc_updated', -1);
-
-    // update courses from firebase
-    useEffect(() => {
-        if(!user) return; // No user logged in
-        if(!firebaseDoc) return; // not yet loaded
-        
-        // Check if docUpdated is older than firebaseDoc.lastUpdated
-        if (docUpdated < firebaseDoc.lastUpdated.toMillis() ?? 0) {
-            if(firebaseDoc.courses) setCourses(firebaseDoc.courses);
-            if(firebaseDoc.colorMap) setColorMap(firebaseDoc.colorMap);
-            setDocUpdated(firebaseDoc.lastUpdated.toMillis() ?? 0);
-        }
-    }, [user, docUpdated, firebaseDoc, loadFirebaseDoc]);
-
-    useEffect(() => { //sync colorMap
-        if(!user) return; // No user logged in
-        const time = Timestamp.now()
-        updateDoc(doc(userCol, user.uid), {
-            colorMap: colorMap,
-            lastUpdated: time
-        });
-        setDocUpdated(time.toMillis());
-    }, [colorMap, user]);
-        
-
     const setTimetableTheme = useCallback((theme: string) => {
         //if theme updated, remap colors and override all
         const newColors = timetableColors[theme];
@@ -122,14 +93,6 @@ const useUserTimetableProvider = (loadCourse = true) => {
         });
         setColorMap(newColorMap);
         setUserDefinedColors({})
-        if(user) {
-            const lastUpdated = new Date();
-            updateDoc(doc(userCol, user.uid), {
-                colorMap: newColorMap,
-                lastUpdated: lastUpdated
-            });
-            setDocUpdated(lastUpdated.getTime());
-        }
         console.log('colorMap updated')
         _setTimetableTheme(theme);
     }, [courses, user]);
@@ -237,14 +200,6 @@ const useUserTimetableProvider = (loadCourse = true) => {
                     label: courseID,
                 })
             });
-            if (user) {
-                const lastUpdated = new Date();
-                updateDoc(doc(userCol, user.uid), {
-                    courses: oldCourses,
-                    lastUpdated: lastUpdated
-                });
-                setDocUpdated(lastUpdated.getTime());
-            }
             return oldCourses;
 
         });
@@ -280,14 +235,6 @@ const useUserTimetableProvider = (loadCourse = true) => {
                     label: courseID,
                 })
             })
-            if (user) {
-                const lastUpdated = new Date();
-                updateDoc(doc(userCol, user.uid), {
-                    courses: oldCourses,
-                    lastUpdated: lastUpdated
-                });
-                setDocUpdated(lastUpdated.getTime());
-            }
 
             return oldCourses;
         });
@@ -298,14 +245,6 @@ const useUserTimetableProvider = (loadCourse = true) => {
             const newColorMap = {
                 ...colorMap,
                 [courseID]: color
-            }
-            if (user) {
-                const lastUpdated = new Date();
-                updateDoc(doc(userCol, user.uid), {
-                    colorMap: newColorMap,
-                    lastUpdated: lastUpdated
-                });
-                setDocUpdated(lastUpdated.getTime());
             }
             return newColorMap;
         });
@@ -324,14 +263,6 @@ const useUserTimetableProvider = (loadCourse = true) => {
 
     const clearCourses = () => {
         setCourses({});
-        if (user) {
-            const lastUpdated = new Date();
-            updateDoc(doc(userCol, user.uid), {
-                courses: {},
-                lastUpdated: lastUpdated
-            });
-            setDocUpdated(lastUpdated.getTime());
-        }
     }
 
 
