@@ -93,7 +93,8 @@ const useUserTimetableProvider = (loadCourse = true) => {
         
         // Check if docUpdated is older than firebaseDoc.lastUpdated
         if (docUpdated < firebaseDoc.lastUpdated.toMillis() ?? 0) {
-            setCourses(firebaseDoc.courses);
+            if(firebaseDoc.courses) setCourses(firebaseDoc.courses);
+            if(firebaseDoc.colorMap) setColorMap(firebaseDoc.colorMap);
             setDocUpdated(firebaseDoc.lastUpdated.toMillis() ?? 0);
         }
     }, [user, docUpdated, firebaseDoc, loadFirebaseDoc]);
@@ -226,9 +227,14 @@ const useUserTimetableProvider = (loadCourse = true) => {
                 })
             });
             if (user) {
+                const newColorMap = { ...colorMap };
+                courseIDs.forEach(courseID => {
+                    newColorMap[courseID] = currentColors[oldCourses[semester].length % currentColors.length];
+                });
                 const lastUpdated = new Date();
                 updateDoc(doc(userCol, user.uid), {
                     courses: oldCourses,
+                    colorMap: newColorMap,
                     lastUpdated: lastUpdated
                 });
                 setDocUpdated(lastUpdated.getTime());
@@ -270,8 +276,13 @@ const useUserTimetableProvider = (loadCourse = true) => {
             })
             if (user) {
                 const lastUpdated = new Date();
+                const newColorMap = { ...colorMap };
+                courseIDs.forEach(courseID => {
+                    delete newColorMap[courseID];
+                });
                 updateDoc(doc(userCol, user.uid), {
                     courses: oldCourses,
+                    colorMap: newColorMap,
                     lastUpdated: lastUpdated
                 });
                 setDocUpdated(lastUpdated.getTime());
