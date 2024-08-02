@@ -99,6 +99,17 @@ const useUserTimetableProvider = (loadCourse = true) => {
         }
     }, [user, docUpdated, firebaseDoc, loadFirebaseDoc]);
 
+    useEffect(() => { //sync colorMap
+        if(!user) return; // No user logged in
+        const time = Timestamp.now()
+        updateDoc(doc(userCol, user.uid), {
+            colorMap: colorMap,
+            lastUpdated: time
+        });
+        setDocUpdated(time.toMillis());
+    }, [colorMap, user]);
+        
+
     const setTimetableTheme = useCallback((theme: string) => {
         //if theme updated, remap colors and override all
         const newColors = timetableColors[theme];
@@ -227,14 +238,9 @@ const useUserTimetableProvider = (loadCourse = true) => {
                 })
             });
             if (user) {
-                const newColorMap = { ...colorMap };
-                courseIDs.forEach(courseID => {
-                    newColorMap[courseID] = currentColors[oldCourses[semester].length % currentColors.length];
-                });
                 const lastUpdated = new Date();
                 updateDoc(doc(userCol, user.uid), {
                     courses: oldCourses,
-                    colorMap: newColorMap,
                     lastUpdated: lastUpdated
                 });
                 setDocUpdated(lastUpdated.getTime());
@@ -276,13 +282,8 @@ const useUserTimetableProvider = (loadCourse = true) => {
             })
             if (user) {
                 const lastUpdated = new Date();
-                const newColorMap = { ...colorMap };
-                courseIDs.forEach(courseID => {
-                    delete newColorMap[courseID];
-                });
                 updateDoc(doc(userCol, user.uid), {
                     courses: oldCourses,
-                    colorMap: newColorMap,
                     lastUpdated: lastUpdated
                 });
                 setDocUpdated(lastUpdated.getTime());
