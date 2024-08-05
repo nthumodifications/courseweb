@@ -43,42 +43,7 @@ import ClearAllButton from './ClearAllButton';
 import useDictionary from '@/dictionaries/useDictionary';
 import FavouritesCourseList from './FavouritesCourseList';
 import GroupByDepartmentButton from '@/components/Timetable/GroupByDepartmentButton';
-
-const SemesterSelector = () => {
-  // refine semester for semester selector
-  const {
-    items,
-    refine,
-    canRefine,
-  } = useCustomMenu({
-    attribute: 'semester',
-  });
-
-  useEffect(() => {
-    if (canRefine && !items.find(item => item.isRefined)) {
-      // default to the latest semester
-      refine(lastSemester.id);
-    }
-  }, [canRefine, items]);
-
-  const handleSelect = (v: string) => {
-    refine(v);
-  }
-
-  const selected = useMemo(() => items.find(item => item.isRefined)?.value, [items]);
-
-  return <Select value={selected} onValueChange={handleSelect}>
-    <SelectTrigger className="w-[200px] border-0 bg-transparent h-0">
-      <SelectValue placeholder="Semester" />
-    </SelectTrigger>
-    <SelectContent>
-      {[...semesterInfo].sort((a, b) => parseInt(b.id) - parseInt(a.id)).map(item => <SelectItem value={item.id} key={item.id}>
-        {toPrettySemester(item.id)} 學期
-      </SelectItem>)}
-    </SelectContent>
-  </Select>
-
-}
+import SemesterSelector from './SemesterSelector';
 
 const TimetableWithSemester = () => {
   const { getSemesterCourses, colorMap } = useUserTimetable();
@@ -128,6 +93,13 @@ const CourseSearchContainer = () => {
   return <InstantSearchNext
     searchClient={searchClient}
     indexName="nthu_courses"
+    initialUiState={{
+      nthu_courses: {
+        menu: {
+          semester: lastSemester.id,
+        }
+      }
+    }}
     routing
   >
     <div className="flex flex-col h-full max-h-[100dvh] gap-4 md:gap-8">
