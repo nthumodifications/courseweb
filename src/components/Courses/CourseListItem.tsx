@@ -41,7 +41,7 @@ const CourseListItem: FC<{ course: CourseSyllabusView, hasTaken?: boolean }> = (
                     <p className='text-sm whitespace-pre-line text-gray-400 dark:text-neutral-500'>{course.note}</p>
                     <div className='space-y-1 @md:hidden'>
                     {course.venues? 
-                        course.venues.map((vn, i) => <p className='text-nthu-600 dark:text-nthu-400 text-sm'>{vn} <span className='text-black dark:text-white'>{course.times![i]}</span></p>) : 
+                        course.venues.map((vn, i) => <p key={i} className='text-nthu-600 dark:text-nthu-400 text-sm'>{vn} <span className='text-black dark:text-white'>{course.times![i]}</span></p>) : 
                         <p>No Venues</p>
                     }
                     </div>
@@ -63,7 +63,7 @@ const CourseListItem: FC<{ course: CourseSyllabusView, hasTaken?: boolean }> = (
             <div className='@md:flex flex-col space-y-3 justify-end items-end hidden'>
                 <div className='space-y-1'>
                 {course.venues? 
-                    course.venues.map((vn, i) => <p className='text-nthu-600 dark:text-nthu-400 text-sm'>{vn} <span className='text-black dark:text-white'>{course.times![i]}</span></p>) : 
+                    course.venues.map((vn, i) => <p key={i} className='text-nthu-600 dark:text-nthu-400 text-sm'>{vn} <span className='text-black dark:text-white'>{course.times![i]}</span></p>) : 
                     <p>No Venues</p>
                 }
                 </div>
