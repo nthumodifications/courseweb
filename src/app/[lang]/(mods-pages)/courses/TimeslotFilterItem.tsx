@@ -28,7 +28,7 @@ export default ({
     refine: timesRefine,
     searchForItems: timesSearchForItems,
   } = useCustomRefinementList({
-    attribute: 'times', 
+    attribute: 'times',
     limit: 500,
   })
   const {
@@ -36,7 +36,7 @@ export default ({
     refine: separateRefine,
     searchForItems: separateSearchForItems,
   } = useCustomRefinementList({
-    attribute: 'separate_times', 
+    attribute: 'separate_times',
     limit: 500,
   })
 
@@ -55,7 +55,7 @@ export default ({
   useEffect(() => {
     if (timeslotValue.length > 0) {
       clearRefine()
-      if(mode == 'includes') {
+      if (mode == 'includes') {
         for (let i = 0; i < timeslotValue.length; i++) {
           refine(timeslotValue[i])
         }
@@ -109,7 +109,7 @@ export default ({
 
   useEffect(() => {
     clearRefine()
-    if(mode == 'includes') {
+    if (mode == 'includes') {
       for (let i = 0; i < timeslotValue.length; i++) {
         refine(timeslotValue[i])
       }
@@ -128,11 +128,11 @@ export default ({
     const days = ['M', 'T', 'W', 'R', 'F', 'S'];
     const selectDays: string[] = [];
     scheduleTimeSlots.forEach(timeSlot => {
-        days.forEach(day => {
-            if (!timeslotList.includes(day + timeSlot.time)) {
-                selectDays.push(day + timeSlot.time);
-            }
-        })
+      days.forEach(day => {
+        if (!timeslotList.includes(day + timeSlot.time)) {
+          selectDays.push(day + timeSlot.time);
+        }
+      })
     })
     setTimeslotValue(selectDays);
   }, [getSemesterCourses, semester]);
@@ -142,16 +142,16 @@ export default ({
       <PopoverTrigger asChild>
         <Button variant="outline" className={`w-full text-left justify-start h-max`}>
           <span className="truncate">
-          {searching ?
-            "Selecting..." :
-            (selected.length == 0 ?
-              'All' :
-              <div className="flex flex-col gap-1">
-                {[...timeslotValue].sort(customSort).slice(0, 8).join('')}
-                {timeslotValue.length > 8 && '...'}
-              </div>
-            )
-          }
+            {searching ?
+              "Selecting..." :
+              (selected.length == 0 ?
+                'All' :
+                <div className="flex flex-col gap-1">
+                  {[...timeslotValue].sort(customSort).slice(0, 8).join('')}
+                  {timeslotValue.length > 8 && '...'}
+                </div>
+              )
+            }
           </span>
         </Button>
       </PopoverTrigger>
@@ -180,7 +180,7 @@ export default ({
           <Trash size="16" />
         </Button>
       </div>
-      
+
     </div>
 
   </div>
