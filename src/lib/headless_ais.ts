@@ -1,10 +1,9 @@
-'use server';
-import { LoginError, UserJWT, UserJWTDetails } from "@/types/headless_ais";
-import { cookies } from "next/headers";
+'use server';;
+import { LoginError, UserJWTDetails } from "@/types/headless_ais";
 import { parseHTML } from 'linkedom';
-import supabase_server from "@/config/supabase_server";
-import * as jose from 'jose'
 import {fetchWithTimeout} from '@/helpers/fetch';
+import {createSessionCookie, mintFirebaseToken, revokeAllSessions} from '@/lib/firebase/auth';
+import { cookies } from "next/headers";
 
 function hexStringToUint8Array(hexString: string) {
     if (hexString.length % 2 !== 0) {
@@ -102,13 +101,13 @@ async function streamAndMatch(response: Response, regex: RegExp) {
     throw new Error(LoginError.Unknown);
 }
 
-type SignInToCCXPResponse = Promise<{ ACIXSTORE: string, encryptedPassword: string, passwordExpired: boolean } | { error: { message: string } }>;
+type SignInToCCXPResponse = Promise<{ ACIXSTORE: string, encryptedPassword: string, passwordExpired: boolean, accessToken: string } | { error: { message: string } }>;
 /**
  * Attempts to login user to CCXP, takes in raw studentid and password
  * ONLY use this for first time login, will return encrypted password and ACIXSTORE
  * @param studentid 
  * @param password 
- * @returns { ACIXSTORE: string, encryptedPassword: string, passwordExpired: boolean }
+ * @returns { ACIXSTORE: string, encryptedPassword: string, passwordExpired: boolean, accessToken: string }
  */
 export const signInToCCXP = async (studentid: string, password: string): SignInToCCXPResponse => {
     console.log("Signing in to CCXP")
@@ -292,23 +291,12 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
         if(form.querySelector('input[name="ACIXSTORE"]')?.getAttribute('value') != result.ACIXSTORE) {
             throw new Error(LoginError.Unknown);
         }
-
-        // const token = jwt.sign({ sub: studentid, ...data }, process.env.NTHU_HEADLESS_AIS_SIGNING_KEY!, { expiresIn: '15d' });
-        //use jose to sign the token
-        const secret = new TextEncoder().encode(process.env.NTHU_HEADLESS_AIS_SIGNING_KEY!);
-        const jwt = await new jose.SignJWT({ sub: studentid, ...data })
-            .setProtectedHeader({ alg: 'HS256' })
-            .setIssuedAt()
-            .setIssuer('NTHUMods')
-            .setExpirationTime('15d')
-            .sign(secret);
-
-        await cookies().set('accessToken', jwt, { path: '/', maxAge: 60 * 60 * 24, sameSite: 'strict', secure: true });
+        const accessToken = await mintFirebaseToken(data);
 
         // Encrypt user password 
         const encryptedPassword = await encrypt(password);
         
-        return { ...result, encryptedPassword };
+        return { ...result, encryptedPassword, accessToken };
     } catch (err) {
         console.error('CCXP Login Err', err);
         if(err instanceof Error) return { error: { message: err.message } };
@@ -316,7 +304,7 @@ export const signInToCCXP = async (studentid: string, password: string): SignInT
     }
 }
 
-type RefreshUserSessionResponse = Promise<{ ACIXSTORE: string, passwordExpired: boolean } | { error: { message: string } }>;
+type RefreshUserSessionResponse = Promise<{ ACIXSTORE: string, passwordExpired: boolean, accessToken: string } | { error: { message: string } }>;
 export const refreshUserSession = async (studentid: string, encryptedPassword: string): RefreshUserSessionResponse => {
     console.log('Refreshing User Session')
     // Decrypt password
@@ -328,7 +316,7 @@ export const refreshUserSession = async (studentid: string, encryptedPassword: s
         return { error: res.error }
     }
     // @ts-ignore - We know that res is not an error
-    return { ACIXSTORE: res.ACIXSTORE, passwordExpired: res.passwordExpired };
+    return { ACIXSTORE: res.ACIXSTORE, passwordExpired: res.passwordExpired, accessToken: res.accessToken };
 }
 
 export const updateUserPassword = async (ACIXSTORE: string, oldEncryptedPassword: string, newPassword: string) => {
@@ -360,27 +348,4 @@ export const updateUserPassword = async (ACIXSTORE: string, oldEncryptedPassword
     // Encrypt new password
     const newEncryptedPassword = await encrypt(newPassword);
     return newEncryptedPassword;
-}
-
-export const getUserSession = async () => {
-    const accessToken = cookies().get('accessToken')?.value ?? '';
-    try {
-        const secret = new TextEncoder().encode(process.env.NTHU_HEADLESS_AIS_SIGNING_KEY!);
-        const { payload } = await jose.jwtVerify(accessToken, secret) as { payload: UserJWT };
-        return payload;
-    } catch {
-        return null;
-    }
-}
-
-export const isUserBanned = async () => {
-    const session = await getUserSession();
-    if(!session) {
-        return false;
-    }
-    const { data, error } = await supabase_server.from('users').select('banned').eq('studentid', session.studentid).maybeSingle();
-    if(error) {
-        return false;
-    }
-    return data?.banned ?? false;
 }
