@@ -114,22 +114,6 @@ const useUserTimetableProvider = (loadCourse = true) => {
         });
     }, [timetableTheme, Object.keys(userDefinedColors).length]);
 
-    //check if number of courses in each semester is the same as number of colors
-    useEffect(() => {
-        const semesters = Object.keys(courses);
-        const numCourses = Object.values(courses).flat().length;
-        const numColors = Object.keys(colorMap).length;
-        if (numCourses == numColors) return;
-        //if not the same, reset colorMap
-        const newColorMap: { [courseID: string]: string } = {};
-        semesters.forEach(sem => {
-            courses[sem].forEach((courseID, i) => {
-                newColorMap[courseID] = currentColors[i % currentColors.length];
-            });
-        });
-        setColorMap(newColorMap);
-    }, [courses, colorMap]);
-
     const { data: user_courses_data = [], error, isLoading } = useQuery({
         queryKey: ['courses', [...Object.values(courses).flat()].sort()],
         queryFn: async () => {
