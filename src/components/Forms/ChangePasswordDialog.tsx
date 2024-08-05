@@ -48,11 +48,18 @@ const ChangePasswordDialog = ({ open, setOpen, children }: PropsWithChildren<{ o
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         if (!user) return;
-        await signIn(user.studentid, values.newPassword)
-        setOpen(false);
-        toast({
-            title: "密碼更新成功",
-        })
+        const success = await signIn(user.studentid, values.newPassword)
+        if(!success) {
+            setOpen(false);
+            toast({
+                title: "密碼更新成功",
+            })
+        } else {
+            toast({
+                title: "密碼更新失敗",
+            })
+        }
+        
     }
 
     return (
