@@ -7,16 +7,9 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible"
-import TimeslotSelector from '@/components/Courses/TimeslotSelector';
 import Timeslotfilteritem from './TimeslotFilterItem';
 import FilterItem from './FilterItem';
 import { semesterInfo } from '@/const/semester';
-import {useClearRefinements} from 'react-instantsearch';
 import ClassRefinementItem from './ClasssRefinementItem';
 
 const latestSemID = semesterInfo[semesterInfo.length - 1].id;
@@ -69,8 +62,8 @@ const Filters = () => {
         <Timeslotfilteritem
           clientSearch={true}
         />
-      </div>    
-      
+      </div>
+
       <div className="flex flex-col gap-2">
         <span className="text-sm">{dict.course.refine.language}</span>
         <FilterItem
@@ -79,7 +72,7 @@ const Filters = () => {
           synonms={languageSynonyms}
           clientSearch={true}
         />
-      </div>  
+      </div>
     </div>
 
     <Accordion type="multiple">
@@ -115,7 +108,7 @@ const Filters = () => {
           {dict.course.refine.advanced_filters}
         </AccordionTrigger>
         <AccordionContent className="flex flex-col gap-6">
-          
+
 
           <div className="flex flex-col gap-2">
             <span className="text-sm">
@@ -163,7 +156,7 @@ const Filters = () => {
               limit={20}
               placeholder="Search (to display more)..."
             />
-          </div>          
+          </div>
 
         </AccordionContent>
       </AccordionItem>

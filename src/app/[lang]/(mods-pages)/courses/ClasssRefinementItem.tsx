@@ -4,7 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button"
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import useCustomRefinementList from "./useCustomRefinementList";
 import { getFormattedClassCode } from "@/helpers/courses";
@@ -40,7 +40,7 @@ const ClassRefinementItem = ({
     attribute: 'semester',
   });
 
-  const selectedSemester = semesterItem.find(item => item.isRefined)?.value ?? lastSemester.id;
+  const selectedSemester = useMemo(() => semesterItem.find(item => item.isRefined)?.value ?? lastSemester.id, [semesterItem])
 
   const searchParams = useSearchParams()
   useEffect(() => {
@@ -53,7 +53,7 @@ const ClassRefinementItem = ({
   const [searching, setSearching] = useState(false)
   const [selected, setSelected] = useState<string[]>([])
 
-  const search = (name: string) => {
+  const search = useCallback((name: string) => {
     setSearchValue(name)
     if (!clientSearch) {
       searchForItems(name)
@@ -62,9 +62,9 @@ const ClassRefinementItem = ({
       const refined = items.filter((item) => item.isRefined)
       setSelected(refined.map((item) => item.value))
     }
-  }
+  }, [searchForItems, items])
 
-  const openChange = (open: boolean) => {
+  const openChange = useCallback((open: boolean) => {
     setEnableTyping(false)
     if (open == true) {
       setSearching(true)
@@ -73,7 +73,7 @@ const ClassRefinementItem = ({
       setSearching(false)
       search('')
     }
-  }
+  }, [search])
 
   const select = (value: string) => {
     setSearchValue('')

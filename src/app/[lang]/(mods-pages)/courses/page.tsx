@@ -1,8 +1,6 @@
-'use client';
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { useEffect, useState } from 'react';
 import CourseSearchContainer from './CourseSearchContainer';
-import { useRouter } from "next/navigation";
+
+export const dynamic = 'force-dynamic';
 
 const CourseDialog = () => {
   

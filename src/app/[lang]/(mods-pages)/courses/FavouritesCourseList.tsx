@@ -1,12 +1,11 @@
-import { Search, Trash, AlertTriangle, Copy, GripVertical, Loader2, Plus, Heart, Minus } from 'lucide-react';
+import { GripVertical, Plus, Heart, Minus } from 'lucide-react';
 import { useSettings } from '@/hooks/contexts/settings';
 import useUserTimetable from '@/hooks/contexts/useUserTimetable';
 import { useRouter, useSearchParams } from 'next/navigation';
 import useDictionary from '@/dictionaries/useDictionary';
 import { useMemo } from 'react';
-import { hasConflictingTimeslots, hasSameCourse, hasTimes } from '@/helpers/courses';
-import { MinimalCourse, RawCourseID } from '@/types/courses';
-import dynamic from 'next/dynamic';
+import { hasTimes } from '@/helpers/courses';
+import { MinimalCourse } from '@/types/courses';
 import { Button } from '@/components/ui/button';
 import {
     DndContext,
@@ -20,7 +19,6 @@ import {
 } from '@dnd-kit/core';
 import {
     arrayMove,
-    rectSwappingStrategy,
     SortableContext,
     sortableKeyboardCoordinates,
     verticalListSortingStrategy,
@@ -28,24 +26,16 @@ import {
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-import {
-    restrictToVerticalAxis,
-    restrictToWindowEdges,
-} from '@dnd-kit/modifiers';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import Compact from '@uiw/react-color-compact';
-import { Separator } from '@/components/ui/separator';
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
-import { TimetableItemDrawer } from '@/components/Timetable/TimetableItemDrawer';
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { useQuery } from '@tanstack/react-query';
 import supabase from '@/config/supabase';
-import {CourseDefinition} from '@/config/supabase';
+import { CourseDefinition } from '@/config/supabase';
 import { useLocalStorage } from 'usehooks-ts';
 
-const TimetableCourseListItem = ({ 
-    course, 
-}: { 
-    course: MinimalCourse, 
+const TimetableCourseListItem = ({
+    course,
+}: {
+    course: MinimalCourse,
 }) => {
     const { language } = useSettings();
     const router = useRouter();
@@ -101,13 +91,13 @@ const TimetableCourseListItem = ({
                 <Button className='rounded-r-none' variant="outline" size="icon" onClick={() => unfavourite()}>
                     <Heart className="w-4 h-4 fill-red-500 text-red-500" />
                 </Button>
-                {isCourseSelected(course.raw_id) ? 
-                <Button className='rounded-l-none' variant="destructive" size="icon" onClick={() => deleteCourse(course.raw_id)}>
-                    <Minus className="w-4 h-4" />
-                </Button>:
-                <Button className='rounded-l-none' variant="outline" size="icon" onClick={() => addCourse(course.raw_id)}>
-                    <Plus className="w-4 h-4" />
-                </Button>}
+                {isCourseSelected(course.raw_id) ?
+                    <Button className='rounded-l-none' variant="destructive" size="icon" onClick={() => deleteCourse(course.raw_id)}>
+                        <Minus className="w-4 h-4" />
+                    </Button> :
+                    <Button className='rounded-l-none' variant="outline" size="icon" onClick={() => addCourse(course.raw_id)}>
+                        <Plus className="w-4 h-4" />
+                    </Button>}
             </div>
         </div>
     </div>
@@ -115,14 +105,14 @@ const TimetableCourseListItem = ({
 
 export const FavouritesCourseList = ({
 }: {
-}) => {
+    }) => {
     const { language } = useSettings();
     const dict = useDictionary();
     const router = useRouter();
     const [favourites, setFavourites] = useLocalStorage<string[]>('course_favourites', []);
 
     const { data: courses = [], error } = useQuery({
-        queryKey: ['courses', [...favourites].sort()], 
+        queryKey: ['courses', [...favourites].sort()],
         queryFn: async () => {
             const { data = [], error } = await supabase.from('courses').select('*').in('raw_id', [...favourites].sort());
             if (error) throw error;
