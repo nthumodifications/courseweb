@@ -4,6 +4,7 @@ import {
     DialogClose,
     DialogContent,
     DialogDescription,
+    DialogFooter,
     DialogHeader,
     DialogTitle,
     DialogTrigger,
@@ -77,27 +78,12 @@ const ChangePasswordDialog = ({ open, setOpen, children }: PropsWithChildren<{ o
                                 </FormItem>
                             )}
                         />
-                        <Dialog open={open} onOpenChange={setOpen}>
-                            <DialogTrigger asChild>
-                                <Button variant='destructive'>Logout</Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                                <DialogHeader>
-                                    <DialogTitle>確定要登出嗎？</DialogTitle>
-                                    <DialogDescription>登出後將無法使用校務資訊系統相關功能，確定要登出嗎？</DialogDescription>
-                                </DialogHeader>
-                                <DialogClose asChild>
-                                    <Button >Cancel</Button>
-                                </DialogClose>
-                                <DialogClose asChild>
-                                    <Button variant='destructive' onClick={() => {
-                                        signOut()
-                                        setOpen(false)
-                                    }}>Logout</Button>
-                                </DialogClose>
-                            </DialogContent>
-                        </Dialog>
-                        <Button type="submit">{form.formState.isSubmitting ? <Loader2 className="animate-spin" /> : "Submit"}</Button>
+                        <DialogFooter>
+                            <DialogClose>
+                                <Button variant='outline'>Cancel</Button>
+                            </DialogClose>
+                            <Button type="submit" >{form.formState.isSubmitting ? <Loader2 className="animate-spin" /> : "Submit"}</Button>
+                        </DialogFooter>
                     </form>
                 </Form>
             </DialogContent>
