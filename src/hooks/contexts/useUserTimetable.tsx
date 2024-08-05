@@ -86,8 +86,10 @@ const useUserTimetableProvider = (loadCourse = true) => {
         const newColors = timetableColors[theme];
         const newColorMap: { [courseID: string]: string } = {};
 
-        Object.keys(courses).forEach(sem => {
-            (courses[sem] ?? []).forEach((courseID, i) => {
+        const coursesCopy = { ...courses };
+        
+        Object.keys(coursesCopy).forEach(sem => {
+            (coursesCopy[sem] ?? []).forEach((courseID, i) => {
                 newColorMap[courseID] = newColors[i % newColors.length];
             });
         });
