@@ -68,7 +68,7 @@ const useUserTimetableProvider = (loadCourse = true) => {
     const [courses, setCourses] = useSyncedStorage<CourseLocalStorage>("courses", {});
     const [colorMap, setColorMap] = useSyncedStorage<{ [courseID: string]: string }>("course_color_map", {}); //map from courseID to color
     const [timetableTheme, _setTimetableTheme] = useSyncedStorage<string>("timetable_theme", "pastelColors");
-    const [userDefinedColors, setUserDefinedColors] = useLocalStorage<{ [theme_name: string]: string[] }>("user_defined_colors", {});
+    const [userDefinedColors, setUserDefinedColors] = useSyncedStorage<{ [theme_name: string]: string[] }>("user_defined_colors", {});
     const [preferences, setPreferences] = useSyncedStorage<TimetableDisplayPreferences>("timetable_display_preferences", {
         language: 'app',
         align: 'center',
@@ -87,7 +87,7 @@ const useUserTimetableProvider = (loadCourse = true) => {
         const newColorMap: { [courseID: string]: string } = {};
 
         Object.keys(courses).forEach(sem => {
-            courses[sem].forEach((courseID, i) => {
+            (courses[sem] ?? []).forEach((courseID, i) => {
                 newColorMap[courseID] = newColors[i % newColors.length];
             });
         });
@@ -284,7 +284,7 @@ const useUserTimetableProvider = (loadCourse = true) => {
     return {
         getSemesterCourses,
         colorMap,
-        semester,
+        semester,   
         timetableTheme,
         currentColors,
         userDefinedColors,
