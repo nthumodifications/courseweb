@@ -1,7 +1,7 @@
 import {getSubmissionDetails, getCDSTerm} from '@/lib/cds_actions';
 import { getCourse } from "@/lib/course";
-import { Table } from "@mui/joy";
 import DownloadSubmissions from '../../DownloadSubmissions';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const CourseSubmissions = async ({ params: { courseId, term } }: { params: { courseId: string, term: string }}) => {
     const termObj = await getCDSTerm(decodeURI(term));
@@ -14,22 +14,22 @@ const CourseSubmissions = async ({ params: { courseId, term } }: { params: { cou
             <DownloadSubmissions submissions={submissions} filename={`${course?.department} ${course?.course}-${course?.class} ${course?.name_zh}`} />
             <div className="w-full h-full overflow-y-auto">
                 <Table className="w-full">
-                    <thead>
-                        <tr>
-                            <th>學號</th>
-                            <th>姓名</th>
-                            <th>Email</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>學號</TableHead>
+                            <TableHead>姓名</TableHead>
+                            <TableHead>Email</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
                         {submissions.map((submission) => (
-                            <tr key={submission.id}>
-                                <td>{submission.user_id}</td>
-                                <td>{submission.name_zh}</td>
-                                <td>{submission.email}</td>
-                            </tr>
+                            <TableRow key={submission.id}>
+                                <TableCell>{submission.user_id}</TableCell>
+                                <TableCell>{submission.name_zh}</TableCell>
+                                <TableCell>{submission.email}</TableCell>
+                            </TableRow>
                         ))}
-                    </tbody>
+                    </TableBody>
                 </Table>
             </div>
         </div>
