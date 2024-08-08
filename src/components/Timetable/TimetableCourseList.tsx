@@ -2,7 +2,6 @@ import { Search, Trash, AlertTriangle, Copy, GripVertical, Loader2 } from 'lucid
 import { useSettings } from '@/hooks/contexts/settings';
 import useUserTimetable from '@/hooks/contexts/useUserTimetable';
 import { useRouter } from 'next/navigation';
-import CourseSearchbar from './CourseSearchbar';
 import useDictionary from '@/dictionaries/useDictionary';
 import { useMemo } from 'react';
 import { hasConflictingTimeslots, hasSameCourse, hasTimes } from '@/helpers/courses';

@@ -1,6 +1,5 @@
 'use client';;
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { List, ListItem, ListItemButton, ListItemContent } from '@mui/joy';
 import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -49,16 +48,16 @@ const CoursePicker = ({ termObj, courses }: {
             {courses.filter(m => m.semester == semester).map((course) => (
                 <div key={course.raw_id} className='py-2 w-full'>
                     <Link href={`/${lang}/cds/admin/${termObj.term}/${course.raw_id}`} >
-                        <ListItemButton>
-                            <ListItemContent>
+                        <div className='flex flex-row gap-2'>
+                            <div className='flex flex-col gap-2 flex-1'>
                                 <h2 className="text-xl font-bold text-gray-700 dark:text-neutral-200">{course.department} {course.course}-{course.class} {course.name_zh}</h2>
                                 <div className="flex items-center">
                                     <div className="w-4 h-4 rounded-full mr-2" style={{ background: getColor((course.cds_counts as unknown as { count: number }).count, course.capacity || 0) }}></div>
                                     <p className="text-gray-500 dark:text-neutral-500">{(course.cds_counts as unknown as { count: number }).count}/{course.capacity} 人</p>
                                 </div>
-                            </ListItemContent>
+                            </div>
                             <ChevronRight />
-                        </ListItemButton>
+                        </div>
                     </Link>
                 </div>
             ))}

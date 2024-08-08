@@ -2,10 +2,6 @@
 import Timetable from "@/components/Timetable/Timetable";
 import { NextPage } from "next";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
-import { useRouter } from "next/navigation";
-import { useSearchParams } from 'next/navigation'
-import { useModal } from "@/hooks/contexts/useModal";
-import TimetableCourseList from "@/components/Timetable/TimetableCourseList";
 import { useLocalStorage } from "usehooks-ts";
 import SemesterSwitcher from "@/components/Timetable/SemesterSwitcher";
 import { createTimetableFromCourses } from "@/helpers/timetable";
