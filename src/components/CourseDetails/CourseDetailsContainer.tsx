@@ -266,7 +266,7 @@ const CourseDetailContainer = async ({ lang, courseId, bottomAware = false, moda
                             <h3 className="font-semibold text-base">{dict.course.details.compulsory}</h3>
                             <div className="flex flex-row gap-2 flex-wrap">
                                 {course.compulsory_for?.map((m, index) => <Link key={index} href={`/${lang}/courses?nthu_courses%5BrefinementList%5D%5Bcompulsory_for%5D%5B0%5D=${course.compulsory_for}`}>
-                                    <Badge variant="outline">{getFormattedClassCode(m, course.semester)}</Badge>
+                                    <Badge variant="outline">{getFormattedClassCode(m, course.semester, lang)}</Badge>
                                 </Link>)}
                             </div>
                         </div>}
@@ -274,7 +274,7 @@ const CourseDetailContainer = async ({ lang, courseId, bottomAware = false, moda
                             <h3 className="font-semibold text-base">{dict.course.details.elective}</h3>
                             <div className="flex flex-row gap-2 flex-wrap">
                                 {course.elective_for?.map((m, index) => <Link key={index} href={`/${lang}/courses?nthu_courses%5BrefinementList%5D%5Belective_for%5D%5B0%5D=${course.elective_for}`}>
-                                    <Badge variant="outline">{getFormattedClassCode(m, course.semester)}</Badge>
+                                    <Badge variant="outline">{getFormattedClassCode(m, course.semester, lang)}</Badge>
                                 </Link>)}
                             </div>
                         </div>}
