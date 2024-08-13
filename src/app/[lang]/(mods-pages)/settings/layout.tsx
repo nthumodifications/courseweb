@@ -1,10 +1,10 @@
-import { PropsWithChildren } from 'react'
-import Fade from '@/components/Animation/Fade';
+import { PropsWithChildren } from "react";
+import Fade from "@/components/Animation/Fade";
 
 export const metadata = {
-    title: '設定 Settings'
-}
+  title: "設定 Settings",
+};
 
 export default function ClientLayout({ children }: PropsWithChildren<{}>) {
-    return <Fade>{children}</Fade>
+  return <Fade>{children}</Fade>;
 }

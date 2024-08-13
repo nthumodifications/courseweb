@@ -1,3 +1,3 @@
-const BlankLoading = () => (<></>)
+const BlankLoading = () => <></>;
 
-export default BlankLoading
+export default BlankLoading;

@@ -1,256 +1,256 @@
 {
-    "today": {
-        "noclass": "No Classes Today",
-        "noclass_sub": "Enjoy your day off!"
+  "today": {
+    "noclass": "No Classes Today",
+    "noclass_sub": "Enjoy your day off!"
+  },
+  "timetable": {
+    "actions": {
+      "download": "Download",
+      "share": "Share/Sync",
+      "horizontal_view": "Horizontal View",
+      "vertical_view": "Vertical View",
+      "sync_ccxp": "Sync from CCXP"
+    }
+  },
+  "course": {
+    "credits": "Credits",
+    "list": {
+      "courses": "Courses",
+      "found": "Found",
+      "search_placeholder": "Search for your course..."
     },
-    "timetable":{
-        "actions": {
-            "download": "Download",
-            "share": "Share/Sync",
-            "horizontal_view": "Horizontal View",
-            "vertical_view": "Vertical View",
-            "sync_ccxp": "Sync from CCXP"
-        }
+    "item": {
+      "add_to_semester": "Add to this Semester",
+      "remove_from_semester": "Remove from this Semester"
     },
-    "course": {
-        "credits": "Credits",
-        "list": {
-            "courses": "Courses",
-            "found": "Found",
-            "search_placeholder": "Search for your course..."
-        },
-        "item": {
-            "add_to_semester": "Add to this Semester",
-            "remove_from_semester": "Remove from this Semester"
-        },
-        "timetable": {
-            "title": "Timetable"
-        },
-        "refine": {
-            "title": "Refine",
-            "semester": "Semester",
-            "level": "Level",
-            "language": "Instruction Language",
-            "department": "Departments",
-            "specialization": "Specialization",
-            "firstSpecialization": "First Specialization",
-            "secondSpecialization": "Second Specialization",
-            "compulsory_elective": "Compulsory & Elective",
-            "class": "Class",
-            "venues": "Venues",
-            "time": "Time",
-            "cross_discipline": "Cross Discipline",
-            "geTarget": "GE Target",
-            "gecDimensions": "GEC Dimensions",
-            "extra_selection": "Allows Extra Selection",
-            "x-class": "X-Class",
-            "16_weeks": "16 Weeks",
-            "others": "Others",
-            "clear": "Clear all",
-            "special_tags": "Special tags",
-            "ge_filters": "GE Filters",
-            "timetable_empty": "Find empty",
-            "advanced_filters": "Advanced filters",
-            "search_results": "Search results"
-        },
-        "details": {
-            "semester": "Semester",
-            "language": "Instruction Language",
-            "reserved": "Reserved",
-            "capacity": "Capacity",
-            "venue_time": "Venue & Time",
-            "class": "Class",
-            "brief": "Brief",
-            "remarks": "Remarks",
-            "description": "Description",
-            "restrictions": "Restrictions",
-            "prerequesites": "Prerequisites",
-            "timetable": "Timetable",
-            "course_list": "Course List",
-            "scores": "Scores",
-            "average": "Average",
-            "standard_deviation": "Std. Deviation",
-            "score_types": {
-                "gpa": "GPA",
-                "percent": "Percentage"
-            },
-            "ptt": "PTT Reviews",
-            "related_courses": "Related Courses",
-            "compulsory": "Compulsory",
-            "elective": "Elective",
-            "cross_discipline": "Cross Discipline",
-            "first_specialization": "First Specialization",
-            "second_specialization": "Second Specialization",
-            "ptt_title": "PTT Reviews",
-            "ptt_disclaimer": "PTT reviews are from the NTHU_Course board and are not moderated by NTHUMods. The reviews do not represent the views of NTHUMods. If you find any inappropriate content, please report to the board itself."
-        }
+    "timetable": {
+      "title": "Timetable"
     },
-    "navigation": {
-        "today": "Today",
-        "courses": "Courses",
-        "timetable": "Timetable",
-        "settings": "Settings",
-        "venues": "Venues",
-        "bus": "Bus"
+    "refine": {
+      "title": "Refine",
+      "semester": "Semester",
+      "level": "Level",
+      "language": "Instruction Language",
+      "department": "Departments",
+      "specialization": "Specialization",
+      "firstSpecialization": "First Specialization",
+      "secondSpecialization": "Second Specialization",
+      "compulsory_elective": "Compulsory & Elective",
+      "class": "Class",
+      "venues": "Venues",
+      "time": "Time",
+      "cross_discipline": "Cross Discipline",
+      "geTarget": "GE Target",
+      "gecDimensions": "GEC Dimensions",
+      "extra_selection": "Allows Extra Selection",
+      "x-class": "X-Class",
+      "16_weeks": "16 Weeks",
+      "others": "Others",
+      "clear": "Clear all",
+      "special_tags": "Special tags",
+      "ge_filters": "GE Filters",
+      "timetable_empty": "Find empty",
+      "advanced_filters": "Advanced filters",
+      "search_results": "Search results"
+    },
+    "details": {
+      "semester": "Semester",
+      "language": "Instruction Language",
+      "reserved": "Reserved",
+      "capacity": "Capacity",
+      "venue_time": "Venue & Time",
+      "class": "Class",
+      "brief": "Brief",
+      "remarks": "Remarks",
+      "description": "Description",
+      "restrictions": "Restrictions",
+      "prerequesites": "Prerequisites",
+      "timetable": "Timetable",
+      "course_list": "Course List",
+      "scores": "Scores",
+      "average": "Average",
+      "standard_deviation": "Std. Deviation",
+      "score_types": {
+        "gpa": "GPA",
+        "percent": "Percentage"
+      },
+      "ptt": "PTT Reviews",
+      "related_courses": "Related Courses",
+      "compulsory": "Compulsory",
+      "elective": "Elective",
+      "cross_discipline": "Cross Discipline",
+      "first_specialization": "First Specialization",
+      "second_specialization": "Second Specialization",
+      "ptt_title": "PTT Reviews",
+      "ptt_disclaimer": "PTT reviews are from the NTHU_Course board and are not moderated by NTHUMods. The reviews do not represent the views of NTHUMods. If you find any inappropriate content, please report to the board itself."
+    }
+  },
+  "navigation": {
+    "today": "Today",
+    "courses": "Courses",
+    "timetable": "Timetable",
+    "settings": "Settings",
+    "venues": "Venues",
+    "bus": "Bus"
+  },
+  "bus": {
+    "north_gate": "North Gate",
+    "tsmc": "TSMC",
+    "nanda": "Nanda Campus",
+    "main_campus": "Main Campus",
+    "service_over": "Service Over",
+    "red_line": "Red Line",
+    "green_line": "Green Line",
+    "nanda_line": "Nanda Line",
+    "departing": "Departing",
+    "departed": "Departed",
+    "validity": "Validity",
+    "route": "Route",
+    "departure_time": "Departure Time",
+    "notes": "Notes",
+    "weekdays": "Weekdays",
+    "weekends": "Weekends",
+    "to": "To "
+  },
+  "settings": {
+    "account": {
+      "signin": "Sign In",
+      "signout": "Sign Out",
+      "title": "Account",
+      "description": "NTHU AIS Login",
+      "ccxp": {
+        "title": "Proxy Login into your NTHU AIS Account",
+        "description": "Access more features by connecting with NTHU AIS securely."
+      }
+    },
+    "display": {
+      "title": "Display",
+      "description": "Appearance, Language",
+      "dark_mode": {
+        "title": "Dark Mode"
+      },
+      "language": {
+        "title": "Language"
+      }
+    },
+    "timetable": {
+      "title": "Timetable",
+      "description": "Theme, Preview",
+      "vertical_preview": "Vertical Preview",
+      "language": "Language",
+      "align": {
+        "title": "Align",
+        "left": "Left",
+        "center": "Center",
+        "right": "Right"
+      },
+      "display": "Display",
+      "slot_title": "Title",
+      "slot_code": "Code",
+      "slot_time": "Time",
+      "slot_venue": "Venue"
+    },
+    "privacy": {
+      "title": "Privacy",
+      "description": "Analytics",
+      "analytics": {
+        "title": "Analytics",
+        "description": "Send anonymous usage info to Google Analytics"
+      }
+    }
+  },
+  "venues": {
+    "placeholder": "Select a Venue from the list"
+  },
+  "alerts": {
+    "TimetableCourseList": {
+      "action": "Go Settings",
+      "text": "You can change your theme in the settings page!"
+    }
+  },
+  "applist": {
+    "title": "Apps"
+  },
+  "dialogs": {
+    "DownloadTimetableDialog": {
+      "title": "Download Your Timetable",
+      "description": "You can download the calendar file (.ics) and import it to your calendar app, or download the image!",
+      "buttons": {
+        "image": "Image",
+        "ICS": "Calendar .ics"
+      }
+    },
+    "ShareSyncTimetableDialog": {
+      "title": "Share & Sync Your Timetable",
+      "description": "Send this link to your friends to share your timetable or to yourself to keep your timetable synced on all devices.",
+      "category:qr": "QR Code",
+      "category:links": "Links",
+      "links": {
+        "email": "Send Email"
+      }
+    }
+  },
+  "shops": {
+    "search_placeholder": "Search for shops",
+    "search_results_prefix": "Search results for",
+    "open_now": "Open Now",
+    "closed": "Closed",
+    "closed_today": "Closed Today",
+    "area_placeholder": "Select area",
+    "area_all": "Anywhere"
+  },
+  "help": {
+    "intro": {
+      "title": "Welcome to NTHUMODS",
+      "description": "NTHUMODS might just be your ultimate companion for academic success at National Tsing Hua University! Here's a quick guide to get you started."
+    },
+    "courses": {
+      "title": "Explore Courses",
+      "description": "Discover a wide range of courses tailored to your academic journey. From core subjects to electives, NTHUMODS has you covered. Dive in and find the perfect fit for your schedule."
+    },
+    "dashboard": {
+      "title": "Personalized Dashboard",
+      "description": "Your personalized dashboard awaits! Track your courses, assignments (coming soon), and exams (coming soon) all in one place. Stay organized, stay on top."
     },
     "bus": {
-        "north_gate": "North Gate",
-        "tsmc": "TSMC",
-        "nanda": "Nanda Campus",
-        "main_campus": "Main Campus",
-        "service_over": "Service Over",
-        "red_line": "Red Line",
-        "green_line": "Green Line",
-        "nanda_line": "Nanda Line",
-        "departing": "Departing",
-        "departed": "Departed",
-        "validity": "Validity",
-        "route": "Route",
-        "departure_time": "Departure Time",
-        "notes": "Notes",
-        "weekdays": "Weekdays",
-        "weekends": "Weekends",
-        "to": "To "
+      "title": "Bus Schedules",
+      "description": "Navigating NTHU's campus is a breeze with access to bus routes, timings, and stops to plan your daily commute efficiently. No more waiting in uncertainty."
     },
-    "settings": {
-        "account": {
-            "signin": "Sign In",
-            "signout": "Sign Out",
-            "title": "Account",
-            "description": "NTHU AIS Login",
-            "ccxp": {
-                "title": "Proxy Login into your NTHU AIS Account",
-                "description": "Access more features by connecting with NTHU AIS securely."
-            }
-        },
-        "display": {
-            "title": "Display",
-            "description": "Appearance, Language",
-            "dark_mode": {
-                "title": "Dark Mode"
-            },
-            "language": {
-                "title": "Language"
-            }
-        },
-        "timetable": {
-            "title": "Timetable",
-            "description": "Theme, Preview",
-            "vertical_preview": "Vertical Preview",
-            "language": "Language",
-            "align": {
-                "title": "Align",
-                "left": "Left",
-                "center": "Center",
-                "right": "Right"
-            },
-            "display": "Display",
-            "slot_title": "Title",
-            "slot_code": "Code",
-            "slot_time": "Time",
-            "slot_venue": "Venue"
-        },
-        "privacy": {
-            "title": "Privacy",
-            "description": "Analytics",
-            "analytics": {
-                "title": "Analytics",
-                "description": "Send anonymous usage info to Google Analytics"
-            }
-        }
+    "tools": {
+      "title": "Need more features?",
+      "description": "Link your NTHU account to NTHUMODS and open the door to a treasure trove of additional tools. Seamlessly integrate your academic life by accessing exclusive features tailored to NTHU students.",
+      "connect": "Connect now"
     },
-    "venues": {
-        "placeholder": "Select a Venue from the list"
+    "dev": {
+      "title": "Growing together",
+      "description": "We're committed to continuous improvement to offer you the best possible experience. Please note that the app is still in development, and while we strive for perfection, there may be occasional hiccups along the way. We value your input extremely, share your ideas, feedback, and features you'd love to see.",
+      "feedback": "Give feedback"
     },
-    "alerts": {
-        "TimetableCourseList": {
-            "action": "Go Settings",
-            "text": "You can change your theme in the settings page!"
-        }
+    "prev": "Prev",
+    "next": "Next",
+    "skip": "Skip",
+    "jump": "Jump in"
+  },
+  "ccxp": {
+    "connected": "Connected",
+    "failed": "Failed",
+    "connect": "Connect",
+    "incorrect_credentials": "Incorrect Student ID or Password",
+    "studentid": "Student ID",
+    "password": "Password",
+    "fill_in_ccxp_credentials": "Login with NTHU AIS Account",
+    "login": {
+      "title": "Proxy Login With NTHU AIS Account",
+      "disclaimer": "Note: Your credentials will only be stored on your device, and will only be transmitted to the server for authentication.",
+      "description": "For every action that requires authenticated data from NTHU AIS, the website will send your credentials to the server for authentication by our web scrapers. The tranmission is protected by HTTPS encryption, and your credentials is never stored on our servers.",
+      "agree": "I've read the privacy policy, and understand the terms of proxy login."
     },
-    "applist": {
-        "title": "Apps"
-    },
-    "dialogs": {
-        "DownloadTimetableDialog": {
-            "title": "Download Your Timetable",
-            "description": "You can download the calendar file (.ics) and import it to your calendar app, or download the image!",
-            "buttons": {
-                "image": "Image",
-                "ICS": "Calendar .ics"
-            }
-        },
-        "ShareSyncTimetableDialog": {
-            "title": "Share & Sync Your Timetable",
-            "description": "Send this link to your friends to share your timetable or to yourself to keep your timetable synced on all devices.",
-            "category:qr": "QR Code",
-            "category:links": "Links",
-            "links": {
-                "email": "Send Email"
-            }
-        }
-    },
-    "shops": {
-        "search_placeholder": "Search for shops",
-        "search_results_prefix": "Search results for",
-        "open_now": "Open Now",
-        "closed": "Closed",
-        "closed_today": "Closed Today",
-        "area_placeholder": "Select area",
-        "area_all": "Anywhere"
-    },
-    "help": {
-        "intro": {
-            "title": "Welcome to NTHUMODS",
-            "description": "NTHUMODS might just be your ultimate companion for academic success at National Tsing Hua University! Here's a quick guide to get you started."
-        },
-        "courses": {
-            "title": "Explore Courses",
-            "description": "Discover a wide range of courses tailored to your academic journey. From core subjects to electives, NTHUMODS has you covered. Dive in and find the perfect fit for your schedule."
-        },
-        "dashboard": {
-            "title": "Personalized Dashboard",
-            "description": "Your personalized dashboard awaits! Track your courses, assignments (coming soon), and exams (coming soon) all in one place. Stay organized, stay on top."
-        },
-        "bus": {
-            "title": "Bus Schedules",
-            "description": "Navigating NTHU's campus is a breeze with access to bus routes, timings, and stops to plan your daily commute efficiently. No more waiting in uncertainty."
-        },
-        "tools": {
-            "title": "Need more features?",
-            "description": "Link your NTHU account to NTHUMODS and open the door to a treasure trove of additional tools. Seamlessly integrate your academic life by accessing exclusive features tailored to NTHU students.",
-            "connect": "Connect now"
-        },
-        "dev": {
-            "title": "Growing together",
-            "description": "We're committed to continuous improvement to offer you the best possible experience. Please note that the app is still in development, and while we strive for perfection, there may be occasional hiccups along the way. We value your input extremely, share your ideas, feedback, and features you'd love to see.",
-            "feedback": "Give feedback"
-        },
-        "prev": "Prev",
-        "next": "Next",
-        "skip": "Skip",
-        "jump": "Jump in"
-    },
-    "ccxp": {
-        "connected": "Connected",
-        "failed": "Failed",
-        "connect": "Connect",
-        "incorrect_credentials": "Incorrect Student ID or Password",
-        "studentid": "Student ID",
-        "password": "Password",
-        "fill_in_ccxp_credentials": "Login with NTHU AIS Account",
-        "login": {
-            "title": "Proxy Login With NTHU AIS Account",
-            "disclaimer": "Note: Your credentials will only be stored on your device, and will only be transmitted to the server for authentication.",
-            "description": "For every action that requires authenticated data from NTHU AIS, the website will send your credentials to the server for authentication by our web scrapers. The tranmission is protected by HTTPS encryption, and your credentials is never stored on our servers.",
-            "agree": "I've read the privacy policy, and understand the terms of proxy login."
-        },
-        "errors": {
-            "IncorrectCredentials": "Incorrect Login Credentials",
-            "CaptchaError": "CAPTCHA Decoding went wrong, Please retry in 15 minutes.",
-            "UnknownError": "Something went wrong, please try checking on the NTHU AIS website."
-        }
-    },
-    "cancel": "Cancel",
-    "privacy_policy": "Privacy Policy"
+    "errors": {
+      "IncorrectCredentials": "Incorrect Login Credentials",
+      "CaptchaError": "CAPTCHA Decoding went wrong, Please retry in 15 minutes.",
+      "UnknownError": "Something went wrong, please try checking on the NTHU AIS website."
+    }
+  },
+  "cancel": "Cancel",
+  "privacy_policy": "Privacy Policy"
 }

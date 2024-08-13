@@ -1,26 +1,24 @@
+const withPWA = require("@ducanh2912/next-pwa").default({
+  dest: "public",
+  disable: process.env.NODE_ENV === "development",
+  cacheStartUrl: true,
+  cacheOnFrontEndNav: true,
+  aggressiveFrontEndNavCaching: true,
+  reloadOnOnline: true,
+  swcMinify: true,
+  dynamicStartUrlRedirect: "/zh/today",
+  workboxOptions: {
+    disableDevLogs: true,
+  },
+  fallbacks: {
+    document: "/zh/offline",
+  },
+});
 
-const withPWA = require('@ducanh2912/next-pwa').default({
-    dest: 'public',
-    disable: process.env.NODE_ENV === 'development',
-    cacheStartUrl: true,
-    cacheOnFrontEndNav: true,
-    aggressiveFrontEndNavCaching: true,
-    reloadOnOnline: true,
-    swcMinify: true,  
-    dynamicStartUrlRedirect: '/zh/today',
-    workboxOptions: {
-      disableDevLogs: true,
-    },
-    fallbacks: {
-      document: '/zh/offline',
-    }
-})
-
-const withBundleAnalyzer = require('@next/bundle-analyzer')({
+const withBundleAnalyzer = require("@next/bundle-analyzer")({
   enabled: false,
-})
+});
 
-  
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   webpack: (config, { webpack, isServer }) => {
@@ -31,13 +29,13 @@ const nextConfig = {
         __RRWEB_EXCLUDE_IFRAME__: true,
         __RRWEB_EXCLUDE_SHADOW_DOM__: true,
         __SENTRY_EXCLUDE_REPLAY_WORKER__: true,
-      })
+      }),
     );
 
     // return the modified config
     return config;
   },
-}
+};
 
 const { withSentryConfig } = require("@sentry/nextjs");
 
@@ -70,7 +68,7 @@ const sentryConfig = withSentryConfig(
 
     // Automatically tree-shake Sentry logger statements to reduce bundle size
     disableLogger: true,
-  }
+  },
 );
 
-module.exports = withBundleAnalyzer(sentryConfig)
+module.exports = withBundleAnalyzer(sentryConfig);

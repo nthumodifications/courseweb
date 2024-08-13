@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-    - main
+      - main
 jobs:
   check_todo:
     name: check for TODO and create issues

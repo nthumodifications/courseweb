@@ -34,27 +34,25 @@ html {
 }
 
 body {
-  padding: env(safe-area-inset-top)
-          env(safe-area-inset-right) 
-          env(safe-area-inset-bottom) 
-          env(safe-area-inset-left);
-  @apply overflow-x-hidden
+  padding: env(safe-area-inset-top) env(safe-area-inset-right)
+    env(safe-area-inset-bottom) env(safe-area-inset-left);
+  @apply overflow-x-hidden;
 }
 
 @layer utilities {
-    @variants responsive {
-      /* Hide scrollbar for Chrome, Safari and Opera */
-      .no-scrollbar::-webkit-scrollbar {
-          display: none;
-      }
+  @variants responsive {
+    /* Hide scrollbar for Chrome, Safari and Opera */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
 
-      /* Hide scrollbar for IE, Edge and Firefox */
-      .no-scrollbar {
-          -ms-overflow-style: none;  /* IE and Edge */
-          scrollbar-width: none;  /* Firefox */
-      }
+    /* Hide scrollbar for IE, Edge and Firefox */
+    .no-scrollbar {
+      -ms-overflow-style: none; /* IE and Edge */
+      scrollbar-width: none; /* Firefox */
     }
   }
+}
 
 @layer base {
   :root {
@@ -80,11 +78,14 @@ body {
     --radius: 0.5rem;
     --header-height: 3.5rem;
     --bottom-nav-height: 5rem;
-    --content-height: calc(calc(calc(100dvh - env(safe-area-inset-top)) - var(--header-height)) - var(--bottom-nav-height));
+    --content-height: calc(
+      calc(calc(100dvh - env(safe-area-inset-top)) - var(--header-height)) -
+        var(--bottom-nav-height)
+    );
   }
 
   .dark {
-    --background: 0 0% 9%; 
+    --background: 0 0% 9%;
     --foreground: 0 0% 98%;
     --card: 240 10% 3.9%;
     --card-foreground: 0 0% 98%;
@@ -104,18 +105,21 @@ body {
     --input: 240 3.7% 15.9%;
     --ring: 240 4.9% 83.9%;
   }
-} 
+}
 @layer base {
   * {
     @apply border-border;
   }
-  html, body {
+  html,
+  body {
     @apply bg-background text-foreground;
   }
 }
 
 @screen md {
   :root {
-    --content-height: calc(calc(100vh - env(safe-area-inset-top, 0px)) - var(--header-height));
+    --content-height: calc(
+      calc(100vh - env(safe-area-inset-top, 0px)) - var(--header-height)
+    );
   }
 }
