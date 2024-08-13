@@ -116,11 +116,11 @@ async function streamAndMatch(response: Response, regex: RegExp) {
 
 type SignInToCCXPResponse = Promise<
   | {
-    ACIXSTORE: string;
-    encryptedPassword: string;
-    passwordExpired: boolean;
-    accessToken: string;
-  }
+      ACIXSTORE: string;
+      encryptedPassword: string;
+      passwordExpired: boolean;
+      accessToken: string;
+    }
   | { error: { message: string } }
 >;
 /**
@@ -142,152 +142,152 @@ export const signInToCCXP = async (
     ) => Promise<{ ACIXSTORE: string; passwordExpired: boolean }> = async (
       _try = 0,
     ) => {
-        if (_try == 3) {
-          throw new Error(LoginError.Unknown);
-        }
-        let tries = 0,
-          pwdstr = "",
-          answer = "";
-        do {
-          tries++;
-          try {
-            console.log("Fetching login page");
-            const res = await fetchWithTimeout(
-              "https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/",
-              {
-                timeout: 3000,
-                headers: {
-                  accept:
-                    "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-                  "accept-language": "en-US,en;q=0.9",
-                  "cache-control": "max-age=0",
-                  "sec-ch-ua":
-                    '"Not/A)Brand";v="8", "Chromium";v="126", "Microsoft Edge";v="126"',
-                  "sec-ch-ua-mobile": "?0",
-                  "sec-ch-ua-platform": '"Windows"',
-                  "sec-fetch-dest": "document",
-                  "sec-fetch-mode": "navigate",
-                  "sec-fetch-site": "none",
-                  "sec-fetch-user": "?1",
-                  "upgrade-insecure-requests": "1",
-                },
-                keepalive: true,
-                body: null,
-                method: "GET",
-                mode: "cors",
-                credentials: "include",
+      if (_try == 3) {
+        throw new Error(LoginError.Unknown);
+      }
+      let tries = 0,
+        pwdstr = "",
+        answer = "";
+      do {
+        tries++;
+        try {
+          console.log("Fetching login page");
+          const res = await fetchWithTimeout(
+            "https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/",
+            {
+              timeout: 3000,
+              headers: {
+                accept:
+                  "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+                "accept-language": "en-US,en;q=0.9",
+                "cache-control": "max-age=0",
+                "sec-ch-ua":
+                  '"Not/A)Brand";v="8", "Chromium";v="126", "Microsoft Edge";v="126"',
+                "sec-ch-ua-mobile": "?0",
+                "sec-ch-ua-platform": '"Windows"',
+                "sec-fetch-dest": "document",
+                "sec-fetch-mode": "navigate",
+                "sec-fetch-site": "none",
+                "sec-fetch-user": "?1",
+                "upgrade-insecure-requests": "1",
               },
-            );
-            pwdstr = await streamAndMatch(
-              res,
-              /auth_img\.php\?pwdstr=([a-zA-Z0-9_-]+)/,
-            );
-            console.log("Time taken", Date.now() - startTime);
-            startTime = Date.now();
-
-            //fetch the image from the url and send as base64
-            console.log("pwdstr: ", pwdstr);
-            console.log("Fetching CAPTCHA");
-            answer = await fetch(
-              `https://ocr.nthumods.com/?url=https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/auth_img.php?pwdstr=${pwdstr}`,
-            ).then((res) => res.text());
-            console.log("Time taken", Date.now() - startTime);
-            startTime = Date.now();
-            if (answer.length == 6) break;
-          } catch (err) {
-            console.error("fetch login err", err);
-            // throw new Error(LoginError.Unknown);
-            continue;
-          }
-        } while (tries <= 5);
-        if (tries == 6 || answer.length != 6) {
-          throw new Error("Internal Server Error");
-        }
-        console.log("Attempt Login");
-        const response = await fetchWithTimeout(
-          "https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/pre_select_entry.php",
-          {
-            timeout: 3000,
-            headers: {
-              accept:
-                "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-              "accept-language": "en-US,en;q=0.9",
-              "cache-control": "max-age=0",
-              "content-type": "application/x-www-form-urlencoded",
-              "sec-ch-ua":
-                '"Chromium";v="110", "Not A(Brand";v="24", "Microsoft Edge";v="110"',
-              "sec-ch-ua-mobile": "?0",
-              "sec-ch-ua-platform": '"Windows"',
-              "sec-fetch-dest": "document",
-              "sec-fetch-mode": "navigate",
-              "sec-fetch-site": "same-origin",
-              "upgrade-insecure-requests": "1",
+              keepalive: true,
+              body: null,
+              method: "GET",
+              mode: "cors",
+              credentials: "include",
             },
-            keepalive: true,
-            body: `account=${studentid}&passwd=${password}&passwd2=${answer}&Submit=%B5n%A4J&fnstr=${pwdstr}`,
-            method: "POST",
+          );
+          pwdstr = await streamAndMatch(
+            res,
+            /auth_img\.php\?pwdstr=([a-zA-Z0-9_-]+)/,
+          );
+          console.log("Time taken", Date.now() - startTime);
+          startTime = Date.now();
+
+          //fetch the image from the url and send as base64
+          console.log("pwdstr: ", pwdstr);
+          console.log("Fetching CAPTCHA");
+          answer = await fetch(
+            `https://ocr.nthumods.com/?url=https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/auth_img.php?pwdstr=${pwdstr}`,
+          ).then((res) => res.text());
+          console.log("Time taken", Date.now() - startTime);
+          startTime = Date.now();
+          if (answer.length == 6) break;
+        } catch (err) {
+          console.error("fetch login err", err);
+          // throw new Error(LoginError.Unknown);
+          continue;
+        }
+      } while (tries <= 5);
+      if (tries == 6 || answer.length != 6) {
+        throw new Error("Internal Server Error");
+      }
+      console.log("Attempt Login");
+      const response = await fetchWithTimeout(
+        "https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/pre_select_entry.php",
+        {
+          timeout: 3000,
+          headers: {
+            accept:
+              "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+            "accept-language": "en-US,en;q=0.9",
+            "cache-control": "max-age=0",
+            "content-type": "application/x-www-form-urlencoded",
+            "sec-ch-ua":
+              '"Chromium";v="110", "Not A(Brand";v="24", "Microsoft Edge";v="110"',
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": '"Windows"',
+            "sec-fetch-dest": "document",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-site": "same-origin",
+            "upgrade-insecure-requests": "1",
           },
-        );
-        const resHTML = await response.arrayBuffer().then((buffer) => {
+          keepalive: true,
+          body: `account=${encodeURIComponent(studentid)}&passwd=${encodeURIComponent(password)}&passwd2=${answer}&Submit=%B5n%A4J&fnstr=${pwdstr}`,
+          method: "POST",
+        },
+      );
+      const resHTML = await response.arrayBuffer().then((buffer) => {
+        const decoder = new TextDecoder("big5");
+        const text = decoder.decode(buffer);
+        return text;
+      });
+      const redirectMatch = resHTML.match(
+        /url=(select_entry\.php\?ACIXSTORE=[a-zA-Z0-9_-]+&hint=[0-9]+)/,
+      );
+      //Check if login credentials are correct
+      const newHTML = await fetch(
+        "https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/" + redirectMatch?.[1],
+        {
+          headers: {
+            accept:
+              "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+            "accept-language": "en-US,en;q=0.9",
+            "sec-ch-ua":
+              '"Not_A Brand";v="8", "Chromium";v="120", "Microsoft Edge";v="120"',
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": '"Windows"',
+            "sec-fetch-dest": "document",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-site": "same-origin",
+            "upgrade-insecure-requests": "1",
+          },
+          keepalive: true,
+          body: null,
+          method: "GET",
+          mode: "cors",
+          credentials: "include",
+        },
+      )
+        .then((response) => response.arrayBuffer())
+        .then((buffer) => {
           const decoder = new TextDecoder("big5");
           const text = decoder.decode(buffer);
           return text;
         });
-        const redirectMatch = resHTML.match(
-          /url=(select_entry\.php\?ACIXSTORE=[a-zA-Z0-9_-]+&hint=[0-9]+)/,
-        );
-        //Check if login credentials are correct
-        const newHTML = await fetch(
-          "https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/" + redirectMatch?.[1],
-          {
-            headers: {
-              accept:
-                "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-              "accept-language": "en-US,en;q=0.9",
-              "sec-ch-ua":
-                '"Not_A Brand";v="8", "Chromium";v="120", "Microsoft Edge";v="120"',
-              "sec-ch-ua-mobile": "?0",
-              "sec-ch-ua-platform": '"Windows"',
-              "sec-fetch-dest": "document",
-              "sec-fetch-mode": "navigate",
-              "sec-fetch-site": "same-origin",
-              "upgrade-insecure-requests": "1",
-            },
-            keepalive: true,
-            body: null,
-            method: "GET",
-            mode: "cors",
-            credentials: "include",
-          },
-        )
-          .then((response) => response.arrayBuffer())
-          .then((buffer) => {
-            const decoder = new TextDecoder("big5");
-            const text = decoder.decode(buffer);
-            return text;
-          });
-        console.log("Time taken", Date.now() - startTime);
-        startTime = Date.now();
+      console.log("Time taken", Date.now() - startTime);
+      startTime = Date.now();
 
-        const passwordExpired = !!newHTML.match("個人密碼修改");
-        if (resHTML.match("驗證碼輸入錯誤!")) {
+      const passwordExpired = !!newHTML.match("個人密碼修改");
+      if (resHTML.match("驗證碼輸入錯誤!")) {
+        return await ocrAndLogin(_try++);
+      } else if (resHTML.match("15分鐘內登錄錯誤")) {
+        throw new Error(LoginError.CaptchaError);
+      }
+      //CAPTCHA IS CORRECT: check if select_entry.php is correct  (if not, then login credentials are wrong)
+      else if (newHTML.match("帳號或密碼錯誤")) {
+        throw new Error(LoginError.IncorrectCredentials);
+      } else if (resHTML.match(/ACIXSTORE=([a-zA-Z0-9_-]+)/)?.length == 0) {
+        return await ocrAndLogin(_try++);
+      } else {
+        const ACIXSTORE = resHTML.match(/ACIXSTORE=([a-zA-Z0-9_-]+)/)?.[1];
+        if (!ACIXSTORE) {
           return await ocrAndLogin(_try++);
-        } else if (resHTML.match("15分鐘內登錄錯誤")) {
-          throw new Error(LoginError.CaptchaError);
         }
-        //CAPTCHA IS CORRECT: check if select_entry.php is correct  (if not, then login credentials are wrong)
-        else if (newHTML.match("帳號或密碼錯誤")) {
-          throw new Error(LoginError.IncorrectCredentials);
-        } else if (resHTML.match(/ACIXSTORE=([a-zA-Z0-9_-]+)/)?.length == 0) {
-          return await ocrAndLogin(_try++);
-        } else {
-          const ACIXSTORE = resHTML.match(/ACIXSTORE=([a-zA-Z0-9_-]+)/)?.[1];
-          if (!ACIXSTORE) {
-            return await ocrAndLogin(_try++);
-          }
-          return { ACIXSTORE, passwordExpired };
-        }
-      };
+        return { ACIXSTORE, passwordExpired };
+      }
+    };
     const result = await ocrAndLogin();
 
     console.log("Fetching user details");
@@ -387,12 +387,12 @@ export const refreshUserSession = async (
   if ("error" in res && res.error) {
     console.error(res.error);
     return { error: res.error };
-  }
-  else if (!("error" in res)) return {
-    ACIXSTORE: res.ACIXSTORE,
-    passwordExpired: res.passwordExpired,
-    accessToken: res.accessToken,
-  };
+  } else if (!("error" in res))
+    return {
+      ACIXSTORE: res.ACIXSTORE,
+      passwordExpired: res.passwordExpired,
+      accessToken: res.accessToken,
+    };
   return { error: { message: "Unknown error" } };
 };
 
@@ -420,10 +420,7 @@ export const updateUserPassword = async (
       "sec-fetch-user": "?1",
       "upgrade-insecure-requests": "1",
     },
-    referrer:
-      "https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/PC/1/1.1/PC11001.php?ACIXSTORE=c3d1ipem8trmvk6gpq5mrv9490",
-    referrerPolicy: "strict-origin-when-cross-origin",
-    body: `ACIXSTORE=${ACIXSTORE}&O_PASS=${oldPassword}&N_PASS=${newPassword}&N_PASS2=${newPassword}&choice=確定`,
+    body: `ACIXSTORE=${ACIXSTORE}&O_PASS=${encodeURIComponent(oldPassword)}&N_PASS=${encodeURIComponent(newPassword)}&N_PASS2=${encodeURIComponent(newPassword)}&choice=確定`,
     method: "POST",
     mode: "cors",
     credentials: "include",
