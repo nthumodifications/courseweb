@@ -221,25 +221,6 @@ const BusDetailsContainer = ({
 
   // scroll time selector to the closest time
   const timeSelectorRef = useRef<HTMLDivElement>(null);
-  const scrollTimeSelector = (date: Date) => {
-    const closestHour = hoursDate.reduce((prev, curr) =>
-      Math.abs(curr.getTime() - date.getTime()) <
-      Math.abs(prev.getTime() - date.getTime())
-        ? curr
-        : prev,
-    );
-    const closestHourIndex = hoursDate.indexOf(closestHour);
-    const closestHourElement = timeSelectorRef.current?.children[0].children[
-      closestHourIndex
-    ] as HTMLElement;
-    if (closestHourElement) {
-      closestHourElement.scrollIntoView({
-        behavior: "auto",
-        block: "center",
-        inline: "center",
-      });
-    }
-  };
 
   const handleTimeSelected = (hd: Date) => {
     setSelectedHour(hd);
@@ -247,8 +228,27 @@ const BusDetailsContainer = ({
   };
 
   useEffect(() => {
+    const scrollTimeSelector = (date: Date) => {
+      const closestHour = hoursDate.reduce((prev, curr) =>
+        Math.abs(curr.getTime() - date.getTime()) <
+        Math.abs(prev.getTime() - date.getTime())
+          ? curr
+          : prev,
+      );
+      const closestHourIndex = hoursDate.indexOf(closestHour);
+      const closestHourElement = timeSelectorRef.current?.children[0].children[
+        closestHourIndex
+      ] as HTMLElement;
+      if (closestHourElement) {
+        closestHourElement.scrollIntoView({
+          behavior: "auto",
+          block: "center",
+          inline: "center",
+        });
+      }
+    };
     scrollTimeSelector(selectedHour);
-  }, [selectedHour, scrollTimeSelector]);
+  }, [selectedHour]);
 
   //when weektab changes, check if is weekend, if so, set the selected hour to the first bus of the weekend
   useEffect(() => {

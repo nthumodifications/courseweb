@@ -62,7 +62,7 @@ const BottomNav: FC = () => {
     links.forEach((link) => {
       router.prefetch(link.href);
     });
-  }, [links]);
+  }, [links, router]);
 
   return (
     <div className="fixed w-full bottom-0 md:hidden flex-col h-[5rem] bg-background z-50 flex">
