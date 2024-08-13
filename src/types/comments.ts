@@ -1,6 +1,5 @@
-
 export enum CommentState {
-    Disabled = 'disabled',
-    Enabled = 'enabled',
-    Filled = 'filled'
+  Disabled = "disabled",
+  Enabled = "enabled",
+  Filled = "filled",
 }

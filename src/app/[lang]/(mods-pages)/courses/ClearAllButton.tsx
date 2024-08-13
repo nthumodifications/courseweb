@@ -1,13 +1,15 @@
-import useDictionary from '@/dictionaries/useDictionary';
-import { useClearRefinements } from 'react-instantsearch';
+import useDictionary from "@/dictionaries/useDictionary";
+import { useClearRefinements } from "react-instantsearch";
 
 const ClearAllButton = () => {
-    const { refine } = useClearRefinements();
-    const dict = useDictionary();
+  const { refine } = useClearRefinements();
+  const dict = useDictionary();
 
-    return <button className="text-xs" onClick={refine}>
-        {dict.course.refine.clear}
+  return (
+    <button className="text-xs" onClick={refine}>
+      {dict.course.refine.clear}
     </button>
-}
+  );
+};
 
 export default ClearAllButton;

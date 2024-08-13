@@ -1,13 +1,15 @@
-import { FC } from 'react';
-import { getVenues } from '@/lib/venues';
-import VenueList from '@/components/Venue/VenueList';
+import { FC } from "react";
+import { getVenues } from "@/lib/venues";
+import VenueList from "@/components/Venue/VenueList";
 
 const Sidebar = async () => {
-    const venues = await getVenues();
+  const venues = await getVenues();
 
-    return <div className={`w-full h-full hidden md:block overflow-auto`}>
-        <VenueList venues={venues} />
+  return (
+    <div className={`w-full h-full hidden md:block overflow-auto`}>
+      <VenueList venues={venues} />
     </div>
-}
+  );
+};
 
 export default Sidebar;
