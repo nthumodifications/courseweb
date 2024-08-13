@@ -354,7 +354,7 @@ const BusPage = () => {
     }
 
     return returnData;
-  }, [tab, UphillBuses, DownhillBuses]);
+  }, [tab, UphillBuses, DownhillBuses, dict, time, language]);
 
   const handleTabChange = (tab: string) => {
     setTab(tab);

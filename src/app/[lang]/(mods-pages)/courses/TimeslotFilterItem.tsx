@@ -20,17 +20,21 @@ import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { scheduleTimeSlots } from "@/const/timetable";
 import useDictionary from "@/dictionaries/useDictionary";
 
-export default ({
-  searchable = false,
-  clientSearch = false,
-  synonms = {},
-  placeholder = "Search ...",
-}: {
+type TimeslotFilterItemProps = {
   searchable?: boolean;
   clientSearch?: boolean;
   synonms?: Record<string, string>;
   placeholder?: string;
-}) => {
+};
+
+const TimeslotFilterItem = ({
+  searchable = false,
+  clientSearch = false,
+  synonms = {},
+  placeholder = "Search ...",
+}: TimeslotFilterItemProps) => {
+  const { getSemesterCourses, semester, setSemester } = useUserTimetable();
+  const dict = useDictionary();
   const [mode, setMode] = useState("includes");
   const {
     items: timesItems,
@@ -48,6 +52,16 @@ export default ({
     attribute: "separate_times",
     limit: 500,
   });
+  const [timeslotValue, setTimeslotValue] = useState<string[]>([]);
+
+  const { canRefine: canClearRefine, refine: clearRefine } =
+    useClearRefinements({
+      includedAttributes: ["times", "separate_times"],
+    });
+
+  const [searchValue, setSearchValue] = useState("");
+  const [searching, setSearching] = useState(false);
+  const [selected, setSelected] = useState<string[]>([]);
 
   const items = mode == "exact" ? timesItems : separateItems;
   const refine = mode == "exact" ? timesRefine : separateRefine;
@@ -73,16 +87,7 @@ export default ({
         refine([...timeslotValue].sort(customSort).join(""));
       }
     }
-  }, [mode]);
-
-  const { canRefine: canClearRefine, refine: clearRefine } =
-    useClearRefinements({
-      includedAttributes: ["times", "separate_times"],
-    });
-
-  const [searchValue, setSearchValue] = useState("");
-  const [searching, setSearching] = useState(false);
-  const [selected, setSelected] = useState<string[]>([]);
+  }, [mode, timeslotValue, clearRefine, refine]);
 
   const search = (name: string) => {
     setSearchValue(name);
@@ -115,8 +120,6 @@ export default ({
     clearRefine();
   };
 
-  const [timeslotValue, setTimeslotValue] = useState<string[]>([]);
-
   useEffect(() => {
     clearRefine();
     if (mode == "includes") {
@@ -126,10 +129,7 @@ export default ({
     } else {
       refine([...timeslotValue].sort(customSort).join(""));
     }
-  }, [timeslotValue]);
-
-  const { getSemesterCourses, semester, setSemester } = useUserTimetable();
-  const dict = useDictionary();
+  }, [timeslotValue, mode, refine, clearRefine]);
 
   const handleFillTimes = useCallback(() => {
     const timeslots = getSemesterCourses(semester)
@@ -204,3 +204,5 @@ export default ({
     </div>
   );
 };
+
+export default TimeslotFilterItem;

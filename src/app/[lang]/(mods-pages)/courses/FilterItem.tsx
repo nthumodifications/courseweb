@@ -102,7 +102,7 @@ const FilterItem = ({
             ) : (
               <div className="flex flex-col gap-1">
                 {selected.map((i) => (
-                  <Badge variant="outline" className="">
+                  <Badge key={i} variant="outline" className="">
                     {synonms[i] ? `${i} - ${synonms[i]}` : i}
                   </Badge>
                 ))}

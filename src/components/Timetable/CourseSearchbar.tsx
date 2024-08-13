@@ -45,7 +45,7 @@ const CourseSearchbar = ({
 
   useEffect(() => {
     if (open) search("");
-  }, [open]);
+  }, [open, search]);
 
   const filterOptions = createFilterOptions({
     matchFrom: "any",

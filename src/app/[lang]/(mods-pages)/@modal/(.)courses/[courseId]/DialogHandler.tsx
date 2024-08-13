@@ -16,7 +16,7 @@ const DialogHandler = ({ children }: PropsWithChildren) => {
       setOpen(false);
     }
     setLastPathname(pathname);
-  }, [pathname]);
+  }, [pathname, lastPathname]);
 
   // If the dialog is closed, navigate back
   useEffect(() => {
@@ -24,7 +24,7 @@ const DialogHandler = ({ children }: PropsWithChildren) => {
     if (!open && pathname.match(/\/[a-z]{2}\/courses\/[a-zA-Z0-9-]+/)) {
       router.back();
     }
-  }, [open, pathname]);
+  }, [open, pathname, router]);
 
   return (
     <Dialog open={open} onOpenChange={() => setOpen(false)}>

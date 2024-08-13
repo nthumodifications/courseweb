@@ -74,20 +74,20 @@ const BusDetailsContainer = ({
       .map((m) => exportNotes(m, lang));
 
     // create a merged list of buses, each row contains both up and down buses, each row {up: BusDepartureDetails, down: BusDepartureDetails
-    const mergedBuses = useMemo(() => {
-      const maxLen = Math.max(
-        transformedBusesUp.length,
-        transformedBusesDown.length,
-      );
-      const merged = [];
-      for (let i = 0; i < maxLen; i++) {
-        merged.push({
-          up: transformedBusesUp[i],
-          down: transformedBusesDown[i],
-        });
-      }
-      return merged;
-    }, [transformedBusesUp, transformedBusesDown]);
+    const maxLen = Math.max(
+      transformedBusesUp.length,
+      transformedBusesDown.length,
+    );
+    const mergedBuses: {
+      up: BusDepartureDetails | undefined;
+      down: BusDepartureDetails | undefined;
+    }[] = [];
+    for (let i = 0; i < maxLen; i++) {
+      mergedBuses.push({
+        up: transformedBusesUp[i],
+        down: transformedBusesDown[i],
+      });
+    }
 
     return (
       <Table className="border border-border table-fixed">
@@ -248,7 +248,7 @@ const BusDetailsContainer = ({
 
   useEffect(() => {
     scrollTimeSelector(selectedHour);
-  }, [selectedHour]);
+  }, [selectedHour, scrollTimeSelector]);
 
   //when weektab changes, check if is weekend, if so, set the selected hour to the first bus of the weekend
   useEffect(() => {
@@ -265,7 +265,7 @@ const BusDetailsContainer = ({
       );
       setSelectedHour(startOfHour(new Date(minTime)));
     }
-  }, [weektab]);
+  }, [weektab, down.weekday, down.weekend, up.weekday, up.weekend]);
 
   return (
     <div className="flex flex-col px-4 h-full">

@@ -42,5 +42,6 @@ const TimeslotHeader = forwardRef<
     </tr>
   );
 });
+TimeslotHeader.displayName = "TimeslotHeader";
 
 export default TimeslotHeader;
