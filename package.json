@@ -10,13 +10,14 @@
     "dev-turbo": "next dev --turbo",
     "build": "next build",
     "start": "concurrently \"next start\" \"npm run runner:update-courses\" --restart-tries -1 --kill-others --success first",
+    "runner:update-courses": "node --import=tsimp/import runners/update-courses.ts",
     "lint": "next lint",
     "gentype": "npx supabase gen types typescript --project-id \"cmzdlrqfpuktcczvsobs\" --schema public > src/types/supabase.ts",
     "checkts": "tsc --noEmit",
     "ionic:build": "npm run build",
     "ionic:serve": "npm run start",
     "sync:ios": "npx cap sync ios",
-    "runner:update-courses": "node --import=tsimp/import runners/update-courses.ts"
+    "prepare": "husky"
   },
   "dependencies": {
     "@capacitor-community/media": "6.0.0",
@@ -136,6 +137,11 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "husky": "^9.1.4",
+    "lint-staged": "^15.2.8",
     "prettier": "3.3.3"
+  },
+  "lint-staged": {
+    "**/*": "prettier --write --ignore-unknown"
   }
 }
