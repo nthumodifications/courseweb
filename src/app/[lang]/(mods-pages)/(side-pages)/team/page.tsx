@@ -1,20 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { Github, LinkedinIcon } from "lucide-react";
+import { Github, Link2, LinkedinIcon } from "lucide-react";
 import Link from "next/link";
-
-const team = [
-  {
-    name_zh: "丘子輝",
-    name_en: "Chew Tzi Hwee",
-    role: "Professional Procrastrinator",
-    github: "https://github.com/ImJustChew",
-    linkedin: "https://www.linkedin.com/in/ImJustChew/",
-  },
-];
+import team from "@/const/team.json";
 
 const Team = () => {
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col px-3">
       <article className="prose prose-neutral dark:prose-invert">
         <h1>Who are we?</h1>
         <p>
@@ -31,28 +22,106 @@ const Team = () => {
           <a href="https://github.com/nthumodifications/courseweb">here</a>.
         </p>
         <h1>Core Team</h1>
-        <ul>
-          {team.map((member, index) => (
-            <li key={index}>
-              <h2>
-                {member.name_zh} ({member.name_en})
-              </h2>
-              <p>{member.role}</p>
-              <div className="flex flex-row gap-2">
-                <Button asChild variant="ghost">
-                  <Link href={member.github}>
-                    <Github />
-                  </Link>
-                </Button>
-                <Button asChild variant="ghost">
-                  <Link href={member.linkedin}>
-                    <LinkedinIcon />
-                  </Link>
-                </Button>
+        <div className="grid grid-cols-1 md:grid-cols-2 mb-8">
+          {team
+            .filter((t) => t.active)
+            .map((member, index) => (
+              <div key={index} className="flex flex-row w-full items-center">
+                <div className="relative inline-block">
+                  <img
+                    src={member.photo}
+                    alt={member.name_en}
+                    className="w-20 h-20 rounded-full m-0"
+                  />
+                  <div className="absolute -top-2 -right-2 text-xs p-1 rounded-lg shadow-lg bg-neutral-50 text-black dark:bg-neutral-700 dark:text-white">
+                    {member.description}
+                  </div>
+                </div>
+                <div className="pl-4 flex-1 flex flex-col gap-1">
+                  <div className="">
+                    <div className="font-bold text-xl">{member.name_zh}</div>
+                    {member.name_en && (
+                      <div className="text-sm">{member.name_en}</div>
+                    )}
+                  </div>
+                  <div className="flex flex-row gap-2">
+                    {member.link && (
+                      <Button asChild variant="ghost" size="icon">
+                        <Link href={`${member.link}`} target="_blank">
+                          <Link2 />
+                        </Link>
+                      </Button>
+                    )}
+                    {member.github && (
+                      <Button asChild variant="ghost" size="icon">
+                        <Link
+                          href={`https://github.com/${member.github}`}
+                          target="_blank"
+                        >
+                          <Github />
+                        </Link>
+                      </Button>
+                    )}
+                    {member.linkedin && (
+                      <Button asChild variant="ghost" size="icon">
+                        <Link
+                          href={`https://linkedin.com/in/${member.linkedin}`}
+                          target="_blank"
+                        >
+                          <LinkedinIcon />
+                        </Link>
+                      </Button>
+                    )}
+                  </div>
+                </div>
               </div>
-            </li>
-          ))}
-        </ul>
+            ))}
+        </div>
+        <h1>Dedicated Members</h1>
+        <div className="flex flex-row w-full">
+          {team
+            .filter((t) => !t.active)
+            .map((member, index) => (
+              <div key={index} className="flex flex-row w-full">
+                <img
+                  src={member.photo}
+                  alt={member.name_en}
+                  className="w-20 h-20 rounded-full"
+                />
+                <div className="pl-4 flex-1">
+                  <div className="font-bold text-xl my-1">
+                    {member.name_zh} ({member.name_en})
+                  </div>
+                  <div>{member.description}</div>
+                  <div className="flex flex-row gap-2">
+                    {member.link && (
+                      <Button asChild variant="ghost" size="icon">
+                        <Link href={`${member.link}`}>
+                          <Link2 />
+                        </Link>
+                      </Button>
+                    )}
+                    {member.github && (
+                      <Button asChild variant="ghost" size="icon">
+                        <Link href={`https://github.com/${member.github}`}>
+                          <Github />
+                        </Link>
+                      </Button>
+                    )}
+                    {member.linkedin && (
+                      <Button asChild variant="ghost" size="icon">
+                        <Link
+                          href={`https://linkedin.com/i/${member.linkedin}`}
+                        >
+                          <LinkedinIcon />
+                        </Link>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+        </div>
       </article>
     </div>
   );
