@@ -27,51 +27,52 @@ const IssueButton = ({
 
 const IssuesPage = () => {
   return (
-    <div className="flex flex-col max-w-2xl px-4">
-      <h1 className="font-semibold text-3xl text-gray-400 py-3">
-        {"Report an Issue"}
-      </h1>
-      <div className="flex flex-row w-max m-4 rounded-md shadow-md divide-x divide-gray-200">
-        <IssueButton
-          title="Data Issue"
-          description="Report an issue with the data"
-          icon={<Database className="w-8 h-8" />}
-          href="#dataissue"
-        />
-        <IssueButton
-          title="Bug/Feature"
-          description="Report a bug or request a feature"
-          icon={<Codepen className="w-8 h-8" />}
-          href="https://github.com/nthumodifications/courseweb/issues/new/choose"
-        />
-        <IssueButton
-          title="Other"
-          description="Report an issue that doesn't fit in the above categories"
-          icon={<Globe className="w-8 h-8" />}
-          href="mailto:nthumods@googlegroups.com"
-        />
-      </div>
-      <Separator />
-      <div id="dataissue" className="flex flex-col gap-4 py-4">
+    <div className="flex flex-col max-w-2xl px-4 prose">
+      <h1>Report an Issue</h1>
+      <div id="dataissue" className="flex flex-col">
         {/* Explainer of the data sources */}
-        <h2 className="font-semibold text-xl text-gray-600 dark:text-gray-400 pb-2">
-          {"Data Sources"}
-        </h2>
-        <p className="text-gray-600 dark:text-gray-400">
-          {
-            "We use the following data sources to generate the course information."
-          }
+        <h2>{"Data Sources"}</h2>
+        <p>
+          We collect a variety of data sources to compile the best course
+          information for you. These include:
         </p>
-        <ul className="list-disc list-inside">
-          <li className="text-gray-600 dark:text-gray-400">
-            {"Course information is from the NTHU Courses JSON file."}
-          </li>
-          <li className="text-gray-600 dark:text-gray-400">
-            {"Course reviews are from PTT NTHU course reviews."}
-          </li>
-        </ul>
-        <p className="text-gray-600 dark:text-gray-400">
-          {"If you find any issues with the data, please report it below."}
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-col">
+            <div className="text-lg font-bold">最新課程資料《 JSON格式》</div>
+            <a
+              className="text-muted-foreground text-sm"
+              href="https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/OPENDATA/open_course_data.json"
+              target="_blank"
+            >
+              https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/OPENDATA/open_course_data.json
+            </a>
+          </div>
+          <div className="flex flex-col">
+            <div className="text-lg font-bold">校務資訊系統課程總表</div>
+            <a
+              className="text-muted-foreground text-sm"
+              href="https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/6/6.2/6.2.9/JH629001.php"
+              target="_blank"
+            >
+              https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/6/6.2/6.2.9/JH629001.php
+            </a>
+          </div>
+          <div className="flex flex-col">
+            <div className="text-lg font-bold">課程平均值及標準差查詢</div>
+            <a
+              className="text-muted-foreground text-sm"
+              href="https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/8/8.4/8.4.2/JH84201.php"
+              target="_blank"
+            >
+              https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/8/8.4/8.4.2/JH84201.php
+            </a>
+          </div>
+        </div>
+        <p>
+          We fetch and update the data daily at 8 AM. If there are issues with
+          the course details on NTHUMods, please verify from the above links if
+          the its an error on NTHUMods's side. Then feel free to report it
+          below.{" "}
         </p>
         {/* Data issue form */}
       </div>
