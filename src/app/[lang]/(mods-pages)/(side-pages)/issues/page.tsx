@@ -69,10 +69,7 @@ const IssuesPage = () => {
           </div>
         </div>
         <p>
-          We fetch and update the data daily at 8 AM. If there are issues with
-          the course details on NTHUMods, please verify from the above links if
-          the its an error on NTHUMods's side. Then feel free to report it
-          below.{" "}
+          {`We fetch and update the data daily at 8 AM. If there are issues with the course details on NTHUMods, please verify from the above links if the its an error on NTHUMods's side. Then feel free to report it below. `}
         </p>
         {/* Data issue form */}
       </div>
