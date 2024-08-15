@@ -8,6 +8,8 @@ import {
   Paperclip,
 } from "lucide-react";
 import Link from "next/link";
+import ContributeComment from "./ContributeComment";
+import IssueFormDialog from "@/components/Forms/IssueFormDialog";
 
 const ContributePage = () => {
   return (
@@ -25,6 +27,7 @@ const ContributePage = () => {
         <h1>For Everyone</h1>
         <h2>Share your experiences</h2>
         <p>{`You've took a fair share of courses, so share how your courses went to all students. Every insight that you can provide brings value to NTHUMods!`}</p>
+        <ContributeComment />
         <h2>Share your feedback</h2>
         <p>
           We are always open for feedback! If you have any suggestions, ideas,
@@ -32,12 +35,14 @@ const ContributePage = () => {
           Let us know using the links below.
         </p>
         <div className="flex flex-row gap-2 mb-8">
-          <div className="rounded-md hover:shadow-md transition-shadow cursor-pointer  bg-neutral-800 text-white grid place-items-center w-28 h-28">
-            <div className="flex flex-col items-center gap-2">
-              <Paperclip />
-              <div className="text-sm no-underline">Form</div>
+          <IssueFormDialog>
+            <div className="rounded-md hover:shadow-md transition-shadow cursor-pointer  bg-neutral-800 text-white grid place-items-center w-28 h-28">
+              <div className="flex flex-col items-center gap-2">
+                <Paperclip />
+                <div className="text-sm no-underline">Form</div>
+              </div>
             </div>
-          </div>
+          </IssueFormDialog>
           <Link href="mailto:nthumods@gmail.com">
             <div className="rounded-md hover:shadow-md transition-shadow cursor-pointer  bg-red-600 text-white grid place-items-center w-28 h-28">
               <div className="flex flex-col items-center gap-2">

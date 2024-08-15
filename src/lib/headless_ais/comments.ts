@@ -67,6 +67,22 @@ export const hasUserCommented = async (courseId: string) => {
   return data?.length > 0;
 };
 
+export const getUserCommentsCourses = async () => {
+  const user = await getCurrentUser();
+  if (user == null) {
+    throw new Error("User not authenticated");
+  }
+
+  const { data, error } = await supabase_server
+    .from("course_comments")
+    .select("raw_id")
+    .eq("submitter", user.uid);
+
+  if (error) throw error;
+  if (!data) return [];
+  return data.map((comment) => comment.raw_id);
+};
+
 export const postComment = async (
   courseId: string,
   ACIXSTORE: string,

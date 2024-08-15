@@ -49,6 +49,7 @@ const Footer = () => {
       </div>
 
       <div className="flex flex-row text-muted-foreground text-sm gap-4">
+        <Link href={"/contribute"}>Contribute</Link>
         <Link href={"/issues"}>Report an Issue</Link>
         <Link href={"/team"}>Team</Link>
         <Link href={"/privacy-policy"}>Privacy Policy</Link>
@@ -60,8 +61,8 @@ const Footer = () => {
           © {getYear(Date.now())} NTHUMods. All rights reserved.
         </p>
         <p className="text-muted-foreground text-xs">
-          NTHUMods is not affiliated with National Tsing Hua University. But my
-          graduation depends on them so don't worry.
+          {`NTHUMods is not affiliated with National Tsing Hua University. But my
+          graduation depends on them so don't worry.`}
         </p>
       </div>
     </div>

@@ -25,6 +25,7 @@ export const GET = async (request: NextRequest) => {
   await scrapeSyllabus(semester);
   console.log("syncing to algolia");
   await syncCoursesToAlgolia(semester);
+  console.log("finish syncing to algolia");
 
   return NextResponse.json({ status: 200, body: { message: "success" } });
 };
