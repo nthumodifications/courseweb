@@ -61,7 +61,6 @@ const TimeslotFilterItem = ({
 
   const [searchValue, setSearchValue] = useState("");
   const [searching, setSearching] = useState(false);
-  const [selected, setSelected] = useState<string[]>([]);
 
   const items = mode == "exact" ? timesItems : separateItems;
   const refine = mode == "exact" ? timesRefine : separateRefine;
@@ -77,15 +76,13 @@ const TimeslotFilterItem = ({
   };
 
   useEffect(() => {
-    if (timeslotValue.length > 0) {
-      clearRefine();
-      if (mode == "includes") {
-        for (let i = 0; i < timeslotValue.length; i++) {
-          refine(timeslotValue[i]);
-        }
-      } else {
-        refine([...timeslotValue].sort(customSort).join(""));
+    clearRefine();
+    if (mode == "includes") {
+      for (let i = 0; i < timeslotValue.length; i++) {
+        refine(timeslotValue[i]);
       }
+    } else {
+      refine([...timeslotValue].sort(customSort).join(""));
     }
   }, [mode, timeslotValue, clearRefine, refine]);
 
@@ -96,7 +93,6 @@ const TimeslotFilterItem = ({
     }
     if (name == "") {
       const refinedItems = items.filter((item) => item.isRefined);
-      setSelected(refinedItems.map((item) => item.value));
     }
   };
 
@@ -116,20 +112,8 @@ const TimeslotFilterItem = ({
 
   const clear = () => {
     setTimeslotValue([]);
-    setSelected([]);
     clearRefine();
   };
-
-  useEffect(() => {
-    clearRefine();
-    if (mode == "includes") {
-      for (let i = 0; i < timeslotValue.length; i++) {
-        refine(timeslotValue[i]);
-      }
-    } else {
-      refine([...timeslotValue].sort(customSort).join(""));
-    }
-  }, [timeslotValue, mode, refine, clearRefine]);
 
   const handleFillTimes = useCallback(() => {
     const timeslots = getSemesterCourses(semester)
@@ -164,7 +148,7 @@ const TimeslotFilterItem = ({
             <span className="truncate">
               {searching ? (
                 "Selecting..."
-              ) : selected.length == 0 ? (
+              ) : timeslotValue.length == 0 ? (
                 "All"
               ) : (
                 <div className="flex flex-col gap-1">
