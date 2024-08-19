@@ -1,7 +1,17 @@
 {
   "today": {
     "noclass": "今天沒有課喔！",
-    "noclass_sub": "放假吧~"
+    "noclass_sub": "放假吧~",
+    "noclass_sem": "放假咯！",
+    "noclass_reminder": {
+      "reminder": "還沒選到課嗎？",
+      "first": "先到",
+      "courses": "課表",
+      "choose_courses": "選擇課程",
+      "then": "後到",
+      "timetable": "時間表",
+      "check_schedule": "查看時間表"
+    }
   },
   "timetable": {
     "actions": {
@@ -9,8 +19,12 @@
       "share": "分享/同步",
       "horizontal_view": "水平視圖",
       "vertical_view": "垂直視圖",
-      "sync_ccxp": "同步校務系統"
-    }
+      "more_options": "更多",
+      "sync_ccxp": "同步校務系統",
+      "group_dept": "依系所分顔色"
+    },
+    "credits": "總學分",
+    "course": "課"
   },
   "course": {
     "credits": "學分",
@@ -67,6 +81,7 @@
       "prerequesites": "擋修",
       "timetable": "時間表",
       "course_list": "課程列表",
+      "favourites": "已收藏課程",
       "scores": "成績",
       "average": "平均",
       "standard_deviation": "標準差",
@@ -110,7 +125,8 @@
     "notes": "備注",
     "weekdays": "平日",
     "weekends": "假日",
-    "to": "往"
+    "to": "往",
+    "schedule": "發車時刻表"
   },
   "settings": {
     "account": {
@@ -158,6 +174,9 @@
         "description": "傳送匿名使用量統計數據至 Google Analytics，幫助我們了解使用者行為，以改進服務。"
       }
     }
+  },
+  "pages": {
+    "ais_loading": "正在幫你登入校務資訊系統，請稍等..."
   },
   "venues": {
     "placeholder": "從選項中選一個地點"
@@ -229,7 +248,9 @@
     "prev": "上一頁",
     "next": "下一頁",
     "skip": "跳過",
-    "jump": "啓動！"
+    "jump": "啓動！",
+    "continue": "繼續",
+    "login": "登入"
   },
   "ccxp": {
     "connected": "已連接",
