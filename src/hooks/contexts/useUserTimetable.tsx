@@ -114,6 +114,14 @@ const useUserTimetableProvider = (loadCourse = true) => {
 
       const coursesCopy = { ...courses };
 
+      // Check and confirm if coursesCopy is traversable
+      if (Object.keys(coursesCopy).length === 0) return;
+      if (Object.keys(coursesCopy).find((sem) => sem.length !== 5)) return;
+      if (
+        Object.keys(coursesCopy).find((sem) => !Array.isArray(coursesCopy[sem]))
+      )
+        return;
+
       Object.keys(coursesCopy).forEach((sem) => {
         (coursesCopy[sem] ?? []).forEach((courseID, i) => {
           newColorMap[courseID] = newColors[i % newColors.length];
