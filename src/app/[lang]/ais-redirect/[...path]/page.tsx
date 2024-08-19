@@ -56,7 +56,11 @@ const RedirectPage = ({}) => {
   if (!ais.enabled) return <AISNotLoggedIn />;
   if (loading) return <AISLoading />;
   if (error) return <AISError />;
-  return <div>Redirecting...</div>;
+  return (
+    <div className="w-screen h-screen grid place-items-center">
+      <h1>Redirecting...</h1>
+    </div>
+  );
 };
 
 export default RedirectPage;
