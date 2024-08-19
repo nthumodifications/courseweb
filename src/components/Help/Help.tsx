@@ -17,6 +17,7 @@ const ProgressDisplay = ({ current, max }: ProgressDisplayProps) => {
     <div className="w-44 h-1.5 justify-center items-center gap-1.5 inline-flex">
       {Array.from({ length: max }, (_, i) => i).map((i) => (
         <div
+          key={i}
           className={cn(
             "flex-1 h-1.5 relative rounded-md",
             current >= i + 1 ? "bg-nthu-600" : "bg-zinc-100",

@@ -9,13 +9,13 @@ const ShortNameContributeForm = () => {
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-bold">Contribute Short Name</h1>
         <p className="text-sm text-muted-foreground">
-          Make everyone's life easier by contributing a short name for this
-          course
+          {`Make everyone's life easier by contributing a short name for this
+          course`}
         </p>
       </div>
       <Alert>
         <Edit2 className="h-4 w-4" />
-        <AlertTitle>Don't abuse the system!</AlertTitle>
+        <AlertTitle>{`Don't abuse the system!`}</AlertTitle>
         <AlertDescription>
           <p>Enter only accurate and relevant information!</p>
           <p>

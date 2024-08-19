@@ -21,7 +21,7 @@ const SemesterSelector = () => {
       // default to the latest semester
       refine(lastSemester.id);
     }
-  }, [canRefine, items]);
+  }, [canRefine, items, refine]);
 
   const handleSelect = (v: string) => {
     refine(v);

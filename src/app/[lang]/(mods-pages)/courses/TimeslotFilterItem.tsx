@@ -20,17 +20,21 @@ import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { scheduleTimeSlots } from "@/const/timetable";
 import useDictionary from "@/dictionaries/useDictionary";
 
-export default ({
-  searchable = false,
-  clientSearch = false,
-  synonms = {},
-  placeholder = "Search ...",
-}: {
+type TimeslotFilterItemProps = {
   searchable?: boolean;
   clientSearch?: boolean;
   synonms?: Record<string, string>;
   placeholder?: string;
-}) => {
+};
+
+const TimeslotFilterItem = ({
+  searchable = false,
+  clientSearch = false,
+  synonms = {},
+  placeholder = "Search ...",
+}: TimeslotFilterItemProps) => {
+  const { getSemesterCourses, semester, setSemester } = useUserTimetable();
+  const dict = useDictionary();
   const [mode, setMode] = useState("includes");
   const {
     items: timesItems,
@@ -48,6 +52,15 @@ export default ({
     attribute: "separate_times",
     limit: 500,
   });
+  const [timeslotValue, setTimeslotValue] = useState<string[]>([]);
+
+  const { canRefine: canClearRefine, refine: clearRefine } =
+    useClearRefinements({
+      includedAttributes: ["times", "separate_times"],
+    });
+
+  const [searchValue, setSearchValue] = useState("");
+  const [searching, setSearching] = useState(false);
 
   const items = mode == "exact" ? timesItems : separateItems;
   const refine = mode == "exact" ? timesRefine : separateRefine;
@@ -63,26 +76,15 @@ export default ({
   };
 
   useEffect(() => {
-    if (timeslotValue.length > 0) {
-      clearRefine();
-      if (mode == "includes") {
-        for (let i = 0; i < timeslotValue.length; i++) {
-          refine(timeslotValue[i]);
-        }
-      } else {
-        refine([...timeslotValue].sort(customSort).join(""));
+    clearRefine();
+    if (mode == "includes") {
+      for (let i = 0; i < timeslotValue.length; i++) {
+        refine(timeslotValue[i]);
       }
+    } else {
+      refine([...timeslotValue].sort(customSort).join(""));
     }
-  }, [mode]);
-
-  const { canRefine: canClearRefine, refine: clearRefine } =
-    useClearRefinements({
-      includedAttributes: ["times", "separate_times"],
-    });
-
-  const [searchValue, setSearchValue] = useState("");
-  const [searching, setSearching] = useState(false);
-  const [selected, setSelected] = useState<string[]>([]);
+  }, [mode, timeslotValue, clearRefine, refine]);
 
   const search = (name: string) => {
     setSearchValue(name);
@@ -91,7 +93,6 @@ export default ({
     }
     if (name == "") {
       const refinedItems = items.filter((item) => item.isRefined);
-      setSelected(refinedItems.map((item) => item.value));
     }
   };
 
@@ -111,25 +112,8 @@ export default ({
 
   const clear = () => {
     setTimeslotValue([]);
-    setSelected([]);
     clearRefine();
   };
-
-  const [timeslotValue, setTimeslotValue] = useState<string[]>([]);
-
-  useEffect(() => {
-    clearRefine();
-    if (mode == "includes") {
-      for (let i = 0; i < timeslotValue.length; i++) {
-        refine(timeslotValue[i]);
-      }
-    } else {
-      refine([...timeslotValue].sort(customSort).join(""));
-    }
-  }, [timeslotValue]);
-
-  const { getSemesterCourses, semester, setSemester } = useUserTimetable();
-  const dict = useDictionary();
 
   const handleFillTimes = useCallback(() => {
     const timeslots = getSemesterCourses(semester)
@@ -164,7 +148,7 @@ export default ({
             <span className="truncate">
               {searching ? (
                 "Selecting..."
-              ) : selected.length == 0 ? (
+              ) : timeslotValue.length == 0 ? (
                 "All"
               ) : (
                 <div className="flex flex-col gap-1">
@@ -204,3 +188,5 @@ export default ({
     </div>
   );
 };
+
+export default TimeslotFilterItem;

@@ -91,11 +91,11 @@ const PrivacyPolicyENPage = () => {
       </div>
       <article className="prose prose-neutral dark:prose-invert">
         <p>
-          Welcome to NTHUMods (hereinafter referred to as "this website"). To
+          {`Welcome to NTHUMods (hereinafter referred to as "this website"). To
           ensure you can use the services and information on this website with
           peace of mind, we hereby explain the privacy protection policy of this
           website to protect your rights. Please read the following content
-          carefully:
+          carefully:`}
         </p>
         <h2>1. Scope of the Privacy Protection Policy</h2>
         <ul className="list-disc">
@@ -150,13 +150,13 @@ const PrivacyPolicyENPage = () => {
         <h2>3. Protection of Data</h2>
         <ul className="list-disc">
           <li>
-            This website's host is equipped with various information security
+            {`This website's host is equipped with various information security
             devices such as firewalls and anti-virus systems, and necessary
             security protection measures to protect the website and your
             personal data. Strict protection measures are adopted, and only
             authorized personnel can access your personal data. All related
             processing personnel have signed confidentiality agreements and will
-            face legal penalties if they violate confidentiality obligations.
+            face legal penalties if they violate confidentiality obligations.`}
           </li>
           <li>
             If it is necessary to entrust relevant units of this department to

@@ -51,7 +51,7 @@ const RedirectPage = ({}) => {
 
       setLoading(false);
     })();
-  }, []);
+  }, [getACIXSTORE, redirect_url]);
 
   if (!ais.enabled) return <AISNotLoggedIn />;
   if (loading) return <AISLoading />;

@@ -224,7 +224,7 @@ export const signInToCCXP = async (
             "upgrade-insecure-requests": "1",
           },
           keepalive: true,
-          body: `account=${studentid}&passwd=${password}&passwd2=${answer}&Submit=%B5n%A4J&fnstr=${pwdstr}`,
+          body: `account=${encodeURIComponent(studentid)}&passwd=${encodeURIComponent(password)}&passwd2=${answer}&Submit=%B5n%A4J&fnstr=${pwdstr}`,
           method: "POST",
         },
       );
@@ -387,13 +387,13 @@ export const refreshUserSession = async (
   if ("error" in res && res.error) {
     console.error(res.error);
     return { error: res.error };
-  }
-  // @ts-ignore - We know that res is not an error
-  return {
-    ACIXSTORE: res.ACIXSTORE,
-    passwordExpired: res.passwordExpired,
-    accessToken: res.accessToken,
-  };
+  } else if (!("error" in res))
+    return {
+      ACIXSTORE: res.ACIXSTORE,
+      passwordExpired: res.passwordExpired,
+      accessToken: res.accessToken,
+    };
+  return { error: { message: "Unknown error" } };
 };
 
 export const updateUserPassword = async (
@@ -420,10 +420,7 @@ export const updateUserPassword = async (
       "sec-fetch-user": "?1",
       "upgrade-insecure-requests": "1",
     },
-    referrer:
-      "https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/PC/1/1.1/PC11001.php?ACIXSTORE=c3d1ipem8trmvk6gpq5mrv9490",
-    referrerPolicy: "strict-origin-when-cross-origin",
-    body: `ACIXSTORE=${ACIXSTORE}&O_PASS=${oldPassword}&N_PASS=${newPassword}&N_PASS2=${newPassword}&choice=確定`,
+    body: `ACIXSTORE=${ACIXSTORE}&O_PASS=${encodeURIComponent(oldPassword)}&N_PASS=${encodeURIComponent(newPassword)}&N_PASS2=${encodeURIComponent(newPassword)}&choice=確定`,
     method: "POST",
     mode: "cors",
     credentials: "include",

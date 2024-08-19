@@ -1,6 +1,14 @@
 "use client";
 import Timetable from "@/components/Timetable/Timetable";
-import { FC, useState, useRef, useEffect, useMemo, useTransition } from "react";
+import {
+  FC,
+  Fragment,
+  useState,
+  useRef,
+  useEffect,
+  useMemo,
+  useTransition,
+} from "react";
 import {
   createTimetableFromCourses,
   colorMapFromCourses,

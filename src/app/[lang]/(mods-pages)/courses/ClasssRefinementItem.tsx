@@ -109,7 +109,7 @@ const ClassRefinementItem = ({
             ) : (
               <div className="flex flex-col gap-1">
                 {selected.map((i) => (
-                  <Badge variant="outline" className="">
+                  <Badge key={i} variant="outline" className="">
                     {getFormattedClassCode(i, selectedSemester)}
                   </Badge>
                 ))}
