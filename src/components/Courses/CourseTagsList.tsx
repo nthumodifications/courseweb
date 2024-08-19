@@ -34,9 +34,11 @@ const CourseTagList = ({ course }: { course: CourseDefinition }) => {
           {(course.reserve ?? 0) > 0 && <>{` 保 ${course.reserve}`}</>}人
         </span>
       </HighlightItem>
-      <HighlightItem className="bg-violet-50 text-violet-900 dark:bg-violet-950 dark:text-violet-100">
-        <span className="">{`${course.enrolled} 選上 `}</span>
-      </HighlightItem>
+      {course.enrolled && (
+        <HighlightItem className="bg-violet-50 text-violet-900 dark:bg-violet-950 dark:text-violet-100">
+          <span className="">{`${course.enrolled} 選上 `}</span>
+        </HighlightItem>
+      )}
       <HighlightItem>
         <span className="">
           {course.credits} {dict.course.credits}

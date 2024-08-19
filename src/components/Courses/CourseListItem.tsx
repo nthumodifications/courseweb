@@ -74,7 +74,10 @@ const CourseListItem: FC<{
             <div className="space-y-1 @md:hidden">
               {course.venues ? (
                 course.venues.map((vn, i) => (
-                  <p className="text-nthu-600 dark:text-nthu-400 text-sm">
+                  <p
+                    key={i}
+                    className="text-nthu-600 dark:text-nthu-400 text-sm"
+                  >
                     {vn}{" "}
                     <span className="text-black dark:text-white">
                       {course.times![i]}
@@ -110,7 +113,7 @@ const CourseListItem: FC<{
           <div className="space-y-1">
             {course.venues ? (
               course.venues.map((vn, i) => (
-                <p className="text-nthu-600 dark:text-nthu-400 text-sm">
+                <p key={i} className="text-nthu-600 dark:text-nthu-400 text-sm">
                   {vn}{" "}
                   <span className="text-black dark:text-white">
                     {course.times![i]}

@@ -53,6 +53,7 @@ const FilterItem = ({
     setSelected(refinedItems.map((item) => item.value));
   }, [items, searchParams]);
 
+  const [typable, setEnableTyping] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [searching, setSearching] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
@@ -69,6 +70,7 @@ const FilterItem = ({
   };
 
   const openChange = (open: boolean) => {
+    setEnableTyping(false);
     if (open == true) {
       setSearching(true);
     } else {
@@ -100,7 +102,7 @@ const FilterItem = ({
             ) : (
               <div className="flex flex-col gap-1">
                 {selected.map((i) => (
-                  <Badge variant="outline" className="">
+                  <Badge key={i} variant="outline" className="">
                     {synonms[i] ? `${i} - ${synonms[i]}` : i}
                   </Badge>
                 ))}
@@ -117,6 +119,8 @@ const FilterItem = ({
         <Command shouldFilter={clientSearch}>
           {searchable && (
             <CommandInput
+              onClick={() => setEnableTyping(true)}
+              inputMode={typable ? "text" : "none"}
               autoComplete="off"
               autoCorrect="off"
               autoCapitalize="off"
@@ -127,7 +131,10 @@ const FilterItem = ({
               placeholder={placeholder}
             />
           )}
-          <ScrollArea className="h-[300px]">
+          <ScrollArea
+            onScrollCapture={() => setEnableTyping(false)}
+            className="h-[300px]"
+          >
             <CommandList className="max-h-none">
               <CommandEmpty>No results found.</CommandEmpty>
               {items

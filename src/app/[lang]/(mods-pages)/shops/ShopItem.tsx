@@ -304,6 +304,7 @@ const ShopItem: React.FC<ShopItemProps> = ({ shop, filter }) => {
   return (
     <div className="flex gap-6">
       <div className="flex flex-col">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={shop.image}
           alt={shop.name}

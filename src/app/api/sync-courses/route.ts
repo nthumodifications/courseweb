@@ -1,3 +1,8 @@
+import {
+  scrapeArchivedCourses,
+  scrapeSyllabus,
+  syncCoursesToAlgolia,
+} from "@/lib/scrapers/course";
 import { NextRequest, NextResponse } from "next/server";
 
 export const GET = async (request: NextRequest) => {
@@ -14,23 +19,12 @@ export const GET = async (request: NextRequest) => {
   const semester = "11310";
 
   console.log("syncing courses uwu");
-
-  await fetch(
-    "https://nthumods.com/api/scrape-archived-courses?semester=" + semester,
-    {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${process.env.CRON_SECRET}`,
-      },
-    },
-  );
-
-  fetch("https://nthumods.com/api/scrape-syllabus?semester=" + semester, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${process.env.CRON_SECRET}`,
-    },
-  });
+  console.log("scraping archived courses");
+  await scrapeArchivedCourses(semester);
+  console.log("scraping syllabus");
+  await scrapeSyllabus(semester);
+  console.log("syncing to algolia");
+  await syncCoursesToAlgolia(semester);
 
   return NextResponse.json({ status: 200, body: { message: "success" } });
 };

@@ -270,7 +270,7 @@ const CdsCoursesForm: FC<{
   useEffect(() => {
     setLoading(true);
     searchQueryFunc(filters);
-  }, [JSON.stringify(filters), semester]);
+  }, [JSON.stringify(filters), semester, filters, searchQueryFunc]);
 
   const semesterSelectedCourses = selectedCourses.filter(
     (m) => m.semester == semester,
@@ -338,7 +338,7 @@ const CdsCoursesForm: FC<{
       exceedesMaxCourses1 ||
       exceedesMaxCourses2
     );
-  }, [timeConflicts, duplicates, exceedesMaxCourses]);
+  }, [selectedCourses, termObj]);
 
   const totalCredits = useMemo(() => {
     return semesterSelectedCourses.reduce(
@@ -583,7 +583,10 @@ const CdsCoursesForm: FC<{
                     <p>{course.credits} 學分</p>
                     {course.venues ? (
                       course.venues.map((vn, i) => (
-                        <p className="text-blue-600 dark:text-blue-400 font-mono">
+                        <p
+                          key={i}
+                          className="text-blue-600 dark:text-blue-400 font-mono"
+                        >
                           {normalizeRoomName(vn)}{" "}
                           <span className="text-black dark:text-white">
                             {course.times![i]}
@@ -596,7 +599,9 @@ const CdsCoursesForm: FC<{
                     <div className="flex flex-row flex-wrap gap-1">
                       {(course.cross_discipline ?? []).map(
                         (discipline, index) => (
-                          <Button variant="outline">{discipline}</Button>
+                          <Button key={discipline} variant="outline">
+                            {discipline}
+                          </Button>
                         ),
                       )}
                     </div>

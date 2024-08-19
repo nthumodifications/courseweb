@@ -1,6 +1,6 @@
-import { forwardRef } from "react";
+import { SVGProps } from "react";
 
-const NTHUModsLogo = forwardRef<SVGSVGElement>((props, ref) => {
+const NTHUModsLogo = (props: SVGProps<SVGSVGElement>) => {
   return (
     <svg
       width="36"
@@ -8,7 +8,6 @@ const NTHUModsLogo = forwardRef<SVGSVGElement>((props, ref) => {
       viewBox="0 0 74 81"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      ref={ref}
       {...props}
     >
       <rect
@@ -40,6 +39,6 @@ const NTHUModsLogo = forwardRef<SVGSVGElement>((props, ref) => {
       <rect x="54" y="13" width="5" height="11" rx="2.5" fill="black" />
     </svg>
   );
-});
+};
 
 export default NTHUModsLogo;

@@ -149,7 +149,6 @@ const LineDisplayPage = () => {
   const { line } = useParams() as { line: string };
   const searchParams = useSearchParams();
   const time = useTime();
-  if (!(line in linesDict)) return <div>Invalid Line</div>;
   const lineData = linesDict[line] as (typeof linesDict)["green_up"];
 
   const { language } = useSettings();
@@ -308,7 +307,7 @@ const LineDisplayPage = () => {
         })
         .filter((bus) => bus.stationIndex != -1);
     return [];
-  }, [time, UphillBuses, DownhillBuses]);
+  }, [time, UphillBuses, DownhillBuses, line, lineData]);
 
   const displayText = useMemo<
     {
@@ -390,6 +389,7 @@ const LineDisplayPage = () => {
     );
   }, [time, busOfInterest]);
 
+  if (!(line in linesDict)) return <div>Invalid Line</div>;
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-row items-center px-2 gap-4">

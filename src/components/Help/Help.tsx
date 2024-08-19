@@ -17,6 +17,7 @@ const ProgressDisplay = ({ current, max }: ProgressDisplayProps) => {
     <div className="w-44 h-1.5 justify-center items-center gap-1.5 inline-flex">
       {Array.from({ length: max }, (_, i) => i).map((i) => (
         <div
+          key={i}
           className={cn(
             "flex-1 h-1.5 relative rounded-md",
             current >= i + 1 ? "bg-nthu-600" : "bg-zinc-100",
@@ -94,8 +95,8 @@ const Help = () => {
           <span className="hidden md:inline-block">Help</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="h-[100dvh] p-0 w-full lg:h-[calc(100vh-48px)]">
-        <div className="flex flex-col items-center gap-8 px-4 py-8 max-h-screen overflow-y-auto">
+      <DialogContent className="h-[calc(100dvh-env(safe-area-inset-bottom))] p-0 w-full lg:h-[calc(100vh-48px)] pb-[env(safe-area-inset-bottom)]">
+        <div className="flex flex-col items-center gap-8 px-4 py-8 max-h-[calc(100dvh-env(safe-area-inset-bottom))] overflow-y-auto">
           <div className="flex-1 grid place-items-center">
             <div className="w-[254px] h-[254px] max-h-full">
               <Image

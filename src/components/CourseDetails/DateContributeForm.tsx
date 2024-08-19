@@ -143,7 +143,7 @@ const DateContributeForm = ({ courseId }: { courseId: string }) => {
           </div>
           <Alert>
             <Edit2 className="h-4 w-4" />
-            <AlertTitle>Don't abuse the system!</AlertTitle>
+            <AlertTitle>{`Don't abuse the system!`}</AlertTitle>
             <AlertDescription>
               <p>Enter only accurate and relevant information!</p>
               <p>

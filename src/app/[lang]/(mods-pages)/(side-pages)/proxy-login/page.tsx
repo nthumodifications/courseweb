@@ -4,6 +4,7 @@ const ProxyLoginExplainer = () => {
   return (
     <div className="px-4 py-8">
       <Script
+        id="mermaid"
         type="module"
         strategy="afterInteractive"
         dangerouslySetInnerHTML={{

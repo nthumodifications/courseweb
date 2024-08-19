@@ -1,26 +1,11 @@
-import {
-  Search,
-  Trash,
-  AlertTriangle,
-  Copy,
-  GripVertical,
-  Loader2,
-  Plus,
-  Heart,
-  Minus,
-} from "lucide-react";
+import { GripVertical, Plus, Heart, Minus } from "lucide-react";
 import { useSettings } from "@/hooks/contexts/settings";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { useRouter, useSearchParams } from "next/navigation";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useMemo } from "react";
-import {
-  hasConflictingTimeslots,
-  hasSameCourse,
-  hasTimes,
-} from "@/helpers/courses";
-import { MinimalCourse, RawCourseID } from "@/types/courses";
-import dynamic from "next/dynamic";
+import { hasTimes } from "@/helpers/courses";
+import { MinimalCourse } from "@/types/courses";
 import { Button } from "@/components/ui/button";
 import {
   DndContext,
@@ -34,7 +19,6 @@ import {
 } from "@dnd-kit/core";
 import {
   arrayMove,
-  rectSwappingStrategy,
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
@@ -42,23 +26,7 @@ import {
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-import {
-  restrictToVerticalAxis,
-  restrictToWindowEdges,
-} from "@dnd-kit/modifiers";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import Compact from "@uiw/react-color-compact";
-import { Separator } from "@/components/ui/separator";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card";
-import { TimetableItemDrawer } from "@/components/Timetable/TimetableItemDrawer";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { useQuery } from "@tanstack/react-query";
 import supabase from "@/config/supabase";
 import { CourseDefinition } from "@/config/supabase";

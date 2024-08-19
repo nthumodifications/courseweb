@@ -68,7 +68,10 @@ const UpcomingEvents = () => {
       <div className="self-stretch p-4 bg-slate-50 rounded-lg flex-col justify-start items-start gap-6 flex">
         <div className="self-stretch justify-start items-start gap-6 inline-flex flex-col sm:flex-row md:flex-col">
           {uniqueLabels.map((label, index) => (
-            <div className="self-stretch flex-col justify-start items-start gap-2 inline-flex">
+            <div
+              key={index}
+              className="self-stretch flex-col justify-start items-start gap-2 inline-flex"
+            >
               <div className="self-stretch h-10 justify-start items-center gap-2 inline-flex">
                 <div className="grow shrink basis-0 text-slate-900 text-lg font-semibold font-['Inter'] leading-7 capitalize">
                   {label}

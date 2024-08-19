@@ -1,7 +1,5 @@
 import {
-  useClearRefinements,
   useStats,
-  PoweredBy,
   useInfiniteHits,
   useInstantSearch,
 } from "react-instantsearch";
@@ -84,7 +82,6 @@ export function InfiniteHits(props: Parameters<typeof useInfiniteHits>[0]) {
 }
 
 const SearchContainer = ({
-  searchClient,
   sessionStorageCache,
 }: {
   searchClient: SearchClient;
@@ -92,10 +89,6 @@ const SearchContainer = ({
 }) => {
   const dict = useDictionary();
   const { nbHits, processingTimeMS } = useStats();
-
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  // listen i
 
   return (
     <div className="flex w-full gap-4">

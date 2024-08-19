@@ -15,7 +15,3 @@ export const scheduleTimeSlots: TimeSlot[] = [
   { time: "b", start: "19:30", end: "20:20" },
   { time: "c", start: "20:30", end: "21:20" },
 ];
-
-export const parseSlotTime = (time: string) => {
-  return time.split(":").map((i) => parseInt(i));
-};

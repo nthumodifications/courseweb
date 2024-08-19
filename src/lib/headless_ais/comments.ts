@@ -1,12 +1,12 @@
 "use server";
 import supabase_server from "@/config/supabase_server";
-import { getUserSession } from "@/lib/headless_ais";
 import { revalidatePath } from "next/cache";
 import { getStudentCourses } from "@/lib/headless_ais/courses";
 import { CommentState } from "@/types/comments";
+import { getCurrentUser } from "../firebase/auth";
 
 export const getComments = async (courseId: string, page: number = 1) => {
-  const user = await getUserSession();
+  const user = await getCurrentUser();
   if (user == null) {
     throw new Error("User not authenticated");
   }
@@ -52,7 +52,7 @@ export const getStudentCommentState = async (
 };
 
 export const hasUserCommented = async (courseId: string) => {
-  const user = await getUserSession();
+  const user = await getCurrentUser();
   if (user == null) {
     throw new Error("User not authenticated");
   }
@@ -61,7 +61,7 @@ export const hasUserCommented = async (courseId: string) => {
     .from("course_comments")
     .select("id")
     .eq("raw_id", courseId)
-    .eq("submitter", user.studentid);
+    .eq("submitter", user.uid);
 
   if (error) throw error;
   return data?.length > 0;
@@ -74,7 +74,7 @@ export const postComment = async (
   easiness: number,
   comment: string,
 ) => {
-  const user = await getUserSession();
+  const user = await getCurrentUser();
   if (user == null) {
     throw new Error("User not authenticated");
   }
@@ -99,7 +99,7 @@ export const postComment = async (
 
   const { data, error } = await supabase_server.from("course_comments").insert({
     raw_id: courseId,
-    submitter: user.studentid,
+    submitter: user.uid,
     scoring: scoring,
     easiness: easiness,
     comment: comment,

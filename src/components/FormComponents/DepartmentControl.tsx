@@ -52,6 +52,7 @@ const DepartmentControl = ({
           isOptionEqualToValue={(option, value) => option.code === value.code}
           renderTags={(value, getTagProps) =>
             value.map((option, index) => (
+              // eslint-disable-next-line react/jsx-key
               <Chip variant="soft" {...getTagProps({ index })}>
                 {`${option.code}`}
               </Chip>

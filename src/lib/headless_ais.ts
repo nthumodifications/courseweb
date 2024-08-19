@@ -1,10 +1,13 @@
 "use server";
-import { LoginError, UserJWT, UserJWTDetails } from "@/types/headless_ais";
-import { cookies } from "next/headers";
+import { LoginError, UserJWTDetails } from "@/types/headless_ais";
 import { parseHTML } from "linkedom";
-import supabase_server from "@/config/supabase_server";
-import * as jose from "jose";
 import { fetchWithTimeout } from "@/helpers/fetch";
+import {
+  createSessionCookie,
+  mintFirebaseToken,
+  revokeAllSessions,
+} from "@/lib/firebase/auth";
+import { cookies } from "next/headers";
 
 function hexStringToUint8Array(hexString: string) {
   if (hexString.length % 2 !== 0) {
@@ -112,7 +115,12 @@ async function streamAndMatch(response: Response, regex: RegExp) {
 }
 
 type SignInToCCXPResponse = Promise<
-  | { ACIXSTORE: string; encryptedPassword: string }
+  | {
+      ACIXSTORE: string;
+      encryptedPassword: string;
+      passwordExpired: boolean;
+      accessToken: string;
+    }
   | { error: { message: string } }
 >;
 /**
@@ -120,7 +128,7 @@ type SignInToCCXPResponse = Promise<
  * ONLY use this for first time login, will return encrypted password and ACIXSTORE
  * @param studentid
  * @param password
- * @returns { ACIXSTORE: string, encryptedPassword: string }
+ * @returns { ACIXSTORE: string, encryptedPassword: string, passwordExpired: boolean, accessToken: string }
  */
 export const signInToCCXP = async (
   studentid: string,
@@ -131,7 +139,9 @@ export const signInToCCXP = async (
   try {
     const ocrAndLogin: (
       _try?: number,
-    ) => Promise<{ ACIXSTORE: string }> = async (_try = 0) => {
+    ) => Promise<{ ACIXSTORE: string; passwordExpired: boolean }> = async (
+      _try = 0,
+    ) => {
       if (_try == 3) {
         throw new Error(LoginError.Unknown);
       }
@@ -214,7 +224,7 @@ export const signInToCCXP = async (
             "upgrade-insecure-requests": "1",
           },
           keepalive: true,
-          body: `account=${studentid}&passwd=${password}&passwd2=${answer}&Submit=%B5n%A4J&fnstr=${pwdstr}`,
+          body: `account=${encodeURIComponent(studentid)}&passwd=${encodeURIComponent(password)}&passwd2=${answer}&Submit=%B5n%A4J&fnstr=${pwdstr}`,
           method: "POST",
         },
       );
@@ -258,6 +268,8 @@ export const signInToCCXP = async (
         });
       console.log("Time taken", Date.now() - startTime);
       startTime = Date.now();
+
+      const passwordExpired = !!newHTML.match("個人密碼修改");
       if (resHTML.match("驗證碼輸入錯誤!")) {
         return await ocrAndLogin(_try++);
       } else if (resHTML.match("15分鐘內登錄錯誤")) {
@@ -273,7 +285,7 @@ export const signInToCCXP = async (
         if (!ACIXSTORE) {
           return await ocrAndLogin(_try++);
         }
-        return { ACIXSTORE };
+        return { ACIXSTORE, passwordExpired };
       }
     };
     const result = await ocrAndLogin();
@@ -297,7 +309,6 @@ export const signInToCCXP = async (
           "sec-fetch-user": "?1",
           "upgrade-insecure-requests": "1",
         },
-        keepalive: true,
         body: null,
         method: "GET",
         mode: "cors",
@@ -347,30 +358,12 @@ export const signInToCCXP = async (
     ) {
       throw new Error(LoginError.Unknown);
     }
-
-    // const token = jwt.sign({ sub: studentid, ...data }, process.env.NTHU_HEADLESS_AIS_SIGNING_KEY!, { expiresIn: '15d' });
-    //use jose to sign the token
-    const secret = new TextEncoder().encode(
-      process.env.NTHU_HEADLESS_AIS_SIGNING_KEY!,
-    );
-    const jwt = await new jose.SignJWT({ sub: studentid, ...data })
-      .setProtectedHeader({ alg: "HS256" })
-      .setIssuedAt()
-      .setIssuer("NTHUMods")
-      .setExpirationTime("15d")
-      .sign(secret);
-
-    await cookies().set("accessToken", jwt, {
-      path: "/",
-      maxAge: 60 * 60 * 24,
-      sameSite: "strict",
-      secure: true,
-    });
+    const accessToken = await mintFirebaseToken(data);
 
     // Encrypt user password
     const encryptedPassword = await encrypt(password);
 
-    return { ...result, encryptedPassword };
+    return { ...result, encryptedPassword, accessToken };
   } catch (err) {
     console.error("CCXP Login Err", err);
     if (err instanceof Error) return { error: { message: err.message } };
@@ -379,7 +372,8 @@ export const signInToCCXP = async (
 };
 
 type RefreshUserSessionResponse = Promise<
-  { ACIXSTORE: string } | { error: { message: string } }
+  | { ACIXSTORE: string; passwordExpired: boolean; accessToken: string }
+  | { error: { message: string } }
 >;
 export const refreshUserSession = async (
   studentid: string,
@@ -393,38 +387,46 @@ export const refreshUserSession = async (
   if ("error" in res && res.error) {
     console.error(res.error);
     return { error: res.error };
-  }
-  // @ts-ignore - We know that res is not an error
-  return { ACIXSTORE: res.ACIXSTORE };
-};
-
-export const getUserSession = async () => {
-  const accessToken = cookies().get("accessToken")?.value ?? "";
-  try {
-    const secret = new TextEncoder().encode(
-      process.env.NTHU_HEADLESS_AIS_SIGNING_KEY!,
-    );
-    const { payload } = (await jose.jwtVerify(accessToken, secret)) as {
-      payload: UserJWT;
+  } else if (!("error" in res))
+    return {
+      ACIXSTORE: res.ACIXSTORE,
+      passwordExpired: res.passwordExpired,
+      accessToken: res.accessToken,
     };
-    return payload;
-  } catch {
-    return null;
-  }
+  return { error: { message: "Unknown error" } };
 };
 
-export const isUserBanned = async () => {
-  const session = await getUserSession();
-  if (!session) {
-    return false;
-  }
-  const { data, error } = await supabase_server
-    .from("users")
-    .select("banned")
-    .eq("studentid", session.studentid)
-    .maybeSingle();
-  if (error) {
-    return false;
-  }
-  return data?.banned ?? false;
+export const updateUserPassword = async (
+  ACIXSTORE: string,
+  oldEncryptedPassword: string,
+  newPassword: string,
+) => {
+  // Decrypt old password
+  const oldPassword = await decrypt(oldEncryptedPassword);
+  fetch("https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/PC/1/1.1/PC11002.php", {
+    headers: {
+      accept:
+        "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+      "accept-language": "en-US,en;q=0.9",
+      "cache-control": "max-age=0",
+      "content-type": "application/x-www-form-urlencoded",
+      "sec-ch-ua":
+        '"Not)A;Brand";v="99", "Microsoft Edge";v="127", "Chromium";v="127"',
+      "sec-ch-ua-mobile": "?0",
+      "sec-ch-ua-platform": '"Windows"',
+      "sec-fetch-dest": "frame",
+      "sec-fetch-mode": "navigate",
+      "sec-fetch-site": "same-origin",
+      "sec-fetch-user": "?1",
+      "upgrade-insecure-requests": "1",
+    },
+    body: `ACIXSTORE=${ACIXSTORE}&O_PASS=${encodeURIComponent(oldPassword)}&N_PASS=${encodeURIComponent(newPassword)}&N_PASS2=${encodeURIComponent(newPassword)}&choice=確定`,
+    method: "POST",
+    mode: "cors",
+    credentials: "include",
+  });
+
+  // Encrypt new password
+  const newEncryptedPassword = await encrypt(newPassword);
+  return newEncryptedPassword;
 };

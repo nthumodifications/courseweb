@@ -48,10 +48,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { CompactPicker } from "react-color";
-import { useHeadlessAIS } from "@/hooks/contexts/useHeadlessAIS";
-import { toast } from "../ui/use-toast";
-import { event } from "@/lib/gtag";
+import Compact from "@uiw/react-color-compact";
 import { Separator } from "../ui/separator";
 import {
   HoverCard,
@@ -146,7 +143,7 @@ const TimetableCourseListItem = ({
           </div>
         </PopoverTrigger>
         <PopoverContent className="p-0">
-          <CompactPicker
+          <Compact
             color={colorMap[course.raw_id]}
             onChange={(color) => {
               setColor(course.raw_id, color.hex);

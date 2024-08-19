@@ -7,16 +7,9 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import TimeslotSelector from "@/components/Courses/TimeslotSelector";
 import Timeslotfilteritem from "./TimeslotFilterItem";
 import FilterItem from "./FilterItem";
 import { semesterInfo } from "@/const/semester";
-import { useClearRefinements } from "react-instantsearch";
 import ClassRefinementItem from "./ClasssRefinementItem";
 
 const latestSemID = semesterInfo[semesterInfo.length - 1].id;

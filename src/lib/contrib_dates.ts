@@ -1,10 +1,10 @@
 "use server";
 import supabase_server from "@/config/supabase_server";
 import { cookies } from "next/headers";
-import { getUserSession, isUserBanned } from "./headless_ais";
 import { isSameDay } from "date-fns";
 import { id } from "date-fns/locale";
 import { ServerAction } from "@/types/actions";
+import { getCurrentUser } from "@/lib/firebase/auth";
 
 export const getContribDates = async (raw_id: string) => {
   cookies();
@@ -28,10 +28,9 @@ export const submitContribDates: ServerAction = async (
   raw_id: string,
   dates: { id?: number; type: string; title: string; date: string }[],
 ) => {
-  const session = await getUserSession();
+  const session = await getCurrentUser();
   try {
     if (!session) throw new Error("Not logged in");
-    if (await isUserBanned()) throw new Error("User is banned");
     //check if all dates are in yyyy-mm-dd format (We assume Taipei timezone, so no need to convert timezone)
     if (!dates.every((d) => /^\d{4}-\d{2}-\d{2}$/.test(d.date)))
       throw new Error("Invalid date format");
@@ -62,7 +61,7 @@ export const submitContribDates: ServerAction = async (
           type: d.type,
           title: d.title,
           date: d.date,
-          submitter: session.studentid,
+          submitter: session.uid,
         })),
         { onConflict: "id", defaultToNull: false },
       );
@@ -71,7 +70,7 @@ export const submitContribDates: ServerAction = async (
       await supabase_server.from("course_logs").insert({
         raw_id,
         action: `added ${newDates.filter((d) => !d.id).length} dates and updated ${newDates.filter((d) => d.id).length} dates`,
-        user: session.studentid,
+        user: session.uid,
       });
     }
 
@@ -86,7 +85,7 @@ export const submitContribDates: ServerAction = async (
       await supabase_server.from("course_logs").insert({
         raw_id,
         action: `deleted ${missingIds.length} dates`,
-        user: session.studentid,
+        user: session.uid,
       });
       if (delError) throw new Error("Failed to delete dates");
     } else return true;

@@ -14,7 +14,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import useCustomRefinementList from "./useCustomRefinementList";
 import { getFormattedClassCode } from "@/helpers/courses";
@@ -43,8 +43,10 @@ const ClassRefinementItem = ({
     attribute: "semester",
   });
 
-  const selectedSemester =
-    semesterItem.find((item) => item.isRefined)?.value ?? lastSemester.id;
+  const selectedSemester = useMemo(
+    () => semesterItem.find((item) => item.isRefined)?.value ?? lastSemester.id,
+    [semesterItem],
+  );
 
   const searchParams = useSearchParams();
   useEffect(() => {
@@ -52,29 +54,37 @@ const ClassRefinementItem = ({
     setSelected(refinedItems.map((item) => item.value));
   }, [items, searchParams]);
 
+  const [typable, setEnableTyping] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [searching, setSearching] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
 
-  const search = (name: string) => {
-    setSearchValue(name);
-    if (!clientSearch) {
-      searchForItems(name);
-    }
-    if (name == "") {
-      const refined = items.filter((item) => item.isRefined);
-      setSelected(refined.map((item) => item.value));
-    }
-  };
+  const search = useCallback(
+    (name: string) => {
+      setSearchValue(name);
+      if (!clientSearch) {
+        searchForItems(name);
+      }
+      if (name == "") {
+        const refined = items.filter((item) => item.isRefined);
+        setSelected(refined.map((item) => item.value));
+      }
+    },
+    [searchForItems, items],
+  );
 
-  const openChange = (open: boolean) => {
-    if (open == true) {
-      setSearching(true);
-    } else {
-      setSearching(false);
-      search("");
-    }
-  };
+  const openChange = useCallback(
+    (open: boolean) => {
+      setEnableTyping(false);
+      if (open == true) {
+        setSearching(true);
+      } else {
+        setSearching(false);
+        search("");
+      }
+    },
+    [search],
+  );
 
   const select = (value: string) => {
     setSearchValue("");
@@ -99,7 +109,7 @@ const ClassRefinementItem = ({
             ) : (
               <div className="flex flex-col gap-1">
                 {selected.map((i) => (
-                  <Badge variant="outline" className="">
+                  <Badge key={i} variant="outline" className="">
                     {getFormattedClassCode(i, selectedSemester)}
                   </Badge>
                 ))}
@@ -116,6 +126,8 @@ const ClassRefinementItem = ({
         <Command shouldFilter={clientSearch}>
           {searchable && (
             <CommandInput
+              onClick={() => setEnableTyping(true)}
+              inputMode={typable ? "text" : "none"}
               autoComplete="off"
               autoCorrect="off"
               autoCapitalize="off"
@@ -126,7 +138,10 @@ const ClassRefinementItem = ({
               placeholder={placeholder}
             />
           )}
-          <ScrollArea className="h-[300px]">
+          <ScrollArea
+            onScrollCapture={() => setEnableTyping(false)}
+            className="h-[300px]"
+          >
             <CommandList className="max-h-none">
               <CommandEmpty>No results found.</CommandEmpty>
               {items

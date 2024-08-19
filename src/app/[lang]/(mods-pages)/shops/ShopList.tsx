@@ -48,7 +48,7 @@ const Shops = ({ data }: { data: Array<{ restaurants: Array<any> }> }) => {
         {search && (
           <div className="mt-4">
             <span>Search results for </span>
-            <span className="font-bold">"{search}"</span>
+            <span className="font-bold">{`"${search}"`}</span>
           </div>
         )}
 
@@ -75,7 +75,9 @@ const Shops = ({ data }: { data: Array<{ restaurants: Array<any> }> }) => {
             <SelectContent>
               <SelectItem value="anywhere">Anywhere</SelectItem>
               {areas.map((area) => (
-                <SelectItem value={area}>{area}</SelectItem>
+                <SelectItem key={area} value={area}>
+                  {area}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -85,6 +87,7 @@ const Shops = ({ data }: { data: Array<{ restaurants: Array<any> }> }) => {
       <div className="flex flex-col gap-12 py-4">
         {shops.map((shop) => (
           <ShopItem
+            key={shop.name}
             shop={shop}
             filter={{ search: search, open: filterOpen, area: filterArea }}
           />

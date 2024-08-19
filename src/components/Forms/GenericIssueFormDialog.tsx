@@ -75,8 +75,8 @@ const GenericIssueForm = () => {
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>問題回報 Bug Reporting</DialogTitle>
-          <DialogDescription>匿名的哦~ It's Anonymous!</DialogDescription>
+          <DialogTitle>{`問題回報 Bug Reporting`}</DialogTitle>
+          <DialogDescription>{`匿名的哦~ It's Anonymous!`}</DialogDescription>
         </DialogHeader>
         <ScrollArea className="max-h-[90vh]">
           <form action={action} className="flex flex-col max-w-2xl gap-4">

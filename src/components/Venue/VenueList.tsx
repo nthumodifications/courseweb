@@ -43,7 +43,7 @@ const VenueList = ({ venues }: { venues: string[] }) => {
       />
       {Object.keys(grouped).map((ven, i) => {
         return (
-          <div className="flex flex-col gap-2">
+          <div key={ven} className="flex flex-col gap-2">
             <h2 className="text-lg font-semibold">{ven}</h2>
             <div className="grid grid-cols-2 md:grid-cols-3">
               {grouped[ven].map((venue, i) => (

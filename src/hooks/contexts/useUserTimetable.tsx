@@ -21,6 +21,9 @@ import { getSemesterFromID } from "@/helpers/courses";
 import { event } from "@/lib/gtag";
 import { timetableColors } from "@/const/timetableColors";
 import { useQuery } from "@tanstack/react-query";
+import { auth, db } from "@/config/firebase";
+import { useAuthState } from "react-firebase-hooks/auth";
+import useSyncedStorage from "../useSyncedStorage";
 
 export interface TimetableDisplayPreferences {
   language: "app" | "zh" | "en";
@@ -33,7 +36,7 @@ export interface TimetableDisplayPreferences {
   };
 }
 
-type CourseLocalStorage = { [sem: string]: RawCourseID[] };
+export type CourseLocalStorage = { [sem: string]: RawCourseID[] };
 
 const userTimetableContext = createContext<
   ReturnType<typeof useUserTimetableProvider>
@@ -73,22 +76,22 @@ const userTimetableContext = createContext<
 });
 
 const useUserTimetableProvider = (loadCourse = true) => {
-  const [courses, setCourses] = useLocalStorage<CourseLocalStorage>(
+  const [courses, setCourses] = useSyncedStorage<CourseLocalStorage>(
     "courses",
     {},
   );
-  const [colorMap, setColorMap] = useLocalStorage<{
+  const [colorMap, setColorMap] = useSyncedStorage<{
     [courseID: string]: string;
   }>("course_color_map", {}); //map from courseID to color
-  const [timetableTheme, _setTimetableTheme] = useLocalStorage<string>(
+  const [timetableTheme, _setTimetableTheme] = useSyncedStorage<string>(
     "timetable_theme",
     "pastelColors",
   );
-  const [userDefinedColors, setUserDefinedColors] = useLocalStorage<{
+  const [userDefinedColors, setUserDefinedColors] = useSyncedStorage<{
     [theme_name: string]: string[];
   }>("user_defined_colors", {});
   const [preferences, setPreferences] =
-    useLocalStorage<TimetableDisplayPreferences>(
+    useSyncedStorage<TimetableDisplayPreferences>(
       "timetable_display_preferences",
       {
         language: "app",
@@ -102,15 +105,17 @@ const useUserTimetableProvider = (loadCourse = true) => {
       },
     );
   const [semester, setSemester] = useState<string>(lastSemester.id);
-
+  const [user] = useAuthState(auth);
   const setTimetableTheme = useCallback(
     (theme: string) => {
       //if theme updated, remap colors and override all
       const newColors = timetableColors[theme];
       const newColorMap: { [courseID: string]: string } = {};
 
-      Object.keys(courses).forEach((sem) => {
-        courses[sem].forEach((courseID, i) => {
+      const coursesCopy = { ...courses };
+
+      Object.keys(coursesCopy).forEach((sem) => {
+        (coursesCopy[sem] ?? []).forEach((courseID, i) => {
           newColorMap[courseID] = newColors[i % newColors.length];
         });
       });
@@ -119,7 +124,7 @@ const useUserTimetableProvider = (loadCourse = true) => {
       console.log("colorMap updated");
       _setTimetableTheme(theme);
     },
-    [courses],
+    [courses, user],
   );
 
   //fix timetableTheme if it is not in timetableColors
@@ -139,22 +144,6 @@ const useUserTimetableProvider = (loadCourse = true) => {
       label: !themes.includes(timetableTheme) ? themes[0] : timetableTheme,
     });
   }, [timetableTheme, Object.keys(userDefinedColors).length]);
-
-  //check if number of courses in each semester is the same as number of colors
-  useEffect(() => {
-    const semesters = Object.keys(courses);
-    const numCourses = Object.values(courses).flat().length;
-    const numColors = Object.keys(colorMap).length;
-    if (numCourses == numColors) return;
-    //if not the same, reset colorMap
-    const newColorMap: { [courseID: string]: string } = {};
-    semesters.forEach((sem) => {
-      courses[sem].forEach((courseID, i) => {
-        newColorMap[courseID] = currentColors[i % currentColors.length];
-      });
-    });
-    setColorMap(newColorMap);
-  }, [courses, colorMap]);
 
   const {
     data: user_courses_data = [],
@@ -289,10 +278,11 @@ const useUserTimetableProvider = (loadCourse = true) => {
 
   const setColor = (courseID: string, color: string) => {
     setColorMap((colorMap) => {
-      return {
+      const newColorMap = {
         ...colorMap,
         [courseID]: color,
       };
+      return newColorMap;
     });
   };
 

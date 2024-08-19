@@ -1,8 +1,6 @@
 import jsdom from "jsdom";
 import supabase_server from "@/config/supabase_server";
 import { NextRequest, NextResponse } from "next/server";
-import iconv from "iconv-lite";
-import fs from "fs/promises";
 import { signInToCCXP } from "@/lib/headless_ais";
 
 export const GET = async (request: NextRequest) => {
@@ -62,13 +60,17 @@ export const GET = async (request: NextRequest) => {
       new TextDecoder("big5").decode(new Uint8Array(arrayBuffer)),
     );
 
-  console.log("parsing ");
+  // if html contains '查無平均值及標準差資料' then return error
+  if (html.includes("查無平均值及標準差資料")) {
+    return NextResponse.json({ message: "no data" }, { status: 200 });
+  }
   const dom = new jsdom.JSDOM(html);
   const doc = dom.window.document;
   const rows = doc.body
     .getElementsByTagName("table")[0]
     ?.getElementsByTagName("tr");
   const courses = [];
+  console.log("Found rows: ", rows?.length);
   //first two rows are headers
   for (let i = 2; i < rows!.length; i++) {
     // for(let i = 2; i < 3; i++) {
@@ -88,6 +90,8 @@ export const GET = async (request: NextRequest) => {
         : avg.trim().length > 0
           ? "percent"
           : "none";
+    console.log(type);
+
     courses.push({
       raw_id,
       enrollment: parseInt(enrollment),

@@ -14,7 +14,7 @@ const AppUrlListener: React.FC<any> = () => {
         router.push(slug);
       }
     });
-  }, []);
+  }, [router]);
 
   return <></>;
 };
