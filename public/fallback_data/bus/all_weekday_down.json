@@ -1,1 +1,1077 @@
-[{"time": "7:20", "description": "", "route": "\u5357\u5927\u5340\u9593\u8eca"}, {"time": "7:27", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "7:33", "description": "\u6b64\u70ba\u4ed8\u8cbb\u5e02\u5340\u516c\u8eca(83\u865f\u516c\u8eca\u76f4\u9054\u5169\u6821\u5340)", "route": "\u5357\u5927\u5340\u9593\u8eca"}, {"time": "7:52", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "7:57", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "8:00", "description": "", "route": "\u5357\u5927\u5340\u9593\u8eca"}, {"time": "8:12", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "8:22", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "8:32", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "8:40", "description": "", "route": "\u5357\u5927\u5340\u9593\u8eca"}, {"time": "8:42", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "8:42", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "8:47", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "8:52", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "8:52", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "8:57", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "\u5927\u578b\u5df4\u58eb\u3001\u9031\u516d\u6709\u884c\u99db", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "8:57", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "9:02", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "9:02", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "9:07", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "9:12", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "9:22", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "9:32", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "9:32", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "9:40", "description": "", "route": "\u5357\u5927\u5340\u9593\u8eca"}, {"time": "9:42", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "9:42", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "9:47", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "9:47", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "9:50", "description": "", "route": "\u5357\u5927\u5340\u9593\u8eca"}, {"time": "9:52", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "9:52", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "9:55", "description": "", "route": "\u5357\u5927\u5340\u9593\u8eca"}, {"time": "9:57", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "9:57", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "10:02", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "\u5927\u578b\u5df4\u58eb", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "10:02", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "10:07", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "\u5927\u578b\u5df4\u58eb", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "10:07", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "10:12", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "10:12", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "\u5927\u578b\u5df4\u58eb", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "10:17", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "10:17", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "10:27", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "10:42", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "11:02", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "11:22", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "11:30", "description": "", "route": "\u5357\u5927\u5340\u9593\u8eca"}, {"time": "11:42", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "12:02", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "12:02", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "12:05", "description": "", "route": "\u5357\u5927\u5340\u9593\u8eca"}, {"time": "12:07", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "12:07", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "12:12", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "12:12", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "\u5927\u578b\u5df4\u58eb", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "12:17", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "\u9031\u516d\u6709\u884c\u99db", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "12:17", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "\u5927\u578b\u5df4\u58eb", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "12:20", "description": "", "route": "\u5357\u5927\u5340\u9593\u8eca"}, {"time": "12:22", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "12:23", "description": "\u6b64\u70ba\u4ed8\u8cbb\u5e02\u5340\u516c\u8eca(83\u865f\u516c\u8eca\u76f4\u9054\u5169\u6821\u5340)", "route": "\u5357\u5927\u5340\u9593\u8eca"}, {"time": "12:35", "description": "", "route": "\u5357\u5927\u5340\u9593\u8eca"}, {"time": "12:37", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "12:37", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "12:47", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "12:47", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "12:55", "description": "", "route": "\u5357\u5927\u5340\u9593\u8eca"}, {"time": "12:57", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "12:57", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "13:00", "description": "", "route": "\u5357\u5927\u5340\u9593\u8eca"}, {"time": "13:02", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "13:07", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "13:07", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "13:12", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "\u5927\u578b\u5df4\u58eb", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "13:12", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "13:17", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "\u9031\u516d\u6709\u884c\u99db", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "13:17", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "13:22", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "13:22", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "13:27", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "13:32", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "13:42", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "13:52", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "13:52", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "14:00", "description": "", "route": "\u5357\u5927\u5340\u9593\u8eca"}, {"time": "14:02", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "14:02", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "14:07", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "14:12", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "14:17", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "14:22", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "14:32", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "14:42", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "14:50", "description": "\u9031\u4e94\u505c\u99db", "route": "\u5357\u5927\u5340\u9593\u8eca"}, {"time": "14:52", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "15:00", "description": "", "route": "\u5357\u5927\u5340\u9593\u8eca"}, {"time": "15:02", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "15:02", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "15:05", "description": "\u9031\u4e94\u505c\u99db", "route": "\u5357\u5927\u5340\u9593\u8eca"}, {"time": "15:07", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "15:12", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "15:12", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "15:15", "description": "", "route": "\u5357\u5927\u5340\u9593\u8eca"}, {"time": "15:17", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "15:17", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "\u5927\u578b\u5df4\u58eb", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "15:18", "description": "\u6b64\u70ba\u4ed8\u8cbb\u5e02\u5340\u516c\u8eca(83\u865f\u516c\u8eca\u76f4\u9054\u5169\u6821\u5340)", "route": "\u5357\u5927\u5340\u9593\u8eca"}, {"time": "15:22", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "\u5927\u578b\u5df4\u58eb", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "15:22", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "15:27", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "15:27", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "15:32", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "15:32", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "15:37", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "15:40", "description": "", "route": "\u5357\u5927\u5340\u9593\u8eca"}, {"time": "15:42", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "15:57", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "16:17", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "16:27", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "\u9031\u516d\u6709\u884c\u99db", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "16:32", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "16:42", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "16:55", "description": "", "route": "\u5357\u5927\u5340\u9593\u8eca"}, {"time": "16:57", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "17:12", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "17:12", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "17:22", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "17:22", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "17:27", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "17:30", "description": "", "route": "\u5357\u5927\u5340\u9593\u8eca"}, {"time": "17:32", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "17:32", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "17:42", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "17:50", "description": "\u9031\u4e94\u505c\u99db", "route": "\u5357\u5927\u5340\u9593\u8eca"}, {"time": "17:52", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "18:02", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "18:10", "description": "", "route": "\u5357\u5927\u5340\u9593\u8eca"}, {"time": "18:12", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "18:17", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "18:22", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "18:22", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "\u5927\u578b\u5df4\u58eb", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "18:27", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "18:30", "description": "\u9031\u4e94\u505c\u99db", "route": "\u5357\u5927\u5340\u9593\u8eca"}, {"time": "18:32", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "18:32", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "\u5927\u578b\u5df4\u58eb", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "18:37", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "18:40", "description": "", "route": "\u5357\u5927\u5340\u9593\u8eca"}, {"time": "18:42", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "18:43", "description": "\u6b64\u70ba\u4ed8\u8cbb\u5e02\u5340\u516c\u8eca(83\u865f\u516c\u8eca\u76f4\u9054\u5169\u6821\u5340)", "route": "\u5357\u5927\u5340\u9593\u8eca"}, {"time": "18:57", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "19:12", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "19:32", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "19:40", "description": "\u9031\u4e94\u505c\u99db", "route": "\u5357\u5927\u5340\u9593\u8eca"}, {"time": "20:02", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "20:32", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "20:40", "description": "", "route": "\u5357\u5927\u5340\u9593\u8eca"}, {"time": "21:07", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "21:10", "description": "\u9031\u4e94\u505c\u99db", "route": "\u5357\u5927\u5340\u9593\u8eca"}, {"time": "21:17", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "21:32", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "21:40", "description": "", "route": "\u5357\u5927\u5340\u9593\u8eca"}, {"time": "21:52", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "22:07", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "22:20", "description": "", "route": "\u5357\u5927\u5340\u9593\u8eca"}, {"time": "22:27", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}]
+[
+  {
+    "time": "7:20",
+    "description": "",
+    "route": "\u5357\u5927\u5340\u9593\u8eca"
+  },
+  {
+    "time": "7:27",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "7:33",
+    "description": "\u6b64\u70ba\u4ed8\u8cbb\u5e02\u5340\u516c\u8eca(83\u865f\u516c\u8eca\u76f4\u9054\u5169\u6821\u5340)",
+    "route": "\u5357\u5927\u5340\u9593\u8eca"
+  },
+  {
+    "time": "7:52",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "7:57",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "8:00",
+    "description": "",
+    "route": "\u5357\u5927\u5340\u9593\u8eca"
+  },
+  {
+    "time": "8:12",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "8:22",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "8:32",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "8:40",
+    "description": "",
+    "route": "\u5357\u5927\u5340\u9593\u8eca"
+  },
+  {
+    "time": "8:42",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "8:42",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "8:47",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "8:52",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "8:52",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "8:57",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "\u5927\u578b\u5df4\u58eb\u3001\u9031\u516d\u6709\u884c\u99db",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "8:57",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "9:02",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "9:02",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "9:07",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "9:12",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "9:22",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "9:32",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "9:32",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "9:40",
+    "description": "",
+    "route": "\u5357\u5927\u5340\u9593\u8eca"
+  },
+  {
+    "time": "9:42",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "9:42",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "9:47",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "9:47",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "9:50",
+    "description": "",
+    "route": "\u5357\u5927\u5340\u9593\u8eca"
+  },
+  {
+    "time": "9:52",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "9:52",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "9:55",
+    "description": "",
+    "route": "\u5357\u5927\u5340\u9593\u8eca"
+  },
+  {
+    "time": "9:57",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "9:57",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "10:02",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "\u5927\u578b\u5df4\u58eb",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "10:02",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "10:07",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "\u5927\u578b\u5df4\u58eb",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "10:07",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "10:12",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "10:12",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "\u5927\u578b\u5df4\u58eb",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "10:17",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "10:17",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "10:27",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "10:42",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "11:02",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "11:22",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "11:30",
+    "description": "",
+    "route": "\u5357\u5927\u5340\u9593\u8eca"
+  },
+  {
+    "time": "11:42",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "12:02",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "12:02",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "12:05",
+    "description": "",
+    "route": "\u5357\u5927\u5340\u9593\u8eca"
+  },
+  {
+    "time": "12:07",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "12:07",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "12:12",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "12:12",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "\u5927\u578b\u5df4\u58eb",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "12:17",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "\u9031\u516d\u6709\u884c\u99db",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "12:17",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "\u5927\u578b\u5df4\u58eb",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "12:20",
+    "description": "",
+    "route": "\u5357\u5927\u5340\u9593\u8eca"
+  },
+  {
+    "time": "12:22",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "12:23",
+    "description": "\u6b64\u70ba\u4ed8\u8cbb\u5e02\u5340\u516c\u8eca(83\u865f\u516c\u8eca\u76f4\u9054\u5169\u6821\u5340)",
+    "route": "\u5357\u5927\u5340\u9593\u8eca"
+  },
+  {
+    "time": "12:35",
+    "description": "",
+    "route": "\u5357\u5927\u5340\u9593\u8eca"
+  },
+  {
+    "time": "12:37",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "12:37",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "12:47",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "12:47",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "12:55",
+    "description": "",
+    "route": "\u5357\u5927\u5340\u9593\u8eca"
+  },
+  {
+    "time": "12:57",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "12:57",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "13:00",
+    "description": "",
+    "route": "\u5357\u5927\u5340\u9593\u8eca"
+  },
+  {
+    "time": "13:02",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "13:07",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "13:07",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "13:12",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "\u5927\u578b\u5df4\u58eb",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "13:12",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "13:17",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "\u9031\u516d\u6709\u884c\u99db",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "13:17",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "13:22",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "13:22",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "13:27",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "13:32",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "13:42",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "13:52",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "13:52",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "14:00",
+    "description": "",
+    "route": "\u5357\u5927\u5340\u9593\u8eca"
+  },
+  {
+    "time": "14:02",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "14:02",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "14:07",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "14:12",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "14:17",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "14:22",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "14:32",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "14:42",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "14:50",
+    "description": "\u9031\u4e94\u505c\u99db",
+    "route": "\u5357\u5927\u5340\u9593\u8eca"
+  },
+  {
+    "time": "14:52",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "15:00",
+    "description": "",
+    "route": "\u5357\u5927\u5340\u9593\u8eca"
+  },
+  {
+    "time": "15:02",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "15:02",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "15:05",
+    "description": "\u9031\u4e94\u505c\u99db",
+    "route": "\u5357\u5927\u5340\u9593\u8eca"
+  },
+  {
+    "time": "15:07",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "15:12",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "15:12",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "15:15",
+    "description": "",
+    "route": "\u5357\u5927\u5340\u9593\u8eca"
+  },
+  {
+    "time": "15:17",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "15:17",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "\u5927\u578b\u5df4\u58eb",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "15:18",
+    "description": "\u6b64\u70ba\u4ed8\u8cbb\u5e02\u5340\u516c\u8eca(83\u865f\u516c\u8eca\u76f4\u9054\u5169\u6821\u5340)",
+    "route": "\u5357\u5927\u5340\u9593\u8eca"
+  },
+  {
+    "time": "15:22",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "\u5927\u578b\u5df4\u58eb",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "15:22",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "15:27",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "15:27",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "15:32",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "15:32",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "15:37",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "15:40",
+    "description": "",
+    "route": "\u5357\u5927\u5340\u9593\u8eca"
+  },
+  {
+    "time": "15:42",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "15:57",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "16:17",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "16:27",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "\u9031\u516d\u6709\u884c\u99db",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "16:32",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "16:42",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "16:55",
+    "description": "",
+    "route": "\u5357\u5927\u5340\u9593\u8eca"
+  },
+  {
+    "time": "16:57",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "17:12",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "17:12",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "17:22",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "17:22",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "17:27",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "17:30",
+    "description": "",
+    "route": "\u5357\u5927\u5340\u9593\u8eca"
+  },
+  {
+    "time": "17:32",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "17:32",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "17:42",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "17:50",
+    "description": "\u9031\u4e94\u505c\u99db",
+    "route": "\u5357\u5927\u5340\u9593\u8eca"
+  },
+  {
+    "time": "17:52",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "18:02",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "18:10",
+    "description": "",
+    "route": "\u5357\u5927\u5340\u9593\u8eca"
+  },
+  {
+    "time": "18:12",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "18:17",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "18:22",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "18:22",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "\u5927\u578b\u5df4\u58eb",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "18:27",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "18:30",
+    "description": "\u9031\u4e94\u505c\u99db",
+    "route": "\u5357\u5927\u5340\u9593\u8eca"
+  },
+  {
+    "time": "18:32",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "18:32",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "\u5927\u578b\u5df4\u58eb",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "18:37",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "18:40",
+    "description": "",
+    "route": "\u5357\u5927\u5340\u9593\u8eca"
+  },
+  {
+    "time": "18:42",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "18:43",
+    "description": "\u6b64\u70ba\u4ed8\u8cbb\u5e02\u5340\u516c\u8eca(83\u865f\u516c\u8eca\u76f4\u9054\u5169\u6821\u5340)",
+    "route": "\u5357\u5927\u5340\u9593\u8eca"
+  },
+  {
+    "time": "18:57",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "19:12",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "19:32",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "19:40",
+    "description": "\u9031\u4e94\u505c\u99db",
+    "route": "\u5357\u5927\u5340\u9593\u8eca"
+  },
+  {
+    "time": "20:02",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "20:32",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "20:40",
+    "description": "",
+    "route": "\u5357\u5927\u5340\u9593\u8eca"
+  },
+  {
+    "time": "21:07",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "21:10",
+    "description": "\u9031\u4e94\u505c\u99db",
+    "route": "\u5357\u5927\u5340\u9593\u8eca"
+  },
+  {
+    "time": "21:17",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "21:32",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "21:40",
+    "description": "",
+    "route": "\u5357\u5927\u5340\u9593\u8eca"
+  },
+  {
+    "time": "21:52",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "22:07",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "22:20",
+    "description": "",
+    "route": "\u5357\u5927\u5340\u9593\u8eca"
+  },
+  {
+    "time": "22:27",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  }
+]

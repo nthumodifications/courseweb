@@ -1,11 +1,11 @@
 export type CalendarApiResponse = {
-    "summary": string;
-    "start": {
-        "date": string;
-    }
-}
+  summary: string;
+  start: {
+    date: string;
+  };
+};
 
 export type EventData = {
-    summary: string;
-    weekday: number;
-}
+  summary: string;
+  weekday: number;
+};

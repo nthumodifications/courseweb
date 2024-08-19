@@ -1,256 +1,256 @@
 {
-    "today": {
-        "noclass": "今天沒有課喔！",
-        "noclass_sub": "放假吧~"
+  "today": {
+    "noclass": "今天沒有課喔！",
+    "noclass_sub": "放假吧~"
+  },
+  "timetable": {
+    "actions": {
+      "download": "下載",
+      "share": "分享/同步",
+      "horizontal_view": "水平視圖",
+      "vertical_view": "垂直視圖",
+      "sync_ccxp": "同步校務系統"
+    }
+  },
+  "course": {
+    "credits": "學分",
+    "list": {
+      "courses": "課程",
+      "found": "收到",
+      "search_placeholder": "尋找你要的課程..."
     },
-    "timetable":{
-        "actions": {
-            "download": "下載",
-            "share": "分享/同步",
-            "horizontal_view": "水平視圖",
-            "vertical_view": "垂直視圖",
-            "sync_ccxp": "同步校務系統"
-        }
+    "item": {
+      "add_to_semester": "加入這學期",
+      "remove_from_semester": "退掉這學期"
     },
-    "course": {
-        "credits": "學分",
-        "list": {
-            "courses": "課程",
-            "found": "收到",
-            "search_placeholder": "尋找你要的課程..."
-        },
-        "item": {
-            "add_to_semester": "加入這學期",
-            "remove_from_semester": "退掉這學期"
-        },
-        "timetable": {
-            "title": "時間表"
-        },
-        "refine": {
-            "title": "篩選",
-            "semester": "學期",
-            "level": "修習年級",
-            "language": "授課語言",
-            "department": "開課系所",
-            "specialization": "一二專選課",
-            "firstSpecialization": "一專",
-            "secondSpecialization": "二專",
-            "compulsory_elective": "必選修課",
-            "class": "班級",
-            "venues": "地點",
-            "time": "時間",
-            "cross_discipline": "跨領域",
-            "geTarget": "通識對象",
-            "gecDimensions": "核通向度",
-            "extra_selection": "允許加簽",
-            "x-class": "X-Class",
-            "16_weeks": "16 週課程",
-            "others": "其他",
-            "clear": "清除",
-            "special_tags": "特殊標籤",
-            "ge_filters": "通識篩選",
-            "timetable_empty": "找沒課的時間",
-            "advanced_filters": "進階篩選",
-            "search_results": "搜尋結果"
-        },
-        "details": {
-            "semester": "學期",
-            "language": "授課語言",
-            "reserved": "新生保留",
-            "capacity": "名額",
-            "venue_time": "時間地點",
-            "class": "系班",
-            "brief": "簡介",
-            "remarks": "備注",
-            "description": "課程大綱",
-            "restrictions": "課程限制",
-            "prerequesites": "擋修",
-            "timetable": "時間表",
-            "course_list": "課程列表",
-            "scores": "成績",
-            "average": "平均",
-            "standard_deviation": "標準差",
-            "score_types": {
-                "gpa": "GPA",
-                "percent": "百分比"
-            },
-            "ptt": "PTT心得",
-            "related_courses": "相同課號資料",
-            "compulsory": "必修",
-            "elective": "選修",
-            "cross_discipline": "跨領域",
-            "first_specialization": "一專",
-            "second_specialization": "二專",
-            "ptt_title": "PTT Reviews",
-            "ptt_disclaimer": "PTT 評論來自於 NTHU_Course 版，並非由 NTHUMods 審核。評論並不代表 NTHUMods 的立場。若您發現任何不當內容，請向PTT版檢舉。"
-        }
+    "timetable": {
+      "title": "時間表"
     },
-    "navigation": {
-        "today": "行事曆",
-        "courses": "課表",
-        "timetable": "時間表",
-        "settings": "設定",
-        "venues": "地點",
-        "bus": "校車"
+    "refine": {
+      "title": "篩選",
+      "semester": "學期",
+      "level": "修習年級",
+      "language": "授課語言",
+      "department": "開課系所",
+      "specialization": "一二專選課",
+      "firstSpecialization": "一專",
+      "secondSpecialization": "二專",
+      "compulsory_elective": "必選修課",
+      "class": "班級",
+      "venues": "地點",
+      "time": "時間",
+      "cross_discipline": "跨領域",
+      "geTarget": "通識對象",
+      "gecDimensions": "核通向度",
+      "extra_selection": "允許加簽",
+      "x-class": "X-Class",
+      "16_weeks": "16 週課程",
+      "others": "其他",
+      "clear": "清除",
+      "special_tags": "特殊標籤",
+      "ge_filters": "通識篩選",
+      "timetable_empty": "找沒課的時間",
+      "advanced_filters": "進階篩選",
+      "search_results": "搜尋結果"
+    },
+    "details": {
+      "semester": "學期",
+      "language": "授課語言",
+      "reserved": "新生保留",
+      "capacity": "名額",
+      "venue_time": "時間地點",
+      "class": "系班",
+      "brief": "簡介",
+      "remarks": "備注",
+      "description": "課程大綱",
+      "restrictions": "課程限制",
+      "prerequesites": "擋修",
+      "timetable": "時間表",
+      "course_list": "課程列表",
+      "scores": "成績",
+      "average": "平均",
+      "standard_deviation": "標準差",
+      "score_types": {
+        "gpa": "GPA",
+        "percent": "百分比"
+      },
+      "ptt": "PTT心得",
+      "related_courses": "相同課號資料",
+      "compulsory": "必修",
+      "elective": "選修",
+      "cross_discipline": "跨領域",
+      "first_specialization": "一專",
+      "second_specialization": "二專",
+      "ptt_title": "PTT Reviews",
+      "ptt_disclaimer": "PTT 評論來自於 NTHU_Course 版，並非由 NTHUMods 審核。評論並不代表 NTHUMods 的立場。若您發現任何不當內容，請向PTT版檢舉。"
+    }
+  },
+  "navigation": {
+    "today": "行事曆",
+    "courses": "課表",
+    "timetable": "時間表",
+    "settings": "設定",
+    "venues": "地點",
+    "bus": "校車"
+  },
+  "bus": {
+    "north_gate": "北校門口",
+    "tsmc": "台積館",
+    "nanda": "南大校區",
+    "main_campus": "校本部",
+    "service_over": "末班車已過",
+    "red_line": "紅線",
+    "green_line": "綠線",
+    "nanda_line": "南大校車",
+    "departing": "即將發車",
+    "departed": "已過站",
+    "validity": "有效期限",
+    "route": "路線",
+    "departure_time": "出發時間",
+    "notes": "備注",
+    "weekdays": "平日",
+    "weekends": "假日",
+    "to": "往"
+  },
+  "settings": {
+    "account": {
+      "signin": "登入",
+      "signout": "登出",
+      "title": "賬號",
+      "description": "校務資訊系統代理登入",
+      "ccxp": {
+        "title": "代理登入校務資訊系統",
+        "description": "系統會用代理登入方式，讓學生們可以在NTHUMods 上輕鬆連結校務系統功能。"
+      }
+    },
+    "display": {
+      "title": "顯示",
+      "description": "外觀，語言",
+      "dark_mode": {
+        "title": "黑暗模式"
+      },
+      "language": {
+        "title": "語言 Language"
+      }
+    },
+    "timetable": {
+      "title": "時間表",
+      "description": "顔色, 客制化",
+      "vertical_preview": "垂直式顯示",
+      "language": "時間表語言",
+      "align": {
+        "title": "對齊",
+        "left": "左",
+        "center": "中",
+        "right": "右"
+      },
+      "display": "顯示設定",
+      "slot_title": "課程名稱",
+      "slot_code": "課程代碼",
+      "slot_time": "時間",
+      "slot_venue": "地點"
+    },
+    "privacy": {
+      "title": "隱私",
+      "description": "使用量分析",
+      "analytics": {
+        "title": "分享至 Google Analytics",
+        "description": "傳送匿名使用量統計數據至 Google Analytics，幫助我們了解使用者行為，以改進服務。"
+      }
+    }
+  },
+  "venues": {
+    "placeholder": "從選項中選一個地點"
+  },
+  "alerts": {
+    "TimetableCourseList": {
+      "action": "前往設定",
+      "text": "時間表可以在設定頁面客制化哦！"
+    }
+  },
+  "applist": {
+    "title": "功能列表"
+  },
+  "dialogs": {
+    "DownloadTimetableDialog": {
+      "title": "下載你的課表",
+      "description": "把課表下載成圖片或是 .ics 導入到行事曆吧！",
+      "buttons": {
+        "image": "圖片",
+        "ICS": "行事曆 .ics"
+      }
+    },
+    "ShareSyncTimetableDialog": {
+      "title": "分享/同步你的課表",
+      "description": "把你的課表分享給朋友，或是同步到其他裝置上吧！",
+      "category:qr": "QR 碼",
+      "category:links": "連結",
+      "links": {
+        "email": "發送郵件"
+      }
+    }
+  },
+  "shops": {
+    "search_placeholder": "你要的店家是？",
+    "search_results_prefix": "找到",
+    "open_now": "營業中",
+    "closed": "休息中",
+    "closed_today": "今日休息",
+    "area_placeholder": "選擇地區",
+    "area_all": "全部"
+  },
+  "help": {
+    "intro": {
+      "title": "歡迎來到NTHUMODS",
+      "description": "這可能是能讓你在清大取得好成績的終極工具！以下是一份快速指南，讓你能夠輕鬆入門。"
+    },
+    "courses": {
+      "title": "課程探索",
+      "description": "在你的學習之路上不斷發現和探索，從核心必修到選修，包在NTHUMODS身上。深入挖掘，找到最適合你時間表的課程！"
+    },
+    "dashboard": {
+      "title": "個人化儀表板",
+      "description": "你的個人化儀表板已經準備就緒！在這裡，你可以追蹤你的課程、作業（即將推出）和考試（即將推出）。保持積極，繼續努力!"
     },
     "bus": {
-        "north_gate": "北校門口",
-        "tsmc": "台積館",
-        "nanda": "南大校區",
-        "main_campus": "校本部",
-        "service_over": "末班車已過",
-        "red_line": "紅線",
-        "green_line": "綠線",
-        "nanda_line": "南大校車",
-        "departing": "即將發車",
-        "departed": "已過站",
-        "validity": "有效期限",
-        "route": "路線",
-        "departure_time": "出發時間",
-        "notes": "備注",
-        "weekdays": "平日",
-        "weekends": "假日",
-        "to": "往"
+      "title": "公車路線",
+      "description": "有了對校園公車路線、時間和站點的掌握，輕鬆規劃在學校的日常通勤。"
     },
-    "settings": {
-        "account": {
-            "signin": "登入",
-            "signout": "登出",
-            "title": "賬號",
-            "description": "校務資訊系統代理登入",
-            "ccxp": {
-                "title": "代理登入校務資訊系統",
-                "description": "系統會用代理登入方式，讓學生們可以在NTHUMods 上輕鬆連結校務系統功能。"
-            }
-        },
-        "display": {
-            "title": "顯示",
-            "description": "外觀，語言",
-            "dark_mode": {
-                "title": "黑暗模式"
-            },
-            "language": {
-                "title": "語言 Language"
-            }
-        },
-        "timetable": {
-            "title": "時間表",
-            "description": "顔色, 客制化",
-            "vertical_preview": "垂直式顯示",
-            "language": "時間表語言",
-            "align": {
-                "title": "對齊",
-                "left": "左",
-                "center": "中",
-                "right": "右"
-            },
-            "display": "顯示設定",
-            "slot_title": "課程名稱",
-            "slot_code": "課程代碼",
-            "slot_time": "時間",
-            "slot_venue": "地點"
-        },
-        "privacy": {
-            "title": "隱私",
-            "description": "使用量分析",
-            "analytics": {
-                "title": "分享至 Google Analytics",
-                "description": "傳送匿名使用量統計數據至 Google Analytics，幫助我們了解使用者行為，以改進服務。"
-            }
-        }
+    "tools": {
+      "title": "需要更多功能嗎？",
+      "description": "將你的清大帳戶與NTHUMODS連結，打開一扇通往豐富附加工具的大門。輕鬆整合各種功能，豐富你的大學生活。",
+      "connect": "現在連結"
     },
-    "venues": {
-        "placeholder": "從選項中選一個地點"
+    "dev": {
+      "title": "共同成長",
+      "description": "我們致力於不斷改進，為提供最好的體驗。目前應用程式仍在開發中，過程中可能會面對一些困難。但我們重視你的意見，請分享你的想法、回饋，以及你希望看到的功能。",
+      "feedback": "給回饋"
     },
-    "alerts": {
-        "TimetableCourseList": {
-            "action": "前往設定",
-            "text": "時間表可以在設定頁面客制化哦！"
-        }
+    "prev": "上一頁",
+    "next": "下一頁",
+    "skip": "跳過",
+    "jump": "啓動！"
+  },
+  "ccxp": {
+    "connected": "已連接",
+    "failed": "連接著/登入異常",
+    "connect": "連接",
+    "incorrect_credentials": "學號或密碼錯誤",
+    "studentid": "學號",
+    "password": "密碼",
+    "fill_in_ccxp_credentials": "請輸入校務資訊系統密碼",
+    "login": {
+      "title": "登入校務資訊系統",
+      "disclaimer": "注意：你的學號和密碼僅會儲存在你的設備中，不會儲存在伺服器上。",
+      "description": "每次有接觸到需要登入的功能，網站會重新登入校務資訊系統，並把學號和密碼傳到該伺服器進行身份驗證，傳輸過程會使用HTTPS加密連線，並且在驗證完畢后立即刪除。",
+      "agree": "我同意本網站的隱私權政策及理解代理登入的方法"
     },
-    "applist": {
-        "title": "功能列表"
-    },
-    "dialogs": {
-        "DownloadTimetableDialog": {
-            "title": "下載你的課表",
-            "description": "把課表下載成圖片或是 .ics 導入到行事曆吧！",
-            "buttons": {
-                "image": "圖片",
-                "ICS": "行事曆 .ics"
-            }
-        },
-        "ShareSyncTimetableDialog": {
-            "title": "分享/同步你的課表",
-            "description": "把你的課表分享給朋友，或是同步到其他裝置上吧！",
-            "category:qr": "QR 碼",
-            "category:links": "連結",
-            "links": {
-                "email": "發送郵件"
-            }
-        }
-    },
-    "shops": {
-        "search_placeholder": "你要的店家是？",
-        "search_results_prefix": "找到",
-        "open_now": "營業中",
-        "closed": "休息中",
-        "closed_today": "今日休息",
-        "area_placeholder": "選擇地區",
-        "area_all": "全部"
-    },
-    "help": {
-        "intro": {
-            "title": "歡迎來到NTHUMODS",
-            "description": "這可能是能讓你在清大取得好成績的終極工具！以下是一份快速指南，讓你能夠輕鬆入門。"
-        },
-        "courses": {
-            "title": "課程探索",
-            "description": "在你的學習之路上不斷發現和探索，從核心必修到選修，包在NTHUMODS身上。深入挖掘，找到最適合你時間表的課程！"
-        },
-        "dashboard": {
-            "title": "個人化儀表板",
-            "description": "你的個人化儀表板已經準備就緒！在這裡，你可以追蹤你的課程、作業（即將推出）和考試（即將推出）。保持積極，繼續努力!"
-        },
-        "bus": {
-            "title": "公車路線",
-            "description": "有了對校園公車路線、時間和站點的掌握，輕鬆規劃在學校的日常通勤。"
-        },
-        "tools": {
-            "title": "需要更多功能嗎？",
-            "description": "將你的清大帳戶與NTHUMODS連結，打開一扇通往豐富附加工具的大門。輕鬆整合各種功能，豐富你的大學生活。",
-            "connect": "現在連結"
-        },
-        "dev": {
-            "title": "共同成長",
-            "description": "我們致力於不斷改進，為提供最好的體驗。目前應用程式仍在開發中，過程中可能會面對一些困難。但我們重視你的意見，請分享你的想法、回饋，以及你希望看到的功能。",
-            "feedback": "給回饋"
-        },
-        "prev": "上一頁",
-        "next": "下一頁",
-        "skip": "跳過",
-        "jump": "啓動！"
-    },
-    "ccxp": {
-        "connected": "已連接",
-        "failed": "連接著/登入異常",
-        "connect": "連接",
-        "incorrect_credentials": "學號或密碼錯誤",
-        "studentid": "學號",
-        "password": "密碼",
-        "fill_in_ccxp_credentials": "請輸入校務資訊系統密碼",
-        "login": {
-            "title": "登入校務資訊系統",
-            "disclaimer": "注意：你的學號和密碼僅會儲存在你的設備中，不會儲存在伺服器上。",
-            "description": "每次有接觸到需要登入的功能，網站會重新登入校務資訊系統，並把學號和密碼傳到該伺服器進行身份驗證，傳輸過程會使用HTTPS加密連線，並且在驗證完畢后立即刪除。",
-            "agree": "我同意本網站的隱私權政策及理解代理登入的方法"
-        },
-        "errors": {
-            "IncorrectCredentials": "學號或密碼錯誤",
-            "CaptchaError": "驗證碼解讀失敗,  請在15分鐘后重試。",
-            "UnknownError": "發生了問題，但不知道爲什麽 :( 請到校務系統登入試試看。"
-        }
-    },
-    "cancel": "取消",
-    "privacy_policy": "隱私權政策"
+    "errors": {
+      "IncorrectCredentials": "學號或密碼錯誤",
+      "CaptchaError": "驗證碼解讀失敗,  請在15分鐘后重試。",
+      "UnknownError": "發生了問題，但不知道爲什麽 :( 請到校務系統登入試試看。"
+    }
+  },
+  "cancel": "取消",
+  "privacy_policy": "隱私權政策"
 }

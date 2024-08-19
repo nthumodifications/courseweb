@@ -1,8 +1,6 @@
-import CourseDetailsSkeleton from '@/components/CourseDetails/CourseDetailsSkeleton';
+import CourseDetailsSkeleton from "@/components/CourseDetails/CourseDetailsSkeleton";
 const LoadingPage = () => {
-    return (
-        <CourseDetailsSkeleton/>
-    )
-}
+  return <CourseDetailsSkeleton />;
+};
 
 export default LoadingPage;

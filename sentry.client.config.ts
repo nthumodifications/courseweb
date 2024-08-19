@@ -27,10 +27,7 @@ const client = new BrowserClient({
   transport: makeFetchTransport,
   stackParser: defaultStackParser,
   // Only the integrations listed here will be used
-  integrations: [
-    breadcrumbsIntegration(),
-    globalHandlersIntegration(),
-  ],
+  integrations: [breadcrumbsIntegration(), globalHandlersIntegration()],
 });
 
 getCurrentHub().bindClient(client);

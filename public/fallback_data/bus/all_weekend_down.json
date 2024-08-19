@@ -1,1 +1,50 @@
-[{"time": "8:00", "description": "", "route": "\u5357\u5927\u5340\u9593\u8eca"}, {"time": "8:57", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "\u5927\u578b\u5df4\u58eb", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "12:00", "description": "", "route": "\u5357\u5927\u5340\u9593\u8eca"}, {"time": "12:17", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "13:17", "dep_stop": "\u53f0\u7a4d\u9928", "line": "red", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "14:00", "description": "", "route": "\u5357\u5927\u5340\u9593\u8eca"}, {"time": "16:27", "dep_stop": "\u53f0\u7a4d\u9928", "line": "green", "description": "", "route": "\u6821\u5712\u516c\u8eca"}, {"time": "17:00", "description": "", "route": "\u5357\u5927\u5340\u9593\u8eca"}]
+[
+  {
+    "time": "8:00",
+    "description": "",
+    "route": "\u5357\u5927\u5340\u9593\u8eca"
+  },
+  {
+    "time": "8:57",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "\u5927\u578b\u5df4\u58eb",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "12:00",
+    "description": "",
+    "route": "\u5357\u5927\u5340\u9593\u8eca"
+  },
+  {
+    "time": "12:17",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "13:17",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "red",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "14:00",
+    "description": "",
+    "route": "\u5357\u5927\u5340\u9593\u8eca"
+  },
+  {
+    "time": "16:27",
+    "dep_stop": "\u53f0\u7a4d\u9928",
+    "line": "green",
+    "description": "",
+    "route": "\u6821\u5712\u516c\u8eca"
+  },
+  {
+    "time": "17:00",
+    "description": "",
+    "route": "\u5357\u5927\u5340\u9593\u8eca"
+  }
+]

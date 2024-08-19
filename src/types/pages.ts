@@ -1,5 +1,5 @@
 export type LangProps = {
-    params: {
-        lang: 'en' | 'zh'
-    }
-}
+  params: {
+    lang: "en" | "zh";
+  };
+};

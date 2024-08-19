@@ -16,7 +16,8 @@
     "ionic:build": "npm run build",
     "ionic:serve": "npm run start",
     "sync:ios": "npx cap sync ios",
-    "runner:update-courses": "node --import=tsimp/import runners/update-courses.ts"
+    "runner:update-courses": "node --import=tsimp/import runners/update-courses.ts",
+    "pretty": "prettier --write ."
   },
   "dependencies": {
     "@capacitor-community/media": "6.0.0",
