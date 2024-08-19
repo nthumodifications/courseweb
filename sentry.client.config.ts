@@ -23,15 +23,12 @@ const client = new BrowserClient({
   replaysSessionSampleRate: 0.1,
 
   environment: process.env.NODE_ENV,
-  enabled: process.env.NODE_ENV === 'production', // Only send events to Sentry in production
+  enabled: process.env.NODE_ENV === "production", // Only send events to Sentry in production
 
   transport: makeFetchTransport,
   stackParser: defaultStackParser,
   // Only the integrations listed here will be used
-  integrations: [
-    breadcrumbsIntegration(),
-    globalHandlersIntegration(),
-  ],
+  integrations: [breadcrumbsIntegration(), globalHandlersIntegration()],
 });
 
 getCurrentHub().bindClient(client);

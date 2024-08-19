@@ -1,13 +1,13 @@
-import type { Config } from "tailwindcss"
+import type { Config } from "tailwindcss";
 
 const config = {
   darkMode: ["class"],
   content: [
-    './pages/**/*.{ts,tsx}',
-    './components/**/*.{ts,tsx}',
-    './app/**/*.{ts,tsx}',
-    './src/**/*.{ts,tsx}',
-	],
+    "./pages/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./app/**/*.{ts,tsx}",
+    "./src/**/*.{ts,tsx}",
+  ],
   prefix: "",
   theme: {
     container: {
@@ -53,18 +53,18 @@ const config = {
           foreground: "hsl(var(--card-foreground))",
         },
         nthu: {
-          50: '#FAF7FD',
-          100: '#F3ECFB',
-          200: '#E9DDF7',
-          300: '#D9C2F0',
-          400: '#C19AE6',
-          500: '#A973D9',
-          600: '#9558C9',
-          700: '#7E42AE',
-          800: '#6A3A8F',
-          900: '#573073',
-          950: '#3A1853',
-        }
+          50: "#FAF7FD",
+          100: "#F3ECFB",
+          200: "#E9DDF7",
+          300: "#D9C2F0",
+          400: "#C19AE6",
+          500: "#A973D9",
+          600: "#9558C9",
+          700: "#7E42AE",
+          800: "#6A3A8F",
+          900: "#573073",
+          950: "#3A1853",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -89,16 +89,19 @@ const config = {
   },
   plugins: [
     require("tailwindcss-animate"),
-    require('@tailwindcss/typography'),
-    require('tailwind-scrollbar'),
-    require('@tailwindcss/container-queries'),
+    require("@tailwindcss/typography"),
+    require("tailwind-scrollbar"),
+    require("@tailwindcss/container-queries"),
     function ({ addVariant }: any) {
-      addVariant('hover', '@media (any-hover: hover) and (any-pointer: fine) { &:hover }')
-    }
+      addVariant(
+        "hover",
+        "@media (any-hover: hover) and (any-pointer: fine) { &:hover }",
+      );
+    },
   ],
   future: {
     hoverOnlyWhenSupported: true,
   },
-} satisfies Config
+} satisfies Config;
 
-export default config
+export default config;

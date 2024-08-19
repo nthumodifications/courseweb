@@ -1,13 +1,13 @@
 [
-    {
-        "name_zh": "丘子輝",
-        "name_en": "Chew Tzi Hwee",
-        "photo": "https://avatars.githubusercontent.com/u/1801389?v=4",
-        "description": "I just wanna do stuff",
-        "link": "https://imjustchew.com",
-        "facebook": "imjustchew",
-        "github": "ImJustChew",
-        "linkedin": "",
-        "active": true
-    }
+  {
+    "name_zh": "丘子輝",
+    "name_en": "Chew Tzi Hwee",
+    "photo": "https://avatars.githubusercontent.com/u/1801389?v=4",
+    "description": "I just wanna do stuff",
+    "link": "https://imjustchew.com",
+    "facebook": "imjustchew",
+    "github": "ImJustChew",
+    "linkedin": "",
+    "active": true
+  }
 ]

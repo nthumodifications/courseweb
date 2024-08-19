@@ -1,7 +1,7 @@
-import { PropsWithChildren } from "react"
+import { PropsWithChildren } from "react";
 
-const Layout = ({children}: PropsWithChildren<{}>) => {
-    return <>{children}</>
-}
+const Layout = ({ children }: PropsWithChildren<{}>) => {
+  return <>{children}</>;
+};
 
 export default Layout;

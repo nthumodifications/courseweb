@@ -1,5 +1,5 @@
 const VenuesPage = async () => {
-    return (<></>)
-}
+  return <></>;
+};
 
 export default VenuesPage;

@@ -1,8 +1,7 @@
-'use client';
+"use client";
 import React, { PropsWithChildren, ReactElement } from "react";
 import { Modal, ModalProps } from "@mui/joy";
-import { Transition } from 'react-transition-group';
-
+import { Transition } from "react-transition-group";
 
 const EMPTY_FUNC = () => {};
 
@@ -33,12 +32,8 @@ function ModalContainer(props: ModalContainerProps) {
   const { children, open, onClose, onKill, ...rest } = props;
 
   return (
-    <Modal
-        open={open}
-        onClose={onClose}
-        {...rest}
-    >
-        {children as ReactElement}
+    <Modal open={open} onClose={onClose} {...rest}>
+      {children as ReactElement}
     </Modal>
     // <Transition in={open} timeout={100} onExited={onKill}>
     //     {(state: string) => (
@@ -69,7 +64,6 @@ function ModalContainer(props: ModalContainerProps) {
     //     )}
     // </Transition>
   );
-
 }
 
 export default function ModalProvider({ children }: PropsWithChildren) {
