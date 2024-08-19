@@ -173,7 +173,7 @@ const GradeOverview = ({ grades }: { grades: GradeObject }) => {
           data={grades.credits.passed_credits.toString()}
         />
         <GradeCard
-          title="畢業未到學分"
+          title="成績未到學分"
           data={grades.credits.pending_credits.toString()}
         />
       </div>

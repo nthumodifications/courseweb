@@ -18,7 +18,8 @@
     "ionic:serve": "npm run start",
     "sync:ios": "npx cap sync ios",
     "prepare": "husky",
-    "format:all": "prettier --write ."
+    "format:all": "prettier --write .",
+    "dict": "node  --import=tsimp/import ./scripts/dict.ts"
   },
   "dependencies": {
     "@capacitor-community/media": "6.0.0",
