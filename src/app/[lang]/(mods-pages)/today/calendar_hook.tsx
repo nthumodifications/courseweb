@@ -7,6 +7,7 @@ import {
   useRef,
   useMemo,
   useEffect,
+  useState,
 } from "react";
 import {
   CalendarEvent,
@@ -34,38 +35,46 @@ export enum UpdateType {
 
 export const calendarContext = createContext<
   ReturnType<typeof useCalendarProvider>
->({} as any);
+>({
+  events: [],
+  addEvent: async () => {},
+  removeEvent: async () => {},
+  updateEvent: async () => {},
+  displayContainer: { current: null },
+  HOUR_HEIGHT: 48,
+});
 
 export const useCalendar = () => useContext(calendarContext);
 
 export const useCalendarProvider = () => {
-  const HOUR_HEIGHT = 48;
+  const [HOUR_HEIGHT] = useState(48);
 
   const db = useRxDB();
   const eventsCol = useRxCollection("events");
   const { result: eventStore } = useRxQuery(eventsCol?.find());
-  const events = useMemo(() => {
-    return eventStore.map((e) => {
-      const event = e.toJSON() as Required<EventDocType>;
-      return {
-        ...event,
-        start: new Date(event.start),
-        end: new Date(event.end),
-        repeat: event.repeat
-          ? {
-              ...event.repeat,
-              ...("date" in event.repeat
-                ? { date: new Date(event.repeat.date!) }
-                : {}),
-            }
-          : null,
-        actualEnd: event.actualEnd ? new Date(event.actualEnd) : null,
-        ...(event.excludedDates
-          ? { excludedDates: event.excludedDates.map((d) => new Date(d)) }
-          : {}),
-      } as CalendarEventInternal;
-    });
-  }, [eventStore]);
+  const events =
+    useMemo(() => {
+      return eventStore.map((e) => {
+        const event = e.toJSON() as Required<EventDocType>;
+        return {
+          ...event,
+          start: new Date(event.start),
+          end: new Date(event.end),
+          repeat: event.repeat
+            ? {
+                ...event.repeat,
+                ...("date" in event.repeat
+                  ? { date: new Date(event.repeat.date!) }
+                  : {}),
+              }
+            : null,
+          actualEnd: event.actualEnd ? new Date(event.actualEnd) : null,
+          ...(event.excludedDates
+            ? { excludedDates: event.excludedDates.map((d) => new Date(d)) }
+            : {}),
+        } as CalendarEventInternal;
+      });
+    }, [eventStore]) ?? [];
 
   const { courses, colorMap } = useUserTimetable();
 
@@ -274,7 +283,7 @@ export const useCalendarProvider = () => {
         console.log("sync timetable to events complete");
       }
     })();
-  }, [db, courses, colorMap, eventsCol]);
+  }, [db, courses, colorMap, eventsCol, addEvent]);
 
   return {
     events,

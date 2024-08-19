@@ -124,7 +124,7 @@ const Calendar = () => {
   }, [displayContainer, HOUR_HEIGHT, moveBackward, moveForward]);
 
   return (
-    <div className="flex flex-col gap-6 flex-1 w-full">
+    <div className="flex flex-col gap-2 md:gap-6 flex-1 w-full">
       <div className="flex flex-col md:flex-row gap-2 justify-evenly">
         <div className="flex-1 w-full flex align-middle gap-2">
           <Button variant="outline" onClick={moveBackward} size="icon">
@@ -184,8 +184,7 @@ const Calendar = () => {
           </TabsTrigger>
         </TabsList>
       </Tabs>
-      <ScrollArea className="w-full">
-        <ScrollBar orientation="horizontal" />
+      <div className="w-full h-[80dvh]">
         {displayMode == "week" && (
           <CalendarWeekContainer displayWeek={displayDates} />
         )}
@@ -195,7 +194,7 @@ const Calendar = () => {
             onChangeView={handleOnViewChange}
           />
         )}
-      </ScrollArea>
+      </div>
     </div>
   );
 };

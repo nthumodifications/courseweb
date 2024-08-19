@@ -12,7 +12,7 @@ import { eventsToDisplay } from "./calendar_utils";
 import { EventPopover } from "./EventPopover";
 const UpcomingEvents = () => {
   const { events } = useCalendar();
-
+  console.log(events);
   const today = new Date();
   const end = addDays(today, 7);
   const upcomingEvents = eventsToDisplay(events, today, end).sort(
@@ -121,7 +121,7 @@ const TodayPage: NextPage = () => {
   });
 
   return (
-    <div className="px-4 md:pr-8 w-full h-[--content-height] overflow-y-hidden">
+    <div className="px-4 md:pr-8 w-full">
       <div className="flex flex-row-reverse gap-6 h-full">
         <Calendar />
         <div className="hidden xl:inline">
