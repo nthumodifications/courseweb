@@ -13,6 +13,7 @@ import {
   Paperclip,
   TicketCheck,
   CalendarCheck2,
+  CalendarSearch,
 } from "lucide-react";
 
 export const apps = [
@@ -62,6 +63,19 @@ export const apps = [
         "https://www.ccxp.nthu.edu.tw/ccxp/COURSE/JH/7/7.1/7.1.3/JH713001.php",
       ),
     Icon: CalendarCheck2,
+    target: "_blank",
+    ais: true,
+  },
+  {
+    id: "coursereg",
+    title_zh: "選課選上/剩餘名額/待亂數人數統計",
+    title_en: "Realtime Course Enrollment Status",
+    href:
+      "/ais-redirect/custom?url=" +
+      encodeURIComponent(
+        "https://www.ccxp.nthu.edu.tw/ccxp/COURSE/JH/7/7.2/7.2.7/JH727001.php",
+      ),
+    Icon: CalendarSearch,
     target: "_blank",
     ais: true,
   },
