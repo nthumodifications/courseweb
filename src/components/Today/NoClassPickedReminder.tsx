@@ -1,15 +1,31 @@
-'use client';
-import Link from 'next/link';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+"use client";
+import Link from "next/link";
+import useDictionary from "@/dictionaries/useDictionary";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export const NoClassPickedReminder = () => {
-    return <Alert>
-        <AlertTitle>還沒選到課嗎？</AlertTitle>
-        <AlertDescription>
-            <ul className='list-decimal list-inside'>
-                <li className='text-base'>先到 <Link className='text-[#AF7BE4] font-medium' href='/zh/courses'>課表</Link> 選擇課程</li>
-                <li className='text-base'>後到 <Link className='text-[#AF7BE4] font-medium' href='/zh/timetable'>時間表</Link> 查看時間表</li>
-            </ul>
-        </AlertDescription>
-    </Alert>;
+  const dict = useDictionary();
+  return (
+    <Alert>
+      <AlertTitle>{dict.today.noclass_reminder.reminder}</AlertTitle>
+      <AlertDescription>
+        <ul className="list-decimal list-inside">
+          <li className="text-base">
+            {dict.today.noclass_reminder.first + " "}
+            <Link className="text-[#AF7BE4] font-medium" href="/zh/courses">
+              {dict.today.noclass_reminder.courses}
+            </Link>{" "}
+            {dict.today.noclass_reminder.choose_courses}
+          </li>
+          <li className="text-base">
+            {dict.today.noclass_reminder.then + " "}
+            <Link className="text-[#AF7BE4] font-medium" href="/zh/timetable">
+              {dict.today.noclass_reminder.timetable}
+            </Link>{" "}
+            {dict.today.noclass_reminder.check_schedule}
+          </li>
+        </ul>
+      </AlertDescription>
+    </Alert>
+  );
 };

@@ -1,31 +1,30 @@
-import {NextRequest, NextResponse} from 'next/server';
+import {
+  scrapeArchivedCourses,
+  scrapeSyllabus,
+  syncCoursesToAlgolia,
+} from "@/lib/scrapers/course";
+import { NextRequest, NextResponse } from "next/server";
 
 export const GET = async (request: NextRequest) => {
-    const authHeader = request.headers.get('authorization');
-    if (process.env.NODE_ENV == 'production' && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      return new Response('Unauthorized', {
-        status: 401,
-      });
-    }
-
-    const semester = '11310';
-    
-    console.log('syncing courses uwu')
-
-    await fetch('https://nthumods.com/api/scrape-archived-courses?semester='+semester, {
-        method: 'GET',
-        headers: {
-            'Authorization': `Bearer ${process.env.CRON_SECRET}`
-        }
+  const authHeader = request.headers.get("authorization");
+  if (
+    process.env.NODE_ENV == "production" &&
+    authHeader !== `Bearer ${process.env.CRON_SECRET}`
+  ) {
+    return new Response("Unauthorized", {
+      status: 401,
     });
+  }
 
-    fetch('https://nthumods.com/api/scrape-syllabus?semester='+semester, {
-        method: 'GET',
-        headers: {
-            'Authorization': `Bearer ${process.env.CRON_SECRET}`
-        }
-    });   
+  const semester = "11310";
 
-    return NextResponse.json({ status: 200, body: { message: 'success' } })
+  console.log("syncing courses uwu");
+  console.log("scraping archived courses");
+  await scrapeArchivedCourses(semester);
+  console.log("scraping syllabus");
+  await scrapeSyllabus(semester);
+  console.log("syncing to algolia");
+  await syncCoursesToAlgolia(semester);
 
-}
+  return NextResponse.json({ status: 200, body: { message: "success" } });
+};

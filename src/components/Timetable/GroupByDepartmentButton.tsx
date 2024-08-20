@@ -1,41 +1,49 @@
-'use client';
-import useUserTimetable from "@/hooks/contexts/useUserTimetable"
-import { Button } from "../ui/button"
+"use client";
+import useUserTimetable from "@/hooks/contexts/useUserTimetable";
+import useDictionary from "@/dictionaries/useDictionary";
+import { Button } from "../ui/button";
 
 type GroupByDepartmentButtonProps = {
-    semester: string
-}
+  semester: string;
+};
 
-const GroupByDepartmentButton = ({ semester }: GroupByDepartmentButtonProps) => {
-    const { colorMap, setColorMap, getSemesterCourses, currentColors } = useUserTimetable();
+const GroupByDepartmentButton = ({
+  semester,
+}: GroupByDepartmentButtonProps) => {
+  const dict = useDictionary();
 
-    const handleGroupByDepartment = () => {
-        const semesterCourses = getSemesterCourses(semester);
-        const newColorMap = { ...colorMap };
-        
-        const departments = semesterCourses.reduce((acc, course) => {
-            if (!acc.includes(course.department)) {
-                acc.push(course.department);
-            }
-            return acc;
-        }, [] as string[]);
+  const { colorMap, setColorMap, getSemesterCourses, currentColors } =
+    useUserTimetable();
 
-        for(let i = 0; i < departments.length; i++) {
-            const color = currentColors[i % currentColors.length];
+  const handleGroupByDepartment = () => {
+    const semesterCourses = getSemesterCourses(semester);
+    const newColorMap = { ...colorMap };
 
-            semesterCourses.filter(course => course.department === departments[i]).forEach(course => {
-                newColorMap[course.raw_id] = color;
-            });
-        }
+    const departments = semesterCourses.reduce((acc, course) => {
+      if (!acc.includes(course.department)) {
+        acc.push(course.department);
+      }
+      return acc;
+    }, [] as string[]);
 
-        setColorMap(newColorMap);
+    for (let i = 0; i < departments.length; i++) {
+      const color = currentColors[i % currentColors.length];
+
+      semesterCourses
+        .filter((course) => course.department === departments[i])
+        .forEach((course) => {
+          newColorMap[course.raw_id] = color;
+        });
     }
 
-    return (
-        <Button variant='outline' onClick={handleGroupByDepartment}>
-            依系所分顔色
-        </Button>
-    )
-}
+    setColorMap(newColorMap);
+  };
+
+  return (
+    <Button variant="outline" onClick={handleGroupByDepartment}>
+      {dict.timetable.actions.group_dept}
+    </Button>
+  );
+};
 
 export default GroupByDepartmentButton;

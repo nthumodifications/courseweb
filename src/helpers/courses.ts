@@ -1,48 +1,62 @@
-import {Language, MinimalCourse, RawCourseID} from '@/types/courses';
+import { Language, MinimalCourse, RawCourseID } from '@/types/courses';
 import { createTimetableFromCourses } from './timetable';
 import { departments } from '@/const/departments';
 import { classCode } from '@/const/class_code';
+
 export const getGECType = (ge_type: string) => {
-    //核心通識Core GE courses 1, 核心通識Core GE courses 2  <- return this number
-    if(ge_type.includes('核心通識Core GE courses')){
-        return parseInt(ge_type.slice(-1));
-    }
-    else return null;
-}
+  //核心通識Core GE courses 1, 核心通識Core GE courses 2  <- return this number
+  if (ge_type.includes("核心通識Core GE courses")) {
+    return parseInt(ge_type.slice(-1));
+  } else return null;
+};
 
 export const hasConflictingTimeslots = (courses: MinimalCourse[]) => {
-    const timetableData = createTimetableFromCourses(courses);
-    return timetableData.filter((timeslot, index, self) => {
-        const otherTimeslots = self.filter((ts, i) => i != index);
-        return otherTimeslots.find(ts => ts.dayOfWeek == timeslot.dayOfWeek && ts.startTime <= timeslot.endTime && ts.endTime >= timeslot.startTime) != undefined;
-    })
+  const timetableData = createTimetableFromCourses(courses);
+  return timetableData.filter((timeslot, index, self) => {
+    const otherTimeslots = self.filter((ts, i) => i != index);
+    return (
+      otherTimeslots.find(
+        (ts) =>
+          ts.dayOfWeek == timeslot.dayOfWeek &&
+          ts.startTime <= timeslot.endTime &&
+          ts.endTime >= timeslot.startTime,
+      ) != undefined
+    );
+  });
 };
 
 //check if there is same dept same course but different class, return course codes
 export const hasSameCourse = (courses: MinimalCourse[]) => {
-    const sameCourse = courses.filter((course, index, self) => {
-        const otherCourses = self.filter((c, i) => i != index);
-        return otherCourses.find(c => c.department == course.department && c.course == course.course) != undefined;
-    });
-    return sameCourse.map(course => course.raw_id) as RawCourseID[];
-}
+  const sameCourse = courses.filter((course, index, self) => {
+    const otherCourses = self.filter((c, i) => i != index);
+    return (
+      otherCourses.find(
+        (c) => c.department == course.department && c.course == course.course,
+      ) != undefined
+    );
+  });
+  return sameCourse.map((course) => course.raw_id) as RawCourseID[];
+};
 
 export const getSemesterFromID = (id: string) => {
-    return id.slice(0, 5) as RawCourseID;
-}
+  return id.slice(0, 5) as RawCourseID;
+};
 
 export const hasTimes = (course: MinimalCourse) => {
-    return course.times.length > 0 && !course.times.every((m) => m.trim() == "");
-}
+  return course.times.length > 0 && !course.times.every((m) => m.trim() == "");
+};
 
 export const getScoreType = (score: string) => {
-    // 'gpa' | 'percent'
-    switch(score){
-        case 'gpa': return 'GPA';
-        case 'percent': return '百分制';
-        default: return 'GPA';
-    }
-}
+  // 'gpa' | 'percent'
+  switch (score) {
+    case "gpa":
+      return "GPA";
+    case "percent":
+      return "百分制";
+    default:
+      return "GPA";
+  }
+};
 
 // Define mappings for degree types and class letters
 const degreeTypes: { [key: string]: any } = {
@@ -110,6 +124,16 @@ export const getFormattedClassCode = (class_code: string, semester: string, lang
         return lang === 'zh' ? `電資院學士班${readableYear}國際學程` : `EECS-GS ${readableYear}`;
     }
 
+    // Translate components
+    const readableYear = sem - parseInt(year) + 1 + "年級";
+    const readableDegreeType = degreeTypes[degreeType] || "";
+    const readableClassLetter = classLetters[classLetter] || "";
+
+    // exception for EECS-GS
+    if (deptName == "電資院學士班" && degreeType == "B" && classLetter == "A") {
+      return `電資院學士班${readableYear}國際學程`;
+    }
+
     // Construct the output
-    return `${deptCode}${readableYear} ${readableDegreeType} ${readableClassLetter}`;
-}
+    return `${deptName}${readableYear}${readableDegreeType}${readableClassLetter}`;
+};

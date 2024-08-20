@@ -1,4 +1,4 @@
-'use client';
-const ErrorBounds = () => <></>
+"use client";
+const ErrorBounds = () => <></>;
 
-export default ErrorBounds
+export default ErrorBounds;

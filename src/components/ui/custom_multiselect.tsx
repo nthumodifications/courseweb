@@ -27,25 +27,22 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 
-const multiSelectVariants = cva(
-  "mb-0.5",
-  {
-    variants: {
-      variant: {
-        default:
-          "border-foreground/10 drop-shadow-sm text-foreground bg-card hover:bg-card/80",
-        secondary:
-          "border-foreground/10 bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        destructive:
-          "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
-        inverted: "inverted",
-      },
+const multiSelectVariants = cva("mb-0.5", {
+  variants: {
+    variant: {
+      default:
+        "border-foreground/10 drop-shadow-sm text-foreground bg-card hover:bg-card/80",
+      secondary:
+        "border-foreground/10 bg-secondary text-secondary-foreground hover:bg-secondary/80",
+      destructive:
+        "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
+      inverted: "inverted",
     },
-    defaultVariants: {
-      variant: "default",
-    },
-  }
-);
+  },
+  defaultVariants: {
+    variant: "default",
+  },
+});
 
 interface MultiSelectFormFieldProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
@@ -81,10 +78,10 @@ const MultiSelectFormField = React.forwardRef<
       animation = 0,
       ...props
     },
-    ref
+    ref,
   ) => {
     const [selectedValues, setSelectedValues] = React.useState<string[]>(
-      defaultValue || []
+      defaultValue || [],
     );
     const selectedValuesSet = React.useRef(new Set(selectedValues));
     const [isPopoverOpen, setIsPopoverOpen] = React.useState(false);
@@ -102,7 +99,7 @@ const MultiSelectFormField = React.forwardRef<
         selectedValues.pop();
         setSelectedValues([...selectedValues]);
         selectedValuesSet.current.delete(
-          selectedValues[selectedValues.length - 1]
+          selectedValues[selectedValues.length - 1],
         );
         onValueChange([...selectedValues]);
       }
@@ -139,7 +136,7 @@ const MultiSelectFormField = React.forwardRef<
                         key={value}
                         className={cn(
                           isAnimating ? "animate-bounce" : "",
-                          multiSelectVariants({ variant, className })
+                          multiSelectVariants({ variant, className }),
                         )}
                         style={{
                           animationDuration: `${animation}s`,
@@ -207,7 +204,7 @@ const MultiSelectFormField = React.forwardRef<
               <CommandGroup>
                 {options.map((option) => {
                   const isSelected = selectedValuesSet.current.has(
-                    option.value
+                    option.value,
                   );
                   return (
                     <CommandItem
@@ -224,7 +221,7 @@ const MultiSelectFormField = React.forwardRef<
                           "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
                           isSelected
                             ? "bg-primary text-primary-foreground"
-                            : "opacity-50 [&_svg]:invisible"
+                            : "opacity-50 [&_svg]:invisible",
                         )}
                       >
                         <CheckIcon className="h-4 w-4" />
@@ -282,14 +279,14 @@ const MultiSelectFormField = React.forwardRef<
           <WandSparkles
             className={cn(
               "cursor-pointer my-2 text-foreground bg-background w-3 h-3",
-              isAnimating ? "" : "text-muted-foreground"
+              isAnimating ? "" : "text-muted-foreground",
             )}
             onClick={() => setIsAnimating(!isAnimating)}
           />
         )}
       </Popover>
     );
-  }
+  },
 );
 
 MultiSelectFormField.displayName = "MultiSelectFormField";
