@@ -11,6 +11,8 @@ import {
   WalletCards,
   Gamepad,
   Paperclip,
+  TicketCheck,
+  CalendarCheck2,
 } from "lucide-react";
 
 export const apps = [
@@ -48,6 +50,19 @@ export const apps = [
     title_en: "Your Grades",
     href: "/student/grades",
     Icon: Clipboard,
+    ais: true,
+  },
+  {
+    id: "coursereg",
+    title_zh: "選課系統",
+    title_en: "Course Selection System",
+    href:
+      "/ais-redirect/custom?url=" +
+      encodeURIComponent(
+        "https://www.ccxp.nthu.edu.tw/ccxp/COURSE/JH/7/7.1/7.1.3/JH713001.php",
+      ),
+    Icon: CalendarCheck2,
+    target: "_blank",
     ais: true,
   },
   {

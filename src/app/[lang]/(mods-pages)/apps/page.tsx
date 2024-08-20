@@ -31,11 +31,11 @@ const AppList = ({ params: { lang } }: LangProps) => {
                 className="flex flex-row flex-1 items-center space-x-2"
                 target={app.target}
               >
-                <div className="p-3 rounded-full bg-indigo-100 text-indigo-800 grid place-items-center">
+                <div className="p-3 rounded-full bg-nthu-200 text-nthu-800 grid place-items-center">
                   <app.Icon size={16} />
                 </div>
                 <div className="flex flex-col gap-1 flex-1">
-                  <h2 className="text-base font-medium text-gray-600 dark:text-neutral-400">
+                  <h2 className="text-base font-medium text-muted-foreground">
                     {lang == "zh" ? app.title_zh : app.title_en}
                   </h2>
                 </div>

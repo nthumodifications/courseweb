@@ -139,7 +139,7 @@ const TodaySchedule: FC<{
           {applist.map((app, index) => (
             <Link href={app.href} key={index}>
               <div className="flex flex-col items-center justify-center p-2 gap-2 w-16">
-                <div className="p-3 rounded-full bg-indigo-100 text-indigo-800 grid place-items-center">
+                <div className="p-3 rounded-full bg-nthu-200 text-nthu-800 grid place-items-center">
                   <app.Icon size={20} />
                 </div>
                 <div className="flex flex-col gap-1 flex-1">
