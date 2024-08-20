@@ -9,7 +9,7 @@ import { getYear } from "date-fns";
 const Footer = () => {
   return (
     <div className="py-16 flex flex-col gap-4">
-      <div className="flex flex-row justify-between">
+      <div className="flex flex-col md:flex-row justify-between">
         <div className="flex gap-3">
           <div className="-translate-y-1">
             <NTHUModsLogo />
@@ -48,7 +48,7 @@ const Footer = () => {
         </div>
       </div>
 
-      <div className="flex flex-row text-muted-foreground text-sm gap-4">
+      <div className="flex flex-row text-muted-foreground text-sm [&>a]:mr-4 [&>a]:w-max flex-wrap">
         <Link href={"/contribute"}>Contribute</Link>
         <Link href={"/issues"}>Report an Issue</Link>
         <Link href={"/team"}>Team</Link>
