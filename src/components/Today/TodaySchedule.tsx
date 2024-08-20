@@ -84,7 +84,7 @@ const TodaySchedule: FC<{
     if (!curr_sem)
       return (
         <div className="text-gray-500 dark:text-gray-400 text-center text-sm font-semibold">
-          放假咯！
+          {dict.today.noclass_sem}
         </div>
       );
     const classesThisDay = (

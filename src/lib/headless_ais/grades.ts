@@ -158,45 +158,105 @@ export const getStudentGrades = async (ACIXSTORE: string) => {
   const ranking_cum_row = ranking_rows[ranking_rows.length - 1];
   const ranking_cum_cells = ranking_cum_row.querySelectorAll("td > div");
   // in each cell, get firstChild textContent which is the chinese text, then regex to extract the ranking and total number of students
-  const letter_cum = Array.from(ranking_cum_cells[0]?.childNodes)
-    .find((n) => n.textContent?.startsWith("等級制累計系排名"))
-    ?.textContent?.trim();
-  const letter_cum_regex =
-    /等級制累計系排名\/總人數、累計班排名\/總人數、GPA\(至(?<gpa_cum_year_tw>.+)\)： (?<letter_cum_dept_rank>.+)、(?<letter_cum_class_rank>.+)、(?<gpa>.+)/;
-  const letter_cum_match = letter_cum?.match(letter_cum_regex);
-  const letter = {
-    gpa_cum_year_tw: letter_cum_match?.groups?.gpa_cum_year_tw,
-    letter_cum_dept_rank: letter_cum_match?.groups?.letter_cum_dept_rank,
-    letter_cum_class_rank: letter_cum_match?.groups?.letter_cum_class_rank,
-    gpa: letter_cum_match?.groups?.gpa,
-  };
-  const relative_cum = ranking_cum_cells[1].firstChild?.textContent?.trim();
-  const relative_cum_regex =
-    /修課相對成績學業累計系排名\/總人數、累計班排名\/總人數、修課相對成績學業平均成績\(至(?<gpa_cum_year_tw>.+)\)： (?<relative_cum_dept_rank>.+)、(?<relative_cum_class_rank>.+)、(?<relative_cum>.+)/;
-  const relative_cum_match = relative_cum?.match(relative_cum_regex);
-  const relative = {
-    gpa_cum_year_tw: relative_cum_match?.groups?.gpa_cum_year_tw,
-    relative_cum_dept_rank: relative_cum_match?.groups?.relative_cum_dept_rank,
-    relative_cum_class_rank:
-      relative_cum_match?.groups?.relative_cum_class_rank,
-    relative_cum: relative_cum_match?.groups?.relative_cum,
-  };
-  const t_scores_cum = ranking_cum_cells[2].firstChild?.textContent?.trim();
-  const t_scores_cum_regex =
-    /T分數學業累計系排名\/總人數、T分數成績學業平均成績\(至(?<gpa_cum_year_tw>.+)\)： (?<t_scores_cum_dept_rank>.+)、(?<t_scores_cum_class_rank>.+)、(?<t_scores_cum>.+)/;
-  const t_scores_cum_match = t_scores_cum?.match(t_scores_cum_regex);
-  const t_scores = {
-    gpa_cum_year_tw: t_scores_cum_match?.groups?.gpa_cum_year_tw,
-    t_scores_cum_dept_rank: t_scores_cum_match?.groups?.t_scores_cum_dept_rank,
-    t_scores_cum_class_rank:
-      t_scores_cum_match?.groups?.t_scores_cum_class_rank,
-    t_scores_cum: t_scores_cum_match?.groups?.t_scores_cum,
-  };
-  const ranking_cum = {
-    letter,
-    relative,
-    t_scores,
-  };
+
+  // handle different classes have different text
+  const class_type = ranking_cum_row.textContent?.includes("等級制畢業系排名")
+    ? "grad"
+    : "undergrad";
+
+  const ranking_cum = (() => {
+    if (class_type === "grad") {
+      // 等級制畢業系排名/總人數、畢業班排名/總人數、GPA： -/-、-/-、3.92
+      // 修課相對成績畢業系排名/總人數、修課相對成績學業平均成績：-/-、-/-、26.67%
+      const letter_cum = Array.from(ranking_cum_cells[0]?.childNodes)
+        .find((n) => n.textContent?.startsWith("等級制畢業系排名"))
+        ?.textContent?.trim();
+      const letter_cum_regex =
+        /等級制畢業系排名\/總人數、畢業班排名\/總人數、GPA： (?<letter_cum_dept_rank>.+)、(?<letter_cum_class_rank>.+)、(?<gpa>.+)/;
+      const letter_cum_match = letter_cum?.match(letter_cum_regex);
+      const letter = {
+        letter_cum_dept_rank: letter_cum_match?.groups?.letter_cum_dept_rank,
+        letter_cum_class_rank: letter_cum_match?.groups?.letter_cum_class_rank,
+        gpa: letter_cum_match?.groups?.gpa,
+      };
+      const relative_cum = ranking_cum_cells[1].firstChild?.textContent?.trim();
+      const relative_cum_regex =
+        /修課相對成績畢業系排名\/總人數、修課相對成績學業平均成績：(?<relative_cum_dept_rank>.+)、(?<relative_cum_class_rank>.+)、(?<relative_cum>.+)/;
+      const relative_cum_match = relative_cum?.match(relative_cum_regex);
+      const relative = {
+        relative_cum_dept_rank:
+          relative_cum_match?.groups?.relative_cum_dept_rank,
+        relative_cum_class_rank:
+          relative_cum_match?.groups?.relative_cum_class_rank,
+        relative_cum: relative_cum_match?.groups?.relative_cum,
+      };
+      const t_scores_cum = ranking_cum_cells[2].firstChild?.textContent?.trim();
+      const t_scores_cum_regex =
+        /T分數畢業系排名\/總人數、T分數成績學業平均成績：(?<t_scores_cum_dept_rank>.+)、(?<t_scores_cum_class_rank>.+)、(?<t_scores_cum>.+)/;
+      const t_scores_cum_match = t_scores_cum?.match(t_scores_cum_regex);
+      const t_scores = {
+        t_scores_cum_dept_rank:
+          t_scores_cum_match?.groups?.t_scores_cum_dept_rank,
+        t_scores_cum_class_rank:
+          t_scores_cum_match?.groups?.t_scores_cum_class_rank,
+        t_scores_cum: t_scores_cum_match?.groups?.t_scores_cum,
+      };
+      return {
+        letter,
+        relative,
+        t_scores,
+      };
+    } else {
+      // 等級制累計系排名/總人數、累計班排名/總人數、GPA(至112學年下學期)： -/-、-/-、3.38
+      // Letter Grade Cumulative Department ranking/Total number of students、GPA (to the spring semester of Academic Year 2023): -/-、-/-、3.38
+      // 修課相對成績學業累計系排名/總人數、累計班排名/總人數、修課相對成績學業平均成績(至112學年下學期)： -/-、-/-、-
+      // Relative Grade Cumulative Department ranking/Total number of students、Relative Grade Average (to the spring semester of Academic Year 2023): -/-、-/-、-
+      // T分數學業累計系排名/總人數、T分數成績學業平均成績(至112學年下學期)： -/-、-/-、-
+      // T Scores Cumulative Department ranking/Total number of students、T Scores Average (to the spring semester of Academic Year 2023): -/-、-/-、-
+      const letter_cum = Array.from(ranking_cum_cells[0]?.childNodes)
+        .find((n) => n.textContent?.startsWith("等級制累計系排名"))
+        ?.textContent?.trim();
+      const letter_cum_regex =
+        /等級制累計系排名\/總人數、累計班排名\/總人數、GPA\(至(?<gpa_cum_year_tw>.+)\)： (?<letter_cum_dept_rank>.+)、(?<letter_cum_class_rank>.+)、(?<gpa>.+)/;
+      const letter_cum_match = letter_cum?.match(letter_cum_regex);
+      const letter = {
+        gpa_cum_year_tw: letter_cum_match?.groups?.gpa_cum_year_tw,
+        letter_cum_dept_rank: letter_cum_match?.groups?.letter_cum_dept_rank,
+        letter_cum_class_rank: letter_cum_match?.groups?.letter_cum_class_rank,
+        gpa: letter_cum_match?.groups?.gpa,
+      };
+      const relative_cum = ranking_cum_cells[1].firstChild?.textContent?.trim();
+      const relative_cum_regex =
+        /修課相對成績學業累計系排名\/總人數、累計班排名\/總人數、修課相對成績學業平均成績\(至(?<gpa_cum_year_tw>.+)\)： (?<relative_cum_dept_rank>.+)、(?<relative_cum_class_rank>.+)、(?<relative_cum>.+)/;
+      const relative_cum_match = relative_cum?.match(relative_cum_regex);
+      const relative = {
+        gpa_cum_year_tw: relative_cum_match?.groups?.gpa_cum_year_tw,
+        relative_cum_dept_rank:
+          relative_cum_match?.groups?.relative_cum_dept_rank,
+        relative_cum_class_rank:
+          relative_cum_match?.groups?.relative_cum_class_rank,
+        relative_cum: relative_cum_match?.groups?.relative_cum,
+      };
+      const t_scores_cum = ranking_cum_cells[2].firstChild?.textContent?.trim();
+      const t_scores_cum_regex =
+        /T分數學業累計系排名\/總人數、T分數成績學業平均成績\(至(?<gpa_cum_year_tw>.+)\)： (?<t_scores_cum_dept_rank>.+)、(?<t_scores_cum_class_rank>.+)、(?<t_scores_cum>.+)/;
+      const t_scores_cum_match = t_scores_cum?.match(t_scores_cum_regex);
+      const t_scores = {
+        gpa_cum_year_tw: t_scores_cum_match?.groups?.gpa_cum_year_tw,
+        t_scores_cum_dept_rank:
+          t_scores_cum_match?.groups?.t_scores_cum_dept_rank,
+        t_scores_cum_class_rank:
+          t_scores_cum_match?.groups?.t_scores_cum_class_rank,
+        t_scores_cum: t_scores_cum_match?.groups?.t_scores_cum,
+      };
+      return {
+        letter,
+        relative,
+        t_scores,
+      };
+    }
+  })();
+
   const ranking = {
     data: ranking_data,
     cumulative: ranking_cum,

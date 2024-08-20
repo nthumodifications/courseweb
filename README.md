@@ -41,6 +41,8 @@ You can clone the repository and start the development server via `npm run dev`
 
 If you wish to participate in this development, feel free to email [nthumods@gmail.com](mailto:nthumods@gmail.com) in the meantime while we figure out the system for contributing.
 
+Translation Dictionary Management Script `npm run dict --` to manage the translation dictionary. Eg `npm run dict -- create settings.ais.login 登入 Login`
+
 ## Contributing
 
 We welcome contributions from everyone, regardless of experience level. Here’s how you can get started:

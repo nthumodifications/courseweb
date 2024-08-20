@@ -14,7 +14,6 @@ import NextAuthProvider from "@/components/NextAuthProvider";
 import { Toaster } from "@/components/ui/toaster";
 import ReactQuery from "@/components/ReactQuery";
 
-import "./globals.css";
 import AppUrlListener from "@/components/AppUrlListener";
 
 export const metadata: Metadata = {
@@ -112,7 +111,6 @@ export default function RootLayout({
   children: React.ReactNode;
 } & LangProps) {
   const theme = cookies().get("theme");
-
   return (
     <CssVarsProvider defaultMode={(theme?.value as any) ?? "light"}>
       <NextAuthProvider>
@@ -121,18 +119,9 @@ export default function RootLayout({
             <HeadlessAISProvider>
               <UserTimetableProvider>
                 <ModalProvider>
-                  <html
-                    lang={params.lang}
-                    translate="no"
-                    className={`${theme?.value ?? ""} ${inter.variable} ${noto.variable}`}
-                    suppressHydrationWarning={true}
-                  >
-                    <body suppressHydrationWarning={true}>
-                      {children}
-                      <AppUrlListener />
-                      <Toaster />
-                    </body>
-                  </html>
+                  {children}
+                  <AppUrlListener />
+                  <Toaster />
                 </ModalProvider>
               </UserTimetableProvider>
             </HeadlessAISProvider>

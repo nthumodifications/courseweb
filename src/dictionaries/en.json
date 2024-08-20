@@ -1,7 +1,17 @@
 {
   "today": {
     "noclass": "No Classes Today",
-    "noclass_sub": "Enjoy your day off!"
+    "noclass_sub": "Enjoy your day off!",
+    "noclass_sem": "Enjoy your holiday!",
+    "noclass_reminder": {
+      "reminder": "Haven't chosen your courses yet?",
+      "first": "First open",
+      "courses": "Courses",
+      "choose_courses": "to choose courses",
+      "then": "Next open",
+      "timetable": "Timetable",
+      "check_schedule": "to check your schedule"
+    }
   },
   "timetable": {
     "actions": {
@@ -9,8 +19,12 @@
       "share": "Share/Sync",
       "horizontal_view": "Horizontal View",
       "vertical_view": "Vertical View",
-      "sync_ccxp": "Sync from CCXP"
-    }
+      "more_options": "More",
+      "sync_ccxp": "Sync from CCXP",
+      "group_dept": "Group dept. by colors"
+    },
+    "credits": "credits",
+    "course": "courses"
   },
   "course": {
     "credits": "Credits",
@@ -69,6 +83,7 @@
       "course_list": "Course List",
       "scores": "Scores",
       "average": "Average",
+      "favourites": "Favourites",
       "standard_deviation": "Std. Deviation",
       "score_types": {
         "gpa": "GPA",
@@ -110,7 +125,8 @@
     "notes": "Notes",
     "weekdays": "Weekdays",
     "weekends": "Weekends",
-    "to": "To "
+    "to": "To ",
+    "schedule": "Departure Schedule"
   },
   "settings": {
     "account": {
@@ -158,6 +174,9 @@
         "description": "Send anonymous usage info to Google Analytics"
       }
     }
+  },
+  "pages": {
+    "ais_loading": "Accessing the academic information system, please wait a moment..."
   },
   "venues": {
     "placeholder": "Select a Venue from the list"
@@ -229,7 +248,9 @@
     "prev": "Prev",
     "next": "Next",
     "skip": "Skip",
-    "jump": "Jump in"
+    "jump": "Jump in",
+    "continue": "Continue",
+    "login": "Log in"
   },
   "ccxp": {
     "connected": "Connected",

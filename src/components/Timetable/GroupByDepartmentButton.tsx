@@ -1,5 +1,6 @@
 "use client";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
+import useDictionary from "@/dictionaries/useDictionary";
 import { Button } from "../ui/button";
 
 type GroupByDepartmentButtonProps = {
@@ -9,6 +10,8 @@ type GroupByDepartmentButtonProps = {
 const GroupByDepartmentButton = ({
   semester,
 }: GroupByDepartmentButtonProps) => {
+  const dict = useDictionary();
+
   const { colorMap, setColorMap, getSemesterCourses, currentColors } =
     useUserTimetable();
 
@@ -38,7 +41,7 @@ const GroupByDepartmentButton = ({
 
   return (
     <Button variant="outline" onClick={handleGroupByDepartment}>
-      依系所分顔色
+      {dict.timetable.actions.group_dept}
     </Button>
   );
 };
