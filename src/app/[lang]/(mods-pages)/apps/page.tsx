@@ -1,85 +1,104 @@
 "use client";
-import { apps } from "@/const/apps";
-import { getDictionary } from "@/dictionaries/dictionaries";
-import { LangProps } from "@/types/pages";
-import Link from "next/link";
-import { Info, ArrowRight } from "lucide-react";
-import FavouriteApp from "./Favorite";
-import React from "react";
+import { apps, categories } from "@/const/apps";
+import { Settings, Star } from "lucide-react";
 import useDictionary from "@/dictionaries/useDictionary";
-import { useHeadlessAIS } from "@/hooks/contexts/useHeadlessAIS";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useSettings } from "@/hooks/contexts/settings";
+import { cn } from "@/lib/utils";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
+import AppItem from "./AppItem";
 
-const AppList = ({ params: { lang } }: LangProps) => {
+const AppList = () => {
   const dict = useDictionary();
-  const { ais } = useHeadlessAIS();
+  const { language, pinnedApps, toggleApp } = useSettings();
 
   return (
-    <div className="h-full w-full">
-      <div className="flex flex-col" suppressHydrationWarning>
-        <h1 className="text-xl font-bold px-4 py-2">{dict.applist.title}</h1>
-        {apps
-          .filter((m) => (m.ais ? !!ais.enabled : true))
-          .map((app) => (
-            <div
-              key={app.id}
-              className="flex flex-row items-center space-x-2 py-2 px-4 hover:bg-gray-100 dark:hover:bg-neutral-800"
-            >
-              <Link
-                href={app.href}
-                className="flex flex-row flex-1 items-center space-x-2"
-                target={app.target}
-              >
-                <div className="p-3 rounded-full bg-nthu-200 text-nthu-800 grid place-items-center">
-                  <app.Icon size={16} />
+    <div className="h-full w-full px-2">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="flex flex-col p-4 rounded-md border border-border gap-4">
+          <div className="flex flex-row items-center">
+            <h1 className="font-bold text-muted-foreground flex-1">
+              {dict.applist.pinned_apps_title}
+            </h1>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Settings size={20} className="cursor-pointer" />
+              </DialogTrigger>
+              <DialogContent>
+                <div className="flex flex-col gap-4">
+                  <h1 className="font-bold text-muted-foreground">
+                    {dict.applist.edit_pinned_apps_title}
+                  </h1>
+                  <ScrollArea className="max-h-[80dvh]">
+                    <div className="flex flex-col gap-2">
+                      {apps.map((app) => (
+                        <div
+                          key={app.id}
+                          className="flex flex-row items-center space-x-2"
+                        >
+                          <div className="p-2 rounded-lg bg-nthu-100 text-nthu-800 grid place-items-center">
+                            <app.Icon size={24} />
+                          </div>
+                          <div className="flex flex-col flex-1">
+                            <h2 className=" font-medium">
+                              {language == "zh" ? app.title_zh : app.title_en}
+                            </h2>
+                          </div>
+                          <div className="flex flex-row items-center space-x-2 pr-4">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => toggleApp(app.id)}
+                            >
+                              <Star
+                                size={20}
+                                className={cn(
+                                  !pinnedApps.includes(app.id)
+                                    ? ""
+                                    : "fill-yellow-500 stroke-yellow-500",
+                                )}
+                              />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
                 </div>
-                <div className="flex flex-col gap-1 flex-1">
-                  <h2 className="text-base font-medium text-muted-foreground">
-                    {lang == "zh" ? app.title_zh : app.title_en}
-                  </h2>
-                </div>
-              </Link>
-              <div className="items-center px-3">
-                <FavouriteApp appId={app.id} />
-              </div>
-            </div>
-          ))}
-        {/* <CCXPDownAlert/> */}
-        <div className="px-4 py-2 space-y-2">
-          {!ais.enabled && (
-            <Alert color="success">
-              <Info className="mr-2" />
-              <div className="flex flex-col">
-                <h4 className="font-bold mb-1">還有更多功能！</h4>
-                <p>
-                  到設定同步校務資訊系統后，可以直接在這裏使用校務資訊系統的功能！
-                </p>
-              </div>
-              <React.Fragment>
-                <Link href={`/${lang}/settings#headless_ais`}>
-                  <Button variant="default">
-                    前往開通
-                    <ArrowRight className="w-4 h-4" />
-                  </Button>
-                </Link>
-              </React.Fragment>
-            </Alert>
+              </DialogContent>
+            </Dialog>
+          </div>
+          <div className="grid md:grid-cols-2 gap-2">
+            {apps
+              .filter((app) => pinnedApps.includes(app.id))
+              .map((app) => (
+                <AppItem key={app.id} app={app} />
+              ))}
+          </div>
+          {pinnedApps.length == 0 && (
+            <p className="text-muted-foreground text-center">
+              {dict.applist.empty_pinned_apps_reminder}
+            </p>
           )}
-          <Alert>
-            <AlertTitle>沒有你要的功能？</AlertTitle>
-            <AlertDescription>
-              快到
-              <Link
-                href="https://github.com/nthumodifications/courseweb/issues/new"
-                className="underline text-indigo-600"
-              >
-                Github
-              </Link>
-              提出你的想法吧
-            </AlertDescription>
-          </Alert>
         </div>
+        {Object.keys(categories).map((category) => (
+          <div
+            className="flex flex-col p-4 rounded-md border border-border gap-4"
+            key={category}
+          >
+            <h1 className="font-bold text-muted-foreground">
+              {categories[category][`title_${language}`]}
+            </h1>
+            <div className="grid md:grid-cols-2 gap-2">
+              {apps
+                .filter((m) => m.category === category)
+                .map((app) => (
+                  <AppItem key={app.id} app={app} />
+                ))}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
