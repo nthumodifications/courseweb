@@ -2,6 +2,7 @@ import { Codepen, Database, Globe } from "lucide-react";
 import Link from "next/link";
 import EmptyIssueForm from "./EmptyIssueForm";
 import { Separator } from "@/components/ui/separator";
+import Footer from "@/components/Footer";
 
 const IssueButton = ({
   title,
@@ -27,7 +28,7 @@ const IssueButton = ({
 
 const IssuesPage = () => {
   return (
-    <div className="flex flex-col max-w-2xl px-4 prose">
+    <div className="flex flex-col max-w-2xl px-4 prose prose-neutral dark:prose-invert">
       <h1>Report an Issue</h1>
       <div id="dataissue" className="flex flex-col">
         {/* Explainer of the data sources */}
@@ -74,6 +75,7 @@ const IssuesPage = () => {
         {/* Data issue form */}
       </div>
       <EmptyIssueForm />
+      <Footer />
     </div>
   );
 };

@@ -2,6 +2,13 @@ import { Button } from "@/components/ui/button";
 import { Github, Link2, LinkedinIcon } from "lucide-react";
 import Link from "next/link";
 import team from "@/const/team.json";
+import Footer from "@/components/Footer";
+
+/**
+ * Woah woah did you stumble here? Is this because you wanna join us!
+ *
+ * Leave your name at ./const/team.json and let everyone remember who you are!
+ */
 
 const Team = () => {
   return (
@@ -123,6 +130,7 @@ const Team = () => {
             ))}
         </div>
       </article>
+      <Footer />
     </div>
   );
 };

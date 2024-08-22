@@ -10,11 +10,12 @@ import {
 import Link from "next/link";
 import ContributeComment from "./ContributeComment";
 import IssueFormDialog from "@/components/Forms/IssueFormDialog";
+import Footer from "@/components/Footer";
 
 const ContributePage = () => {
   return (
     <div className="px-4">
-      <article className="prose">
+      <article className="prose prose-neutral dark:prose-invert">
         <h1>Be a Contributor</h1>
         <p>
           NTHUMods is a 100% pure student-led, open source project. We rely on
@@ -104,6 +105,7 @@ const ContributePage = () => {
           </Link>
         </Button>
       </article>
+      <Footer />
     </div>
   );
 };
