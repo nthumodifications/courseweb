@@ -188,7 +188,11 @@
     }
   },
   "applist": {
-    "title": "功能列表"
+    "title": "功能列表",
+    "to_ccxp": "校務系統鏈接",
+    "empty_pinned_apps_reminder": "可以到右上角加快捷功能哦~",
+    "pinned_apps_title": "快捷功能",
+    "edit_pinned_apps_title": "修改快捷功能"
   },
   "dialogs": {
     "DownloadTimetableDialog": {
@@ -270,7 +274,9 @@
       "IncorrectCredentials": "學號或密碼錯誤",
       "CaptchaError": "驗證碼解讀失敗,  請在15分鐘后重試。",
       "UnknownError": "發生了問題，但不知道爲什麽 :( 請到校務系統登入試試看。"
-    }
+    },
+    "logging_in_please_wait": "正在幫你登入校務資訊系統，請稍等...",
+    "not_logged_in_error": "還未連接校務資訊系統"
   },
   "cancel": "取消",
   "privacy_policy": "隱私權政策"
