@@ -227,4 +227,12 @@ export const apps: {
     Icon: Globe,
     ais: true,
   },
+  {
+    id: "scholarship",
+    category: "other",
+    title_zh: "清華助學系統",
+    title_en: "NTHU Scholarship",
+    href: "https://meo110.wwlc.nthu.edu.tw/",
+    Icon: Globe,
+  },
 ];
