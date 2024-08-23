@@ -138,7 +138,7 @@ export const apps: {
     ais: true,
   },
   {
-    id: "coursereg",
+    id: "coursecheck",
     category: "course",
     title_zh: "選課待亂數名額查詢",
     title_en: "Realtime Course Enrollment Status",
@@ -192,7 +192,7 @@ export const apps: {
     ais: true,
   },
   {
-    id: "netsys",
+    id: "office365",
     category: "apply",
     title_zh: "	Office365帳號申請",
     title_en: "Office 365 Account Application",
@@ -201,7 +201,7 @@ export const apps: {
     ais: true,
   },
   {
-    id: "netsys",
+    id: "classroom_renting",
     category: "apply",
     title_zh: "	教室借用申請",
     title_en: "Classroom Renting",
