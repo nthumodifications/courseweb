@@ -1,6 +1,6 @@
 import { apps } from "@/const/apps";
 import { ExternalLink } from "lucide-react";
-import React from "react";
+import React, { useMemo } from "react";
 import { useCallback } from "react";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useHeadlessAIS } from "@/hooks/contexts/useHeadlessAIS";
@@ -55,15 +55,18 @@ const AppItem = ({
     }
   }, [router, app, ais, getACIXSTORE, dict]);
 
+  const isEnabled = useMemo(
+    () => (app.ais && ais.enabled) || !app.ais,
+    [app, ais],
+  );
+
   return (
     <div
       className={cn(
         !mini
           ? "flex flex-row items-center space-x-2 flex-1"
           : "flex flex-col items-center space-y-1",
-        (app.ais && ais.enabled) || !app.ais
-          ? "cursor-pointer"
-          : "cursor-not-allowed opacity-30",
+        isEnabled ? "cursor-pointer" : "cursor-not-allowed opacity-30",
       )}
       onClick={onItemClicked}
     >
