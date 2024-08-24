@@ -72,6 +72,7 @@ const TimetableSidebar = ({
             <DropdownMenuItem asChild>
               <HeadlessSyncCourseButtonDynamic />
             </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <GroupByDepartmentButton semester={semester} />
             </DropdownMenuItem>

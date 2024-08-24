@@ -83,7 +83,7 @@ const TimetableSlotVertical: FC<TimetableSlotProps> = ({
                 {course.course.name_zh}
               </span>
             ) : (
-              <span className={cn("text-xs font-medium", textAlign)}>
+              <span className={cn("text-xs font-medium w-full", textAlign)}>
                 {course.course.name_en}
               </span>
             ))}
