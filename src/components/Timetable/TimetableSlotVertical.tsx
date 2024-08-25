@@ -46,12 +46,14 @@ const TimetableSlotVertical: FC<TimetableSlotProps> = ({
         left:
           tableDim.header.width +
           course.dayOfWeek * tableDim.timetable.width +
-          (fractionIndex - 1) * (tableDim.timetable.width / fraction),
+          (fractionIndex - 1) * (tableDim.timetable.width / fraction) +
+          2,
         top:
           tableDim.header.height + course.startTime * tableDim.timetable.height,
         width: tableDim.timetable.width / fraction - 4,
         height:
-          (course.endTime - course.startTime + 1) * tableDim.timetable.height,
+          (course.endTime - course.startTime + 1) * tableDim.timetable.height -
+          4,
         backgroundColor: course.color,
       }}
       {...props}
@@ -81,7 +83,7 @@ const TimetableSlotVertical: FC<TimetableSlotProps> = ({
                 {course.course.name_zh}
               </span>
             ) : (
-              <span className={cn("text-xs font-medium", textAlign)}>
+              <span className={cn("text-xs font-medium w-full", textAlign)}>
                 {course.course.name_en}
               </span>
             ))}
