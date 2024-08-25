@@ -1,0 +1,11 @@
+- repo: https://github.com/pre-commit/mirrors-eslint
+  rev: "v9.9.1" # Use the sha / tag you want to point at
+  hooks:
+    - id: eslint
+      files: \.[jt]sx?$ # *.js, *.jsx, *.ts and *.tsx
+      types: [file]
+      additional_dependencies:
+        - eslint@8.57.0
+        - eslint-config-next@14.2.5
+        - eslint-config-prettier@9.1.0
+        - eslint-plugin-unused-imports@4.1.3
