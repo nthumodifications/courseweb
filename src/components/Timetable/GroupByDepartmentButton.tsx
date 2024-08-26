@@ -40,7 +40,11 @@ const GroupByDepartmentButton = ({
   };
 
   return (
-    <Button variant="outline" onClick={handleGroupByDepartment}>
+    <Button
+      className="w-full"
+      variant="outline"
+      onClick={handleGroupByDepartment}
+    >
       {dict.timetable.actions.group_dept}
     </Button>
   );

@@ -324,9 +324,9 @@ export const TimetableCourseList = ({
               vertical ? verticalListSortingStrategy : rectSwappingStrategy
             }
           >
-            {displayCourseData.map((course, index) => (
+            {displayCourseData.map((course) => (
               <TimetableCourseListItem
-                key={index}
+                key={course.raw_id}
                 course={course as MinimalCourse}
                 hasConflict={
                   !!timeConflicts.find(
