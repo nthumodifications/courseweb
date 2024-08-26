@@ -30,7 +30,9 @@ const TimetableSlotHorizontal: FC<TimetableSlotProps> = ({
       className={`absolute rounded-md transform translate-y-0.5`}
       style={{
         left:
-          tableDim.header.width + course.startTime * tableDim.timetable.width,
+          tableDim.header.width +
+          course.startTime * tableDim.timetable.width +
+          2,
         top:
           tableDim.header.height +
           course.dayOfWeek * tableDim.timetable.height +
@@ -38,7 +40,7 @@ const TimetableSlotHorizontal: FC<TimetableSlotProps> = ({
         width:
           tableDim.timetable.width * (course.endTime - course.startTime + 1) -
           4,
-        height: tableDim.timetable.height / fraction,
+        height: tableDim.timetable.height / fraction - 4,
         backgroundColor: course.color,
         color: course.textColor,
       }}
