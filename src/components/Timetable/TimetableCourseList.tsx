@@ -324,9 +324,9 @@ export const TimetableCourseList = ({
               vertical ? verticalListSortingStrategy : rectSwappingStrategy
             }
           >
-            {displayCourseData.map((course, index) => (
+            {displayCourseData.map((course) => (
               <TimetableCourseListItem
-                key={index}
+                key={course.raw_id}
                 course={course as MinimalCourse}
                 hasConflict={
                   !!timeConflicts.find(
@@ -360,11 +360,11 @@ export const TimetableCourseList = ({
       <div className="flex flex-row gap-4 justify-end">
         <div className="space-x-2">
           <span className="font-bold">{displayCourseData.length}</span>
-          <span className="text-gray-600">課</span>
+          <span className="text-gray-600">{dict.timetable.course}</span>
         </div>
         <div className="space-x-2">
           <span className="font-bold">{totalCredits}</span>
-          <span className="text-gray-600">總學分</span>
+          <span className="text-gray-600">{dict.timetable.credits}</span>
         </div>
       </div>
     </div>

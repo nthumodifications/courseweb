@@ -65,7 +65,7 @@
     "@sentry/nextjs": "^7.113.0",
     "@supabase/supabase-js": "^2.39.7",
     "@tailwindcss/container-queries": "^0.1.1",
-    "@tailwindcss/typography": "^0.5.10",
+    "@tailwindcss/typography": "^0.5.14",
     "@tanstack/query-sync-storage-persister": "^5.40.0",
     "@tanstack/react-query": "^5.51.15",
     "@tanstack/react-query-persist-client": "^5.39.0",

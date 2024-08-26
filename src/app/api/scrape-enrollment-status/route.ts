@@ -4,18 +4,14 @@ import { getLatestCourseEnrollment } from "@/lib/headless_ais/courses";
 import { readFileSync, writeFileSync } from "fs";
 import { NextRequest, NextResponse } from "next/server";
 import { kv } from "@vercel/kv";
-import supabase from "@/config/supabase";
 import supabase_server from "@/config/supabase_server";
 
-export const GET = async (request: NextRequest, _try = 0) => {
-  const authHeader = request.headers.get("authorization");
-
-  if (
-    process.env.NODE_ENV == "production" &&
-    authHeader !== `Bearer ${process.env.CRON_SECRET}`
-  ) {
-    return new Response("Unauthorized", {
-      status: 401,
+export const GET = async (request: NextRequest) => {
+  const semester = request.nextUrl.searchParams.get("semester");
+  if (!semester) {
+    return NextResponse.json({
+      sucesss: false,
+      message: "Semester not provided",
     });
   }
 

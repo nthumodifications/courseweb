@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import { LangProps } from "@/types/pages";
 
 import { Viewport } from "next";
-import { Inter, Noto_Sans_TC } from "next/font/google";
-import { cookies } from "next/headers";
 import { SettingsProvider } from "@/hooks/contexts/settings";
 import { UserTimetableProvider } from "@/hooks/contexts/useUserTimetable";
 import { HeadlessAISProvider } from "@/hooks/contexts/useHeadlessAIS";
@@ -12,7 +10,6 @@ import NextAuthProvider from "@/components/NextAuthProvider";
 import { Toaster } from "@/components/ui/toaster";
 import ReactQuery from "@/components/ReactQuery";
 
-import "./globals.css";
 import AppUrlListener from "@/components/AppUrlListener";
 
 export const metadata: Metadata = {
@@ -93,42 +90,21 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-const inter = Inter({
-  subsets: ["latin", "latin-ext"],
-  variable: "--font-inter",
-});
-
-const noto = Noto_Sans_TC({
-  subsets: ["latin", "latin-ext"],
-  variable: "--font-noto",
-});
-
 export default function RootLayout({
   children,
   params,
 }: {
   children: React.ReactNode;
 } & LangProps) {
-  const theme = cookies().get("theme");
-
   return (
     <NextAuthProvider>
       <ReactQuery>
         <SettingsProvider>
           <HeadlessAISProvider>
             <UserTimetableProvider>
-              <html
-                lang={params.lang}
-                translate="no"
-                className={`${theme?.value ?? ""} ${inter.variable} ${noto.variable}`}
-                suppressHydrationWarning={true}
-              >
-                <body suppressHydrationWarning={true}>
-                  {children}
-                  <AppUrlListener />
-                  <Toaster />
-                </body>
-              </html>
+              {children}
+              <AppUrlListener />
+              <Toaster />
             </UserTimetableProvider>
           </HeadlessAISProvider>
         </SettingsProvider>

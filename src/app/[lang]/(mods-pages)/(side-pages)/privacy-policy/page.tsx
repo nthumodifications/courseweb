@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: "隱私權政策 Privacy Policy",
@@ -194,6 +195,7 @@ const PrivacyPolicyENPage = () => {
           discrepancies are found, please refer to the Chinese Version.
         </p>
       </article>
+      <Footer />
     </div>
   );
 };

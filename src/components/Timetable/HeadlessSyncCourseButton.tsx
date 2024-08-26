@@ -62,7 +62,12 @@ const HeadlessSyncCourseButton = () => {
   if (!ais.enabled) return <></>;
 
   return (
-    <Button variant="outline" onClick={handleSync} disabled={loading}>
+    <Button
+      className="w-full"
+      variant="outline"
+      onClick={handleSync}
+      disabled={loading}
+    >
       {!loading ? (
         <>
           <FolderSync className="w-4 h-4 mr-1" />{" "}

@@ -52,13 +52,17 @@ export const config = {
     // Optional: only run on root (/) URL
     // '/'
     "/",
+    "/issues/:path*",
+    "/contribute/:path*",
+    "/team/:path*",
+    "/privacy-policy/:path*",
+    "/proxy-login/:path*",
     "/bus/:path*",
     "/courses/:path*",
     "/settings/:path*",
     "/timetable/:path*",
     "/today/:path*",
     "/venues/:path*",
-    "/issues/:path*",
     "/cds/:path*",
     "/apps/:path*",
     "/student/:path*",

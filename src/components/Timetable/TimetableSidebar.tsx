@@ -63,7 +63,7 @@ const TimetableSidebar = ({
           <DropdownMenuTrigger asChild>
             <Button variant="outline">
               <EllipsisVertical className="w-4 h-4 mr-2" />
-              更多
+              {dict.timetable.actions.more_options}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
@@ -72,6 +72,7 @@ const TimetableSidebar = ({
             <DropdownMenuItem asChild>
               <HeadlessSyncCourseButtonDynamic />
             </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <GroupByDepartmentButton semester={semester} />
             </DropdownMenuItem>

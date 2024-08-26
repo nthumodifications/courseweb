@@ -1,13 +1,8 @@
 ![Frame 3](https://github.com/nthumodifications/courseweb/assets/74640729/c810b72f-e428-47bc-8f5b-22a49c4eb1a0)
 
-<<<<<<< HEAD
-國立清華大學非公式的開源預排，選課，課表網站.  
-=======
-
 # 國立清華大學非公式的開源預排，選課，課表網站.
 
-> > > > > > > main
-> > > > > > > The unofficial open-source course preselection, timetable builder, and course catalog website!
+The unofficial open-source course preselection, timetable builder, and course catalog website!
 
 We are a passionate team of students dedicated to improving the technological standards of NTHU through students. We hope that with our efforts and yours, we'll make NTHU great again!
 
@@ -115,8 +110,6 @@ We are LICENSED under the GNU General Public License v3.0. You can view the lice
 ## Acknowledgements
 
 [National Tsing Hua University Interdisciplinary Program](https://ipth.site.nthu.edu.tw/p/406-1462-267815,r9940.php) - Acknowledging and supporting the project
-
-> > > > > > > main
 
 ## Inspiration
 
