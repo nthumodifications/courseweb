@@ -25,6 +25,13 @@ import { SearchBox } from "react-instantsearch";
 const searchClient = algoliasearch(
   process.env.NEXT_PUBLIC_ALGOLIA_APP_ID!,
   process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY!,
+  {
+    timeouts: {
+      connect: 5,
+      read: 5,
+      write: 30,
+    },
+  },
 );
 const sessionStorageCache = createInfiniteHitsSessionStorageCache();
 
