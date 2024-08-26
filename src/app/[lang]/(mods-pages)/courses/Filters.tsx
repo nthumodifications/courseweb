@@ -68,6 +68,10 @@ const Filters = () => {
             synonms={languageSynonyms}
             clientSearch={true}
           />
+          <div className="flex flex-col gap-2">
+            <span className="text-sm">{dict.course.refine.level}</span>
+            <FilterItem attribute="courseLevel" searchable={true} limit={20} />
+          </div>
         </div>
       </div>
 
