@@ -105,8 +105,6 @@ We are LICENSED under the GNU General Public License v3.0. You can view the lice
 - [Joshua Lean](@Joshimello)
 - [Huang Shi Jie](@SJieNg123)
 
-# <<<<<<< HEAD
-
 ## Acknowledgements
 
 [National Tsing Hua University Interdisciplinary Program](https://ipth.site.nthu.edu.tw/p/406-1462-267815,r9940.php) - Acknowledging and supporting the project
