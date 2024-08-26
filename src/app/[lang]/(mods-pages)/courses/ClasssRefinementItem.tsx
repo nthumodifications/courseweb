@@ -108,9 +108,9 @@ const ClassRefinementItem = ({
               "All"
             ) : (
               <div className="flex flex-col gap-1">
-                {selected.map((i) => (
+                {selected.map(i => 
                   <Badge key={i} variant="outline" className="">
-                    {getFormattedClassCode(i, selectedSemester)}
+                    {getFormattedClassCode(i, selectedSemester, 'zh')}
                   </Badge>
                 ))}
               </div>
@@ -121,7 +121,6 @@ const ClassRefinementItem = ({
           <X className="px-2 w-8 h-6 cursor-pointer" onClick={clear} />
         )}
       </Button>
-
       <PopoverContent className="p-0" align="start">
         <Command shouldFilter={clientSearch}>
           {searchable && (
@@ -164,7 +163,7 @@ const ClassRefinementItem = ({
                         />
                       </div>
                       <span className="mr-4">
-                        {getFormattedClassCode(item.label, selectedSemester)}
+                        {getFormattedClassCode(item.label, selectedSemester, 'zh')}
                       </span>
                       <Badge variant="outline">{item.count}</Badge>
                     </div>

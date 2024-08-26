@@ -1,6 +1,14 @@
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import supabase_server from "@/config/supabase_server";
 import { LangProps } from "@/types/pages";
-import { Button, Table } from "@mui/joy";
 import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 
@@ -19,37 +27,35 @@ const CDSTermsPage = async ({ params: { lang } }: LangProps) => {
   const termObjs = await getCdsTerms();
   return (
     <Table className="w-full">
-      <thead>
-        <tr>
-          <th>調查學期</th>
-          <th>開始時間</th>
-          <th>結束時間</th>
-          <th>參考學期</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
+      <TableHeader>
+        <TableRow>
+          <TableHead>調查學期</TableHead>
+          <TableHead>開始時間</TableHead>
+          <TableHead>結束時間</TableHead>
+          <TableHead>參考學期</TableHead>
+          <TableHead></TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
         {termObjs.map((termObj) => (
-          <tr key={termObj.term}>
-            <td>{termObj.term}</td>
-            <td>{termObj.starts}</td>
-            <td>{termObj.ends}</td>
-            <td>
+          <TableRow key={termObj.term}>
+            <TableCell>{termObj.term}</TableCell>
+            <TableCell>{termObj.starts}</TableCell>
+            <TableCell>{termObj.ends}</TableCell>
+            <TableCell>
               {termObj.ref_sem},{termObj.ref_sem_2}
-            </td>
-            <td>
+            </TableCell>
+            <TableCell>
               <Link href={`/${lang}/cds/admin/${termObj.term}`}>
-                <Button
-                  variant="soft"
-                  endDecorator={<ExternalLink size={16} />}
-                >
+                <Button variant="ghost">
                   細節
+                  <ExternalLink size={16} className="ml-2" />
                 </Button>
               </Link>
-            </td>
-          </tr>
+            </TableCell>
+          </TableRow>
         ))}
-      </tbody>
+      </TableBody>
     </Table>
   );
 };
