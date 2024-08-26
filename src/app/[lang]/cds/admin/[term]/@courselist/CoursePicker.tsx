@@ -1,6 +1,5 @@
 "use client";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { List, ListItem, ListItemButton, ListItemContent } from "@mui/joy";
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -61,8 +60,8 @@ const CoursePicker = ({
               <Link
                 href={`/${lang}/cds/admin/${termObj.term}/${course.raw_id}`}
               >
-                <ListItemButton>
-                  <ListItemContent>
+                <div className="flex flex-row gap-2">
+                  <div className="flex flex-row gap-2">
                     <h2 className="text-xl font-bold text-gray-700 dark:text-neutral-200">
                       {course.department} {course.course}-{course.class}{" "}
                       {course.name_zh}
@@ -86,9 +85,9 @@ const CoursePicker = ({
                         /{course.capacity} 人
                       </p>
                     </div>
-                  </ListItemContent>
+                  </div>
                   <ChevronRight />
-                </ListItemButton>
+                </div>
               </Link>
             </div>
           ))}
