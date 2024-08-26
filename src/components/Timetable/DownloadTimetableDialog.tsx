@@ -15,6 +15,8 @@ import {
 } from "../ui/dialog";
 import { DialogTrigger } from "@radix-ui/react-dialog";
 import { Button } from "../ui/button";
+import { ScrollArea } from "../ui/scroll-area";
+import { toast } from "../ui/use-toast";
 
 const DownloadTimetableComponent = () => {
   const dict = useDictionary();
@@ -22,6 +24,7 @@ const DownloadTimetableComponent = () => {
     useUserTimetable();
   const ref = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(false);
+  const [generatedImg, setGeneratedImg] = useState<string | null>(null);
 
   const timetableData = createTimetableFromCourses(
     getSemesterCourses(semester) as MinimalCourse[],
@@ -39,6 +42,7 @@ const DownloadTimetableComponent = () => {
       filter: (node: HTMLElement) => node.id !== "time_slot",
     })
       .then(async (dataUrl) => {
+        setGeneratedImg(dataUrl);
         const filename = new Date().toISOString() + "_timetable.png";
         const link = document.createElement("a");
         link.download = filename;
@@ -54,6 +58,31 @@ const DownloadTimetableComponent = () => {
       });
   }, [ref]);
 
+  const handleClose = (v: boolean) => {
+    if (!v) setGeneratedImg(null);
+  };
+
+  const handleCopy = () => {
+    if (generatedImg === null) return;
+    // base64 to blob
+    const byteString = atob(generatedImg.split(",")[1]);
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    for (let i = 0; i < byteString.length; i++) {
+      ia[i] = byteString.charCodeAt(i);
+    }
+    const blob = new Blob([ab], { type: "image/png" });
+    navigator.clipboard.write([
+      new ClipboardItem({
+        "image/png": blob,
+      }),
+    ]);
+    toast({
+      title: "复制成功",
+      description: "已将课表图片复制到剪贴板",
+    });
+  };
+
   return (
     <>
       <Button onClick={handleConvert} variant="outline" disabled={loading}>
@@ -61,6 +90,7 @@ const DownloadTimetableComponent = () => {
           <Loader2 className="w-4 h-4 animate-spin" />
         ) : (
           <>
+            {/* eslint-disable-next-line jsx-a11y/alt-text */}
             <Image className="w-4 h-4 mr-2" />{" "}
             {dict.dialogs.DownloadTimetableDialog.buttons.image}
           </>
@@ -76,6 +106,20 @@ const DownloadTimetableComponent = () => {
           </div>
         </div>
       </div>
+      <Dialog open={generatedImg !== null} onOpenChange={handleClose}>
+        <DialogContent>
+          <h1 className="font-bold text-lg">生成成功</h1>
+          <ScrollArea className="max-h-[70dvh]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            {generatedImg && (
+              <img src={generatedImg} alt="timetable" onClick={handleCopy} />
+            )}
+          </ScrollArea>
+          <Button onClick={() => handleClose(false)} variant="outline">
+            Close
+          </Button>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

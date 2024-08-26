@@ -188,7 +188,11 @@
     }
   },
   "applist": {
-    "title": "Apps"
+    "title": "Apps",
+    "to_ccxp": "NTHU AIS",
+    "empty_pinned_apps_reminder": "Pin your most used apps here!",
+    "pinned_apps_title": "Pinned Apps",
+    "edit_pinned_apps_title": "Edit Pinned Apps"
   },
   "dialogs": {
     "DownloadTimetableDialog": {
@@ -270,7 +274,9 @@
       "IncorrectCredentials": "Incorrect Login Credentials",
       "CaptchaError": "CAPTCHA Decoding went wrong, Please retry in 15 minutes.",
       "UnknownError": "Something went wrong, please try checking on the NTHU AIS website."
-    }
+    },
+    "logging_in_please_wait": "Logging into your Academic Information System Account...",
+    "not_logged_in_error": "You are not logged in"
   },
   "cancel": "Cancel",
   "privacy_policy": "Privacy Policy"

@@ -2,12 +2,21 @@
   {
     "name_zh": "丘子輝",
     "name_en": "Chew Tzi Hwee",
-    "photo": "https://avatars.githubusercontent.com/u/1801389?v=4",
-    "description": "I just wanna do stuff",
+    "photo": "https://avatars.githubusercontent.com/u/17233431?v=4",
+    "description": "😺",
     "link": "https://imjustchew.com",
-    "facebook": "imjustchew",
     "github": "ImJustChew",
-    "linkedin": "",
+    "linkedin": "ImJustChew",
+    "active": true
+  },
+  {
+    "name_zh": "連正文",
+    "name_en": "Joshua Lean",
+    "photo": "https://avatars.githubusercontent.com/u/74640729?v=4",
+    "description": "🐳",
+    "link": "https://joshualean.com",
+    "github": "Joshimello",
+    "linkedin": "JoshuaLean",
     "active": true
   }
 ]

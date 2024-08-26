@@ -9,7 +9,6 @@ import {
 import { useSettings } from "@/hooks/contexts/settings";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { useRouter } from "next/navigation";
-import CourseSearchbar from "./CourseSearchbar";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useMemo } from "react";
 import {
@@ -324,9 +323,9 @@ export const TimetableCourseList = ({
               vertical ? verticalListSortingStrategy : rectSwappingStrategy
             }
           >
-            {displayCourseData.map((course, index) => (
+            {displayCourseData.map((course) => (
               <TimetableCourseListItem
-                key={index}
+                key={course.raw_id}
                 course={course as MinimalCourse}
                 hasConflict={
                   !!timeConflicts.find(

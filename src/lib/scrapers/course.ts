@@ -435,6 +435,7 @@ export const syncCoursesToAlgolia = async (semester: string) => {
         for_class: [...(elective_for || []), ...(compulsory_for || [])],
         objectID: course.raw_id,
         separate_times: course.times.flatMap((s) => s.match(/.{1,2}/g)),
+        courseLevel: course.course[0] + "000",
       }),
     );
     algolia.saveObjects(algoliaChunk);

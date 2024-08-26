@@ -21,6 +21,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import useTime from "@/hooks/useTime";
 import { NoClassPickedReminder } from "./NoClassPickedReminder";
 import { TimetableItemDrawer } from "@/components/Timetable/TimetableItemDrawer";
+import AppItem from "@/app/[lang]/(mods-pages)/apps/AppItem";
 
 const getRangeOfDays = (start: Date, end: Date) => {
   const days = [];
@@ -132,23 +133,9 @@ const TodaySchedule: FC<{
     if (applist.length == 0) return <></>;
     return (
       <div className="flex flex-col gap-1">
-        <h1 className="text-xs font-bold text-gray-500">
-          {dict.applist.title}
-        </h1>
-        <div className="flex flex-row flex-wrap gap-2 pb-2">
+        <div className="flex flex-row flex-wrap gap-2 pb-2 justify-evenly">
           {applist.map((app, index) => (
-            <Link href={app.href} key={index}>
-              <div className="flex flex-col items-center justify-center p-2 gap-2 w-16">
-                <div className="p-3 rounded-full bg-indigo-100 text-indigo-800 grid place-items-center">
-                  <app.Icon size={20} />
-                </div>
-                <div className="flex flex-col gap-1 flex-1">
-                  <h2 className="text-xs font-medium text-gray-600 text-center line-clamp-2 break-all">
-                    {language == "zh" ? app.title_zh : app.title_en}
-                  </h2>
-                </div>
-              </div>
-            </Link>
+            <AppItem key={index} app={app} mini />
           ))}
         </div>
       </div>
