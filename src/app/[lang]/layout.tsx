@@ -2,14 +2,10 @@ import type { Metadata } from "next";
 import { LangProps } from "@/types/pages";
 
 import { Viewport } from "next";
-import { Inter, Noto_Sans_TC } from "next/font/google";
-import { cookies } from "next/headers";
 import { SettingsProvider } from "@/hooks/contexts/settings";
-import ModalProvider from "@/hooks/contexts/useModal";
 import { UserTimetableProvider } from "@/hooks/contexts/useUserTimetable";
 import { HeadlessAISProvider } from "@/hooks/contexts/useHeadlessAIS";
 
-import { CssVarsProvider } from "@mui/joy";
 import NextAuthProvider from "@/components/NextAuthProvider";
 import { Toaster } from "@/components/ui/toaster";
 import ReactQuery from "@/components/ReactQuery";
@@ -94,40 +90,25 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-const inter = Inter({
-  subsets: ["latin", "latin-ext"],
-  variable: "--font-inter",
-});
-
-const noto = Noto_Sans_TC({
-  subsets: ["latin", "latin-ext"],
-  variable: "--font-noto",
-});
-
 export default function RootLayout({
   children,
   params,
 }: {
   children: React.ReactNode;
 } & LangProps) {
-  const theme = cookies().get("theme");
   return (
-    <CssVarsProvider defaultMode={(theme?.value as any) ?? "light"}>
-      <NextAuthProvider>
-        <ReactQuery>
-          <SettingsProvider>
-            <HeadlessAISProvider>
-              <UserTimetableProvider>
-                <ModalProvider>
-                  {children}
-                  <AppUrlListener />
-                  <Toaster />
-                </ModalProvider>
-              </UserTimetableProvider>
-            </HeadlessAISProvider>
-          </SettingsProvider>
-        </ReactQuery>
-      </NextAuthProvider>
-    </CssVarsProvider>
+    <NextAuthProvider>
+      <ReactQuery>
+        <SettingsProvider>
+          <HeadlessAISProvider>
+            <UserTimetableProvider>
+              {children}
+              <AppUrlListener />
+              <Toaster />
+            </UserTimetableProvider>
+          </HeadlessAISProvider>
+        </SettingsProvider>
+      </ReactQuery>
+    </NextAuthProvider>
   );
 }

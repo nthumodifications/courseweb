@@ -9,7 +9,6 @@ import {
 import { useSettings } from "@/hooks/contexts/settings";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { useRouter } from "next/navigation";
-import CourseSearchbar from "./CourseSearchbar";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useMemo } from "react";
 import {
