@@ -21,6 +21,7 @@ import {
   Globe,
   HeartHandshakeIcon,
   HandCoins,
+  University,
 } from "lucide-react";
 
 export const categories: {
@@ -106,6 +107,16 @@ export const apps: {
     title_en: "Clubs Information",
     href: "https://outrageous-savory-d52.notion.site/d33567eea7814fc6b91744351eb2ba6a",
     Icon: Gamepad,
+  },
+  {
+    id: "ccxp",
+    category: "campuslife",
+    title_zh: "校務資訊系統",
+    title_en: "Academic Information System",
+    href: "https://www.ccxp.nthu.edu.tw/ccxp/COURSE/JH/7/7.1/7.1.3/logout.php",
+    Icon: University,
+    target: "_blank",
+    ais: true,
   },
   {
     id: "nthuclub",
