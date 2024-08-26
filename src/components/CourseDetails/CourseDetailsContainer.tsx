@@ -500,7 +500,7 @@ const CourseDetailContainer = async ({
                         href={`/${lang}/courses?nthu_courses%5BrefinementList%5D%5Bcompulsory_for%5D%5B0%5D=${course.compulsory_for}`}
                       >
                         <Badge variant="outline">
-                          {getFormattedClassCode(m, course.semester)}
+                          {getFormattedClassCode(m, course.semester, lang)}
                         </Badge>
                       </Link>
                     ))}
@@ -519,7 +519,7 @@ const CourseDetailContainer = async ({
                         href={`/${lang}/courses?nthu_courses%5BrefinementList%5D%5Belective_for%5D%5B0%5D=${course.elective_for}`}
                       >
                         <Badge variant="outline">
-                          {getFormattedClassCode(m, course.semester)}
+                          {getFormattedClassCode(m, course.semester, lang)}
                         </Badge>
                       </Link>
                     ))}
