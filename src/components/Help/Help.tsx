@@ -123,13 +123,13 @@ const Help = () => {
                 setPage(page + 1);
               }}
             >
-              繼續
+              {dict.help.continue}
             </Button>
           ) : (
             <div className="flex flex-col gap-2 w-full">
               <Dialog open={loginOpen} onOpenChange={setLoginOpen}>
                 <DialogTrigger asChild>
-                  <Button className="w-full">登入</Button>
+                  <Button className="w-full">{dict.help.login}</Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[425px] h-[100dvh] lg:h-auto w-full">
                   <ScrollArea className="h-full">
@@ -142,7 +142,7 @@ const Help = () => {
                 className="w-full"
                 onClick={() => setOpen(false)}
               >
-                略過
+                {dict.help.skip}
               </Button>
             </div>
           )}

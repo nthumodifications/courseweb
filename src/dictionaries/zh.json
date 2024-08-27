@@ -1,7 +1,17 @@
 {
   "today": {
     "noclass": "今天沒有課喔！",
-    "noclass_sub": "放假吧~"
+    "noclass_sub": "放假吧~",
+    "noclass_sem": "放假咯！",
+    "noclass_reminder": {
+      "reminder": "還沒選到課嗎？",
+      "first": "先到",
+      "courses": "課表",
+      "choose_courses": "選擇課程",
+      "then": "後到",
+      "timetable": "時間表",
+      "check_schedule": "查看時間表"
+    }
   },
   "timetable": {
     "actions": {
@@ -9,8 +19,12 @@
       "share": "分享/同步",
       "horizontal_view": "水平視圖",
       "vertical_view": "垂直視圖",
-      "sync_ccxp": "同步校務系統"
-    }
+      "more_options": "更多",
+      "sync_ccxp": "同步校務系統",
+      "group_dept": "依系所分顔色"
+    },
+    "credits": "總學分",
+    "course": "課"
   },
   "course": {
     "credits": "學分",
@@ -29,7 +43,7 @@
     "refine": {
       "title": "篩選",
       "semester": "學期",
-      "level": "修習年級",
+      "level": "課程對象",
       "language": "授課語言",
       "department": "開課系所",
       "specialization": "一二專選課",
@@ -67,6 +81,7 @@
       "prerequesites": "擋修",
       "timetable": "時間表",
       "course_list": "課程列表",
+      "favourites": "已收藏課程",
       "scores": "成績",
       "average": "平均",
       "standard_deviation": "標準差",
@@ -110,7 +125,8 @@
     "notes": "備注",
     "weekdays": "平日",
     "weekends": "假日",
-    "to": "往"
+    "to": "往",
+    "schedule": "發車時刻表"
   },
   "settings": {
     "account": {
@@ -159,6 +175,9 @@
       }
     }
   },
+  "pages": {
+    "ais_loading": "正在幫你登入校務資訊系統，請稍等..."
+  },
   "venues": {
     "placeholder": "從選項中選一個地點"
   },
@@ -169,7 +188,11 @@
     }
   },
   "applist": {
-    "title": "功能列表"
+    "title": "功能列表",
+    "to_ccxp": "校務系統鏈接",
+    "empty_pinned_apps_reminder": "可以到右上角加快捷功能哦~",
+    "pinned_apps_title": "快捷功能",
+    "edit_pinned_apps_title": "修改快捷功能"
   },
   "dialogs": {
     "DownloadTimetableDialog": {
@@ -229,7 +252,9 @@
     "prev": "上一頁",
     "next": "下一頁",
     "skip": "跳過",
-    "jump": "啓動！"
+    "jump": "啓動！",
+    "continue": "繼續",
+    "login": "登入"
   },
   "ccxp": {
     "connected": "已連接",
@@ -249,7 +274,9 @@
       "IncorrectCredentials": "學號或密碼錯誤",
       "CaptchaError": "驗證碼解讀失敗,  請在15分鐘后重試。",
       "UnknownError": "發生了問題，但不知道爲什麽 :( 請到校務系統登入試試看。"
-    }
+    },
+    "logging_in_please_wait": "正在幫你登入校務資訊系統，請稍等...",
+    "not_logged_in_error": "還未連接校務資訊系統"
   },
   "cancel": "取消",
   "privacy_policy": "隱私權政策"

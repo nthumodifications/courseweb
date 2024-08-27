@@ -1,4 +1,5 @@
 import Script from "next/script";
+import Footer from "@/components/Footer";
 
 const ProxyLoginExplainer = () => {
   return (
@@ -110,6 +111,7 @@ const ProxyLoginExplainer = () => {
           。
         </p>
       </article>
+      <Footer />
     </div>
   );
 };

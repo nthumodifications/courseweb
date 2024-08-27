@@ -160,7 +160,10 @@ const Timetable: FC<{
 
   if (!vertical)
     return (
-      <div className="text-center lg:mb-0 w-full overflow-x-auto overflow-y-hidden">
+      <div
+        className="text-center lg:mb-0 w-full overflow-x-auto overflow-y-hidden"
+        ref={containerRef}
+      >
         {/* Timetable, Relative overlay */}
         <div className="relative w-full">
           <table className="table-auto w-full">

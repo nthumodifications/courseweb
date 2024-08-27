@@ -2,20 +2,14 @@ import type { Metadata } from "next";
 import { LangProps } from "@/types/pages";
 
 import { Viewport } from "next";
-import { Inter, Noto_Sans_TC } from "next/font/google";
-import { cookies } from "next/headers";
 import { SettingsProvider } from "@/hooks/contexts/settings";
-import ModalProvider from "@/hooks/contexts/useModal";
 import { UserTimetableProvider } from "@/hooks/contexts/useUserTimetable";
 import { HeadlessAISProvider } from "@/hooks/contexts/useHeadlessAIS";
 
-import { CssVarsProvider } from "@mui/joy";
 import NextAuthProvider from "@/components/NextAuthProvider";
 import { Toaster } from "@/components/ui/toaster";
 import ReactQuery from "@/components/ReactQuery";
 import { RxDBProvider } from "@/config/rxdb";
-
-import "./globals.css";
 import AppUrlListener from "@/components/AppUrlListener";
 
 export const metadata: Metadata = {
@@ -96,52 +90,27 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-const inter = Inter({
-  subsets: ["latin", "latin-ext"],
-  variable: "--font-inter",
-});
-
-const noto = Noto_Sans_TC({
-  subsets: ["latin", "latin-ext"],
-  variable: "--font-noto",
-});
-
 export default function RootLayout({
   children,
   params,
 }: {
   children: React.ReactNode;
 } & LangProps) {
-  const theme = cookies().get("theme");
-
   return (
-    <CssVarsProvider defaultMode={(theme?.value as any) ?? "light"}>
-      <RxDBProvider>
-        <NextAuthProvider>
-          <ReactQuery>
-            <SettingsProvider>
-              <HeadlessAISProvider>
-                <UserTimetableProvider>
-                  <ModalProvider>
-                    <html
-                      lang={params.lang}
-                      translate="no"
-                      className={`${theme?.value ?? ""} ${inter.variable} ${noto.variable}`}
-                      suppressHydrationWarning={true}
-                    >
-                      <body suppressHydrationWarning={true}>
-                        {children}
-                        <AppUrlListener />
-                        <Toaster />
-                      </body>
-                    </html>
-                  </ModalProvider>
-                </UserTimetableProvider>
-              </HeadlessAISProvider>
-            </SettingsProvider>
-          </ReactQuery>
-        </NextAuthProvider>
-      </RxDBProvider>
-    </CssVarsProvider>
+    <RxDBProvider>
+      <NextAuthProvider>
+        <ReactQuery>
+          <SettingsProvider>
+            <HeadlessAISProvider>
+              <UserTimetableProvider>
+                {children}
+                <AppUrlListener />
+                <Toaster />
+              </UserTimetableProvider>
+            </HeadlessAISProvider>
+          </SettingsProvider>
+        </ReactQuery>
+      </NextAuthProvider>
+    </RxDBProvider>
   );
 }

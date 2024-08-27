@@ -1,13 +1,8 @@
 ![Frame 3](https://github.com/nthumodifications/courseweb/assets/74640729/c810b72f-e428-47bc-8f5b-22a49c4eb1a0)
 
-<<<<<<< HEAD
-國立清華大學非公式的開源預排，選課，課表網站.  
-=======
-
 # 國立清華大學非公式的開源預排，選課，課表網站.
 
-> > > > > > > main
-> > > > > > > The unofficial open-source course preselection, timetable builder, and course catalog website!
+The unofficial open-source course preselection, timetable builder, and course catalog website!
 
 We are a passionate team of students dedicated to improving the technological standards of NTHU through students. We hope that with our efforts and yours, we'll make NTHU great again!
 
@@ -45,6 +40,9 @@ Currently, everyone can access the website at [NTHUMods](https://nthumods.com). 
 You can clone the repository and start the development server via `npm run dev`
 
 If you wish to participate in this development, feel free to email [nthumods@gmail.com](mailto:nthumods@gmail.com) in the meantime while we figure out the system for contributing.
+
+=======
+Translation Dictionary Management Script `npm run dict --` to manage the translation dictionary. Eg `npm run dict -- create settings.ais.login 登入 Login`
 
 ## Contributing
 

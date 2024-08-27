@@ -118,7 +118,9 @@ const BusListingItem = ({
           onClick={() => router.push(`/${language}/bus/${route}`)}
         >
           <Timer className="w-4 h-4" />
-          <div className="text-center text-sm font-medium">{"發車時刻表"}</div>
+          <div className="text-center text-sm font-medium">
+            {dict.bus.schedule}
+          </div>
         </div>
         {notes.map((note) => (
           <div

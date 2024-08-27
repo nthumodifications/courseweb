@@ -8,20 +8,14 @@ import {
   useMemo,
   useLayoutEffect,
 } from "react";
-import supabase, {
-  CourseDefinition,
-  CourseSyllabusView,
-} from "@/config/supabase";
-import { createTimetableFromCourses } from "@/helpers/timetable";
-import { CourseTimeslotData } from "@/types/timetable";
-import { MinimalCourse, RawCourseID } from "@/types/courses";
-import { useLocalStorage } from "usehooks-ts";
-import { lastSemester, currentSemester } from "@/const/semester";
+import supabase, { CourseDefinition } from "@/config/supabase";
+import { RawCourseID } from "@/types/courses";
+import { lastSemester } from "@/const/semester";
 import { getSemesterFromID } from "@/helpers/courses";
 import { event } from "@/lib/gtag";
 import { timetableColors } from "@/const/timetableColors";
 import { useQuery } from "@tanstack/react-query";
-import { auth, db } from "@/config/firebase";
+import { auth } from "@/config/firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
 import useSyncedStorage from "../useSyncedStorage";
 
@@ -113,6 +107,14 @@ const useUserTimetableProvider = (loadCourse = true) => {
       const newColorMap: { [courseID: string]: string } = {};
 
       const coursesCopy = { ...courses };
+
+      // Check and confirm if coursesCopy is traversable
+      if (Object.keys(coursesCopy).length === 0) return;
+      if (Object.keys(coursesCopy).find((sem) => sem.length !== 5)) return;
+      if (
+        Object.keys(coursesCopy).find((sem) => !Array.isArray(coursesCopy[sem]))
+      )
+        return;
 
       Object.keys(coursesCopy).forEach((sem) => {
         (coursesCopy[sem] ?? []).forEach((courseID, i) => {
@@ -272,6 +274,7 @@ const useUserTimetableProvider = (loadCourse = true) => {
           label: courseID,
         });
       });
+
       return oldCourses;
     });
   };

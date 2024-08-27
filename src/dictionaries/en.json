@@ -1,7 +1,17 @@
 {
   "today": {
     "noclass": "No Classes Today",
-    "noclass_sub": "Enjoy your day off!"
+    "noclass_sub": "Enjoy your day off!",
+    "noclass_sem": "Enjoy your holiday!",
+    "noclass_reminder": {
+      "reminder": "Haven't chosen your courses yet?",
+      "first": "First open",
+      "courses": "Courses",
+      "choose_courses": "to choose courses",
+      "then": "Next open",
+      "timetable": "Timetable",
+      "check_schedule": "to check your schedule"
+    }
   },
   "timetable": {
     "actions": {
@@ -9,8 +19,12 @@
       "share": "Share/Sync",
       "horizontal_view": "Horizontal View",
       "vertical_view": "Vertical View",
-      "sync_ccxp": "Sync from CCXP"
-    }
+      "more_options": "More",
+      "sync_ccxp": "Sync from CCXP",
+      "group_dept": "Group dept. by colors"
+    },
+    "credits": "credits",
+    "course": "courses"
   },
   "course": {
     "credits": "Credits",
@@ -69,6 +83,7 @@
       "course_list": "Course List",
       "scores": "Scores",
       "average": "Average",
+      "favourites": "Favourites",
       "standard_deviation": "Std. Deviation",
       "score_types": {
         "gpa": "GPA",
@@ -110,7 +125,8 @@
     "notes": "Notes",
     "weekdays": "Weekdays",
     "weekends": "Weekends",
-    "to": "To "
+    "to": "To ",
+    "schedule": "Departure Schedule"
   },
   "settings": {
     "account": {
@@ -159,6 +175,9 @@
       }
     }
   },
+  "pages": {
+    "ais_loading": "Accessing the academic information system, please wait a moment..."
+  },
   "venues": {
     "placeholder": "Select a Venue from the list"
   },
@@ -169,7 +188,11 @@
     }
   },
   "applist": {
-    "title": "Apps"
+    "title": "Apps",
+    "to_ccxp": "NTHU AIS",
+    "empty_pinned_apps_reminder": "Pin your most used apps here!",
+    "pinned_apps_title": "Pinned Apps",
+    "edit_pinned_apps_title": "Edit Pinned Apps"
   },
   "dialogs": {
     "DownloadTimetableDialog": {
@@ -229,7 +252,9 @@
     "prev": "Prev",
     "next": "Next",
     "skip": "Skip",
-    "jump": "Jump in"
+    "jump": "Jump in",
+    "continue": "Continue",
+    "login": "Log in"
   },
   "ccxp": {
     "connected": "Connected",
@@ -249,7 +274,9 @@
       "IncorrectCredentials": "Incorrect Login Credentials",
       "CaptchaError": "CAPTCHA Decoding went wrong, Please retry in 15 minutes.",
       "UnknownError": "Something went wrong, please try checking on the NTHU AIS website."
-    }
+    },
+    "logging_in_please_wait": "Logging into your Academic Information System Account...",
+    "not_logged_in_error": "You are not logged in"
   },
   "cancel": "Cancel",
   "privacy_policy": "Privacy Policy"
