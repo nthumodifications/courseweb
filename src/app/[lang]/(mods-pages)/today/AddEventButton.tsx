@@ -52,6 +52,8 @@ import { EventLabelPicker } from "./EventLabelPicker";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { v4 as uuidv4 } from "uuid";
 import { TimeSelect, getNearestTime } from "@/components/ui/custom_timeselect";
+import { PopoverPortal } from "@radix-ui/react-popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export const AddEventButton = ({
   children,
@@ -76,8 +78,8 @@ export const AddEventButton = ({
             }
           : {
               id: uuidv4(),
-              title: "",
-              details: "",
+              title: undefined,
+              details: undefined,
               allDay: true,
               start: startOfDay(new Date()),
               end: endOfDay(new Date()),
@@ -85,15 +87,16 @@ export const AddEventButton = ({
                 type: null,
               },
               color: currentColors[0],
-              tag: "none",
+              tag: undefined,
             },
-      [defaultEvent],
+      [defaultEvent, currentColors],
     ),
+    mode: "onChange",
   });
 
   useEffect(() => {
     form.trigger();
-  }, [defaultEvent]);
+  }, [defaultEvent, form.trigger]);
 
   const onSubmit = (data: z.infer<typeof eventFormSchema>) => {
     const eventDef: CalendarEvent = {
@@ -140,13 +143,13 @@ export const AddEventButton = ({
   const renderNormalDatePicker = () => {
     return (
       <>
-        <div className="flex flex-row gap-4 overflow-x-auto">
+        <div className="flex flex-col items-end sm:flex-row gap-4 overflow-x-auto">
           <FormField
             control={form.control}
             name="start"
             render={({ field }) => (
               <FormItem className="flex flex-row space-x-2 space-y-0">
-                <Popover>
+                <Popover modal={true}>
                   <PopoverTrigger asChild>
                     <FormControl>
                       <Button
@@ -165,23 +168,25 @@ export const AddEventButton = ({
                       </Button>
                     </FormControl>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <ShadcnCalendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={(d) => {
-                        if (!d) return;
-                        //dont modify hour and minute
-                        const originalDate = field.value;
-                        const newDate = set(d, {
-                          hours: originalDate.getHours(),
-                          minutes: originalDate.getMinutes(),
-                        });
-                        field.onChange(newDate);
-                      }}
-                      initialFocus
-                    />
-                  </PopoverContent>
+                  <PopoverPortal>
+                    <PopoverContent className="w-auto p-0">
+                      <ShadcnCalendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={(d) => {
+                          if (!d) return;
+                          //dont modify hour and minute
+                          const originalDate = field.value;
+                          const newDate = set(d, {
+                            hours: originalDate.getHours(),
+                            minutes: originalDate.getMinutes(),
+                          });
+                          field.onChange(newDate);
+                        }}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </PopoverPortal>
                 </Popover>
                 <TimeSelect
                   minuteStep={minuteStep}
@@ -224,7 +229,7 @@ export const AddEventButton = ({
 
   const renderAllDayDatePicker = () => {
     return (
-      <div className="flex flex-row gap-4">
+      <div className="flex flex-col sm:flex-row gap-4">
         <FormField
           control={form.control}
           name="start"
@@ -318,7 +323,7 @@ export const AddEventButton = ({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger>{children}</DialogTrigger>
       <DialogContent className="p-0 flex">
-        <div className="p-6 w-full gap-4 flex flex-col">
+        <div className="p-4 md:p-6 w-full gap-4 flex flex-col">
           <DialogHeader>
             <DialogTitle>新增行程</DialogTitle>
           </DialogHeader>
@@ -327,97 +332,79 @@ export const AddEventButton = ({
               onSubmit={form.handleSubmit(onSubmit)}
               className="flex flex-col space-y-6"
             >
-              <div className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Input placeholder="新增標題" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="allDay"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center space-y-0 gap-2">
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <FormLabel>全天</FormLabel>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                {allDay ? renderAllDayDatePicker() : renderNormalDatePicker()}
-                <FormField
-                  control={form.control}
-                  name="repeat.type"
-                  render={({ field }) => (
-                    <FormItem>
-                      <Select
-                        defaultValue="null"
-                        value={String(field.value)}
-                        onValueChange={(v) =>
-                          field.onChange(v == "null" ? null : v)
-                        }
-                      >
-                        <SelectTrigger>
-                          <FormControl>
-                            <SelectValue placeholder="Repeat" />
-                          </FormControl>
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="null">不重複</SelectItem>
-                          <SelectItem value="daily">Daily</SelectItem>
-                          <SelectItem value="weekly">Weekly</SelectItem>
-                          <SelectItem value="monthly">Monthly</SelectItem>
-                          <SelectItem value="yearly">Yearly</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                {repeat && (
-                  <>
-                    <FormField
-                      control={form.control}
-                      name="repeat.interval"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Interval</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="Interval"
-                              defaultValue={1}
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <div className="flex flex-col gap-4">
-                      {/* TODO: Repeat is still not working */}
+              <ScrollArea className="max-h-[80dvh]">
+                <div className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input placeholder="新增標題" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="allDay"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center space-y-0 gap-2">
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormLabel>全天</FormLabel>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  {allDay ? renderAllDayDatePicker() : renderNormalDatePicker()}
+                  <FormField
+                    control={form.control}
+                    name="repeat.type"
+                    render={({ field }) => (
+                      <FormItem>
+                        <Select
+                          defaultValue="null"
+                          value={String(field.value)}
+                          onValueChange={(v) =>
+                            field.onChange(v == "null" ? null : v)
+                          }
+                        >
+                          <SelectTrigger>
+                            <FormControl>
+                              <SelectValue placeholder="Repeat" />
+                            </FormControl>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="null">不重複</SelectItem>
+                            <SelectItem value="daily">Daily</SelectItem>
+                            <SelectItem value="weekly">Weekly</SelectItem>
+                            <SelectItem value="monthly">Monthly</SelectItem>
+                            <SelectItem value="yearly">Yearly</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  {repeat && (
+                    <>
                       <FormField
                         control={form.control}
-                        name="repeat.count"
+                        name="repeat.interval"
                         render={({ field }) => (
                           <FormItem>
+                            <FormLabel>Interval</FormLabel>
                             <FormControl>
                               <Input
                                 type="number"
-                                placeholder="Count"
-                                defaultValue=""
+                                placeholder="Interval"
+                                defaultValue={1}
                                 {...field}
                               />
                             </FormControl>
@@ -425,109 +412,129 @@ export const AddEventButton = ({
                           </FormItem>
                         )}
                       />
-                      <FormField
-                        control={form.control}
-                        name="repeat.date"
-                        render={({ field }) => (
-                          <FormItem>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <FormControl>
-                                  <Button
-                                    variant={"outline"}
-                                    className={cn(
-                                      "justify-start text-left font-normal",
-                                      !field.value && "text-muted-foreground",
-                                    )}
-                                  >
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {field.value ? (
-                                      format(field.value, "PPP")
-                                    ) : (
-                                      <span>Pick a date</span>
-                                    )}
-                                  </Button>
-                                </FormControl>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0">
-                                <ShadcnCalendar
-                                  mode="single"
-                                  selected={field.value}
-                                  onSelect={field.onChange}
-                                  initialFocus
+                      <div className="flex flex-col gap-4">
+                        {/* TODO: Repeat is still not working */}
+                        <FormField
+                          control={form.control}
+                          name="repeat.count"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  placeholder="Count"
+                                  defaultValue=""
+                                  {...field}
                                 />
-                              </PopoverContent>
-                            </Popover>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </>
-                )}
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="repeat.date"
+                          render={({ field }) => (
+                            <FormItem>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <FormControl>
+                                    <Button
+                                      variant={"outline"}
+                                      className={cn(
+                                        "justify-start text-left font-normal",
+                                        !field.value && "text-muted-foreground",
+                                      )}
+                                    >
+                                      <CalendarIcon className="mr-2 h-4 w-4" />
+                                      {field.value ? (
+                                        format(field.value, "PPP")
+                                      ) : (
+                                        <span>Pick a date</span>
+                                      )}
+                                    </Button>
+                                  </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0">
+                                  <ShadcnCalendar
+                                    mode="single"
+                                    selected={field.value}
+                                    onSelect={field.onChange}
+                                    initialFocus
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </>
+                  )}
 
-                <div className="flex flex-row gap-4">
+                  <div className="flex flex-row gap-4">
+                    <FormField
+                      control={form.control}
+                      name="color"
+                      render={({ field }) => (
+                        <FormItem>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button variant="outline">
+                                  <div
+                                    className="w-6 h-6 rounded-full"
+                                    style={{ background: field.value }}
+                                  ></div>
+                                  <ChevronDown className="ml-2 w-4 h-4" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent>
+                              <CirclePicker
+                                color={field.value}
+                                onChangeComplete={(color) =>
+                                  field.onChange(color.hex)
+                                }
+                                colors={currentColors}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="tag"
+                      render={({ field }) => (
+                        <FormItem className="flex-1 w-full">
+                          <FormControl>
+                            <EventLabelPicker
+                              value={field.value}
+                              setValue={field.onChange}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                   <FormField
                     control={form.control}
-                    name="color"
+                    name="details"
                     render={({ field }) => (
                       <FormItem>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button variant="outline">
-                                <div
-                                  className="w-6 h-6 rounded-full"
-                                  style={{ background: field.value }}
-                                ></div>
-                                <ChevronDown className="ml-2 w-4 h-4" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent>
-                            <CirclePicker
-                              color={field.value}
-                              onChangeComplete={(color) =>
-                                field.onChange(color.hex)
-                              }
-                              colors={currentColors}
-                            />
-                          </PopoverContent>
-                        </Popover>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="tag"
-                    render={({ field }) => (
-                      <FormItem className="flex-1 w-full">
+                        <FormLabel>說明</FormLabel>
                         <FormControl>
-                          <EventLabelPicker
-                            value={field.value}
-                            setValue={field.onChange}
-                          />
+                          <Textarea placeholder="新增說明" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
-                <FormField
-                  control={form.control}
-                  name="details"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>說明</FormLabel>
-                      <FormControl>
-                        <Textarea placeholder="新增說明" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              </ScrollArea>
               <Button type="submit" disabled={!form.formState.isValid}>
                 Submit
               </Button>

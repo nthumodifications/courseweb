@@ -11,6 +11,7 @@ import { adjustLuminance } from "@/helpers/colors";
 import { eventsToDisplay } from "./calendar_utils";
 import { EventPopover } from "./EventPopover";
 import { EventData } from "@/types/calendar_event";
+import { CalendarProvider } from "@/app/[lang]/(mods-pages)/today/calendar_hook";
 
 const UpcomingEvents = () => {
   const { events } = useCalendar();
@@ -136,14 +137,16 @@ const TodayPage: NextPage = () => {
   });
 
   return (
-    <div className="px-4 md:pr-8 w-full">
-      <div className="flex flex-row-reverse gap-6 h-full">
-        <Calendar />
-        <div className="hidden xl:inline">
-          <UpcomingEvents />
+    <CalendarProvider>
+      <div className="px-4 md:pr-8 w-full">
+        <div className="flex flex-row-reverse gap-6 h-full">
+          <Calendar />
+          <div className="hidden xl:inline">
+            <UpcomingEvents />
+          </div>
         </div>
       </div>
-    </div>
+    </CalendarProvider>
   );
 };
 

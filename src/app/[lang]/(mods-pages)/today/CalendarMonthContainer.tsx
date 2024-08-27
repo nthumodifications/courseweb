@@ -51,6 +51,7 @@ export const CalendarMonthContainer = ({
             .fill(0)
             .map((_, index) => (
               <div
+                key={index}
                 className="w-full"
                 style={{ height: isScreenMD ? 20 : 16 }}
               ></div>
@@ -116,8 +117,8 @@ export const CalendarMonthContainer = ({
             style={{
               position: "absolute",
               top: 33 + index * (isScreenMD ? 22 : 18),
-              left: `calc(${event.left}% + 4px)`,
-              width: `calc(${event.width}% - 8px)`,
+              left: `calc(${event.left}%)`,
+              width: `calc(${event.width}%)`,
             }}
           >
             <div
@@ -146,13 +147,13 @@ export const CalendarMonthContainer = ({
         <div
           key={day.getTime()}
           className={cn(
-            "flex flex-col gap-1 p-1 border border-slate-200 min-h-[120px]",
+            "flex flex-col gap-1 min-h-[120px] border-t border-l border-slate-200 last:border-b last:border-r",
             isSameMonth(day, displayMonth[15]) ? "" : "bg-slate-50",
           )}
         >
           <div
             className={cn(
-              "text-sm font-semibold cursor-pointer",
+              "text-sm font-semibold cursor-pointer p-0.5",
               isToday(day)
                 ? "w-6 h-6 rounded-full bg-nthu-500 text-white flex items-center justify-center"
                 : "text-slate-900",
@@ -166,7 +167,7 @@ export const CalendarMonthContainer = ({
         </div>
       );
     },
-    [events, isScreenMD],
+    [events, displayMonth, renderAllDayEvents, renderEventsInDay, onChangeView],
   );
 
   return (
@@ -184,7 +185,6 @@ export const CalendarMonthContainer = ({
             ),
           )}
         </div>
-        <Separator orientation="horizontal" />
         <div
           className="grid flex-1"
           style={{ gridTemplateRows: `repeat(${rows_length}, 1fr)` }}

@@ -11,7 +11,7 @@ const schemaDates = z
 
 const schemaDetails = z.object({
   id: z.string(),
-  title: z.string(),
+  title: z.string().min(2),
   details: z.string().optional(),
   allDay: z.boolean(),
   repeat: z.union([
@@ -60,7 +60,7 @@ const schemaDetails = z.object({
     }),
   ]),
   color: z.string(),
-  tag: z.string(),
+  tag: z.string().min(2),
 });
 
 export const eventFormSchema = z.intersection(schemaDates, schemaDetails);

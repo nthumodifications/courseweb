@@ -6,7 +6,6 @@ import {
   PropsWithChildren,
   useRef,
   useMemo,
-  useEffect,
   useState,
 } from "react";
 import {
@@ -16,15 +15,9 @@ import {
 } from "@/app/[lang]/(mods-pages)/today/calendar.types";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { useRxCollection, useRxDB, useRxQuery } from "rxdb-hooks";
-import { timetableToCalendarEvent } from "./timetableToCalendarEvent";
-import { createTimetableFromCourses } from "@/helpers/timetable";
-import supabase from "@/config/supabase";
-import { MinimalCourse } from "@/types/courses";
-import { toast } from "@/components/ui/use-toast";
 import { getDiffFunction, getActualEndDate } from "./calendar_utils";
 import { subDays } from "date-fns";
 import { serializeEvent } from "@/app/[lang]/(mods-pages)/today/calendar_utils";
-import { RxJsonSchema } from "rxdb";
 import { EventDocType } from "@/config/rxdb";
 
 export enum UpdateType {
@@ -254,36 +247,6 @@ export const useCalendarProvider = () => {
       }
     }
   };
-
-  useEffect(() => {
-    if (!db) return;
-    if (!eventsCol) return;
-    (async () => {
-      if (courses) {
-        const timetable = [];
-        for (const semester in courses) {
-          const { data: coursesData, error } = await supabase
-            .from("courses")
-            .select("*")
-            .in("raw_id", courses[semester]);
-          if (error) console.error(error);
-          if (coursesData)
-            timetable.push(
-              timetableToCalendarEvent(
-                createTimetableFromCourses(
-                  coursesData as unknown as MinimalCourse[],
-                  colorMap,
-                ),
-              ),
-            );
-        }
-        for (const event of timetable.flat()) {
-          addEvent(event);
-        }
-        console.log("sync timetable to events complete");
-      }
-    })();
-  }, [db, courses, colorMap, eventsCol, addEvent]);
 
   return {
     events,
