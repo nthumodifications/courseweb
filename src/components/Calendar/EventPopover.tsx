@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/popover";
 import { CalendarEvent, DisplayCalendarEvent } from "./calendar.types";
 import { Button } from "@/components/ui/button";
-import { Delete, Edit, Trash, X } from "lucide-react";
+import { Delete, Edit, MapPin, Pin, Text, Trash, X } from "lucide-react";
 import { PopoverClose } from "@radix-ui/react-popover";
 import { UpdateType, useCalendar } from "./calendar_hook";
 import {
@@ -169,18 +169,20 @@ export const EventPopover: FC<
         />
         <div className="flex flex-col">
           <div className="flex flex-row justify-end">
-            <AddEventButton
-              defaultEvent={{
-                ...event,
-                start: event.displayStart,
-                end: event.displayEnd,
-              }}
-              onEventAdded={handleEventAdded}
-            >
-              <Button size="icon" variant="ghost">
-                <Edit className="w-4 h-4" />
-              </Button>
-            </AddEventButton>
+            {!event.readonly && (
+              <AddEventButton
+                defaultEvent={{
+                  ...event,
+                  start: event.displayStart,
+                  end: event.displayEnd,
+                }}
+                onEventAdded={handleEventAdded}
+              >
+                <Button size="icon" variant="ghost">
+                  <Edit className="w-4 h-4" />
+                </Button>
+              </AddEventButton>
+            )}
             {event.repeat ? (
               <Button
                 size="icon"
@@ -224,7 +226,18 @@ export const EventPopover: FC<
                   {format(event.displayEnd, "yyyy-LL-dd HH:mm")}
                 </p>
               )}
-              <p className="text-sm text-slate-500">{event.details}</p>
+              {event.location && (
+                <p className="text-sm text-slate-500">
+                  <MapPin className="w-4 h-4 inline mr-1" />
+                  {event.location}
+                </p>
+              )}
+              {event.details && (
+                <p className="text-sm text-slate-500">
+                  <Text className="w-4 h-4 inline mr-1" />
+                  {event.details}
+                </p>
+              )}
             </div>
           </div>
         </div>

@@ -1,6 +1,6 @@
 "use client";
 import { EventData } from "@/types/calendar_event";
-import { format, formatRelative, getDay } from "date-fns";
+import { format, formatRelative, getDay, isSameDay } from "date-fns";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { scheduleTimeSlots } from "@/const/timetable";
 import { FC, useMemo } from "react";
@@ -22,6 +22,8 @@ import useTime from "@/hooks/useTime";
 import { NoClassPickedReminder } from "./NoClassPickedReminder";
 import { TimetableItemDrawer } from "@/components/Timetable/TimetableItemDrawer";
 import AppItem from "@/app/[lang]/(mods-pages)/apps/AppItem";
+import { useQuery } from "@tanstack/react-query";
+import { getNTHUCalendar } from "@/lib/calendar_event";
 
 const getRangeOfDays = (start: Date, end: Date) => {
   const days = [];
@@ -31,21 +33,7 @@ const getRangeOfDays = (start: Date, end: Date) => {
   return days;
 };
 
-const TodaySchedule: FC<{
-  weather: WeatherData | undefined;
-  alerts: AlertDefinition[];
-  calendar: EventData[];
-  weatherLoading: boolean;
-  alertLoading: boolean;
-  calendarLoading: boolean;
-}> = ({
-  weather,
-  alerts,
-  calendar,
-  weatherLoading,
-  alertLoading,
-  calendarLoading,
-}) => {
+const TodaySchedule: FC = () => {
   const { isCoursesEmpty, colorMap, getSemesterCourses } = useUserTimetable();
   const { language, pinnedApps } = useSettings();
   const dict = useDictionary();
@@ -58,12 +46,12 @@ const TodaySchedule: FC<{
         getSemesterCourses(curr_sem?.id) as MinimalCourse[],
         colorMap,
       ),
-    [getSemesterCourses, curr_sem],
+    [getSemesterCourses, curr_sem, colorMap],
   );
   //sort display_courses according to courses[semester]
   const displayCourseData = useMemo(
     () => getSemesterCourses(lastSemester.id),
-    [getSemesterCourses, lastSemester],
+    [getSemesterCourses],
   );
 
   const nextTimetableData = useMemo(
@@ -80,6 +68,34 @@ const TodaySchedule: FC<{
     () => getRangeOfDays(date, new Date(date.getTime() + 86400000 * 4)),
     [date],
   );
+
+  const {
+    data: weather,
+    error: weatherError,
+    isLoading: weatherLoading,
+  } = useQuery<WeatherData>({
+    queryKey: ["weather"],
+    queryFn: async () => {
+      const res = await fetch("/api/dashboard/weather");
+      const data = await res.json();
+      return data;
+    },
+  });
+
+  const {
+    data: calendar = [],
+    error: calendarError,
+    isLoading: calendarLoading,
+  } = useQuery<EventData[]>({
+    queryKey: [
+      "event",
+      format(days[0], "yyyy-MM-dd"),
+      format(days[4], "yyyy-MM-dd"),
+    ],
+    queryFn: async () => {
+      return getNTHUCalendar(days[0], days[4]);
+    },
+  });
 
   const renderDayTimetable = (day: Date) => {
     if (!curr_sem)
@@ -142,29 +158,14 @@ const TodaySchedule: FC<{
     );
   };
 
-  const renderAlerts = (day: Date) => {
-    return alerts
-      .filter(
-        (alert) =>
-          new Date(alert.start_date) <= day && new Date(alert.end_date) >= day,
-      )
-      .map((alert, index) => (
-        <Alert key={index} className="mb-4" color={alert.severity}>
-          <Info className="w-4 h-4" />
-          <AlertTitle>{alert.title}</AlertTitle>
-          <AlertDescription>{alert.description}</AlertDescription>
-        </Alert>
-      ));
-  };
-
   const renderCalendars = (day: Date) => {
     return (
       !calendarLoading &&
       calendar &&
       calendar
-        .filter((event) => event.weekday == day.getDay())
+        .filter((event) => isSameDay(new Date(event.date), day))
         .map((event) => (
-          <Alert key={event.weekday}>
+          <Alert key={event.id}>
             <CalendarRange className="h-4 w-4" />
             <AlertDescription>{event.summary}</AlertDescription>
           </Alert>
@@ -203,7 +204,6 @@ const TodaySchedule: FC<{
               />
             )}
           </div>
-          {renderAlerts(day)}
           {renderCalendars(day)}
           {renderDayTimetable(day)}
         </div>

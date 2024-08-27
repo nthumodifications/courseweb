@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { useCalendar } from "./calendar_hook";
 import { CurrentTimePointer } from "./CurrentTimePointer";
-import { eventsToDisplay } from "@/app/[lang]/(mods-pages)/today/calendar_utils";
+import { eventsToDisplay } from "@/components/Calendar/calendar_utils";
 import { adjustLuminance, getBrightness } from "@/helpers/colors";
 import { EventPopover } from "./EventPopover";
 import {
@@ -22,6 +22,10 @@ import {
   useRef,
   useState,
 } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { EventData } from "@/types/calendar_event";
+import { getNTHUCalendar } from "@/lib/calendar_event";
+import { CalendarEventInternal } from "./calendar.types";
 
 export const CalendarWeekContainer = ({
   displayWeek,
@@ -29,7 +33,35 @@ export const CalendarWeekContainer = ({
   displayWeek: Date[];
 }) => {
   const { events, addEvent, displayContainer, HOUR_HEIGHT } = useCalendar();
-  console.log(HOUR_HEIGHT);
+  const {
+    data: nthuCalendarEvents = [],
+    error: calendarError,
+    isLoading: calendarLoading,
+  } = useQuery<CalendarEventInternal[]>({
+    queryKey: [
+      "event",
+      format(displayWeek[0], "yyyy-MM-dd"),
+      format(displayWeek[6], "yyyy-MM-dd"),
+    ],
+    queryFn: async () => {
+      const nthuEvents = await getNTHUCalendar(displayWeek[0], displayWeek[6]);
+      return nthuEvents.map((event, index) => {
+        return {
+          id: "nthu-" + event.id,
+          title: event.summary,
+          start: startOfDay(new Date(event.date)),
+          end: endOfDay(new Date(event.date)),
+          allDay: true,
+          color: "#A973D9",
+          tag: "NTHU",
+          actualEnd: endOfDay(new Date(event.date)),
+          repeat: null,
+          readonly: true,
+        } as CalendarEventInternal;
+      });
+    },
+    enabled: false,
+  });
 
   const hours = eachHourOfInterval({
     start: new Date(2024, 2, 3, 0),
@@ -101,6 +133,9 @@ export const CalendarWeekContainer = ({
                 {format(event.displayStart, "HH:mm")} -{" "}
                 {format(event.displayEnd, "HH:mm")}
               </div>
+              {event.location && (
+                <div className="text-xs leading-none">{event.location}</div>
+              )}
             </div>
           </div>
         </EventPopover>
@@ -111,7 +146,7 @@ export const CalendarWeekContainer = ({
 
   const dayEvents = useMemo(() => {
     const dayEvents = eventsToDisplay(
-      events,
+      [...events, ...nthuCalendarEvents],
       startOfDay(displayWeek[0]),
       endOfDay(displayWeek[6]),
     )
@@ -150,9 +185,10 @@ export const CalendarWeekContainer = ({
         }
 
         return { ...event, textColor, span, gridColumnStart, dispStart };
-      });
+      })
+      .sort((a, b) => a.displayStart.getTime() - b.displayStart.getTime());
     return dayEvents;
-  }, [events, displayWeek]);
+  }, [events, displayWeek, nthuCalendarEvents]);
 
   const renderAllDayEvents = useCallback(() => {
     return dayEvents.map((event, index) => (
@@ -167,7 +203,9 @@ export const CalendarWeekContainer = ({
             className=" overflow-hidden bg-nthu-500 rounded-md h-full p-1 sm:p-2 flex flex-col gap-1 hover:shadow-md cursor-pointer transition-shadow select-none"
             style={{ background: event.color, color: event.textColor }}
           >
-            <div className="text-sm leading-none">{event.title}</div>
+            <div className="text-sm leading-none line-clamp-1">
+              {event.title}
+            </div>
           </div>
         </div>
       </EventPopover>
@@ -177,7 +215,7 @@ export const CalendarWeekContainer = ({
   return (
     <div className="flex flex-row w-full overflow-x-scroll h-full">
       <div
-        className="flex flex-col min-w-10 sticky left-0 bg-white shadow-md z-20 h-full overflow-y-hidden"
+        className="flex flex-col min-w-9 sticky left-0 bg-white shadow-md z-20 h-full overflow-y-hidden"
         ref={timeLabelContainer}
         style={{
           paddingTop: headerHeight + 10,

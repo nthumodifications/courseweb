@@ -13,7 +13,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { useCalendar } from "./calendar_hook";
-import { eventsToDisplay } from "@/app/[lang]/(mods-pages)/today/calendar_utils";
+import { eventsToDisplay } from "@/components/Calendar/calendar_utils";
 import { adjustLuminance, getBrightness } from "@/helpers/colors";
 import { EventPopover } from "./EventPopover";
 import { useEventCallback, useMediaQuery } from "usehooks-ts";

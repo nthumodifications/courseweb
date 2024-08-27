@@ -30,6 +30,7 @@ export const timetableToCalendarEvent = (
         "-" +
         t.endTime,
       title: t.course.name_zh,
+      location: t.venue,
       allDay: false,
       start: startDate,
       end: endDate,

@@ -12,12 +12,12 @@ import {
   CalendarEvent,
   CalendarEventInternal,
   DisplayCalendarEvent,
-} from "@/app/[lang]/(mods-pages)/today/calendar.types";
+} from "@/components/Calendar/calendar.types";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { useRxCollection, useRxDB, useRxQuery } from "rxdb-hooks";
 import { getDiffFunction, getActualEndDate } from "./calendar_utils";
 import { subDays } from "date-fns";
-import { serializeEvent } from "@/app/[lang]/(mods-pages)/today/calendar_utils";
+import { serializeEvent } from "@/components/Calendar/calendar_utils";
 import { EventDocType } from "@/config/rxdb";
 
 export enum UpdateType {

@@ -13,6 +13,7 @@ const schemaDetails = z.object({
   id: z.string(),
   title: z.string().min(2),
   details: z.string().optional(),
+  location: z.string().optional(),
   allDay: z.boolean(),
   repeat: z.union([
     z.object({

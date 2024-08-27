@@ -348,6 +348,18 @@ export const AddEventButton = ({
                   />
                   <FormField
                     control={form.control}
+                    name="location"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input placeholder="地點" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
                     name="allDay"
                     render={({ field }) => (
                       <FormItem className="flex flex-row items-center space-y-0 gap-2">

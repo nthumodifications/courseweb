@@ -29,6 +29,9 @@ const eventsSchema = {
     details: {
       type: "string",
     },
+    location: {
+      type: "string",
+    },
     allDay: {
       type: "boolean",
     },

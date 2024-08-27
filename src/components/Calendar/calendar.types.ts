@@ -17,6 +17,7 @@ export interface CalendarEvent {
   id: string;
   title: string;
   details?: string;
+  location?: string;
   allDay: boolean;
   start: Date;
   end: Date;
@@ -25,6 +26,7 @@ export interface CalendarEvent {
   tag: string | "none";
   excludedDates?: Date[];
   parentId?: string;
+  readonly?: boolean;
 }
 
 export interface CalendarEventInternal extends CalendarEvent {
