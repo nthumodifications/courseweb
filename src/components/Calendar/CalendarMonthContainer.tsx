@@ -18,6 +18,10 @@ import { adjustLuminance, getBrightness } from "@/helpers/colors";
 import { EventPopover } from "./EventPopover";
 import { useEventCallback, useMediaQuery } from "usehooks-ts";
 import { useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { getNTHUCalendar } from "@/lib/calendar_event";
+import { CalendarEventInternal } from "@/components/Calendar/calendar.types";
+import { useSettings } from "@/hooks/contexts/settings";
 
 export const CalendarMonthContainer = ({
   displayMonth,
@@ -27,8 +31,42 @@ export const CalendarMonthContainer = ({
   onChangeView: (view: "week", date: Date) => void;
 }) => {
   const { events } = useCalendar();
+  const { showAcademicCalendar } = useSettings();
+
   const isScreenMD = useMediaQuery("(min-width: 768px)");
   const rows_length = Math.ceil(displayMonth.length / 7);
+  const {
+    data: nthuCalendarEvents = [],
+    error: calendarError,
+    isLoading: calendarLoading,
+  } = useQuery<CalendarEventInternal[]>({
+    queryKey: [
+      "event",
+      format(displayMonth[0], "yyyy-MM-dd"),
+      format(displayMonth[displayMonth.length - 1], "yyyy-MM-dd"),
+    ],
+    queryFn: async () => {
+      const nthuEvents = await getNTHUCalendar(
+        displayMonth[0],
+        displayMonth[displayMonth.length - 1],
+      );
+      return nthuEvents.map((event, index) => {
+        return {
+          id: "nthu-" + event.id,
+          title: event.summary,
+          start: startOfDay(new Date(event.date)),
+          end: endOfDay(new Date(event.date)),
+          allDay: true,
+          color: "#A973D9",
+          tag: "NTHU",
+          actualEnd: endOfDay(new Date(event.date)),
+          repeat: null,
+          readonly: true,
+        } as CalendarEventInternal;
+      });
+    },
+    enabled: showAcademicCalendar,
+  });
 
   const renderEventsInDay = useCallback(
     (day: Date, padding: number) => {
@@ -80,7 +118,7 @@ export const CalendarMonthContainer = ({
   const renderAllDayEvents = useCallback(
     (start: Date, end: Date) => {
       const allDayEvents = eventsToDisplay(
-        events,
+        showAcademicCalendar ? [...nthuCalendarEvents, ...events] : events,
         startOfDay(start),
         endOfDay(end),
       )
@@ -133,7 +171,7 @@ export const CalendarMonthContainer = ({
         </EventPopover>
       ));
     },
-    [events, isScreenMD],
+    [events, isScreenMD, nthuCalendarEvents, showAcademicCalendar],
   );
 
   const renderRow = useCallback(

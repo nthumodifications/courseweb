@@ -35,7 +35,7 @@ const getRangeOfDays = (start: Date, end: Date) => {
 
 const TodaySchedule: FC = () => {
   const { isCoursesEmpty, colorMap, getSemesterCourses } = useUserTimetable();
-  const { language, pinnedApps } = useSettings();
+  const { language, pinnedApps, showAcademicCalendar } = useSettings();
   const dict = useDictionary();
   const date = useTime();
 
@@ -95,6 +95,7 @@ const TodaySchedule: FC = () => {
     queryFn: async () => {
       return getNTHUCalendar(days[0], days[4]);
     },
+    enabled: showAcademicCalendar,
   });
 
   const renderDayTimetable = (day: Date) => {
@@ -159,6 +160,7 @@ const TodaySchedule: FC = () => {
   };
 
   const renderCalendars = (day: Date) => {
+    if (!showAcademicCalendar) return <></>;
     return (
       !calendarLoading &&
       calendar &&
@@ -184,15 +186,15 @@ const TodaySchedule: FC = () => {
         >
           <div className="flex flex-row gap-2 justify-between border-b border-gray-400 pb-2">
             <div className="flex flex-col flex-1">
-              {/* 6TH OCTOBER */}
-              <div className="text-sm font-semibold text-gray-400 dark:text-gray-500">
-                {format(day, "EEEE, do MMMM", { locale: getLocale(language) })}
-              </div>
               {/* WEDNESDAY */}
               <div className="text-xl font-semibold text-gray-600 dark:text-gray-300">
                 {formatRelative(day, Date.now(), {
                   locale: getLocale(language),
                 })}
+              </div>
+              {/* 6TH OCTOBER */}
+              <div className="text-sm font-semibold text-gray-400 dark:text-gray-500">
+                {format(day, "EEEE, do MMMM", { locale: getLocale(language) })}
               </div>
             </div>
             {!weatherLoading && weather && (

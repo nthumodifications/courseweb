@@ -125,14 +125,29 @@ const CalendarSettingsCard = () => {
     "use_new_calendar",
     false,
   );
+  const { showAcademicCalendar, setShowAcademicCalendar } = useSettings();
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Calendar</CardTitle>
-        <CardDescription>Calendar settings</CardDescription>
+        <CardTitle>Today Page</CardTitle>
+        <CardDescription>What do you wanna see first</CardDescription>
       </CardHeader>
       <CardContent>
+        <div className="flex flex-row gap-4 py-4" id="calendar">
+          <div className="flex flex-col flex-1 gap-1">
+            <h2 className="font-semibold text-base">NTHU Academic Calendar</h2>
+            <p className="text-sm text-muted-foreground">
+              Show Academic Calendar on the Today Page.
+            </p>
+          </div>
+          <div className="flex items-center">
+            <Switch
+              checked={showAcademicCalendar}
+              onCheckedChange={setShowAcademicCalendar}
+            />
+          </div>
+        </div>
         <div className="flex flex-row gap-4 py-4" id="calendar">
           <div className="flex flex-col flex-1 gap-1">
             <h2 className="font-semibold text-base">

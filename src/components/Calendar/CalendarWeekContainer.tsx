@@ -26,6 +26,7 @@ import { useQuery } from "@tanstack/react-query";
 import { EventData } from "@/types/calendar_event";
 import { getNTHUCalendar } from "@/lib/calendar_event";
 import { CalendarEventInternal } from "./calendar.types";
+import { useSettings } from "@/hooks/contexts/settings";
 
 export const CalendarWeekContainer = ({
   displayWeek,
@@ -33,6 +34,7 @@ export const CalendarWeekContainer = ({
   displayWeek: Date[];
 }) => {
   const { events, addEvent, displayContainer, HOUR_HEIGHT } = useCalendar();
+  const { showAcademicCalendar } = useSettings();
   const {
     data: nthuCalendarEvents = [],
     error: calendarError,
@@ -60,7 +62,7 @@ export const CalendarWeekContainer = ({
         } as CalendarEventInternal;
       });
     },
-    enabled: false,
+    enabled: showAcademicCalendar,
   });
 
   const hours = eachHourOfInterval({
@@ -146,7 +148,7 @@ export const CalendarWeekContainer = ({
 
   const dayEvents = useMemo(() => {
     const dayEvents = eventsToDisplay(
-      [...events, ...nthuCalendarEvents],
+      showAcademicCalendar ? [...nthuCalendarEvents, ...events] : events,
       startOfDay(displayWeek[0]),
       endOfDay(displayWeek[6]),
     )
@@ -188,7 +190,7 @@ export const CalendarWeekContainer = ({
       })
       .sort((a, b) => a.displayStart.getTime() - b.displayStart.getTime());
     return dayEvents;
-  }, [events, displayWeek, nthuCalendarEvents]);
+  }, [events, displayWeek, nthuCalendarEvents, showAcademicCalendar]);
 
   const renderAllDayEvents = useCallback(() => {
     return dayEvents.map((event, index) => (

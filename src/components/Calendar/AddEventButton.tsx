@@ -56,6 +56,7 @@ import { PopoverPortal } from "@radix-ui/react-popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "../ui/label";
+import { useCalendar } from "./calendar_hook";
 
 export const AddEventButton = ({
   children,
@@ -67,6 +68,7 @@ export const AddEventButton = ({
 }>) => {
   const [open, setOpen] = useState(false);
   const { currentColors } = useUserTimetable();
+  const { labels } = useCalendar();
 
   const minuteStep = 15;
   const form = useForm<z.infer<typeof eventFormSchema>>({
@@ -89,9 +91,9 @@ export const AddEventButton = ({
                 type: null,
               },
               color: currentColors[0],
-              tag: undefined,
+              tag: labels[0],
             },
-      [defaultEvent, currentColors],
+      [defaultEvent, currentColors, labels],
     ),
     mode: "onChange",
   });

@@ -41,13 +41,23 @@ export const calendarContext = createContext<
   updateEvent: async () => {},
   displayContainer: { current: null },
   HOUR_HEIGHT: 48,
+  labels: [],
 });
 
 export const useCalendar = () => useContext(calendarContext);
 
 export const useCalendarProvider = () => {
   const [HOUR_HEIGHT] = useState(48);
-
+  const [labels] = useState([
+    "Event",
+    "Course",
+    "Meeting",
+    "Assignment",
+    "Exam",
+    "Holiday",
+    "Birthday",
+    "Anniversary",
+  ]);
   const eventsCol = useRxCollection("events");
 
   // setup firestore replication
@@ -282,6 +292,7 @@ export const useCalendarProvider = () => {
     updateEvent,
     displayContainer,
     HOUR_HEIGHT,
+    labels,
   };
 };
 

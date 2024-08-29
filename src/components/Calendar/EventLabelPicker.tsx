@@ -15,6 +15,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { Button } from "@/components/ui/button";
+import { useCalendar } from "./calendar_hook";
 
 export const EventLabelPicker = ({
   value,
@@ -25,17 +26,7 @@ export const EventLabelPicker = ({
 }) => {
   const [open, setOpen] = useState(false);
 
-  //TODO: user defined labels, should have ability to add new labels
-  const options = [
-    "Event",
-    "Course",
-    "Meeting",
-    "Assignment",
-    "Exam",
-    "Holiday",
-    "Birthday",
-    "Anniversary",
-  ];
+  const { labels } = useCalendar();
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -45,18 +36,18 @@ export const EventLabelPicker = ({
           aria-expanded={open}
           className="w-full justify-between"
         >
-          {options.find((framework) => framework === value ?? options[0]) ??
+          {labels.find((framework) => framework === value ?? labels[0]) ??
             "標籤"}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="p-0">
-        <Command defaultValue={options[0]}>
+        <Command defaultValue={labels[0]}>
           <CommandInput placeholder="標籤" />
           <CommandList>
             <CommandEmpty>No label found.</CommandEmpty>
             <CommandGroup>
-              {options.map((op) => (
+              {labels.map((op) => (
                 <CommandItem
                   key={op}
                   value={op}
