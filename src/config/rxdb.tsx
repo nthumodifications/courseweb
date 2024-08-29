@@ -57,12 +57,12 @@ const eventsSchema = {
         interval: {
           type: "number",
         },
-        count: {
-          type: "number",
-        },
-        date: {
+        mode: {
           type: "string",
-          format: "date-time",
+          enum: ["count", "date"],
+        },
+        value: {
+          type: "number",
         },
       },
     },

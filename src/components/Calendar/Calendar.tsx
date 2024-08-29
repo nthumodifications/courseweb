@@ -1,6 +1,6 @@
 import { ChevronLeft, ChevronRight, FolderSync, Plus } from "lucide-react";
 import { addMonths, addWeeks, getMonth, subMonths, subWeeks } from "date-fns";
-import { useEffect, useState } from "react";
+import { KeyboardEvent, useEffect, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -114,29 +114,23 @@ const Calendar = () => {
   };
 
   //listen to keypress events
-  useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.key === "ArrowUp") {
-        displayContainer.current?.scrollBy(0, -HOUR_HEIGHT);
-      } else if (e.key === "ArrowDown") {
-        displayContainer.current?.scrollBy(0, HOUR_HEIGHT);
-      } else if (e.key === "ArrowLeft") {
-        moveBackward();
-      } else if (e.key === "ArrowRight") {
-        moveForward();
-      } else if (e.key === "t") {
-        backToToday();
-      } else if (e.key === "w") {
-        handleSwitchMode("week");
-      } else if (e.key === "m") {
-        handleSwitchMode("month");
-      }
-    };
-    window.addEventListener("keydown", handleKeyPress);
-    return () => {
-      window.removeEventListener("keydown", handleKeyPress);
-    };
-  }, [displayContainer, HOUR_HEIGHT, moveBackward, moveForward]);
+  const handleKeyPress = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "ArrowUp") {
+      displayContainer.current?.scrollBy(0, -HOUR_HEIGHT);
+    } else if (e.key === "ArrowDown") {
+      displayContainer.current?.scrollBy(0, HOUR_HEIGHT);
+    } else if (e.key === "ArrowLeft") {
+      moveBackward();
+    } else if (e.key === "ArrowRight") {
+      moveForward();
+    } else if (e.key === "t") {
+      backToToday();
+    } else if (e.key === "w") {
+      handleSwitchMode("week");
+    } else if (e.key === "m") {
+      handleSwitchMode("month");
+    }
+  };
 
   const syncTimetable = () => {
     // for each course, convert to timetable event

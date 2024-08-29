@@ -137,7 +137,7 @@ export const EventPopover: FC<
     else {
       setUpdateDialogOpen(true);
       setWaitingUpdateEvent(newEvent);
-      console.log("1", newEvent);
+      console.log("1", event, newEvent);
     }
   };
 

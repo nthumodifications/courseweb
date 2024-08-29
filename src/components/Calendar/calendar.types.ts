@@ -1,17 +1,9 @@
 export interface RepeatDefinition {
   type: "daily" | "weekly" | "monthly" | "yearly";
-  interval?: number;
+  interval: number;
+  value: number;
+  mode: "count" | "date";
 }
-
-export interface RepeatByCount extends RepeatDefinition {
-  count: number;
-}
-
-export interface RepeatByDate extends RepeatDefinition {
-  date: Date;
-}
-
-export type Repeat = RepeatByCount | RepeatByDate | RepeatDefinition;
 
 export interface CalendarEvent {
   id: string;
@@ -21,7 +13,7 @@ export interface CalendarEvent {
   allDay: boolean;
   start: Date;
   end: Date;
-  repeat: null | Repeat;
+  repeat: null | RepeatDefinition;
   color: string;
   tag: string | "none";
   excludedDates?: Date[];

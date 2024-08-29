@@ -37,7 +37,8 @@ export const timetableToCalendarEvent = (
       repeat: {
         type: "weekly",
         interval: 1,
-        date: semester.ends,
+        mode: "date",
+        value: semester.ends.getTime(),
       },
       color: t.color,
       tag: "course",

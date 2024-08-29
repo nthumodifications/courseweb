@@ -118,12 +118,15 @@ export function* getRepeatedStartDays(event: CalendarEvent) {
 
     while (true) {
       //check if count is reached, if so, break
-      if ("count" in event.repeat && days.length >= event.repeat.count) {
+      if (event.repeat.mode == "count" && days.length >= event.repeat.value) {
         break;
       }
       currDay = getAddFunc(event.repeat.type)(currDay, interval ?? 1);
       //check if date is later than end date, if so, break
-      if ("date" in event.repeat && currDay > event.repeat.date) {
+      if (
+        event.repeat.mode == "date" &&
+        currDay > new Date(event.repeat.value)
+      ) {
         break;
       }
       days.push(new Date(currDay));
@@ -141,24 +144,22 @@ export const getActualEndDate = (event: CalendarEvent) => {
 
 export const getDisplayEndDate = (event: CalendarEvent) => {
   // if event is not bounded, return null
-  if (event.repeat && !("count" in event.repeat) && !("date" in event.repeat)) {
-    return null;
-  } else if (!event.repeat) {
+  if (!event.repeat) {
     return event.end;
   }
   // from count, calculate the end date
-  else if ("count" in event.repeat) {
+  else if (event.repeat.mode === "count") {
     const endDate = getAddFunc(event.repeat.type)(
       event.end,
-      event.repeat.count,
+      event.repeat.value,
     );
     return endDate;
   }
   // from date, calculate the end date
-  else if ("date" in event.repeat) {
+  else if (event.repeat.mode == "date") {
     // if daily, just return the end date with time set to the same as end
     if (event.repeat.type === "daily") {
-      return set(event.repeat.date, {
+      return set(event.repeat.value, {
         hours: event.end.getHours(),
         minutes: event.end.getMinutes(),
       });
@@ -166,8 +167,8 @@ export const getDisplayEndDate = (event: CalendarEvent) => {
     // if weekly, find the same day of the week as the end date
     if (event.repeat.type === "weekly") {
       //check if the day of the week is the same
-      const diff = event.repeat.date.getDay() - event.end.getDay();
-      const newDate = addDays(event.repeat.date, -diff);
+      const diff = new Date(event.repeat.value).getDay() - event.end.getDay();
+      const newDate = addDays(event.repeat.value, -diff);
       return set(newDate, {
         hours: event.end.getHours(),
         minutes: event.end.getMinutes(),
@@ -176,9 +177,9 @@ export const getDisplayEndDate = (event: CalendarEvent) => {
     // if monthly, find the same day of the month as the end date
     if (event.repeat.type === "monthly") {
       // set the date to the same day of the month, before the repeat date
-      const newDate = set(event.repeat.date, { date: event.end.getDate() });
+      const newDate = set(event.repeat.value, { date: event.end.getDate() });
       // if the date is later than the repeat date, subtract a mon
-      if (newDate > event.repeat.date) {
+      if (newDate > new Date(event.repeat.value)) {
         return addMonths(newDate, -1);
       }
       return newDate;
@@ -186,12 +187,12 @@ export const getDisplayEndDate = (event: CalendarEvent) => {
     // if yearly, find the same day of the year as the end date
     if (event.repeat.type === "yearly") {
       // set the date to the same day of the year, before the repeat date
-      const newDate = set(event.repeat.date, {
+      const newDate = set(event.repeat.value, {
         date: event.end.getDate(),
         month: event.end.getMonth(),
       });
       // if the date is later than the repeat date, subtract a year
-      if (newDate > event.repeat.date) {
+      if (newDate > new Date(event.repeat.value)) {
         return addYears(newDate, -1);
       }
       return newDate;
@@ -226,15 +227,7 @@ export const serializeEvent = (event: Partial<CalendarEventInternal>) => {
     ...(event.start && { start: event.start.toISOString() }),
     ...(event.end && { end: event.end.toISOString() }),
     ...(event.repeat && {
-      repeat:
-        event.repeat != null
-          ? {
-              ...event.repeat,
-              ...("date" in event.repeat
-                ? { date: event.repeat.date.toISOString() }
-                : {}),
-            }
-          : null,
+      repeat: event.repeat,
     }),
     ...(event.actualEnd && { actualEnd: event.actualEnd.toISOString() }),
     ...(event.excludedDates && {
@@ -248,15 +241,7 @@ export const serializeEvent = (event: Partial<CalendarEventInternal>) => {
     ...(event.start && { start: event.start.toISOString() }),
     ...(event.end && { end: event.end.toISOString() }),
     ...(event.repeat && {
-      repeat:
-        event.repeat != null
-          ? {
-              ...event.repeat,
-              ...("date" in event.repeat
-                ? { date: event.repeat.date.toISOString() }
-                : {}),
-            }
-          : null,
+      repeat: event.repeat,
     }),
     ...(event.actualEnd && { actualEnd: event.actualEnd.toISOString() }),
     ...(event.excludedDates && {

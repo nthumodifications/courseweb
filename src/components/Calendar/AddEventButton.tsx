@@ -54,6 +54,8 @@ import { v4 as uuidv4 } from "uuid";
 import { TimeSelect, getNearestTime } from "@/components/ui/custom_timeselect";
 import { PopoverPortal } from "@radix-ui/react-popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "../ui/label";
 
 export const AddEventButton = ({
   children,
@@ -109,6 +111,30 @@ export const AddEventButton = ({
   };
 
   const repeat = form.watch("repeat.type");
+  const repeatMode = form.watch("repeat.mode");
+
+  // If repeat updates, set interval = 1 and default to count = 1, else set to undefined
+  useEffect(() => {
+    if (repeat) {
+      form.setValue("repeat.interval", 1);
+      form.setValue("repeat.value", 1);
+      form.setValue("repeat.mode", "count");
+    } else {
+      form.setValue("repeat.interval", undefined!);
+      form.setValue("repeat.value", undefined!);
+      form.setValue("repeat.mode", undefined!);
+    }
+  }, [form, repeat]);
+
+  // If repeatMode updates, clear the value
+  useEffect(() => {
+    if (repeatMode === "count") {
+      form.setValue("repeat.value", 1);
+    } else if (repeatMode === "date") {
+      form.setValue("repeat.value", Date.now());
+    }
+  }, [form, repeatMode]);
+
   const allDay = useWatch({ control: form.control, name: "allDay" });
 
   const [delayed, setDelayed] = useState(false);
@@ -319,6 +345,127 @@ export const AddEventButton = ({
     );
   };
 
+  const renderRepeatEnd = () => {
+    return (
+      <div className="flex flex-col gap-2">
+        <FormField
+          control={form.control}
+          name="repeat.mode"
+          render={({ field: fieldMode }) => (
+            <FormItem className="flex flex-row items-center space-y-0 gap-2">
+              <FormControl>
+                <RadioGroup
+                  defaultValue="date"
+                  value={fieldMode.value}
+                  onValueChange={fieldMode.onChange}
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="count" id="count" />
+                    <Label htmlFor="count">
+                      {fieldMode.value === "count" ? (
+                        <FormField
+                          control={form.control}
+                          name="repeat.value"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  placeholder="Count"
+                                  defaultValue=""
+                                  {...field}
+                                  // Convert string to number
+                                  onChange={(e) => {
+                                    const value = parseInt(e.target.value);
+                                    field.onChange(isNaN(value) ? "" : value);
+                                  }}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      ) : (
+                        <Input
+                          placeholder="Count"
+                          defaultValue=""
+                          disabled={true}
+                        />
+                      )}
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="date" id="date" />
+                    <Label htmlFor="date">
+                      {fieldMode.value === "date" ? (
+                        <FormField
+                          control={form.control}
+                          name="repeat.value"
+                          disabled={fieldMode.value !== "date"}
+                          render={({ field }) => (
+                            <FormItem>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <FormControl>
+                                    <Button
+                                      variant={"outline"}
+                                      className={cn(
+                                        "justify-start text-left font-normal",
+                                        !field.value && "text-muted-foreground",
+                                      )}
+                                      disabled={fieldMode.value !== "date"}
+                                    >
+                                      <CalendarIcon className="mr-2 h-4 w-4" />
+                                      {!field.value ? (
+                                        <span>Pick a date</span>
+                                      ) : (
+                                        format(field.value, "PPP")
+                                      )}
+                                    </Button>
+                                  </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0">
+                                  {fieldMode.value === "date" && (
+                                    <ShadcnCalendar
+                                      mode="single"
+                                      selected={new Date(field.value)}
+                                      onSelect={(v) =>
+                                        field.onChange(
+                                          v?.getTime() ?? Date.now(),
+                                        )
+                                      }
+                                      initialFocus
+                                    />
+                                  )}
+                                </PopoverContent>
+                              </Popover>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      ) : (
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "justify-start text-left font-normal text-muted-foreground",
+                          )}
+                          disabled={true}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          <span>Pick a date</span>
+                        </Button>
+                      )}
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </FormControl>
+            </FormItem>
+          )}
+        />
+      </div>
+    );
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger>{children}</DialogTrigger>
@@ -418,68 +565,19 @@ export const AddEventButton = ({
                                 placeholder="Interval"
                                 defaultValue={1}
                                 {...field}
+                                // Convert string to number
+                                onChange={(e) => {
+                                  const value = parseInt(e.target.value);
+                                  field.onChange(isNaN(value) ? "" : value);
+                                }}
                               />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                      <div className="flex flex-col gap-4">
-                        {/* TODO: Repeat is still not working */}
-                        <FormField
-                          control={form.control}
-                          name="repeat.count"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormControl>
-                                <Input
-                                  type="number"
-                                  placeholder="Count"
-                                  defaultValue=""
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="repeat.date"
-                          render={({ field }) => (
-                            <FormItem>
-                              <Popover>
-                                <PopoverTrigger asChild>
-                                  <FormControl>
-                                    <Button
-                                      variant={"outline"}
-                                      className={cn(
-                                        "justify-start text-left font-normal",
-                                        !field.value && "text-muted-foreground",
-                                      )}
-                                    >
-                                      <CalendarIcon className="mr-2 h-4 w-4" />
-                                      {field.value ? (
-                                        format(field.value, "PPP")
-                                      ) : (
-                                        <span>Pick a date</span>
-                                      )}
-                                    </Button>
-                                  </FormControl>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0">
-                                  <ShadcnCalendar
-                                    mode="single"
-                                    selected={field.value}
-                                    onSelect={field.onChange}
-                                    initialFocus
-                                  />
-                                </PopoverContent>
-                              </Popover>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                      <div className="flex flex-row gap-4">
+                        {renderRepeatEnd()}
                       </div>
                     </>
                   )}

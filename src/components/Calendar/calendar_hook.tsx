@@ -7,6 +7,7 @@ import {
   useRef,
   useMemo,
   useState,
+  useEffect,
 } from "react";
 import {
   CalendarEvent,
@@ -19,6 +20,11 @@ import { getDiffFunction, getActualEndDate } from "./calendar_utils";
 import { subDays } from "date-fns";
 import { serializeEvent } from "@/components/Calendar/calendar_utils";
 import { EventDocType } from "@/config/rxdb";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth, firebaseConfig, db as firebaseDb } from "@/config/firebase";
+import { replicateFirestore } from "rxdb/plugins/replication-firestore";
+import { collection, where } from "firebase/firestore";
+import { toast } from "../ui/use-toast";
 
 export enum UpdateType {
   THIS = "THIS",
@@ -42,8 +48,43 @@ export const useCalendar = () => useContext(calendarContext);
 export const useCalendarProvider = () => {
   const [HOUR_HEIGHT] = useState(48);
 
-  const db = useRxDB();
   const eventsCol = useRxCollection("events");
+
+  // setup firestore replication
+  const [user, loading, error] = useAuthState(auth);
+
+  useEffect(() => {
+    if (!user) return;
+    if (!eventsCol) return;
+    const replicationState = replicateFirestore({
+      replicationIdentifier: "events-to-firestore",
+      collection: eventsCol,
+      firestore: {
+        projectId: firebaseConfig.projectId,
+        database: firebaseDb,
+        collection: collection(firebaseDb, "users", user.uid, "events"),
+      },
+      pull: {},
+      push: {},
+      live: true,
+      serverTimestampField: "serverTimestamp",
+      autoStart: true,
+    });
+    // emits all errors that happen when running the push- & pull-handlers.
+    replicationState.error$.subscribe((error) => console.error(error));
+    replicationState.start();
+    replicationState.awaitInitialReplication().then(() => {
+      console.log("Initial replication done");
+      toast({
+        title: "Synced calendar events",
+      });
+    });
+    return () => {
+      replicationState.cancel();
+      replicationState.remove();
+    };
+  }, [user, eventsCol]);
+
   const { result: eventStore } = useRxQuery(eventsCol?.find());
   const events =
     useMemo(() => {
@@ -53,14 +94,7 @@ export const useCalendarProvider = () => {
           ...event,
           start: new Date(event.start),
           end: new Date(event.end),
-          repeat: event.repeat
-            ? {
-                ...event.repeat,
-                ...("date" in event.repeat
-                  ? { date: new Date(event.repeat.date!) }
-                  : {}),
-              }
-            : null,
+          repeat: event.repeat,
           actualEnd: event.actualEnd ? new Date(event.actualEnd) : null,
           ...(event.excludedDates
             ? { excludedDates: event.excludedDates.map((d) => new Date(d)) }
@@ -78,14 +112,7 @@ export const useCalendarProvider = () => {
       ...event,
       start: event.start.toISOString(),
       end: event.end.toISOString(),
-      repeat: event.repeat
-        ? {
-            ...event.repeat,
-            ...("date" in event.repeat
-              ? { date: event.repeat.date.toISOString() }
-              : {}),
-          }
-        : null,
+      repeat: event.repeat,
       actualEnd: getActualEndDate(event),
     });
   };
@@ -187,8 +214,8 @@ export const useCalendarProvider = () => {
             ...oldEvent,
             repeat: {
               ...oldEvent.repeat!,
-              count: undefined,
-              date: subDays(operationEvent.start, 1),
+              mode: "date" as const,
+              value: subDays(operationEvent.start, 1).getTime(),
             },
           };
           await eventsCol!.findOne(newEvent.id).update({
@@ -198,7 +225,7 @@ export const useCalendarProvider = () => {
             },
           });
           let newEvent3;
-          if ("count" in oldEvent.repeat) {
+          if (oldEvent.repeat.mode == "count") {
             //if oldEvent was using count, find how many counts to subtract
             //oldEvent.start => newEvent.start = x * interval
             const interval = oldEvent.repeat.interval || 1;
@@ -214,7 +241,7 @@ export const useCalendarProvider = () => {
               parentId: newEvent.id,
               repeat: {
                 ...oldEvent.repeat,
-                count: oldEvent.repeat.count - x,
+                value: oldEvent.repeat.value - x,
               },
             };
           } else {

@@ -17,44 +17,15 @@ const schemaDetails = z.object({
   allDay: z.boolean(),
   repeat: z.union([
     z.object({
-      type: z.literal("daily"),
-      interval: z.number().optional(),
-      count: z.number().optional(),
-    }),
-    z.object({
-      type: z.literal("weekly"),
-      interval: z.number().optional(),
-      count: z.number().optional(),
-    }),
-    z.object({
-      type: z.literal("monthly"),
-      interval: z.number().optional(),
-      count: z.number().optional(),
-    }),
-    z.object({
-      type: z.literal("yearly"),
-      interval: z.number().optional(),
-      count: z.number().optional(),
-    }),
-    z.object({
-      type: z.literal("daily"),
-      interval: z.number().optional(),
-      date: z.date().optional(),
-    }),
-    z.object({
-      type: z.literal("weekly"),
-      interval: z.number().optional(),
-      date: z.date().optional(),
-    }),
-    z.object({
-      type: z.literal("monthly"),
-      interval: z.number().optional(),
-      date: z.date(),
-    }),
-    z.object({
-      type: z.literal("yearly"),
-      interval: z.number().optional(),
-      date: z.date(),
+      type: z.union([
+        z.literal("daily"),
+        z.literal("weekly"),
+        z.literal("monthly"),
+        z.literal("yearly"),
+      ]),
+      interval: z.number(),
+      mode: z.union([z.literal("count"), z.literal("date")]),
+      value: z.number(),
     }),
     z.object({
       type: z.null(),
