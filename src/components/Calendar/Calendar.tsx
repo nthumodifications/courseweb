@@ -168,7 +168,7 @@ const Calendar = () => {
               </Button>
             </div>
             <Button variant="outline" onClick={syncTimetable}>
-              <FolderSync />
+              <FolderSync size={16} />
             </Button>
           </div>
           <div className="md:flex flex-row items-center gap-2 hidden ">

@@ -62,6 +62,7 @@ export const config = {
     "/settings/:path*",
     "/timetable/:path*",
     "/today/:path*",
+    "/calendar/:path*",
     "/venues/:path*",
     "/cds/:path*",
     "/apps/:path*",

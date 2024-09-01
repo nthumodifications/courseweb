@@ -70,18 +70,20 @@ export const CalendarMonthContainer = ({
 
   const renderEventsInDay = useCallback(
     (day: Date, padding: number) => {
-      const dayEvents = eventsToDisplay(events, startOfDay(day), endOfDay(day))
-        .filter((e) => !e.allDay)
-        .map((event) => {
-          // Determine the text color
-          const brightness = getBrightness(event.color);
-          // From the brightness, using the adjustBrightness function, create a complementary color that is legible
-          const textColor = adjustLuminance(
-            event.color,
-            brightness > 186 ? 0.2 : 0.95,
-          );
-          return { ...event, textColor };
-        });
+      const dayEvents = eventsToDisplay(
+        events,
+        startOfDay(day),
+        endOfDay(day),
+      ).map((event) => {
+        // Determine the text color
+        const brightness = getBrightness(event.color);
+        // From the brightness, using the adjustBrightness function, create a complementary color that is legible
+        const textColor = adjustLuminance(
+          event.color,
+          brightness > 186 ? 0.2 : 0.95,
+        );
+        return { ...event, textColor };
+      });
 
       return (
         <div className="flex flex-col gap-0.5 mt-1" key={day.getTime()}>
@@ -117,44 +119,50 @@ export const CalendarMonthContainer = ({
 
   const renderAllDayEvents = useCallback(
     (start: Date, end: Date) => {
-      const allDayEvents = eventsToDisplay(
+      const filteredEvents = eventsToDisplay(
         showAcademicCalendar ? [...nthuCalendarEvents, ...events] : events,
         startOfDay(start),
         endOfDay(end),
-      )
-        .filter((e) => e.allDay)
-        .map((event) => {
-          // Snap the event to the start if it starts before the start of the week
-          const snippetStart = isSameWeek(start, event.start)
-            ? event.start
-            : startOfDay(start);
-          // Snap the event to the end if it ends after the end of the week
-          const snippetEnd = isSameWeek(end, event.end)
-            ? event.end
-            : endOfDay(end);
-          // Determine the text color
-          const brightness = getBrightness(event.color);
-          // From the brightness, using the adjustBrightness function, create a complementary color that is legible
-          const textColor = adjustLuminance(
-            event.color,
-            brightness > 186 ? 0.2 : 0.95,
-          );
-          const span = Math.min(
-            differenceInDays(endOfDay(snippetEnd), startOfDay(snippetStart)) +
-              1,
-            7 - getDay(snippetStart) + 1,
-          );
-          const left = (100 / 7) * getDay(snippetStart);
-          const width = (100 / 7) * span;
-          return { ...event, textColor, left, width };
-        });
+      ).filter((e) => e.allDay);
+
+      const allDayEvents = filteredEvents.map((event) => {
+        // Snap the event to the start if it starts before the start of the week
+        const snippetStart = isSameWeek(start, event.start)
+          ? event.start
+          : startOfDay(start);
+        // Snap the event to the end if it ends after the end of the week
+        const snippetEnd = isSameWeek(end, event.end)
+          ? event.end
+          : endOfDay(end);
+        // Determine the text color
+        const brightness = getBrightness(event.color);
+        // From the brightness, using the adjustBrightness function, create a complementary color that is legible
+        const textColor = adjustLuminance(
+          event.color,
+          brightness > 186 ? 0.2 : 0.95,
+        );
+        const span = Math.min(
+          differenceInDays(endOfDay(snippetEnd), startOfDay(snippetStart)) + 1,
+          7 - getDay(snippetStart) + 1,
+        );
+        const left = (100 / 7) * getDay(snippetStart);
+        const width = (100 / 7) * span;
+        // calculate the index in that day, to determine the top position
+        const events = filteredEvents.filter(
+          (m) => m.start <= event.start && m.end >= event.end,
+        );
+        const index = events.indexOf(event);
+        const top = 33 + index * (isScreenMD ? 22 : 18);
+
+        return { ...event, textColor, left, width, top };
+      });
 
       return allDayEvents.map((event, index) => (
         <EventPopover key={index} event={event}>
           <div
             style={{
               position: "absolute",
-              top: 33 + index * (isScreenMD ? 22 : 18),
+              top: `${event.top}px`,
               left: `calc(${event.left}%)`,
               width: `calc(${event.width}%)`,
             }}
@@ -177,32 +185,37 @@ export const CalendarMonthContainer = ({
   const renderRow = useCallback(
     (day: Date, colIndex: number) => {
       //check for any allday events that exists in the day
-      const allDayEvents = events.filter(
-        (e) => e.allDay && (isSameWeek(day, e.start) || isSameWeek(day, e.end)),
-      );
+      const allDayEvents = eventsToDisplay(
+        showAcademicCalendar ? [...nthuCalendarEvents, ...events] : events,
+        startOfDay(day),
+        endOfDay(day),
+      ).filter((e) => e.allDay);
 
       return (
-        <div
-          key={day.getTime()}
-          className={cn(
-            "flex flex-col gap-1 min-h-[120px] border-t border-l border-slate-200 last:border-b last:border-r",
-            isSameMonth(day, displayMonth[15]) ? "" : "bg-slate-50",
-          )}
-        >
+        <>
+          {getDay(day) == 0 &&
+            renderAllDayEvents(startOfWeek(day), endOfWeek(day))}
           <div
+            key={day.getTime()}
             className={cn(
-              "text-sm font-semibold cursor-pointer p-0.5",
-              isToday(day)
-                ? "w-6 h-6 rounded-full bg-nthu-500 text-white flex items-center justify-center"
-                : "text-slate-900",
+              "flex flex-col gap-1 min-h-[120px] border-t border-l border-slate-200 last:border-b last:border-r",
+              isSameMonth(day, displayMonth[15]) ? "" : "bg-slate-50",
             )}
-            onClick={() => onChangeView("week", day)}
           >
-            {format(day, "d")}
+            <div
+              className={cn(
+                "text-sm font-semibold cursor-pointer p-0.5",
+                isToday(day)
+                  ? "w-6 h-6 rounded-full bg-nthu-500 text-white flex items-center justify-center"
+                  : "text-slate-900",
+              )}
+              onClick={() => onChangeView("week", day)}
+            >
+              {format(day, "d")}
+            </div>
+            {renderEventsInDay(day, allDayEvents.length)}
           </div>
-          {renderAllDayEvents(startOfWeek(day), endOfWeek(day))}
-          {renderEventsInDay(day, allDayEvents.length)}
-        </div>
+        </>
       );
     },
     [events, displayMonth, renderAllDayEvents, renderEventsInDay, onChangeView],
