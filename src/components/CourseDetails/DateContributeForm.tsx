@@ -17,7 +17,7 @@ import {
   Plus,
   CalendarPlus,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { PropsWithChildren, useEffect, useMemo, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -42,6 +42,8 @@ import { useQuery } from "@tanstack/react-query";
 import { getContribDates, submitContribDates } from "@/lib/contrib_dates";
 import { toast } from "@/components/ui/use-toast";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import useDictionary from "@/dictionaries/useDictionary";
+import { useHeadlessAIS } from "@/hooks/contexts/useHeadlessAIS";
 
 const schema = z.object({
   dates: z.array(
@@ -58,9 +60,13 @@ const schema = z.object({
   ),
 });
 
-const DateContributeForm = ({ courseId }: { courseId: string }) => {
+const DateContributeForm = ({
+  courseId,
+  children,
+}: PropsWithChildren<{ courseId: string }>) => {
   const [open, setOpen] = useState(false);
-
+  const dict = useDictionary();
+  const { getACIXSTORE } = useHeadlessAIS();
   const {
     data: existingDates,
     error,
@@ -104,14 +110,22 @@ const DateContributeForm = ({ courseId }: { courseId: string }) => {
   );
 
   const onSubmit = async (data: z.infer<typeof schema>) => {
-    console.log(data);
     const submitDates = data.dates.map((d) => ({
       id: d.id,
       type: d.type,
       title: d.title,
       date: format(d.date, "yyyy-MM-dd"),
     }));
-    const result = await submitContribDates(courseId, submitDates);
+
+    const ACIXSTORE = await getACIXSTORE();
+    if (!ACIXSTORE) {
+      toast({
+        title: "Failed to submit",
+        description: "Failed to get token",
+      });
+      throw new Error("Failed to get token");
+    }
+    const result = await submitContribDates(ACIXSTORE, submitDates);
     if (typeof result == "object" && "error" in result) {
       toast({
         title: "Failed to submit",
@@ -119,6 +133,10 @@ const DateContributeForm = ({ courseId }: { courseId: string }) => {
       });
       throw new Error(result.error.message);
     }
+    toast({
+      title: "Submitted successfully",
+      description: "Your contribution has been submitted successfully",
+    });
     setOpen(false);
     const newData = await refetch();
     form.reset({ dates: newData.data });
@@ -128,28 +146,25 @@ const DateContributeForm = ({ courseId }: { courseId: string }) => {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="icon">
-          <CalendarPlus />
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
-            <h1 className="text-2xl font-bold">Contribute Dates</h1>
+            <h1 className="text-2xl font-bold">
+              {dict.dialogs.DateContributeForm.title}
+            </h1>
             <p className="text-sm text-muted-foreground">
-              Contribute important dates to the course
+              {dict.dialogs.DateContributeForm.description}
             </p>
           </div>
           <Alert>
             <Edit2 className="h-4 w-4" />
-            <AlertTitle>{`Don't abuse the system!`}</AlertTitle>
+            <AlertTitle>
+              {dict.dialogs.DateContributeForm.dont_abuse}
+            </AlertTitle>
             <AlertDescription>
-              <p>Enter only accurate and relevant information!</p>
-              <p>
-                Your submission will contain your Student ID, and will be
-                auditable on request.
-              </p>
+              <p>{dict.dialogs.DateContributeForm.accurate_relavent}</p>
+              <p>{dict.dialogs.DateContributeForm.disclaimer}</p>
             </AlertDescription>
           </Alert>
           <ScrollArea>
@@ -173,10 +188,20 @@ const DateContributeForm = ({ courseId }: { courseId: string }) => {
                                 <SelectValue placeholder="Type" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="exam">Exam</SelectItem>
-                                <SelectItem value="quiz">Quiz</SelectItem>
+                                <SelectItem value="exam">
+                                  {dict.dialogs.DateContributeForm.types.exam}
+                                </SelectItem>
+                                <SelectItem value="quiz">
+                                  {dict.dialogs.DateContributeForm.types.quiz}
+                                </SelectItem>
                                 <SelectItem value="no_class">
-                                  No Class
+                                  {
+                                    dict.dialogs.DateContributeForm.types
+                                      .no_class
+                                  }
+                                </SelectItem>
+                                <SelectItem value="other">
+                                  {dict.dialogs.DateContributeForm.types.other}
                                 </SelectItem>
                               </SelectContent>
                             </Select>
@@ -221,7 +246,12 @@ const DateContributeForm = ({ courseId }: { courseId: string }) => {
                                   {field.value ? (
                                     format(field.value, "PPP")
                                   ) : (
-                                    <span>Pick a date</span>
+                                    <span>
+                                      {
+                                        dict.dialogs.DateContributeForm
+                                          .date_placeholder
+                                      }
+                                    </span>
                                   )}
                                 </Button>
                               </PopoverTrigger>
@@ -256,7 +286,8 @@ const DateContributeForm = ({ courseId }: { courseId: string }) => {
                     append({ type: "exam", title: "", date: new Date() })
                   }
                 >
-                  <Plus className="mr-2" /> Add Date
+                  <Plus className="mr-2" />{" "}
+                  {dict.dialogs.DateContributeForm.add_date}
                 </Button>
                 <div className="flex flex-row gap-2 justify-end">
                   <Button
@@ -264,14 +295,14 @@ const DateContributeForm = ({ courseId }: { courseId: string }) => {
                     onClick={() => form.reset()}
                     disabled={disabled}
                   >
-                    Reset
+                    {dict.dialogs.DateContributeForm.reset}
                   </Button>
                   <Button
                     type="submit"
                     onClick={form.handleSubmit(onSubmit)}
                     disabled={disabled}
                   >
-                    Submit
+                    {dict.dialogs.DateContributeForm.submit}
                   </Button>
                 </div>
               </div>
