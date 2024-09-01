@@ -108,10 +108,10 @@ const UpcomingEvents = () => {
 
   return (
     <div className="flex-col justify-start items-start gap-2 inline-flex md:max-w-[292px] md:h-full">
-      <div className="self-stretch text-slate-900 text-lg font-semibold  leading-7">
+      <div className="self-stretch text-lg font-semibold  leading-7">
         即將到來的行程
       </div>
-      <div className="self-stretch p-4 bg-slate-50 rounded-lg flex-col justify-start items-start gap-6 flex">
+      <div className="self-stretch p-4 bg-neutral-50 dark:bg-neutral-800 rounded-lg flex-col justify-start items-start gap-6 flex">
         {days.map((day) => (
           <div
             className="flex flex-col gap-2 pb-4 w-full"

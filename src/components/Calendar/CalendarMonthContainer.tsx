@@ -198,8 +198,8 @@ export const CalendarMonthContainer = ({
           <div
             key={day.getTime()}
             className={cn(
-              "flex flex-col gap-1 min-h-[120px] border-t border-l border-slate-200 last:border-b last:border-r",
-              isSameMonth(day, displayMonth[15]) ? "" : "bg-slate-50",
+              "flex flex-col gap-1 min-h-[120px] border-t border-l border-border last:border-b last:border-r",
+              isSameMonth(day, displayMonth[15]) ? "" : "bg-black/15",
             )}
           >
             <div
@@ -207,7 +207,7 @@ export const CalendarMonthContainer = ({
                 "text-sm font-semibold cursor-pointer p-0.5",
                 isToday(day)
                   ? "w-6 h-6 rounded-full bg-nthu-500 text-white flex items-center justify-center"
-                  : "text-slate-900",
+                  : "",
               )}
               onClick={() => onChangeView("week", day)}
             >

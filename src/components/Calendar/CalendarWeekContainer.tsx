@@ -217,7 +217,7 @@ export const CalendarWeekContainer = ({
   return (
     <div className="flex flex-row w-full overflow-x-scroll h-full">
       <div
-        className="flex flex-col min-w-9 sticky left-0 bg-white shadow-md z-20 h-full overflow-y-hidden"
+        className="flex flex-col min-w-9 sticky left-0 shadow-md z-20 h-full overflow-y-hidden"
         ref={timeLabelContainer}
         style={{
           paddingTop: headerHeight + 10,
@@ -241,10 +241,10 @@ export const CalendarWeekContainer = ({
                 key={day.getTime()}
                 className="flex flex-col flex-1 items-center justify-center h-full select-none"
               >
-                <div className="md:hidden text-slate-900 text-xs font-semibold">
+                <div className="md:hidden text-xs font-semibold">
                   {format(day, "EEEEE")}
                 </div>
-                <div className="hidden md:inline text-slate-900 text-xs font-semibold">
+                <div className="hidden md:inline text-xs font-semibold">
                   {format(day, "E")}
                 </div>
                 <div
@@ -277,11 +277,11 @@ export const CalendarWeekContainer = ({
               <div className="flex flex-row">
                 {displayWeek.map((day, index) => (
                   <div key={day.getTime()} className="relative flex-1">
-                    <div className="flex flex-col border-r border-slate-200 flex-1">
+                    <div className="flex flex-col border-r border-border flex-1">
                       {hours.map((hour, index) => (
                         <div
                           key={hour.getTime()}
-                          className="border-b border-slate-200"
+                          className="border-b border-border"
                           style={{ height: HOUR_HEIGHT }}
                         ></div>
                       ))}
