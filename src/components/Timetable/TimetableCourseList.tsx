@@ -27,8 +27,6 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
-  MouseSensor,
-  TouchSensor,
 } from "@dnd-kit/core";
 import {
   arrayMove,
@@ -266,17 +264,7 @@ export const TimetableCourseList = ({
     [displayCourseData],
   );
   const sensors = useSensors(
-    useSensor(MouseSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 0,
-        tolerance: 8,
-      },
-    }),
+    useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
