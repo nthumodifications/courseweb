@@ -22,6 +22,7 @@ import {
   HeartHandshakeIcon,
   HandCoins,
   University,
+  CreditCardIcon,
 } from "lucide-react";
 
 export const categories: {
@@ -90,6 +91,15 @@ export const apps: {
     title_en: "Shops",
     href: "/shops",
     Icon: Store,
+  },
+  {
+    id: "studentcard",
+    category: "campuslife",
+    title_zh: "門禁學生証",
+    title_en: "Door Access Card",
+    href: "/student/id",
+    Icon: CreditCardIcon,
+    ais: true,
   },
   {
     id: "grades",

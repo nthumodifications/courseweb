@@ -21,6 +21,13 @@ const withBundleAnalyzer = require("@next/bundle-analyzer")({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    turbo: {
+      resolveAlias: {
+        canvas: "./empty-module.ts",
+      },
+    },
+  },
   webpack: (config, { webpack, isServer }) => {
     config.plugins.push(
       new webpack.DefinePlugin({
