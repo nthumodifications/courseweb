@@ -7,6 +7,7 @@ import {
   ArrowRight,
   Share,
   Share2,
+  CalendarPlus,
 } from "lucide-react";
 import Link from "next/link";
 import DownloadSyllabus from "./DownloadSyllabus";
@@ -20,7 +21,7 @@ import {
   colorMapFromCourses,
   createTimetableFromCourses,
 } from "@/helpers/timetable";
-import { MinimalCourse } from "@/types/courses";
+import { MinimalCourse, RawCourseID } from "@/types/courses";
 import {
   hasTimes,
   getScoreType,
@@ -56,6 +57,10 @@ import { Dialog, DialogContent, DialogTrigger } from "../ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { cn } from "@/lib/utils";
 import ShareCourseButton from "./ShareCourseButton";
+import DateContributeForm from "./DateContributeForm";
+import { getContribDates } from "@/lib/contrib_dates";
+import { getCurrentUser } from "@/lib/firebase/auth";
+import { currentSemester } from "@/const/semester";
 
 const PDFViewerDynamic = dynamicFn(
   () => import("@/components/CourseDetails/PDFViewer"),
@@ -137,6 +142,63 @@ const getOtherClasses = async (course: MinimalCourse) => {
   return data as unknown as (CourseDefinition & {
     course_scores: CourseScoreDefinition | undefined;
   })[];
+};
+
+const ImportantDates = async ({
+  raw_id,
+  lang,
+}: {
+  raw_id: RawCourseID;
+  lang: Language;
+}) => {
+  const dates = await getContribDates(raw_id);
+  const dict = await getDictionary(lang);
+  const session = await getCurrentUser();
+
+  const sortedDates = dates?.sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+  );
+
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex flex-row justify-between">
+        <h3 className="font-semibold text-base">
+          {dict.course.details.important_dates}
+        </h3>
+        {session && currentSemester?.id == raw_id.substring(0, 5) && (
+          <DateContributeForm courseId={raw_id}>
+            <Button size="sm" variant="ghost" className="h-6">
+              <CalendarPlus className="w-4 h-4" />
+            </Button>
+          </DateContributeForm>
+        )}
+      </div>
+      {sortedDates && (
+        <div className="flex flex-col gap-1">
+          {sortedDates.map((m, index) => (
+            <div key={index} className="flex flex-row gap-2">
+              <p className="text-sm min-w-20">
+                {format(new Date(m.date), "yyyy-MM-dd")}
+              </p>
+              <p className="text-sm font-semibold">
+                <Badge variant="secondary" className="mr-2">
+                  {
+                    dict.dialogs.DateContributeForm.types[
+                      m.type as keyof typeof dict.dialogs.DateContributeForm.types
+                    ]
+                  }
+                </Badge>
+                {m.title}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+      {!sortedDates?.length && (
+        <p className="text-sm text-gray-500">No Information</p>
+      )}
+    </div>
+  );
 };
 
 const CourseDetailContainer = async ({
@@ -472,6 +534,7 @@ const CourseDetailContainer = async ({
                   </ul>
                 </div>
               </ScrollArea>
+              <ImportantDates raw_id={course.raw_id} lang={lang} />
               {(course.note ?? "").trim().length > 0 && (
                 <div className="flex flex-col gap-1">
                   <h3 className="font-semibold text-base">
