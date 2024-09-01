@@ -1,6 +1,6 @@
 "use client";
 import { EventData } from "@/types/calendar_event";
-import { format, formatRelative, getDay } from "date-fns";
+import { format, formatRelative, getDay, isSameDay, parse } from "date-fns";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { scheduleTimeSlots } from "@/const/timetable";
 import { FC, useMemo } from "react";
@@ -22,6 +22,8 @@ import useTime from "@/hooks/useTime";
 import { NoClassPickedReminder } from "./NoClassPickedReminder";
 import { TimetableItemDrawer } from "@/components/Timetable/TimetableItemDrawer";
 import AppItem from "@/app/[lang]/(mods-pages)/apps/AppItem";
+import { useQuery } from "@tanstack/react-query";
+import { getNTHUCalendar } from "@/lib/calendar_event";
 
 const getRangeOfDays = (start: Date, end: Date) => {
   const days = [];
@@ -31,23 +33,9 @@ const getRangeOfDays = (start: Date, end: Date) => {
   return days;
 };
 
-const TodaySchedule: FC<{
-  weather: WeatherData | undefined;
-  alerts: AlertDefinition[];
-  calendar: EventData[];
-  weatherLoading: boolean;
-  alertLoading: boolean;
-  calendarLoading: boolean;
-}> = ({
-  weather,
-  alerts,
-  calendar,
-  weatherLoading,
-  alertLoading,
-  calendarLoading,
-}) => {
+const TodaySchedule: FC = () => {
   const { isCoursesEmpty, colorMap, getSemesterCourses } = useUserTimetable();
-  const { language, pinnedApps } = useSettings();
+  const { language, pinnedApps, showAcademicCalendar } = useSettings();
   const dict = useDictionary();
   const date = useTime();
 
@@ -58,12 +46,12 @@ const TodaySchedule: FC<{
         getSemesterCourses(curr_sem?.id) as MinimalCourse[],
         colorMap,
       ),
-    [getSemesterCourses, curr_sem],
+    [getSemesterCourses, curr_sem, colorMap],
   );
   //sort display_courses according to courses[semester]
   const displayCourseData = useMemo(
     () => getSemesterCourses(lastSemester.id),
-    [getSemesterCourses, lastSemester],
+    [getSemesterCourses],
   );
 
   const nextTimetableData = useMemo(
@@ -80,6 +68,35 @@ const TodaySchedule: FC<{
     () => getRangeOfDays(date, new Date(date.getTime() + 86400000 * 4)),
     [date],
   );
+
+  const {
+    data: weather,
+    error: weatherError,
+    isLoading: weatherLoading,
+  } = useQuery<WeatherData>({
+    queryKey: ["weather"],
+    queryFn: async () => {
+      const res = await fetch("/api/dashboard/weather");
+      const data = await res.json();
+      return data;
+    },
+  });
+
+  const {
+    data: calendar = [],
+    error: calendarError,
+    isLoading: calendarLoading,
+  } = useQuery<EventData[]>({
+    queryKey: [
+      "event",
+      format(days[0], "yyyy-MM-dd"),
+      format(days[4], "yyyy-MM-dd"),
+    ],
+    queryFn: async () => {
+      return getNTHUCalendar(days[0], days[4]);
+    },
+    enabled: showAcademicCalendar,
+  });
 
   const renderDayTimetable = (day: Date) => {
     if (!curr_sem)
@@ -141,34 +158,26 @@ const TodaySchedule: FC<{
       </div>
     );
   };
-
-  const renderAlerts = (day: Date) => {
-    return alerts
-      .filter(
-        (alert) =>
-          new Date(alert.start_date) <= day && new Date(alert.end_date) >= day,
-      )
-      .map((alert, index) => (
-        <Alert key={index} className="mb-4" color={alert.severity}>
-          <Info className="w-4 h-4" />
-          <AlertTitle>{alert.title}</AlertTitle>
-          <AlertDescription>{alert.description}</AlertDescription>
-        </Alert>
-      ));
-  };
-
   const renderCalendars = (day: Date) => {
+    if (!showAcademicCalendar) return <></>;
+    const events = calendar.filter((event) =>
+      isSameDay(new Date(event.date), day),
+    );
     return (
       !calendarLoading &&
-      calendar &&
-      calendar
-        .filter((event) => event.weekday == day.getDay())
-        .map((event) => (
-          <Alert key={event.weekday}>
-            <CalendarRange className="h-4 w-4" />
-            <AlertDescription>{event.summary}</AlertDescription>
-          </Alert>
-        ))
+      events.length > 0 && (
+        <Alert className="p-2">
+          <AlertDescription>
+            <ul className="divide-y divide-border text-sm text-muted-foreground">
+              {events.map((event) => (
+                <li key={event.id} className="text-sm py-1">
+                  {event.summary}
+                </li>
+              ))}
+            </ul>
+          </AlertDescription>
+        </Alert>
+      )
     );
   };
 
@@ -183,15 +192,15 @@ const TodaySchedule: FC<{
         >
           <div className="flex flex-row gap-2 justify-between border-b border-gray-400 pb-2">
             <div className="flex flex-col flex-1">
-              {/* 6TH OCTOBER */}
-              <div className="text-sm font-semibold text-gray-400 dark:text-gray-500">
-                {format(day, "EEEE, do MMMM", { locale: getLocale(language) })}
-              </div>
               {/* WEDNESDAY */}
               <div className="text-xl font-semibold text-gray-600 dark:text-gray-300">
                 {formatRelative(day, Date.now(), {
                   locale: getLocale(language),
                 })}
+              </div>
+              {/* 6TH OCTOBER */}
+              <div className="text-sm font-semibold text-gray-400 dark:text-gray-500">
+                {format(day, "EEEE, do MMMM", { locale: getLocale(language) })}
               </div>
             </div>
             {!weatherLoading && weather && (
@@ -203,7 +212,6 @@ const TodaySchedule: FC<{
               />
             )}
           </div>
-          {renderAlerts(day)}
           {renderCalendars(day)}
           {renderDayTimetable(day)}
         </div>

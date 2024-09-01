@@ -12,6 +12,7 @@ Sentry.init({
   tracesSampleRate: 1,
 
   environment: process.env.NODE_ENV,
+  enabled: process.env.NODE_ENV === "production", // Only send events to Sentry in production
   // Setting this option to true will print useful information to the console while you're setting up Sentry.
   debug: false,
 });

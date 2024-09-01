@@ -23,6 +23,7 @@ import {
   HandCoins,
   University,
   CreditCardIcon,
+  CalendarIcon,
 } from "lucide-react";
 
 export const categories: {
@@ -100,6 +101,14 @@ export const apps: {
     href: "/student/id",
     Icon: CreditCardIcon,
     ais: true,
+  },
+  {
+    id: "calendar",
+    category: "campuslife",
+    title_zh: "日曆",
+    title_en: "Calendar",
+    href: "/calendar",
+    Icon: CalendarIcon,
   },
   {
     id: "grades",

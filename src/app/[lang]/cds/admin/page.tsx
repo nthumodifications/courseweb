@@ -1,3 +1,5 @@
+import supabase_server from "@/config/supabase_server";
+import { LangProps } from "@/types/pages";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -7,8 +9,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import supabase_server from "@/config/supabase_server";
-import { LangProps } from "@/types/pages";
 import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 

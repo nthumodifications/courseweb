@@ -42,6 +42,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useLocalStorage } from "usehooks-ts";
+import { Badge } from "@/components/ui/badge";
 
 const DisplaySettingsCard = () => {
   const { darkMode, setDarkMode, language, setLanguage } = useSettings();
@@ -112,6 +114,56 @@ const TimetableSettingsCard = () => {
             settings={preferences}
             onSettingsChange={setPreferences}
           />
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+const CalendarSettingsCard = () => {
+  const [useNewCalendar, setUseNewCalendar] = useLocalStorage(
+    "use_new_calendar",
+    false,
+  );
+  const { showAcademicCalendar, setShowAcademicCalendar } = useSettings();
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Today Page</CardTitle>
+        <CardDescription>What do you wanna see first</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="flex flex-row gap-4 py-4" id="calendar">
+          <div className="flex flex-col flex-1 gap-1">
+            <h2 className="font-semibold text-base">NTHU Academic Calendar</h2>
+            <p className="text-sm text-muted-foreground">
+              Show Academic Calendar on the Today Page.
+            </p>
+          </div>
+          <div className="flex items-center">
+            <Switch
+              checked={showAcademicCalendar}
+              onCheckedChange={setShowAcademicCalendar}
+            />
+          </div>
+        </div>
+        <div className="flex flex-row gap-4 py-4" id="calendar">
+          <div className="flex flex-col flex-1 gap-1">
+            <h2 className="font-semibold text-base">
+              Calendar <Badge variant="outline">Experimental</Badge>
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Use the new Calendar on the Today Page.
+            </p>
+          </div>
+          <div className="flex items-center">
+            <Switch
+              checked={useNewCalendar}
+              defaultChecked={useNewCalendar}
+              onCheckedChange={(e) => setUseNewCalendar(e)}
+            />
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -248,6 +300,7 @@ const SettingsPage = () => {
     <div className="flex flex-col max-w-2xl px-4 gap-4">
       <AccountInfoSettingsCard />
       <DisplaySettingsCard />
+      <CalendarSettingsCard />
       <TimetableSettingsCard />
       <PrivacySettingsCard />
       <Footer />

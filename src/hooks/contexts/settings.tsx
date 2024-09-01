@@ -18,6 +18,8 @@ const settingsContext = createContext<ReturnType<typeof useSettingsProvider>>({
   language: "zh",
   darkMode: false,
   pinnedApps: [],
+  showAcademicCalendar: true,
+  setShowAcademicCalendar: () => {},
   setLanguage: () => {},
   setDarkMode: () => {},
   setTimetableTheme: () => {},
@@ -53,6 +55,8 @@ const useSettingsProvider = () => {
     [],
   );
   const [analytics, setAnalytics] = useLocalStorage<boolean>("analytics", true);
+  const [showAcademicCalendar, setShowAcademicCalendar] =
+    useLocalStorage<boolean>("show_academic_calendar", true);
 
   const setLanguage = (newLang: Language) => {
     //set cookie of 'locale'
@@ -130,6 +134,8 @@ const useSettingsProvider = () => {
     language,
     darkMode,
     pinnedApps,
+    showAcademicCalendar,
+    setShowAcademicCalendar,
     setLanguage,
     setDarkMode,
     setTimetableTheme,

@@ -9,7 +9,7 @@ import { HeadlessAISProvider } from "@/hooks/contexts/useHeadlessAIS";
 import NextAuthProvider from "@/components/NextAuthProvider";
 import { Toaster } from "@/components/ui/toaster";
 import ReactQuery from "@/components/ReactQuery";
-
+import { RxDBProvider } from "@/config/rxdb";
 import AppUrlListener from "@/components/AppUrlListener";
 
 export const metadata: Metadata = {
@@ -97,18 +97,20 @@ export default function RootLayout({
   children: React.ReactNode;
 } & LangProps) {
   return (
-    <NextAuthProvider>
-      <ReactQuery>
-        <SettingsProvider>
-          <HeadlessAISProvider>
-            <UserTimetableProvider>
-              {children}
-              <AppUrlListener />
-              <Toaster />
-            </UserTimetableProvider>
-          </HeadlessAISProvider>
-        </SettingsProvider>
-      </ReactQuery>
-    </NextAuthProvider>
+    <RxDBProvider>
+      <NextAuthProvider>
+        <ReactQuery>
+          <SettingsProvider>
+            <HeadlessAISProvider>
+              <UserTimetableProvider>
+                {children}
+                <AppUrlListener />
+                <Toaster />
+              </UserTimetableProvider>
+            </HeadlessAISProvider>
+          </SettingsProvider>
+        </ReactQuery>
+      </NextAuthProvider>
+    </RxDBProvider>
   );
 }

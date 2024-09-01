@@ -16,7 +16,10 @@ export const OPTIONS = (req: NextRequest) => {
 };
 
 export const GET = async (req: NextRequest) => {
-  const datas = await getNTHUCalendar();
+  const datas = await getNTHUCalendar(
+    new Date(),
+    new Date(Date.now() + 86400000 * 7),
+  );
 
   return NextResponse.json(datas);
 };

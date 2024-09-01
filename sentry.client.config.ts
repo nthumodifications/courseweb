@@ -23,6 +23,7 @@ const client = new BrowserClient({
   replaysSessionSampleRate: 0.1,
 
   environment: process.env.NODE_ENV,
+  enabled: process.env.NODE_ENV === "production", // Only send events to Sentry in production
 
   transport: makeFetchTransport,
   stackParser: defaultStackParser,
