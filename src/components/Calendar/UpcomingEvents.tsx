@@ -47,7 +47,9 @@ const UpcomingEvents = () => {
     (a, b) => a.start.getTime() - b.start.getTime(),
   );
   const renderLabelEvents = (date: Date) => {
-    const ev = upcomingEvents.filter((event) => isSameDay(event.start, date));
+    const ev = upcomingEvents
+      .filter((event) => isSameDay(event.start, date))
+      .sort((a, b) => a.start.getTime() - b.start.getTime());
     return ev.map((event, index) => {
       //Determine the text color
       const brightness = getBrightness(event.color);
@@ -62,21 +64,21 @@ const UpcomingEvents = () => {
             className="self-stretch px-2 pt-2 pb-6 rounded-md flex-col justify-start items-start gap-2 flex"
             style={{ background: event.color, color: textColor }}
           >
-            <div className="text-sm font-medium font-['Inter'] leading-none">
+            <div className="text-sm font-semibold  leading-none">
               {event.title}
             </div>
             <div className="justify-start items-start gap-1 inline-flex">
-              <div className="text-xs font-normal font-['Inter'] leading-none">
+              <div className="text-xs font-normal  leading-none">
                 {format(event.displayStart, "yyyy-LL-d")}
               </div>
-              <div className="text-xs font-normal font-['Inter'] leading-none">
+              <div className="text-xs font-normal leading-none">
                 {format(event.displayStart, "HH:mm")} -{" "}
                 {format(event.displayEnd, "HH:mm")}
               </div>
             </div>
-            <div className="text-slate-500 text-xs font-normal font-['Inter'] leading-none">
-              {event.details}
-            </div>
+
+            <div className="text-xs font-normal">{event.location}</div>
+            <div className="text-xs font-normal">{event.details}</div>
           </div>
         </EventPopover>
       );
@@ -89,11 +91,13 @@ const UpcomingEvents = () => {
     );
     return (
       events.length > 0 && (
-        <Alert>
+        <Alert className="p-2">
           <AlertDescription>
             <ul className="divide-y divide-border text-sm text-muted-foreground">
               {events.map((event) => (
-                <li key={event.id}>{event.summary}</li>
+                <li key={event.id} className="text-sm py-1">
+                  {event.summary}
+                </li>
               ))}
             </ul>
           </AlertDescription>
@@ -104,7 +108,7 @@ const UpcomingEvents = () => {
 
   return (
     <div className="flex-col justify-start items-start gap-2 inline-flex md:max-w-[292px] md:h-full">
-      <div className="self-stretch text-slate-900 text-lg font-semibold font-['Inter'] leading-7">
+      <div className="self-stretch text-slate-900 text-lg font-semibold  leading-7">
         即將到來的行程
       </div>
       <div className="self-stretch p-4 bg-slate-50 rounded-lg flex-col justify-start items-start gap-6 flex">

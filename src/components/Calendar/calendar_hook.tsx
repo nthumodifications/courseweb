@@ -85,9 +85,6 @@ export const useCalendarProvider = () => {
     replicationState.start();
     replicationState.awaitInitialReplication().then(() => {
       console.log("Initial replication done");
-      toast({
-        title: "Synced calendar events",
-      });
     });
     return () => {
       replicationState.cancel();

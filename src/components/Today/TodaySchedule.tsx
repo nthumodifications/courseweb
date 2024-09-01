@@ -1,6 +1,6 @@
 "use client";
 import { EventData } from "@/types/calendar_event";
-import { format, formatRelative, getDay, isSameDay } from "date-fns";
+import { format, formatRelative, getDay, isSameDay, parse } from "date-fns";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { scheduleTimeSlots } from "@/const/timetable";
 import { FC, useMemo } from "react";
@@ -158,20 +158,26 @@ const TodaySchedule: FC = () => {
       </div>
     );
   };
-
   const renderCalendars = (day: Date) => {
     if (!showAcademicCalendar) return <></>;
+    const events = calendar.filter((event) =>
+      isSameDay(new Date(event.date), day),
+    );
     return (
       !calendarLoading &&
-      calendar &&
-      calendar
-        .filter((event) => isSameDay(new Date(event.date), day))
-        .map((event) => (
-          <Alert key={event.id}>
-            <CalendarRange className="h-4 w-4" />
-            <AlertDescription>{event.summary}</AlertDescription>
-          </Alert>
-        ))
+      events.length > 0 && (
+        <Alert className="p-2">
+          <AlertDescription>
+            <ul className="divide-y divide-border text-sm text-muted-foreground">
+              {events.map((event) => (
+                <li key={event.id} className="text-sm py-1">
+                  {event.summary}
+                </li>
+              ))}
+            </ul>
+          </AlertDescription>
+        </Alert>
+      )
     );
   };
 
