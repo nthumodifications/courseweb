@@ -97,7 +97,8 @@
       "first_specialization": "First Specialization",
       "second_specialization": "Second Specialization",
       "ptt_title": "PTT Reviews",
-      "ptt_disclaimer": "PTT reviews are from the NTHU_Course board and are not moderated by NTHUMods. The reviews do not represent the views of NTHUMods. If you find any inappropriate content, please report to the board itself."
+      "ptt_disclaimer": "PTT reviews are from the NTHU_Course board and are not moderated by NTHUMods. The reviews do not represent the views of NTHUMods. If you find any inappropriate content, please report to the board itself.",
+      "important_dates": "Important Dates"
     }
   },
   "navigation": {
@@ -211,6 +212,23 @@
       "links": {
         "email": "Send Email"
       }
+    },
+    "DateContributeForm": {
+      "title": "Contribute Dates",
+      "description": "Contribute important dates to the course",
+      "dont_abuse": "Don't abuse the system!",
+      "disclaimer": "Your submission will contain your Student ID, and will be auditable on request.",
+      "types": {
+        "exam": "Exam",
+        "quiz": "Quiz",
+        "no_class": "No Class",
+        "other": "Others"
+      },
+      "date_placeholder": "Pick a date",
+      "add_date": "Add Date",
+      "reset": "Reset",
+      "submit": "Submit",
+      "accurate_relavent": "Enter only accurate and relavent information!"
     }
   },
   "shops": {

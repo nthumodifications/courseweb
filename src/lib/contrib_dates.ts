@@ -5,6 +5,9 @@ import { isSameDay } from "date-fns";
 import { id } from "date-fns/locale";
 import { ServerAction } from "@/types/actions";
 import { getCurrentUser } from "@/lib/firebase/auth";
+import { revalidatePath } from "next/cache";
+import { getStudentCourses } from "./headless_ais/courses";
+import { currentSemester } from "@/const/semester";
 
 export const getContribDates = async (raw_id: string) => {
   cookies();
@@ -25,12 +28,19 @@ export const getContribDates = async (raw_id: string) => {
 };
 
 export const submitContribDates: ServerAction = async (
+  ACIXSTORE: string,
   raw_id: string,
   dates: { id?: number; type: string; title: string; date: string }[],
 ) => {
-  const session = await getCurrentUser();
   try {
-    if (!session) throw new Error("Not logged in");
+    const session = await getCurrentUser();
+    if (!session) throw new Error("Unauthorized");
+    const courses = await getStudentCourses(ACIXSTORE);
+    if (!courses?.courses.includes(raw_id)) throw new Error("Course not found");
+    // so user has course, make sure this is edited during the semester
+    if (!currentSemester || currentSemester.id != raw_id.substring(0, 5))
+      throw new Error("Invalid semester");
+
     //check if all dates are in yyyy-mm-dd format (We assume Taipei timezone, so no need to convert timezone)
     if (!dates.every((d) => /^\d{4}-\d{2}-\d{2}$/.test(d.date)))
       throw new Error("Invalid date format");
@@ -88,7 +98,10 @@ export const submitContribDates: ServerAction = async (
         user: session.uid,
       });
       if (delError) throw new Error("Failed to delete dates");
-    } else return true;
+    }
+    // invalidate cache
+    revalidatePath(`/[lang]/courses/${raw_id}`);
+    return true;
   } catch (error) {
     if (error instanceof Error)
       return {

@@ -97,7 +97,8 @@
       "first_specialization": "一專",
       "second_specialization": "二專",
       "ptt_title": "PTT Reviews",
-      "ptt_disclaimer": "PTT 評論來自於 NTHU_Course 版，並非由 NTHUMods 審核。評論並不代表 NTHUMods 的立場。若您發現任何不當內容，請向PTT版檢舉。"
+      "ptt_disclaimer": "PTT 評論來自於 NTHU_Course 版，並非由 NTHUMods 審核。評論並不代表 NTHUMods 的立場。若您發現任何不當內容，請向PTT版檢舉。",
+      "important_dates": "重要日期"
     }
   },
   "navigation": {
@@ -211,6 +212,23 @@
       "links": {
         "email": "發送郵件"
       }
+    },
+    "DateContributeForm": {
+      "title": "貢獻行事曆",
+      "description": "把課堂上重要的日期共享給其他同學",
+      "dont_abuse": "請勿濫用此系統",
+      "disclaimer": "你的貢獻將有學號作證，但不會公開顯示。",
+      "types": {
+        "exam": "考試",
+        "quiz": "小考",
+        "no_class": "沒課",
+        "other": "其他"
+      },
+      "date_placeholder": "選一個日期",
+      "add_date": "加日期",
+      "reset": "還原",
+      "submit": "送出",
+      "accurate_relavent": "請輸入準確並跟此課程有關的日期"
     }
   },
   "shops": {
