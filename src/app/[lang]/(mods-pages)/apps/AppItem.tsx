@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/use-toast";
+import { event } from "@/lib/gtag";
 
 const AppItem = ({
   app,
@@ -24,6 +25,11 @@ const AppItem = ({
   const [aisLoading, setAisLoading] = React.useState(false);
 
   const onItemClicked = useCallback(async () => {
+    event({
+      action: "open_app",
+      category: "app",
+      label: "open_app_" + app.id,
+    });
     if (app.ais) {
       if (!ais.enabled) {
         toast({ title: dict.ccxp.not_logged_in_error });
