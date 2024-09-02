@@ -44,6 +44,7 @@ import {
 } from "@/components/ui/dialog";
 import { useLocalStorage } from "usehooks-ts";
 import { Badge } from "@/components/ui/badge";
+import { event } from "@/lib/gtag";
 
 const DisplaySettingsCard = () => {
   const { darkMode, setDarkMode, language, setLanguage } = useSettings();
@@ -127,6 +128,15 @@ const CalendarSettingsCard = () => {
   );
   const { showAcademicCalendar, setShowAcademicCalendar } = useSettings();
 
+  const handleUseNewCalendar = (v: boolean) => {
+    setUseNewCalendar(v);
+    event({
+      action: "use_new_calendar",
+      category: "settings",
+      label: "calendar_" + v ? "on" : "off",
+    });
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -161,7 +171,7 @@ const CalendarSettingsCard = () => {
             <Switch
               checked={useNewCalendar}
               defaultChecked={useNewCalendar}
-              onCheckedChange={(e) => setUseNewCalendar(e)}
+              onCheckedChange={handleUseNewCalendar}
             />
           </div>
         </div>

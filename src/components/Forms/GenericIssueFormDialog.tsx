@@ -14,11 +14,12 @@ import { MessageCircle } from "lucide-react";
 import { genericIssueFormAction } from "./GenericIssueFormDialog.action";
 import { DialogDescription } from "@radix-ui/react-dialog";
 import { useFormStatus } from "react-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "../ui/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { listIssuesWithTag } from "@/lib/github";
 import { ScrollArea } from "../ui/scroll-area";
+import { event } from "@/lib/gtag";
 
 const placeholderIssueDescription = `   **Describe the issue**
 A clear and concise description of what the issue is.
@@ -37,6 +38,15 @@ A clear and concise description of what you expected to happen.
 const GenericIssueForm = () => {
   const { pending } = useFormStatus();
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    event({
+      action: "open_report_issue",
+      category: "report",
+      label: "open_report_issue",
+    });
+  }, [open]);
 
   const action = async (form: FormData) => {
     const res = await genericIssueFormAction(form);
