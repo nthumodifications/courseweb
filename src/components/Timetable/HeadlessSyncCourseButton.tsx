@@ -35,6 +35,14 @@ const HeadlessSyncCourseButton = () => {
     setLoading(true);
     console.log("sync");
     const ACIXSTORE = await getACIXSTORE();
+    if (!ACIXSTORE) {
+      setLoading(false);
+      toast({
+        title: "登入失敗 Login Failed!",
+        description: "請到設定頁面重新登入 Please re-login in settings.",
+      });
+      return;
+    }
     const res = await getStudentCourses(ACIXSTORE!);
     if (!res) {
       setLoading(false);
