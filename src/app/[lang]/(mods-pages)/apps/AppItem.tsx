@@ -37,25 +37,30 @@ const AppItem = ({
       }
 
       setAisLoading(true);
-      const token = await getACIXSTORE();
-      if (!token) {
-        setAisLoading(false);
-        return;
-      }
+      try {
+        const token = await getACIXSTORE();
+        if (!token) {
+          setAisLoading(false);
+          return;
+        }
 
-      // if starts with http, open in new tab
-      if (app.href.startsWith("https://www.ccxp.nthu.edu.tw")) {
-        // Redirect user
-        const redirect_url = app.href + `?ACIXSTORE=${token}`;
-        console.log(redirect_url);
-        const link = document.createElement("a");
-        link.href = redirect_url;
-        link.target = "_blank";
-        link.click();
-      } else {
-        router.push(app.href);
+        // if starts with http, open in new tab
+        if (app.href.startsWith("https://www.ccxp.nthu.edu.tw")) {
+          // Redirect user
+          const redirect_url = app.href + `?ACIXSTORE=${token}`;
+          console.log(redirect_url);
+          const link = document.createElement("a");
+          link.href = redirect_url;
+          link.target = "_blank";
+          link.click();
+        } else {
+          router.push(app.href);
+        }
+      } catch (e) {
+        console.error("Failed to get ACIXSTORE", e);
+      } finally {
+        setAisLoading(false);
       }
-      setAisLoading(false);
     } else {
       router.push(app.href);
     }
@@ -65,6 +70,10 @@ const AppItem = ({
     () => (app.ais && ais.enabled) || !app.ais,
     [app, ais],
   );
+
+  const handleDialogStateChange = () => {
+    setAisLoading(false);
+  };
 
   return (
     <div
@@ -91,7 +100,11 @@ const AppItem = ({
           </h3>
         )}
       </div>
-      <Dialog open={aisLoading} modal={true}>
+      <Dialog
+        open={aisLoading}
+        modal={true}
+        onOpenChange={handleDialogStateChange}
+      >
         <DialogContent>
           <div className="flex flex-col items-center space-y-4">
             <div className="flex flex-col space-y-4 items-center">
