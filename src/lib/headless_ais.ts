@@ -218,8 +218,8 @@ export const signInToCCXP = async (
           // throw new Error(LoginError.Unknown);
           continue;
         }
-      } while (tries <= 5);
-      if (tries == 6 || answer.length != 6) {
+      } while (tries <= 8);
+      if (tries == 9 || answer.length != 6) {
         throw new Error("Internal Server Error");
       }
       console.log("Attempt Login");
