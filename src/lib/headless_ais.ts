@@ -178,10 +178,20 @@ export const signInToCCXP = async (
               credentials: "include",
             },
           );
-          pwdstr = await streamAndMatch(
-            res,
+
+          const resHTML = await res.arrayBuffer().then((buffer) => {
+            const decoder = new TextDecoder("big5");
+            const text = decoder.decode(buffer);
+            return text;
+          });
+          pwdstr = resHTML.match(
             /auth_img\.php\?pwdstr=([a-zA-Z0-9_-]+)/,
-          );
+          )?.[1]!;
+          if (!pwdstr) {
+            console.error("pwdstr not found");
+            console.error("Full response", resHTML);
+            continue;
+          }
           console.log("pwdstr: ", pwdstr);
           console.log("Time taken", Date.now() - startTime);
           startTime = Date.now();
