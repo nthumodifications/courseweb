@@ -120,7 +120,7 @@ const useHeadlessAISProvider = () => {
           title: "代理登入失敗",
           description:
             dict.ccxp.errors[err.message as keyof typeof dict.ccxp.errors] ??
-            "目前認證服务降级，请稍后再试，敬請見諒",
+            "目前認證服务降级，試看再按多一次？",
         });
         setLoading(false);
         setError(err);
@@ -208,7 +208,7 @@ const useHeadlessAISProvider = () => {
           title: "代理登入失敗",
           description:
             dict.ccxp.errors[err.message as keyof typeof dict.ccxp.errors] ??
-            "目前認證服务降级，请稍后再试，敬請見諒",
+            "目前認證服务降级，試看再按多一次？",
         });
         setLoading(false);
         setError(err);
