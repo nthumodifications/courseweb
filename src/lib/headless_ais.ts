@@ -182,11 +182,20 @@ export const signInToCCXP = async (
             res,
             /auth_img\.php\?pwdstr=([a-zA-Z0-9_-]+)/,
           );
+          console.log("pwdstr: ", pwdstr);
           console.log("Time taken", Date.now() - startTime);
           startTime = Date.now();
+          //fetch the image and check if its a image/png
+          const img = await fetch(
+            `https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/auth_img.php?pwdstr=${pwdstr}`,
+          ).then((res) => res.blob());
+          if (img.type != "image/png") {
+            console.error("Image is not PNG");
+            console.error("Full response", res.text());
+            continue;
+          }
 
           //fetch the image from the url and send as base64
-          console.log("pwdstr: ", pwdstr);
           console.log("Fetching CAPTCHA");
           answer = await fetch(
             `https://ocr.nthumods.com/?url=https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/auth_img.php?pwdstr=${pwdstr}`,

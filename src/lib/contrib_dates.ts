@@ -36,7 +36,8 @@ export const submitContribDates: ServerAction = async (
     const session = await getCurrentUser();
     if (!session) throw new Error("Unauthorized");
     const courses = await getStudentCourses(ACIXSTORE);
-    if (!courses?.courses.includes(raw_id)) throw new Error("Course not found");
+    if (!courses?.courses.includes(raw_id))
+      throw new Error("User has not taken this course");
     // so user has course, make sure this is edited during the semester
     if (!currentSemester || currentSemester.id != raw_id.substring(0, 5))
       throw new Error("Invalid semester");
