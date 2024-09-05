@@ -189,7 +189,6 @@ export const signInToCCXP = async (
           )?.[1]!;
           if (!pwdstr) {
             console.error("pwdstr not found");
-            console.error("Full response", resHTML);
             continue;
           }
           console.log("pwdstr: ", pwdstr);
@@ -201,7 +200,6 @@ export const signInToCCXP = async (
           ).then((res) => res.blob());
           if (img.type != "image/png") {
             console.error("Image is not PNG");
-            console.error("Full response", res.text());
             continue;
           }
 
