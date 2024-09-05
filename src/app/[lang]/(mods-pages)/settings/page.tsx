@@ -181,7 +181,7 @@ const CalendarSettingsCard = () => {
 };
 
 const AccountInfoSettingsCard = () => {
-  const { user, ais, signOut } = useHeadlessAIS();
+  const { user, ais, signOut, getACIXSTORE } = useHeadlessAIS();
   const dict = useDictionary();
   const [openChangePassword, setOpenChangePassword] = useState(false);
 
@@ -265,6 +265,9 @@ const AccountInfoSettingsCard = () => {
                 {dict.ccxp.failed}
               </span>
             )}
+            <Button variant={"ghost"} onClick={() => getACIXSTORE(true)}>
+              Retry
+            </Button>
           </div>
         </div>
       </CardContent>

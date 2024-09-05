@@ -202,6 +202,7 @@ export const signInToCCXP = async (
             console.error("Image is not PNG");
             continue;
           }
+          console.error("Valid PNG");
 
           //fetch the image from the url and send as base64
           console.log("Fetching CAPTCHA");
@@ -218,7 +219,7 @@ export const signInToCCXP = async (
         }
       } while (tries <= 8);
       if (tries == 9 || answer.length != 6) {
-        throw new Error("Internal Server Error");
+        throw new Error("OCR Failed Utterly");
       }
       console.log("Attempt Login");
       const response = await fetchWithTimeout(
