@@ -29,6 +29,7 @@ import {
   ErrorBoundary,
   ErrorComponent,
 } from "next/dist/client/components/error-boundary";
+import { useSettings } from "@/hooks/contexts/settings";
 
 const CalendarError: ErrorComponent = ({ error, reset }) => {
   return <div className="text-red-500">An error occurred: {error.message}</div>;
@@ -40,6 +41,7 @@ const Calendar = () => {
   const { events, addEvent, removeEvent, displayContainer, HOUR_HEIGHT } =
     useCalendar();
   const { courses, colorMap, getSemesterCourses } = useUserTimetable();
+  const { language } = useSettings();
 
   //week movers
   const moveBackward = () => {
@@ -142,7 +144,10 @@ const Calendar = () => {
       );
     });
     // flatten and add to events
-    const calendarEvents = timetableToCalendarEvent(timetableCourses.flat());
+    const calendarEvents = timetableToCalendarEvent(
+      timetableCourses.flat(),
+      language,
+    );
 
     calendarEvents.forEach((event) => {
       addEvent(event);
