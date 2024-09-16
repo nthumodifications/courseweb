@@ -38,6 +38,7 @@ const headlessAISContext = createContext<
   signIn: async () => false,
   signOut: async () => {},
   getACIXSTORE: async () => undefined,
+  isACIXSTOREValid: () => false,
   openChangePassword: false,
   setOpenChangePassword: () => {},
 });
@@ -230,6 +231,11 @@ const useHeadlessAISProvider = () => {
     enabled: headlessAIS.enabled,
   };
 
+  const isACIXSTOREValid = () =>
+    headlessAIS.enabled
+      ? headlessAIS.lastUpdated + 15 * 60 * 1000 > Date.now()
+      : false;
+
   return {
     user,
     ais,
@@ -238,6 +244,7 @@ const useHeadlessAISProvider = () => {
     signIn,
     signOut,
     getACIXSTORE,
+    isACIXSTOREValid,
     initializing,
     openChangePassword,
     setOpenChangePassword,
