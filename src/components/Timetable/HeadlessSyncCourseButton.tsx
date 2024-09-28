@@ -34,37 +34,44 @@ const HeadlessSyncCourseButton = () => {
   const handleSync = async () => {
     setLoading(true);
     console.log("sync");
-    const ACIXSTORE = await getACIXSTORE();
-    if (!ACIXSTORE) {
-      setLoading(false);
-      toast({
-        title: "登入失敗 Login Failed!",
-        description: "請到設定頁面重新登入 Please re-login in settings.",
-      });
-      return;
-    }
-    const res = await getStudentCourses(ACIXSTORE!);
-    if (!res) {
+    try {
+      const ACIXSTORE = await getACIXSTORE();
+      if (!ACIXSTORE) {
+        setLoading(false);
+        toast({
+          title: "登入失敗 Login Failed!",
+          description: "請到設定頁面重新登入 Please re-login in settings.",
+        });
+        return;
+      }
+      const res = await getStudentCourses(ACIXSTORE!);
+      if (!res) {
+        setLoading(false);
+        toast({
+          title: "Sync Failed!",
+          description: "Please try again later.",
+        });
+        return;
+      }
+      //remove courses that are not in the latest
+      const courses_to_remove = Object.values(courses)
+        .flat()
+        .filter((id) => !res.courses.includes(id));
+      deleteCourse(courses_to_remove);
+      //add courses that are not in the current
+      const courses_to_add = res.courses.filter(
+        (id) => !Object.values(courses).flat().includes(id),
+      );
+      setCoursesToAdd(courses_to_add);
+      console.log("add", courses_to_add, "remove", courses_to_remove);
+    } catch (e) {
+      console.error(e);
       setLoading(false);
       toast({
         title: "Sync Failed!",
         description: "Please try again later.",
       });
-      return;
     }
-    console.log(res.courses);
-    //remove courses that are not in the latest
-    const courses_to_remove = Object.values(courses)
-      .flat()
-      .filter((id) => !res.courses.includes(id));
-    deleteCourse(courses_to_remove);
-    //add courses that are not in the current
-    const courses_to_add = res.courses.filter(
-      (id) => !Object.values(courses).flat().includes(id),
-    );
-    setCoursesToAdd(courses_to_add);
-    console.log("add", courses_to_add, "remove", courses_to_remove);
-    setLoading(false);
   };
 
   if (!ais.enabled) return <></>;
