@@ -18,7 +18,10 @@ import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { useRxCollection, useRxDB, useRxQuery } from "rxdb-hooks";
 import { getDiffFunction, getActualEndDate } from "./calendar_utils";
 import { subDays } from "date-fns";
-import { serializeEvent } from "@/components/Calendar/calendar_utils";
+import {
+  serializeEvent,
+  getDisplayEndDate,
+} from "@/components/Calendar/calendar_utils";
 import { EventDocType } from "@/config/rxdb";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, firebaseConfig, db as firebaseDb } from "@/config/firebase";
@@ -137,23 +140,23 @@ export const useCalendarProvider = () => {
         case UpdateType.THIS:
           // add this date to excluded dates
           await eventsCol!.findOne(event.id).update({
-            $set: {
-              actualEnd: getActualEndDate(event),
+            $set: serializeEvent({
+              actualEnd: getDisplayEndDate(event),
               excludedDates: [
                 ...(event.excludedDates || []),
                 event.displayStart,
               ],
-            },
+            }),
           });
           break;
         case UpdateType.FOLLOWING:
           //set the repeat end date to the new event start date
-          const newEvent = {
-            ...event,
+          const { displayStart, displayEnd, ...originalEvent } = event;
+          const newEvent: CalendarEvent = {
+            ...originalEvent,
             repeat: {
               ...event.repeat!,
-              count: undefined,
-              date: subDays(event.displayStart, 1),
+              value: subDays(displayStart, 1).getTime(),
             },
           };
           await eventsCol!.findOne(event.id).update({

@@ -7,6 +7,7 @@ import { Command, CommandGroup, CommandItem } from "@/components/ui/command";
 import { set } from "date-fns";
 import { Popover, PopoverContent } from "./popover";
 import { PopoverAnchor, PopoverPortal } from "@radix-ui/react-popover";
+import { Input } from "./input";
 
 export const getNearestTime = (date: Date, minuteStep: number) => {
   const minutes = date.getMinutes();
@@ -136,60 +137,53 @@ export function TimeSelect({
       className={clsx(label && "gap-1.5", parentClassName, "grid items-center")}
     >
       <Popover open={open} modal={true}>
-        <Command className="overflow-visible bg-transparent w-28">
-          <div className="group border border-input px-3 py-2 text-sm ring-offset-background rounded-md focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
-            <div className="gap-1 flex-wrap">
-              {/* Avoid having the "Search" Icon */}
-              <CommandPrimitive.Input
-                ref={inputRef}
-                value={inputValue}
-                onValueChange={setInputValue}
-                onKeyDown={handleKeyDown}
-                onBlur={handleInputBlur}
-                onFocus={() => setOpen(true)}
-                placeholder={placeholder}
-                className="ml-2 bg-transparent outline-none placeholder:text-muted-foreground flex-1 overflow-hidden w-full"
-              />
-            </div>
+        <div className="group border border-input px-3 py-2 text-sm ring-offset-background rounded-md focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+          <div className="gap-1 flex-wrap">
+            <Input
+              ref={inputRef}
+              value={inputValue}
+              onChange={(v) => setInputValue(v.target.value)}
+              onKeyDown={handleKeyDown}
+              onBlur={handleInputBlur}
+              onFocus={() => setOpen(true)}
+              placeholder={placeholder}
+              className="ml-2 bg-transparent outline-none placeholder:text-muted-foreground flex-1 overflow-hidden w-full"
+            />
           </div>
-          <PopoverAnchor />
-          <CommandList>
-            <PopoverPortal>
-              <PopoverContent
-                onOpenAutoFocus={(e) => e.preventDefault()}
-                className="p-0 w-28 h-0 border-none"
-              >
-                <div className="relative mt-2">
-                  {open && selectables.length > 0 ? (
-                    <div className="absolute w-full top-0 rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in z-40">
-                      <CommandGroup className="h-full overflow-auto">
-                        {selectables.map((framework) => {
-                          return (
-                            <CommandItem
-                              autoFocus={false}
-                              key={framework.label}
-                              onMouseDown={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                              }}
-                              onSelect={(value) => {
-                                setInputValue(framework.label);
-                                setSelected(framework.value);
-                                setOpen(false);
-                              }}
-                            >
-                              {framework.label}
-                            </CommandItem>
-                          );
-                        })}
-                      </CommandGroup>
-                    </div>
-                  ) : null}
+        </div>
+        <PopoverAnchor />
+        <PopoverPortal>
+          <PopoverContent
+            onOpenAutoFocus={(e) => e.preventDefault()}
+            className="p-0 w-28 h-0 border-none"
+          >
+            <div className="relative mt-2">
+              {open && selectables.length > 0 ? (
+                <div className="absolute w-full top-0 rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in z-40">
+                  {selectables.map((framework) => {
+                    return (
+                      <div
+                        autoFocus={false}
+                        key={framework.label}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                        onSelect={(value) => {
+                          setInputValue(framework.label);
+                          setSelected(framework.value);
+                          setOpen(false);
+                        }}
+                      >
+                        {framework.label}
+                      </div>
+                    );
+                  })}
                 </div>
-              </PopoverContent>
-            </PopoverPortal>
-          </CommandList>
-        </Command>
+              ) : null}
+            </div>
+          </PopoverContent>
+        </PopoverPortal>
       </Popover>
     </div>
   );

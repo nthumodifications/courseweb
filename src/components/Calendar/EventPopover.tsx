@@ -34,9 +34,7 @@ const ConfirmDeleteEvent: FC<{ event: DisplayCalendarEvent }> = ({ event }) => {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>確認刪除</DialogTitle>
-          <DialogDescription>
-            <p>確定要刪除這個事件嗎？</p>
-          </DialogDescription>
+          <DialogDescription>確定要刪除這個事件嗎?</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <DialogClose asChild>
@@ -67,7 +65,7 @@ const UpdateRepeatedEventDialog: FC<{
         <DialogHeader>
           <DialogTitle>更新重複事件</DialogTitle>
           <DialogDescription>
-            <p>您要更新所有重複事件還是只更新這個事件？</p>
+            您要更新所有重複事件還是只更新這個事件？
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
@@ -103,7 +101,7 @@ const DeleteRepeatedEventDialog: FC<{
         <DialogHeader>
           <DialogTitle>刪除重複事件</DialogTitle>
           <DialogDescription>
-            <p>您要刪除所有重複事件還是只刪除這個事件？</p>
+            您要刪除所有重複事件還是只刪除這個事件
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
