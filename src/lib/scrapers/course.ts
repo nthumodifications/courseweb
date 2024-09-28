@@ -7,58 +7,19 @@ import { departments } from "@/const/departments";
 import { NextResponse } from "next/server";
 import algolia from "@/config/algolia_server";
 import { kv } from "@vercel/kv";
+import { signInToCCXP } from "@/lib/headless_ais";
 const baseUrl = `https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/6/6.2/6.2.9/JH629002.php`;
 
 export const scrapeArchivedCourses = async (semester: string) => {
-  let tries = 0,
-    ACIXSTORE = "",
-    answer = "";
-  do {
-    tries++;
-    const url =
-      "https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/6/6.2/6.2.9/JH629001.php";
-    const res = await fetch(url, {
-      headers: {
-        accept:
-          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-        "accept-language": "en-US,en;q=0.9",
-        "cache-control": "max-age=0",
-        "sec-ch-ua":
-          '"Microsoft Edge";v="125", "Chromium";v="125", "Not.A/Brand";v="24"',
-        "sec-ch-ua-mobile": "?0",
-        "sec-ch-ua-platform": '"Windows"',
-        "sec-fetch-dest": "document",
-        "sec-fetch-mode": "navigate",
-        "sec-fetch-site": "same-site",
-        "sec-fetch-user": "?1",
-        "upgrade-insecure-requests": "1",
-      },
-      body: null,
-      method: "GET",
-      mode: "cors",
-      credentials: "include",
-      cache: "no-cache",
-    });
-    const body = await res.text();
-    if (!body) {
-      continue;
-    }
-    const bodyMatch = body.match(/auth_img\.php\?ACIXSTORE=([a-zA-Z0-9_-]+)/);
-    if (!bodyMatch) {
-      continue;
-    }
-    ACIXSTORE = bodyMatch[1];
-    //fetch the image from the url and send as base64
-    console.log("ACIXSTORE: ", ACIXSTORE);
-    answer = await fetch(
-      `${process.env.NTHUMODS_OCR_BASE_URL}/?url=https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/mod/auth_img/auth_img.php?ACIXSTORE=${ACIXSTORE}`,
-    ).then((res) => res.text());
-    console.log(answer);
-    if (answer.length == 3) break;
-  } while (tries <= 5);
-  if (tries == 6 || answer.length != 3) {
-    throw "Internal Server Error";
+  const user = await signInToCCXP(
+    process.env.DONER_STUDENTID!,
+    process.env.DONER_PASSWORD!,
+  );
+
+  if ("error" in user) {
+    throw new Error(user.error.message);
   }
+  const { ACIXSTORE } = user;
   const fetchCourses = async (department: Department, yearSemester: string) => {
     const response = await fetch(baseUrl, {
       body: new URLSearchParams({
@@ -67,7 +28,7 @@ export const scrapeArchivedCourses = async (semester: string) => {
         YS: `${yearSemester.slice(0, 3)}|${yearSemester.slice(3, 5)}`,
         cond: "a",
         cou_code: `${department.code}`,
-        auth_num: `${answer}`,
+        // auth_num: `${answer}`,
       }),
       method: "POST",
       cache: "no-cache",
