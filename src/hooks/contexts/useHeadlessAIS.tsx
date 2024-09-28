@@ -38,6 +38,7 @@ const headlessAISContext = createContext<
   signIn: async () => false,
   signOut: async () => {},
   getACIXSTORE: async () => undefined,
+  isACIXSTOREValid: false,
   openChangePassword: false,
   setOpenChangePassword: () => {},
 });
@@ -230,6 +231,22 @@ const useHeadlessAISProvider = () => {
     enabled: headlessAIS.enabled,
   };
 
+  const [isACIXSTOREValid, setIsACIXSTOREValid] = useState(false);
+
+  // check every second
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (headlessAIS.enabled) {
+        setIsACIXSTOREValid(
+          headlessAIS.lastUpdated + 15 * 60 * 1000 > Date.now(),
+        );
+      } else {
+        setIsACIXSTOREValid(false);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [headlessAIS]);
+
   return {
     user,
     ais,
@@ -238,6 +255,7 @@ const useHeadlessAISProvider = () => {
     signIn,
     signOut,
     getACIXSTORE,
+    isACIXSTOREValid,
     initializing,
     openChangePassword,
     setOpenChangePassword,
