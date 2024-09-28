@@ -207,7 +207,7 @@ export const signInToCCXP = async (
           //fetch the image from the url and send as base64
           console.log("Fetching CAPTCHA");
           answer = await fetch(
-            `https://ocr.nthumods.com/?url=https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/auth_img.php?pwdstr=${pwdstr}`,
+            `${process.env.NTHUMODS_OCR_BASE_URL}/?url=https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/auth_img.php?pwdstr=${pwdstr}`,
           ).then((res) => res.text());
           console.log("Time taken", Date.now() - startTime);
           startTime = Date.now();
