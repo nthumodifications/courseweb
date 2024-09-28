@@ -31,12 +31,6 @@ const SideNav: FC = () => {
         color: "#E47B86",
       },
       {
-        title: dict.navigation.courses,
-        href: `/${language}/courses`,
-        icon: <I.BookOpen strokeWidth="2" />,
-        color: "#7BC2CF",
-      },
-      {
         title: dict.navigation.bus,
         href: `/${language}/bus`,
         icon: <I.Bus strokeWidth="2" />,

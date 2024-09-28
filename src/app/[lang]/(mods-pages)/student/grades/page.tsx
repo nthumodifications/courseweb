@@ -9,13 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getStudentGrades } from "@/lib/headless_ais/grades";
 
 const StudentGradesPage = () => {
-  const {
-    initializing,
-    getACIXSTORE,
-    ais,
-    loading,
-    error: aisError,
-  } = useHeadlessAIS();
+  const { initializing, getACIXSTORE, ais, loading } = useHeadlessAIS();
 
   const {
     data: grades,
@@ -30,7 +24,6 @@ const StudentGradesPage = () => {
     },
   });
   if (!ais.enabled) return <AISNotLoggedIn />;
-  if (error || aisError) return <AISError />;
   if (isLoading || !grades) return <AISLoading />;
   return <GradesViewer grades={grades!} />;
 };

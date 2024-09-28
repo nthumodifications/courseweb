@@ -23,8 +23,8 @@ import { Calendar, FilterIcon, SearchIcon } from "lucide-react";
 import { SearchBox } from "react-instantsearch";
 
 const searchClient = algoliasearch(
-  process.env.NEXT_PUBLIC_ALGOLIA_TEMP_APP_ID!,
-  process.env.NEXT_PUBLIC_ALGOLIA_TEMP_SEARCH_KEY!,
+  process.env.NEXT_PUBLIC_ALGOLIA_APP_ID!,
+  process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY!,
 );
 const sessionStorageCache = createInfiniteHitsSessionStorageCache();
 

@@ -51,7 +51,7 @@ export const scrapeArchivedCourses = async (semester: string) => {
     //fetch the image from the url and send as base64
     console.log("ACIXSTORE: ", ACIXSTORE);
     answer = await fetch(
-      `https://ocr.nthumods.com/?url=https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/mod/auth_img/auth_img.php?ACIXSTORE=${ACIXSTORE}`,
+      `${process.env.NTHUMODS_OCR_BASE_URL}/?url=https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/mod/auth_img/auth_img.php?ACIXSTORE=${ACIXSTORE}`,
     ).then((res) => res.text());
     console.log(answer);
     if (answer.length == 3) break;

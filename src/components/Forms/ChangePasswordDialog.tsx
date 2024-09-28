@@ -1,10 +1,8 @@
 "use client";
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -26,73 +24,108 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PropsWithChildren } from "react";
 import { useHeadlessAIS } from "@/hooks/contexts/useHeadlessAIS";
-import { Loader2 } from "lucide-react";
 import { toast } from "../ui/use-toast";
+import { updateUserPassword } from "@/lib/headless_ais";
 
 // * 8~16字元
 // * 至少包含1大寫英文字母
 // * 至少包含1小寫英文字母
 // * 至少包含1個數字
 // * 密碼三代不重覆
-const formSchema = z.object({
-  newPassword: z
-    .string()
-    .min(8)
-    .max(16)
-    .refine(
-      (value) => {
-        const hasLowerCase = /[a-z]/.test(value);
-        const hasUpperCase = /[A-Z]/.test(value);
-        const hasNumber = /[0-9]/.test(value);
-        return hasLowerCase && hasUpperCase && hasNumber;
-      },
-      {
-        message:
-          "Password must contain at least 1 uppercase letter, 1 lowercase letter, and 1 number",
-      },
-    ),
-});
+const formSchema = z
+  .object({
+    oldPassword: z.string().min(8),
+    newPassword: z
+      .string()
+      .min(8)
+      .max(16)
+      .refine(
+        (value) => {
+          const hasLowerCase = /[a-z]/.test(value);
+          const hasUpperCase = /[A-Z]/.test(value);
+          const hasNumber = /[0-9]/.test(value);
+          return hasLowerCase && hasUpperCase && hasNumber;
+        },
+        {
+          message:
+            "Password must contain at least 1 uppercase letter, 1 lowercase letter, and 1 number",
+        },
+      ),
+    confirmPassword: z.string().min(8).max(16),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords do not match",
+  });
 
-const ChangePasswordDialog = ({
-  open,
-  setOpen,
-  children,
-}: PropsWithChildren<{ open: boolean; setOpen: (s: boolean) => void }>) => {
-  const { signIn, signOut, user } = useHeadlessAIS();
+const ChangePasswordDialog = ({ children }: PropsWithChildren) => {
+  const { getACIXSTORE, signIn, user } = useHeadlessAIS();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      oldPassword: "",
       newPassword: "",
+      confirmPassword: "",
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user) return;
-    const success = await signIn(user.studentid, values.newPassword);
-    if (!success) {
-      setOpen(false);
-      toast({
-        title: "密碼更新成功",
-      });
-    } else {
-      toast({
-        title: "密碼更新失敗",
-      });
+    const ACIXSTORE = await getACIXSTORE(true);
+
+    if (!ACIXSTORE) {
+      throw new Error("Login Failed!");
     }
+
+    const res = await updateUserPassword(
+      ACIXSTORE,
+      values.oldPassword,
+      values.newPassword,
+    );
+
+    if (!res) {
+      throw new Error("Login Failed!");
+    }
+
+    const success = await signIn(user.studentid, values.newPassword);
+
+    if (!success) {
+      throw new Error("Login Failed!");
+    }
+
+    toast({
+      title: "Password Updated!",
+    });
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>更新密碼</DialogTitle>
+          <DialogTitle>跟新校務資訊系統密碼</DialogTitle>
           <DialogDescription>
-            同學~你好像在校務資訊系統有跟新密碼哦，請也在這邊跟新！
+            在這邊更新密碼會同時更新校務資訊系統的密碼哦~
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <FormField
+              control={form.control}
+              name="oldPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Old Password</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Old Password"
+                      type="password"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="newPassword"
@@ -100,24 +133,34 @@ const ChangePasswordDialog = ({
                 <FormItem>
                   <FormLabel>New Password</FormLabel>
                   <FormControl>
-                    <Input placeholder="Password" type="password" {...field} />
+                    <Input
+                      placeholder="New Password"
+                      type="password"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <DialogFooter>
-              <DialogClose>
-                <Button variant="outline">Cancel</Button>
-              </DialogClose>
-              <Button type="submit">
-                {form.formState.isSubmitting ? (
-                  <Loader2 className="animate-spin" />
-                ) : (
-                  "Submit"
-                )}
-              </Button>
-            </DialogFooter>
+            <FormField
+              control={form.control}
+              name="confirmPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Confirm Password</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Confirm Password"
+                      type="password"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit">Submit</Button>
           </form>
         </Form>
       </DialogContent>

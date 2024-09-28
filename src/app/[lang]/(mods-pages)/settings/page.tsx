@@ -29,7 +29,6 @@ import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { GraduationCap, Hash } from "lucide-react";
-import ChangePasswordDialog from "@/components/Forms/ChangePasswordDialog";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/config/firebase";
 import {
@@ -45,6 +44,7 @@ import {
 import { useLocalStorage } from "usehooks-ts";
 import { Badge } from "@/components/ui/badge";
 import { event } from "@/lib/gtag";
+import ChangePasswordDialog from "@/components/Forms/ChangePasswordDialog";
 
 const DisplaySettingsCard = () => {
   const { darkMode, setDarkMode, language, setLanguage } = useSettings();
@@ -183,7 +183,6 @@ const CalendarSettingsCard = () => {
 const AccountInfoSettingsCard = () => {
   const { user, ais, signOut, getACIXSTORE } = useHeadlessAIS();
   const dict = useDictionary();
-  const [openChangePassword, setOpenChangePassword] = useState(false);
 
   return (
     <Card id="account">
@@ -209,12 +208,9 @@ const AccountInfoSettingsCard = () => {
               </div>
             </div>
             <div className="flex flex-row justify-end items-center w-full gap-2">
-              <ChangePasswordDialog
-                open={openChangePassword}
-                setOpen={setOpenChangePassword}
-              >
+              {/* <ChangePasswordDialog>
                 <Button variant={"ghost"}>更新密碼</Button>
-              </ChangePasswordDialog>
+              </ChangePasswordDialog> */}
               <Dialog>
                 <DialogTrigger asChild>
                   <Button variant="destructive">

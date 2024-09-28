@@ -207,7 +207,7 @@ export const signInToCCXP = async (
           //fetch the image from the url and send as base64
           console.log("Fetching CAPTCHA");
           answer = await fetch(
-            `https://ocr.nthumods.com/?url=https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/auth_img.php?pwdstr=${pwdstr}`,
+            `${process.env.NTHUMODS_OCR_BASE_URL}/?url=https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/auth_img.php?pwdstr=${pwdstr}`,
           ).then((res) => res.text());
           console.log("Time taken", Date.now() - startTime);
           startTime = Date.now();
@@ -308,75 +308,94 @@ export const signInToCCXP = async (
     };
     const result = await ocrAndLogin();
 
-    console.log("Fetching user details");
-    const html = await fetch(
-      `https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/4/4.19/JH4j002.php?ACIXSTORE=${result.ACIXSTORE}&user_lang=`,
-      {
-        headers: {
-          accept:
-            "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-          "accept-language": "en-US,en;q=0.9",
-          "cache-control": "max-age=0",
-          "sec-ch-ua":
-            '"Chromium";v="124", "Microsoft Edge";v="124", "Not-A.Brand";v="99"',
-          "sec-ch-ua-mobile": "?0",
-          "sec-ch-ua-platform": '"Windows"',
-          "sec-fetch-dest": "document",
-          "sec-fetch-mode": "navigate",
-          "sec-fetch-site": "same-origin",
-          "sec-fetch-user": "?1",
-          "upgrade-insecure-requests": "1",
+    const isExchangeStudent =
+      studentid.startsWith("X") || studentid.startsWith("x");
+
+    if (!isExchangeStudent) {
+      console.log("Fetching user details");
+      const html = await fetch(
+        `https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/4/4.19/JH4j002.php?ACIXSTORE=${result.ACIXSTORE}&user_lang=`,
+        {
+          headers: {
+            accept:
+              "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+            "accept-language": "en-US,en;q=0.9",
+            "cache-control": "max-age=0",
+            "sec-ch-ua":
+              '"Chromium";v="124", "Microsoft Edge";v="124", "Not-A.Brand";v="99"',
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": '"Windows"',
+            "sec-fetch-dest": "document",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-site": "same-origin",
+            "sec-fetch-user": "?1",
+            "upgrade-insecure-requests": "1",
+          },
+          body: null,
+          method: "GET",
+          mode: "cors",
+          credentials: "include",
         },
-        body: null,
-        method: "GET",
-        mode: "cors",
-        credentials: "include",
-      },
-    )
-      .then((res) => res.arrayBuffer())
-      .then((arrayBuffer) =>
-        new TextDecoder("big5").decode(new Uint8Array(arrayBuffer)),
-      );
-    const { document: doc } = parseHTML(html, "text/html");
+      )
+        .then((res) => res.arrayBuffer())
+        .then((arrayBuffer) =>
+          new TextDecoder("big5").decode(new Uint8Array(arrayBuffer)),
+        );
+      const { document: doc } = parseHTML(html, "text/html");
 
-    const form = doc.querySelector('form[name="register"]');
-    if (form == null) {
-      throw new Error(LoginError.Unknown);
+      const form = doc.querySelector('form[name="register"]');
+      if (form == null) {
+        throw new Error(LoginError.Unknown);
+      }
+
+      console.log("Time taken", Date.now() - startTime);
+      startTime = Date.now();
+
+      const firstRow = form.querySelector("tr:nth-child(1)")!;
+      const secondRow = form.querySelector("tr:nth-child(2)")!;
+
+      const data = {
+        studentid:
+          firstRow.querySelector(".class3:nth-child(2)")?.textContent?.trim() ??
+          "",
+        name_zh:
+          firstRow.querySelector(".class3:nth-child(4)")?.textContent?.trim() ??
+          "",
+        name_en:
+          firstRow.querySelector(".class3:nth-child(6)")?.textContent?.trim() ??
+          "",
+        department:
+          secondRow
+            .querySelector(".class3:nth-child(2)")
+            ?.textContent?.trim() ?? "",
+        grade:
+          secondRow
+            .querySelector(".class3:nth-child(4)")
+            ?.textContent?.trim() ?? "",
+        email:
+          form.querySelector('input[name="email"]')?.getAttribute("value") ??
+          "",
+      } as UserJWTDetails;
+
+      if (
+        form.querySelector('input[name="ACIXSTORE"]')?.getAttribute("value") !=
+        result.ACIXSTORE
+      ) {
+        throw new Error(LoginError.Unknown);
+      }
+      var accessToken = await mintFirebaseToken(data);
+    } else {
+      // Exchange students don't have details page, so we just fill the data with blanks
+      const data = {
+        studentid: studentid,
+        name_zh: "交換生",
+        name_en: "Exchange Student",
+        department: "Have fun!",
+        grade: "9",
+        email: "-",
+      } as UserJWTDetails;
+      var accessToken = await mintFirebaseToken(data);
     }
-
-    console.log("Time taken", Date.now() - startTime);
-    startTime = Date.now();
-
-    const firstRow = form.querySelector("tr:nth-child(1)")!;
-    const secondRow = form.querySelector("tr:nth-child(2)")!;
-
-    const data = {
-      studentid:
-        firstRow.querySelector(".class3:nth-child(2)")?.textContent?.trim() ??
-        "",
-      name_zh:
-        firstRow.querySelector(".class3:nth-child(4)")?.textContent?.trim() ??
-        "",
-      name_en:
-        firstRow.querySelector(".class3:nth-child(6)")?.textContent?.trim() ??
-        "",
-      department:
-        secondRow.querySelector(".class3:nth-child(2)")?.textContent?.trim() ??
-        "",
-      grade:
-        secondRow.querySelector(".class3:nth-child(4)")?.textContent?.trim() ??
-        "",
-      email:
-        form.querySelector('input[name="email"]')?.getAttribute("value") ?? "",
-    } as UserJWTDetails;
-
-    if (
-      form.querySelector('input[name="ACIXSTORE"]')?.getAttribute("value") !=
-      result.ACIXSTORE
-    ) {
-      throw new Error(LoginError.Unknown);
-    }
-    const accessToken = await mintFirebaseToken(data);
 
     // Encrypt user password
     const encryptedPassword = await encrypt(password);
@@ -416,35 +435,55 @@ export const refreshUserSession = async (
 
 export const updateUserPassword = async (
   ACIXSTORE: string,
-  oldEncryptedPassword: string,
+  oldPassword: string,
   newPassword: string,
 ) => {
-  // Decrypt old password
-  const oldPassword = await decrypt(oldEncryptedPassword);
-  fetch("https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/PC/1/1.1/PC11002.php", {
-    headers: {
-      accept:
-        "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-      "accept-language": "en-US,en;q=0.9",
-      "cache-control": "max-age=0",
-      "content-type": "application/x-www-form-urlencoded",
-      "sec-ch-ua":
-        '"Not)A;Brand";v="99", "Microsoft Edge";v="127", "Chromium";v="127"',
-      "sec-ch-ua-mobile": "?0",
-      "sec-ch-ua-platform": '"Windows"',
-      "sec-fetch-dest": "frame",
-      "sec-fetch-mode": "navigate",
-      "sec-fetch-site": "same-origin",
-      "sec-fetch-user": "?1",
-      "upgrade-insecure-requests": "1",
-    },
-    body: `ACIXSTORE=${ACIXSTORE}&O_PASS=${encodeURIComponent(oldPassword)}&N_PASS=${encodeURIComponent(newPassword)}&N_PASS2=${encodeURIComponent(newPassword)}&choice=確定`,
-    method: "POST",
-    mode: "cors",
-    credentials: "include",
-  });
+  try {
+    // Decrypt old password
+    const res = await fetch(
+      "https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/PC/1/1.1/PC11002.php",
+      {
+        headers: {
+          accept:
+            "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+          "accept-language": "en-US,en;q=0.9",
+          "cache-control": "max-age=0",
+          "content-type": "application/x-www-form-urlencoded",
+          "sec-ch-ua":
+            '"Chromium";v="128", "Not;A=Brand";v="24", "Microsoft Edge";v="128"',
+          "sec-ch-ua-mobile": "?0",
+          "sec-ch-ua-platform": '"Windows"',
+          "sec-fetch-dest": "frame",
+          "sec-fetch-mode": "navigate",
+          "sec-fetch-site": "same-origin",
+          "sec-fetch-user": "?1",
+          "upgrade-insecure-requests": "1",
+        },
+        referrer:
+          "https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/PC/1/1.1/PC11001.php",
+        referrerPolicy: "strict-origin-when-cross-origin",
+        body: `ACIXSTORE=${ACIXSTORE}&O_PASS=${encodeURIComponent(oldPassword)}&N_PASS=${encodeURIComponent(newPassword)}&N_PASS2=${encodeURIComponent(newPassword)}&choice=確定`,
+        method: "POST",
+        mode: "cors",
+        credentials: "include",
+      },
+    );
 
-  // Encrypt new password
-  const newEncryptedPassword = await encrypt(newPassword);
-  return newEncryptedPassword;
+    if (!res) {
+      throw new Error("Sync Failed!");
+    }
+
+    // check the return html for the text alert('上次密碼修改時間是'.20240916 23:38:05.', 24小時內不能再次修改密碼!');
+    const text = await res.text();
+    if (text.includes("上次密碼修改時間是")) {
+      throw new Error("Password can only be changed once every 24 hours.");
+    }
+    return true;
+  } catch (e) {
+    if (e instanceof Error) {
+      return {
+        error: { message: e.message },
+      };
+    }
+  }
 };

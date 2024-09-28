@@ -30,6 +30,8 @@ import {
   ErrorComponent,
 } from "next/dist/client/components/error-boundary";
 import { useSettings } from "@/hooks/contexts/settings";
+import { useSwipeable } from "react-swipeable";
+import { semesterInfo } from "@/const/semester";
 
 const CalendarError: ErrorComponent = ({ error, reset }) => {
   return <div className="text-red-500">An error occurred: {error.message}</div>;
@@ -134,6 +136,15 @@ const Calendar = () => {
     }
   };
 
+  const handlers = useSwipeable({
+    onSwipedLeft: (eventData) => {
+      moveForward();
+    },
+    onSwipedRight: (eventData) => {
+      moveBackward();
+    },
+  });
+
   const syncTimetable = () => {
     // for each course, convert to timetable event
     const timetableCourses: CourseTimeslotData[][] = [];
@@ -214,7 +225,7 @@ const Calendar = () => {
             </TabsTrigger>
           </TabsList>
         </Tabs>
-        <div className="w-full h-[80dvh]">
+        <div className="w-full h-[80dvh]" {...handlers}>
           {displayMode == "week" && (
             <CalendarWeekContainer displayWeek={displayDates} />
           )}

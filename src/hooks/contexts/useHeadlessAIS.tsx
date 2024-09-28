@@ -33,17 +33,17 @@ const headlessAISContext = createContext<
     ACIXSTORE: undefined,
   },
   loading: true,
-  error: undefined,
   initializing: true,
   signIn: async () => false,
   signOut: async () => {},
   getACIXSTORE: async () => undefined,
+  isACIXSTOREValid: false,
   openChangePassword: false,
   setOpenChangePassword: () => {},
 });
 
-const ChangePasswordDialogDynamic = dynamic(
-  () => import("@/components/Forms/ChangePasswordDialog"),
+const RenewPasswordDialogDynamic = dynamic(
+  () => import("@/components/Forms/RenewPasswordDialog"),
   { ssr: false },
 );
 
@@ -54,7 +54,6 @@ const useHeadlessAISProvider = () => {
   );
   const [initializing, setInitializing] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<LoginError | undefined>(undefined);
   const dict = useDictionary();
   const [openChangePassword, setOpenChangePassword] = useState(false);
   const [_user, authloading, autherror] = useAuthState(auth);
@@ -112,7 +111,6 @@ const useHeadlessAISProvider = () => {
           user.user.getIdToken().then(serverSignIn),
         );
         setLoading(false);
-        setError(undefined);
         return true;
       })
       .catch((err) => {
@@ -123,7 +121,6 @@ const useHeadlessAISProvider = () => {
             "目前認證服务降级，試看再按多一次？",
         });
         setLoading(false);
-        setError(err);
         return false;
       });
   };
@@ -135,10 +132,6 @@ const useHeadlessAISProvider = () => {
    */
   const getACIXSTORE = async (force = false) => {
     if (!headlessAIS.enabled) return undefined;
-    if (error && !force) {
-      setLoading(false);
-      throw error;
-    }
     if (headlessAIS.lastUpdated + 15 * 60 * 1000 > Date.now() && !force) {
       setLoading(false);
       return headlessAIS.ACIXSTORE!;
@@ -171,7 +164,6 @@ const useHeadlessAISProvider = () => {
           user.user.getIdToken().then(serverSignIn),
         );
         setLoading(false);
-        setError(undefined);
         return res.ACIXSTORE;
       });
     }
@@ -197,7 +189,6 @@ const useHeadlessAISProvider = () => {
           user.user.getIdToken().then(serverSignIn),
         );
         setLoading(false);
-        setError(undefined);
         return res.ACIXSTORE;
       })
       .catch((err) => {
@@ -211,7 +202,6 @@ const useHeadlessAISProvider = () => {
             "目前認證服务降级，試看再按多一次？",
         });
         setLoading(false);
-        setError(err);
         throw err as LoginError;
       });
   };
@@ -230,14 +220,30 @@ const useHeadlessAISProvider = () => {
     enabled: headlessAIS.enabled,
   };
 
+  const [isACIXSTOREValid, setIsACIXSTOREValid] = useState(false);
+
+  // check every second
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (headlessAIS.enabled) {
+        setIsACIXSTOREValid(
+          headlessAIS.lastUpdated + 15 * 60 * 1000 > Date.now(),
+        );
+      } else {
+        setIsACIXSTOREValid(false);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [headlessAIS]);
+
   return {
     user,
     ais,
     loading,
-    error,
     signIn,
     signOut,
     getACIXSTORE,
+    isACIXSTOREValid,
     initializing,
     openChangePassword,
     setOpenChangePassword,
@@ -252,7 +258,7 @@ const HeadlessAISProvider: FC<PropsWithChildren> = ({ children }) => {
   return (
     <headlessAISContext.Provider value={headlessAIS}>
       {children}
-      <ChangePasswordDialogDynamic
+      <RenewPasswordDialogDynamic
         open={headlessAIS.openChangePassword}
         setOpen={headlessAIS.setOpenChangePassword}
       />
