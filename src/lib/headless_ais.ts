@@ -416,35 +416,55 @@ export const refreshUserSession = async (
 
 export const updateUserPassword = async (
   ACIXSTORE: string,
-  oldEncryptedPassword: string,
+  oldPassword: string,
   newPassword: string,
 ) => {
-  // Decrypt old password
-  const oldPassword = await decrypt(oldEncryptedPassword);
-  fetch("https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/PC/1/1.1/PC11002.php", {
-    headers: {
-      accept:
-        "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-      "accept-language": "en-US,en;q=0.9",
-      "cache-control": "max-age=0",
-      "content-type": "application/x-www-form-urlencoded",
-      "sec-ch-ua":
-        '"Not)A;Brand";v="99", "Microsoft Edge";v="127", "Chromium";v="127"',
-      "sec-ch-ua-mobile": "?0",
-      "sec-ch-ua-platform": '"Windows"',
-      "sec-fetch-dest": "frame",
-      "sec-fetch-mode": "navigate",
-      "sec-fetch-site": "same-origin",
-      "sec-fetch-user": "?1",
-      "upgrade-insecure-requests": "1",
-    },
-    body: `ACIXSTORE=${ACIXSTORE}&O_PASS=${encodeURIComponent(oldPassword)}&N_PASS=${encodeURIComponent(newPassword)}&N_PASS2=${encodeURIComponent(newPassword)}&choice=確定`,
-    method: "POST",
-    mode: "cors",
-    credentials: "include",
-  });
+  try {
+    // Decrypt old password
+    const res = await fetch(
+      "https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/PC/1/1.1/PC11002.php",
+      {
+        headers: {
+          accept:
+            "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+          "accept-language": "en-US,en;q=0.9",
+          "cache-control": "max-age=0",
+          "content-type": "application/x-www-form-urlencoded",
+          "sec-ch-ua":
+            '"Chromium";v="128", "Not;A=Brand";v="24", "Microsoft Edge";v="128"',
+          "sec-ch-ua-mobile": "?0",
+          "sec-ch-ua-platform": '"Windows"',
+          "sec-fetch-dest": "frame",
+          "sec-fetch-mode": "navigate",
+          "sec-fetch-site": "same-origin",
+          "sec-fetch-user": "?1",
+          "upgrade-insecure-requests": "1",
+        },
+        referrer:
+          "https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/PC/1/1.1/PC11001.php",
+        referrerPolicy: "strict-origin-when-cross-origin",
+        body: `ACIXSTORE=${ACIXSTORE}&O_PASS=${encodeURIComponent(oldPassword)}&N_PASS=${encodeURIComponent(newPassword)}&N_PASS2=${encodeURIComponent(newPassword)}&choice=確定`,
+        method: "POST",
+        mode: "cors",
+        credentials: "include",
+      },
+    );
 
-  // Encrypt new password
-  const newEncryptedPassword = await encrypt(newPassword);
-  return newEncryptedPassword;
+    if (!res) {
+      throw new Error("Sync Failed!");
+    }
+
+    // check the return html for the text alert('上次密碼修改時間是'.20240916 23:38:05.', 24小時內不能再次修改密碼!');
+    const text = await res.text();
+    if (text.includes("上次密碼修改時間是")) {
+      throw new Error("Password can only be changed once every 24 hours.");
+    }
+    return true;
+  } catch (e) {
+    if (e instanceof Error) {
+      return {
+        error: { message: e.message },
+      };
+    }
+  }
 };
