@@ -216,9 +216,14 @@ export const AddEventButton = ({
                     </PopoverContent>
                   </PopoverPortal>
                 </Popover>
-                <TimeSelect
-                  minuteStep={minuteStep}
-                  onDateChange={(d) => {
+                <Input
+                  type="time"
+                  onChange={(e) => {
+                    const timesplits = e.target.value.split(":");
+                    const d = set(field.value, {
+                      hours: parseInt(timesplits[0]),
+                      minutes: parseInt(timesplits[1]),
+                    });
                     const diff =
                       form.getValues("end").getTime() -
                       form.getValues("start").getTime();
@@ -231,7 +236,7 @@ export const AddEventButton = ({
                       form.trigger(["end"]);
                     }
                   }}
-                  date={field.value}
+                  value={format(field.value, "HH:mm")}
                 />
               </FormItem>
             )}
@@ -241,10 +246,10 @@ export const AddEventButton = ({
             name="end"
             render={({ field }) => (
               <FormItem>
-                <TimeSelect
-                  minuteStep={minuteStep}
-                  onDateChange={field.onChange}
-                  date={field.value}
+                <Input
+                  type="time"
+                  onChange={field.onChange}
+                  value={format(field.value, "HH:mm")}
                 />
                 <FormMessage />
               </FormItem>
