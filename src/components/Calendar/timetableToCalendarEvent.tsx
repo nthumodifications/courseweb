@@ -3,9 +3,11 @@ import { CourseTimeslotData } from "@/types/timetable";
 import { semesterInfo } from "@/const/semester";
 import { parseSlotTime, scheduleTimeSlots } from "@/const/timetable";
 import { CalendarEvent } from "./calendar.types";
+import { Language } from "@/types/settings";
 
 export const timetableToCalendarEvent = (
   timetable: CourseTimeslotData[],
+  language: Language,
 ): CalendarEvent[] => {
   return timetable.map((t) => {
     const semester = semesterInfo.find((s) => s.id == t.course.semester)!;
@@ -20,6 +22,8 @@ export const timetableToCalendarEvent = (
       minutes: endTime[1],
     });
 
+    const title = language == "en" ? t.course.name_en : t.course.name_zh;
+
     return {
       id:
         t.course.raw_id +
@@ -29,7 +33,7 @@ export const timetableToCalendarEvent = (
         t.startTime +
         "-" +
         t.endTime,
-      title: t.course.name_zh,
+      title: title,
       location: t.venue,
       allDay: false,
       start: startDate,

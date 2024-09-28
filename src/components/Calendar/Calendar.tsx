@@ -29,6 +29,7 @@ import {
   ErrorBoundary,
   ErrorComponent,
 } from "next/dist/client/components/error-boundary";
+import { useSettings } from "@/hooks/contexts/settings";
 import { useSwipeable } from "react-swipeable";
 import { semesterInfo } from "@/const/semester";
 
@@ -42,6 +43,7 @@ const Calendar = () => {
   const { events, addEvent, removeEvent, displayContainer, HOUR_HEIGHT } =
     useCalendar();
   const { courses, colorMap, getSemesterCourses } = useUserTimetable();
+  const { language } = useSettings();
 
   //week movers
   const moveBackward = () => {
@@ -153,7 +155,10 @@ const Calendar = () => {
       );
     });
     // flatten and add to events
-    const calendarEvents = timetableToCalendarEvent(timetableCourses.flat());
+    const calendarEvents = timetableToCalendarEvent(
+      timetableCourses.flat(),
+      language,
+    );
 
     calendarEvents.forEach((event) => {
       addEvent(event);

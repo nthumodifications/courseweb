@@ -59,7 +59,7 @@ const UpcomingEvents = () => {
         brightness > 186 ? 0.2 : 0.95,
       );
       return (
-        <EventPopover event={event} key={event.id}>
+        <EventPopover event={event} key={event.id + index}>
           <div
             className="self-stretch px-2 pt-2 pb-6 rounded-md flex-col justify-start items-start gap-2 flex"
             style={{ background: event.color, color: textColor }}
