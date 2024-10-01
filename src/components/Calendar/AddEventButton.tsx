@@ -220,6 +220,9 @@ export const AddEventButton = ({
                   type="time"
                   onChange={(e) => {
                     const timesplits = e.target.value.split(":");
+                    // ensure completed input before setting
+                    if (timesplits[0].length < 2 || timesplits[1].length < 2)
+                      return;
                     const d = set(field.value, {
                       hours: parseInt(timesplits[0]),
                       minutes: parseInt(timesplits[1]),
@@ -248,7 +251,17 @@ export const AddEventButton = ({
               <FormItem>
                 <Input
                   type="time"
-                  onChange={field.onChange}
+                  onChange={(v) => {
+                    const timesplits = v.target.value.split(":");
+                    // ensure completed input before setting
+                    if (timesplits[0].length < 2 || timesplits[1].length < 2)
+                      return;
+                    const d = set(field.value, {
+                      hours: parseInt(timesplits[0]),
+                      minutes: parseInt(timesplits[1]),
+                    });
+                    field.onChange(d);
+                  }}
                   value={format(field.value, "HH:mm")}
                 />
                 <FormMessage />
