@@ -269,15 +269,10 @@ export const useCalendarProvider = () => {
           break;
         case UpdateType.ALL:
           //just update the event
-          const newEvent4 = {
-            ...newEvent,
-            start: oldEvent.start,
-            end: oldEvent.end,
-          };
           await eventsCol!.findOne(newEvent.id).update({
             $set: {
-              ...serializeEvent(newEvent4),
-              actualEnd: getActualEndDate(newEvent4),
+              ...serializeEvent(newEvent),
+              actualEnd: getActualEndDate(newEvent),
             },
           });
           break;
