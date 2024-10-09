@@ -127,6 +127,7 @@
     "react-resizable-panels": "^2.0.11",
     "react-swipeable": "^7.0.1",
     "react-transition-group": "^4.4.5",
+    "react-turnstile": "^1.1.4",
     "recharts": "^2.12.7",
     "rxdb": "^15.11.1",
     "rxdb-hooks": "^5.0.2",

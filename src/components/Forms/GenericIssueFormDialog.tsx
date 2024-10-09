@@ -20,6 +20,7 @@ import { useQuery } from "@tanstack/react-query";
 import { listIssuesWithTag } from "@/lib/github";
 import { ScrollArea } from "../ui/scroll-area";
 import { event } from "@/lib/gtag";
+import Turnstile from "react-turnstile";
 
 const placeholderIssueDescription = `   **Describe the issue**
 A clear and concise description of what the issue is.
@@ -38,6 +39,7 @@ A clear and concise description of what you expected to happen.
 const GenericIssueForm = () => {
   const { pending } = useFormStatus();
   const [open, setOpen] = useState(false);
+  const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -49,6 +51,16 @@ const GenericIssueForm = () => {
   }, [open]);
 
   const action = async (form: FormData) => {
+    if (!token) {
+      toast({
+        title: "Error Occured",
+        description: "Please verify you're not a bot",
+      });
+      return;
+    }
+
+    form.append("token", token);
+
     const res = await genericIssueFormAction(form);
     if (res && "error" in res && res.error) {
       console.error(res.error.message);
@@ -128,6 +140,11 @@ const GenericIssueForm = () => {
               </p>
               <p className="text-xs">{"Markdown GFM enabled!"}</p>
             </div>
+            <Turnstile
+              sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
+              onVerify={(token) => setToken(token)}
+              size="flexible"
+            />
             <div className="flex flex-row gap-2 justify-end">
               <Button type="submit" disabled={pending}>
                 Submit
