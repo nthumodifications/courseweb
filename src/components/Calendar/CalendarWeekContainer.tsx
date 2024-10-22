@@ -109,39 +109,70 @@ export const CalendarWeekContainer = ({
           );
           return { ...event, textColor };
         });
-      return dayEvents.map((event, index) => (
-        <EventPopover key={index} event={event}>
-          <div
-            className="absolute left-0 w-full pr-0.5 "
-            style={{
-              top:
-                event.displayStart.getHours() * HOUR_HEIGHT +
-                (event.displayStart.getMinutes() * HOUR_HEIGHT) / 60,
-              height:
-                (event.displayEnd.getHours() - event.displayStart.getHours()) *
-                  HOUR_HEIGHT +
-                ((event.displayEnd.getMinutes() -
-                  event.displayStart.getMinutes()) *
-                  HOUR_HEIGHT) /
-                  60,
-            }}
-          >
+
+      // Group overlapping events
+      const groupedEvents: typeof dayEvents[] = [];
+      dayEvents.forEach((event) => {
+        let added = false;
+        for (const group of groupedEvents) {
+          if (
+            group.some(
+              (e) =>
+                (event.displayStart >= e.displayStart &&
+                  event.displayStart < e.displayEnd) ||
+                (event.displayEnd > e.displayStart &&
+                  event.displayEnd <= e.displayEnd) ||
+                (event.displayStart <= e.displayStart &&
+                  event.displayEnd >= e.displayEnd),
+            )
+          ) {
+            group.push(event);
+            added = true;
+            break;
+          }
+        }
+        if (!added) {
+          groupedEvents.push([event]);
+        }
+      });
+
+      return groupedEvents.map((group, groupIndex) =>
+        group.map((event, index) => (
+          <EventPopover key={index} event={event}>
             <div
-              className="overflow-hidden bg-nthu-500 rounded-md h-full p-1 flex flex-col gap-1 hover:shadow-md cursor-pointer transition-shadow select-none"
-              style={{ background: event.color, color: event.textColor }}
+              className="absolute left-0 w-full pr-0.5 "
+              style={{
+                top:
+                  event.displayStart.getHours() * HOUR_HEIGHT +
+                  (event.displayStart.getMinutes() * HOUR_HEIGHT) / 60,
+                height:
+                  (event.displayEnd.getHours() - event.displayStart.getHours()) *
+                    HOUR_HEIGHT +
+                  ((event.displayEnd.getMinutes() -
+                    event.displayStart.getMinutes()) *
+                    HOUR_HEIGHT) /
+                    60,
+                width: `calc(${100 / group.length}% - 2px)`,
+                left: `calc(${(100 / group.length) * index}% + 1px)`,
+              }}
             >
-              <div className="text-xs leading-none">{event.title}</div>
-              <div className="text-xs font-normal leading-none">
-                {format(event.displayStart, "HH:mm")} -{" "}
-                {format(event.displayEnd, "HH:mm")}
+              <div
+                className="overflow-hidden bg-nthu-500 rounded-md h-full p-1 flex flex-col gap-1 hover:shadow-md cursor-pointer transition-shadow select-none"
+                style={{ background: event.color, color: event.textColor }}
+              >
+                <div className="text-xs leading-none">{event.title}</div>
+                <div className="text-xs font-normal leading-none">
+                  {format(event.displayStart, "HH:mm")} -{" "}
+                  {format(event.displayEnd, "HH:mm")}
+                </div>
+                {event.location && (
+                  <div className="text-xs leading-none">{event.location}</div>
+                )}
               </div>
-              {event.location && (
-                <div className="text-xs leading-none">{event.location}</div>
-              )}
             </div>
-          </div>
-        </EventPopover>
-      ));
+          </EventPopover>
+        )),
+      );
     },
     [events, HOUR_HEIGHT],
   );
