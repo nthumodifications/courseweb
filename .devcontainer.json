@@ -1,0 +1,6 @@
+{
+  "tasks": {
+    "build": "npm run checkts",
+    "launch": "npm run dev-turbo"
+  }
+}

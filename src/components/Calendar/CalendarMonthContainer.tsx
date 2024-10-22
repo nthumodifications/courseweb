@@ -85,6 +85,32 @@ export const CalendarMonthContainer = ({
         return { ...event, textColor };
       });
 
+      // Group overlapping events
+      const groupedEvents: typeof dayEvents[] = [];
+      dayEvents.forEach((event) => {
+        let added = false;
+        for (const group of groupedEvents) {
+          if (
+            group.some(
+              (e) =>
+                (event.displayStart >= e.displayStart &&
+                  event.displayStart < e.displayEnd) ||
+                (event.displayEnd > e.displayStart &&
+                  event.displayEnd <= e.displayEnd) ||
+                (event.displayStart <= e.displayStart &&
+                  event.displayEnd >= e.displayEnd),
+            )
+          ) {
+            group.push(event);
+            added = true;
+            break;
+          }
+        }
+        if (!added) {
+          groupedEvents.push([event]);
+        }
+      });
+
       return (
         <div className="flex flex-col gap-0.5 mt-1" key={day.getTime()}>
           {Array(padding)
@@ -96,21 +122,29 @@ export const CalendarMonthContainer = ({
                 style={{ height: isScreenMD ? 20 : 16 }}
               ></div>
             ))}
-          {dayEvents.map((event, index) => (
-            <EventPopover key={index} event={event}>
-              <div
-                className="bg-nthu-500 rounded-md p-0.5 md:p-1 flex flex-row gap-1 items-center hover:shadow-md cursor-pointer transition-shadow select-none"
-                style={{ background: event.color, color: event.textColor }}
-              >
-                <div className="hidden md:inline text-[10px] font-normal leading-none">
-                  {format(event.displayStart, "HH:mm")}
+          {groupedEvents.map((group, groupIndex) =>
+            group.map((event, index) => (
+              <EventPopover key={index} event={event}>
+                <div
+                  className="bg-nthu-500 rounded-md p-0.5 md:p-1 flex flex-row gap-1 items-center hover:shadow-md cursor-pointer transition-shadow select-none"
+                  style={{
+                    background: event.color,
+                    color: event.textColor,
+                    height: isScreenMD ? 20 : 16,
+                    width: `calc(${100 / group.length}% - 2px)`,
+                    left: `calc(${(100 / group.length) * index}% + 1px)`,
+                  }}
+                >
+                  <div className="hidden md:inline text-[10px] font-normal leading-none">
+                    {format(event.displayStart, "HH:mm")}
+                  </div>
+                  <div className="text-xs leading-none whitespace-nowrap overflow-hidden">
+                    {event.title}
+                  </div>
                 </div>
-                <div className="text-xs leading-none whitespace-nowrap overflow-hidden">
-                  {event.title}
-                </div>
-              </div>
-            </EventPopover>
-          ))}
+              </EventPopover>
+            )),
+          )}
         </div>
       );
     },
