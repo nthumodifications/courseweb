@@ -6,14 +6,23 @@ labels: ""
 assignees: ""
 ---
 
-**Is your feature request related to a problem? Please describe.**
-A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+### 📌 Proposal Title
+*Concise, descriptive title for the proposal.*
 
-**Describe the solution you'd like**
-A clear and concise description of what you want to happen.
+### 🎯 Target Audience
+*Specify who this feature or improvement will primarily benefit (e.g., NTHU students, faculty, admin).*
 
-**Describe alternatives you've considered**
-A clear and concise description of any alternative solutions or features you've considered.
+### 💡 Idea / Problem Statement
+*Describe the core idea or problem this proposal addresses.*
 
-**Additional context**
-Add any other context or screenshots about the feature request here.
+### 🔍 Description & Implementation
+*Provide a brief explanation of the proposed solution or enhancement, covering both the intended functionality and any technical details, dependencies, or challenges anticipated during implementation.*
+
+### 📊 Supporting Diagrams / Documents (Optional)
+*Attach relevant diagrams, mockups, or links to documents that can help clarify the proposal.*
+
+### 📈 Expected Outcomes
+*Outline the positive impacts or metrics that can measure the success of this proposal.*
+
+### 🗂 References or Similar Proposals
+*List any similar existing features, proposals, or issues that this one relates to or builds upon.*
