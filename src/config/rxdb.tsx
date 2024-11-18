@@ -102,6 +102,83 @@ export type EventDocType = ExtractDocumentTypeFromTypedRxJsonSchema<
   typeof schemaTyped
 >;
 
+const foldersSchema = {
+  version: 0,
+  primaryKey: "id",
+  type: "object",
+  properties: {
+    id: {
+      type: "string",
+      maxLength: 100,
+    },
+    title: {
+      type: "string",
+    },
+    parent: {
+      type: ["string", "null"],
+    },
+    min: {
+      type: "number",
+    },
+    max: {
+      type: "number",
+    },
+    metric: {
+      type: "string",
+      enum: ["credits", "courses"],
+    },
+    requireChildValidation: {
+      type: "boolean",
+    },
+    titlePlacement: {
+      type: "string",
+    },
+  },
+  required: [
+    "id",
+    "title",
+    "parent",
+    "min",
+    "max",
+    "metric",
+    "requireChildValidation",
+    "titlePlacement",
+  ],
+} as const;
+
+const itemsSchema = {
+  version: 0,
+  primaryKey: "id",
+  type: "object",
+  properties: {
+    id: {
+      type: "string",
+      maxLength: 100,
+    },
+    title: {
+      type: "string",
+    },
+    parent: {
+      type: "string",
+    },
+    credits: {
+      type: "number",
+    },
+    type: {
+      type: "string",
+    },
+  },
+  required: ["id", "title", "parent", "credits", "type"],
+} as const;
+
+export type FolderDocType = ExtractDocumentTypeFromTypedRxJsonSchema<
+  typeof foldersSchema
+>;
+
+export type ItemDocType = ExtractDocumentTypeFromTypedRxJsonSchema<
+  typeof itemsSchema
+>;
+
 export const initializeRxDB = async () => {
   // create RxDB
   if (process.env.NODE_ENV === "development") {
@@ -124,9 +201,319 @@ export const initializeRxDB = async () => {
     events: {
       schema: eventsSchema,
     },
+    folders: {
+      schema: foldersSchema,
+    },
+    items: {
+      schema: itemsSchema,
+    },
   });
 
   return db;
+};
+
+export const loadDummyData = async ({
+  foldersCol,
+  itemsCol,
+}: {
+  foldersCol: any;
+  itemsCol: any;
+}) => {
+  const folders: FolderDocType[] = [
+    {
+      id: "root",
+      title: "電機資訊學院學士班 111學年度",
+      parent: null,
+      min: 128,
+      max: -1,
+      metric: "credits",
+      requireChildValidation: true,
+      titlePlacement: "top",
+    },
+    {
+      id: "school_required",
+      title: "校定必修",
+      parent: "root",
+      min: 30,
+      max: -1,
+      metric: "credits",
+      requireChildValidation: true,
+      titlePlacement: "left",
+    },
+    {
+      id: "chinese",
+      title: "大學中文",
+      parent: "school_required",
+      min: 2,
+      max: -1,
+      metric: "credits",
+      requireChildValidation: false,
+      titlePlacement: "left",
+    },
+    {
+      id: "english",
+      title: "英文領域",
+      parent: "school_required",
+      min: 8,
+      max: -1,
+      metric: "credits",
+      requireChildValidation: false,
+      titlePlacement: "left",
+    },
+    {
+      id: "general_education",
+      title: "通識課程",
+      parent: "school_required",
+      min: 20,
+      max: -1,
+      metric: "credits",
+      requireChildValidation: true,
+      titlePlacement: "left",
+    },
+    {
+      id: "core_courses",
+      title: "核心必修",
+      parent: "general_education",
+      min: 4,
+      max: -1,
+      metric: "courses",
+      requireChildValidation: false,
+      titlePlacement: "left",
+    },
+    {
+      id: "elective_courses",
+      title: "選修科目",
+      parent: "general_education",
+      min: 8,
+      max: 12,
+      metric: "credits",
+      requireChildValidation: false,
+      titlePlacement: "left",
+    },
+    {
+      id: "physical_education",
+      title: "體育",
+      parent: "school_required",
+      min: 0,
+      max: -1,
+      metric: "credits",
+      requireChildValidation: false,
+      titlePlacement: "left",
+    },
+    {
+      id: "service_learning",
+      title: "服務學習",
+      parent: "school_required",
+      min: 0,
+      max: -1,
+      metric: "credits",
+      requireChildValidation: false,
+      titlePlacement: "left",
+    },
+    {
+      id: "conduct",
+      title: "操行",
+      parent: "school_required",
+      min: 0,
+      max: -1,
+      metric: "credits",
+      requireChildValidation: false,
+      titlePlacement: "left",
+    },
+    {
+      id: "department_required",
+      title: "班定必修",
+      parent: "root",
+      min: 43,
+      max: 44,
+      metric: "credits",
+      requireChildValidation: true,
+      titlePlacement: "left",
+    },
+    {
+      id: "calculus",
+      title: "微積分一、微積分二",
+      parent: "department_required",
+      min: 8,
+      max: -1,
+      metric: "credits",
+      requireChildValidation: false,
+      titlePlacement: "left",
+    },
+    {
+      id: "physics",
+      title: "普通物理一、普通物理二",
+      parent: "department_required",
+      min: 6,
+      max: -1,
+      metric: "credits",
+      requireChildValidation: false,
+      titlePlacement: "left",
+    },
+    {
+      id: "physics_lab",
+      title: "普通物理實驗一",
+      parent: "department_required",
+      min: 1,
+      max: -1,
+      metric: "credits",
+      requireChildValidation: false,
+      titlePlacement: "left",
+    },
+    {
+      id: "programming",
+      title: "計算機程式設計",
+      parent: "department_required",
+      min: 3,
+      max: -1,
+      metric: "credits",
+      requireChildValidation: false,
+      titlePlacement: "left",
+    },
+    {
+      id: "logic_design",
+      title: "邏輯設計",
+      parent: "department_required",
+      min: 3,
+      max: -1,
+      metric: "credits",
+      requireChildValidation: false,
+      titlePlacement: "left",
+    },
+    {
+      id: "discrete_math",
+      title: "離散數學",
+      parent: "department_required",
+      min: 3,
+      max: -1,
+      metric: "credits",
+      requireChildValidation: false,
+      titlePlacement: "left",
+    },
+    {
+      id: "differential_eq",
+      title: "常微分方程",
+      parent: "department_required",
+      min: 3,
+      max: -1,
+      metric: "credits",
+      requireChildValidation: false,
+      titlePlacement: "left",
+    },
+    {
+      id: "linear_algebra",
+      title: "線性代數",
+      parent: "department_required",
+      min: 3,
+      max: -1,
+      metric: "credits",
+      requireChildValidation: false,
+      titlePlacement: "left",
+    },
+    {
+      id: "probability",
+      title: "機率",
+      parent: "department_required",
+      min: 3,
+      max: -1,
+      metric: "credits",
+      requireChildValidation: false,
+      titlePlacement: "left",
+    },
+    {
+      id: "signals_systems",
+      title: "訊號與系統",
+      parent: "department_required",
+      min: 3,
+      max: -1,
+      metric: "credits",
+      requireChildValidation: false,
+      titlePlacement: "left",
+    },
+    {
+      id: "project_one",
+      title: "實作專題一或系統整合實作一",
+      parent: "department_required",
+      min: 1,
+      max: 2,
+      metric: "credits",
+      requireChildValidation: false,
+      titlePlacement: "left",
+    },
+    {
+      id: "project_two",
+      title: "實作專題二或系統整合實作二",
+      parent: "department_required",
+      min: 2,
+      max: -1,
+      metric: "credits",
+      requireChildValidation: false,
+      titlePlacement: "left",
+    },
+    {
+      id: "lab_courses",
+      title: "實驗",
+      parent: "department_required",
+      min: 4,
+      max: -1,
+      metric: "credits",
+      requireChildValidation: false,
+      titlePlacement: "left",
+    },
+    {
+      id: "core_electives",
+      title: "核心選修",
+      parent: "root",
+      min: 15,
+      max: -1,
+      metric: "credits",
+      requireChildValidation: true,
+      titlePlacement: "left",
+    },
+    {
+      id: "professional_electives",
+      title: "專業選修",
+      parent: "root",
+      min: 27,
+      max: -1,
+      metric: "credits",
+      requireChildValidation: true,
+      titlePlacement: "left",
+    },
+    {
+      id: "second_major",
+      title: "他系第二專長",
+      parent: "root",
+      min: 26,
+      max: 33,
+      metric: "credits",
+      requireChildValidation: true,
+      titlePlacement: "left",
+    },
+    {
+      id: "other_electives",
+      title: "其餘選修",
+      parent: "root",
+      min: 6,
+      max: 14,
+      metric: "credits",
+      requireChildValidation: true,
+      titlePlacement: "left",
+    },
+  ];
+
+  const items: ItemDocType[] = [
+    {
+      id: "11310ABCD12340",
+      title: "CS 2026",
+      parent: "other_electives",
+      credits: 12,
+      type: "course",
+    },
+  ];
+
+  await foldersCol.bulkInsert(folders);
+  await itemsCol.bulkInsert(items);
 };
 
 export const RxDBProvider: FC<PropsWithChildren> = ({ children }) => {
