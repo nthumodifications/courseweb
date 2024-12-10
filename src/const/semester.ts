@@ -78,7 +78,7 @@ export const semesterInfo = [
   },
   {
     id: "11320",
-    year: 2025,
+    year: 2024,
     semester: 2,
     begins: new Date(2025, 2 - 1, 17),
     ends: new Date(2025, 6 - 1, 8),
