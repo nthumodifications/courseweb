@@ -6,7 +6,7 @@ const job = schedule.scheduleJob("0 0 * * *", async () => {
   try {
     console.log("syncing courses begin uwu");
     const res = await fetch(
-      "http://localhost:8080/api/scrape-archived-courses?semester=11310",
+      "http://localhost:8080/api/scrape-archived-courses?semester=11320",
       {
         method: "GET",
         headers: {
@@ -16,7 +16,7 @@ const job = schedule.scheduleJob("0 0 * * *", async () => {
       },
     );
     const res2 = await fetch(
-      "http://localhost:8080/api/scrape-syllabus?semester=11310",
+      "http://localhost:8080/api/scrape-syllabus?semester=11320",
       {
         method: "GET",
         headers: {
@@ -26,7 +26,7 @@ const job = schedule.scheduleJob("0 0 * * *", async () => {
       },
     );
     const res3 = await fetch(
-      "http://localhost:8080/api/sync-algolia?semester=11310",
+      "http://localhost:8080/api/sync-algolia?semester=11320",
       {
         method: "GET",
         headers: {
