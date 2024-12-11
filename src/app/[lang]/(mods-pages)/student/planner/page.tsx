@@ -10,6 +10,14 @@ import { useEffect, useMemo, useState } from "react";
 import { CSS } from "@dnd-kit/utilities";
 import { useRxCollection, useRxQuery } from "rxdb-hooks";
 import { FolderDocType, ItemDocType, loadDummyData } from "@/config/rxdb";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
+import { Button } from "@/components/ui/button";
+import useUserTimetable from "@/hooks/contexts/useUserTimetable";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export function Droppable(props: { id: string; children: React.ReactNode }) {
   const { isOver, setNodeRef } = useDroppable({
@@ -59,6 +67,16 @@ const PlannerFolder = ({ folder }: { folder: ProcessedFolder }) => {
       <div className="flex flex-col p-1">
         <div className="text-sm">{folder.title}</div>
         <div className="text-xs">
+          {/* green color circle if fullfilled, else red */}
+          <div
+            className={cn(
+              "w-2 h-2 rounded-full inline-block",
+              folder.credits >= folder.min &&
+                (folder.credits <= folder.max || folder.max == -1)
+                ? "bg-green-500"
+                : "bg-red-500",
+            )}
+          ></div>{" "}
           {folder.credits} / {folder.min} -{" "}
           {folder.max == -1 ? "∞" : folder.max}
         </div>
@@ -97,10 +115,14 @@ const GraduationPlanner = () => {
     itemsCol?.find(),
   );
 
-  const folders = useMemo(() => foldersDocs.map((doc) => doc.toJSON()), [
-    foldersDocs,
-  ]);
-  const items = useMemo(() => itemsDocs.map((doc) => doc.toJSON()), [itemsDocs]);
+  const folders = useMemo(
+    () => foldersDocs.map((doc) => doc.toJSON()),
+    [foldersDocs],
+  );
+  const items = useMemo(
+    () => itemsDocs.map((doc) => doc.toJSON()),
+    [itemsDocs],
+  );
 
   const [loading, setLoading] = useState(true);
 
@@ -169,27 +191,63 @@ const GraduationPlanner = () => {
   };
 
   const folderTree = useMemo(() => buildFolderTree(), [folders, items]);
-  console.log(folderTree)
 
   function handleDragEnd(event: DragEndEvent) {
     // move item to folder
     console.log(event);
-    const activeId = event.active.id;
-    const overId = event.over?.id;
-    // update activeId's parent to overId
+    const activeId = event.active.id as string;
+    const overId = event.over?.id ?? null;
+    // set item's parent to overId
+    itemsCol?.findOne(activeId).update({ $set: { parent: overId } });
   }
+
+  const { getSemesterCourses, courses } = useUserTimetable();
+
+  const importItems = async () => {
+    // get user courses and import them as items
+    for (const sem in courses) {
+      const semCourses = getSemesterCourses(sem);
+      for (const course of semCourses) {
+        await itemsCol?.insert({
+          id: course.raw_id,
+          parent: null,
+          title: course.name_zh,
+          credits: course.credits,
+        });
+      }
+    }
+  };
 
   if (loading) {
     return <div>Loading...</div>;
   }
-
   return (
     <DndContext onDragEnd={handleDragEnd}>
-      <div className="w-full">
-        {folderTree.map((folder) => (
-          <PlannerFolder key={folder.id} folder={folder} />
-        ))}
-      </div>
+      <ResizablePanelGroup direction="horizontal">
+        <ResizablePanel>
+          <ScrollArea className="h-full">
+            {folderTree.map((folder) => (
+              <PlannerFolder key={folder.id} folder={folder} />
+            ))}
+          </ScrollArea>
+        </ResizablePanel>
+        <ResizableHandle />
+        <ResizablePanel>
+          <div className="w-full h-full flex flex-col">
+            <h3>Items</h3>
+            <Button onClick={() => importItems()}>Import items</Button>
+            <ScrollArea className="h-full">
+              <div className="flex flex-col gap-3">
+                {items
+                  .filter((item) => item.parent == null)
+                  .map((item) => (
+                    <PlannerItem key={item.id} item={item} />
+                  ))}
+              </div>
+            </ScrollArea>
+          </div>
+        </ResizablePanel>
+      </ResizablePanelGroup>
     </DndContext>
   );
 };

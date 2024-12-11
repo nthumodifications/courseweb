@@ -3,6 +3,7 @@ import {
   ExtractDocumentTypeFromTypedRxJsonSchema,
   addRxPlugin,
   createRxDatabase,
+  removeRxDatabase,
   toTypedRxJsonSchema,
 } from "rxdb";
 import { getRxStorageDexie } from "rxdb/plugins/storage-dexie";
@@ -159,16 +160,13 @@ const itemsSchema = {
       type: "string",
     },
     parent: {
-      type: "string",
+      type: ["string", "null"],
     },
     credits: {
       type: "number",
     },
-    type: {
-      type: "string",
-    },
   },
-  required: ["id", "title", "parent", "credits", "type"],
+  required: ["id", "title", "parent", "credits"],
 } as const;
 
 export type FolderDocType = ExtractDocumentTypeFromTypedRxJsonSchema<
@@ -191,6 +189,7 @@ export const initializeRxDB = async () => {
   addRxPlugin(RxDBQueryBuilderPlugin);
   addRxPlugin(RxDBUpdatePlugin);
 
+  // removeRxDatabase('nthumods-calendar', getRxStorageDexie());
   const db = await createRxDatabase({
     name: "nthumods-calendar",
     storage: getRxStorageDexie(),
@@ -506,9 +505,8 @@ export const loadDummyData = async ({
     {
       id: "11310ABCD12340",
       title: "CS 2026",
-      parent: "other_electives",
+      parent: null,
       credits: 12,
-      type: "course",
     },
   ];
 
