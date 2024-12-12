@@ -1,4 +1,5 @@
 "use client";
+import { useSettings } from "@/hooks/contexts/settings";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -47,8 +48,10 @@ const DeptRankChart = dynamic(
 
 const SemesterGradeCard = ({
   semester,
+  language,
 }: {
   semester: GradeObject["ranking"]["data"][number];
+  language: string;
 }) => {
   return (
     <Dialog>
@@ -230,6 +233,8 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
 
   const [tab, setTab] = useState<"courses" | "semester">("courses");
 
+  const { language } = useSettings();
+
   return (
     <div className="px-6 pb-12 flex-col justify-start items-start gap-12 inline-flex w-full overflow-x-hidden">
       <div className="w-full pt-8 flex-col justify-start items-start gap-4 inline-flex">
@@ -325,7 +330,11 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
                                 <span className="text-slate-400 dark:text-slate-600 text-xs">
                                   {grade.course_id}
                                 </span>
-                                <span>{grade.name_zh}</span>
+                                <span>
+                                  {language == "en"
+                                    ? grade.name_en
+                                    : grade.name_zh}
+                                </span>
                               </div>
                               {grade.ge_description && (
                                 <div>
@@ -417,7 +426,10 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
                     {semester.t_score_dept_rank}
                   </TableCell>
                   <TableCell className="md:hidden table-cell">
-                    <SemesterGradeCard semester={semester} />
+                    <SemesterGradeCard
+                      semester={semester}
+                      language={language}
+                    />
                   </TableCell>
                 </TableRow>
               ))}
