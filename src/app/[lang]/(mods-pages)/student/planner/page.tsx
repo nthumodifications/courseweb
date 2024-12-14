@@ -1,13 +1,6 @@
 "use client";
-import { cn } from "@/lib/utils";
-import {
-  DndContext,
-  DragEndEvent,
-  useDraggable,
-  useDroppable,
-} from "@dnd-kit/core";
+import { DndContext, DragEndEvent } from "@dnd-kit/core";
 import { useEffect, useMemo, useState } from "react";
-import { CSS } from "@dnd-kit/utilities";
 import { useRxCollection, useRxQuery } from "rxdb-hooks";
 import { FolderDocType, ItemDocType, loadDummyData } from "@/config/rxdb";
 import {
@@ -18,101 +11,19 @@ import {
 import { Button } from "@/components/ui/button";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
-export function Droppable(props: { id: string; children: React.ReactNode }) {
-  const { isOver, setNodeRef } = useDroppable({
-    id: props.id,
-  });
-  const style = {
-    backgroundColor: isOver ? "lightblue" : "transparent",
-  };
-
-  return (
-    <div
-      className="flex flex-col gap-3 h-full w-full"
-      ref={setNodeRef}
-      style={style}
-    >
-      {props.children}
-    </div>
-  );
-}
-
-const PlannerItem = ({ item }: { item: ItemDocType }) => {
-  const { attributes, listeners, setNodeRef, transform } = useDraggable({
-    id: item.id,
-    data: item,
-  });
-  const style = {
-    // Outputs `translate3d(x, y, 0)`
-    transform: CSS.Translate.toString(transform),
-  };
-  return (
-    <div ref={setNodeRef} style={style} {...listeners} {...attributes}>
-      {item.title}
-    </div>
-  );
-};
-
-const PlannerFolder = ({ folder }: { folder: ProcessedFolder }) => {
-  return (
-    <div
-      className={cn(
-        "flex w-full border border-border divide-border",
-        folder.titlePlacement == "top"
-          ? "flex-col divide-y"
-          : "flex-row divide-x",
-      )}
-    >
-      <div className="flex flex-col p-1">
-        <div className="text-sm">{folder.title}</div>
-        <div className="text-xs">
-          {/* green color circle if fullfilled, else red */}
-          <div
-            className={cn(
-              "w-2 h-2 rounded-full inline-block",
-              folder.credits >= folder.min &&
-                (folder.credits <= folder.max || folder.max == -1)
-                ? "bg-green-500"
-                : "bg-red-500",
-            )}
-          ></div>{" "}
-          {folder.credits} / {folder.min} -{" "}
-          {folder.max == -1 ? "∞" : folder.max}
-        </div>
-      </div>
-      <div className="flex flex-col flex-1">
-        {folder.children?.map((child) => (
-          <PlannerFolder key={child.id} folder={child} />
-        ))}
-        {!folder.children && (
-          <Droppable id={folder.id}>
-            {folder.items?.map((item) => (
-              <PlannerItem key={item.id} item={item} />
-            ))}
-          </Droppable>
-        )}
-      </div>
-    </div>
-  );
-};
-
-type ProcessedFolder = FolderDocType & {
-  credits: number;
-  courses: number;
-  children?: ProcessedFolder[];
-  items?: ItemDocType[];
-};
+import { PlannerFolder } from "./PlannerFolder";
+import PlannerItem from "./PlannerItem";
+import { ProcessedFolder } from "./ProcessedFolder";
 
 const GraduationPlanner = () => {
   const foldersCol = useRxCollection<FolderDocType>("folders");
   const itemsCol = useRxCollection<ItemDocType>("items");
 
   const { result: foldersDocs = [], isFetching: foldersLoading } = useRxQuery(
-    foldersCol?.find(),
+    foldersCol?.find().sort("order"),
   );
   const { result: itemsDocs = [], isFetching: itemsLoading } = useRxQuery(
-    itemsCol?.find(),
+    itemsCol?.find().sort("order"),
   );
 
   const folders = useMemo(
@@ -205,6 +116,7 @@ const GraduationPlanner = () => {
 
   const importItems = async () => {
     // get user courses and import them as items
+    let counter = 0;
     for (const sem in courses) {
       const semCourses = getSemesterCourses(sem);
       for (const course of semCourses) {
@@ -213,9 +125,16 @@ const GraduationPlanner = () => {
           parent: null,
           title: course.name_zh,
           credits: course.credits,
+          order: counter++,
         });
       }
     }
+  };
+
+  const clearItems = async () => {
+    // remove all cols and items
+    await foldersCol?.find().remove();
+    await itemsCol?.find().remove();
   };
 
   if (loading) {
@@ -235,6 +154,9 @@ const GraduationPlanner = () => {
         <ResizablePanel>
           <div className="w-full h-full flex flex-col">
             <h3>Items</h3>
+            <Button variant="destructive" onClick={() => clearItems()}>
+              Clear DB
+            </Button>
             <Button onClick={() => importItems()}>Import items</Button>
             <ScrollArea className="h-full">
               <div className="flex flex-col gap-3">

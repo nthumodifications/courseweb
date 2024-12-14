@@ -104,7 +104,7 @@ export type EventDocType = ExtractDocumentTypeFromTypedRxJsonSchema<
 >;
 
 const foldersSchema = {
-  version: 0,
+  version: 1,
   primaryKey: "id",
   type: "object",
   properties: {
@@ -134,6 +134,9 @@ const foldersSchema = {
     titlePlacement: {
       type: "string",
     },
+    order: {
+      type: "number",
+    },
   },
   required: [
     "id",
@@ -144,11 +147,12 @@ const foldersSchema = {
     "metric",
     "requireChildValidation",
     "titlePlacement",
+    "order",
   ],
 } as const;
 
 const itemsSchema = {
-  version: 0,
+  version: 1,
   primaryKey: "id",
   type: "object",
   properties: {
@@ -165,8 +169,11 @@ const itemsSchema = {
     credits: {
       type: "number",
     },
+    order: {
+      type: "number",
+    },
   },
-  required: ["id", "title", "parent", "credits"],
+  required: ["id", "title", "parent", "credits", "order"],
 } as const;
 
 export type FolderDocType = ExtractDocumentTypeFromTypedRxJsonSchema<
@@ -202,9 +209,21 @@ export const initializeRxDB = async () => {
     },
     folders: {
       schema: foldersSchema,
+      migrationStrategies: {
+        1: (oldDoc: any) => {
+          oldDoc.order = 0;
+          return oldDoc;
+        },
+      },
     },
     items: {
       schema: itemsSchema,
+      migrationStrategies: {
+        1: (oldDoc: any) => {
+          oldDoc.order = 0;
+          return oldDoc;
+        },
+      },
     },
   });
 
@@ -228,6 +247,7 @@ export const loadDummyData = async ({
       metric: "credits",
       requireChildValidation: true,
       titlePlacement: "top",
+      order: 0,
     },
     {
       id: "school_required",
@@ -238,6 +258,7 @@ export const loadDummyData = async ({
       metric: "credits",
       requireChildValidation: true,
       titlePlacement: "left",
+      order: 1,
     },
     {
       id: "chinese",
@@ -248,6 +269,7 @@ export const loadDummyData = async ({
       metric: "credits",
       requireChildValidation: false,
       titlePlacement: "left",
+      order: 2,
     },
     {
       id: "english",
@@ -258,6 +280,7 @@ export const loadDummyData = async ({
       metric: "credits",
       requireChildValidation: false,
       titlePlacement: "left",
+      order: 3,
     },
     {
       id: "general_education",
@@ -268,6 +291,7 @@ export const loadDummyData = async ({
       metric: "credits",
       requireChildValidation: true,
       titlePlacement: "left",
+      order: 4,
     },
     {
       id: "core_courses",
@@ -278,6 +302,7 @@ export const loadDummyData = async ({
       metric: "courses",
       requireChildValidation: false,
       titlePlacement: "left",
+      order: 5,
     },
     {
       id: "elective_courses",
@@ -288,6 +313,7 @@ export const loadDummyData = async ({
       metric: "credits",
       requireChildValidation: false,
       titlePlacement: "left",
+      order: 6,
     },
     {
       id: "physical_education",
@@ -298,6 +324,7 @@ export const loadDummyData = async ({
       metric: "credits",
       requireChildValidation: false,
       titlePlacement: "left",
+      order: 7,
     },
     {
       id: "service_learning",
@@ -308,6 +335,7 @@ export const loadDummyData = async ({
       metric: "credits",
       requireChildValidation: false,
       titlePlacement: "left",
+      order: 8,
     },
     {
       id: "conduct",
@@ -318,6 +346,7 @@ export const loadDummyData = async ({
       metric: "credits",
       requireChildValidation: false,
       titlePlacement: "left",
+      order: 9,
     },
     {
       id: "department_required",
@@ -328,6 +357,7 @@ export const loadDummyData = async ({
       metric: "credits",
       requireChildValidation: true,
       titlePlacement: "left",
+      order: 10,
     },
     {
       id: "calculus",
@@ -338,6 +368,7 @@ export const loadDummyData = async ({
       metric: "credits",
       requireChildValidation: false,
       titlePlacement: "left",
+      order: 11,
     },
     {
       id: "physics",
@@ -348,6 +379,7 @@ export const loadDummyData = async ({
       metric: "credits",
       requireChildValidation: false,
       titlePlacement: "left",
+      order: 12,
     },
     {
       id: "physics_lab",
@@ -358,6 +390,7 @@ export const loadDummyData = async ({
       metric: "credits",
       requireChildValidation: false,
       titlePlacement: "left",
+      order: 13,
     },
     {
       id: "programming",
@@ -368,6 +401,7 @@ export const loadDummyData = async ({
       metric: "credits",
       requireChildValidation: false,
       titlePlacement: "left",
+      order: 14,
     },
     {
       id: "logic_design",
@@ -378,6 +412,7 @@ export const loadDummyData = async ({
       metric: "credits",
       requireChildValidation: false,
       titlePlacement: "left",
+      order: 15,
     },
     {
       id: "discrete_math",
@@ -388,6 +423,7 @@ export const loadDummyData = async ({
       metric: "credits",
       requireChildValidation: false,
       titlePlacement: "left",
+      order: 16,
     },
     {
       id: "differential_eq",
@@ -398,6 +434,7 @@ export const loadDummyData = async ({
       metric: "credits",
       requireChildValidation: false,
       titlePlacement: "left",
+      order: 17,
     },
     {
       id: "linear_algebra",
@@ -408,6 +445,7 @@ export const loadDummyData = async ({
       metric: "credits",
       requireChildValidation: false,
       titlePlacement: "left",
+      order: 18,
     },
     {
       id: "probability",
@@ -418,6 +456,7 @@ export const loadDummyData = async ({
       metric: "credits",
       requireChildValidation: false,
       titlePlacement: "left",
+      order: 19,
     },
     {
       id: "signals_systems",
@@ -428,6 +467,7 @@ export const loadDummyData = async ({
       metric: "credits",
       requireChildValidation: false,
       titlePlacement: "left",
+      order: 20,
     },
     {
       id: "project_one",
@@ -438,6 +478,7 @@ export const loadDummyData = async ({
       metric: "credits",
       requireChildValidation: false,
       titlePlacement: "left",
+      order: 21,
     },
     {
       id: "project_two",
@@ -448,6 +489,7 @@ export const loadDummyData = async ({
       metric: "credits",
       requireChildValidation: false,
       titlePlacement: "left",
+      order: 22,
     },
     {
       id: "lab_courses",
@@ -458,6 +500,7 @@ export const loadDummyData = async ({
       metric: "credits",
       requireChildValidation: false,
       titlePlacement: "left",
+      order: 23,
     },
     {
       id: "core_electives",
@@ -468,6 +511,7 @@ export const loadDummyData = async ({
       metric: "credits",
       requireChildValidation: true,
       titlePlacement: "left",
+      order: 24,
     },
     {
       id: "professional_electives",
@@ -478,6 +522,7 @@ export const loadDummyData = async ({
       metric: "credits",
       requireChildValidation: true,
       titlePlacement: "left",
+      order: 25,
     },
     {
       id: "second_major",
@@ -488,6 +533,7 @@ export const loadDummyData = async ({
       metric: "credits",
       requireChildValidation: true,
       titlePlacement: "left",
+      order: 26,
     },
     {
       id: "other_electives",
@@ -498,20 +544,11 @@ export const loadDummyData = async ({
       metric: "credits",
       requireChildValidation: true,
       titlePlacement: "left",
-    },
-  ];
-
-  const items: ItemDocType[] = [
-    {
-      id: "11310ABCD12340",
-      title: "CS 2026",
-      parent: null,
-      credits: 12,
+      order: 27,
     },
   ];
 
   await foldersCol.bulkInsert(folders);
-  await itemsCol.bulkInsert(items);
 };
 
 export const RxDBProvider: FC<PropsWithChildren> = ({ children }) => {
