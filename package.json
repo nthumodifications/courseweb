@@ -19,7 +19,8 @@
     "sync:ios": "npx cap sync ios",
     "prepare": "husky",
     "format:all": "prettier --write .",
-    "dict": "node  --import=tsimp/import ./scripts/dict.ts"
+    "dict": "node  --import=tsimp/import ./scripts/dict.ts",
+    "runner:sync-courses": "node  --import=tsimp/import runners/sync-courses.ts"
   },
   "dependencies": {
     "@capacitor-community/media": "6.0.0",
