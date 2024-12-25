@@ -2,7 +2,7 @@
   try {
     console.log("syncing courses begin uwu");
     const res = await fetch(
-      "http://localhost:8080/api/scrape-archived-courses?semester=11320",
+      "http://localhost:3000/api/scrape-archived-courses?semester=11320",
       {
         method: "GET",
         headers: {
@@ -12,7 +12,7 @@
       },
     );
     const res2 = await fetch(
-      "http://localhost:8080/api/scrape-syllabus?semester=11320",
+      "http://localhost:3000/api/scrape-syllabus?semester=11320",
       {
         method: "GET",
         headers: {
@@ -22,7 +22,7 @@
       },
     );
     const res3 = await fetch(
-      "http://localhost:8080/api/sync-algolia?semester=11320",
+      "http://localhost:3000/api/sync-algolia?semester=11320",
       {
         method: "GET",
         headers: {
