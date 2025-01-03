@@ -1,4 +1,6 @@
 "use client";
+import { useSettings } from "@/hooks/contexts/settings";
+import useDictionary from "@/dictionaries/useDictionary";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -32,6 +34,7 @@ import {
 } from "@/components/ui/dialog";
 import { ExternalLink } from "lucide-react";
 import dynamic from "next/dynamic";
+import { distinct } from "rxjs";
 
 const GPAChart = dynamic(async () => (await import("./GPAChart")).GPAChart, {
   ssr: false,
@@ -47,9 +50,12 @@ const DeptRankChart = dynamic(
 
 const SemesterGradeCard = ({
   semester,
+  language,
 }: {
   semester: GradeObject["ranking"]["data"][number];
+  language: string;
 }) => {
+  const dict = useDictionary();
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -71,13 +77,13 @@ const SemesterGradeCard = ({
                 <TableCell className="text-right">{semester.gpa}</TableCell>
               </TableRow>
               <TableRow>
-                <TableCell>T 分數成績</TableCell>
+                <TableCell>{dict.grade.t_score}</TableCell>
                 <TableCell className="text-right">
                   {semester.t_score_avg}
                 </TableCell>
               </TableRow>
               <TableRow>
-                <TableCell>修課相對成績平均</TableCell>
+                <TableCell>{dict.grade.relative_avg}</TableCell>
                 <TableCell className="text-right">
                   {semester.relative_avg}
                 </TableCell>
@@ -90,25 +96,25 @@ const SemesterGradeCard = ({
             </TableHeader>
             <TableBody>
               <TableRow>
-                <TableCell>修習/實得學分</TableCell>
+                <TableCell>{dict.grade.taken_actual_credits}</TableCell>
                 <TableCell className="text-right">
                   {semester.credits}/{semester.actual_credits}
                 </TableCell>
               </TableRow>
               <TableRow>
-                <TableCell>修課數</TableCell>
+                <TableCell>{dict.grade.num_of_courses}</TableCell>
                 <TableCell className="text-right">
                   {semester.num_of_courses}
                 </TableCell>
               </TableRow>
               <TableRow>
-                <TableCell>暑修學分</TableCell>
+                <TableCell>{dict.grade.summer_credits}</TableCell>
                 <TableCell className="text-right">
                   {semester.summer_credits}
                 </TableCell>
               </TableRow>
               <TableRow>
-                <TableCell>抵免學分</TableCell>
+                <TableCell>{dict.grade.transfer_credits}</TableCell>
                 <TableCell className="text-right">
                   {semester.transfer_credits}
                 </TableCell>
@@ -121,25 +127,25 @@ const SemesterGradeCard = ({
             </TableHeader>
             <TableBody>
               <TableRow>
-                <TableCell>班排名</TableCell>
+                <TableCell>{dict.grade.class_rank}</TableCell>
                 <TableCell className="text-right">
                   {semester.letter_class_rank}
                 </TableCell>
               </TableRow>
               <TableRow>
-                <TableCell>系排名</TableCell>
+                <TableCell>{dict.grade.dept_rank}</TableCell>
                 <TableCell className="text-right">
                   {semester.letter_dept_rank}
                 </TableCell>
               </TableRow>
               <TableRow>
-                <TableCell>T分數班排名</TableCell>
+                <TableCell>{dict.grade.t_score_class_rank}</TableCell>
                 <TableCell className="text-right">
                   {semester.t_score_class_rank}
                 </TableCell>
               </TableRow>
               <TableRow>
-                <TableCell>T分數系排名</TableCell>
+                <TableCell>{dict.grade.t_score_dept_rank}</TableCell>
                 <TableCell className="text-right">
                   {semester.t_score_dept_rank}
                 </TableCell>
@@ -164,26 +170,27 @@ const GradeCard = ({ title, data }: { title: string; data: string }) => (
 );
 
 const GradeOverview = ({ grades }: { grades: GradeObject }) => {
+  const dict = useDictionary();
   return (
     <div className="w-full rounded-lg shadow border border-slate-200 dark:border-slate-800 dark:divide-slate-800 justify-start items-start inline-flex flex-col md:flex-row flex-wrap divide-y md:divide-y-0 divide-x-0 md:divide-x divide-slate-200 overflow-hidden">
       <div className="w-full md:w-auto flex-[3] justify-start items-start inline-flex divide-x divide-slate-200 dark:divide-slate-800">
         <GradeCard title="GPA" data={grades.ranking.cumulative.letter.gpa} />
         <GradeCard
-          title="及格學分"
+          title={dict.grade.passed_credits}
           data={grades.credits.passed_credits.toString()}
         />
         <GradeCard
-          title="成績未到學分"
+          title={dict.grade.pending_credits}
           data={grades.credits.pending_credits.toString()}
         />
       </div>
       <div className="w-full md:w-auto flex-[2] justify-start items-start inline-flex divide-x divide-slate-200 dark:divide-slate-800">
         <GradeCard
-          title="班排名"
+          title={dict.grade.class_rank}
           data={grades.ranking.cumulative.letter.letter_cum_class_rank}
         />
         <GradeCard
-          title="系排名"
+          title={dict.grade.dept_rank}
           data={grades.ranking.cumulative.letter.letter_cum_dept_rank}
         />
       </div>
@@ -230,6 +237,10 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
 
   const [tab, setTab] = useState<"courses" | "semester">("courses");
 
+  const { language } = useSettings();
+
+  const dict = useDictionary();
+
   return (
     <div className="px-6 pb-12 flex-col justify-start items-start gap-12 inline-flex w-full overflow-x-hidden">
       <div className="w-full pt-8 flex-col justify-start items-start gap-4 inline-flex">
@@ -251,8 +262,10 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
       >
         <div className="flex flex-row justify-between flex-wrap gap-3">
           <TabsList>
-            <TabsTrigger value="courses">全部課程</TabsTrigger>
-            <TabsTrigger value="semester">學期成績</TabsTrigger>
+            <TabsTrigger value="courses">{dict.grade.all_courses}</TabsTrigger>
+            <TabsTrigger value="semester">
+              {dict.grade.semester_grades}
+            </TabsTrigger>
           </TabsList>
           {tab == "courses" && (
             <Select
@@ -263,7 +276,7 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
                 <SelectValue placeholder="Semesters" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={"All"}>全部課程</SelectItem>
+                <SelectItem value={"All"}>{dict.grade.all_courses}</SelectItem>
                 {gradesSemesters.map((sem_id) => (
                   <SelectItem key={sem_id} value={sem_id}>
                     {toPrettySemester(sem_id)}
@@ -283,8 +296,10 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
                 <SelectValue placeholder="Semesters" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={"asc"}>由遠到近</SelectItem>
-                <SelectItem value={"desc"}>由近到遠</SelectItem>
+                <SelectItem value={"asc"}>{dict.grade.oldest_first}</SelectItem>
+                <SelectItem value={"desc"}>
+                  {dict.grade.latest_first}
+                </SelectItem>
               </SelectContent>
             </Select>
           )}
@@ -325,7 +340,11 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
                                 <span className="text-slate-400 dark:text-slate-600 text-xs">
                                   {grade.course_id}
                                 </span>
-                                <span>{grade.name_zh}</span>
+                                <span>
+                                  {language == "en"
+                                    ? grade.name_en
+                                    : grade.name_zh}
+                                </span>
                               </div>
                               {grade.ge_description && (
                                 <div>
@@ -360,25 +379,33 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
           <Table className="w-full">
             <TableHeader>
               <TableRow className="[&>th]:font-bold [&>th]:text-slate-900 dark:[&>th]:text-slate-100">
-                <TableHead className="min-w-[72px] break-all">學期</TableHead>
+                <TableHead className="min-w-[72px] break-all">
+                  {dict.grade.semester}
+                </TableHead>
                 <TableHead>GPA</TableHead>
                 <TableHead className="hidden md:table-cell">T-Score</TableHead>
                 <TableHead className="hidden md:table-cell">
-                  修課相對成績平均
+                  {dict.grade.relative_avg}
                 </TableHead>
                 <TableHead className="hidden md:table-cell">
-                  修習/實得學分
-                </TableHead>
-                <TableHead className="hidden md:table-cell">修課數</TableHead>
-                <TableHead className="hidden md:table-cell">暑修學分</TableHead>
-                <TableHead className="hidden md:table-cell">抵免學分</TableHead>
-                <TableHead>班排名</TableHead>
-                <TableHead>系排名</TableHead>
-                <TableHead className="hidden md:table-cell">
-                  T分數班排名
+                  {dict.grade.taken_actual_credits}
                 </TableHead>
                 <TableHead className="hidden md:table-cell">
-                  T分數系排名
+                  {dict.grade.num_of_courses}
+                </TableHead>
+                <TableHead className="hidden md:table-cell">
+                  {dict.grade.summer_credits}
+                </TableHead>
+                <TableHead className="hidden md:table-cell">
+                  {dict.grade.transfer_credits}
+                </TableHead>
+                <TableHead>{dict.grade.class_rank}</TableHead>
+                <TableHead>{dict.grade.dept_rank}</TableHead>
+                <TableHead className="hidden md:table-cell">
+                  {dict.grade.t_score_class_rank}
+                </TableHead>
+                <TableHead className="hidden md:table-cell">
+                  {dict.grade.t_score_dept_rank}
                 </TableHead>
                 <TableHead className="md:hidden table-cell"></TableHead>
               </TableRow>
@@ -417,7 +444,10 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
                     {semester.t_score_dept_rank}
                   </TableCell>
                   <TableCell className="md:hidden table-cell">
-                    <SemesterGradeCard semester={semester} />
+                    <SemesterGradeCard
+                      semester={semester}
+                      language={language}
+                    />
                   </TableCell>
                 </TableRow>
               ))}
@@ -428,7 +458,7 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
       {!isMobile && (
         <div className="w-full flex-col justify-start items-start gap-4 md:inline-flex hidden">
           <div className="text-zinc-900 dark:text-zinc-100 text-3xl font-semibold leading-9">
-            成績曲線圖
+            {dict.grade.score_curve}
           </div>
           <div className="flex flex-row flex-wrap gap-6">
             <Card className=" min-w-[300px] flex-1">
@@ -441,7 +471,7 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
             </Card>
             <Card className=" min-w-[300px] flex-1">
               <CardHeader>
-                <CardTitle>班排名</CardTitle>
+                <CardTitle>{dict.grade.class_rank}</CardTitle>
               </CardHeader>
               <CardContent>
                 <ClassRankChart lineData={lineData} />
@@ -449,7 +479,7 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
             </Card>
             <Card className=" min-w-[300px] flex-1">
               <CardHeader>
-                <CardTitle>系排名</CardTitle>
+                <CardTitle>{dict.grade.dept_rank}</CardTitle>
               </CardHeader>
               <CardContent>
                 <DeptRankChart lineData={lineData} />
@@ -463,8 +493,12 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
           <div className="flex flex-row justify-between">
             <TabsList>
               <TabsTrigger value="gpa">GPA</TabsTrigger>
-              <TabsTrigger value="class_rank">班排名</TabsTrigger>
-              <TabsTrigger value="dept_rank">系排名</TabsTrigger>
+              <TabsTrigger value="class_rank">
+                {dict.grade.class_rank}
+              </TabsTrigger>
+              <TabsTrigger value="dept_rank">
+                {dict.grade.dept_rank}
+              </TabsTrigger>
             </TabsList>
           </div>
           <TabsContent value="gpa">
