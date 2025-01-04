@@ -1,6 +1,6 @@
 "use server";
-import { uuid4 } from "@sentry/utils";
 import { parseHTML } from "linkedom";
+import { v4 as uuidv4 } from "uuid";
 
 export const getOSACode = async (ACIXSTORE: string) => {
   const entryLink =
@@ -65,7 +65,7 @@ export const getOSAAccessToken = async (
   refreshToken: string,
 ) => {
   const endpoint = "https://osa.nthu.edu.tw/api/GetToken.ashx";
-  const uuid = uuid4();
+  const uuid = uuidv4();
   const response = await fetch(endpoint, {
     method: "POST",
     headers: {
