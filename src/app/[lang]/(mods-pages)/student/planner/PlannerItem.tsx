@@ -22,7 +22,6 @@ const PlannerItem = ({ item }: { item: ItemDocType }) => {
     data: item,
   });
   const style = {
-    // Outputs `translate3d(x, y, 0)`
     transform: CSS.Translate.toString(transform),
   };
   const itemsCol = useRxCollection<ItemDocType>("items");
@@ -31,9 +30,13 @@ const PlannerItem = ({ item }: { item: ItemDocType }) => {
   };
 
   return (
+    // eslint
     <div ref={setNodeRef} style={style} {...attributes}>
-      <Badge variant="outline">
-        <span {...listeners}>{item.title} </span>
+      <div className="p-1 rounded-sm bg-border m-0.5">
+        <div className="flex flex-col gap-1" {...listeners}>
+          <div className="text-sm">{item.title} </div>
+          <div className="text-xs">{item.credits} Credits</div>
+        </div>
         {item.parent == null && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
@@ -55,7 +58,7 @@ const PlannerItem = ({ item }: { item: ItemDocType }) => {
             </AlertDialogContent>
           </AlertDialog>
         )}
-      </Badge>
+      </div>
     </div>
   );
 };
