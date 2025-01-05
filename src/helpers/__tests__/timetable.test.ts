@@ -69,7 +69,6 @@ describe("createTimetableFromCourses", () => {
       "11310EECS123402": "#FF5733",
     };
     const result = createTimetableFromCourses(courses, colorMap);
-    console.log(result);
     expect(result).toHaveLength(12);
     expect(result).toMatchObject([
       {
