@@ -5,6 +5,8 @@
 
 import type { Config } from "jest";
 import nextJest from "next/jest.js";
+import { pathsToModuleNameMapper } from "ts-jest";
+import { compilerOptions } from "./tsconfig.json";
 
 const createJestConfig = nextJest({
   // Provide the path to your Next.js app to load next.config.js and .env files in your test environment
@@ -14,6 +16,9 @@ const createJestConfig = nextJest({
 const config: Config = {
   testEnvironment: "jsdom",
   coverageProvider: "v8",
+  moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths, {
+    prefix: "<rootDir>/",
+  }),
   setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
 };
 
