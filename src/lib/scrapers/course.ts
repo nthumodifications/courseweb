@@ -240,6 +240,7 @@ export const scrapeArchivedCourses = async (semester: string) => {
           restrictions: course_restriction,
           raw_id: course_id,
           enrolled: parseInt(enrollment) ?? 0,
+          updated_at: new Date().toISOString(),
         });
       }
     }),
@@ -363,6 +364,7 @@ export const scrapeSyllabus = async (semester: string) => {
       keywords: keywords?.split(",") ?? [],
       content,
       has_file: content === null ? true : false,
+      updated_at: new Date().toISOString(),
     });
 
     if (error) throw error;

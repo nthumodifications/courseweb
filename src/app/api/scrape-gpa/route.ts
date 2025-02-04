@@ -120,9 +120,12 @@ export const GET = async (request: NextRequest) => {
   if (!data) throw new Error("failed to fetch data from supabase");
 
   // only add scores that for courses in data
-  const scores = courses.filter((course) =>
-    data.some((d) => d.raw_id == course.raw_id),
-  );
+  const scores = courses
+    .filter((course) => data.some((d) => d.raw_id == course.raw_id))
+    .map((course) => ({
+      ...course,
+      updated_at: new Date().toISOString(),
+    }));
 
   const { error } = await supabase_server.from("course_scores").upsert(scores);
 

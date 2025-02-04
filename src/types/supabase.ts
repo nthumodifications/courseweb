@@ -525,6 +525,7 @@ export type Database = {
           raw_id: string;
           std_dev: number;
           type: string;
+          updated_at: string;
         };
         Insert: {
           average: number;
@@ -533,6 +534,7 @@ export type Database = {
           raw_id: string;
           std_dev: number;
           type: string;
+          updated_at?: string;
         };
         Update: {
           average?: number;
@@ -541,6 +543,7 @@ export type Database = {
           raw_id?: string;
           std_dev?: number;
           type?: string;
+          updated_at?: string;
         };
         Relationships: [
           {
@@ -594,6 +597,7 @@ export type Database = {
           has_file: boolean;
           keywords: string[] | null;
           raw_id: string;
+          updated_at: string;
         };
         Insert: {
           brief?: string | null;
@@ -601,6 +605,7 @@ export type Database = {
           has_file: boolean;
           keywords?: string[] | null;
           raw_id: string;
+          updated_at?: string;
         };
         Update: {
           brief?: string | null;
@@ -608,6 +613,7 @@ export type Database = {
           has_file?: boolean;
           keywords?: string[] | null;
           raw_id?: string;
+          updated_at?: string;
         };
         Relationships: [
           {
@@ -649,6 +655,7 @@ export type Database = {
           teacher_en: string[] | null;
           teacher_zh: string[];
           times: string[];
+          updated_at: string;
           venues: string[];
           time_slots: string[] | null;
         };
@@ -681,6 +688,7 @@ export type Database = {
           teacher_en?: string[] | null;
           teacher_zh: string[];
           times: string[];
+          updated_at?: string;
           venues: string[];
         };
         Update: {
@@ -712,6 +720,7 @@ export type Database = {
           teacher_en?: string[] | null;
           teacher_zh?: string[];
           times?: string[];
+          updated_at?: string;
           venues?: string[];
         };
         Relationships: [];
@@ -864,6 +873,7 @@ export type Database = {
           teacher_en: string[] | null;
           teacher_zh: string[];
           times: string[];
+          updated_at: string;
           venues: string[];
         }[];
       };
@@ -1007,4 +1017,19 @@ export type Enums<
   ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
     ? PublicSchema["Enums"][PublicEnumNameOrOptions]
+    : never;
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof PublicSchema["CompositeTypes"]
+    | { schema: keyof Database },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof Database;
+  }
+    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
+    ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never;
