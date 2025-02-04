@@ -623,6 +623,21 @@ const CourseDetailContainer = async ({
                   </div>
                 </div>
               )}
+              <div className="flex flex-col gap-1">
+                <div className="flex flex-row gap-2 flex-wrap">
+                  <p className="text-xs text-gray-500">
+                    Details Updated:{" "}
+                    {format(new Date(course.updated_at), "yyyy-MM-dd HH:mm")}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Syllabus Updated:{" "}
+                    {format(
+                      new Date(course.course_syllabus?.updated_at ?? 0),
+                      "yyyy-MM-dd HH:mm",
+                    )}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
           <CommmentsSectionDynamic course={course as MinimalCourse} />
