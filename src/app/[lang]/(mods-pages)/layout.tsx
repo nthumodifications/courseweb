@@ -6,6 +6,23 @@ import { Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import ConsoleLogger from "@/components/ConsoleLogger";
 import { LangProps } from "@/types/pages";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
+import NTHUModsLogo from "@/components/Branding/NTHUModsLogo";
+
+import dynamic from "next/dynamic";
+
+const HelpDynamic = dynamic(() => import("@/components/Help/Help"));
+
+const GenericIssueFormDynamic = dynamic(
+  () => import("@/components/Forms/GenericIssueFormDialog"),
+);
 
 const NTHUModsLayout = ({
   children,
@@ -17,22 +34,30 @@ const NTHUModsLayout = ({
 } & LangProps) => {
   return (
     <>
-      <GoogleAnalytics />
-      <ConsoleLogger />
-
-      <div
-        className={`grid grid-cols-1 grid-rows-[var(--header-height)_var(--content-height)_auto] md:grid-cols-[12rem_auto] pb-[5rem] md:pb-0`}
-      >
-        <Header />
-        <div className="hidden md:flex h-full px-2 pt-8 pl-8">
-          <SideNav />
-        </div>
-        <main className="overflow-y-auto overflow-x-hidden h-full w-full scroll-smooth [&>div]:h-full pt-8 md:pl-8">
+      <SidebarProvider>
+        <GoogleAnalytics />
+        <ConsoleLogger />
+        <Sidebar collapsible="offcanvas">
+          <SidebarHeader className="p-4">
+            <NTHUModsLogo />
+          </SidebarHeader>
+          <SidebarContent className="p-2">
+            <SideNav />
+          </SidebarContent>
+          <SidebarFooter>
+            <div className="flex flex-row justify-stretch gap-2">
+              <HelpDynamic />
+              <GenericIssueFormDynamic />
+            </div>
+          </SidebarFooter>
+        </Sidebar>
+        <main className="w-full min-h-full">
+          <Header />
           {children}
           {modal}
         </main>
-      </div>
-      <BottomNav />
+        <BottomNav />
+      </SidebarProvider>
     </>
   );
 };
