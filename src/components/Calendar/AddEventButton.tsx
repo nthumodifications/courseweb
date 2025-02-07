@@ -79,8 +79,8 @@ export const AddEventButton = ({
   const generateEmptyEvent = useCallback(
     () => ({
       id: uuidv4(),
-      title: undefined,
-      details: undefined,
+      title: "",
+      details: "",
       allDay: true,
       start: startOfDay(new Date()),
       end: endOfDay(new Date()),
@@ -199,6 +199,7 @@ export const AddEventButton = ({
                   <PopoverTrigger asChild>
                     <FormControl>
                       <Button
+                        aria-label="date trigger"
                         variant={"outline"}
                         className={cn(
                           "justify-start text-left font-normal",
@@ -244,6 +245,7 @@ export const AddEventButton = ({
                   </PopoverPortal>
                 </Popover>
                 <Input
+                  aria-label="start time"
                   type="time"
                   onChange={(e) => {
                     const timesplits = e.target.value.split(":");
@@ -277,6 +279,7 @@ export const AddEventButton = ({
             render={({ field }) => (
               <FormItem>
                 <Input
+                  aria-label="end time"
                   type="time"
                   onChange={(v) => {
                     const timesplits = v.target.value.split(":");
@@ -312,6 +315,7 @@ export const AddEventButton = ({
                 <PopoverTrigger asChild>
                   <FormControl>
                     <Button
+                      aria-label="start date trigger"
                       variant={"outline"}
                       className={cn(
                         "justify-start text-left font-normal w-full",
@@ -358,6 +362,7 @@ export const AddEventButton = ({
                 <PopoverTrigger asChild>
                   <FormControl>
                     <Button
+                      aria-label="end date trigger"
                       variant={"outline"}
                       className={cn(
                         "justify-start text-left font-normal w-full",
@@ -534,7 +539,11 @@ export const AddEventButton = ({
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
-                          <Input placeholder="新增標題" {...field} />
+                          <Input
+                            aria-label="event title"
+                            placeholder="新增標題"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -546,7 +555,11 @@ export const AddEventButton = ({
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
-                          <Input placeholder="地點" {...field} />
+                          <Input
+                            aria-label="event location"
+                            placeholder="地點"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -559,6 +572,7 @@ export const AddEventButton = ({
                       <FormItem className="flex flex-row items-center space-y-0 gap-2">
                         <FormControl>
                           <Switch
+                            aria-label="all day"
                             checked={field.value}
                             onCheckedChange={field.onChange}
                           />
@@ -575,6 +589,7 @@ export const AddEventButton = ({
                     render={({ field }) => (
                       <FormItem>
                         <Select
+                          aria-label="repeat"
                           defaultValue="null"
                           value={String(field.value)}
                           onValueChange={(v) =>
@@ -684,7 +699,11 @@ export const AddEventButton = ({
                       <FormItem>
                         <FormLabel>說明</FormLabel>
                         <FormControl>
-                          <Textarea placeholder="新增說明" {...field} />
+                          <Textarea
+                            aria-label="details"
+                            placeholder="新增說明"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
