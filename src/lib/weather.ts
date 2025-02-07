@@ -33,26 +33,48 @@ export async function getWeatherData() {
   // for each day, get the the MinT, MaxT, PoP12h, Wx, WeatherDescription for the day
   const weatherData = days.map((day) => {
     const dayElements =
-      weatherResponse.locations[0].location[0].weatherElement.map((element) => {
-        const data = element.time.find(
-          (t) => new Date(t.startTime) <= day && new Date(t.endTime) >= day,
+      weatherResponse.Locations[0].Location[0].WeatherElement.map((element) => {
+        const data = element.Time.find(
+          (t) => new Date(t.StartTime) <= day && new Date(t.EndTime) >= day,
         );
 
-        if (element.elementName === "Wx" && data) {
+        if (element.ElementName === "天氣現象" && data) {
           return {
-            element: element.elementName,
-            value: data.elementValue[1].value,
+            element: "Wx",
+            value: data.ElementValue.find((v) => v.WeatherCode)?.WeatherCode!,
           };
-        } else if (data)
+        } else if (element.ElementName === "12小時降雨機率" && data) {
           return {
-            element: element.elementName,
-            value: data.elementValue[0].value,
+            element: "PoP12h",
+            value: data.ElementValue.find((v) => v.ProbabilityOfPrecipitation)
+              ?.ProbabilityOfPrecipitation!,
           };
-        else
+        } else if (element.ElementName === "最高溫度" && data) {
           return {
-            element: element.elementName,
-            value: undefined,
+            element: "MaxT",
+            value: data.ElementValue.find((v) => v.MaxTemperature)
+              ?.MaxTemperature!,
           };
+        } else if (element.ElementName === "最低溫度" && data) {
+          return {
+            element: "MinT",
+            value: data.ElementValue.find((v) => v.MinTemperature)
+              ?.MinTemperature!,
+          };
+        } else if (element.ElementName === "風速" && data) {
+          return {
+            element: "WindSpeed",
+            value: data.ElementValue.find((v) => v.WindSpeed)?.WindSpeed!,
+          };
+        } else if (element.ElementName === "天氣預報綜合描述" && data) {
+          return {
+            element: "WeatherDescription",
+            value: data.ElementValue.find((v) => v.WeatherDescription)
+              ?.WeatherDescription!,
+          };
+        } else {
+          return { element: element.ElementName, value: "" };
+        }
       });
     const weatherData = {
       MinT: dayElements.find((e) => e.element === "MinT")!.value,
