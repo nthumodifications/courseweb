@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Route } from "next";
 import { useSettings } from "@/hooks/contexts/settings";
 import useDictionary from "@/dictionaries/useDictionary";
+import { useSidebar } from "./ui/sidebar";
 
 const SideNav: FC = () => {
   const pathname = usePathname();
@@ -52,11 +53,20 @@ const SideNav: FC = () => {
     [dict, language],
   );
 
+  const { setOpenMobile, isMobile } = useSidebar();
+
   useEffect(() => {
     links.forEach((link) => {
       router.prefetch(link.href);
     });
   }, [links, router]);
+
+  const handleLinkClick = (href: Route) => () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+    router.push(href);
+  };
 
   return (
     <nav className="h-full w-full flex flex-col justify-start items-start gap-3">
@@ -64,7 +74,7 @@ const SideNav: FC = () => {
         <div
           className={`w-full flex flex-row items-center justify-start gap-2 rounded-md cursor-pointer transition dark:text-slate-300 font-semibold px-3 py-1.5 ${link.href == pathname ? "text-white  bg-nthu-600" : "text-slate-700"}`}
           key={index}
-          onClick={() => router.push(link.href)}
+          onClick={handleLinkClick(link.href)}
         >
           <span className="w-6 h-6">{link.icon}</span>
           <span className="flex-1 font-semibold">{link.title}</span>

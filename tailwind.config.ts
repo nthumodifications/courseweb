@@ -53,17 +53,27 @@ const config = {
           foreground: "hsl(var(--card-foreground))",
         },
         nthu: {
-          50: "#FAF7FD",
-          100: "#F3ECFB",
-          200: "#E9DDF7",
-          300: "#D9C2F0",
-          400: "#C19AE6",
-          500: "#A973D9",
-          600: "#9558C9",
-          700: "#7E42AE",
-          800: "#6A3A8F",
-          900: "#573073",
-          950: "#3A1853",
+          "50": "#FAF7FD",
+          "100": "#F3ECFB",
+          "200": "#E9DDF7",
+          "300": "#D9C2F0",
+          "400": "#C19AE6",
+          "500": "#A973D9",
+          "600": "#9558C9",
+          "700": "#7E42AE",
+          "800": "#6A3A8F",
+          "900": "#573073",
+          "950": "#3A1853",
+        },
+        sidebar: {
+          DEFAULT: "hsl(var(--sidebar-background))",
+          foreground: "hsl(var(--sidebar-foreground))",
+          primary: "hsl(var(--sidebar-primary))",
+          "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
+          accent: "hsl(var(--sidebar-accent))",
+          "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
+          border: "hsl(var(--sidebar-border))",
+          ring: "hsl(var(--sidebar-ring))",
         },
       },
       borderRadius: {
@@ -73,12 +83,20 @@ const config = {
       },
       keyframes: {
         "accordion-down": {
-          from: { height: "0" },
-          to: { height: "var(--radix-accordion-content-height)" },
+          from: {
+            height: "0",
+          },
+          to: {
+            height: "var(--radix-accordion-content-height)",
+          },
         },
         "accordion-up": {
-          from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: "0" },
+          from: {
+            height: "var(--radix-accordion-content-height)",
+          },
+          to: {
+            height: "0",
+          },
         },
       },
       animation: {
