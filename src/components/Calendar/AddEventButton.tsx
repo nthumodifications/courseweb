@@ -5,6 +5,9 @@ import {
   differenceInDays,
   endOfDay,
   format,
+  getDate,
+  getMonth,
+  getYear,
   set,
   startOfDay,
 } from "date-fns";
@@ -172,6 +175,18 @@ export const AddEventButton = ({
       form.setValue("end", defaultEnd);
       form.trigger(["start", "end"]);
       setDelayed(false);
+    } else if (delayed && defaultEvent && !allDay) {
+      // if from all day to normal, set end to the same day as start
+      const start = form.getValues("start");
+      form.setValue(
+        "end",
+        set(form.getValues("end"), {
+          year: getYear(start),
+          month: getMonth(start),
+          date: getDate(start),
+        }),
+      );
+      setDelayed(false);
     }
   }, [delayed, defaultEvent, form]);
 
@@ -308,7 +323,7 @@ export const AddEventButton = ({
           name="start"
           render={({ field }) => (
             <FormItem className="flex-1">
-              <Popover>
+              <Popover modal={true}>
                 <PopoverTrigger asChild>
                   <FormControl>
                     <Button
@@ -354,7 +369,7 @@ export const AddEventButton = ({
           name="end"
           render={({ field }) => (
             <FormItem className="flex-1">
-              <Popover>
+              <Popover modal={true}>
                 <PopoverTrigger asChild>
                   <FormControl>
                     <Button
@@ -451,7 +466,7 @@ export const AddEventButton = ({
                           disabled={fieldMode.value !== "date"}
                           render={({ field }) => (
                             <FormItem>
-                              <Popover>
+                              <Popover modal={true}>
                                 <PopoverTrigger asChild>
                                   <FormControl>
                                     <Button
@@ -635,7 +650,7 @@ export const AddEventButton = ({
                       name="color"
                       render={({ field }) => (
                         <FormItem>
-                          <Popover>
+                          <Popover modal={true}>
                             <PopoverTrigger asChild>
                               <FormControl>
                                 <Button variant="outline">
