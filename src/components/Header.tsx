@@ -82,8 +82,8 @@ const Header = () => {
         </DropdownMenu>
       ) : (
         <LoginDialog>
-          <Button size="sm" variant="ghost">
-            <LogIn className="w-4 h-4 mr-2" /> {dict.ccxp.connect}
+          <Button size="sm" variant="outline">
+            {dict.settings.account.signin} <LogIn className="w-4 h-4" />
           </Button>
         </LoginDialog>
       )}

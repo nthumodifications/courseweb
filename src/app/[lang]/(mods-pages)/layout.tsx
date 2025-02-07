@@ -26,7 +26,7 @@ const NTHUModsLayout = async ({
         <AppSidebar />
         <main className="w-full min-h-full">
           <Header />
-          <div className="pt-2 pb-[5rem] md:pb-0">{children}</div>
+          <div className="pt-4 pb-[5rem] md:pb-0 md:pl-2">{children}</div>
           {modal}
         </main>
         <BottomNav />
