@@ -43,12 +43,6 @@ const BottomNav: FC = () => {
         icon: <I.LayoutGrid strokeWidth="2" />,
         color: "#AEA3C9",
       },
-      {
-        title: dict.navigation.settings,
-        href: `/${language}/settings`,
-        icon: <I.Settings strokeWidth="2" />,
-        color: "#B46DD6",
-      },
     ],
     [language, dict],
   );
@@ -62,7 +56,7 @@ const BottomNav: FC = () => {
   return (
     <div className="fixed w-full bottom-0 md:hidden flex-col h-[5rem] bg-background z-50 flex">
       <Separator />
-      <nav className="grid grid-cols-5 items-center py-2.5">
+      <nav className="grid grid-cols-4 items-center py-2.5">
         {links.map((link, index) => (
           <div
             className={`flex flex-col items-center gap-1 ${link.href == pathname ? "text-primary" : "text-gray-400"}`}
