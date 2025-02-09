@@ -1,6 +1,12 @@
-import { ChevronLeft, ChevronRight, FolderSync, Plus } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  FolderSync,
+  Plus,
+  Settings,
+} from "lucide-react";
 import { addMonths, addWeeks, getMonth, subMonths, subWeeks } from "date-fns";
-import { KeyboardEvent, useEffect, useState } from "react";
+import { FC, KeyboardEvent, useEffect, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -32,9 +38,76 @@ import {
 import { useSettings } from "@/hooks/contexts/settings";
 import { useSwipeable } from "react-swipeable";
 import { semesterInfo } from "@/const/semester";
+import { useRxCollection } from "rxdb-hooks";
+import { TimetableSyncDocType } from "@/config/rxdb";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "../ui/alert-dialog";
+import { toPrettySemester } from "@/helpers/semester";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const CalendarError: ErrorComponent = ({ error, reset }) => {
   return <div className="text-red-500">An error occurred: {error.message}</div>;
+};
+
+type TimetableSyncRequest = {
+  semester: string;
+  courses: CourseTimeslotData[];
+  reason: "modified" | "new";
+};
+
+const CalendarTimetableSyncDialog: FC<{
+  request: TimetableSyncRequest;
+  onSyncAccept: (request?: TimetableSyncRequest) => void;
+}> = ({ request, onSyncAccept }) => {
+  const [open, setOpen] = useState(true);
+  useEffect(() => {
+    setOpen(true);
+  }, [request]);
+
+  const handleUserClose = () => {
+    setOpen(false);
+    onSyncAccept();
+  };
+
+  const handleUserSync = () => {
+    setOpen(false);
+    onSyncAccept(request);
+  };
+
+  return (
+    <AlertDialog open={open} onOpenChange={handleUserClose}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Timetable Update Found!</AlertDialogTitle>
+          <AlertDialogDescription>
+            {request.reason == "new" ? "New" : "Modified"} courses found in{" "}
+            {toPrettySemester(request.semester)}'s Timetable. Do you want to
+            sync the changes?
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={handleUserSync}>Sync</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
 };
 
 const Calendar = () => {
@@ -145,29 +218,82 @@ const Calendar = () => {
     },
   });
 
-  const syncTimetable = () => {
-    // for each course, convert to timetable event
-    const timetableCourses: CourseTimeslotData[][] = [];
-    Object.keys(courses).forEach((sem) => {
-      const coursesData = getSemesterCourses(sem);
-      timetableCourses.push(
-        createTimetableFromCourses(coursesData as MinimalCourse[], colorMap),
-      );
-    });
-    // flatten and add to events
-    const calendarEvents = timetableToCalendarEvent(
-      timetableCourses.flat(),
-      language,
-    );
+  const timetableSync = useRxCollection<TimetableSyncDocType>("timetablesync");
 
-    calendarEvents.forEach((event) => {
-      addEvent(event);
-    });
-    console.log("Synced timetable to calendar");
+  const [availableSync, setAvailableSync] = useState<TimetableSyncRequest[]>(
+    [],
+  );
+
+  const syncTimetable = async () => {
+    if (!timetableSync) return;
+    // for each semester, check if its already synced
+    const timetableCourses: TimetableSyncRequest[] = [];
+    for (const sem in courses) {
+      const coursesData = getSemesterCourses(sem);
+      // get current synced from db
+      const syncData = await timetableSync
+        .findOne({ selector: { semester: { $eq: sem } } })
+        .exec();
+      if (!syncData) {
+        timetableCourses.push({
+          semester: sem,
+          courses: createTimetableFromCourses(
+            coursesData as MinimalCourse[],
+            colorMap,
+          ),
+          reason: "new",
+        });
+        continue;
+      }
+      // check if courses are modified
+      const syncedCourses = syncData.courses as string[];
+      // compare courses after converting to timetable format, because some courses might not be displayable.
+      const newCourses = createTimetableFromCourses(
+        coursesData as MinimalCourse[],
+        colorMap,
+      );
+      const newCoursesId = newCourses.map((c) => c.course.raw_id);
+      const coursesModified =
+        syncedCourses.filter((c) => !newCoursesId.includes(c)).length > 0 ||
+        newCoursesId.filter((c) => !syncedCourses.includes(c)).length > 0;
+      if (coursesModified) {
+        timetableCourses.push({
+          semester: sem,
+          courses: newCourses,
+          reason: "modified",
+        });
+      }
+    }
+    // prompt update if required
+    if (timetableCourses.length == 0) return;
+    setAvailableSync(timetableCourses);
+  };
+
+  useEffect(() => {
+    syncTimetable();
+  }, [courses, timetableSync]);
+
+  const handleSyncAccept = async (request?: TimetableSyncRequest) => {
+    if (request) {
+      const courses = timetableToCalendarEvent(request.courses, language);
+      courses.forEach((c) => addEvent(c));
+      await timetableSync!.upsert({
+        semester: request.semester,
+        courses: request.courses.map((c) => c.course.raw_id),
+        lastSync: new Date().toISOString(),
+      });
+      setAvailableSync((s) => s.filter((r) => r.semester != request.semester));
+    }
   };
 
   return (
     <ErrorBoundary errorComponent={CalendarError}>
+      {availableSync.length > 0 && (
+        <CalendarTimetableSyncDialog
+          request={availableSync[0]}
+          onSyncAccept={handleSyncAccept}
+        />
+      )}
       <div className="flex flex-col gap-2 md:gap-6 flex-1 w-full">
         <div className="flex flex-col md:flex-row gap-2 justify-evenly">
           <div className="flex flex-row justify-between flex-1">
@@ -183,9 +309,18 @@ const Calendar = () => {
                 <ChevronRight />
               </Button>
             </div>
-            <Button variant="outline" onClick={syncTimetable}>
-              <FolderSync size={16} />
-            </Button>
+            {/* <DropdownMenu>
+              <DropdownMenuTrigger asChild >
+              <Button variant="outline">
+                <Settings size={16} />
+              </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuLabel>Settings</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>Clear All</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu> */}
           </div>
           <div className="md:flex flex-row items-center gap-2 hidden ">
             <Select
