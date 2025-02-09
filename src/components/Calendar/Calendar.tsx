@@ -1,12 +1,6 @@
-import {
-  ChevronLeft,
-  ChevronRight,
-  FolderSync,
-  Plus,
-  Settings,
-} from "lucide-react";
-import { addMonths, addWeeks, getMonth, subMonths, subWeeks } from "date-fns";
-import { FC, KeyboardEvent, useEffect, useState } from "react";
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { addMonths, addWeeks, subMonths, subWeeks } from "date-fns";
+import { KeyboardEvent, useEffect, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -16,8 +10,8 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 
-import { CalendarEvent } from "./calendar.types";
-import { UpdateType, useCalendar } from "./calendar_hook";
+import { CalendarEvent, TimetableSyncRequest } from "./calendar.types";
+import { useCalendar } from "./calendar_hook";
 import { AddEventButton } from "./AddEventButton";
 import { getWeek } from "./calendar_utils";
 import { getMonthForDisplay } from "@/components/Calendar/calendar_utils";
@@ -25,89 +19,22 @@ import { CalendarDateSelector } from "@/components/Calendar/CalendarDateSelector
 import { CalendarWeekContainer } from "./CalendarWeekContainer";
 import { CalendarMonthContainer } from "./CalendarMonthContainer";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { timetableToCalendarEvent } from "./timetableToCalendarEvent";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { createTimetableFromCourses } from "@/helpers/timetable";
 import { MinimalCourse } from "@/types/courses";
-import { CourseTimeslotData } from "@/types/timetable";
 import {
   ErrorBoundary,
   ErrorComponent,
 } from "next/dist/client/components/error-boundary";
 import { useSettings } from "@/hooks/contexts/settings";
 import { useSwipeable } from "react-swipeable";
-import { semesterInfo } from "@/const/semester";
 import { useRxCollection } from "rxdb-hooks";
 import { TimetableSyncDocType } from "@/config/rxdb";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "../ui/alert-dialog";
-import { toPrettySemester } from "@/helpers/semester";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import CalendarTimetableSyncDialog from "./CalendarTimetableSyncDialog";
 
 const CalendarError: ErrorComponent = ({ error, reset }) => {
   return <div className="text-red-500">An error occurred: {error.message}</div>;
-};
-
-type TimetableSyncRequest = {
-  semester: string;
-  courses: CourseTimeslotData[];
-  reason: "modified" | "new";
-};
-
-const CalendarTimetableSyncDialog: FC<{
-  request: TimetableSyncRequest;
-  onSyncAccept: (request?: TimetableSyncRequest) => void;
-}> = ({ request, onSyncAccept }) => {
-  const [open, setOpen] = useState(true);
-  useEffect(() => {
-    setOpen(true);
-  }, [request]);
-
-  const handleUserClose = () => {
-    setOpen(false);
-    onSyncAccept();
-  };
-
-  const handleUserSync = () => {
-    setOpen(false);
-    onSyncAccept(request);
-  };
-
-  return (
-    <AlertDialog open={open} onOpenChange={handleUserClose}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Timetable Update Found!</AlertDialogTitle>
-          <AlertDialogDescription>
-            {request.reason == "new" ? "New" : "Modified"} courses found in{" "}
-            {toPrettySemester(request.semester)}'s Timetable. Do you want to
-            sync the changes?
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={handleUserSync}>Sync</AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  );
 };
 
 const Calendar = () => {
