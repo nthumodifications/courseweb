@@ -14,7 +14,7 @@ import { TimetableSyncRequest } from "./calendar.types";
 
 const CalendarTimetableSyncDialog: FC<{
   request: TimetableSyncRequest;
-  onSyncAccept: (request?: TimetableSyncRequest) => void;
+  onSyncAccept: (request: TimetableSyncRequest, accept: boolean) => void;
 }> = ({ request, onSyncAccept }) => {
   const [open, setOpen] = useState(true);
   useEffect(() => {
@@ -22,17 +22,19 @@ const CalendarTimetableSyncDialog: FC<{
   }, [request]);
 
   const handleUserClose = () => {
-    setOpen(false);
-    onSyncAccept();
+    if (open) {
+      setOpen(false);
+      onSyncAccept(request, false);
+    }
   };
 
   const handleUserSync = () => {
     setOpen(false);
-    onSyncAccept(request);
+    onSyncAccept(request, true);
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={handleUserClose}>
+    <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Timetable Update Found!</AlertDialogTitle>
@@ -43,7 +45,9 @@ const CalendarTimetableSyncDialog: FC<{
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel onClick={handleUserClose}>
+            Cancel
+          </AlertDialogCancel>
           <AlertDialogAction onClick={handleUserSync}>Sync</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

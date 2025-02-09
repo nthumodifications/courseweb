@@ -32,6 +32,8 @@ import { useSwipeable } from "react-swipeable";
 import { useRxCollection } from "rxdb-hooks";
 import { TimetableSyncDocType } from "@/config/rxdb";
 import CalendarTimetableSyncDialog from "./CalendarTimetableSyncDialog";
+import { toast } from "../ui/use-toast";
+import { toPrettySemester } from "@/helpers/semester";
 
 const CalendarError: ErrorComponent = ({ error, reset }) => {
   return <div className="text-red-500">An error occurred: {error.message}</div>;
@@ -200,17 +202,27 @@ const Calendar = () => {
     syncTimetable();
   }, [courses, timetableSync]);
 
-  const handleSyncAccept = async (request?: TimetableSyncRequest) => {
-    if (request) {
-      const courses = timetableToCalendarEvent(request.courses, language);
+  const handleSyncAccept = async (
+    request: TimetableSyncRequest,
+    accept: boolean,
+  ) => {
+    console.log("Syncing", request.semester, accept);
+    const courses = timetableToCalendarEvent(request.courses, language);
+    if (accept) {
       courses.forEach((c) => addEvent(c));
-      await timetableSync!.upsert({
-        semester: request.semester,
-        courses: request.courses.map((c) => c.course.raw_id),
-        lastSync: new Date().toISOString(),
+    } else {
+      toast({
+        title: `Semester ${toPrettySemester(request.semester)} sync cancelled`,
+        description: "You can sync again if the timetable changes",
       });
-      setAvailableSync((s) => s.filter((r) => r.semester != request.semester));
     }
+    await timetableSync!.upsert({
+      semester: request.semester,
+      courses: request.courses.map((c) => c.course.raw_id),
+      lastSync: new Date().toISOString(),
+    });
+
+    setAvailableSync((s) => s.filter((r) => r.semester != request.semester));
   };
 
   return (
