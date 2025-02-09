@@ -138,7 +138,7 @@ export const AddEventButton = ({
 
   // If repeat updates, set interval = 1 and default to count = 1, else set to undefined
   useEffect(() => {
-    if (repeat) {
+    if (repeat && !defaultEvent) {
       form.setValue("repeat.interval", 1);
       form.setValue("repeat.value", 1);
       form.setValue("repeat.mode", "count");
@@ -147,16 +147,24 @@ export const AddEventButton = ({
       form.setValue("repeat.value", undefined!);
       form.setValue("repeat.mode", undefined!);
     }
-  }, [form, repeat]);
+  }, [form, repeat, defaultEvent]);
 
   // If repeatMode updates, clear the value
   useEffect(() => {
     if (repeatMode === "count") {
-      form.setValue("repeat.value", 1);
+      form.setValue(
+        "repeat.value",
+        defaultEvent?.repeat?.mode == "count" ? defaultEvent.repeat.value : 1,
+      );
     } else if (repeatMode === "date") {
-      form.setValue("repeat.value", Date.now());
+      form.setValue(
+        "repeat.value",
+        defaultEvent?.repeat?.mode == "date"
+          ? defaultEvent.repeat.value
+          : Date.now(),
+      );
     }
-  }, [form, repeatMode]);
+  }, [form, repeatMode, defaultEvent]);
 
   const allDay = useWatch({ control: form.control, name: "allDay" });
 
@@ -254,6 +262,7 @@ export const AddEventButton = ({
                           form.trigger(["end"]);
                         }}
                         initialFocus
+                        defaultMonth={field.value}
                       />
                     </PopoverContent>
                   </PopoverPortal>
@@ -357,6 +366,7 @@ export const AddEventButton = ({
                       form.setValue("end", endDate);
                       form.trigger("end");
                     }}
+                    defaultMonth={field.value}
                     initialFocus
                   />
                 </PopoverContent>
@@ -396,6 +406,7 @@ export const AddEventButton = ({
                       if (d) field.onChange(endOfDay(d));
                     }}
                     initialFocus
+                    defaultMonth={field.value}
                   />
                 </PopoverContent>
               </Popover>
@@ -417,9 +428,10 @@ export const AddEventButton = ({
             <FormItem className="flex flex-row items-center space-y-0 gap-2">
               <FormControl>
                 <RadioGroup
-                  defaultValue="date"
+                  defaultValue={fieldMode.value}
                   value={fieldMode.value}
                   onValueChange={fieldMode.onChange}
+                  // test-key={console.log(fieldMode.value)}
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="count" id="count" />
@@ -497,6 +509,7 @@ export const AddEventButton = ({
                                         )
                                       }
                                       initialFocus
+                                      defaultMonth={new Date(field.value)}
                                     />
                                   )}
                                 </PopoverContent>
@@ -625,9 +638,8 @@ export const AddEventButton = ({
                               <Input
                                 type="number"
                                 placeholder="Interval"
-                                defaultValue={1}
+                                defaultValue={field.value}
                                 {...field}
-                                // Convert string to number
                                 onChange={(e) => {
                                   const value = parseInt(e.target.value);
                                   field.onChange(isNaN(value) ? "" : value);
