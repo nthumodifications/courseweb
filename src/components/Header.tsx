@@ -20,10 +20,13 @@ import {
   LogIn,
   LogOut,
   MessageCircle,
+  University,
 } from "lucide-react";
 import useDictionary from "@/dictionaries/useDictionary";
 import useLaunchApp from "@/hooks/useLaunchApp";
 import { apps } from "@/const/apps";
+import { auth } from "@/config/firebase";
+import { useAuthState } from "react-firebase-hooks/auth";
 
 const HelpDynamic = dynamic(() => import("@/components/Help/Help"), {
   ssr: false,
@@ -40,6 +43,7 @@ const Header = () => {
   const dict = useDictionary();
   const ccxpApp = apps.find((app) => app.id === "ccxp")!;
   const [onItemClicked, aisLoading, cancelLoading] = useLaunchApp(ccxpApp);
+  const [_, authloading, autherror] = useAuthState(auth);
 
   return (
     <header className="h-[--header-height] w-full bg-white dark:bg-background shadow-md px-2 md:px-4 py-4 md:col-span-2 flex flex-row items-center z-50 gap-4 sticky top-0">
@@ -48,7 +52,7 @@ const Header = () => {
         <CurrentSemesterLabel />
       </div>
 
-      {user ? (
+      {user && (
         <DropdownMenu>
           <DropdownMenuTrigger>
             <div className="text-left">
@@ -67,6 +71,7 @@ const Header = () => {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onItemClicked} disabled={aisLoading}>
+              <University className="w-4 h-4 mr-2" />
               {aisLoading ? (
                 <Loader2 className="animate-spin" />
               ) : language == "zh" ? (
@@ -75,9 +80,10 @@ const Header = () => {
                 ccxpApp.title_en
               )}
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
+            {/* <DropdownMenuSeparator /> */}
 
-            <HelpDynamic>
+            {/* Triggering will result in unmounting, thus we will disable for now. */}
+            {/* <HelpDynamic>
               <DropdownMenuItem>
                 <HelpCircle className="mr-2 w-4 h-4" />
                 Help
@@ -89,7 +95,7 @@ const Header = () => {
                 <MessageCircle className="mr-2 w-4 h-4" />
                 Feedback
               </DropdownMenuItem>
-            </GenericIssueFormDynamic>
+            </GenericIssueFormDynamic> */}
             <DropdownMenuSeparator />
             <DropdownMenuItem>
               <LogOut className="w-4 h-4 mr-2" />
@@ -97,7 +103,8 @@ const Header = () => {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      ) : (
+      )}
+      {user == null && !authloading && (
         <LoginDialog>
           <Button size="sm" variant="outline">
             {dict.settings.account.signin} <LogIn className="w-4 h-4" />

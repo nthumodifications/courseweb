@@ -16,7 +16,8 @@ const NTHUModsLayout = async ({
   modal?: React.ReactNode;
 } & LangProps) => {
   const cookieStore = await cookies();
-  const defaultOpen = cookieStore.get("sidebar:state")?.value === "true";
+  const defaultOpen =
+    (cookieStore.get("sidebar:state")?.value ?? "true") === "true";
 
   return (
     <>
