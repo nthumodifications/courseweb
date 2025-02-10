@@ -24,7 +24,7 @@ export const CalendarDateSelector = ({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger>
-        <h2 className=" text-lg md:text-2xl font-semibold w-max">
+        <h2 className=" text-lg md:text-2xl font-semibold md:w-48 w-36">
           {format(date, "LLLL yyyy")}
         </h2>
       </PopoverTrigger>

@@ -113,8 +113,6 @@ export const useCalendarProvider = () => {
       });
     }, [eventStore]) ?? [];
 
-  const { courses, colorMap } = useUserTimetable();
-
   const displayContainer = useRef<HTMLDivElement>(null);
 
   const addEvent = async (event: CalendarEvent) => {
