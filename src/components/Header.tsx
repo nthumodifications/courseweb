@@ -1,7 +1,5 @@
 "use client";
 import { useSettings } from "@/hooks/contexts/settings";
-import Link from "next/link";
-import NTHUModsLogo from "@/components/Branding/NTHUModsLogo";
 import dynamic from "next/dynamic";
 import CurrentSemesterLabel from "./Today/CurrentSemesterLabel";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -11,14 +9,18 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { useHeadlessAIS } from "@/hooks/contexts/useHeadlessAIS";
 import LoginDialog from "./Forms/LoginDialog";
 import { Button } from "./ui/button";
-import { Loader2, LogIn, LogOut } from "lucide-react";
+import {
+  HelpCircle,
+  Loader2,
+  LogIn,
+  LogOut,
+  MessageCircle,
+} from "lucide-react";
 import useDictionary from "@/dictionaries/useDictionary";
 import useLaunchApp from "@/hooks/useLaunchApp";
 import { apps } from "@/const/apps";
@@ -73,6 +75,21 @@ const Header = () => {
                 ccxpApp.title_en
               )}
             </DropdownMenuItem>
+            <DropdownMenuSeparator />
+
+            <HelpDynamic>
+              <DropdownMenuItem>
+                <HelpCircle className="mr-2 w-4 h-4" />
+                Help
+              </DropdownMenuItem>
+            </HelpDynamic>
+
+            <GenericIssueFormDynamic>
+              <DropdownMenuItem>
+                <MessageCircle className="mr-2 w-4 h-4" />
+                Feedback
+              </DropdownMenuItem>
+            </GenericIssueFormDynamic>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
               <LogOut className="w-4 h-4 mr-2" />
