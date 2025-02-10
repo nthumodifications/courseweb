@@ -1,5 +1,5 @@
-import { ChevronLeft, ChevronRight, FolderSync, Plus } from "lucide-react";
-import { addMonths, addWeeks, getMonth, subMonths, subWeeks } from "date-fns";
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { addMonths, addWeeks, subMonths, subWeeks } from "date-fns";
 import { KeyboardEvent, useEffect, useState } from "react";
 import {
   Select,
@@ -10,8 +10,8 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 
-import { CalendarEvent } from "./calendar.types";
-import { UpdateType, useCalendar } from "./calendar_hook";
+import { CalendarEvent, TimetableSyncRequest } from "./calendar.types";
+import { useCalendar } from "./calendar_hook";
 import { AddEventButton } from "./AddEventButton";
 import { getWeek } from "./calendar_utils";
 import { getMonthForDisplay } from "@/components/Calendar/calendar_utils";
@@ -19,19 +19,21 @@ import { CalendarDateSelector } from "@/components/Calendar/CalendarDateSelector
 import { CalendarWeekContainer } from "./CalendarWeekContainer";
 import { CalendarMonthContainer } from "./CalendarMonthContainer";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { timetableToCalendarEvent } from "./timetableToCalendarEvent";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { createTimetableFromCourses } from "@/helpers/timetable";
 import { MinimalCourse } from "@/types/courses";
-import { CourseTimeslotData } from "@/types/timetable";
 import {
   ErrorBoundary,
   ErrorComponent,
 } from "next/dist/client/components/error-boundary";
 import { useSettings } from "@/hooks/contexts/settings";
 import { useSwipeable } from "react-swipeable";
-import { semesterInfo } from "@/const/semester";
+import { useRxCollection } from "rxdb-hooks";
+import { TimetableSyncDocType } from "@/config/rxdb";
+import CalendarTimetableSyncDialog from "./CalendarTimetableSyncDialog";
+import { toast } from "../ui/use-toast";
+import { toPrettySemester } from "@/helpers/semester";
 
 const CalendarError: ErrorComponent = ({ error, reset }) => {
   return <div className="text-red-500">An error occurred: {error.message}</div>;
@@ -145,29 +147,92 @@ const Calendar = () => {
     },
   });
 
-  const syncTimetable = () => {
-    // for each course, convert to timetable event
-    const timetableCourses: CourseTimeslotData[][] = [];
-    Object.keys(courses).forEach((sem) => {
-      const coursesData = getSemesterCourses(sem);
-      timetableCourses.push(
-        createTimetableFromCourses(coursesData as MinimalCourse[], colorMap),
-      );
-    });
-    // flatten and add to events
-    const calendarEvents = timetableToCalendarEvent(
-      timetableCourses.flat(),
-      language,
-    );
+  const timetableSync = useRxCollection<TimetableSyncDocType>("timetablesync");
 
-    calendarEvents.forEach((event) => {
-      addEvent(event);
+  const [availableSync, setAvailableSync] = useState<TimetableSyncRequest[]>(
+    [],
+  );
+
+  const syncTimetable = async () => {
+    if (!timetableSync) return;
+    // for each semester, check if its already synced
+    const timetableCourses: TimetableSyncRequest[] = [];
+    for (const sem in courses) {
+      const coursesData = getSemesterCourses(sem);
+      // get current synced from db
+      const syncData = await timetableSync
+        .findOne({ selector: { semester: { $eq: sem } } })
+        .exec();
+      if (!syncData) {
+        timetableCourses.push({
+          semester: sem,
+          courses: createTimetableFromCourses(
+            coursesData as MinimalCourse[],
+            colorMap,
+          ),
+          reason: "new",
+        });
+        continue;
+      }
+      // check if courses are modified
+      const syncedCourses = syncData.courses as string[];
+      // compare courses after converting to timetable format, because some courses might not be displayable.
+      const newCourses = createTimetableFromCourses(
+        coursesData as MinimalCourse[],
+        colorMap,
+      );
+      const newCoursesId = newCourses.map((c) => c.course.raw_id);
+      const coursesModified =
+        syncedCourses.filter((c) => !newCoursesId.includes(c)).length > 0 ||
+        newCoursesId.filter((c) => !syncedCourses.includes(c)).length > 0;
+      if (coursesModified) {
+        timetableCourses.push({
+          semester: sem,
+          courses: newCourses,
+          reason: "modified",
+        });
+      }
+    }
+    // prompt update if required
+    if (timetableCourses.length == 0) return;
+    setAvailableSync(timetableCourses);
+  };
+
+  useEffect(() => {
+    syncTimetable();
+  }, [courses, timetableSync]);
+
+  const handleSyncAccept = async (
+    request: TimetableSyncRequest,
+    accept: boolean,
+  ) => {
+    console.log("Syncing", request.semester, accept);
+    const courses = timetableToCalendarEvent(request.courses, language);
+    if (accept) {
+      courses.forEach((c) => addEvent(c));
+    } else {
+      toast({
+        title: `Semester ${toPrettySemester(request.semester)} sync cancelled`,
+        description: "You can sync again if the timetable changes",
+      });
+    }
+    await timetableSync!.upsert({
+      semester: request.semester,
+      courses: request.courses.map((c) => c.course.raw_id),
+      lastSync: new Date().toISOString(),
     });
-    console.log("Synced timetable to calendar");
+
+    setAvailableSync((s) => s.filter((r) => r.semester != request.semester));
   };
 
   return (
     <ErrorBoundary errorComponent={CalendarError}>
+      {availableSync.length > 0 && (
+        <CalendarTimetableSyncDialog
+          request={availableSync[0]}
+          onSyncAccept={handleSyncAccept}
+        />
+      )}
       <div className="flex flex-col gap-2 md:gap-6 flex-1 w-full">
         <div className="flex flex-col md:flex-row gap-2 justify-evenly">
           <div className="flex flex-row justify-between flex-1">
@@ -183,9 +248,18 @@ const Calendar = () => {
                 <ChevronRight />
               </Button>
             </div>
-            <Button variant="outline" onClick={syncTimetable}>
-              <FolderSync size={16} />
-            </Button>
+            {/* <DropdownMenu>
+              <DropdownMenuTrigger asChild >
+              <Button variant="outline">
+                <Settings size={16} />
+              </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuLabel>Settings</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>Clear All</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu> */}
           </div>
           <div className="md:flex flex-row items-center gap-2 hidden ">
             <Select
