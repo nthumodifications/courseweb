@@ -1,15 +1,12 @@
 import { apps } from "@/const/apps";
 import { ExternalLink } from "lucide-react";
-import React, { useMemo } from "react";
-import { useCallback } from "react";
+import { useMemo } from "react";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useHeadlessAIS } from "@/hooks/contexts/useHeadlessAIS";
 import { useSettings } from "@/hooks/contexts/settings";
-import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { toast } from "@/components/ui/use-toast";
-import { event } from "@/lib/gtag";
+import useLaunchApp from "@/hooks/useLaunchApp";
 
 const AppItem = ({
   app,
@@ -19,52 +16,10 @@ const AppItem = ({
   mini?: boolean;
 }) => {
   const { language } = useSettings();
-  const { ais, getACIXSTORE } = useHeadlessAIS();
-  const router = useRouter();
+  const { ais } = useHeadlessAIS();
   const dict = useDictionary();
-  const [aisLoading, setAisLoading] = React.useState(false);
 
-  const onItemClicked = useCallback(async () => {
-    event({
-      action: "open_app",
-      category: "app",
-      label: "open_app_" + app.id,
-    });
-    if (app.ais) {
-      if (!ais.enabled) {
-        toast({ title: dict.ccxp.not_logged_in_error });
-        return;
-      }
-
-      setAisLoading(true);
-      try {
-        const token = await getACIXSTORE();
-        if (!token) {
-          setAisLoading(false);
-          return;
-        }
-
-        // if starts with http, open in new tab
-        if (app.href.startsWith("https://www.ccxp.nthu.edu.tw")) {
-          // Redirect user
-          const redirect_url = app.href + `?ACIXSTORE=${token}`;
-          console.log(redirect_url);
-          const link = document.createElement("a");
-          link.href = redirect_url;
-          link.target = "_blank";
-          link.click();
-        } else {
-          router.push(app.href);
-        }
-      } catch (e) {
-        console.error("Failed to get ACIXSTORE", e);
-      } finally {
-        setAisLoading(false);
-      }
-    } else {
-      router.push(app.href);
-    }
-  }, [router, app, ais, getACIXSTORE, dict]);
+  const [onItemClicked, aisLoading, cancelLoading] = useLaunchApp(app);
 
   const isEnabled = useMemo(
     () => (app.ais && ais.enabled) || !app.ais,
@@ -72,7 +27,7 @@ const AppItem = ({
   );
 
   const handleDialogStateChange = () => {
-    setAisLoading(false);
+    cancelLoading();
   };
 
   return (
