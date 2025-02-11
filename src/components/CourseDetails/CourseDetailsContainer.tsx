@@ -8,6 +8,7 @@ import {
   Share,
   Share2,
   CalendarPlus,
+  ExternalLink,
 } from "lucide-react";
 import Link from "next/link";
 import DownloadSyllabus from "./DownloadSyllabus";
@@ -61,6 +62,7 @@ import DateContributeForm from "./DateContributeForm";
 import { getContribDates } from "@/lib/contrib_dates";
 import { getCurrentUser } from "@/lib/firebase/auth";
 import { currentSemester } from "@/const/semester";
+import CCXPSyllabusLink from "./CCXPSyllabusLink";
 
 const PDFViewerDynamic = dynamicFn(
   () => import("@/components/CourseDetails/PDFViewer"),
@@ -623,6 +625,13 @@ const CourseDetailContainer = async ({
                   </div>
                 </div>
               )}
+
+              <CCXPSyllabusLink course={course as MinimalCourse}>
+                <a className="font-semibold text-base">
+                  {dict.course.details.view_ccxp_syllabus}{" "}
+                  <ExternalLink className="w-4 h-4 inline" />
+                </a>
+              </CCXPSyllabusLink>
               <div className="flex flex-col gap-1">
                 <div className="flex flex-row gap-2 flex-wrap">
                   <p className="text-xs text-gray-500">
