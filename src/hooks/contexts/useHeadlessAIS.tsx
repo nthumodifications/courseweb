@@ -23,6 +23,7 @@ import {
   signOut as serverSignOut,
   signIn as serverSignIn,
 } from "@/lib/firebase/auth";
+import { signInEeclassOauth } from "@/lib/headless_ais/elearning";
 
 const headlessAISContext = createContext<
   ReturnType<typeof useHeadlessAISProvider>
@@ -40,6 +41,7 @@ const headlessAISContext = createContext<
   isACIXSTOREValid: false,
   openChangePassword: false,
   setOpenChangePassword: () => {},
+  getEEClassUrl: async () => "",
 });
 
 const RenewPasswordDialogDynamic = dynamic(
@@ -236,6 +238,22 @@ const useHeadlessAISProvider = () => {
     return () => clearInterval(interval);
   }, [headlessAIS]);
 
+  const getEEClassUrl = async () => {
+    if (!headlessAIS.enabled) return "";
+    const res = await signInEeclassOauth(
+      headlessAIS.studentid,
+      headlessAIS.password,
+    );
+    if ("error" in res) {
+      toast({
+        title: "登入失敗",
+        description: res.error.message,
+      });
+      return "";
+    }
+    return res.url;
+  };
+
   return {
     user,
     ais,
@@ -247,6 +265,7 @@ const useHeadlessAISProvider = () => {
     initializing,
     openChangePassword,
     setOpenChangePassword,
+    getEEClassUrl,
   };
 };
 
