@@ -3,7 +3,6 @@ const withPWA = require("@ducanh2912/next-pwa").default({
   disable: process.env.NODE_ENV === "development",
   reloadOnOnline: true,
   swcMinify: true,
-  dynamicStartUrlRedirect: "/zh/today",
   workboxOptions: {
     disableDevLogs: true,
   },
