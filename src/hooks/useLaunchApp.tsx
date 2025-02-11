@@ -8,7 +8,7 @@ import { toast } from "@/components/ui/use-toast";
 import { event } from "@/lib/gtag";
 const useLaunchApp = (app: (typeof apps)[number]) => {
   const dict = useDictionary();
-  const { ais, getACIXSTORE } = useHeadlessAIS();
+  const { ais, getACIXSTORE, getEEClassUrl } = useHeadlessAIS();
   const router = useRouter();
   const [aisLoading, setAisLoading] = React.useState(false);
 
@@ -25,29 +25,41 @@ const useLaunchApp = (app: (typeof apps)[number]) => {
       }
 
       setAisLoading(true);
-      try {
-        const token = await getACIXSTORE();
-        if (!token) {
+      if (app.href.startsWith("eeclass")) {
+        try {
+          const url = await getEEClassUrl();
+          window.open(url, "_blank");
+        } catch (e) {
+          console.error("Failed to get eeclass url", e);
+        } finally {
           setAisLoading(false);
-          return;
         }
+        return;
+      } else {
+        try {
+          const token = await getACIXSTORE();
+          if (!token) {
+            setAisLoading(false);
+            return;
+          }
 
-        // if starts with http, open in new tab
-        if (app.href.startsWith("https://www.ccxp.nthu.edu.tw")) {
-          // Redirect user
-          const redirect_url = app.href + `?ACIXSTORE=${token}`;
-          console.log(redirect_url);
-          const link = document.createElement("a");
-          link.href = redirect_url;
-          link.target = "_blank";
-          link.click();
-        } else {
-          router.push(app.href);
+          // if starts with http, open in new tab
+          if (app.href.startsWith("https://www.ccxp.nthu.edu.tw")) {
+            // Redirect user
+            const redirect_url = app.href + `?ACIXSTORE=${token}`;
+            console.log(redirect_url);
+            const link = document.createElement("a");
+            link.href = redirect_url;
+            link.target = "_blank";
+            link.click();
+          } else {
+            router.push(app.href);
+          }
+        } catch (e) {
+          console.error("Failed to get ACIXSTORE", e);
+        } finally {
+          setAisLoading(false);
         }
-      } catch (e) {
-        console.error("Failed to get ACIXSTORE", e);
-      } finally {
-        setAisLoading(false);
       }
     } else {
       router.push(app.href);
