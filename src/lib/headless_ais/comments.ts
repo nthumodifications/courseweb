@@ -128,8 +128,8 @@ export const postComment = async (
   }
 
   console.log("Comment posted:", data);
-  revalidatePath(`/en/courses/${courseId}`);
-  revalidatePath(`/zh/courses/${courseId}`);
+  revalidatePath(`/en/courses/${courseId}`, "page");
+  revalidatePath(`/zh/courses/${courseId}`, "page");
 };
 
 // const parseTemplate = (text: string): Partial<CommentData> => {

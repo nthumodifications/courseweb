@@ -27,7 +27,7 @@ export const getContribDates = async (raw_id: string) => {
     }));
 };
 
-export const submitContribDates: ServerAction = async (
+export const submitContribDates = async (
   ACIXSTORE: string,
   raw_id: string,
   dates: { id?: number; type: string; title: string; date: string }[],
@@ -36,6 +36,7 @@ export const submitContribDates: ServerAction = async (
     const session = await getCurrentUser();
     if (!session) throw new Error("Unauthorized");
     const courses = await getStudentCourses(ACIXSTORE);
+    console.log(courses, raw_id);
     if (!courses?.courses.includes(raw_id))
       throw new Error("User has not taken this course");
     // so user has course, make sure this is edited during the semester
@@ -101,7 +102,7 @@ export const submitContribDates: ServerAction = async (
       if (delError) throw new Error("Failed to delete dates");
     }
     // invalidate cache
-    revalidatePath(`/[lang]/courses/${raw_id}`);
+    revalidatePath(`/[lang]/courses/${raw_id}`, "page");
     return true;
   } catch (error) {
     if (error instanceof Error)
