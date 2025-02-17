@@ -28,7 +28,7 @@ export const EventLabelPicker = ({
 
   const { labels } = useCalendar();
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={setOpen} modal={true}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
@@ -36,8 +36,7 @@ export const EventLabelPicker = ({
           aria-expanded={open}
           className="w-full justify-between"
         >
-          {labels.find((framework) => framework === value ?? labels[0]) ??
-            "標籤"}
+          {labels.find((framework) => framework === value) ?? "標籤"}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>

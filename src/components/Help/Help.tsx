@@ -1,7 +1,7 @@
 "use client";
 import { HelpCircle } from "lucide-react";
 import useDictionary from "@/dictionaries/useDictionary";
-import { useState, useEffect } from "react";
+import { useState, useEffect, ReactNode } from "react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
@@ -28,7 +28,7 @@ const ProgressDisplay = ({ current, max }: ProgressDisplayProps) => {
   );
 };
 
-const Help = () => {
+const Help = ({ children }: { children?: ReactNode }) => {
   const dict = useDictionary();
 
   const content = [
@@ -85,15 +85,17 @@ const Help = () => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button
-          size="sm"
-          variant="outline"
-          className="flex gap-1"
-          onClick={() => setOpen(true)}
-        >
-          <HelpCircle size="16" />
-          <span className="hidden md:inline-block">Help</span>
-        </Button>
+        {children ?? (
+          <Button
+            size="sm"
+            variant="outline"
+            className="flex gap-1"
+            onClick={() => setOpen(true)}
+          >
+            <HelpCircle size="16" />
+            <span className="hidden md:inline-block">Help</span>
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="h-[calc(100dvh-env(safe-area-inset-bottom))] p-0 w-full lg:h-[calc(100vh-48px)] pb-[env(safe-area-inset-bottom)]">
         <div className="flex flex-col items-center gap-8 px-4 py-8 max-h-[calc(100dvh-env(safe-area-inset-bottom))] overflow-y-auto">

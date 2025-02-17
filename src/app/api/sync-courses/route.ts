@@ -16,7 +16,7 @@ export const GET = async (request: NextRequest) => {
     });
   }
 
-  const semester = "11310";
+  const semester = "11320";
 
   console.log("syncing courses uwu");
   console.log("scraping archived courses");

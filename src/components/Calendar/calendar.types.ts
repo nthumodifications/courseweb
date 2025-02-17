@@ -1,3 +1,4 @@
+import { CourseTimeslotData } from "@/types/timetable";
 export interface RepeatDefinition {
   type: "daily" | "weekly" | "monthly" | "yearly";
   interval: number;
@@ -29,3 +30,9 @@ export interface DisplayCalendarEvent extends CalendarEventInternal {
   displayStart: Date;
   displayEnd: Date;
 }
+
+export type TimetableSyncRequest = {
+  semester: string;
+  courses: CourseTimeslotData[];
+  reason: "modified" | "new";
+};

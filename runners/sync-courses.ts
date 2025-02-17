@@ -1,8 +1,4 @@
-import schedule from "node-schedule";
-
-// Run every day at 8:00 AM
-// 8 AM (GMT+8) = 0 AM (GMT)
-const job = schedule.scheduleJob("0 0 * * *", async () => {
+(async () => {
   try {
     console.log("syncing courses begin uwu");
     const res = await fetch(
@@ -38,10 +34,4 @@ const job = schedule.scheduleJob("0 0 * * *", async () => {
   } catch (e) {
     console.error("error calling scrape-courses", e);
   }
-});
-
-// handle close job
-process.on("SIGINT", () => {
-  job.cancel();
-  process.exit();
-});
+})();

@@ -98,7 +98,8 @@
       "second_specialization": "二專",
       "ptt_title": "PTT Reviews",
       "ptt_disclaimer": "PTT 評論來自於 NTHU_Course 版，並非由 NTHUMods 審核。評論並不代表 NTHUMods 的立場。若您發現任何不當內容，請向PTT版檢舉。",
-      "important_dates": "重要日期"
+      "important_dates": "重要日期",
+      "view_ccxp_syllabus": "瀏覽校務系統大綱網頁"
     }
   },
   "navigation": {
@@ -295,6 +296,26 @@
     },
     "logging_in_please_wait": "正在幫你登入校務資訊系統，請稍等...",
     "not_logged_in_error": "還未連接校務資訊系統"
+  },
+  "grade": {
+    "class_rank": "班排名",
+    "dept_rank": "系排名",
+    "passed_credits": "及格學分",
+    "pending_credits": "成績未到學分",
+    "semester": "學期",
+    "relative_avg": "修課相對成績平均",
+    "num_of_courses": "修課數",
+    "summer_credits": "暑修學分",
+    "transfer_credits": "抵免學分",
+    "t_score_class_rank": "T分數班排名",
+    "t_score_dept_rank": "T分數系排名",
+    "latest_first": "由遠到近",
+    "oldest_first": "由近到遠",
+    "score_curve": "成績曲線圖",
+    "taken_actual_credits": "修習/實得學分",
+    "all_courses": "全部課程",
+    "semester_grades": "學期成績",
+    "t_score": "T 分數成績"
   },
   "cancel": "取消",
   "privacy_policy": "隱私權政策"

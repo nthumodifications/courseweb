@@ -98,7 +98,8 @@
       "second_specialization": "Second Specialization",
       "ptt_title": "PTT Reviews",
       "ptt_disclaimer": "PTT reviews are from the NTHU_Course board and are not moderated by NTHUMods. The reviews do not represent the views of NTHUMods. If you find any inappropriate content, please report to the board itself.",
-      "important_dates": "Important Dates"
+      "important_dates": "Important Dates",
+      "view_ccxp_syllabus": "View Original Webpage"
     }
   },
   "navigation": {
@@ -295,6 +296,26 @@
     },
     "logging_in_please_wait": "Logging into your Academic Information System Account...",
     "not_logged_in_error": "You are not logged in"
+  },
+  "grade": {
+    "class_rank": "Class Ranking",
+    "dept_rank": "Department Ranking",
+    "passed_credits": "Passed credits",
+    "pending_credits": "Pending credits",
+    "semester": "Semester",
+    "relative_avg": "Relative Grade Average",
+    "num_of_courses": "Number of Courses",
+    "summer_credits": "Summer Credits",
+    "transfer_credits": "Transfer Credits",
+    "t_score_class_rank": "T-Score Class Ranking",
+    "t_score_dept_rank": "T-Score Department Ranking",
+    "latest_first": "Latest First",
+    "oldest_first": "Oldest First",
+    "score_curve": "Score Curve",
+    "taken_actual_credits": "Taken/Actual Credits",
+    "all_courses": "All Courses",
+    "semester_grades": "Semester Grades",
+    "t_score": "T-Score"
   },
   "cancel": "Cancel",
   "privacy_policy": "Privacy Policy"

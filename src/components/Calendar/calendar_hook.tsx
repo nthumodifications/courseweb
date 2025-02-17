@@ -87,13 +87,44 @@ export const useCalendarProvider = () => {
     replicationState.error$.subscribe((error) => console.error(error));
     replicationState.start();
     replicationState.awaitInitialReplication().then(() => {
-      console.log("Initial replication done");
+      console.log("[events] Initial replication done");
     });
     return () => {
       replicationState.cancel();
       replicationState.remove();
     };
   }, [user, eventsCol]);
+
+  const timetableSyncCol = useRxCollection("timetablesync");
+
+  useEffect(() => {
+    if (!user) return;
+    if (!timetableSyncCol) return;
+    const replicationState = replicateFirestore({
+      replicationIdentifier: "timetablesync-to-firestore",
+      collection: timetableSyncCol,
+      firestore: {
+        projectId: firebaseConfig.projectId,
+        database: firebaseDb,
+        collection: collection(firebaseDb, "users", user.uid, "timetablesync"),
+      },
+      pull: {},
+      push: {},
+      live: true,
+      serverTimestampField: "serverTimestamp",
+      autoStart: true,
+    });
+    // emits all errors that happen when running the push- & pull-handlers.
+    replicationState.error$.subscribe((error) => console.error(error));
+    replicationState.start();
+    replicationState.awaitInitialReplication().then(() => {
+      console.log("[timetableSync] Initial replication done");
+    });
+    return () => {
+      replicationState.cancel();
+      replicationState.remove();
+    };
+  }, [user, timetableSyncCol]);
 
   const { result: eventStore } = useRxQuery(eventsCol?.find());
   const events =
@@ -112,8 +143,6 @@ export const useCalendarProvider = () => {
         } as CalendarEventInternal;
       });
     }, [eventStore]) ?? [];
-
-  const { courses, colorMap } = useUserTimetable();
 
   const displayContainer = useRef<HTMLDivElement>(null);
 

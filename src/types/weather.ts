@@ -1,22 +1,21 @@
 export type WeatherAPIResponse = {
-  locations: {
-    datasetDescription: string;
-    locationsName: string;
-    dataid: string;
-    location: {
-      locationName: string;
-      geocode: string;
-      lat: string;
-      lon: string;
-      weatherElement: {
-        elementName: string;
-        description: string;
-        time: {
-          startTime: string;
-          endTime: string;
-          elementValue: {
-            value: string;
-            measures: string;
+  Locations: {
+    DatasetDescription: string;
+    LocationsName: string;
+    Dataid: string;
+    Location: {
+      LocationName: string;
+      Geocode: string;
+      Lat: string;
+      Lon: string;
+      WeatherElement: {
+        ElementName: string;
+        Description: string;
+        Time: {
+          StartTime: string;
+          EndTime: string;
+          ElementValue: {
+            [Measures: string]: string;
           }[];
         }[];
       }[];

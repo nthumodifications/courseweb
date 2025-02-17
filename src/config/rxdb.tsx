@@ -184,6 +184,34 @@ export type ItemDocType = ExtractDocumentTypeFromTypedRxJsonSchema<
   typeof itemsSchema
 >;
 
+const timetableSyncSchema = {
+  version: 0,
+  primaryKey: "semester",
+  type: "object",
+  properties: {
+    semester: {
+      type: "string",
+      maxLength: 5,
+    },
+    lastSync: {
+      type: "string",
+      format: "date-time",
+    },
+    courses: {
+      type: "array",
+      items: {
+        type: "string",
+      },
+    },
+  },
+  required: ["semester", "lastSync", "courses"],
+} as const;
+
+const timetableSyncSchemaTyped = toTypedRxJsonSchema(timetableSyncSchema);
+
+export type TimetableSyncDocType = ExtractDocumentTypeFromTypedRxJsonSchema<
+  typeof timetableSyncSchemaTyped
+>;
 export const initializeRxDB = async () => {
   // create RxDB
   if (process.env.NODE_ENV === "development") {
@@ -224,6 +252,9 @@ export const initializeRxDB = async () => {
           return oldDoc;
         },
       },
+    },
+    timetablesync: {
+      schema: timetableSyncSchema,
     },
   });
 
