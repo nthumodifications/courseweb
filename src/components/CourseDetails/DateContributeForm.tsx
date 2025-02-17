@@ -233,7 +233,7 @@ const DateContributeForm = ({
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            <Popover>
+                            <Popover modal={true}>
                               <PopoverTrigger asChild disabled={disabled}>
                                 <Button
                                   variant={"outline"}
