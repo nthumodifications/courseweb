@@ -125,7 +125,7 @@ const DateContributeForm = ({
       });
       throw new Error("Failed to get token");
     }
-    const result = await submitContribDates(ACIXSTORE, submitDates);
+    const result = await submitContribDates(ACIXSTORE, courseId, submitDates);
     if (typeof result == "object" && "error" in result) {
       toast({
         title: "Failed to submit",
