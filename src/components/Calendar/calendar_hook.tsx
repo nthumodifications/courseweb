@@ -81,7 +81,6 @@ export const useCalendarProvider = () => {
       push: {},
       live: true,
       serverTimestampField: "serverTimestamp",
-      autoStart: true,
     });
     // emits all errors that happen when running the push- & pull-handlers.
     replicationState.error$.subscribe((error) => console.error(error));
@@ -112,7 +111,6 @@ export const useCalendarProvider = () => {
       push: {},
       live: true,
       serverTimestampField: "serverTimestamp",
-      autoStart: true,
     });
     // emits all errors that happen when running the push- & pull-handlers.
     replicationState.error$.subscribe((error) => console.error(error));
