@@ -9,7 +9,7 @@
     "dev": "next dev",
     "dev-turbo": "next dev --turbo",
     "build": "next build",
-    "start": "concurrently \"next start\" \"npm run runner:update-courses\" --restart-tries -1 --kill-others --success first",
+    "start": "next start",
     "runner:update-courses": "node --import=tsimp/import runners/update-courses.ts",
     "lint": "next lint --fix",
     "gentype": "npx supabase gen types typescript --project-id \"cmzdlrqfpuktcczvsobs\" --schema public > src/types/supabase.ts",
