@@ -10,7 +10,7 @@ const PrivacyPolicyZHPage = () => {
     <div className="px-4 py-8">
       <div id="hero" className="flex flex-col gap-4 py-8">
         <h1 className="text-5xl font-bold">隱私權政策</h1>
-        <p className="text-gray-600 dark:text-gray-400">更新時間: 2023/12/21</p>
+        <p className="text-gray-600 dark:text-gray-400">更新時間: 2025/02/20</p>
       </div>
       <article className="prose prose-neutral dark:prose-invert">
         <p>
@@ -55,7 +55,7 @@ const PrivacyPolicyZHPage = () => {
         <p>
           <ul className="list-disc">
             <li>
-              本網站主機均設有防火牆、防毒系統等相關的各項資訊安全設備及必要的安全防護措施，加以保護網站及您的個人資料採用嚴格的保護措施，只由經過授權的人員才能接觸您的個人資料，相關處理人員皆簽有保密合約，如有違反保密義者，將會受到相關的法律處分。
+              本網站主機均設有防火牆、防毒系統等相關的各項資訊安全設備及必要的安全防護措施，加以保護網站及您的個人資料採用嚴格的保護措施，只由經過授權的人員才能接觸您的個人資料。
             </li>
             <li>
               如因業務需要有必要委託本部相關單位提供服務時，本網站亦會嚴格要求其遵守保密義務，並且採取必要檢查程序以確定其將確實遵守。
@@ -158,12 +158,6 @@ const PrivacyPolicyENPage = () => {
             authorized personnel can access your personal data. All related
             processing personnel have signed confidentiality agreements and will
             face legal penalties if they violate confidentiality obligations.`}
-          </li>
-          <li>
-            If it is necessary to entrust relevant units of this department to
-            provide services due to business needs, this website will also
-            strictly require them to comply with confidentiality obligations and
-            take necessary inspection procedures to ensure compliance.
           </li>
         </ul>
         <h2>4. External Links on the Website</h2>
