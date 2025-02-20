@@ -1,0 +1,11 @@
+[phases.setup]
+nixPkgs = ["nodejs_23"] 
+
+[phases.install]
+cmds = ["npm ci"]  # Install dependencies
+
+[phases.build]
+cmds = ["npm run build"]  # Build the Next.js app
+
+[start]
+cmd = "npm run start"  # Start the app
