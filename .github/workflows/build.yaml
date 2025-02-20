@@ -28,12 +28,13 @@ jobs:
       # Build and push Docker image with Nixpacks action
       - name: Build and push Docker image
         uses: iloveitaly/github-action-nixpacks@main
-        env:
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
         with:
           context: . # Path to your Next.js app (root by default)
+          env:
+            SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+            SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+            SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+            SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           push: true # Push to registry
           tags: |
             ${{ env.IMAGE_NAME }}:${{ github.sha }}
