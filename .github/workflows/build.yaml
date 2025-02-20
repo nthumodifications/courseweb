@@ -32,9 +32,7 @@ jobs:
           context: . # Path to your Next.js app (root by default)
           env:
             SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-            SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-            SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
-            SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+            SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SENTRY_PROJECT }}
           push: true # Push to registry
           tags: |
             ${{ env.IMAGE_NAME }}:${{ github.sha }}
