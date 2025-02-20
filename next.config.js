@@ -42,6 +42,7 @@ const nextConfig = {
     // return the modified config
     return config;
   },
+  output: "standalone",
 };
 
 const { withSentryConfig } = require("@sentry/nextjs");
