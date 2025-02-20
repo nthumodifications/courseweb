@@ -25,17 +25,18 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Build and push Docker image with Nixpacks action
+      # Install Nixpacks CLI
+      - name: Install Nixpacks
+        run: curl -sSL https://nixpacks.com/install.sh | bash
+
+      # Build and push Docker image with Nixpacks CLI
       - name: Build and push Docker image
-        uses: iloveitaly/github-action-nixpacks@main
-        with:
-          context: . # Path to your Next.js app (root by default)
-          push: true # Push to registry
-          tags: |
-            ${{ env.IMAGE_NAME }}:${{ github.sha }}
-            ${{ env.IMAGE_NAME }}:latest
-          # Optional: Customize Nixpacks build args if needed
-          nixpacks_args: "--name ${{ env.IMAGE_NAME }}"
+        run: |
+          nixpacks build . \
+            --name ${{ env.IMAGE_NAME }} \
+            --tag ${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            --tag ${{ env.IMAGE_NAME }}:latest \
+            --push
 
       # Trigger Coolify deployment (optional webhook)
       - name: Trigger Coolify deployment
