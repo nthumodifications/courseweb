@@ -24,10 +24,24 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Debug Secret
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        run: |
+          echo "SENTRY_AUTH_TOKEN is: $SENTRY_AUTH_TOKEN"
+          if [ -z "$SENTRY_AUTH_TOKEN" ]; then
+            echo "Token is empty or unset!"
+            exit 1
+          else
+            echo "Token is set (length: ${#SENTRY_AUTH_TOKEN})"
+          fi
 
       # Build and push Docker image with Nixpacks action
       - name: Build and push Docker image
         uses: iloveitaly/github-action-nixpacks@main
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
         with:
           context: . # Path to your Next.js app (root by default)
           env: |
