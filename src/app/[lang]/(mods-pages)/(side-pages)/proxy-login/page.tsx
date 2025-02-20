@@ -1,7 +1,7 @@
 import Script from "next/script";
 import Footer from "@/components/Footer";
 
-const ProxyLoginExplainer = () => {
+const ProxyLoginExplainerZH = () => {
   return (
     <div className="px-4 py-8">
       <Script
@@ -116,4 +116,151 @@ const ProxyLoginExplainer = () => {
   );
 };
 
-export default ProxyLoginExplainer;
+const ProxyLoginExplainerEN = () => {
+  return (
+    <div className="px-4 py-8">
+      <Script
+        id="mermaid"
+        type="module"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `
+                import mermaid from "https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.esm.min.mjs";
+                mermaid.initialize({startOnLoad: true});
+                mermaid.contentLoaded();`,
+        }}
+      />
+      <div id="hero" className="flex flex-col gap-4 py-8">
+        <h1 className="text-5xl font-bold">NTHUMods Proxy Login Explanation</h1>
+        <p className="text-gray-600 dark:text-gray-400">
+          Updated on: 2024/05/31
+        </p>
+      </div>
+      <article className="prose prose-neutral dark:prose-invert">
+        <h2>What is NTHUMods Proxy Login?</h2>
+        <p>
+          NTHUMods Proxy Login is a tool that helps users securely log in to the
+          school information system on the NTHUMods platform. It uses encryption
+          technology to protect user accounts and passwords, ensuring your
+          information’s security.
+        </p>
+
+        <h2>How do we use your account information?</h2>
+        <p>
+          When using NTHUMods Proxy Login, we require your student ID and
+          password for the initial login verification. The login process is as
+          follows:
+        </p>
+        <ol>
+          <li>
+            Send a request to the school information system login page to obtain
+            a captcha image.
+          </li>
+          <li>Decode the captcha using OCR technology.</li>
+          <li>Submit your student ID, password, and captcha to log in.</li>
+          <li>Verify the login status and obtain ACIXSTORE information.</li>
+        </ol>
+        <b>
+          Your information is stored only on your device! We do not store any
+          data (we don’t have the fuckin’ money to store it for you)!
+        </b>
+        <p>
+          After the initial login, your password will be encrypted{" "}
+          <b>and stored on your device</b> for automatic login next time.
+        </p>
+
+        <h2>How is your information protected?</h2>
+        <p>We take the following steps to protect your information:</p>
+        <ul>
+          <li>
+            <b>Your information is stored only on your device.</b>
+          </li>
+          <li>
+            Passwords stored on your device are encrypted using AES-256-CBC
+            encryption technology.
+          </li>
+          <li>A diagram of the password encryption and decryption process:</li>
+          <div className="mermaid">
+            {`
+                    graph TD;
+                        A[User enters password] -->|Encrypt| B[Encrypted password];
+                        B --> C[Stored on user’s device];
+                        C -->|Decrypt| D[Login using password];
+                    `}
+          </div>
+          <li>
+            Using JWT technology to authenticate user data—reducing password
+            usage while ensuring security and timeliness.{" "}
+            <b>Your JWT is stored only on your device.</b>
+          </li>
+        </ul>
+
+        <h2>Flowchart</h2>
+        <div className="mermaid">
+          {`
+                graph TD;
+                subgraph User Device
+                    A1[User enters student ID and password] --> B1[Send login request];
+                end
+                subgraph Server
+                    B1 --> C1[Get captcha];
+                    C1 --> D1[Decode captcha];
+                    D1 --> E1[Submit login information];
+                    E1 --> F1[Verify login status];
+                    F1 -->|Success| G1[Return ACIXSTORE];
+                    F1 -->|Failure| H1[Error handling];
+                end
+                G1 --> I1[User Device];
+                subgraph User Device
+                    J1[Whenever a login-required feature is accessed] --> K1[Send re-login request using encrypted password];
+                end
+                K1 --> L1[Refresh login status];
+                `}
+        </div>
+
+        <h2>When is automatic re-authentication performed?</h2>
+        <p>
+          When the JWT expires or a feature linking to the school information
+          system is activated, the system will use the encrypted stored password
+          to refresh the authentication period:{" "}
+          <b>Your information is stored only on your device.</b>
+        </p>
+        <ol>
+          <li>Decrypt the stored password.</li>
+          <li>Use the decrypted password to log in again.</li>
+          <li>Return a new ACIXSTORE.</li>
+        </ol>
+
+        <h2>Reference Links</h2>
+        <p>
+          For detailed code, please refer to our{" "}
+          <a href="https://github.com/nthumodifications/courseweb/blob/9e738bc32c49b0168efaedeb9626211dbc36b639/src/lib/headless_ais/headless_ais.ts">
+            NTHUMods Github
+          </a>
+          .
+        </p>
+      </article>
+      <Footer />
+    </div>
+  );
+};
+
+type LangProps = {
+  params: {
+    lang: string;
+  };
+};
+
+const ProxyLoginExplainerPage = ({ params }: LangProps) => {
+  return (
+    <>
+      {params.lang === "zh" ? (
+        <ProxyLoginExplainerZH />
+      ) : (
+        <ProxyLoginExplainerEN />
+      )}
+    </>
+  );
+};
+
+export default ProxyLoginExplainerPage;
