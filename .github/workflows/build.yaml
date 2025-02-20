@@ -12,6 +12,7 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     environment: production
+    permissions: write-all
     steps:
       # Checkout the repository
       - name: Checkout code
