@@ -59,6 +59,7 @@ jobs:
             --build-arg SENTRY_PROJECT=$SENTRY_PROJECT \
             --build-arg SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY \
             --build-arg SUPABASE_URL=$SUPABASE_URL
+            --build-arg FIREBASE_SERVICE_ACCOUNT=$FIREBASE_SERVICE_ACCOUNT
 
       # Push Docker image to GHCR
       - name: Push Docker image
