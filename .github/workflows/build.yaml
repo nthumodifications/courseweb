@@ -11,6 +11,7 @@ env:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    environment: production
     steps:
       # Checkout the repository
       - name: Checkout code
@@ -27,6 +28,10 @@ jobs:
       # Build and push Docker image with Nixpacks action
       - name: Build and push Docker image
         uses: iloveitaly/github-action-nixpacks@main
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
         with:
           context: . # Path to your Next.js app (root by default)
           push: true # Push to registry
