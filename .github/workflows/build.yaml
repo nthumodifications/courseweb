@@ -25,17 +25,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Install Nixpacks CLI
-      - name: Install Nixpacks
-        run: curl -sSL https://nixpacks.com/install.sh | bash
-
-      # Build Docker image with Nixpacks CLI
+      # Build and tag Docker image
       - name: Build Docker image
         run: |
-          nixpacks build . \
-            --name ${{ env.IMAGE_NAME }} \
-            --tag ${{ env.IMAGE_NAME }}:${{ github.sha }} \
-            --tag ${{ env.IMAGE_NAME }}:latest
+          docker build . -t ${{ env.IMAGE_NAME }}:${{ github.sha }} -t ${{ env.IMAGE_NAME }}:latest
+
+      # Push Docker image to GHCR
+      - name: Push Docker image
+        run: |
+          docker push ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          docker push ${{ env.IMAGE_NAME }}:latest
 
       # Push Docker image to GHCR
       - name: Push Docker image
