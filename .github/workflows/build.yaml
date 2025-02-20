@@ -27,8 +27,33 @@ jobs:
 
       # Build and tag Docker image
       - name: Build Docker image
+        env:
+          NEXT_PUBLIC_ALGOLIA_APP_ID: ${{ secrets.NEXT_PUBLIC_ALGOLIA_APP_ID }}
+          NEXT_PUBLIC_ALGOLIA_SEARCH_KEY: ${{ secrets.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY }}
+          NEXT_PUBLIC_ALGOLIA_TEMP_APP_ID: ${{ secrets.NEXT_PUBLIC_ALGOLIA_TEMP_APP_ID }}
+          NEXT_PUBLIC_ALGOLIA_TEMP_SEARCH_KEY: ${{ secrets.NEXT_PUBLIC_ALGOLIA_TEMP_SEARCH_KEY }}
+          NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.NEXT_PUBLIC_SENTRY_DSN }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${{ secrets.NEXT_PUBLIC_TURNSTILE_SITE_KEY }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
         run: |
-          docker build . -t ${{ env.IMAGE_NAME }}:${{ github.sha }} -t ${{ env.IMAGE_NAME }}:latest
+          docker build . \
+            -t ${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            -t ${{ env.IMAGE_NAME }}:latest \
+            --build-arg NEXT_PUBLIC_ALGOLIA_APP_ID=$NEXT_PUBLIC_ALGOLIA_APP_ID \
+            --build-arg NEXT_PUBLIC_ALGOLIA_SEARCH_KEY=$NEXT_PUBLIC_ALGOLIA_SEARCH_KEY \
+            --build-arg NEXT_PUBLIC_ALGOLIA_TEMP_APP_ID=$NEXT_PUBLIC_ALGOLIA_TEMP_APP_ID \
+            --build-arg NEXT_PUBLIC_ALGOLIA_TEMP_SEARCH_KEY=$NEXT_PUBLIC_ALGOLIA_TEMP_SEARCH_KEY \
+            --build-arg NEXT_PUBLIC_SENTRY_DSN=$NEXT_PUBLIC_SENTRY_DSN \
+            --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY \
+            --build-arg NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL \
+            --build-arg NEXT_PUBLIC_TURNSTILE_SITE_KEY=$NEXT_PUBLIC_TURNSTILE_SITE_KEY \
+            --build-arg SENTRY_AUTH_TOKEN=$SENTRY_AUTH_TOKEN \
+            --build-arg SENTRY_ORG=$SENTRY_ORG \
+            --build-arg SENTRY_PROJECT=$SENTRY_PROJECT \
 
       # Push Docker image to GHCR
       - name: Push Docker image
