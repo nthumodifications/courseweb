@@ -39,6 +39,8 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
         run: |
           docker build . \
             -t ${{ env.IMAGE_NAME }}:${{ github.sha }} \
@@ -54,6 +56,8 @@ jobs:
             --build-arg SENTRY_AUTH_TOKEN=$SENTRY_AUTH_TOKEN \
             --build-arg SENTRY_ORG=$SENTRY_ORG \
             --build-arg SENTRY_PROJECT=$SENTRY_PROJECT \
+            --build-arg SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY \
+            --build-arg SUPABASE_URL=$SUPABASE_URL
 
       # Push Docker image to GHCR
       - name: Push Docker image
