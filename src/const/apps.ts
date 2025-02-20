@@ -53,6 +53,7 @@ export const categories: {
 };
 
 export const apps: {
+  hidden?: boolean;
   id: string;
   category: keyof typeof categories;
   title_zh: string;
@@ -139,6 +140,7 @@ export const apps: {
     ais: true,
   },
   {
+    hidden: true,
     id: "eeclass",
     category: "campuslife",
     title_zh: "eeclass",

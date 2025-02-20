@@ -32,37 +32,39 @@ const AppList = () => {
                   </h1>
                   <ScrollArea className="max-h-[80dvh]">
                     <div className="flex flex-col gap-2">
-                      {apps.map((app) => (
-                        <div
-                          key={app.id}
-                          className="flex flex-row items-center space-x-2"
-                        >
-                          <div className="p-2 rounded-lg bg-nthu-100 text-nthu-800 grid place-items-center">
-                            <app.Icon size={24} />
+                      {apps
+                        .filter((a) => !a.hidden)
+                        .map((app) => (
+                          <div
+                            key={app.id}
+                            className="flex flex-row items-center space-x-2"
+                          >
+                            <div className="p-2 rounded-lg bg-nthu-100 text-nthu-800 grid place-items-center">
+                              <app.Icon size={24} />
+                            </div>
+                            <div className="flex flex-col flex-1">
+                              <h2 className=" font-medium">
+                                {language == "zh" ? app.title_zh : app.title_en}
+                              </h2>
+                            </div>
+                            <div className="flex flex-row items-center space-x-2 pr-4">
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => toggleApp(app.id)}
+                              >
+                                <Star
+                                  size={20}
+                                  className={cn(
+                                    !pinnedApps.includes(app.id)
+                                      ? ""
+                                      : "fill-yellow-500 stroke-yellow-500",
+                                  )}
+                                />
+                              </Button>
+                            </div>
                           </div>
-                          <div className="flex flex-col flex-1">
-                            <h2 className=" font-medium">
-                              {language == "zh" ? app.title_zh : app.title_en}
-                            </h2>
-                          </div>
-                          <div className="flex flex-row items-center space-x-2 pr-4">
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              onClick={() => toggleApp(app.id)}
-                            >
-                              <Star
-                                size={20}
-                                className={cn(
-                                  !pinnedApps.includes(app.id)
-                                    ? ""
-                                    : "fill-yellow-500 stroke-yellow-500",
-                                )}
-                              />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
+                        ))}
                     </div>
                   </ScrollArea>
                 </div>
@@ -92,6 +94,7 @@ const AppList = () => {
             </h1>
             <div className="grid md:grid-cols-2 gap-2">
               {apps
+                .filter((a) => !a.hidden)
                 .filter((m) => m.category === category)
                 .map((app) => (
                   <AppItem key={app.id} app={app} />
