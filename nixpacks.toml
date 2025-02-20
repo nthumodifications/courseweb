@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ["nodejs_23"] 
+nixPkgs = ["nodejs_20"] 
 
 [phases.install]
 cmds = ["npm ci"]  # Install dependencies
