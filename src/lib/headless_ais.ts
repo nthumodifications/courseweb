@@ -164,13 +164,20 @@ export const signInToCCXP = async (
               method: "GET",
             },
           );
+          // content length
+          console.log("Content Length", res.headers.get("content-length"));
 
           const resHTML = await res.arrayBuffer().then((buffer) => {
             const decoder = new TextDecoder("big5");
             const text = decoder.decode(buffer);
             return text;
           });
-console.log("HTML from ccxp page", resHTML.slice(0,300));
+          console.log("HTML from ccxp page", resHTML.slice(0, 300));
+          // check if title is correct "國立清華大學 -- 校務資訊系統 - "
+          if (!resHTML.includes("國立清華大學 -- 校務資訊系統")) {
+            console.error("Title not found");
+            continue;
+          }
           pwdstr = resHTML.match(
             /auth_img\.php\?pwdstr=([a-zA-Z0-9_-]+)/,
           )?.[1]!;
@@ -205,8 +212,8 @@ console.log("HTML from ccxp page", resHTML.slice(0,300));
           // throw new Error(LoginError.Unknown);
           continue;
         }
-      } while (tries <= 4);
-      if (tries == 5 || answer.length != 6) {
+      } while (tries < 3);
+      if (tries == 3 || answer.length != 6) {
         throw new Error("OCR Failed Utterly");
       }
       console.log("Attempt Login");
