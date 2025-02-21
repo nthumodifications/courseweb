@@ -170,6 +170,7 @@ export const signInToCCXP = async (
             const text = decoder.decode(buffer);
             return text;
           });
+console.log(resHTML.slice(0,300));
           pwdstr = resHTML.match(
             /auth_img\.php\?pwdstr=([a-zA-Z0-9_-]+)/,
           )?.[1]!;
