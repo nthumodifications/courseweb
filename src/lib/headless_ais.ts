@@ -170,7 +170,7 @@ export const signInToCCXP = async (
             const text = decoder.decode(buffer);
             return text;
           });
-console.log(resHTML.slice(0,300));
+console.log("HTML from ccxp page", resHTML.slice(0,300));
           pwdstr = resHTML.match(
             /auth_img\.php\?pwdstr=([a-zA-Z0-9_-]+)/,
           )?.[1]!;
@@ -205,8 +205,8 @@ console.log(resHTML.slice(0,300));
           // throw new Error(LoginError.Unknown);
           continue;
         }
-      } while (tries <= 8);
-      if (tries == 9 || answer.length != 6) {
+      } while (tries <= 4);
+      if (tries == 5 || answer.length != 6) {
         throw new Error("OCR Failed Utterly");
       }
       console.log("Attempt Login");
