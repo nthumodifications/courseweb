@@ -1,3 +1,4 @@
+import { Trash } from "lucide-react";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { PropsWithChildren } from "react";
 import { hasTimes } from "@/helpers/courses";
@@ -139,6 +140,14 @@ const TimetableCourseQuickAccess = ({ course }: { course: MinimalCourse }) => {
             }) || <span className="text-gray-400 text-xs">No Venue</span>}
           </div>
         </div>
+        <Button
+          className="rounded-l-none h-full"
+          variant="outline"
+          size="icon"
+          onClick={() => deleteCourse(course.raw_id)}
+        >
+          <Trash className="w-4 h-4" />
+        </Button>
       </div>
       <ImportantDates raw_id={course.raw_id} />
       <div className="p-4 flex flex-col gap-4">
