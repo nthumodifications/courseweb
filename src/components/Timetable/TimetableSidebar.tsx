@@ -8,7 +8,6 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import {
   DownloadTimetableDialogDynamic,
   ShareSyncTimetableDialogDynamic,
-  HeadlessSyncCourseButtonDynamic,
   CourseSearchContainerDynamic,
   TimetableCourseList,
 } from "./TimetableCourseList";
@@ -68,10 +67,6 @@ const TimetableSidebar = ({
           </DropdownMenuTrigger>
           <DropdownMenuContent>
             <DropdownMenuLabel>Customizations</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <HeadlessSyncCourseButtonDynamic />
-            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <GroupByDepartmentButton semester={semester} />

@@ -24,6 +24,8 @@ import {
   signIn as serverSignIn,
 } from "@/lib/firebase/auth";
 import { signInEeclassOauth } from "@/lib/headless_ais/elearning";
+import { useSettings } from "./settings";
+import Link from "next/link";
 
 const headlessAISContext = createContext<
   ReturnType<typeof useHeadlessAISProvider>
@@ -59,6 +61,7 @@ const useHeadlessAISProvider = () => {
   const dict = useDictionary();
   const [openChangePassword, setOpenChangePassword] = useState(false);
   const [_user, authloading, autherror] = useAuthState(auth);
+  const { language } = useSettings();
 
   useEffect(() => {
     setInitializing(false);
@@ -90,6 +93,16 @@ const useHeadlessAISProvider = () => {
     if (!username || !password) {
       throw "empty username or password";
     }
+    toast({
+      title: "目前沒辦法登入",
+      description: (
+        <p>
+          校務系統的登入功能暫時無法使用，
+          <Link href={`/${language}/next-steps`}>詳情</Link>
+        </p>
+      ),
+    });
+    return;
     setLoading(true);
     return await signInToCCXP(username, password)
       .then(async (res) => {
@@ -139,73 +152,74 @@ const useHeadlessAISProvider = () => {
       return headlessAIS.ACIXSTORE!;
     }
     setLoading(true);
+    return null;
 
     // legacy support, if encrypted password is not set, set it
-    if (!headlessAIS.encrypted) {
-      // use signInToCCXP to get encrypted password
-      return await signInToCCXP(
-        headlessAIS.studentid,
-        headlessAIS.password,
-      ).then(async (res) => {
-        if ("error" in res) throw new Error(res.error.message);
-        setHeadlessAIS({
-          enabled: true,
-          studentid: headlessAIS.studentid,
-          password: res.encryptedPassword,
-          encrypted: true,
-          ACIXSTORE: res.ACIXSTORE,
-          lastUpdated: Date.now(),
-          expired: res.passwordExpired,
-        });
-        if (res.passwordExpired)
-          toast({
-            title: "提醒您校務系統密碼已經過期~ ",
-            description: "但是NTHUMods 的功能都不會被影響 ヾ(≧▽≦*)o",
-          });
-        await signInWithCustomToken(auth, res.accessToken).then((user) =>
-          user.user.getIdToken().then(serverSignIn),
-        );
-        setLoading(false);
-        return res.ACIXSTORE;
-      });
-    }
+    // if (!headlessAIS.encrypted) {
+    //   // use signInToCCXP to get encrypted password
+    //   return await signInToCCXP(
+    //     headlessAIS.studentid,
+    //     headlessAIS.password,
+    //   ).then(async (res) => {
+    //     if ("error" in res) throw new Error(res.error.message);
+    //     setHeadlessAIS({
+    //       enabled: true,
+    //       studentid: headlessAIS.studentid,
+    //       password: res.encryptedPassword,
+    //       encrypted: true,
+    //       ACIXSTORE: res.ACIXSTORE,
+    //       lastUpdated: Date.now(),
+    //       expired: res.passwordExpired,
+    //     });
+    //     if (res.passwordExpired)
+    //       toast({
+    //         title: "提醒您校務系統密碼已經過期~ ",
+    //         description: "但是NTHUMods 的功能都不會被影響 ヾ(≧▽≦*)o",
+    //       });
+    //     await signInWithCustomToken(auth, res.accessToken).then((user) =>
+    //       user.user.getIdToken().then(serverSignIn),
+    //     );
+    //     setLoading(false);
+    //     return res.ACIXSTORE;
+    //   });
+    // }
 
-    return await refreshUserSession(headlessAIS.studentid, headlessAIS.password)
-      .then(async (res) => {
-        if ("error" in res) throw new Error(res.error.message);
-        setHeadlessAIS({
-          enabled: true,
-          studentid: headlessAIS.studentid,
-          password: headlessAIS.password,
-          encrypted: true,
-          ACIXSTORE: res.ACIXSTORE,
-          lastUpdated: Date.now(),
-          expired: res.passwordExpired,
-        });
-        if (res.passwordExpired)
-          toast({
-            title: "提醒您校務系統密碼已經過期~ ",
-            description: "但是NTHUMods 的功能都不會被影響 ヾ(≧▽≦*)o",
-          });
-        await signInWithCustomToken(auth, res.accessToken).then((user) =>
-          user.user.getIdToken().then(serverSignIn),
-        );
-        setLoading(false);
-        return res.ACIXSTORE;
-      })
-      .catch((err) => {
-        if (err.message == LoginError.IncorrectCredentials) {
-          setOpenChangePassword(true);
-        }
-        toast({
-          title: "代理登入失敗",
-          description:
-            dict.ccxp.errors[err.message as keyof typeof dict.ccxp.errors] ??
-            "目前認證服务降级，試看再按多一次？",
-        });
-        setLoading(false);
-        throw err as LoginError;
-      });
+    // return await refreshUserSession(headlessAIS.studentid, headlessAIS.password)
+    //   .then(async (res) => {
+    //     if ("error" in res) throw new Error(res.error.message);
+    //     setHeadlessAIS({
+    //       enabled: true,
+    //       studentid: headlessAIS.studentid,
+    //       password: headlessAIS.password,
+    //       encrypted: true,
+    //       ACIXSTORE: res.ACIXSTORE,
+    //       lastUpdated: Date.now(),
+    //       expired: res.passwordExpired,
+    //     });
+    //     if (res.passwordExpired)
+    //       toast({
+    //         title: "提醒您校務系統密碼已經過期~ ",
+    //         description: "但是NTHUMods 的功能都不會被影響 ヾ(≧▽≦*)o",
+    //       });
+    //     await signInWithCustomToken(auth, res.accessToken).then((user) =>
+    //       user.user.getIdToken().then(serverSignIn),
+    //     );
+    //     setLoading(false);
+    //     return res.ACIXSTORE;
+    //   })
+    //   .catch((err) => {
+    //     if (err.message == LoginError.IncorrectCredentials) {
+    //       setOpenChangePassword(true);
+    //     }
+    //     toast({
+    //       title: "代理登入失敗",
+    //       description:
+    //         dict.ccxp.errors[err.message as keyof typeof dict.ccxp.errors] ??
+    //         "目前認證服务降级，試看再按多一次？",
+    //     });
+    //     setLoading(false);
+    //     throw err as LoginError;
+    //   });
   };
 
   const [user, setUser] = useState<UserJWT | null | undefined>();

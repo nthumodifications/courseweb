@@ -41,8 +41,6 @@ const Header = () => {
   const { language } = useSettings();
   const { user, signOut } = useHeadlessAIS();
   const dict = useDictionary();
-  const ccxpApp = apps.find((app) => app.id === "ccxp")!;
-  const [onItemClicked, aisLoading, cancelLoading] = useLaunchApp(ccxpApp);
   const [_, authloading, autherror] = useAuthState(auth);
 
   return (
@@ -70,16 +68,6 @@ const Header = () => {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={onItemClicked} disabled={aisLoading}>
-              <University className="w-4 h-4 mr-2" />
-              {aisLoading ? (
-                <Loader2 className="animate-spin" />
-              ) : language == "zh" ? (
-                ccxpApp.title_zh
-              ) : (
-                ccxpApp.title_en
-              )}
-            </DropdownMenuItem>
             {/* <DropdownMenuSeparator /> */}
 
             {/* Triggering will result in unmounting, thus we will disable for now. */}

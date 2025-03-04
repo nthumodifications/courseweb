@@ -80,17 +80,6 @@ export const ShareSyncTimetableDialogDynamic = dynamic(
     ),
   },
 );
-export const HeadlessSyncCourseButtonDynamic = dynamic(
-  () => import("./HeadlessSyncCourseButton"),
-  {
-    ssr: false,
-    loading: () => (
-      <Button variant="outline" disabled>
-        <Loader2 className="w-4 h-4 animate-spin" />
-      </Button>
-    ),
-  },
-);
 export const CourseSearchContainerDynamic = dynamic(
   () => import("@/app/[lang]/(mods-pages)/courses/CourseSearchContainer"),
   { ssr: false, loading: () => <Loader2 className="w-4 h-4 animate-spin" /> },
