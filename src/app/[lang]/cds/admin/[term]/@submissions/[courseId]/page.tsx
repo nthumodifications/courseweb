@@ -1,5 +1,4 @@
 import { getSubmissionDetails, getCDSTerm } from "@/lib/cds_actions";
-import { getCourse } from "@/lib/course";
 import DownloadSubmissions from "../../DownloadSubmissions";
 import {
   Table,
@@ -9,6 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import client from "@/config/api";
 
 const CourseSubmissions = async ({
   params: { courseId, term },
@@ -17,7 +17,10 @@ const CourseSubmissions = async ({
 }) => {
   const termObj = await getCDSTerm(decodeURI(term));
   const submissions = await getSubmissionDetails(decodeURI(courseId), termObj);
-  const course = await getCourse(decodeURI(courseId));
+  const res = await client.course[":courseId"].$get({
+    param: { courseId: decodeURI(courseId) },
+  });
+  const course = await res.json();
 
   return (
     <div className="w-full h-full overflow-y-auto">

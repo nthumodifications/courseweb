@@ -1,4 +1,3 @@
-import { WeatherData } from "@/types/weather";
 import { FC } from "react";
 import { Umbrella } from "lucide-react";
 import {
@@ -10,7 +9,16 @@ import {
 
 interface WeatherIconProps {
   date: Date;
-  weather: WeatherData[number];
+  weather: {
+    date: string;
+    weatherData: {
+      MinT: string;
+      MaxT: string;
+      PoP12h: string;
+      Wx: string;
+      WeatherDescription: string;
+    };
+  };
 }
 
 const WeatherIcon: FC<WeatherIconProps> = ({ date, weather }) => {
@@ -36,6 +44,7 @@ const WeatherIcon: FC<WeatherIconProps> = ({ date, weather }) => {
             )}
             <div className="flex flex-col">
               <img
+                title="Weather Icon"
                 className="w-9 h-8"
                 src={`https://www.cwa.gov.tw/V8/assets/img/weather_icons/weathers/svg_icon/day/${weatherData}.svg`}
               />

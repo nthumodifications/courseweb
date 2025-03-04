@@ -1,9 +1,9 @@
-import { FC } from "react";
-import { getVenues } from "@/lib/venues";
 import VenueList from "@/components/Venue/VenueList";
+import client from "@/config/api";
 
 const Sidebar = async () => {
-  const venues = await getVenues();
+  const res = await client.venue.$get();
+  const venues = await res.json();
 
   return (
     <div className={`w-full h-full hidden md:block overflow-auto`}>

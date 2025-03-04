@@ -31,6 +31,7 @@ import { useQuery } from "@tanstack/react-query";
 import supabase from "@/config/supabase";
 import { CourseDefinition } from "@/config/supabase";
 import { useLocalStorage } from "usehooks-ts";
+import client from "@/config/api";
 
 const TimetableCourseListItem = ({ course }: { course: MinimalCourse }) => {
   const { language } = useSettings();
@@ -150,11 +151,11 @@ export const FavouritesCourseList = ({}: {}) => {
   const { data: courses = [], error } = useQuery({
     queryKey: ["courses", [...favourites].sort()],
     queryFn: async () => {
-      const { data = [], error } = await supabase
-        .from("courses")
-        .select("*")
-        .in("raw_id", [...favourites].sort());
-      if (error) throw error;
+      const res = await client.course.$get({
+        query: { courses: [...favourites].sort() },
+      });
+
+      const data = await res.json();
       if (!data) throw new Error("No data");
       return data as CourseDefinition[];
     },

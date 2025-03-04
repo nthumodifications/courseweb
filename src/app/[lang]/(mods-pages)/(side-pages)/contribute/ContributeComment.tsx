@@ -23,6 +23,7 @@ import { NewCommentDialog } from "@/components/CourseDetails/NewCommentDialog";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import CommentsNotSignedIn from "@/components/CourseDetails/CommentsNotSignedIn";
+import client from "@/config/api";
 
 const ContributeComment = () => {
   const [user, loading, error] = useAuthState(auth);
@@ -39,11 +40,11 @@ const ContributeComment = () => {
       if (!res) {
         throw new Error("Failed to fetch student courses.");
       }
-      const { data: coursesData, error } = await supabase
-        .from("courses")
-        .select(selectMinimalStr)
-        .in("raw_id", res.courses);
-      if (error) throw error;
+      const courseRes = await client.course.$get({
+        query: { courses: res.courses },
+      });
+
+      const coursesData = await courseRes.json();
       if (!coursesData) {
         return [];
       }

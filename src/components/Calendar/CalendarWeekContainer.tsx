@@ -23,10 +23,9 @@ import {
   useState,
 } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { EventData } from "@/types/calendar_event";
-import { getNTHUCalendar } from "@/lib/calendar_event";
 import { CalendarEventInternal } from "./calendar.types";
 import { useSettings } from "@/hooks/contexts/settings";
+import client from "@/config/api";
 
 export const CalendarWeekContainer = ({
   displayWeek,
@@ -46,7 +45,13 @@ export const CalendarWeekContainer = ({
       format(displayWeek[6], "yyyy-MM-dd"),
     ],
     queryFn: async () => {
-      const nthuEvents = await getNTHUCalendar(displayWeek[0], displayWeek[6]);
+      const res = await client.acacalendar.$get({
+        query: {
+          start: displayWeek[0].toISOString(),
+          end: displayWeek[6].toISOString(),
+        },
+      });
+      const nthuEvents = await res.json();
       return nthuEvents.map((event, index) => {
         return {
           id: "nthu-" + event.id,
@@ -111,7 +116,7 @@ export const CalendarWeekContainer = ({
         });
 
       // Group overlapping events
-      const groupedEvents: typeof dayEvents[] = [];
+      const groupedEvents: (typeof dayEvents)[] = [];
       dayEvents.forEach((event) => {
         let added = false;
         for (const group of groupedEvents) {
@@ -146,7 +151,8 @@ export const CalendarWeekContainer = ({
                   event.displayStart.getHours() * HOUR_HEIGHT +
                   (event.displayStart.getMinutes() * HOUR_HEIGHT) / 60,
                 height:
-                  (event.displayEnd.getHours() - event.displayStart.getHours()) *
+                  (event.displayEnd.getHours() -
+                    event.displayStart.getHours()) *
                     HOUR_HEIGHT +
                   ((event.displayEnd.getMinutes() -
                     event.displayStart.getMinutes()) *

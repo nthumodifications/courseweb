@@ -1,4 +1,4 @@
-import { getShortLink } from "@/lib/cloudflarekv";
+import client from "@/config/api";
 import { NextRequest, NextResponse } from "next/server";
 
 export const GET = async (
@@ -12,7 +12,9 @@ export const GET = async (
       { status: 404 },
     );
   }
-  const url = await getShortLink(slug);
+  const url = await (
+    await client.shortlink[":key"].$get({ param: { key: slug } })
+  ).text();
   if (url === null) {
     return NextResponse.json(
       { error: { message: "Link does not exist" } },
