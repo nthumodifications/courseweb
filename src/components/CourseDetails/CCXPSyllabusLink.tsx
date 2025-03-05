@@ -18,7 +18,7 @@ const CCXPSyllabusLink = ({
   React.useEffect(() => {
     const fetchACIXSTORE = async () => {
       const token = await getACIXSTORE();
-      setACIXSTORE(token);
+      setACIXSTORE(token || undefined);
     };
     fetchACIXSTORE();
   }, [getACIXSTORE]);

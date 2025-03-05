@@ -14,7 +14,11 @@ import HeadlessSyncCourseButton from "../Timetable/HeadlessSyncCourseButton";
 import { Separator } from "../ui/separator";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { cn } from "@/lib/utils";
-import { GraduationCap, Hash, Tag } from "lucide-react";
+import { ExternalLink, GraduationCap, Hash, Tag } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
+import { AlertDialog } from "../ui/alert-dialog";
+import Link from "next/link";
+import { DialogClose } from "../ui/dialog";
 
 const WelcomeUserPage = ({ onClose }: { onClose: () => void }) => {
   const { user } = useHeadlessAIS();
@@ -70,7 +74,7 @@ export const LoginPage = ({ onClose }: { onClose: () => void }) => {
   const [studentid, setStudentid] = useState("");
   const [password, setPassword] = useState("");
   const [agreeChecked, setAgreeChecked] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | undefined>(undefined);
   const { user, signIn } = useHeadlessAIS();
   const dict = useDictionary();
@@ -112,6 +116,20 @@ export const LoginPage = ({ onClose }: { onClose: () => void }) => {
                 Welcome to NTHUMODS
               </h2>
             </div>
+            <Alert>
+              <AlertTitle>注意</AlertTitle>
+              <AlertDescription>
+                校務資訊系統的登入功能目前停止服務
+              </AlertDescription>
+              <DialogClose asChild>
+                <Button asChild variant="ghost">
+                  <Link href={`/${language}/next-steps`}>
+                    點擊此處了解詳情
+                    <ExternalLink className="w-4 h-4 ml-1" />
+                  </Link>
+                </Button>
+              </DialogClose>
+            </Alert>
 
             <div className="flex flex-col gap-3">
               <div className="flex flex-col gap-2">
