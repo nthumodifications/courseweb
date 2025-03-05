@@ -44,7 +44,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { cn } from "@/lib/utils";
 import ShareCourseButton from "./ShareCourseButton";
 import DateContributeForm from "./DateContributeForm";
-import { getContribDates } from "@/lib/contrib_dates";
 import { getCurrentUser } from "@/lib/firebase/auth";
 import { currentSemester } from "@/const/semester";
 import client from "@/config/api";
@@ -55,17 +54,6 @@ const PDFViewerDynamic = dynamicFn(
 );
 const SelectCourseButtonDynamic = dynamicFn(
   () => import("@/components/Courses/SelectCourseButton"),
-  { ssr: false },
-);
-const CommmentsSectionDynamic = dynamicFn(
-  () =>
-    import("@/components/CourseDetails/CommentsContainer").then(
-      (m) => m.CommmentsSection,
-    ),
-  { ssr: false },
-);
-const CCXPSyllabusLinkDynamic = dynamicFn(
-  () => import("@/components/CourseDetails/CCXPSyllabusLink"),
   { ssr: false },
 );
 
@@ -123,7 +111,10 @@ const ImportantDates = async ({
   raw_id: RawCourseID;
   lang: Language;
 }) => {
-  const dates = await getContribDates(raw_id);
+  const res = await client.course[":courseId"].dates.$get({
+    param: { courseId: raw_id },
+  });
+  const dates = await res.json();
   const dict = await getDictionary(lang);
   const session = await getCurrentUser();
 
@@ -604,12 +595,6 @@ const CourseDetailContainer = async ({
                 </div>
               )}
 
-              <CCXPSyllabusLinkDynamic course={course as MinimalCourse}>
-                <a className="font-semibold text-base">
-                  {dict.course.details.view_ccxp_syllabus}{" "}
-                  <ExternalLink className="w-4 h-4 inline" />
-                </a>
-              </CCXPSyllabusLinkDynamic>
               <div className="flex flex-col gap-1">
                 <div className="flex flex-row gap-2 flex-wrap">
                   <p className="text-xs text-gray-500">
@@ -627,7 +612,6 @@ const CourseDetailContainer = async ({
               </div>
             </div>
           </div>
-          <CommmentsSectionDynamic course={course as MinimalCourse} />
         </div>
       </div>
     </Fade>

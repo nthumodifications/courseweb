@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { useLocalStorage } from "usehooks-ts";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import { LoginPage } from "@/components/Forms/LoginPage";
 import { ScrollArea } from "../ui/scroll-area";
 
 type ProgressDisplayProps = { max: number; current: number };
@@ -134,9 +133,7 @@ const Help = ({ children }: { children?: ReactNode }) => {
                   <Button className="w-full">{dict.help.login}</Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[425px] h-[100dvh] lg:h-auto w-full">
-                  <ScrollArea className="h-full">
-                    <LoginPage onClose={() => setOpen(false)} />
-                  </ScrollArea>
+                  <ScrollArea className="h-full"></ScrollArea>
                 </DialogContent>
               </Dialog>
               <Button

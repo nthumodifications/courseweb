@@ -4,7 +4,6 @@ import { LangProps } from "@/types/pages";
 import { Viewport } from "next";
 import { SettingsProvider } from "@/hooks/contexts/settings";
 import { UserTimetableProvider } from "@/hooks/contexts/useUserTimetable";
-import { HeadlessAISProvider } from "@/hooks/contexts/useHeadlessAIS";
 
 import NextAuthProvider from "@/components/NextAuthProvider";
 import { Toaster } from "@/components/ui/toaster";
@@ -101,13 +100,11 @@ export default function RootLayout({
       <NextAuthProvider>
         <ReactQuery>
           <SettingsProvider>
-            <HeadlessAISProvider>
-              <UserTimetableProvider>
-                {children}
-                <AppUrlListener />
-                <Toaster />
-              </UserTimetableProvider>
-            </HeadlessAISProvider>
+            <UserTimetableProvider>
+              {children}
+              <AppUrlListener />
+              <Toaster />
+            </UserTimetableProvider>
           </SettingsProvider>
         </ReactQuery>
       </NextAuthProvider>

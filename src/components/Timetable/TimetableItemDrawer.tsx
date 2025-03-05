@@ -9,27 +9,19 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import Compact from "@uiw/react-color-compact";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
+import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import { Button } from "../ui/button";
 import Link from "next/link";
 import { Book, ExternalLink, CalendarPlus } from "lucide-react";
 import { format } from "date-fns";
-import { getDictionary } from "@/dictionaries/dictionaries";
 import { Badge } from "@/components/ui/badge";
-import { Language } from "@/types/settings";
 import DateContributeForm from "@/components/CourseDetails/DateContributeForm";
-import { getContribDates } from "@/lib/contrib_dates";
 import { useQuery } from "@tanstack/react-query";
 import useDictionary from "@/dictionaries/useDictionary";
-import { useHeadlessAIS } from "@/hooks/contexts/useHeadlessAIS";
 import { useMediaQuery } from "usehooks-ts";
 import { Dialog, DialogContent, DialogTrigger } from "../ui/dialog";
 import { currentSemester } from "@/const/semester";
+import client from "@/config/api";
 
 const ImportantDates = ({ raw_id }: { raw_id: RawCourseID }) => {
   const {
@@ -39,7 +31,12 @@ const ImportantDates = ({ raw_id }: { raw_id: RawCourseID }) => {
   } = useQuery({
     queryKey: ["contrib_dates", raw_id],
     queryFn: async () => {
-      const dates = await getContribDates(raw_id);
+      const res = await client.course[":courseId"].dates.$get({
+        param: {
+          courseId: raw_id,
+        },
+      });
+      const dates = await res.json();
       const sortedDates = dates?.sort(
         (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
       );
@@ -47,7 +44,6 @@ const ImportantDates = ({ raw_id }: { raw_id: RawCourseID }) => {
     },
   });
   const dict = useDictionary();
-  const { user } = useHeadlessAIS();
 
   return (
     <div className="flex flex-col gap-1 px-4">
@@ -55,13 +51,6 @@ const ImportantDates = ({ raw_id }: { raw_id: RawCourseID }) => {
         <h3 className="font-semibold text-base">
           {dict.course.details.important_dates}
         </h3>
-        {user && currentSemester?.id == raw_id.substring(0, 5) && (
-          <DateContributeForm courseId={raw_id}>
-            <Button size="sm" variant="ghost" className="h-6">
-              <CalendarPlus className="w-4 h-4" />
-            </Button>
-          </DateContributeForm>
-        )}
       </div>
       {dates && (
         <div className="flex flex-col gap-1">

@@ -12,11 +12,11 @@ interface WeatherIconProps {
   weather: {
     date: string;
     weatherData: {
-      MinT: string;
-      MaxT: string;
-      PoP12h: string;
-      Wx: string;
-      WeatherDescription: string;
+      MinT?: string;
+      MaxT?: string;
+      PoP12h?: string;
+      Wx?: string;
+      WeatherDescription?: string;
     };
   };
 }
