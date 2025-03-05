@@ -10,7 +10,7 @@ const NextStepsZH = () => {
       </div>
       <article className="prose prose-neutral dark:prose-invert max-w-none">
         <p>
-          NTHUMods團隊非常感謝大家對平台的支持，基於避免觸犯個人資料保護法的原則，團隊宣佈從(5/3/2025)開始終止用於代理登入清大校務系統的服務。屆時涉及到需要登入校務系統才能使用的功能會被暫停使用，不過其他無需登入校務系統的功能皆可正常使用。
+          NTHUMods團隊非常感謝大家對平台的支持，基於避免觸犯個人資料保護法的原則，團隊宣佈從(5/3/2025)開始終止用於代理登入清大校務系統的服務。届時涉及到需要登入校務系統才能使用的功能會被暫停使用，不過其他無需登入校務系統的功能皆可正常使用。
         </p>
 
         <h2>發生了什麽</h2>
@@ -21,14 +21,19 @@ const NextStepsZH = () => {
 
         <h2>我們的應對措施</h2>
         <p>
-          由於清大并無提供公開提取資料的API服務於第三方平台，故目前團隊只好與校方做進一步的討論，希望早日商討出解法，爭取在合規合法的前提下為使用者提供更便利的服務。
+          {
+            "由於清大并無提供身份驗證服務於第三方平台，故目前團隊只好與校方做進一步的討論，希望早日商討出解法，爭取在合規合法的前提下為使用者提供更便利的服務。"
+          }
         </p>
 
         <h2>我們的願景</h2>
         <p>
-          團隊致力於改善校内資訊分散和使用者界面設計不友好的痛點，我們堅信平台一直都有走在正確的道路上，未來團隊也會持續秉持這份理念，繼續為使用者提供更好的服務。
+          {
+            "團隊一直致力於打造一個讓學生能夠輕鬆獲得資訊、並擁有直觀易用的使用者界面。我們堅信我們的平台始終走在正確的發展路徑上。展望未來，我們將繼續秉持這樣的理念，不斷為使用者提供更卓越的服務。"
+          }
         </p>
 
+        <p>感謝大家對NTHUMods的支持與愛護，期待未來與大家一起共同成長！</p>
         <p>
           若有興趣加入都可以透過 IG (@nthumods) 或 Email (nthumods@gmail.com)
           聯繫我們，還請大家繼續支持NTHUMods！
@@ -50,40 +55,37 @@ const NextStepsEN = () => {
         </h1>
       </div>
       <article className="prose prose-neutral dark:prose-invert max-w-none">
+        <p>Dear NTHUMods Community:</p>
         <p>
           {
-            "The NTHUMods team would like to express our sincere gratitude for the support you've shown our platform. In order to avoid violating personal data protection laws, the team announces that, starting from (5/3/2025), we will terminate the proxy login service used for accessing the NTHU CCXP system. As a result, any features that require logging into the CCXP system will be suspended, while all other functions that do not require such a login will remain fully available."
+            "We wish to extend our heartfelt thanks for your unwavering support and trust in our platform. Due to new compliance requirements with personal data protection laws, we will be discontinuing the proxy login service for the NTHU CCXP system starting from 5/3/2025. This means that features dependent on CCXP system login will be temporarily suspended. However, rest assured that all other functionalities of NTHUMods will continue to operate as usual."
           }
         </p>
 
-        <h2>What Happened</h2>
-        <p>
-          We received a notification from NTHU stating that the proxy login
-          service might breach personal data protection laws. Although there
-          have been no data leakage incidents so far, after thorough
-          discussions, the team decided to terminate the proxy login service.
-        </p>
+        <h2>Background</h2>
         <p>
           {
-            "According to the university's definition, NTHUMods is classified as a third-party external platform; therefore, users' accounts and passwords should not be handled by our servers for proxy login. The proxy login implementation inherently requires the use of users' accounts and passwords. Even though users must provide explicit consent for the proxy login to retrieve data from the CCXP System, NTHU has raised concerns that this technology may violate personal data protection laws."
+            "Recently, we received guidance from NTHU regarding potential conflicts between our proxy login service and personal data protection standards. Although no incidents of data misuse have occurred, we prioritize your security and privacy. Therefore, in consultation with the university, we've decided to discontinue this service. Our platform is recognized as an external third-party service, and handling login credentials directly conflicts with the university's guidelines."
           }
         </p>
 
-        <h2>Our Response</h2>
+        <h2>Moving Forward</h2>
         <p>
-          Since NTHU does not provide an external API for third-party platforms,
-          our team is currently engaging in further discussions with NTHU. We
-          hope to work out a solution soon that will allow us to offer more
-          convenient services to users while remaining compliant and legal.
+          {
+            "We are in active discussions with NTHU to explore alternative authentication methods that maintain both convenience and compliance. Our goal remains to enhance your experience by integrating useful features without compromising on legal standards."
+          }
         </p>
 
-        <h2>Our Vision</h2>
+        <h2>Looking Ahead</h2>
         <p>
-          Our team is dedicated to addressing the issues of dispersed
-          information and unfriendly user interface within the campus. We firmly
-          believe that the platform has always been on the right track, and we
-          will continue to uphold this philosophy by providing better services
-          for our users in the future.
+          {
+            "We remain committed to improving campus information accessibility and user experience. We’re optimistic about finding solutions that will allow us to continue serving your needs effectively and safely. For those interested in contributing to our journey or if you have questions, don’t hesitate to reach out via Instagram or email."
+          }
+        </p>
+
+        <p>
+          Thank you for being a part of our community. We look forward to
+          navigating these changes together and building a better NTHUMods.
         </p>
 
         <p>
@@ -92,7 +94,8 @@ const NextStepsEN = () => {
           support of NTHUMods!
         </p>
 
-        <p className="text-right">— The NTHUMods Team</p>
+        <p>Warm regards, </p>
+        <p>The NTHUMods Team</p>
       </article>
       <Footer />
     </div>
