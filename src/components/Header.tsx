@@ -7,15 +7,6 @@ import useDictionary from "@/dictionaries/useDictionary";
 import { auth } from "@/config/firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
 
-const HelpDynamic = dynamic(() => import("@/components/Help/Help"), {
-  ssr: false,
-});
-
-const GenericIssueFormDynamic = dynamic(
-  () => import("@/components/Forms/GenericIssueFormDialog"),
-  { ssr: false },
-);
-
 const Header = () => {
   const { language } = useSettings();
   const dict = useDictionary();
