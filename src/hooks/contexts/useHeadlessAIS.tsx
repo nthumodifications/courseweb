@@ -102,7 +102,7 @@ const useHeadlessAISProvider = () => {
         </p>
       ),
     });
-    return;
+    return null;
     setLoading(true);
     return await signInToCCXP(username, password)
       .then(async (res) => {
