@@ -1,0 +1,6 @@
+[submodule "api"]
+	path = api
+	url = https://github.com/nthumodifications/courseweb-api
+[submodule "secure-api"]
+	path = secure-api
+	url = https://github.com/nthumodifications/secure-api
