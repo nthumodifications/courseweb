@@ -1,6 +1,8 @@
 import VenueList from "@/components/Venue/VenueList";
 import client from "@/config/api";
 
+export const revalidate = 0;
+
 const Sidebar = async () => {
   const res = await client.venue.$get();
   const venues = await res.json();
