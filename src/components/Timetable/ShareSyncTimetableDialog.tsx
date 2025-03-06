@@ -2,7 +2,6 @@ import { Calendar, Copy, Mail, Share } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useEffect, useState } from "react";
-import { addShortLink } from "@/lib/cloudflarekv";
 import { toast } from "../ui/use-toast";
 import {
   Dialog,
@@ -16,6 +15,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import Link from "next/link";
 import { Skeleton } from "../ui/skeleton";
+import client from "@/config/api";
 
 const ComponentSkeleton = () => {
   return (
@@ -56,16 +56,19 @@ const ShareSyncTimetableDialog = ({
 
   useEffect(() => {
     if (open) {
-      addShortLink(shareLink).then((shortLink) => {
-        if (typeof shortLink == "object" && "error" in shortLink) {
-          toast({
-            title: "Short Link Error",
-            description:
-              "Failed to generate short link. Please try again later.",
-          });
-        }
-        setLink(shortLink as string);
-      });
+      client.shortlink
+        .$put({ query: { url: shareLink } })
+        .then((res) => res.text())
+        .then((shortLink) => {
+          if (typeof shortLink == "object" && "error" in shortLink) {
+            toast({
+              title: "Short Link Error",
+              description:
+                "Failed to generate short link. Please try again later.",
+            });
+          }
+          setLink(shortLink as string);
+        });
     }
   }, [open]);
 
@@ -98,6 +101,7 @@ const ShareSyncTimetableDialog = ({
           <div className="flex flex-col gap-4">
             <div className="flex flex-row gap-4">
               <input
+                aria-label="Link"
                 type="text"
                 value={link}
                 readOnly

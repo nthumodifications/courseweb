@@ -4,13 +4,13 @@ import { LangProps } from "@/types/pages";
 import { Viewport } from "next";
 import { SettingsProvider } from "@/hooks/contexts/settings";
 import { UserTimetableProvider } from "@/hooks/contexts/useUserTimetable";
-import { HeadlessAISProvider } from "@/hooks/contexts/useHeadlessAIS";
 
 import NextAuthProvider from "@/components/NextAuthProvider";
 import { Toaster } from "@/components/ui/toaster";
 import ReactQuery from "@/components/ReactQuery";
 import { RxDBProvider } from "@/config/rxdb";
 import AppUrlListener from "@/components/AppUrlListener";
+import { ClearAuthComponent } from "@/hooks/useClearAuth";
 
 export const metadata: Metadata = {
   title: {
@@ -101,13 +101,12 @@ export default function RootLayout({
       <NextAuthProvider>
         <ReactQuery>
           <SettingsProvider>
-            <HeadlessAISProvider>
-              <UserTimetableProvider>
-                {children}
-                <AppUrlListener />
-                <Toaster />
-              </UserTimetableProvider>
-            </HeadlessAISProvider>
+            <UserTimetableProvider>
+              {children}
+              <AppUrlListener />
+              <Toaster />
+              <ClearAuthComponent />
+            </UserTimetableProvider>
           </SettingsProvider>
         </ReactQuery>
       </NextAuthProvider>

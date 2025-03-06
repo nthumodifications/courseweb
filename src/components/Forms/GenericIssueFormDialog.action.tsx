@@ -1,5 +1,6 @@
 "use server";
-import { createIssue } from "@/lib/github";
+
+import client from "@/config/api";
 
 export const genericIssueFormAction = async (form: FormData) => {
   const url = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
@@ -45,9 +46,15 @@ const processForm = async (form: FormData) => {
       throw new Error("Description is required");
     }
     console.log("sabmitting issue");
-    const issue = await createIssue(`[UI Submitted]: ${title}`, description, [
-      "generic",
-    ]);
+
+    const createIssue = client.issue.$post;
+    const issue = await createIssue({
+      form: {
+        title: `[UI Submitted]: ${title}`,
+        body: description,
+        labels: ["generic"],
+      },
+    });
     console.log("issue submitted", issue);
   } catch (error) {
     if (error instanceof Error) {

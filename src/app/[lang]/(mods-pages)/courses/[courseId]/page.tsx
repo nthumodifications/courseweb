@@ -1,11 +1,11 @@
 import { ResolvingMetadata } from "next";
-import { getCourseWithSyllabus } from "@/lib/course";
 import { LangProps } from "@/types/pages";
 import CourseDetailContainer from "@/components/CourseDetails/CourseDetailsContainer";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
+import client from "@/config/api";
 
 type PageProps = {
   params: { courseId?: string };
@@ -15,9 +15,10 @@ export async function generateMetadata(
   { params }: PageProps,
   parent: ResolvingMetadata,
 ) {
-  const course = await getCourseWithSyllabus(
-    decodeURI(params.courseId as string),
-  );
+  const res = await client.course[":courseId"].syllabus.$get({
+    param: { courseId: decodeURI(params.courseId as string) },
+  });
+  const course = await res.json();
 
   if (!course) redirect("/404");
 

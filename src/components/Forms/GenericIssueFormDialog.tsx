@@ -17,10 +17,10 @@ import { useFormStatus } from "react-dom";
 import { useEffect, useState, ReactNode } from "react";
 import { toast } from "../ui/use-toast";
 import { useQuery } from "@tanstack/react-query";
-import { listIssuesWithTag } from "@/lib/github";
 import { ScrollArea } from "../ui/scroll-area";
 import { event } from "@/lib/gtag";
 import Turnstile from "react-turnstile";
+import client from "@/config/api";
 
 const placeholderIssueDescription = `   **Describe the issue**
 A clear and concise description of what the issue is.
@@ -83,7 +83,14 @@ const GenericIssueForm = ({ children }: { children?: ReactNode }) => {
     error,
   } = useQuery({
     queryKey: ["issues"],
-    queryFn: () => listIssuesWithTag("display"),
+    queryFn: async () => {
+      const res = await client.issue.$get({
+        query: {
+          tag: "display",
+        },
+      });
+      return await res.json();
+    },
     enabled: open,
   });
 

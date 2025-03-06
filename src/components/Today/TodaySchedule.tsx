@@ -10,7 +10,6 @@ import useDictionary from "@/dictionaries/useDictionary";
 import WeatherIcon from "./WeatherIcon";
 import { getLocale } from "@/helpers/dateLocale";
 import { Info, CalendarRange } from "lucide-react";
-import { WeatherData } from "@/types/weather";
 import { apps } from "@/const/apps";
 import Link from "next/link";
 import { getSemester, lastSemester } from "@/const/semester";
@@ -23,7 +22,7 @@ import { NoClassPickedReminder } from "./NoClassPickedReminder";
 import { TimetableItemDrawer } from "@/components/Timetable/TimetableItemDrawer";
 import AppItem from "@/app/[lang]/(mods-pages)/apps/AppItem";
 import { useQuery } from "@tanstack/react-query";
-import { getNTHUCalendar } from "@/lib/calendar_event";
+import client from "@/config/api";
 
 const getRangeOfDays = (start: Date, end: Date) => {
   const days = [];
@@ -73,10 +72,10 @@ const TodaySchedule: FC = () => {
     data: weather,
     error: weatherError,
     isLoading: weatherLoading,
-  } = useQuery<WeatherData>({
+  } = useQuery({
     queryKey: ["weather"],
     queryFn: async () => {
-      const res = await fetch("/api/dashboard/weather");
+      const res = await client.weather.$get();
       const data = await res.json();
       return data;
     },
@@ -93,9 +92,17 @@ const TodaySchedule: FC = () => {
       format(days[4], "yyyy-MM-dd"),
     ],
     queryFn: async () => {
-      return getNTHUCalendar(days[0], days[4]);
+      const res = await client.acacalendar.$get({
+        query: {
+          start: days[0].toISOString(),
+          end: days[4].toISOString(),
+        },
+      });
+      console.log(await res.json());
+      return await res.json();
     },
     enabled: showAcademicCalendar,
+    initialData: [],
   });
 
   const renderDayTimetable = (day: Date) => {

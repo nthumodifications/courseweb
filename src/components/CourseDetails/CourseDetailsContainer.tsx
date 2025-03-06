@@ -10,7 +10,6 @@ import Link from "next/link";
 import DownloadSyllabus from "./DownloadSyllabus";
 import Fade from "@/components/Animation/Fade";
 import { getDictionary } from "@/dictionaries/dictionaries";
-import { getCoursePTTReview, getCourseWithSyllabus } from "@/lib/course";
 import { toPrettySemester } from "@/helpers/semester";
 import CourseTagList from "@/components/Courses/CourseTagsList";
 import {
@@ -27,10 +26,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import supabase, {
-  CourseDefinition,
-  CourseScoreDefinition,
-} from "@/config/supabase";
+import { CourseDefinition } from "@/config/supabase";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { timetableColors } from "@/const/timetableColors";
 import dynamicFn from "next/dynamic";
@@ -48,9 +44,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { cn } from "@/lib/utils";
 import ShareCourseButton from "./ShareCourseButton";
 import DateContributeForm from "./DateContributeForm";
-import { getContribDates } from "@/lib/contrib_dates";
 import { getCurrentUser } from "@/lib/firebase/auth";
 import { currentSemester } from "@/const/semester";
+import client from "@/config/api";
 
 const PDFViewerDynamic = dynamicFn(
   () => import("@/components/CourseDetails/PDFViewer"),
@@ -58,17 +54,6 @@ const PDFViewerDynamic = dynamicFn(
 );
 const SelectCourseButtonDynamic = dynamicFn(
   () => import("@/components/Courses/SelectCourseButton"),
-  { ssr: false },
-);
-const CommmentsSectionDynamic = dynamicFn(
-  () =>
-    import("@/components/CourseDetails/CommentsContainer").then(
-      (m) => m.CommmentsSection,
-    ),
-  { ssr: false },
-);
-const CCXPSyllabusLinkDynamic = dynamicFn(
-  () => import("@/components/CourseDetails/CCXPSyllabusLink"),
   { ssr: false },
 );
 
@@ -112,26 +97,11 @@ const CrossDisciplineTagList = ({ course }: { course: CourseDefinition }) => {
 };
 
 const getOtherClasses = async (course: MinimalCourse) => {
-  const semester = parseInt(course.semester.substring(0, 3));
-  const getsemesters = [semester - 2, semester - 1, semester, semester + 1]
-    .map((s) => [s.toString() + "10", s.toString() + "20"])
-    .flat();
+  const res = await client.course[":courseId"].related.$get({
+    param: { courseId: course.raw_id },
+  });
 
-  const { data, error } = await supabase
-    .from("courses")
-    .select("*, course_scores(*)")
-    .eq("department", course.department)
-    .eq("course", course.course)
-    .eq("name_zh", course.name_zh) //due to the way the course ids are arranged, this is the best way to get the same course
-    .in("semester", getsemesters)
-    .not("raw_id", "eq", course.raw_id)
-    .order("raw_id", { ascending: false });
-
-  if (error) throw error;
-  if (!data) throw new Error("No data");
-  return data as unknown as (CourseDefinition & {
-    course_scores: CourseScoreDefinition | undefined;
-  })[];
+  return await res.json();
 };
 
 const ImportantDates = async ({
@@ -141,7 +111,10 @@ const ImportantDates = async ({
   raw_id: RawCourseID;
   lang: Language;
 }) => {
-  const dates = await getContribDates(raw_id);
+  const res = await client.course[":courseId"].dates.$get({
+    param: { courseId: raw_id },
+  });
+  const dates = await res.json();
   const dict = await getDictionary(lang);
   const session = await getCurrentUser();
 
@@ -203,7 +176,10 @@ const CourseDetailContainer = async ({
   modal?: boolean;
 }) => {
   const dict = await getDictionary(lang);
-  const course = await getCourseWithSyllabus(courseId);
+  const res = await client.course[":courseId"].syllabus.$get({
+    param: { courseId },
+  });
+  const course = await res.json();
 
   if (!course)
     return (
@@ -222,7 +198,12 @@ const CourseDetailContainer = async ({
     );
   const missingSyllabus = course.course_syllabus == null;
 
-  const reviews = (await getCoursePTTReview(courseId)) ?? [];
+  const reviews =
+    (await (
+      await client.course[":courseId"].ptt.$get({
+        param: { courseId },
+      })
+    ).json()) ?? [];
   const otherClasses = await getOtherClasses(course as MinimalCourse);
 
   // times might not be available, check if it is empty list or its items are all empty strings
@@ -312,7 +293,7 @@ const CourseDetailContainer = async ({
                     {dict.course.details.brief}
                   </h3>
                   <p className="whitespace-pre-line text-sm">
-                    {course.course_syllabus.brief}
+                    {course.course_syllabus!.brief}
                   </p>
                 </div>
               )}
@@ -322,7 +303,7 @@ const CourseDetailContainer = async ({
                     {dict.course.details.description}
                   </h3>
                   <p className="whitespace-pre-line text-sm">
-                    {course.course_syllabus.content ?? (
+                    {course.course_syllabus!.content ?? (
                       <div className="flex flex-col gap-2">
                         <DownloadSyllabus courseId={course.raw_id} />
                         <PDFViewerDynamic
@@ -614,12 +595,6 @@ const CourseDetailContainer = async ({
                 </div>
               )}
 
-              <CCXPSyllabusLinkDynamic course={course as MinimalCourse}>
-                <a className="font-semibold text-base">
-                  {dict.course.details.view_ccxp_syllabus}{" "}
-                  <ExternalLink className="w-4 h-4 inline" />
-                </a>
-              </CCXPSyllabusLinkDynamic>
               <div className="flex flex-col gap-1">
                 <div className="flex flex-row gap-2 flex-wrap">
                   <p className="text-xs text-gray-500">
@@ -637,7 +612,6 @@ const CourseDetailContainer = async ({
               </div>
             </div>
           </div>
-          <CommmentsSectionDynamic course={course as MinimalCourse} />
         </div>
       </div>
     </Fade>

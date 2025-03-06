@@ -7,19 +7,22 @@ import { departments } from "@/const/departments";
 import { NextResponse } from "next/server";
 import algolia from "@/config/algolia_server";
 import { kv } from "@vercel/kv";
-import { signInToCCXP } from "@/lib/headless_ais";
+import client from "@/config/api";
 const baseUrl = `https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/6/6.2/6.2.9/JH629002.php`;
 
 export const scrapeArchivedCourses = async (semester: string) => {
-  const user = await signInToCCXP(
-    process.env.DONER_STUDENTID!,
-    process.env.DONER_PASSWORD!,
-  );
-
-  if ("error" in user) {
-    throw new Error(user.error.message);
+  if (!process.env.DONER_STUDENTID || !process.env.DONER_PASSWORD) {
+    throw new Error("DONER_STUDENTID and DONER_PASSWORD is not set");
   }
-  const { ACIXSTORE } = user;
+  const userRes = await client.ccxp.auth.login.$post({
+    form: {
+      studentid: process.env.DONER_STUDENTID,
+      password: process.env.DONER_PASSWORD,
+    },
+  });
+
+  const { ACIXSTORE } = await userRes.json();
+
   const fetchCourses = async (department: Department, yearSemester: string) => {
     const response = await fetch(baseUrl, {
       body: new URLSearchParams({

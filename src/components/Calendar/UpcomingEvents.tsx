@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { WeatherData } from "@/types/weather";
 import { getBrightness, adjustLuminance } from "@/helpers/colors";
 import { EventData } from "@/types/calendar_event";
 import { useCalendar } from "@/components/Calendar/calendar_hook";
@@ -11,7 +10,7 @@ import { useSettings } from "@/hooks/contexts/settings";
 import useTime from "@/hooks/useTime";
 import WeatherIcon from "@/components/Today/WeatherIcon";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { getNTHUCalendar } from "@/lib/calendar_event";
+import client from "@/config/api";
 const UpcomingEvents = () => {
   const { events } = useCalendar();
   const { language } = useSettings();
@@ -23,10 +22,10 @@ const UpcomingEvents = () => {
     data: weatherData,
     error: weatherError,
     isLoading: weatherLoading,
-  } = useQuery<WeatherData>({
+  } = useQuery({
     queryKey: ["weather"],
     queryFn: async () => {
-      const res = await fetch("/api/dashboard/weather");
+      const res = await client.weather.$get();
       const data = await res.json();
       return data;
     },
@@ -39,7 +38,13 @@ const UpcomingEvents = () => {
   } = useQuery<EventData[]>({
     queryKey: ["event", format(today, "yyyy-MM-dd"), format(end, "yyyy-MM-dd")],
     queryFn: async () => {
-      return getNTHUCalendar(today, end);
+      const res = await client.acacalendar.$get({
+        query: {
+          start: today.toISOString(),
+          end: end.toISOString(),
+        },
+      });
+      return res.json();
     },
   });
 

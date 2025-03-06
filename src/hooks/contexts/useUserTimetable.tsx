@@ -8,7 +8,7 @@ import {
   useMemo,
   useLayoutEffect,
 } from "react";
-import supabase, { CourseDefinition } from "@/config/supabase";
+import { CourseDefinition } from "@/config/supabase";
 import { RawCourseID } from "@/types/courses";
 import { lastSemester } from "@/const/semester";
 import { getSemesterFromID } from "@/helpers/courses";
@@ -18,6 +18,7 @@ import { useQuery } from "@tanstack/react-query";
 import { auth } from "@/config/firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
 import useSyncedStorage from "../useSyncedStorage";
+import client from "@/config/api";
 
 export interface TimetableDisplayPreferences {
   language: "app" | "zh" | "en";
@@ -154,11 +155,11 @@ const useUserTimetableProvider = (loadCourse = true) => {
   } = useQuery({
     queryKey: ["courses", [...Object.values(courses).flat()].sort()],
     queryFn: async () => {
-      const { data = [], error } = await supabase
-        .from("courses")
-        .select("*")
-        .in("raw_id", [...Object.values(courses).flat()].sort());
-      if (error) throw error;
+      const res = await client.course.$get({
+        query: { courses: [...Object.values(courses).flat()].sort() },
+      });
+
+      const data = await res.json();
       if (!data) throw new Error("No data");
       return data as CourseDefinition[];
     },
