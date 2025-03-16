@@ -17,6 +17,8 @@ jobs:
       # Checkout the repository
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       # Log in to GitHub Container Registry
       - name: Log in to GHCR
