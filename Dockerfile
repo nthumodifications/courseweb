@@ -1,7 +1,7 @@
 # syntax=docker.io/docker/dockerfile:1
 
 FROM node:20-alpine AS base
-RUN apk add --no-cache curl \
+RUN apk add --no-cache curl unzip \
     && curl -fsSL https://github.com/oven-sh/bun/releases/latest/download/bun-linux-x64.zip -o bun.zip \
     && unzip bun.zip \
     && mv bun-linux-x64/bun /usr/local/bin/ \
