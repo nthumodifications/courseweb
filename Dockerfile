@@ -26,8 +26,7 @@ RUN \
 
 # Clone submodule and install bun dependencies
 WORKDIR /app/libs/api
-ARG SUBMODULE_URL
-RUN git clone ${SUBMODULE_URL} . && bun install
+RUN bun install
 
 # Rebuild the source code only when needed
 FROM base AS builder
