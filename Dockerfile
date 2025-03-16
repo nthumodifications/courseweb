@@ -1,6 +1,6 @@
 # syntax=docker.io/docker/dockerfile:1
 
-FROM node:20-slim AS base
+FROM node:20 AS base
 # Install curl and unzip, then clean up unzip after use
 RUN apt-get update && apt-get install -y --no-install-recommends curl unzip \
     && curl -fsSL https://github.com/oven-sh/bun/releases/latest/download/bun-linux-x64.zip -o bun.zip \
