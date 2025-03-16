@@ -22,8 +22,9 @@ RUN \
   else echo "Lockfile not found." && exit 1; \
   fi
 
-# Install submodule dependencies with Bun
+# Install submodule dependencies with Bun and ensure types are available
 COPY libs/api/package.json libs/api/
+COPY libs/api/ ./libs/api/  
 WORKDIR /app/libs/api
 RUN bun install
 
@@ -32,9 +33,11 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/libs/api/node_modules ./libs/api/node_modules
-COPY --from=deps /app/libs/api/package.json ./libs/api/
+COPY --from=deps /app/libs/api ./libs/api
 COPY . .
 
+# Ensure TypeScript can find the submodule types
+RUN npm install  # Re-run to ensure dependencies are resolved with submodule in place
 RUN \
   if [ -f yarn.lock ]; then yarn run build; \
   elif [ -f package-lock.json ]; then npm run build; \
