@@ -1,8 +1,8 @@
 # syntax=docker.io/docker/dockerfile:1
 
 FROM node:20 AS base
-# Install curl and unzip, then clean up unzip after use
-RUN apt-get update && apt-get install -y --no-install-recommends curl unzip \
+# Install curl and unzip for Bun, then clean up unzip after use
+RUN apt-get update && apt-get install -y --no-install-recommends curl unzip ca-certificates \
     && curl -fsSL https://github.com/oven-sh/bun/releases/latest/download/bun-linux-x64.zip -o bun.zip \
     && unzip bun.zip \
     && mv bun-linux-x64/bun /usr/local/bin/ \
@@ -11,11 +11,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl unzip \
 
 # Install dependencies only when needed
 FROM base AS deps
-RUN apt-get update && apt-get install -y --no-install-recommends git \
-    && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 
-# Install dependencies based on the preferred package manager
+# Install main app dependencies with preferred package manager
 COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* .npmrc* ./
 RUN \
   if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
@@ -24,7 +22,8 @@ RUN \
   else echo "Lockfile not found." && exit 1; \
   fi
 
-# Clone submodule and install bun dependencies
+# Install submodule dependencies with Bun
+COPY libs/api/package.json libs/api/
 WORKDIR /app/libs/api
 RUN bun install
 
@@ -33,7 +32,7 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/libs/api/node_modules ./libs/api/node_modules
-COPY --from=deps /app/libs/api ./libs/api
+COPY --from=deps /app/libs/api/package.json ./libs/api/
 COPY . .
 
 RUN \
@@ -43,7 +42,7 @@ RUN \
   else echo "Lockfile not found." && exit 1; \
   fi
 
-# Production image, copy all the files and run next
+# Production image, copy all the files and run Next.js
 FROM base AS runner
 WORKDIR /app
 
