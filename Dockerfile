@@ -1,12 +1,12 @@
 # syntax=docker.io/docker/dockerfile:1
 
 FROM node:20-alpine AS base
-RUN apk add --no-cache curl unzip \
-    && curl -fsSL https://bun.sh/install -o install.sh \
-    && sh install.sh \
-    && mv /root/.bun/bin/bun /usr/local/bin/ \
-    && rm install.sh
-
+RUN apk add --no-cache curl \
+    && curl -fsSL https://github.com/oven-sh/bun/releases/latest/download/bun-linux-x64.zip -o bun.zip \
+    && unzip bun.zip \
+    && mv bun-linux-x64/bun /usr/local/bin/ \
+    && rm -rf bun.zip bun-linux-x64 \
+    && apk del unzip
     
 # Install dependencies only when needed
 FROM base AS deps
