@@ -1,9 +1,11 @@
 # syntax=docker.io/docker/dockerfile:1
 
 FROM node:20-alpine AS base
-RUN apk add --no-cache curl \
-    && curl -fsSL https://bun.sh/install | bash \
-    && mv /root/.bun/bin/bun /usr/local/bin/
+RUN apk add --no-cache curl unzip \
+    && curl -fsSL https://bun.sh/install -o install.sh \
+    && sh install.sh \
+    && mv /root/.bun/bin/bun /usr/local/bin/ \
+    && rm install.sh
 
     
 # Install dependencies only when needed
