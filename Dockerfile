@@ -32,6 +32,7 @@ RUN bun install
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/libs/api/node_modules ./libs/api/node_modules
 COPY --from=deps /app/libs/api ./libs/api
 COPY . .
 
