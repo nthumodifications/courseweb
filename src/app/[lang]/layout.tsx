@@ -5,7 +5,6 @@ import { Viewport } from "next";
 import { SettingsProvider } from "@/hooks/contexts/settings";
 import { UserTimetableProvider } from "@/hooks/contexts/useUserTimetable";
 
-import NextAuthProvider from "@/components/NextAuthProvider";
 import { Toaster } from "@/components/ui/toaster";
 import ReactQuery from "@/components/ReactQuery";
 import { RxDBProvider } from "@/config/rxdb";
@@ -98,18 +97,16 @@ export default function RootLayout({
 } & LangProps) {
   return (
     <RxDBProvider>
-      <NextAuthProvider>
-        <ReactQuery>
-          <SettingsProvider>
-            <UserTimetableProvider>
-              {children}
-              <AppUrlListener />
-              <Toaster />
-              <ClearAuthComponent />
-            </UserTimetableProvider>
-          </SettingsProvider>
-        </ReactQuery>
-      </NextAuthProvider>
+      <ReactQuery>
+        <SettingsProvider>
+          <UserTimetableProvider>
+            {children}
+            <AppUrlListener />
+            <Toaster />
+            <ClearAuthComponent />
+          </UserTimetableProvider>
+        </SettingsProvider>
+      </ReactQuery>
     </RxDBProvider>
   );
 }
