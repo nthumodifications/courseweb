@@ -43,6 +43,7 @@ import {
 import { useLocalStorage } from "usehooks-ts";
 import { Badge } from "@/components/ui/badge";
 import { event } from "@/lib/gtag";
+import { useAuth } from "react-oidc-context";
 
 const DisplaySettingsCard = () => {
   const { darkMode, setDarkMode, language, setLanguage } = useSettings();
