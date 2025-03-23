@@ -1,7 +1,6 @@
 "use client";
 import { useEffect } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { signOut as serverSignOut } from "@/lib/firebase/auth";
 import { signOut } from "firebase/auth";
 import { auth } from "@/config/firebase";
 
@@ -16,7 +15,6 @@ const useClearAuth = () => {
 
   useEffect(() => {
     if (user) {
-      serverSignOut();
       signOut(auth);
     }
   }, [user]);

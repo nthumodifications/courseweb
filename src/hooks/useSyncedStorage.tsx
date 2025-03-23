@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
-import { useAuthState } from "react-firebase-hooks/auth";
-import { doc, FirestoreDataConverter, setDoc } from "firebase/firestore";
 import { useLocalStorage } from "usehooks-ts";
-import { useDocumentData } from "react-firebase-hooks/firestore";
-import { auth } from "@/config/firebase";
-import { userCol } from "@/lib/firebase/firestore";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "react-oidc-context";
+import authClient from "@/config/auth";
 
 interface SyncedData<T> {
   value: T;
@@ -18,45 +16,63 @@ const migrateDataFormat = <T = unknown,>(data: any) => {
   return { value: data, lastModified: Date.now() } as SyncedData<T>;
 };
 
-const syncedStorage: FirestoreDataConverter<{
-  value: any;
-  lastModified: number;
-}> = {
-  toFirestore: (data) => data,
-  fromFirestore: (snap) => snap.data() as { value: any; lastModified: number },
-};
-
 const useSyncedStorage = <T = unknown,>(
   key: string,
   defaultValue: T,
 ): [T, (newData: T | ((prevData: T) => T)) => void] => {
-  const [user, loading] = useAuthState(auth);
+  const { user, isAuthenticated } = useAuth();
   const [localData, setLocalData] = useLocalStorage<SyncedData<T>>(key, {
     value: defaultValue,
     lastModified: -1,
   });
   const [data, setDataState] = useState<SyncedData<T>>(localData);
 
-  const docRef = user
-    ? doc(userCol, user.uid, "storage", key).withConverter(syncedStorage)
-    : null;
-  const [remoteData] = useDocumentData<SyncedData<T>>(docRef);
+  const { data: remoteData, isLoading } = useQuery<SyncedData<T>>({
+    queryKey: ["kv", key],
+    enabled: isAuthenticated,
+    queryFn: async () => {
+      const response = await authClient.api.kv[":key"].$get(
+        {
+          param: { key },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${user!.access_token}`,
+          },
+        },
+      );
+      const data = await response.json();
+      if (!response.ok || data.error) {
+        throw new Error(data.error || "Unknown error");
+      }
+      return data as unknown as SyncedData<T>;
+    },
+  });
 
   useEffect(() => {
     // wait for auth to finish loading
-    if (loading) return;
+    if (!isAuthenticated) return;
     // Migrate old data format if necessary
     const migratedData = migrateDataFormat<T>(localData);
     if (migratedData !== localData) {
       setLocalData(migratedData);
       setDataState(migratedData);
-      // If migration happened, sync the data with Firestore
-      if (user && docRef) {
-        setDoc(docRef, migratedData);
-        console.log("migrated data format and uploading to firebase");
+      // If migration happened, sync the data with kv storage
+      if (user) {
+        authClient.api.kv[":key"].$post(
+          {
+            param: { key },
+            json: migratedData,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${user.access_token}`,
+            },
+          },
+        );
       }
     }
-  }, [localData, setLocalData, user, docRef, loading]);
+  }, [localData, setLocalData, user, isAuthenticated]);
 
   useEffect(() => {
     const syncData = async () => {
@@ -65,8 +81,22 @@ const useSyncedStorage = <T = unknown,>(
         const remoteLastModified = remoteData.lastModified || 0;
 
         if (localLastModified > remoteLastModified) {
-          // Local data is newer, update Firestore
-          await setDoc(docRef!, localData);
+          // Local data is newer, update remote storage
+
+          if (isAuthenticated) {
+            authClient.api.kv[":key"].$post(
+              {
+                param: { key },
+                json: localData,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${user!.access_token}`,
+                },
+              },
+            );
+            console.log("updated remote data");
+          }
           setDataState(localData);
         } else if (localLastModified < remoteLastModified) {
           // Remote data is newer, update local storage
@@ -82,7 +112,7 @@ const useSyncedStorage = <T = unknown,>(
     };
 
     syncData();
-  }, [user, key, localData, setLocalData, remoteData, docRef]);
+  }, [user, key, localData, setLocalData, remoteData, isAuthenticated]);
 
   const updateData = useCallback(
     async (newData: T | ((prevData: T) => T)) => {
@@ -94,16 +124,10 @@ const useSyncedStorage = <T = unknown,>(
         const newTimestamp = Date.now();
         const updatedData = { value, lastModified: newTimestamp };
         setLocalData(updatedData);
-
-        if (user && docRef) {
-          setDoc(docRef, updatedData);
-          console.log("updated remote data");
-        }
-
         return updatedData;
       });
     },
-    [user, docRef, setLocalData],
+    [setLocalData],
   );
 
   return [data.value ?? defaultValue, updateData] as const;

@@ -22,6 +22,7 @@ const Header = () => {
     signoutRedirect,
     removeUser,
     clearStaleState,
+    revokeTokens,
   } = useAuth();
   const dict = useDictionary();
 
@@ -31,6 +32,7 @@ const Header = () => {
       id_token_hint: user?.id_token,
     });
     await clearStaleState();
+    revokeTokens();
     console.log("logout state", isAuthenticated);
   };
 
@@ -62,9 +64,9 @@ const Header = () => {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>
               <LogOut className="w-4 h-4 mr-2" />
-              <span onClick={handleLogout}>Log out</span>
+              <span>Log out</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

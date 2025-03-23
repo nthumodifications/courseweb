@@ -11,8 +11,9 @@ const OidcAuthProvider = ({ children }: PropsWithChildren) => {
     authority: process.env.NEXT_PUBLIC_NTHUMODS_AUTH_URL!,
     client_id: process.env.NEXT_PUBLIC_AUTH_CLIENT_ID!,
     redirect_uri: process.env.NEXT_PUBLIC_NTHUMODS_AUTH_REDIRECT!,
-    scope: "openid profile email api ",
+    scope: "openid profile email kv",
     userStore: new WebStorageStateStore({ store: window.localStorage }),
+    automaticSilentRenew: true,
     onSigninCallback(user) {
       console.log("User signed in", user);
       const redirectUri = localStorage.getItem("redirectUri");
