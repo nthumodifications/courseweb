@@ -15,8 +15,6 @@ import { getSemesterFromID } from "@/helpers/courses";
 import { event } from "@/lib/gtag";
 import { timetableColors } from "@/const/timetableColors";
 import { useQuery } from "@tanstack/react-query";
-import { auth } from "@/config/firebase";
-import { useAuthState } from "react-firebase-hooks/auth";
 import useSyncedStorage from "../useSyncedStorage";
 import client from "@/config/api";
 
@@ -100,7 +98,6 @@ const useUserTimetableProvider = (loadCourse = true) => {
       },
     );
   const [semester, setSemester] = useState<string>(lastSemester.id);
-  const [user] = useAuthState(auth);
   const setTimetableTheme = useCallback(
     (theme: string) => {
       //if theme updated, remap colors and override all
@@ -127,7 +124,7 @@ const useUserTimetableProvider = (loadCourse = true) => {
       console.log("colorMap updated");
       _setTimetableTheme(theme);
     },
-    [courses, user],
+    [courses],
   );
 
   //fix timetableTheme if it is not in timetableColors

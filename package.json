@@ -120,7 +120,6 @@
     "react-cookie": "^7.1.0",
     "react-day-picker": "^8.10.1",
     "react-dom": "18.3.1",
-    "react-firebase-hooks": "^5.1.1",
     "react-hook-form": "^7.51.4",
     "react-instantsearch": "^7.8.1",
     "react-instantsearch-nextjs": "^0.2.4",
