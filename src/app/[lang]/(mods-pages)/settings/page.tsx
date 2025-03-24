@@ -1,8 +1,6 @@
 "use client";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useSettings } from "@/hooks/contexts/settings";
-import { useState } from "react";
-import LoginDialog from "@/components/Forms/LoginDialog";
 import { TimetableThemeList } from "./TimetableThemeList";
 import TimetablePreview from "./TimetablePreview";
 import { Separator } from "@/components/ui/separator";
@@ -25,25 +23,9 @@ import {
 } from "@/components/ui/card";
 import TimetablePreferences from "./TimetablePreferences";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { GraduationCap, Hash } from "lucide-react";
-import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "@/config/firebase";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { useLocalStorage } from "usehooks-ts";
 import { Badge } from "@/components/ui/badge";
 import { event } from "@/lib/gtag";
-import { useAuth } from "react-oidc-context";
 
 const DisplaySettingsCard = () => {
   const { darkMode, setDarkMode, language, setLanguage } = useSettings();
