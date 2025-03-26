@@ -1,5 +1,5 @@
 import { hc } from "hono/client";
-import { app } from "auth/index";
+import { app } from "@/types/secure-api";
 
 if (!process.env.NEXT_PUBLIC_NTHUMODS_AUTH_URL) {
   throw new Error("NEXT_PUBLIC_NTHUMODS_AUTH_URL is not defined");
