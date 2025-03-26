@@ -1,5 +1,6 @@
 "use client";
-import { useRouter } from "next/navigation";
+import { Language } from "@/types/settings";
+import { useRouter, useParams } from "next/navigation";
 import { UserManager, WebStorageStateStore } from "oidc-client-ts";
 import { PropsWithChildren, useEffect, useState } from "react";
 import {
@@ -11,7 +12,6 @@ import {
 
 const RefreshOnLoad = () => {
   const auth = useAuth();
-
   const [hasTriedSignin, setHasTriedSignin] = useState(false);
 
   // automatically sign-in
@@ -38,6 +38,7 @@ const RefreshOnLoad = () => {
 
 const OidcAuthProvider = ({ children }: PropsWithChildren) => {
   const router = useRouter();
+  const language = useParams().lang as Language;
 
   const oidcConfig: AuthProviderProps = {
     authority: process.env.NEXT_PUBLIC_NTHUMODS_AUTH_URL!,
@@ -52,6 +53,8 @@ const OidcAuthProvider = ({ children }: PropsWithChildren) => {
       const redirectUri = localStorage.getItem("redirectUri");
       router.push(redirectUri ?? "/");
     },
+    ui_locales: language,
+    post_logout_redirect_uri: window.location.origin,
   };
 
   return (

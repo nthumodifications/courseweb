@@ -1,4 +1,4 @@
-import supabase from "@/config/supabase";
+import supabase, { CourseDefinition } from "@/config/supabase";
 import { scheduleTimeSlots } from "@/const/timetable";
 import {
   colorMapFromCourses,
@@ -50,7 +50,7 @@ export async function GET(request: Request) {
     else {
       const data = await res.json();
       const colorMap = colorMapFromCourses(
-        data!.map((m) => m.raw_id),
+        data!.map((m: CourseDefinition) => m.raw_id),
         timetableColors[theme],
       );
       const timetableData = createTimetableFromCourses(
