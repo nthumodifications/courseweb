@@ -139,7 +139,11 @@
       "ccxp": {
         "title": "代理登入校務資訊系統",
         "description": "系統會用代理登入方式，讓學生們可以在NTHUMods 上輕鬆連結校務系統功能。"
-      }
+      },
+      "logoutDescription": "是否确定要退出登录？",
+      "logoutConfimation": "確認登出",
+      "keepLocalData": "在這個設備保留数据",
+      "logout": "登出"
     },
     "display": {
       "title": "顯示",
@@ -318,5 +322,8 @@
     "t_score": "T 分數成績"
   },
   "cancel": "取消",
-  "privacy_policy": "隱私權政策"
+  "privacy_policy": "隱私權政策",
+  "common": {
+    "cancel": "取消"
+  }
 }

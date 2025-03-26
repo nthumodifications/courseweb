@@ -2,6 +2,7 @@ import { LangProps } from "@/types/pages";
 
 import { Inter, Noto_Sans_TC } from "next/font/google";
 import { cookies } from "next/headers";
+import OidcAuthProvider from "@/hooks/contexts/useAuth";
 
 import "./globals.css";
 
@@ -29,7 +30,9 @@ export default function RootLayout({
       className={`${theme?.value ?? ""} ${inter.variable} ${noto.variable}`}
       suppressHydrationWarning={true}
     >
-      <body suppressHydrationWarning={true}>{children}</body>
+      <OidcAuthProvider>
+        <body suppressHydrationWarning={true}>{children}</body>
+      </OidcAuthProvider>
     </html>
   );
 }

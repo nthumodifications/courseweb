@@ -10,6 +10,8 @@ import ReactQuery from "@/components/ReactQuery";
 import { RxDBProvider } from "@/config/rxdb";
 import AppUrlListener from "@/components/AppUrlListener";
 import { ClearAuthComponent } from "@/hooks/useClearAuth";
+import { AuthProvider } from "react-oidc-context";
+import OidcAuthProvider from "@/hooks/contexts/useAuth";
 
 export const metadata: Metadata = {
   title: {
