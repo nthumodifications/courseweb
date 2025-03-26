@@ -82,12 +82,17 @@ const useSyncedStorage = <T = unknown,>(
 
         if (localLastModified > remoteLastModified) {
           // Local data is newer, update remote storage
+          // current data is nested in value: { value: { value: ... } }
+          // so we need to extract the inner value recursively
 
           if (isAuthenticated) {
             authClient.api.kv[":key"].$post(
               {
                 param: { key },
-                json: localData,
+                json: {
+                  value: localData.value,
+                  lastModified: localLastModified,
+                },
               },
               {
                 headers: {
@@ -97,7 +102,10 @@ const useSyncedStorage = <T = unknown,>(
             );
             console.log("updated remote data");
           }
-          setDataState(localData);
+          setDataState({
+            value: localData.value,
+            lastModified: localLastModified,
+          });
         } else if (localLastModified < remoteLastModified) {
           // Remote data is newer, update local storage
           setLocalData(remoteData);

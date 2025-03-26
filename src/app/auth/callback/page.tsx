@@ -1,5 +1,6 @@
 "use client";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { toast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -9,7 +10,8 @@ export default function AuthCallback() {
   const auth = useAuth();
   const router = useRouter();
   useEffect(() => {
-    if (auth.isAuthenticated) {
+    if (auth.error) {
+      console.error(auth.error);
       router.push("/");
     }
   }, [auth, router]);

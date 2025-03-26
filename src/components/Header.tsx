@@ -13,6 +13,20 @@ import { LogIn, LogOut } from "lucide-react";
 import { Button } from "./ui/button";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useAuth } from "react-oidc-context";
+import { MouseEvent, useState } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useRxCollection } from "rxdb-hooks";
 
 const Header = () => {
   const {
@@ -26,20 +40,59 @@ const Header = () => {
   } = useAuth();
   const dict = useDictionary();
 
-  const handleLogout = async () => {
-    await removeUser();
-    await signoutRedirect({
-      id_token_hint: user?.id_token,
-    });
-    await clearStaleState();
-    revokeTokens();
-    console.log("logout state", isAuthenticated);
-  };
-
   const handleLogin = () => {
     // set redirectUri in localStorage to current page
     localStorage.setItem("redirectUri", window.location.pathname);
     signinRedirect();
+  };
+  const [open, setOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [keepLocalData, setKeepLocalData] = useState(true);
+
+  const eventsCol = useRxCollection("events");
+  const timetableSyncCol = useRxCollection("timetablesync");
+
+  const handleConfirmLogout = async () => {
+    if (!keepLocalData) {
+      // Clear local storage except for necessary auth-related items
+      const localStorageKeys = [
+        "hasVisitedBefore",
+        "theme_changable_alert",
+        "use_new_calendar",
+        "timetable_vertical",
+        "courses",
+        "course_color_map",
+        "timetable_theme",
+        "user_defined_colors",
+        "timetable_display_preferences",
+      ];
+      localStorageKeys.forEach((key) => localStorage.removeItem(key));
+
+      // Clear any other local data (IndexedDB, etc) if needed
+      await eventsCol?.remove();
+      await timetableSyncCol?.remove();
+      console.log("Local data cleared");
+    }
+    await handleLogout();
+    setOpen(false);
+  };
+
+  const handleLogout = async () => {
+    await signoutRedirect({
+      id_token_hint: user?.id_token,
+      post_logout_redirect_uri: window.location.origin,
+    });
+    await removeUser();
+    await clearStaleState();
+    await revokeTokens();
+    console.log("logout state", isAuthenticated);
+  };
+
+  const handleOpenConfirmLogout = (e: MouseEvent) => {
+    e.preventDefault();
+
+    setDropdownOpen(false);
+    setOpen(true);
   };
 
   return (
@@ -49,7 +102,7 @@ const Header = () => {
         <CurrentSemesterLabel />
       </div>
       {isAuthenticated && user ? (
-        <DropdownMenu>
+        <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
           <DropdownMenuTrigger>
             <div className="text-left">
               <div className="text-sm">{user.profile.name}</div>
@@ -64,7 +117,7 @@ const Header = () => {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout}>
+            <DropdownMenuItem onClick={handleOpenConfirmLogout}>
               <LogOut className="w-4 h-4 mr-2" />
               <span>Log out</span>
             </DropdownMenuItem>
@@ -75,6 +128,37 @@ const Header = () => {
           {dict.settings.account.signin} <LogIn className="w-4 h-4" />
         </Button>
       )}
+      <AlertDialog open={open} onOpenChange={setOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {dict.settings.account.logoutConfimation}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {dict.settings.account.logoutDescription}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex items-center space-x-2 py-4">
+            <Checkbox
+              id="keepData"
+              checked={keepLocalData}
+              onCheckedChange={(checked) => setKeepLocalData(!!checked)}
+            />
+            <Label htmlFor="keepData">
+              {dict.settings.account.keepLocalData}
+            </Label>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{dict.common.cancel}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmLogout}
+              className="bg-destructive text-destructive-foreground"
+            >
+              {dict.settings.account.logout}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </header>
   );
 };

@@ -139,7 +139,11 @@
       "ccxp": {
         "title": "Proxy Login into your NTHU AIS Account",
         "description": "Access more features by connecting with NTHU AIS securely."
-      }
+      },
+      "logoutDescription": "Are you sure you want to log out?",
+      "logoutConfimation": "Log out?",
+      "keepLocalData": "Keep data locally",
+      "logout": "Logout"
     },
     "display": {
       "title": "Display",
@@ -318,5 +322,8 @@
     "t_score": "T-Score"
   },
   "cancel": "Cancel",
-  "privacy_policy": "Privacy Policy"
+  "privacy_policy": "Privacy Policy",
+  "common": {
+    "cancel": "Cancel"
+  }
 }
