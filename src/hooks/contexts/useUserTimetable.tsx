@@ -152,6 +152,7 @@ const useUserTimetableProvider = (loadCourse = true) => {
   } = useQuery({
     queryKey: ["courses", [...Object.values(courses).flat()].sort()],
     queryFn: async () => {
+      if (Object.values(courses).flat().length == 0) return [];
       const res = await client.course.$get({
         query: { courses: [...Object.values(courses).flat()].sort() },
       });
@@ -161,9 +162,9 @@ const useUserTimetableProvider = (loadCourse = true) => {
       return data as CourseDefinition[];
     },
     placeholderData: (prev) =>
-      prev?.filter((c: CourseDefinition) =>
+      (prev ?? []).filter((c: CourseDefinition) =>
         Object.values(courses).flat().includes(c.raw_id),
-      ) ?? [],
+      ),
   });
 
   const getSemesterCourses = useCallback(
