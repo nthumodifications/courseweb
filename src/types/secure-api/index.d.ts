@@ -517,4 +517,8 @@ export declare const app: import("hono/hono-base").HonoBase<{}, {
         };
     };
 }, "/replication">, "/api">, "/">;
-export default app;
+declare const _default: {
+    fetch: (request: Request, Env?: unknown, executionCtx?: import("hono").ExecutionContext) => Response | Promise<Response>;
+    port: number;
+};
+export default _default;
