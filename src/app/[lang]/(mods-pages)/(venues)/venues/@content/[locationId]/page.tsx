@@ -13,7 +13,6 @@ const VenueTimetableDynamic = dynamic(
     import(
       "@/app/[lang]/(mods-pages)/(venues)/venues/@content/[locationId]/VenueTimetable"
     ),
-  { ssr: false },
 );
 
 type Props = {

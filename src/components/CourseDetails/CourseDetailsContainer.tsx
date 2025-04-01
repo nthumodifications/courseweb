@@ -49,11 +49,9 @@ import client from "@/config/api";
 
 const PDFViewerDynamic = dynamicFn(
   () => import("@/components/CourseDetails/PDFViewer"),
-  { ssr: false },
 );
 const SelectCourseButtonDynamic = dynamicFn(
   () => import("@/components/Courses/SelectCourseButton"),
-  { ssr: false },
 );
 
 const TOCNavItem = ({
