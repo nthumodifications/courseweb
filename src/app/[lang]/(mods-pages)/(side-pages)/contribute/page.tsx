@@ -8,7 +8,6 @@ import {
   Paperclip,
 } from "lucide-react";
 import Link from "next/link";
-import ContributeComment from "./ContributeComment";
 import IssueFormDialog from "@/components/Forms/IssueFormDialog";
 import Footer from "@/components/Footer";
 
@@ -28,7 +27,6 @@ const ContributePage = () => {
         <h1>For Everyone</h1>
         <h2>Share your experiences</h2>
         <p>{`You've took a fair share of courses, so share how your courses went to all students. Every insight that you can provide brings value to NTHUMods!`}</p>
-        <ContributeComment />
         <h2>Share your feedback</h2>
         <p>
           We are always open for feedback! If you have any suggestions, ideas,

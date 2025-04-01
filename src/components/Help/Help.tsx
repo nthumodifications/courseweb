@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { useLocalStorage } from "usehooks-ts";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import { LoginPage } from "@/components/Forms/LoginPage";
 import { ScrollArea } from "../ui/scroll-area";
+import { useAuth } from "react-oidc-context";
 
 type ProgressDisplayProps = { max: number; current: number };
 const ProgressDisplay = ({ current, max }: ProgressDisplayProps) => {
@@ -80,7 +80,13 @@ const Help = ({ children }: { children?: ReactNode }) => {
     }
   }, [open]);
 
-  const [loginOpen, setLoginOpen] = useState(false);
+  const { signinRedirect } = useAuth();
+
+  const handleLogin = () => {
+    // set redirectUri in localStorage to current page
+    localStorage.setItem("redirectUri", window.location.pathname);
+    signinRedirect();
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -129,16 +135,9 @@ const Help = ({ children }: { children?: ReactNode }) => {
             </Button>
           ) : (
             <div className="flex flex-col gap-2 w-full">
-              <Dialog open={loginOpen} onOpenChange={setLoginOpen}>
-                <DialogTrigger asChild>
-                  <Button className="w-full">{dict.help.login}</Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px] h-[100dvh] lg:h-auto w-full">
-                  <ScrollArea className="h-full">
-                    <LoginPage onClose={() => setOpen(false)} />
-                  </ScrollArea>
-                </DialogContent>
-              </Dialog>
+              <Button className="w-full" onClick={handleLogin}>
+                {dict.help.login}
+              </Button>
               <Button
                 variant="outline"
                 className="w-full"

@@ -39,11 +39,10 @@ import { ScrollArea } from "@radix-ui/react-scroll-area";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
-import { getContribDates, submitContribDates } from "@/lib/contrib_dates";
 import { toast } from "@/components/ui/use-toast";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import useDictionary from "@/dictionaries/useDictionary";
-import { useHeadlessAIS } from "@/hooks/contexts/useHeadlessAIS";
+import client from "@/config/api";
 
 const schema = z.object({
   dates: z.array(
@@ -66,7 +65,6 @@ const DateContributeForm = ({
 }: PropsWithChildren<{ courseId: string }>) => {
   const [open, setOpen] = useState(false);
   const dict = useDictionary();
-  const { getACIXSTORE } = useHeadlessAIS();
   const {
     data: existingDates,
     error,
@@ -75,10 +73,15 @@ const DateContributeForm = ({
   } = useQuery({
     queryKey: ["course", courseId, "dates"],
     queryFn: async () => {
-      const res = await getContribDates(courseId);
-      console.log("fetched dates", res);
-      if (res == null) throw new Error("Failed to fetch dates");
-      return res.map((d) => ({
+      const res = await client.course[":courseId"].dates.$get({
+        param: {
+          courseId,
+        },
+      });
+      const dates = await res.json();
+      console.log("fetched dates", dates);
+      if (dates == null) throw new Error("Failed to fetch dates");
+      return dates.map((d) => ({
         id: d.id,
         title: d.title,
         type: d.type as "exam" | "quiz" | "no_class",
@@ -117,22 +120,21 @@ const DateContributeForm = ({
       date: format(d.date, "yyyy-MM-dd"),
     }));
 
-    const ACIXSTORE = await getACIXSTORE();
-    if (!ACIXSTORE) {
-      toast({
-        title: "Failed to submit",
-        description: "Failed to get token",
-      });
-      throw new Error("Failed to get token");
-    }
-    const result = await submitContribDates(ACIXSTORE, submitDates);
-    if (typeof result == "object" && "error" in result) {
-      toast({
-        title: "Failed to submit",
-        description: result.error.message,
-      });
-      throw new Error(result.error.message);
-    }
+    // const result = await submitContribDates(ACIXSTORE, courseId, submitDates);
+    const res = await client.course[":courseId"].dates.$post({
+      json: {
+        dates: submitDates,
+      },
+      param: { courseId },
+    });
+    const result = await res.json();
+    // if (typeof result == "object" && "error" in result) {
+    //   toast({
+    //     title: "Failed to submit",
+    //     description: result.error.message,
+    //   });
+    //   throw new Error(result.error.message);
+    // }
     toast({
       title: "Submitted successfully",
       description: "Your contribution has been submitted successfully",
@@ -233,7 +235,7 @@ const DateContributeForm = ({
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            <Popover>
+                            <Popover modal={true}>
                               <PopoverTrigger asChild disabled={disabled}>
                                 <Button
                                   variant={"outline"}

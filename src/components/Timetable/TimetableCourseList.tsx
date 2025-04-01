@@ -1,3 +1,4 @@
+"use client";
 import {
   Search,
   Trash,
@@ -71,17 +72,6 @@ export const DownloadTimetableDialogDynamic = dynamic(
 );
 export const ShareSyncTimetableDialogDynamic = dynamic(
   () => import("./ShareSyncTimetableDialog"),
-  {
-    ssr: false,
-    loading: () => (
-      <Button variant="outline" disabled>
-        <Loader2 className="w-4 h-4 animate-spin" />
-      </Button>
-    ),
-  },
-);
-export const HeadlessSyncCourseButtonDynamic = dynamic(
-  () => import("./HeadlessSyncCourseButton"),
   {
     ssr: false,
     loading: () => (

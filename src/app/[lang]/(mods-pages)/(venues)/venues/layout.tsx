@@ -1,6 +1,5 @@
 import { FC, PropsWithChildren, ReactNode } from "react";
 import Fade from "@/components/Animation/Fade";
-import { getVenues } from "@/lib/venues";
 
 type LocationLayoutProps = PropsWithChildren<{
   content: ReactNode;

@@ -21,6 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { Separator } from "@/components/ui/separator";
+import client from "@/config/api";
 
 const ViewTimetablePage: NextPage = () => {
   const router = useRouter();
@@ -55,11 +56,11 @@ const ViewTimetablePage: NextPage = () => {
   } = useQuery({
     queryKey: ["courses", courseCodes![semester]],
     queryFn: async () => {
-      const { data = [], error } = await supabase
-        .from("courses")
-        .select("*")
-        .in("raw_id", courseCodes![semester]);
-      if (error) throw error;
+      const res = await client.course.$get({
+        query: { courses: courseCodes![semester] },
+      });
+
+      const data = await res.json();
       if (!data) throw new Error("No data");
       return data;
     },

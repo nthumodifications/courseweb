@@ -1,3 +1,5 @@
 # Ignore artifacts:
 build
 coverage
+src/types/api
+src/types/secure-api

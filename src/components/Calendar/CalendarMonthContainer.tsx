@@ -19,9 +19,9 @@ import { EventPopover } from "./EventPopover";
 import { useEventCallback, useMediaQuery } from "usehooks-ts";
 import { useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getNTHUCalendar } from "@/lib/calendar_event";
 import { CalendarEventInternal } from "@/components/Calendar/calendar.types";
 import { useSettings } from "@/hooks/contexts/settings";
+import client from "@/config/api";
 
 export const CalendarMonthContainer = ({
   displayMonth,
@@ -46,10 +46,13 @@ export const CalendarMonthContainer = ({
       format(displayMonth[displayMonth.length - 1], "yyyy-MM-dd"),
     ],
     queryFn: async () => {
-      const nthuEvents = await getNTHUCalendar(
-        displayMonth[0],
-        displayMonth[displayMonth.length - 1],
-      );
+      const res = await client.acacalendar.$get({
+        query: {
+          start: displayMonth[0].toISOString(),
+          end: displayMonth[displayMonth.length - 1].toISOString(),
+        },
+      });
+      const nthuEvents = await res.json();
       return nthuEvents.map((event, index) => {
         return {
           id: "nthu-" + event.id,
@@ -86,7 +89,7 @@ export const CalendarMonthContainer = ({
       });
 
       // Group overlapping events
-      const groupedEvents: typeof dayEvents[] = [];
+      const groupedEvents: (typeof dayEvents)[] = [];
       dayEvents.forEach((event) => {
         let added = false;
         for (const group of groupedEvents) {

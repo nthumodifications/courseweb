@@ -1,4 +1,4 @@
-import supabase from "@/config/supabase";
+import supabase, { CourseDefinition } from "@/config/supabase";
 import { scheduleTimeSlots } from "@/const/timetable";
 import {
   colorMapFromCourses,
@@ -11,6 +11,7 @@ import { fromZonedTime } from "date-fns-tz";
 import { MinimalCourse } from "@/types/courses";
 import { semesterInfo } from "@/const/semester";
 import { timetableColors } from "@/const/timetableColors";
+import client from "@/config/api";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -41,14 +42,15 @@ export async function GET(request: Request) {
   }
 
   try {
-    let { data = [], error } = await supabase
-      .from("courses")
-      .select("*")
-      .in("raw_id", courses_ids);
-    if (error) throw error;
+    const res = await client.course.$get({
+      query: { courses: courses_ids },
+    });
+
+    if (!res.ok) return NextResponse.error();
     else {
+      const data = await res.json();
       const colorMap = colorMapFromCourses(
-        data!.map((m) => m.raw_id),
+        data!.map((m: CourseDefinition) => m.raw_id),
         timetableColors[theme],
       );
       const timetableData = createTimetableFromCourses(

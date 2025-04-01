@@ -8,16 +8,15 @@ import {
   useMemo,
   useLayoutEffect,
 } from "react";
-import supabase, { CourseDefinition } from "@/config/supabase";
+import { CourseDefinition } from "@/config/supabase";
 import { RawCourseID } from "@/types/courses";
 import { lastSemester } from "@/const/semester";
 import { getSemesterFromID } from "@/helpers/courses";
 import { event } from "@/lib/gtag";
 import { timetableColors } from "@/const/timetableColors";
 import { useQuery } from "@tanstack/react-query";
-import { auth } from "@/config/firebase";
-import { useAuthState } from "react-firebase-hooks/auth";
 import useSyncedStorage from "../useSyncedStorage";
+import client from "@/config/api";
 
 export interface TimetableDisplayPreferences {
   language: "app" | "zh" | "en";
@@ -99,7 +98,6 @@ const useUserTimetableProvider = (loadCourse = true) => {
       },
     );
   const [semester, setSemester] = useState<string>(lastSemester.id);
-  const [user] = useAuthState(auth);
   const setTimetableTheme = useCallback(
     (theme: string) => {
       //if theme updated, remap colors and override all
@@ -126,7 +124,7 @@ const useUserTimetableProvider = (loadCourse = true) => {
       console.log("colorMap updated");
       _setTimetableTheme(theme);
     },
-    [courses, user],
+    [courses],
   );
 
   //fix timetableTheme if it is not in timetableColors
@@ -154,18 +152,19 @@ const useUserTimetableProvider = (loadCourse = true) => {
   } = useQuery({
     queryKey: ["courses", [...Object.values(courses).flat()].sort()],
     queryFn: async () => {
-      const { data = [], error } = await supabase
-        .from("courses")
-        .select("*")
-        .in("raw_id", [...Object.values(courses).flat()].sort());
-      if (error) throw error;
+      if (Object.values(courses).flat().length == 0) return [];
+      const res = await client.course.$get({
+        query: { courses: [...Object.values(courses).flat()].sort() },
+      });
+
+      const data = await res.json();
       if (!data) throw new Error("No data");
       return data as CourseDefinition[];
     },
     placeholderData: (prev) =>
-      prev?.filter((c: CourseDefinition) =>
+      (prev ?? []).filter((c: CourseDefinition) =>
         Object.values(courses).flat().includes(c.raw_id),
-      ) ?? [],
+      ),
   });
 
   const getSemesterCourses = useCallback(
