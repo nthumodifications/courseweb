@@ -1,3 +1,6 @@
-export declare const admin: import("firebase-admin/app").App;
-export declare const adminAuth: import("firebase-admin/auth").Auth;
-export declare const adminFirestore: FirebaseFirestore.Firestore;
+import type { Context } from "hono";
+export declare const getFirebaseAdmin: (c: Context) => {
+    admin: import("firebase-admin/app").App;
+    adminAuth: import("firebase-admin/auth").Auth;
+    adminFirestore: FirebaseFirestore.Firestore;
+};
