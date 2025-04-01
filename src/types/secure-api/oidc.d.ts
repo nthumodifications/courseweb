@@ -262,10 +262,11 @@ declare const app: import("hono/hono-base").HonoBase<{}, {
         } | {
             input: {};
             output: {
+                email?: string | undefined;
+                name?: string | undefined;
+                name_en?: string | undefined;
+                inschool?: boolean | undefined;
                 sub: string;
-                name: string;
-                email: string;
-                inschool: boolean;
             };
             outputFormat: "json";
             status: import("hono/utils/http-status").ContentfulStatusCode;
@@ -302,6 +303,34 @@ declare const app: import("hono/hono-base").HonoBase<{}, {
             };
             outputFormat: "json";
             status: 400;
+        };
+    };
+} & {
+    "/revoke": {
+        $post: {
+            input: {
+                form: {
+                    client_id: string;
+                    token: string;
+                    token_type_hint?: "access_token" | "refresh_token" | undefined;
+                };
+            };
+            output: {
+                error: string;
+            };
+            outputFormat: "json";
+            status: 401;
+        } | {
+            input: {
+                form: {
+                    client_id: string;
+                    token: string;
+                    token_type_hint?: "access_token" | "refresh_token" | undefined;
+                };
+            };
+            output: {};
+            outputFormat: "json";
+            status: 200;
         };
     };
 }, "/">;
