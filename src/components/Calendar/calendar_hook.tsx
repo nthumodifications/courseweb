@@ -14,7 +14,6 @@ import {
   CalendarEventInternal,
   DisplayCalendarEvent,
 } from "@/components/Calendar/calendar.types";
-import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { useRxCollection, useRxDB, useRxQuery } from "rxdb-hooks";
 import { getDiffFunction, getActualEndDate } from "./calendar_utils";
 import { subDays } from "date-fns";
@@ -22,12 +21,12 @@ import {
   serializeEvent,
   getDisplayEndDate,
 } from "@/components/Calendar/calendar_utils";
-import { EventDocType } from "@/config/rxdb";
-import { useAuthState } from "react-firebase-hooks/auth";
-import { auth, firebaseConfig, db as firebaseDb } from "@/config/firebase";
-import { replicateFirestore } from "rxdb/plugins/replication-firestore";
-import { collection, where } from "firebase/firestore";
+import { EventDocType, TimetableSyncDocType } from "@/config/rxdb";
 import { toast } from "../ui/use-toast";
+import { replicateRxCollection } from "rxdb/plugins/replication";
+import { useAuth } from "react-oidc-context";
+import authClient from "@/config/auth";
+import { WithDeleted } from "rxdb";
 
 export enum UpdateType {
   THIS = "THIS",
@@ -62,67 +61,143 @@ export const useCalendarProvider = () => {
     "Anniversary",
   ]);
   const eventsCol = useRxCollection("events");
-
-  // setup firestore replication
-  const [user, loading, error] = useAuthState(auth);
+  const auth = useAuth();
 
   useEffect(() => {
-    if (!user) return;
     if (!eventsCol) return;
-    const replicationState = replicateFirestore({
-      replicationIdentifier: "events-to-firestore",
+    if (!auth.isAuthenticated) return;
+    const replicationState = replicateRxCollection<
+      EventDocType,
+      { id: string; serverTimestamp: string }
+    >({
       collection: eventsCol,
-      firestore: {
-        projectId: firebaseConfig.projectId,
-        database: firebaseDb,
-        collection: collection(firebaseDb, "users", user.uid, "events"),
-      },
-      pull: {},
-      push: {},
+      replicationIdentifier: "events-to-auth-calendar",
       live: true,
-      serverTimestampField: "serverTimestamp",
+      push: {
+        async handler(changeRows) {
+          const rawResponse =
+            await authClient.api.replication.events.push.$post(
+              {
+                json: changeRows,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${auth.user?.access_token}`,
+                },
+              },
+            );
+          const conflictsArray = await rawResponse.json();
+          return conflictsArray;
+        },
+      },
+      pull: {
+        async handler(lastPulledCheckpoint, batchSize) {
+          const serverTimestamp = lastPulledCheckpoint
+            ? lastPulledCheckpoint.serverTimestamp
+            : "";
+          const id = lastPulledCheckpoint ? lastPulledCheckpoint.id : "";
+          const response = await authClient.api.replication.events.pull.$get(
+            {
+              query: {
+                id,
+                serverTimestamp: serverTimestamp,
+                batchSize: batchSize.toString(),
+              },
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${auth.user?.access_token}`,
+              },
+            },
+          );
+          const data = await response.json();
+          return {
+            documents: data.documents as WithDeleted<EventDocType>[],
+            checkpoint: data.checkpoint,
+          };
+        },
+      },
     });
-    // emits all errors that happen when running the push- & pull-handlers.
     replicationState.error$.subscribe((error) => console.error(error));
     replicationState.start();
     replicationState.awaitInitialReplication().then(() => {
       console.log("[events] Initial replication done");
     });
+
     return () => {
       replicationState.cancel();
-      replicationState.remove();
     };
-  }, [user, eventsCol]);
+  }, [auth, eventsCol]);
 
   const timetableSyncCol = useRxCollection("timetablesync");
 
   useEffect(() => {
-    if (!user) return;
     if (!timetableSyncCol) return;
-    const replicationState = replicateFirestore({
-      replicationIdentifier: "timetablesync-to-firestore",
+    if (!auth.isAuthenticated) return;
+    const replicationState = replicateRxCollection<
+      TimetableSyncDocType,
+      { id: string; serverTimestamp: string }
+    >({
       collection: timetableSyncCol,
-      firestore: {
-        projectId: firebaseConfig.projectId,
-        database: firebaseDb,
-        collection: collection(firebaseDb, "users", user.uid, "timetablesync"),
-      },
-      pull: {},
-      push: {},
+      replicationIdentifier: "timetablesync-to-auth-calendar",
       live: true,
-      serverTimestampField: "serverTimestamp",
+      push: {
+        async handler(changeRows) {
+          const rawResponse =
+            await authClient.api.replication.timetablesync.push.$post(
+              {
+                json: changeRows,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${auth.user?.access_token}`,
+                },
+              },
+            );
+          const conflictsArray =
+            (await rawResponse.json()) as WithDeleted<TimetableSyncDocType>[];
+          return conflictsArray;
+        },
+      },
+      pull: {
+        async handler(lastPulledCheckpoint, batchSize) {
+          const serverTimestamp = lastPulledCheckpoint
+            ? lastPulledCheckpoint.serverTimestamp
+            : "";
+          const id = lastPulledCheckpoint ? lastPulledCheckpoint.id : "";
+          const response =
+            await authClient.api.replication.timetablesync.pull.$get(
+              {
+                query: {
+                  id,
+                  serverTimestamp: serverTimestamp,
+                  batchSize: batchSize.toString(),
+                },
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${auth.user?.access_token}`,
+                },
+              },
+            );
+          const data = await response.json();
+          return {
+            documents: data.documents as WithDeleted<TimetableSyncDocType>[],
+            checkpoint: data.checkpoint,
+          };
+        },
+      },
     });
-    // emits all errors that happen when running the push- & pull-handlers.
     replicationState.error$.subscribe((error) => console.error(error));
     replicationState.start();
     replicationState.awaitInitialReplication().then(() => {
-      console.log("[timetableSync] Initial replication done");
+      console.log("[events] Initial replication done");
     });
+
     return () => {
       replicationState.cancel();
-      replicationState.remove();
     };
-  }, [user, timetableSyncCol]);
+  }, [auth, timetableSyncCol]);
 
   const { result: eventStore } = useRxQuery(eventsCol?.find());
   const events =

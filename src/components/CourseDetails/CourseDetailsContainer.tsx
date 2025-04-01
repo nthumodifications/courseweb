@@ -44,7 +44,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { cn } from "@/lib/utils";
 import ShareCourseButton from "./ShareCourseButton";
 import DateContributeForm from "./DateContributeForm";
-import { getCurrentUser } from "@/lib/firebase/auth";
 import { currentSemester } from "@/const/semester";
 import client from "@/config/api";
 
@@ -116,7 +115,6 @@ const ImportantDates = async ({
   });
   const dates = await res.json();
   const dict = await getDictionary(lang);
-  const session = await getCurrentUser();
 
   const sortedDates = dates?.sort(
     (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
@@ -128,13 +126,6 @@ const ImportantDates = async ({
         <h3 className="font-semibold text-base">
           {dict.course.details.important_dates}
         </h3>
-        {session && currentSemester?.id == raw_id.substring(0, 5) && (
-          <DateContributeForm courseId={raw_id}>
-            <Button size="sm" variant="ghost" className="h-6">
-              <CalendarPlus className="w-4 h-4" />
-            </Button>
-          </DateContributeForm>
-        )}
       </div>
       {sortedDates && (
         <div className="flex flex-col gap-1">
