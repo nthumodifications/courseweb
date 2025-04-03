@@ -108,7 +108,7 @@ export function CreateCourseDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange} modal={true}>
       <DialogTrigger asChild>
         <Button size={buttonSize} variant={buttonVariant}>
           <Plus className="h-4 w-4 mr-2" />
