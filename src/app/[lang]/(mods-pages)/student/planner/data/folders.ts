@@ -130,3 +130,35 @@ export const changeFolderParent = async (
   await doc.patch({ parent: newParentId });
   return true;
 };
+
+// Ensure unsorted folder exists
+export async function ensureUnsortedFolder(
+  collection: RxCollection<FolderDocType>,
+) {
+  try {
+    // Check if _unsorted folder exists
+    const unsortedFolder = await collection
+      .findOne({
+        selector: { id: "_unsorted" },
+      })
+      .exec();
+
+    // If not, create it
+    if (!unsortedFolder) {
+      await collection.insert({
+        id: "_unsorted",
+        title: "未分類",
+        parent: "planner-1",
+        min: 0,
+        max: 0,
+        metric: "credits",
+        requireChildValidation: false,
+        titlePlacement: "top",
+        order: 999,
+      });
+      console.log("Created _unsorted folder");
+    }
+  } catch (error) {
+    console.error("Error ensuring unsorted folder exists:", error);
+  }
+}

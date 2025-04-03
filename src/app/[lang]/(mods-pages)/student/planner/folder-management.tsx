@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   ChevronRight,
   Plus,
@@ -10,6 +10,9 @@ import {
   ArrowDown,
   Save,
   X,
+  Download,
+  Upload,
+  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,11 +35,24 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "@/components/ui/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
   getFolders,
   createFolder,
   updateFolder,
   deleteFolder,
   reorderFolders,
+  ensureUnsortedFolder,
 } from "./data/folders";
 import { FolderDocType } from "@/config/rxdb";
 import { useRxCollection } from "rxdb-hooks";
@@ -64,6 +80,10 @@ export function FolderManagement({
   );
   const [editMode, setEditMode] = useState<boolean>(false);
   const [newFolder, setNewFolder] = useState<boolean>(false);
+  const [importMode, setImportMode] = useState<boolean>(false);
+  const [importPreview, setImportPreview] = useState<FolderDocType[]>([]);
+  const [importConfirmOpen, setImportConfirmOpen] = useState<boolean>(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Form with react-hook-form
   const { register, handleSubmit, control, reset, setValue, watch } =
@@ -87,6 +107,8 @@ export function FolderManagement({
   useEffect(() => {
     const loadFolders = async () => {
       if (!folderCol) return;
+      // Ensure _unsorted folder exists
+      await ensureUnsortedFolder(folderCol);
       const data = await getFolders(folderCol);
       setFolders(data);
     };
@@ -99,8 +121,11 @@ export function FolderManagement({
   // Get root folders
   const getRootFolders = () => {
     return folders
-      .filter((folder) => folder.parent === "planner-1")
-      .sort((a, b) => a.order - b.order);
+      .filter(
+        (folder) => folder.parent === "planner-1" && folder.id !== "_unsorted",
+      )
+      .sort((a, b) => a.order - b.order)
+      .concat(folders.filter((folder) => folder.id === "_unsorted"));
   };
 
   // Get child folders
@@ -112,6 +137,13 @@ export function FolderManagement({
 
   // Handle folder selection
   const handleSelectFolder = (folder: FolderDocType) => {
+    // Don't allow editing the _unsorted folder
+    if (folder.id === "_unsorted") {
+      setSelectedFolder(folder);
+      setEditMode(false);
+      setNewFolder(false);
+      return;
+    }
     setSelectedFolder(folder);
     setEditMode(false);
     setNewFolder(false);
@@ -119,7 +151,7 @@ export function FolderManagement({
 
   // Handle edit mode
   const handleEditMode = () => {
-    if (selectedFolder) {
+    if (selectedFolder && selectedFolder.id !== "_unsorted") {
       // Reset form with selected folder data
       reset({
         ...selectedFolder,
@@ -184,7 +216,7 @@ export function FolderManagement({
 
   // Handle delete
   const handleDelete = async () => {
-    if (!selectedFolder) return;
+    if (!selectedFolder || selectedFolder.id === "_unsorted") return;
 
     try {
       await deleteFolder(folderCol!, selectedFolder.id);
@@ -208,7 +240,7 @@ export function FolderManagement({
 
   // Handle move up
   const handleMoveUp = async () => {
-    if (!selectedFolder) return;
+    if (!selectedFolder || selectedFolder.id === "_unsorted") return;
 
     const siblings = folders
       .filter((f) => f.parent === selectedFolder.parent)
@@ -241,7 +273,7 @@ export function FolderManagement({
 
   // Handle move down
   const handleMoveDown = async () => {
-    if (!selectedFolder) return;
+    if (!selectedFolder || selectedFolder.id === "_unsorted") return;
 
     const siblings = folders
       .filter((f) => f.parent === selectedFolder.parent)
@@ -272,16 +304,227 @@ export function FolderManagement({
     }
   };
 
+  // Export folders as template
+  const handleExportTemplate = () => {
+    try {
+      // Prepare folders data for export (omitting rxdb-specific properties and _unsorted folder)
+      const exportData = folders
+        .filter((folder) => folder.id !== "_unsorted")
+        .map((folder) => ({
+          id: folder.id,
+          title: folder.title,
+          parent: folder.parent,
+          min: folder.min,
+          max: folder.max,
+          metric: folder.metric,
+          requireChildValidation: folder.requireChildValidation,
+          titlePlacement: folder.titlePlacement,
+          order: folder.order,
+        }));
+
+      // Create JSON blob
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+        type: "application/json",
+      });
+
+      // Create download URL
+      const url = URL.createObjectURL(blob);
+
+      // Create temporary link and trigger download
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `folder-template-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(link);
+      link.click();
+
+      // Clean up
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "範本匯出成功",
+        description: "範本已下載，您可以在 Notion 頁面上分享它。",
+      });
+    } catch (error) {
+      console.error("Error exporting template:", error);
+      toast({
+        title: "匯出失敗",
+        description: "無法匯出範本，請再試一次。",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handle file selection for import
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const importedData = JSON.parse(event.target?.result as string);
+
+        // Basic validation
+        if (
+          !Array.isArray(importedData) ||
+          !importedData.every(
+            (item) =>
+              item.id &&
+              item.title &&
+              typeof item.min === "number" &&
+              typeof item.max === "number" &&
+              item.parent,
+          )
+        ) {
+          throw new Error("無效的範本檔案格式");
+        }
+
+        setImportPreview(importedData);
+        setImportMode(true);
+      } catch (error) {
+        console.error("Error parsing template:", error);
+        toast({
+          title: "匯入失敗",
+          description: "無法解析範本檔案，請確保它是有效的 JSON 格式。",
+          variant: "destructive",
+        });
+
+        // Reset file input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  // Import template
+  const handleImportConfirm = async () => {
+    if (!folderCol || importPreview.length === 0) return;
+
+    try {
+      // Get the items collection to update their references
+      const itemsCol = folderCol.database.collections.items;
+      if (itemsCol) {
+        // Get all items that reference folders
+        const items = await itemsCol.find().exec();
+
+        // Get all valid folder IDs from the new structure
+        const newFolderIds = importPreview.map((folder) => folder.id);
+
+        // Update items' parent references
+        for (const item of items) {
+          if (item.parent && !newFolderIds.includes(item.parent)) {
+            // If the parent folder doesn't exist in the new structure, set parent to _unsorted
+            await item.patch({ parent: "_unsorted" });
+          }
+        }
+      }
+
+      // Save _unsorted folder if it exists
+      const unsortedFolder = folders.find((f) => f.id === "_unsorted");
+
+      // Delete all existing folders except _unsorted
+      for (const folder of folders.filter((f) => f.id !== "_unsorted")) {
+        await deleteFolder(folderCol, folder.id);
+      }
+
+      // Create new folders
+      for (const folder of importPreview.filter((f) => f.id !== "_unsorted")) {
+        await createFolder(folderCol, folder as FolderDocType);
+      }
+
+      // Ensure _unsorted folder exists
+      await ensureUnsortedFolder(folderCol);
+
+      // Refresh folders
+      const updatedFolders = await getFolders(folderCol);
+      setFolders(updatedFolders);
+
+      // Reset state
+      setImportMode(false);
+      setImportPreview([]);
+      setImportConfirmOpen(false);
+
+      toast({
+        title: "範本匯入成功",
+        description: "資料夾結構已更新，未匹配的項目已移至「未分類」。",
+      });
+
+      // Notify parent
+      onFoldersUpdated();
+    } catch (error) {
+      console.error("Error importing template:", error);
+      toast({
+        title: "匯入失敗",
+        description: "無法匯入範本，請再試一次。",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Cancel import
+  const handleCancelImport = () => {
+    setImportMode(false);
+    setImportPreview([]);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
   // Render folder tree item
   const renderFolderItem = (folder: FolderDocType, level = 0) => {
     const children = getChildFolders(folder.id);
+    const hasChildren = children.length > 0;
+    const isUnsorted = folder.id === "_unsorted";
+
+    return (
+      <div key={folder.id} className="mb-1">
+        <div
+          className={`flex items-center p-2 rounded-md ${selectedFolder?.id === folder.id ? "bg-gray-800" : "hover:bg-gray-800/50"} cursor-pointer ${isUnsorted ? "opacity-70" : ""}`}
+          onClick={() => handleSelectFolder(folder)}
+          style={{ paddingLeft: `${level * 16 + 8}px` }}
+        >
+          <div className="mr-2 flex-shrink-0">
+            {hasChildren ? (
+              <ChevronRight className="h-4 w-4 text-gray-400" />
+            ) : (
+              <div className="w-4" />
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-medium truncate">
+              {folder.title}
+              {isUnsorted && " (系統)"}
+            </div>
+            <div className="text-xs text-gray-400">
+              {folder.min} - {folder.max === 0 ? "∞" : folder.max}{" "}
+              {folder.metric === "credits" ? "學分" : "課程"}
+            </div>
+          </div>
+        </div>
+
+        {hasChildren && (
+          <div className="ml-6">
+            {children.map((child) => renderFolderItem(child, level + 1))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Render folder tree item for preview
+  const renderFolderPreviewItem = (folder: FolderDocType, level = 0) => {
+    const children = importPreview
+      .filter((f) => f.parent === folder.id)
+      .sort((a, b) => a.order - b.order);
     const hasChildren = children.length > 0;
 
     return (
       <div key={folder.id} className="mb-1">
         <div
-          className={`flex items-center p-2 rounded-md ${selectedFolder?.id === folder.id ? "bg-gray-800" : "hover:bg-gray-800/50"} cursor-pointer`}
-          onClick={() => handleSelectFolder(folder)}
+          className={`flex items-center p-2 rounded-md hover:bg-gray-800/50`}
           style={{ paddingLeft: `${level * 16 + 8}px` }}
         >
           <div className="mr-2 flex-shrink-0">
@@ -302,317 +545,465 @@ export function FolderManagement({
 
         {hasChildren && (
           <div className="ml-6">
-            {children.map((child) => renderFolderItem(child, level + 1))}
+            {children.map((child) => renderFolderPreviewItem(child, level + 1))}
           </div>
         )}
       </div>
     );
   };
 
+  // Get preview root folders
+  const getPreviewRootFolders = () => {
+    return importPreview
+      .filter((folder) => folder.parent === "planner-1")
+      .sort((a, b) => a.order - b.order);
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-4xl max-h-[80vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle>類別管理</DialogTitle>
-          <DialogDescription className="text-gray-400">
-            管理畢業要求類別和結構
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-4xl max-h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>類別管理</DialogTitle>
+            <DialogDescription className="text-gray-400">
+              管理畢業要求類別和結構
+            </DialogDescription>
+          </DialogHeader>
 
-        <div className="flex flex-1 gap-4 overflow-hidden">
-          {/* Left side - Folder tree */}
-          <div className="w-1/2 border border-gray-700 rounded-md overflow-hidden flex flex-col">
-            <div className="p-2 border-b border-gray-700 flex justify-between items-center">
-              <h3 className="font-medium">類別結構</h3>
-              <Button size="sm" onClick={handleNewFolder}>
-                <Plus className="h-4 w-4 mr-2" />
-                新增類別
-              </Button>
-            </div>
-
-            <ScrollArea className="flex-1">
-              <div className="p-2">
-                {getRootFolders().map((folder) => renderFolderItem(folder))}
-              </div>
-            </ScrollArea>
-          </div>
-
-          {/* Right side - Folder details/edit */}
-          <div className="w-1/2 border border-gray-700 rounded-md overflow-hidden flex flex-col">
-            {selectedFolder && !editMode ? (
-              <>
+          {!importMode ? (
+            <div className="flex flex-1 gap-4 overflow-hidden">
+              {/* Left side - Folder tree */}
+              <div className="w-1/2 border border-gray-700 rounded-md overflow-hidden flex flex-col">
                 <div className="p-2 border-b border-gray-700 flex justify-between items-center">
-                  <h3 className="font-medium">類別詳情</h3>
-                  <div className="flex gap-1">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={handleEditMode}
-                    >
-                      <Edit className="h-4 w-4 mr-2" />
-                      編輯
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={handleDelete}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      刪除
-                    </Button>
-                  </div>
+                  <h3 className="font-medium">類別結構</h3>
+                  <Button size="sm" onClick={handleNewFolder}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    新增類別
+                  </Button>
                 </div>
 
                 <ScrollArea className="flex-1">
-                  <div className="p-4 space-y-4">
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-400">
-                        類別名稱
-                      </h4>
-                      <p className="mt-1">{selectedFolder.title}</p>
-                    </div>
+                  <div className="p-2">
+                    {getRootFolders().map((folder) => renderFolderItem(folder))}
+                  </div>
+                </ScrollArea>
+              </div>
 
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-400">
-                        學分要求
-                      </h4>
-                      <p className="mt-1">
-                        {selectedFolder.min} -{" "}
-                        {selectedFolder.max === 0
-                          ? "無上限"
-                          : selectedFolder.max}{" "}
-                        {selectedFolder.metric === "credits" ? "學分" : "課程"}
-                      </p>
-                    </div>
-
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-400">
-                        父類別
-                      </h4>
-                      <p className="mt-1">
-                        {selectedFolder.parent === "planner-1"
-                          ? "無 (根類別)"
-                          : folders.find((f) => f.id === selectedFolder.parent)
-                              ?.title || "無"}
-                      </p>
-                    </div>
-
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-400">
-                        排序
-                      </h4>
-                      <div className="mt-1 flex items-center gap-2">
-                        <p>{selectedFolder.order}</p>
-                        <div className="flex gap-1">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={handleMoveUp}
-                          >
-                            <ArrowUp className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={handleMoveDown}
-                          >
-                            <ArrowDown className="h-4 w-4" />
-                          </Button>
-                        </div>
+              {/* Right side - Folder details/edit */}
+              {selectedFolder && !editMode ? (
+                <>
+                  <div className="w-1/2 border border-gray-700 rounded-md overflow-hidden flex flex-col">
+                    <div className="p-2 border-b border-gray-700 flex justify-between items-center">
+                      <h3 className="font-medium">類別詳情</h3>
+                      <div className="flex gap-1">
+                        {selectedFolder.id !== "_unsorted" && (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={handleEditMode}
+                            >
+                              <Edit className="h-4 w-4 mr-2" />
+                              編輯
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={handleDelete}
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              刪除
+                            </Button>
+                          </>
+                        )}
+                        {selectedFolder.id === "_unsorted" && (
+                          <div className="text-xs text-gray-400 italic">
+                            系統類別，不可編輯
+                          </div>
+                        )}
                       </div>
                     </div>
 
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-400">
-                        需要子類別驗證
-                      </h4>
-                      <p className="mt-1">
-                        {selectedFolder.requireChildValidation ? "是" : "否"}
-                      </p>
-                    </div>
+                    <ScrollArea className="flex-1">
+                      <div className="p-4 space-y-4">
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-400">
+                            類別名稱
+                          </h4>
+                          <p className="mt-1">{selectedFolder.title}</p>
+                        </div>
+
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-400">
+                            學分要求
+                          </h4>
+                          <p className="mt-1">
+                            {selectedFolder.min} -{" "}
+                            {selectedFolder.max === 0
+                              ? "無上限"
+                              : selectedFolder.max}{" "}
+                            {selectedFolder.metric === "credits"
+                              ? "學分"
+                              : "課程"}
+                          </p>
+                        </div>
+
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-400">
+                            父類別
+                          </h4>
+                          <p className="mt-1">
+                            {selectedFolder.parent === "planner-1"
+                              ? "無 (根類別)"
+                              : folders.find(
+                                  (f) => f.id === selectedFolder.parent,
+                                )?.title || "無"}
+                          </p>
+                        </div>
+
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-400">
+                            排序
+                          </h4>
+                          <div className="mt-1 flex items-center gap-2">
+                            <p>{selectedFolder.order}</p>
+                            <div className="flex gap-1">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={handleMoveUp}
+                              >
+                                <ArrowUp className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={handleMoveDown}
+                              >
+                                <ArrowDown className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-400">
+                            需要子類別驗證
+                          </h4>
+                          <p className="mt-1">
+                            {selectedFolder.requireChildValidation
+                              ? "是"
+                              : "否"}
+                          </p>
+                        </div>
+                      </div>
+                    </ScrollArea>
                   </div>
-                </ScrollArea>
-              </>
-            ) : editMode ? (
-              <>
+                </>
+              ) : editMode ? (
+                <>
+                  <div className="w-1/2 border border-gray-700 rounded-md overflow-hidden flex flex-col">
+                    <div className="p-2 border-b border-gray-700 flex justify-between items-center">
+                      <h3 className="font-medium">
+                        {newFolder ? "新增類別" : "編輯類別"}
+                      </h3>
+                      <div className="flex gap-1">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setEditMode(false);
+                            setNewFolder(false);
+                            reset();
+                          }}
+                        >
+                          <X className="h-4 w-4 mr-2" />
+                          取消
+                        </Button>
+                        <Button size="sm" onClick={handleSubmit(onSubmit)}>
+                          <Save className="h-4 w-4 mr-2" />
+                          儲存
+                        </Button>
+                      </div>
+                    </div>
+
+                    <ScrollArea className="flex-1">
+                      <form
+                        onSubmit={handleSubmit(onSubmit)}
+                        className="p-4 space-y-4"
+                      >
+                        <div className="space-y-2">
+                          <Label htmlFor="folder-title">類別名稱</Label>
+                          <Input
+                            id="folder-title"
+                            {...register("title", { required: true })}
+                            className="bg-gray-800 border-gray-700 text-white"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="folder-min">最低要求</Label>
+                            <Input
+                              id="folder-min"
+                              type="number"
+                              {...register("min", { valueAsNumber: true })}
+                              className="bg-gray-800 border-gray-700 text-white"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="folder-max">最高要求</Label>
+                            <div className="flex items-center gap-2">
+                              <Input
+                                id="folder-max"
+                                type="number"
+                                {...register("max", { valueAsNumber: true })}
+                                className="bg-gray-800 border-gray-700 text-white"
+                              />
+                              <div className="flex items-center gap-1">
+                                <Controller
+                                  control={control}
+                                  name="max"
+                                  render={({ field }) => (
+                                    <Checkbox
+                                      id="infinite-max"
+                                      checked={field.value === 0}
+                                      onCheckedChange={(checked) => {
+                                        setValue(
+                                          "max",
+                                          checked ? 0 : watch("min") || 0,
+                                        );
+                                      }}
+                                    />
+                                  )}
+                                />
+                                <Label
+                                  htmlFor="infinite-max"
+                                  className="text-sm"
+                                >
+                                  無上限
+                                </Label>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="folder-metric">計算單位</Label>
+                          <Controller
+                            control={control}
+                            name="metric"
+                            render={({ field }) => (
+                              <Select
+                                value={field.value}
+                                onValueChange={field.onChange}
+                              >
+                                <SelectTrigger
+                                  id="folder-metric"
+                                  className="bg-gray-800 border-gray-700"
+                                >
+                                  <SelectValue placeholder="選擇計算單位" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-gray-800 border-gray-700">
+                                  <SelectItem value="credits">學分</SelectItem>
+                                  <SelectItem value="courses">
+                                    課程數
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            )}
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="folder-parent">父類別</Label>
+                          <Controller
+                            control={control}
+                            name="parent"
+                            render={({ field }) => (
+                              <Select
+                                value={field.value || "planner-1"}
+                                onValueChange={field.onChange}
+                              >
+                                <SelectTrigger
+                                  id="folder-parent"
+                                  className="bg-gray-800 border-gray-700"
+                                >
+                                  <SelectValue placeholder="選擇父類別" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-gray-800 border-gray-700">
+                                  <SelectItem value="planner-1">
+                                    無 (根類別)
+                                  </SelectItem>
+                                  {folders
+                                    .filter((f) => f.id !== watch("id"))
+                                    .map((folder) => (
+                                      <SelectItem
+                                        key={folder.id}
+                                        value={folder.id}
+                                      >
+                                        {folder.title}
+                                      </SelectItem>
+                                    ))}
+                                </SelectContent>
+                              </Select>
+                            )}
+                          />
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <Controller
+                            control={control}
+                            name="requireChildValidation"
+                            render={({ field }) => (
+                              <Checkbox
+                                id="require-child-validation"
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            )}
+                          />
+                          <Label htmlFor="require-child-validation">
+                            需要子類別驗證
+                          </Label>
+                        </div>
+
+                        <input type="hidden" {...register("id")} />
+                        <input type="hidden" {...register("order")} />
+                        <input type="hidden" {...register("titlePlacement")} />
+                      </form>
+                    </ScrollArea>
+                  </div>
+                </>
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-400">
+                  <p>選擇一個類別以查看詳情</p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-1 gap-4 overflow-hidden">
+              <div className="w-full border border-gray-700 rounded-md overflow-hidden flex flex-col">
                 <div className="p-2 border-b border-gray-700 flex justify-between items-center">
-                  <h3 className="font-medium">
-                    {newFolder ? "新增類別" : "編輯類別"}
-                  </h3>
-                  <div className="flex gap-1">
+                  <h3 className="font-medium">匯入預覽</h3>
+                  <div className="flex gap-2">
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => {
-                        setEditMode(false);
-                        setNewFolder(false);
-                        reset();
-                      }}
+                      onClick={handleCancelImport}
                     >
                       <X className="h-4 w-4 mr-2" />
                       取消
                     </Button>
-                    <Button size="sm" onClick={handleSubmit(onSubmit)}>
+                    <Button
+                      size="sm"
+                      onClick={() => setImportConfirmOpen(true)}
+                    >
                       <Save className="h-4 w-4 mr-2" />
-                      儲存
+                      確認匯入
                     </Button>
                   </div>
                 </div>
 
-                <ScrollArea className="flex-1">
-                  <form
-                    onSubmit={handleSubmit(onSubmit)}
-                    className="p-4 space-y-4"
+                <div className="p-4">
+                  <Alert className="mb-4 bg-amber-900/20 border-amber-700">
+                    <AlertDescription>
+                      確認匯入將會覆蓋所有現有類別。請仔細檢查下方預覽的資料夾結構。
+                    </AlertDescription>
+                  </Alert>
+
+                  <div className="mb-4">
+                    <h3 className="font-medium mb-2">資料夾結構預覽</h3>
+                    <div className="border border-gray-700 rounded-md p-2">
+                      <ScrollArea className="h-[40vh]">
+                        {getPreviewRootFolders().map((folder) =>
+                          renderFolderPreviewItem(folder),
+                        )}
+                      </ScrollArea>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-sm text-gray-400">
+                    <p>總共 {importPreview.length} 個資料夾將被匯入</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="flex flex-col items-stretch gap-2 sm:flex-row sm:justify-between sm:items-center pt-2">
+            {!importMode ? (
+              <>
+                <div className="flex gap-2 items-center">
+                  <a
+                    href="https://www.notion.so/share-folder-templates"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-blue-400 hover:underline flex items-center gap-1"
                   >
-                    <div className="space-y-2">
-                      <Label htmlFor="folder-title">類別名稱</Label>
-                      <Input
-                        id="folder-title"
-                        {...register("title", { required: true })}
-                        className="bg-gray-800 border-gray-700 text-white"
-                      />
-                    </div>
+                    <ExternalLink className="h-3 w-3" />
+                    範本分享頁面
+                  </a>
+                </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="folder-min">最低要求</Label>
-                        <Input
-                          id="folder-min"
-                          type="number"
-                          {...register("min", { valueAsNumber: true })}
-                          className="bg-gray-800 border-gray-700 text-white"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="folder-max">最高要求</Label>
-                        <div className="flex items-center gap-2">
-                          <Input
-                            id="folder-max"
-                            type="number"
-                            {...register("max", { valueAsNumber: true })}
-                            className="bg-gray-800 border-gray-700 text-white"
-                          />
-                          <div className="flex items-center gap-1">
-                            <Controller
-                              control={control}
-                              name="max"
-                              render={({ field }) => (
-                                <Checkbox
-                                  id="infinite-max"
-                                  checked={field.value === 0}
-                                  onCheckedChange={(checked) => {
-                                    setValue(
-                                      "max",
-                                      checked ? 0 : watch("min") || 0,
-                                    );
-                                  }}
-                                />
-                              )}
-                            />
-                            <Label htmlFor="infinite-max" className="text-sm">
-                              無上限
-                            </Label>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="folder-metric">計算單位</Label>
-                      <Controller
-                        control={control}
-                        name="metric"
-                        render={({ field }) => (
-                          <Select
-                            value={field.value}
-                            onValueChange={field.onChange}
-                          >
-                            <SelectTrigger
-                              id="folder-metric"
-                              className="bg-gray-800 border-gray-700"
-                            >
-                              <SelectValue placeholder="選擇計算單位" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-gray-800 border-gray-700">
-                              <SelectItem value="credits">學分</SelectItem>
-                              <SelectItem value="courses">課程數</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        )}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="folder-parent">父類別</Label>
-                      <Controller
-                        control={control}
-                        name="parent"
-                        render={({ field }) => (
-                          <Select
-                            value={field.value || "planner-1"}
-                            onValueChange={field.onChange}
-                          >
-                            <SelectTrigger
-                              id="folder-parent"
-                              className="bg-gray-800 border-gray-700"
-                            >
-                              <SelectValue placeholder="選擇父類別" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-gray-800 border-gray-700">
-                              <SelectItem value="planner-1">
-                                無 (根類別)
-                              </SelectItem>
-                              {folders
-                                .filter((f) => f.id !== watch("id"))
-                                .map((folder) => (
-                                  <SelectItem key={folder.id} value={folder.id}>
-                                    {folder.title}
-                                  </SelectItem>
-                                ))}
-                            </SelectContent>
-                          </Select>
-                        )}
-                      />
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <Controller
-                        control={control}
-                        name="requireChildValidation"
-                        render={({ field }) => (
-                          <Checkbox
-                            id="require-child-validation"
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        )}
-                      />
-                      <Label htmlFor="require-child-validation">
-                        需要子類別驗證
-                      </Label>
-                    </div>
-
-                    <input type="hidden" {...register("id")} />
-                    <input type="hidden" {...register("order")} />
-                    <input type="hidden" {...register("titlePlacement")} />
-                  </form>
-                </ScrollArea>
+                <div className="flex gap-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".json"
+                    className="hidden"
+                    aria-label="file"
+                    onChange={handleFileSelect}
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    匯入範本
+                  </Button>
+                  <Button variant="outline" onClick={handleExportTemplate}>
+                    <Download className="h-4 w-4 mr-2" />
+                    匯出為範本
+                  </Button>
+                  <Button variant="outline" onClick={onClose}>
+                    關閉
+                  </Button>
+                </div>
               </>
             ) : (
-              <div className="flex items-center justify-center h-full text-gray-400">
-                <p>選擇一個類別以查看詳情</p>
+              <div className="flex justify-end w-full">
+                <Button variant="outline" onClick={onClose}>
+                  關閉
+                </Button>
               </div>
             )}
-          </div>
-        </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            關閉
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      <AlertDialog open={importConfirmOpen} onOpenChange={setImportConfirmOpen}>
+        <AlertDialogContent className="bg-gray-900 border-gray-700 text-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>確認匯入範本</AlertDialogTitle>
+            <AlertDialogDescription>
+              此操作將刪除所有現有類別並替換為新的範本結構。此操作無法復原。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-gray-800 hover:bg-gray-700 border-gray-600">
+              取消
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-900 hover:bg-red-800"
+              onClick={handleImportConfirm}
+            >
+              確認匯入
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

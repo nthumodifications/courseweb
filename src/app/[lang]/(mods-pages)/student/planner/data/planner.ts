@@ -57,6 +57,23 @@ export const calculateCompletedCredits = async (
     .reduce((sum, course) => sum + course.credits, 0);
 };
 
+export const calculateInProgressCredits = async (
+  courseItems: ItemDocType[],
+): Promise<number> => {
+  return courseItems
+    .filter((course) => course.status === "in-progress")
+    .reduce((sum, course) => sum + course.credits, 0);
+};
+
+// Function to calculate planned credits
+export const calculatePlannedCredits = async (
+  courseItems: ItemDocType[],
+): Promise<number> => {
+  return courseItems
+    .filter((course) => course.status === "planned")
+    .reduce((sum, course) => sum + course.credits, 0);
+};
+
 // Function to calculate progress percentage
 export const calculateProgressPercentage = async (
   col: RxCollection<PlannerDataDocType>,
