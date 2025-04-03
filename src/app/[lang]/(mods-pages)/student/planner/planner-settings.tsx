@@ -1,0 +1,497 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import {
+  Save,
+  X,
+  Trash2,
+  Download,
+  RefreshCw,
+  AlertTriangle,
+  FolderGit2,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  FolderDocType,
+  ItemDocType,
+  PlannerDataDocType,
+  SemesterDocType,
+} from "@/config/rxdb";
+import { useRxCollection } from "rxdb-hooks";
+import {
+  createPlannerData,
+  getPlannerData,
+  updatePlannerData,
+} from "./data/planner";
+import { getSemesters } from "./data/semesters";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { v4 as uuidv4 } from "uuid";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { getCourseItems } from "./data/courses";
+import { getFolders } from "./data/folders";
+
+// Define the validation schema with Zod
+const plannerFormSchema = z.object({
+  id: z.string().optional(),
+  title: z.string().min(1, { message: "規劃名稱為必填欄位" }),
+  department: z.string().min(1, { message: "學系/學院為必填欄位" }),
+  enrollmentYear: z.string().min(1, { message: "入學學年為必填欄位" }),
+  graduationYear: z.string().min(1, { message: "預計畢業學年為必填欄位" }),
+  requiredCredits: z.number().min(0, { message: "畢業學分不能為負數" }),
+  description: z.string().optional(),
+});
+
+type PlannerFormValues = z.infer<typeof plannerFormSchema>;
+
+interface PlannerSettingsProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSettingsUpdated: () => void;
+}
+
+export function PlannerSettings({
+  isOpen,
+  onClose,
+  onSettingsUpdated,
+}: PlannerSettingsProps) {
+  const [isNewPlanner, setIsNewPlanner] = useState(false);
+  const [activeTab, setActiveTab] = useState("basic");
+  const [showConfirmation, setShowConfirmation] = useState<string | null>(null);
+
+  const plannerCol = useRxCollection<PlannerDataDocType>("plannerdata");
+  const semesterCol = useRxCollection<SemesterDocType>("semesters");
+  const courseCol = useRxCollection<ItemDocType>("items");
+  const foldersCol = useRxCollection<FolderDocType>("folders");
+  // Set up form with React Hook Form and Zod validation
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    formState: { errors, isSubmitting },
+  } = useForm<PlannerFormValues>({
+    resolver: zodResolver(plannerFormSchema),
+    defaultValues: {
+      title: "",
+      department: "",
+      enrollmentYear: "",
+      graduationYear: "",
+      requiredCredits: 0,
+      description: "",
+    },
+  });
+
+  // Load planner data
+  useEffect(() => {
+    const loadData = async () => {
+      if (!plannerCol) return;
+
+      try {
+        const data = await getPlannerData(plannerCol);
+
+        if (data) {
+          // Reset form with existing data
+          reset({
+            id: data.id,
+            title: data.title || "",
+            department: data.department || "",
+            enrollmentYear: data.enrollmentYear || "",
+            graduationYear: data.graduationYear || "",
+            requiredCredits: data.requiredCredits || 0,
+            description: data.description || "",
+          });
+          setIsNewPlanner(false);
+        } else {
+          // No planner exists, prepare for creating a new one
+          reset({
+            id: uuidv4(),
+            title: "",
+            department: "",
+            enrollmentYear: "",
+            graduationYear: "",
+            requiredCredits: 0,
+            description: "",
+          });
+          setIsNewPlanner(true);
+        }
+      } catch (error) {
+        console.error("Error loading planner data:", error);
+      }
+    };
+
+    if (isOpen) {
+      loadData();
+    }
+  }, [isOpen, plannerCol, reset]);
+
+  // Handle save with form validation
+  const onSubmit = async (data: PlannerFormValues) => {
+    if (!plannerCol) return;
+
+    try {
+      if (isNewPlanner) {
+        // Create a new planner
+        await createPlannerData(plannerCol, data as PlannerDataDocType);
+      } else {
+        // Update existing planner
+        await updatePlannerData(plannerCol, data as PlannerDataDocType);
+      }
+      // Notify parent
+      onSettingsUpdated();
+      onClose();
+    } catch (error) {
+      console.error("Error saving planner settings:", error);
+    }
+  };
+
+  // Handle action confirmations
+  const handleConfirmAction = async (action: string) => {
+    try {
+      switch (action) {
+        case "removeCourses":
+          console.log("Remove all courses action triggered");
+          await courseCol!.find().remove();
+          break;
+        case "resetPlanner":
+          // Implementation to reset the planner
+          console.log("Reset planner action triggered");
+          await plannerCol!.find().remove();
+          await semesterCol!.find().remove();
+          await courseCol!.find().remove();
+          await foldersCol!.find().remove();
+          break;
+        case "export":
+          // Implementation to export planner data
+          console.log("Export planner data action triggered");
+          if (plannerCol) {
+            const data = await getPlannerData(plannerCol);
+            const semesters = await getSemesters(semesterCol!);
+            const courses = await getCourseItems(courseCol!);
+            const folders = await getFolders(foldersCol!);
+            const exportData = {
+              planner: data,
+              semesters: semesters,
+              courses: courses,
+              folders: folders,
+            };
+            const dataStr =
+              "data:text/json;charset=utf-8," +
+              encodeURIComponent(JSON.stringify(exportData));
+            const downloadAnchorNode = document.createElement("a");
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute(
+              "download",
+              `${data?.title || "planner"}_export.json`,
+            );
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+          }
+          break;
+        default:
+          break;
+      }
+      setShowConfirmation(null);
+    } catch (error) {
+      console.error(`Error during ${action}:`, error);
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+        <DialogHeader className="pb-2">
+          <DialogTitle>{isNewPlanner ? "建立新規劃" : "規劃設定"}</DialogTitle>
+          <DialogDescription className="text-gray-400 text-sm">
+            {isNewPlanner ? "建立新的畢業規劃" : "設定畢業規劃的基本資訊"}
+          </DialogDescription>
+        </DialogHeader>
+
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="flex-1 flex flex-col"
+        >
+          <TabsList className="bg-gray-800 mb-2">
+            <TabsTrigger value="basic">基本設定</TabsTrigger>
+            <TabsTrigger value="actions">進階操作</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="basic" className="flex-1 overflow-hidden">
+            <form
+              id="plannerForm"
+              onSubmit={handleSubmit(onSubmit)}
+              className="flex flex-col h-full"
+            >
+              <ScrollArea className="flex-1 pr-4">
+                <div className="space-y-3">
+                  <div>
+                    <Label htmlFor="planner-title" className="text-sm">
+                      規劃名稱
+                    </Label>
+                    <Input
+                      id="planner-title"
+                      className="bg-gray-800 border-gray-700 text-white h-8 mt-1"
+                      {...register("title")}
+                    />
+                    {errors.title && (
+                      <p className="text-red-500 text-xs">
+                        {errors.title.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label htmlFor="planner-department" className="text-sm">
+                      學系/學院
+                    </Label>
+                    <Input
+                      id="planner-department"
+                      className="bg-gray-800 border-gray-700 text-white h-8 mt-1"
+                      {...register("department")}
+                    />
+                    {errors.department && (
+                      <p className="text-red-500 text-xs">
+                        {errors.department.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label
+                        htmlFor="planner-enrollment-year"
+                        className="text-sm"
+                      >
+                        入學學年
+                      </Label>
+                      <Input
+                        id="planner-enrollment-year"
+                        className="bg-gray-800 border-gray-700 text-white h-8 mt-1"
+                        {...register("enrollmentYear")}
+                      />
+                      {errors.enrollmentYear && (
+                        <p className="text-red-500 text-xs">
+                          {errors.enrollmentYear.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label
+                        htmlFor="planner-graduation-year"
+                        className="text-sm"
+                      >
+                        預計畢業學年
+                      </Label>
+                      <Input
+                        id="planner-graduation-year"
+                        className="bg-gray-800 border-gray-700 text-white h-8 mt-1"
+                        {...register("graduationYear")}
+                      />
+                      {errors.graduationYear && (
+                        <p className="text-red-500 text-xs">
+                          {errors.graduationYear.message}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label
+                      htmlFor="planner-required-credits"
+                      className="text-sm"
+                    >
+                      畢業學分要求
+                    </Label>
+                    <Input
+                      id="planner-required-credits"
+                      type="number"
+                      className="bg-gray-800 border-gray-700 text-white h-8 mt-1"
+                      {...register("requiredCredits", { valueAsNumber: true })}
+                    />
+                    {errors.requiredCredits && (
+                      <p className="text-red-500 text-xs">
+                        {errors.requiredCredits.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label htmlFor="planner-description" className="text-sm">
+                      規劃描述
+                    </Label>
+                    <Textarea
+                      id="planner-description"
+                      className="bg-gray-800 border-gray-700 text-white min-h-[80px] mt-1"
+                      {...register("description")}
+                    />
+                    {errors.description && (
+                      <p className="text-red-500 text-xs">
+                        {errors.description.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </ScrollArea>
+            </form>
+          </TabsContent>
+
+          <TabsContent value="actions" className="flex-1 overflow-hidden">
+            <ScrollArea className="h-full pr-4">
+              <div className="space-y-4">
+                <Accordion type="single" collapsible className="w-full">
+                  <AccordionItem value="templates" className="border-gray-700">
+                    <AccordionTrigger className="text-sm py-2">
+                      <div className="flex items-center">
+                        <FolderGit2 className="h-4 w-4 mr-2" />
+                        套用課程模板
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="p-2 text-gray-400 text-sm">
+                        此功能尚未實作，將允許從預設模板快速建立學期課程。
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="manage" className="border-gray-700">
+                    <AccordionTrigger className="text-sm py-2">
+                      <div className="flex items-center">
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        資料管理
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="space-y-3">
+                        <div>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            className="w-full"
+                            onClick={() => setShowConfirmation("removeCourses")}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            移除所有課程
+                          </Button>
+                          <p className="text-gray-400 text-xs mt-1">
+                            從所有學期移除課程，但保留學期和規劃設定
+                          </p>
+                        </div>
+
+                        <div>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            className="w-full"
+                            onClick={() => setShowConfirmation("resetPlanner")}
+                          >
+                            <RefreshCw className="h-4 w-4 mr-2" />
+                            完全重設規劃
+                          </Button>
+                          <p className="text-gray-400 text-xs mt-1">
+                            刪除所有規劃資料，包含學期和課程
+                          </p>
+                        </div>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="export" className="border-gray-700">
+                    <AccordionTrigger className="text-sm py-2">
+                      <div className="flex items-center">
+                        <Download className="h-4 w-4 mr-2" />
+                        匯出資料
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        onClick={() => handleConfirmAction("export")}
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        匯出規劃資料 (JSON)
+                      </Button>
+                      <p className="text-gray-400 text-xs mt-1">
+                        匯出所有規劃資料，包含學期和課程
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+
+                {showConfirmation && (
+                  <Alert variant="destructive" className="mt-4">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>確認操作</AlertTitle>
+                    <AlertDescription>
+                      {showConfirmation === "removeCourses" &&
+                        "確定要移除所有課程嗎？此操作無法還原。"}
+                      {showConfirmation === "resetPlanner" &&
+                        "確定要重設整個規劃嗎？所有資料將會被刪除，此操作無法還原。"}
+
+                      <div className="flex gap-2 mt-3">
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleConfirmAction(showConfirmation)}
+                        >
+                          確認
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowConfirmation(null)}
+                        >
+                          取消
+                        </Button>
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </div>
+            </ScrollArea>
+          </TabsContent>
+        </Tabs>
+
+        <DialogFooter className="pt-2 border-t border-gray-700">
+          <Button type="button" variant="outline" onClick={onClose}>
+            <X className="h-4 w-4 mr-2" />
+            取消
+          </Button>
+          <Button
+            type="submit"
+            disabled={isSubmitting || activeTab !== "basic"}
+            form="plannerForm"
+          >
+            <Save className="h-4 w-4 mr-2" />
+            {isNewPlanner ? "建立規劃" : "儲存設定"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

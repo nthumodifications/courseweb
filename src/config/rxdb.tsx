@@ -13,6 +13,7 @@ import { RxDBMigrationPlugin } from "rxdb/plugins/migration-schema";
 import { RxDBStatePlugin } from "rxdb/plugins/state";
 import { RxDBQueryBuilderPlugin } from "rxdb/plugins/query-builder";
 import { RxDBUpdatePlugin } from "rxdb/plugins/update";
+import { v4 as uuidv4 } from "uuid";
 
 // create collection based on CalendarEvent
 const eventsSchema = {
@@ -104,7 +105,7 @@ export type EventDocType = ExtractDocumentTypeFromTypedRxJsonSchema<
 >;
 
 const foldersSchema = {
-  version: 1,
+  version: 0,
   primaryKey: "id",
   type: "object",
   properties: {
@@ -137,6 +138,12 @@ const foldersSchema = {
     order: {
       type: "number",
     },
+    color: {
+      type: "string",
+    },
+    expanded: {
+      type: "boolean",
+    },
   },
   required: [
     "id",
@@ -152,7 +159,68 @@ const foldersSchema = {
 } as const;
 
 const itemsSchema = {
-  version: 1,
+  version: 0,
+  primaryKey: "uuid",
+  type: "object",
+  properties: {
+    uuid: {
+      // uuid for each item, key
+      type: "string",
+      maxLength: 100,
+    },
+    id: {
+      //course id ish CS123456
+      type: "string",
+    },
+    title: {
+      // course name
+      type: "string",
+    },
+    parent: {
+      // folder id
+      type: ["string", "null"],
+    },
+    credits: {
+      // course credits
+      type: "number",
+    },
+    raw_id: {
+      // reference course id to the course database, optional
+      type: "string",
+    },
+    semester: {
+      // 11310, 11320, etc
+      type: "string",
+    },
+    status: {
+      // enum
+      type: "string",
+    },
+    description: {
+      type: "string",
+    },
+    comments: {
+      type: "string",
+    },
+    instructor: {
+      type: "string",
+    },
+    dependson: {
+      type: "array",
+      items: {
+        type: "string",
+      },
+    },
+    order: {
+      // order of the item in the folder
+      type: "number",
+    },
+  },
+  required: ["uuid", "id", "title", "parent", "credits", "order"],
+} as const;
+
+const plannerDataSchema = {
+  version: 0,
   primaryKey: "id",
   type: "object",
   properties: {
@@ -163,17 +231,87 @@ const itemsSchema = {
     title: {
       type: "string",
     },
-    parent: {
-      type: ["string", "null"],
+    department: {
+      type: "string",
     },
-    credits: {
+    requiredCredits: {
       type: "number",
+    },
+    enrollmentYear: {
+      type: "string",
+    },
+    graduationYear: {
+      type: "string",
+    },
+    includedSemesters: {
+      type: "array",
+      items: {
+        type: "string",
+      },
+    },
+    description: {
+      type: "string",
+    },
+    createdAt: {
+      type: "string",
+      format: "date-time",
+    },
+    updatedAt: {
+      type: "string",
+      format: "date-time",
+    },
+  },
+  required: [
+    "id",
+    "title",
+    "department",
+    "requiredCredits",
+    "enrollmentYear",
+    "graduationYear",
+    "includedSemesters",
+    "createdAt",
+    "updatedAt",
+  ],
+} as const;
+
+const semesterSchema = {
+  version: 0,
+  primaryKey: "id",
+  type: "object",
+  properties: {
+    id: {
+      type: "string",
+      maxLength: 100,
+    },
+    name: {
+      type: "string",
+    },
+    status: {
+      type: "string",
+      enum: ["completed", "in-progress", "planned"],
+    },
+    year: {
+      type: "string",
+    },
+    term: {
+      type: "string",
+    },
+    startDate: {
+      type: "string",
+      format: "date-time",
+    },
+    endDate: {
+      type: "string",
+      format: "date-time",
+    },
+    isActive: {
+      type: "boolean",
     },
     order: {
       type: "number",
     },
   },
-  required: ["id", "title", "parent", "credits", "order"],
+  required: ["id", "name", "status", "year", "term", "isActive"],
 } as const;
 
 export type FolderDocType = ExtractDocumentTypeFromTypedRxJsonSchema<
@@ -182,6 +320,14 @@ export type FolderDocType = ExtractDocumentTypeFromTypedRxJsonSchema<
 
 export type ItemDocType = ExtractDocumentTypeFromTypedRxJsonSchema<
   typeof itemsSchema
+>;
+
+export type PlannerDataDocType = ExtractDocumentTypeFromTypedRxJsonSchema<
+  typeof plannerDataSchema
+>;
+
+export type SemesterDocType = ExtractDocumentTypeFromTypedRxJsonSchema<
+  typeof semesterSchema
 >;
 
 const timetableSyncSchema = {
@@ -237,21 +383,15 @@ export const initializeRxDB = async () => {
     },
     folders: {
       schema: foldersSchema,
-      migrationStrategies: {
-        1: (oldDoc: any) => {
-          oldDoc.order = 0;
-          return oldDoc;
-        },
-      },
     },
     items: {
       schema: itemsSchema,
-      migrationStrategies: {
-        1: (oldDoc: any) => {
-          oldDoc.order = 0;
-          return oldDoc;
-        },
-      },
+    },
+    plannerdata: {
+      schema: plannerDataSchema,
+    },
+    semesters: {
+      schema: semesterSchema,
     },
     timetablesync: {
       schema: timetableSyncSchema,
@@ -261,29 +401,12 @@ export const initializeRxDB = async () => {
   return db;
 };
 
-export const loadDummyData = async ({
-  foldersCol,
-  itemsCol,
-}: {
-  foldersCol: any;
-  itemsCol: any;
-}) => {
+export const loadDummyData = async ({ foldersCol }: { foldersCol: any }) => {
   const folders: FolderDocType[] = [
-    {
-      id: "root",
-      title: "電機資訊學院學士班 111學年度",
-      parent: null,
-      min: 128,
-      max: -1,
-      metric: "credits",
-      requireChildValidation: true,
-      titlePlacement: "top",
-      order: 0,
-    },
     {
       id: "school_required",
       title: "校定必修",
-      parent: "root",
+      parent: "planner-1",
       min: 30,
       max: -1,
       metric: "credits",
@@ -382,7 +505,7 @@ export const loadDummyData = async ({
     {
       id: "department_required",
       title: "班定必修",
-      parent: "root",
+      parent: "planner-1",
       min: 43,
       max: 44,
       metric: "credits",
@@ -536,7 +659,7 @@ export const loadDummyData = async ({
     {
       id: "core_electives",
       title: "核心選修",
-      parent: "root",
+      parent: "planner-1",
       min: 15,
       max: -1,
       metric: "credits",
@@ -547,7 +670,7 @@ export const loadDummyData = async ({
     {
       id: "professional_electives",
       title: "專業選修",
-      parent: "root",
+      parent: "planner-1",
       min: 27,
       max: -1,
       metric: "credits",
@@ -558,7 +681,7 @@ export const loadDummyData = async ({
     {
       id: "second_major",
       title: "他系第二專長",
-      parent: "root",
+      parent: "planner-1",
       min: 26,
       max: 33,
       metric: "credits",
@@ -569,7 +692,7 @@ export const loadDummyData = async ({
     {
       id: "other_electives",
       title: "其餘選修",
-      parent: "root",
+      parent: "planner-1",
       min: 6,
       max: 14,
       metric: "credits",
