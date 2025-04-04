@@ -54,7 +54,7 @@ import {
   reorderFolders,
   ensureUnsortedFolder,
 } from "./data/folders";
-import { FolderDocType } from "@/config/rxdb";
+import { FolderDocType } from "./rxdb";
 import { useRxCollection } from "rxdb-hooks";
 import { useForm, Controller } from "react-hook-form";
 

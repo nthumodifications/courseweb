@@ -32,7 +32,7 @@ import {
   generateSemesterId,
 } from "./data/semesters";
 import { useRxCollection } from "rxdb-hooks";
-import { SemesterDocType } from "@/config/rxdb";
+import { SemesterDocType } from "./rxdb";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";

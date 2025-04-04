@@ -1,4 +1,4 @@
-import { FolderDocType } from "@/config/rxdb";
+import { FolderDocType } from "@/app/[lang]/(mods-pages)/student/planner/rxdb";
 import { RxCollection } from "rxdb";
 
 // Function to get folders

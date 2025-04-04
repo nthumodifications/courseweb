@@ -33,7 +33,7 @@ import Filters from "../../../courses/Filters";
 import SearchContainer from "./SearchContainer";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { MinimalCourse } from "@/types/courses";
-import { ItemDocType } from "@/config/rxdb";
+import { ItemDocType } from "@/app/[lang]/(mods-pages)/student/planner/rxdb";
 
 type CourseSearchContainerProps = {
   onAdd: (course: MinimalCourse, keepSemester?: boolean) => void;

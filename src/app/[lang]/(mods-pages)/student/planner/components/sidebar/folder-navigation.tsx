@@ -2,7 +2,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
-import { FolderDocType, PlannerDataDocType } from "@/config/rxdb";
+import {
+  FolderDocType,
+  PlannerDataDocType,
+} from "@/app/[lang]/(mods-pages)/student/planner/rxdb";
 import { FolderNavItem } from "../folder-nav/folder-nav-item";
 import {
   GraduationCap,

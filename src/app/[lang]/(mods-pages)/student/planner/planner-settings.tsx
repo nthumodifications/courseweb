@@ -30,7 +30,7 @@ import {
   ItemDocType,
   PlannerDataDocType,
   SemesterDocType,
-} from "@/config/rxdb";
+} from "./rxdb";
 import { useRxCollection } from "rxdb-hooks";
 import {
   createPlannerData,

@@ -15,7 +15,7 @@ import CourseListItem from "./CourseListItem";
 import Filters from "./Filters";
 import { CourseSyllabusView } from "@/config/supabase";
 import { MinimalCourse } from "@/types/courses";
-import { ItemDocType } from "@/config/rxdb";
+import { ItemDocType } from "@/app/[lang]/(mods-pages)/student/planner/rxdb";
 
 type SearchClient = ReturnType<typeof algoliasearch>;
 type InfiniteHitsCache = ReturnType<

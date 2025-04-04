@@ -18,7 +18,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useState, useEffect } from "react";
-import { FolderDocType, ItemDocType, SemesterDocType } from "@/config/rxdb";
+import {
+  FolderDocType,
+  ItemDocType,
+  SemesterDocType,
+} from "@/app/[lang]/(mods-pages)/student/planner/rxdb";
 import { CourseStatus } from "../../types";
 
 interface CourseEditDialogProps {

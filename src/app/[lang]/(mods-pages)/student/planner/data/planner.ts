@@ -1,4 +1,7 @@
-import { ItemDocType, PlannerDataDocType } from "@/config/rxdb";
+import {
+  ItemDocType,
+  PlannerDataDocType,
+} from "@/app/[lang]/(mods-pages)/student/planner/rxdb";
 import { RxCollection } from "rxdb";
 
 // // Sample planner data

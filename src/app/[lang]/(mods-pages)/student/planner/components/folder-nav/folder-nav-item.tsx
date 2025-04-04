@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
-import { FolderDocType, ItemDocType } from "@/config/rxdb";
+import {
+  FolderDocType,
+  ItemDocType,
+} from "@/app/[lang]/(mods-pages)/student/planner/rxdb";
 import { useRxCollection } from "rxdb-hooks";
 import { updateCourseItem } from "../../data/courses";
 

@@ -7,7 +7,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { FolderDocType, ItemDocType } from "@/config/rxdb";
+import {
+  FolderDocType,
+  ItemDocType,
+} from "@/app/[lang]/(mods-pages)/student/planner/rxdb";
 import { MinimalCourse } from "@/types/courses";
 import CourseSearchContainer from "../../course-picker/container";
 

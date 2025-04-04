@@ -9,7 +9,11 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Users, Check, Edit, Eye, FileText } from "lucide-react";
-import { FolderDocType, ItemDocType, SemesterDocType } from "@/config/rxdb";
+import {
+  FolderDocType,
+  ItemDocType,
+  SemesterDocType,
+} from "@/app/[lang]/(mods-pages)/student/planner/rxdb";
 
 interface CourseDetailsDialogProps {
   open: boolean;

@@ -22,7 +22,11 @@ import {
 } from "lucide-react";
 
 import { CourseStatus } from "../../types";
-import { FolderDocType, ItemDocType, SemesterDocType } from "@/config/rxdb";
+import {
+  FolderDocType,
+  ItemDocType,
+  SemesterDocType,
+} from "@/app/[lang]/(mods-pages)/student/planner/rxdb";
 
 interface CourseListItemProps {
   course: ItemDocType;

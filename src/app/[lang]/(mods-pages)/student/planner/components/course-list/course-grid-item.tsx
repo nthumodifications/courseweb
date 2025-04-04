@@ -21,7 +21,11 @@ import {
 } from "lucide-react";
 
 import { CourseStatus } from "../../types";
-import { FolderDocType, ItemDocType, SemesterDocType } from "@/config/rxdb";
+import {
+  FolderDocType,
+  ItemDocType,
+  SemesterDocType,
+} from "@/app/[lang]/(mods-pages)/student/planner/rxdb";
 
 interface CourseGridItemProps {
   course: ItemDocType;
@@ -58,7 +62,7 @@ export function CourseGridItem({
       case "completed":
         return "bg-green-500/10 dark:bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/30";
       case "in-progress":
-        return "bg-yellow-500/10 dark:bg-yellow-500/20 text-blue-700 dark:text-yellow-500 border-yellow-500/30";
+        return "bg-blue-500/10 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-500/30";
       case "failed":
         return "bg-red-500/10 dark:bg-red-500/20 text-red-700 dark:text-red-400 border-red-500/30";
       default:
@@ -84,7 +88,7 @@ export function CourseGridItem({
       case "completed":
         return <CheckCircle2 className="h-4 w-4 text-green-500" />;
       case "in-progress":
-        return <CircleDot className="h-4 w-4 text-yellow-500" />;
+        return <CircleDot className="h-4 w-4 text-blue-500" />;
       case "failed":
         return <X className="h-4 w-4 text-red-500" />;
       default:
@@ -176,7 +180,7 @@ export function CourseGridItem({
               <DropdownMenuItem
                 onClick={() => handleStatusChange("in-progress")}
               >
-                <CircleDot className="h-4 w-4 mr-2 text-yellow-500" />
+                <CircleDot className="h-4 w-4 mr-2 text-blue-500" />
                 標記為進行中
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleStatusChange("planned")}>

@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { FolderDocType } from "@/config/rxdb";
+import { FolderDocType } from "@/app/[lang]/(mods-pages)/student/planner/rxdb";
 import { Badge } from "@/components/ui/badge";
 import {
   ChevronRight,

@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { FolderDocType } from "@/config/rxdb";
+import { FolderDocType } from "@/app/[lang]/(mods-pages)/student/planner/rxdb";
 import { Filter, Plus, Search } from "lucide-react";
 import { CreateCourseDialog } from "../dialogs/create-course-dialog";
 import { CourseStatus } from "../../types";

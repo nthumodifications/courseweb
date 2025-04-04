@@ -1,4 +1,4 @@
-import { ItemDocType } from "@/config/rxdb";
+import { ItemDocType } from "@/app/[lang]/(mods-pages)/student/planner/rxdb";
 import { RxCollection } from "rxdb";
 import { CourseStatus } from "../types";
 

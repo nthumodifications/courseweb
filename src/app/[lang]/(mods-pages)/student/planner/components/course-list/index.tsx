@@ -1,5 +1,9 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { FolderDocType, ItemDocType, SemesterDocType } from "@/config/rxdb";
+import {
+  FolderDocType,
+  ItemDocType,
+  SemesterDocType,
+} from "@/app/[lang]/(mods-pages)/student/planner/rxdb";
 import { CourseStatus } from "../../types";
 import { CourseListItem } from "./course-list-item";
 import { CourseGridItem } from "./course-grid-item";

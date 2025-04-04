@@ -28,7 +28,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { FolderDocType, ItemDocType, SemesterDocType } from "@/config/rxdb";
+import { FolderDocType, ItemDocType, SemesterDocType } from "./rxdb";
 import { CourseStatus } from "@/app/[lang]/(mods-pages)/student/planner/types";
 
 interface SemesterPlanningProps {

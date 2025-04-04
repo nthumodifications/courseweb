@@ -38,7 +38,7 @@ import {
   ItemDocType,
   PlannerDataDocType,
   SemesterDocType,
-} from "@/config/rxdb";
+} from "./rxdb";
 import { CourseStatus } from "./types";
 import { MinimalCourse } from "@/types/courses";
 
@@ -57,6 +57,7 @@ import { CourseEditDialog } from "./components/dialogs/course-edit-dialog";
 import { BulkActionsMenu } from "./components/bulk-actions/bulk-actions-menu";
 import { CourseSearchDialog } from "./components/dialogs/course-search-dialog";
 import { CreateCourseDialog } from "./components/dialogs/create-course-dialog";
+import { PlannerDBProvider } from "@/app/[lang]/(mods-pages)/student/planner/rxdb";
 
 function GraduationPlanner() {
   const [folderData, setFolderData] = useState<FolderDocType[]>([]);
