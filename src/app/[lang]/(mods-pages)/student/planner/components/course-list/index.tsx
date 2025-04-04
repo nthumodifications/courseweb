@@ -65,6 +65,7 @@ export function CourseList({
             <CourseGridItem
               key={index}
               course={course}
+              folders={folders}
               isSelected={selectedCourse?.uuid === course.uuid}
               isMultiSelected={!!selectedCourses[course.uuid]}
               onClick={() => onCourseClick(course)}

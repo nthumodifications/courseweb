@@ -223,36 +223,52 @@ function GraduationPlanner() {
   // Calculate folder completion
   const getFolderCompletion = (folderId: string) => {
     const folder = folderData.find((f) => f.id === folderId);
-    if (!folder) return { completed: 0, inProgress: 0, total: 0 };
+    if (!folder) return { completed: 0, inProgress: 0, pending: 0, total: 0 };
 
     // Get courses in this folder and child folders
     const folderCourses = getCoursesByFolder(folderId);
 
-    // Calculate completed credits/courses
-    let completed = 0;
-    if (folder.metric === "credits") {
-      completed = folderCourses
-        .filter((course) => course.status === "completed")
-        .reduce((sum, course) => sum + course.credits, 0);
-    } else {
-      completed = folderCourses.filter(
-        (course) => course.status === "completed",
-      ).length;
-    }
+    console.log(folderId, folderCourses);
 
-    // Calculate inprogress credits/courses
-    let inProgress = 0;
-    if (folder.metric === "credits") {
-      inProgress = folderCourses
-        .filter((course) => course.status === "in-progress")
-        .reduce((sum, course) => sum + course.credits, 0);
-    } else {
-      inProgress = folderCourses.filter(
-        (course) => course.status === "in-progress",
-      ).length;
-    }
+    // Track both counts and credits in a single pass
+    const stats = folderCourses.reduce(
+      (acc, course) => {
+        // Increment the count for the appropriate status
+        if (!course.status) return acc;
 
-    return { completed, inProgress, total: folder.min };
+        // Type-safe access with type assertion
+        const status = course.status as CourseStatus;
+
+        // Use a type-safe mapping
+        if (status === "completed") {
+          acc.counts.completed += 1;
+          acc.credits.completed += course.credits;
+        } else if (status === "in-progress") {
+          acc.counts["in-progress"] += 1;
+          acc.credits["in-progress"] += course.credits;
+        } else if (status === "planned") {
+          acc.counts.planned += 1;
+          acc.credits.planned += course.credits;
+        }
+
+        return acc;
+      },
+      {
+        counts: { completed: 0, "in-progress": 0, planned: 0 },
+        credits: { completed: 0, "in-progress": 0, planned: 0 },
+      },
+    );
+
+    // Based on folder metric, return the appropriate values
+    const useCredits = folder.metric === "credits";
+    const values = useCredits ? stats.credits : stats.counts;
+
+    return {
+      completed: values["completed"],
+      inProgress: values["in-progress"],
+      pending: values["planned"],
+      total: folder.min,
+    };
   };
 
   // Update course status
@@ -533,7 +549,7 @@ function GraduationPlanner() {
   };
 
   return (
-    <div className="flex h-screen text-white overflow-hidden">
+    <div className="flex h-screen overflow-hidden">
       {/* Left Sidebar - Folder Navigation */}
       <FolderNavigation
         plannerInfo={plannerInfo}
@@ -553,7 +569,7 @@ function GraduationPlanner() {
       />
 
       {/* Middle Pane - Course List */}
-      <div className="flex-1 flex flex-col border-r border-neutral-700">
+      <div className="flex-1 flex flex-col border-r border-border">
         <CourseListHeader
           selectedFolder={selectedFolder}
           folderData={folderData}
@@ -571,23 +587,23 @@ function GraduationPlanner() {
           onCreateCourse={handleCreateCourse}
         />
 
-        <div className="p-2 border-b border-neutral-700 flex items-center justify-between">
+        <div className="p-2 border-b border-border flex items-center justify-between">
           <Tabs
             defaultValue={viewMode}
             className="w-full"
             onValueChange={(value) => setViewMode(value as "list" | "grid")}
           >
             <div className="flex justify-between items-center">
-              <TabsList className="bg-neutral-800 border-neutral-700">
+              <TabsList className="border-border">
                 <TabsTrigger value="list">列表</TabsTrigger>
                 <TabsTrigger value="grid">網格</TabsTrigger>
               </TabsList>
 
               <Select defaultValue="all">
-                <SelectTrigger className="w-[180px] bg-neutral-800 border-neutral-700">
+                <SelectTrigger className="w-[180px] border-border">
                   <SelectValue placeholder="課程狀態" />
                 </SelectTrigger>
-                <SelectContent className="bg-neutral-800 border-neutral-700">
+                <SelectContent className="border-border">
                   <SelectItem value="all">全部課程</SelectItem>
                   <SelectItem value="completed">已完成</SelectItem>
                   <SelectItem value="in-progress">進行中</SelectItem>
@@ -667,6 +683,7 @@ function GraduationPlanner() {
             setSelectedCourse(course);
             setEditCourseOpen(true);
           }}
+          onDelete={handleItemRemove}
           onStatusChange={handleUpdateCourseStatus}
           onSemesterChange={handleUpdateCourseSemester}
         />

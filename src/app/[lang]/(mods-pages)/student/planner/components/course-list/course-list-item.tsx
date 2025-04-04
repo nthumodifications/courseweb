@@ -59,13 +59,13 @@ export function CourseListItem({
   const getStatusColor = () => {
     switch (course.status) {
       case "completed":
-        return "bg-green-500/20 text-green-400 border-green-500/30";
+        return "bg-green-500/10 dark:bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/30";
       case "in-progress":
-        return "bg-blue-500/20 text-blue-400 border-blue-500/30";
+        return "bg-yellow-500/10 dark:bg-yellow-500/20 text-blue-700 dark:text-yellow-500 border-yellow-500/30";
       case "failed":
-        return "bg-red-500/20 text-red-400 border-red-500/30";
+        return "bg-red-500/10 dark:bg-red-500/20 text-red-700 dark:text-red-400 border-red-500/30";
       default:
-        return "bg-neutral-700 text-neutral-300 border-neutral-600";
+        return "bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 border-neutral-300 dark:border-neutral-600";
     }
   };
 
@@ -87,7 +87,7 @@ export function CourseListItem({
       case "completed":
         return <CheckCircle2 className="h-4 w-4 text-green-500" />;
       case "in-progress":
-        return <CircleDot className="h-4 w-4 text-blue-500" />;
+        return <CircleDot className="h-4 w-4 text-yellow-500" />;
       case "failed":
         return <X className="h-4 w-4 text-red-500" />;
       default:
@@ -122,8 +122,8 @@ export function CourseListItem({
 
   return (
     <div
-      className={`flex items-center p-2 rounded-md border ${isSelected ? "border-primary" : isMultiSelected ? "border-primary bg-primary/10" : "border-neutral-700"} 
-        bg-neutral-800 cursor-pointer hover:border-primary transition-colors duration-200 group relative`}
+      className={`flex items-center p-2 rounded-md border ${isSelected ? "border-primary" : isMultiSelected ? "border-primary bg-primary/10" : "border-border"} 
+        bg-neutral-50 dark:bg-neutral-800 cursor-pointer hover:border-primary transition-colors duration-200 group relative`}
       onClick={onClick}
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
@@ -143,9 +143,9 @@ export function CourseListItem({
       >
         <div
           className={`w-4 h-4 rounded border flex items-center justify-center
-          ${isMultiSelected ? "bg-primary border-primary" : "border-neutral-500 bg-neutral-800"}`}
+          ${isMultiSelected ? "bg-primary border-primary" : "border-neutral-500 bg-neutral-50    dark:bg-neutral-800"}`}
         >
-          {isMultiSelected && <Check className="h-3 w-3 text-white" />}
+          {isMultiSelected && <Check className="h-3 w-3" />}
         </div>
       </div>
       <div className="flex-1 min-w-0 pl-6">
@@ -201,46 +201,31 @@ export function CourseListItem({
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="bg-neutral-800 border-neutral-700">
-            <DropdownMenuItem
-              className="text-white hover:bg-neutral-700 cursor-pointer"
-              onClick={handleEdit}
-            >
+          <DropdownMenuContent className="border-border">
+            <DropdownMenuItem onClick={handleEdit}>
               <Edit className="h-4 w-4 mr-2" />
               編輯課程
             </DropdownMenuItem>
-            <DropdownMenuSeparator className="bg-neutral-700" />
-            <DropdownMenuItem
-              className="text-white hover:bg-neutral-700 cursor-pointer"
-              onClick={() => handleStatusChange("completed")}
-            >
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => handleStatusChange("completed")}>
               <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" />
               標記為已完成
             </DropdownMenuItem>
-            <DropdownMenuItem
-              className="text-white hover:bg-neutral-700 cursor-pointer"
-              onClick={() => handleStatusChange("in-progress")}
-            >
-              <CircleDot className="h-4 w-4 mr-2 text-blue-500" />
+            <DropdownMenuItem onClick={() => handleStatusChange("in-progress")}>
+              <CircleDot className="h-4 w-4 mr-2 text-yellow-500" />
               標記為進行中
             </DropdownMenuItem>
-            <DropdownMenuItem
-              className="text-white hover:bg-neutral-700 cursor-pointer"
-              onClick={() => handleStatusChange("planned")}
-            >
+            <DropdownMenuItem onClick={() => handleStatusChange("planned")}>
               <CircleDashed className="h-4 w-4 mr-2 text-neutral-400" />
               標記為計劃中
             </DropdownMenuItem>
-            <DropdownMenuSeparator className="bg-neutral-700" />
-            <DropdownMenuItem className="text-white hover:bg-neutral-700 cursor-pointer">
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>
               <Calendar className="h-4 w-4 mr-2" />
               更改學期
             </DropdownMenuItem>
-            <DropdownMenuSeparator className="bg-neutral-700" />
-            <DropdownMenuItem
-              className="text-red-400 hover:bg-neutral-700 cursor-pointer"
-              onClick={handleDeleteCourse}
-            >
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleDeleteCourse}>
               <Trash2 className="h-4 w-4 mr-2" />
               移除課程
             </DropdownMenuItem>

@@ -32,7 +32,7 @@ export function CourseDetailsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-neutral-900 border-neutral-700 text-white max-w-3xl">
+      <DialogContent className="border-border max-w-3xl">
         <DialogHeader>
           <DialogTitle className="text-xl">{selectedCourse.title}</DialogTitle>
           <DialogDescription className="text-neutral-400">
@@ -47,14 +47,14 @@ export function CourseDetailsDialog({
                 <Users className="h-4 w-4 mr-2 text-neutral-400" />
                 授課教師
               </h3>
-              <p className="text-neutral-300 bg-neutral-800 p-2 rounded-md">
+              <p className="text-neutral-300 bg-neutral-800 dark:text-neutral-600 dark:bg-neutral-50 p-2 rounded-md">
                 {selectedCourse.instructor}
               </p>
             </div>
 
             <div>
               <h3 className="font-medium mb-2">課程簡介</h3>
-              <p className="text-neutral-300 bg-neutral-800 p-2 rounded-md">
+              <p className="text-neutral-300 bg-neutral-800 dark:text-neutral-600 dark:bg-neutral-50 p-2 rounded-md">
                 {selectedCourse.description}
               </p>
             </div>
@@ -62,14 +62,14 @@ export function CourseDetailsDialog({
 
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-2">
-              <div className="bg-neutral-800 p-2 rounded-md">
+              <div className="bg-neutral-50 dark:bg-neutral-800 p-2 rounded-md">
                 <p className="text-xs text-neutral-400">類別</p>
                 <p className="font-medium">
                   {folderData.find((f) => f.id === selectedCourse.parent)
                     ?.title || selectedCourse.parent}
                 </p>
               </div>
-              <div className="bg-neutral-800 p-2 rounded-md">
+              <div className="bg-neutral-50 dark:bg-neutral-800 p-2 rounded-md">
                 <p className="text-xs text-neutral-400">學期</p>
                 <p className="font-medium">
                   {selectedCourse.semester
@@ -78,7 +78,7 @@ export function CourseDetailsDialog({
                     : "未分配"}
                 </p>
               </div>
-              <div className="bg-neutral-800 p-2 rounded-md">
+              <div className="bg-neutral-50 dark:bg-neutral-800 p-2 rounded-md">
                 <p className="text-xs text-neutral-400">狀態</p>
                 <p className="font-medium">
                   {selectedCourse.status === "completed"
@@ -98,7 +98,7 @@ export function CourseDetailsDialog({
                   {selectedCourse.dependson.map((prereq, index) => (
                     <div
                       key={index}
-                      className="bg-neutral-800 p-2 rounded-md flex items-center"
+                      className="bg-neutral-50 dark:bg-neutral-800 p-2 rounded-md flex items-center"
                     >
                       <Check className="h-4 w-4 text-green-500 mr-2" />
                       <span>{prereq}</span>
@@ -106,7 +106,7 @@ export function CourseDetailsDialog({
                   ))}
                 </div>
               ) : (
-                <p className="text-neutral-300 bg-neutral-800 p-2 rounded-md">
+                <p className="text-neutral-300 bg-neutral-800 dark:text-neutral-600 dark:bg-neutral-50 p-2 rounded-md">
                   無先修課程要求
                 </p>
               )}
@@ -115,7 +115,7 @@ export function CourseDetailsDialog({
             <div>
               <h3 className="font-medium mb-2">畢業要求滿足情況</h3>
               <div className="space-y-1">
-                <div className="bg-neutral-800 p-2 rounded-md flex items-center">
+                <div className="bg-neutral-50 dark:bg-neutral-800 p-2 rounded-md flex items-center">
                   <Check className="h-4 w-4 text-green-500 mr-2" />
                   <span>
                     滿足「

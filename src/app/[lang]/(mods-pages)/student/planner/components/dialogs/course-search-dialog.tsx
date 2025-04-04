@@ -35,7 +35,7 @@ export function CourseSearchDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-neutral-900 border-neutral-700 text-white min-w-full h-full">
+      <DialogContent className="border-border min-w-full h-full">
         <DialogHeader>
           <DialogTitle>
             {selectedFolder ? `加入${folderTitle}` : "搜尋課程"}

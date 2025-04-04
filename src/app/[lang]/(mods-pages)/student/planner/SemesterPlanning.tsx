@@ -42,6 +42,7 @@ interface SemesterPlanningProps {
   onEdit: (course: ItemDocType) => void;
   onStatusChange: (uuid: string, status: CourseStatus) => void;
   onSemesterChange: (uuid: string, semester: string | undefined) => void;
+  onDelete: (course: ItemDocType) => void;
 }
 
 export function SemesterPlanning({
@@ -55,13 +56,14 @@ export function SemesterPlanning({
   onEdit,
   onStatusChange,
   onSemesterChange,
+  onDelete,
 }: SemesterPlanningProps) {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "completed":
         return <Badge className="bg-green-600 min-w-max">已完成</Badge>;
       case "in-progress":
-        return <Badge className="bg-blue-600 min-w-max">進行中</Badge>;
+        return <Badge className="bg-yellow-600 min-w-max">進行中</Badge>;
       default:
         return (
           <Badge className="min-w-max" variant="outline">
@@ -76,9 +78,9 @@ export function SemesterPlanning({
       case "completed":
         return "border-green-500/30 bg-green-500/10";
       case "in-progress":
-        return "border-blue-500/30 bg-blue-500/10";
+        return "border-yellow-500/30 bg-yellow-500/10";
       default:
-        return "border-neutral-700 bg-neutral-800";
+        return "border-border bg-neutral-800";
     }
   };
 
@@ -117,7 +119,7 @@ export function SemesterPlanning({
     <ScrollArea className="flex-1">
       <div className="p-4 space-y-4">
         {semesters.length === 0 ? (
-          <Card className="bg-neutral-900 border-neutral-700">
+          <Card className="border-border">
             <CardContent className="pt-6 pb-6 flex flex-col items-center justify-center">
               <div className="text-center space-y-3">
                 <h3 className="font-medium text-lg">尚未設定任何學期</h3>
@@ -136,7 +138,7 @@ export function SemesterPlanning({
                 .map((semester) => (
                   <Card
                     key={semester.id}
-                    className={`bg-neutral-900 border ${semester.id === currentSemester ? "border-primary" : "border-neutral-700"} cursor-pointer transition-all hover:border-primary`}
+                    className={`bg-background border ${semester.id === currentSemester ? "border-primary" : "border-border"} cursor-pointer transition-all hover:border-primary`}
                     onClick={() => setCurrentSemester(semester.id)}
                   >
                     <CardHeader className="p-3">
@@ -173,8 +175,8 @@ export function SemesterPlanning({
                       ? "border-green-500/30"
                       : semesters.find((s) => s.id === currentSemester)
                             ?.status === "in-progress"
-                        ? "border-blue-500/30"
-                        : "border-neutral-700"
+                        ? "border-yellow-500/30"
+                        : "border-border"
                   }`}
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={(e) => {
@@ -195,7 +197,7 @@ export function SemesterPlanning({
                       (course, index) => (
                         <div
                           key={index}
-                          className="p-2 rounded-md border border-neutral-700 bg-neutral-800 flex justify-between items-center"
+                          className="p-2 rounded-md border border-border bg-neutral-50 dark:bg-neutral-800 flex justify-between items-center"
                           draggable
                           onDragStart={(e) => handleDragStart(e, course)}
                           onDragEnd={(e) => handleDragEnd(e, course)}
@@ -232,17 +234,15 @@ export function SemesterPlanning({
                                   <MoreHorizontal className="h-4 w-4" />
                                 </Button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent className="bg-neutral-800 border-neutral-700">
+                              <DropdownMenuContent>
                                 <DropdownMenuItem
-                                  className="text-white hover:bg-neutral-700 cursor-pointer"
                                   onClick={() => onEdit(course)}
                                 >
                                   <Edit className="h-4 w-4 mr-2" />
                                   編輯課程
                                 </DropdownMenuItem>
-                                <DropdownMenuSeparator className="bg-neutral-700" />
+                                <DropdownMenuSeparator />
                                 <DropdownMenuItem
-                                  className="text-white hover:bg-neutral-700 cursor-pointer"
                                   onClick={() =>
                                     onStatusChange(course.uuid, "completed")
                                   }
@@ -251,16 +251,14 @@ export function SemesterPlanning({
                                   標記為已完成
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
-                                  className="text-white hover:bg-neutral-700 cursor-pointer"
                                   onClick={() =>
                                     onStatusChange(course.uuid, "in-progress")
                                   }
                                 >
-                                  <CircleDot className="h-4 w-4 mr-2 text-blue-500" />
+                                  <CircleDot className="h-4 w-4 mr-2 text-yellow-500" />
                                   標記為進行中
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
-                                  className="text-white hover:bg-neutral-700 cursor-pointer"
                                   onClick={() =>
                                     onStatusChange(course.uuid, "planned")
                                   }
@@ -270,7 +268,7 @@ export function SemesterPlanning({
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator className="bg-neutral-700" />
                                 <DropdownMenuItem
-                                  className="text-red-400 hover:bg-neutral-700 cursor-pointer"
+                                  className="text-red-400 cursor-pointer"
                                   onClick={() =>
                                     onSemesterChange(course.uuid, undefined)
                                   }
@@ -278,7 +276,10 @@ export function SemesterPlanning({
                                   <MinusCircle className="h-4 w-4 mr-2" />
                                   從學期移除
                                 </DropdownMenuItem>
-                                <DropdownMenuItem className="text-red-400 hover:bg-neutral-700 cursor-pointer">
+                                <DropdownMenuItem
+                                  className="text-red-400 cursor-pointer"
+                                  onClick={() => onDelete(course)}
+                                >
                                   <Trash2 className="h-4 w-4 mr-2" />
                                   移除課程
                                 </DropdownMenuItem>
@@ -300,7 +301,7 @@ export function SemesterPlanning({
             )}
 
             {currentSemester && (
-              <Card className="bg-neutral-900 border-neutral-700">
+              <Card className="border-border">
                 <CardHeader className="p-3">
                   <CardTitle className="text-base">學期統計</CardTitle>
                 </CardHeader>
@@ -326,7 +327,7 @@ export function SemesterPlanning({
                       {creditsInEachTopFolder.map((folder) => (
                         <div
                           key={folder.folder.id}
-                          className="bg-neutral-800 p-2 rounded-md"
+                          className="bg-neutral-100 dark:bg-neutral-800 p-2 rounded-md"
                         >
                           <p className="text-xs text-neutral-400">
                             {folder.folder.title}

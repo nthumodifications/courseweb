@@ -52,7 +52,7 @@ export function CourseEditDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-neutral-900 border-neutral-700 text-white">
+      <DialogContent className="border-border">
         <DialogHeader>
           <DialogTitle>編輯課程</DialogTitle>
           <DialogDescription className="text-neutral-400">
@@ -67,7 +67,7 @@ export function CourseEditDialog({
               <Input
                 id="course-id"
                 value={editCourseForm.id}
-                className="bg-neutral-800 border-neutral-700 text-white"
+                className="bg-neutral-50 dark:bg-neutral-800 border-border"
                 onChange={(e) =>
                   setEditCourseForm({
                     ...editCourseForm,
@@ -81,7 +81,7 @@ export function CourseEditDialog({
               <Input
                 id="course-title"
                 value={editCourseForm.title}
-                className="bg-neutral-800 border-neutral-700 text-white"
+                className="bg-neutral-50 dark:bg-neutral-800 border-border"
                 onChange={(e) =>
                   setEditCourseForm({
                     ...editCourseForm,
@@ -96,7 +96,7 @@ export function CourseEditDialog({
                 id="course-credits"
                 type="number"
                 value={editCourseForm.credits}
-                className="bg-neutral-800 border-neutral-700 text-white"
+                className="bg-neutral-50 dark:bg-neutral-800 border-border"
                 onChange={(e) =>
                   setEditCourseForm({
                     ...editCourseForm,
@@ -115,11 +115,11 @@ export function CourseEditDialog({
               >
                 <SelectTrigger
                   id="course-category"
-                  className="bg-neutral-800 border-neutral-700"
+                  className="bg-neutral-50 dark:bg-neutral-800 border-border"
                 >
                   <SelectValue placeholder="選擇類別" />
                 </SelectTrigger>
-                <SelectContent className="bg-neutral-800 border-neutral-700 max-h-[300px]">
+                <SelectContent className="bg-neutral-50 dark:bg-neutral-800border-border max-h-[300px]">
                   {leafFolders.map((folder) => (
                     <SelectItem key={folder.id} value={folder.id}>
                       {folder.title}
@@ -143,11 +143,11 @@ export function CourseEditDialog({
             >
               <SelectTrigger
                 id="course-status"
-                className="bg-neutral-800 border-neutral-700"
+                className="bg-neutral-50 dark:bg-neutral-800 border-border"
               >
                 <SelectValue placeholder="選擇狀態" />
               </SelectTrigger>
-              <SelectContent className="bg-neutral-800 border-neutral-700">
+              <SelectContent className="bg-neutral-50 dark:bg-neutral-800 border-border">
                 <SelectItem value="completed">已完成</SelectItem>
                 <SelectItem value="in-progress">進行中</SelectItem>
                 <SelectItem value="planned">計劃中</SelectItem>
@@ -166,11 +166,11 @@ export function CourseEditDialog({
             >
               <SelectTrigger
                 id="course-semester"
-                className="bg-neutral-800 border-neutral-700"
+                className="bg-neutral-50 dark:bg-neutral-800 border-border"
               >
                 <SelectValue placeholder="選擇學期" />
               </SelectTrigger>
-              <SelectContent className="bg-neutral-800 border-neutral-700">
+              <SelectContent className="bg-neutral-50 dark:bg-neutral-800 border-border">
                 {semesterData.map((semester) => (
                   <SelectItem key={semester.id} value={semester.id}>
                     {semester.name}
@@ -185,7 +185,7 @@ export function CourseEditDialog({
             <Input
               id="course-instructor"
               value={editCourseForm.instructor || ""}
-              className="bg-neutral-800 border-neutral-700 text-white"
+              className="bg-neutral-50 dark:bg-neutral-800 border-border"
               onChange={(e) =>
                 setEditCourseForm({
                   ...editCourseForm,
@@ -200,7 +200,7 @@ export function CourseEditDialog({
             <Textarea
               id="course-description"
               value={editCourseForm.description || ""}
-              className="bg-neutral-800 border-neutral-700 text-white min-h-[100px]"
+              className="bg-neutral-50 dark:bg-neutral-800 border-border min-h-[100px]"
               onChange={(e) =>
                 setEditCourseForm({
                   ...editCourseForm,

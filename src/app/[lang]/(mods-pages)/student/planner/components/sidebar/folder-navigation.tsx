@@ -13,6 +13,7 @@ import {
   Inbox,
 } from "lucide-react";
 import { useMemo } from "react";
+import Link from "next/link";
 
 interface FolderNavigationProps {
   plannerInfo: PlannerDataDocType | null;
@@ -28,6 +29,7 @@ interface FolderNavigationProps {
   getFolderCompletion: (folderId: string) => {
     completed: number;
     inProgress: number;
+    pending: number;
     total: number;
   };
   getChildFolders: (parentId: string | null) => FolderDocType[];
@@ -72,9 +74,9 @@ export function FolderNavigation({
   }, [getChildFolders, hasUnsortedItems]);
 
   return (
-    <div className="w-72 border-r border-neutral-700 flex flex-col">
+    <div className="w-72 border-r border-border flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b border-neutral-700">
+      <div className="p-4 border-b border-border">
         <div className="flex justify-between items-center">
           <h1 className="text-lg font-bold">
             {plannerInfo?.title || "學分規劃"}
@@ -90,7 +92,7 @@ export function FolderNavigation({
         <div className="flex items-center mt-2">
           <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
           <span className="font-medium text-green-500">{completedCredits}</span>
-          <span className="text-blue-400">+{inProgressCredits}</span>
+          <span className="text-yellow-500">+{inProgressCredits}</span>
           <span className="text-neutral-400">+{plannedCredits}</span>
           <span className="mx-1">/</span>
           <span>{totalRequiredCredits}</span>
@@ -99,34 +101,34 @@ export function FolderNavigation({
           <Progress
             value={completedPercentage}
             className="h-2 absolute bottom-0 w-full z-30 bg-transparent"
-            indicatorColor="bg-white"
+            indicatorColor="bg-neutral-700 dark:bg-white"
           />
           <Progress
             value={inProgressPercentage}
             className="h-2 absolute bottom-0 w-full z-20 bg-transparent"
-            indicatorColor="bg-blue-500"
+            indicatorColor="bg-yellow-500"
           />
           <Progress
             value={plannedPercentage}
             className="h-2 absolute bottom-0 w-full z-10"
-            indicatorColor="bg-gray-500"
+            indicatorColor="bg-neutral-500"
           />
         </div>
       </div>
 
       {/* Search */}
-      <div className="p-2 border-b border-neutral-700">
+      <div className="p-2 border-b border-border">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-neutral-400" />
           <Input
             placeholder="搜尋課程或要求"
-            className="pl-10 bg-neutral-800 border-neutral-700 text-white"
+            className="pl-10 border-border text-white"
           />
         </div>
       </div>
 
       {/* Folder Header */}
-      <div className="p-2 border-b border-neutral-700 flex justify-between items-center">
+      <div className="p-2 border-b border-border flex justify-between items-center">
         <h3 className="font-medium">畢業要求</h3>
         <Button variant="ghost" size="icon" onClick={onOpenFolderManagement}>
           <FolderTree className="h-4 w-4" />
@@ -153,14 +155,19 @@ export function FolderNavigation({
       </ScrollArea>
 
       {/* Footer Actions */}
-      <div className="p-4 border-t border-neutral-700 flex flex-col gap-2">
+      <div className="p-4 border-t border-border flex flex-col gap-2">
         <Button variant="outline" className="w-full">
           <GraduationCap className="h-4 w-4 mr-2" />
           畢業審查
         </Button>
-        <Button variant="outline" className="w-full">
-          <FileText className="h-4 w-4 mr-2" />
-          查看畢業要求PDF
+        <Button variant="outline" className="w-full" asChild>
+          <Link
+            href="https://registra.site.nthu.edu.tw/p/412-1211-1826.php?Lang=zh-tw"
+            target="_blank"
+          >
+            <FileText className="h-4 w-4 mr-2" />
+            畢業學分PDF
+          </Link>
         </Button>
       </div>
     </div>

@@ -54,7 +54,7 @@ export function CourseListEmpty({
           <div className="max-w-lg text-center">
             <h3 className="text-xl font-bold mb-6">開始使用學分規劃</h3>
             <div className="space-y-6 text-left">
-              <div className="bg-neutral-800/50 p-4 rounded-lg flex items-start">
+              <div className="bg-neutral-50/50 dark:bg-neutral-800/50 p-4 rounded-lg flex items-start">
                 <div className="bg-primary/20 text-primary rounded-full w-8 h-8 flex items-center justify-center mr-4 flex-shrink-0">
                   1
                 </div>
@@ -74,7 +74,7 @@ export function CourseListEmpty({
                 </div>
               </div>
 
-              <div className="bg-neutral-800/50 p-4 rounded-lg flex items-start">
+              <div className="bg-neutral-50/50 dark:bg-neutral-800/50 p-4 rounded-lg flex items-start">
                 <div className="bg-primary/20 text-primary rounded-full w-8 h-8 flex items-center justify-center mr-4 flex-shrink-0">
                   2
                 </div>
@@ -91,7 +91,7 @@ export function CourseListEmpty({
                       <CheckCircle2 className="h-3 w-3" />
                       已完成
                     </Badge>
-                    <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 flex items-center gap-1">
+                    <Badge className="bg-yellow-500/20 text-yellow-500 border-yellow-500/30 flex items-center gap-1">
                       <CircleDot className="h-3 w-3" />
                       進行中
                     </Badge>
@@ -103,7 +103,7 @@ export function CourseListEmpty({
                 </div>
               </div>
 
-              <div className="bg-neutral-800/50 p-4 rounded-lg flex items-start">
+              <div className="bg-neutral-50/50 dark:bg-neutral-800/50 p-4 rounded-lg flex items-start">
                 <div className="bg-primary/20 text-primary rounded-full w-8 h-8 flex items-center justify-center mr-4 flex-shrink-0">
                   3
                 </div>
@@ -140,7 +140,7 @@ export function CourseListEmpty({
             請選擇左側面板的子資料夾來管理課程。
             只有末端資料夾可以直接添加課程。
           </p>
-          <div className="bg-neutral-800/50 p-3 rounded-lg text-left mb-4">
+          <div className="bg-neutral-50/50 dark:bg-neutral-800/50 p-3 rounded-lg text-left mb-4">
             <p className="text-sm">可用子資料夾：</p>
             <div className="mt-2 space-y-1">
               {childFolders.map((folder) => (

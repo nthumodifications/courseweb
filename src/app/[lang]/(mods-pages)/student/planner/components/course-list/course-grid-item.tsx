@@ -21,10 +21,11 @@ import {
 } from "lucide-react";
 
 import { CourseStatus } from "../../types";
-import { ItemDocType, SemesterDocType } from "@/config/rxdb";
+import { FolderDocType, ItemDocType, SemesterDocType } from "@/config/rxdb";
 
 interface CourseGridItemProps {
   course: ItemDocType;
+  folders: FolderDocType[];
   isSelected: boolean;
   isMultiSelected: boolean;
   onClick: () => void;
@@ -38,6 +39,7 @@ interface CourseGridItemProps {
 
 export function CourseGridItem({
   course,
+  folders,
   isSelected,
   isMultiSelected,
   onClick,
@@ -54,13 +56,13 @@ export function CourseGridItem({
   const getStatusColor = () => {
     switch (course.status) {
       case "completed":
-        return "bg-green-500/20 text-green-400 border-green-500/30";
+        return "bg-green-500/10 dark:bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/30";
       case "in-progress":
-        return "bg-blue-500/20 text-blue-400 border-blue-500/30";
+        return "bg-yellow-500/10 dark:bg-yellow-500/20 text-blue-700 dark:text-yellow-500 border-yellow-500/30";
       case "failed":
-        return "bg-red-500/20 text-red-400 border-red-500/30";
+        return "bg-red-500/10 dark:bg-red-500/20 text-red-700 dark:text-red-400 border-red-500/30";
       default:
-        return "bg-neutral-700 text-neutral-300 border-neutral-600";
+        return "bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 border-neutral-300 dark:border-neutral-600";
     }
   };
 
@@ -82,7 +84,7 @@ export function CourseGridItem({
       case "completed":
         return <CheckCircle2 className="h-4 w-4 text-green-500" />;
       case "in-progress":
-        return <CircleDot className="h-4 w-4 text-blue-500" />;
+        return <CircleDot className="h-4 w-4 text-yellow-500" />;
       case "failed":
         return <X className="h-4 w-4 text-red-500" />;
       default:
@@ -100,10 +102,15 @@ export function CourseGridItem({
     onEdit();
   };
 
+  const getParentName = () => {
+    const parentFolder = folders.find((folder) => folder.id === course.parent);
+    return parentFolder ? parentFolder.title : "無";
+  };
+
   return (
     <div
-      className={`p-3 rounded-md border ${isSelected ? "border-primary" : isMultiSelected ? "border-primary bg-primary/10" : "border-neutral-700"} 
-        bg-neutral-800 cursor-pointer hover:border-primary transition-colors duration-200 h-32 flex flex-col group relative`}
+      className={`p-3 rounded-md border ${isSelected ? "border-primary" : isMultiSelected ? "border-primary bg-primary/10" : "border-border"} 
+        bg-neutral-50 dark:bg-neutral-800 cursor-pointer hover:border-primary transition-colors duration-200 h-32 flex flex-col group relative`}
       onClick={onClick}
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
@@ -123,7 +130,7 @@ export function CourseGridItem({
       >
         <div
           className={`w-4 h-4 rounded border flex items-center justify-center
-          ${isMultiSelected ? "bg-primary border-primary" : "border-neutral-500 bg-neutral-800"}`}
+          ${isMultiSelected ? "bg-primary border-primary" : "border-neutral-500 dark:neutral-50 bg-neutral-50 dark:bg-neutral-800"}`}
         >
           {isMultiSelected && <Check className="h-3 w-3 text-white" />}
         </div>
@@ -156,39 +163,29 @@ export function CourseGridItem({
                 <MoreHorizontal className="h-3 w-3" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="bg-neutral-800 border-neutral-700">
-              <DropdownMenuItem
-                className="text-white hover:bg-neutral-700 cursor-pointer"
-                onClick={handleEdit}
-              >
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={handleEdit}>
                 <Edit className="h-4 w-4 mr-2" />
                 編輯課程
               </DropdownMenuItem>
-              <DropdownMenuSeparator className="bg-neutral-700" />
-              <DropdownMenuItem
-                className="text-white hover:bg-neutral-700 cursor-pointer"
-                onClick={() => handleStatusChange("completed")}
-              >
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => handleStatusChange("completed")}>
                 <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" />
                 標記為已完成
               </DropdownMenuItem>
               <DropdownMenuItem
-                className="text-white hover:bg-neutral-700 cursor-pointer"
                 onClick={() => handleStatusChange("in-progress")}
               >
-                <CircleDot className="h-4 w-4 mr-2 text-blue-500" />
+                <CircleDot className="h-4 w-4 mr-2 text-yellow-500" />
                 標記為進行中
               </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-white hover:bg-neutral-700 cursor-pointer"
-                onClick={() => handleStatusChange("planned")}
-              >
+              <DropdownMenuItem onClick={() => handleStatusChange("planned")}>
                 <CircleDashed className="h-4 w-4 mr-2 text-neutral-400" />
                 標記為計劃中
               </DropdownMenuItem>
-              <DropdownMenuSeparator className="bg-neutral-700" />
+              <DropdownMenuSeparator />
               <DropdownMenuItem
-                className="text-red-400 hover:bg-neutral-700 cursor-pointer"
+                className="text-red-400 cursor-pointer"
                 onClick={() => {
                   onStatusChange("failed");
                   setDropdownOpen(false);

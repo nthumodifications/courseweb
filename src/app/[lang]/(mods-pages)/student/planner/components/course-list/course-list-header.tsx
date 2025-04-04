@@ -29,7 +29,7 @@ export function CourseListHeader({
     folderData.find((f) => f.id === selectedFolder)?.title || "";
 
   return (
-    <div className="p-4 border-b border-neutral-700 flex justify-between items-center">
+    <div className="p-4 border-b border-border flex justify-between items-center">
       <div>
         <h2 className="text-lg font-bold">{folderTitle}</h2>
         <p className="text-sm text-neutral-400">

@@ -108,14 +108,14 @@ export function CreateCourseDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange} modal={true}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         <Button size={buttonSize} variant={buttonVariant}>
           <Plus className="h-4 w-4 mr-2" />
           建立新課程
         </Button>
       </DialogTrigger>
-      <DialogContent className="bg-neutral-900 border-neutral-700 text-white">
+      <DialogContent className="border-border">
         <DialogHeader>
           <DialogTitle>建立新課程</DialogTitle>
           <DialogDescription>手動創建一個自定義課程</DialogDescription>
@@ -125,7 +125,7 @@ export function CreateCourseDialog({
             <Label htmlFor="new-course-id">課程代碼</Label>
             <Input
               id="new-course-id"
-              className="bg-neutral-800 border-neutral-700 text-white"
+              className="border-border"
               placeholder="例如: CSIE1212"
               value={formData.id}
               onChange={(e) => handleChange("id", e.target.value)}
@@ -135,7 +135,7 @@ export function CreateCourseDialog({
             <Label htmlFor="new-course-title">課程名稱</Label>
             <Input
               id="new-course-title"
-              className="bg-neutral-800 border-neutral-700 text-white"
+              className="border-border"
               placeholder="例如: 程式設計"
               value={formData.title}
               onChange={(e) => handleChange("title", e.target.value)}
@@ -148,7 +148,7 @@ export function CreateCourseDialog({
                 id="new-course-credits"
                 type="number"
                 value={formData.credits}
-                className="bg-neutral-800 border-neutral-700 text-white"
+                className="border-border"
                 onChange={(e) =>
                   handleChange("credits", Number(e.target.value))
                 }
@@ -160,13 +160,10 @@ export function CreateCourseDialog({
                 value={formData.status}
                 onValueChange={(value) => handleChange("status", value)}
               >
-                <SelectTrigger
-                  id="new-course-status"
-                  className="bg-neutral-800 border-neutral-700"
-                >
+                <SelectTrigger id="new-course-status" className="border-border">
                   <SelectValue placeholder="選擇狀態" />
                 </SelectTrigger>
-                <SelectContent className="bg-neutral-800 border-neutral-700">
+                <SelectContent className="border-border">
                   <SelectItem value="completed">已完成</SelectItem>
                   <SelectItem value="in-progress">進行中</SelectItem>
                   <SelectItem value="planned">計劃中</SelectItem>

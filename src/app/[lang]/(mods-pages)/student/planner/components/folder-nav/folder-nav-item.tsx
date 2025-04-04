@@ -14,6 +14,7 @@ interface FolderNavItemProps {
   getFolderCompletion: (folderId: string) => {
     completed: number;
     inProgress: number;
+    pending: number;
     total: number;
   };
   getChildFolders: (parentId: string | null) => FolderDocType[];
@@ -29,7 +30,9 @@ export function FolderNavItem({
   getFolderCompletion,
   getChildFolders,
 }: FolderNavItemProps) {
-  const { completed, inProgress, total } = getFolderCompletion(folder.id);
+  const { completed, inProgress, pending, total } = getFolderCompletion(
+    folder.id,
+  );
   const childFolders = getChildFolders(
     folder.id == "unsorted" ? null : folder.id,
   );
@@ -40,10 +43,13 @@ export function FolderNavItem({
   const isLeafFolder = !hasChildren;
 
   const getColorClass = () => {
+    if (folder.id == "_unsorted") {
+      return "";
+    }
     return completed >= total
       ? "bg-green-500"
       : completed + inProgress >= total
-        ? "bg-blue-500"
+        ? "bg-yellow-500"
         : "bg-red-500";
   };
 
@@ -51,7 +57,7 @@ export function FolderNavItem({
     return completed >= total
       ? "text-green-500"
       : completed + inProgress >= total
-        ? "text-blue-500"
+        ? "text-yellow-500"
         : "text-red-500";
   };
 
@@ -94,7 +100,7 @@ export function FolderNavItem({
   return (
     <div>
       <div
-        className={`flex items-center p-2 rounded-md ${isSelected ? "bg-neutral-800" : isDragOver && isLeafFolder ? "bg-primary/20 border border-primary/50" : "hover:bg-neutral-800/50"} cursor-pointer group ${isLeafFolder ? "transition-colors duration-200" : ""}`}
+        className={`flex items-center p-2 rounded-md ${isSelected ? "bg-neutral-100 dark:bg-neutral-800" : isDragOver && isLeafFolder ? "bg-primary/20 border border-primary/50" : "hover:bg-neutral-100/50 dark:hover:bg-neutral-800/50"} cursor-pointer group ${isLeafFolder ? "transition-colors duration-200" : ""}`}
         onDragOver={handleDragOver}
         onDragEnter={handleDragEnter}
         onDragLeave={handleDragLeave}
@@ -119,21 +125,35 @@ export function FolderNavItem({
             <div className="w-4" />
           )}
         </div>
-        <div className="flex-1 min-w-0" onClick={() => onSelect(folder.id)}>
-          <div className="flex items-center">
+        <div
+          className="flex-1 min-w-0 flex flex-row items-center"
+          onClick={() => onSelect(folder.id)}
+        >
+          <div className="flex items-center flex-1">
             <div
               className={`w-2 h-2 rounded-full ${getColorClass()} mr-2`}
             ></div>
             <h2 className="font-medium truncate">{folder.title}</h2>
           </div>
           <div className="flex items-center mt-1">
-            <span className={`${getTextColor()} text-xs font-medium`}>
-              {completed} / {total}{" "}
+            <span
+              className={`text-xs font-medium`}
+              title={`Completed: ${completed}, In Progress: ${inProgress}, Planned: ${total - (completed + inProgress)}`}
+            >
+              <span className="text-green-500">{completed}</span>
+              {inProgress > 0 ? (
+                <span className="text-yellow-400">+{inProgress}</span>
+              ) : null}
+              {pending > 0 ? (
+                <span className="text-neutral-400">+{pending}</span>
+              ) : null}
+              {" / "}
               {folder.min < folder.max
-                ? `- ${folder.min}~${folder.max}`
+                ? `${folder.min}~${folder.max}`
                 : folder.min == folder.max
                   ? ""
-                  : `${folder.min}~∞`}
+                  : `${folder.min}`}
+              {folder.metric == "courses" ? "門課" : "學分"}
             </span>
           </div>
         </div>

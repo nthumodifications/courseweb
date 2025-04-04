@@ -482,7 +482,7 @@ export function FolderManagement({
     return (
       <div key={folder.id} className="mb-1">
         <div
-          className={`flex items-center p-2 rounded-md ${selectedFolder?.id === folder.id ? "bg-gray-800" : "hover:bg-gray-800/50"} cursor-pointer ${isUnsorted ? "opacity-70" : ""}`}
+          className={`flex items-center p-2 rounded-md ${selectedFolder?.id === folder.id ? "bg-neutral-50 dark:bg-neutral-800" : "hover:bg-neutral-50/50 dark:hover:bg-neutral-800/50"} cursor-pointer ${isUnsorted ? "opacity-70" : ""}`}
           onClick={() => handleSelectFolder(folder)}
           style={{ paddingLeft: `${level * 16 + 8}px` }}
         >
@@ -524,7 +524,7 @@ export function FolderManagement({
     return (
       <div key={folder.id} className="mb-1">
         <div
-          className={`flex items-center p-2 rounded-md hover:bg-gray-800/50`}
+          className={`flex items-center p-2 rounded-md hover:bg-neutral-50/50 dark:hover:bg-neutral-800/50`}
           style={{ paddingLeft: `${level * 16 + 8}px` }}
         >
           <div className="mr-2 flex-shrink-0">
@@ -562,7 +562,7 @@ export function FolderManagement({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-4xl max-h-[80vh] flex flex-col">
+        <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>類別管理</DialogTitle>
             <DialogDescription className="text-gray-400">
@@ -573,8 +573,8 @@ export function FolderManagement({
           {!importMode ? (
             <div className="flex flex-1 gap-4 overflow-hidden">
               {/* Left side - Folder tree */}
-              <div className="w-1/2 border border-gray-700 rounded-md overflow-hidden flex flex-col">
-                <div className="p-2 border-b border-gray-700 flex justify-between items-center">
+              <div className="w-1/2 border border-border rounded-md overflow-hidden flex flex-col">
+                <div className="p-2 border-b border-border flex justify-between items-center">
                   <h3 className="font-medium">類別結構</h3>
                   <Button size="sm" onClick={handleNewFolder}>
                     <Plus className="h-4 w-4 mr-2" />
@@ -592,8 +592,8 @@ export function FolderManagement({
               {/* Right side - Folder details/edit */}
               {selectedFolder && !editMode ? (
                 <>
-                  <div className="w-1/2 border border-gray-700 rounded-md overflow-hidden flex flex-col">
-                    <div className="p-2 border-b border-gray-700 flex justify-between items-center">
+                  <div className="w-1/2 border border-border rounded-md overflow-hidden flex flex-col">
+                    <div className="p-2 border-b border-border flex justify-between items-center">
                       <h3 className="font-medium">類別詳情</h3>
                       <div className="flex gap-1">
                         {selectedFolder.id !== "_unsorted" && (
@@ -702,8 +702,8 @@ export function FolderManagement({
                 </>
               ) : editMode ? (
                 <>
-                  <div className="w-1/2 border border-gray-700 rounded-md overflow-hidden flex flex-col">
-                    <div className="p-2 border-b border-gray-700 flex justify-between items-center">
+                  <div className="w-1/2 border border-border rounded-md overflow-hidden flex flex-col">
+                    <div className="p-2 border-b border-border flex justify-between items-center">
                       <h3 className="font-medium">
                         {newFolder ? "新增類別" : "編輯類別"}
                       </h3>
@@ -737,7 +737,7 @@ export function FolderManagement({
                           <Input
                             id="folder-title"
                             {...register("title", { required: true })}
-                            className="bg-gray-800 border-gray-700 text-white"
+                            className="bg-neutral-50 dark:bg-neutral-800 border-border"
                           />
                         </div>
 
@@ -748,7 +748,7 @@ export function FolderManagement({
                               id="folder-min"
                               type="number"
                               {...register("min", { valueAsNumber: true })}
-                              className="bg-gray-800 border-gray-700 text-white"
+                              className="bg-neutral-50 dark:bg-neutral-800 border-border"
                             />
                           </div>
 
@@ -759,7 +759,7 @@ export function FolderManagement({
                                 id="folder-max"
                                 type="number"
                                 {...register("max", { valueAsNumber: true })}
-                                className="bg-gray-800 border-gray-700 text-white"
+                                className="bg-neutral-50 dark:bg-neutral-800 border-border"
                               />
                               <div className="flex items-center gap-1">
                                 <Controller
@@ -801,11 +801,11 @@ export function FolderManagement({
                               >
                                 <SelectTrigger
                                   id="folder-metric"
-                                  className="bg-gray-800 border-gray-700"
+                                  className="bg-neutral-50 dark:bg-neutral-800 border-border"
                                 >
                                   <SelectValue placeholder="選擇計算單位" />
                                 </SelectTrigger>
-                                <SelectContent className="bg-gray-800 border-gray-700">
+                                <SelectContent className="bg-neutral-50 dark:bg-neutral-800 border-border">
                                   <SelectItem value="credits">學分</SelectItem>
                                   <SelectItem value="courses">
                                     課程數
@@ -828,11 +828,11 @@ export function FolderManagement({
                               >
                                 <SelectTrigger
                                   id="folder-parent"
-                                  className="bg-gray-800 border-gray-700"
+                                  className="bg-neutral-50 dark:bg-neutral-800 border-border"
                                 >
                                   <SelectValue placeholder="選擇父類別" />
                                 </SelectTrigger>
-                                <SelectContent className="bg-gray-800 border-gray-700">
+                                <SelectContent className="bg-neutral-50 dark:bg-neutral-800 border-border">
                                   <SelectItem value="planner-1">
                                     無 (根類別)
                                   </SelectItem>
@@ -884,8 +884,8 @@ export function FolderManagement({
             </div>
           ) : (
             <div className="flex flex-1 gap-4 overflow-hidden">
-              <div className="w-full border border-gray-700 rounded-md overflow-hidden flex flex-col">
-                <div className="p-2 border-b border-gray-700 flex justify-between items-center">
+              <div className="w-full border border-border rounded-md overflow-hidden flex flex-col">
+                <div className="p-2 border-b border-border flex justify-between items-center">
                   <h3 className="font-medium">匯入預覽</h3>
                   <div className="flex gap-2">
                     <Button
@@ -907,7 +907,7 @@ export function FolderManagement({
                 </div>
 
                 <div className="p-4">
-                  <Alert className="mb-4 bg-amber-900/20 border-amber-700">
+                  <Alert className="mb-4 dark:bg-amber-900/20 dark:border-amber-700 bg-amber-100/20 border-amber-300">
                     <AlertDescription>
                       確認匯入將會覆蓋所有現有類別。請仔細檢查下方預覽的資料夾結構。
                     </AlertDescription>
@@ -915,7 +915,7 @@ export function FolderManagement({
 
                   <div className="mb-4">
                     <h3 className="font-medium mb-2">資料夾結構預覽</h3>
-                    <div className="border border-gray-700 rounded-md p-2">
+                    <div className="border border-border rounded-md p-2">
                       <ScrollArea className="h-[40vh]">
                         {getPreviewRootFolders().map((folder) =>
                           renderFolderPreviewItem(folder),
@@ -937,10 +937,10 @@ export function FolderManagement({
               <>
                 <div className="flex gap-2 items-center">
                   <a
-                    href="https://www.notion.so/share-folder-templates"
+                    href="https://imjustchew.notion.site/Graduation-Planner-Share-1cb17af8f2ad80808a3ec05cfd40e6a7?pvs=4"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-blue-400 hover:underline flex items-center gap-1"
+                    className="text-sm text-yellow-500 hover:underline flex items-center gap-1"
                   >
                     <ExternalLink className="h-3 w-3" />
                     範本分享頁面
@@ -984,7 +984,7 @@ export function FolderManagement({
       </Dialog>
 
       <AlertDialog open={importConfirmOpen} onOpenChange={setImportConfirmOpen}>
-        <AlertDialogContent className="bg-gray-900 border-gray-700 text-white">
+        <AlertDialogContent className="">
           <AlertDialogHeader>
             <AlertDialogTitle>確認匯入範本</AlertDialogTitle>
             <AlertDialogDescription>
@@ -992,11 +992,9 @@ export function FolderManagement({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-gray-800 hover:bg-gray-700 border-gray-600">
-              取消
-            </AlertDialogCancel>
+            <AlertDialogCancel>取消</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-red-900 hover:bg-red-800"
+              className="bg-red-200 hover:bg-red-400 dark:bg-red-900 dark:hover:bg-red-800"
               onClick={handleImportConfirm}
             >
               確認匯入

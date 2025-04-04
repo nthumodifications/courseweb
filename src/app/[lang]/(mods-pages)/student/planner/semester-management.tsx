@@ -323,7 +323,7 @@ export function SemesterManagement({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-4xl max-h-[80vh] flex flex-col">
+      <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>學期管理</DialogTitle>
           <DialogDescription className="text-gray-400">
@@ -333,8 +333,8 @@ export function SemesterManagement({
 
         <div className="flex flex-1 gap-4 overflow-hidden">
           {/* Left side - Semester list */}
-          <div className="w-1/2 border border-gray-700 rounded-md overflow-hidden flex flex-col">
-            <div className="p-2 border-b border-gray-700 flex justify-between items-center">
+          <div className="w-1/2 border border-border rounded-md overflow-hidden flex flex-col">
+            <div className="p-2 border-b border-border flex justify-between items-center">
               <h3 className="font-medium">學期列表</h3>
               <Button size="sm" onClick={handleNewSemester}>
                 <Plus className="h-4 w-4 mr-2" />
@@ -347,7 +347,7 @@ export function SemesterManagement({
                 {semesters.map((semester) => (
                   <div
                     key={semester.id}
-                    className={`flex items-center justify-between p-2 rounded-md ${selectedSemester?.id === semester.id ? "bg-gray-800" : "hover:bg-gray-800/50"} cursor-pointer`}
+                    className={`flex items-center justify-between p-2 rounded-md ${selectedSemester?.id === semester.id ? "bg-neutral-50 dark:bg-neutral-800" : "hover:bg-neutral-50/50 dark:hover:bg-neutral-800/50"} cursor-pointer`}
                     onClick={() => handleSelectSemester(semester)}
                   >
                     <div className="flex-1 min-w-0">
@@ -372,10 +372,10 @@ export function SemesterManagement({
           </div>
 
           {/* Right side - Semester details/edit */}
-          <div className="w-1/2 border border-gray-700 rounded-md overflow-hidden flex flex-col">
+          <div className="w-1/2 border border-border rounded-md overflow-hidden flex flex-col">
             {selectedSemester && !editMode ? (
               <>
-                <div className="p-2 border-b border-gray-700 flex justify-between items-center">
+                <div className="p-2 border-b border-border flex justify-between items-center">
                   <h3 className="font-medium">學期詳情</h3>
                   <div className="flex gap-1">
                     <Button
@@ -472,7 +472,7 @@ export function SemesterManagement({
               </>
             ) : editMode ? (
               <>
-                <div className="p-2 border-b border-gray-700 flex justify-between items-center">
+                <div className="p-2 border-b border-border flex justify-between items-center">
                   <h3 className="font-medium">
                     {newSemester ? "新增學期" : "編輯學期"}
                   </h3>
@@ -508,7 +508,7 @@ export function SemesterManagement({
                       </Label>
                       <Input
                         id="semester-id"
-                        className="bg-gray-800 border-gray-700 text-white"
+                        className="bg-neutral-50 border-border dark:bg-neutral-800  "
                         placeholder="例如: 11310 (113學年度第1學期)"
                         {...register("id")}
                       />
@@ -530,7 +530,7 @@ export function SemesterManagement({
                         <Label htmlFor="semester-year">學年 (民國年)</Label>
                         <Input
                           id="semester-year"
-                          className="bg-gray-800 border-gray-700 text-white"
+                          className="bg-neutral-50 border-border dark:bg-neutral-800  "
                           placeholder="例如: 113"
                           {...register("year")}
                         />
@@ -549,11 +549,11 @@ export function SemesterManagement({
                         >
                           <SelectTrigger
                             id="semester-term"
-                            className="bg-gray-800 border-gray-700"
+                            className="bg-neutral-50 border-border dark:bg-neutral-800 "
                           >
                             <SelectValue placeholder="選擇學期" />
                           </SelectTrigger>
-                          <SelectContent className="bg-gray-800 border-gray-700">
+                          <SelectContent className="bg-neutral-50 border-border dark:bg-neutral-800 ">
                             <SelectItem value="1">秋季學期 (1)</SelectItem>
                             <SelectItem value="2">春季學期 (2)</SelectItem>
                             <SelectItem value="3">暑假 (3)</SelectItem>
@@ -571,7 +571,7 @@ export function SemesterManagement({
                       <Label htmlFor="semester-name">學期名稱</Label>
                       <Input
                         id="semester-name"
-                        className="bg-gray-800 border-gray-700 text-white"
+                        className="bg-neutral-50 border-border dark:bg-neutral-800  "
                         {...register("name")}
                       />
                       {errors.name && (
@@ -597,11 +597,11 @@ export function SemesterManagement({
                       >
                         <SelectTrigger
                           id="semester-status"
-                          className="bg-gray-800 border-gray-700"
+                          className="bg-neutral-50 border-border dark:bg-neutral-800 "
                         >
                           <SelectValue placeholder="選擇狀態" />
                         </SelectTrigger>
-                        <SelectContent className="bg-gray-800 border-gray-700">
+                        <SelectContent className="bg-neutral-50 border-border dark:bg-neutral-800 ">
                           <SelectItem value="completed">已完成</SelectItem>
                           <SelectItem value="in-progress">進行中</SelectItem>
                           <SelectItem value="planned">計劃中</SelectItem>
@@ -620,7 +620,7 @@ export function SemesterManagement({
                         <Input
                           id="semester-start-date"
                           type="date"
-                          className="bg-gray-800 border-gray-700 text-white"
+                          className="bg-neutral-50 border-border dark:bg-neutral-800  "
                           {...register("startDate")}
                         />
                         {errors.startDate && (
@@ -635,7 +635,7 @@ export function SemesterManagement({
                         <Input
                           id="semester-end-date"
                           type="date"
-                          className="bg-gray-800 border-gray-700 text-white"
+                          className="bg-neutral-50 border-border dark:bg-neutral-800  "
                           {...register("endDate")}
                         />
                         {errors.endDate && (
