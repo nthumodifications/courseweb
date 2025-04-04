@@ -6,6 +6,7 @@ import {
 } from "@/app/[lang]/(mods-pages)/student/planner/rxdb";
 import { useRxCollection } from "rxdb-hooks";
 import { updateCourseItem } from "../../data/courses";
+import { useDroppable } from "@dnd-kit/core";
 
 interface FolderNavItemProps {
   folder: FolderDocType;
@@ -42,8 +43,17 @@ export function FolderNavItem({
   const hasChildren = childFolders.length > 0;
   const isExpanded = folder.id != null ? expandedFolders[folder.id] : false;
   const isSelected = selectedFolder === folder.id;
-  const [isDragOver, setIsDragOver] = useState(false);
   const isLeafFolder = !hasChildren;
+
+  const { setNodeRef, isOver } = useDroppable({
+    id: `folder-${folder.id}`,
+    disabled: !isLeafFolder,
+    data: {
+      folderId: folder.id,
+      isLeaf: isLeafFolder,
+      type: "folder", // Add type to distinguish between folder and semester drops
+    },
+  });
 
   const getColorClass = () => {
     if (folder.id == "_unsorted") {
@@ -64,50 +74,19 @@ export function FolderNavItem({
         : "text-red-500";
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
-    if (isLeafFolder) {
-      e.preventDefault();
-    }
-  };
-
-  const handleDragEnter = (e: React.DragEvent) => {
-    if (isLeafFolder) {
-      e.preventDefault();
-      setIsDragOver(true);
-    }
-  };
-
-  const handleDragLeave = () => {
-    setIsDragOver(false);
-  };
-
   const courseCol = useRxCollection<ItemDocType>("items");
-  const handleDrop = (e: React.DragEvent) => {
-    if (isLeafFolder) {
-      e.preventDefault();
-      setIsDragOver(false);
-
-      try {
-        const courseData = JSON.parse(
-          e.dataTransfer.getData("text/plain"),
-        ) as ItemDocType;
-        if (courseData && courseData.uuid) {
-          updateCourseItem(courseCol!, { ...courseData, parent: folder.id });
-        }
-      } catch (error) {
-        console.error("Failed to parse dragged course data:", error);
-      }
-    }
-  };
 
   return (
     <div>
       <div
-        className={`flex items-center p-2 rounded-md ${isSelected ? "bg-neutral-100 dark:bg-neutral-800" : isDragOver && isLeafFolder ? "bg-primary/20 border border-primary/50" : "hover:bg-neutral-100/50 dark:hover:bg-neutral-800/50"} cursor-pointer group ${isLeafFolder ? "transition-colors duration-200" : ""}`}
-        onDragOver={handleDragOver}
-        onDragEnter={handleDragEnter}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
+        ref={isLeafFolder ? setNodeRef : undefined}
+        className={`flex items-center p-2 rounded-md ${
+          isSelected
+            ? "bg-neutral-100 dark:bg-neutral-800"
+            : isOver && isLeafFolder
+              ? "bg-primary/20 border border-primary/50"
+              : "hover:bg-neutral-100/50 dark:hover:bg-neutral-800/50"
+        } cursor-pointer group ${isLeafFolder ? "transition-colors duration-200" : ""}`}
       >
         <div
           className="mr-2 flex-shrink-0"

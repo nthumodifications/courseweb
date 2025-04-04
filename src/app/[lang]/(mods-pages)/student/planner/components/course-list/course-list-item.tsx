@@ -20,6 +20,8 @@ import {
   CircleDot,
   X,
 } from "lucide-react";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 import { CourseStatus } from "../../types";
 import {
@@ -59,6 +61,18 @@ export function CourseListItem({
 }: CourseListItemProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    isDragging,
+    transition,
+  } = useSortable({
+    id: `course-${course.uuid}`,
+    data: course,
+  });
 
   const getStatusColor = () => {
     switch (course.status) {
@@ -124,17 +138,24 @@ export function CourseListItem({
     return parentFolder ? parentFolder.title : "無";
   };
 
+  const dragStyle = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : undefined,
+    zIndex: isDragging ? 50 : undefined,
+  };
+
   return (
     <div
+      ref={setNodeRef}
+      style={dragStyle}
       className={`flex items-center p-2 rounded-md border ${isSelected ? "border-primary" : isMultiSelected ? "border-primary bg-primary/10" : "border-border"} 
         bg-neutral-50 dark:bg-neutral-800 cursor-pointer hover:border-primary transition-colors duration-200 group relative`}
       onClick={onClick}
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
-      draggable
-      onDragStart={(e) => {
-        e.dataTransfer.setData("text/plain", JSON.stringify(course));
-      }}
+      {...attributes}
+      {...listeners}
     >
       {/* Selection checkbox - only shown on hover or when selected */}
       <div

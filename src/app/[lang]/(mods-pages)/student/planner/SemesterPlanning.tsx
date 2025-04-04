@@ -30,19 +30,137 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { FolderDocType, ItemDocType, SemesterDocType } from "./rxdb";
 import { CourseStatus } from "@/app/[lang]/(mods-pages)/student/planner/types";
+import { useDroppable } from "@dnd-kit/core";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface SemesterPlanningProps {
   folders: FolderDocType[];
   semesters: SemesterDocType[];
   currentSemester: string | undefined;
-  setCurrentSemester: (semester: string) => void;
-  getCoursesBySemester: (semester: string) => ItemDocType[];
-  getTotalCreditsBySemester: (semester: string) => number;
+  setCurrentSemester: (id: string) => void;
+  getCoursesBySemester: (semesterId: string) => ItemDocType[];
+  getTotalCreditsBySemester: (semesterId: string) => number;
   onViewDetails: (course: ItemDocType) => void;
   onEdit: (course: ItemDocType) => void;
   onStatusChange: (uuid: string, status: CourseStatus) => void;
   onSemesterChange: (uuid: string, semester: string | undefined) => void;
   onDelete: (course: ItemDocType) => void;
+}
+
+// Add a new component for draggable semester course item
+function DraggableSemesterCourseItem({
+  course,
+  onViewDetails,
+  onEdit,
+  onStatusChange,
+  onSemesterChange,
+  onDelete,
+}: {
+  course: ItemDocType;
+  onViewDetails: () => void;
+  onEdit: () => void;
+  onStatusChange: (uuid: string, status: CourseStatus) => void;
+  onSemesterChange: (uuid: string, semester: string | undefined) => void;
+  onDelete: (course: ItemDocType) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    isDragging,
+    transition,
+  } = useSortable({
+    id: `semester-course-${course.uuid}`,
+    data: course,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : undefined,
+    zIndex: isDragging ? 50 : undefined,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="p-2 rounded-md border border-border bg-neutral-50 dark:bg-neutral-800 flex justify-between items-center"
+      {...attributes}
+      {...listeners}
+    >
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1 mb-1">
+          <Badge variant="outline" className="text-xs">
+            {course.id}
+          </Badge>
+          <Badge variant="secondary" className="text-xs">
+            {course.credits}學分
+          </Badge>
+        </div>
+        <div className="text-sm font-medium truncate">{course.title}</div>
+      </div>
+      <div className="flex items-center">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={() => onViewDetails()}
+        >
+          <Eye className="h-4 w-4" />
+        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => onEdit()}>
+              <Edit className="h-4 w-4 mr-2" />
+              編輯課程
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => onStatusChange(course.uuid, "completed")}
+            >
+              <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" />
+              標記為已完成
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => onStatusChange(course.uuid, "in-progress")}
+            >
+              <CircleDot className="h-4 w-4 mr-2 text-yellow-500" />
+              標記為進行中
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => onStatusChange(course.uuid, "planned")}
+            >
+              <CircleDashed className="h-4 w-4 mr-2 text-neutral-400" />
+              標記為計劃中
+            </DropdownMenuItem>
+            <DropdownMenuSeparator className="bg-neutral-700" />
+            <DropdownMenuItem
+              className="text-red-400 cursor-pointer"
+              onClick={() => onSemesterChange(course.uuid, undefined)}
+            >
+              <MinusCircle className="h-4 w-4 mr-2" />
+              從學期移除
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="text-red-400 cursor-pointer"
+              onClick={() => onDelete(course)}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              移除課程
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </div>
+  );
 }
 
 export function SemesterPlanning({
@@ -58,6 +176,12 @@ export function SemesterPlanning({
   onSemesterChange,
   onDelete,
 }: SemesterPlanningProps) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: `semester-${currentSemester || "none"}`,
+    data: { semesterId: currentSemester, type: "semester" },
+    disabled: !currentSemester,
+  });
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "completed":
@@ -98,22 +222,6 @@ export function SemesterPlanning({
     );
     return { folder, totalCredits };
   });
-
-  // Track whether a dragged course was dropped into a valid target
-  const handleDragStart = (e: React.DragEvent, course: ItemDocType) => {
-    e.dataTransfer.setData("text/plain", JSON.stringify(course));
-    // Add a custom property to track the source semester
-    e.dataTransfer.setData("source-semester", course.semester || "");
-  };
-
-  const handleDragEnd = (e: React.DragEvent, course: ItemDocType) => {
-    // If the course was not dropped in a valid drop target
-    // (dropEffect is "none" when not dropped in a valid target)
-    if (e.dataTransfer.dropEffect === "none") {
-      // Remove the course from its current semester
-      onSemesterChange(course.uuid, undefined);
-    }
-  };
 
   return (
     <ScrollArea className="flex-1">
@@ -169,124 +277,31 @@ export function SemesterPlanning({
                 </div>
 
                 <div
-                  className={`border-2 border-dashed rounded-md p-2 ${
-                    semesters.find((s) => s.id === currentSemester)?.status ===
-                    "completed"
-                      ? "border-green-500/30"
+                  ref={setNodeRef}
+                  className={`border-2 border-dashed rounded-md p-2 transition-all ${
+                    isOver
+                      ? "bg-primary/5 border-primary scale-[1.01]"
                       : semesters.find((s) => s.id === currentSemester)
-                            ?.status === "in-progress"
-                        ? "border-yellow-500/30"
-                        : "border-border"
+                            ?.status === "completed"
+                        ? "border-green-500/30"
+                        : semesters.find((s) => s.id === currentSemester)
+                              ?.status === "in-progress"
+                          ? "border-yellow-500/30"
+                          : "border-border"
                   }`}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    // Handle drop logic here
-                    try {
-                      const courseData = JSON.parse(
-                        e.dataTransfer.getData("text/plain"),
-                      );
-                      onSemesterChange(courseData.uuid, currentSemester);
-                    } catch (error) {
-                      console.error("Error parsing course data:", error);
-                    }
-                  }}
                 >
                   <div className="space-y-1 min-h-[100px]">
                     {getCoursesBySemester(currentSemester).map(
                       (course, index) => (
-                        <div
-                          key={index}
-                          className="p-2 rounded-md border border-border bg-neutral-50 dark:bg-neutral-800 flex justify-between items-center"
-                          draggable
-                          onDragStart={(e) => handleDragStart(e, course)}
-                          onDragEnd={(e) => handleDragEnd(e, course)}
-                        >
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1 mb-1">
-                              <Badge variant="outline" className="text-xs">
-                                {course.id}
-                              </Badge>
-                              <Badge variant="secondary" className="text-xs">
-                                {course.credits}學分
-                              </Badge>
-                            </div>
-                            <div className="text-sm font-medium truncate">
-                              {course.title}
-                            </div>
-                          </div>
-                          <div className="flex items-center">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => onViewDetails(course)}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8"
-                                >
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent>
-                                <DropdownMenuItem
-                                  onClick={() => onEdit(course)}
-                                >
-                                  <Edit className="h-4 w-4 mr-2" />
-                                  編輯課程
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    onStatusChange(course.uuid, "completed")
-                                  }
-                                >
-                                  <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" />
-                                  標記為已完成
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    onStatusChange(course.uuid, "in-progress")
-                                  }
-                                >
-                                  <CircleDot className="h-4 w-4 mr-2 text-yellow-500" />
-                                  標記為進行中
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    onStatusChange(course.uuid, "planned")
-                                  }
-                                >
-                                  <CircleDashed className="h-4 w-4 mr-2 text-neutral-400" />
-                                  標記為計劃中
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator className="bg-neutral-700" />
-                                <DropdownMenuItem
-                                  className="text-red-400 cursor-pointer"
-                                  onClick={() =>
-                                    onSemesterChange(course.uuid, undefined)
-                                  }
-                                >
-                                  <MinusCircle className="h-4 w-4 mr-2" />
-                                  從學期移除
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  className="text-red-400 cursor-pointer"
-                                  onClick={() => onDelete(course)}
-                                >
-                                  <Trash2 className="h-4 w-4 mr-2" />
-                                  移除課程
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </div>
+                        <DraggableSemesterCourseItem
+                          key={course.uuid}
+                          course={course}
+                          onViewDetails={() => onViewDetails(course)}
+                          onEdit={() => onEdit(course)}
+                          onStatusChange={onStatusChange}
+                          onSemesterChange={onSemesterChange}
+                          onDelete={onDelete}
+                        />
                       ),
                     )}
 

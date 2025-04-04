@@ -7,6 +7,12 @@ import {
 import { CourseStatus } from "../../types";
 import { CourseListItem } from "./course-list-item";
 import { CourseGridItem } from "./course-grid-item";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  horizontalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { useEffect, useState } from "react";
 
 interface CourseListProps {
   viewMode: "list" | "grid";
@@ -22,6 +28,7 @@ interface CourseListProps {
   onStatusChange: (uuid: string, status: CourseStatus) => void;
   onSemesterChange: (uuid: string, semester: string) => void;
   onDeleteCourse: (course: ItemDocType) => void;
+  onCoursesReordered?: (courses: { uuid: string; order: number }[]) => void;
 }
 
 export function CourseList({
@@ -38,53 +45,75 @@ export function CourseList({
   onStatusChange,
   onSemesterChange,
   onDeleteCourse,
+  onCoursesReordered,
 }: CourseListProps) {
+  // Sort courses by order property
+  const [sortedCourses, setSortedCourses] = useState<ItemDocType[]>([]);
+
+  useEffect(() => {
+    // Sort courses by order when the courses array changes
+    const sorted = [...courses].sort((a, b) => a.order - b.order);
+    setSortedCourses(sorted);
+  }, [courses]);
+
+  // Create an array of IDs for SortableContext
+  const itemIds = sortedCourses.map((course) => `course-${course.uuid}`);
+
   return (
     <ScrollArea className="h-[calc(100vh-13rem)]">
-      {viewMode === "list" ? (
-        <div className="space-y-2 p-2">
-          {courses.map((course, index) => (
-            <CourseListItem
-              key={index}
-              course={course}
-              isSelected={selectedCourse?.uuid === course.uuid}
-              isMultiSelected={!!selectedCourses[course.uuid]}
-              onClick={() => onCourseClick(course)}
-              onSelect={(e) => onCourseSelect(course.uuid, e.shiftKey)}
-              onViewDetails={() => onViewDetails(course)}
-              onEdit={() => onEdit(course)}
-              onStatusChange={(status) => onStatusChange(course.uuid, status)}
-              onSemesterChange={(semester) =>
-                onSemesterChange(course.uuid, semester)
-              }
-              semesters={semesters}
-              folders={folders}
-              onDeleteCourse={() => onDeleteCourse(course)}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 gap-2 p-2">
-          {courses.map((course, index) => (
-            <CourseGridItem
-              key={index}
-              course={course}
-              folders={folders}
-              isSelected={selectedCourse?.uuid === course.uuid}
-              isMultiSelected={!!selectedCourses[course.uuid]}
-              onClick={() => onCourseClick(course)}
-              onSelect={(e) => onCourseSelect(course.uuid, e.shiftKey)}
-              onViewDetails={() => onViewDetails(course)}
-              onEdit={() => onEdit(course)}
-              onStatusChange={(status) => onStatusChange(course.uuid, status)}
-              onSemesterChange={(semester) =>
-                onSemesterChange(course.uuid, semester)
-              }
-              semesters={semesters}
-            />
-          ))}
-        </div>
-      )}
+      <SortableContext
+        items={itemIds}
+        strategy={
+          viewMode === "list"
+            ? verticalListSortingStrategy
+            : horizontalListSortingStrategy
+        }
+      >
+        {viewMode === "list" ? (
+          <div className="space-y-2 p-2">
+            {sortedCourses.map((course, index) => (
+              <CourseListItem
+                key={course.uuid}
+                course={course}
+                isSelected={selectedCourse?.uuid === course.uuid}
+                isMultiSelected={!!selectedCourses[course.uuid]}
+                onClick={() => onCourseClick(course)}
+                onSelect={(e) => onCourseSelect(course.uuid, e.shiftKey)}
+                onViewDetails={() => onViewDetails(course)}
+                onEdit={() => onEdit(course)}
+                onStatusChange={(status) => onStatusChange(course.uuid, status)}
+                onSemesterChange={(semester) =>
+                  onSemesterChange(course.uuid, semester)
+                }
+                semesters={semesters}
+                folders={folders}
+                onDeleteCourse={() => onDeleteCourse(course)}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-2 p-2">
+            {sortedCourses.map((course, index) => (
+              <CourseGridItem
+                key={course.uuid}
+                course={course}
+                folders={folders}
+                isSelected={selectedCourse?.uuid === course.uuid}
+                isMultiSelected={!!selectedCourses[course.uuid]}
+                onClick={() => onCourseClick(course)}
+                onSelect={(e) => onCourseSelect(course.uuid, e.shiftKey)}
+                onViewDetails={() => onViewDetails(course)}
+                onEdit={() => onEdit(course)}
+                onStatusChange={(status) => onStatusChange(course.uuid, status)}
+                onSemesterChange={(semester) =>
+                  onSemesterChange(course.uuid, semester)
+                }
+                semesters={semesters}
+              />
+            ))}
+          </div>
+        )}
+      </SortableContext>
     </ScrollArea>
   );
 }
