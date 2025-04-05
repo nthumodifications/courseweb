@@ -134,7 +134,7 @@ export function PlannerSettings({
             department: data.department || "",
             enrollmentYear: data.enrollmentYear || "",
             graduationYear: data.graduationYear || "",
-            requiredCredits: data.requiredCredits || 0,
+            requiredCredits: data.requiredCredits || 128,
             description: data.description || "",
           });
           setIsNewPlanner(false);
@@ -146,7 +146,7 @@ export function PlannerSettings({
             department: "",
             enrollmentYear: "",
             graduationYear: "",
-            requiredCredits: 0,
+            requiredCredits: 128,
             description: "",
           });
           setIsNewPlanner(true);
@@ -383,6 +383,7 @@ export function PlannerSettings({
                       <Input
                         id="planner-title"
                         className="bg-neutral-50 border-border dark:bg-neutral-800 h-8 mt-1"
+                        placeholder="逃離新竹!"
                         {...register("title")}
                       />
                       {errors.title && (
@@ -399,6 +400,7 @@ export function PlannerSettings({
                       <Input
                         id="planner-department"
                         className="bg-neutral-50 border-border dark:bg-neutral-800 h-8 mt-1"
+                        placeholder="科技管理學院學士班26級"
                         {...register("department")}
                       />
                       {errors.department && (
@@ -419,6 +421,7 @@ export function PlannerSettings({
                         <Input
                           id="planner-enrollment-year"
                           className="bg-neutral-50 border-border dark:bg-neutral-800 h-8 mt-1"
+                          placeholder="113"
                           {...register("enrollmentYear")}
                         />
                         {errors.enrollmentYear && (
@@ -438,6 +441,7 @@ export function PlannerSettings({
                         <Input
                           id="planner-graduation-year"
                           className="bg-neutral-50 border-border dark:bg-neutral-800 h-8 mt-1"
+                          placeholder="123"
                           {...register("graduationYear")}
                         />
                         {errors.graduationYear && (
@@ -477,6 +481,7 @@ export function PlannerSettings({
                       <Textarea
                         id="planner-description"
                         className="bg-neutral-50 border-border dark:bg-neutral-800 min-h-[80px] mt-1"
+                        placeholder="不必填"
                         {...register("description")}
                       />
                       {errors.description && (

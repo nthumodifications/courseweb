@@ -39,8 +39,13 @@ const AppList = () => {
                             key={app.id}
                             className="flex flex-row items-center space-x-2"
                           >
-                            <div className="p-2 rounded-lg bg-nthu-100 text-nthu-800 grid place-items-center">
+                            <div className="p-2 rounded-lg bg-nthu-100 text-nthu-800 grid place-items-center relative">
                               <app.Icon size={24} />
+                              {app.beta && (
+                                <div className="absolute -top-2 -right-2 bg-blue-500 text-white text-[8px] px-1 rounded-full font-semibold">
+                                  BETA
+                                </div>
+                              )}
                             </div>
                             <div className="flex flex-col flex-1">
                               <h2 className=" font-medium">

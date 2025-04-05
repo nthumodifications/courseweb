@@ -1002,10 +1002,10 @@ export function FolderManagement({
                     href="https://imjustchew.notion.site/Graduation-Planner-Share-1cb17af8f2ad80808a3ec05cfd40e6a7?pvs=4"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-yellow-500 hover:underline flex items-center gap-1"
+                    className="text-sm text-blue-500 hover:underline flex items-center gap-1"
                   >
                     <ExternalLink className="h-3 w-3" />
-                    範本分享頁面
+                    範本分享庫
                   </a>
                 </div>
 
