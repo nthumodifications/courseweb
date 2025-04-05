@@ -20,7 +20,7 @@ import {
   CircleDot,
   X,
 } from "lucide-react";
-
+import { SemesterSelectionDialog } from "../../components/semester-selection-dialog";
 import { CourseStatus } from "../../types";
 import {
   FolderDocType,
@@ -59,6 +59,7 @@ export function CourseListItem({
 }: CourseListItemProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
+  const [isSemesterDialogOpen, setIsSemesterDialogOpen] = useState(false);
 
   const getStatusColor = () => {
     switch (course.status) {
@@ -117,6 +118,11 @@ export function CourseListItem({
   const handleSemesterChange = (semester: string) => {
     setDropdownOpen(false);
     onSemesterChange(semester);
+  };
+
+  const openSemesterDialog = () => {
+    setDropdownOpen(false);
+    setIsSemesterDialogOpen(true);
   };
 
   const getParentName = () => {
@@ -224,7 +230,7 @@ export function CourseListItem({
               標記為計劃中
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={openSemesterDialog}>
               <Calendar className="h-4 w-4 mr-2" />
               更改學期
             </DropdownMenuItem>
@@ -236,6 +242,15 @@ export function CourseListItem({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      {/* Semester Selection Dialog */}
+      <SemesterSelectionDialog
+        open={isSemesterDialogOpen}
+        onOpenChange={setIsSemesterDialogOpen}
+        semesters={semesters}
+        currentSemester={course.semester}
+        onSemesterSelect={handleSemesterChange}
+      />
     </div>
   );
 }

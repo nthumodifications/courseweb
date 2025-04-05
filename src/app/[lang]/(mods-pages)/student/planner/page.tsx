@@ -550,7 +550,7 @@ function GraduationPlanner() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex overflow-hidden -mt-4 md:-mb-0 md:-ml-2 h-[calc(100vh-var(--header-height))]">
       {/* Left Sidebar - Folder Navigation */}
       <FolderNavigation
         plannerInfo={plannerInfo}

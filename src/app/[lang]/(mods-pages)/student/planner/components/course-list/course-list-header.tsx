@@ -38,11 +38,6 @@ export function CourseListHeader({
       </div>
       {selectedFolder != undefined && !hasChildren && (
         <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm">
-            <Filter className="h-4 w-4 mr-2" />
-            篩選
-          </Button>
-
           <CreateCourseDialog
             open={createCourseOpen}
             onOpenChange={setCreateCourseOpen}

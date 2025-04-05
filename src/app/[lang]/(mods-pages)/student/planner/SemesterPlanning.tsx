@@ -86,16 +86,37 @@ export function SemesterPlanning({
 
   const topFolders = folders.filter((folder) => folder.parent === "planner-1");
 
-  const creditsInEachTopFolder = topFolders.map((folder) => {
-    const coursesInFolder = semesters.flatMap((semester) =>
-      getCoursesBySemester(semester.id).filter(
-        (course) => course.parent === folder.id,
-      ),
+  const getAllCoursesInFolder = (
+    folderId: string,
+    semesterId: string,
+  ): ItemDocType[] => {
+    // Get direct courses in this folder from the current semester only
+    const directCourses = getCoursesBySemester(semesterId).filter(
+      (course) => course.parent === folderId,
     );
+
+    // Get all subfolders of this folder
+    const subfolders = folders.filter((f) => f.parent === folderId);
+
+    // Recursively get courses from all subfolders for the current semester
+    const coursesInSubfolders = subfolders.flatMap((subfolder) =>
+      getAllCoursesInFolder(subfolder.id, semesterId),
+    );
+
+    // Combine direct courses and courses from subfolders
+    return [...directCourses, ...coursesInSubfolders];
+  };
+
+  const creditsInEachTopFolder = topFolders.map((folder) => {
+    const coursesInFolder = currentSemester
+      ? getAllCoursesInFolder(folder.id, currentSemester)
+      : [];
+
     const totalCredits = coursesInFolder.reduce(
       (total, course) => total + course.credits,
       0,
     );
+
     return { folder, totalCredits };
   });
 
@@ -202,8 +223,8 @@ export function SemesterPlanning({
                           onDragStart={(e) => handleDragStart(e, course)}
                           onDragEnd={(e) => handleDragEnd(e, course)}
                         >
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1 mb-1">
+                          <div className="flex-1 min-w-0 overflow-hidden mr-2">
+                            <div className="flex items-center gap-1 mb-1 flex-wrap">
                               <Badge variant="outline" className="text-xs">
                                 {course.id}
                               </Badge>
@@ -211,11 +232,11 @@ export function SemesterPlanning({
                                 {course.credits}學分
                               </Badge>
                             </div>
-                            <div className="text-sm font-medium truncate">
+                            <div className="text-sm font-medium truncate max-w-full">
                               {course.title}
                             </div>
                           </div>
-                          <div className="flex items-center">
+                          <div className="flex items-center flex-shrink-0">
                             <Button
                               variant="ghost"
                               size="icon"

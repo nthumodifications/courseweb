@@ -39,7 +39,9 @@ export function BulkActionsMenu({
     <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-neutral-800 border border-border rounded-lg shadow-lg p-2 z-50 transition-all duration-200 flex items-center gap-2">
       <div className="flex items-center bg-neutral-900 px-3 py-1 rounded-md mr-2">
         <SquareCheckBig className="h-4 w-4 text-primary mr-1" />
-        <span className="text-sm font-medium">{selectedCount} 已選擇</span>
+        <span className="text-sm font-medium w-max">
+          {selectedCount} 已選擇
+        </span>
       </div>
 
       <div className="flex items-center gap-1 border-r border-border pr-2">

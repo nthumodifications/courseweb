@@ -136,7 +136,9 @@ export function FolderNavItem({
             <div
               className={`w-2 h-2 rounded-full ${getColorClass()} mr-2`}
             ></div>
-            <h2 className="font-medium truncate">{folder.title}</h2>
+            <h2 className="font-medium break-words whitespace-normal overflow-hidden max-w-full">
+              {folder.title}
+            </h2>
           </div>
           <div className="flex items-center mt-1">
             <span

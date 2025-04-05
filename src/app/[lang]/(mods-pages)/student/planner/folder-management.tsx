@@ -78,6 +78,7 @@ export function FolderManagement({
   const [selectedFolder, setSelectedFolder] = useState<FolderDocType | null>(
     null,
   );
+  const [isRootSelected, setIsRootSelected] = useState<boolean>(false);
   const [editMode, setEditMode] = useState<boolean>(false);
   const [newFolder, setNewFolder] = useState<boolean>(false);
   const [importMode, setImportMode] = useState<boolean>(false);
@@ -142,11 +143,21 @@ export function FolderManagement({
       setSelectedFolder(folder);
       setEditMode(false);
       setNewFolder(false);
+      setIsRootSelected(false);
       return;
     }
     setSelectedFolder(folder);
     setEditMode(false);
     setNewFolder(false);
+    setIsRootSelected(false);
+  };
+
+  // Handle root selection
+  const handleSelectRoot = () => {
+    setSelectedFolder(null);
+    setEditMode(false);
+    setNewFolder(false);
+    setIsRootSelected(true);
   };
 
   // Handle edit mode
@@ -164,7 +175,12 @@ export function FolderManagement({
   // Handle new folder
   const handleNewFolder = () => {
     const newId = `folder-${Date.now()}`;
-    const parentId = selectedFolder ? selectedFolder.id : "planner-1";
+    // If root is selected or no folder is selected, create at root level
+    const parentId = isRootSelected
+      ? "planner-1"
+      : selectedFolder
+        ? selectedFolder.id
+        : "planner-1";
     const newOrder = folders.filter((f) => f.parent === parentId).length;
 
     reset({
@@ -559,6 +575,36 @@ export function FolderManagement({
       .sort((a, b) => a.order - b.order);
   };
 
+  // Render folder tree
+  const renderFolderTree = () => {
+    const rootFolders = getRootFolders();
+
+    return (
+      <div className="p-2">
+        {/* Root container folder */}
+        <div className="mb-2">
+          <div
+            className={`flex items-center p-2 rounded-md ${isRootSelected ? "bg-neutral-50 dark:bg-neutral-800" : "hover:bg-neutral-50/50 dark:hover:bg-neutral-800/50"} cursor-pointer`}
+            onClick={handleSelectRoot}
+          >
+            <div className="mr-2 flex-shrink-0">
+              <ChevronRight className="h-4 w-4 text-gray-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-medium">根目錄</div>
+              <div className="text-xs text-gray-400">所有類別的最上層</div>
+            </div>
+          </div>
+
+          {/* Root folder children */}
+          <div className="ml-6">
+            {rootFolders.map((folder) => renderFolderItem(folder, 1))}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
@@ -582,11 +628,7 @@ export function FolderManagement({
                   </Button>
                 </div>
 
-                <ScrollArea className="flex-1">
-                  <div className="p-2">
-                    {getRootFolders().map((folder) => renderFolderItem(folder))}
-                  </div>
-                </ScrollArea>
+                <ScrollArea className="flex-1">{renderFolderTree()}</ScrollArea>
               </div>
 
               {/* Right side - Folder details/edit */}
@@ -876,6 +918,26 @@ export function FolderManagement({
                     </ScrollArea>
                   </div>
                 </>
+              ) : isRootSelected ? (
+                <div className="w-1/2 border border-border rounded-md overflow-hidden flex flex-col">
+                  <div className="p-2 border-b border-border flex justify-between items-center">
+                    <h3 className="font-medium">根目錄</h3>
+                    <Button size="sm" onClick={handleNewFolder}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      新增根類別
+                    </Button>
+                  </div>
+                  <div className="p-4 flex flex-col items-center justify-center h-full text-center">
+                    <h4 className="mb-2 font-medium">根類別</h4>
+                    <p className="text-gray-400 mb-4">
+                      這是最頂層類別。您可以在此添加新的根類別，根類別將直接顯示在主畫面上。
+                    </p>
+                    <Button onClick={handleNewFolder}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      新增根類別
+                    </Button>
+                  </div>
+                </div>
               ) : (
                 <div className="flex items-center justify-center h-full text-gray-400">
                   <p>選擇一個類別以查看詳情</p>
