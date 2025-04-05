@@ -65,9 +65,9 @@ export function CourseList({
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-2 p-2">
-          {courses.map((course, index) => (
+          {courses.map((course) => (
             <CourseGridItem
-              key={index}
+              key={course.uuid}
               course={course}
               folders={folders}
               isSelected={selectedCourse?.uuid === course.uuid}

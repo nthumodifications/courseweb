@@ -37,7 +37,7 @@ export function FolderNavItem({
     folder.id,
   );
   const childFolders = getChildFolders(
-    folder.id == "unsorted" ? null : folder.id,
+    folder.id == "_unsorted" ? null : folder.id,
   );
   const hasChildren = childFolders.length > 0;
   const isExpanded = folder.id != null ? expandedFolders[folder.id] : false;
