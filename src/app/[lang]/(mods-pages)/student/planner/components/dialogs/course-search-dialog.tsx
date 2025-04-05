@@ -52,12 +52,6 @@ export function CourseSearchDialog({
           onRemove={onRemoveCourse}
           items={courseData}
         />
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            取消
-          </Button>
-          <Button>新增所選課程</Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

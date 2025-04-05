@@ -8,9 +8,9 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { semesterInfo } from "@/const/semester";
-import ClassRefinementItem from "../../../courses/ClasssRefinementItem";
-import FilterItem from "../../../courses/FilterItem";
 import SemesterSelector from "./SemesterSelector";
+import ExpandableFilter from "./ExpandableFilter";
+import ExpandableClassFilter from "./ExpandableClassFilter";
 
 const latestSemID = semesterInfo[semesterInfo.length - 1].id;
 
@@ -19,7 +19,7 @@ const languageSynonyms: Record<string, string> = {
   英: "English",
 };
 const departmentSynonyms: Record<string, string> = departments.reduce(
-  (a, v) => ({ ...a, [v.code]: v.name_zh }),
+  (a, v) => ({ ...a, [v.code]: `${v.code} ${v.name_zh}` }),
   {},
 );
 const geTargetSynonyms: Record<string, string> = GETargetCodes.reduce(
@@ -38,11 +38,11 @@ const Filters = () => {
           <span className="text-sm">
             {dict.course.refine.compulsory_elective}
           </span>
-          <ClassRefinementItem searchable={true} limit={20} />
+          <ExpandableClassFilter limit={20} />
         </div>
         <div className="flex flex-col gap-2">
           <span className="text-sm">{dict.course.refine.department}</span>
-          <FilterItem
+          <ExpandableFilter
             attribute="department"
             searchable={true}
             limit={500}
@@ -53,12 +53,12 @@ const Filters = () => {
 
         <div className="flex flex-col gap-2">
           <span className="text-sm">{dict.course.refine.special_tags}</span>
-          <FilterItem attribute="tags" clientSearch={true} />
+          <ExpandableFilter attribute="tags" clientSearch={true} />
         </div>
 
         <div className="flex flex-col gap-2">
           <span className="text-sm">{dict.course.refine.language}</span>
-          <FilterItem
+          <ExpandableFilter
             attribute="language"
             searchable={false}
             synonms={languageSynonyms}
@@ -66,7 +66,11 @@ const Filters = () => {
           />
           <div className="flex flex-col gap-2">
             <span className="text-sm">{dict.course.refine.level}</span>
-            <FilterItem attribute="courseLevel" searchable={true} limit={20} />
+            <ExpandableFilter
+              attribute="courseLevel"
+              searchable={true}
+              limit={20}
+            />
           </div>
         </div>
       </div>
@@ -79,7 +83,7 @@ const Filters = () => {
           <AccordionContent className="flex flex-col gap-6">
             <div className="flex flex-col gap-2">
               <span className="text-sm">{dict.course.refine.geTarget}</span>
-              <FilterItem
+              <ExpandableFilter
                 attribute="ge_target"
                 clientSearch={true}
                 synonms={geTargetSynonyms}
@@ -90,7 +94,7 @@ const Filters = () => {
               <span className="text-sm">
                 {dict.course.refine.gecDimensions}
               </span>
-              <FilterItem attribute="ge_type" clientSearch={true} />
+              <ExpandableFilter attribute="ge_type" clientSearch={true} />
             </div>
           </AccordionContent>
         </AccordionItem>
@@ -101,7 +105,7 @@ const Filters = () => {
           <AccordionContent className="flex flex-col gap-6">
             <div className="flex flex-col gap-2">
               <span className="text-sm">{dict.course.refine.venues}</span>
-              <FilterItem
+              <ExpandableFilter
                 attribute="venues"
                 searchable={true}
                 limit={20}
@@ -113,7 +117,7 @@ const Filters = () => {
               <span className="text-sm">
                 {dict.course.refine.firstSpecialization}
               </span>
-              <FilterItem
+              <ExpandableFilter
                 attribute="first_specialization"
                 searchable={true}
                 limit={20}
@@ -125,7 +129,7 @@ const Filters = () => {
               <span className="text-sm">
                 {dict.course.refine.secondSpecialization}
               </span>
-              <FilterItem
+              <ExpandableFilter
                 attribute="second_specialization"
                 searchable={true}
                 limit={20}
@@ -137,7 +141,7 @@ const Filters = () => {
               <span className="text-sm">
                 {dict.course.refine.cross_discipline}
               </span>
-              <FilterItem
+              <ExpandableFilter
                 attribute="cross_discipline"
                 searchable={true}
                 limit={20}

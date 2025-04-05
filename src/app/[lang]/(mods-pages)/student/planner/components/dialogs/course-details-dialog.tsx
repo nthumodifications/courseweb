@@ -8,7 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Users, Check, Edit, Eye, FileText } from "lucide-react";
+import { Users, Check, Edit, Eye, FileText, Info } from "lucide-react";
 import {
   FolderDocType,
   ItemDocType,
@@ -46,25 +46,6 @@ export function CourseDetailsDialog({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-4">
-            <div>
-              <h3 className="font-medium mb-2 flex items-center">
-                <Users className="h-4 w-4 mr-2 text-neutral-400" />
-                授課教師
-              </h3>
-              <p className="text-neutral-300 bg-neutral-800 dark:text-neutral-600 dark:bg-neutral-50 p-2 rounded-md">
-                {selectedCourse.instructor}
-              </p>
-            </div>
-
-            <div>
-              <h3 className="font-medium mb-2">課程簡介</h3>
-              <p className="text-neutral-300 bg-neutral-800 dark:text-neutral-600 dark:bg-neutral-50 p-2 rounded-md">
-                {selectedCourse.description}
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-4">
             <div className="grid grid-cols-2 gap-2">
               <div className="bg-neutral-50 dark:bg-neutral-800 p-2 rounded-md">
                 <p className="text-xs text-neutral-400">類別</p>
@@ -92,61 +73,39 @@ export function CourseDetailsDialog({
                       : "計劃中"}
                 </p>
               </div>
-            </div>
-
-            <div>
-              <h3 className="font-medium mb-2">先修課程</h3>
-              {selectedCourse.dependson &&
-              selectedCourse.dependson.length > 0 ? (
-                <div className="space-y-1">
-                  {selectedCourse.dependson.map((prereq, index) => (
-                    <div
-                      key={index}
-                      className="bg-neutral-50 dark:bg-neutral-800 p-2 rounded-md flex items-center"
-                    >
-                      <Check className="h-4 w-4 text-green-500 mr-2" />
-                      <span>{prereq}</span>
-                    </div>
-                  ))}
+              {selectedCourse.raw_id && (
+                <div className="bg-neutral-50 dark:bg-neutral-800 p-2 rounded-md">
+                  <p className="text-xs text-neutral-400">課程ID</p>
+                  <p className="font-medium">{selectedCourse.raw_id}</p>
                 </div>
-              ) : (
-                <p className="text-neutral-300 bg-neutral-800 dark:text-neutral-600 dark:bg-neutral-50 p-2 rounded-md">
-                  無先修課程要求
-                </p>
               )}
             </div>
 
-            <div>
-              <h3 className="font-medium mb-2">畢業要求滿足情況</h3>
-              <div className="space-y-1">
-                <div className="bg-neutral-50 dark:bg-neutral-800 p-2 rounded-md flex items-center">
-                  <Check className="h-4 w-4 text-green-500 mr-2" />
-                  <span>
-                    滿足「
-                    {folderData.find((f) => f.id === selectedCourse.parent)
-                      ?.title || "未知"}
-                    」要求
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Add link to actual course if raw_id exists */}
+            {/* Prominent link to actual course */}
             {selectedCourse.raw_id && (
-              <div>
-                <h3 className="font-medium mb-2">課程詳情</h3>
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() =>
-                    router.push(`/zh/courses/${selectedCourse.raw_id}`)
-                  }
-                >
-                  <Eye className="h-4 w-4 mr-2" />
-                  查看課程詳情頁面
-                </Button>
-              </div>
+              <Button
+                variant="outline"
+                className="w-full mt-4"
+                onClick={() =>
+                  router.push(`/zh/courses/${selectedCourse.raw_id}`)
+                }
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                查看完整課程資訊
+              </Button>
             )}
+          </div>
+          <div className="space-y-4">
+            {/* Show all item data for debugging/reference */}
+            <div>
+              <h3 className="font-medium mb-2 flex items-center">
+                <Info className="h-4 w-4 mr-2 text-neutral-400" />
+                課程資料
+              </h3>
+              <pre className="text-xs text-neutral-300 bg-neutral-800 dark:text-neutral-600 dark:bg-neutral-50 p-2 rounded-md overflow-auto max-h-40">
+                {JSON.stringify(selectedCourse, null, 2)}
+              </pre>
+            </div>
           </div>
         </div>
 

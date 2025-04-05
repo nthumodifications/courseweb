@@ -1,4 +1,6 @@
-import { useEffect, useMemo } from "react";
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
 import useCustomMenu from "@/app/[lang]/(mods-pages)/courses/useCustomMenu";
 import {
   Select,
@@ -11,31 +13,39 @@ import { toPrettySemester } from "@/helpers/semester";
 import { lastSemester, semesterInfo } from "@/const/semester";
 
 const SemesterSelector = () => {
-  // refine semester for semester selector
+  const [initialized, setInitialized] = useState(false);
   const { items, refine, canRefine } = useCustomMenu({
     attribute: "semester",
   });
 
+  // Find the currently selected semester
+  const selected = useMemo(() => {
+    const refined = items.find((item) => item.isRefined);
+    return refined ? refined.value : lastSemester.id;
+  }, [items]);
+
+  // Set default semester only once on initial load
   useEffect(() => {
-    if (canRefine && !items.find((item) => item.isRefined)) {
-      // default to the latest semester
-      refine(lastSemester.id);
+    if (canRefine && !initialized) {
+      if (!items.some((item) => item.isRefined)) {
+        refine(lastSemester.id);
+      }
+      setInitialized(true);
     }
-  }, [canRefine, items, refine]);
+  }, [canRefine, items, refine, initialized]);
 
   const handleSelect = (v: string) => {
-    refine(v);
+    if (v !== selected) {
+      refine(v);
+    }
   };
-
-  const selected = useMemo(
-    () => items.find((item) => item.isRefined)?.value,
-    [items],
-  );
 
   return (
     <Select value={selected} onValueChange={handleSelect}>
-      <SelectTrigger>
-        <SelectValue placeholder="Semester" />
+      <SelectTrigger className="bg-background">
+        <SelectValue placeholder="Select semester">
+          {selected ? toPrettySemester(selected) + " 學期" : "Select semester"}
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
         {[...semesterInfo]

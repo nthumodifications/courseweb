@@ -58,7 +58,7 @@ const CourseSearchContainer = (props: CourseSearchContainerProps) => {
       }}
       routing
     >
-      <div className="flex flex-col h-full max-h-[100dvh] gap-4 md:gap-8">
+      <div className="flex flex-col h-full max-h-[90dvh] gap-4 md:gap-8">
         <div className="">
           <div className="bg-neutral-100 dark:bg-neutral-950 rounded-2xl flex items-center py-2 md:p-4">
             <HoverCard>
