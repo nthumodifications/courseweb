@@ -46,6 +46,7 @@ const Calendar = () => {
     useCalendar();
   const { courses, colorMap, getSemesterCourses } = useUserTimetable();
   const { language } = useSettings();
+  const [dbReady, setDbReady] = useState(false);
 
   //week movers
   const moveBackward = () => {
@@ -153,8 +154,21 @@ const Calendar = () => {
     [],
   );
 
+  // Check if database is ready
+  useEffect(() => {
+    if (timetableSync) {
+      // Wait a bit to ensure DB is fully initialized
+      const timer = setTimeout(() => {
+        setDbReady(true);
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [timetableSync]);
+
   const syncTimetable = async () => {
-    if (!timetableSync) return;
+    if (!timetableSync || !dbReady || Object.keys(courses).length === 0) return;
+
     // for each semester, check if its already synced
     const timetableCourses: TimetableSyncRequest[] = [];
     for (const sem in courses) {
@@ -199,8 +213,10 @@ const Calendar = () => {
   };
 
   useEffect(() => {
-    syncTimetable();
-  }, [courses, timetableSync]);
+    if (dbReady) {
+      syncTimetable();
+    }
+  }, [courses, timetableSync, dbReady]);
 
   const handleSyncAccept = async (
     request: TimetableSyncRequest,
@@ -227,7 +243,7 @@ const Calendar = () => {
 
   return (
     <ErrorBoundary errorComponent={CalendarError}>
-      {availableSync.length > 0 && (
+      {availableSync.length > 0 && dbReady && (
         <CalendarTimetableSyncDialog
           request={availableSync[0]}
           onSyncAccept={handleSyncAccept}
