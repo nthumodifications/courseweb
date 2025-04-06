@@ -27,7 +27,7 @@ const RefreshOnLoad = () => {
       // Check if user exists in local storage before signing in
       if (auth.user !== null) {
         // Only trigger sign-in if no user exists in storage
-        auth.signinRedirect();
+        auth.signinSilent();
       }
       setHasTriedSignin(true);
     }
