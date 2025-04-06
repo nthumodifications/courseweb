@@ -3,6 +3,7 @@ import {
   ExtractDocumentTypeFromTypedRxJsonSchema,
   addRxPlugin,
   createRxDatabase,
+  removeRxDatabase,
   toTypedRxJsonSchema,
 } from "rxdb";
 import { getRxStorageDexie } from "rxdb/plugins/storage-dexie";
@@ -12,6 +13,7 @@ import { RxDBMigrationPlugin } from "rxdb/plugins/migration-schema";
 import { RxDBStatePlugin } from "rxdb/plugins/state";
 import { RxDBQueryBuilderPlugin } from "rxdb/plugins/query-builder";
 import { RxDBUpdatePlugin } from "rxdb/plugins/update";
+import { v4 as uuidv4 } from "uuid";
 
 // create collection based on CalendarEvent
 const eventsSchema = {
@@ -142,6 +144,7 @@ export const initializeRxDB = async () => {
   addRxPlugin(RxDBQueryBuilderPlugin);
   addRxPlugin(RxDBUpdatePlugin);
 
+  // removeRxDatabase('nthumods-calendar', getRxStorageDexie());
   const db = await createRxDatabase({
     name: "nthumods-calendar",
     storage: getRxStorageDexie(),

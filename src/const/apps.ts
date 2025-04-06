@@ -1,30 +1,12 @@
 import {
-  AlertOctagon,
   Store,
   Bus,
-  Car,
-  Clipboard,
-  Club,
-  CreditCard,
   MapPin,
-  Network,
-  WalletCards,
   Gamepad,
-  Paperclip,
-  TicketCheck,
-  CalendarCheck2,
-  CalendarSearch,
-  Book,
   BookOpen,
-  ClipboardCheck,
-  Download,
   Globe,
-  HeartHandshakeIcon,
-  HandCoins,
-  University,
-  CreditCardIcon,
   CalendarIcon,
-  Notebook,
+  SquareGanttChart,
 } from "lucide-react";
 
 export const categories: {
@@ -56,8 +38,8 @@ export const apps: {
   title_en: string;
   href: string;
   Icon: React.FC<any>;
-  ais?: boolean;
   target?: string;
+  beta?: boolean;
 }[] = [
   {
     id: "courses",
@@ -114,5 +96,15 @@ export const apps: {
     title_en: "NTHU Scholarship",
     href: "https://meo110.wwlc.nthu.edu.tw/",
     Icon: Globe,
+  },
+
+  {
+    id: "planner",
+    category: "course",
+    title_zh: "畢業規劃",
+    title_en: "Planner",
+    href: "/student/planner",
+    Icon: SquareGanttChart,
+    beta: true,
   },
 ];

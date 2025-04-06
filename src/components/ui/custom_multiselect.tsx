@@ -117,7 +117,11 @@ const MultiSelectFormField = React.forwardRef<
     };
 
     return (
-      <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+      <Popover
+        open={isPopoverOpen}
+        onOpenChange={setIsPopoverOpen}
+        modal={true}
+      >
         <PopoverTrigger asChild>
           <Button
             ref={ref}
