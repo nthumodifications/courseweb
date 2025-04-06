@@ -11,7 +11,7 @@ const useLaunchApp = (app: (typeof apps)[number]) => {
 
   const launchFn = useCallback(async () => {
     event({
-      action: "open_app",
+      action: "open_app" + app.id,
       category: "app",
       label: "open_app_" + app.id,
     });
