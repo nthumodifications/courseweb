@@ -333,5 +333,85 @@ declare const app: import("hono/hono-base").HonoBase<{}, {
             status: 200;
         };
     };
+} & {
+    "/introspect": {
+        $post: {
+            input: {
+                form: {
+                    token: string;
+                    token_type_hint?: "access_token" | "refresh_token" | undefined;
+                };
+            };
+            output: {
+                error: string;
+            };
+            outputFormat: "json";
+            status: 400;
+        } | {
+            input: {
+                form: {
+                    token: string;
+                    token_type_hint?: "access_token" | "refresh_token" | undefined;
+                };
+            };
+            output: {
+                error: string;
+            };
+            outputFormat: "json";
+            status: 401;
+        } | {
+            input: {
+                form: {
+                    token: string;
+                    token_type_hint?: "access_token" | "refresh_token" | undefined;
+                };
+            };
+            output: {
+                active: boolean;
+            };
+            outputFormat: "json";
+            status: 200;
+        } | {
+            input: {
+                form: {
+                    token: string;
+                    token_type_hint?: "access_token" | "refresh_token" | undefined;
+                };
+            };
+            output: {
+                error: string;
+            };
+            outputFormat: "json";
+            status: 500;
+        } | {
+            input: {
+                form: {
+                    token: string;
+                    token_type_hint?: "access_token" | "refresh_token" | undefined;
+                };
+            };
+            output: {
+                active: boolean;
+                client_id: string;
+                scope: string;
+                username: string;
+                exp: number;
+                iat: number;
+            };
+            outputFormat: "json";
+            status: import("hono/utils/http-status").ContentfulStatusCode;
+        };
+    };
+} & {
+    "/health": {
+        $get: {
+            input: {};
+            output: {
+                status: string;
+            };
+            outputFormat: "json";
+            status: import("hono/utils/http-status").ContentfulStatusCode;
+        };
+    };
 }, "/">;
 export default app;
