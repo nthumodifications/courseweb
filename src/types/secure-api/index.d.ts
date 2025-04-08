@@ -388,18 +388,6 @@ export declare const app: import("hono/hono-base").HonoBase<{}, {
                 };
             };
             output: {
-                error: string;
-            };
-            outputFormat: "json";
-            status: 500;
-        } | {
-            input: {
-                form: {
-                    token: string;
-                    token_type_hint?: "access_token" | "refresh_token" | undefined;
-                };
-            };
-            output: {
                 active: boolean;
                 client_id: string;
                 scope: string;
