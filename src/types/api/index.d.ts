@@ -921,9 +921,6 @@ export declare const app: import("hono/hono-base").HonoBase<{}, {
                 checkpoint: {
                     id: string;
                     serverTimestamp: string;
-                } | {
-                    uuid: string;
-                    serverTimestamp: string;
                 } | null;
                 documents: {
                     id: string;
@@ -990,9 +987,6 @@ export declare const app: import("hono/hono-base").HonoBase<{}, {
             output: {
                 checkpoint: {
                     id: string;
-                    serverTimestamp: string;
-                } | {
-                    uuid: string;
                     serverTimestamp: string;
                 } | null;
                 documents: {
