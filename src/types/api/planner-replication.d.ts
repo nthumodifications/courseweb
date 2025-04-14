@@ -24,19 +24,6 @@ declare const app: import("hono/hono-base").HonoBase<{}, {
             };
             outputFormat: "json";
             status: import("hono/utils/http-status").ContentfulStatusCode;
-        } | {
-            input: {
-                query: {
-                    id: string | string[];
-                    serverTimestamp: string | string[];
-                    batchSize?: string | string[] | undefined;
-                };
-            };
-            output: {
-                message: string;
-            };
-            outputFormat: "json";
-            status: 400;
         };
     };
 } & {
@@ -59,26 +46,6 @@ declare const app: import("hono/hono-base").HonoBase<{}, {
             output: never;
             outputFormat: "json";
             status: import("hono/utils/http-status").ContentfulStatusCode;
-        } | {
-            input: {
-                json: {
-                    newDocumentState: {
-                        id: string;
-                        _deleted: boolean;
-                    } & {
-                        [k: string]: unknown;
-                    };
-                    assumedMasterState?: z.objectInputType<{
-                        id: z.ZodString;
-                        _deleted: z.ZodBoolean;
-                    }, z.ZodTypeAny, "passthrough"> | undefined;
-                }[];
-            };
-            output: {
-                message: string;
-            };
-            outputFormat: "json";
-            status: 400;
         };
     };
 } & {
@@ -106,19 +73,6 @@ declare const app: import("hono/hono-base").HonoBase<{}, {
             };
             outputFormat: "json";
             status: import("hono/utils/http-status").ContentfulStatusCode;
-        } | {
-            input: {
-                query: {
-                    uuid: string | string[];
-                    serverTimestamp: string | string[];
-                    batchSize?: string | string[] | undefined;
-                };
-            };
-            output: {
-                message: string;
-            };
-            outputFormat: "json";
-            status: 400;
         };
     };
 } & {
@@ -141,26 +95,6 @@ declare const app: import("hono/hono-base").HonoBase<{}, {
             output: never;
             outputFormat: "json";
             status: import("hono/utils/http-status").ContentfulStatusCode;
-        } | {
-            input: {
-                json: {
-                    newDocumentState: {
-                        uuid: string;
-                        _deleted: boolean;
-                    } & {
-                        [k: string]: unknown;
-                    };
-                    assumedMasterState?: z.objectInputType<{
-                        uuid: z.ZodString;
-                        _deleted: z.ZodBoolean;
-                    }, z.ZodTypeAny, "passthrough"> | undefined;
-                }[];
-            };
-            output: {
-                message: string;
-            };
-            outputFormat: "json";
-            status: 400;
         };
     };
 } & {
@@ -188,19 +122,6 @@ declare const app: import("hono/hono-base").HonoBase<{}, {
             };
             outputFormat: "json";
             status: import("hono/utils/http-status").ContentfulStatusCode;
-        } | {
-            input: {
-                query: {
-                    id: string | string[];
-                    serverTimestamp: string | string[];
-                    batchSize?: string | string[] | undefined;
-                };
-            };
-            output: {
-                message: string;
-            };
-            outputFormat: "json";
-            status: 400;
         };
     };
 } & {
@@ -223,26 +144,6 @@ declare const app: import("hono/hono-base").HonoBase<{}, {
             output: never;
             outputFormat: "json";
             status: import("hono/utils/http-status").ContentfulStatusCode;
-        } | {
-            input: {
-                json: {
-                    newDocumentState: {
-                        id: string;
-                        _deleted: boolean;
-                    } & {
-                        [k: string]: unknown;
-                    };
-                    assumedMasterState?: z.objectInputType<{
-                        id: z.ZodString;
-                        _deleted: z.ZodBoolean;
-                    }, z.ZodTypeAny, "passthrough"> | undefined;
-                }[];
-            };
-            output: {
-                message: string;
-            };
-            outputFormat: "json";
-            status: 400;
         };
     };
 } & {
@@ -270,19 +171,6 @@ declare const app: import("hono/hono-base").HonoBase<{}, {
             };
             outputFormat: "json";
             status: import("hono/utils/http-status").ContentfulStatusCode;
-        } | {
-            input: {
-                query: {
-                    id: string | string[];
-                    serverTimestamp: string | string[];
-                    batchSize?: string | string[] | undefined;
-                };
-            };
-            output: {
-                message: string;
-            };
-            outputFormat: "json";
-            status: 400;
         };
     };
 } & {
@@ -305,26 +193,6 @@ declare const app: import("hono/hono-base").HonoBase<{}, {
             output: never;
             outputFormat: "json";
             status: import("hono/utils/http-status").ContentfulStatusCode;
-        } | {
-            input: {
-                json: {
-                    newDocumentState: {
-                        id: string;
-                        _deleted: boolean;
-                    } & {
-                        [k: string]: unknown;
-                    };
-                    assumedMasterState?: z.objectInputType<{
-                        id: z.ZodString;
-                        _deleted: z.ZodBoolean;
-                    }, z.ZodTypeAny, "passthrough"> | undefined;
-                }[];
-            };
-            output: {
-                message: string;
-            };
-            outputFormat: "json";
-            status: 400;
         };
     };
 }, "/">;
