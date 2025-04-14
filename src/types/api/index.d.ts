@@ -765,5 +765,333 @@ export declare const app: import("hono/hono-base").HonoBase<{}, {
             status: import("hono/utils/http-status").ContentfulStatusCode;
         };
     };
-}, "/issue">, "/">;
+}, "/issue"> | import("hono/types").MergeSchemaPath<{
+    "/folders/pull": {
+        $get: {
+            input: {
+                query: {
+                    id: string | string[];
+                    serverTimestamp: string | string[];
+                    batchSize?: string | string[] | undefined;
+                };
+            };
+            output: {
+                checkpoint: {
+                    [x: string]: string | undefined;
+                    serverTimestamp: string | undefined;
+                } | null;
+                documents: never[];
+            } | {
+                documents: any;
+                checkpoint: {
+                    [x: string]: string;
+                    serverTimestamp: string;
+                };
+            };
+            outputFormat: "json";
+            status: import("hono/utils/http-status").ContentfulStatusCode;
+        } | {
+            input: {
+                query: {
+                    id: string | string[];
+                    serverTimestamp: string | string[];
+                    batchSize?: string | string[] | undefined;
+                };
+            };
+            output: {
+                message: string;
+            };
+            outputFormat: "json";
+            status: 400;
+        };
+    };
+} & {
+    "/folders/push": {
+        $post: {
+            input: {
+                json: {
+                    newDocumentState: {
+                        id: string;
+                        _deleted: boolean;
+                    } & {
+                        [k: string]: unknown;
+                    };
+                    assumedMasterState?: import("zod").objectInputType<{
+                        id: import("zod").ZodString;
+                        _deleted: import("zod").ZodBoolean;
+                    }, import("zod").ZodTypeAny, "passthrough"> | undefined;
+                }[];
+            };
+            output: never;
+            outputFormat: "json";
+            status: import("hono/utils/http-status").ContentfulStatusCode;
+        } | {
+            input: {
+                json: {
+                    newDocumentState: {
+                        id: string;
+                        _deleted: boolean;
+                    } & {
+                        [k: string]: unknown;
+                    };
+                    assumedMasterState?: import("zod").objectInputType<{
+                        id: import("zod").ZodString;
+                        _deleted: import("zod").ZodBoolean;
+                    }, import("zod").ZodTypeAny, "passthrough"> | undefined;
+                }[];
+            };
+            output: {
+                message: string;
+            };
+            outputFormat: "json";
+            status: 400;
+        };
+    };
+} & {
+    "/items/pull": {
+        $get: {
+            input: {
+                query: {
+                    uuid: string | string[];
+                    serverTimestamp: string | string[];
+                    batchSize?: string | string[] | undefined;
+                };
+            };
+            output: {
+                checkpoint: {
+                    [x: string]: string | undefined;
+                    serverTimestamp: string | undefined;
+                } | null;
+                documents: never[];
+            } | {
+                documents: any;
+                checkpoint: {
+                    [x: string]: string;
+                    serverTimestamp: string;
+                };
+            };
+            outputFormat: "json";
+            status: import("hono/utils/http-status").ContentfulStatusCode;
+        } | {
+            input: {
+                query: {
+                    uuid: string | string[];
+                    serverTimestamp: string | string[];
+                    batchSize?: string | string[] | undefined;
+                };
+            };
+            output: {
+                message: string;
+            };
+            outputFormat: "json";
+            status: 400;
+        };
+    };
+} & {
+    "/items/push": {
+        $post: {
+            input: {
+                json: {
+                    newDocumentState: {
+                        uuid: string;
+                        _deleted: boolean;
+                    } & {
+                        [k: string]: unknown;
+                    };
+                    assumedMasterState?: import("zod").objectInputType<{
+                        uuid: import("zod").ZodString;
+                        _deleted: import("zod").ZodBoolean;
+                    }, import("zod").ZodTypeAny, "passthrough"> | undefined;
+                }[];
+            };
+            output: never;
+            outputFormat: "json";
+            status: import("hono/utils/http-status").ContentfulStatusCode;
+        } | {
+            input: {
+                json: {
+                    newDocumentState: {
+                        uuid: string;
+                        _deleted: boolean;
+                    } & {
+                        [k: string]: unknown;
+                    };
+                    assumedMasterState?: import("zod").objectInputType<{
+                        uuid: import("zod").ZodString;
+                        _deleted: import("zod").ZodBoolean;
+                    }, import("zod").ZodTypeAny, "passthrough"> | undefined;
+                }[];
+            };
+            output: {
+                message: string;
+            };
+            outputFormat: "json";
+            status: 400;
+        };
+    };
+} & {
+    "/plannerdata/pull": {
+        $get: {
+            input: {
+                query: {
+                    id: string | string[];
+                    serverTimestamp: string | string[];
+                    batchSize?: string | string[] | undefined;
+                };
+            };
+            output: {
+                checkpoint: {
+                    [x: string]: string | undefined;
+                    serverTimestamp: string | undefined;
+                } | null;
+                documents: never[];
+            } | {
+                documents: any;
+                checkpoint: {
+                    [x: string]: string;
+                    serverTimestamp: string;
+                };
+            };
+            outputFormat: "json";
+            status: import("hono/utils/http-status").ContentfulStatusCode;
+        } | {
+            input: {
+                query: {
+                    id: string | string[];
+                    serverTimestamp: string | string[];
+                    batchSize?: string | string[] | undefined;
+                };
+            };
+            output: {
+                message: string;
+            };
+            outputFormat: "json";
+            status: 400;
+        };
+    };
+} & {
+    "/plannerdata/push": {
+        $post: {
+            input: {
+                json: {
+                    newDocumentState: {
+                        id: string;
+                        _deleted: boolean;
+                    } & {
+                        [k: string]: unknown;
+                    };
+                    assumedMasterState?: import("zod").objectInputType<{
+                        id: import("zod").ZodString;
+                        _deleted: import("zod").ZodBoolean;
+                    }, import("zod").ZodTypeAny, "passthrough"> | undefined;
+                }[];
+            };
+            output: never;
+            outputFormat: "json";
+            status: import("hono/utils/http-status").ContentfulStatusCode;
+        } | {
+            input: {
+                json: {
+                    newDocumentState: {
+                        id: string;
+                        _deleted: boolean;
+                    } & {
+                        [k: string]: unknown;
+                    };
+                    assumedMasterState?: import("zod").objectInputType<{
+                        id: import("zod").ZodString;
+                        _deleted: import("zod").ZodBoolean;
+                    }, import("zod").ZodTypeAny, "passthrough"> | undefined;
+                }[];
+            };
+            output: {
+                message: string;
+            };
+            outputFormat: "json";
+            status: 400;
+        };
+    };
+} & {
+    "/semesters/pull": {
+        $get: {
+            input: {
+                query: {
+                    id: string | string[];
+                    serverTimestamp: string | string[];
+                    batchSize?: string | string[] | undefined;
+                };
+            };
+            output: {
+                checkpoint: {
+                    [x: string]: string | undefined;
+                    serverTimestamp: string | undefined;
+                } | null;
+                documents: never[];
+            } | {
+                documents: any;
+                checkpoint: {
+                    [x: string]: string;
+                    serverTimestamp: string;
+                };
+            };
+            outputFormat: "json";
+            status: import("hono/utils/http-status").ContentfulStatusCode;
+        } | {
+            input: {
+                query: {
+                    id: string | string[];
+                    serverTimestamp: string | string[];
+                    batchSize?: string | string[] | undefined;
+                };
+            };
+            output: {
+                message: string;
+            };
+            outputFormat: "json";
+            status: 400;
+        };
+    };
+} & {
+    "/semesters/push": {
+        $post: {
+            input: {
+                json: {
+                    newDocumentState: {
+                        id: string;
+                        _deleted: boolean;
+                    } & {
+                        [k: string]: unknown;
+                    };
+                    assumedMasterState?: import("zod").objectInputType<{
+                        id: import("zod").ZodString;
+                        _deleted: import("zod").ZodBoolean;
+                    }, import("zod").ZodTypeAny, "passthrough"> | undefined;
+                }[];
+            };
+            output: never;
+            outputFormat: "json";
+            status: import("hono/utils/http-status").ContentfulStatusCode;
+        } | {
+            input: {
+                json: {
+                    newDocumentState: {
+                        id: string;
+                        _deleted: boolean;
+                    } & {
+                        [k: string]: unknown;
+                    };
+                    assumedMasterState?: import("zod").objectInputType<{
+                        id: import("zod").ZodString;
+                        _deleted: import("zod").ZodBoolean;
+                    }, import("zod").ZodTypeAny, "passthrough"> | undefined;
+                }[];
+            };
+            output: {
+                message: string;
+            };
+            outputFormat: "json";
+            status: 400;
+        };
+    };
+}, "/planner">, "/">;
 export default app;
