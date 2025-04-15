@@ -45,7 +45,7 @@ const OidcAuthProvider = ({ children }: PropsWithChildren) => {
     client_id: process.env.NEXT_PUBLIC_AUTH_CLIENT_ID!,
     redirect_uri: process.env.NEXT_PUBLIC_NTHUMODS_AUTH_REDIRECT!,
     silent_redirect_uri: process.env.NEXT_PUBLIC_NTHUMODS_AUTH_SILENT_REDIRECT!,
-    scope: "openid profile offline_access email kv calendar",
+    scope: "openid profile offline_access email kv calendar planner",
     userStore: new WebStorageStateStore({ store: window.localStorage }),
     automaticSilentRenew: true,
     onSigninCallback(user) {
