@@ -1036,8 +1036,8 @@ export declare const app: import("hono/hono-base").HonoBase<{
                 requiredCredits: number;
                 enrollmentYear: string;
                 graduationYear: string;
-                includedSemesters: string;
                 _deleted: boolean;
+                includedSemesters: string[];
             }[];
             outputFormat: "json";
             status: import("hono/utils/http-status").ContentfulStatusCode;

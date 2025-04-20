@@ -1,4 +1,4 @@
-import type { MiddlewareHandler } from 'hono';
+import type { MiddlewareHandler } from "hono";
 export interface User {
     sub: string | undefined;
     scopes: string[];
@@ -13,7 +13,7 @@ export declare const auth: (requiredScopes?: string[]) => MiddlewareHandler;
  * Middleware factory to make user available in route handlers
  */
 export declare const withUser: () => MiddlewareHandler;
-declare module 'hono' {
+declare module "hono" {
     interface ContextVariableMap {
         user: User;
     }

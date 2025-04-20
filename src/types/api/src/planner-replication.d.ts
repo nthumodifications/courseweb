@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { Bindings } from './index';
+import type { Bindings } from "./index";
 declare const app: import("hono/hono-base").HonoBase<{
     Bindings: Bindings;
 }, {
@@ -200,8 +200,8 @@ declare const app: import("hono/hono-base").HonoBase<{
                 requiredCredits: number;
                 enrollmentYear: string;
                 graduationYear: string;
-                includedSemesters: string;
                 _deleted: boolean;
+                includedSemesters: string[];
             }[];
             outputFormat: "json";
             status: import("hono/utils/http-status").ContentfulStatusCode;
