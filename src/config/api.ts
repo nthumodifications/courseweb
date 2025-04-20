@@ -1,5 +1,5 @@
 import { hc } from "hono/client";
-import { app } from "@/types/api";
+import { app } from "@/types/api/src";
 
 if (!process.env.NEXT_PUBLIC_COURSEWEB_API_URL) {
   throw new Error("NEXT_PUBLIC_COURSEWEB_API_URL is not defined");

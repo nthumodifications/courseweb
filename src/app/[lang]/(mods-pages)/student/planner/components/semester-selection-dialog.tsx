@@ -12,7 +12,7 @@ interface SemesterSelectionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   semesters: SemesterDocType[];
-  currentSemester?: string;
+  currentSemester?: string | null;
   onSemesterSelect: (semester: string) => void;
 }
 

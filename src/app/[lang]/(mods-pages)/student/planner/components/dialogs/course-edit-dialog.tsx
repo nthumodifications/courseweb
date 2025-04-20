@@ -137,7 +137,7 @@ export function CourseEditDialog({
           <div className="space-y-2">
             <Label htmlFor="course-status">課程狀態</Label>
             <Select
-              value={editCourseForm.status}
+              value={editCourseForm.status ?? ""}
               onValueChange={(value) =>
                 setEditCourseForm({
                   ...editCourseForm,
@@ -163,7 +163,7 @@ export function CourseEditDialog({
           <div className="space-y-2">
             <Label htmlFor="course-semester">學期</Label>
             <Select
-              value={editCourseForm.semester}
+              value={editCourseForm.semester ?? ""}
               onValueChange={(value) =>
                 setEditCourseForm({ ...editCourseForm, semester: value })
               }

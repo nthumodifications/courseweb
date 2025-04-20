@@ -291,12 +291,7 @@ export const PlannerReplicationProvider: FC<PropsWithChildren> = ({
               },
             );
             const conflicts = await response.json();
-            // remove createdAt and updatedAt from conflicts
-            const conflictsWithoutTimestamps = conflicts.map((doc) => {
-              const { createdAt, updatedAt, ...rest } = doc;
-              return rest as WithDeleted<PlannerDataDocType>;
-            });
-            return conflictsWithoutTimestamps as WithDeleted<PlannerDataDocType>[];
+            return conflicts as WithDeleted<PlannerDataDocType>[];
           } catch (error) {
             console.error("Error pushing plannerdata:", error);
             return [];
@@ -327,13 +322,9 @@ export const PlannerReplicationProvider: FC<PropsWithChildren> = ({
 
           const data = await response.json();
 
-          // make sure createdAt and updatedAt is removed
-          const documents = data.documents.map((doc) => {
-            const { createdAt, updatedAt, ...rest } = doc;
-            return rest as WithDeleted<PlannerDataDocType>;
-          });
           return {
-            documents: documents as WithDeleted<PlannerDataDocType>[],
+            documents:
+              data.documents as unknown as WithDeleted<PlannerDataDocType>[],
             checkpoint: data.checkpoint,
           };
         },
