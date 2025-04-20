@@ -235,6 +235,51 @@ export function FolderManagement({
     if (!selectedFolder || selectedFolder.id === "_unsorted") return;
 
     try {
+      // Get items collection
+      const itemsCol = folderCol?.database.collections.items;
+      if (!itemsCol) return;
+
+      // Helper function to get all child folder IDs recursively
+      const getAllChildFolderIds = (
+        parentId: string,
+        allFolders: FolderDocType[],
+      ): string[] => {
+        const directChildren = allFolders
+          .filter((f) => f.parent === parentId)
+          .map((f) => f.id);
+        const allChildren = [...directChildren];
+
+        for (const childId of directChildren) {
+          const grandchildren = getAllChildFolderIds(childId, allFolders);
+          allChildren.push(...grandchildren);
+        }
+
+        return allChildren;
+      };
+
+      // Get all child folders of the selected folder
+      const childFolderIds = getAllChildFolderIds(selectedFolder.id, folders);
+
+      // Get all folder IDs to be deleted (selected folder and all its descendants)
+      const folderIdsToDelete = [selectedFolder.id, ...childFolderIds];
+
+      // Move all items from these folders to _unsorted
+      const items = await itemsCol
+        .find()
+        .where("parent")
+        .in(folderIdsToDelete)
+        .exec();
+
+      for (const item of items) {
+        await item.patch({ parent: "_unsorted" });
+      }
+
+      // Delete all child folders first (bottom-up to avoid referential issues)
+      for (const folderId of childFolderIds.reverse()) {
+        await deleteFolder(folderCol!, folderId);
+      }
+
+      // Delete the selected folder
       await deleteFolder(folderCol!, selectedFolder.id);
 
       // Refresh folders
@@ -249,8 +294,18 @@ export function FolderManagement({
 
       // Notify parent
       onFoldersUpdated();
+
+      toast({
+        title: "類別已刪除",
+        description: `類別及其子類別已被刪除，${items.length > 0 ? "相關課程已移至「未分類」" : ""}。`,
+      });
     } catch (error) {
       console.error("Error deleting folder:", error);
+      toast({
+        title: "刪除失敗",
+        description: "無法刪除類別，請再試一次。",
+        variant: "destructive",
+      });
     }
   };
 

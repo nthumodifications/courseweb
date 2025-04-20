@@ -14,6 +14,7 @@ import { RxDBStatePlugin } from "rxdb/plugins/state";
 import { RxDBQueryBuilderPlugin } from "rxdb/plugins/query-builder";
 import { RxDBUpdatePlugin } from "rxdb/plugins/update";
 import { v4 as uuidv4 } from "uuid";
+import { wrappedValidateZSchemaStorage } from "rxdb/plugins/validate-z-schema";
 
 // create collection based on CalendarEvent
 const eventsSchema = {
@@ -144,10 +145,16 @@ export const initializeRxDB = async () => {
   addRxPlugin(RxDBQueryBuilderPlugin);
   addRxPlugin(RxDBUpdatePlugin);
 
+  const storage =
+    process.env.NODE_ENV === "development"
+      ? wrappedValidateZSchemaStorage({
+          storage: getRxStorageDexie(),
+        })
+      : getRxStorageDexie();
   // removeRxDatabase('nthumods-calendar', getRxStorageDexie());
   const db = await createRxDatabase({
     name: "nthumods-calendar",
-    storage: getRxStorageDexie(),
+    storage: storage,
     ignoreDuplicate: true,
   });
 

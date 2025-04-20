@@ -64,10 +64,11 @@ export const PlannerReplicationProvider: FC<PropsWithChildren> = ({
 
   // Calculate overall initialized state
   const initialized =
-    foldersInitialized &&
-    itemsInitialized &&
-    plannerdataInitialized &&
-    semestersInitialized;
+    !auth.isAuthenticated ||
+    (foldersInitialized &&
+      itemsInitialized &&
+      plannerdataInitialized &&
+      semestersInitialized);
 
   // Handle authentication and scopes
   useEffect(() => {
@@ -109,9 +110,19 @@ export const PlannerReplicationProvider: FC<PropsWithChildren> = ({
       push: {
         async handler(changeRows) {
           try {
+            // Filter out the _unsorted folder before pushing to server
+            const filteredChangeRows = changeRows.filter(
+              (row) => row.newDocumentState.id !== "_unsorted",
+            );
+
+            // Skip the API call if there are no changes to push after filtering
+            if (filteredChangeRows.length === 0) {
+              return [];
+            }
+
             const response = await client.planner.folders.push.$post(
               {
-                json: changeRows,
+                json: filteredChangeRows,
               },
               {
                 headers: {
@@ -150,6 +161,13 @@ export const PlannerReplicationProvider: FC<PropsWithChildren> = ({
           );
 
           const data = await response.json();
+          // Filter out _unsorted folder if it somehow exists in pulled data
+          if (data.documents) {
+            data.documents = data.documents.filter(
+              (doc) => doc.id !== "_unsorted",
+            );
+          }
+
           return {
             documents: data.documents as WithDeleted<FolderDocType>[],
             checkpoint: data.checkpoint,
@@ -187,23 +205,18 @@ export const PlannerReplicationProvider: FC<PropsWithChildren> = ({
       live: true,
       push: {
         async handler(changeRows) {
-          try {
-            const response = await client.planner.items.push.$post(
-              {
-                json: changeRows,
+          const response = await client.planner.items.push.$post(
+            {
+              json: changeRows,
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${auth.user?.access_token}`,
               },
-              {
-                headers: {
-                  Authorization: `Bearer ${auth.user?.access_token}`,
-                },
-              },
-            );
-            const conflicts = await response.json();
-            return conflicts as WithDeleted<ItemDocType>[];
-          } catch (error) {
-            console.error("Error pushing items:", error);
-            return [];
-          }
+            },
+          );
+          const conflicts = await response.json();
+          return conflicts as WithDeleted<ItemDocType>[];
         },
       },
       pull: {
@@ -278,7 +291,12 @@ export const PlannerReplicationProvider: FC<PropsWithChildren> = ({
               },
             );
             const conflicts = await response.json();
-            return conflicts as WithDeleted<PlannerDataDocType>[];
+            // remove createdAt and updatedAt from conflicts
+            const conflictsWithoutTimestamps = conflicts.map((doc) => {
+              const { createdAt, updatedAt, ...rest } = doc;
+              return rest as WithDeleted<PlannerDataDocType>;
+            });
+            return conflictsWithoutTimestamps as WithDeleted<PlannerDataDocType>[];
           } catch (error) {
             console.error("Error pushing plannerdata:", error);
             return [];
@@ -308,8 +326,14 @@ export const PlannerReplicationProvider: FC<PropsWithChildren> = ({
           );
 
           const data = await response.json();
+
+          // make sure createdAt and updatedAt is removed
+          const documents = data.documents.map((doc) => {
+            const { createdAt, updatedAt, ...rest } = doc;
+            return rest as WithDeleted<PlannerDataDocType>;
+          });
           return {
-            documents: data.documents as WithDeleted<PlannerDataDocType>[],
+            documents: documents as WithDeleted<PlannerDataDocType>[],
             checkpoint: data.checkpoint,
           };
         },

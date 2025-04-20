@@ -191,9 +191,9 @@ export function SemesterManagement({
         year: selectedSemester.year,
         term: selectedSemester.term,
         isActive: selectedSemester.isActive,
-        order: selectedSemester.order,
-        startDate: selectedSemester.startDate,
-        endDate: selectedSemester.endDate,
+        order: selectedSemester.order ?? 0,
+        startDate: selectedSemester.startDate ?? "",
+        endDate: selectedSemester.endDate ?? "",
       });
       setEditMode(true);
       setNewSemester(false);

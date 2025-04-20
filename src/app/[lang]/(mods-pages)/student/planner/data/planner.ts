@@ -45,7 +45,6 @@ export const updatePlannerData = async (
 
   await planner.patch({
     ...data,
-    updatedAt: new Date().toISOString(),
   });
 
   return planner.toMutableJSON();

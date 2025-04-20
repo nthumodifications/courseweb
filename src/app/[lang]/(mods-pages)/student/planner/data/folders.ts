@@ -145,7 +145,7 @@ export async function ensureUnsortedFolder(
 
     // If not, create it
     if (!unsortedFolder) {
-      await collection.insert({
+      await collection.incrementalUpsert({
         id: "_unsorted",
         title: "未分類",
         parent: "planner-1",

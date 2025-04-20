@@ -3,58 +3,33 @@ import {
   ExtractDocumentTypeFromTypedRxJsonSchema,
   addRxPlugin,
   createRxDatabase,
-  removeRxDatabase,
-  toTypedRxJsonSchema,
 } from "rxdb";
 import { getRxStorageDexie } from "rxdb/plugins/storage-dexie";
 import { Provider } from "rxdb-hooks";
 import { FC, PropsWithChildren, useEffect, useState } from "react";
-import { RxDBMigrationPlugin } from "rxdb/plugins/migration-schema";
 import { RxDBStatePlugin } from "rxdb/plugins/state";
 import { RxDBQueryBuilderPlugin } from "rxdb/plugins/query-builder";
 import { RxDBUpdatePlugin } from "rxdb/plugins/update";
-import { v4 as uuidv4 } from "uuid";
+import { wrappedValidateZSchemaStorage } from "rxdb/plugins/validate-z-schema";
+import { RxDBMigrationSchemaPlugin } from "rxdb/plugins/migration-schema";
 
+// FOLDERS (version 2 → bumped from 1 ⇒ 2)
 const foldersSchema = {
-  version: 0,
+  version: 2,
   primaryKey: "id",
   type: "object",
   properties: {
-    id: {
-      type: "string",
-      maxLength: 100,
-    },
-    title: {
-      type: "string",
-    },
-    parent: {
-      type: ["string", "null"],
-    },
-    min: {
-      type: "number",
-    },
-    max: {
-      type: "number",
-    },
-    metric: {
-      type: "string",
-      enum: ["credits", "courses"],
-    },
-    requireChildValidation: {
-      type: "boolean",
-    },
-    titlePlacement: {
-      type: "string",
-    },
-    order: {
-      type: "number",
-    },
-    color: {
-      type: "string",
-    },
-    expanded: {
-      type: "boolean",
-    },
+    id: { type: "string", maxLength: 100 },
+    title: { type: "string" },
+    parent: { type: ["string", "null"] },
+    min: { type: "number" },
+    max: { type: "number" },
+    metric: { type: "string", enum: ["credits", "courses"] },
+    requireChildValidation: { type: "boolean" },
+    titlePlacement: { type: "string" },
+    order: { type: "number" },
+    color: { type: ["string", "null"] },
+    expanded: { type: ["boolean", "null"] },
   },
   required: [
     "id",
@@ -69,108 +44,43 @@ const foldersSchema = {
   ],
 } as const;
 
+// ITEMS (version 2 → bumped from 1 ⇒ 2)
 const itemsSchema = {
-  version: 0,
+  version: 2,
   primaryKey: "uuid",
   type: "object",
   properties: {
-    uuid: {
-      // uuid for each item, key
-      type: "string",
-      maxLength: 100,
-    },
-    id: {
-      //course id ish CS123456
-      type: "string",
-    },
-    title: {
-      // course name
-      type: "string",
-    },
-    parent: {
-      // folder id
-      type: ["string", "null"],
-    },
-    credits: {
-      // course credits
-      type: "number",
-    },
-    raw_id: {
-      // reference course id to the course database, optional
-      type: "string",
-    },
-    semester: {
-      // 11310, 11320, etc
-      type: "string",
-    },
-    status: {
-      // enum
-      type: "string",
-    },
-    description: {
-      type: "string",
-    },
-    comments: {
-      type: "string",
-    },
-    instructor: {
-      type: "string",
-    },
-    dependson: {
-      type: "array",
-      items: {
-        type: "string",
-      },
-    },
-    order: {
-      // order of the item in the folder
-      type: "number",
-    },
+    uuid: { type: "string", maxLength: 100 },
+    id: { type: "string" },
+    title: { type: "string" },
+    parent: { type: ["string", "null"] },
+    credits: { type: "number" },
+    raw_id: { type: ["string", "null"] },
+    semester: { type: ["string", "null"] },
+    status: { type: ["string", "null"] },
+    description: { type: ["string", "null"] },
+    comments: { type: ["string", "null"] },
+    instructor: { type: ["string", "null"] },
+    dependson: { type: ["array", "null"], items: { type: "string" } },
+    order: { type: "number" },
   },
   required: ["uuid", "id", "title", "parent", "credits", "order"],
 } as const;
 
+// PLANNER DATA (version 3 → bumped from 2 ⇒ 3)
 const plannerDataSchema = {
-  version: 0,
+  version: 3,
   primaryKey: "id",
   type: "object",
   properties: {
-    id: {
-      type: "string",
-      maxLength: 100,
-    },
-    title: {
-      type: "string",
-    },
-    department: {
-      type: "string",
-    },
-    requiredCredits: {
-      type: "number",
-    },
-    enrollmentYear: {
-      type: "string",
-    },
-    graduationYear: {
-      type: "string",
-    },
-    includedSemesters: {
-      type: "array",
-      items: {
-        type: "string",
-      },
-    },
-    description: {
-      type: "string",
-    },
-    createdAt: {
-      type: "string",
-      format: "date-time",
-    },
-    updatedAt: {
-      type: "string",
-      format: "date-time",
-    },
+    id: { type: "string", maxLength: 100 },
+    title: { type: "string" },
+    department: { type: "string" },
+    requiredCredits: { type: "number" },
+    enrollmentYear: { type: "string" },
+    graduationYear: { type: "string" },
+    includedSemesters: { type: "array", items: { type: "string" } },
+    description: { type: ["string", "null"] },
   },
   required: [
     "id",
@@ -180,47 +90,24 @@ const plannerDataSchema = {
     "enrollmentYear",
     "graduationYear",
     "includedSemesters",
-    "createdAt",
-    "updatedAt",
   ],
 } as const;
 
+// SEMESTERS (version 2 → bumped from 1 ⇒ 2)
 const semesterSchema = {
-  version: 0,
+  version: 3,
   primaryKey: "id",
   type: "object",
   properties: {
-    id: {
-      type: "string",
-      maxLength: 100,
-    },
-    name: {
-      type: "string",
-    },
-    status: {
-      type: "string",
-      enum: ["completed", "in-progress", "planned"],
-    },
-    year: {
-      type: "string",
-    },
-    term: {
-      type: "string",
-    },
-    startDate: {
-      type: "string",
-      format: "date-time",
-    },
-    endDate: {
-      type: "string",
-      format: "date-time",
-    },
-    isActive: {
-      type: "boolean",
-    },
-    order: {
-      type: "number",
-    },
+    id: { type: "string", maxLength: 100 },
+    name: { type: "string" },
+    status: { type: "string", enum: ["completed", "in-progress", "planned"] },
+    year: { type: "string" },
+    term: { type: "string" },
+    startDate: { type: ["string", "null"], format: "date" },
+    endDate: { type: ["string", "null"], format: "date" },
+    isActive: { type: "boolean" },
+    order: { type: ["number", "null"] },
   },
   required: ["id", "name", "status", "year", "term", "isActive"],
 } as const;
@@ -228,49 +115,74 @@ const semesterSchema = {
 export type FolderDocType = ExtractDocumentTypeFromTypedRxJsonSchema<
   typeof foldersSchema
 >;
-
 export type ItemDocType = ExtractDocumentTypeFromTypedRxJsonSchema<
   typeof itemsSchema
 >;
-
 export type PlannerDataDocType = ExtractDocumentTypeFromTypedRxJsonSchema<
   typeof plannerDataSchema
 >;
-
 export type SemesterDocType = ExtractDocumentTypeFromTypedRxJsonSchema<
   typeof semesterSchema
 >;
 
 export const initializeRxDB = async () => {
-  // create RxDB
   if (process.env.NODE_ENV === "development") {
-    await import("rxdb/plugins/dev-mode").then((module) =>
-      addRxPlugin(module.RxDBDevModePlugin),
+    await import("rxdb/plugins/dev-mode").then((m) =>
+      addRxPlugin(m.RxDBDevModePlugin),
     );
   }
-  addRxPlugin(RxDBMigrationPlugin);
+  addRxPlugin(RxDBMigrationSchemaPlugin);
   addRxPlugin(RxDBStatePlugin);
   addRxPlugin(RxDBQueryBuilderPlugin);
   addRxPlugin(RxDBUpdatePlugin);
 
+  const storage =
+    process.env.NODE_ENV === "development"
+      ? wrappedValidateZSchemaStorage({
+          storage: getRxStorageDexie(),
+        })
+      : getRxStorageDexie();
   const db = await createRxDatabase({
     name: "grad-planner",
-    storage: getRxStorageDexie(),
+    storage,
     ignoreDuplicate: true,
   });
 
   await db.addCollections({
     folders: {
       schema: foldersSchema,
+      migrationStrategies: {
+        1: (oldDoc) => oldDoc,
+        2: (oldDoc) => oldDoc,
+      },
     },
     items: {
       schema: itemsSchema,
+      migrationStrategies: {
+        1: (oldDoc) => oldDoc,
+        2: (oldDoc) => oldDoc,
+      },
     },
     plannerdata: {
       schema: plannerDataSchema,
+      migrationStrategies: {
+        // migrate from v1 → v2
+        1: (oldDoc) => {
+          delete (oldDoc as any).updatedAt;
+          delete (oldDoc as any).createdAt;
+          return oldDoc;
+        },
+        2: (oldDoc) => oldDoc,
+        3: (oldDoc) => oldDoc,
+      },
     },
     semesters: {
       schema: semesterSchema,
+      migrationStrategies: {
+        1: (oldDoc) => oldDoc,
+        2: (oldDoc) => oldDoc,
+        3: (oldDoc) => oldDoc,
+      },
     },
   });
 
@@ -279,10 +191,8 @@ export const initializeRxDB = async () => {
 
 export const PlannerDBProvider: FC<PropsWithChildren> = ({ children }) => {
   const [db, setDb] = useState<Awaited<ReturnType<typeof initializeRxDB>>>();
-
   useEffect(() => {
     initializeRxDB().then(setDb);
   }, []);
-
   return <Provider db={db}>{children}</Provider>;
 };

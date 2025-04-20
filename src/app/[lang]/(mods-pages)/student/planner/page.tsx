@@ -109,6 +109,32 @@ function GraduationPlanner() {
   const plannerCol = useRxCollection<PlannerDataDocType>("plannerdata");
   const semestersCol = useRxCollection<SemesterDocType>("semesters");
 
+  useEffect(() => {
+    if (!coursesCol) return;
+    if (!plannerCol) return;
+
+    const updatePlannerStats = async () => {
+      // recalculate progress when courses change
+      const courseData = await coursesCol!.find().exec();
+      const completed = await calculateCompletedCredits(courseData);
+      const inProgress = await calculateInProgressCredits(courseData);
+      const planned = await calculatePlannedCredits(courseData);
+      const percentage = await calculateProgressPercentage(
+        plannerCol!,
+        completed,
+      );
+      setCompletedCredits(completed);
+      setInProgressCredits(inProgress);
+      setPlannedCredits(planned);
+      setProgressPercentage(percentage);
+    };
+    updatePlannerStats();
+    const unsub = coursesCol?.$.subscribe(updatePlannerStats);
+    return () => {
+      unsub?.unsubscribe();
+    };
+  }, [coursesCol, plannerCol]);
+
   // Load initial data
   useEffect(() => {
     if (!foldersCol || !coursesCol || !plannerCol || !semestersCol) return;
@@ -134,23 +160,6 @@ function GraduationPlanner() {
     const coursesSub = coursesCol.find().$.subscribe(async (courses) => {
       const courseData = courses.map((doc) => doc.toMutableJSON());
       setCourseData(courseData);
-
-      // Recalculate progress when courses change
-      const completed = await calculateCompletedCredits(courseData);
-      const inProgress = await calculateInProgressCredits(courseData);
-      const planned = await calculatePlannedCredits(courseData);
-
-      setCompletedCredits(completed);
-      setInProgressCredits(inProgress);
-      setPlannedCredits(planned);
-
-      if (plannerCol) {
-        const percentage = await calculateProgressPercentage(
-          plannerCol,
-          completed,
-        );
-        setProgressPercentage(percentage);
-      }
     });
 
     const semestersSub = semestersCol.find().$.subscribe((semesters) => {
@@ -229,8 +238,6 @@ function GraduationPlanner() {
     // Get courses in this folder and child folders
     const folderCourses = getCoursesByFolder(folderId);
 
-    console.log(folderId, folderCourses);
-
     // Track both counts and credits in a single pass
     const stats = folderCourses.reduce(
       (acc, course) => {
@@ -282,23 +289,6 @@ function GraduationPlanner() {
       uuid,
       newStatus,
     );
-    if (updatedCourse) {
-      // Recalculate progress
-      const updatedCourses = courseData.map((course) =>
-        course.uuid === uuid ? { ...course, status: newStatus } : course,
-      );
-      const completed = await calculateCompletedCredits(updatedCourses);
-      const inProgress = await calculateInProgressCredits(updatedCourses);
-      const planned = await calculatePlannedCredits(updatedCourses);
-
-      setCompletedCredits(completed);
-      setInProgressCredits(inProgress);
-      setPlannedCredits(planned);
-
-      setProgressPercentage(
-        await calculateProgressPercentage(plannerCol!, completed),
-      );
-    }
   };
 
   // Update course semester
@@ -313,24 +303,6 @@ function GraduationPlanner() {
   const handleUpdateCourse = async (updatedCourse: ItemDocType) => {
     const result = await updateCourseItem(coursesCol!, updatedCourse);
     setEditCourseOpen(false);
-
-    // Recalculate progress if status changed
-    if (selectedCourse && selectedCourse.status !== updatedCourse.status) {
-      const updatedCourses = courseData.map((course) =>
-        course.uuid === updatedCourse.uuid ? updatedCourse : course,
-      );
-      const completed = await calculateCompletedCredits(updatedCourses);
-      const inProgress = await calculateInProgressCredits(updatedCourses);
-      const planned = await calculatePlannedCredits(updatedCourses);
-
-      setCompletedCredits(completed);
-      setInProgressCredits(inProgress);
-      setPlannedCredits(planned);
-
-      setProgressPercentage(
-        await calculateProgressPercentage(plannerCol!, completed),
-      );
-    }
   };
 
   // Handle course selection

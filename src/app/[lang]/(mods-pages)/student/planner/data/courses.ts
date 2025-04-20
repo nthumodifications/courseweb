@@ -51,7 +51,7 @@ export const updateCourseItem = async (
   const newCourse = await col
     .findOne({ selector: { uuid: course.uuid } })
     .update({
-      $set: { ...course, updatedAt: new Date().toISOString() },
+      $set: { ...course },
     });
   return newCourse ? newCourse.toMutableJSON() : null;
 };

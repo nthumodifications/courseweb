@@ -294,29 +294,62 @@ export function PlannerSettings({
 
       // Import planner data
       if (importData.planner) {
-        await createPlannerData(plannerCol, importData.planner);
+        // Use destructuring to create a clean object without unwanted properties
+        const {
+          createdAt,
+          updatedAt,
+          _rev,
+          _attachments,
+          _meta,
+          ...cleanPlannerData
+        } = importData.planner;
+        await createPlannerData(plannerCol, cleanPlannerData);
       }
 
       // Import semesters
       if (importData.semesters && Array.isArray(importData.semesters)) {
-        for (const semester of importData.semesters) {
-          await semesterCol.insert(semester);
+        const result = await semesterCol.bulkInsert(importData.semesters);
+        if (result.error.length > 0) {
+          console.error("Error importing semesters:", result.error);
+          toast({
+            title: "匯入失敗",
+            description: "無法匯入學期資料，請檢查格式。",
+            variant: "destructive",
+          });
         }
       }
 
       // Import courses
       if (importData.courses && Array.isArray(importData.courses)) {
-        for (const course of importData.courses) {
-          await courseCol.insert(course);
+        // remove updatedAt from each course
+        importData.courses = importData.courses.map((course: any) => {
+          const { updatedAt, ...rest } = course;
+          return rest;
+        });
+        const result = await courseCol.bulkInsert(importData.courses);
+        if (result.error.length > 0) {
+          console.error("Error importing courses:", result.error);
+          toast({
+            title: "匯入失敗",
+            description: "無法匯入課程資料，請檢查格式。",
+            variant: "destructive",
+          });
         }
       }
 
       // Import folders
       if (importData.folders && Array.isArray(importData.folders)) {
-        for (const folder of importData.folders) {
-          if (folder.id !== "_unsorted") {
-            await foldersCol.insert(folder);
-          }
+        const newFolders = importData.folders.filter(
+          (f: any) => f?.id !== "_unsorted",
+        );
+        const result = await foldersCol.bulkInsert(newFolders);
+        if (result.error.length > 0) {
+          console.error("Error importing folders:", result.error);
+          toast({
+            title: "匯入失敗",
+            description: "無法匯入資料夾資料，請檢查格式。",
+            variant: "destructive",
+          });
         }
       }
 
