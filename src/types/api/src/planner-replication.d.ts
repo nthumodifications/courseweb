@@ -1,5 +1,8 @@
 import { z } from "zod";
-declare const app: import("hono/hono-base").HonoBase<{}, {
+import type { Bindings } from './index';
+declare const app: import("hono/hono-base").HonoBase<{
+    Bindings: Bindings;
+}, {
     "/folders/pull": {
         $get: {
             input: {
@@ -96,7 +99,7 @@ declare const app: import("hono/hono-base").HonoBase<{}, {
                     parent: string | null;
                     order: number;
                     instructor: string | null;
-                    dependson: string[];
+                    dependson: string | null;
                     _deleted: boolean;
                 }[];
             };
@@ -134,7 +137,7 @@ declare const app: import("hono/hono-base").HonoBase<{}, {
                 parent: string | null;
                 order: number;
                 instructor: string | null;
-                dependson: string[];
+                dependson: string | null;
                 _deleted: boolean;
             }[];
             outputFormat: "json";
@@ -164,9 +167,7 @@ declare const app: import("hono/hono-base").HonoBase<{}, {
                     requiredCredits: number;
                     enrollmentYear: string;
                     graduationYear: string;
-                    includedSemesters: string[];
-                    createdAt: string;
-                    updatedAt: string;
+                    includedSemesters: string;
                     _deleted: boolean;
                 }[];
             };
@@ -199,9 +200,7 @@ declare const app: import("hono/hono-base").HonoBase<{}, {
                 requiredCredits: number;
                 enrollmentYear: string;
                 graduationYear: string;
-                includedSemesters: string[];
-                createdAt: string;
-                updatedAt: string;
+                includedSemesters: string;
                 _deleted: boolean;
             }[];
             outputFormat: "json";
