@@ -145,7 +145,7 @@ export const initializeRxDB = async () => {
   const db = await createRxDatabase({
     name: "grad-planner",
     storage,
-    ignoreDuplicate: true,
+    ignoreDuplicate: process.env.NODE_ENV === "development",
   });
 
   await db.addCollections({
