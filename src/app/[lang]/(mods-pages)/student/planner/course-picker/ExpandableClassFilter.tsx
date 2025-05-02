@@ -157,13 +157,11 @@ const ExpandableClassFilter = ({
             />
           )}
         </div>
-        {selected.length > 0 ? (
+        {selected.length > 0 && (
           <X
             className="h-4 w-4 text-muted-foreground ml-2 cursor-pointer"
             onClick={handleClearAll}
           />
-        ) : (
-          <Search className="h-4 w-4 text-muted-foreground ml-2" />
         )}
       </div>
 

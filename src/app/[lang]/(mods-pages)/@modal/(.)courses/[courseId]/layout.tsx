@@ -1,3 +1,4 @@
+"use client";
 import DialogHandler from "./DialogHandler";
 import { LangProps } from "@/types/pages";
 import { Button } from "@/components/ui/button";
@@ -11,8 +12,6 @@ type PageProps = {
     courseId: string;
   };
 };
-
-export const revalidate = 3600;
 
 export const dynamic = "force-dynamic";
 

@@ -17,7 +17,7 @@ const HighlightItem: FC<
 > = ({ children, className, ...props }) => {
   return (
     <div
-      className={`flex flex-row items-center justify-center min-w-[60px] space-x-2 px-1 py-1.5 select-none rounded-md ${className ?? "bg-indigo-50 text-indigo-900 dark:bg-indigo-950 dark:text-indigo-100"}`}
+      className={`flex flex-row items-center justify-center min-w-[52px] space-x-2 px-0.5 py-1 select-none rounded-md text-xs ${className ?? "bg-indigo-50 text-indigo-900 dark:bg-indigo-950 dark:text-indigo-100"}`}
       {...props}
     >
       {children}

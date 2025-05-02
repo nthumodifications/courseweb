@@ -32,9 +32,9 @@ const SelectCourseButton = ({ courseId }: { courseId: RawCourseID }) => {
   };
 
   return (
-    <div className="flex flex-row gap-2 red-500">
+    <div className="flex flex-row gap-1">
       {isFavouritable && (
-        <Button variant="outline" size="icon" onClick={handleToggleFavourite}>
+        <Button variant="ghost" onClick={handleToggleFavourite} size="sm">
           {isInFavourites ? (
             <Heart className="text-red-500 fill-red-500 w-4 h-4" />
           ) : (
@@ -43,11 +43,15 @@ const SelectCourseButton = ({ courseId }: { courseId: RawCourseID }) => {
         </Button>
       )}
       {isCourseSelected(courseId) ? (
-        <Button variant={"destructive"} onClick={() => deleteCourse(courseId)}>
+        <Button
+          variant={"destructive"}
+          onClick={() => deleteCourse(courseId)}
+          size="sm"
+        >
           <Minus className="w-4 h-4" /> {dict.course.item.remove_from_semester}
         </Button>
       ) : (
-        <Button onClick={() => addCourse(courseId)}>
+        <Button variant="outline" onClick={() => addCourse(courseId)} size="sm">
           <Plus className="w-4 h-4" /> {dict.course.item.add_to_semester}
         </Button>
       )}

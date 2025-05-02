@@ -34,8 +34,8 @@
       "search_placeholder": "Search for your course..."
     },
     "item": {
-      "add_to_semester": "Add to this Semester",
-      "remove_from_semester": "Remove from this Semester"
+      "add_to_semester": "Add",
+      "remove_from_semester": "Remove"
     },
     "timetable": {
       "title": "Timetable"

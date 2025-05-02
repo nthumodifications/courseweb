@@ -309,7 +309,7 @@ export const TimetableCourseList = ({
   return (
     <div className="flex flex-col gap-2">
       <div
-        className={`${!vertical ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 " : "flex flex-col"} gap-4 px-4 flex-wrap`}
+        className={`${!vertical ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 " : "flex flex-col"} gap-4 flex-wrap`}
       >
         <DndContext
           sensors={sensors}

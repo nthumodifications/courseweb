@@ -34,7 +34,7 @@ const SemesterSelector = () => {
 
   return (
     <Select value={selected} onValueChange={handleSelect}>
-      <SelectTrigger className="w-[200px] border-0 bg-transparent h-0">
+      <SelectTrigger className="w-[200px] ">
         <SelectValue placeholder="Semester" />
       </SelectTrigger>
       <SelectContent>

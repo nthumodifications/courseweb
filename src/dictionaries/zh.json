@@ -34,8 +34,8 @@
       "search_placeholder": "尋找你要的課程..."
     },
     "item": {
-      "add_to_semester": "加入這學期",
-      "remove_from_semester": "退掉這學期"
+      "add_to_semester": "加入",
+      "remove_from_semester": "退掉"
     },
     "timetable": {
       "title": "時間表"

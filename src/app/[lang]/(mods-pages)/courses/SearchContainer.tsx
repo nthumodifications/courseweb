@@ -13,6 +13,14 @@ import ClearAllButton from "@/app/[lang]/(mods-pages)/courses/ClearAllButton";
 import { useEffect, useRef } from "react";
 import CourseListItemSkeleton from "../../../../components/Courses/CourseListItemSkeleton";
 import { cn } from "@/lib/utils";
+import { Separator } from "@/components/ui/separator";
+import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
+import { Button } from "@/components/ui/button";
+import { Calendar, FilterIcon } from "lucide-react";
+import Filters from "./Filters";
+import CourseSidePanel from "./CourseSidePanel";
+import SearchBox from "@/components/SearchBox/SearchBox";
+import SemesterSelector from "./SemesterSelector";
 
 type SearchClient = ReturnType<typeof algoliasearch>;
 type InfiniteHitsCache = ReturnType<
@@ -55,9 +63,12 @@ export function InfiniteHits(props: Parameters<typeof useInfiniteHits>[0]) {
       className={cn("scroll-smooth", status != "idle" ? "opacity-70" : "")}
     >
       <div className="ais-InfiniteHits">
-        <ul className="ais-InfiniteHits-list flex flex-col w-full h-full space-y-5">
+        <ul className="ais-InfiniteHits-list flex flex-col w-full h-full divide-border gap-3">
           {hits.map((hit) => (
-            <Hit key={hit.objectID} hit={hit} />
+            <>
+              <Hit key={hit.objectID} hit={hit} />
+              <Separator />
+            </>
           ))}
           <li ref={sentinelRef} aria-hidden={true} />
           {status === "stalled" ||
@@ -92,26 +103,75 @@ const SearchContainer = ({
 
   return (
     <div className="flex w-full gap-4">
-      <div className="hidden md:flex flex-col gap-4 w-72">
-        <div className="flex justify-between items-end">
-          <span className="text-2xl">{dict.course.refine.title}</span>
+      <div className="hidden md:flex flex-col gap-4 w-72 px-4">
+        <div className="flex justify-between items-baseline">
+          <span className="text-2xl font-medium">
+            {dict.course.refine.title}
+          </span>
           <ClearAllButton />
         </div>
-        <ScrollArea className="border rounded-2xl">
+        <ScrollArea className="">
           <Filter />
         </ScrollArea>
       </div>
 
-      <div className="flex flex-col gap-4 flex-1">
-        <div className="flex items-end ml-4">
-          <span className="text-2xl">{dict.course.refine.search_results}</span>
-          <span className="text-sm mr-auto ml-2">
-            ({nbHits}, {processingTimeMS}ms)
-          </span>
+      <div className="flex flex-col gap-4 flex-1 px-2">
+        <div className="">
+          <div className="flex items-center gap-1">
+            <SemesterSelector />
+            <Separator orientation="vertical" className="h-full" />
+            <SearchBox
+              placeholder={dict.course.list.search_placeholder}
+              autoFocus
+            />
+            <Separator orientation="vertical" className="h-full" />
+            <div className="md:hidden">
+              <Drawer>
+                <DrawerTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <FilterIcon size="16" />
+                  </Button>
+                </DrawerTrigger>
+                <DrawerContent>
+                  <ScrollArea className="w-full max-h-[90vh] overflow-auto px-4">
+                    <div className="flex flex-row justify-end px-4 py-2 w-full">
+                      <ClearAllButton />
+                    </div>
+                    <Filters />
+                  </ScrollArea>
+                </DrawerContent>
+              </Drawer>
+            </div>
+            <Separator orientation="vertical" className="h-full" />
+            <div className="md:hidden">
+              <Drawer>
+                <DrawerTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <Calendar size="16" />
+                  </Button>
+                </DrawerTrigger>
+                <DrawerContent>
+                  <ScrollArea className="w-full max-h-[80vh] overflow-auto p-2">
+                    <CourseSidePanel />
+                  </ScrollArea>
+                </DrawerContent>
+              </Drawer>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-end">
+          <div className="flex-1">
+            <h2 className="text-xl font-medium">搜尋結果</h2>
+            <span className="text-sm mr-auto">
+              Results in {nbHits} ({processingTimeMS}ms)
+            </span>
+          </div>
           <a
+            title="Algolia"
             href="https://www.algolia.com/?utm_medium=AOS-referral"
             target="_blank"
             rel="noopener noreferrer"
+            className="mb-1"
           >
             <svg viewBox="0 0 572 64" className="h-4">
               <path

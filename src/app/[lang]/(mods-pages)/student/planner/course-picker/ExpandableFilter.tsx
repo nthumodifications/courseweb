@@ -130,11 +130,13 @@ const ExpandableFilter = ({
                 <Badge
                   key={item.value}
                   variant="outline"
-                  className="mr-1 mb-1 whitespace-nowrap"
+                  className="mr-1 mb-1 break-words"
                 >
-                  {synonms[item.label] || item.label}
+                  <span className="break-all whitespace-normal">
+                    {synonms[item.label] || item.label}
+                  </span>
                   <button
-                    className="ml-1 text-xs"
+                    className="ml-1 text-xs flex-shrink-0"
                     onClick={(e) => {
                       e.stopPropagation();
                       refine(item.value);
@@ -160,27 +162,26 @@ const ExpandableFilter = ({
             />
           )}
         </div>
-        <Search className="h-4 w-4 text-muted-foreground ml-2" />
       </div>
 
       {isExpanded && (
-        <div className="absolute z-10 mt-1 w-full bg-background border rounded-md shadow-lg max-h-60 overflow-y-auto">
+        <div className="absolute z-50 mt-1 w-full bg-background border rounded-md shadow-lg max-h-[300px] overflow-y-auto left-0 right-0">
           {filteredItems.length > 0 ? (
-            <div className="p-1">
+            <div className="p-1 w-full">
               {filteredItems.map((item) => (
                 <div
                   key={item.value}
                   className={cn(
-                    "flex items-center px-2 py-1.5 text-sm rounded-sm cursor-pointer",
+                    "flex items-center px-2 py-1.5 text-sm rounded-sm cursor-pointer w-full",
                     item.isRefined
                       ? "bg-primary/10 text-primary"
                       : "hover:bg-muted",
                   )}
                   onClick={() => handleClassTypeSelect(item.value)}
                 >
-                  <div className="flex-1">
+                  <div className="flex-1 break-words whitespace-normal">
                     {synonms[item.label] || item.label}{" "}
-                    <span className="text-muted-foreground">
+                    <span className="text-muted-foreground whitespace-normal">
                       ({item.count})
                     </span>
                   </div>
