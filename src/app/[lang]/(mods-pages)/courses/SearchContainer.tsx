@@ -10,7 +10,7 @@ import CourseListItem from "@/components/Courses/CourseListItem";
 import Filter from "./Filters";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ClearAllButton from "@/app/[lang]/(mods-pages)/courses/ClearAllButton";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import CourseListItemSkeleton from "../../../../components/Courses/CourseListItemSkeleton";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
@@ -21,6 +21,7 @@ import Filters from "./Filters";
 import CourseSidePanel from "./CourseSidePanel";
 import SearchBox from "@/components/SearchBox/SearchBox";
 import SemesterSelector from "./SemesterSelector";
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 type SearchClient = ReturnType<typeof algoliasearch>;
 type InfiniteHitsCache = ReturnType<
@@ -37,9 +38,174 @@ export function InfiniteHits(props: Parameters<typeof useInfiniteHits>[0]) {
     ...props,
   });
   const { status } = useInstantSearch();
-
   const sentinelRef = useRef(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const itemsRef = useRef(new Map());
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
+  const mutationObserverRef = useRef<MutationObserver | null>(null);
+  const itemHeightsRef = useRef<Record<string, number>>({});
+  const [forceUpdateCounter, setForceUpdateCounter] = useState(0);
 
+  // Force update function that's safe to call multiple times
+  const triggerUpdate = useCallback(() => {
+    setForceUpdateCounter((prev) => prev + 1);
+  }, []);
+
+  // Setup virtualizer with dynamic size calculation
+  const rowVirtualizer = useVirtualizer({
+    count:
+      status === "loading" || status === "stalled"
+        ? hits.length + 3
+        : hits.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: (index) => {
+      const hit = hits[index];
+      // Return stored height or default estimate
+      if (hit && itemHeightsRef.current[hit.objectID]) {
+        return itemHeightsRef.current[hit.objectID];
+      }
+      return 180; // Slightly reduced default estimate
+    },
+    overscan: 10,
+    // This ensures the virtualizer recalculates when our height data changes
+    getItemKey: (index) => {
+      if (index >= hits.length) return `skeleton-${index}`;
+      return `${hits[index].objectID}-${forceUpdateCounter}`;
+    },
+  });
+
+  // Setup resize and mutation observers
+  useEffect(() => {
+    // Initialize ResizeObserver
+    if (!resizeObserverRef.current) {
+      resizeObserverRef.current = new ResizeObserver((entries) => {
+        let heightChanged = false;
+
+        for (const entry of entries) {
+          const id = entry.target.getAttribute("data-id");
+          if (id) {
+            const height = entry.contentRect.height;
+            if (height > 0 && itemHeightsRef.current[id] !== height + 4) {
+              itemHeightsRef.current[id] = height + 4; // Reduced padding
+              heightChanged = true;
+            }
+          }
+        }
+
+        if (heightChanged) {
+          triggerUpdate();
+        }
+      });
+    }
+
+    // Initialize MutationObserver to catch expanded/collapsed collapsible sections
+    if (!mutationObserverRef.current) {
+      mutationObserverRef.current = new MutationObserver((mutations) => {
+        let shouldUpdate = false;
+
+        for (const mutation of mutations) {
+          // Check if this looks like a collapsible being toggled
+          if (
+            mutation.type === "attributes" ||
+            (mutation.type === "childList" &&
+              (mutation.addedNodes.length > 0 ||
+                mutation.removedNodes.length > 0))
+          ) {
+            // Find the course item container
+            let element = mutation.target as Node;
+            while (element && element.nodeType === Node.ELEMENT_NODE) {
+              const el = element as HTMLElement;
+              const id = el.getAttribute("data-id");
+
+              if (id) {
+                // Re-measure this element
+                const height = el.getBoundingClientRect().height;
+                if (height > 0 && itemHeightsRef.current[id] !== height + 4) {
+                  itemHeightsRef.current[id] = height + 4; // Reduced padding
+                  shouldUpdate = true;
+                }
+                break;
+              }
+
+              if (el.parentElement) {
+                element = el.parentElement;
+              } else {
+                break;
+              }
+            }
+          }
+        }
+
+        if (shouldUpdate) {
+          // Wait a bit for any animations to complete
+          setTimeout(triggerUpdate, 50);
+        }
+      });
+    }
+
+    return () => {
+      // Cleanup observers on unmount
+      if (resizeObserverRef.current) {
+        resizeObserverRef.current.disconnect();
+      }
+      if (mutationObserverRef.current) {
+        mutationObserverRef.current.disconnect();
+      }
+    };
+  }, [triggerUpdate]);
+
+  // Register and measure element
+  const setItemRef = useCallback(
+    (element: HTMLElement | null, id: string) => {
+      if (element && id) {
+        // Store the element reference
+        itemsRef.current.set(id, element);
+
+        // Set data attribute for identification
+        element.setAttribute("data-id", id);
+
+        // Observe the element for size changes
+        if (resizeObserverRef.current) {
+          resizeObserverRef.current.observe(element);
+        }
+
+        // Also observe for DOM mutations (collapsible sections)
+        if (mutationObserverRef.current) {
+          mutationObserverRef.current.observe(element, {
+            attributes: true,
+            childList: true,
+            subtree: true,
+            characterData: true,
+          });
+        }
+
+        // Initial measurement
+        const height = element.getBoundingClientRect().height;
+        if (height > 0 && itemHeightsRef.current[id] !== height + 4) {
+          itemHeightsRef.current[id] = height + 4; // Reduced padding
+          triggerUpdate();
+        }
+
+        return true;
+      } else if (!element && id) {
+        // Clean up when element is removed
+        const existingElement = itemsRef.current.get(id);
+        if (existingElement) {
+          if (resizeObserverRef.current) {
+            resizeObserverRef.current.unobserve(existingElement);
+          }
+          if (mutationObserverRef.current) {
+            mutationObserverRef.current.disconnect();
+          }
+          itemsRef.current.delete(id);
+        }
+      }
+      return false;
+    },
+    [triggerUpdate],
+  );
+
+  // IntersectionObserver for infinite loading
   useEffect(() => {
     if (sentinelRef.current !== null) {
       const observer = new IntersectionObserver((entries) => {
@@ -51,44 +217,92 @@ export function InfiniteHits(props: Parameters<typeof useInfiniteHits>[0]) {
       });
 
       observer.observe(sentinelRef.current);
-
-      return () => {
-        observer.disconnect();
-      };
+      return () => observer.disconnect();
     }
   }, [isLastPage, showMore]);
 
-  return (
-    <ScrollArea
-      className={cn("scroll-smooth", status != "idle" ? "opacity-70" : "")}
-    >
-      <div className="ais-InfiniteHits">
-        <ul className="ais-InfiniteHits-list flex flex-col w-full h-full divide-border gap-3">
-          {hits.map((hit) => (
-            <>
-              <Hit key={hit.objectID} hit={hit} />
-              <Separator />
-            </>
-          ))}
-          <li ref={sentinelRef} aria-hidden={true} />
-          {status === "stalled" ||
-            (status === "loading" && (
-              <>
-                <CourseListItemSkeleton />
-                <CourseListItemSkeleton />
-                <CourseListItemSkeleton />
-              </>
-            ))}
-          {status == "error" && (
-            <li className="text-center text-gray-500">An Error Occured</li>
-          )}
-          {isLastPage && (
-            <li className="text-center text-gray-500">No more results</li>
-          )}
-          <div className="h-32 w-full"></div>
-        </ul>
+  // Render functions that don't directly set state during render
+  const renderVirtualizedItem = (virtualRow: any) => {
+    const index = virtualRow.index;
+
+    // Handle skeleton items at the end during loading
+    if (index >= hits.length) {
+      return (
+        <div className="py-0.5">
+          <CourseListItemSkeleton />
+        </div>
+      );
+    }
+
+    const hit = hits[index];
+    return (
+      <div
+        className="py-0.5"
+        data-id={hit.objectID}
+        ref={(el) => el && setItemRef(el, hit.objectID)}
+      >
+        <Hit hit={hit} />
+        <Separator className="mt-1" />
       </div>
-    </ScrollArea>
+    );
+  };
+
+  return (
+    <div
+      ref={scrollRef}
+      className={cn(
+        "overflow-auto relative scroll-smooth",
+        status !== "idle" ? "opacity-80" : "",
+      )}
+      style={{ height: "calc(100vh - 200px)" }}
+    >
+      <div
+        className="relative w-full"
+        style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
+      >
+        {rowVirtualizer.getVirtualItems().map((virtualRow) => (
+          <div
+            key={
+              virtualRow.index >= hits.length
+                ? `skeleton-${virtualRow.index}`
+                : hits[virtualRow.index].objectID
+            }
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: `${virtualRow.size}px`,
+              transform: `translateY(${virtualRow.start}px)`,
+            }}
+          >
+            {renderVirtualizedItem(virtualRow)}
+          </div>
+        ))}
+
+        <div
+          ref={sentinelRef}
+          className="h-4"
+          style={{
+            position: "absolute",
+            bottom: "100px",
+            width: "100%",
+          }}
+        />
+
+        {status === "error" && (
+          <div className="text-center text-gray-500 mt-4 absolute bottom-4 w-full">
+            An Error Occurred
+          </div>
+        )}
+
+        {isLastPage && hits.length > 0 && status === "idle" && (
+          <div className="text-center text-gray-500 mt-4 absolute bottom-4 w-full">
+            No more results
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 

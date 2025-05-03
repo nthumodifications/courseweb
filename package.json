@@ -70,6 +70,7 @@
     "@tanstack/query-sync-storage-persister": "^5.40.0",
     "@tanstack/react-query": "^5.51.15",
     "@tanstack/react-query-persist-client": "^5.39.0",
+    "@tanstack/react-virtual": "^3.13.6",
     "@types/jsdom": "^21.1.7",
     "@types/jsonwebtoken": "^9.0.6",
     "@types/leaflet": "^1.9.11",

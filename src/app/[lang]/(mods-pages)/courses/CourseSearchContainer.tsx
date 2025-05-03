@@ -36,6 +36,7 @@ const CourseSearchContainer = () => {
         },
       }}
       routing
+      stalledSearchDelay={500}
     >
       <div className="flex flex-col h-full max-h-[95dvh] gap-4 md:gap-8">
         <ResizablePanelGroup direction="horizontal" className="h-full w-full">
