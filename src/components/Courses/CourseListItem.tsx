@@ -1,7 +1,7 @@
 "use client";
 import { CourseDefinition, CourseSyllabusView } from "@/config/supabase";
 import useDictionary from "@/dictionaries/useDictionary";
-import { FC } from "react";
+import { FC, memo } from "react";
 import Link from "next/link";
 import CourseTagList from "./CourseTagsList";
 import SelectCourseButton from "./SelectCourseButton";
@@ -17,10 +17,11 @@ import {
 import { useSearchParams } from "next/navigation";
 import { ChevronDown } from "lucide-react";
 
+// Memoize the CourseListItem component
 const CourseListItem: FC<{
   course: CourseSyllabusView;
   hasTaken?: boolean;
-}> = ({ course, hasTaken = false }) => {
+}> = memo(({ course, hasTaken = false }) => {
   const dict = useDictionary();
   const { language } = useSettings();
   const searchParams = useSearchParams();
@@ -138,6 +139,7 @@ const CourseListItem: FC<{
       </div>
     </div>
   );
-};
+});
 
+CourseListItem.displayName = "CourseListItem";
 export default CourseListItem;

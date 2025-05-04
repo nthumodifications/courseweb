@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/resizable";
 import { useMediaQuery } from "usehooks-ts";
 import { InstantSearchNext } from "react-instantsearch-nextjs";
+import { useMemo } from "react";
 
 const searchClient = algoliasearch(
   process.env.NEXT_PUBLIC_ALGOLIA_APP_ID!,
@@ -24,17 +25,22 @@ const CourseSearchContainer = () => {
   const dict = useDictionary();
   const isDesktop = useMediaQuery("(min-width: 1024px)");
 
+  const initialUiState = useMemo(
+    () => ({
+      nthu_courses: {
+        menu: {
+          semester: lastSemester.id,
+        },
+      },
+    }),
+    [],
+  );
+
   return (
     <InstantSearchNext
       searchClient={searchClient}
       indexName="nthu_courses"
-      initialUiState={{
-        nthu_courses: {
-          menu: {
-            semester: lastSemester.id,
-          },
-        },
-      }}
+      initialUiState={initialUiState}
       routing
       stalledSearchDelay={500}
     >
