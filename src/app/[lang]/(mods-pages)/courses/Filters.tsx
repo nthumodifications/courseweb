@@ -21,7 +21,7 @@ const languageSynonyms: Record<string, string> = {
   英: "English",
 };
 const departmentSynonyms: Record<string, string> = departments.reduce(
-  (a, v) => ({ ...a, [v.code]: v.name_zh }),
+  (a, v) => ({ ...a, [v.code]: `${v.code} ${v.name_zh}` }),
   {},
 );
 const geTargetSynonyms: Record<string, string> = GETargetCodes.reduce(

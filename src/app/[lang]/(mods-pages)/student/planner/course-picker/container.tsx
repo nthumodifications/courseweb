@@ -28,7 +28,7 @@ import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { lastSemester } from "@/const/semester";
 import useDictionary from "@/dictionaries/useDictionary";
-import ClearAllButton from "../../../courses/ClearAllButton";
+import ResetFiltersButton from "../../../courses/ResetFiltersButton";
 import Filters from "../../../courses/Filters";
 import SearchContainer from "./SearchContainer";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
@@ -95,7 +95,7 @@ const CourseSearchContainer = (props: CourseSearchContainerProps) => {
                 <DrawerContent>
                   <ScrollArea className="w-full max-h-[90vh] overflow-auto">
                     <div className="flex flex-row justify-end px-4 py-2 w-full">
-                      <ClearAllButton />
+                      <ResetFiltersButton />
                     </div>
                     <Filters />
                   </ScrollArea>

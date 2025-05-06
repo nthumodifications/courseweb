@@ -13,7 +13,10 @@ export const renderTimetableSlot = (
   vertical?: boolean,
 ) => {
   return (
-    <TimetableItemDrawer course={course.course}>
+    <TimetableItemDrawer
+      key={`drawer-${course.dayOfWeek}-${course.startTime}-${course.endTime}-${course.course.raw_id}`}
+      course={course.course}
+    >
       {vertical ? (
         <TimetableSlotVertical
           course={course}

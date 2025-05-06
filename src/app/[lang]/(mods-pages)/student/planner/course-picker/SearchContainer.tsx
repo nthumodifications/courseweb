@@ -7,7 +7,7 @@ import { createInfiniteHitsSessionStorageCache } from "instantsearch.js/es/lib/i
 import algoliasearch from "algoliasearch/lite";
 import useDictionary from "@/dictionaries/useDictionary";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import ClearAllButton from "@/app/[lang]/(mods-pages)/courses/ClearAllButton";
+import ResetFiltersButton from "@/app/[lang]/(mods-pages)/courses/ResetFiltersButton";
 import { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import CourseListItemSkeleton from "@/components/Courses/CourseListItemSkeleton";
@@ -113,7 +113,7 @@ const SearchContainer = ({
       <div className="hidden md:flex flex-col gap-4 w-72">
         <div className="flex justify-between items-end">
           <span className="text-2xl">{dict.course.refine.title}</span>
-          <ClearAllButton />
+          <ResetFiltersButton />
         </div>
         <ScrollArea className="border rounded-2xl">
           <Filters />

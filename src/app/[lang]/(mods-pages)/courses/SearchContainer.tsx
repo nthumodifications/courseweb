@@ -9,7 +9,7 @@ import useDictionary from "@/dictionaries/useDictionary";
 import CourseListItem from "@/components/Courses/CourseListItem";
 import Filter from "./Filters";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import ClearAllButton from "@/app/[lang]/(mods-pages)/courses/ClearAllButton";
+import ResetFiltersButton from "@/app/[lang]/(mods-pages)/courses/ResetFiltersButton";
 import { useEffect, useRef, memo, useMemo } from "react";
 import CourseListItemSkeleton from "../../../../components/Courses/CourseListItemSkeleton";
 import { cn } from "@/lib/utils";
@@ -140,7 +140,7 @@ const SearchContainer = memo(
             <span className="text-2xl font-medium">
               {dict.course.refine.title}
             </span>
-            <ClearAllButton />
+            <ResetFiltersButton />
           </div>
           <ScrollArea className="">
             <Filter selectedCourses={courses as MinimalCourse[]} />
@@ -167,7 +167,7 @@ const SearchContainer = memo(
                   <DrawerContent>
                     <ScrollArea className="w-full max-h-[90vh] overflow-auto px-4">
                       <div className="flex flex-row justify-end px-4 py-2 w-full">
-                        <ClearAllButton />
+                        <ResetFiltersButton />
                       </div>
                       <Filters selectedCourses={courses as MinimalCourse[]} />
                     </ScrollArea>

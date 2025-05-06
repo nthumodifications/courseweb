@@ -222,12 +222,6 @@ const TimeSelectionFilter = ({
     };
   }, [isDragging, handleMouseUp]);
 
-  useEffect(() => {
-    if (pendingSlots.length > 0) {
-      console.log("Current pending slots:", pendingSlots);
-    }
-  }, [pendingSlots]);
-
   const handleApply = () => {
     setIndexUiState((prevUiState) => {
       return {
