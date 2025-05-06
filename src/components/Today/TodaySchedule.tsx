@@ -177,8 +177,8 @@ const TodaySchedule: FC = () => {
       !calendarLoading &&
       events.length > 0 &&
       events.map((event, index) => (
-        <div key={index} className="flex flex-row gap-2 items-center">
-          <div className="size-4 bg-nthu-500 rounded-sm shrink-0"></div>
+        <div key={index} className="flex flex-row gap-2 items-start">
+          <div className="size-4 bg-nthu-500 rounded-sm shrink-0 mt-1"></div>
           <div className="text-sm">{event.summary}</div>
         </div>
       ))
