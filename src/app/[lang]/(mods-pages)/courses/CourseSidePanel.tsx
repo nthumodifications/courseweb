@@ -5,9 +5,21 @@ import TimetableWithSemester from "./TimetableWithSemester";
 import TimetableBottomBar from "./TimetableBottomBar";
 import TimetableCourseListWithSemester from "./TimetableCourseListWithSemester";
 import FavouritesCourseList from "./FavouritesCourseList";
+import useCustomMenu from "./useCustomMenu";
+import { useMemo } from "react";
+import { lastSemester } from "@/const/semester";
 
 const CourseSidePanel = () => {
   const dict = useDictionary();
+
+  const { items } = useCustomMenu({
+    attribute: "semester",
+  });
+
+  const semester = useMemo(
+    () => items.find((item) => item.isRefined)?.value ?? lastSemester.id,
+    [items],
+  );
 
   return (
     <Tabs defaultValue="timetable">
@@ -25,7 +37,7 @@ const CourseSidePanel = () => {
       <TabsContent value="timetable" className="h-full">
         <ScrollArea className="w-full h-[calc(100vh-12.5rem)] overflow-auto">
           <div className="h-full">
-            <TimetableWithSemester />
+            <TimetableWithSemester semester={semester} />
             <TimetableBottomBar />
           </div>
         </ScrollArea>

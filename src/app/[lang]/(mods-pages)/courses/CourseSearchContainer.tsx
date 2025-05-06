@@ -41,7 +41,10 @@ const CourseSearchContainer = () => {
       searchClient={searchClient}
       indexName="nthu_courses"
       initialUiState={initialUiState}
-      routing
+      routing={true}
+      future={{
+        preserveSharedStateOnUnmount: true,
+      }}
       stalledSearchDelay={500}
     >
       <div className="flex flex-col h-full max-h-[95dvh] gap-4 md:gap-8">

@@ -4,21 +4,9 @@ import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { createTimetableFromCourses } from "@/helpers/timetable";
 import { MinimalCourse } from "@/types/courses";
 import { renderTimetableSlot } from "@/helpers/timetable_course";
-import useCustomMenu from "./useCustomMenu";
-import { lastSemester } from "@/const/semester";
 
-const TimetableWithSemester = () => {
+const TimetableWithSemester = ({ semester }: { semester: string }) => {
   const { getSemesterCourses, colorMap } = useUserTimetable();
-
-  const { items } = useCustomMenu({
-    attribute: "semester",
-  });
-
-  const semester = useMemo(
-    () => items.find((item) => item.isRefined)?.value ?? lastSemester.id,
-    [items],
-  );
-
   return (
     <Timetable
       timetableData={createTimetableFromCourses(

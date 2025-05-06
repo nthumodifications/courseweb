@@ -11,6 +11,10 @@ import { semesterInfo } from "@/const/semester";
 import ClassRefinementItem from "./ClasssRefinementItem";
 import ExpandableClassFilter from "../student/planner/course-picker/ExpandableClassFilter";
 import ExpandableFilter from "../student/planner/course-picker/ExpandableFilter";
+import InlineCheckboxFilter from "../student/planner/course-picker/InlineCheckboxFilter";
+import TimeSelectionFilter from "./TimeSelectionFilter";
+import { Label } from "@/components/ui/label";
+import { MinimalCourse } from "@/types/courses";
 
 const languageSynonyms: Record<string, string> = {
   中: "Chinese",
@@ -25,9 +29,8 @@ const geTargetSynonyms: Record<string, string> = GETargetCodes.reduce(
   {},
 );
 
-const Filters = () => {
+const Filters = ({ selectedCourses }: { selectedCourses: MinimalCourse[] }) => {
   const dict = useDictionary();
-
   return (
     <div className="w-full flex flex-col gap-2">
       <div className="w-full flex flex-col gap-6">
@@ -37,6 +40,7 @@ const Filters = () => {
           </span>
           <ExpandableClassFilter limit={20} />
         </div>
+
         <div className="flex flex-col gap-2">
           <span className="text-sm">{dict.course.refine.department}</span>
           <ExpandableFilter
@@ -49,26 +53,33 @@ const Filters = () => {
         </div>
 
         <div className="flex flex-col gap-2">
+          <span className="text-sm">{dict.course.refine.level}</span>
+          <ExpandableFilter
+            attribute="courseLevel"
+            searchable={true}
+            limit={20}
+          />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <span className="text-sm">上課時間</span>
+          <TimeSelectionFilter
+            attribute="separate_times"
+            selectedCourses={selectedCourses}
+          />
+        </div>
+
+        <div className="flex flex-col gap-2">
           <span className="text-sm">{dict.course.refine.special_tags}</span>
-          <ExpandableFilter attribute="tags" clientSearch={true} />
+          <InlineCheckboxFilter attribute="tags" />
         </div>
 
         <div className="flex flex-col gap-2">
           <span className="text-sm">{dict.course.refine.language}</span>
-          <ExpandableFilter
+          <InlineCheckboxFilter
             attribute="language"
-            searchable={false}
             synonms={languageSynonyms}
-            clientSearch={true}
           />
-          <div className="flex flex-col gap-2">
-            <span className="text-sm">{dict.course.refine.level}</span>
-            <ExpandableFilter
-              attribute="courseLevel"
-              searchable={true}
-              limit={20}
-            />
-          </div>
         </div>
       </div>
       {/* Advanced Filters Section */}
@@ -77,16 +88,29 @@ const Filters = () => {
         <div className="w-full flex flex-col gap-6">
           <div className="flex flex-col gap-2">
             <span className="text-sm">{dict.course.refine.geTarget}</span>
-            <ExpandableFilter
+            <InlineCheckboxFilter
               attribute="ge_target"
-              clientSearch={true}
               synonms={geTargetSynonyms}
             />
           </div>
 
           <div className="flex flex-col gap-2">
             <span className="text-sm">{dict.course.refine.gecDimensions}</span>
-            <ExpandableFilter attribute="ge_type" clientSearch={true} />
+            <InlineCheckboxFilter
+              attribute="ge_type"
+              filterFn={(items) => {
+                // Ensure it starts with "核心通識"
+                return items.filter((item) => {
+                  return item.label.startsWith("核心通識");
+                });
+              }}
+              sortFn={(items) => {
+                // Sort by string order
+                return items.sort((a, b) => {
+                  return a.label.localeCompare(b.label);
+                });
+              }}
+            />
           </div>
         </div>
       </div>

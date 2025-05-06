@@ -10,7 +10,7 @@ import CourseListItem from "@/components/Courses/CourseListItem";
 import Filter from "./Filters";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ClearAllButton from "@/app/[lang]/(mods-pages)/courses/ClearAllButton";
-import { useEffect, useRef, memo } from "react";
+import { useEffect, useRef, memo, useMemo } from "react";
 import CourseListItemSkeleton from "../../../../components/Courses/CourseListItemSkeleton";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
@@ -21,6 +21,11 @@ import Filters from "./Filters";
 import CourseSidePanel from "./CourseSidePanel";
 import SearchBox from "@/components/SearchBox/SearchBox";
 import SemesterSelector from "./SemesterSelector";
+import { Label } from "@/components/ui/label";
+import useCustomMenu from "@/app/[lang]/(mods-pages)/courses/useCustomMenu";
+import { lastSemester } from "@/const/semester";
+import useUserTimetable from "@/hooks/contexts/useUserTimetable";
+import { MinimalCourse } from "@/types/courses";
 
 type SearchClient = ReturnType<typeof algoliasearch>;
 type InfiniteHitsCache = ReturnType<
@@ -117,6 +122,17 @@ const SearchContainer = memo(
     const dict = useDictionary();
     const { nbHits, processingTimeMS } = useStats();
 
+    const { items } = useCustomMenu({
+      attribute: "semester",
+    });
+
+    const semester = useMemo(
+      () => items.find((item) => item.isRefined)?.value ?? lastSemester.id,
+      [items],
+    );
+    const { getSemesterCourses, colorMap } = useUserTimetable();
+    const courses = getSemesterCourses(semester);
+
     return (
       <div className="flex w-full gap-4">
         <div className="hidden md:flex flex-col gap-4 w-72 px-4">
@@ -127,7 +143,7 @@ const SearchContainer = memo(
             <ClearAllButton />
           </div>
           <ScrollArea className="">
-            <Filter />
+            <Filter selectedCourses={courses as MinimalCourse[]} />
           </ScrollArea>
         </div>
 
@@ -153,7 +169,7 @@ const SearchContainer = memo(
                       <div className="flex flex-row justify-end px-4 py-2 w-full">
                         <ClearAllButton />
                       </div>
-                      <Filters />
+                      <Filters selectedCourses={courses as MinimalCourse[]} />
                     </ScrollArea>
                   </DrawerContent>
                 </Drawer>
