@@ -7,9 +7,19 @@ import { FC, useMemo } from "react";
 import { useSettings } from "@/hooks/contexts/settings";
 import { AlertDefinition } from "@/config/supabase";
 import useDictionary from "@/dictionaries/useDictionary";
-import WeatherIcon from "./WeatherIcon";
 import { getLocale } from "@/helpers/dateLocale";
-import { Info, CalendarRange } from "lucide-react";
+import {
+  Info,
+  CalendarRange,
+  Sun,
+  CloudSun,
+  Cloud,
+  CloudRain,
+  CloudLightning,
+  Snowflake,
+  MapPin,
+  Clock,
+} from "lucide-react";
 import { apps } from "@/const/apps";
 import Link from "next/link";
 import { getSemester, lastSemester } from "@/const/semester";
@@ -23,6 +33,9 @@ import { TimetableItemDrawer } from "@/components/Timetable/TimetableItemDrawer"
 import AppItem from "@/app/[lang]/(mods-pages)/apps/AppItem";
 import { useQuery } from "@tanstack/react-query";
 import client from "@/config/api";
+import { Badge } from "../ui/badge";
+import WeatherIcon from "./WeatherIcon";
+import { cn } from "@/lib/utils";
 
 const getRangeOfDays = (start: Date, end: Date) => {
   const days = [];
@@ -98,7 +111,6 @@ const TodaySchedule: FC = () => {
           end: days[4].toISOString(),
         },
       });
-      console.log(await res.json());
       return await res.json();
     },
     enabled: showAcademicCalendar,
@@ -118,9 +130,16 @@ const TodaySchedule: FC = () => {
 
     if (classesThisDay.length == 0)
       return (
-        <div className="flex flex-col items-center text-gray-800 dark:text-gray-500">
-          <span className="text-sm font-semibold">{dict.today.noclass}</span>
-          <span className="text-xs">{dict.today.noclass_sub}</span>
+        <div className="flex flex-row gap-2 items-start">
+          <div className="size-4 rounded-sm mt-1 flex items-center justify-center">
+            🎉
+          </div>
+          <div className="flex flex-col gap-1">
+            <div className="font-semibold">{dict.today.noclass}</div>
+            <div className="text-xs text-muted-foreground">
+              {dict.today.noclass_sub}
+            </div>
+          </div>
         </div>
       );
 
@@ -128,23 +147,20 @@ const TodaySchedule: FC = () => {
       .sort((a, b) => a.startTime - b.startTime)
       .map((t, index) => (
         <TimetableItemDrawer course={t.course} key={index}>
-          <div className="flex flex-row" key={index}>
-            <div className="flex flex-col justify-between text-sm pr-1 py-[2px] text-gray-400 w-11">
-              <p>{scheduleTimeSlots[t.startTime].start}</p>
-              <p>{scheduleTimeSlots[t.endTime].end}</p>
-            </div>
+          <div className="flex flex-row gap-2 items-start">
             <div
-              className="flex flex-col rounded-md p-2 flex-1"
-              style={{ background: t.color, color: t.textColor }}
-            >
-              <p className="font-semibold">{t.course.name_zh}</p>
-              <p className="text-xs">{t.course.name_en}</p>
-              <div className="w-fit mt-1">
-                <VenueChip
-                  venue={t.venue}
-                  color={t.textColor}
-                  textColor={t.color}
-                />
+              className="size-4 rounded-sm mt-1"
+              style={{ backgroundColor: t.color }}
+            ></div>
+            <div className="flex flex-col gap-1">
+              <div className="font-semibold"> {t.course.name_zh} </div>
+              <div className="text-xs text-muted-foreground align-baseline">
+                <Clock className="size-3 inline mr-1" />
+                {`${scheduleTimeSlots[t.startTime].start} - ${scheduleTimeSlots[t.endTime].end}`}
+              </div>
+              <div className="text-xs text-muted-foreground align-baseline">
+                <MapPin className="size-3 inline mr-1" />
+                {t.venue}
               </div>
             </div>
           </div>
@@ -152,19 +168,6 @@ const TodaySchedule: FC = () => {
       ));
   };
 
-  const applist = apps.filter((app) => pinnedApps.includes(app.id));
-  const renderPinnedApps = () => {
-    if (applist.length == 0) return <></>;
-    return (
-      <div className="flex flex-col gap-1">
-        <div className="flex flex-row flex-wrap gap-2 pb-2 justify-evenly">
-          {applist.map((app, index) => (
-            <AppItem key={index} app={app} mini />
-          ))}
-        </div>
-      </div>
-    );
-  };
   const renderCalendars = (day: Date) => {
     if (!showAcademicCalendar) return <></>;
     const events = calendar.filter((event) =>
@@ -172,19 +175,58 @@ const TodaySchedule: FC = () => {
     );
     return (
       !calendarLoading &&
-      events.length > 0 && (
-        <Alert className="p-2">
-          <AlertDescription>
-            <ul className="divide-y divide-border text-sm text-muted-foreground">
-              {events.map((event) => (
-                <li key={event.id} className="text-sm py-1">
-                  {event.summary}
-                </li>
-              ))}
-            </ul>
-          </AlertDescription>
-        </Alert>
-      )
+      events.length > 0 &&
+      events.map((event, index) => (
+        <div key={index} className="flex flex-row gap-2 items-center">
+          <div className="size-4 bg-nthu-500 rounded-sm shrink-0"></div>
+          <div className="text-sm">{event.summary}</div>
+        </div>
+      ))
+    );
+  };
+
+  const renderWeather = (day: Date) => {
+    const weatherData = weather?.find(
+      (w) => w.date == format(day, "yyyy-MM-dd"),
+    );
+    if (!weatherData) return <></>;
+
+    // Check if weatherData.weatherData is empty or doesn't contain necessary data
+    if (
+      !weatherData.weatherData ||
+      Object.keys(weatherData.weatherData).length === 0 ||
+      !weatherData.weatherData.Wx
+    ) {
+      return (
+        <div className="flex items-center gap-1 rounded-full bg-muted px-2 py-1 text-sm">
+          <Cloud className="h-5 w-5 text-gray-400" />
+          <span className="text-muted-foreground text-xs">資料更新中</span>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex items-center gap-1 rounded-full bg-muted px-2 py-1 text-sm">
+        <WeatherIcon wxCode={weatherData.weatherData.Wx} />
+        <span className="font-medium">{weatherData.weatherData.MaxT}°</span>
+        <span className="text-muted-foreground text-xs">
+          {weatherData.weatherData.MinT}°
+        </span>
+        <Badge variant="outline" className="ml-1 text-xs">
+          {weatherData.weatherData.PoP12h}%
+        </Badge>
+      </div>
+    );
+  };
+
+  const applist = apps.filter((app) => pinnedApps.includes(app.id));
+  const renderPinnedApps = () => {
+    return (
+      <div className="flex flex-row flex-wrap gap-4 pb-2">
+        {applist.map((app, index) => (
+          <AppItem key={index} app={app} mini />
+        ))}
+      </div>
     );
   };
 
@@ -197,27 +239,27 @@ const TodaySchedule: FC = () => {
           className="flex flex-col gap-2 pb-4"
           key={format(day, "EEEE, do MMMM")}
         >
-          <div className="flex flex-row gap-2 justify-between border-b border-gray-400 pb-2">
-            <div className="flex flex-col flex-1">
-              {/* WEDNESDAY */}
-              <div className="text-xl font-semibold text-gray-600 dark:text-gray-300">
+          <div className="flex flex-row justify-between">
+            <div className="flex flex-row flex-1 items-baseline gap-2">
+              <div
+                className={cn(
+                  "whitespace-nowrap font-semibold text-lg",
+                  !isSameDay(day, date) && "text-muted-foreground",
+                )}
+              >
                 {formatRelative(day, Date.now(), {
                   locale: getLocale(language),
                 })}
               </div>
-              {/* 6TH OCTOBER */}
-              <div className="text-sm font-semibold text-gray-400 dark:text-gray-500">
-                {format(day, "EEEE, do MMMM", { locale: getLocale(language) })}
+              <div className="text-sm text-muted-foreground whitespace-nowrap">
+                {format(
+                  day,
+                  isSameDay(day, date) ? "EEE, MMMM do" : "MMMM do",
+                  { locale: getLocale(language) },
+                )}
               </div>
             </div>
-            {!weatherLoading && weather && (
-              <WeatherIcon
-                date={day}
-                weather={
-                  weather!.find((w) => w.date == format(day, "yyyy-MM-dd"))!
-                }
-              />
-            )}
+            {!weatherLoading && weather && renderWeather(day)}
           </div>
           {renderCalendars(day)}
           {renderDayTimetable(day)}

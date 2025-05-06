@@ -11,6 +11,10 @@ import useTime from "@/hooks/useTime";
 import WeatherIcon from "@/components/Today/WeatherIcon";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import client from "@/config/api";
+import { Badge } from "@/components/ui/badge";
+import { Clock, MapPin, Cloud } from "lucide-react";
+import { cn } from "@/lib/utils";
+
 const UpcomingEvents = () => {
   const { events } = useCalendar();
   const { language } = useSettings();
@@ -51,10 +55,28 @@ const UpcomingEvents = () => {
   const upcomingEvents = eventsToDisplay(events, today, end).sort(
     (a, b) => a.start.getTime() - b.start.getTime(),
   );
+
   const renderLabelEvents = (date: Date) => {
     const ev = upcomingEvents
-      .filter((event) => isSameDay(event.start, date))
-      .sort((a, b) => a.start.getTime() - b.start.getTime());
+      .filter((event) => isSameDay(event.displayStart, date))
+      .sort((a, b) => a.displayStart.getTime() - b.displayStart.getTime());
+
+    if (ev.length === 0) {
+      return (
+        <div className="flex flex-row gap-2 items-start">
+          <div className="size-4 rounded-sm mt-1 flex items-center justify-center">
+            🎉
+          </div>
+          <div className="flex flex-col gap-1">
+            <div className="font-semibold">無行程</div>
+            <div className="text-xs text-muted-foreground">
+              今天沒有任何行程
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return ev.map((event, index) => {
       //Determine the text color
       const brightness = getBrightness(event.color);
@@ -63,90 +85,121 @@ const UpcomingEvents = () => {
         event.color,
         brightness > 186 ? 0.2 : 0.95,
       );
+
       return (
         <EventPopover event={event} key={event.id + index}>
-          <div
-            className="self-stretch px-2 pt-2 pb-6 rounded-md flex-col justify-start items-start gap-2 flex"
-            style={{ background: event.color, color: textColor }}
-          >
-            <div className="text-sm font-semibold  leading-none">
-              {event.title}
-            </div>
-            <div className="justify-start items-start gap-1 inline-flex">
-              <div className="text-xs font-normal  leading-none">
-                {format(event.displayStart, "yyyy-LL-d")}
-              </div>
-              <div className="text-xs font-normal leading-none">
+          <div className="flex flex-row gap-2 items-start">
+            <div
+              className="size-4 rounded-sm mt-1"
+              style={{ backgroundColor: event.color }}
+            ></div>
+            <div className="flex flex-col gap-1">
+              <div className="font-semibold">{event.title}</div>
+              <div className="text-xs text-muted-foreground align-baseline">
+                <Clock className="size-3 inline mr-1" />
                 {format(event.displayStart, "HH:mm")} -{" "}
                 {format(event.displayEnd, "HH:mm")}
               </div>
+              {event.location && (
+                <div className="text-xs text-muted-foreground align-baseline">
+                  <MapPin className="size-3 inline mr-1" />
+                  {event.location}
+                </div>
+              )}
+              {event.details && (
+                <div className="text-xs text-muted-foreground">
+                  {event.details}
+                </div>
+              )}
             </div>
-
-            <div className="text-xs font-normal">{event.location}</div>
-            <div className="text-xs font-normal">{event.details}</div>
           </div>
         </EventPopover>
       );
     });
   };
 
-  const renderCalendars = (day: Date) => {
+  const renderCalendars = (date: Date) => {
     const events = (calendarData ?? []).filter((event) =>
-      isSameDay(parse(event.date, "yyyy-MM-dd", new Date()), day),
+      isSameDay(parse(event.date, "yyyy-MM-dd", new Date()), date),
     );
+
     return (
-      events.length > 0 && (
-        <Alert className="p-2">
-          <AlertDescription>
-            <ul className="divide-y divide-border text-sm text-muted-foreground">
-              {events.map((event) => (
-                <li key={event.id} className="text-sm py-1">
-                  {event.summary}
-                </li>
-              ))}
-            </ul>
-          </AlertDescription>
-        </Alert>
-      )
+      events.length > 0 &&
+      events.map((event, index) => (
+        <div key={index} className="flex flex-row gap-2 items-center">
+          <div className="size-4 bg-nthu-500 rounded-sm shrink-0"></div>
+          <div className="text-sm">{event.summary}</div>
+        </div>
+      ))
+    );
+  };
+
+  const renderWeather = (day: Date) => {
+    const weatherItem = weatherData?.find(
+      (w) => w.date === format(day, "yyyy-MM-dd"),
+    );
+    if (!weatherItem) return <></>;
+
+    // Check if weatherData.weatherData is empty or doesn't contain necessary data
+    if (
+      !weatherItem.weatherData ||
+      Object.keys(weatherItem.weatherData).length === 0 ||
+      !weatherItem.weatherData.Wx
+    ) {
+      return (
+        <div className="flex items-center gap-1 rounded-full bg-muted px-2 py-1 text-sm">
+          <Cloud className="h-5 w-5 text-gray-400" />
+          <span className="text-muted-foreground text-xs">資料更新中</span>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex items-center gap-1 rounded-full bg-muted px-2 py-1 text-sm">
+        <WeatherIcon wxCode={weatherItem.weatherData.Wx} />
+        <span className="font-medium">{weatherItem.weatherData.MaxT}°</span>
+        <span className="text-muted-foreground text-xs">
+          {weatherItem.weatherData.MinT}°
+        </span>
+        <Badge variant="outline" className="ml-1 text-xs">
+          {weatherItem.weatherData.PoP12h}%
+        </Badge>
+      </div>
     );
   };
 
   return (
     <div className="flex-col justify-start items-start gap-2 inline-flex md:max-w-[292px] md:h-full">
-      <div className="self-stretch text-lg font-semibold  leading-7">
+      <div className="self-stretch text-lg font-semibold leading-7">
         即將到來的行程
       </div>
-      <div className="self-stretch p-4 bg-neutral-50 dark:bg-neutral-800 rounded-lg flex-col justify-start items-start gap-6 flex">
+      <div className="self-stretch flex-col justify-start items-start gap-6 flex overflow-x-hidden overflow-y-auto max-h-[calc(100vh-12rem)]">
         {days.map((day) => (
           <div
             className="flex flex-col gap-2 pb-4 w-full"
             key={format(day, "EEEE, do MMMM")}
           >
-            <div className="flex flex-row gap-2 justify-between border-b border-gray-400 pb-2">
-              <div className="flex flex-col flex-1">
-                {/* WEDNESDAY */}
-                <div className="text-xl font-semibold text-gray-600 dark:text-gray-300">
+            <div className="flex flex-row justify-between">
+              <div className="flex flex-row flex-1 items-baseline gap-2">
+                <div
+                  className={cn(
+                    "whitespace-nowrap font-semibold text-lg",
+                    !isSameDay(day, today) && "text-muted-foreground",
+                  )}
+                >
                   {formatRelative(day, Date.now(), {
                     locale: getLocale(language),
                   })}
                 </div>
-                {/* 6TH OCTOBER */}
-                <div className="text-sm font-semibold text-gray-400 dark:text-gray-500">
-                  {format(day, "EEEE, do MMMM", {
-                    locale: getLocale(language),
-                  })}
+                <div className="text-sm text-muted-foreground whitespace-nowrap">
+                  {format(
+                    day,
+                    isSameDay(day, today) ? "EEE, MMMM do" : "MMMM do",
+                    { locale: getLocale(language) },
+                  )}
                 </div>
               </div>
-              {!weatherLoading && weatherData && (
-                <WeatherIcon
-                  date={day}
-                  weather={
-                    weatherData!.find(
-                      (w) => w.date == format(day, "yyyy-MM-dd"),
-                    )!
-                  }
-                />
-              )}
+              {!weatherLoading && weatherData && renderWeather(day)}
             </div>
             {renderCalendars(day)}
             {renderLabelEvents(day)}

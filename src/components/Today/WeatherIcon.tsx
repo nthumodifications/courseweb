@@ -1,71 +1,53 @@
-import { FC } from "react";
-import { Umbrella } from "lucide-react";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+  Sun,
+  CloudSun,
+  Cloud,
+  CloudRain,
+  CloudLightning,
+  Snowflake,
+} from "lucide-react";
+const WeatherIcon = ({ wxCode }: { wxCode: string | undefined }) => {
+  // Map CWA weather codes to Lucide icons
+  // Based on https://www.cwa.gov.tw/V8/assets/img/weather_icons/weathers/svg_icon/day/XX.svg
+  if (!wxCode) return <Sun className="h-5 w-5 text-yellow-500" />;
 
-interface WeatherIconProps {
-  date: Date;
-  weather: {
-    date: string;
-    weatherData: {
-      MinT?: string;
-      MaxT?: string;
-      PoP12h?: string;
-      Wx?: string;
-      WeatherDescription?: string;
-    };
-  };
-}
+  const code = parseInt(wxCode);
 
-const WeatherIcon: FC<WeatherIconProps> = ({ date, weather }) => {
-  if (!weather) return <></>;
+  // Sunny (01)
+  if (code === 1) return <Sun className="h-5 w-5 text-yellow-500" />;
 
-  const weatherData = weather.weatherData.Wx;
-  const weatherDescription = weather.weatherData.WeatherDescription;
+  // Fair (02, 03)
+  if (code >= 2 && code <= 3)
+    return <CloudSun className="h-5 w-5 text-blue-400" />;
 
-  if (!weatherData || !weatherDescription) return <></>;
+  // Cloudy (04, 05, 06, 07)
+  if (code >= 4 && code <= 7)
+    return <Cloud className="h-5 w-5 text-gray-400" />;
 
-  return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div className="flex flex-row gap-4 items-center">
-            {parseInt(weather.weatherData.PoP12h ?? "0") > 0 && (
-              <div className="relative">
-                <div className="absolute -top-2 -right-3 bg-blue-500 text-white rounded-full p-0.5 flex items-center justify-center text-xs">
-                  {weather.weatherData.PoP12h}%
-                </div>
-                <Umbrella />
-              </div>
-            )}
-            <div className="flex flex-col">
-              <img
-                title="Weather Icon"
-                className="w-9 h-8"
-                src={`https://www.cwa.gov.tw/V8/assets/img/weather_icons/weathers/svg_icon/day/${weatherData}.svg`}
-              />
+  // Fog related (08, 09)
+  if (code >= 8 && code <= 9)
+    return <Cloud className="h-5 w-5 text-gray-300" />;
 
-              <p className="text-center text-xs">
-                <span className="text-gray-600 dark:text-neutral-400 px-1">
-                  {weather.weatherData.MaxT}
-                </span>
-                <span className="text-gray-400 dark:text-neutral-600 px-1">
-                  {weather.weatherData.MinT}
-                </span>
-              </p>
-            </div>
-          </div>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p>{weatherDescription}</p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  );
+  // Showers/Rain (10-19, 21, 22, 29, 30)
+  if (
+    (code >= 10 && code <= 19) ||
+    code === 21 ||
+    code === 22 ||
+    code === 29 ||
+    code === 30
+  )
+    return <CloudRain className="h-5 w-5 text-blue-500" />;
+
+  // Thunderstorm (20, 22, 23, 24, 25, 26, 27, 28, 39, 41)
+  if (code === 20 || (code >= 22 && code <= 28) || code === 39 || code === 41)
+    return <CloudLightning className="h-5 w-5 text-amber-500" />;
+
+  // Snow (32-38, 42)
+  if ((code >= 32 && code <= 38) || code === 42)
+    return <Snowflake className="h-5 w-5 text-blue-300" />;
+
+  // Default
+  return <Sun className="h-5 w-5 text-yellow-500" />;
 };
 
 export default WeatherIcon;
