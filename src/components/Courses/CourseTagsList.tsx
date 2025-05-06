@@ -28,6 +28,11 @@ const CourseTagList = ({ course }: { course: CourseDefinition }) => {
   const dict = useDictionary();
   return (
     <div className="flex flex-row flex-wrap gap-1 text-sm">
+      {course.closed_mark && (
+        <HighlightItem className="bg-red-200 text-red-900 dark:bg-red-800 dark:text-red-100">
+          {course.closed_mark}
+        </HighlightItem>
+      )}
       <HighlightItem className="bg-purple-50 text-purple-900 dark:bg-purple-950 dark:text-purple-100">
         <span className="">
           {course.capacity ?? "-"}
