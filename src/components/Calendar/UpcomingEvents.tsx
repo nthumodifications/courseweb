@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getBrightness, adjustLuminance } from "@/helpers/colors";
+import { getBrightness, getContrastColor } from "@/helpers/colors";
 import { EventData } from "@/types/calendar_event";
 import { useCalendar } from "@/components/Calendar/calendar_hook";
 import { addDays, format, formatRelative, isSameDay, parse } from "date-fns";
@@ -80,11 +80,8 @@ const UpcomingEvents = () => {
     return ev.map((event, index) => {
       //Determine the text color
       const brightness = getBrightness(event.color);
-      //From the brightness, using the adjustBrightness function, create a complementary color that is legible
-      const textColor = adjustLuminance(
-        event.color,
-        brightness > 186 ? 0.2 : 0.95,
-      );
+      //From the brightness, using the getContrastColor function, create a complementary color that is legible
+      const textColor = getContrastColor(event.color);
 
       return (
         <EventPopover event={event} key={event.id + index}>

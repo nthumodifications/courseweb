@@ -12,7 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { useCalendar } from "./calendar_hook";
 import { CurrentTimePointer } from "./CurrentTimePointer";
 import { eventsToDisplay } from "@/components/Calendar/calendar_utils";
-import { adjustLuminance, getBrightness } from "@/helpers/colors";
+import { getContrastColor, getBrightness } from "@/helpers/colors";
 import { EventPopover } from "./EventPopover";
 import {
   UIEventHandler,
@@ -107,11 +107,8 @@ export const CalendarWeekContainer = ({
         .map((event) => {
           //Determine the text color
           const brightness = getBrightness(event.color);
-          //From the brightness, using the adjustBrightness function, create a complementary color that is legible
-          const textColor = adjustLuminance(
-            event.color,
-            brightness > 186 ? 0.2 : 0.95,
-          );
+          //From the brightness, using the getContrastColor function, create a complementary color that is legible
+          const textColor = getContrastColor(event.color);
           return { ...event, textColor };
         });
 
@@ -195,11 +192,8 @@ export const CalendarWeekContainer = ({
       .map((event) => {
         //Determine the text color
         const brightness = getBrightness(event.color);
-        //From the brightness, using the adjustBrightness function, create a complementary color that is legible
-        const textColor = adjustLuminance(
-          event.color,
-          brightness > 186 ? 0.2 : 0.95,
-        );
+        //From the brightness, using the getContrastColor function, create a complementary color that is legible
+        const textColor = getContrastColor(event.color);
         let span =
           differenceInDays(
             endOfDay(event.displayEnd),

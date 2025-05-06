@@ -1,8 +1,7 @@
 import { scheduleTimeSlots } from "@/const/timetable";
 import { CourseTimeslotData } from "@/types/timetable";
 import { MinimalCourse } from "@/types/courses";
-import { getBrightness } from "./colors";
-import { adjustLuminance } from "@/helpers/colors";
+import { getBrightness, getContrastColor } from "./colors";
 import { timetableColors } from "@/const/timetableColors";
 import { hasTimes } from "./courses";
 
@@ -71,10 +70,8 @@ export const createTimetableFromCourses = (
         //get the color, mod the index by the length of the color array so that it loops
         const color = colorMap[course.raw_id] || "#555555";
 
-        //Determine the text color
-        const brightness = getBrightness(color);
-        //From the brightness, using the adjustBrightness function, create a complementary color that is legible
-        const textColor = adjustLuminance(color, brightness > 186 ? 0.2 : 0.95);
+        // Use the WCAG-compliant contrast function for better text legibility
+        const textColor = getContrastColor(color);
 
         //push to scheduleData
         newTimetableData.push({

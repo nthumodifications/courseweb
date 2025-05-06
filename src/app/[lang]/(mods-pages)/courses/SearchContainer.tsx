@@ -195,7 +195,7 @@ const SearchContainer = memo(
             <div className="flex-1">
               <h2 className="text-xl font-medium">搜尋結果</h2>
               <span className="text-sm mr-auto">
-                Results in {nbHits} ({processingTimeMS}ms)
+                {nbHits} results ({processingTimeMS}ms)
               </span>
             </div>
             <a
