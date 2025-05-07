@@ -15,6 +15,10 @@ const GenericIssueFormDynamic = dynamic(
   () => import("@/components/Forms/GenericIssueFormDialog"),
 );
 
+const MinifiedUpcomingEventsDynamic = dynamic(
+  () => import("@/components/Calendar/MinifiedUpcomingEvents"),
+);
+
 const AppSidebar = () => {
   return (
     <Sidebar collapsible="offcanvas">
@@ -24,8 +28,11 @@ const AppSidebar = () => {
       <SidebarContent className="p-2">
         <SideNav />
       </SidebarContent>
-      <SidebarFooter>
-        <div className="flex flex-row justify-stretch gap-2">
+      <SidebarFooter className="flex flex-col">
+        <div className="border-t border-border pt-2">
+          <MinifiedUpcomingEventsDynamic />
+        </div>
+        <div className="flex flex-row justify-stretch gap-2 mt-2">
           <HelpDynamic />
           <GenericIssueFormDynamic />
         </div>
