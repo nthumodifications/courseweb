@@ -84,7 +84,9 @@ const Filters = ({ selectedCourses }: { selectedCourses: MinimalCourse[] }) => {
       </div>
       {/* Advanced Filters Section */}
       <div>
-        <h3 className="font-medium text-base mb-2">GE</h3>
+        <h3 className="font-medium text-base mb-2">
+          {dict.course.refine.ge_filters}
+        </h3>
         <div className="w-full flex flex-col gap-6">
           <div className="flex flex-col gap-2">
             <span className="text-sm">{dict.course.refine.geTarget}</span>
@@ -115,7 +117,9 @@ const Filters = ({ selectedCourses }: { selectedCourses: MinimalCourse[] }) => {
         </div>
       </div>
       <div>
-        <h3 className="font-medium text-base mb-2">Advanced Filters</h3>
+        <h3 className="font-medium text-base mb-2">
+          {dict.course.refine.advanced_filters}
+        </h3>
         <div className="w-full flex flex-col gap-6">
           <div className="flex flex-col gap-2">
             <span className="text-sm">{dict.course.refine.venues}</span>

@@ -99,7 +99,7 @@ const TimetableSlotVertical = forwardRef<HTMLDivElement, TimetableSlotProps>(
               <VenueChip
                 venue={course.venue}
                 color={course.textColor}
-                textColor={course.color}
+                textColor={course.textColor}
               />
             </div>
           )}

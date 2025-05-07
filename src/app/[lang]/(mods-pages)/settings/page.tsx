@@ -108,6 +108,7 @@ const CalendarSettingsCard = () => {
     false,
   );
   const { showAcademicCalendar, setShowAcademicCalendar } = useSettings();
+  const dict = useDictionary();
 
   const handleUseNewCalendar = (v: boolean) => {
     setUseNewCalendar(v);
@@ -121,15 +122,17 @@ const CalendarSettingsCard = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Today Page</CardTitle>
-        <CardDescription>What do you wanna see first</CardDescription>
+        <CardTitle>{dict.settings.calendar.title}</CardTitle>
+        <CardDescription>{dict.settings.calendar.description}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="flex flex-row gap-4 py-4" id="calendar">
           <div className="flex flex-col flex-1 gap-1">
-            <h2 className="font-semibold text-base">NTHU Academic Calendar</h2>
+            <h2 className="font-semibold text-base">
+              {dict.settings.calendar.academic_calendar.title}
+            </h2>
             <p className="text-sm text-muted-foreground">
-              Show Academic Calendar on the Today Page.
+              {dict.settings.calendar.academic_calendar.description}
             </p>
           </div>
           <div className="flex items-center">
@@ -142,10 +145,13 @@ const CalendarSettingsCard = () => {
         <div className="flex flex-row gap-4 py-4" id="calendar">
           <div className="flex flex-col flex-1 gap-1">
             <h2 className="font-semibold text-base">
-              Calendar <Badge variant="outline">Experimental</Badge>
+              {dict.settings.calendar.experimental_calendar.title}{" "}
+              <Badge variant="outline">
+                {dict.settings.calendar.experimental_calendar.badge}
+              </Badge>
             </h2>
             <p className="text-sm text-muted-foreground">
-              Use the new Calendar on the Today Page.
+              {dict.settings.calendar.experimental_calendar.description}
             </p>
           </div>
           <div className="flex items-center">

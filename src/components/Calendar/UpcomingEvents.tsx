@@ -14,6 +14,7 @@ import client from "@/config/api";
 import { Badge } from "@/components/ui/badge";
 import { Clock, MapPin, Cloud } from "lucide-react";
 import { cn } from "@/lib/utils";
+import useDictionary from "@/dictionaries/useDictionary";
 
 const UpcomingEvents = () => {
   const { events } = useCalendar();
@@ -21,6 +22,7 @@ const UpcomingEvents = () => {
   const today = useTime();
   const end = addDays(today, 5);
   const days = [today, ...[1, 2, 3, 4].map((i) => addDays(today, i))];
+  const dict = useDictionary();
 
   const {
     data: weatherData,
@@ -68,9 +70,9 @@ const UpcomingEvents = () => {
             🎉
           </div>
           <div className="flex flex-col gap-1">
-            <div className="font-semibold">無行程</div>
+            <div className="font-semibold">{dict.calendar.no_events}</div>
             <div className="text-xs text-muted-foreground">
-              今天沒有任何行程
+              {dict.calendar.no_events_sub}
             </div>
           </div>
         </div>
@@ -168,7 +170,7 @@ const UpcomingEvents = () => {
   return (
     <div className="flex-col justify-start items-start gap-2 inline-flex md:max-w-[300px] md:h-full px-2">
       <div className="self-stretch text-lg font-semibold leading-7">
-        即將到來的行程
+        {dict.calendar.upcoming_events}
       </div>
       <div className="self-stretch flex-col justify-start items-start gap-6 flex overflow-x-hidden overflow-y-auto max-h-[calc(100vh-12rem)]">
         {days.map((day) => (

@@ -6,11 +6,13 @@ import { eventsToDisplay } from "@/components/Calendar/calendar_utils";
 import { EventPopover } from "@/components/Calendar/EventPopover";
 import useTime from "@/hooks/useTime";
 import { Clock, Calendar } from "lucide-react";
+import useDictionary from "@/dictionaries/useDictionary";
 
 const MinifiedUpcomingEvents = () => {
   const { events } = useCalendar();
   const today = useTime();
   const end = addDays(today, 14); // Look ahead for two weeks
+  const dict = useDictionary();
 
   const upcomingEvents = eventsToDisplay(events, today, end)
     .sort((a, b) => a.displayStart.getTime() - b.displayStart.getTime())
@@ -19,14 +21,16 @@ const MinifiedUpcomingEvents = () => {
   if (upcomingEvents.length === 0) {
     return (
       <div className="p-2 text-xs text-muted-foreground">
-        沒有即將到來的行程
+        {dict.calendar.minified.no_events}
       </div>
     );
   }
 
   return (
     <div className="p-2">
-      <div className="text-xs font-semibold mb-1">即將到來行程</div>
+      <div className="text-xs font-semibold mb-1">
+        {dict.calendar.upcoming_events}
+      </div>
       <div className="flex flex-col gap-1">
         {upcomingEvents.map((event, index) => (
           <EventPopover event={event} key={event.id + index}>

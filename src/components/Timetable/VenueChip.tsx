@@ -9,7 +9,7 @@ export const VenueChip: FC<{
   return (
     <Link
       className="flex flex-row justify-center items-center text-center text-[8px] md:text-[10px] rounded-md px-1 py-0.5"
-      style={{ backgroundColor: color, color: textColor }}
+      style={{ backgroundColor: color + "24", color: textColor }}
       href={`/venues/${venue}`}
     >
       <span className="">{venue}</span>

@@ -193,9 +193,11 @@ const SearchContainer = memo(
           </div>
           <div className="flex items-end">
             <div className="flex-1">
-              <h2 className="text-xl font-medium">搜尋結果</h2>
+              <h2 className="text-xl font-medium">
+                {dict.course.refine.search_results}
+              </h2>
               <span className="text-sm mr-auto">
-                {nbHits} results ({processingTimeMS}ms)
+                {nbHits} {dict.course.refine.results} ({processingTimeMS}ms)
               </span>
             </div>
             <a

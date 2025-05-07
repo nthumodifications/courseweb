@@ -383,14 +383,9 @@ export const CalendarWeekContainer = ({
             openDialog={eventFormOpen}
             onOpenChange={setEventFormOpen}
             defaultEvent={{
-              id: "",
-              title: "",
               start: newEventTime,
               end: addMinutes(newEventTime, 30),
               allDay: false,
-              color: "#4285F4",
-              repeat: null,
-              tag: "",
             }}
             onEventAdded={(event) => {
               addEvent(event);

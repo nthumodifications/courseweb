@@ -45,6 +45,7 @@ import { toPrettySemester } from "@/helpers/semester";
 import { useHeaderPortal } from "@/components/Portal/HeaderPortal";
 import UpcomingEvents from "./UpcomingEvents";
 import { useIsMobile } from "@/hooks/use-mobile";
+import useDictionary from "@/dictionaries/useDictionary";
 
 const CalendarError: ErrorComponent = ({ error, reset }) => {
   return <div className="text-red-500">An error occurred: {error.message}</div>;
@@ -61,6 +62,7 @@ const Calendar = () => {
   const { language } = useSettings();
   const [dbReady, setDbReady] = useState(false);
   const isMobile = useIsMobile();
+  const dict = useDictionary();
 
   // Get the portal functions
   const { setPortalContent, clearPortalContent } = useHeaderPortal();
@@ -346,7 +348,7 @@ const Calendar = () => {
           <div className="md:flex flex-row items-center gap-2 hidden ">
             <AddEventButton onEventAdded={handleAddEvent}>
               <Button className="hidden md:inline-flex">
-                <Plus className="mr-2" /> 新增行程
+                <Plus className="mr-2" /> {dict.calendar.add_event}
               </Button>
             </AddEventButton>
           </div>

@@ -65,7 +65,8 @@
       "ge_filters": "GE Filters",
       "timetable_empty": "Find empty",
       "advanced_filters": "Advanced filters",
-      "search_results": "Search results"
+      "search_results": "Search results",
+      "results": "results"
     },
     "details": {
       "semester": "Semester",
@@ -178,6 +179,19 @@
       "analytics": {
         "title": "Analytics",
         "description": "Send anonymous usage info to Google Analytics"
+      }
+    },
+    "calendar": {
+      "title": "Today Page",
+      "description": "What do you wanna see first",
+      "academic_calendar": {
+        "title": "NTHU Academic Calendar",
+        "description": "Show Academic Calendar on the Today Page."
+      },
+      "experimental_calendar": {
+        "title": "Calendar",
+        "badge": "Experimental",
+        "description": "Use the new Calendar on the Today Page."
       }
     }
   },
@@ -320,6 +334,15 @@
     "all_courses": "All Courses",
     "semester_grades": "Semester Grades",
     "t_score": "T-Score"
+  },
+  "calendar": {
+    "upcoming_events": "Upcoming Events",
+    "no_events": "No Upcoming Events",
+    "no_events_sub": "There are no scheduled events",
+    "add_event": "Add Event",
+    "minified": {
+      "no_events": "No upcoming events"
+    }
   },
   "cancel": "Cancel",
   "privacy_policy": "Privacy Policy",

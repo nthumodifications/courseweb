@@ -143,7 +143,10 @@ const TodaySchedule: FC = () => {
               style={{ backgroundColor: t.color }}
             ></div>
             <div className="flex flex-col gap-1">
-              <div className="font-semibold"> {t.course.name_zh} </div>
+              <div className="font-semibold">
+                {" "}
+                {language == "zh" ? t.course.name_zh : t.course.name_en}{" "}
+              </div>
               <div className="text-xs text-muted-foreground align-baseline">
                 <Clock className="size-3 inline mr-1" />
                 {`${scheduleTimeSlots[t.startTime].start} - ${scheduleTimeSlots[t.endTime].end}`}
