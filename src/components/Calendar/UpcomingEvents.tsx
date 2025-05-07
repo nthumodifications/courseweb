@@ -166,7 +166,7 @@ const UpcomingEvents = () => {
   };
 
   return (
-    <div className="flex-col justify-start items-start gap-2 inline-flex md:max-w-[292px] md:h-full">
+    <div className="flex-col justify-start items-start gap-2 inline-flex md:max-w-[300px] md:h-full px-2">
       <div className="self-stretch text-lg font-semibold leading-7">
         即將到來的行程
       </div>
