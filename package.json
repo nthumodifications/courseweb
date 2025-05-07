@@ -91,6 +91,7 @@
     "concurrently": "^8.2.2",
     "date-fns": "^3.6.0",
     "date-fns-tz": "^3.0.1",
+    "focus-trap-react": "^11.0.3",
     "fuse.js": "^6.6.2",
     "hono": "^4.7.2",
     "html-entities": "^2.5.2",

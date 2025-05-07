@@ -6,6 +6,8 @@ import {
   isSameMonth,
   isToday,
   startOfDay,
+  set,
+  addMinutes,
 } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
@@ -26,6 +28,8 @@ import { useQuery } from "@tanstack/react-query";
 import { CalendarEventInternal } from "./calendar.types";
 import { useSettings } from "@/hooks/contexts/settings";
 import client from "@/config/api";
+import { AddEventButton } from "./AddEventButton";
+import { getNearestTime } from "@/components/ui/custom_timeselect";
 
 export const CalendarWeekContainer = ({
   displayWeek,
@@ -34,6 +38,50 @@ export const CalendarWeekContainer = ({
 }) => {
   const { events, addEvent, displayContainer, HOUR_HEIGHT } = useCalendar();
   const { showAcademicCalendar } = useSettings();
+  const [eventFormOpen, setEventFormOpen] = useState(false);
+  const [newEventTime, setNewEventTime] = useState<Date | null>(null);
+
+  // Function to handle clicks on empty time slots
+  const handleEmptySlotClick = useCallback(
+    (day: Date, clientY: number, e: React.MouseEvent) => {
+      // Don't open form if clicked on an existing event
+      if ((e.target as HTMLElement).closest(".event-item")) {
+        return;
+      }
+
+      // Calculate the time based on the click position
+      const containerRect = displayContainer.current?.getBoundingClientRect();
+      if (!containerRect) return;
+
+      const scrollTop = displayContainer.current?.scrollTop || 0;
+      const offsetY = clientY - containerRect.top + scrollTop;
+
+      // Convert the Y position to hours and minutes
+      const totalMinutes = (offsetY / HOUR_HEIGHT) * 60;
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = Math.floor(totalMinutes % 60);
+
+      // Create a new date with the day and calculated time
+      const clickedTime = set(day, {
+        hours,
+        minutes,
+        seconds: 0,
+        milliseconds: 0,
+      });
+
+      // Round to nearest 10 minutes
+      const roundedTime = getNearestTime(clickedTime, 10);
+      const newTime = set(clickedTime, {
+        hours: roundedTime.hours,
+        minutes: roundedTime.minutes,
+      });
+
+      setNewEventTime(newTime);
+      setEventFormOpen(true);
+    },
+    [displayContainer, HOUR_HEIGHT],
+  );
+
   const {
     data: nthuCalendarEvents = [],
     error: calendarError,
@@ -308,7 +356,10 @@ export const CalendarWeekContainer = ({
               <div className="flex flex-row">
                 {displayWeek.map((day, index) => (
                   <div key={day.getTime()} className="relative flex-1">
-                    <div className="flex flex-col border-r border-border flex-1">
+                    <div
+                      className="flex flex-col border-r border-border flex-1"
+                      onClick={(e) => handleEmptySlotClick(day, e.clientY, e)}
+                    >
                       {hours.map((hour, index) => (
                         <div
                           key={hour.getTime()}
@@ -325,6 +376,28 @@ export const CalendarWeekContainer = ({
             </div>
           </div>
         </div>
+
+        {/* Event form that opens when clicking on an empty time slot */}
+        {newEventTime && (
+          <AddEventButton
+            openDialog={eventFormOpen}
+            onOpenChange={setEventFormOpen}
+            defaultEvent={{
+              id: "",
+              title: "",
+              start: newEventTime,
+              end: addMinutes(newEventTime, 30),
+              allDay: false,
+              color: "#4285F4",
+              repeat: null,
+              tag: "",
+            }}
+            onEventAdded={(event) => {
+              addEvent(event);
+              setNewEventTime(null);
+            }}
+          />
+        )}
       </div>
     </div>
   );

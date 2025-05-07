@@ -230,7 +230,7 @@ export const CalendarMonthContainer = ({
             key={day.getTime()}
             className={cn(
               "flex flex-col gap-1 min-h-[120px] border-t border-l border-border last:border-b last:border-r",
-              isSameMonth(day, displayMonth[15]) ? "" : "bg-black/15",
+              isSameMonth(day, displayMonth[15]) ? "" : "bg-black/5",
             )}
           >
             <div
@@ -260,7 +260,7 @@ export const CalendarMonthContainer = ({
             (day, index) => (
               <div
                 key={index}
-                className="text-slate-500 text-sm font-semibold text-center"
+                className="text-muted-foreground text-sm font-semibold text-center"
               >
                 {day}
               </div>
