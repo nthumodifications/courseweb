@@ -86,7 +86,6 @@ const TimetableSidebar = ({
         </DialogContent>
       </Dialog>
       <TimetableCourseList semester={semester} vertical={vertical} />
-      <ThemeChangableAlert />
     </div>
   );
 };

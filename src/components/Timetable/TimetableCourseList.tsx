@@ -283,7 +283,6 @@ export const TimetableCourseList = ({
       }
       return false;
     });
-    console.log(peAndGe);
 
     return peAndGe.map((course) => course.raw_id);
   }, [displayCourseData]);

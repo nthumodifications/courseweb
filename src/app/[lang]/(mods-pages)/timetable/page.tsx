@@ -10,16 +10,33 @@ import { renderTimetableSlot } from "@/helpers/timetable_course";
 import TimetableSidebar from "@/components/Timetable/TimetableSidebar";
 import { useSwipeable } from "react-swipeable";
 import { semesterInfo } from "@/const/semester";
+import { useHeaderPortal } from "@/components/Portal/HeaderPortal";
+import { useEffect } from "react";
 
 const TimetablePage: NextPage = () => {
   const { getSemesterCourses, semester, setSemester, colorMap } =
     useUserTimetable();
   const [vertical, setVertical] = useLocalStorage("timetable_vertical", true);
+  const { setPortalContent, clearPortalContent } = useHeaderPortal();
 
   const timetableData = createTimetableFromCourses(
     getSemesterCourses(semester) as MinimalCourse[],
     colorMap,
   );
+
+  // Set the SemesterSwitcher in the header portal
+  useEffect(() => {
+    setPortalContent(
+      <div className="flex justify-center w-full">
+        <SemesterSwitcher semester={semester} setSemester={setSemester} />
+      </div>,
+    );
+
+    // Clean up when component unmounts
+    return () => {
+      clearPortalContent();
+    };
+  }, [semester, setSemester]);
 
   const handlers = useSwipeable({
     onSwipedLeft: (eventData) => {
@@ -42,7 +59,6 @@ const TimetablePage: NextPage = () => {
 
   return (
     <div className="flex flex-col w-full h-full">
-      <SemesterSwitcher semester={semester} setSemester={setSemester} />
       <div
         className={`grid grid-cols-1 md:grid-rows-1 ${!vertical ? "" : "md:grid-cols-[3fr_2fr]"} px-1 py-4 md:p-4 gap-4 md:gap-2`}
       >
