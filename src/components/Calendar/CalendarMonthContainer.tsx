@@ -11,13 +11,12 @@ import {
   startOfWeek,
 } from "date-fns";
 import { cn } from "@/lib/utils";
-import { Separator } from "@/components/ui/separator";
 import { useCalendar } from "./calendar_hook";
 import { eventsToDisplay } from "@/components/Calendar/calendar_utils";
-import { adjustLuminance, getBrightness } from "@/helpers/colors";
+import { getContrastColor, getBrightness } from "@/helpers/colors";
 import { EventPopover } from "./EventPopover";
-import { useEventCallback, useMediaQuery } from "usehooks-ts";
-import { useCallback } from "react";
+import { useMediaQuery } from "usehooks-ts";
+import { Fragment, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarEventInternal } from "@/components/Calendar/calendar.types";
 import { useSettings } from "@/hooks/contexts/settings";
@@ -80,11 +79,8 @@ export const CalendarMonthContainer = ({
       ).map((event) => {
         // Determine the text color
         const brightness = getBrightness(event.color);
-        // From the brightness, using the adjustBrightness function, create a complementary color that is legible
-        const textColor = adjustLuminance(
-          event.color,
-          brightness > 186 ? 0.2 : 0.95,
-        );
+        // From the brightness, using the getContrastColor function, create a complementary color that is legible
+        const textColor = getContrastColor(event.color);
         return { ...event, textColor };
       });
 
@@ -173,11 +169,8 @@ export const CalendarMonthContainer = ({
           : endOfDay(end);
         // Determine the text color
         const brightness = getBrightness(event.color);
-        // From the brightness, using the adjustBrightness function, create a complementary color that is legible
-        const textColor = adjustLuminance(
-          event.color,
-          brightness > 186 ? 0.2 : 0.95,
-        );
+        // From the brightness, using the getContrastColor function, create a complementary color that is legible
+        const textColor = getContrastColor(event.color);
         const span = Math.min(
           differenceInDays(endOfDay(snippetEnd), startOfDay(snippetStart)) + 1,
           7 - getDay(snippetStart) + 1,
@@ -229,14 +222,13 @@ export const CalendarMonthContainer = ({
       ).filter((e) => e.allDay);
 
       return (
-        <>
+        <Fragment key={day.getTime()}>
           {getDay(day) == 0 &&
             renderAllDayEvents(startOfWeek(day), endOfWeek(day))}
           <div
-            key={day.getTime()}
             className={cn(
               "flex flex-col gap-1 min-h-[120px] border-t border-l border-border last:border-b last:border-r",
-              isSameMonth(day, displayMonth[15]) ? "" : "bg-black/15",
+              isSameMonth(day, displayMonth[15]) ? "" : "bg-black/5",
             )}
           >
             <div
@@ -252,7 +244,7 @@ export const CalendarMonthContainer = ({
             </div>
             {renderEventsInDay(day, allDayEvents.length)}
           </div>
-        </>
+        </Fragment>
       );
     },
     [events, displayMonth, renderAllDayEvents, renderEventsInDay, onChangeView],
@@ -266,7 +258,7 @@ export const CalendarMonthContainer = ({
             (day, index) => (
               <div
                 key={index}
-                className="text-slate-500 text-sm font-semibold text-center"
+                className="text-muted-foreground text-sm font-semibold text-center"
               >
                 {day}
               </div>

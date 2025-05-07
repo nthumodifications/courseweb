@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/hover-card";
 import { InstantSearchNext } from "react-instantsearch-nextjs";
 import { Calendar, FilterIcon, SearchIcon } from "lucide-react";
-import { SearchBox } from "react-instantsearch";
 
 const searchClient = algoliasearch(
   process.env.NEXT_PUBLIC_ALGOLIA_APP_ID!,
@@ -28,12 +27,14 @@ import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { lastSemester } from "@/const/semester";
 import useDictionary from "@/dictionaries/useDictionary";
-import ClearAllButton from "../../../courses/ClearAllButton";
-import Filters from "../../../courses/Filters";
-import SearchContainer from "./SearchContainer";
+import PlannerFilters from "./PlannerFilters";
+import SearchContainer from "./PlannerSearchContainer";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { MinimalCourse } from "@/types/courses";
 import { ItemDocType } from "@/app/[lang]/(mods-pages)/student/planner/rxdb";
+import { useSettings } from "@/hooks/contexts/settings";
+import ResetFiltersButton from "../../../courses/ResetFiltersButton";
+import SearchBox from "@/components/SearchBox/SearchBox";
 
 type CourseSearchContainerProps = {
   onAdd: (course: MinimalCourse, keepSemester?: boolean) => void;
@@ -43,6 +44,7 @@ type CourseSearchContainerProps = {
 
 const CourseSearchContainer = (props: CourseSearchContainerProps) => {
   const dict = useDictionary();
+  const { language } = useSettings();
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const { courses, getSemesterCourses } = useUserTimetable();
   return (
@@ -60,29 +62,10 @@ const CourseSearchContainer = (props: CourseSearchContainerProps) => {
     >
       <div className="flex flex-col h-full max-h-[90dvh] gap-4 md:gap-8">
         <div className="">
-          <div className="bg-neutral-100 dark:bg-neutral-950 rounded-2xl flex items-center py-2 md:p-4">
-            <HoverCard>
-              <HoverCardTrigger className="px-2">
-                <SearchIcon size={16} />
-              </HoverCardTrigger>
-              <HoverCardContent align="start" className="whitespace-pre-wrap">
-                You can search by <br />
-                - Course Name <br />
-                - Teacher Name <br />- Course ID
-              </HoverCardContent>
-            </HoverCard>
+          <div className="flex items-center">
             <SearchBox
-              ignoreCompositionEvents
               placeholder={dict.course.list.search_placeholder}
               autoFocus
-              classNames={{
-                root: "flex w-full",
-                input: "bg-transparent outline-none w-full",
-                form: "w-full",
-                submit: "hidden",
-                reset: "hidden",
-                loadingIndicator: "hidden",
-              }}
             />
             <Separator orientation="vertical" className="h-full" />
             <div className="md:hidden">
@@ -95,9 +78,9 @@ const CourseSearchContainer = (props: CourseSearchContainerProps) => {
                 <DrawerContent>
                   <ScrollArea className="w-full max-h-[90vh] overflow-auto">
                     <div className="flex flex-row justify-end px-4 py-2 w-full">
-                      <ClearAllButton />
+                      <ResetFiltersButton />
                     </div>
-                    <Filters />
+                    <PlannerFilters lang={language} />
                   </ScrollArea>
                 </DrawerContent>
               </Drawer>

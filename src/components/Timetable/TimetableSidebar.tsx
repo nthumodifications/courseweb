@@ -1,10 +1,14 @@
 import { Repeat, Plus, EllipsisVertical } from "lucide-react";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { useRouter } from "next/navigation";
-import ThemeChangableAlert from "../Alerts/ThemeChangableAlert";
 import useDictionary from "@/dictionaries/useDictionary";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   DownloadTimetableDialogDynamic,
   ShareSyncTimetableDialogDynamic,
@@ -75,6 +79,7 @@ const TimetableSidebar = ({
         </DropdownMenu>
       </div>
       <Dialog>
+        <DialogTitle className="hidden">AddToSem</DialogTitle>
         <DialogTrigger asChild>
           <Button variant="outline">
             <Plus className="w-4 h-4 mr-2" />
@@ -86,7 +91,6 @@ const TimetableSidebar = ({
         </DialogContent>
       </Dialog>
       <TimetableCourseList semester={semester} vertical={vertical} />
-      <ThemeChangableAlert />
     </div>
   );
 };

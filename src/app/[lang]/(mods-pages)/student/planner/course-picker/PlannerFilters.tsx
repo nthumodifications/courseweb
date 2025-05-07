@@ -8,13 +8,13 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { semesterInfo } from "@/const/semester";
-import ClassRefinementItem from "./ClasssRefinementItem";
-import ExpandableClassFilter from "../student/planner/course-picker/ExpandableClassFilter";
-import ExpandableFilter from "../student/planner/course-picker/ExpandableFilter";
-import InlineCheckboxFilter from "../student/planner/course-picker/InlineCheckboxFilter";
-import TimeSelectionFilter from "./TimeSelectionFilter";
-import { Label } from "@/components/ui/label";
-import { MinimalCourse } from "@/types/courses";
+import SemesterSelector from "./SemesterSelector";
+import ExpandableFilter from "./ExpandableFilter";
+import ExpandableClassFilter from "./ExpandableClassFilter";
+import InlineCheckboxFilter from "./InlineCheckboxFilter";
+import { Language } from "@/types/settings";
+
+const latestSemID = semesterInfo[semesterInfo.length - 1].id;
 
 const languageSynonyms: Record<string, string> = {
   中: "Chinese",
@@ -29,18 +29,23 @@ const geTargetSynonyms: Record<string, string> = GETargetCodes.reduce(
   {},
 );
 
-const Filters = ({ selectedCourses }: { selectedCourses: MinimalCourse[] }) => {
+interface PlannerFiltersProps {
+  lang?: Language;
+}
+
+const PlannerFilters = ({ lang }: PlannerFiltersProps) => {
   const dict = useDictionary();
+
   return (
     <div className="w-full flex flex-col gap-2">
       <div className="w-full flex flex-col gap-6">
+        <SemesterSelector />
         <div className="flex flex-col gap-2">
           <span className="text-sm">
             {dict.course.refine.compulsory_elective}
           </span>
           <ExpandableClassFilter limit={20} />
         </div>
-
         <div className="flex flex-col gap-2">
           <span className="text-sm">{dict.course.refine.department}</span>
           <ExpandableFilter
@@ -62,14 +67,6 @@ const Filters = ({ selectedCourses }: { selectedCourses: MinimalCourse[] }) => {
         </div>
 
         <div className="flex flex-col gap-2">
-          <span className="text-sm">上課時間</span>
-          <TimeSelectionFilter
-            attribute="separate_times"
-            selectedCourses={selectedCourses}
-          />
-        </div>
-
-        <div className="flex flex-col gap-2">
           <span className="text-sm">{dict.course.refine.special_tags}</span>
           <InlineCheckboxFilter attribute="tags" />
         </div>
@@ -82,6 +79,7 @@ const Filters = ({ selectedCourses }: { selectedCourses: MinimalCourse[] }) => {
           />
         </div>
       </div>
+
       {/* Advanced Filters Section */}
       <div>
         <h3 className="font-medium text-base mb-2">
@@ -116,6 +114,7 @@ const Filters = ({ selectedCourses }: { selectedCourses: MinimalCourse[] }) => {
           </div>
         </div>
       </div>
+
       <div>
         <h3 className="font-medium text-base mb-2">
           {dict.course.refine.advanced_filters}
@@ -172,4 +171,4 @@ const Filters = ({ selectedCourses }: { selectedCourses: MinimalCourse[] }) => {
   );
 };
 
-export default Filters;
+export default PlannerFilters;

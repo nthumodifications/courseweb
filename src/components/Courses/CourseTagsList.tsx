@@ -17,7 +17,7 @@ const HighlightItem: FC<
 > = ({ children, className, ...props }) => {
   return (
     <div
-      className={`flex flex-row items-center justify-center min-w-[60px] space-x-2 px-1 py-1.5 select-none rounded-md ${className ?? "bg-indigo-50 text-indigo-900 dark:bg-indigo-950 dark:text-indigo-100"}`}
+      className={`flex flex-row items-center justify-center min-w-[52px] space-x-2 px-0.5 py-1 select-none rounded-md text-xs ${className ?? "bg-indigo-50 text-indigo-900 dark:bg-indigo-950 dark:text-indigo-100"}`}
       {...props}
     >
       {children}
@@ -28,6 +28,11 @@ const CourseTagList = ({ course }: { course: CourseDefinition }) => {
   const dict = useDictionary();
   return (
     <div className="flex flex-row flex-wrap gap-1 text-sm">
+      {course.closed_mark && (
+        <HighlightItem className="bg-red-200 text-red-900 dark:bg-red-800 dark:text-red-100">
+          {course.closed_mark}
+        </HighlightItem>
+      )}
       <HighlightItem className="bg-purple-50 text-purple-900 dark:bg-purple-950 dark:text-purple-100">
         <span className="">
           {course.capacity ?? "-"}

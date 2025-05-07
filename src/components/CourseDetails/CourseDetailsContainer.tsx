@@ -1,15 +1,9 @@
+"use client";
 import { format } from "date-fns";
-import {
-  AlertTriangle,
-  ChevronLeft,
-  ArrowRight,
-  CalendarPlus,
-  ExternalLink,
-} from "lucide-react";
+import { AlertTriangle, ChevronLeft, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import DownloadSyllabus from "./DownloadSyllabus";
 import Fade from "@/components/Animation/Fade";
-import { getDictionary } from "@/dictionaries/dictionaries";
 import { toPrettySemester } from "@/helpers/semester";
 import CourseTagList from "@/components/Courses/CourseTagsList";
 import {
@@ -44,8 +38,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { cn } from "@/lib/utils";
 import ShareCourseButton from "./ShareCourseButton";
 import DateContributeForm from "./DateContributeForm";
-import { currentSemester } from "@/const/semester";
 import client from "@/config/api";
+import useDictionary from "@/dictionaries/useDictionary";
+import { useQuery } from "@tanstack/react-query";
+import CourseDetailsSkeleton from "./CourseDetailsSkeleton";
 
 const PDFViewerDynamic = dynamicFn(
   () => import("@/components/CourseDetails/PDFViewer"),
@@ -93,67 +89,7 @@ const CrossDisciplineTagList = ({ course }: { course: CourseDefinition }) => {
   );
 };
 
-const getOtherClasses = async (course: MinimalCourse) => {
-  const res = await client.course[":courseId"].related.$get({
-    param: { courseId: course.raw_id },
-  });
-
-  return await res.json();
-};
-
-const ImportantDates = async ({
-  raw_id,
-  lang,
-}: {
-  raw_id: RawCourseID;
-  lang: Language;
-}) => {
-  const res = await client.course[":courseId"].dates.$get({
-    param: { courseId: raw_id },
-  });
-  const dates = await res.json();
-  const dict = await getDictionary(lang);
-
-  const sortedDates = dates?.sort(
-    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
-  );
-
-  return (
-    <div className="flex flex-col gap-1">
-      <div className="flex flex-row justify-between">
-        <h3 className="font-semibold text-base">
-          {dict.course.details.important_dates}
-        </h3>
-      </div>
-      {sortedDates && (
-        <div className="flex flex-col gap-1">
-          {sortedDates.map((m, index) => (
-            <div key={index} className="flex flex-row gap-2">
-              <p className="text-sm min-w-20">
-                {format(new Date(m.date), "yyyy-MM-dd")}
-              </p>
-              <p className="text-sm font-semibold">
-                <Badge variant="secondary" className="mr-2">
-                  {
-                    dict.dialogs.DateContributeForm.types[
-                      m.type as keyof typeof dict.dialogs.DateContributeForm.types
-                    ]
-                  }
-                </Badge>
-                {m.title}
-              </p>
-            </div>
-          ))}
-        </div>
-      )}
-      {!sortedDates?.length && (
-        <p className="text-sm text-gray-500">No Information</p>
-      )}
-    </div>
-  );
-};
-
-const CourseDetailContainer = async ({
+const CourseDetailContainer = ({
   lang,
   courseId,
   bottomAware = false,
@@ -164,13 +100,54 @@ const CourseDetailContainer = async ({
   bottomAware?: boolean;
   modal?: boolean;
 }) => {
-  const dict = await getDictionary(lang);
-  const res = await client.course[":courseId"].syllabus.$get({
-    param: { courseId },
-  });
-  const course = await res.json();
+  const dict = useDictionary();
 
-  if (!course)
+  // Use React Query to fetch the course data
+  const {
+    data: course,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["course", courseId, "syllabus"],
+    queryFn: async () => {
+      const res = await client.course[":courseId"].syllabus.$get({
+        param: { courseId },
+      });
+      return res.json();
+    },
+  });
+
+  // Use React Query for reviews
+  const { data: reviews = [] } = useQuery({
+    queryKey: ["course", courseId, "ptt"],
+    queryFn: async () => {
+      const res = await client.course[":courseId"].ptt.$get({
+        param: { courseId },
+      });
+      return res.json();
+    },
+    enabled: !!course, // Only fetch if course data is available
+  });
+
+  // Use React Query for related courses
+  const { data: otherClasses = [] } = useQuery({
+    queryKey: ["course", courseId, "related"],
+    queryFn: async () => {
+      const res = await client.course[":courseId"].related.$get({
+        param: { courseId },
+      });
+      return res.json();
+    },
+    enabled: !!course, // Only fetch if course data is available
+  });
+
+  // Handle loading state
+  if (isLoading) {
+    return <CourseDetailsSkeleton />;
+  }
+
+  // Handle error state
+  if (error || !course) {
     return (
       <div className="py-6 px-4">
         <div className="flex flex-col gap-2 border-l border-neutral-500 pl-4 pr-6">
@@ -185,15 +162,9 @@ const CourseDetailContainer = async ({
         </div>
       </div>
     );
-  const missingSyllabus = course.course_syllabus == null;
+  }
 
-  const reviews =
-    (await (
-      await client.course[":courseId"].ptt.$get({
-        param: { courseId },
-      })
-    ).json()) ?? [];
-  const otherClasses = await getOtherClasses(course as MinimalCourse);
+  const missingSyllabus = course.course_syllabus == null;
 
   // times might not be available, check if it is empty list or its items are all empty strings
   const showTimetable = hasTimes(course as MinimalCourse);
@@ -494,7 +465,6 @@ const CourseDetailContainer = async ({
                   </ul>
                 </div>
               </ScrollArea>
-              <ImportantDates raw_id={course.raw_id} lang={lang} />
               {(course.note ?? "").trim().length > 0 && (
                 <div className="flex flex-col gap-1">
                   <h3 className="font-semibold text-base">

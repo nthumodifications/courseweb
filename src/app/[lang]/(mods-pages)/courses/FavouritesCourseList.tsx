@@ -151,6 +151,7 @@ export const FavouritesCourseList = ({}: {}) => {
   const { data: courses = [], error } = useQuery({
     queryKey: ["courses", [...favourites].sort()],
     queryFn: async () => {
+      if (favourites.length == 0) return [] as CourseDefinition[];
       const res = await client.course.$get({
         query: { courses: [...favourites].sort() },
       });
@@ -161,13 +162,14 @@ export const FavouritesCourseList = ({}: {}) => {
     },
   });
 
-  const displayCourseData = useMemo(
-    () =>
-      courses.sort(
-        (a, b) => favourites.indexOf(a.raw_id) - favourites.indexOf(b.raw_id),
-      ),
-    [courses, favourites],
-  );
+  const displayCourseData = useMemo(() => {
+    // Create a copy of the array and ensure it's an array before sorting
+    return Array.isArray(courses)
+      ? [...courses].sort(
+          (a, b) => favourites.indexOf(a.raw_id) - favourites.indexOf(b.raw_id),
+        )
+      : [];
+  }, [courses, favourites]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),

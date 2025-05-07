@@ -116,8 +116,6 @@ const Timetable: FC<{
     return timetableDataWithFraction;
   }, [timetableData]);
 
-  // console.log(timetableDataWithFraction)
-
   const showSaturday = timetableData.some((course) => course.dayOfWeek == 5);
 
   const days = showSaturday

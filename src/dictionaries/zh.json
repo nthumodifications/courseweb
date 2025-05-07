@@ -34,8 +34,8 @@
       "search_placeholder": "尋找你要的課程..."
     },
     "item": {
-      "add_to_semester": "加入這學期",
-      "remove_from_semester": "退掉這學期"
+      "add_to_semester": "加入",
+      "remove_from_semester": "退掉"
     },
     "timetable": {
       "title": "時間表"
@@ -65,7 +65,8 @@
       "ge_filters": "通識篩選",
       "timetable_empty": "找沒課的時間",
       "advanced_filters": "進階篩選",
-      "search_results": "搜尋結果"
+      "search_results": "搜尋結果",
+      "results": "結果"
     },
     "details": {
       "semester": "學期",
@@ -178,6 +179,19 @@
       "analytics": {
         "title": "分享至 Google Analytics",
         "description": "傳送匿名使用量統計數據至 Google Analytics，幫助我們了解使用者行為，以改進服務。"
+      }
+    },
+    "calendar": {
+      "title": "行事曆頁面",
+      "description": "想先看到什麼内容",
+      "academic_calendar": {
+        "title": "清大校曆",
+        "description": "在行事曆頁面顯示學校行事曆。"
+      },
+      "experimental_calendar": {
+        "title": "日曆",
+        "badge": "實驗",
+        "description": "在行事曆頁面使用新的日曆功能。"
       }
     }
   },
@@ -320,6 +334,15 @@
     "all_courses": "全部課程",
     "semester_grades": "學期成績",
     "t_score": "T 分數成績"
+  },
+  "calendar": {
+    "upcoming_events": "即將到來的行程",
+    "no_events": "無行程",
+    "no_events_sub": "今天沒有任何行程",
+    "add_event": "新增行程",
+    "minified": {
+      "no_events": "沒有即將到來的行程"
+    }
   },
   "cancel": "取消",
   "privacy_policy": "隱私權政策",

@@ -25,7 +25,7 @@ export const GETargetCodes = [
   {
     code: "*3",
     short_zh: "開課系所/院學生非通識",
-    short_en: "Not GE for students of the department/college",
+    short_en: "Not GE for college students",
     description_zh:
       "全校學生皆可選修；但開課系(所)所屬(院)學生選修，不列入通識課程學分",
     description_en:
@@ -57,7 +57,7 @@ export const GETargetCodes = [
   {
     code: "*7",
     short_zh: "開課系所學生非通識",
-    short_en: "Not GE for students of the department",
+    short_en: "Not GE for dept. students",
     description_zh:
       "全校學生皆可選修；但開課系(所)之學生選修，不列入通識課程學分",
     description_en:

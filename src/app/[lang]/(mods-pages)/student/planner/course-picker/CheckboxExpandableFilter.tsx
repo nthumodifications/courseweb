@@ -2,13 +2,13 @@
 
 import { useEffect, useRef, useState, useMemo } from "react";
 import { useRefinementList } from "react-instantsearch";
-import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 
-type ExpandableFilterProps = {
+type CheckboxExpandableFilterProps = {
   attribute: string;
   searchable?: boolean;
   limit?: number;
@@ -18,7 +18,7 @@ type ExpandableFilterProps = {
   isClassType?: boolean;
 };
 
-const ExpandableFilter = ({
+const CheckboxExpandableFilter = ({
   attribute,
   searchable = false,
   limit = 10,
@@ -26,7 +26,7 @@ const ExpandableFilter = ({
   synonms = {},
   placeholder = "Search...",
   isClassType = false,
-}: ExpandableFilterProps) => {
+}: CheckboxExpandableFilterProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
@@ -70,10 +70,28 @@ const ExpandableFilter = ({
     }, 0);
   };
 
-  const handleItemSelect = (value: string) => {
+  const handleItemToggle = (value: string) => {
     refine(value);
-    setIsExpanded(false);
-    setSearchQuery("");
+    // Don't close the dropdown after selecting an item with checkbox
+  };
+
+  // For class type, handle "Required" and "Elective" separately
+  const handleClassTypeToggle = (value: string) => {
+    if (isClassType) {
+      // Toggle off any current refinement first
+      items.forEach((item) => {
+        if (item.isRefined) {
+          refine(item.value);
+        }
+      });
+      // Then apply the new refinement if it's not already refined
+      const selectedItem = items.find((item) => item.value === value);
+      if (selectedItem && !selectedItem.isRefined) {
+        refine(value);
+      }
+    } else {
+      handleItemToggle(value);
+    }
   };
 
   // Memoize the filtered items to prevent unnecessary re-renders
@@ -87,27 +105,6 @@ const ExpandableFilter = ({
     }
     return items;
   }, [items, searchable, searchQuery, synonms]);
-
-  // For class type, handle "Required" and "Elective" separately
-  const handleClassTypeSelect = (value: string) => {
-    if (isClassType) {
-      // Toggle off any current refinement first
-      items.forEach((item) => {
-        if (item.isRefined) {
-          refine(item.value);
-        }
-      });
-      // Then apply the new refinement if it's not already refined
-      const selectedItem = items.find((item) => item.value === value);
-      if (selectedItem && !selectedItem.isRefined) {
-        refine(value);
-      }
-      setIsExpanded(false);
-      setSearchQuery("");
-    } else {
-      handleItemSelect(value);
-    }
-  };
 
   // Memoize the refined items to prevent re-renders
   const refinedItems = useMemo(() => {
@@ -125,7 +122,7 @@ const ExpandableFilter = ({
       >
         <div className="flex flex-1 flex-wrap gap-1 items-center">
           {refinedItems.length > 0 ? (
-            <>
+            <div className="flex flex-wrap gap-1">
               {refinedItems.map((item) => (
                 <Badge
                   key={item.value}
@@ -146,7 +143,7 @@ const ExpandableFilter = ({
                   </button>
                 </Badge>
               ))}
-            </>
+            </div>
           ) : (
             <span className="text-muted-foreground text-sm">
               {isExpanded ? "" : "Click to select..."}
@@ -177,13 +174,22 @@ const ExpandableFilter = ({
                       ? "bg-primary/10 text-primary"
                       : "hover:bg-muted",
                   )}
-                  onClick={() => handleClassTypeSelect(item.value)}
                 >
-                  <div className="flex-1 break-words whitespace-normal">
-                    {synonms[item.label] || item.label}{" "}
-                    <span className="text-muted-foreground whitespace-normal">
-                      ({item.count})
-                    </span>
+                  <div className="flex items-center space-x-2 w-full">
+                    <Checkbox
+                      id={`${attribute}-${item.value}`}
+                      checked={item.isRefined}
+                      onCheckedChange={() => handleClassTypeToggle(item.value)}
+                    />
+                    <label
+                      htmlFor={`${attribute}-${item.value}`}
+                      className="flex-1 cursor-pointer text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 break-words whitespace-normal"
+                    >
+                      {synonms[item.label] || item.label}{" "}
+                      <span className="text-muted-foreground whitespace-normal">
+                        ({item.count})
+                      </span>
+                    </label>
                   </div>
                 </div>
               ))}
@@ -212,4 +218,4 @@ const ExpandableFilter = ({
   );
 };
 
-export default ExpandableFilter;
+export default CheckboxExpandableFilter;

@@ -27,6 +27,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useRxCollection } from "rxdb-hooks";
+import { HeaderPortalOutlet } from "./Portal/HeaderPortal";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Header = () => {
   const {
@@ -39,6 +41,7 @@ const Header = () => {
     revokeTokens,
   } = useAuth();
   const dict = useDictionary();
+  const isMobile = useIsMobile();
 
   const handleLogin = () => {
     // set redirectUri in localStorage to current page
@@ -96,10 +99,14 @@ const Header = () => {
   };
 
   return (
-    <header className="h-[--header-height] w-full bg-white dark:bg-background shadow-md px-2 md:px-4 py-4 md:col-span-2 flex flex-row items-center z-50 gap-4 sticky top-0">
+    <header className="h-[--header-height] w-full bg-white border-border border-b dark:bg-background px-2 md:px-4 py-4 md:col-span-2 flex flex-row items-center z-50 gap-4 sticky top-0">
       <SidebarTrigger />
-      <div className="flex flex-1">
-        <CurrentSemesterLabel />
+      <div className="flex flex-1 items-center">
+        <div
+          id="header-portal-container"
+          className="flex-1 flex justify-center"
+        />
+        <HeaderPortalOutlet />
       </div>
       {isAuthenticated && user ? (
         <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
@@ -124,8 +131,9 @@ const Header = () => {
           </DropdownMenuContent>
         </DropdownMenu>
       ) : (
-        <Button size="sm" variant="outline" onClick={handleLogin}>
-          {dict.settings.account.signin} <LogIn className="w-4 h-4" />
+        <Button variant="ghost" size="sm" onClick={handleLogin}>
+          {isMobile ? "" : dict.settings.account.signin}{" "}
+          <LogIn className="w-4 h-4" />
         </Button>
       )}
       <AlertDialog open={open} onOpenChange={setOpen}>

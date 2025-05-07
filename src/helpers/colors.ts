@@ -3,6 +3,38 @@ export function getBrightness(color: string) {
   return (r * 299 + g * 587 + b * 114) / 1000;
 }
 
+// WCAG contrast calculation for better text readability
+export function getContrastColor(backgroundColor: string): string {
+  // Convert hex to RGB
+  const [r, g, b] = hexToRgb(backgroundColor);
+
+  // Calculate relative luminance according to WCAG formula
+  const luminance = calculateRelativeLuminance(r, g, b);
+
+  // Choose black or white based on contrast ratio
+  // Use white text on dark background and black text on light background
+  return luminance > 0.5 ? "#000000" : "#FFFFFF";
+}
+
+// Calculate relative luminance according to WCAG formula
+function calculateRelativeLuminance(r: number, g: number, b: number): number {
+  // Normalize RGB values
+  const rsRGB = r / 255;
+  const gsRGB = g / 255;
+  const bsRGB = b / 255;
+
+  // Calculate RGB components for luminance
+  const R =
+    rsRGB <= 0.03928 ? rsRGB / 12.92 : Math.pow((rsRGB + 0.055) / 1.055, 2.4);
+  const G =
+    gsRGB <= 0.03928 ? gsRGB / 12.92 : Math.pow((gsRGB + 0.055) / 1.055, 2.4);
+  const B =
+    bsRGB <= 0.03928 ? bsRGB / 12.92 : Math.pow((bsRGB + 0.055) / 1.055, 2.4);
+
+  // Calculate luminance using WCAG formula
+  return 0.2126 * R + 0.7152 * G + 0.0722 * B;
+}
+
 const hexToRgb = (hex: string) => {
   const bigint = parseInt(hex.replace("#", ""), 16);
   const r = (bigint >> 16) & 255;

@@ -2,8 +2,7 @@ import { useSettings } from "@/hooks/contexts/settings";
 import { currentSemester } from "@/const/semester";
 import { useMemo } from "react";
 
-const CurrentSemesterLabel = () => {
-  const { language } = useSettings();
+const CurrentSemesterLabel = ({ language }: { language: "en" | "zh" }) => {
   const currentWeek = useMemo(
     () =>
       currentSemester
@@ -16,7 +15,7 @@ const CurrentSemesterLabel = () => {
   );
 
   return (
-    <p className="text-xs text-gray-600 dark:text-gray-400">
+    <p className="text-xs text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
       {language == "en" &&
         (currentSemester
           ? `AC${currentSemester.year} Sem ${currentSemester.semester}, Week ${currentWeek}`

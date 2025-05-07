@@ -1,6 +1,14 @@
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import {
+  CalendarIcon,
+  ChevronLeft,
+  ChevronRight,
+  Columns4,
+  Grid3x3,
+  Plus,
+  Rows2,
+} from "lucide-react";
 import { addMonths, addWeeks, subMonths, subWeeks } from "date-fns";
-import { KeyboardEvent, useEffect, useState } from "react";
+import { KeyboardEvent, useCallback, useEffect, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -34,6 +42,10 @@ import { TimetableSyncDocType } from "@/config/rxdb";
 import CalendarTimetableSyncDialog from "./CalendarTimetableSyncDialog";
 import { toast } from "../ui/use-toast";
 import { toPrettySemester } from "@/helpers/semester";
+import { useHeaderPortal } from "@/components/Portal/HeaderPortal";
+import UpcomingEvents from "./UpcomingEvents";
+import { useIsMobile } from "@/hooks/use-mobile";
+import useDictionary from "@/dictionaries/useDictionary";
 
 const CalendarError: ErrorComponent = ({ error, reset }) => {
   return <div className="text-red-500">An error occurred: {error.message}</div>;
@@ -41,12 +53,103 @@ const CalendarError: ErrorComponent = ({ error, reset }) => {
 
 const Calendar = () => {
   const [displayDates, setDisplayDates] = useState<Date[]>(getWeek(new Date()));
-  const [displayMode, setDisplayMode] = useState<"week" | "month">("week");
+  const [displayMode, setDisplayMode] = useState<"week" | "month" | "upcoming">(
+    "week",
+  );
   const { events, addEvent, removeEvent, displayContainer, HOUR_HEIGHT } =
     useCalendar();
   const { courses, colorMap, getSemesterCourses } = useUserTimetable();
   const { language } = useSettings();
   const [dbReady, setDbReady] = useState(false);
+  const isMobile = useIsMobile();
+  const dict = useDictionary();
+
+  // Get the portal functions
+  const { setPortalContent, clearPortalContent } = useHeaderPortal();
+
+  const setDate = useCallback(
+    (date: Date) => {
+      switch (displayMode) {
+        case "week":
+          setDisplayDates(getWeek(date));
+          break;
+        case "month":
+          setDisplayDates(getMonthForDisplay(date));
+          break;
+      }
+    },
+    [displayMode],
+  );
+
+  // When component mounts or displayDates change, update the header content
+  useEffect(() => {
+    const centerDate = displayDates[Math.floor(displayDates.length / 2)];
+
+    // Create the portal content with tabs included
+    const content = (
+      <div className="md:w-full flex flex-row items-center justify-between gap-2">
+        <div className="flex align-middle gap-2">
+          <Button
+            variant="ghost"
+            onClick={moveBackward}
+            size="icon"
+            className="hidden md:inline-flex"
+          >
+            <ChevronLeft />
+          </Button>
+          <CalendarDateSelector date={centerDate} setDate={setDate} />
+          <Button
+            variant="ghost"
+            onClick={moveForward}
+            size="icon"
+            className="hidden md:inline-flex"
+          >
+            <ChevronRight />
+          </Button>
+        </div>
+
+        <div className="flex items-center">
+          <Tabs
+            defaultValue={displayMode}
+            value={displayMode}
+            onValueChange={(v) =>
+              handleSwitchMode(v as "week" | "month" | "upcoming")
+            }
+            className="mr-2"
+          >
+            <TabsList className="h-8">
+              <TabsTrigger value="upcoming" className="md:hidden h-7 px-2">
+                <Rows2 className="h-4 w-4" />
+              </TabsTrigger>
+              <TabsTrigger value="week" className="h-7 px-2">
+                <Columns4 className="h-4 w-4" />
+              </TabsTrigger>
+              <TabsTrigger value="month" className="h-7 px-2">
+                <Grid3x3 className="h-4 w-4" />
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={backToToday}
+            className="h-8 hidden md:inline-flex"
+          >
+            <CalendarIcon className="size-4" />
+          </Button>
+        </div>
+      </div>
+    );
+
+    // Set the portal content
+    setPortalContent(content);
+
+    // Clean up when unmounting
+    return () => {
+      clearPortalContent();
+    };
+  }, [displayDates, setDate, displayMode]); // Added displayMode as dependency
 
   //week movers
   const moveBackward = () => {
@@ -88,18 +191,7 @@ const Calendar = () => {
     }
   };
 
-  const setDate = (date: Date) => {
-    switch (displayMode) {
-      case "week":
-        setDisplayDates(getWeek(date));
-        break;
-      case "month":
-        setDisplayDates(getMonthForDisplay(date));
-        break;
-    }
-  };
-
-  const handleSwitchMode = (mode: "week" | "month") => {
+  const handleSwitchMode = (mode: "week" | "month" | "upcoming") => {
     setDisplayMode(mode);
     switch (mode) {
       case "week":
@@ -107,6 +199,8 @@ const Calendar = () => {
         break;
       case "month":
         setDisplayDates(getMonthForDisplay(displayDates[0]));
+        break;
+      case "upcoming":
         break;
     }
   };
@@ -250,80 +344,29 @@ const Calendar = () => {
         />
       )}
       <div className="flex flex-col gap-2 md:gap-6 flex-1 w-full">
-        <div className="flex flex-col md:flex-row gap-2 justify-evenly">
-          <div className="flex flex-row justify-between flex-1">
-            <div className="flex-1 w-full flex align-middle gap-2">
-              <Button variant="outline" onClick={moveBackward} size="icon">
-                <ChevronLeft />
-              </Button>
-              <CalendarDateSelector
-                date={displayDates[Math.floor(displayDates.length / 2)]}
-                setDate={setDate}
-              />
-              <Button variant="outline" onClick={moveForward} size="icon">
-                <ChevronRight />
-              </Button>
-            </div>
-            {/* <DropdownMenu>
-              <DropdownMenuTrigger asChild >
-              <Button variant="outline">
-                <Settings size={16} />
-              </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuLabel>Settings</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>Clear All</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu> */}
-          </div>
+        <div className="flex flex-col md:flex-row gap-2 justify-end">
           <div className="md:flex flex-row items-center gap-2 hidden ">
-            <Select
-              value={displayMode}
-              onValueChange={(v) => handleSwitchMode(v as "week" | "month")}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Display" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="week">Week</SelectItem>
-                <SelectItem value="month">Month</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button variant="outline" onClick={backToToday}>
-              Today
-            </Button>
             <AddEventButton onEventAdded={handleAddEvent}>
               <Button className="hidden md:inline-flex">
-                <Plus className="mr-2" /> 新增行程
+                <Plus className="mr-2" /> {dict.calendar.add_event}
               </Button>
             </AddEventButton>
           </div>
         </div>
-        <Tabs
-          defaultValue={displayMode}
-          value={displayMode}
-          onValueChange={(v) => handleSwitchMode(v as "week" | "month")}
-          className="w-full md:hidden"
-        >
-          <TabsList className="w-full">
-            <TabsTrigger value="week" className="w-full">
-              Week
-            </TabsTrigger>
-            <TabsTrigger value="month" className="w-full">
-              Month
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
         <div className="w-full h-[80dvh]" {...handlers}>
-          {displayMode == "week" && (
+          {displayMode === "week" && (
             <CalendarWeekContainer displayWeek={displayDates} />
           )}
-          {displayMode == "month" && (
+          {displayMode === "month" && (
             <CalendarMonthContainer
               displayMonth={displayDates}
               onChangeView={handleOnViewChange}
             />
+          )}
+          {displayMode === "upcoming" && (
+            <div className="px-2 py-4">
+              <UpcomingEvents />
+            </div>
           )}
         </div>
         <AddEventButton onEventAdded={handleAddEvent}>

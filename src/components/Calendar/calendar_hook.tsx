@@ -87,7 +87,7 @@ export const useCalendarProvider = () => {
               },
             );
           const conflictsArray = await rawResponse.json();
-          return conflictsArray;
+          return conflictsArray as WithDeleted<EventDocType>[];
         },
       },
       pull: {

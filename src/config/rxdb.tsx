@@ -18,7 +18,7 @@ import { wrappedValidateZSchemaStorage } from "rxdb/plugins/validate-z-schema";
 
 // create collection based on CalendarEvent
 const eventsSchema = {
-  version: 0,
+  version: 1,
   primaryKey: "id",
   type: "object",
   properties: {
@@ -30,10 +30,10 @@ const eventsSchema = {
       type: "string",
     },
     details: {
-      type: "string",
+      type: ["string"],
     },
     location: {
-      type: "string",
+      type: ["string"],
     },
     allDay: {
       type: "boolean",
@@ -51,7 +51,7 @@ const eventsSchema = {
       format: "date-time",
     },
     repeat: {
-      type: "object",
+      type: ["object", "null"],
       properties: {
         type: {
           type: "string",
@@ -70,10 +70,10 @@ const eventsSchema = {
       },
     },
     color: {
-      type: "string",
+      type: ["string"],
     },
     tag: {
-      type: "string",
+      type: ["string"],
     },
     excludedDates: {
       type: "array",
@@ -83,7 +83,7 @@ const eventsSchema = {
       },
     },
     parentId: {
-      type: "string",
+      type: ["string"],
     },
   },
   required: [
@@ -92,7 +92,6 @@ const eventsSchema = {
     "allDay",
     "start",
     "end",
-    "displayEnd",
     "repeat",
     "color",
     "tag",
@@ -151,16 +150,128 @@ export const initializeRxDB = async () => {
           storage: getRxStorageDexie(),
         })
       : getRxStorageDexie();
-  // removeRxDatabase('nthumods-calendar', getRxStorageDexie());
   const db = await createRxDatabase({
     name: "nthumods-calendar",
     storage: storage,
     ignoreDuplicate: process.env.NODE_ENV === "development",
+    // Add global options to handle replication protocol metadata
+    options: {
+      replication: {
+        metaInstanceFactory: (docData: any) => {
+          // Ensure _meta is always a valid object with lwt when used in replication
+          if (!docData._meta || docData._meta === null) {
+            docData._meta = { lwt: Date.now() };
+          }
+          return docData;
+        },
+      },
+    },
   });
 
   await db.addCollections({
     events: {
       schema: eventsSchema,
+      migrationStrategies: {
+        1: (oldDoc) => {
+          console.log("Migrating document:", oldDoc.id, oldDoc);
+
+          try {
+            // Special handling for replication protocol documents
+            if (oldDoc.isCheckpoint && oldDoc.itemId) {
+              console.log(
+                "Found replication protocol document, ensuring proper structure",
+              );
+              // This is a replication protocol document
+              if (oldDoc.docData) {
+                // Fix nested _meta
+                if (!oldDoc.docData._meta || oldDoc.docData._meta === null) {
+                  oldDoc.docData._meta = {
+                    lwt: Math.min(Math.max(Date.now(), 1), 1000000000000000),
+                  };
+                }
+
+                // Add any missing required fields in docData to avoid validation errors
+                oldDoc.docData.excludedDates = Array.isArray(
+                  oldDoc.docData.excludedDates,
+                )
+                  ? oldDoc.docData.excludedDates
+                  : [];
+                oldDoc.docData.parentId = oldDoc.docData.parentId || "";
+                oldDoc.docData.details = oldDoc.docData.details || "";
+              }
+
+              return oldDoc;
+            }
+
+            // Regular document handling
+            if (oldDoc.docData && typeof oldDoc.docData === "object") {
+              console.log(
+                "Document has docData structure, handling validation issues",
+              );
+
+              // Always ensure docData._meta is properly initialized with required lwt property
+              const timestamp = Date.now();
+              oldDoc.docData._meta = {
+                lwt: Math.min(Math.max(timestamp, 1), 1000000000000000),
+              };
+
+              // Ensure other required fields are present
+              oldDoc.docData.excludedDates = Array.isArray(
+                oldDoc.docData.excludedDates,
+              )
+                ? oldDoc.docData.excludedDates
+                : [];
+
+              oldDoc.docData.parentId = oldDoc.docData.parentId || "";
+              oldDoc.docData.details = oldDoc.docData.details || "";
+
+              // Remove any nested docData that might be causing issues
+              if (oldDoc.docData.docData) {
+                console.log(
+                  "Found nested docData.docData, removing to avoid validation errors",
+                );
+                delete oldDoc.docData.docData;
+              }
+            }
+
+            // Handle root-level properties
+            if (!oldDoc._meta || oldDoc._meta === null) {
+              const timestamp = Date.now();
+              oldDoc._meta = {
+                lwt: Math.min(Math.max(timestamp, 1), 1000000000000000),
+              };
+            }
+
+            // Ensure other required fields are present at the root level
+            oldDoc.excludedDates = Array.isArray(oldDoc.excludedDates)
+              ? oldDoc.excludedDates
+              : [];
+
+            oldDoc.parentId = oldDoc.parentId || "";
+            oldDoc.details = oldDoc.details || "";
+
+            console.log("Migration completed for document:", oldDoc.id);
+
+            return oldDoc;
+          } catch (error) {
+            console.error(
+              "Error during migration of document:",
+              oldDoc.id,
+              error,
+            );
+
+            // Even if there's an error, try to return a minimally valid document
+            if (oldDoc.docData && typeof oldDoc.docData === "object") {
+              oldDoc.docData._meta = { lwt: Date.now() };
+            }
+            if (!oldDoc._meta || oldDoc._meta === null) {
+              oldDoc._meta = { lwt: Date.now() };
+            }
+
+            return oldDoc;
+          }
+        },
+      },
     },
     timetablesync: {
       schema: timetableSyncSchema,
