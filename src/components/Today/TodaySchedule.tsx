@@ -1,32 +1,17 @@
 "use client";
 import { EventData } from "@/types/calendar_event";
-import { format, formatRelative, getDay, isSameDay, parse } from "date-fns";
+import { format, formatRelative, getDay, isSameDay } from "date-fns";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { scheduleTimeSlots } from "@/const/timetable";
-import { FC, useMemo } from "react";
+import { FC, useMemo, useState, useEffect } from "react";
 import { useSettings } from "@/hooks/contexts/settings";
-import { AlertDefinition } from "@/config/supabase";
 import useDictionary from "@/dictionaries/useDictionary";
 import { getLocale } from "@/helpers/dateLocale";
-import {
-  Info,
-  CalendarRange,
-  Sun,
-  CloudSun,
-  Cloud,
-  CloudRain,
-  CloudLightning,
-  Snowflake,
-  MapPin,
-  Clock,
-} from "lucide-react";
+import { Cloud, MapPin, Clock } from "lucide-react";
 import { apps } from "@/const/apps";
-import Link from "next/link";
 import { getSemester, lastSemester } from "@/const/semester";
 import { createTimetableFromCourses } from "@/helpers/timetable";
 import { MinimalCourse } from "@/types/courses";
-import { VenueChip } from "../Timetable/VenueChip";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import useTime from "@/hooks/useTime";
 import { NoClassPickedReminder } from "./NoClassPickedReminder";
 import { TimetableItemDrawer } from "@/components/Timetable/TimetableItemDrawer";
@@ -50,6 +35,11 @@ const TodaySchedule: FC = () => {
   const { language, pinnedApps, showAcademicCalendar } = useSettings();
   const dict = useDictionary();
   const date = useTime();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const curr_sem = useMemo(() => getSemester(date), [date]);
   const timetableData = useMemo(
@@ -113,7 +103,7 @@ const TodaySchedule: FC = () => {
       });
       return await res.json();
     },
-    enabled: showAcademicCalendar,
+    enabled: showAcademicCalendar && isClient,
     initialData: [],
   });
 
@@ -169,7 +159,7 @@ const TodaySchedule: FC = () => {
   };
 
   const renderCalendars = (day: Date) => {
-    if (!showAcademicCalendar) return <></>;
+    if (!showAcademicCalendar || !isClient) return <></>;
     const events = calendar.filter((event) =>
       isSameDay(new Date(event.date), day),
     );
@@ -186,6 +176,8 @@ const TodaySchedule: FC = () => {
   };
 
   const renderWeather = (day: Date) => {
+    if (!isClient) return null;
+
     const weatherData = weather?.find(
       (w) => w.date == format(day, "yyyy-MM-dd"),
     );
@@ -259,7 +251,7 @@ const TodaySchedule: FC = () => {
                 )}
               </div>
             </div>
-            {!weatherLoading && weather && renderWeather(day)}
+            {isClient && !weatherLoading && weather && renderWeather(day)}
           </div>
           {renderCalendars(day)}
           {renderDayTimetable(day)}
