@@ -152,7 +152,7 @@
     "@types/react-color": "^3.0.12",
     "@types/uuid": "^10.0.0",
     "eslint": "8.57.0",
-    "eslint-config-next": "14.2.5",
+    "eslint-config-next": "14.2.26",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-unused-imports": "^4.1.3",
     "husky": "^9.1.4",

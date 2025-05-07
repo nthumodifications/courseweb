@@ -6,6 +6,7 @@ import {
 } from "@/components/ui/popover";
 import { Calendar as ShadcnCalendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
+import { ChevronDown } from "lucide-react";
 
 export const CalendarDateSelector = ({
   date,
@@ -24,8 +25,8 @@ export const CalendarDateSelector = ({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger>
-        <h2 className=" text-lg md:text-2xl font-semibold md:w-48 w-36">
-          {format(date, "LLLL yyyy")}
+        <h2 className="text-lg md:text-xl font-semibold md:w-40 w-36 whitespace-nowrap">
+          {format(date, "LLLL yyyy")} <ChevronDown className="inline size-3" />
         </h2>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0">

@@ -8,6 +8,8 @@ import {
 import NTHUModsLogo from "@/components/Branding/NTHUModsLogo";
 
 import dynamic from "next/dynamic";
+import CurrentSemesterLabel from "./Today/CurrentSemesterLabel";
+import { Language } from "@/types/settings";
 
 const HelpDynamic = dynamic(() => import("@/components/Help/Help"));
 
@@ -19,7 +21,7 @@ const MinifiedUpcomingEventsDynamic = dynamic(
   () => import("@/components/Calendar/MinifiedUpcomingEvents"),
 );
 
-const AppSidebar = () => {
+const AppSidebar = ({ lang }: { lang: Language }) => {
   return (
     <Sidebar collapsible="offcanvas">
       <SidebarHeader className="p-4">
@@ -29,6 +31,9 @@ const AppSidebar = () => {
         <SideNav />
       </SidebarContent>
       <SidebarFooter className="flex flex-col">
+        <div className="pl-2">
+          <CurrentSemesterLabel language={lang} />
+        </div>
         <div className="border-t border-border pt-2">
           <MinifiedUpcomingEventsDynamic />
         </div>

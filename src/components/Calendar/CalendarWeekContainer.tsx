@@ -294,7 +294,7 @@ export const CalendarWeekContainer = ({
   }, [dayEvents]);
 
   return (
-    <div className="flex flex-row w-full overflow-x-scroll h-full">
+    <div className="flex flex-row w-full overflow-x-scroll h-full pl-2 md:pl-0">
       <div
         className="flex flex-col min-w-9 sticky left-0 shadow-md z-20 h-full overflow-y-hidden"
         ref={timeLabelContainer}
