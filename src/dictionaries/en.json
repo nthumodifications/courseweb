@@ -348,5 +348,9 @@
   "privacy_policy": "Privacy Policy",
   "common": {
     "cancel": "Cancel"
+  },
+  "sponsorship": {
+    "title": "Help NTHUMods grow",
+    "description": "Contribute as little as $1 to support our development"
   }
 }

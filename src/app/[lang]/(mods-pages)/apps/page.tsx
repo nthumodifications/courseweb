@@ -1,6 +1,6 @@
 "use client";
 import { apps, categories } from "@/const/apps";
-import { Settings, Star } from "lucide-react";
+import { Settings, Star, ArrowRight } from "lucide-react";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useSettings } from "@/hooks/contexts/settings";
 import { cn } from "@/lib/utils";
@@ -8,6 +8,8 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import AppItem from "./AppItem";
+import Link from "next/link";
+import SponsorshipBanner from "@/components/Sponsorship/SponsorshipBanner";
 
 const AppList = () => {
   const dict = useDictionary();
@@ -15,7 +17,7 @@ const AppList = () => {
 
   return (
     <div className="h-full w-full px-2">
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-2">
         <div className="flex flex-col p-4 rounded-md border border-border gap-4">
           <div className="flex flex-row items-center">
             <h1 className="font-bold text-muted-foreground flex-1">
@@ -89,6 +91,7 @@ const AppList = () => {
             </p>
           )}
         </div>
+
         {Object.keys(categories).map((category) => (
           <div
             className="flex flex-col p-4 rounded-md border border-border gap-4"
@@ -107,6 +110,7 @@ const AppList = () => {
             </div>
           </div>
         ))}
+        <SponsorshipBanner />
       </div>
     </div>
   );

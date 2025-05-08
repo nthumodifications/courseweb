@@ -10,6 +10,7 @@ import NTHUModsLogo from "@/components/Branding/NTHUModsLogo";
 import dynamic from "next/dynamic";
 import CurrentSemesterLabel from "./Today/CurrentSemesterLabel";
 import { Language } from "@/types/settings";
+import SponsorshipBanner from "./Sponsorship/SponsorshipBanner";
 
 const HelpDynamic = dynamic(() => import("@/components/Help/Help"));
 
@@ -37,7 +38,10 @@ const AppSidebar = ({ lang }: { lang: Language }) => {
         <div className="border-t border-border pt-2">
           <MinifiedUpcomingEventsDynamic />
         </div>
-        <div className="flex flex-row justify-stretch gap-2 mt-2">
+        <div className="px-2 mt-2">
+          <SponsorshipBanner />
+        </div>
+        <div className="flex flex-row justify-stretch gap-2 mt-2 px-2">
           <HelpDynamic />
           <GenericIssueFormDynamic />
         </div>

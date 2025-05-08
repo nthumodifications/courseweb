@@ -348,5 +348,9 @@
   "privacy_policy": "隱私權政策",
   "common": {
     "cancel": "取消"
+  },
+  "sponsorship": {
+    "title": "幫助 NTHUMods 成長",
+    "description": "僅需 $1 即可支持我們的開發"
   }
 }
