@@ -39,7 +39,6 @@ const DownloadTimetableComponent = () => {
     toPng(ref.current!, {
       cacheBust: true,
       pixelRatio: 3,
-      filter: (node: HTMLElement) => node.id !== "time_slot",
     })
       .then(async (dataUrl) => {
         setGeneratedImg(dataUrl);

@@ -6,12 +6,14 @@ import {
   Copy,
   GripVertical,
   Loader2,
+  Settings,
 } from "lucide-react";
 import { useSettings } from "@/hooks/contexts/settings";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { useRouter } from "next/navigation";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useMemo } from "react";
+import useSyncedStorage from "@/hooks/useSyncedStorage";
 import {
   hasConflictingTimeslots,
   hasSameCourse,
@@ -24,7 +26,6 @@ import {
   DndContext,
   closestCenter,
   KeyboardSensor,
-  PointerSensor,
   useSensor,
   useSensors,
   DragEndEvent,
@@ -58,6 +59,15 @@ import {
   HoverCardTrigger,
 } from "../ui/hover-card";
 import { TimetableItemDrawer } from "./TimetableItemDrawer";
+import { Switch } from "../ui/switch";
+import { Label } from "../ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 
 export const DownloadTimetableDialogDynamic = dynamic(
   () => import("./DownloadTimetableDialog"),
@@ -86,16 +96,27 @@ export const CourseSearchContainerDynamic = dynamic(
   { ssr: false, loading: () => <Loader2 className="w-4 h-4 animate-spin" /> },
 );
 
+interface DisplaySettings {
+  englishNames: "add" | "replace" | "none";
+  showCourseCode: boolean;
+  showVenue: boolean;
+  showPriority: boolean;
+  showCredits: boolean;
+  lockOrder: boolean;
+}
+
 const TimetableCourseListItem = ({
   course,
   hasConflict,
   isDuplicate,
   priority,
+  displaySettings,
 }: {
   course: MinimalCourse;
   hasConflict: boolean;
   isDuplicate: boolean;
   priority: number;
+  displaySettings: DisplaySettings;
 }) => {
   const { language } = useSettings();
 
@@ -106,7 +127,7 @@ const TimetableCourseListItem = ({
     useUserTimetable();
 
   const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id: course.raw_id });
+    useSortable({ id: course.raw_id, disabled: displaySettings.lockOrder });
 
   const style = {
     transform: CSS.Translate.toString(transform),
@@ -119,11 +140,13 @@ const TimetableCourseListItem = ({
       ref={setNodeRef}
       style={style}
     >
-      <GripVertical
-        className="w-4 h-4 text-gray-400"
-        {...attributes}
-        {...listeners}
-      />
+      {!displaySettings.lockOrder && (
+        <GripVertical
+          className="w-4 h-4 text-gray-400"
+          {...attributes}
+          {...listeners}
+        />
+      )}
       <Popover>
         <PopoverTrigger asChild>
           <div className="p-1 rounded-md hover:outline outline-1 outline-slate-400 mr-2">
@@ -145,35 +168,56 @@ const TimetableCourseListItem = ({
       </Popover>
       <TimetableItemDrawer course={course}>
         <div className="flex flex-col flex-1">
-          <p className="mb-1">
-            {priority != 0 && (
-              <span className="px-2 py-0.5 dark:bg-white dark:text-black bg-neutral-700 text-white mr-1 rounded-md text-xs">
+          {displaySettings.showCourseCode && (
+            <div className="text-xs text-muted-foreground">
+              {course.department} {course.course}
+            </div>
+          )}
+          {displaySettings.englishNames !== "replace" && (
+            <div className="">
+              {course.name_zh}{" "}
+              <span className="text-muted-foreground">
+                {course.teacher_zh.join(",")}
+              </span>
+            </div>
+          )}
+          {displaySettings.englishNames === "replace" && (
+            <>
+              <div className="font-medium text-sm">{course.name_en}</div>
+              <div className="text-xs text-muted-foreground mt-1">
+                {course.teacher_en.join(",")}
+              </div>
+            </>
+          )}
+          {displaySettings.englishNames === "add" && (
+            <div className={"text-xs"}>
+              {course.name_en} - {course.teacher_en.join(",")}
+            </div>
+          )}
+          <div className="mt-1 flex flex-row gap-1 text-muted-foreground">
+            {displaySettings.showVenue &&
+              course.venues?.map((venue, index) => {
+                const time = course.times![index];
+                return (
+                  <div
+                    key={index}
+                    className="px-2 py-0.5 bg-foreground/10 mr-1 rounded-md text-xs"
+                  >
+                    {venue}{" "}
+                    {hasTimes(course as MinimalCourse) ? time : "缺時間"}
+                  </div>
+                );
+              })}
+            {displaySettings.showCredits && (
+              <div className="px-2 py-0.5 bg-foreground/10 mr-1 rounded-md text-xs">
+                {course.credits} 學分
+              </div>
+            )}
+            {displaySettings.showPriority && priority != 0 && (
+              <span className="px-2 py-0.5 bg-foreground text-muted mr-1 rounded-md text-xs">
                 {priority} 志願
               </span>
             )}
-          </p>
-          <span className="text-sm">
-            {course.department} {course.course}-{course.class} {course.name_zh}{" "}
-            - {course.teacher_zh.join(",")}
-          </span>
-          <span className="text-xs">{course.name_en}</span>
-          <div className="mt-1">
-            {course.venues?.map((venue, index) => {
-              const time = course.times![index];
-              return (
-                <div
-                  key={index}
-                  className="flex flex-row items-center space-x-2 font-mono text-gray-400"
-                >
-                  <span className="text-xs">{venue}</span>
-                  {hasTimes(course as MinimalCourse) ? (
-                    <span className="text-xs">{time}</span>
-                  ) : (
-                    <span className="text-xs text-red-500">缺時間</span>
-                  )}
-                </div>
-              );
-            }) || <span className="text-gray-400 text-xs">No Venue</span>}
           </div>
         </div>
       </TimetableItemDrawer>
@@ -198,12 +242,6 @@ const TimetableCourseListItem = ({
             </HoverCardContent>
           </HoverCard>
         )}
-        {/* Credits */}
-
-        <div className="flex flex-row items-center space-x-1">
-          <span className="text-lg">{course.credits}</span>
-          <span className="text-xs text-gray-400">學分</span>
-        </div>
         <div className="flex flex-row">
           <Button
             className="rounded-l-none"
@@ -213,10 +251,6 @@ const TimetableCourseListItem = ({
           >
             <Trash className="w-4 h-4" />
           </Button>
-          {/* TOOD: Has no plans to implement now */}
-          {/* <IconButton>
-                    <EyeOff className="w-4 h-4" />
-                </IconButton> */}
         </div>
       </div>
     </div>
@@ -236,6 +270,21 @@ export const TimetableCourseList = ({
 
   const { getSemesterCourses, courses, addCourse, colorMap, setCourses } =
     useUserTimetable();
+
+  const defaultSettings: DisplaySettings = {
+    englishNames: "add",
+    showCourseCode: false,
+    showVenue: true,
+    showPriority: true,
+    showCredits: true,
+    lockOrder: false,
+  };
+
+  const [displaySettings, setDisplaySettings] =
+    useSyncedStorage<DisplaySettings>(
+      "timetable-display-settings",
+      defaultSettings,
+    );
 
   const displayCourseData = useMemo(
     () => getSemesterCourses(semester),
@@ -273,7 +322,6 @@ export const TimetableCourseList = ({
   );
 
   const peAndGeAllocation = useMemo(() => {
-    //filter by pe and ge: include PE (exclude PE 1110) and courses with ge_target
     const peAndGe = displayCourseData.filter((course) => {
       if (course.department == "PE" && course.course != "PE 1110") {
         return true;
@@ -288,15 +336,11 @@ export const TimetableCourseList = ({
   }, [displayCourseData]);
 
   function handleDragEnd(event: DragEndEvent) {
+    if (displaySettings.lockOrder) return;
+
     const { active, over } = event;
     if (!over) return;
     if (active.id !== over.id) {
-      // setItems((items) => {
-      //     const oldIndex = items.indexOf(active.id);
-      //     const newIndex = items.indexOf(over.id);
-
-      //     return arrayMove(items, oldIndex, newIndex);
-      // });
       const courseCopy = [...courses[semester]];
       const oldIndex = courseCopy.indexOf(active.id as string);
       const newIndex = courseCopy.indexOf(over.id as string);
@@ -308,7 +352,11 @@ export const TimetableCourseList = ({
   return (
     <div className="flex flex-col gap-2">
       <div
-        className={`${!vertical ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 " : "flex flex-col"} gap-4 flex-wrap`}
+        className={`${
+          !vertical
+            ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 "
+            : "flex flex-col"
+        } gap-4 flex-wrap`}
       >
         <DndContext
           sensors={sensors}
@@ -335,6 +383,7 @@ export const TimetableCourseList = ({
                 }
                 isDuplicate={duplicates.includes(course.raw_id)}
                 priority={peAndGeAllocation.indexOf(course.raw_id) + 1}
+                displaySettings={displaySettings}
               />
             ))}
           </SortableContext>
@@ -345,7 +394,6 @@ export const TimetableCourseList = ({
               {"No Courses Added (yet)"}
             </span>
             <div className="flex flex-row gap-2">
-              {/* <Button variant="plain" startDecorator={<UploadCloud className="w-4 h-4"/>}>Import from File</Button> */}
               <Button
                 variant="outline"
                 onClick={() => router.push(`/${language}/courses`)}
@@ -357,14 +405,121 @@ export const TimetableCourseList = ({
         )}
       </div>
       <Separator orientation="horizontal" />
-      <div className="flex flex-row gap-4 justify-end">
-        <div className="space-x-2">
-          <span className="font-bold">{displayCourseData.length}</span>
-          <span className="text-gray-600">{dict.timetable.course}</span>
-        </div>
-        <div className="space-x-2">
-          <span className="font-bold">{totalCredits}</span>
-          <span className="text-gray-600">{dict.timetable.credits}</span>
+      <div className="flex flex-row justify-between items-center">
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="sm" className="flex gap-1">
+              <Settings className="h-4 w-4" />
+              Display Settings
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80">
+            <div className="flex flex-col gap-4 p-2">
+              <div className="flex items-center justify-between space-x-2">
+                <Label htmlFor="english-names">English Names</Label>
+                <Select
+                  value={displaySettings.englishNames}
+                  onValueChange={(value) =>
+                    setDisplaySettings({
+                      ...displaySettings,
+                      englishNames: value as "add" | "replace" | "none",
+                    })
+                  }
+                >
+                  <SelectTrigger className="w-[120px]">
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="add">Add</SelectItem>
+                    <SelectItem value="replace">Replace</SelectItem>
+                    <SelectItem value="none">Hide</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center justify-between space-x-2">
+                <Label htmlFor="show-course-code">Show Course Code</Label>
+                <Switch
+                  id="show-course-code"
+                  checked={displaySettings.showCourseCode}
+                  onCheckedChange={(checked) =>
+                    setDisplaySettings({
+                      ...displaySettings,
+                      showCourseCode: checked,
+                    })
+                  }
+                />
+              </div>
+              <div className="flex items-center justify-between space-x-2">
+                <Label htmlFor="show-venue">Show Venue</Label>
+                <Switch
+                  id="show-venue"
+                  checked={displaySettings.showVenue}
+                  onCheckedChange={(checked) =>
+                    setDisplaySettings({
+                      ...displaySettings,
+                      showVenue: checked,
+                    })
+                  }
+                />
+              </div>
+              <div className="flex items-center justify-between space-x-2">
+                <Label htmlFor="show-credits">Show Credits</Label>
+                <Switch
+                  id="show-credits"
+                  checked={displaySettings.showCredits}
+                  onCheckedChange={(checked) =>
+                    setDisplaySettings({
+                      ...displaySettings,
+                      showCredits: checked,
+                    })
+                  }
+                />
+              </div>
+              <div className="flex items-center justify-between space-x-2">
+                <Label htmlFor="show-priority">Show Priority Number</Label>
+                <Switch
+                  id="show-priority"
+                  checked={displaySettings.showPriority}
+                  onCheckedChange={(checked) =>
+                    setDisplaySettings({
+                      ...displaySettings,
+                      showPriority: checked,
+                    })
+                  }
+                />
+              </div>
+              <div className="flex items-center justify-between space-x-2">
+                <Label htmlFor="lock-order">Lock Course Order</Label>
+                <Switch
+                  id="lock-order"
+                  checked={displaySettings.lockOrder}
+                  onCheckedChange={(checked) =>
+                    setDisplaySettings({
+                      ...displaySettings,
+                      lockOrder: checked,
+                    })
+                  }
+                />
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setDisplaySettings(defaultSettings)}
+              >
+                Reset to Default
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
+        <div className="flex flex-row gap-4">
+          <div className="space-x-2">
+            <span className="font-bold">{displayCourseData.length}</span>
+            <span className="text-gray-600">{dict.timetable.course}</span>
+          </div>
+          <div className="space-x-2">
+            <span className="font-bold">{totalCredits}</span>
+            <span className="text-gray-600">{dict.timetable.credits}</span>
+          </div>
         </div>
       </div>
     </div>
