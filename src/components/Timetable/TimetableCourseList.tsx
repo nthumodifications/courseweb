@@ -194,14 +194,14 @@ const TimetableCourseListItem = ({
               {course.name_en} - {course.teacher_en.join(",")}
             </div>
           )}
-          <div className="mt-1 flex flex-row gap-1 text-muted-foreground">
+          <div className="mt-1 flex flex-row gap-1 text-muted-foreground flex-wrap">
             {displaySettings.showVenue &&
               course.venues?.map((venue, index) => {
                 const time = course.times![index];
                 return (
                   <div
                     key={index}
-                    className="px-2 py-0.5 bg-foreground/10 mr-1 rounded-md text-xs"
+                    className="px-2 py-0.5 bg-foreground/10 mr-1 rounded-md text-xs whitespace-nowrap"
                   >
                     {venue}{" "}
                     {hasTimes(course as MinimalCourse) ? time : "缺時間"}
@@ -209,12 +209,12 @@ const TimetableCourseListItem = ({
                 );
               })}
             {displaySettings.showCredits && (
-              <div className="px-2 py-0.5 bg-foreground/10 mr-1 rounded-md text-xs">
+              <div className="px-2 py-0.5 bg-foreground/10 mr-1 rounded-md text-xs whitespace-nowrap">
                 {course.credits} 學分
               </div>
             )}
             {displaySettings.showPriority && priority != 0 && (
-              <span className="px-2 py-0.5 bg-foreground text-muted mr-1 rounded-md text-xs">
+              <span className="px-2 py-0.5 bg-foreground text-muted mr-1 rounded-md text-xs whitespace-nowrap">
                 {priority} 志願
               </span>
             )}
@@ -391,14 +391,14 @@ export const TimetableCourseList = ({
         {displayCourseData.length == 0 && (
           <div className="flex flex-col items-center space-y-4">
             <span className="text-lg font-semibold text-gray-400">
-              {"No Courses Added (yet)"}
+              {dict.timetable.no_courses}
             </span>
             <div className="flex flex-row gap-2">
               <Button
                 variant="outline"
                 onClick={() => router.push(`/${language}/courses`)}
               >
-                <Search className="w-4 h-4" /> All Courses
+                <Search className="w-4 h-4" /> {dict.timetable.all_courses}
               </Button>
             </div>
           </div>
@@ -410,13 +410,15 @@ export const TimetableCourseList = ({
           <PopoverTrigger asChild>
             <Button variant="ghost" size="sm" className="flex gap-1">
               <Settings className="h-4 w-4" />
-              Display Settings
+              {dict.timetable.display_settings}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-80">
             <div className="flex flex-col gap-4 p-2">
               <div className="flex items-center justify-between space-x-2">
-                <Label htmlFor="english-names">English Names</Label>
+                <Label htmlFor="english-names">
+                  {dict.timetable.english_names}
+                </Label>
                 <Select
                   value={displaySettings.englishNames}
                   onValueChange={(value) =>
@@ -430,14 +432,22 @@ export const TimetableCourseList = ({
                     <SelectValue placeholder="Select" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="add">Add</SelectItem>
-                    <SelectItem value="replace">Replace</SelectItem>
-                    <SelectItem value="none">Hide</SelectItem>
+                    <SelectItem value="add">
+                      {dict.timetable.english_names_options.add}
+                    </SelectItem>
+                    <SelectItem value="replace">
+                      {dict.timetable.english_names_options.replace}
+                    </SelectItem>
+                    <SelectItem value="none">
+                      {dict.timetable.english_names_options.hide}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="flex items-center justify-between space-x-2">
-                <Label htmlFor="show-course-code">Show Course Code</Label>
+                <Label htmlFor="show-course-code">
+                  {dict.timetable.show_course_code}
+                </Label>
                 <Switch
                   id="show-course-code"
                   checked={displaySettings.showCourseCode}
@@ -450,7 +460,7 @@ export const TimetableCourseList = ({
                 />
               </div>
               <div className="flex items-center justify-between space-x-2">
-                <Label htmlFor="show-venue">Show Venue</Label>
+                <Label htmlFor="show-venue">{dict.timetable.show_venue}</Label>
                 <Switch
                   id="show-venue"
                   checked={displaySettings.showVenue}
@@ -463,7 +473,9 @@ export const TimetableCourseList = ({
                 />
               </div>
               <div className="flex items-center justify-between space-x-2">
-                <Label htmlFor="show-credits">Show Credits</Label>
+                <Label htmlFor="show-credits">
+                  {dict.timetable.show_credits}
+                </Label>
                 <Switch
                   id="show-credits"
                   checked={displaySettings.showCredits}
@@ -476,7 +488,9 @@ export const TimetableCourseList = ({
                 />
               </div>
               <div className="flex items-center justify-between space-x-2">
-                <Label htmlFor="show-priority">Show Priority Number</Label>
+                <Label htmlFor="show-priority">
+                  {dict.timetable.show_priority}
+                </Label>
                 <Switch
                   id="show-priority"
                   checked={displaySettings.showPriority}
@@ -489,7 +503,7 @@ export const TimetableCourseList = ({
                 />
               </div>
               <div className="flex items-center justify-between space-x-2">
-                <Label htmlFor="lock-order">Lock Course Order</Label>
+                <Label htmlFor="lock-order">{dict.timetable.lock_order}</Label>
                 <Switch
                   id="lock-order"
                   checked={displaySettings.lockOrder}
@@ -506,7 +520,7 @@ export const TimetableCourseList = ({
                 size="sm"
                 onClick={() => setDisplaySettings(defaultSettings)}
               >
-                Reset to Default
+                {dict.timetable.reset_default}
               </Button>
             </div>
           </PopoverContent>

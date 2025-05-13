@@ -107,7 +107,9 @@ const DownloadTimetableComponent = () => {
       </div>
       <Dialog open={generatedImg !== null} onOpenChange={handleClose}>
         <DialogContent>
-          <h1 className="font-bold text-lg">生成成功</h1>
+          <h1 className="font-bold text-lg">
+            {dict.dialogs.DownloadTimetableDialog.success_title}
+          </h1>
           <ScrollArea className="max-h-[70dvh]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             {generatedImg && (
@@ -115,7 +117,7 @@ const DownloadTimetableComponent = () => {
             )}
           </ScrollArea>
           <Button onClick={() => handleClose(false)} variant="outline">
-            Close
+            {dict.dialogs.DownloadTimetableDialog.close}
           </Button>
         </DialogContent>
       </Dialog>

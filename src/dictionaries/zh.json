@@ -24,7 +24,22 @@
       "group_dept": "依系所分顔色"
     },
     "credits": "總學分",
-    "course": "課"
+    "course": "課",
+    "display_settings": "顯示設定",
+    "english_names": "英文名稱",
+    "english_names_options": {
+      "add": "添加",
+      "replace": "替換",
+      "hide": "隱藏"
+    },
+    "show_course_code": "顯示課程代碼",
+    "show_venue": "顯示地點",
+    "show_credits": "顯示學分",
+    "show_priority": "顯示志願順序",
+    "lock_order": "鎖定課程順序",
+    "reset_default": "恢復預設值",
+    "no_courses": "尚未添加課程",
+    "all_courses": "所有課程"
   },
   "course": {
     "credits": "學分",
@@ -221,7 +236,9 @@
       "buttons": {
         "image": "圖片",
         "ICS": "行事曆 .ics"
-      }
+      },
+      "success_title": "生成成功",
+      "close": "關閉"
     },
     "ShareSyncTimetableDialog": {
       "title": "分享/同步你的課表",
