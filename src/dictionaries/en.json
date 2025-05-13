@@ -24,7 +24,22 @@
       "group_dept": "Group dept. by colors"
     },
     "credits": "credits",
-    "course": "courses"
+    "course": "courses",
+    "display_settings": "Display Settings",
+    "english_names": "English Names",
+    "english_names_options": {
+      "add": "Add",
+      "replace": "Replace",
+      "hide": "Hide"
+    },
+    "show_course_code": "Show Course Code",
+    "show_venue": "Show Venue",
+    "show_credits": "Show Credits",
+    "show_priority": "Show Priority Number",
+    "lock_order": "Lock Course Order",
+    "reset_default": "Reset to Default",
+    "no_courses": "No Courses Added (yet)",
+    "all_courses": "All Courses"
   },
   "course": {
     "credits": "Credits",
@@ -221,7 +236,9 @@
       "buttons": {
         "image": "Image",
         "ICS": "Calendar .ics"
-      }
+      },
+      "success_title": "Generated Successfully",
+      "close": "Close"
     },
     "ShareSyncTimetableDialog": {
       "title": "Share & Sync Your Timetable",

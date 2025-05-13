@@ -69,7 +69,6 @@ export const CalendarMonthContainer = ({
     },
     enabled: showAcademicCalendar,
   });
-
   const renderEventsInDay = useCallback(
     (day: Date, padding: number) => {
       const dayEvents = eventsToDisplay(
@@ -108,7 +107,11 @@ export const CalendarMonthContainer = ({
         if (!added) {
           groupedEvents.push([event]);
         }
-      });
+      }); // Flatten all events from all groups and sort them by start time
+      // This creates a single sorted array of all events for the day
+      const allSortedEvents = groupedEvents
+        .flat()
+        .sort((a, b) => a.displayStart.getTime() - b.displayStart.getTime());
 
       return (
         <div className="flex flex-col gap-0.5 mt-1" key={day.getTime()}>
@@ -121,29 +124,26 @@ export const CalendarMonthContainer = ({
                 style={{ height: isScreenMD ? 20 : 16 }}
               ></div>
             ))}
-          {groupedEvents.map((group, groupIndex) =>
-            group.map((event, index) => (
-              <EventPopover key={index} event={event}>
-                <div
-                  className="bg-nthu-500 rounded-md p-0.5 md:p-1 flex flex-row gap-1 items-center hover:shadow-md cursor-pointer transition-shadow select-none"
-                  style={{
-                    background: event.color,
-                    color: event.textColor,
-                    height: isScreenMD ? 20 : 16,
-                    width: `calc(${100 / group.length}% - 2px)`,
-                    left: `calc(${(100 / group.length) * index}% + 1px)`,
-                  }}
-                >
-                  <div className="hidden md:inline text-[10px] font-normal leading-none">
-                    {format(event.displayStart, "HH:mm")}
-                  </div>
-                  <div className="text-xs leading-none whitespace-nowrap overflow-hidden">
-                    {event.title}
-                  </div>
+          {allSortedEvents.map((event, index) => (
+            <EventPopover key={index} event={event}>
+              <div
+                className="bg-nthu-500 rounded-md p-0.5 md:p-1 flex flex-row gap-1 items-center hover:shadow-md cursor-pointer transition-shadow select-none"
+                style={{
+                  background: event.color,
+                  color: event.textColor,
+                  height: isScreenMD ? 20 : 16,
+                  width: "100%",
+                }}
+              >
+                <div className="hidden md:inline text-[10px] font-normal leading-none">
+                  {format(event.displayStart, "HH:mm")}
                 </div>
-              </EventPopover>
-            )),
-          )}
+                <div className="text-xs leading-none whitespace-nowrap overflow-hidden">
+                  {event.title}
+                </div>
+              </div>
+            </EventPopover>
+          ))}
         </div>
       );
     },
