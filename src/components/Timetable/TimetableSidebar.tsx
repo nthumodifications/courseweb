@@ -15,7 +15,6 @@ import {
   CourseSearchContainerDynamic,
   TimetableCourseList,
 } from "./TimetableCourseList";
-import GroupByDepartmentButton from "./GroupByDepartmentButton";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,7 +34,15 @@ const TimetableSidebar = ({
 }) => {
   const dict = useDictionary();
 
-  const { semester, courses, colorMap } = useUserTimetable();
+  const {
+    semester,
+    getSemesterCourses,
+    courses,
+    setCourses,
+    colorMap,
+    setColorMap,
+    currentColors,
+  } = useUserTimetable();
 
   const router = useRouter();
 
@@ -47,6 +54,43 @@ const TimetableSidebar = ({
     .join("&")}&colorMap=${encodeURIComponent(JSON.stringify(colorMap))}`;
   const webcalLink = `webcals://nthumods.com/timetable/calendar.ics?semester=${semester}&${`semester_${semester}=${(courses[semester] ?? []).map((id) => encodeURI(id)).join(",")}`}`;
   const icsfileLink = `https://nthumods.com/timetable/calendar.ics?semester=${semester}&${`semester_${semester}=${(courses[semester] ?? []).map((id) => encodeURI(id)).join(",")}`}`;
+
+  const handleGroupByDepartment = (semester: string) => {
+    const semesterCourses = getSemesterCourses(semester);
+    const newColorMap = { ...colorMap };
+
+    const departments = semesterCourses.reduce((acc, course) => {
+      if (!acc.includes(course.department)) {
+        acc.push(course.department);
+      }
+      return acc;
+    }, [] as string[]);
+
+    for (let i = 0; i < departments.length; i++) {
+      const color = currentColors[i % currentColors.length];
+
+      semesterCourses
+        .filter((course) => course.department === departments[i])
+        .forEach((course) => {
+          newColorMap[course.raw_id] = color;
+        });
+    }
+
+    setColorMap(newColorMap);
+  };
+
+  const sortByCredits = (semester: string) => {
+    const semesterCourses = getSemesterCourses(semester);
+
+    const sortedCourses = [...semesterCourses].sort(
+      (a, b) => b.credits - a.credits,
+    );
+
+    setCourses({
+      ...courses,
+      [semester]: sortedCourses.map((course) => course.raw_id),
+    });
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -72,8 +116,11 @@ const TimetableSidebar = ({
           <DropdownMenuContent>
             <DropdownMenuLabel>Customizations</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <GroupByDepartmentButton semester={semester} />
+            <DropdownMenuItem onClick={() => handleGroupByDepartment(semester)}>
+              {dict.timetable.actions.group_dept}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => sortByCredits(semester)}>
+              {dict.timetable.actions.sort_by_credits}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

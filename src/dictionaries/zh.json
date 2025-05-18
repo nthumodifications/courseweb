@@ -21,7 +21,8 @@
       "vertical_view": "垂直視圖",
       "more_options": "更多",
       "sync_ccxp": "同步校務系統",
-      "group_dept": "依系所分顔色"
+      "group_dept": "依系所分顔色",
+      "sort_by_credits": "依學分排序"
     },
     "credits": "總學分",
     "course": "課"
