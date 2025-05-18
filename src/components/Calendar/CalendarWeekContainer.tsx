@@ -227,8 +227,8 @@ export const CalendarWeekContainer = ({
     },
     [events, HOUR_HEIGHT],
   );
-
   const dayEvents = useMemo(() => {
+    // Step 1: Prepare events with display information
     const dayEvents = eventsToDisplay(
       showAcademicCalendar ? [...nthuCalendarEvents, ...events] : events,
       startOfDay(displayWeek[0]),
@@ -252,36 +252,92 @@ export const CalendarWeekContainer = ({
           differenceInDays(event.displayStart, displayWeek[0]) > 0
             ? event.displayStart
             : displayWeek[0];
-
-        let gridColumnStart: number = 0;
+        // Calculate which column this event starts at
+        let gridColumnStart: number = 1; // Start with 1 as grid columns are 1-indexed
         if (differenceInDays(event.displayStart, displayWeek[0]) > 0)
           gridColumnStart =
             differenceInDays(event.displayStart, displayWeek[0]) + 1;
         else {
-          gridColumnStart = 0;
+          gridColumnStart = 1; // Events starting before the week start at column 1
           span = differenceInDays(event.displayEnd, displayWeek[0]) + 1;
         }
         if (span > 7) {
           span = 7;
         }
 
-        return { ...event, textColor, span, gridColumnStart, dispStart };
+        return {
+          ...event,
+          textColor,
+          span,
+          gridColumnStart,
+          dispStart,
+          gridRowStart: 0, // Will be assigned in next step
+        };
       })
-      .sort((a, b) => a.displayStart.getTime() - b.displayStart.getTime());
+      .sort((a, b) => {
+        // Sort by start date first, then by span length (longer events first)
+        const dateCompare = a.displayStart.getTime() - b.displayStart.getTime();
+        if (dateCompare === 0) {
+          return b.span - a.span; // Longer events first
+        }
+        return dateCompare;
+      });
+
+    // Step 2: Assign row positions to events to maximize row usage
+    const rows: number[][] = []; // Tracks occupied columns in each row
+
+    dayEvents.forEach((event) => {
+      const eventStart = event.gridColumnStart;
+      const eventEnd = eventStart + event.span - 1;
+
+      // Find the first row where this event can fit
+      let rowIndex = 0;
+      let foundRow = false;
+
+      while (!foundRow) {
+        // Initialize row if it doesn't exist
+        if (!rows[rowIndex]) {
+          rows[rowIndex] = Array(8).fill(0); // 8 columns (1-indexed to match grid)
+        }
+
+        // Check if this row has space for the event
+        let hasSpace = true;
+        for (let col = eventStart; col <= eventEnd; col++) {
+          if (rows[rowIndex][col]) {
+            hasSpace = false;
+            break;
+          }
+        }
+
+        if (hasSpace) {
+          // Mark columns as occupied
+          for (let col = eventStart; col <= eventEnd; col++) {
+            rows[rowIndex][col] = 1;
+          }
+
+          // Assign row to event (1-indexed for CSS grid)
+          event.gridRowStart = rowIndex + 1;
+          foundRow = true;
+        } else {
+          // Try next row
+          rowIndex++;
+        }
+      }
+    });
+
     return dayEvents;
   }, [events, displayWeek, nthuCalendarEvents, showAcademicCalendar]);
-
   const renderAllDayEvents = useCallback(() => {
     return dayEvents.map((event, index) => (
       <EventPopover key={event.id + event.dispStart.getDate()} event={event}>
         <div
           style={{
-            gridColumn: `span ${event.span} / span ${event.span}`,
-            gridColumnStart: event.gridColumnStart,
+            gridColumn: `${event.gridColumnStart} / span ${event.span}`,
+            gridRow: event.gridRowStart,
           }}
         >
           <div
-            className=" overflow-hidden bg-nthu-500 rounded-md h-full p-1 sm:p-2 flex flex-col gap-1 hover:shadow-md cursor-pointer transition-shadow select-none"
+            className="overflow-hidden bg-nthu-500 rounded-md h-full p-1 sm:p-2 flex flex-col gap-1 hover:shadow-md cursor-pointer transition-shadow select-none"
             style={{ background: event.color, color: event.textColor }}
           >
             <div className="text-sm leading-none line-clamp-1">
@@ -338,9 +394,9 @@ export const CalendarWeekContainer = ({
                 </div>
               </div>
             ))}
-          </div>
+          </div>{" "}
           <div className="flex flex-row justify-evenly">
-            <div className="grid grid-cols-7 flex-1">
+            <div className="grid grid-cols-7 grid-auto-rows-max gap-1 flex-1">
               {renderAllDayEvents()}
             </div>
           </div>
