@@ -21,7 +21,8 @@
       "vertical_view": "Vertical View",
       "more_options": "More",
       "sync_ccxp": "Sync from CCXP",
-      "group_dept": "Group dept. by colors"
+      "group_dept": "Group dept. by colors",
+      "sort_by_credits": "Sort by credits"
     },
     "credits": "credits",
     "course": "courses",
