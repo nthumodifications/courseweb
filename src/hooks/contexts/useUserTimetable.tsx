@@ -42,7 +42,6 @@ const userTimetableContext = createContext<
   courses: {},
   hoverCourse: null,
   setHoverCourse: () => {},
-  getCourseById: () => null,
   colorMap: {},
   setCourses: () => {},
   clearCourses: () => {},
@@ -189,20 +188,6 @@ const useUserTimetableProvider = (loadCourse = true) => {
       return sortedCourses;
     },
     [courses, user_courses_data],
-  );
-
-  const getCourseById = useCallback(
-    (courseID: string) => {
-      console.log("getCourseById", courseID);
-      console.log("checking course", courseID);
-      const course = user_courses_data.find((c) => {
-        console.log("comparing", c.raw_id, courseID);
-        return c.raw_id == courseID;
-      });
-      if (!course) return null;
-      return course;
-    },
-    [user_courses_data],
   );
 
   //migration from old localStorage key "semester_1121"
@@ -362,7 +347,6 @@ const useUserTimetableProvider = (loadCourse = true) => {
     courses,
     hoverCourse,
     setHoverCourse,
-    getCourseById,
     preferences,
     setPreferences,
   };
