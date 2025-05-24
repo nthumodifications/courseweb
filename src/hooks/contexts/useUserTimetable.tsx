@@ -40,6 +40,8 @@ const userTimetableContext = createContext<
   currentColors: [],
   userDefinedColors: {},
   courses: {},
+  hoverCourse: null,
+  setHoverCourse: () => {},
   colorMap: {},
   setCourses: () => {},
   clearCourses: () => {},
@@ -73,6 +75,7 @@ const useUserTimetableProvider = (loadCourse = true) => {
     "courses",
     {},
   );
+  const [hoverCourse, setHoverCourse] = useState<CourseDefinition | null>(null);
   const [colorMap, setColorMap] = useSyncedStorage<{
     [courseID: string]: string;
   }>("course_color_map", {}); //map from courseID to color
@@ -342,6 +345,8 @@ const useUserTimetableProvider = (loadCourse = true) => {
     isCoursesEmpty,
     error,
     courses,
+    hoverCourse,
+    setHoverCourse,
     preferences,
     setPreferences,
   };

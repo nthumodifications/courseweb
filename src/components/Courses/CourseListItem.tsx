@@ -1,7 +1,7 @@
 "use client";
 import { CourseDefinition, CourseSyllabusView } from "@/config/supabase";
 import useDictionary from "@/dictionaries/useDictionary";
-import { FC, memo } from "react";
+import { FC, memo, useState } from "react";
 import Link from "next/link";
 import CourseTagList from "./CourseTagsList";
 import SelectCourseButton from "./SelectCourseButton";
@@ -14,6 +14,10 @@ import {
 } from "@/components/ui/collapsible";
 import { useSearchParams } from "next/navigation";
 import { ChevronDown } from "lucide-react";
+import useUserTimetable, {
+  CourseLocalStorage,
+} from "@/hooks/contexts/useUserTimetable";
+import useSyncedStorage from "@/hooks/useSyncedStorage";
 
 // Memoize the CourseListItem component
 const CourseListItem: FC<{
@@ -21,8 +25,51 @@ const CourseListItem: FC<{
   hasTaken?: boolean;
 }> = memo(({ course, hasTaken = false }) => {
   const dict = useDictionary();
-  const { language } = useSettings();
+  const { darkMode, language } = useSettings();
   const searchParams = useSearchParams();
+
+  const [isHovering, setIsHovering] = useState(false);
+
+  const [colorMap, setColorMap] = useSyncedStorage<{
+    [courseID: string]: string;
+  }>("course_color_map", {}); //map from courseID to color
+
+  const [courses, setCourses] = useSyncedStorage<CourseLocalStorage>(
+    "courses",
+    {},
+  );
+
+  const { currentColors, setHoverCourse } = useUserTimetable();
+
+  const handleHover = (hovering: boolean) => {
+    setIsHovering(hovering);
+
+    const courseID = course.raw_id as string;
+
+    if (hovering) {
+      setCourses((courses) => {
+        setColorMap((colorMap) => {
+          return {
+            ...colorMap,
+            [courseID]: darkMode
+              ? "rgb(255 255 255 / 0.7)"
+              : "rgb(38 38 38 / 0.25)",
+          };
+        });
+
+        setHoverCourse(hovering ? course : null);
+
+        return courses;
+      });
+    } else {
+      setColorMap((colorMap) => {
+        const newColorMap = { ...colorMap };
+        delete newColorMap[courseID];
+        return newColorMap;
+      });
+      setHoverCourse(null);
+    }
+  };
 
   const courseTitle =
     language === "zh"
@@ -50,6 +97,8 @@ const CourseListItem: FC<{
             <Link
               className="font-semibold"
               href={`/${language}/courses/${course.raw_id}?${searchParams.toString()}`}
+              onMouseEnter={() => handleHover(true)}
+              onMouseLeave={() => handleHover(false)}
             >
               {courseTitle}
             </Link>
