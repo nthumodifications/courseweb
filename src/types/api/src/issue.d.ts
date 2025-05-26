@@ -3,8 +3,8 @@ declare const app: import("hono/hono-base").HonoBase<import("hono/types").BlankE
         $post: {
             input: {
                 form: {
-                    title: string;
                     body: string;
+                    title: string;
                     labels: string[];
                 };
             };
