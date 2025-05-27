@@ -46,6 +46,7 @@ import { useHeaderPortal } from "@/components/Portal/HeaderPortal";
 import UpcomingEvents from "./UpcomingEvents";
 import { useIsMobile } from "@/hooks/use-mobile";
 import useDictionary from "@/dictionaries/useDictionary";
+import { CalendarShareDialog } from "./CalendarShareDialog";
 
 const CalendarError: ErrorComponent = ({ error, reset }) => {
   return <div className="text-red-500">An error occurred: {error.message}</div>;
@@ -344,8 +345,10 @@ const Calendar = () => {
         />
       )}
       <div className="flex flex-col gap-2 md:gap-6 flex-1 w-full">
+        {" "}
         <div className="flex flex-col md:flex-row gap-2 justify-end">
           <div className="md:flex flex-row items-center gap-2 hidden ">
+            <CalendarShareDialog />
             <AddEventButton onEventAdded={handleAddEvent}>
               <Button className="hidden md:inline-flex">
                 <Plus className="mr-2" /> {dict.calendar.add_event}

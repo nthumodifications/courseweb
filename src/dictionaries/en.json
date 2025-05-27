@@ -342,6 +342,48 @@
     "add_event": "Add Event",
     "minified": {
       "no_events": "No upcoming events"
+    },
+    "share": {
+      "title": "Share Calendar",
+      "description": "Generate API keys to share your calendar with external applications.",
+      "create_new": "Create New API Key",
+      "key_name": "Key Name",
+      "key_name_placeholder": "Enter a name for your API key",
+      "expiration": "Key Expiration",
+      "never_expires": "Never Expires",
+      "expires_in_days": "Expires in days",
+      "scopes": "Permissions",
+      "calendar_read": "Calendar Read Access",
+      "create_key": "Create Key",
+      "your_new_key": "Your New API Key",
+      "key_warning": "This is the only time you'll see this key. Copy it now!",
+      "copy_key": "Copy Key",
+      "copy_url": "Copy URL",
+      "copy_success": "Copied to clipboard!",
+      "existing_keys": "Existing API Keys",
+      "no_keys": "No API keys found",
+      "created": "Created",
+      "expires": "Expires",
+      "never": "Never",
+      "last_used": "Last Used",
+      "not_used": "Not used yet",
+      "revoked": "Revoked",
+      "actions": "Actions",
+      "revoke": "Revoke",
+      "delete": "Delete",
+      "confirm_revoke": "Are you sure you want to revoke this API key?",
+      "confirm_delete": "Are you sure you want to delete this API key?",
+      "success": {
+        "created": "API key created successfully",
+        "revoked": "API key revoked successfully",
+        "deleted": "API key deleted successfully"
+      },
+      "error": {
+        "fetch": "Failed to fetch API keys",
+        "create": "Failed to create API key",
+        "revoke": "Failed to revoke API key",
+        "delete": "Failed to delete API key"
+      }
     }
   },
   "cancel": "Cancel",

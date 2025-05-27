@@ -342,6 +342,48 @@
     "add_event": "新增行程",
     "minified": {
       "no_events": "沒有即將到來的行程"
+    },
+    "share": {
+      "title": "分享行事曆",
+      "description": "生成API金鑰來與外部應用程式分享你的行事曆",
+      "create_new": "創建新的API金鑰",
+      "key_name": "金鑰名稱",
+      "key_name_placeholder": "輸入金鑰名稱",
+      "expiration": "金鑰有效期",
+      "never_expires": "永不過期",
+      "expires_in_days": "有效天數",
+      "scopes": "權限",
+      "calendar_read": "行事曆讀取權限",
+      "create_key": "創建金鑰",
+      "your_new_key": "你的新API金鑰",
+      "key_warning": "這是你唯一能看到金鑰的時候，請立即複製！",
+      "copy_key": "複製金鑰",
+      "copy_url": "複製網址",
+      "copy_success": "已複製到剪貼簿！",
+      "existing_keys": "現有API金鑰",
+      "no_keys": "沒有找到API金鑰",
+      "created": "創建時間",
+      "expires": "過期時間",
+      "never": "永不過期",
+      "last_used": "最後使用",
+      "not_used": "尚未使用",
+      "revoked": "已撤銷",
+      "actions": "操作",
+      "revoke": "撤銷",
+      "delete": "刪除",
+      "confirm_revoke": "確定要撤銷這個API金鑰嗎？",
+      "confirm_delete": "確定要刪除這個API金鑰嗎？",
+      "success": {
+        "created": "API金鑰創建成功",
+        "revoked": "API金鑰已成功撤銷",
+        "deleted": "API金鑰已成功刪除"
+      },
+      "error": {
+        "fetch": "無法獲取API金鑰",
+        "create": "創建API金鑰失敗",
+        "revoke": "撤銷API金鑰失敗",
+        "delete": "刪除API金鑰失敗"
+      }
     }
   },
   "cancel": "取消",

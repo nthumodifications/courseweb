@@ -26,6 +26,7 @@ import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { useLocalStorage } from "usehooks-ts";
 import { Badge } from "@/components/ui/badge";
 import { event } from "@/lib/gtag";
+import ApiKeysCard from "./ApiKeysCard";
 
 const DisplaySettingsCard = () => {
   const { darkMode, setDarkMode, language, setLanguage } = useSettings();
@@ -205,6 +206,7 @@ const SettingsPage = () => {
     <div className="flex flex-col max-w-2xl px-4 gap-4">
       <DisplaySettingsCard />
       <CalendarSettingsCard />
+      <ApiKeysCard />
       <TimetableSettingsCard />
       <PrivacySettingsCard />
       <Footer />
