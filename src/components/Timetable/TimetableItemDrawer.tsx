@@ -22,6 +22,8 @@ import { useMediaQuery } from "usehooks-ts";
 import { Dialog, DialogContent, DialogTrigger } from "../ui/dialog";
 import { currentSemester } from "@/const/semester";
 import client from "@/config/api";
+import CourseTagList from "@/components/Courses/CourseTagsList";
+import { CourseDefinition } from "@/config/supabase";
 
 const ImportantDates = ({ raw_id }: { raw_id: RawCourseID }) => {
   const {
@@ -80,69 +82,65 @@ const ImportantDates = ({ raw_id }: { raw_id: RawCourseID }) => {
 const TimetableCourseQuickAccess = ({ course }: { course: MinimalCourse }) => {
   const { deleteCourse, colorMap, setColor, currentColors } =
     useUserTimetable();
+
   return (
     <>
-      <div className="flex flex-row text-left gap-4 p-4">
-        <Popover>
-          <PopoverTrigger>
-            <div className="p-1 rounded-md hover:outline outline-1 outline-slate-400">
-              <div
-                className="w-4 h-4 rounded-full"
-                style={{ backgroundColor: colorMap[course.raw_id] }}
-              ></div>
-            </div>
-          </PopoverTrigger>
-          <PopoverContent className="p-0">
-            <Compact
-              color={colorMap[course.raw_id]}
-              onChange={(color) => {
-                setColor(course.raw_id, color.hex);
-              }}
-              colors={currentColors}
-            />
-          </PopoverContent>
-        </Popover>
-        <div className="flex flex-col flex-1">
-          <span className="text-sm">
-            {course.department} {course.course}-{course.class}
-          </span>
-          <span className="text-sm">
-            {course.name_zh} - {course.teacher_zh.join(",")}
-          </span>
-          <span className="text-xs">{course.name_en}</span>
-          <div className="mt-1">
-            {course.venues?.map((venue, index) => {
-              const time = course.times![index];
-              return (
+      <div className="relative @container">
+        <div className="flex flex-row gap-4 p-4">
+          <Popover>
+            <PopoverTrigger>
+              <div className="p-1 rounded-md hover:outline outline-1 outline-slate-400">
                 <div
-                  key={index}
-                  className="flex flex-row items-center space-x-2 font-mono text-gray-400"
-                >
-                  <span className="text-xs">{venue}</span>
-                  {hasTimes(course as MinimalCourse) ? (
-                    <span className="text-xs">{time}</span>
-                  ) : (
-                    <span className="text-xs text-red-500">缺時間</span>
-                  )}
-                </div>
-              );
-            }) || <span className="text-gray-400 text-xs">No Venue</span>}
+                  className="w-4 h-4 rounded-full"
+                  style={{ backgroundColor: colorMap[course.raw_id] }}
+                ></div>
+              </div>
+            </PopoverTrigger>
+            <PopoverContent className="p-0">
+              <Compact
+                color={colorMap[course.raw_id]}
+                onChange={(color) => {
+                  setColor(course.raw_id, color.hex);
+                }}
+                colors={currentColors}
+              />
+            </PopoverContent>
+          </Popover>
+          <div className="flex-1">
+            <div className="mb-2 space-y-1">
+              <div className="flex flex-row gap-2 items-center">
+                <p className="text-nthu-500 text-sm font-semibold">
+                  {course.department} {course.course}-
+                  {course.class.padStart(2, "0")}
+                </p>
+              </div>
+              <div className="font-semibold">
+                {course.name_zh} - {course.teacher_zh.join(",")}
+              </div>
+              <div className="text-sm mt-0 break-words">
+                {course.name_en} - {course.teacher_en.join(",")}
+              </div>
+              <div className="space-y-1 self-start w-auto max-w-fit">
+                {course.venues?.map((venue, index) => {
+                  const time = course.times![index];
+                  return (
+                    <div key={index} className="text-muted-foreground text-xs">
+                      {venue} /{" "}
+                      {hasTimes(course as MinimalCourse) ? time : "缺時間"}
+                    </div>
+                  );
+                }) || (
+                  <div className="text-muted-foreground text-xs">No Venue</div>
+                )}
+              </div>
+              <CourseTagList course={course as unknown as CourseDefinition} />
+            </div>
           </div>
-        </div>
-        <div className="flex flex-row">
-          <Button
-            className="rounded-l-none h-full"
-            variant="outline"
-            size="icon"
-            onClick={() => deleteCourse(course.raw_id)}
-          >
-            <Trash className="w-4 h-4" />
-          </Button>
         </div>
       </div>
       <ImportantDates raw_id={course.raw_id} />
       <div className="p-4 flex flex-col gap-4">
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           <Button variant="outline" asChild>
             <Link href={`/courses/${course.raw_id}`}>
               <ExternalLink className="w-4 h-4 mr-2" />
@@ -152,6 +150,13 @@ const TimetableCourseQuickAccess = ({ course }: { course: MinimalCourse }) => {
           <Button variant="outline" disabled={true}>
             <Book className="w-4 h-4 mr-2" />
             學習平臺
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={() => deleteCourse(course.raw_id)}
+          >
+            <Trash className="w-4 h-4 mr-2" />
+            移除
           </Button>
         </div>
       </div>
