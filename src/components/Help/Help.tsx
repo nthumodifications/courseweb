@@ -412,7 +412,10 @@ const Help = ({ children }: { children?: ReactNode }) => {
     if (open) {
       setPage(0);
     } else {
-      setHasVisitedBefore(true);
+      // wait for 2 seconds before setting hasVisitedBefore to true
+      const timer = setTimeout(() => {
+        setHasVisitedBefore(true);
+      }, 2000);
     }
   }, [open]);
 

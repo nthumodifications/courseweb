@@ -90,14 +90,16 @@ const useSettingsProvider = () => {
           path: "/",
           expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
         });
+        document.documentElement.classList.add("dark");
+        document.documentElement.classList.remove("light");
       } else {
         setCookie("theme", "light", {
           path: "/",
           expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
         });
+        document.documentElement.classList.add("light");
+        document.documentElement.classList.remove("dark");
       }
-      window.localStorage.removeItem("joy-mode");
-      window.location.reload();
     }
   }, [cookies]);
 
@@ -108,8 +110,14 @@ const useSettingsProvider = () => {
       path: "/",
       expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
     });
-    window.localStorage.removeItem("joy-mode");
-    window.location.reload();
+    // set html class to theme
+    if (val) {
+      document.documentElement.classList.add("dark");
+      document.documentElement.classList.remove("light");
+    } else {
+      document.documentElement.classList.add("light");
+      document.documentElement.classList.remove("dark");
+    }
   };
 
   const darkMode = useMemo(() => cookies.theme == "dark", [cookies]);
