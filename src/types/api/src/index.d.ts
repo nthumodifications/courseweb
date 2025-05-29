@@ -32,6 +32,73 @@ export declare const app: import("hono/hono-base").HonoBase<{
         };
     };
 }, "/acacalendar"> | import("hono/types").MergeSchemaPath<{
+    "/ical/:userId": {
+        $get: {
+            input: {
+                query: {
+                    type?: "basic" | "full" | undefined;
+                    key?: string | undefined;
+                };
+            } & {
+                param: {
+                    userId: string;
+                };
+            };
+            output: {
+                error: string;
+            };
+            outputFormat: "json";
+            status: 400;
+        } | {
+            input: {
+                query: {
+                    type?: "basic" | "full" | undefined;
+                    key?: string | undefined;
+                };
+            } & {
+                param: {
+                    userId: string;
+                };
+            };
+            output: {
+                error: string;
+                status: number;
+            };
+            outputFormat: "json";
+            status: import("hono/utils/http-status").ContentfulStatusCode;
+        } | {
+            input: {
+                query: {
+                    type?: "basic" | "full" | undefined;
+                    key?: string | undefined;
+                };
+            } & {
+                param: {
+                    userId: string;
+                };
+            };
+            output: {};
+            outputFormat: "body";
+            status: import("hono/utils/http-status").ContentfulStatusCode;
+        } | {
+            input: {
+                query: {
+                    type?: "basic" | "full" | undefined;
+                    key?: string | undefined;
+                };
+            } & {
+                param: {
+                    userId: string;
+                };
+            };
+            output: {
+                error: string;
+            };
+            outputFormat: "json";
+            status: 500;
+        };
+    };
+}, "/calendar"> | import("hono/types").MergeSchemaPath<{
     "/": {
         $get: {
             input: {};
@@ -681,8 +748,8 @@ export declare const app: import("hono/hono-base").HonoBase<{
         $post: {
             input: {
                 form: {
-                    title: string;
                     body: string;
+                    title: string;
                     labels: string[];
                 };
             };
