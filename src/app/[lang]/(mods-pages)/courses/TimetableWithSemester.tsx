@@ -8,12 +8,13 @@ import { CourseDefinition } from "@/config/supabase";
 import { useSettings } from "@/hooks/contexts/settings";
 
 const TimetableWithSemester = ({ semester }: { semester: string }) => {
-  const { getSemesterCourses, colorMap, hoverCourse } = useUserTimetable();
+  const { courses, getSemesterCourses, colorMap, hoverCourse } =
+    useUserTimetable();
   const { darkMode } = useSettings();
 
   const semesterCourses = useMemo<MinimalCourse[]>(() => {
     return getSemesterCourses(semester) as MinimalCourse[];
-  }, [semester, getSemesterCourses]);
+  }, [semester, getSemesterCourses, courses]);
 
   const displayCourses = useMemo<MinimalCourse[]>(() => {
     if (!hoverCourse) return semesterCourses;
@@ -25,7 +26,7 @@ const TimetableWithSemester = ({ semester }: { semester: string }) => {
     }
 
     return [...semesterCourses, hoverCourse as MinimalCourse];
-  }, [semester, hoverCourse]);
+  }, [semester, hoverCourse, semesterCourses]);
 
   const colorMapMemo = useMemo(() => {
     if (!hoverCourse) return colorMap;
