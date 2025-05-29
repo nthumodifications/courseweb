@@ -25,7 +25,7 @@ const CourseListItem: FC<{
   hasTaken?: boolean;
 }> = memo(({ course, hasTaken = false }) => {
   const dict = useDictionary();
-  const { darkMode, language } = useSettings();
+  const { language } = useSettings();
   const searchParams = useSearchParams();
 
   const [isHovering, setIsHovering] = useState(false);
@@ -43,32 +43,7 @@ const CourseListItem: FC<{
 
   const handleHover = (hovering: boolean) => {
     setIsHovering(hovering);
-
-    const courseID = course.raw_id as string;
-
-    if (hovering) {
-      setCourses((courses) => {
-        setColorMap((colorMap) => {
-          return {
-            ...colorMap,
-            [courseID]: darkMode
-              ? "rgb(255 255 255 / 0.7)"
-              : "rgb(38 38 38 / 0.25)",
-          };
-        });
-
-        setHoverCourse(hovering ? course : null);
-
-        return courses;
-      });
-    } else {
-      setColorMap((colorMap) => {
-        const newColorMap = { ...colorMap };
-        delete newColorMap[courseID];
-        return newColorMap;
-      });
-      setHoverCourse(null);
-    }
+    setHoverCourse(hovering ? course : null);
   };
 
   const courseTitle =

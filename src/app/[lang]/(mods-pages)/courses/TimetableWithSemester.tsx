@@ -5,13 +5,17 @@ import { createTimetableFromCourses } from "@/helpers/timetable";
 import { MinimalCourse } from "@/types/courses";
 import { renderTimetableSlot } from "@/helpers/timetable_course";
 import { CourseDefinition } from "@/config/supabase";
+import { useSettings } from "@/hooks/contexts/settings";
 
 const TimetableWithSemester = ({ semester }: { semester: string }) => {
   const { getSemesterCourses, colorMap, hoverCourse } = useUserTimetable();
+  const { darkMode } = useSettings();
 
-  const displayCourses = useMemo(() => {
-    const semesterCourses = getSemesterCourses(semester) as MinimalCourse[];
+  const semesterCourses = useMemo<MinimalCourse[]>(() => {
+    return getSemesterCourses(semester) as MinimalCourse[];
+  }, [semester, getSemesterCourses]);
 
+  const displayCourses = useMemo<MinimalCourse[]>(() => {
     if (!hoverCourse) return semesterCourses;
 
     if (
@@ -21,11 +25,28 @@ const TimetableWithSemester = ({ semester }: { semester: string }) => {
     }
 
     return [...semesterCourses, hoverCourse as MinimalCourse];
-  }, [semester, hoverCourse, getSemesterCourses]);
+  }, [semester, hoverCourse]);
+
+  const colorMapMemo = useMemo(() => {
+    if (!hoverCourse) return colorMap;
+
+    if (
+      semesterCourses.some((course) => course.raw_id === hoverCourse.raw_id)
+    ) {
+      return colorMap;
+    }
+
+    return {
+      ...colorMap,
+      [hoverCourse.raw_id]: darkMode
+        ? "rgb(255 255 255 / 0.65)"
+        : "rgb(38 38 38 / 0.25)",
+    };
+  }, [colorMap, hoverCourse, semesterCourses]);
 
   return (
     <Timetable
-      timetableData={createTimetableFromCourses(displayCourses, colorMap)}
+      timetableData={createTimetableFromCourses(displayCourses, colorMapMemo)}
       renderTimetableSlot={renderTimetableSlot}
     />
   );
