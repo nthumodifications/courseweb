@@ -239,6 +239,9 @@
         "ICS": "行事曆 .ics"
       },
       "success_title": "生成成功",
+      "success_description": "課表圖片已下載到您的裝置。請檢查瀏覽器的下載資料夾或點擊圖片複製到剪貼板。",
+      "download_error": "下載失敗",
+      "download_error_description": "圖片生成失敗，請重試或聯繫支援。",
       "close": "關閉"
     },
     "ShareSyncTimetableDialog": {
