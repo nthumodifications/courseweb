@@ -371,7 +371,66 @@
     "cancel": "Cancel"
   },
   "sponsorship": {
-    "title": "Help NTHUMods grow",
-    "description": "Contribute as little as $1 to support our development"
+    "title": "Supported by",
+    "description": "Contribute as little as $1 to support our development",
+    "cerana": "Cerana Technology"
+  },
+  "contribute": {
+    "title": "Contributors & Contributing",
+    "subtitle": "Help us build better academic tools for the NTHU community. Every contribution makes a difference.",
+    "sponsors": {
+      "title": "Our Amazing Sponsors",
+      "description": "We're grateful for the incredible support from our sponsors who make NTHUMods possible!",
+      "algolia": "Search Engine",
+      "cerana": "Infrastructure Sponsor"
+    },
+    "stats": {
+      "active_users": "Active Users",
+      "open_source": "Open Source",
+      "years_running": "Years Running",
+      "community": "Community"
+    },
+    "how_to_contribute": {
+      "title": "How You Can Contribute",
+      "description": "NTHUMods is a 100% student-led, open source project. We rely on the support of our contributors and the NTHU community to keep this platform alive and thriving. Every contribution, no matter how small, makes a real difference in the lives of thousands of students!"
+    },
+    "financial_support": {
+      "title": "💰 Financial Support",
+      "description": "Help us cover development costs, and other expenses. Every dollar helps us maintain and improve the platform for all students.",
+      "opencollective": "Support on OpenCollective"
+    },
+    "for_everyone": {
+      "title": "For Everyone",
+      "feedback": {
+        "title": "Share your feedback",
+        "description": "We are always open for feedback! If you have any suggestions, ideas, or feedback, or you think this particular shade of purple looks ugly! Let us know using the links below.",
+        "form": "Form",
+        "email": "Email",
+        "instagram": "Instagram"
+      }
+    },
+    "for_developers": {
+      "title": "For Developers",
+      "bug_reports": {
+        "title": "File Bug Reports and Feature Requests",
+        "description": "Found a bug? Want to see a new feature? File an issue on our GitHub repository!",
+        "bug": "Bug",
+        "bug_description": "Report a bug on Github",
+        "feature": "Feature",
+        "feature_description": "Submit a Feature Idea"
+      },
+      "code_design": {
+        "title": "Contribute Code and Design",
+        "description": "Ready to dive in? We welcome contributors of all skill levels! Whether you're a seasoned developer or just starting out, there's something for everyone. Check out our good first issues to get started, and join our community discussions!",
+        "github_repo": "GitHub Repository",
+        "good_first_issues": "Good First Issues"
+      }
+    },
+    "call_to_action": {
+      "title": "Ready to Make a Difference?",
+      "description": "Join our vibrant community of students, developers, and dreamers who are building the future of academic tools at NTHU!",
+      "start_contributing": "Start Contributing",
+      "support_us": "Support Us"
+    }
   }
 }

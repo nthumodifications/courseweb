@@ -371,7 +371,66 @@
     "cancel": "取消"
   },
   "sponsorship": {
-    "title": "幫助 NTHUMods 成長",
-    "description": "僅需 $1 即可支持我們的開發"
+    "title": "贊助 NTHUMods",
+    "description": "僅需 $1 即可支持我們的開發",
+    "cerana": "東蜂科技"
+  },
+  "contribute": {
+    "title": "貢獻者與貢獻",
+    "subtitle": "幫助我們為清華大學社群建立更好的學術工具。每一個貢獻都很重要。",
+    "sponsors": {
+      "title": "我們的贊助商",
+      "description": "我們感謝這些贊助商的大力支持，讓 NTHUMods 得以實現！",
+      "algolia": "搜尋引擎",
+      "cerana": "基礎設施贊助商"
+    },
+    "stats": {
+      "active_users": "活躍用戶",
+      "open_source": "開放原始碼",
+      "years_running": "運行年數",
+      "community": "社群"
+    },
+    "how_to_contribute": {
+      "title": "如何貢獻",
+      "description": "NTHUMods 是一個 100% 由學生主導的開源專案。我們依靠貢獻者和清華大學社群的支持來維持這個平台的生命力和蓬勃發展。每一個貢獻，無論多小，都能為數以千計的學生生活帶來真正的改變！"
+    },
+    "financial_support": {
+      "title": "💰 財務支持",
+      "description": "幫助我們支付開發成本和其他費用。每一分錢都有助於我們維護和改善平台，為所有學生提供更好的服務。",
+      "opencollective": "在 OpenCollective 上支持"
+    },
+    "for_everyone": {
+      "title": "給所有人",
+      "feedback": {
+        "title": "分享你的回饋",
+        "description": "我們隨時歡迎回饋！如果你有任何建議、想法或回饋，或者你覺得這個紫色調很醜！請使用以下連結告訴我們。",
+        "form": "表單",
+        "email": "電子郵件",
+        "instagram": "Instagram"
+      }
+    },
+    "for_developers": {
+      "title": "給開發者",
+      "bug_reports": {
+        "title": "提交錯誤報告和功能請求",
+        "description": "發現了錯誤？想要看到新功能？在我們的 GitHub 存儲庫中提交問題！",
+        "bug": "錯誤",
+        "bug_description": "在 Github 上報告錯誤",
+        "feature": "功能",
+        "feature_description": "提交功能想法"
+      },
+      "code_design": {
+        "title": "貢獻程式碼和設計",
+        "description": "準備好開始了嗎？我們歡迎各種技能水平的貢獻者！無論你是經驗豐富的開發者還是剛剛起步，這裡都有適合每個人的東西。查看我們的適合新手的問題來開始，並加入我們的社群討論！",
+        "github_repo": "GitHub 存儲庫",
+        "good_first_issues": "適合新手的問題"
+      }
+    },
+    "call_to_action": {
+      "title": "準備好做出改變了嗎？",
+      "description": "加入我們充滿活力的學生、開發者和夢想家社群，一起為清華大學建立未來的學術工具！",
+      "start_contributing": "開始貢獻",
+      "support_us": "支持我們"
+    }
   }
 }
