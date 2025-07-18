@@ -29,6 +29,7 @@ import {
 import { useRxCollection } from "rxdb-hooks";
 import { HeaderPortalOutlet } from "./Portal/HeaderPortal";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Badge } from "./ui/badge";
 
 const Header = () => {
   const {

@@ -6,13 +6,12 @@ The unofficial open-source course preselection, timetable builder, and course ca
 
 We are a passionate team of students dedicated to improving the technological standards of NTHU through students. We hope that with our efforts and yours, we'll make NTHU great again!
 
-Since its inception, NTHUMods has been continuously enhanced with features like:
+Since its inception, NTHUMods has been continuously enhanced --and degraded-- with features like:
 
 - 📚 Course Selector
 - 📅 Timetable Builder
-- 📝 Course Reviews
+- 🎓 Graduation Planner
 - 🚍 Bus Schedule
-- ⛓️‍💥 NTHU CCXP Linking
 - 📱 Mobile Support
 - 🌐 Multi-Language Support
 
@@ -27,9 +26,6 @@ Follow more updates on [Instagram](https://www.instagram.com/nthumods/)
 - Supabase
 - Firebase
 - DigitalOcean
-
-> **Note**
-> This Repository is under heavy development, expect to have breaking changes!
 
 ## Usage
 
@@ -108,6 +104,10 @@ We are LICENSED under the GNU General Public License v3.0. You can view the lice
 ## Acknowledgements
 
 [National Tsing Hua University Interdisciplinary Program](https://ipth.site.nthu.edu.tw/p/406-1462-267815,r9940.php) - Acknowledging and supporting the project
+
+[Algolia](https://www.algolia.com/) - Powering our lightning-fast course search functionality
+
+[Cerana Technology](https://cerana.tech//) - Sponsoring our infrastructure to keep the project running without eating our pockets.
 
 ## Inspiration
 
