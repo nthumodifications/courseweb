@@ -294,6 +294,15 @@ export const useCalendarProvider = () => {
         },
       });
       return;
+    } else if (!oldEvent.repeat && newEvent.repeat) {
+      // Handle transition from non-repeated to repeated event
+      await eventsCol!.findOne(newEvent.id).update({
+        $set: {
+          ...serializeEvent(newEvent),
+          actualEnd: getActualEndDate(newEvent),
+        },
+      });
+      return;
     } else if (oldEvent.repeat && newEvent.repeat) {
       switch (type) {
         case UpdateType.THIS:
@@ -379,6 +388,15 @@ export const useCalendarProvider = () => {
           });
           break;
       }
+    } else if (oldEvent.repeat && !newEvent.repeat) {
+      // Handle transition from repeated to non-repeated event
+      await eventsCol!.findOne(newEvent.id).update({
+        $set: {
+          ...serializeEvent(newEvent),
+          actualEnd: getActualEndDate(newEvent),
+        },
+      });
+      return;
     }
   };
 
