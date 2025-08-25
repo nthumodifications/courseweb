@@ -28,8 +28,6 @@ const CourseListItem: FC<{
   const { language } = useSettings();
   const searchParams = useSearchParams();
 
-  const [isHovering, setIsHovering] = useState(false);
-
   const [colorMap, setColorMap] = useSyncedStorage<{
     [courseID: string]: string;
   }>("course_color_map", {}); //map from courseID to color
