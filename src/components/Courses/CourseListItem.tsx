@@ -28,15 +28,6 @@ const CourseListItem: FC<{
   const { language } = useSettings();
   const searchParams = useSearchParams();
 
-  const [colorMap, setColorMap] = useSyncedStorage<{
-    [courseID: string]: string;
-  }>("course_color_map", {}); //map from courseID to color
-
-  const [courses, setCourses] = useSyncedStorage<CourseLocalStorage>(
-    "courses",
-    {},
-  );
-
   const { currentColors, setHoverCourse } = useUserTimetable();
 
   const handleHover = (hovering: boolean) => {
