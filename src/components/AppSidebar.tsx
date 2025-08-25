@@ -11,6 +11,7 @@ import dynamic from "next/dynamic";
 import CurrentSemesterLabel from "./Today/CurrentSemesterLabel";
 import { Language } from "@/types/settings";
 import SponsorshipBanner from "./Sponsorship/SponsorshipBanner";
+import { Badge } from "@/components/ui/badge";
 
 const HelpDynamic = dynamic(() => import("@/components/Help/Help"));
 
@@ -23,10 +24,15 @@ const MinifiedUpcomingEventsDynamic = dynamic(
 );
 
 const AppSidebar = ({ lang }: { lang: Language }) => {
+  const isDevServer = process.env.NODE_ENV === "development";
   return (
     <Sidebar collapsible="offcanvas">
       <SidebarHeader className="p-4">
-        <NTHUModsLogo />
+        <div className="flex flex-row gap-4">
+          <NTHUModsLogo />
+
+          {isDevServer && <Badge variant={"destructive"}>Testing</Badge>}
+        </div>
       </SidebarHeader>
       <SidebarContent className="p-2">
         <SideNav />

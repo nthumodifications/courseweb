@@ -42,20 +42,54 @@ const DownloadTimetableComponent = () => {
     })
       .then(async (dataUrl) => {
         setGeneratedImg(dataUrl);
-        const filename = new Date().toISOString() + "_timetable.png";
+        // Create a more user-friendly filename with current date
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('zh-TW', { 
+          year: 'numeric', 
+          month: '2-digit', 
+          day: '2-digit' 
+        }).replace(/\//g, '-');
+        const timeStr = now.toLocaleTimeString('zh-TW', { 
+          hour: '2-digit', 
+          minute: '2-digit',
+          hour12: false 
+        }).replace(/:/g, '');
+        const filename = `課表_${dateStr}_${timeStr}.png`;
+        
         const link = document.createElement("a");
         link.download = filename;
         link.href = dataUrl;
         link.target = "_blank";
-        link.click();
+        
+        // Try to trigger download
+        try {
+          link.click();
+          // Show success toast
+          toast({
+            title: "下載成功",
+            description: `課表圖片已下載為 ${filename}`,
+          });
+        } catch (downloadError) {
+          console.error("Download failed:", downloadError);
+          toast({
+            title: dict.dialogs.DownloadTimetableDialog.download_error,
+            description: dict.dialogs.DownloadTimetableDialog.download_error_description,
+            variant: "destructive",
+          });
+        }
       })
       .catch((err) => {
-        console.error("oops, something went wrong!", err);
+        console.error("Image generation failed:", err);
+        toast({
+          title: dict.dialogs.DownloadTimetableDialog.download_error,
+          description: dict.dialogs.DownloadTimetableDialog.download_error_description,
+          variant: "destructive",
+        });
       })
       .finally(() => {
         setLoading(false);
       });
-  }, [ref]);
+  }, [ref, dict]);
 
   const handleClose = (v: boolean) => {
     if (!v) setGeneratedImg(null);
@@ -71,15 +105,32 @@ const DownloadTimetableComponent = () => {
       ia[i] = byteString.charCodeAt(i);
     }
     const blob = new Blob([ab], { type: "image/png" });
-    navigator.clipboard.write([
-      new ClipboardItem({
-        "image/png": blob,
-      }),
-    ]);
-    toast({
-      title: "复制成功",
-      description: "已将课表图片复制到剪贴板",
-    });
+    
+    if (navigator.clipboard && navigator.clipboard.write) {
+      navigator.clipboard.write([
+        new ClipboardItem({
+          "image/png": blob,
+        }),
+      ]).then(() => {
+        toast({
+          title: "複製成功",
+          description: "已將課表圖片複製到剪貼板",
+        });
+      }).catch((err) => {
+        console.error("Copy failed:", err);
+        toast({
+          title: "複製失敗",
+          description: "無法複製到剪貼板，請手動儲存圖片",
+          variant: "destructive",
+        });
+      });
+    } else {
+      toast({
+        title: "不支援複製功能",
+        description: "您的瀏覽器不支援複製到剪貼板",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -107,18 +158,35 @@ const DownloadTimetableComponent = () => {
       </div>
       <Dialog open={generatedImg !== null} onOpenChange={handleClose}>
         <DialogContent>
-          <h1 className="font-bold text-lg">
-            {dict.dialogs.DownloadTimetableDialog.success_title}
-          </h1>
+          <DialogHeader>
+            <DialogTitle className="font-bold text-lg">
+              {dict.dialogs.DownloadTimetableDialog.success_title}
+            </DialogTitle>
+            <DialogDescription>
+              {dict.dialogs.DownloadTimetableDialog.success_description}
+            </DialogDescription>
+          </DialogHeader>
           <ScrollArea className="max-h-[70dvh]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             {generatedImg && (
-              <img src={generatedImg} alt="timetable" onClick={handleCopy} />
+              <img 
+                src={generatedImg} 
+                alt="timetable" 
+                onClick={handleCopy}
+                className="cursor-pointer hover:opacity-80 transition-opacity"
+                title="點擊複製到剪貼板"
+              />
             )}
           </ScrollArea>
-          <Button onClick={() => handleClose(false)} variant="outline">
-            {dict.dialogs.DownloadTimetableDialog.close}
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={handleCopy} variant="outline" className="flex-1">
+              <Image className="w-4 h-4 mr-2" />
+              複製到剪貼板
+            </Button>
+            <Button onClick={() => handleClose(false)} variant="outline" className="flex-1">
+              {dict.dialogs.DownloadTimetableDialog.close}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </>
