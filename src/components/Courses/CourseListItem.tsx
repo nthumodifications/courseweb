@@ -1,7 +1,7 @@
 "use client";
 import { CourseDefinition, CourseSyllabusView } from "@/config/supabase";
 import useDictionary from "@/dictionaries/useDictionary";
-import { FC, memo } from "react";
+import { FC, memo, useState } from "react";
 import Link from "next/link";
 import CourseTagList from "./CourseTagsList";
 import SelectCourseButton from "./SelectCourseButton";
@@ -14,6 +14,10 @@ import {
 } from "@/components/ui/collapsible";
 import { useSearchParams } from "next/navigation";
 import { ChevronDown } from "lucide-react";
+import useUserTimetable, {
+  CourseLocalStorage,
+} from "@/hooks/contexts/useUserTimetable";
+import useSyncedStorage from "@/hooks/useSyncedStorage";
 
 // Memoize the CourseListItem component
 const CourseListItem: FC<{
@@ -23,6 +27,12 @@ const CourseListItem: FC<{
   const dict = useDictionary();
   const { language } = useSettings();
   const searchParams = useSearchParams();
+
+  const { currentColors, setHoverCourse } = useUserTimetable();
+
+  const handleHover = (hovering: boolean) => {
+    setHoverCourse(hovering ? course : null);
+  };
 
   const courseTitle =
     language === "zh"
@@ -50,6 +60,8 @@ const CourseListItem: FC<{
             <Link
               className="font-semibold"
               href={`/${language}/courses/${course.raw_id}?${searchParams.toString()}`}
+              onMouseEnter={() => handleHover(true)}
+              onMouseLeave={() => handleHover(false)}
             >
               {courseTitle}
             </Link>
