@@ -31,7 +31,6 @@ const CourseListItem: FC<{
   const { currentColors, setHoverCourse } = useUserTimetable();
 
   const handleHover = (hovering: boolean) => {
-    setIsHovering(hovering);
     setHoverCourse(hovering ? course : null);
   };
 
