@@ -131,13 +131,13 @@ const PWAInstallPrompt = () => {
             <span className="bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded text-blue-800 dark:text-blue-200">
               2
             </span>
-            <span>Scroll down and tap "Add to Home Screen"</span>
+            <span>Scroll down and tap &quot;Add to Home Screen&quot;</span>
           </div>
           <div className="flex items-center gap-2 text-sm">
             <span className="bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded text-blue-800 dark:text-blue-200">
               3
             </span>
-            <span>Tap "Add" to confirm</span>
+            <span>Tap &quot;Add&quot; to confirm</span>
           </div>
         </div>
       ) : (
@@ -149,13 +149,13 @@ const PWAInstallPrompt = () => {
             <span className="bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded text-blue-800 dark:text-blue-200">
               1
             </span>
-            <span>Look for the install icon in your browser's address bar</span>
+            <span>Look for the install icon in your browser&apos;s address bar</span>
           </div>
           <div className="flex items-center gap-2 text-sm">
             <span className="bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded text-blue-800 dark:text-blue-200">
               2
             </span>
-            <span>Or check your browser's menu for "Install app" option</span>
+            <span>Or check your browser&apos;s menu for &quot;Install app&quot; option</span>
           </div>
         </div>
       )}
