@@ -49,9 +49,8 @@ const PWAInstallPrompt = () => {
 
     // Listen for beforeinstallprompt event (Android/Chrome)
     const handleBeforeInstallPrompt = (e: BeforeInstallPromptEvent) => {
-      // Prevent the mini-infobar from appearing on mobile
-      e.preventDefault();
-      // Stash the event so it can be triggered later
+      // Keep the default mini-infobar to help more users discover PWA installation
+      // Stash the event so it can be triggered later by our custom button
       setDeferredPrompt(e);
       setIsInstallable(true);
     };
