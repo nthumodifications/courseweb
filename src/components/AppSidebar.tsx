@@ -23,6 +23,10 @@ const MinifiedUpcomingEventsDynamic = dynamic(
   () => import("@/components/Calendar/MinifiedUpcomingEvents"),
 );
 
+const PWAInstallPromptDynamic = dynamic(
+  () => import("@/components/PWA/PWAInstallPrompt"),
+);
+
 const AppSidebar = ({ lang }: { lang: Language }) => {
   const isDevServer = process.env.NODE_ENV === "development";
   return (
@@ -38,6 +42,9 @@ const AppSidebar = ({ lang }: { lang: Language }) => {
         <SideNav />
       </SidebarContent>
       <SidebarFooter className="flex flex-col">
+        <div className="px-2 mb-2">
+          <PWAInstallPromptDynamic />
+        </div>
         <div className="pl-2">
           <CurrentSemesterLabel language={lang} />
         </div>
