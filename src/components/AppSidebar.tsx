@@ -23,6 +23,10 @@ const MinifiedUpcomingEventsDynamic = dynamic(
   () => import("@/components/Calendar/MinifiedUpcomingEvents"),
 );
 
+const PWAInstallPromptDynamic = dynamic(
+  () => import("@/components/PWA/PWAInstallPrompt"),
+);
+
 const AppSidebar = ({ lang }: { lang: Language }) => {
   const isDevServer = process.env.NODE_ENV === "development";
   return (
@@ -46,6 +50,9 @@ const AppSidebar = ({ lang }: { lang: Language }) => {
         </div>
         <div className="px-2 mt-2">
           <SponsorshipBanner />
+        </div>
+        <div className="px-2 mt-2">
+          <PWAInstallPromptDynamic />
         </div>
         <div className="flex flex-row justify-stretch gap-2 mt-2 px-2">
           <HelpDynamic />
