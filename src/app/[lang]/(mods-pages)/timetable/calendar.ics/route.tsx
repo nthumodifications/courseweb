@@ -4,7 +4,7 @@ import {
   colorMapFromCourses,
   createTimetableFromCourses,
 } from "@/helpers/timetable";
-import { getHours, getMinutes, parse } from "date-fns";
+import { getHours, getMinutes, parse, addDays } from "date-fns";
 import * as ics from "ics";
 import { NextResponse } from "next/server";
 import { fromZonedTime } from "date-fns-tz";
@@ -41,6 +41,12 @@ export async function GET(request: Request) {
     return i < 10 ? `0${i}` : `${i}`;
   }
 
+  function getFirstOccurrenceOfDayOfWeek(startDate: Date, targetDayOfWeek: number): Date {
+    const startDayOfWeek = startDate.getDay();
+    const daysToAdd = (7 + targetDayOfWeek - startDayOfWeek) % 7;
+    return addDays(startDate, daysToAdd);
+  }
+
   try {
     const res = await client.course.$get({
       query: { courses: courses_ids },
@@ -75,21 +81,24 @@ export async function GET(request: Request) {
             course.dayOfWeek
           ];
 
+          // Get the first occurrence of this day of the week after semester start
+          const firstOccurrence = getFirstOccurrenceOfDayOfWeek(semStart, course.dayOfWeek);
+
           return {
             title: course.course.name_zh!,
             description: `${course.course.name_en!}\n${course.course.teacher_zh}\n${course.course.teacher_en}\nhttps://nthumods.com/courses/${encodeURIComponent(course.course.raw_id)}`,
             location: course.venue,
             start: [
-              semStart.getFullYear(),
-              semStart.getMonth() + 1,
-              semStart.getDate() + 1 + course.dayOfWeek,
+              firstOccurrence.getFullYear(),
+              firstOccurrence.getMonth() + 1,
+              firstOccurrence.getDate(),
               getHours(start),
               getMinutes(start),
             ],
             end: [
-              semStart.getFullYear(),
-              semStart.getMonth() + 1,
-              semStart.getDate() + 1 + course.dayOfWeek,
+              firstOccurrence.getFullYear(),
+              firstOccurrence.getMonth() + 1,
+              firstOccurrence.getDate(),
               getHours(end),
               getMinutes(end),
             ],
