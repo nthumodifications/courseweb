@@ -2,10 +2,25 @@ declare const app: import("hono/hono-base").HonoBase<import("hono/types").BlankE
     "/": {
         $post: {
             input: {
-                form: {
+                json: {
                     body: string;
                     title: string;
                     labels: string[];
+                    turnstileToken?: string | undefined;
+                };
+            };
+            output: {
+                error: string;
+            };
+            outputFormat: "json";
+            status: 400;
+        } | {
+            input: {
+                json: {
+                    body: string;
+                    title: string;
+                    labels: string[];
+                    turnstileToken?: string | undefined;
                 };
             };
             output: {

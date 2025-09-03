@@ -747,10 +747,25 @@ export declare const app: import("hono/hono-base").HonoBase<{
     "/": {
         $post: {
             input: {
-                form: {
+                json: {
                     body: string;
                     title: string;
                     labels: string[];
+                    turnstileToken?: string | undefined;
+                };
+            };
+            output: {
+                error: string;
+            };
+            outputFormat: "json";
+            status: 400;
+        } | {
+            input: {
+                json: {
+                    body: string;
+                    title: string;
+                    labels: string[];
+                    turnstileToken?: string | undefined;
                 };
             };
             output: {
@@ -1923,10 +1938,25 @@ declare const APIHandler: {
         "/": {
             $post: {
                 input: {
-                    form: {
+                    json: {
                         body: string;
                         title: string;
                         labels: string[];
+                        turnstileToken?: string | undefined;
+                    };
+                };
+                output: {
+                    error: string;
+                };
+                outputFormat: "json";
+                status: 400;
+            } | {
+                input: {
+                    json: {
+                        body: string;
+                        title: string;
+                        labels: string[];
+                        turnstileToken?: string | undefined;
                     };
                 };
                 output: {
@@ -3097,10 +3127,25 @@ declare const APIHandler: {
         "/": {
             $post: {
                 input: {
-                    form: {
+                    json: {
                         body: string;
                         title: string;
                         labels: string[];
+                        turnstileToken?: string | undefined;
+                    };
+                };
+                output: {
+                    error: string;
+                };
+                outputFormat: "json";
+                status: 400;
+            } | {
+                input: {
+                    json: {
+                        body: string;
+                        title: string;
+                        labels: string[];
+                        turnstileToken?: string | undefined;
                     };
                 };
                 output: {
@@ -4271,10 +4316,25 @@ declare const APIHandler: {
         "/": {
             $post: {
                 input: {
-                    form: {
+                    json: {
                         body: string;
                         title: string;
                         labels: string[];
+                        turnstileToken?: string | undefined;
+                    };
+                };
+                output: {
+                    error: string;
+                };
+                outputFormat: "json";
+                status: 400;
+            } | {
+                input: {
+                    json: {
+                        body: string;
+                        title: string;
+                        labels: string[];
+                        turnstileToken?: string | undefined;
                     };
                 };
                 output: {
@@ -5445,10 +5505,25 @@ declare const APIHandler: {
         "/": {
             $post: {
                 input: {
-                    form: {
+                    json: {
                         body: string;
                         title: string;
                         labels: string[];
+                        turnstileToken?: string | undefined;
+                    };
+                };
+                output: {
+                    error: string;
+                };
+                outputFormat: "json";
+                status: 400;
+            } | {
+                input: {
+                    json: {
+                        body: string;
+                        title: string;
+                        labels: string[];
+                        turnstileToken?: string | undefined;
                     };
                 };
                 output: {
@@ -6619,10 +6694,25 @@ declare const APIHandler: {
         "/": {
             $post: {
                 input: {
-                    form: {
+                    json: {
                         body: string;
                         title: string;
                         labels: string[];
+                        turnstileToken?: string | undefined;
+                    };
+                };
+                output: {
+                    error: string;
+                };
+                outputFormat: "json";
+                status: 400;
+            } | {
+                input: {
+                    json: {
+                        body: string;
+                        title: string;
+                        labels: string[];
+                        turnstileToken?: string | undefined;
                     };
                 };
                 output: {
@@ -7793,10 +7883,25 @@ declare const APIHandler: {
         "/": {
             $post: {
                 input: {
-                    form: {
+                    json: {
                         body: string;
                         title: string;
                         labels: string[];
+                        turnstileToken?: string | undefined;
+                    };
+                };
+                output: {
+                    error: string;
+                };
+                outputFormat: "json";
+                status: 400;
+            } | {
+                input: {
+                    json: {
+                        body: string;
+                        title: string;
+                        labels: string[];
+                        turnstileToken?: string | undefined;
                     };
                 };
                 output: {
@@ -8967,10 +9072,25 @@ declare const APIHandler: {
         "/": {
             $post: {
                 input: {
-                    form: {
+                    json: {
                         body: string;
                         title: string;
                         labels: string[];
+                        turnstileToken?: string | undefined;
+                    };
+                };
+                output: {
+                    error: string;
+                };
+                outputFormat: "json";
+                status: 400;
+            } | {
+                input: {
+                    json: {
+                        body: string;
+                        title: string;
+                        labels: string[];
+                        turnstileToken?: string | undefined;
                     };
                 };
                 output: {
@@ -10141,10 +10261,25 @@ declare const APIHandler: {
         "/": {
             $post: {
                 input: {
-                    form: {
+                    json: {
                         body: string;
                         title: string;
                         labels: string[];
+                        turnstileToken?: string | undefined;
+                    };
+                };
+                output: {
+                    error: string;
+                };
+                outputFormat: "json";
+                status: 400;
+            } | {
+                input: {
+                    json: {
+                        body: string;
+                        title: string;
+                        labels: string[];
+                        turnstileToken?: string | undefined;
                     };
                 };
                 output: {
@@ -11315,10 +11450,25 @@ declare const APIHandler: {
         "/": {
             $post: {
                 input: {
-                    form: {
+                    json: {
                         body: string;
                         title: string;
                         labels: string[];
+                        turnstileToken?: string | undefined;
+                    };
+                };
+                output: {
+                    error: string;
+                };
+                outputFormat: "json";
+                status: 400;
+            } | {
+                input: {
+                    json: {
+                        body: string;
+                        title: string;
+                        labels: string[];
+                        turnstileToken?: string | undefined;
                     };
                 };
                 output: {
@@ -12496,10 +12646,25 @@ declare const APIHandler: {
         "/": {
             $post: {
                 input: {
-                    form: {
+                    json: {
                         body: string;
                         title: string;
                         labels: string[];
+                        turnstileToken?: string | undefined;
+                    };
+                };
+                output: {
+                    error: string;
+                };
+                outputFormat: "json";
+                status: 400;
+            } | {
+                input: {
+                    json: {
+                        body: string;
+                        title: string;
+                        labels: string[];
+                        turnstileToken?: string | undefined;
                     };
                 };
                 output: {
@@ -13672,10 +13837,25 @@ declare const APIHandler: {
         "/": {
             $post: {
                 input: {
-                    form: {
+                    json: {
                         body: string;
                         title: string;
                         labels: string[];
+                        turnstileToken?: string | undefined;
+                    };
+                };
+                output: {
+                    error: string;
+                };
+                outputFormat: "json";
+                status: 400;
+            } | {
+                input: {
+                    json: {
+                        body: string;
+                        title: string;
+                        labels: string[];
+                        turnstileToken?: string | undefined;
                     };
                 };
                 output: {
