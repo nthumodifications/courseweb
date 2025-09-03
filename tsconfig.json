@@ -13,17 +13,13 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
-      "api/*": ["./libs/api/src/*"],
-      "auth/*": ["./libs/secure-api/src/*"]
+      "@courseweb/ui": ["./packages/ui/src"],
+      "@courseweb/shared": ["./packages/shared/src"],
+      "@courseweb/database": ["./packages/database/src"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules", "libs"]
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules", "dist", "build", ".next"]
 }

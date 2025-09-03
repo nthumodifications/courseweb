@@ -1,47 +1,79 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
+node_modules/
+**/node_modules/
 /.pnp
 .pnp.js
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
 # testing
 /coverage
+**/coverage/
 
 # next.js
 /.next/
+**/\.next/
 /out/
 
 # production
 /build
+**/build/
+**/dist/
 
 # misc
 .DS_Store
 *.pem
 
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
 # local env files
 .env*.local
+**/.env*.local
 
 # vercel
 .vercel
 
 # typescript
 *.tsbuildinfo
+**/tsconfig.tsbuildinfo
 next-env.d.ts
-public/sw.js.map
 
 # Sentry Config File
 .sentryclirc
 
+# Monorepo specific
+.turbo/
+**/.turbo/
+
+# Mobile/Capacitor
 resources/ios/**/*
 resources/android/**/*
 android/private_key.pepk
+**/android/private_key.pepk
+**/ios/private_key.pepk
 
-# Sentry Config File
-.sentryclirc
+# Build outputs
+**/public/sw.js.map
+
+# Tools
 .tsimp
+**/.tsimp
+
+# IDEs
+.vscode/settings.json
+.idea/
+**/.idea/
+
+# OS
+.DS_Store
+**/.DS_Store
+Thumbs.db
+**/Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+**/*.tmp
+**/*.temp

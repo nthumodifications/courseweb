@@ -1,0 +1,35 @@
+{
+  "name": "@courseweb/web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Main Next.js web application for CoursWeb",
+  "scripts": {
+    "dev": "next dev",
+    "dev-turbo": "next dev --turbo",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint --fix",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf .next dist"
+  },
+  "dependencies": {
+    "@courseweb/ui": "*",
+    "@courseweb/shared": "*",
+    "next": "^14.2.26",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@courseweb/eslint-config": "*",
+    "@types/node": "^20.10.7",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "eslint": "^8.57.0",
+    "typescript": "^5.4.4"
+  },
+  "eslintConfig": {
+    "extends": [
+      "@courseweb/eslint-config/next"
+    ]
+  }
+}
