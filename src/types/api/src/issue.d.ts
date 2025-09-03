@@ -11,9 +11,11 @@ declare const app: import("hono/hono-base").HonoBase<import("hono/types").BlankE
             };
             output: {
                 error: string;
+                code?: string | undefined;
+                details?: string | undefined;
             };
             outputFormat: "json";
-            status: 400;
+            status: any;
         } | {
             input: {
                 json: {
@@ -98,6 +100,19 @@ declare const app: import("hono/hono-base").HonoBase<import("hono/types").BlankE
 } & {
     "/": {
         $get: {
+            input: {
+                query: {
+                    tag: string;
+                };
+            };
+            output: {
+                error: string;
+                code?: string | undefined;
+                details?: string | undefined;
+            };
+            outputFormat: "json";
+            status: any;
+        } | {
             input: {
                 query: {
                     tag: string;
