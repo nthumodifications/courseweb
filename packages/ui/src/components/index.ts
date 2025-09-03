@@ -43,8 +43,8 @@ export * from "./ui/tooltip";
 export * from "./ui/use-toast";
 
 // Animation Components
-export * from "./animation/ButtonSpinner";
-export * from "./animation/Fade";
+export { default as ButtonSpinner } from "./animation/ButtonSpinner";
+export { default as Fade } from "./animation/Fade";
 
 // Hooks
 export * from "../hooks/use-mobile";
