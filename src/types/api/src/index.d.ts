@@ -756,9 +756,11 @@ export declare const app: import("hono/hono-base").HonoBase<{
             };
             output: {
                 error: string;
+                code?: string | undefined;
+                details?: string | undefined;
             };
             outputFormat: "json";
-            status: 400;
+            status: any;
         } | {
             input: {
                 json: {
@@ -843,6 +845,19 @@ export declare const app: import("hono/hono-base").HonoBase<{
 } & {
     "/": {
         $get: {
+            input: {
+                query: {
+                    tag: string;
+                };
+            };
+            output: {
+                error: string;
+                code?: string | undefined;
+                details?: string | undefined;
+            };
+            outputFormat: "json";
+            status: any;
+        } | {
             input: {
                 query: {
                     tag: string;
@@ -1947,9 +1962,11 @@ declare const APIHandler: {
                 };
                 output: {
                     error: string;
+                    code?: string | undefined;
+                    details?: string | undefined;
                 };
                 outputFormat: "json";
-                status: 400;
+                status: any;
             } | {
                 input: {
                     json: {
@@ -2034,6 +2051,19 @@ declare const APIHandler: {
     } & {
         "/": {
             $get: {
+                input: {
+                    query: {
+                        tag: string;
+                    };
+                };
+                output: {
+                    error: string;
+                    code?: string | undefined;
+                    details?: string | undefined;
+                };
+                outputFormat: "json";
+                status: any;
+            } | {
                 input: {
                     query: {
                         tag: string;
@@ -3136,9 +3166,11 @@ declare const APIHandler: {
                 };
                 output: {
                     error: string;
+                    code?: string | undefined;
+                    details?: string | undefined;
                 };
                 outputFormat: "json";
-                status: 400;
+                status: any;
             } | {
                 input: {
                     json: {
@@ -3223,6 +3255,19 @@ declare const APIHandler: {
     } & {
         "/": {
             $get: {
+                input: {
+                    query: {
+                        tag: string;
+                    };
+                };
+                output: {
+                    error: string;
+                    code?: string | undefined;
+                    details?: string | undefined;
+                };
+                outputFormat: "json";
+                status: any;
+            } | {
                 input: {
                     query: {
                         tag: string;
@@ -4325,9 +4370,11 @@ declare const APIHandler: {
                 };
                 output: {
                     error: string;
+                    code?: string | undefined;
+                    details?: string | undefined;
                 };
                 outputFormat: "json";
-                status: 400;
+                status: any;
             } | {
                 input: {
                     json: {
@@ -4412,6 +4459,19 @@ declare const APIHandler: {
     } & {
         "/": {
             $get: {
+                input: {
+                    query: {
+                        tag: string;
+                    };
+                };
+                output: {
+                    error: string;
+                    code?: string | undefined;
+                    details?: string | undefined;
+                };
+                outputFormat: "json";
+                status: any;
+            } | {
                 input: {
                     query: {
                         tag: string;
@@ -5514,9 +5574,11 @@ declare const APIHandler: {
                 };
                 output: {
                     error: string;
+                    code?: string | undefined;
+                    details?: string | undefined;
                 };
                 outputFormat: "json";
-                status: 400;
+                status: any;
             } | {
                 input: {
                     json: {
@@ -5601,6 +5663,19 @@ declare const APIHandler: {
     } & {
         "/": {
             $get: {
+                input: {
+                    query: {
+                        tag: string;
+                    };
+                };
+                output: {
+                    error: string;
+                    code?: string | undefined;
+                    details?: string | undefined;
+                };
+                outputFormat: "json";
+                status: any;
+            } | {
                 input: {
                     query: {
                         tag: string;
@@ -6703,9 +6778,11 @@ declare const APIHandler: {
                 };
                 output: {
                     error: string;
+                    code?: string | undefined;
+                    details?: string | undefined;
                 };
                 outputFormat: "json";
-                status: 400;
+                status: any;
             } | {
                 input: {
                     json: {
@@ -6790,6 +6867,19 @@ declare const APIHandler: {
     } & {
         "/": {
             $get: {
+                input: {
+                    query: {
+                        tag: string;
+                    };
+                };
+                output: {
+                    error: string;
+                    code?: string | undefined;
+                    details?: string | undefined;
+                };
+                outputFormat: "json";
+                status: any;
+            } | {
                 input: {
                     query: {
                         tag: string;
@@ -7892,9 +7982,11 @@ declare const APIHandler: {
                 };
                 output: {
                     error: string;
+                    code?: string | undefined;
+                    details?: string | undefined;
                 };
                 outputFormat: "json";
-                status: 400;
+                status: any;
             } | {
                 input: {
                     json: {
@@ -7979,6 +8071,19 @@ declare const APIHandler: {
     } & {
         "/": {
             $get: {
+                input: {
+                    query: {
+                        tag: string;
+                    };
+                };
+                output: {
+                    error: string;
+                    code?: string | undefined;
+                    details?: string | undefined;
+                };
+                outputFormat: "json";
+                status: any;
+            } | {
                 input: {
                     query: {
                         tag: string;
@@ -9081,9 +9186,11 @@ declare const APIHandler: {
                 };
                 output: {
                     error: string;
+                    code?: string | undefined;
+                    details?: string | undefined;
                 };
                 outputFormat: "json";
-                status: 400;
+                status: any;
             } | {
                 input: {
                     json: {
@@ -9168,6 +9275,19 @@ declare const APIHandler: {
     } & {
         "/": {
             $get: {
+                input: {
+                    query: {
+                        tag: string;
+                    };
+                };
+                output: {
+                    error: string;
+                    code?: string | undefined;
+                    details?: string | undefined;
+                };
+                outputFormat: "json";
+                status: any;
+            } | {
                 input: {
                     query: {
                         tag: string;
@@ -10270,9 +10390,11 @@ declare const APIHandler: {
                 };
                 output: {
                     error: string;
+                    code?: string | undefined;
+                    details?: string | undefined;
                 };
                 outputFormat: "json";
-                status: 400;
+                status: any;
             } | {
                 input: {
                     json: {
@@ -10357,6 +10479,19 @@ declare const APIHandler: {
     } & {
         "/": {
             $get: {
+                input: {
+                    query: {
+                        tag: string;
+                    };
+                };
+                output: {
+                    error: string;
+                    code?: string | undefined;
+                    details?: string | undefined;
+                };
+                outputFormat: "json";
+                status: any;
+            } | {
                 input: {
                     query: {
                         tag: string;
@@ -11459,9 +11594,11 @@ declare const APIHandler: {
                 };
                 output: {
                     error: string;
+                    code?: string | undefined;
+                    details?: string | undefined;
                 };
                 outputFormat: "json";
-                status: 400;
+                status: any;
             } | {
                 input: {
                     json: {
@@ -11546,6 +11683,19 @@ declare const APIHandler: {
     } & {
         "/": {
             $get: {
+                input: {
+                    query: {
+                        tag: string;
+                    };
+                };
+                output: {
+                    error: string;
+                    code?: string | undefined;
+                    details?: string | undefined;
+                };
+                outputFormat: "json";
+                status: any;
+            } | {
                 input: {
                     query: {
                         tag: string;
@@ -12655,9 +12805,11 @@ declare const APIHandler: {
                 };
                 output: {
                     error: string;
+                    code?: string | undefined;
+                    details?: string | undefined;
                 };
                 outputFormat: "json";
-                status: 400;
+                status: any;
             } | {
                 input: {
                     json: {
@@ -12742,6 +12894,19 @@ declare const APIHandler: {
     } & {
         "/": {
             $get: {
+                input: {
+                    query: {
+                        tag: string;
+                    };
+                };
+                output: {
+                    error: string;
+                    code?: string | undefined;
+                    details?: string | undefined;
+                };
+                outputFormat: "json";
+                status: any;
+            } | {
                 input: {
                     query: {
                         tag: string;
@@ -13846,9 +14011,11 @@ declare const APIHandler: {
                 };
                 output: {
                     error: string;
+                    code?: string | undefined;
+                    details?: string | undefined;
                 };
                 outputFormat: "json";
-                status: 400;
+                status: any;
             } | {
                 input: {
                     json: {
@@ -13933,6 +14100,19 @@ declare const APIHandler: {
     } & {
         "/": {
             $get: {
+                input: {
+                    query: {
+                        tag: string;
+                    };
+                };
+                output: {
+                    error: string;
+                    code?: string | undefined;
+                    details?: string | undefined;
+                };
+                outputFormat: "json";
+                status: any;
+            } | {
                 input: {
                     query: {
                         tag: string;
