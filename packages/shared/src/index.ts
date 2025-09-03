@@ -1,6 +1,8 @@
 // Shared utilities and types for CoursWeb applications
-export * from "./types";
+
+// Core utilities
 export * from "./utils";
+export * from "./types";
 export * from "./constants";
 export * from "./config";
 
@@ -9,4 +11,3 @@ export { clsx } from "clsx";
 export { z } from "zod";
 export { v4 as uuid } from "uuid";
 export { format, parseISO } from "date-fns";
-export { zonedTimeToUtc, utcToZonedTime } from "date-fns-tz";
