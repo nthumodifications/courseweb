@@ -1,4 +1,4 @@
-import { FormField, FormItem, FormLabel } from "@courseweb/ui";
+import { FormField, FormItem, FormLabel } from "../ui/form";
 import { useState } from "react";
 import { Button, buttonVariants } from "@courseweb/ui";
 import { Check, ChevronsUpDown, X } from "lucide-react";

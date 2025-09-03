@@ -1,4 +1,4 @@
-import { FormControl, FormField, FormItem, FormLabel } from "@courseweb/ui";
+import { FormControl, FormField, FormItem, FormLabel } from "../ui/form";
 import { Checkbox } from "@courseweb/ui";
 
 export const MultiCheckboxControl = ({

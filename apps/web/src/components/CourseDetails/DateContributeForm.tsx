@@ -29,7 +29,7 @@ import {
   FormField,
   FormItem,
   FormMessage,
-} from "@courseweb/ui";
+} from "../ui/form";
 import { Alert, AlertDescription, AlertTitle } from "@courseweb/ui";
 import { ScrollArea } from "@radix-ui/react-scroll-area";
 import { z } from "zod";

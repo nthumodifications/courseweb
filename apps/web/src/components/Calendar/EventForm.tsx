@@ -23,7 +23,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@courseweb/ui";
+} from "../ui/form";
 import { Input } from "@courseweb/ui";
 import { Switch } from "@courseweb/ui";
 import {
