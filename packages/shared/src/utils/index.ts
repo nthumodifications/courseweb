@@ -1,14 +1,17 @@
 // Shared utilities for CoursWeb applications
-// TODO: Move utilities from src/helpers/ and src/lib/ here in Phase 5
 
-// Placeholder export to prevent build errors
-export function placeholder() {
-  return "placeholder";
-}
+// Core utilities
+export * from "./array";
+export * from "./dates";
+export * from "./colors";
+export * from "./courses";
+export * from "./semester";
+export * from "./timetable";
+export * from "./characters";
+export * from "./fetch";
 
 // Re-export commonly used external libraries for consistency
 export { clsx } from "clsx";
 export { z } from "zod";
 export { v4 as uuid } from "uuid";
 export { format, parseISO } from "date-fns";
-// TODO: Add date-fns-tz exports when needed

@@ -1,7 +1,10 @@
 // Shared types for CoursWeb applications
-// TODO: Move types from src/types/ here in Phase 5
 
-// Placeholder export to prevent build errors
-export interface PlaceholderType {
-  id: string;
-}
+// Core types
+
+export * from "./courses";
+export * from "./timetable";
+export * from "./calendar_event";
+export * from "./comments";
+export * from "./settings";
+export * from "./supabase";

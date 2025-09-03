@@ -1,6 +1,7 @@
-import { CourseLanguage, MinimalCourse, RawCourseID } from "@courseweb/shared";
+import { CourseLanguage, MinimalCourse, RawCourseID } from "../types/courses";
 import { createTimetableFromCourses } from "./timetable";
-import { departments, classCode } from "@courseweb/shared";
+import { departments } from "../constants/departments";
+import { classCode } from "../constants/class_code";
 
 export const getGECType = (ge_type: string) => {
   //核心通識Core GE courses 1, 核心通識Core GE courses 2  <- return this number

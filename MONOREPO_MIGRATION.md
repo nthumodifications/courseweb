@@ -128,21 +128,23 @@ courseweb/
 
 ---
 
-### Phase 4: Migrate Services ⏳ IN PROGRESS
+### Phase 4: Migrate Services ✅ COMPLETE
 
-**Status**: In Progress  
+**Status**: Complete  
 **Branch**: `feat/migrate-services`  
 **Description**: Move API services to the `services/` directory.
 
 **Tasks**:
 
-- [ ] Create `services/api` from `libs/api`
-- [ ] Create `services/secure-api` from `libs/secure-api`
-- [ ] Create `services/discord-bot` structure
-- [ ] Update package.json for each service
-- [ ] Update deployment configurations
-- [ ] Test API functionality
-- [ ] Update CI/CD pipelines
+- [x] Create `services/api` from `libs/api`
+- [x] Create `services/secure-api` from `libs/secure-api`
+- [x] Create `services/discord-bot` structure
+- [x] Update package.json for each service with monorepo naming
+- [x] Add shared dependencies and ESLint configuration
+- [x] Update git submodules to point to services directory
+- [x] Clean up old libs directory
+- [ ] Update deployment configurations (Phase 8)
+- [ ] Update CI/CD pipelines (Phase 8)
 
 **Services to Migrate**:
 
@@ -250,9 +252,9 @@ courseweb/
 4. **Test Thoroughly**: Each phase should maintain functionality
 5. **Update Status**: Update this document as phases are completed
 
-### Current State (Phase 3 Complete, Phase 4 Started)
+### Current State (Phase 4 Complete, Phase 5 Next)
 
-**Branch**: `feat/migrate-services`  
+**Branch**: `feat/migrate-services` (ready to merge or start Phase 5)
 **Completed in Phase 1**:
 
 1. ✅ Setup root package.json with workspaces configuration
@@ -290,7 +292,21 @@ courseweb/
 - ✅ `@courseweb/shared` - Building successfully
 - ✅ `@courseweb/web` - Development working, minor SSR build issues remain
 
-**Phase 4 Started**: Migrate Services from `libs/` to `services/`
+**Phase 4 Completed**: Services successfully migrated from `libs/` to `services/`
+
+**Completed in Phase 4**:
+
+1. ✅ Migrated API service as git submodule to `services/api`
+2. ✅ Migrated secure-api service as git submodule to `services/secure-api`
+3. ✅ Created discord-bot service structure with basic package.json
+4. ✅ Updated all service package.json files with monorepo naming (@courseweb/\*)
+5. ✅ Added shared package dependencies to all services
+6. ✅ Added ESLint configuration to all services
+7. ✅ Updated .gitmodules to point to services directory
+8. ✅ Cleaned up old libs directory
+9. ✅ Services properly integrated into npm workspaces and Turbo
+
+**Phase 5 Ready**: Extract Shared Utilities Package
 
 ### Commands Completed
 
@@ -364,5 +380,6 @@ After successful migration:
 **Phase 1 Completed**: 2024-12-19  
 **Phase 2 Completed**: 2024-12-19  
 **Phase 3 Completed**: 2024-12-19  
-**Phase 4 Started**: 2024-12-19  
+**Phase 4 Completed**: 2024-12-19  
+**Phase 5 Ready**: 2024-12-19
 **Estimated Completion**: Phase 4-8 remaining

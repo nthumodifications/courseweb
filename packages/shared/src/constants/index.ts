@@ -1,8 +1,12 @@
 // Shared constants for CoursWeb applications
-// TODO: Move constants from src/const/ here in Phase 5
 
-// Placeholder export to prevent build errors
-export const PLACEHOLDER_CONSTANT = "placeholder";
+// Core constants
+export * from "./departments";
+export * from "./semester";
+export * from "./venues";
+export * from "./timetable";
+export * from "./timetableColors";
+export * from "./class_code";
 
 // Common UI constants that might be shared
 export const MOBILE_BREAKPOINT = 768;
