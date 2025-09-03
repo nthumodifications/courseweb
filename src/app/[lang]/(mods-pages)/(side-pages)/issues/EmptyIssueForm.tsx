@@ -21,7 +21,7 @@ const EmptyIssueForm = () => {
         console.log("sabmitting issue");
         const createIssue = client.issue.$post;
         const issue = await createIssue({
-          form: {
+          json: {
             title,
             body: description,
             labels: [],

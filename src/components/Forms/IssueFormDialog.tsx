@@ -11,14 +11,97 @@ import {
   DialogTrigger,
 } from "../ui/dialog";
 import { MessageCircle } from "lucide-react";
-import { genericIssueFormAction } from "./GenericIssueFormDialog.action";
 import { DialogDescription } from "@radix-ui/react-dialog";
-import { useFormStatus } from "react-dom";
 import { PropsWithChildren, useState } from "react";
 import { toast } from "../ui/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { ScrollArea } from "../ui/scroll-area";
 import client from "@/config/api";
+
+interface ApiError {
+  message: string;
+  code?: string;
+  status?: number;
+}
+
+const parseApiError = async (response: Response): Promise<ApiError> => {
+  let errorMessage = "An unknown error occurred";
+  let errorCode = "";
+
+  try {
+    const contentType = response.headers.get("content-type");
+    if (contentType?.includes("application/json")) {
+      const errorData = await response.json();
+      errorMessage = errorData.error || errorData.message || errorMessage;
+      errorCode = errorData.code || "";
+    } else {
+      errorMessage =
+        (await response.text()) ||
+        `HTTP ${response.status}: ${response.statusText}`;
+    }
+  } catch {
+    errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+  }
+
+  return {
+    message: errorMessage,
+    code: errorCode,
+    status: response.status,
+  };
+};
+
+const getErrorMessage = (
+  error: ApiError,
+): { title: string; description: string } => {
+  const { status, message } = error;
+
+  switch (status) {
+    case 400:
+      return {
+        title: "Invalid Submission",
+        description: message.includes("Title")
+          ? "Please ensure your title is at least 7 characters long"
+          : message.includes("Description")
+            ? "Please provide a description of your issue"
+            : message || "Please check your input and try again",
+      };
+    case 401:
+      return {
+        title: "Authentication Required",
+        description: "Please refresh the page and try again",
+      };
+    case 403:
+      return {
+        title: "Access Denied",
+        description: "You don't have permission to submit issues at this time",
+      };
+    case 429:
+      return {
+        title: "Too Many Requests",
+        description: "Please wait a moment before submitting another issue",
+      };
+    case 500:
+      return {
+        title: "Server Error",
+        description:
+          "Our servers are experiencing issues. Please try again in a few minutes",
+      };
+    case 502:
+    case 503:
+    case 504:
+      return {
+        title: "Service Unavailable",
+        description:
+          "The issue reporting service is temporarily unavailable. Please try again later",
+      };
+    default:
+      return {
+        title: "Submission Failed",
+        description:
+          message || "An unexpected error occurred. Please try again",
+      };
+  }
+};
 
 const placeholderIssueDescription = `   **Describe the issue**
 A clear and concise description of what the issue is.
@@ -35,42 +118,223 @@ A clear and concise description of what you expected to happen.
 `;
 
 const IssueFormDialog = ({ children }: PropsWithChildren) => {
-  const { pending } = useFormStatus();
   const [open, setOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [retryCount, setRetryCount] = useState(0);
+  const [lastError, setLastError] = useState<ApiError | null>(null);
 
-  const action = async (form: FormData) => {
-    if (pending) return;
-    const res = await genericIssueFormAction(form);
-    if (res && "error" in res && res.error) {
-      console.error(res.error.message);
+  const MAX_RETRIES = 2;
+  const RETRY_DELAYS = [1000, 3000]; // 1s, then 3s
+
+  const validateForm = (): boolean => {
+    if (!title || title.length < 7) {
       toast({
-        title: "Error Occured",
-        description: res.error.message,
+        title: "Validation Error",
+        description:
+          "Title is required and should be at least 7 characters long",
+        variant: "destructive",
       });
-      return;
+      return false;
     }
-    setOpen(false);
-    toast({
-      title: "Issue Submitted",
-      description: "Thank you for your feedback!",
-    });
+
+    if (!description || description.trim().length < 10) {
+      toast({
+        title: "Validation Error",
+        description:
+          "Please provide a detailed description (at least 10 characters)",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    // Check for potentially spam-like content
+    const spamIndicators = ["test", "testing", "asdf", "qwerty"];
+    const lowercaseTitle = title.toLowerCase();
+    const lowercaseDescription = description.toLowerCase();
+
+    if (
+      spamIndicators.some(
+        (indicator) =>
+          lowercaseTitle.includes(indicator) &&
+          lowercaseDescription.includes(indicator),
+      )
+    ) {
+      toast({
+        title: "Please Provide Details",
+        description: "Please provide a more detailed description of your issue",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    return true;
+  };
+
+  const attemptSubmission = async (): Promise<boolean> => {
+    try {
+      const response = await client.issue.$post({
+        json: {
+          title: `[UI Submitted]: ${title}`,
+          body: description,
+          labels: ["generic"],
+        },
+      } as any);
+
+      if (!response.ok) {
+        const error = await parseApiError(response);
+        setLastError(error);
+
+        // Don't retry for client errors (4xx) except for specific cases
+        if (
+          response.status >= 400 &&
+          response.status < 500 &&
+          response.status !== 429
+        ) {
+          const { title: errorTitle, description: errorDescription } =
+            getErrorMessage(error);
+          toast({
+            title: errorTitle,
+            description: errorDescription,
+            variant: "destructive",
+          });
+          return false;
+        }
+
+        throw new Error(error.message);
+      }
+
+      // Success
+      setOpen(false);
+      setTitle("");
+      setDescription("");
+      setRetryCount(0);
+      setLastError(null);
+
+      toast({
+        title: "Issue Submitted Successfully",
+        description: "Thank you for your feedback! We'll look into your issue.",
+      });
+
+      return true;
+    } catch (error) {
+      const apiError: ApiError = {
+        message:
+          error instanceof Error ? error.message : "Network error occurred",
+        status: 0,
+      };
+      setLastError(apiError);
+      throw error;
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (isSubmitting) return;
+
+    if (!validateForm()) return;
+
+    setIsSubmitting(true);
+
+    try {
+      const success = await attemptSubmission();
+      if (success) return;
+
+      // If we reach here, it's a retryable error
+      let currentRetry = 0;
+      while (currentRetry < MAX_RETRIES) {
+        await new Promise((resolve) =>
+          setTimeout(resolve, RETRY_DELAYS[currentRetry]),
+        );
+
+        setRetryCount(currentRetry + 1);
+
+        try {
+          const success = await attemptSubmission();
+          if (success) return;
+        } catch (retryError) {
+          console.warn(`Retry ${currentRetry + 1} failed:`, retryError);
+        }
+
+        currentRetry++;
+      }
+
+      // All retries failed
+      const { title: errorTitle, description: errorDescription } =
+        getErrorMessage(
+          lastError || {
+            message: "Failed to submit after multiple attempts",
+            status: 500,
+          },
+        );
+
+      toast({
+        title: errorTitle,
+        description: `${errorDescription} (Failed after ${MAX_RETRIES + 1} attempts)`,
+        variant: "destructive",
+      });
+    } catch (error) {
+      console.error("Error submitting issue:", error);
+
+      const { title: errorTitle, description: errorDescription } =
+        getErrorMessage(
+          lastError || {
+            message:
+              error instanceof Error
+                ? error.message
+                : "An unexpected error occurred",
+            status: 0,
+          },
+        );
+
+      toast({
+        title: errorTitle,
+        description: errorDescription,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+      setRetryCount(0);
+    }
   };
 
   const {
     data: issues,
     isLoading,
-    error,
+    error: issuesError,
   } = useQuery({
     queryKey: ["issues"],
     queryFn: async () => {
-      const res = await client.issue.$get({
-        query: {
-          tag: "display",
-        },
-      });
-      return await res.json();
+      try {
+        const res = await client.issue.$get({
+          query: {
+            tag: "display",
+          },
+        });
+
+        if (!res.ok) {
+          const errorData = await res.json();
+          console.warn("Failed to fetch known issues:", errorData);
+          return []; // Return empty array on error to prevent UI breaking
+        }
+
+        const data = await res.json();
+        if (!Array.isArray(data)) {
+          console.warn("Invalid issues data format:", data);
+          return [];
+        }
+
+        return data;
+      } catch (error) {
+        console.warn("Error fetching known issues:", error);
+        return []; // Return empty array on network errors
+      }
     },
     enabled: open,
+    retry: 1, // Only retry once for non-critical data
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
   return (
@@ -82,14 +346,19 @@ const IssueFormDialog = ({ children }: PropsWithChildren) => {
           <DialogDescription>{`匿名的哦~ It's Anonymous!`}</DialogDescription>
         </DialogHeader>
         <ScrollArea className="max-h-[90vh]">
-          <form action={action} className="flex flex-col max-w-2xl gap-4">
+          <form
+            onSubmit={handleSubmit}
+            className="flex flex-col max-w-2xl gap-4"
+          >
             <div className="flex flex-col gap-2">
               <Label htmlFor="title">{"標題 Title"}</Label>
               <Input
                 id="title"
                 name="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
                 placeholder="Whats the feature/bug you're facing"
-                disabled={pending}
+                disabled={isSubmitting}
               />
             </div>
             {issues && issues.length > 0 && (
@@ -111,8 +380,10 @@ const IssueFormDialog = ({ children }: PropsWithChildren) => {
               <Textarea
                 id="description"
                 name="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
                 placeholder={placeholderIssueDescription}
-                disabled={pending}
+                disabled={isSubmitting}
               />
               <p className="text-xs">
                 {
@@ -122,8 +393,12 @@ const IssueFormDialog = ({ children }: PropsWithChildren) => {
               <p className="text-xs">{"Markdown GFM enabled!"}</p>
             </div>
             <div className="flex flex-row gap-2 justify-end">
-              <Button type="submit" disabled={pending}>
-                Submit
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting
+                  ? retryCount > 0
+                    ? `Retrying... (${retryCount}/${MAX_RETRIES})`
+                    : "Submitting..."
+                  : "Submit"}
               </Button>
             </div>
           </form>
