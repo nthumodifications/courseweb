@@ -1,9 +1,10 @@
-import { hc } from "hono/client";
-import { app } from "@/types/secure-api";
+import { createSecureApiClient } from "@courseweb/api-types";
 
 if (!process.env.NEXT_PUBLIC_NTHUMODS_AUTH_URL) {
   throw new Error("NEXT_PUBLIC_NTHUMODS_AUTH_URL is not defined");
 }
-const authClient = hc<typeof app>(process.env.NEXT_PUBLIC_NTHUMODS_AUTH_URL);
+const authClient = createSecureApiClient(
+  process.env.NEXT_PUBLIC_NTHUMODS_AUTH_URL,
+);
 
 export default authClient;

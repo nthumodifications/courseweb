@@ -1,6 +1,7 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "globalDependencies": ["**/.env.*local"],
+  "concurrency": "12",
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
@@ -31,6 +32,61 @@
     },
     "gentype": {
       "outputs": ["packages/shared/src/types/**"]
+    },
+    "build:api-types": {
+      "dependsOn": [],
+      "outputs": ["packages/api-types/dist/**"]
+    },
+    "sync": {
+      "cache": false,
+      "dependsOn": ["^build"]
+    },
+    "sync:ios": {
+      "cache": false,
+      "dependsOn": ["sync"]
+    },
+    "sync:android": {
+      "cache": false,
+      "dependsOn": ["sync"]
+    },
+    "build:ios": {
+      "dependsOn": ["sync:ios"],
+      "outputs": ["ios/App/build/**"]
+    },
+    "build:android": {
+      "dependsOn": ["sync:android"],
+      "outputs": ["android/app/build/**"]
+    },
+    "open:ios": {
+      "cache": false
+    },
+    "open:android": {
+      "cache": false
+    },
+    "doctor": {
+      "cache": false
+    },
+    "sync:once": {
+      "cache": false
+    },
+    "sync:scheduled": {
+      "cache": false,
+      "persistent": true
+    },
+    "create": {
+      "cache": false
+    },
+    "remove": {
+      "cache": false
+    },
+    "move": {
+      "cache": false
+    },
+    "update:ui-imports": {
+      "cache": false
+    },
+    "update:web-imports": {
+      "cache": false
     }
   },
   "globalEnv": [

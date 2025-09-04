@@ -1,4 +1,5 @@
 "use client";
+
 import CurrentSemesterLabel from "./Today/CurrentSemesterLabel";
 import { SidebarTrigger } from "@courseweb/ui";
 import {

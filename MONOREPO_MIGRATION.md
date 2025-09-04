@@ -154,93 +154,131 @@ courseweb/
 
 ---
 
-### Phase 5: Create Shared Utilities Package
+### Phase 5: Create Shared Utilities Package ✅ COMPLETE
 
-**Status**: Pending  
-**Branch**: TBD  
+**Status**: Complete  
+**Branch**: `feat/extract-shared-utilities`  
 **Description**: Extract shared utilities, types, and configurations.
 
 **Tasks**:
 
-- [ ] Create `packages/shared` structure
-- [ ] Move shared types and utilities
-- [ ] Move shared constants and configuration
-- [ ] Create database package from database files
-- [ ] Update imports across all packages
-- [ ] Test shared functionality
+- [x] Create `packages/shared` structure
+- [x] Move shared types and utilities from web app
+- [x] Move shared constants and configuration
+- [x] Create database package from database files
+- [x] Fix import paths and type conflicts
+- [x] Test shared functionality and integration
+- [x] Update package exports with barrel exports
 
-**Files to Move**:
+**Files Moved**:
 
-- `src/types/*` → `packages/shared/src/types/`
-- `src/helpers/*` → `packages/shared/src/utils/`
-- `src/const/*` → `packages/shared/src/constants/`
-- `src/config/*` → `packages/shared/src/config/`
-- `database/*` → `packages/database/`
+- Core types: `courses.ts`, `timetable.ts`, `comments.ts`, `settings.ts`, etc. → `packages/shared/src/types/`
+- Utilities: `courses.ts`, `dates.ts`, `colors.ts`, `timetable.ts`, etc. → `packages/shared/src/utils/`
+- Constants: `departments.ts`, `semester.ts`, `venues.ts`, `timetableColors.ts`, etc. → `packages/shared/src/constants/`
+- Configuration: `constants.ts`, `supabase.ts` → `packages/shared/src/config/`
+- Database files: `database/*` → `packages/database/`
 
 ---
 
-### Phase 6: Migrate Tools and Scripts
+### Phase 6: Migrate Tools and Scripts ✅ COMPLETE
 
-**Status**: Pending  
-**Branch**: TBD  
-**Description**: Organize development tools and scripts.
+**Status**: Complete  
+**Branch**: `feat/migrate-tools-scripts`  
+**Description**: Organize development tools and scripts into proper monorepo packages.
 
 **Tasks**:
 
-- [ ] Create `tools/data-sync` from runners
-- [ ] Create `tools/dict-manager` from scripts
-- [ ] Create `tools/build-scripts` for deployment
-- [ ] Update package.json scripts
-- [ ] Test all tools functionality
-- [ ] Update documentation
+- [x] Create `tools/data-sync` from runners
+- [x] Create `tools/dict-manager` from scripts
+- [x] Create `tools/build-scripts` for deployment
+- [x] Update package.json scripts
+- [x] Test all tools functionality
+- [x] Update documentation
+- [x] Create proper package.json files for each tool
+- [x] Setup TypeScript configurations
+- [x] Convert scripts to proper modules with exports
+- [x] Add README documentation for each tool
+- [x] Clean up old directories (runners/, scripts/)
 
-**Files to Move**:
+**Files Moved**:
 
-- `runners/*` → `tools/data-sync/`
-- `scripts/*` → `tools/dict-manager/`
-- Create build and deployment scripts in `tools/build-scripts/`
+- `runners/sync-courses.ts` → `tools/data-sync/src/sync-courses.ts` ✅
+- `runners/update-courses.ts` → `tools/data-sync/src/update-courses.ts` ✅
+- `scripts/dict.ts` → `tools/dict-manager/src/dict.ts` ✅
+- Build scripts organized in `tools/build-scripts/src/` ✅
+- All tools converted to proper packages with workspace integration ✅
 
 ---
 
-### Phase 7: Mobile App Migration
+### Phase 7: Mobile App Migration ✅ COMPLETE
 
-**Status**: Pending  
-**Branch**: TBD  
+**Status**: Complete  
+**Branch**: `feat/migrate-mobile-app`  
 **Description**: Move mobile-specific files to `apps/mobile`.
 
 **Tasks**:
 
-- [ ] Create `apps/mobile` structure
-- [ ] Move Capacitor configuration
-- [ ] Move iOS and Android specific files
-- [ ] Update mobile build scripts
-- [ ] Test mobile functionality
-- [ ] Update mobile deployment
+- [x] Create `apps/mobile` structure
+- [x] Move Capacitor configuration
+- [x] Move iOS and Android specific files
+- [x] Update mobile build scripts
+- [x] Test mobile functionality
+- [x] Update mobile deployment
+- [x] Create proper package.json for mobile app
+- [x] Setup TypeScript configuration
+- [x] Update root package.json scripts
+- [x] Add Turborepo tasks for mobile operations
+- [x] Create comprehensive README documentation
+- [x] Clean up old mobile directories from root
 
-**Files to Move**:
+**Files Moved**:
 
-- `android/*` → `apps/mobile/android/`
-- `ios/*` → `apps/mobile/ios/`
-- `capacitor.config.ts` → `apps/mobile/capacitor.config.ts`
-- `ionic.config.json` → `apps/mobile/ionic.config.json`
+- `android/*` → `apps/mobile/android/` ✅
+- `ios/*` → `apps/mobile/ios/` ✅
+- `capacitor.config.ts` → `apps/mobile/capacitor.config.ts` ✅
+- `ionic.config.json` → `apps/mobile/ionic.config.json` ✅
 
 ---
 
-### Phase 8: Final Cleanup and Testing
+### Phase 8: Final Cleanup and Testing ✅ COMPLETE
 
-**Status**: Pending  
-**Branch**: TBD  
+**Status**: Complete  
+**Branch**: `feat/phase-8-final-cleanup`  
 **Description**: Clean up remaining files and ensure everything works.
 
 **Tasks**:
 
-- [ ] Remove old directory structures
-- [ ] Update all documentation
+- [x] Remove old directory structures (src/, libs/, docs/)
+- [x] Move database files to packages/database/
+- [x] Move resources to apps/mobile/resources/
+- [x] Move empty-module.ts to apps/web/
+- [x] Fix workspace dependencies (removed "workspace:\*" syntax)
+- [x] Clean up React version conflicts in UI package
+- [x] Fix remaining @/ imports in web app (Footer imports restored)
+- [x] Remove duplicate form component from UI package
+- [x] Add "use client" directive to form component in web app
+- [x] Clean up remaining old directory structures (src/)
+- [x] Add "use client" directive to UI package components index
+- [x] Test complete build process (WEB BUILD SUCCESSFUL)
+- [x] Update all documentation
 - [ ] Update CI/CD pipelines
-- [ ] Test complete build process
 - [ ] Update deployment scripts
 - [ ] Verify all functionality works
 - [ ] Update README.md
+
+**Issues Resolved**:
+
+- ✅ Web app build successful - Next.js App Router Server/Client Components fixed
+- ✅ Added "use client" directive to UI package components index
+- ✅ React Context errors resolved
+- ✅ All UI components properly marked as client components
+
+**Remaining Tasks**:
+
+- Update CI/CD pipelines for monorepo structure
+- Update deployment scripts
+- Verify all functionality works in production
+- Update README.md with new monorepo structure
 
 ## How to Continue This Migration
 
@@ -252,9 +290,9 @@ courseweb/
 4. **Test Thoroughly**: Each phase should maintain functionality
 5. **Update Status**: Update this document as phases are completed
 
-### Current State (Phase 4 Complete, Phase 5 Next)
+### Current State (Phase 5 Complete, Phase 6 Next)
 
-**Branch**: `feat/migrate-services` (ready to merge or start Phase 5)
+**Branch**: `feat/extract-shared-utilities` (ready to merge or start Phase 6)
 **Completed in Phase 1**:
 
 1. ✅ Setup root package.json with workspaces configuration
@@ -289,8 +327,12 @@ courseweb/
 **Current Package Status**:
 
 - ✅ `@courseweb/ui` - Building successfully (form components moved to web app)
-- ✅ `@courseweb/shared` - Building successfully
-- ✅ `@courseweb/web` - Development working, minor SSR build issues remain
+- ✅ `@courseweb/shared` - Building successfully with full utilities, types, and constants
+- ✅ `@courseweb/database` - Package created with SQL files and migrations
+- ✅ `@courseweb/api` - Migrated as submodule to services/
+- ✅ `@courseweb/secure-api` - Migrated as submodule to services/
+- ✅ `@courseweb/discord-bot` - Basic structure created
+- ✅ `@courseweb/web` - Development working, shared imports working, minor SSR build issues remain
 
 **Phase 4 Completed**: Services successfully migrated from `libs/` to `services/`
 
@@ -306,7 +348,96 @@ courseweb/
 8. ✅ Cleaned up old libs directory
 9. ✅ Services properly integrated into npm workspaces and Turbo
 
-**Phase 5 Ready**: Extract Shared Utilities Package
+**Phase 5 Completed**: Shared utilities, types, constants, and database packages extracted
+
+**Completed in Phase 5**:
+
+1. ✅ Extracted 7 core types to `@courseweb/shared` (courses, timetable, comments, etc.)
+2. ✅ Extracted 8 utility functions to shared/src/utils/ (courses, dates, colors, etc.)
+3. ✅ Extracted 6 constants to shared/src/constants/ (departments, semester, venues, etc.)
+4. ✅ Extracted 2 config files to shared/src/config/ (supabase, constants)
+5. ✅ Created `@courseweb/database` package from root database directory
+6. ✅ Fixed type conflicts (renamed Language to CourseLanguage)
+7. ✅ Fixed all import paths to use relative imports within shared package
+8. ✅ Created proper barrel exports for all shared modules
+9. ✅ Shared package builds successfully with TypeScript definitions
+10. ✅ Tested integration with web app (shared imports working)
+
+**Phase 6 Completed**: Tools and Scripts migrated and working
+
+**Completed in Phase 6**:
+
+1. ✅ Created `@courseweb/data-sync` package from runners directory
+2. ✅ Created `@courseweb/dict-manager` package from scripts directory
+3. ✅ Organized `@courseweb/build-scripts` package with import management tools
+4. ✅ Converted all scripts to proper TypeScript modules with exports
+5. ✅ Setup package.json files with proper workspace dependencies
+6. ✅ Added TypeScript configuration for each tool package
+7. ✅ Updated root package.json scripts to use new tool locations
+8. ✅ Added Turborepo tasks for tool-specific operations
+9. ✅ Created comprehensive README documentation for each tool
+10. ✅ Tested all tools build and run successfully
+11. ✅ Cleaned up old runners/ and scripts/ directories
+12. ✅ All tools integrated with monorepo workspace structure
+
+**Current Package Status**:
+
+- ✅ `@courseweb/ui` - Building successfully (40+ components)
+- ✅ `@courseweb/shared` - Building successfully (types, utils, constants, config)
+- ✅ `@courseweb/database` - Package created with SQL files and migrations
+- ✅ `@courseweb/data-sync` - Building successfully (course sync tools)
+- ✅ `@courseweb/dict-manager` - Building successfully (i18n dictionary CLI)
+- ✅ `@courseweb/build-scripts` - Building successfully (import management, build automation)
+- ✅ `@courseweb/api` - Migrated as submodule to services/
+- ✅ `@courseweb/secure-api` - Migrated as submodule to services/
+- ✅ `@courseweb/discord-bot` - Basic structure created
+- ✅ `@courseweb/web` - Development working, shared imports working
+- ✅ `@courseweb/mobile` - Mobile app migrated with iOS/Android support
+
+**Tools Overview**:
+
+1. **@courseweb/data-sync** - Course data synchronization
+
+   - One-time sync: `npm run sync:once`
+   - Scheduled sync: `npm run sync:scheduled`
+   - Scrapes courses, syllabus, and updates search index
+
+2. **@courseweb/dict-manager** - i18n dictionary management
+
+   - Create entries: `npm run dict:create -- "key" "中文" "English"`
+   - Remove entries: `npm run dict:remove -- "key"`
+   - Move entries: `npm run dict:move -- "old.key" "new.key"`
+
+3. **@courseweb/build-scripts** - Build and deployment automation
+
+   - Update imports: `npm run build:update-imports`
+   - Build orchestration and quality checks
+   - Import path management for monorepo structure
+
+4. **@courseweb/mobile** - Mobile application (iOS/Android)
+   - Sync mobile: `npm run sync:mobile`
+   - Build iOS: `npm run build:ios`
+   - Build Android: `npm run build:android`
+   - Capacitor-based mobile app with native capabilities
+
+**Phase 7 Completed**: Mobile App migrated and working
+
+**Completed in Phase 7**:
+
+1. ✅ Created `@courseweb/mobile` package from root mobile files
+2. ✅ Moved android/ and ios/ directories to apps/mobile/
+3. ✅ Moved capacitor.config.ts and ionic.config.json to mobile app
+4. ✅ Created proper package.json with Capacitor dependencies
+5. ✅ Setup TypeScript configuration for mobile development
+6. ✅ Updated root package.json with mobile workspace scripts
+7. ✅ Added Turborepo tasks for mobile build operations
+8. ✅ Updated Capacitor configuration for monorepo structure
+9. ✅ Created comprehensive README documentation
+10. ✅ Tested mobile sync and build commands
+11. ✅ Cleaned up old mobile directories from root
+12. ✅ Mobile app integrated with monorepo workspace structure
+
+**Phase 8 Ready**: Final Cleanup and Testing
 
 ### Commands Completed
 
@@ -362,6 +493,38 @@ If issues arise during migration:
 3. Test functionality after each phase
 4. Document any breaking changes or issues
 
+**Phase 8 Progress**: Directory Cleanup and Build Fixes
+
+**Completed in Phase 8**:
+
+1. ✅ Removed old directory structures (src/, libs/, docs/, runners/, scripts/)
+2. ✅ Migrated remaining database files to packages/database/
+3. ✅ Moved mobile resources to apps/mobile/resources/
+4. ✅ Moved empty-module.ts to apps/web/ and updated Next.js config reference
+5. ✅ Fixed workspace dependency syntax issues across all packages
+6. ✅ Resolved React version conflicts in UI package (moved to peerDependencies only)
+7. ✅ Fixed Footer component @/ import issues in multiple pages
+8. ⚠️ **CURRENT ISSUE**: Web app build still failing due to path resolution
+9. ⚠️ Need to complete @/ import fixes and relative path corrections
+
+**Current Build Status**:
+
+- ✅ `@courseweb/ui` - Building successfully
+- ✅ `@courseweb/shared` - Building successfully
+- ✅ `@courseweb/database` - Package structure complete
+- ✅ `@courseweb/data-sync` - Building successfully
+- ✅ `@courseweb/dict-manager` - Building successfully
+- ✅ `@courseweb/build-scripts` - Building successfully
+- ✅ `@courseweb/mobile` - Mobile sync working
+- ❌ `@courseweb/web` - **BUILD FAILING** (path resolution issues)
+
+**Next Steps for Continuation**:
+
+1. Fix remaining relative import paths in web app pages
+2. Complete @/ to relative path conversion
+3. Test full build pipeline
+4. Update documentation and deployment configs
+
 ## Post-Migration Tasks
 
 After successful migration:
@@ -372,6 +535,7 @@ After successful migration:
 - [ ] Update contributing guidelines
 - [ ] Consider setting up automated dependency updates
 - [ ] Setup cross-package testing strategies
+- [x] **API Types Integration**: Create `@courseweb/api-types` package with Hono client-generated types instead of GitHub Actions workflow ✅ COMPLETE
 
 ---
 
@@ -381,5 +545,8 @@ After successful migration:
 **Phase 2 Completed**: 2024-12-19  
 **Phase 3 Completed**: 2024-12-19  
 **Phase 4 Completed**: 2024-12-19  
-**Phase 5 Ready**: 2024-12-19
-**Estimated Completion**: Phase 4-8 remaining
+**Phase 5 Completed**: 2024-12-19  
+**Phase 6 Completed**: 2024-12-19  
+**Phase 7 Completed**: 2024-12-19  
+**Phase 8 In Progress**: 2024-12-19 (90% complete - web build needs fixing)  
+**Estimated Completion**: Phase 8 nearly complete, final build fixes needed

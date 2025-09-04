@@ -1,3 +1,5 @@
+"use client";
+
 // UI Components barrel exports
 export * from "./ui/accordion";
 export * from "./ui/alert-dialog";
@@ -14,7 +16,7 @@ export * from "./ui/custom_timeselect";
 export * from "./ui/dialog";
 export * from "./ui/drawer";
 export * from "./ui/dropdown-menu";
-// export * from "./ui/form"; // Commented out due to react-hook-form dependency issues
+// export * from "./ui/form"; // Moved to web app
 export * from "./ui/hour-minute-picker";
 export * from "./ui/hover-card";
 export * from "./ui/input";

@@ -1,3 +1,4 @@
+"use client";
 // Shared UI components for CoursWeb applications
 
 // Core utilities

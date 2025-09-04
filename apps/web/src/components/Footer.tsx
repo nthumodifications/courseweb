@@ -1,8 +1,10 @@
+"use client";
+
 import { Github, Mail, Instagram, Facebook } from "lucide-react";
 import { Button } from "@courseweb/ui";
 import { Badge } from "@courseweb/ui";
 import FullLogo from "./Branding/FullLogo";
-import NTHUModsLogo from "@/components/Branding/NTHUModsLogo";
+import NTHUModsLogo from "./Branding/NTHUModsLogo";
 import Link from "next/link";
 import { getYear } from "date-fns";
 

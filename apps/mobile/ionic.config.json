@@ -1,0 +1,7 @@
+{
+  "name": "@courseweb/mobile",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "custom"
+}
