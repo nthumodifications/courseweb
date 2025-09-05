@@ -1,0 +1,62 @@
+name: Sync API Types to Main Repo
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "src/**" # Trigger when API source code changes
+
+jobs:
+  sync-types:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the API repository
+      - name: Checkout API repository
+        uses: actions/checkout@v4
+        with:
+          path: api
+
+      # Set up Bun
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: 1.2.6
+
+      # Install dependencies and build the API to generate types
+      - name: Build API and generate types
+        run: |
+          cd api
+          bun install
+          bun run build
+
+      # Checkout the main repository
+      - name: Checkout main repository
+        uses: actions/checkout@v4
+        with:
+          path: main
+          repository: nthumodifications/courseweb
+          token: ${{ secrets.PAT }} # Use the PAT to authenticate
+
+      # Copy the types from api/dist/types to main/src/types/api
+      - name: Copy types to main repository
+        run: |
+          rm -rf main/src/types/secure-api # Remove old types (if any)
+          mkdir -p main/src/types/secure-api # Create the target directory
+          cp -r api/dist/types/* main/src/types/secure-api # Copy the new types
+
+      # Commit and push changes to the main repository
+      - name: Commit and push changes to main repository
+        run: |
+          cd main
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          git add src/types/secure-api
+          # Check if there are changes to commit
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore: sync Secure-API types from Secure-API"
+            git push
+          fi

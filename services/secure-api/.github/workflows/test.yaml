@@ -1,0 +1,47 @@
+name: Run Tests
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "prisma/**"
+      - "package.json"
+      - "bun.lock"
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "prisma/**"
+      - "package.json"
+      - "bun.lock"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: 1.2.6
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Run tests
+        run: bun test
+
+      - name: Build project
+        run: bun run build
+
+      - name: Upload test coverage reports (if available)
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: test-coverage
+          path: coverage/
+          retention-days: 5
