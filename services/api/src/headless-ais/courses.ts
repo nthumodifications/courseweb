@@ -1,6 +1,13 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
-import { parseHTML } from "linkedom/worker";
+import {
+  HTMLInputElement,
+  HTMLOptionElement,
+  HTMLTableCellElement,
+  HTMLTableElement,
+  HTMLTableRowElement,
+  parseHTML,
+} from "linkedom/worker";
 import { z } from "zod";
 
 const app = new Hono()
@@ -23,7 +30,9 @@ const app = new Hono()
         );
       const window = parseHTML(html);
       const doc = window.document;
-      const table = Array.from(doc.querySelectorAll("table")).find((n) =>
+      const table = Array.from(
+        doc.querySelectorAll("table") as HTMLTableElement[],
+      ).find((n) =>
         (n.textContent!.trim() ?? "").startsWith("學號 Student Number"),
       );
 
@@ -122,10 +131,14 @@ const app = new Hono()
       const dom1 = parseHTML(html1);
       const doc1 = dom1.document;
       const semester = Array.from(
-        doc1.querySelectorAll("select")[0].querySelectorAll("option"),
+        doc1
+          .querySelectorAll("select")[0]
+          .querySelectorAll("option") as HTMLOptionElement[],
       )[1].value;
       const phaseArr = Array.from(
-        doc1.querySelectorAll("select")[1].querySelectorAll("option"),
+        doc1
+          .querySelectorAll("select")[1]
+          .querySelectorAll("option") as HTMLOptionElement[],
       );
       const phase = phaseArr[phaseArr.length - 1].value;
       const stu_no = (
@@ -165,7 +178,9 @@ const app = new Hono()
       const dom = parseHTML(html);
       const doc = dom.document;
       const raw_ids = Array.from(
-        doc.querySelectorAll("table")[1].querySelectorAll("tbody > .class3"),
+        doc
+          .querySelectorAll("table")[1]
+          .querySelectorAll("tbody > .class3") as HTMLTableCellElement[],
       ).map((n) => n.children[0].textContent);
 
       return c.json({
@@ -225,12 +240,14 @@ const app = new Hono()
         throw new Error("No table found on " + dept);
       }
 
-      const headerCells = table.querySelectorAll("tr.class2 td");
+      const headerCells = table.querySelectorAll(
+        "tr.class2 td",
+      ) as HTMLTableCellElement[];
       const hasGeType = Array.from(headerCells).some((cell) =>
         (cell.textContent ?? "").includes("通識類別"),
       );
 
-      const rows = table.querySelectorAll("tr.word");
+      const rows = table.querySelectorAll("tr.word") as HTMLTableRowElement[];
       const courses = Array.from(rows).map((row) => {
         const cells = row.querySelectorAll("td");
         if (cells.length > 0) {
@@ -300,7 +317,7 @@ const app = new Hono()
         'input[type="button"][value="加ADD"]',
       );
 
-      const courses = Array.from(buttons)
+      const courses = Array.from(buttons as HTMLInputElement[])
         .map((button) => {
           const onClick = button.getAttribute("onClick")!;
           const matches = onClick.match(

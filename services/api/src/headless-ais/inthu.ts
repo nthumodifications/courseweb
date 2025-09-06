@@ -1,6 +1,6 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
-import { parseHTML } from "linkedom/worker";
+import { HTMLDivElement, parseHTML } from "linkedom/worker";
 import { z } from "zod";
 import { v4 as uuid4 } from "uuid";
 
@@ -206,7 +206,9 @@ const app = new Hono()
       const dom = parseHTML(html);
       const document = dom.document;
 
-      const parcelCards = document.querySelectorAll(".parcel-card");
+      const parcelCards = document.querySelectorAll(
+        ".parcel-card",
+      ) as HTMLDivElement[];
 
       // Initialize an array to store parcel information
       const parcelInfoList: {

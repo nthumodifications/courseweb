@@ -1,8 +1,12 @@
-import { parseHTML } from "linkedom/worker";
+import {
+  HTMLOptionElement,
+  HTMLTableCellElement,
+  HTMLTableElement,
+  parseHTML,
+} from "linkedom/worker";
 import { fullWidthToHalfWidth } from "../utils/characters";
-import supabase_server, { supabaseWithEnv } from "../config/supabase_server";
-import type { Context } from "hono";
-import algolia, { algoliaWithEnv } from "../config/algolia";
+import { supabaseWithEnv } from "../config/supabase_server";
+import { algoliaWithEnv } from "../config/algolia";
 
 // Utility function for retry with exponential backoff
 const retryWithBackoff = async <T>(
@@ -133,7 +137,8 @@ export const scrapeArchivedCourses = async (env: Env, semester: string) => {
 
   // Extract department options from the select element
   const selectElement = webLanding.querySelector('select[name="cou_code"]');
-  const optionElements = selectElement?.querySelectorAll("option") || [];
+  const optionElements = (selectElement?.querySelectorAll("option") ||
+    []) as HTMLOptionElement[];
 
   let departments: Department[] = [];
 
@@ -257,16 +262,18 @@ export const scrapeArchivedCourses = async (env: Env, semester: string) => {
           );
 
         const doc = parseHTML(text).document;
-        const table = Array.from(doc.querySelectorAll("table")).find((n) =>
-          (n.textContent?.trim() ?? "").startsWith("科號"),
-        );
+        const table = Array.from(
+          doc.querySelectorAll("table") as HTMLTableElement[],
+        ).find((n) => (n.textContent?.trim() ?? "").startsWith("科號")) as
+          | HTMLTableElement
+          | undefined;
 
         const rows = Array.from(table?.querySelectorAll("tr") ?? []);
         const departmentCourses: Course[] = [];
 
         for (let rowIndex = 2; rowIndex < rows.length; rowIndex += 2) {
           const row = rows[rowIndex];
-          const cells = row.querySelectorAll("td");
+          const cells = row.querySelectorAll("td") as HTMLTableCellElement[];
 
           const course_id = cells[0].textContent?.trim() ?? "";
           if (course_id === "") {
@@ -405,9 +412,10 @@ export const scrapeArchivedCourses = async (env: Env, semester: string) => {
           const comp: string[] = [];
           const elect: string[] = [];
 
-          const required_optional_note_cell = rows[rowIndex + 1]
-            .querySelectorAll("td")[0]
-            .textContent?.trim()
+          const required_optional_note_cell = (
+            rows[rowIndex + 1].querySelectorAll("td")[0] as HTMLTableCellElement
+          ).textContent
+            ?.trim()
             .replace("/", "");
           const required_optional_note = required_optional_note_cell
             ?.split(",")

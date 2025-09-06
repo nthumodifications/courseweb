@@ -186,30 +186,6 @@ npx turbo run test --filter=@courseweb/ui...
 npx turbo run clean
 ```
 
-### Working with Services (Git Submodules)
-
-The API services are managed as git submodules:
-
-```bash
-# Update submodules to latest
-git submodule update --remote
-
-# Initialize submodules if missing
-git submodule update --init --recursive
-
-# Work on API service
-cd services/api
-git checkout main
-# make changes...
-git commit -am "Update API"
-git push
-
-# Update main repo to use new API commit
-cd ../..
-git add services/api
-git commit -m "Update API service"
-```
-
 ## 📱 Mobile Development
 
 The mobile app is built with **Capacitor** and supports both iOS and Android:
@@ -251,7 +227,7 @@ We welcome contributions from everyone! Here's how to get started:
 ### 1. Fork & Clone
 
 ```bash
-git clone --recursive https://github.com/your-username/courseweb.git
+git clone https://github.com/your-username/courseweb.git
 cd courseweb
 npm install
 ```

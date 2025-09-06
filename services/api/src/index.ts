@@ -9,15 +9,15 @@ import course from "./course";
 import venue from "./venue";
 import shortlink from "./shortlink";
 import issue from "./issue";
-// import headlessAis from "./headless-ais";
+import headlessAis from "./headless-ais";
 import planner from "./planner-replication";
 import { D1Database } from "@cloudflare/workers-types";
-// import {
-//   scrapeArchivedCourses,
-//   scrapeSyllabus,
-//   syncCoursesToAlgolia,
-//   exportCoursesToAlgoliaFile,
-// } from "./scheduled/syllabus";
+import {
+  scrapeArchivedCourses,
+  scrapeSyllabus,
+  syncCoursesToAlgolia,
+  exportCoursesToAlgoliaFile,
+} from "./scheduled/syllabus";
 
 export type Bindings = {
   DB: D1Database;
@@ -41,7 +41,7 @@ export const app = new Hono<{ Bindings: Bindings }>()
   .route("/course", course)
   .route("/venue", venue)
   .route("/shortlink", shortlink)
-  // .route("/ccxp", headlessAis)
+  .route("/ccxp", headlessAis)
   .route("/issue", issue)
   .route("/planner", planner);
 
@@ -58,8 +58,8 @@ const APIHandler = {
         const semester = "11410";
         // Scrape archived courses and syllabus
         try {
-          // const cache = await scrapeArchivedCourses(env, semester);
-          // await scrapeSyllabus(env, semester, cache);
+          const cache = await scrapeArchivedCourses(env, semester);
+          await scrapeSyllabus(env, semester, cache);
           // await scrapeSyllabus(env, semester);
           // await syncCoursesToAlgolia(env, semester);
           // await exportCoursesToAlgoliaFile(env, semester);

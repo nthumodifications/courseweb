@@ -1,6 +1,6 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
-import { parseHTML } from "linkedom/worker";
+import { HTMLSourceElement, parseHTML } from "linkedom/worker";
 import { z } from "zod";
 
 type EEClassOauthReturn = {

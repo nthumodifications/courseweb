@@ -1,6 +1,6 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
-import { parseHTML } from "linkedom/worker";
+import { HTMLDivElement, HTMLTableElement, parseHTML } from "linkedom/worker";
 import { z } from "zod";
 
 const app = new Hono().post(
@@ -22,7 +22,9 @@ const app = new Hono().post(
       );
     const dom = parseHTML(html);
     const doc = dom.document;
-    const table = Array.from(doc.querySelectorAll("table")).find((n) =>
+    const table = Array.from(
+      doc.querySelectorAll("table") as HTMLTableElement[],
+    ).find((n) =>
       (n.textContent?.trim() ?? "").startsWith("學號 Student Number"),
     );
 
@@ -117,7 +119,9 @@ const app = new Hono().post(
     // T Scores Cumulative Department ranking/Total number of students、T Scores Average (to the summer classes of Academic Year {gpa_cum_year}): {t_scores_cum_dept_rank}、{t_scores_cum_class_rank}、{t_scores_cum}
 
     // const ranking_table = doc.querySelectorAll('table')[3];
-    const ranking_table = Array.from(doc.querySelectorAll("table")).find((n) =>
+    const ranking_table = Array.from(
+      doc.querySelectorAll("table") as HTMLTableElement[],
+    ).find((n) =>
       (n.textContent?.trim() ?? "").startsWith("以下各排名僅供參考"),
     );
 
@@ -171,7 +175,9 @@ const app = new Hono().post(
 
     //extract cumulative ranking
     const ranking_cum_row = ranking_rows[ranking_rows.length - 1];
-    const ranking_cum_cells = ranking_cum_row.querySelectorAll("td > div");
+    const ranking_cum_cells = ranking_cum_row.querySelectorAll(
+      "td > div",
+    ) as HTMLDivElement[];
     // in each cell, get firstChild textContent which is the chinese text, then regex to extract the ranking and total number of students
 
     // handle different classes have different text

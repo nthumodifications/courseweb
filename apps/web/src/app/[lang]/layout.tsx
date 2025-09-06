@@ -8,7 +8,7 @@ import { UserTimetableProvider } from "@/hooks/contexts/useUserTimetable";
 import { Toaster } from "@courseweb/ui";
 import ReactQuery from "@/components/ReactQuery";
 import { RxDBProvider } from "@/config/rxdb";
-import AppUrlListener from "@/components/AppUrlListener";
+
 import { ClearAuthComponent } from "@/hooks/useClearAuth";
 import { AuthProvider } from "react-oidc-context";
 import OidcAuthProvider from "@/hooks/contexts/useAuth";
@@ -103,7 +103,7 @@ export default function RootLayout({
         <SettingsProvider>
           <UserTimetableProvider>
             {children}
-            <AppUrlListener />
+
             <Toaster />
             <ClearAuthComponent />
           </UserTimetableProvider>

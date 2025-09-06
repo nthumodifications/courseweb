@@ -7,7 +7,7 @@
     "strict": true,
     "verbatimModuleSyntax": true,
     "skipLibCheck": true,
-    "types": ["./worker-configuration.d.ts"],
+    "types": ["@cloudflare/workers-types", "bun-types"],
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
     "declaration": true,

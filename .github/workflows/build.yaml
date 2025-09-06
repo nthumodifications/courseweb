@@ -1,7 +1,10 @@
-name: Build and Deploy Next.js to GHCR
+name: Build and Deploy Monorepo
 
 on:
   push:
+    branches:
+      - main
+  pull_request:
     branches:
       - main
 
@@ -9,8 +12,72 @@ env:
   IMAGE_NAME: ghcr.io/${{ github.repository }}
 
 jobs:
-  build-and-push:
+  test:
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      # Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Setup Bun
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      # Install dependencies
+      - name: Install dependencies
+        run: bun install
+
+      # Run tests for all services
+      - name: Run tests
+        run: |
+          bun run test
+
+      # Build all services
+      - name: Build all services
+        run: |
+          bun run build
+
+  deploy-api:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment: production
+    steps:
+      # Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Setup Bun
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      # Install dependencies
+      - name: Install dependencies
+        run: bun install
+
+      # Generate Prisma client for API service
+      - name: Generate Prisma client
+        run: |
+          cd services/api
+          bun run prisma:generate
+
+      # Deploy API service to Cloudflare Workers
+      - name: Deploy API Service
+        uses: cloudflare/wrangler-action@v3
+        with:
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          workingDirectory: services/api
+          command: deploy src/index.ts
+          packageManager: bun
+
+  build-and-push-web:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     environment: production
     permissions: write-all
     steps:
@@ -46,18 +113,18 @@ jobs:
           echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> .env
           echo "FIREBASE_SERVICE_ACCOUNT=${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" >> .env
 
-      # Build and tag Docker image using .env file
-      - name: Build Docker image
+      # Build and tag Docker image for web app
+      - name: Build Web App Docker image
         run: |
-          docker build . \
-            -t ${{ env.IMAGE_NAME }}:${{ github.sha }} \
-            -t ${{ env.IMAGE_NAME }}:latest
+          docker build -f apps/web/Dockerfile . \
+            -t ${{ env.IMAGE_NAME }}-web:${{ github.sha }} \
+            -t ${{ env.IMAGE_NAME }}-web:latest
 
       # Push Docker image to GHCR
-      - name: Push Docker image
+      - name: Push Web App Docker image
         run: |
-          docker push ${{ env.IMAGE_NAME }}:${{ github.sha }}
-          docker push ${{ env.IMAGE_NAME }}:latest
+          docker push ${{ env.IMAGE_NAME }}-web:${{ github.sha }}
+          docker push ${{ env.IMAGE_NAME }}-web:latest
 
       # Clean up .env file (security step)
       - name: Clean up .env
@@ -71,3 +138,34 @@ jobs:
           curl --request GET "${{ secrets.COOLIFY_WEBHOOK }}" \
             --header "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}"
         if: success()
+
+  build-and-push-secure-api:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment: production
+    permissions: write-all
+    steps:
+      # Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Log in to GitHub Container Registry
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Build and tag Docker image for secure-api
+      - name: Build Secure API Docker image
+        run: |
+          docker build -f services/secure-api/Dockerfile services/secure-api \
+            -t ${{ env.IMAGE_NAME }}-secure-api:${{ github.sha }} \
+            -t ${{ env.IMAGE_NAME }}-secure-api:latest
+
+      # Push Docker image to GHCR
+      - name: Push Secure API Docker image
+        run: |
+          docker push ${{ env.IMAGE_NAME }}-secure-api:${{ github.sha }}
+          docker push ${{ env.IMAGE_NAME }}-secure-api:latest

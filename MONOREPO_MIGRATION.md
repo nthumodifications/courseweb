@@ -210,11 +210,11 @@ courseweb/
 
 ---
 
-### Phase 7: Mobile App Migration ✅ COMPLETE
+### Phase 7: Mobile App Migration ❌ REMOVED
 
-**Status**: Complete  
+**Status**: Removed - Mobile app has been completely removed from monorepo  
 **Branch**: `feat/migrate-mobile-app`  
-**Description**: Move mobile-specific files to `apps/mobile`.
+**Description**: ~~Move mobile-specific files to `apps/mobile`~~ **REMOVED**: Mobile app and all Capacitor dependencies have been removed to simplify the monorepo structure.
 
 **Tasks**:
 
@@ -231,12 +231,15 @@ courseweb/
 - [x] Create comprehensive README documentation
 - [x] Clean up old mobile directories from root
 
-**Files Moved**:
+**Files Removed**:
 
-- `android/*` → `apps/mobile/android/` ✅
-- `ios/*` → `apps/mobile/ios/` ✅
-- `capacitor.config.ts` → `apps/mobile/capacitor.config.ts` ✅
-- `ionic.config.json` → `apps/mobile/ionic.config.json` ✅
+- `apps/mobile/` directory completely removed ✅
+- `fakeout/` directory removed ✅
+- All mobile-related scripts from `package.json` removed ✅
+- All mobile-related tasks from `turbo.json` removed ✅
+- Capacitor-specific code from web app removed ✅
+  - `AppUrlListener.tsx` component deleted
+  - Capacitor imports and usage cleaned up
 
 ---
 
