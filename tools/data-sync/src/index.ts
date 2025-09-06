@@ -5,13 +5,33 @@
  */
 
 export {
+  scrapeArchivedCourses,
+  scrapeSyllabus,
+  syncCoursesToAlgolia,
+} from "./scrapers";
+
+export {
   default as syncCourses,
   syncCourses as runSyncCourses,
 } from "./sync-courses";
+
 export {
   default as startScheduledSync,
   syncCourseData,
 } from "./update-courses";
+
+export {
+  validateEnvironment,
+  retryWithBackoff,
+  createSupabaseClient,
+  createAlgoliaClient,
+  fullWidthToHalfWidth,
+  sleep,
+  chunkArray,
+  formatBytes,
+} from "./utils";
+
+export type { Course, Department, SyncEnvironment, SyncResult } from "./types";
 
 // Re-export the main sync function for convenience
 export const runSync = async (semester?: string) => {

@@ -5,60 +5,100 @@
  */
 
 import schedule from "node-schedule";
+import { validateEnvironment } from "./utils";
+import {
+  scrapeArchivedCourses,
+  scrapeSyllabus,
+  syncCoursesToAlgolia,
+} from "./scrapers";
+import type { SyncResult } from "./types";
 
-const syncCourseData = async (semester: string = "11320") => {
+const syncCourseData = async (
+  semester: string = "11410",
+): Promise<SyncResult> => {
   try {
-    console.log("syncing courses begin uwu");
-    const res = await fetch(
-      `http://localhost:3000/api/scrape-archived-courses?semester=${semester}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${process.env.CRON_SECRET}`,
-        },
-        signal: AbortSignal.timeout(5 * 60 * 1000), // 5 minutes
-      },
+    console.log("🚀 Starting scheduled course synchronization...");
+    const startTime = Date.now();
+
+    // Validate environment variables
+    const env = validateEnvironment();
+    console.log("✅ Environment validated");
+
+    // Step 1: Scrape archived courses
+    console.log(`📚 Scraping archived courses for semester ${semester}...`);
+    const courses = await scrapeArchivedCourses(env, semester);
+    console.log(`✅ Scraped ${courses.length} courses`);
+
+    // Step 2: Scrape syllabus data
+    console.log("📝 Scraping syllabus data...");
+    await scrapeSyllabus(env, semester, courses);
+    console.log("✅ Syllabus scraping completed");
+
+    // Step 3: Sync to Algolia
+    console.log("🔍 Syncing courses to Algolia...");
+    await syncCoursesToAlgolia(env, semester);
+    console.log("✅ Algolia sync completed");
+
+    const endTime = Date.now();
+    const duration = Math.round((endTime - startTime) / 1000);
+
+    console.log(
+      `🎉 Scheduled course synchronization completed successfully in ${duration}s`,
     );
-    const res2 = await fetch(
-      `http://localhost:3000/api/scrape-syllabus?semester=${semester}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${process.env.CRON_SECRET}`,
-        },
-        signal: AbortSignal.timeout(20 * 60 * 1000), // 20 minutes
+
+    return {
+      success: true,
+      stats: {
+        coursesScraped: courses.length,
+        syllabusDownloaded: courses.length,
+        algoliaRecordsUpdated: courses.length,
       },
-    );
-    const res3 = await fetch(
-      `http://localhost:3000/api/sync-algolia?semester=${semester}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${process.env.CRON_SECRET}`,
-        },
-      },
-    );
-    console.log("syncing courses end uwu");
-    return { success: true, responses: [res, res2, res3] };
-  } catch (e) {
-    console.error("error calling scrape-courses", e);
-    return { success: false, error: e };
+    };
+  } catch (error) {
+    console.error("❌ Error during scheduled course synchronization:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error : new Error(String(error)),
+    };
   }
 };
 
 export const startScheduledSync = (
   cronPattern: string = "0 0 * * *",
-  semester: string = "11320",
+  semester: string = "11410",
 ) => {
+  console.log(
+    `📅 Starting scheduled sync with pattern: ${cronPattern} for semester: ${semester}`,
+  );
+
   // Run every day at 8:00 AM
   // 8 AM (GMT+8) = 0 AM (GMT)
-  const job = schedule.scheduleJob(cronPattern, () => syncCourseData(semester));
+  const job = schedule.scheduleJob(cronPattern, async () => {
+    console.log("⏰ Scheduled sync triggered");
+    const result = await syncCourseData(semester);
 
-  // handle close job
-  process.on("SIGINT", () => {
-    job.cancel();
-    process.exit();
+    if (result.success) {
+      console.log("✅ Scheduled sync completed successfully");
+      if (result.stats) {
+        console.log(`📊 Stats:`, result.stats);
+      }
+    } else {
+      console.error("❌ Scheduled sync failed:", result.error?.message);
+    }
   });
+
+  console.log(`⏰ Scheduled job created. Next run: ${job.nextInvocation()}`);
+
+  // Handle graceful shutdown
+  const gracefulShutdown = () => {
+    console.log("🛑 Received shutdown signal, cancelling scheduled job...");
+    job.cancel();
+    console.log("✅ Scheduled job cancelled. Exiting...");
+    process.exit(0);
+  };
+
+  process.on("SIGINT", gracefulShutdown);
+  process.on("SIGTERM", gracefulShutdown);
 
   return job;
 };
@@ -68,5 +108,15 @@ export default startScheduledSync;
 
 // If this file is run directly, start the scheduled sync
 if (require.main === module) {
-  startScheduledSync();
+  const cronPattern = process.argv[2] || "0 0 * * *";
+  const semester = process.argv[3] || "11410";
+
+  console.log(`Starting scheduled sync:`);
+  console.log(`  Cron pattern: ${cronPattern}`);
+  console.log(`  Semester: ${semester}`);
+
+  startScheduledSync(cronPattern, semester);
+
+  // Keep the process alive
+  console.log("🔄 Scheduled sync service is running. Press Ctrl+C to stop.");
 }

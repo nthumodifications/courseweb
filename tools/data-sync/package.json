@@ -9,6 +9,8 @@
     "clean": "rm -rf dist",
     "sync:once": "tsx src/sync-courses.ts",
     "sync:scheduled": "tsx src/update-courses.ts",
+    "docker:build": "docker build -t courseweb-data-sync .",
+    "docker:run": "docker run --env-file .env courseweb-data-sync",
     "lint": "eslint src --ext .ts,.tsx",
     "type-check": "tsc --noEmit"
   },
@@ -21,7 +23,10 @@
   "author": "CourseWeb Team",
   "license": "MIT",
   "dependencies": {
-    "node-schedule": "^2.1.1"
+    "node-schedule": "^2.1.1",
+    "linkedom": "^0.18.4",
+    "@supabase/supabase-js": "^2.45.4",
+    "algoliasearch": "^4.24.0"
   },
   "devDependencies": {
     "@courseweb/eslint-config": "*",
