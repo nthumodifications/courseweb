@@ -1,0 +1,33 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["db:generate"],
+      "outputs": ["dist/**"]
+    },
+    "db:generate": {
+      "cache": false,
+      "outputs": ["node_modules/.prisma/**"]
+    },
+    "dev": {
+      "dependsOn": ["db:generate"],
+      "cache": false,
+      "persistent": true
+    },
+    "start": {
+      "dependsOn": ["db:generate"],
+      "cache": false,
+      "persistent": true
+    },
+    "test": {
+      "dependsOn": ["db:generate"]
+    },
+    "preproduction": {
+      "dependsOn": ["security:check", "test", "build"]
+    },
+    "security:check": {
+      "dependsOn": ["test:security", "security:scan"]
+    }
+  }
+}

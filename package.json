@@ -22,6 +22,8 @@
     "dev:web": "turbo run dev --filter=@courseweb/web",
     "build:web": "turbo run build --filter=@courseweb/web",
     "build:api": "turbo run build --filter=@courseweb/api",
+    "build:secure-api": "turbo run build --filter=@courseweb/secure-api",
+    "build:apis": "turbo run build --filter=@courseweb/api --filter=@courseweb/secure-api",
     "build:api-types": "turbo run build --filter=@courseweb/api-types",
     "dev:api": "turbo run dev --filter=api",
     "dev:secure-api": "turbo run dev --filter=secure-api",
