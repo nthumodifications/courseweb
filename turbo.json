@@ -55,6 +55,10 @@
     },
     "update:web-imports": {
       "cache": false
+    },
+    "db:generate": {
+      "cache": false,
+      "outputs": ["src/generated/client/**"]
     }
   },
   "globalEnv": [
