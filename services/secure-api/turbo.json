@@ -4,11 +4,13 @@
   "tasks": {
     "build": {
       "dependsOn": ["db:generate"],
-      "outputs": ["dist/**"]
+      "outputs": ["dist/**"],
+      "env": ["DATABASE_URL", "DIRECT_URL"]
     },
     "db:generate": {
       "cache": false,
-      "outputs": ["node_modules/.prisma/**"]
+      "outputs": ["node_modules/.prisma/**"],
+      "env": ["DATABASE_URL", "DIRECT_URL"]
     },
     "dev": {
       "dependsOn": ["db:generate"],

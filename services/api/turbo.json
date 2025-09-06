@@ -4,11 +4,13 @@
   "tasks": {
     "build": {
       "dependsOn": ["db:generate"],
-      "outputs": ["dist/**"]
+      "outputs": ["dist/**"],
+      "env": ["DATABASE_URL"]
     },
     "db:generate": {
       "cache": false,
-      "outputs": ["src/generated/client/**"]
+      "outputs": ["src/generated/client/**"],
+      "env": ["DATABASE_URL"]
     },
     "dev": {
       "dependsOn": ["db:generate"],
