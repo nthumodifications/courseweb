@@ -1,0 +1,52 @@
+{
+  "name": "@courseweb/dict-manager",
+  "version": "1.0.0",
+  "description": "Dictionary management tools for i18n",
+  "main": "src/index.ts",
+  "bin": {
+    "dict": "dist/dict.js"
+  },
+  "scripts": {
+    "build": "tsup src/dict.ts --format cjs",
+    "dev": "tsup src/dict.ts --format cjs --watch",
+    "clean": "rm -rf dist",
+    "create": "tsx src/dict.ts create",
+    "remove": "tsx src/dict.ts remove",
+    "move": "tsx src/dict.ts move",
+    "lint": "eslint src --ext .ts,.tsx",
+    "type-check": "tsc --noEmit"
+  },
+  "keywords": [
+    "courseweb",
+    "i18n",
+    "dictionary",
+    "translation",
+    "cli"
+  ],
+  "author": "CourseWeb Team",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^11.0.0"
+  },
+  "devDependencies": {
+    "@courseweb/eslint-config": "*",
+    "@types/node": "^20.0.0",
+    "eslint": "^8.57.0",
+    "tsup": "^8.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.3.0"
+  },
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "require": "./dist/dict.js"
+    }
+  },
+  "eslintConfig": {
+    "extends": [
+      "@courseweb/eslint-config"
+    ]
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": ["**/.env.*local"],
+  "concurrency": "12",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**", "build/**"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "lint": {
+      "dependsOn": ["^build"]
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "outputs": ["coverage/**"]
+    },
+    "clean": {
+      "cache": false
+    },
+    "type-check": {
+      "dependsOn": ["^build"]
+    },
+    "deploy": {
+      "dependsOn": ["build", "test", "lint"]
+    },
+    "gentype": {
+      "outputs": ["packages/shared/src/types/**"]
+    },
+    "build:api-types": {
+      "dependsOn": [],
+      "outputs": ["packages/api-types/dist/**"]
+    },
+    "sync:once": {
+      "cache": false
+    },
+    "sync:scheduled": {
+      "cache": false,
+      "persistent": true
+    },
+    "create": {
+      "cache": false
+    },
+    "remove": {
+      "cache": false
+    },
+    "move": {
+      "cache": false
+    },
+    "update:ui-imports": {
+      "cache": false
+    },
+    "update:web-imports": {
+      "cache": false
+    },
+    "db:generate": {
+      "cache": false,
+      "outputs": ["src/generated/client/**"]
+    }
+  },
+  "globalEnv": [
+    "NODE_ENV",
+    "NEXT_PUBLIC_SUPABASE_URL",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+    "DATABASE_URL",
+    "SUPABASE_SERVICE_ROLE_KEY"
+  ]
+}

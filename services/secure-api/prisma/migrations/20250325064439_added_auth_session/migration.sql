@@ -1,0 +1,55 @@
+/*
+  Warnings:
+
+  - You are about to drop the column `userId` on the `AuthCode` table. All the data in the column will be lost.
+  - You are about to drop the column `userId` on the `Token` table. All the data in the column will be lost.
+  - Added the required column `sessionId` to the `AuthCode` table without a default value. This is not possible if the table is not empty.
+  - Added the required column `sessionId` to the `AuthRequest` table without a default value. This is not possible if the table is not empty.
+  - Added the required column `sessionId` to the `Token` table without a default value. This is not possible if the table is not empty.
+
+*/
+-- CreateEnum
+CREATE TYPE "AuthSessionState" AS ENUM ('UNAUTHENTICATED', 'AUTHENTICATED', 'EXPIRED');
+
+-- DropForeignKey
+ALTER TABLE "AuthCode" DROP CONSTRAINT "AuthCode_userId_fkey";
+
+-- DropForeignKey
+ALTER TABLE "Token" DROP CONSTRAINT "Token_userId_fkey";
+
+-- AlterTable
+ALTER TABLE "AuthCode" DROP COLUMN "userId",
+ADD COLUMN     "responseMode" TEXT,
+ADD COLUMN     "responseType" TEXT[],
+ADD COLUMN     "sessionId" TEXT NOT NULL;
+
+-- AlterTable
+ALTER TABLE "AuthRequest" ADD COLUMN     "sessionId" TEXT NOT NULL;
+
+-- AlterTable
+ALTER TABLE "Token" DROP COLUMN "userId",
+ADD COLUMN     "sessionId" TEXT NOT NULL;
+
+-- CreateTable
+CREATE TABLE "AuthSessions" (
+    "id" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "state" "AuthSessionState" NOT NULL,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "userId" TEXT,
+    "authenticatedAt" TIMESTAMP(3),
+
+    CONSTRAINT "AuthSessions_pkey" PRIMARY KEY ("id")
+);
+
+-- AddForeignKey
+ALTER TABLE "AuthCode" ADD CONSTRAINT "AuthCode_sessionId_fkey" FOREIGN KEY ("sessionId") REFERENCES "AuthSessions"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "AuthRequest" ADD CONSTRAINT "AuthRequest_sessionId_fkey" FOREIGN KEY ("sessionId") REFERENCES "AuthSessions"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Token" ADD CONSTRAINT "Token_sessionId_fkey" FOREIGN KEY ("sessionId") REFERENCES "AuthSessions"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "AuthSessions" ADD CONSTRAINT "AuthSessions_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;

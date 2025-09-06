@@ -1,0 +1,48 @@
+{
+  "name": "@courseweb/build-scripts",
+  "version": "1.0.0",
+  "description": "Build and deployment scripts for courseweb monorepo",
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm",
+    "dev": "tsup src/index.ts --format cjs,esm --watch",
+    "clean": "rm -rf dist",
+    "update:ui-imports": "node src/update-ui-imports.js",
+    "update:web-imports": "node src/update-web-imports.js",
+    "lint": "eslint src --ext .ts,.tsx",
+    "type-check": "tsc --noEmit"
+  },
+  "keywords": [
+    "courseweb",
+    "build",
+    "deployment",
+    "scripts",
+    "automation"
+  ],
+  "author": "CourseWeb Team",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "@courseweb/eslint-config": "*",
+    "@types/node": "^20.0.0",
+    "eslint": "^8.57.0",
+    "tsup": "^8.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.3.0"
+  },
+  "files": [
+    "dist",
+    "*.js"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "eslintConfig": {
+    "extends": [
+      "@courseweb/eslint-config"
+    ]
+  }
+}

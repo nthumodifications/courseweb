@@ -1,0 +1,92 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output = "../generated/client"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Folder {
+  id                    String    @id
+  title                 String
+  parent                String?
+  min                   Int
+  max                   Int
+  metric                String
+  requireChildValidation Boolean
+  titlePlacement        String
+  order                 Int
+  color                 String?
+  expanded              Boolean?
+  serverTimestamp       DateTime  @updatedAt
+  userId                String
+  deleted               Boolean   @default(false)
+
+  @@unique([userId, id])
+  @@index([userId])
+}
+
+model Item {
+  uuid         String   @id
+  id           String
+  title        String
+  parent       String?
+  credits      Float
+  raw_id       String?
+  semester     String?
+  status       String?
+  description  String?
+  comments     String?
+  instructor   String?
+  dependson    String?  // Store as JSON string
+  order        Int
+  serverTimestamp DateTime @updatedAt
+  userId       String
+  deleted      Boolean  @default(false)
+
+  @@index([userId])
+}
+
+model PlannerData {
+  id               String    @id
+  title            String
+  department       String
+  requiredCredits  Float
+  enrollmentYear   String
+  graduationYear   String
+  includedSemesters String    // Store as JSON string
+  description      String?
+  serverTimestamp  DateTime  @updatedAt
+  userId           String
+  deleted          Boolean   @default(false)
+
+  @@unique([userId, id])
+  @@index([userId])
+}
+
+model Semester {
+  id            String    @id
+  name          String
+  status        String
+  year          String
+  term          String
+  startDate     String?
+  endDate       String?
+  isActive      Boolean
+  order         Int?
+  serverTimestamp DateTime @updatedAt
+  userId        String
+  deleted       Boolean    @default(false)
+
+  @@unique([userId, id])
+  @@index([userId])
+}

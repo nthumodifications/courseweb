@@ -1,0 +1,39 @@
+{
+  "name": "@courseweb/shared",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Shared utilities, types, and configurations for CoursWeb applications",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "lint": "eslint src --ext .ts,.tsx --fix",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "date-fns": "^3.6.0",
+    "date-fns-tz": "^3.0.1",
+    "zod": "^3.22.4",
+    "uuid": "^9.0.1",
+    "clsx": "^2.0.0"
+  },
+  "devDependencies": {
+    "@courseweb/eslint-config": "*",
+    "@types/node": "^20.10.7",
+    "@types/uuid": "^10.0.0",
+    "eslint": "^8.57.0",
+    "tsup": "^8.0.1",
+    "typescript": "^5.4.4"
+  },
+  "eslintConfig": {
+    "extends": [
+      "@courseweb/eslint-config"
+    ]
+  }
+}

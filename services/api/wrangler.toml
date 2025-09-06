@@ -1,0 +1,30 @@
+name = "nthumods-api"
+main = "src/index.ts"
+compatibility_date = "2025-03-06"
+compatibility_flags = ["nodejs_compat"]
+routes = [
+  { pattern = "api.nthumods.com", custom_domain = true }
+]
+minify = true
+
+[dev]
+port = 5001
+local_protocol = "http"
+
+[observability]
+enabled = true
+head_sampling_rate = 1
+
+[[d1_databases]]
+binding = "DB"
+database_name = "data-d1"
+database_id = "c6b4c91d-35a1-4218-9226-a8ab217150fb"
+
+[vars]
+SUPABASE_URL = ""
+SUPABASE_SERVICE_ROLE_KEY = ""
+ALGOLIA_APP_ID = ""
+ALGOLIA_API_KEY = ""
+
+[triggers]
+crons = ["30 4 * * *"]

@@ -1,0 +1,1083 @@
+openapi: 3.0.3
+info:
+  title: NTHU Mods API
+  description: Comprehensive API for NTHU course management, weather, venues, and student services
+  version: 1.0.0
+  contact:
+    name: NTHU Mods
+    url: https://nthumods.com
+servers:
+  - url: https://api.nthumods.com
+    description: Production server
+  - url: http://localhost:3000
+    description: Development server
+
+paths:
+  /acacalendar:
+    get:
+      tags:
+        - Calendar
+      summary: Get academic calendar events
+      description: Retrieve academic calendar events within a specified date range
+      parameters:
+        - name: start
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          description: Start date for calendar events
+        - name: end
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          description: End date for calendar events
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CalendarEvent"
+        "400":
+          description: Invalid date format
+
+  /calendar/ical/{userId}:
+    get:
+      tags:
+        - Calendar
+      summary: Get user calendar in iCal format
+      description: Retrieve user's calendar data in iCalendar format
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: User ID
+        - name: key
+          in: query
+          schema:
+            type: string
+          description: API key for authentication
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [basic, full]
+            default: basic
+          description: Calendar type
+      responses:
+        "200":
+          description: iCalendar data
+          content:
+            text/calendar:
+              schema:
+                type: string
+        "400":
+          description: Missing API key
+        "404":
+          description: User not found
+
+  /weather:
+    get:
+      tags:
+        - Weather
+      summary: Get weather forecast
+      description: Get 5-day weather forecast for NTHU area
+      responses:
+        "200":
+          description: Weather forecast data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WeatherData"
+
+  /course:
+    get:
+      tags:
+        - Courses
+      summary: Get courses by IDs
+      description: Retrieve course information by course IDs
+      parameters:
+        - name: courses
+          in: query
+          required: true
+          schema:
+            oneOf:
+              - type: string
+              - type: array
+                items:
+                  type: string
+          description: Course ID(s)
+      responses:
+        "200":
+          description: Course data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Course"
+
+  /course/{courseId}:
+    get:
+      tags:
+        - Courses
+      summary: Get course by ID
+      description: Retrieve detailed course information
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Course ID
+      responses:
+        "200":
+          description: Course data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Course"
+
+  /course/{courseId}/syllabus:
+    get:
+      tags:
+        - Courses
+      summary: Get course syllabus
+      description: Retrieve course syllabus with related data
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Course ID
+      responses:
+        "200":
+          description: Course with syllabus data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CourseWithSyllabus"
+
+  /course/{courseId}/minimal:
+    get:
+      tags:
+        - Courses
+      summary: Get minimal course info
+      description: Retrieve minimal course information
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Course ID
+      responses:
+        "200":
+          description: Minimal course data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MinimalCourse"
+
+  /course/{courseId}/ptt:
+    get:
+      tags:
+        - Courses
+      summary: Get PTT reviews
+      description: Retrieve PTT course reviews
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Course ID
+      responses:
+        "200":
+          description: PTT reviews
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PTTReview"
+
+  /course/{courseId}/related:
+    get:
+      tags:
+        - Courses
+      summary: Get related courses
+      description: Get courses related to the specified course
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Course ID
+      responses:
+        "200":
+          description: Related courses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CourseWithScores"
+
+  /course/classes:
+    get:
+      tags:
+        - Courses
+      summary: Get all classes
+      description: Retrieve list of all available classes
+      responses:
+        "200":
+          description: List of classes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+  /course/{courseId}/syllabus/file:
+    get:
+      tags:
+        - Courses
+      summary: Get syllabus PDF file
+      description: Redirect to syllabus PDF file
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Course ID
+      responses:
+        "302":
+          description: Redirect to PDF file
+
+  /course/{courseId}/dates:
+    get:
+      tags:
+        - Courses
+      summary: Get course dates
+      description: Retrieve important dates for a course
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Course ID
+      responses:
+        "200":
+          description: Course dates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CourseDate"
+    post:
+      tags:
+        - Courses
+      summary: Update course dates
+      description: Update important dates for a course (currently disabled)
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Course ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                dates:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/CourseDateInput"
+      responses:
+        "404":
+          description: Not found (feature disabled)
+
+  /venue:
+    get:
+      tags:
+        - Venues
+      summary: Get all venues
+      description: Retrieve list of all available venues
+      responses:
+        "200":
+          description: List of venues
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+  /venue/{venueId}/courses:
+    get:
+      tags:
+        - Venues
+      summary: Get courses by venue
+      description: Retrieve courses held at a specific venue
+      parameters:
+        - name: venueId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Venue ID
+        - name: semester
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Semester code
+      responses:
+        "200":
+          description: Courses at venue
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Course"
+
+  /shortlink:
+    put:
+      tags:
+        - Utilities
+      summary: Create short link
+      description: Create a short link for a URL
+      parameters:
+        - name: url
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uri
+          description: URL to shorten
+      responses:
+        "200":
+          description: Short link created
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "https://nthumods.com/l/abc123"
+
+  /shortlink/{key}:
+    get:
+      tags:
+        - Utilities
+      summary: Resolve short link
+      description: Get the original URL from a short link key
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Short link key
+      responses:
+        "200":
+          description: Original URL
+          content:
+            text/plain:
+              schema:
+                type: string
+        "404":
+          description: Short link not found
+
+  /issue:
+    post:
+      tags:
+        - Issues
+      summary: Create GitHub issue
+      description: Create a new issue in the GitHub repository
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IssueCreateRequest"
+      responses:
+        "200":
+          description: Issue created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GitHubIssue"
+        "400":
+          description: Invalid input
+    get:
+      tags:
+        - Issues
+      summary: Get issues by tag
+      description: Retrieve GitHub issues filtered by tag
+      parameters:
+        - name: tag
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Tag to filter by
+      responses:
+        "200":
+          description: List of issues
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GitHubIssue"
+
+  /ccxp/auth/login:
+    post:
+      tags:
+        - CCXP Authentication
+      summary: Login to CCXP
+      description: Authenticate with CCXP system
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                studentid:
+                  type: string
+                password:
+                  type: string
+              required:
+                - studentid
+                - password
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CCXPLoginResponse"
+
+  /ccxp/courses:
+    post:
+      tags:
+        - CCXP Courses
+      summary: Get student courses
+      description: Retrieve all courses for a student
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                ACIXSTORE:
+                  type: string
+              required:
+                - ACIXSTORE
+      responses:
+        "200":
+          description: Student courses
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentCoursesResponse"
+
+  /ccxp/courses/latest:
+    post:
+      tags:
+        - CCXP Courses
+      summary: Get latest semester courses
+      description: Get courses for the current semester
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                ACIXSTORE:
+                  type: string
+              required:
+                - ACIXSTORE
+      responses:
+        "200":
+          description: Latest semester courses
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LatestCoursesResponse"
+
+  /ccxp/grades:
+    post:
+      tags:
+        - CCXP Grades
+      summary: Get student grades
+      description: Retrieve comprehensive grade information for a student
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                ACIXSTORE:
+                  type: string
+              required:
+                - ACIXSTORE
+      responses:
+        "200":
+          description: Student grades and rankings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GradesResponse"
+
+  /planner/folders/pull:
+    get:
+      tags:
+        - Planner Sync
+      summary: Pull folder changes
+      description: Retrieve folder changes for synchronization
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: serverTimestamp
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: batchSize
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: Folder changes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PullResponse"
+
+  /planner/folders/push:
+    post:
+      tags:
+        - Planner Sync
+      summary: Push folder changes
+      description: Push folder changes for synchronization
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PushRequest"
+      responses:
+        "200":
+          description: Sync conflicts (if any)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SyncDocument"
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    CalendarEvent:
+      type: object
+      properties:
+        summary:
+          type: string
+        date:
+          type: string
+          format: date
+        id:
+          type: string
+
+    WeatherData:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        weatherData:
+          type: object
+          properties:
+            MinT:
+              type: string
+            MaxT:
+              type: string
+            PoP12h:
+              type: string
+            Wx:
+              type: string
+            WeatherDescription:
+              type: string
+
+    Course:
+      type: object
+      properties:
+        raw_id:
+          type: string
+        name_zh:
+          type: string
+        name_en:
+          type: string
+        semester:
+          type: string
+        department:
+          type: string
+        course:
+          type: string
+        class:
+          type: string
+        credits:
+          type: integer
+        capacity:
+          type: integer
+          nullable: true
+        enrolled:
+          type: integer
+        venues:
+          type: array
+          items:
+            type: string
+        times:
+          type: array
+          items:
+            type: string
+        teacher_zh:
+          type: array
+          items:
+            type: string
+        teacher_en:
+          type: array
+          items:
+            type: string
+          nullable: true
+        language:
+          type: string
+        ge_type:
+          type: string
+          nullable: true
+        compulsory_for:
+          type: array
+          items:
+            type: string
+          nullable: true
+        elective_for:
+          type: array
+          items:
+            type: string
+          nullable: true
+
+    MinimalCourse:
+      type: object
+      properties:
+        raw_id:
+          type: string
+        name_zh:
+          type: string
+        name_en:
+          type: string
+        semester:
+          type: string
+        department:
+          type: string
+        course:
+          type: string
+        class:
+          type: string
+        credits:
+          type: integer
+        venues:
+          type: array
+          items:
+            type: string
+        times:
+          type: array
+          items:
+            type: string
+        teacher_zh:
+          type: array
+          items:
+            type: string
+        teacher_en:
+          type: array
+          items:
+            type: string
+        language:
+          type: string
+
+    CourseWithSyllabus:
+      allOf:
+        - $ref: "#/components/schemas/Course"
+        - type: object
+          properties:
+            course_syllabus:
+              type: array
+              items:
+                $ref: "#/components/schemas/Syllabus"
+            course_scores:
+              type: array
+              items:
+                $ref: "#/components/schemas/CourseScore"
+            course_dates:
+              type: array
+              items:
+                $ref: "#/components/schemas/CourseDate"
+
+    Syllabus:
+      type: object
+      properties:
+        brief:
+          type: string
+          nullable: true
+        keywords:
+          type: array
+          items:
+            type: string
+          nullable: true
+        content:
+          type: string
+          nullable: true
+        has_file:
+          type: boolean
+
+    CourseScore:
+      type: object
+      properties:
+        average:
+          type: number
+        std_dev:
+          type: number
+        type:
+          type: string
+        enrollment:
+          type: integer
+          nullable: true
+
+    CourseDate:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+        title:
+          type: string
+        date:
+          type: string
+          format: date
+
+    CourseDateInput:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+        title:
+          type: string
+        date:
+          type: string
+          format: date
+      required:
+        - type
+        - title
+        - date
+
+    PTTReview:
+      type: object
+      properties:
+        content:
+          type: string
+        date:
+          type: string
+
+    CourseWithScores:
+      allOf:
+        - $ref: "#/components/schemas/Course"
+        - type: object
+          properties:
+            course_scores:
+              type: array
+              items:
+                $ref: "#/components/schemas/CourseScore"
+
+    IssueCreateRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 7
+        body:
+          type: string
+          minLength: 10
+        labels:
+          type: array
+          items:
+            type: string
+        turnstileToken:
+          type: string
+      required:
+        - title
+        - body
+        - labels
+
+    GitHubIssue:
+      type: object
+      properties:
+        id:
+          type: integer
+        number:
+          type: integer
+        title:
+          type: string
+        body:
+          type: string
+        html_url:
+          type: string
+        state:
+          type: string
+        labels:
+          type: array
+          items:
+            type: string
+
+    CCXPLoginResponse:
+      type: object
+      properties:
+        ACIXSTORE:
+          type: string
+        passwordExpired:
+          type: boolean
+        data:
+          $ref: "#/components/schemas/UserDetails"
+
+    UserDetails:
+      type: object
+      properties:
+        studentid:
+          type: string
+        name_zh:
+          type: string
+        name_en:
+          type: string
+        department:
+          type: string
+        grade:
+          type: string
+        email:
+          type: string
+
+    StudentCoursesResponse:
+      type: object
+      properties:
+        student:
+          type: object
+          properties:
+            studentid:
+              type: string
+            name_zh:
+              type: string
+            class_name_zh:
+              type: string
+        courses:
+          type: array
+          items:
+            type: string
+
+    LatestCoursesResponse:
+      type: object
+      properties:
+        semester:
+          type: string
+        phase:
+          type: string
+        studentid:
+          type: string
+        courses:
+          type: array
+          items:
+            type: string
+
+    GradesResponse:
+      type: object
+      properties:
+        student:
+          type: object
+          properties:
+            studentid:
+              type: string
+            name_zh:
+              type: string
+            class_name_zh:
+              type: string
+        credits:
+          type: object
+          properties:
+            total_credits:
+              type: integer
+            passed_credits:
+              type: integer
+            pending_credits:
+              type: integer
+        grades:
+          type: array
+          items:
+            $ref: "#/components/schemas/Grade"
+        ranking:
+          $ref: "#/components/schemas/RankingData"
+
+    Grade:
+      type: object
+      properties:
+        raw_id:
+          type: string
+        year:
+          type: string
+        semester:
+          type: string
+        course_id:
+          type: string
+        name_zh:
+          type: string
+        name_en:
+          type: string
+        credits:
+          type: integer
+        grade:
+          type: string
+        ge_type:
+          type: string
+        ranking:
+          type: string
+        t_scores:
+          type: string
+
+    RankingData:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/SemesterRanking"
+        cumulative:
+          $ref: "#/components/schemas/CumulativeRanking"
+
+    SemesterRanking:
+      type: object
+      properties:
+        year:
+          type: string
+        semester:
+          type: string
+        gpa:
+          type: string
+        t_score_avg:
+          type: string
+        relative_avg:
+          type: string
+        credits:
+          type: integer
+
+    CumulativeRanking:
+      type: object
+      properties:
+        letter:
+          type: object
+          properties:
+            gpa:
+              type: string
+            letter_cum_dept_rank:
+              type: string
+            letter_cum_class_rank:
+              type: string
+
+    PullResponse:
+      type: object
+      properties:
+        checkpoint:
+          type: object
+          nullable: true
+        documents:
+          type: array
+          items:
+            $ref: "#/components/schemas/SyncDocument"
+
+    PushRequest:
+      type: array
+      items:
+        type: object
+        properties:
+          newDocumentState:
+            $ref: "#/components/schemas/SyncDocument"
+          assumedMasterState:
+            $ref: "#/components/schemas/SyncDocument"
+
+    SyncDocument:
+      type: object
+      properties:
+        id:
+          type: string
+        _deleted:
+          type: boolean
+      additionalProperties: true
+
+tags:
+  - name: Calendar
+    description: Academic calendar and scheduling
+  - name: Weather
+    description: Weather information
+  - name: Courses
+    description: Course information and management
+  - name: Venues
+    description: Venue and location data
+  - name: Utilities
+    description: Utility services like short links
+  - name: Issues
+    description: Issue tracking and management
+  - name: CCXP Authentication
+    description: CCXP system authentication
+  - name: CCXP Courses
+    description: CCXP course data retrieval
+  - name: CCXP Grades
+    description: CCXP grade information
+  - name: Planner Sync
+    description: Data synchronization for planner application
