@@ -1,8 +1,8 @@
 {
-  "crons": [
-    {
-      "path": "/api/sync-courses",
-      "schedule": "0 16 * * *"
-    }
-  ]
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "turbo run build --filter=@courseweb/web",
+  "outputDirectory": "apps/web/.next",
+  "installCommand": "bun install",
+  "framework": "nextjs",
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD ./"
 }

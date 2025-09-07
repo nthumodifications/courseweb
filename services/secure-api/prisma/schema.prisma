@@ -1,0 +1,116 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String     @id @default(uuid())
+  userId    String     @unique
+  name      String
+  nameEn    String     @map("name_en")
+  email     String
+  inschool  Boolean
+  cid       String?
+  lmsid     String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  authSessions AuthSessions[]
+  tokens    Token[]
+  authCodes AuthCode[]
+  apiKeys   ApiKey[]
+}
+
+model AuthCode {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  userId      String
+  clientId    String
+  redirectUri String
+  scopes      String[]
+  expiresAt   DateTime
+  nonce       String?
+  codeChallenge String?
+  codeChallengeMethod String?
+  responseMode String?
+  responseType String[]
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+}
+
+model AuthRequest {
+  id          String   @id @default(uuid())
+  sessionId   String
+  clientId    String 
+  redirectUri String
+  scopes      String[]
+  state       String? @unique
+  clientState String?
+  nonce       String?
+  codeChallenge String?
+  codeChallengeMethod String?
+  responseMode String?
+  responseType String[]
+  createdAt   DateTime @default(now())
+  session     AuthSessions @relation(fields: [sessionId], references: [sessionId], onDelete: Cascade)
+}
+
+enum TokenType {
+  ACCESS
+  REFRESH
+}
+
+model Token {
+  id        String    @id @default(uuid())
+  userId    String
+  token     String    @unique
+  type      TokenType
+  clientId  String
+  scopes    String[]
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+  user     User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+}
+
+enum AuthSessionState {
+  UNAUTHENTICATED
+  AUTHENTICATED
+}
+
+model AuthSessions {
+  id          String   @id @default(uuid())
+  sessionId   String   @unique
+  createdAt   DateTime @default(now())
+  state      AuthSessionState
+  expiresAt   DateTime
+  userId      String?
+  authenticatedAt DateTime?
+  authRequests AuthRequest[]
+  user        User?     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+}
+
+model Client {
+  id           String   @id @default(uuid())
+  clientId     String   @unique
+  redirectUris String[]
+  logoutUris   String[]
+  clientSecret String? // Optional, for confidential clients
+  scopes       String[]
+}
+
+model ApiKey {
+  id          String       @id @default(uuid())
+  name        String
+  key         String       @unique
+  scopes      String[]
+  expiresAt   DateTime?
+  userId      String
+  user        User         @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  createdAt   DateTime     @default(now())
+  lastUsedAt  DateTime?
+  isRevoked   Boolean      @default(false)
+}

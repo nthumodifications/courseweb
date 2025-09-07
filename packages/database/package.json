@@ -1,0 +1,39 @@
+{
+  "name": "@courseweb/database",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Database schemas, migrations, and SQL utilities for CoursWeb",
+  "main": "index.js",
+  "files": [
+    "functions/**/*",
+    "indexes/**/*",
+    "migrations/**/*",
+    "triggers/**/*",
+    "views/**/*",
+    "schemas/**/*"
+  ],
+  "scripts": {
+    "migrate": "supabase db push",
+    "reset": "supabase db reset",
+    "generate-types": "supabase gen types typescript --project-id \"cmzdlrqfpuktcczvsobs\" --schema public > ../shared/src/types/supabase.ts",
+    "lint": "echo 'Database linting not implemented'",
+    "clean": "echo 'Database cleanup not needed'"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@courseweb/eslint-config": "*",
+    "supabase": "^1.148.6"
+  },
+  "keywords": [
+    "database",
+    "sql",
+    "supabase",
+    "migrations",
+    "schemas"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nthumodifications/courseweb.git",
+    "directory": "packages/database"
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "name": "@courseweb/secure-api",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "bun run --hot src/index.ts",
+    "start": "NODE_ENV=production bun run src/index.ts",
+    "db:generate": "prisma generate",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev --name init",
+    "tailwind:watch": "tailwindcss -i ./src/pages/input.css -o ./src/pages/output.css --watch",
+    "build": "tsc --outDir dist",
+    "clean": "rm -rf dist",
+    "lint": "echo 'Secure API lint check'",
+    "test": "bun test",
+    "test:calendar": "bun test src/api/calendar.test.ts src/utils/apiKeyValidationBun.test.ts src/utils/icalendar.test.ts",
+    "test:security": "bun test --grep security",
+    "audit:deps": "bun audit",
+    "audit:vulnerabilities": "bun audit --audit-level moderate",
+    "security:scan": "bun run audit:deps && bun run audit:vulnerabilities",
+    "security:check": "bun run test:security && bun run security:scan",
+    "preproduction": "bun run security:check && bun run test && bun run build"
+  },
+  "dependencies": {
+    "@courseweb/shared": "*",
+    "@courseweb/database": "*",
+    "@hono/zod-validator": "^0.4.3",
+    "@prisma/client": "^6.5.0",
+    "@tailwindcss/cli": "^4.0.16",
+    "date-fns": "^4.1.0",
+    "firebase-admin": "^13.2.0",
+    "hono": "^4.7.5",
+    "ical-generator": "^9.0.0",
+    "jose": "^6.0.10",
+    "prisma": "^6.5.0",
+    "rxdb": "^16.8.1",
+    "tailwindcss": "^4.0.16"
+  },
+  "devDependencies": {
+    "@courseweb/eslint-config": "*",
+    "@types/bun": "latest",
+    "typescript": "^5.4.4"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  }
+}

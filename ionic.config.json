@@ -1,7 +1,0 @@
-{
-  "name": "courseweb",
-  "integrations": {
-    "capacitor": {}
-  },
-  "type": "custom"
-}

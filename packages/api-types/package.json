@@ -1,0 +1,53 @@
+{
+  "name": "@courseweb/api-types",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TypeScript types for CoursWeb API services",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./api": {
+      "import": "./dist/api.js",
+      "types": "./dist/api.d.ts"
+    },
+    "./secure-api": {
+      "import": "./dist/secure-api.js",
+      "types": "./dist/secure-api.d.ts"
+    },
+    "./client": {
+      "import": "./dist/client.js",
+      "types": "./dist/client.d.ts"
+    }
+  },
+  "files": [
+    "dist/**"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@courseweb/api": "*",
+    "@courseweb/secure-api": "*",
+    "hono": "^4.7.2"
+  },
+  "devDependencies": {
+    "@courseweb/eslint-config": "*",
+    "typescript": "^5.4.4"
+  },
+  "eslintConfig": {
+    "extends": [
+      "@courseweb/eslint-config"
+    ]
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}

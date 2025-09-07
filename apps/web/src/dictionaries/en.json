@@ -1,0 +1,437 @@
+{
+  "today": {
+    "noclass": "No Classes Today",
+    "noclass_sub": "Enjoy your day off!",
+    "noclass_sem": "Enjoy your holiday!",
+    "noclass_reminder": {
+      "reminder": "Haven't chosen your courses yet?",
+      "first": "First open",
+      "courses": "Courses",
+      "choose_courses": "to choose courses",
+      "then": "Next open",
+      "timetable": "Timetable",
+      "check_schedule": "to check your schedule"
+    }
+  },
+  "timetable": {
+    "actions": {
+      "download": "Download",
+      "share": "Share/Sync",
+      "horizontal_view": "Horizontal View",
+      "vertical_view": "Vertical View",
+      "more_options": "More",
+      "sync_ccxp": "Sync from CCXP",
+      "group_dept": "Group dept. by colors",
+      "sort_by_credits": "Sort by credits"
+    },
+    "credits": "credits",
+    "course": "courses",
+    "display_settings": "Display Settings",
+    "english_names": "English Names",
+    "english_names_options": {
+      "add": "Add",
+      "replace": "Replace",
+      "hide": "Hide"
+    },
+    "show_course_code": "Show Course Code",
+    "show_venue": "Show Venue",
+    "show_credits": "Show Credits",
+    "show_priority": "Show Priority Number",
+    "lock_order": "Lock Course Order",
+    "reset_default": "Reset to Default",
+    "no_courses": "No Courses Added (yet)",
+    "all_courses": "All Courses"
+  },
+  "course": {
+    "credits": "Credits",
+    "list": {
+      "courses": "Courses",
+      "found": "Found",
+      "search_placeholder": "Search for your course..."
+    },
+    "item": {
+      "add_to_semester": "Add",
+      "remove_from_semester": "Remove"
+    },
+    "timetable": {
+      "title": "Timetable"
+    },
+    "refine": {
+      "title": "Refine",
+      "semester": "Semester",
+      "level": "Level",
+      "language": "Instruction Language",
+      "department": "Departments",
+      "specialization": "Specialization",
+      "firstSpecialization": "First Specialization",
+      "secondSpecialization": "Second Specialization",
+      "compulsory_elective": "Compulsory & Elective",
+      "class": "Class",
+      "venues": "Venues",
+      "time": "Time",
+      "cross_discipline": "Cross Discipline",
+      "geTarget": "GE Target",
+      "gecDimensions": "GEC Dimensions",
+      "extra_selection": "Allows Extra Selection",
+      "x-class": "X-Class",
+      "16_weeks": "16 Weeks",
+      "others": "Others",
+      "clear": "Clear all",
+      "special_tags": "Special tags",
+      "ge_filters": "GE Filters",
+      "timetable_empty": "Find empty",
+      "advanced_filters": "Advanced filters",
+      "search_results": "Search results",
+      "results": "results"
+    },
+    "details": {
+      "semester": "Semester",
+      "language": "Instruction Language",
+      "reserved": "Reserved",
+      "capacity": "Capacity",
+      "venue_time": "Venue & Time",
+      "class": "Class",
+      "brief": "Brief",
+      "remarks": "Remarks",
+      "description": "Description",
+      "restrictions": "Restrictions",
+      "prerequesites": "Prerequisites",
+      "timetable": "Timetable",
+      "course_list": "Course List",
+      "scores": "Scores",
+      "average": "Average",
+      "favourites": "Favourites",
+      "standard_deviation": "Std. Deviation",
+      "score_types": {
+        "gpa": "GPA",
+        "percent": "Percentage"
+      },
+      "ptt": "PTT Reviews",
+      "related_courses": "Related Courses",
+      "compulsory": "Compulsory",
+      "elective": "Elective",
+      "cross_discipline": "Cross Discipline",
+      "first_specialization": "First Specialization",
+      "second_specialization": "Second Specialization",
+      "ptt_title": "PTT Reviews",
+      "ptt_disclaimer": "PTT reviews are from the NTHU_Course board and are not moderated by NTHUMods. The reviews do not represent the views of NTHUMods. If you find any inappropriate content, please report to the board itself.",
+      "important_dates": "Important Dates",
+      "view_ccxp_syllabus": "View Original Webpage"
+    }
+  },
+  "navigation": {
+    "today": "Today",
+    "courses": "Courses",
+    "timetable": "Timetable",
+    "settings": "Settings",
+    "venues": "Venues",
+    "bus": "Bus"
+  },
+  "bus": {
+    "north_gate": "North Gate",
+    "tsmc": "TSMC",
+    "nanda": "Nanda Campus",
+    "main_campus": "Main Campus",
+    "service_over": "Service Over",
+    "red_line": "Red Line",
+    "green_line": "Green Line",
+    "nanda_line": "Nanda Line",
+    "departing": "Departing",
+    "departed": "Departed",
+    "validity": "Validity",
+    "route": "Route",
+    "departure_time": "Departure Time",
+    "notes": "Notes",
+    "weekdays": "Weekdays",
+    "weekends": "Weekends",
+    "to": "To ",
+    "schedule": "Departure Schedule"
+  },
+  "settings": {
+    "account": {
+      "signin": "Sign In",
+      "signout": "Sign Out",
+      "title": "Account",
+      "description": "NTHU AIS Login",
+      "ccxp": {
+        "title": "Proxy Login into your NTHU AIS Account",
+        "description": "Access more features by connecting with NTHU AIS securely."
+      },
+      "logoutDescription": "Are you sure you want to log out?",
+      "logoutConfimation": "Log out?",
+      "keepLocalData": "Keep data locally",
+      "logout": "Logout"
+    },
+    "display": {
+      "title": "Display",
+      "description": "Appearance, Language",
+      "dark_mode": {
+        "title": "Dark Mode"
+      },
+      "language": {
+        "title": "Language"
+      }
+    },
+    "timetable": {
+      "title": "Timetable",
+      "description": "Theme, Preview",
+      "vertical_preview": "Vertical Preview",
+      "language": "Language",
+      "align": {
+        "title": "Align",
+        "left": "Left",
+        "center": "Center",
+        "right": "Right"
+      },
+      "display": "Display",
+      "slot_title": "Title",
+      "slot_code": "Code",
+      "slot_time": "Time",
+      "slot_venue": "Venue"
+    },
+    "privacy": {
+      "title": "Privacy",
+      "description": "Analytics",
+      "analytics": {
+        "title": "Analytics",
+        "description": "Send anonymous usage info to Google Analytics"
+      }
+    },
+    "calendar": {
+      "title": "Today Page",
+      "description": "What do you wanna see first",
+      "academic_calendar": {
+        "title": "NTHU Academic Calendar",
+        "description": "Show Academic Calendar on the Today Page."
+      },
+      "experimental_calendar": {
+        "title": "Calendar",
+        "badge": "Experimental",
+        "description": "Use the new Calendar on the Today Page."
+      }
+    }
+  },
+  "pages": {
+    "ais_loading": "Accessing the academic information system, please wait a moment..."
+  },
+  "venues": {
+    "placeholder": "Select a Venue from the list"
+  },
+  "alerts": {
+    "TimetableCourseList": {
+      "action": "Go Settings",
+      "text": "You can change your theme in the settings page!"
+    }
+  },
+  "applist": {
+    "title": "Apps",
+    "to_ccxp": "NTHU AIS",
+    "empty_pinned_apps_reminder": "Pin your most used apps here!",
+    "pinned_apps_title": "Pinned Apps",
+    "edit_pinned_apps_title": "Edit Pinned Apps"
+  },
+  "dialogs": {
+    "DownloadTimetableDialog": {
+      "title": "Download Your Timetable",
+      "description": "You can download the calendar file (.ics) and import it to your calendar app, or download the image!",
+      "buttons": {
+        "image": "Image",
+        "ICS": "Calendar .ics"
+      },
+      "success_title": "Generated Successfully",
+      "success_description": "The timetable image has been downloaded to your device. Please check your browser's download folder or click the image to copy to clipboard.",
+      "download_error": "Download Failed",
+      "download_error_description": "Failed to generate the image. Please try again or contact support.",
+      "close": "Close"
+    },
+    "ShareSyncTimetableDialog": {
+      "title": "Share & Sync Your Timetable",
+      "description": "Send this link to your friends to share your timetable or to yourself to keep your timetable synced on all devices.",
+      "category:qr": "QR Code",
+      "category:links": "Links",
+      "links": {
+        "email": "Send Email"
+      }
+    },
+    "DateContributeForm": {
+      "title": "Contribute Dates",
+      "description": "Contribute important dates to the course",
+      "dont_abuse": "Don't abuse the system!",
+      "disclaimer": "Your submission will contain your Student ID, and will be auditable on request.",
+      "types": {
+        "exam": "Exam",
+        "quiz": "Quiz",
+        "no_class": "No Class",
+        "other": "Others"
+      },
+      "date_placeholder": "Pick a date",
+      "add_date": "Add Date",
+      "reset": "Reset",
+      "submit": "Submit",
+      "accurate_relavent": "Enter only accurate and relavent information!"
+    }
+  },
+  "shops": {
+    "search_placeholder": "Search for shops",
+    "search_results_prefix": "Search results for",
+    "open_now": "Open Now",
+    "closed": "Closed",
+    "closed_today": "Closed Today",
+    "area_placeholder": "Select area",
+    "area_all": "Anywhere"
+  },
+  "help": {
+    "intro": {
+      "title": "Welcome to NTHUMODS",
+      "description": "NTHUMODS might just be your ultimate companion for academic success at National Tsing Hua University! Here's a quick guide to get you started."
+    },
+    "courses": {
+      "title": "Explore Courses",
+      "description": "Discover a wide range of courses tailored to your academic journey. From core subjects to electives, NTHUMODS has you covered. Dive in and find the perfect fit for your schedule."
+    },
+    "dashboard": {
+      "title": "Personalized Dashboard",
+      "description": "Your personalized dashboard awaits! Track your courses, assignments (coming soon), and exams (coming soon) all in one place. Stay organized, stay on top."
+    },
+    "bus": {
+      "title": "Bus Schedules",
+      "description": "Navigating NTHU's campus is a breeze with access to bus routes, timings, and stops to plan your daily commute efficiently. No more waiting in uncertainty."
+    },
+    "tools": {
+      "title": "Need more features?",
+      "description": "Link your NTHU account to NTHUMODS and open the door to a treasure trove of additional tools. Seamlessly integrate your academic life by accessing exclusive features tailored to NTHU students.",
+      "connect": "Connect now"
+    },
+    "dev": {
+      "title": "Growing together",
+      "description": "We're committed to continuous improvement to offer you the best possible experience. Please note that the app is still in development, and while we strive for perfection, there may be occasional hiccups along the way. We value your input extremely, share your ideas, feedback, and features you'd love to see.",
+      "feedback": "Give feedback"
+    },
+    "prev": "Prev",
+    "next": "Next",
+    "skip": "Skip",
+    "jump": "Jump in",
+    "continue": "Continue",
+    "login": "Log in"
+  },
+  "ccxp": {
+    "connected": "Connected",
+    "failed": "Failed",
+    "connect": "Connect",
+    "incorrect_credentials": "Incorrect Student ID or Password",
+    "studentid": "Student ID",
+    "password": "Password",
+    "fill_in_ccxp_credentials": "Login with NTHU AIS Account",
+    "login": {
+      "title": "Proxy Login With NTHU AIS Account",
+      "disclaimer": "Note: Your credentials will only be stored on your device, and will only be transmitted to the server for authentication.",
+      "description": "For every action that requires authenticated data from NTHU AIS, the website will send your credentials to the server for authentication by our web scrapers. The tranmission is protected by HTTPS encryption, and your credentials is never stored on our servers.",
+      "agree": "I've read the privacy policy, and understand the terms of proxy login."
+    },
+    "errors": {
+      "IncorrectCredentials": "Incorrect Login Credentials",
+      "CaptchaError": "CAPTCHA Decoding went wrong, Please retry in 15 minutes.",
+      "UnknownError": "Something went wrong, please try checking on the NTHU AIS website."
+    },
+    "logging_in_please_wait": "Logging into your Academic Information System Account...",
+    "not_logged_in_error": "You are not logged in"
+  },
+  "grade": {
+    "class_rank": "Class Ranking",
+    "dept_rank": "Department Ranking",
+    "passed_credits": "Passed credits",
+    "pending_credits": "Pending credits",
+    "semester": "Semester",
+    "relative_avg": "Relative Grade Average",
+    "num_of_courses": "Number of Courses",
+    "summer_credits": "Summer Credits",
+    "transfer_credits": "Transfer Credits",
+    "t_score_class_rank": "T-Score Class Ranking",
+    "t_score_dept_rank": "T-Score Department Ranking",
+    "latest_first": "Latest First",
+    "oldest_first": "Oldest First",
+    "score_curve": "Score Curve",
+    "taken_actual_credits": "Taken/Actual Credits",
+    "all_courses": "All Courses",
+    "semester_grades": "Semester Grades",
+    "t_score": "T-Score"
+  },
+  "calendar": {
+    "upcoming_events": "Upcoming Events",
+    "no_events": "No Upcoming Events",
+    "no_events_sub": "There are no scheduled events",
+    "add_event": "Add Event",
+    "minified": {
+      "no_events": "No upcoming events"
+    }
+  },
+  "cancel": "Cancel",
+  "privacy_policy": "Privacy Policy",
+  "common": {
+    "cancel": "Cancel"
+  },
+  "sponsorship": {
+    "title": "Supported by",
+    "description": "Contribute as little as $1 to support our development",
+    "cerana": "Cerana Technology"
+  },
+  "contribute": {
+    "title": "Contributors & Contributing",
+    "subtitle": "Help us build better academic tools for the NTHU community. Every contribution makes a difference.",
+    "sponsors": {
+      "title": "Our Amazing Sponsors",
+      "description": "We're grateful for the incredible support from our sponsors who make NTHUMods possible!",
+      "algolia": "Search Engine",
+      "cerana": "Infrastructure Sponsor"
+    },
+    "stats": {
+      "active_users": "Active Users",
+      "open_source": "Open Source",
+      "years_running": "Years Running",
+      "community": "Community"
+    },
+    "how_to_contribute": {
+      "title": "How You Can Contribute",
+      "description": "NTHUMods is a 100% student-led, open source project. We rely on the support of our contributors and the NTHU community to keep this platform alive and thriving. Every contribution, no matter how small, makes a real difference in the lives of thousands of students!"
+    },
+    "financial_support": {
+      "title": "💰 Financial Support",
+      "description": "Help us cover development costs, and other expenses. Every dollar helps us maintain and improve the platform for all students.",
+      "opencollective": "Support on OpenCollective"
+    },
+    "for_everyone": {
+      "title": "For Everyone",
+      "feedback": {
+        "title": "Share your feedback",
+        "description": "We are always open for feedback! If you have any suggestions, ideas, or feedback, or you think this particular shade of purple looks ugly! Let us know using the links below.",
+        "form": "Form",
+        "email": "Email",
+        "instagram": "Instagram"
+      }
+    },
+    "for_developers": {
+      "title": "For Developers",
+      "bug_reports": {
+        "title": "File Bug Reports and Feature Requests",
+        "description": "Found a bug? Want to see a new feature? File an issue on our GitHub repository!",
+        "bug": "Bug",
+        "bug_description": "Report a bug on Github",
+        "feature": "Feature",
+        "feature_description": "Submit a Feature Idea"
+      },
+      "code_design": {
+        "title": "Contribute Code and Design",
+        "description": "Ready to dive in? We welcome contributors of all skill levels! Whether you're a seasoned developer or just starting out, there's something for everyone. Check out our good first issues to get started, and join our community discussions!",
+        "github_repo": "GitHub Repository",
+        "good_first_issues": "Good First Issues"
+      }
+    },
+    "call_to_action": {
+      "title": "Ready to Make a Difference?",
+      "description": "Join our vibrant community of students, developers, and dreamers who are building the future of academic tools at NTHU!",
+      "start_contributing": "Start Contributing",
+      "support_us": "Support Us"
+    }
+  },
+  "test": {}
+}

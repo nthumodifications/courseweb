@@ -1,0 +1,54 @@
+{
+  "name": "@courseweb/data-sync",
+  "version": "1.0.0",
+  "description": "Course data synchronization tools",
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm",
+    "dev": "tsup src/index.ts --format cjs,esm --watch",
+    "clean": "rm -rf dist",
+    "sync:once": "tsx src/sync-courses.ts",
+    "sync:scheduled": "tsx src/update-courses.ts",
+    "docker:build": "docker build -t courseweb-data-sync .",
+    "docker:run": "docker run --env-file .env courseweb-data-sync",
+    "lint": "eslint src --ext .ts,.tsx",
+    "type-check": "tsc --noEmit"
+  },
+  "keywords": [
+    "courseweb",
+    "data-sync",
+    "scraping",
+    "cron"
+  ],
+  "author": "CourseWeb Team",
+  "license": "MIT",
+  "dependencies": {
+    "node-schedule": "^2.1.1",
+    "linkedom": "^0.18.4",
+    "@supabase/supabase-js": "^2.45.4",
+    "algoliasearch": "^4.24.0"
+  },
+  "devDependencies": {
+    "@courseweb/eslint-config": "*",
+    "@types/node": "^20.0.0",
+    "@types/node-schedule": "^2.1.0",
+    "eslint": "^8.57.0",
+    "tsup": "^8.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.3.0"
+  },
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "eslintConfig": {
+    "extends": [
+      "@courseweb/eslint-config"
+    ]
+  }
+}
