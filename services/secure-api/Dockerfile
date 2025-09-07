@@ -3,39 +3,60 @@
 FROM oven/bun:1 AS base
 WORKDIR /usr/src/app
 
-# install dependencies into temp directory
-# this will cache them and speed up future builds
-FROM base AS install
-RUN mkdir -p /temp/dev
-COPY package.json bun.lock /temp/dev/
-RUN cd /temp/dev && bun install --frozen-lockfile
+# Install dependencies only when needed
+FROM base AS deps
+# Copy root package files
+COPY package.json bun.lock ./
+COPY turbo.json ./
 
-# install with --production (exclude devDependencies)
-RUN mkdir -p /temp/prod
-COPY package.json bun.lock /temp/prod/
-RUN cd /temp/prod && bun install --frozen-lockfile --production
+# Copy workspace package files
+COPY packages/shared/package.json ./packages/shared/package.json
+COPY packages/database/package.json ./packages/database/package.json
+COPY packages/eslint-config/package.json ./packages/eslint-config/package.json
+COPY services/secure-api/package.json ./services/secure-api/package.json
 
-# copy node_modules from temp directory
-# then copy all (non-ignored) project files into the image
-FROM base AS prerelease
-COPY --from=install /temp/dev/node_modules node_modules
+# Install dependencies
+RUN bun install --frozen-lockfile
+
+# Build dependencies and copy source code
+FROM base AS builder
+WORKDIR /usr/src/app
+COPY --from=deps /usr/src/app/node_modules ./node_modules
 COPY . .
 
-# [optional] tests & build
-ENV NODE_ENV=production
+# Build shared packages first
+RUN cd packages/shared && bun run build || true
+RUN cd packages/database && bun run build || true
+RUN cd packages/eslint-config && bun run build || true
 
-# copy production dependencies and source code into final image
+# Generate Prisma client for secure-api
+RUN cd services/secure-api && bun run prisma:generate
+
+# Build secure-api
+RUN cd services/secure-api && bun run build || true
+
+# Production image
 FROM base AS release
-COPY --from=install /temp/prod/node_modules node_modules
-COPY --from=prerelease /usr/src/app/src/ ./src
-COPY --from=prerelease /usr/src/app/package.json .
-COPY --from=prerelease /usr/src/app/tsconfig.json .
-# Copy the generated Prisma client (adjust path if different)
-COPY --from=prerelease /usr/src/app/prisma ./prisma
+WORKDIR /usr/src/app
+
+# Copy built application and dependencies
+COPY --from=builder /usr/src/app/services/secure-api/dist ./dist
+COPY --from=builder /usr/src/app/services/secure-api/src ./src
+COPY --from=builder /usr/src/app/services/secure-api/package.json .
+COPY --from=builder /usr/src/app/services/secure-api/tsconfig.json .
+COPY --from=builder /usr/src/app/services/secure-api/prisma ./prisma
+
+# Copy necessary workspace packages
+COPY --from=builder /usr/src/app/packages ./packages
+COPY --from=builder /usr/src/app/node_modules ./node_modules
+
+# Install production dependencies
+RUN bun install --frozen-lockfile --production
+
+# Generate Prisma client in production
 RUN bun run prisma:generate
 
-
-# run the app
+# Run the app
 USER bun
 EXPOSE 5002/tcp
 ENTRYPOINT [ "bun", "run", "start" ]

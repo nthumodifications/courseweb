@@ -160,7 +160,7 @@ jobs:
       # Build and tag Docker image for data-sync
       - name: Build Data Sync Docker image
         run: |
-          docker build -f tools/data-sync/Dockerfile tools/data-sync \
+          docker build -f tools/data-sync/Dockerfile . \
             -t ${{ env.IMAGE_NAME }}-data-sync:${{ github.sha }} \
             -t ${{ env.IMAGE_NAME }}-data-sync:latest
 
@@ -191,7 +191,7 @@ jobs:
       # Build and tag Docker image for secure-api
       - name: Build Secure API Docker image
         run: |
-          docker build -f services/secure-api/Dockerfile services/secure-api \
+          docker build -f services/secure-api/Dockerfile . \
             -t ${{ env.IMAGE_NAME }}-secure-api:${{ github.sha }} \
             -t ${{ env.IMAGE_NAME }}-secure-api:latest
 

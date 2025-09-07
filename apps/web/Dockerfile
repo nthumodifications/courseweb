@@ -15,10 +15,12 @@ COPY packages/ui/package.json ./packages/ui/package.json
 COPY packages/shared/package.json ./packages/shared/package.json
 COPY packages/database/package.json ./packages/database/package.json
 COPY packages/eslint-config/package.json ./packages/eslint-config/package.json
+COPY packages/api-types/package.json ./packages/api-types/package.json
+COPY packages/tailwind-config/package.json ./packages/tailwind-config/package.json
 COPY apps/web/package.json ./apps/web/package.json
 
 # Install dependencies
-RUN bun install --frozen-lockfile --production
+RUN bun install --frozen-lockfile
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -30,9 +32,12 @@ COPY . .
 COPY services/api ./services/api
 COPY services/secure-api ./services/secure-api
 
-# Build shared packages first
+# Build workspace packages first
 RUN bunx turbo run build --filter=@courseweb/shared
 RUN bunx turbo run build --filter=@courseweb/ui
+RUN bunx turbo run build --filter=@courseweb/api-types
+RUN bunx turbo run build --filter=@courseweb/database || true
+RUN bunx turbo run build --filter=@courseweb/eslint-config || true
 
 # Build web application
 RUN bunx turbo run build --filter=@courseweb/web
