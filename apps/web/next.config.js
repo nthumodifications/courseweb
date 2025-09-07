@@ -44,6 +44,29 @@ const nextConfig = {
       }),
     );
 
+    // Fix for PDF.js canvas dependency issue
+    config.plugins.push(
+      new webpack.IgnorePlugin({
+        resourceRegExp: /^canvas$/,
+        contextRegExp: /pdf/,
+      }),
+    );
+
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        canvas: false,
+        fs: false,
+        path: false,
+        os: false,
+        crypto: false,
+        stream: false,
+        util: false,
+        url: false,
+        zlib: false,
+      };
+    }
+
     // return the modified config
     return config;
   },

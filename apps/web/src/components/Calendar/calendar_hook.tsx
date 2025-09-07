@@ -26,7 +26,7 @@ import { toast } from "@courseweb/ui";
 import { replicateRxCollection } from "rxdb/plugins/replication";
 import { useAuth } from "react-oidc-context";
 import authClient from "@/config/auth";
-import { WithDeleted } from "rxdb";
+import { RxCollection, WithDeleted } from "rxdb";
 
 export enum UpdateType {
   THIS = "THIS",
@@ -70,7 +70,7 @@ export const useCalendarProvider = () => {
       EventDocType,
       { id: string; serverTimestamp: string }
     >({
-      collection: eventsCol,
+      collection: eventsCol as RxCollection<EventDocType>,
       replicationIdentifier: "events-to-auth-calendar",
       live: true,
       push: {
@@ -138,7 +138,7 @@ export const useCalendarProvider = () => {
       TimetableSyncDocType,
       { id: string; serverTimestamp: string }
     >({
-      collection: timetableSyncCol,
+      collection: timetableSyncCol as RxCollection<TimetableSyncDocType>,
       replicationIdentifier: "timetablesync-to-auth-calendar",
       live: true,
       push: {
