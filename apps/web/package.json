@@ -11,7 +11,7 @@
     "lint": "next lint --fix",
     "type-check": "tsc --noEmit",
     "clean": "rm -rf .next dist",
-    "gentype": "npx supabase gen types typescript --project-id \"cmzdlrqfpuktcczvsobs\" --schema public > src/types/supabase.ts"
+    "gentype": "bunx supabase gen types typescript --project-id \"cmzdlrqfpuktcczvsobs\" --schema public > src/types/supabase.ts"
   },
   "dependencies": {
     "@courseweb/api-types": "*",

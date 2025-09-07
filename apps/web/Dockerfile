@@ -1,13 +1,13 @@
 # syntax=docker.io/docker/dockerfile:1
 
-FROM node:20-alpine AS base
+FROM oven/bun:1-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
 WORKDIR /app
 
 # Copy monorepo package files
-COPY package.json package-lock.json* ./
+COPY package.json bun.lockb* ./
 COPY turbo.json ./
 
 # Copy workspace package files
@@ -18,7 +18,7 @@ COPY packages/eslint-config/package.json ./packages/eslint-config/package.json
 COPY apps/web/package.json ./apps/web/package.json
 
 # Install dependencies
-RUN npm ci --only=production
+RUN bun install --frozen-lockfile --production
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -31,11 +31,11 @@ COPY services/api ./services/api
 COPY services/secure-api ./services/secure-api
 
 # Build shared packages first
-RUN npx turbo run build --filter=@courseweb/shared
-RUN npx turbo run build --filter=@courseweb/ui
+RUN bunx turbo run build --filter=@courseweb/shared
+RUN bunx turbo run build --filter=@courseweb/ui
 
 # Build web application
-RUN npx turbo run build --filter=@courseweb/web
+RUN bunx turbo run build --filter=@courseweb/web
 
 # Production image, copy all the files and run Next.js
 FROM base AS runner

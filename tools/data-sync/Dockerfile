@@ -1,4 +1,4 @@
-FROM node:20-alpine
+FROM oven/bun:1-alpine
 
 # Install necessary packages
 RUN apk add --no-cache \
@@ -12,16 +12,14 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
+COPY bun.lock* ./
 COPY tsconfig.json ./
 
 # Install dependencies
-RUN npm ci --only=production
+RUN bun install --frozen-lockfile --production
 
 # Copy source code
 COPY src/ ./src/
-
-# Install tsx globally for TypeScript execution
-RUN npm install -g tsx
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
@@ -35,8 +33,8 @@ USER nextjs
 EXPOSE 3000
 
 # Default command - run sync once and exit
-CMD ["tsx", "src/sync-courses.ts"]
+CMD ["bun", "run", "src/sync-courses.ts"]
 
 # Health check (optional)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD node --version || exit 1
+  CMD bun --version || exit 1

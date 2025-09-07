@@ -16,10 +16,10 @@
     "test:calendar": "bun test src/api/calendar.test.ts src/utils/apiKeyValidationBun.test.ts src/utils/icalendar.test.ts",
     "test:security": "bun test --grep security",
     "audit:deps": "bun audit",
-    "audit:vulnerabilities": "npm audit --audit-level moderate",
-    "security:scan": "npm run audit:deps && npm run audit:vulnerabilities",
-    "security:check": "npm run test:security && npm run security:scan",
-    "preproduction": "npm run security:check && npm run test && npm run build"
+    "audit:vulnerabilities": "bun audit --audit-level moderate",
+    "security:scan": "bun run audit:deps && bun run audit:vulnerabilities",
+    "security:check": "bun run test:security && bun run security:scan",
+    "preproduction": "bun run security:check && bun run test && bun run build"
   },
   "dependencies": {
     "@courseweb/shared": "*",
