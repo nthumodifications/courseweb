@@ -23,6 +23,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@courseweb/ui";
+import OpenCollectiveSponsorBanner from "../Sponsorship/OpenCollectiveSponsorBanner";
 
 const TimetableSidebar = ({
   vertical,
@@ -138,6 +139,7 @@ const TimetableSidebar = ({
         </DialogContent>
       </Dialog>
       <TimetableCourseList semester={semester} vertical={vertical} />
+      <OpenCollectiveSponsorBanner />
     </div>
   );
 };

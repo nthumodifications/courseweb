@@ -373,7 +373,11 @@
   "sponsorship": {
     "title": "贊助 NTHUMods",
     "description": "僅需 $1 即可支持我們的開發",
-    "cerana": "東蜂科技"
+    "cerana": "東蜂科技",
+    "opencollective": {
+      "title": "請我們喝咖啡",
+      "subtitle": "每一塊錢都有幫助！"
+    }
   },
   "contribute": {
     "title": "貢獻者與貢獻",
