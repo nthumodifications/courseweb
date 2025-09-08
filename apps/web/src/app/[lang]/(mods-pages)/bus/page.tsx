@@ -20,6 +20,7 @@ import { NandaLineIcon } from "@/components/BusIcons/NandaLineIcon";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getTimeOnDate } from "@/helpers/bus";
 import useDictionary from "@/dictionaries/useDictionary";
+import OpenCollectiveSponsorBanner from "@/components/Sponsorship/OpenCollectiveSponsorBanner";
 
 type BusListingItemProps = {
   tab: string;
@@ -387,6 +388,8 @@ const BusPage = () => {
           ))}
         </div>
       </Tabs>
+      <div className="h-6"></div>
+      <OpenCollectiveSponsorBanner />
     </div>
   );
 };

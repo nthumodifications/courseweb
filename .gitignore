@@ -54,9 +54,6 @@ android/private_key.pepk
 **/android/private_key.pepk
 **/ios/private_key.pepk
 
-# Build outputs
-**/public/sw.js.map
-
 # Tools
 .tsimp
 **/.tsimp
@@ -77,3 +74,10 @@ Thumbs.db
 *.temp
 **/*.tmp
 **/*.temp
+
+# pwa generated files
+apps/web/public/fallback-*
+apps/web/public/sw.*
+apps/web/public/workbox-*.js
+apps/web/public/precache-manifest.*
+apps/web/public/workbox-*.js.map

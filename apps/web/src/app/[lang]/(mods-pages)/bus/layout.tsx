@@ -1,4 +1,5 @@
 import { Fade } from "@courseweb/ui";
+import Link from "next/link";
 import { PropsWithChildren } from "react";
 
 export const metadata = {
@@ -10,8 +11,15 @@ export default function ClientLayout({ children }: PropsWithChildren<{}>) {
     <Fade>
       <>
         {children}
-        <div className="flex flex-col text-xs text-center text-muted-foreground pt-10">
-          資料來自總務處事務組網站。資料錯誤請聯絡總務處事務組。
+        <div className="text-xs text-center text-muted-foreground pt-10">
+          資料來自
+          <Link
+            href="https://github.com/NTHU-SA/NTHU-Data-API"
+            className="inline underline"
+          >
+            學生會 NTHU Data API
+          </Link>
+          . 資料問題請直接向學生會反映.
         </div>
       </>
     </Fade>

@@ -373,7 +373,11 @@
   "sponsorship": {
     "title": "Supported by",
     "description": "Contribute as little as $1 to support our development",
-    "cerana": "Cerana Technology"
+    "cerana": "Cerana Technology",
+    "opencollective": {
+      "title": "Buy us a coffee",
+      "subtitle": "Every $1 helps!"
+    }
   },
   "contribute": {
     "title": "Contributors & Contributing",
