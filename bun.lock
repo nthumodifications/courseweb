@@ -349,7 +349,7 @@
       "name": "@courseweb/api",
       "version": "0.1.0",
       "dependencies": {
-        "@algolia/requester-fetch": "^5.25.0",
+        "@algolia/requester-fetch": "^4.23.3",
         "@cloudflare/workers-types": "^4.20250414.0",
         "@courseweb/database": "*",
         "@courseweb/shared": "*",
@@ -359,7 +359,7 @@
         "@supabase/supabase-js": "^2.49.1",
         "@tsndr/cloudflare-worker-jwt": "^3.1.3",
         "@types/bun": "^1.2.4",
-        "algoliasearch": "4.23.3",
+        "algoliasearch": "^4.23.3",
         "bun-types": "^1.2.4",
         "date-fns": "^4.1.0",
         "date-fns-tz": "^3.2.0",
@@ -482,7 +482,7 @@
 
     "@algolia/requester-common": ["@algolia/requester-common@4.25.2", "", {}, "sha512-Q4wC3sgY0UFjV3Rb3icRLTpPB5/M44A8IxzJHM9PNeK1T3iX7X/fmz7ATUYQYZTpwHCYATlsQKWiTpql1hHjVg=="],
 
-    "@algolia/requester-fetch": ["@algolia/requester-fetch@5.37.0", "", { "dependencies": { "@algolia/client-common": "5.37.0" } }, "sha512-H7OJOXrFg5dLcGJ22uxx8eiFId0aB9b0UBhoOi4SMSuDBe6vjJJ/LeZyY25zPaSvkXNBN3vAM+ad6M0h6ha3AA=="],
+    "@algolia/requester-fetch": ["@algolia/requester-fetch@4.25.2", "", { "dependencies": { "@algolia/requester-common": "4.25.2" } }, "sha512-J0kjtJHONaLhsAhboOIKzA3BXbgGllisH7E2IeIFWpG0/lMu83OG6C/SBOD93VcROmQZUifDZksjukMDjAgwgg=="],
 
     "@algolia/requester-node-http": ["@algolia/requester-node-http@4.25.2", "", { "dependencies": { "@algolia/requester-common": "4.25.2" } }, "sha512-Ja/FYB7W9ZM+m8UrMIlawNUAKpncvb9Mo+D8Jq5WepGTUyQ9CBYLsjwxv9O8wbj3TSWqTInf4uUBJ2FKR8G7xw=="],
 
@@ -3316,8 +3316,6 @@
 
     "zod": ["zod@3.25.76", "", {}, "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ=="],
 
-    "@algolia/requester-fetch/@algolia/client-common": ["@algolia/client-common@5.37.0", "", {}, "sha512-GylIFlPvLy9OMgFG8JkonIagv3zF+Dx3H401Uo2KpmfMVBBJiGfAb9oYfXtplpRMZnZPxF5FnkWaI/NpVJMC+g=="],
-
     "@apideck/better-ajv-errors/ajv": ["ajv@8.17.1", "", { "dependencies": { "fast-deep-equal": "^3.1.3", "fast-uri": "^3.0.1", "json-schema-traverse": "^1.0.0", "require-from-string": "^2.0.2" } }, "sha512-B/gBuNg5SiMTrPkC+A2+cW0RszwxYmn6VYxB/inlBStS5nx6xHIt/ehKRhIMhqusl7a8LjQoZnjCs5vhwxOQ1g=="],
 
     "@babel/core/json5": ["json5@2.2.3", "", { "bin": { "json5": "lib/cli.js" } }, "sha512-XmOWe7eyHYH14cLdVPoyg+GOH3rYX++KpzrylJwSW98t3Nk+U8XOl8FWKOgwtzdb8lXGf6zYwDUzeHMWfxasyg=="],
@@ -3337,8 +3335,6 @@
     "@babel/preset-env/semver": ["semver@6.3.1", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA=="],
 
     "@courseweb/api/@types/node": ["@types/node@20.19.13", "", { "dependencies": { "undici-types": "~6.21.0" } }, "sha512-yCAeZl7a0DxgNVteXFHt9+uyFbqXGy/ShC4BlcHkoE0AfGXYv/BUiplV72DjMYXHDBXFjhvr6DD1NiRVfB4j8g=="],
-
-    "@courseweb/api/algoliasearch": ["algoliasearch@4.23.3", "", { "dependencies": { "@algolia/cache-browser-local-storage": "4.23.3", "@algolia/cache-common": "4.23.3", "@algolia/cache-in-memory": "4.23.3", "@algolia/client-account": "4.23.3", "@algolia/client-analytics": "4.23.3", "@algolia/client-common": "4.23.3", "@algolia/client-personalization": "4.23.3", "@algolia/client-search": "4.23.3", "@algolia/logger-common": "4.23.3", "@algolia/logger-console": "4.23.3", "@algolia/recommend": "4.23.3", "@algolia/requester-browser-xhr": "4.23.3", "@algolia/requester-common": "4.23.3", "@algolia/requester-node-http": "4.23.3", "@algolia/transporter": "4.23.3" } }, "sha512-Le/3YgNvjW9zxIQMRhUHuhiUjAlKY/zsdZpfq4dlLqg6mEm0nL6yk+7f2hDOtLpxsgE4jSzDmvHL7nXdBp5feg=="],
 
     "@courseweb/api/date-fns": ["date-fns@4.1.0", "", {}, "sha512-Ukq0owbQXxa/U3EGtsdVBkR1w7KOQ5gIBqdH2hkvknzZPYvBxb/aa6E8L7tmjFtkwZBu3UXBbjIgPo/Ez4xaNg=="],
 
@@ -3793,36 +3789,6 @@
     "@babel/helper-compilation-targets/lru-cache/yallist": ["yallist@3.1.1", "", {}, "sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g=="],
 
     "@courseweb/api/@types/node/undici-types": ["undici-types@6.21.0", "", {}, "sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ=="],
-
-    "@courseweb/api/algoliasearch/@algolia/cache-browser-local-storage": ["@algolia/cache-browser-local-storage@4.23.3", "", { "dependencies": { "@algolia/cache-common": "4.23.3" } }, "sha512-vRHXYCpPlTDE7i6UOy2xE03zHF2C8MEFjPN2v7fRbqVpcOvAUQK81x3Kc21xyb5aSIpYCjWCZbYZuz8Glyzyyg=="],
-
-    "@courseweb/api/algoliasearch/@algolia/cache-common": ["@algolia/cache-common@4.23.3", "", {}, "sha512-h9XcNI6lxYStaw32pHpB1TMm0RuxphF+Ik4o7tcQiodEdpKK+wKufY6QXtba7t3k8eseirEMVB83uFFF3Nu54A=="],
-
-    "@courseweb/api/algoliasearch/@algolia/cache-in-memory": ["@algolia/cache-in-memory@4.23.3", "", { "dependencies": { "@algolia/cache-common": "4.23.3" } }, "sha512-yvpbuUXg/+0rbcagxNT7un0eo3czx2Uf0y4eiR4z4SD7SiptwYTpbuS0IHxcLHG3lq22ukx1T6Kjtk/rT+mqNg=="],
-
-    "@courseweb/api/algoliasearch/@algolia/client-account": ["@algolia/client-account@4.23.3", "", { "dependencies": { "@algolia/client-common": "4.23.3", "@algolia/client-search": "4.23.3", "@algolia/transporter": "4.23.3" } }, "sha512-hpa6S5d7iQmretHHF40QGq6hz0anWEHGlULcTIT9tbUssWUriN9AUXIFQ8Ei4w9azD0hc1rUok9/DeQQobhQMA=="],
-
-    "@courseweb/api/algoliasearch/@algolia/client-analytics": ["@algolia/client-analytics@4.23.3", "", { "dependencies": { "@algolia/client-common": "4.23.3", "@algolia/client-search": "4.23.3", "@algolia/requester-common": "4.23.3", "@algolia/transporter": "4.23.3" } }, "sha512-LBsEARGS9cj8VkTAVEZphjxTjMVCci+zIIiRhpFun9jGDUlS1XmhCW7CTrnaWeIuCQS/2iPyRqSy1nXPjcBLRA=="],
-
-    "@courseweb/api/algoliasearch/@algolia/client-common": ["@algolia/client-common@4.23.3", "", { "dependencies": { "@algolia/requester-common": "4.23.3", "@algolia/transporter": "4.23.3" } }, "sha512-l6EiPxdAlg8CYhroqS5ybfIczsGUIAC47slLPOMDeKSVXYG1n0qGiz4RjAHLw2aD0xzh2EXZ7aRguPfz7UKDKw=="],
-
-    "@courseweb/api/algoliasearch/@algolia/client-personalization": ["@algolia/client-personalization@4.23.3", "", { "dependencies": { "@algolia/client-common": "4.23.3", "@algolia/requester-common": "4.23.3", "@algolia/transporter": "4.23.3" } }, "sha512-3E3yF3Ocr1tB/xOZiuC3doHQBQ2zu2MPTYZ0d4lpfWads2WTKG7ZzmGnsHmm63RflvDeLK/UVx7j2b3QuwKQ2g=="],
-
-    "@courseweb/api/algoliasearch/@algolia/client-search": ["@algolia/client-search@4.23.3", "", { "dependencies": { "@algolia/client-common": "4.23.3", "@algolia/requester-common": "4.23.3", "@algolia/transporter": "4.23.3" } }, "sha512-P4VAKFHqU0wx9O+q29Q8YVuaowaZ5EM77rxfmGnkHUJggh28useXQdopokgwMeYw2XUht49WX5RcTQ40rZIabw=="],
-
-    "@courseweb/api/algoliasearch/@algolia/logger-common": ["@algolia/logger-common@4.23.3", "", {}, "sha512-y9kBtmJwiZ9ZZ+1Ek66P0M68mHQzKRxkW5kAAXYN/rdzgDN0d2COsViEFufxJ0pb45K4FRcfC7+33YB4BLrZ+g=="],
-
-    "@courseweb/api/algoliasearch/@algolia/logger-console": ["@algolia/logger-console@4.23.3", "", { "dependencies": { "@algolia/logger-common": "4.23.3" } }, "sha512-8xoiseoWDKuCVnWP8jHthgaeobDLolh00KJAdMe9XPrWPuf1by732jSpgy2BlsLTaT9m32pHI8CRfrOqQzHv3A=="],
-
-    "@courseweb/api/algoliasearch/@algolia/recommend": ["@algolia/recommend@4.23.3", "", { "dependencies": { "@algolia/cache-browser-local-storage": "4.23.3", "@algolia/cache-common": "4.23.3", "@algolia/cache-in-memory": "4.23.3", "@algolia/client-common": "4.23.3", "@algolia/client-search": "4.23.3", "@algolia/logger-common": "4.23.3", "@algolia/logger-console": "4.23.3", "@algolia/requester-browser-xhr": "4.23.3", "@algolia/requester-common": "4.23.3", "@algolia/requester-node-http": "4.23.3", "@algolia/transporter": "4.23.3" } }, "sha512-9fK4nXZF0bFkdcLBRDexsnGzVmu4TSYZqxdpgBW2tEyfuSSY54D4qSRkLmNkrrz4YFvdh2GM1gA8vSsnZPR73w=="],
-
-    "@courseweb/api/algoliasearch/@algolia/requester-browser-xhr": ["@algolia/requester-browser-xhr@4.23.3", "", { "dependencies": { "@algolia/requester-common": "4.23.3" } }, "sha512-jDWGIQ96BhXbmONAQsasIpTYWslyjkiGu0Quydjlowe+ciqySpiDUrJHERIRfELE5+wFc7hc1Q5hqjGoV7yghw=="],
-
-    "@courseweb/api/algoliasearch/@algolia/requester-common": ["@algolia/requester-common@4.23.3", "", {}, "sha512-xloIdr/bedtYEGcXCiF2muajyvRhwop4cMZo+K2qzNht0CMzlRkm8YsDdj5IaBhshqfgmBb3rTg4sL4/PpvLYw=="],
-
-    "@courseweb/api/algoliasearch/@algolia/requester-node-http": ["@algolia/requester-node-http@4.23.3", "", { "dependencies": { "@algolia/requester-common": "4.23.3" } }, "sha512-zgu++8Uj03IWDEJM3fuNl34s746JnZOWn1Uz5taV1dFyJhVM/kTNw9Ik7YJWiUNHJQXcaD8IXD1eCb0nq/aByA=="],
-
-    "@courseweb/api/algoliasearch/@algolia/transporter": ["@algolia/transporter@4.23.3", "", { "dependencies": { "@algolia/cache-common": "4.23.3", "@algolia/logger-common": "4.23.3", "@algolia/requester-common": "4.23.3" } }, "sha512-Wjl5gttqnf/gQKJA+dafnD0Y6Yw97yvfY8R9h0dQltX1GXTgNs1zWgvtWW0tHl1EgMdhAyw189uWiZMnL3QebQ=="],
 
     "@courseweb/build-scripts/@types/node/undici-types": ["undici-types@6.21.0", "", {}, "sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ=="],
 

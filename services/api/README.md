@@ -13,6 +13,8 @@ A comprehensive API for NTHU course management, weather information, venues, and
   - [Weather](#weather)
   - [Courses](#courses)
   - [Venues](#venues)
+  - [Search](#search)
+  - [Model Context Protocol (MCP)](#model-context-protocol-mcp)
   - [Utilities](#utilities)
   - [Issues](#issues)
   - [CCXP Integration](#ccxp-integration)
@@ -33,6 +35,8 @@ The NTHU Mods API provides access to:
 - Student services integration
 - GitHub issue management
 - Data synchronization for planner applications
+- **Model Context Protocol (MCP) server for AI chatbot integration**
+- **Full-text search API powered by Algolia**
 
 **Base URL:** `https://api.nthumods.com`
 
@@ -250,6 +254,113 @@ GET /venue
 
 ```http
 GET /venue/{venueId}/courses?semester=11410
+```
+
+### Search
+
+Full-text search API powered by Algolia for searching NTHU courses.
+
+#### Search Courses (GET)
+
+```http
+GET /search?q=machine%20learning&limit=10&filters=department:'Computer Science'
+```
+
+**Query Parameters:**
+
+- `q` (required): Search query
+- `limit` (optional): Number of results (default: 10, max: 100)
+- `filters` (optional): Algolia filters
+- `facetFilters` (optional): Comma-separated facet filters
+- `attributesToRetrieve` (optional): Comma-separated attributes to retrieve
+
+#### Search Courses (POST)
+
+```http
+POST /search
+Content-Type: application/json
+
+{
+  "query": "machine learning",
+  "limit": 10,
+  "filters": "department:'Computer Science'",
+  "facetFilters": ["language:English"],
+  "attributesToRetrieve": ["course", "name_zh", "name_en", "teacher_zh", "credits"]
+}
+```
+
+#### Search API Information
+
+```http
+GET /search/info
+```
+
+Returns API documentation and usage examples.
+
+### Model Context Protocol (MCP)
+
+MCP server enabling AI chatbots to interact with CourseWeb data using JSON-RPC 2.0.
+
+#### MCP Server Endpoint
+
+```http
+POST /mcp
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "method": "initialize",
+  "params": {},
+  "id": 1
+}
+```
+
+#### Available MCP Methods
+
+- `initialize` - Initialize MCP connection
+- `tools/list` - Get available tools
+- `resources/list` - Get available resources
+- `tools/call` - Call a specific tool
+- `resources/read` - Read a specific resource
+
+#### MCP Tools
+
+1. **search_courses** - Search for courses using full-text search
+2. **get_course_details** - Get detailed course information
+3. **get_course_syllabus** - Get course syllabus with scores and dates
+4. **get_multiple_courses** - Get information for multiple courses
+
+#### MCP Resources
+
+1. **courseweb://courses/search** - Search interface documentation
+2. **courseweb://courses/all** - Complete list of courses (limited to 1000)
+
+#### MCP Server Information
+
+```http
+GET /mcp
+```
+
+Returns server capabilities and available tools/resources.
+
+#### Example MCP Tool Call
+
+```http
+POST /mcp
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "method": "tools/call",
+  "params": {
+    "name": "search_courses",
+    "arguments": {
+      "query": "machine learning",
+      "limit": 5
+    }
+  },
+  "id": 1
+}
 ```
 
 ### Utilities
