@@ -256,9 +256,9 @@ Note: ${data.note || "N/A"}`,
                   throw new Error(`Course syllabus not found: ${courseId}`);
                 }
                 
-                const syllabusInfo = data.course_syllabus?.[0];
-                const scores = data.course_scores || [];
-                const dates = data.course_dates || [];
+                const syllabusInfo = Array.isArray(data.course_syllabus) ? data.course_syllabus[0] : null;
+                const scores = Array.isArray(data.course_scores) ? data.course_scores : [];
+                const dates = Array.isArray(data.course_dates) ? data.course_dates : [];
                 
                 return c.json({
                   jsonrpc: "2.0",
