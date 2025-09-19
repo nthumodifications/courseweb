@@ -13,6 +13,7 @@ import headlessAis from "./headless-ais";
 import planner from "./planner-replication";
 import mcpServer from "./mcp-server";
 import search from "./search";
+import bus from "./bus";
 import { D1Database } from "@cloudflare/workers-types";
 // Scheduled functions moved to @courseweb/data-sync package
 
@@ -42,7 +43,8 @@ export const app = new Hono<{ Bindings: Bindings }>()
   .route("/issue", issue)
   .route("/planner", planner)
   .route("/mcp", mcpServer)
-  .route("/search", search);
+  .route("/search", search)
+  .route("/bus", bus);
 
 // Note: Scheduled data sync functionality has been moved to @courseweb/data-sync package
 // This service now only handles API endpoints

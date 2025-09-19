@@ -136,6 +136,8 @@
     "red_line": "紅線",
     "green_line": "綠線",
     "nanda_line": "南大校車",
+    "route1_line": "經台積館",
+    "route2_line": "經教育學院",
     "departing": "即將發車",
     "departed": "已過站",
     "validity": "有效期限",

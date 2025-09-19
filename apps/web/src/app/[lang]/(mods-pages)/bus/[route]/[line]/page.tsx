@@ -2,6 +2,8 @@
 import { GreenLineIcon } from "@/components/BusIcons/GreenLineIcon";
 import { NandaLineIcon } from "@/components/BusIcons/NandaLineIcon";
 import { RedLineIcon } from "@/components/BusIcons/RedLineIcon";
+import { Route1LineIcon } from "@/components/BusIcons/Route1LineIcon";
+import { Route2LineIcon } from "@/components/BusIcons/Route2LineIcon";
 import { Button } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
 import { getTimeOnDate } from "@/helpers/bus";
@@ -19,12 +21,14 @@ import {
   endOfMinute,
   startOfMinute,
   differenceInMinutes,
+  set,
+  getDay,
 } from "date-fns";
 import { Bus, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import { useMemo } from "react";
-import { getBusesSchedules } from "../../page.actions";
+import { getAllBusData } from "@/libs/bus";
 import { useQuery } from "@tanstack/react-query";
 
 enum BusStationState {
@@ -139,6 +143,86 @@ const linesDict: {
     ],
     timings: [10, 2, 3, 1],
   },
+  route1_up: {
+    Icon: Route1LineIcon,
+    title_zh: "經台積館 往南大校區",
+    title_en: "Via TSMC Building To Nanda",
+    stations_zh: [
+      "北校門口",
+      "綜二",
+      "人社院/生科院",
+      "台積館(經寶山路)",
+      "南大校區",
+    ],
+    stations_en: [
+      "North Main Gate",
+      "General Building II",
+      "CHSS/CLS Building",
+      "TSMC Building(Baoshan Rd.)",
+      "Nanda Campus",
+    ],
+    timings: [1, 3, 2, 10],
+  },
+  route1_down: {
+    Icon: Route1LineIcon,
+    title_zh: "經台積館 往校本部",
+    title_en: "Via TSMC Building to Main Campus",
+    stations_zh: [
+      "南大校區",
+      "台積館(經寶山路)",
+      "人社院/生科院",
+      "綜二",
+      "北校門口",
+    ],
+    stations_en: [
+      "Nanda Campus",
+      "TSMC Building(Baoshan Rd.)",
+      "CHSS/CLS Building",
+      "General Building II",
+      "North Main Gate",
+    ],
+    timings: [10, 2, 3, 1],
+  },
+  route2_up: {
+    Icon: Route2LineIcon,
+    title_zh: "經教育學院 往南大校區",
+    title_en: "Via COE Building To Nanda",
+    stations_zh: [
+      "北校門口",
+      "綜二",
+      "奕園停車場",
+      "教育學院大樓/南門停車場(經寶山路)",
+      "南大校區",
+    ],
+    stations_en: [
+      "North Main Gate",
+      "General Building II",
+      "Yi Pavilion Parking Lot",
+      "COE Building/South Gate Parking Lot(Baoshan Rd.)",
+      "Nanda Campus",
+    ],
+    timings: [1, 2, 1, 10],
+  },
+  route2_down: {
+    Icon: Route2LineIcon,
+    title_zh: "經教育學院 往校本部",
+    title_en: "Via COE Building to Main Campus",
+    stations_zh: [
+      "南大校區",
+      "教育學院大樓/南門停車場(經寶山路)",
+      "奕園停車場",
+      "綜二",
+      "北校門口",
+    ],
+    stations_en: [
+      "Nanda Campus",
+      "COE Building/South Gate Parking Lot(Baoshan Rd.)",
+      "Yi Pavilion Parking Lot",
+      "General Building II",
+      "North Main Gate",
+    ],
+    timings: [10, 1, 2, 1],
+  },
 };
 
 const LineDisplayPage = () => {
@@ -147,28 +231,56 @@ const LineDisplayPage = () => {
   const time = useTime();
   const lineData = linesDict[line] as (typeof linesDict)["green_up"];
 
+  // If line is "nanda", we want to show both route1 and route2 combined
+  const isNandaCombined = line === "nanda";
+
   const { language } = useSettings();
   const dict = useDictionary();
   const returnUrl = searchParams.get("return_url") ?? `/${language}/bus`;
 
   const weektype = isWeekend(time) ? "weekend" : "weekday";
 
-  const { data: UphillBuses = [], error } = useQuery({
-    queryKey: ["buses_up", weektype],
-    queryFn: () => getBusesSchedules("all", weektype, "up"),
-  });
-
-  const { data: DownhillBuses = [], error: error2 } = useQuery({
-    queryKey: ["buses_down", weektype],
-    queryFn: () => getBusesSchedules("all", weektype, "down"),
+  const { data: busData, error } = useQuery({
+    queryKey: ["all_bus_data"],
+    queryFn: getAllBusData,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const busOfInterest = useMemo(() => {
+    if (!busData) return [];
+
     // get only busses that are still available 30 minutes ago
     const time30minAgo = subMinutes(time, 30);
+    const currentMainData =
+      weektype === "weekend" ? busData.main.weekend : busData.main.weekday;
+    const currentNandaData =
+      weektype === "weekend" ? busData.nanda.weekend : busData.nanda.weekday;
+
     const busses = [
-      ...UphillBuses.map((m) => ({ ...m, direction: "up" })),
-      ...DownhillBuses.map((m) => ({ ...m, direction: "down" })),
+      ...currentMainData.toward_TSMC_building.map((m) => ({
+        ...m,
+        direction: "up",
+      })),
+      ...currentMainData.toward_main_gate.map((m) => ({
+        ...m,
+        direction: "down",
+      })),
+      ...currentNandaData.toward_south_campus
+        .filter(
+          (bus) =>
+            !(
+              bus.description.includes("五") &&
+              getDay(getTimeOnDate(time, bus.time)) == 5
+            ),
+        )
+        .map((m) => ({
+          ...m,
+          direction: "up",
+        })),
+      ...currentNandaData.toward_main_campus.map((m) => ({
+        ...m,
+        direction: "down",
+      })),
     ].filter((bus) => getTimeOnDate(time, bus.time) > time30minAgo);
     // then according to the line, filter out the busses that are not on the line
     if (line == "green")
@@ -252,9 +364,15 @@ const LineDisplayPage = () => {
           return { ...bus, stationIndex, stationDepTime };
         })
         .filter((bus) => bus.stationIndex != -1);
-    if (line == "nanda_up")
+    if (line == "route1_up")
       return busses
-        .filter((bus) => bus.route == "南大區間車" && bus.direction == "up")
+        .filter(
+          (bus) =>
+            bus.route == "南大區間車" &&
+            bus.direction == "up" &&
+            "type" in bus &&
+            bus.type == "route1",
+        )
         .map((bus) => {
           const startIndex = 0;
           const startTime = getTimeOnDate(time, bus.time);
@@ -277,9 +395,15 @@ const LineDisplayPage = () => {
           return { ...bus, stationIndex, stationDepTime };
         })
         .filter((bus) => bus.stationIndex != -1);
-    if (line == "nanda_down")
+    if (line == "route1_down")
       return busses
-        .filter((bus) => bus.route == "南大區間車" && bus.direction == "down")
+        .filter(
+          (bus) =>
+            bus.route == "南大區間車" &&
+            bus.direction == "down" &&
+            "type" in bus &&
+            bus.type == "route1",
+        )
         .map((bus) => {
           const startIndex = 0;
           const startTime = getTimeOnDate(time, bus.time);
@@ -296,6 +420,98 @@ const LineDisplayPage = () => {
           const stationDepTime = addMinutes(
             startTime,
             lineData.timings
+              .slice(0, stationIndex - startIndex)
+              .reduce((a, b) => a + b, 0),
+          );
+          return { ...bus, stationIndex, stationDepTime };
+        })
+        .filter((bus) => bus.stationIndex != -1);
+    if (line == "route2_up")
+      return busses
+        .filter(
+          (bus) =>
+            bus.route == "南大區間車" &&
+            bus.direction == "up" &&
+            "type" in bus &&
+            bus.type == "route2",
+        )
+        .map((bus) => {
+          const startIndex = 0;
+          const startTime = getTimeOnDate(time, bus.time);
+          const stationIndex = lineData.stations_zh.findIndex(
+            (station, i) =>
+              i >= startIndex &&
+              addMinutes(
+                startTime,
+                lineData.timings
+                  .slice(0, i - startIndex)
+                  .reduce((a, b) => a + b, 0),
+              ) >= startOfMinute(time),
+          );
+          const stationDepTime = addMinutes(
+            startTime,
+            lineData.timings
+              .slice(0, stationIndex - startIndex)
+              .reduce((a, b) => a + b, 0),
+          );
+          return { ...bus, stationIndex, stationDepTime };
+        })
+        .filter((bus) => bus.stationIndex != -1);
+    if (line == "route2_down")
+      return busses
+        .filter(
+          (bus) =>
+            bus.route == "南大區間車" &&
+            bus.direction == "down" &&
+            "type" in bus &&
+            bus.type == "route2",
+        )
+        .map((bus) => {
+          const startIndex = 0;
+          const startTime = getTimeOnDate(time, bus.time);
+          const stationIndex = lineData.stations_zh.findIndex(
+            (station, i) =>
+              i >= startIndex &&
+              addMinutes(
+                startTime,
+                lineData.timings
+                  .slice(0, i - startIndex)
+                  .reduce((a, b) => a + b, 0),
+              ) >= startOfMinute(time),
+          );
+          const stationDepTime = addMinutes(
+            startTime,
+            lineData.timings
+              .slice(0, stationIndex - startIndex)
+              .reduce((a, b) => a + b, 0),
+          );
+          return { ...bus, stationIndex, stationDepTime };
+        })
+        .filter((bus) => bus.stationIndex != -1);
+    if (line == "nanda")
+      return busses
+        .filter(
+          (bus) =>
+            bus.route == "南大區間車" &&
+            "type" in bus &&
+            (bus.type == "route1" || bus.type == "route2"),
+        )
+        .map((bus) => {
+          const startIndex = bus.direction == "up" ? 0 : 0;
+          const startTime = getTimeOnDate(time, bus.time);
+          // Use route1 timing for both routes as they follow similar paths
+          const timings = linesDict.route1_up.timings;
+          const stationIndex = linesDict.route1_up.stations_zh.findIndex(
+            (station, i) =>
+              i >= startIndex &&
+              addMinutes(
+                startTime,
+                timings.slice(0, i - startIndex).reduce((a, b) => a + b, 0),
+              ) >= startOfMinute(time),
+          );
+          const stationDepTime = addMinutes(
+            startTime,
+            timings
               .slice(0, stationIndex - startIndex)
               .reduce((a, b) => a + b, 0),
           );
@@ -303,7 +519,7 @@ const LineDisplayPage = () => {
         })
         .filter((bus) => bus.stationIndex != -1);
     return [];
-  }, [time, UphillBuses, DownhillBuses, line, lineData]);
+  }, [time, busData, line, lineData, weektype]);
 
   const displayText = useMemo<
     {
@@ -385,7 +601,7 @@ const LineDisplayPage = () => {
     );
   }, [time, busOfInterest]);
 
-  if (!(line in linesDict)) return <div>Invalid Line</div>;
+  if (!(line in linesDict) && !isNandaCombined) return <div>Invalid Line</div>;
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-row items-center px-2 gap-4">
@@ -395,60 +611,132 @@ const LineDisplayPage = () => {
           </Link>
         </Button>
         <div className="flex flex-row gap-4 items-center">
-          <lineData.Icon />
-          <h3 className="text-slate-800 dark:text-neutral-200 font-bold">
-            {language == "zh" ? lineData.title_zh : lineData.title_en}
-          </h3>
+          {isNandaCombined ? (
+            <>
+              <Route1LineIcon />
+              <Route2LineIcon />
+              <h3 className="text-slate-800 dark:text-neutral-200 font-bold">
+                {language == "zh"
+                  ? "南大校車 經台積館 & 經教育學院"
+                  : "Nanda Via TSMC & COE"}
+              </h3>
+            </>
+          ) : (
+            <>
+              <lineData.Icon />
+              <h3 className="text-slate-800 dark:text-neutral-200 font-bold">
+                {language == "zh" ? lineData.title_zh : lineData.title_en}
+              </h3>
+            </>
+          )}
         </div>
       </div>
       <div className="w-full items-start inline-flex px-4">
         <div className="w-full p-2 flex-col justify-start inline-flex">
-          {displayText.map((m, i) => (
-            <div key={i} className={cn("items-stretch gap-4 inline-flex")}>
-              <div className="h-auto relative w-5">
-                <div className="absolute top-0 left-[calc(50%-2px)] w-1 h-1/2 bg-slate-200 z-10" />
-                {m.state == BusStationState.ARRIVING && (
-                  <div className="absolute top-[calc(-10px)] w-5 h-5 bg-nthu-500 rounded-full z-20 grid place-items-center">
-                    <Bus className="w-3.5 h-3.5 text-white" />
+          {isNandaCombined
+            ? displayText.map((m, i) => (
+                <div key={i} className={cn("items-stretch gap-4 inline-flex")}>
+                  <div className="h-auto relative w-5">
+                    <div className="absolute top-0 left-[calc(50%-2px)] w-1 h-1/2 bg-slate-200 z-10" />
+                    {m.state == BusStationState.ARRIVING && (
+                      <div className="absolute top-[calc(-10px)] w-5 h-5 bg-nthu-500 rounded-full z-20 grid place-items-center">
+                        <Bus className="w-3.5 h-3.5 text-white" />
+                      </div>
+                    )}
+                    {m.state == BusStationState.AT_STATION && (
+                      <div className="absolute top-[calc(50%-10px)] w-5 h-5 bg-nthu-500 rounded-full z-20 grid place-items-center">
+                        <Bus className="w-3.5 h-3.5 text-white" />
+                      </div>
+                    )}
+                    {m.state == BusStationState.LEFT && (
+                      <div className="absolute top-[calc(100%+10px)] w-5 h-5 bg-nthu-500 rounded-full z-20 grid place-items-center">
+                        <Bus className="w-3.5 h-3.5 text-white" />
+                      </div>
+                    )}
+                    <div className="absolute left-[calc(50%-6px)] top-[calc(50%-6px)] w-3 h-3 bg-slate-200 rounded-full z-10" />
+                    {i != displayText.length - 1 && (
+                      <div className="absolute top-1/2 left-[calc(50%-2px)] w-1 h-1/2 bg-slate-200 z-10" />
+                    )}
                   </div>
-                )}
-                {m.state == BusStationState.AT_STATION && (
-                  <div className="absolute top-[calc(50%-10px)] w-5 h-5 bg-nthu-500 rounded-full z-20 grid place-items-center">
-                    <Bus className="w-3.5 h-3.5 text-white" />
+                  <div
+                    className={cn(
+                      "flex-1 py-4 justify-start items-center gap-2 flex border-b border-border",
+                      m.state > BusStationState.AT_STATION ? "opacity-30" : "",
+                    )}
+                  >
+                    <div className="text-slate-800 dark:text-slate-200 text-base font-bold">
+                      {m.station}
+                    </div>
+                    <div className="flex-1 text-right flex items-center justify-end gap-2">
+                      {m.bus && "type" in m.bus && (
+                        <div className="text-slate-800 dark:text-neutral-200">
+                          {m.bus.type === "route1" ? (
+                            <Route1LineIcon width={15} height={15} />
+                          ) : m.bus.type === "route2" ? (
+                            <Route2LineIcon width={15} height={15} />
+                          ) : null}
+                        </div>
+                      )}
+                      <div
+                        className={cn(
+                          "text-base font-bold",
+                          m.state == BusStationState.AT_STATION
+                            ? "text-nthu-500"
+                            : "text-slate-600 dark:text-slate-400",
+                        )}
+                      >
+                        {m.time}
+                      </div>
+                    </div>
                   </div>
-                )}
-                {m.state == BusStationState.LEFT && (
-                  <div className="absolute top-[calc(100%+10px)] w-5 h-5 bg-nthu-500 rounded-full z-20 grid place-items-center">
-                    <Bus className="w-3.5 h-3.5 text-white" />
-                  </div>
-                )}
-                <div className="absolute left-[calc(50%-6px)] top-[calc(50%-6px)] w-3 h-3 bg-slate-200 rounded-full z-10" />
-                {i != displayText.length - 1 && (
-                  <div className="absolute top-1/2 left-[calc(50%-2px)] w-1 h-1/2 bg-slate-200 z-10" />
-                )}
-              </div>
-              <div
-                className={cn(
-                  "flex-1 py-4 justify-start items-center gap-2 flex border-b border-border",
-                  m.state > BusStationState.AT_STATION ? "opacity-30" : "",
-                )}
-              >
-                <div className="text-slate-800 dark:text-slate-200 text-base font-bold">
-                  {m.station}
                 </div>
-                <div
-                  className={cn(
-                    "flex-1 text-right text-base font-bold",
-                    m.state == BusStationState.AT_STATION
-                      ? "text-nthu-500"
-                      : "text-slate-600 dark:text-slate-400",
-                  )}
-                >
-                  {m.time}
+              ))
+            : displayText.map((m, i) => (
+                <div key={i} className={cn("items-stretch gap-4 inline-flex")}>
+                  <div className="h-auto relative w-5">
+                    <div className="absolute top-0 left-[calc(50%-2px)] w-1 h-1/2 bg-slate-200 z-10" />
+                    {m.state == BusStationState.ARRIVING && (
+                      <div className="absolute top-[calc(-10px)] w-5 h-5 bg-nthu-500 rounded-full z-20 grid place-items-center">
+                        <Bus className="w-3.5 h-3.5 text-white" />
+                      </div>
+                    )}
+                    {m.state == BusStationState.AT_STATION && (
+                      <div className="absolute top-[calc(50%-10px)] w-5 h-5 bg-nthu-500 rounded-full z-20 grid place-items-center">
+                        <Bus className="w-3.5 h-3.5 text-white" />
+                      </div>
+                    )}
+                    {m.state == BusStationState.LEFT && (
+                      <div className="absolute top-[calc(100%+10px)] w-5 h-5 bg-nthu-500 rounded-full z-20 grid place-items-center">
+                        <Bus className="w-3.5 h-3.5 text-white" />
+                      </div>
+                    )}
+                    <div className="absolute left-[calc(50%-6px)] top-[calc(50%-6px)] w-3 h-3 bg-slate-200 rounded-full z-10" />
+                    {i != displayText.length - 1 && (
+                      <div className="absolute top-1/2 left-[calc(50%-2px)] w-1 h-1/2 bg-slate-200 z-10" />
+                    )}
+                  </div>
+                  <div
+                    className={cn(
+                      "flex-1 py-4 justify-start items-center gap-2 flex border-b border-border",
+                      m.state > BusStationState.AT_STATION ? "opacity-30" : "",
+                    )}
+                  >
+                    <div className="text-slate-800 dark:text-slate-200 text-base font-bold">
+                      {m.station}
+                    </div>
+                    <div
+                      className={cn(
+                        "flex-1 text-right text-base font-bold",
+                        m.state == BusStationState.AT_STATION
+                          ? "text-nthu-500"
+                          : "text-slate-600 dark:text-slate-400",
+                      )}
+                    >
+                      {m.time}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          ))}
+              ))}
         </div>
       </div>
     </div>
