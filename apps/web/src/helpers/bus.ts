@@ -1,6 +1,6 @@
 import { set } from "date-fns";
-import { BusDepartureDetails } from "@/app/[lang]/(mods-pages)/bus/[route]/page.actions";
 import { Language } from "@/types/settings";
+import { BusDepartureDetails } from "@/libs/bus";
 
 export const getTimeOnDate = (date: Date, time: string) => {
   const [hour, minute] = time.split(":").map((n) => parseInt(n));
