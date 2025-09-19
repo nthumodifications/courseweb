@@ -6,6 +6,9 @@ export const metadata = {
   title: "校園公車 Bus Schedule",
 };
 
+// 南大公車: https://affairs.site.nthu.edu.tw/p/412-1165-20979.php?Lang=zh-tw
+// 校本部公車: https://affairs.site.nthu.edu.tw/p/412-1165-20978.php?Lang=zh-tw
+
 export default function ClientLayout({ children }: PropsWithChildren<{}>) {
   return (
     <Fade>
@@ -14,12 +17,25 @@ export default function ClientLayout({ children }: PropsWithChildren<{}>) {
         <div className="text-xs text-center text-muted-foreground pt-10">
           資料來自
           <Link
-            href="https://github.com/NTHU-SA/NTHU-Data-API"
-            className="inline underline"
+            href="https://affairs.site.nthu.edu.tw/p/412-1165-20979.php?Lang=zh-tw"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-primary"
           >
-            學生會 NTHU Data API
+            {" "}
+            南大公車{" "}
           </Link>
-          . 資料問題請直接向學生會反映.
+          及
+          <Link
+            href="https://affairs.site.nthu.edu.tw/p/412-1165-20978.php?Lang=zh-tw"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-primary"
+          >
+            {" "}
+            校本部公車{" "}
+          </Link>
+          ，如有錯誤請在回饋回報。
         </div>
       </>
     </Fade>

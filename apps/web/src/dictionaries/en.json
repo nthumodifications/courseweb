@@ -136,6 +136,8 @@
     "red_line": "Red Line",
     "green_line": "Green Line",
     "nanda_line": "Nanda Line",
+    "route1_line": "Via TSMC Building",
+    "route2_line": "Via COE Building",
     "departing": "Departing",
     "departed": "Departed",
     "validity": "Validity",

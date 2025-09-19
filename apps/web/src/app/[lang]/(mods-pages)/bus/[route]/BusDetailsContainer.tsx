@@ -1,9 +1,6 @@
 "use client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@courseweb/ui";
-import {
-  BusDepartureDetails,
-  LineInfo,
-} from "@/app/[lang]/(mods-pages)/bus/[route]/page.actions";
+import { BusDepartureDetails, LineInfo } from "@/libs/bus";
 import {
   Table,
   TableBody,
@@ -17,6 +14,8 @@ import { Button } from "@courseweb/ui";
 import { ChevronLeft } from "lucide-react";
 import { GreenLineIcon } from "@/components/BusIcons/GreenLineIcon";
 import { RedLineIcon } from "@/components/BusIcons/RedLineIcon";
+import { Route1LineIcon } from "@/components/BusIcons/Route1LineIcon";
+import { Route2LineIcon } from "@/components/BusIcons/Route2LineIcon";
 import { exportNotes, getTimeOnDate } from "@/helpers/bus";
 import useDictionary from "@/dictionaries/useDictionary";
 import { Language } from "@/types/settings";
@@ -111,8 +110,43 @@ const BusDetailsContainer = ({
                             <RedLineIcon width={15} height={15} />
                           )}
                         </div>
+                        <div className="flex flex-wrap gap-2 items-center">
+                          <div className="text-slate-800 dark:text-neutral-200">
+                            {bus.up.dep_stop}
+                          </div>
+                          {bus.up.description.includes("巴士") && (
+                            <div className="w-max text-xs text-black bg-orange-200 px-1 rounded">
+                              大巴
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    {bus.up.route == "南大區間車" && (
+                      <div className="flex flex-row gap-2 items-center flex-1">
                         <div className="text-slate-800 dark:text-neutral-200">
-                          {bus.up.dep_stop}
+                          {"type" in bus.up && bus.up.type == "route1" ? (
+                            <Route1LineIcon width={15} height={15} />
+                          ) : "type" in bus.up && bus.up.type == "route2" ? (
+                            <Route2LineIcon width={15} height={15} />
+                          ) : null}
+                        </div>
+                        <div className="flex flex-wrap gap-2 items-center">
+                          <div className="text-slate-800 dark:text-neutral-200">
+                            {bus.up.type == "route1"
+                              ? dict.bus.route1_line
+                              : dict.bus.route2_line}
+                          </div>
+                          {bus.up.description.includes("83") && (
+                            <div className="text-xs text-white bg-blue-500 px-1 rounded">
+                              83
+                            </div>
+                          )}
+                          {bus.up.description.includes("五") && (
+                            <div className="text-xs text-white bg-violet-600 px-1 rounded">
+                              週五停駛
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}
@@ -141,8 +175,39 @@ const BusDetailsContainer = ({
                             <RedLineIcon width={15} height={15} />
                           )}
                         </div>
+                        <div className="flex flex-wrap gap-2 items-center">
+                          <div className="text-slate-800 dark:text-neutral-200">
+                            {bus.down.dep_stop}
+                          </div>
+                          {bus.down.description.includes("巴士") && (
+                            <div className="text-xs text-black bg-orange-200 px-1 rounded">
+                              大巴
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    {bus.down.route == "南大區間車" && (
+                      <div className="flex flex-row gap-2 items-center flex-1">
                         <div className="text-slate-800 dark:text-neutral-200">
-                          {bus.down.dep_stop}
+                          {"type" in bus.down && bus.down.type == "route1" ? (
+                            <Route1LineIcon width={15} height={15} />
+                          ) : "type" in bus.down &&
+                            bus.down.type == "route2" ? (
+                            <Route2LineIcon width={15} height={15} />
+                          ) : null}
+                        </div>
+                        <div className="flex flex-wrap gap-2 items-center">
+                          <div className="text-slate-800 dark:text-neutral-200">
+                            {bus.down.type == "route1"
+                              ? dict.bus.route1_line
+                              : dict.bus.route2_line}
+                          </div>
+                          {bus.down.description.includes("83") && (
+                            <div className="text-xs text-white bg-blue-500 px-1 rounded">
+                              83
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}
@@ -268,7 +333,7 @@ const BusDetailsContainer = ({
   }, [weektab, down.weekday, down.weekend, up.weekday, up.weekend]);
 
   return (
-    <div className="flex flex-col px-4 h-full">
+    <div className="flex flex-col px-4 h-full max-w-xl">
       <Tabs
         defaultValue="weekday"
         value={weektab}
