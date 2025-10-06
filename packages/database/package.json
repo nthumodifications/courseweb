@@ -22,7 +22,7 @@
   "dependencies": {},
   "devDependencies": {
     "@courseweb/eslint-config": "*",
-    "supabase": "^1.148.6"
+    "supabase": "^2.48.3"
   },
   "keywords": [
     "database",

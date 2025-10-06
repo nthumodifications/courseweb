@@ -40,7 +40,7 @@
   },
   "devDependencies": {
     "@courseweb/eslint-config": "*",
-    "typescript": "^5.4.4"
+    "typescript": "^5.9.3"
   },
   "eslintConfig": {
     "extends": [
