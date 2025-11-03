@@ -26,15 +26,15 @@
   "author": "CourseWeb Team",
   "license": "MIT",
   "dependencies": {
-    "commander": "^11.0.0"
+    "commander": "^14.0.2"
   },
   "devDependencies": {
     "@courseweb/eslint-config": "*",
-    "@types/node": "^20.0.0",
-    "eslint": "^8.57.0",
+    "@types/node": "^24.9.2",
+    "eslint": "^9.39.0",
     "tsup": "^8.0.0",
     "tsx": "^4.0.0",
-    "typescript": "^5.3.0"
+    "typescript": "^5.9.3"
   },
   "files": [
     "dist"
