@@ -30,13 +30,13 @@ const MCP_TOOLS = [
   {
     name: "search_courses",
     description:
-      "Search for NTHU courses using full-text search. Returns course information including course code, name, instructor, and basic details.",
+      "Search for NTHU courses using full-text search. Returns structured course information. IMPORTANT: Search by course name, topic, or instructor name - NOT by course ID/code (e.g., search 'machine learning' not 'CS535100'). Each result includes raw_id which can be used with get_course_details or get_course_syllabus for more information.",
     inputSchema: {
       type: "object",
       properties: {
         query: {
           type: "string",
-          description: "Search query for courses (course name, instructor, code, etc.)",
+          description: "Search query for courses. Use course name, topic, or instructor name (e.g., 'machine learning', 'artificial intelligence', 'John Doe'). Avoid using course codes/IDs.",
         },
         limit: {
           type: "number",
@@ -51,13 +51,13 @@ const MCP_TOOLS = [
   {
     name: "get_course_details",
     description:
-      "Get detailed information about a specific course by its ID/code.",
+      "Get detailed information about a specific course by its raw_id (obtained from search_courses results). Returns comprehensive course information including syllabus, schedule, and requirements.",
     inputSchema: {
       type: "object",
       properties: {
         courseId: {
           type: "string",
-          description: "Course ID or raw_id to get details for",
+          description: "Course raw_id (from search results, e.g., '11410CS 535100')",
         },
       },
       required: ["courseId"],
@@ -66,13 +66,13 @@ const MCP_TOOLS = [
   {
     name: "get_course_syllabus",
     description:
-      "Get detailed syllabus information for a course including scores and important dates.",
+      "Get detailed syllabus information for a course including objectives, description, prerequisites, grading breakdown, and important dates. Use the raw_id from search_courses results.",
     inputSchema: {
       type: "object",
       properties: {
         courseId: {
           type: "string",
-          description: "Course ID to get syllabus for",
+          description: "Course raw_id (from search results, e.g., '11410CS 535100')",
         },
       },
       required: ["courseId"],
@@ -81,7 +81,7 @@ const MCP_TOOLS = [
   {
     name: "get_multiple_courses",
     description:
-      "Get information for multiple courses by their IDs.",
+      "Get information for multiple courses by their raw_ids (obtained from search results).",
     inputSchema: {
       type: "object",
       properties: {
@@ -90,10 +90,52 @@ const MCP_TOOLS = [
           items: {
             type: "string",
           },
-          description: "Array of course IDs to retrieve",
+          description: "Array of course raw_ids to retrieve (e.g., ['11410CS 535100', '11410EE 200201'])",
         },
       },
       required: ["courseIds"],
+    },
+  },
+  {
+    name: "bulk_search_courses",
+    description:
+      "Search for courses using multiple query strings and optional filters. Useful for comparing different topics or finding courses across multiple criteria. Returns structured course information with raw_id for each result.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        queries: {
+          type: "array",
+          items: {
+            type: "string",
+          },
+          description: "Array of search queries (e.g., ['machine learning', 'data science', 'artificial intelligence'])",
+        },
+        limit: {
+          type: "number",
+          description: "Maximum number of results to return per query (default: 5, max: 20)",
+          minimum: 1,
+          maximum: 20,
+        },
+        filters: {
+          type: "object",
+          description: "Optional filters to apply to all queries",
+          properties: {
+            department: {
+              type: "string",
+              description: "Filter by department (e.g., 'CS', 'EE', 'MATH')",
+            },
+            language: {
+              type: "string",
+              description: "Filter by language (e.g., 'zh', 'en')",
+            },
+            semester: {
+              type: "string",
+              description: "Filter by semester (e.g., '11410', '11420')",
+            },
+          },
+        },
+      },
+      required: ["queries"],
     },
   },
 ];
@@ -180,20 +222,42 @@ const app = new Hono()
                     hitsPerPage: Math.min(limit, 50),
                   });
                   
+                  // Format results as structured JSON similar to CourseListItem
+                  const courses = hits.map((hit: any) => ({
+                    raw_id: hit.raw_id,
+                    course: hit.course,
+                    department: hit.department,
+                    class: hit.class,
+                    name_zh: hit.name_zh,
+                    name_en: hit.name_en,
+                    teacher_zh: hit.teacher_zh || [],
+                    teacher_en: hit.teacher_en || [],
+                    credits: hit.credits,
+                    times: hit.times || [],
+                    venues: hit.venues || [],
+                    language: hit.language,
+                    semester: hit.semester,
+                    brief: hit.brief,
+                    restrictions: hit.restrictions,
+                    note: hit.note,
+                    prerequisites: hit.prerequisites,
+                    capacity: hit.capacity,
+                    cross_discipline: hit.cross_discipline || [],
+                    ge_type: hit.ge_type,
+                  }));
+                  
                   return c.json({
                     jsonrpc: "2.0",
                     result: {
                       content: [
                         {
                           type: "text",
-                          text: `Found ${hits.length} courses for query: "${query}"\n\n${hits
-                            .map(
-                              (hit: any) =>
-                                `Course: ${hit.course} - ${hit.name_zh || hit.name_en}\nInstructor: ${
-                                  hit.teacher_zh?.join(", ") || hit.teacher_en?.join(", ") || "N/A"
-                                }\nCredits: ${hit.credits || "N/A"}\nDepartment: ${hit.department || "N/A"}`
-                            )
-                            .join("\n\n")}`,
+                          text: JSON.stringify({
+                            query,
+                            total: hits.length,
+                            courses,
+                            note: "Use raw_id with get_course_details or get_course_syllabus for more information",
+                          }, null, 2),
                         },
                       ],
                       isError: false,
@@ -223,17 +287,32 @@ const app = new Hono()
                     content: [
                       {
                         type: "text",
-                        text: `Course Details for ${courseId}:
-Course Name: ${data.name_zh || data.name_en}
-Course Code: ${data.course}
-Instructor: ${data.teacher_zh?.join(", ") || data.teacher_en?.join(", ") || "N/A"}
-Credits: ${data.credits}
-Department: ${data.department}
-Class Time: ${data.times?.join(", ") || "N/A"}
-Venue: ${data.venues?.join(", ") || "N/A"}
-Language: ${data.language}
-Enrollment Limit: ${data.capacity}
-Note: ${data.note || "N/A"}`,
+                        text: JSON.stringify({
+                          raw_id: data.raw_id,
+                          course: data.course,
+                          department: data.department,
+                          class: data.class,
+                          name_zh: data.name_zh,
+                          name_en: data.name_en,
+                          teacher_zh: data.teacher_zh || [],
+                          teacher_en: data.teacher_en || [],
+                          credits: data.credits,
+                          times: data.times || [],
+                          venues: data.venues || [],
+                          language: data.language,
+                          semester: data.semester,
+                          capacity: data.capacity,
+                          note: data.note,
+                          restrictions: data.restrictions,
+                          prerequisites: data.prerequisites,
+                          cross_discipline: data.cross_discipline || [],
+                          ge_type: data.ge_type,
+                          compulsory_for: data.compulsory_for || [],
+                          elective_for: data.elective_for || [],
+                          first_specialization: data.first_specialization || [],
+                          second_specialization: data.second_specialization || [],
+                          reserve: data.reserve,
+                        }, null, 2),
                       },
                     ],
                     isError: false,
@@ -266,17 +345,36 @@ Note: ${data.note || "N/A"}`,
                     content: [
                       {
                         type: "text",
-                        text: `Syllabus for ${data.name_zh || data.name_en} (${courseId}):
-
-Course Objectives: ${syllabusInfo?.objectives || "N/A"}
-Course Description: ${syllabusInfo?.description || "N/A"}
-Prerequisites: ${syllabusInfo?.requirements || "N/A"}
-
-${scores.length > 0 ? `Grading:
-${scores.map((s: any) => `${s.type}: ${s.percentage}%`).join("\n")}` : ""}
-
-${dates.length > 0 ? `Important Dates:
-${dates.map((d: any) => `${d.title}: ${d.date}`).join("\n")}` : ""}`,
+                        text: JSON.stringify({
+                          raw_id: data.raw_id,
+                          course: data.course,
+                          name_zh: data.name_zh,
+                          name_en: data.name_en,
+                          teacher_zh: data.teacher_zh || [],
+                          teacher_en: data.teacher_en || [],
+                          syllabus: {
+                            brief: syllabusInfo?.brief,
+                            objectives: syllabusInfo?.objectives,
+                            description: syllabusInfo?.content,
+                            requirements: syllabusInfo?.requirements,
+                            prerequisites: data.prerequisites,
+                            note: data.note,
+                            restrictions: data.restrictions,
+                          },
+                          grading: scores.map((s: any) => ({
+                            type: s.type,
+                            percentage: s.percentage,
+                          })),
+                          important_dates: dates.map((d: any) => ({
+                            title: d.title,
+                            date: d.date,
+                          })),
+                          scores: data.course_scores ? {
+                            type: data.course_scores.type,
+                            average: data.course_scores.average,
+                            std_dev: data.course_scores.std_dev,
+                          } : null,
+                        }, null, 2),
                       },
                     ],
                     isError: false,
@@ -302,24 +400,107 @@ ${dates.map((d: any) => `${d.title}: ${d.date}`).join("\n")}` : ""}`,
                     content: [
                       {
                         type: "text",
-                        text: `Retrieved ${data.length} courses:
-
-${data
-  .map(
-    (course: any) =>
-      `${course.raw_id}: ${course.name_zh || course.name_en}
-Instructor: ${course.teacher_zh?.join(", ") || course.teacher_en?.join(", ") || "N/A"}
-Credits: ${course.credits}
-Time: ${course.times?.join(", ") || "N/A"}
-Venue: ${course.venues?.join(", ") || "N/A"}`
-  )
-  .join("\n\n")}`,
+                        text: JSON.stringify({
+                          total: data.length,
+                          courses: data.map((course: any) => ({
+                            raw_id: course.raw_id,
+                            course: course.course,
+                            department: course.department,
+                            class: course.class,
+                            name_zh: course.name_zh,
+                            name_en: course.name_en,
+                            teacher_zh: course.teacher_zh || [],
+                            teacher_en: course.teacher_en || [],
+                            credits: course.credits,
+                            times: course.times || [],
+                            venues: course.venues || [],
+                            language: course.language,
+                            semester: course.semester,
+                            capacity: course.capacity,
+                            note: course.note,
+                            restrictions: course.restrictions,
+                          })),
+                        }, null, 2),
                       },
                     ],
                     isError: false,
                   },
                   id,
                 });
+              }
+
+              case "bulk_search_courses": {
+                const { queries, limit = 5, filters = {} } = args;
+                const index = algolia(c);
+                
+                try {
+                  // Build Algolia filters if provided
+                  const algoliaFilters: string[] = [];
+                  if (filters.department) {
+                    algoliaFilters.push(`department:"${filters.department}"`);
+                  }
+                  if (filters.language) {
+                    algoliaFilters.push(`language:"${filters.language}"`);
+                  }
+                  if (filters.semester) {
+                    algoliaFilters.push(`semester:"${filters.semester}"`);
+                  }
+                  
+                  // Perform searches for each query
+                  const searchPromises = queries.map((query: string) =>
+                    index.search(query, {
+                      hitsPerPage: Math.min(limit, 20),
+                      filters: algoliaFilters.join(" AND ") || undefined,
+                    })
+                  );
+                  
+                  const results = await Promise.all(searchPromises);
+                  
+                  // Format results
+                  const formattedResults = results.map((result, idx) => ({
+                    query: queries[idx],
+                    total: result.hits.length,
+                    courses: result.hits.map((hit: any) => ({
+                      raw_id: hit.raw_id,
+                      course: hit.course,
+                      department: hit.department,
+                      class: hit.class,
+                      name_zh: hit.name_zh,
+                      name_en: hit.name_en,
+                      teacher_zh: hit.teacher_zh || [],
+                      teacher_en: hit.teacher_en || [],
+                      credits: hit.credits,
+                      times: hit.times || [],
+                      venues: hit.venues || [],
+                      language: hit.language,
+                      semester: hit.semester,
+                      brief: hit.brief,
+                      restrictions: hit.restrictions,
+                      note: hit.note,
+                      capacity: hit.capacity,
+                    })),
+                  }));
+                  
+                  return c.json({
+                    jsonrpc: "2.0",
+                    result: {
+                      content: [
+                        {
+                          type: "text",
+                          text: JSON.stringify({
+                            filters_applied: filters,
+                            results: formattedResults,
+                            note: "Use raw_id with get_course_details or get_course_syllabus for more information",
+                          }, null, 2),
+                        },
+                      ],
+                      isError: false,
+                    },
+                    id,
+                  });
+                } catch (error) {
+                  throw new Error(`Bulk search failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                }
               }
 
               default:
