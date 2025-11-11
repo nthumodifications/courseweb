@@ -1,10 +1,12 @@
+import { describe, it, expect } from "bun:test";
+
 /**
- * Test updated MCP server functionality
- * Validates that the new structured JSON responses work correctly
+ * Test MCP server functionality
+ * Validates that the structured JSON responses and tools work correctly
  */
 
-// Mock MCP tools for the updated server
-const UPDATED_MCP_TOOLS = [
+// Mock MCP tools structure
+const MCP_TOOLS = [
   {
     name: "search_courses",
     description: "Search for NTHU courses using full-text search. Returns structured course information. IMPORTANT: Search by course name, topic, or instructor name - NOT by course ID/code (e.g., search 'machine learning' not 'CS535100'). Each result includes raw_id which can be used with get_course_details or get_course_syllabus for more information.",
@@ -114,7 +116,7 @@ const UPDATED_MCP_TOOLS = [
 ];
 
 // Mock search results with structured data
-function mockSearchResults(query, limit) {
+function mockSearchResults(query: string, limit: number) {
   return {
     query,
     total: 2,
@@ -168,7 +170,7 @@ function mockSearchResults(query, limit) {
   };
 }
 
-function mockBulkSearchResults(queries, filters, limit) {
+function mockBulkSearchResults(queries: string[], filters: any, limit: number) {
   return {
     filters_applied: filters,
     results: queries.map(query => ({
@@ -200,128 +202,89 @@ function mockBulkSearchResults(queries, filters, limit) {
   };
 }
 
-// Test runner
-function runTests() {
-  console.log("🧪 Running Updated MCP Server Tests\n");
-  
-  let passed = 0;
-  let total = 0;
+describe("MCP Server Tools", () => {
+  it("should have all 5 tools defined", () => {
+    expect(MCP_TOOLS.length).toBe(5);
+  });
 
-  // Test 1: Verify all tools are defined
-  console.log("📋 Test 1: Verify all 5 tools are defined");
-  total++;
-  if (UPDATED_MCP_TOOLS.length === 5) {
-    console.log("✅ All 5 tools defined");
-    passed++;
-  } else {
-    console.log(`❌ Expected 5 tools, got ${UPDATED_MCP_TOOLS.length}`);
-  }
+  it("should have bulk_search_courses tool", () => {
+    const bulkSearchTool = MCP_TOOLS.find(t => t.name === "bulk_search_courses");
+    expect(bulkSearchTool).toBeDefined();
+    expect(bulkSearchTool?.name).toBe("bulk_search_courses");
+  });
 
-  // Test 2: Verify bulk_search_courses exists
-  console.log("\n📋 Test 2: Verify bulk_search_courses tool exists");
-  total++;
-  const bulkSearchTool = UPDATED_MCP_TOOLS.find(t => t.name === "bulk_search_courses");
-  if (bulkSearchTool) {
-    console.log("✅ bulk_search_courses tool found");
-    passed++;
-  } else {
-    console.log("❌ bulk_search_courses tool not found");
-  }
+  it("should have clear usage instructions in search_courses", () => {
+    const searchTool = MCP_TOOLS.find(t => t.name === "search_courses");
+    expect(searchTool).toBeDefined();
+    expect(searchTool?.description).toContain("IMPORTANT");
+    expect(searchTool?.description).toContain("NOT by course ID");
+  });
 
-  // Test 3: Verify search_courses has improved description
-  console.log("\n📋 Test 3: Verify search_courses has usage instructions");
-  total++;
-  const searchTool = UPDATED_MCP_TOOLS.find(t => t.name === "search_courses");
-  if (searchTool && searchTool.description.includes("IMPORTANT") && searchTool.description.includes("NOT by course ID")) {
-    console.log("✅ search_courses has clear usage instructions");
-    passed++;
-  } else {
-    console.log("❌ search_courses missing usage instructions");
-  }
+  it("should have all tools mention raw_id in descriptions", () => {
+    const toolsWithRawId = MCP_TOOLS.filter(tool => 
+      tool.description.toLowerCase().includes("raw_id") || 
+      tool.name === "search_courses" || 
+      tool.name === "bulk_search_courses"
+    );
+    expect(toolsWithRawId.length).toBe(MCP_TOOLS.length);
+  });
+});
 
-  // Test 4: Verify structured JSON response format
-  console.log("\n📋 Test 4: Verify structured JSON response format");
-  total++;
-  const mockResult = mockSearchResults("machine learning", 10);
-  const hasRequiredFields = 
-    mockResult.query &&
-    mockResult.total !== undefined &&
-    Array.isArray(mockResult.courses) &&
-    mockResult.courses.length > 0 &&
-    mockResult.courses[0].raw_id &&
-    mockResult.courses[0].course &&
-    mockResult.courses[0].name_zh &&
-    mockResult.courses[0].name_en &&
-    Array.isArray(mockResult.courses[0].teacher_zh) &&
-    Array.isArray(mockResult.courses[0].times) &&
-    Array.isArray(mockResult.courses[0].venues);
-  
-  if (hasRequiredFields) {
-    console.log("✅ Structured JSON has all required fields");
-    console.log(`   Sample course: ${mockResult.courses[0].name_zh} (${mockResult.courses[0].raw_id})`);
-    passed++;
-  } else {
-    console.log("❌ Structured JSON missing required fields");
-  }
+describe("MCP Response Format", () => {
+  it("should return structured JSON with required fields", () => {
+    const result = mockSearchResults("machine learning", 10);
+    
+    expect(result.query).toBe("machine learning");
+    expect(result.total).toBe(2);
+    expect(Array.isArray(result.courses)).toBe(true);
+    expect(result.courses.length).toBeGreaterThan(0);
+    
+    const course = result.courses[0];
+    expect(course.raw_id).toBeDefined();
+    expect(course.course).toBeDefined();
+    expect(course.name_zh).toBeDefined();
+    expect(course.name_en).toBeDefined();
+    expect(Array.isArray(course.teacher_zh)).toBe(true);
+    expect(Array.isArray(course.times)).toBe(true);
+    expect(Array.isArray(course.venues)).toBe(true);
+  });
 
-  // Test 5: Verify bulk search with filters
-  console.log("\n📋 Test 5: Verify bulk_search_courses with filters");
-  total++;
-  const bulkResult = mockBulkSearchResults(
-    ["machine learning", "artificial intelligence"],
-    { department: "CS", language: "zh" },
-    5
-  );
-  
-  const hasBulkFields = 
-    bulkResult.filters_applied &&
-    Array.isArray(bulkResult.results) &&
-    bulkResult.results.length === 2 &&
-    bulkResult.results[0].query === "machine learning" &&
-    bulkResult.results[0].courses[0].raw_id;
-  
-  if (hasBulkFields) {
-    console.log("✅ Bulk search with filters works correctly");
-    console.log(`   Filters applied: ${JSON.stringify(bulkResult.filters_applied)}`);
-    console.log(`   Queries: ${bulkResult.results.map(r => r.query).join(", ")}`);
-    passed++;
-  } else {
-    console.log("❌ Bulk search format incorrect");
-  }
+  it("should include raw_id in all course results", () => {
+    const result = mockSearchResults("machine learning", 10);
+    
+    result.courses.forEach(course => {
+      expect(course.raw_id).toBeDefined();
+      expect(typeof course.raw_id).toBe("string");
+      expect(course.raw_id.length).toBeGreaterThan(0);
+    });
+  });
+});
 
-  // Test 6: Verify all tools mention raw_id
-  console.log("\n📋 Test 6: Verify all tools mention raw_id in descriptions");
-  total++;
-  const allMentionRawId = UPDATED_MCP_TOOLS.every(tool => 
-    tool.description.toLowerCase().includes("raw_id") || 
-    tool.name === "search_courses" || 
-    tool.name === "bulk_search_courses"
-  );
-  
-  if (allMentionRawId) {
-    console.log("✅ All relevant tools mention raw_id");
-    passed++;
-  } else {
-    console.log("❌ Some tools don't mention raw_id");
-  }
+describe("Bulk Search", () => {
+  it("should handle multiple queries with filters", () => {
+    const queries = ["machine learning", "artificial intelligence"];
+    const filters = { department: "CS", language: "zh" };
+    const result = mockBulkSearchResults(queries, filters, 5);
+    
+    expect(result.filters_applied).toEqual(filters);
+    expect(Array.isArray(result.results)).toBe(true);
+    expect(result.results.length).toBe(2);
+    
+    expect(result.results[0].query).toBe("machine learning");
+    expect(result.results[1].query).toBe("artificial intelligence");
+    
+    result.results.forEach(queryResult => {
+      expect(queryResult.courses[0].raw_id).toBeDefined();
+    });
+  });
 
-  // Summary
-  console.log(`\n📊 Test Results: ${passed}/${total} tests passed`);
-  
-  if (passed === total) {
-    console.log("🎉 All tests passed! MCP server improvements are valid.");
-  } else {
-    console.log("⚠️  Some tests failed. Check the implementation.");
-  }
-
-  // Show sample responses
-  console.log("\n📦 Sample Response Formats:");
-  console.log("\n1. search_courses response:");
-  console.log(JSON.stringify(mockSearchResults("machine learning", 5), null, 2).substring(0, 500) + "...");
-  
-  console.log("\n2. bulk_search_courses response:");
-  console.log(JSON.stringify(mockBulkSearchResults(["ML", "AI"], { department: "CS" }, 3), null, 2).substring(0, 500) + "...");
-}
-
-// Run the tests
-runTests();
+  it("should organize results by query", () => {
+    const queries = ["ML", "AI", "data science"];
+    const result = mockBulkSearchResults(queries, {}, 3);
+    
+    expect(result.results.length).toBe(queries.length);
+    queries.forEach((query, idx) => {
+      expect(result.results[idx].query).toBe(query);
+    });
+  });
+});
