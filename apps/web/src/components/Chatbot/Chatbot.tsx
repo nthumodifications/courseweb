@@ -18,11 +18,11 @@ export default function Chatbot() {
   const [userApiKey, setUserApiKey] = useState<string>('');
 
   const { messages, input, setInput, append, isLoading } = useChat({
-    api: '/api/chat',
+    api: `${process.env.NEXT_PUBLIC_COURSEWEB_API_URL || 'https://api.nthumods.com'}/chat`,
     body: {
       userApiKey: userApiKey || undefined,
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Chat error:', error);
     },
   });
