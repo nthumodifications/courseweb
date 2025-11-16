@@ -1,7 +1,7 @@
 import { streamText, convertToCoreMessages, tool } from "ai";
-import { google } from "@ai-sdk/google";
-import { openai } from "@ai-sdk/openai";
-import { anthropic } from "@ai-sdk/anthropic";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { createOpenAI } from "@ai-sdk/openai";
+import { createAnthropic } from "@ai-sdk/anthropic";
 import { z } from "zod";
 
 // MCP Server URL
@@ -49,21 +49,31 @@ async function callMCPTool(toolName: string, args: any) {
 
 // Define AI provider configurations
 function getAIModel(provider: string, apiKey?: string) {
-  const key = apiKey || "";
-  
   switch (provider) {
     case "google":
-      return google("gemini-2.0-flash-exp", { apiKey: key || process.env.GOOGLE_GENERATIVE_AI_API_KEY });
+      const google = createGoogleGenerativeAI({
+        apiKey: apiKey || process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+      });
+      return google("gemini-2.0-flash-exp");
     
     case "openai":
-      return openai("gpt-4o-mini", { apiKey: key || process.env.OPENAI_API_KEY });
+      const openai = createOpenAI({
+        apiKey: apiKey || process.env.OPENAI_API_KEY,
+      });
+      return openai("gpt-4o-mini");
     
     case "anthropic":
-      return anthropic("claude-3-5-sonnet-20241022", { apiKey: key || process.env.ANTHROPIC_API_KEY });
+      const anthropic = createAnthropic({
+        apiKey: apiKey || process.env.ANTHROPIC_API_KEY,
+      });
+      return anthropic("claude-3-5-sonnet-20241022");
     
     default:
       // Default to Google Gemini (free tier)
-      return google("gemini-2.0-flash-exp", { apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY });
+      const defaultGoogle = createGoogleGenerativeAI({
+        apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+      });
+      return defaultGoogle("gemini-2.0-flash-exp");
   }
 }
 
