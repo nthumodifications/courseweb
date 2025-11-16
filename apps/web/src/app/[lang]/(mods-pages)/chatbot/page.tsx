@@ -1,6 +1,7 @@
 "use client";
 
-import { useChat } from "ai/react";
+import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport } from "ai";
 import { useState, useRef, useEffect } from "react";
 import {
   Card,
@@ -59,6 +60,7 @@ export default function ChatbotPage() {
     anthropic: "",
   });
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [inputValue, setInputValue] = useState("");
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   // Load API keys from localStorage on mount
@@ -73,21 +75,22 @@ export default function ChatbotPage() {
     }
   }, []);
 
-  const { messages, input, handleInputChange, handleSubmit, isLoading, reload, stop, setMessages } =
-    useChat({
+  const { messages, sendMessage, status, stop, setMessages } = useChat({
+    transport: new DefaultChatTransport({
       api: "/api/chat",
       body: {
         provider,
         apiKey: savedApiKeys[provider] || undefined,
       },
-      onError: (error) => {
-        toast({
-          title: "Error",
-          description: error.message || "Failed to send message. Please check your API key.",
-          variant: "destructive",
-        });
-      },
-    });
+    }),
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send message. Please check your API key.",
+        variant: "destructive",
+      });
+    },
+  });
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -115,8 +118,17 @@ export default function ChatbotPage() {
     });
   };
 
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!inputValue.trim() || !hasApiKey) return;
+    
+    sendMessage({ text: inputValue });
+    setInputValue("");
+  };
+
   const currentProvider = AI_PROVIDERS.find((p) => p.value === provider);
   const hasApiKey = !!savedApiKeys[provider];
+  const isLoading = status === "submitted" || status === "streaming";
 
   return (
     <div className="container mx-auto max-w-5xl p-4">
@@ -265,35 +277,21 @@ export default function ChatbotPage() {
                         <Button
                           variant="secondary"
                           size="sm"
-                          onClick={() => {
-                            handleInputChange({
-                              target: { value: "What machine learning courses are available?" },
-                            } as React.ChangeEvent<HTMLInputElement>);
-                          }}
+                          onClick={() => setInputValue("What machine learning courses are available?")}
                         >
                           Machine learning courses
                         </Button>
                         <Button
                           variant="secondary"
                           size="sm"
-                          onClick={() => {
-                            handleInputChange({
-                              target: {
-                                value: "Help me plan my CS courses for next semester",
-                              },
-                            } as React.ChangeEvent<HTMLInputElement>);
-                          }}
+                          onClick={() => setInputValue("Help me plan my CS courses for next semester")}
                         >
                           Plan my courses
                         </Button>
                         <Button
                           variant="secondary"
                           size="sm"
-                          onClick={() => {
-                            handleInputChange({
-                              target: { value: "Find English-taught CS courses" },
-                            } as React.ChangeEvent<HTMLInputElement>);
-                          }}
+                          onClick={() => setInputValue("Find English-taught CS courses")}
                         >
                           English courses
                         </Button>
@@ -319,16 +317,14 @@ export default function ChatbotPage() {
                         : "bg-muted text-foreground"
                     }`}
                   >
-                    <div className="whitespace-pre-wrap break-words">{message.content}</div>
-                    {message.toolInvocations && message.toolInvocations.length > 0 && (
-                      <div className="mt-2 space-y-1">
-                        {message.toolInvocations.map((tool: any, idx: number) => (
-                          <Badge key={idx} variant="secondary" className="text-xs">
-                            🔧 {tool.toolName}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
+                    <div className="whitespace-pre-wrap break-words">
+                      {message.parts?.map((part: any, idx: number) => {
+                        if (part.type === "text") {
+                          return <span key={idx}>{part.text}</span>;
+                        }
+                        return null;
+                      })}
+                    </div>
                   </div>
                   {message.role === "user" && (
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-200 dark:bg-gray-700">
@@ -354,8 +350,8 @@ export default function ChatbotPage() {
         <CardFooter className="p-4">
           <form onSubmit={handleSubmit} className="flex w-full gap-2">
             <Textarea
-              value={input}
-              onChange={handleInputChange}
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
               placeholder={
                 hasApiKey
                   ? "Ask me about courses, requirements, or planning..."
@@ -366,7 +362,7 @@ export default function ChatbotPage() {
               onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
-                  handleSubmit(e as any);
+                  handleSubmit();
                 }
               }}
             />
@@ -376,7 +372,7 @@ export default function ChatbotPage() {
                   <RefreshCw className="h-4 w-4" />
                 </Button>
               ) : (
-                <Button type="submit" size="icon" disabled={!input.trim() || !hasApiKey}>
+                <Button type="submit" size="icon" disabled={!inputValue.trim() || !hasApiKey}>
                   <Send className="h-4 w-4" />
                 </Button>
               )}
