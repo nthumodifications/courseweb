@@ -1,9 +1,9 @@
-import { google } from '@ai-sdk/google';
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { streamText, tool, convertToModelMessages, UIMessage, stepCountIs } from 'ai';
 import { z } from 'zod';
 
 // Get API key from environment, with fallback to Gemini free tier
-const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+const defaultApiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -52,7 +52,7 @@ export async function POST(req: Request) {
   } = await req.json();
 
   // Use user-provided API key if available, otherwise use server default
-  const effectiveApiKey = userApiKey || apiKey;
+  const effectiveApiKey = userApiKey || defaultApiKey;
 
   if (!effectiveApiKey) {
     return Response.json(
@@ -61,10 +61,13 @@ export async function POST(req: Request) {
     );
   }
 
+  // Create provider with the effective API key
+  const google = createGoogleGenerativeAI({
+    apiKey: effectiveApiKey,
+  });
+
   const result = streamText({
-    model: google('gemini-2.0-flash-exp', { 
-      apiKey: effectiveApiKey,
-    }),
+    model: google('gemini-2.0-flash-exp'),
     system: `You are a helpful course planning assistant for National Tsing Hua University (NTHU).
 
 Your role is to help students plan their courses for upcoming semesters. You have access to:

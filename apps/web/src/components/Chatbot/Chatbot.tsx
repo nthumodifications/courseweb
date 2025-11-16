@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { MessageCircle, X, Send, Settings, Loader2 } from 'lucide-react';
-import { useChat } from 'ai/react';
+import { useChat } from '@ai-sdk/react';
 import { Button } from '@courseweb/ui';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@courseweb/ui';
 import { Input } from '@courseweb/ui';
