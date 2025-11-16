@@ -161,6 +161,46 @@ const MCP_TOOLS = [
       required: ["college"],
     },
   },
+  {
+    name: "get_user_courses",
+    description:
+      "Get the list of courses that the user has added to their timetable. This requires the user to provide their course list via the frontend. Returns course IDs grouped by semester.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        coursesData: {
+          type: "object",
+          description:
+            "User's courses data from localStorage in format {semester: courseIds[]}. Example: {'11310': ['11310CS 101001', '11310MATH 201001']}",
+        },
+      },
+      required: ["coursesData"],
+    },
+  },
+  {
+    name: "display_timetable",
+    description:
+      "Display a timetable visualization in the chat with recommended courses. This will render an inline timetable component showing the course schedule. Use this when you want to show the user a visual representation of their potential schedule.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        courseIds: {
+          type: "array",
+          items: {
+            type: "string",
+          },
+          description:
+            "Array of course raw_ids to display in the timetable (e.g., ['11410CS 535100', '11410EE 200201'])",
+        },
+        title: {
+          type: "string",
+          description:
+            "Optional title for the timetable display (e.g., 'Recommended Schedule for Fall 2024')",
+        },
+      },
+      required: ["courseIds"],
+    },
+  },
 ];
 
 // MCP Resource definitions
@@ -653,6 +693,102 @@ const app = new Hono()
                   });
                 } catch (error) {
                   throw new Error(`Failed to fetch graduation requirements: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                }
+              }
+
+              case "get_user_courses": {
+                const { coursesData } = args;
+                
+                try {
+                  if (!coursesData || typeof coursesData !== 'object') {
+                    throw new Error('coursesData parameter is required and must be an object');
+                  }
+                  
+                  // Extract all course IDs from the courses data
+                  const allCourseIds: string[] = [];
+                  const semesterSummary: any[] = [];
+                  
+                  for (const [semester, courseIds] of Object.entries(coursesData)) {
+                    if (Array.isArray(courseIds)) {
+                      allCourseIds.push(...courseIds);
+                      semesterSummary.push({
+                        semester,
+                        courseCount: courseIds.length,
+                        courseIds,
+                      });
+                    }
+                  }
+                  
+                  // Fetch course details for all user courses
+                  const { data: coursesDetails, error } = await supabase_server(c)
+                    .from("courses")
+                    .select("*")
+                    .in("raw_id", allCourseIds);
+                  
+                  if (error) {
+                    throw new Error(`Failed to fetch course details: ${error.message}`);
+                  }
+                  
+                  return c.json({
+                    jsonrpc: "2.0",
+                    result: {
+                      content: [
+                        {
+                          type: "text",
+                          text: JSON.stringify({
+                            totalCourses: allCourseIds.length,
+                            semesterSummary,
+                            courses: coursesDetails,
+                            note: "This is the user's current timetable. You can use this information to provide personalized course recommendations and avoid scheduling conflicts.",
+                          }, null, 2),
+                        },
+                      ],
+                      isError: false,
+                    },
+                    id,
+                  });
+                } catch (error) {
+                  throw new Error(`Failed to get user courses: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                }
+              }
+
+              case "display_timetable": {
+                const { courseIds, title } = args;
+                
+                try {
+                  if (!courseIds || !Array.isArray(courseIds)) {
+                    throw new Error('courseIds parameter is required and must be an array');
+                  }
+                  
+                  // Fetch course details for the timetable
+                  const { data: coursesDetails, error } = await supabase_server(c)
+                    .from("courses")
+                    .select("*")
+                    .in("raw_id", courseIds);
+                  
+                  if (error) {
+                    throw new Error(`Failed to fetch course details for timetable: ${error.message}`);
+                  }
+                  
+                  // Return a special format that the frontend can detect and render as a timetable
+                  return c.json({
+                    jsonrpc: "2.0",
+                    result: {
+                      content: [
+                        {
+                          type: "timetable",
+                          title: title || "Recommended Timetable",
+                          courseIds,
+                          courses: coursesDetails,
+                          text: `📅 **${title || "Recommended Timetable"}**\n\nI've prepared a timetable with the following ${courseIds.length} courses:\n${coursesDetails.map((c: any) => `- ${c.name_zh || c.name_en} (${c.course})`).join('\n')}\n\n*The timetable will be displayed below this message.*`,
+                        },
+                      ],
+                      isError: false,
+                    },
+                    id,
+                  });
+                } catch (error) {
+                  throw new Error(`Failed to display timetable: ${error instanceof Error ? error.message : 'Unknown error'}`);
                 }
               }
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { MessageCircle, X, Send, Settings, Loader2 } from 'lucide-react';
+import { MessageCircle, X, Send, Settings, Loader2, Calendar } from 'lucide-react';
 import { useChat } from '@ai-sdk/react';
 import { Button } from '@courseweb/ui';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@courseweb/ui';
@@ -11,11 +11,13 @@ import { Separator } from '@courseweb/ui';
 import { cn } from '@/lib/utils';
 import ChatMessage from './ChatMessage';
 import ChatSettings from './ChatSettings';
+import useUserTimetable from '@/hooks/contexts/useUserTimetable';
 
 export default function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [userApiKey, setUserApiKey] = useState<string>('');
+  const { courses } = useUserTimetable();
 
   const { messages, input, setInput, append, isLoading } = useChat({
     api: `${process.env.NEXT_PUBLIC_COURSEWEB_API_URL || 'https://api.nthumods.com'}/chat`,
@@ -36,6 +38,19 @@ export default function Chatbot() {
       });
       setInput('');
     }
+  };
+
+  const handleLoadMyCourses = () => {
+    const courseCount = Object.values(courses).flat().length;
+    const courseSummary = Object.entries(courses)
+      .filter(([_, courseIds]) => courseIds.length > 0)
+      .map(([semester, courseIds]) => `Semester ${semester}: ${courseIds.length} courses`)
+      .join(', ');
+    
+    append({
+      role: 'user',
+      content: `Here are my currently registered courses: ${courseSummary || 'No courses registered yet'}. Course data: ${JSON.stringify(courses)}`,
+    });
   };
 
   return (
@@ -117,12 +132,10 @@ export default function Chatbot() {
                       <Button
                         variant="outline"
                         className="text-left justify-start h-auto py-3 px-4"
-                        onClick={() => append({
-                          role: 'user',
-                          content: 'What courses should I take for CS degree?',
-                        })}
+                        onClick={handleLoadMyCourses}
                       >
-                        <span className="text-sm">Plan CS degree courses</span>
+                        <Calendar className="h-4 w-4 mr-2" />
+                        <span className="text-sm">Load my registered courses</span>
                       </Button>
                       <Button
                         variant="outline"

@@ -77,11 +77,15 @@ Your role is to help students plan their courses for upcoming semesters. You hav
 1. NTHU course database through search tools
 2. Course details and syllabi
 3. Graduation requirements information (PDFs for each department and year)
+4. User's registered courses (when they provide their data)
+5. Timetable visualization tool to show course schedules
 
 Guidelines:
 - Always search courses by name, topic, or instructor name (NOT by course code)
 - When recommending courses, consider prerequisites, time conflicts, and workload
 - You can fetch graduation requirements by specifying college, department, and entrance year
+- If a user wants to see their current courses, ask them to use the "Load My Courses" button in the chat
+- When you have a list of recommended courses, offer to display them in a timetable visualization
 - Provide clear explanations for your recommendations
 - If you need more information about a student's background (department, year of entrance), ask them
 - Be conversational and friendly
@@ -91,7 +95,12 @@ Important: When searching for courses, use descriptive terms like "machine learn
 For graduation requirements:
 - Common colleges: 電機資訊學院, 理學院, 工學院, 人文社會學院, 生命科學院, 科技管理學院, 清華學院, 竹師教育學院, 藝術學院
 - Use the getGraduationRequirements tool to find department-specific requirements
-- Entrance years are typically 3-digit numbers like "111", "112", "113"`,
+- Entrance years are typically 3-digit numbers like "111", "112", "113"
+
+For timetable display:
+- After recommending a set of courses, use displayTimetable to show them visually
+- This helps students see schedule conflicts and time distribution at a glance
+- Always provide the course names along with the visualization`,
       messages: messages,
       stopWhen: stepCountIs(5),
       tools: {
@@ -161,6 +170,27 @@ For graduation requirements:
           }),
           execute: async ({ college, department, year }) => {
             return await callMCPTool('get_graduation_requirements', { college, department, year });
+          },
+        }),
+        
+        getUserCourses: tool({
+          description: 'Get the list of courses that the user has added to their timetable. Ask the user to provide their saved courses data from the system.',
+          inputSchema: z.object({
+            coursesData: z.object({}).passthrough().describe('User courses data from localStorage in format {semester: courseIds[]}'),
+          }),
+          execute: async ({ coursesData }) => {
+            return await callMCPTool('get_user_courses', { coursesData });
+          },
+        }),
+        
+        displayTimetable: tool({
+          description: 'Display a visual timetable in the chat with recommended courses. Use this to show the user how their schedule would look.',
+          inputSchema: z.object({
+            courseIds: z.array(z.string()).describe('Array of course raw_ids to display in timetable'),
+            title: z.string().optional().describe('Optional title for the timetable display'),
+          }),
+          execute: async ({ courseIds, title }) => {
+            return await callMCPTool('display_timetable', { courseIds, title });
           },
         }),
       },
