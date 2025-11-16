@@ -1,6 +1,6 @@
 'use client';
 
-import { type Message } from '@ai-sdk/react';
+import type { Message } from 'ai';
 import { cn } from '@/lib/utils';
 import { Bot, User } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
