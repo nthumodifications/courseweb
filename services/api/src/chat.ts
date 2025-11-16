@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
-import { streamText, tool, convertToModelMessages, CoreMessage } from 'ai';
+import { streamText, tool, type CoreMessage } from 'ai';
 import { z } from "zod";
 
 const app = new Hono();
@@ -278,8 +278,8 @@ Important: When searching for courses, use descriptive terms like "machine learn
             query: z.string().describe('Search query using course name, topic, or instructor name (e.g., "machine learning", "calculus", "artificial intelligence")'),
             limit: z.number().optional().describe('Maximum number of results (default: 10, max: 50)'),
           }),
-          execute: async ({ query, limit = 10 }) => {
-            return await callMCPTool('search_courses', { query, limit }, c);
+          execute: async (args: { query: string; limit?: number }) => {
+            return await callMCPTool('search_courses', args, c);
           },
         }),
         
@@ -288,8 +288,8 @@ Important: When searching for courses, use descriptive terms like "machine learn
           parameters: z.object({
             courseId: z.string().describe('Course raw_id from search results (e.g., "11410CS 535100")'),
           }),
-          execute: async ({ courseId }) => {
-            return await callMCPTool('get_course_details', { courseId }, c);
+          execute: async (args: { courseId: string }) => {
+            return await callMCPTool('get_course_details', args, c);
           },
         }),
         
@@ -298,8 +298,8 @@ Important: When searching for courses, use descriptive terms like "machine learn
           parameters: z.object({
             courseId: z.string().describe('Course raw_id from search results'),
           }),
-          execute: async ({ courseId }) => {
-            return await callMCPTool('get_course_syllabus', { courseId }, c);
+          execute: async (args: { courseId: string }) => {
+            return await callMCPTool('get_course_syllabus', args, c);
           },
         }),
         
@@ -308,8 +308,8 @@ Important: When searching for courses, use descriptive terms like "machine learn
           parameters: z.object({
             courseIds: z.array(z.string()).describe('Array of course raw_ids'),
           }),
-          execute: async ({ courseIds }) => {
-            return await callMCPTool('get_multiple_courses', { courseIds }, c);
+          execute: async (args: { courseIds: string[] }) => {
+            return await callMCPTool('get_multiple_courses', args, c);
           },
         }),
         
@@ -324,14 +324,14 @@ Important: When searching for courses, use descriptive terms like "machine learn
               semester: z.string().optional().describe('Filter by semester'),
             }).optional(),
           }),
-          execute: async ({ queries, limit = 5, filters }) => {
-            return await callMCPTool('bulk_search_courses', { queries, limit, filters }, c);
+          execute: async (args: { queries: string[]; limit?: number; filters?: any }) => {
+            return await callMCPTool('bulk_search_courses', args, c);
           },
         }),
       },
     });
 
-    return result.toDataStreamResponse();
+    return result.toTextStreamResponse();
   } catch (error) {
     console.error('Chat error:', error);
     return c.json(
