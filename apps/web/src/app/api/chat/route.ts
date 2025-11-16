@@ -49,27 +49,21 @@ async function callMCPTool(toolName: string, args: any) {
 
 // Define AI provider configurations
 function getAIModel(provider: string, apiKey?: string) {
+  const key = apiKey || "";
+  
   switch (provider) {
     case "google":
-      return google("gemini-2.0-flash-exp", {
-        apiKey: apiKey || process.env.GOOGLE_GENERATIVE_AI_API_KEY || "",
-      });
+      return google("gemini-2.0-flash-exp", { apiKey: key || process.env.GOOGLE_GENERATIVE_AI_API_KEY });
     
     case "openai":
-      return openai("gpt-4o-mini", {
-        apiKey: apiKey || process.env.OPENAI_API_KEY || "",
-      });
+      return openai("gpt-4o-mini", { apiKey: key || process.env.OPENAI_API_KEY });
     
     case "anthropic":
-      return anthropic("claude-3-5-sonnet-20241022", {
-        apiKey: apiKey || process.env.ANTHROPIC_API_KEY || "",
-      });
+      return anthropic("claude-3-5-sonnet-20241022", { apiKey: key || process.env.ANTHROPIC_API_KEY });
     
     default:
       // Default to Google Gemini (free tier)
-      return google("gemini-2.0-flash-exp", {
-        apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY || "",
-      });
+      return google("gemini-2.0-flash-exp", { apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY });
   }
 }
 
@@ -111,7 +105,7 @@ export async function POST(req: Request) {
       model,
       system: SYSTEM_PROMPT,
       messages: convertToCoreMessages(messages),
-      maxToolRoundtrips: 5,
+      maxSteps: 5,
       tools: {
         search_courses: tool({
           description:
@@ -197,7 +191,7 @@ export async function POST(req: Request) {
       },
     });
 
-    return result.toTextStreamResponse();
+    return result.toDataStreamResponse();
   } catch (error) {
     console.error("Chat API error:", error);
     return new Response(
