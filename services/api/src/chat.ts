@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
-import { streamText, tool, type CoreMessage } from 'ai';
+import { streamText, tool, type CoreMessage, stepCountIs } from 'ai';
 import { z } from "zod";
 
 const app = new Hono();
@@ -270,52 +270,52 @@ Guidelines:
 
 Important: When searching for courses, use descriptive terms like "machine learning" or "calculus" instead of course codes like "CS535100".`,
       messages: messages,
-      maxSteps: 5,
+      stopWhen: stepCountIs(5),
       tools: {
         searchCourses: tool({
           description: 'Search for NTHU courses by name, topic, or instructor. Use descriptive search terms, not course codes. Returns course information including raw_id for further details.',
-          parameters: z.object({
+          inputSchema: z.object({
             query: z.string().describe('Search query using course name, topic, or instructor name (e.g., "machine learning", "calculus", "artificial intelligence")'),
             limit: z.number().optional().describe('Maximum number of results (default: 10, max: 50)'),
           }),
-          execute: async (args: { query: string; limit?: number }) => {
-            return await callMCPTool('search_courses', args, c);
+          execute: async ({ query, limit = 10 }) => {
+            return await callMCPTool('search_courses', { query, limit }, c);
           },
         }),
         
         getCourseDetails: tool({
           description: 'Get detailed information about a specific course using its raw_id from search results',
-          parameters: z.object({
+          inputSchema: z.object({
             courseId: z.string().describe('Course raw_id from search results (e.g., "11410CS 535100")'),
           }),
-          execute: async (args: { courseId: string }) => {
-            return await callMCPTool('get_course_details', args, c);
+          execute: async ({ courseId }) => {
+            return await callMCPTool('get_course_details', { courseId }, c);
           },
         }),
         
         getCourseSyllabus: tool({
           description: 'Get detailed syllabus including objectives, grading, and prerequisites for a course',
-          parameters: z.object({
+          inputSchema: z.object({
             courseId: z.string().describe('Course raw_id from search results'),
           }),
-          execute: async (args: { courseId: string }) => {
-            return await callMCPTool('get_course_syllabus', args, c);
+          execute: async ({ courseId }) => {
+            return await callMCPTool('get_course_syllabus', { courseId }, c);
           },
         }),
         
         getMultipleCourses: tool({
           description: 'Get information for multiple courses at once using their raw_ids',
-          parameters: z.object({
+          inputSchema: z.object({
             courseIds: z.array(z.string()).describe('Array of course raw_ids'),
           }),
-          execute: async (args: { courseIds: string[] }) => {
-            return await callMCPTool('get_multiple_courses', args, c);
+          execute: async ({ courseIds }) => {
+            return await callMCPTool('get_multiple_courses', { courseIds }, c);
           },
         }),
         
         bulkSearchCourses: tool({
           description: 'Search multiple topics at once and compare courses across different areas',
-          parameters: z.object({
+          inputSchema: z.object({
             queries: z.array(z.string()).describe('Array of search queries'),
             limit: z.number().optional().describe('Results per query (default: 5, max: 20)'),
             filters: z.object({
@@ -324,8 +324,8 @@ Important: When searching for courses, use descriptive terms like "machine learn
               semester: z.string().optional().describe('Filter by semester'),
             }).optional(),
           }),
-          execute: async (args: { queries: string[]; limit?: number; filters?: any }) => {
-            return await callMCPTool('bulk_search_courses', args, c);
+          execute: async ({ queries, limit = 5, filters }) => {
+            return await callMCPTool('bulk_search_courses', { queries, limit, filters }, c);
           },
         }),
       },
