@@ -17,6 +17,7 @@
     "@ai-sdk/anthropic": "^2.0.44",
     "@ai-sdk/google": "^2.0.32",
     "@ai-sdk/openai": "^2.0.67",
+    "@ai-sdk/react": "^2.0.93",
     "@courseweb/api-types": "*",
     "@courseweb/shared": "*",
     "@courseweb/tailwind-config": "*",
