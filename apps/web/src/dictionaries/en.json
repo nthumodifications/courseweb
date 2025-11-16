@@ -125,7 +125,8 @@
     "timetable": "Timetable",
     "settings": "Settings",
     "venues": "Venues",
-    "bus": "Bus"
+    "bus": "Bus",
+    "chatbot": "AI Assistant"
   },
   "bus": {
     "north_gate": "North Gate",

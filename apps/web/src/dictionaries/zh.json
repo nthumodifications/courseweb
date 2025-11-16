@@ -125,7 +125,8 @@
     "timetable": "時間表",
     "settings": "設定",
     "venues": "地點",
-    "bus": "校車"
+    "bus": "校車",
+    "chatbot": "AI 助手"
   },
   "bus": {
     "north_gate": "北校門口",

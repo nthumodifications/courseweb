@@ -38,6 +38,12 @@ const SideNav: FC = () => {
         color: "#EB8751",
       },
       {
+        title: dict.navigation.chatbot,
+        href: `/${language}/chatbot`,
+        icon: <I.Sparkles strokeWidth="2" />,
+        color: "#6366F1",
+      },
+      {
         title: dict.applist.title,
         href: `/${language}/apps`,
         icon: <I.LayoutGrid strokeWidth="2" />,
