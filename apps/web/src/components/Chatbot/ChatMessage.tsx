@@ -1,12 +1,12 @@
 'use client';
 
-import type { Message } from 'ai';
+import type { UIMessage } from 'ai';
 import { cn } from '@/lib/utils';
 import { Bot, User } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 interface ChatMessageProps {
-  message: Message;
+  message: UIMessage;
 }
 
 export default function ChatMessage({ message }: ChatMessageProps) {
