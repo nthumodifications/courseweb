@@ -1,4 +1,4 @@
-import { streamText, convertToCoreMessages, tool } from "ai";
+import { streamText, convertToCoreMessages, tool, stepCountIs } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createAnthropic } from "@ai-sdk/anthropic";
@@ -115,7 +115,7 @@ export async function POST(req: Request) {
       model,
       system: SYSTEM_PROMPT,
       messages: convertToCoreMessages(messages),
-      maxSteps: 5,
+      stopWhen: stepCountIs(5),
       tools: {
         search_courses: tool({
           description:
