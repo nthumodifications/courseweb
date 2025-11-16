@@ -12,6 +12,7 @@ import { RxDBProvider } from "@/config/rxdb";
 import { ClearAuthComponent } from "@/hooks/useClearAuth";
 import { AuthProvider } from "react-oidc-context";
 import OidcAuthProvider from "@/hooks/contexts/useAuth";
+import { Chatbot } from "@/components/Chatbot";
 
 export const metadata: Metadata = {
   title: {
@@ -106,6 +107,7 @@ export default function RootLayout({
 
             <Toaster />
             <ClearAuthComponent />
+            <Chatbot />
           </UserTimetableProvider>
         </SettingsProvider>
       </ReactQuery>
