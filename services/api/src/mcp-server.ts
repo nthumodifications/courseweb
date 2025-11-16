@@ -138,6 +138,29 @@ const MCP_TOOLS = [
       required: ["queries"],
     },
   },
+  {
+    name: "get_graduation_requirements",
+    description:
+      "Fetch graduation requirements for NTHU departments. Navigates the university's graduation requirements page to find PDF documents for specific colleges, departments/programs, and entrance years. Returns PDF URLs and metadata.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        college: {
+          type: "string",
+          description: "College name in Chinese (e.g., '電機資訊學院', '理學院', '工學院')",
+        },
+        department: {
+          type: "string",
+          description: "Department or program name in Chinese (e.g., '電機資訊學院學士班', '資訊工程學系', '電機工程學系'). Optional - if not provided, returns all departments in the college.",
+        },
+        year: {
+          type: "string",
+          description: "Entrance year (e.g., '111', '112', '113', '114'). Optional - if not provided, returns all available years.",
+        },
+      },
+      required: ["college"],
+    },
+  },
 ];
 
 // MCP Resource definitions
@@ -500,6 +523,136 @@ const app = new Hono()
                   });
                 } catch (error) {
                   throw new Error(`Bulk search failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                }
+              }
+
+              case "get_graduation_requirements": {
+                const { college, department, year } = args;
+                
+                try {
+                  // Step 1: Fetch the main graduation requirements page
+                  const mainPageUrl = "https://registra.site.nthu.edu.tw/p/412-1211-1826.php?Lang=zh-tw";
+                  const mainPageResponse = await fetch(mainPageUrl, {
+                    headers: {
+                      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                    },
+                  });
+                  
+                  if (!mainPageResponse.ok) {
+                    throw new Error(`Failed to fetch main page: ${mainPageResponse.statusText}`);
+                  }
+                  
+                  const mainPageHtml = await mainPageResponse.text();
+                  
+                  // Step 2: Find the college link
+                  const collegeLinkMatch = mainPageHtml.match(
+                    new RegExp(`<a[^>]*href="([^"]*)"[^>]*title="${college}"`, 'i')
+                  ) || mainPageHtml.match(
+                    new RegExp(`<a[^>]*title="${college}"[^>]*href="([^"]*)"`, 'i')
+                  );
+                  
+                  if (!collegeLinkMatch) {
+                    throw new Error(`College not found: ${college}. Please check the college name.`);
+                  }
+                  
+                  let collegePageUrl = collegeLinkMatch[1];
+                  if (collegePageUrl.startsWith('/')) {
+                    collegePageUrl = `https://registra.site.nthu.edu.tw${collegePageUrl}`;
+                  }
+                  
+                  // Step 3: Fetch the college page
+                  const collegePageResponse = await fetch(collegePageUrl, {
+                    headers: {
+                      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                      'Referer': mainPageUrl,
+                    },
+                  });
+                  
+                  if (!collegePageResponse.ok) {
+                    throw new Error(`Failed to fetch college page: ${collegePageResponse.statusText}`);
+                  }
+                  
+                  const collegePageHtml = await collegePageResponse.text();
+                  
+                  // Step 4: Parse departments and PDF links
+                  const departments: any[] = [];
+                  
+                  // Extract department sections - look for patterns like:
+                  // <p>電機資訊學院學士班</p> followed by year links
+                  const departmentPattern = /<p>([^<]+?學[系所士班組](?:國際學生組)?[^<]*?)<\/p>/gi;
+                  const matches = collegePageHtml.matchAll(departmentPattern);
+                  
+                  for (const match of matches) {
+                    const deptName = match[1].trim();
+                    
+                    // Skip if department filter is specified and doesn't match
+                    if (department && !deptName.includes(department)) {
+                      continue;
+                    }
+                    
+                    // Find PDF links following this department name
+                    const afterDeptHtml = collegePageHtml.substring(match.index!);
+                    const nextDeptMatch = afterDeptHtml.substring(1).search(/<p>[^<]+?學[系所士班組]/);
+                    const sectionHtml = nextDeptMatch > 0 
+                      ? afterDeptHtml.substring(0, nextDeptMatch + 1)
+                      : afterDeptHtml.substring(0, 500); // Take next 500 chars if no next dept
+                    
+                    // Extract year links
+                    const yearLinkPattern = /<a[^>]*href="([^"]*)"[^>]*>(\d{3})<\/a>/g;
+                    const yearMatches = sectionHtml.matchAll(yearLinkPattern);
+                    
+                    const years: any[] = [];
+                    for (const yearMatch of yearMatches) {
+                      let pdfUrl = yearMatch[1];
+                      const yearNum = yearMatch[2];
+                      
+                      // Skip if year filter is specified and doesn't match
+                      if (year && yearNum !== year) {
+                        continue;
+                      }
+                      
+                      if (pdfUrl.startsWith('/')) {
+                        pdfUrl = `https://registra.site.nthu.edu.tw${pdfUrl}`;
+                      }
+                      
+                      years.push({
+                        year: yearNum,
+                        pdf_url: pdfUrl,
+                      });
+                    }
+                    
+                    if (years.length > 0) {
+                      departments.push({
+                        department: deptName,
+                        years,
+                      });
+                    }
+                  }
+                  
+                  if (departments.length === 0) {
+                    throw new Error(`No matching departments found. College: ${college}, Department: ${department || 'all'}, Year: ${year || 'all'}`);
+                  }
+                  
+                  return c.json({
+                    jsonrpc: "2.0",
+                    result: {
+                      content: [
+                        {
+                          type: "text",
+                          text: JSON.stringify({
+                            college,
+                            total_departments: departments.length,
+                            departments,
+                            note: "PDF URLs may require proper referer headers when accessed. Direct download may return 403.",
+                          }, null, 2),
+                        },
+                      ],
+                      isError: false,
+                    },
+                    id,
+                  });
+                } catch (error) {
+                  throw new Error(`Failed to fetch graduation requirements: ${error instanceof Error ? error.message : 'Unknown error'}`);
                 }
               }
 

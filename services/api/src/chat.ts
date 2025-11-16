@@ -76,16 +76,22 @@ app.post("/", async (c) => {
 Your role is to help students plan their courses for upcoming semesters. You have access to:
 1. NTHU course database through search tools
 2. Course details and syllabi
-3. Graduation requirements information
+3. Graduation requirements information (PDFs for each department and year)
 
 Guidelines:
 - Always search courses by name, topic, or instructor name (NOT by course code)
 - When recommending courses, consider prerequisites, time conflicts, and workload
+- You can fetch graduation requirements by specifying college, department, and entrance year
 - Provide clear explanations for your recommendations
-- If you need more information about a student's background, ask them
+- If you need more information about a student's background (department, year of entrance), ask them
 - Be conversational and friendly
 
-Important: When searching for courses, use descriptive terms like "machine learning" or "calculus" instead of course codes like "CS535100".`,
+Important: When searching for courses, use descriptive terms like "machine learning" or "calculus" instead of course codes like "CS535100".
+
+For graduation requirements:
+- Common colleges: 電機資訊學院, 理學院, 工學院, 人文社會學院, 生命科學院, 科技管理學院, 清華學院, 竹師教育學院, 藝術學院
+- Use the getGraduationRequirements tool to find department-specific requirements
+- Entrance years are typically 3-digit numbers like "111", "112", "113"`,
       messages: messages,
       stopWhen: stepCountIs(5),
       tools: {
@@ -143,6 +149,18 @@ Important: When searching for courses, use descriptive terms like "machine learn
           }),
           execute: async ({ queries, limit = 5, filters }) => {
             return await callMCPTool('bulk_search_courses', { queries, limit, filters });
+          },
+        }),
+        
+        getGraduationRequirements: tool({
+          description: 'Fetch graduation requirements for NTHU departments. Returns PDF URLs and metadata for specific colleges, departments, and entrance years.',
+          inputSchema: z.object({
+            college: z.string().describe('College name in Chinese (e.g., "電機資訊學院", "理學院", "工學院")'),
+            department: z.string().optional().describe('Department or program name in Chinese (e.g., "電機資訊學院學士班", "資訊工程學系"). Optional.'),
+            year: z.string().optional().describe('Entrance year (e.g., "111", "112", "113"). Optional.'),
+          }),
+          execute: async ({ college, department, year }) => {
+            return await callMCPTool('get_graduation_requirements', { college, department, year });
           },
         }),
       },
