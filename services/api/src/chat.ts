@@ -36,7 +36,7 @@ async function callMCPTool(toolName: string, args: any) {
     body: JSON.stringify(mcpRequest),
   } as any);
   
-  const result = await response.json();
+  const result = await response.json() as any;
   
   if (result.error) {
     throw new Error(result.error.message || 'MCP tool execution failed');
