@@ -3,6 +3,11 @@ import { Type } from "@google/genai";
 import type { Context } from "hono";
 import algolia from "../config/algolia";
 import supabase_server from "../config/supabase_server";
+import {
+  getCachedRequirements,
+  setCachedRequirements,
+} from "../graduation/cache";
+import { scrapeAllColleges, findRequirementsPDF } from "../graduation/scraper";
 
 // Tool definitions using Gemini's native JSON Schema format
 // This avoids all the Zod compatibility issues with AI SDK
@@ -274,12 +279,41 @@ export async function executeTool(
       );
     }
 
-    case "get_graduation_requirements":
-      // TODO: Implement graduation requirements lookup
+    case "get_graduation_requirements": {
+      const department = args.department as string;
+      const entranceYear = args.entranceYear as string;
+
+      // Try to get from cache first
+      let colleges = await getCachedRequirements(c);
+      if (!colleges) {
+        // If not cached, scrape and cache
+        colleges = await scrapeAllColleges();
+        await setCachedRequirements(c, colleges);
+      }
+
+      const result = await findRequirementsPDF(
+        colleges,
+        department,
+        entranceYear,
+      );
+
+      if (!result) {
+        return {
+          found: false,
+          message: `找不到 ${department} ${entranceYear} 入學年度的畢業學分表`,
+          searched: { department, entranceYear },
+        };
+      }
+
       return {
-        message: `查詢 ${args.department} ${args.entranceYear} 入學畢業學分`,
-        status: "not_implemented_yet",
+        found: true,
+        college: result.college,
+        department: result.department,
+        entranceYear,
+        pdfUrl: result.pdfUrl,
+        message: `找到 ${result.college} ${result.department} ${entranceYear} 入學年度的畢業學分表`,
       };
+    }
 
     default:
       throw new Error(`Unknown tool: ${toolName}`);
