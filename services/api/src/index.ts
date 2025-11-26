@@ -14,11 +14,13 @@ import planner from "./planner-replication";
 import mcpServer from "./mcp-server";
 import search from "./search";
 import bus from "./bus";
+import chat from "./chat";
 import { D1Database } from "@cloudflare/workers-types";
 // Scheduled functions moved to @courseweb/data-sync package
 
 export type Bindings = {
   DB: D1Database;
+  GOOGLE_AI_API_KEY?: string;
 };
 
 export const app = new Hono<{ Bindings: Bindings }>()
@@ -44,7 +46,8 @@ export const app = new Hono<{ Bindings: Bindings }>()
   .route("/planner", planner)
   .route("/mcp", mcpServer)
   .route("/search", search)
-  .route("/bus", bus);
+  .route("/bus", bus)
+  .route("/chat", chat);
 
 // Note: Scheduled data sync functionality has been moved to @courseweb/data-sync package
 // This service now only handles API endpoints

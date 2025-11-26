@@ -23,8 +23,9 @@
   "dependencies": {
     "@algolia/requester-fetch": "^4.23.3",
     "@cloudflare/workers-types": "^4.20250414.0",
-    "@courseweb/shared": "*",
     "@courseweb/database": "*",
+    "@courseweb/shared": "*",
+    "@google/genai": "^1.30.0",
     "@hono/zod-validator": "^0.4.3",
     "@prisma/adapter-d1": "^6.6.0",
     "@prisma/client": "^6.6.0",
