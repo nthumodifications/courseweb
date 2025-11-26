@@ -16,13 +16,18 @@ export const TOOL_DECLARATIONS: FunctionDeclaration[] = [
   {
     name: "search_courses",
     description:
-      "Search for NTHU courses by topic, name, or instructor. Returns course list with raw_ids.",
+      "Search for NTHU courses by topic, name, or instructor. By default searches current/recent semester only. Returns course list with raw_ids.",
     parameters: {
       type: Type.OBJECT,
       properties: {
         query: {
           type: Type.STRING,
           description: "Search query - course name, topic, or instructor",
+        },
+        semester: {
+          type: Type.STRING,
+          description:
+            'Optional semester filter (e.g., "11410"). If not specified, defaults to current or most recent semester from user context.',
         },
         limit: {
           type: Type.NUMBER,
@@ -67,9 +72,19 @@ export const TOOL_DECLARATIONS: FunctionDeclaration[] = [
     },
   },
   {
+    name: "list_departments",
+    description:
+      "List all available departments with graduation requirements. Use this to map English department names to Chinese.",
+    parameters: {
+      type: Type.OBJECT,
+      properties: {},
+      required: [],
+    },
+  },
+  {
     name: "get_graduation_requirements",
     description:
-      "Find graduation requirements PDF for a department and entrance year. Department must be in Chinese.",
+      "Find graduation requirements PDF for a department and entrance year. Department must be in Chinese. Use list_departments first to get exact Chinese names.",
     parameters: {
       type: Type.OBJECT,
       properties: {
@@ -93,13 +108,21 @@ async function searchCourses(
   c: Context,
   query: string,
   limit: number = 10,
+  semester?: string,
 ): Promise<unknown> {
   const index = algolia(c);
 
   try {
-    const { hits } = await index.search(query, {
+    const searchParams: any = {
       hitsPerPage: Math.min(limit, 50),
-    });
+    };
+
+    // Add semester filter if provided
+    if (semester) {
+      searchParams.filters = `semester:${semester}`;
+    }
+
+    const { hits } = await index.search(query, searchParams);
 
     // Format results as structured JSON
     const courses = hits.map((hit: any) => ({
@@ -255,14 +278,20 @@ export async function executeTool(
   c: Context,
   toolName: string,
   args: Record<string, unknown>,
+  userContext?: any,
 ): Promise<unknown> {
   switch (toolName) {
-    case "search_courses":
+    case "search_courses": {
+      // Use provided semester or default to current semester from user context
+      const semester =
+        (args.semester as string) || userContext?.currentSemester;
       return searchCourses(
         c,
         args.query as string,
         (args.limit as number) || 10,
+        semester,
       );
+    }
 
     case "get_course_details":
       return getCourseDetails(c, args.courseId as string);
@@ -277,6 +306,31 @@ export async function executeTool(
         5,
         Object.keys(filters).length ? filters : undefined,
       );
+    }
+
+    case "list_departments": {
+      // Try to get from cache first
+      let colleges = await getCachedRequirements(c);
+      if (!colleges) {
+        // If not cached, scrape and cache
+        colleges = await scrapeAllColleges();
+        await setCachedRequirements(c, colleges);
+      }
+
+      // Flatten all departments from all colleges
+      const allDepartments = colleges.flatMap((college) =>
+        college.departments.map((dept) => ({
+          college: college.name,
+          department: dept.name,
+          availableYears: dept.years.map((y) => y.year),
+        })),
+      );
+
+      return {
+        total: allDepartments.length,
+        departments: allDepartments,
+        note: "Use the exact Chinese department name with get_graduation_requirements. Common mappings: CS=資訊工程學系, EE=電機工程學系",
+      };
     }
 
     case "get_graduation_requirements": {
@@ -305,13 +359,15 @@ export async function executeTool(
         };
       }
 
+      // Return PDF URL for Gemini File API to fetch
       return {
         found: true,
         college: result.college,
         department: result.department,
         entranceYear,
         pdfUrl: result.pdfUrl,
-        message: `找到 ${result.college} ${result.department} ${entranceYear} 入學年度的畢業學分表`,
+        uploadToGemini: true, // Signal that this should be uploaded to Gemini
+        message: `找到 ${result.college} ${result.department} ${entranceYear} 入學年度的畢業學分表PDF`,
       };
     }
 

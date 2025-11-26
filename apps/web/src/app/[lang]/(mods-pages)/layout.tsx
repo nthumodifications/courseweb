@@ -8,6 +8,7 @@ import AppSidebar from "@/components/AppSidebar";
 import { cookies } from "next/headers";
 import { CalendarProvider } from "@/components/Calendar/calendar_hook";
 import { HeaderPortalProvider } from "@/components/Portal/HeaderPortal";
+import { ChatProvider, ChatContainer, ChatFAB } from "@/components/Chat";
 
 const NTHUModsLayout = async ({
   children,
@@ -23,21 +24,25 @@ const NTHUModsLayout = async ({
 
   return (
     <>
-      <HeaderPortalProvider>
-        <CalendarProvider>
-          <SidebarProvider defaultOpen={defaultOpen}>
-            <GoogleAnalytics />
-            <ConsoleLogger />
-            <AppSidebar lang={params.lang} />
-            <main className="w-full min-h-full">
-              <Header />
-              <div className="pt-4 pb-[5rem] md:pb-0 md:pl-2">{children}</div>
-              {modal}
-            </main>
-            <BottomNav />
-          </SidebarProvider>
-        </CalendarProvider>
-      </HeaderPortalProvider>
+      <ChatProvider>
+        <HeaderPortalProvider>
+          <CalendarProvider>
+            <SidebarProvider defaultOpen={defaultOpen}>
+              <GoogleAnalytics />
+              <ConsoleLogger />
+              <AppSidebar lang={params.lang} />
+              <main className="w-full min-h-full">
+                <Header />
+                <div className="pt-4 pb-[5rem] md:pb-0 md:pl-2">{children}</div>
+                {modal}
+              </main>
+              <BottomNav />
+              <ChatContainer />
+              <ChatFAB />
+            </SidebarProvider>
+          </CalendarProvider>
+        </HeaderPortalProvider>
+      </ChatProvider>
     </>
   );
 };

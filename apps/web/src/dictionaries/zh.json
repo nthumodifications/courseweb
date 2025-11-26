@@ -211,6 +211,34 @@
         "badge": "實驗",
         "description": "在行事曆頁面使用新的日曆功能。"
       }
+    },
+    "ai": {
+      "title": "AI 課程助手",
+      "description": "個性化設定與 API Key 管理",
+      "profile": {
+        "title": "個人資料",
+        "description": "設定您的系所和入學年度，讓 AI 提供更準確的課程建議",
+        "department": {
+          "label": "系所",
+          "placeholder": "選擇您的系所"
+        },
+        "entrance_year": {
+          "label": "入學年度",
+          "placeholder": "選擇入學年度"
+        }
+      },
+      "api_key": {
+        "title": "使用自己的 API Key",
+        "description": "提供您自己的 Gemini API Key 以獲得更高的使用額度",
+        "label": "Gemini API Key",
+        "placeholder": "AIzaSy...",
+        "get_key": "從 Google AI Studio 取得免費 API Key",
+        "test": "測試連接",
+        "testing": "測試中...",
+        "valid": "✓ API Key 有效",
+        "invalid": "✗ API Key 無效或連接失敗"
+      },
+      "save": "儲存設定"
     }
   },
   "pages": {

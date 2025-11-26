@@ -17,9 +17,5 @@ head_sampling_rate = 1
 
 [[d1_databases]]
 binding = "DB"
-database_name = "data-d1"
+database_name =p "data-d1"
 database_id = "c6b4c91d-35a1-4218-9226-a8ab217150fb"
-
-# Secrets (set via CLI):
-# - GOOGLE_AI_API_KEY: Google Gemini API key for chat endpoint
-#   Set with: wrangler secret put GOOGLE_AI_API_KEY

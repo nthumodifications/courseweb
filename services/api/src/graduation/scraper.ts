@@ -100,56 +100,106 @@ export async function scrapeCollegePage(
   const html = await response.text();
   const departments: Department[] = [];
 
-  // Parse HTML to find department sections with PDF links
-  // Pattern: Department name followed by year-specific PDF links
+  // Strategy 1: Table-based layout (most common)
+  // Each <tr> contains a department name in first <td>, then year links in subsequent <td>s
+  const tableRowPattern = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+  let rowMatch;
 
-  // Strategy 1: Look for <h3> or <h4> tags with department names followed by PDF links
-  const sectionPattern =
-    /<(h[234])[^>]*>([^<]+系[^<]*)<\/\1>([\s\S]*?)(?=<h[234]|$)/gi;
-  let sectionMatch;
+  while ((rowMatch = tableRowPattern.exec(html)) !== null) {
+    const rowContent = rowMatch[1];
 
-  while ((sectionMatch = sectionPattern.exec(html)) !== null) {
-    const deptName = sectionMatch[2].trim();
-    const sectionContent = sectionMatch[3];
+    // Extract all <td> cells from this row
+    const cellPattern = /<td[^>]*>([\s\S]*?)<\/td>/gi;
+    const cells: string[] = [];
+    let cellMatch;
 
-    // Find PDF links within this section
-    const pdfPattern =
-      /<a[^>]*href=["']([^"']*\.pdf[^"']*)["'][^>]*>(\d{2,3})[^<]*[入學]*[年度]*<\/a>/gi;
+    while ((cellMatch = cellPattern.exec(rowContent)) !== null) {
+      cells.push(cellMatch[1]);
+    }
+
+    if (cells.length < 2) continue; // Need at least dept name + one year
+
+    // First cell should contain department name
+    // Match: 系 (department), 學士班 (bachelor program), 學程 (program), 研究所 (graduate institute)
+    const deptNameMatch = cells[0].match(
+      />([^<]*(系|學士班|學程|研究所)[^<]*)</,
+    );
+    if (!deptNameMatch) continue;
+
+    const deptName = deptNameMatch[1].replace(/&nbsp;/g, "").trim();
     const years: YearInfo[] = [];
-    let pdfMatch;
 
-    while ((pdfMatch = pdfPattern.exec(sectionContent)) !== null) {
-      let pdfUrl = pdfMatch[1];
-      const year = pdfMatch[2];
+    // Remaining cells contain year links
+    for (let i = 1; i < cells.length; i++) {
+      const pdfPattern =
+        /<a[^>]*href=["']([^"']*\.pdf[^"']*)["'][^>]*>(\d{2,3})[^<]*<\/a>/gi;
+      let pdfMatch;
 
-      if (pdfUrl.startsWith("/")) {
-        pdfUrl = BASE_URL + pdfUrl;
-      } else if (!pdfUrl.startsWith("http")) {
-        // Relative to college page
-        const baseDir = collegeUrl.substring(
-          0,
-          collegeUrl.lastIndexOf("/") + 1,
-        );
-        pdfUrl = baseDir + pdfUrl;
+      while ((pdfMatch = pdfPattern.exec(cells[i])) !== null) {
+        let pdfUrl = pdfMatch[1];
+        const year = pdfMatch[2];
+
+        if (pdfUrl.startsWith("/")) {
+          pdfUrl = BASE_URL + pdfUrl;
+        } else if (!pdfUrl.startsWith("http")) {
+          const baseDir = collegeUrl.substring(
+            0,
+            collegeUrl.lastIndexOf("/") + 1,
+          );
+          pdfUrl = baseDir + pdfUrl;
+        }
+
+        years.push({ year, pdfUrl });
       }
-
-      years.push({ year, pdfUrl });
     }
 
     if (years.length > 0) {
       departments.push({
         name: deptName,
-        years: years.sort((a, b) => parseInt(b.year) - parseInt(a.year)), // Newest first
+        years: years.sort((a, b) => parseInt(b.year) - parseInt(a.year)),
       });
     }
   }
 
-  // Strategy 2: If no departments found, try table-based layout
+  // Strategy 2: Section-based layout (fallback)
   if (departments.length === 0) {
-    // Some pages use tables instead of sections
-    const tableRowPattern =
-      /<tr[^>]*>[\s\S]*?<td[^>]*>([^<]*系[^<]*)<\/td>[\s\S]*?<\/tr>/gi;
-    // ... implement table parsing if needed
+    const sectionPattern =
+      /<(h[234])[^>]*>([^<]+系[^<]*)<\/\1>([\s\S]*?)(?=<h[234]|$)/gi;
+    let sectionMatch;
+
+    while ((sectionMatch = sectionPattern.exec(html)) !== null) {
+      const deptName = sectionMatch[2].trim();
+      const sectionContent = sectionMatch[3];
+
+      const pdfPattern =
+        /<a[^>]*href=["']([^"']*\.pdf[^"']*)["'][^>]*>(\d{2,3})[^<]*[入學]*[年度]*<\/a>/gi;
+      const years: YearInfo[] = [];
+      let pdfMatch;
+
+      while ((pdfMatch = pdfPattern.exec(sectionContent)) !== null) {
+        let pdfUrl = pdfMatch[1];
+        const year = pdfMatch[2];
+
+        if (pdfUrl.startsWith("/")) {
+          pdfUrl = BASE_URL + pdfUrl;
+        } else if (!pdfUrl.startsWith("http")) {
+          const baseDir = collegeUrl.substring(
+            0,
+            collegeUrl.lastIndexOf("/") + 1,
+          );
+          pdfUrl = baseDir + pdfUrl;
+        }
+
+        years.push({ year, pdfUrl });
+      }
+
+      if (years.length > 0) {
+        departments.push({
+          name: deptName,
+          years: years.sort((a, b) => parseInt(b.year) - parseInt(a.year)),
+        });
+      }
+    }
   }
 
   return departments;
