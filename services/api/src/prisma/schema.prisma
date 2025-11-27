@@ -90,3 +90,9 @@ model Semester {
   @@unique([userId, id])
   @@index([userId])
 }
+
+model Cache {
+  key        String   @id
+  data       String   // JSON stringified data
+  updatedAt  DateTime @updatedAt
+}

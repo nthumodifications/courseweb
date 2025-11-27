@@ -81,3 +81,6 @@ apps/web/public/sw.*
 apps/web/public/workbox-*.js
 apps/web/public/precache-manifest.*
 apps/web/public/workbox-*.js.map
+
+.playwright-mcp
+.claude/settings.local.json

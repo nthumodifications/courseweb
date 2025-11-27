@@ -7,6 +7,7 @@ import {
   Globe,
   CalendarIcon,
   SquareGanttChart,
+  Sparkles,
 } from "lucide-react";
 
 export const categories: {
@@ -48,6 +49,15 @@ export const apps: {
     title_en: "Course Search",
     href: "/courses",
     Icon: BookOpen,
+  },
+  {
+    id: "chat",
+    category: "course",
+    title_zh: "AI 課程助手",
+    title_en: "AI Course Assistant",
+    href: "/chat",
+    Icon: Sparkles,
+    beta: true,
   },
   {
     id: "venues",

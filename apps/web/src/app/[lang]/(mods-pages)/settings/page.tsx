@@ -26,6 +26,7 @@ import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { useLocalStorage } from "usehooks-ts";
 import { Badge } from "@courseweb/ui";
 import { event } from "@/lib/gtag";
+import { AIPreferencesPanel } from "./AIPreferences";
 
 const DisplaySettingsCard = () => {
   const { darkMode, setDarkMode, language, setLanguage } = useSettings();
@@ -200,12 +201,28 @@ const PrivacySettingsCard = () => {
   );
 };
 
+const AISettingsCard = () => {
+  const dict = useDictionary();
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{dict.settings.ai.title}</CardTitle>
+        <CardDescription>{dict.settings.ai.description}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <AIPreferencesPanel />
+      </CardContent>
+    </Card>
+  );
+};
+
 const SettingsPage = () => {
   return (
     <div className="flex flex-col max-w-2xl px-4 gap-4">
       <DisplaySettingsCard />
       <CalendarSettingsCard />
       <TimetableSettingsCard />
+      <AISettingsCard />
       <PrivacySettingsCard />
       <Footer />
     </div>

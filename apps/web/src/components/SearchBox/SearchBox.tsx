@@ -1,7 +1,8 @@
 "use client";
 import { useSearchBox, UseSearchBoxProps } from "react-instantsearch";
-import { Input } from "@courseweb/ui";
+import { Input, Button } from "@courseweb/ui";
 import { useRef, useState } from "react";
+import { Search } from "lucide-react";
 
 interface SearchBoxProps extends UseSearchBoxProps {
   placeholder?: string;
@@ -35,7 +36,10 @@ const SearchBox = ({ placeholder, autoFocus, ...props }: SearchBoxProps) => {
   };
 
   return (
-    <form onSubmit={onSubmit} className="relative w-full flex items-center">
+    <form
+      onSubmit={onSubmit}
+      className="relative w-full flex items-center gap-1"
+    >
       <Input
         ref={inputRef}
         value={inputValue}
@@ -47,7 +51,11 @@ const SearchBox = ({ placeholder, autoFocus, ...props }: SearchBoxProps) => {
         autoCorrect="off"
         autoCapitalize="off"
         spellCheck={false}
+        className="flex-1"
       />
+      <Button type="submit" variant="ghost" size="icon" title="Search">
+        <Search size="16" />
+      </Button>
     </form>
   );
 };

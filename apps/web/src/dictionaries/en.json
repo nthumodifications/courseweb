@@ -211,6 +211,34 @@
         "badge": "Experimental",
         "description": "Use the new Calendar on the Today Page."
       }
+    },
+    "ai": {
+      "title": "AI Course Assistant",
+      "description": "Personalization and API Key Management",
+      "profile": {
+        "title": "Profile",
+        "description": "Set your department and entrance year for more accurate course recommendations",
+        "department": {
+          "label": "Department",
+          "placeholder": "Select your department"
+        },
+        "entrance_year": {
+          "label": "Entrance Year",
+          "placeholder": "Select entrance year"
+        }
+      },
+      "api_key": {
+        "title": "Use Your Own API Key",
+        "description": "Provide your own Gemini API Key for higher usage limits",
+        "label": "Gemini API Key",
+        "placeholder": "AIzaSy...",
+        "get_key": "Get free API Key from Google AI Studio",
+        "test": "Test Connection",
+        "testing": "Testing...",
+        "valid": "✓ API Key is valid",
+        "invalid": "✗ Invalid API Key or connection failed"
+      },
+      "save": "Save Settings"
     }
   },
   "pages": {
