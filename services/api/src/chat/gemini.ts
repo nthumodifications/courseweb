@@ -23,7 +23,7 @@ export async function* streamChat(
   data?: unknown;
 }> {
   const ai = new GoogleGenAI({ apiKey: options.apiKey });
-  const model = options.model || "gemini-2.0-flash-exp";
+  const model = options.model || "gemini-flash-lite-latest";
 
   // Build system prompt with user context
   const systemPrompt = buildSystemPrompt(userContext);
