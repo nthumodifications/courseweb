@@ -1,5 +1,6 @@
 import { LangProps } from "@/types/pages";
 import CourseDetailContainer from "@/components/CourseDetails/CourseDetailsContainer";
+import { notFound } from "next/navigation";
 
 type PageProps = {
   params: {

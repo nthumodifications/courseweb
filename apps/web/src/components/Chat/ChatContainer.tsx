@@ -5,13 +5,50 @@ import { useChatContext } from "./ChatProvider";
 import { ChatMessages } from "./ChatMessages";
 import { ChatInput } from "./ChatInput";
 import { ChatSuggestions } from "./ChatSuggestions";
-import { X, Sparkles } from "lucide-react";
+import { X, Sparkles, GripVertical } from "lucide-react";
 import { Button } from "@courseweb/ui";
 import { motion, AnimatePresence } from "framer-motion";
+import { useState, useRef, useEffect } from "react";
+import { usePathname } from "next/navigation";
 
 export function ChatContainer() {
   const { isOpen, setIsOpen, messages } = useChatContext();
   const isDesktop = useMediaQuery("(min-width: 1024px)");
+  const [width, setWidth] = useState(400);
+  const [isResizing, setIsResizing] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizing) return;
+      const newWidth = window.innerWidth - e.clientX;
+      setWidth(Math.max(320, Math.min(800, newWidth)));
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+    };
+
+    if (isResizing) {
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+      document.body.style.cursor = "ew-resize";
+      document.body.style.userSelect = "none";
+    }
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+  }, [isResizing]);
+
+  // Hide side panel on /chat page
+  if (pathname?.includes("/chat")) {
+    return null;
+  }
 
   // Desktop: Side panel
   if (isDesktop) {
@@ -19,12 +56,24 @@ export function ChatContainer() {
       <AnimatePresence>
         {isOpen && (
           <motion.div
+            ref={containerRef}
             initial={{ x: "100%", opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: "100%", opacity: 0 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed right-0 top-0 h-full w-[400px] bg-background border-l shadow-xl z-50 flex flex-col"
+            style={{ width: `${width}px` }}
+            className="fixed right-0 top-0 h-full bg-background border-l shadow-xl z-50 flex flex-col"
           >
+            {/* Resize handle */}
+            <div
+              className="absolute left-0 top-0 bottom-0 w-1 cursor-ew-resize hover:bg-primary/50 group"
+              onMouseDown={() => setIsResizing(true)}
+            >
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <GripVertical className="w-4 h-4 text-muted-foreground" />
+              </div>
+            </div>
+
             <div className="flex items-center justify-between p-4 border-b">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-primary" />

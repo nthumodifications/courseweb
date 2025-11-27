@@ -16,11 +16,12 @@ import { cn } from "@courseweb/ui";
 import { Separator } from "@courseweb/ui";
 import { Drawer, DrawerContent, DrawerTrigger } from "@courseweb/ui";
 import { Button } from "@courseweb/ui";
-import { Calendar, FilterIcon } from "lucide-react";
+import { Calendar, FilterIcon, Sparkles, Search } from "lucide-react";
 import Filters from "./Filters";
 import CourseSidePanel from "./CourseSidePanel";
 import SearchBox from "@/components/SearchBox/SearchBox";
 import SemesterSelector from "./SemesterSelector";
+import Link from "next/link";
 import { Label } from "@courseweb/ui";
 import useCustomMenu from "@/app/[lang]/(mods-pages)/courses/useCustomMenu";
 import { lastSemester } from "@/const/semester";
@@ -156,6 +157,12 @@ const SearchContainer = memo(
                 placeholder={dict.course.list.search_placeholder}
                 autoFocus
               />
+              <Separator orientation="vertical" className="h-full" />
+              <Link href="/zh/chat">
+                <Button variant="ghost" size="icon" title="AI 課程助手">
+                  <Sparkles size="16" />
+                </Button>
+              </Link>
               <Separator orientation="vertical" className="h-full" />
               <div className="md:hidden">
                 <Drawer>

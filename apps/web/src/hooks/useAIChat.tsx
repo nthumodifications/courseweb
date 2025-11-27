@@ -2,6 +2,7 @@
 import { useState, useCallback, useRef } from "react";
 import useUserTimetable from "./contexts/useUserTimetable";
 import { useAuth } from "react-oidc-context";
+import { event as gtagEvent } from "@/lib/gtag";
 
 export interface ToolCall {
   name: string;
@@ -134,6 +135,19 @@ export function useAIChat(options: UseAIChatOptions = {}) {
       setMessages((prev) => [...prev, userMessage]);
       setIsLoading(true);
       setError(null);
+
+      // Track AI chat message sent
+      gtagEvent({
+        action: "ai_chat_message_sent",
+        category: "AI Chat",
+        label: "User Message",
+        data: {
+          message_length: content.length,
+          has_context: !!(
+            getUserContext().department || getUserContext().currentSemester
+          ),
+        },
+      });
 
       // Create placeholder for assistant response
       const assistantMessage: ChatMessage = {
@@ -298,12 +312,30 @@ export function useAIChat(options: UseAIChatOptions = {}) {
               : m,
           ),
         );
+
+        // Track successful AI response
+        gtagEvent({
+          action: "ai_chat_response_received",
+          category: "AI Chat",
+          label: "Assistant Response",
+          data: {
+            response_length: fullContent.length,
+            tools_used: toolCalls.length,
+            tool_names: toolCalls.map((t) => t.name).join(","),
+          },
+        });
       } catch (err) {
         if ((err as Error).name === "AbortError") {
           // User cancelled, remove streaming message
           setMessages((prev) =>
             prev.filter((m) => m.id !== assistantMessage.id),
           );
+          // Track cancellation
+          gtagEvent({
+            action: "ai_chat_cancelled",
+            category: "AI Chat",
+            label: "User Cancelled",
+          });
         } else {
           setError((err as Error).message);
           setMessages((prev) =>
@@ -317,6 +349,15 @@ export function useAIChat(options: UseAIChatOptions = {}) {
                 : m,
             ),
           );
+          // Track error
+          gtagEvent({
+            action: "ai_chat_error",
+            category: "AI Chat",
+            label: "Error",
+            data: {
+              error_message: (err as Error).message,
+            },
+          });
         }
       } finally {
         setIsLoading(false);

@@ -9,7 +9,7 @@ import {
   CheckCircle2,
   XCircle,
 } from "lucide-react";
-import ReactMarkdown from "react-markdown";
+import { RichMessageContent } from "./RichMessageContent";
 
 interface ChatMessageProps {
   message: ChatMessageType;
@@ -67,24 +67,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
               <span className="text-sm">思考中...</span>
             </div>
           ) : (
-            <div className="prose prose-sm dark:prose-invert max-w-none">
-              <ReactMarkdown
-                components={{
-                  a: ({ href, children }) => (
-                    <a
-                      href={href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary underline"
-                    >
-                      {children}
-                    </a>
-                  ),
-                }}
-              >
-                {message.content}
-              </ReactMarkdown>
-            </div>
+            <RichMessageContent content={message.content} />
           )}
 
           {message.isStreaming && message.content && (

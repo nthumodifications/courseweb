@@ -3,9 +3,16 @@ import { useChatContext } from "./ChatProvider";
 import { Button } from "@courseweb/ui";
 import { Sparkles, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { usePathname } from "next/navigation";
 
 export function ChatFAB() {
   const { isOpen, setIsOpen } = useChatContext();
+  const pathname = usePathname();
+
+  // Hide FAB on /chat page
+  if (pathname?.includes("/chat")) {
+    return null;
+  }
 
   return (
     <motion.div className="fixed bottom-6 right-6 z-40" initial={false}>

@@ -69,5 +69,6 @@ export const config = {
     "/student/:path*",
     "/ais-redirect/:path*",
     "/shops/:path*",
+    "/chat/:path*",
   ],
 };
