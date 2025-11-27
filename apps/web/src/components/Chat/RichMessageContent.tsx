@@ -2,6 +2,8 @@
 import React, { Suspense } from "react";
 import ReactMarkdown from "react-markdown";
 import { Skeleton } from "@courseweb/ui";
+import Link from "next/link";
+import remarkGfm from "remark-gfm";
 
 // Lazy load heavy components
 const CourseListRenderer = React.lazy(() => import("./CourseListRenderer"));
@@ -15,6 +17,31 @@ type ContentPart =
   | { type: "text"; content: string }
   | { type: "course"; rawIds: string[] }
   | { type: "timetable"; rawIds: string[] };
+
+/**
+ * Automatically convert course IDs to clickable links
+ * Pattern: 5-digit semester + 2-10 char course code + space + 6 digits
+ * Example: 11410CS 535100 → [11410CS 535100](https://nthumods.com/courses/11410CS%20535100)
+ */
+function linkifyCourseIds(content: string): string {
+  // Match course ID pattern: YYSSDDDD CCCCCC (where YY=year, SS=semester, D=dept, C=course)
+  const courseIdRegex = /\b(\d{5}[A-Z]{2,10}\s+\d{6})\b/g;
+
+  return content.replace(courseIdRegex, (match, p1, offset) => {
+    // Check if already inside a markdown link by looking backwards for unmatched [
+    const beforeMatch = content.substring(0, offset);
+    const lastOpenBracket = beforeMatch.lastIndexOf("[");
+    const lastCloseBracket = beforeMatch.lastIndexOf("]");
+
+    // If there's an open bracket after the last close bracket, we're inside a link
+    if (lastOpenBracket > lastCloseBracket) {
+      return match; // Don't linkify
+    }
+
+    const encodedId = encodeURIComponent(match);
+    return `[${match}](https://nthumods.com/courses/${encodedId})`;
+  });
+}
 
 /**
  * Parse message content and extract rich component directives
@@ -74,19 +101,40 @@ export function RichMessageContent({ content }: RichMessageContentProps) {
           return (
             <div
               key={index}
-              className="prose prose-sm dark:prose-invert max-w-none"
+              className="prose prose-sm dark:prose-invert max-w-none prose-table:text-sm"
             >
               <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
                 components={{
                   a: ({ href, children }) => (
                     <a
                       href={href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-primary underline"
+                      className="text-primary underline hover:text-primary/80"
                     >
                       {children}
                     </a>
+                  ),
+                  table: ({ children }) => (
+                    <div className="overflow-x-auto my-4">
+                      <table className="border-collapse border border-border w-full">
+                        {children}
+                      </table>
+                    </div>
+                  ),
+                  thead: ({ children }) => (
+                    <thead className="bg-muted">{children}</thead>
+                  ),
+                  th: ({ children }) => (
+                    <th className="border border-border px-3 py-2 text-left font-semibold">
+                      {children}
+                    </th>
+                  ),
+                  td: ({ children }) => (
+                    <td className="border border-border px-3 py-2">
+                      {children}
+                    </td>
                   ),
                 }}
               >

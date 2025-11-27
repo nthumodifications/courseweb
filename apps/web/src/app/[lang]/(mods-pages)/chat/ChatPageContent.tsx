@@ -3,6 +3,7 @@ import { Sparkles } from "lucide-react";
 import { ChatMessages } from "@/components/Chat/ChatMessages";
 import { ChatInput } from "@/components/Chat/ChatInput";
 import { ChatSuggestions } from "@/components/Chat/ChatSuggestions";
+import { AISettingsDialog } from "@/components/Chat/AISettingsDialog";
 import { useChatContext } from "@/components/Chat/ChatProvider";
 
 export function ChatPageContent() {
@@ -13,14 +14,17 @@ export function ChatPageContent() {
       {/* Header */}
       <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center gap-3">
-            <Sparkles className="w-6 h-6 text-primary" />
-            <div>
-              <h1 className="text-xl font-bold">AI 課程助手</h1>
-              <p className="text-xs text-muted-foreground">
-                搜尋課程 · 規劃課表 · 查詢畢業學分
-              </p>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <Sparkles className="w-6 h-6 text-primary" />
+              <div>
+                <h1 className="text-xl font-bold">AI 課程助手</h1>
+                <p className="text-xs text-muted-foreground">
+                  搜尋課程 · 規劃課表 · 查詢畢業學分
+                </p>
+              </div>
             </div>
+            <AISettingsDialog />
           </div>
         </div>
       </div>

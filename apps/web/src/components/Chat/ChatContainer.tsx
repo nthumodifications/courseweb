@@ -7,6 +7,7 @@ import { ChatInput } from "./ChatInput";
 import { ChatSuggestions } from "./ChatSuggestions";
 import { X, Sparkles, GripVertical } from "lucide-react";
 import { Button } from "@courseweb/ui";
+import { AISettingsDialog } from "./AISettingsDialog";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
@@ -79,13 +80,16 @@ export function ChatContainer() {
                 <Sparkles className="w-5 h-5 text-primary" />
                 <h2 className="font-semibold">AI 課程助手</h2>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsOpen(false)}
-              >
-                <X className="w-5 h-5" />
-              </Button>
+              <div className="flex items-center gap-1">
+                <AISettingsDialog />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
             </div>
 
             <div className="flex-1 overflow-hidden flex flex-col">
@@ -126,6 +130,7 @@ export function ChatContainer() {
                 <Sparkles className="w-5 h-5 text-primary" />
                 <h2 className="font-semibold">AI 課程助手</h2>
               </div>
+              <AISettingsDialog />
             </div>
 
             <div className="flex-1 overflow-hidden flex flex-col">
