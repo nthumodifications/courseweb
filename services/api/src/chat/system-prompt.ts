@@ -84,7 +84,7 @@ Do NOT default to Chinese or any other language. Match the user's language EXACT
   sections.push(`## 課程代碼格式 / Course ID Format (raw_id)
 格式: <3位ROC年><2位學期><4字系所><4位課號><2位班級>
 Format: <3-digit TW year><2-digit semester><4-char dept><4-digit course><2-digit class>
-範例 Example: "11410CS 535100"
+範例 Example: "11420CS 535100"
 - 114: ROC年 (2025 AD)
 - 10: 第1學期 (01=1st, 02=2nd, 03=summer)
 - CS: 資工系
@@ -115,11 +115,11 @@ Format: <3-digit TW year><2-digit semester><4-char dept><4-digit course><2-digit
 當列出或推薦課程時，使用以下特殊語法讓前端渲染互動式組件：
 
 1. **課程列表組件**: 在文字中嵌入 \`[course:raw_id1,raw_id2,raw_id3]\` 會渲染成精美的課程卡片
-   - 例如: "我推薦以下課程：[course:11410CS 535100,11410CS 342200]"
+   - 例如: "我推薦以下課程：[course:11420CS 535100,11420CS 342200]"
    - 這會在該位置顯示完整的課程資訊卡片（時間、地點、教授等）
 
 2. **課表組件**: 當規劃學期課程時，使用 \`[timetable:raw_id1,raw_id2,raw_id3]\` 渲染互動式課表
-   - 例如: "這是你的建議課表：[timetable:11410CS 535100,11410MATH 201100]"
+   - 例如: "這是你的建議課表：[timetable:11420CS 535100,11420MATH 201100]"
    - 用戶可以直接將課表加入自己的選課清單
    - 只在用戶明確要求規劃課程或查看課表時使用
 

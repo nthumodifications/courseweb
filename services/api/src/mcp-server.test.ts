@@ -9,17 +9,20 @@ import { describe, it, expect } from "bun:test";
 const MCP_TOOLS = [
   {
     name: "search_courses",
-    description: "Search for NTHU courses using full-text search. Returns structured course information. IMPORTANT: Search by course name, topic, or instructor name - NOT by course ID/code (e.g., search 'machine learning' not 'CS535100'). Each result includes raw_id which can be used with get_course_details or get_course_syllabus for more information.",
+    description:
+      "Search for NTHU courses using full-text search. Returns structured course information. IMPORTANT: Search by course name, topic, or instructor name - NOT by course ID/code (e.g., search 'machine learning' not 'CS535100'). Each result includes raw_id which can be used with get_course_details or get_course_syllabus for more information.",
     inputSchema: {
       type: "object",
       properties: {
         query: {
           type: "string",
-          description: "Search query for courses. Use course name, topic, or instructor name (e.g., 'machine learning', 'artificial intelligence', 'John Doe'). Avoid using course codes/IDs.",
+          description:
+            "Search query for courses. Use course name, topic, or instructor name (e.g., 'machine learning', 'artificial intelligence', 'John Doe'). Avoid using course codes/IDs.",
         },
         limit: {
           type: "number",
-          description: "Maximum number of results to return (default: 10, max: 50)",
+          description:
+            "Maximum number of results to return (default: 10, max: 50)",
           minimum: 1,
           maximum: 50,
         },
@@ -29,13 +32,15 @@ const MCP_TOOLS = [
   },
   {
     name: "get_course_details",
-    description: "Get detailed information about a specific course by its raw_id (obtained from search_courses results). Returns comprehensive course information including syllabus, schedule, and requirements.",
+    description:
+      "Get detailed information about a specific course by its raw_id (obtained from search_courses results). Returns comprehensive course information including syllabus, schedule, and requirements.",
     inputSchema: {
       type: "object",
       properties: {
         courseId: {
           type: "string",
-          description: "Course raw_id (from search results, e.g., '11410CS 535100')",
+          description:
+            "Course raw_id (from search results, e.g., '11420CS 535100')",
         },
       },
       required: ["courseId"],
@@ -43,13 +48,15 @@ const MCP_TOOLS = [
   },
   {
     name: "get_course_syllabus",
-    description: "Get detailed syllabus information for a course including objectives, description, prerequisites, grading breakdown, and important dates. Use the raw_id from search_courses results.",
+    description:
+      "Get detailed syllabus information for a course including objectives, description, prerequisites, grading breakdown, and important dates. Use the raw_id from search_courses results.",
     inputSchema: {
       type: "object",
       properties: {
         courseId: {
           type: "string",
-          description: "Course raw_id (from search results, e.g., '11410CS 535100')",
+          description:
+            "Course raw_id (from search results, e.g., '11420CS 535100')",
         },
       },
       required: ["courseId"],
@@ -57,7 +64,8 @@ const MCP_TOOLS = [
   },
   {
     name: "get_multiple_courses",
-    description: "Get information for multiple courses by their raw_ids (obtained from search results).",
+    description:
+      "Get information for multiple courses by their raw_ids (obtained from search results).",
     inputSchema: {
       type: "object",
       properties: {
@@ -66,7 +74,8 @@ const MCP_TOOLS = [
           items: {
             type: "string",
           },
-          description: "Array of course raw_ids to retrieve (e.g., ['11410CS 535100', '11410EE 200201'])",
+          description:
+            "Array of course raw_ids to retrieve (e.g., ['11420CS 535100', '11420EE 200201'])",
         },
       },
       required: ["courseIds"],
@@ -74,7 +83,8 @@ const MCP_TOOLS = [
   },
   {
     name: "bulk_search_courses",
-    description: "Search for courses using multiple query strings and optional filters. Useful for comparing different topics or finding courses across multiple criteria. Returns structured course information with raw_id for each result.",
+    description:
+      "Search for courses using multiple query strings and optional filters. Useful for comparing different topics or finding courses across multiple criteria. Returns structured course information with raw_id for each result.",
     inputSchema: {
       type: "object",
       properties: {
@@ -83,11 +93,13 @@ const MCP_TOOLS = [
           items: {
             type: "string",
           },
-          description: "Array of search queries (e.g., ['machine learning', 'data science', 'artificial intelligence'])",
+          description:
+            "Array of search queries (e.g., ['machine learning', 'data science', 'artificial intelligence'])",
         },
         limit: {
           type: "number",
-          description: "Maximum number of results to return per query (default: 5, max: 20)",
+          description:
+            "Maximum number of results to return per query (default: 5, max: 20)",
           minimum: 1,
           maximum: 20,
         },
@@ -122,7 +134,7 @@ function mockSearchResults(query: string, limit: number) {
     total: 2,
     courses: [
       {
-        raw_id: "11410CS 535100",
+        raw_id: "11420CS 535100",
         course: "CS535100",
         department: "CS",
         class: "00",
@@ -134,7 +146,7 @@ function mockSearchResults(query: string, limit: number) {
         times: ["M3M4"],
         venues: ["台達館105"],
         language: "zh",
-        semester: "11410",
+        semester: "11420",
         brief: "Introduction to machine learning algorithms",
         restrictions: null,
         note: null,
@@ -144,7 +156,7 @@ function mockSearchResults(query: string, limit: number) {
         ge_type: null,
       },
       {
-        raw_id: "11410EE 200201",
+        raw_id: "11420EE 200201",
         course: "EE200201",
         department: "EE",
         class: "01",
@@ -156,7 +168,7 @@ function mockSearchResults(query: string, limit: number) {
         times: ["T5T6"],
         venues: ["工程一館205"],
         language: "en",
-        semester: "11410",
+        semester: "11420",
         brief: "Advanced deep learning techniques",
         restrictions: "限本系",
         note: "需先修機器學習",
@@ -173,13 +185,13 @@ function mockSearchResults(query: string, limit: number) {
 function mockBulkSearchResults(queries: string[], filters: any, limit: number) {
   return {
     filters_applied: filters,
-    results: queries.map(query => ({
+    results: queries.map((query) => ({
       query,
       total: 1,
       courses: [
         {
-          raw_id: `11410CS ${query.replace(/\s+/g, '')}`,
-          course: `CS${query.replace(/\s+/g, '')}`,
+          raw_id: `11420CS ${query.replace(/\s+/g, "")}`,
+          course: `CS${query.replace(/\s+/g, "")}`,
           department: "CS",
           class: "00",
           name_zh: `課程${query}`,
@@ -190,7 +202,7 @@ function mockBulkSearchResults(queries: string[], filters: any, limit: number) {
           times: ["M3M4"],
           venues: ["台達館105"],
           language: "zh",
-          semester: "11410",
+          semester: "11420",
           brief: `Course about ${query}`,
           restrictions: null,
           note: null,
@@ -208,23 +220,26 @@ describe("MCP Server Tools", () => {
   });
 
   it("should have bulk_search_courses tool", () => {
-    const bulkSearchTool = MCP_TOOLS.find(t => t.name === "bulk_search_courses");
+    const bulkSearchTool = MCP_TOOLS.find(
+      (t) => t.name === "bulk_search_courses",
+    );
     expect(bulkSearchTool).toBeDefined();
     expect(bulkSearchTool?.name).toBe("bulk_search_courses");
   });
 
   it("should have clear usage instructions in search_courses", () => {
-    const searchTool = MCP_TOOLS.find(t => t.name === "search_courses");
+    const searchTool = MCP_TOOLS.find((t) => t.name === "search_courses");
     expect(searchTool).toBeDefined();
     expect(searchTool?.description).toContain("IMPORTANT");
     expect(searchTool?.description).toContain("NOT by course ID");
   });
 
   it("should have all tools mention raw_id in descriptions", () => {
-    const toolsWithRawId = MCP_TOOLS.filter(tool => 
-      tool.description.toLowerCase().includes("raw_id") || 
-      tool.name === "search_courses" || 
-      tool.name === "bulk_search_courses"
+    const toolsWithRawId = MCP_TOOLS.filter(
+      (tool) =>
+        tool.description.toLowerCase().includes("raw_id") ||
+        tool.name === "search_courses" ||
+        tool.name === "bulk_search_courses",
     );
     expect(toolsWithRawId.length).toBe(MCP_TOOLS.length);
   });
@@ -233,12 +248,12 @@ describe("MCP Server Tools", () => {
 describe("MCP Response Format", () => {
   it("should return structured JSON with required fields", () => {
     const result = mockSearchResults("machine learning", 10);
-    
+
     expect(result.query).toBe("machine learning");
     expect(result.total).toBe(2);
     expect(Array.isArray(result.courses)).toBe(true);
     expect(result.courses.length).toBeGreaterThan(0);
-    
+
     const course = result.courses[0];
     expect(course.raw_id).toBeDefined();
     expect(course.course).toBeDefined();
@@ -251,8 +266,8 @@ describe("MCP Response Format", () => {
 
   it("should include raw_id in all course results", () => {
     const result = mockSearchResults("machine learning", 10);
-    
-    result.courses.forEach(course => {
+
+    result.courses.forEach((course) => {
       expect(course.raw_id).toBeDefined();
       expect(typeof course.raw_id).toBe("string");
       expect(course.raw_id.length).toBeGreaterThan(0);
@@ -265,15 +280,15 @@ describe("Bulk Search", () => {
     const queries = ["machine learning", "artificial intelligence"];
     const filters = { department: "CS", language: "zh" };
     const result = mockBulkSearchResults(queries, filters, 5);
-    
+
     expect(result.filters_applied).toEqual(filters);
     expect(Array.isArray(result.results)).toBe(true);
     expect(result.results.length).toBe(2);
-    
+
     expect(result.results[0].query).toBe("machine learning");
     expect(result.results[1].query).toBe("artificial intelligence");
-    
-    result.results.forEach(queryResult => {
+
+    result.results.forEach((queryResult) => {
       expect(queryResult.courses[0].raw_id).toBeDefined();
     });
   });
@@ -281,7 +296,7 @@ describe("Bulk Search", () => {
   it("should organize results by query", () => {
     const queries = ["ML", "AI", "data science"];
     const result = mockBulkSearchResults(queries, {}, 3);
-    
+
     expect(result.results.length).toBe(queries.length);
     queries.forEach((query, idx) => {
       expect(result.results[idx].query).toBe(query);

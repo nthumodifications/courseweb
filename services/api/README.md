@@ -175,8 +175,8 @@ Returns 5-day weather forecast for NTHU area.
 #### Get Courses by IDs
 
 ```http
-GET /course?courses=11410CS 100101
-GET /course?courses[]=11410CS 100101&courses[]=11410EE 200201
+GET /course?courses=11420CS 100101
+GET /course?courses[]=11420CS 100101&courses[]=11420EE 200201
 ```
 
 #### Get Course Details
@@ -253,7 +253,7 @@ GET /venue
 #### Get Courses by Venue
 
 ```http
-GET /venue/{venueId}/courses?semester=11410
+GET /venue/{venueId}/courses?semester=11420
 ```
 
 ### Search
@@ -519,7 +519,7 @@ Rate limiting is applied per IP address:
 
 ```javascript
 // Get course information
-const response = await fetch("https://api.nthumods.com/course/11410CS100101");
+const response = await fetch("https://api.nthumods.com/course/11420CS100101");
 const course = await response.json();
 
 // Create short link
@@ -542,7 +542,7 @@ const weather = await weatherResponse.json();
 import requests
 
 # Get course information
-response = requests.get('https://api.nthumods.com/course/11410CS100101')
+response = requests.get('https://api.nthumods.com/course/11420CS100101')
 course = response.json()
 
 # Create GitHub issue
@@ -562,7 +562,7 @@ issue = response.json()
 curl https://api.nthumods.com/weather
 
 # Get courses by venue
-curl "https://api.nthumods.com/venue/綜合一館/courses?semester=11410"
+curl "https://api.nthumods.com/venue/綜合一館/courses?semester=11420"
 
 # Create short link
 curl -X PUT "https://api.nthumods.com/shortlink?url=https://example.com"

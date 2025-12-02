@@ -46,11 +46,32 @@ docker build -t courseweb-data-sync .
 docker run --env-file .env courseweb-data-sync
 
 # Run with custom semester
-docker run --env-file .env courseweb-data-sync tsx src/sync-courses.ts 11410
+docker run --env-file .env courseweb-data-sync tsx src/sync-courses.ts 11420
 
 # Run scheduled sync (persistent container)
 docker run -d --env-file .env --name courseweb-sync \
-  courseweb-data-sync tsx src/update-courses.ts "0 8 * * *" 11410
+  courseweb-data-sync tsx src/update-courses.ts "0 8 * * *" 11420
+```
+
+### Docker Compose Usage
+
+For a ready-to-use daily scraping service:
+
+```bash
+# Copy environment file and configure
+cp .env.example .env
+
+# Start scheduled daily sync service
+docker-compose up -d
+
+# Run one-time sync
+docker-compose run --rm data-sync-once
+
+# View logs
+docker-compose logs -f data-sync
+
+# Stop the service
+docker-compose down
 ```
 
 ### Google Cloud Run Deployment
@@ -91,7 +112,7 @@ npm run sync:once [semester]
 
 This will:
 
-- Scrape archived courses for the specified semester (defaults to 11410)
+- Scrape archived courses for the specified semester (defaults to 11420)
 - Download and process syllabus data
 - Update Algolia search index
 - Exit when complete
@@ -145,16 +166,16 @@ import {
 } from "@courseweb/data-sync";
 
 // One-time sync
-const result = await syncCourses("11410"); // semester parameter optional
+const result = await syncCourses("11420"); // semester parameter optional
 
 // Start scheduled sync
-const job = startScheduledSync("0 8 * * *", "11410"); // cron pattern and semester optional
+const job = startScheduledSync("0 8 * * *", "11420"); // cron pattern and semester optional
 
 // Use individual functions
 const env = validateEnvironment();
-const courses = await scrapeArchivedCourses(env, "11410");
-await scrapeSyllabus(env, "11410", courses);
-await syncCoursesToAlgolia(env, "11410");
+const courses = await scrapeArchivedCourses(env, "11420");
+await scrapeSyllabus(env, "11420", courses);
+await syncCoursesToAlgolia(env, "11420");
 ```
 
 ### Direct Function Usage
@@ -176,13 +197,13 @@ const env: SyncEnvironment = {
 };
 
 // Scrape courses and get results
-const courses = await scrapeArchivedCourses(env, "11410");
+const courses = await scrapeArchivedCourses(env, "11420");
 
 // Process syllabus with scraped courses
-await scrapeSyllabus(env, "11410", courses);
+await scrapeSyllabus(env, "11420", courses);
 
 // Sync to search index
-await syncCoursesToAlgolia(env, "11410");
+await syncCoursesToAlgolia(env, "11420");
 ```
 
 ## Environment Variables
@@ -200,14 +221,14 @@ Optional variables:
 
 | Variable       | Description              | Default       |
 | -------------- | ------------------------ | ------------- |
-| `SEMESTER`     | Default semester to sync | `11410`       |
+| `SEMESTER`     | Default semester to sync | `11420`       |
 | `CRON_PATTERN` | Default cron schedule    | `"0 0 * * *"` |
 
 ## Configuration
 
 ### Default Semester
 
-The default semester is `11410` (Fall 2024). You can override this by:
+The default semester is `11420` (Spring 2026). You can override this by:
 
 - Passing a different semester parameter to the functions
 - Setting the `SEMESTER` environment variable
