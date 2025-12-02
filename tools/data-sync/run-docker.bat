@@ -7,7 +7,7 @@ REM This script helps you run the data sync tool locally using Docker on Windows
 REM Default values
 set IMAGE_NAME=courseweb-data-sync
 set CONTAINER_NAME=courseweb-data-sync-run
-set SEMESTER=11410
+set SEMESTER=11420
 set MODE=once
 set CRON_PATTERN=0 8 * * *
 set ENV_FILE=.env
@@ -206,7 +206,7 @@ echo Usage: %~nx0 [OPTIONS]
 echo.
 echo Options:
 echo   -m, --mode MODE        Run mode: 'once' or 'scheduled' ^(default: once^)
-echo   -s, --semester SEM     Semester to sync ^(default: 11410^)
+echo   -s, --semester SEM     Semester to sync ^(default: 11420^)
 echo   -c, --cron PATTERN     Cron pattern for scheduled mode ^(default: '0 8 * * *'^)
 echo   -e, --env FILE         Environment file path ^(default: .env^)
 echo   -b, --build            Force rebuild the Docker image
@@ -216,7 +216,7 @@ echo   -h, --help             Show this help message
 echo.
 echo Examples:
 echo   %~nx0                     # Run once with default semester
-echo   %~nx0 -m once -s 11410    # Run once for semester 11410
+echo   %~nx0 -m once -s 11420    # Run once for semester 11420
 echo   %~nx0 -m scheduled -c "0 */6 * * *"  # Run every 6 hours
 echo   %~nx0 -b                  # Rebuild image and run once
 echo   %~nx0 -d -f               # Run in background and follow logs

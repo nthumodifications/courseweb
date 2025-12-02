@@ -21,7 +21,7 @@ type ContentPart =
 /**
  * Automatically convert course IDs to clickable links
  * Pattern: 5-digit semester + 2-10 char course code + space + 6 digits
- * Example: 11410CS 535100 → [11410CS 535100](https://nthumods.com/courses/11410CS%20535100)
+ * Example: 11420CS 535100 → [11420CS 535100](https://nthumods.com/courses/11420CS%20535100)
  */
 function linkifyCourseIds(content: string): string {
   // Match course ID pattern: YYSSDDDD CCCCCC (where YY=year, SS=semester, D=dept, C=course)

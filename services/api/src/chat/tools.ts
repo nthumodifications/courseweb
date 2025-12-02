@@ -27,7 +27,7 @@ export const TOOL_DECLARATIONS: FunctionDeclaration[] = [
         semester: {
           type: Type.STRING,
           description:
-            'Optional semester filter (e.g., "11410"). If not specified, defaults to current or most recent semester from user context.',
+            'Optional semester filter (e.g., "11420"). If not specified, defaults to current or most recent semester from user context.',
         },
         limit: {
           type: Type.NUMBER,
@@ -46,7 +46,7 @@ export const TOOL_DECLARATIONS: FunctionDeclaration[] = [
         courseId: {
           type: Type.STRING,
           description:
-            'Course raw_id from search results (e.g., "11410CS 535100")',
+            'Course raw_id from search results (e.g., "11420CS 535100")',
         },
       },
       required: ["courseId"],

@@ -15,7 +15,7 @@ NC='\033[0m' # No Color
 # Default values
 IMAGE_NAME="courseweb-data-sync"
 CONTAINER_NAME="courseweb-data-sync-run"
-SEMESTER="11410"
+SEMESTER="11420"
 MODE="once"
 
 # Function to print colored output
@@ -41,7 +41,7 @@ show_usage() {
     echo ""
     echo "Options:"
     echo "  -m, --mode MODE        Run mode: 'once' or 'scheduled' (default: once)"
-    echo "  -s, --semester SEM     Semester to sync (default: 11410)"
+    echo "  -s, --semester SEM     Semester to sync (default: 11420)"
     echo "  -c, --cron PATTERN     Cron pattern for scheduled mode (default: '0 8 * * *')"
     echo "  -e, --env FILE         Environment file path (default: .env)"
     echo "  -b, --build            Force rebuild the Docker image"
@@ -51,7 +51,7 @@ show_usage() {
     echo ""
     echo "Examples:"
     echo "  $0                     # Run once with default semester"
-    echo "  $0 -m once -s 11410    # Run once for semester 11410"
+    echo "  $0 -m once -s 11420    # Run once for semester 11420"
     echo "  $0 -m scheduled -c '0 */6 * * *'  # Run every 6 hours"
     echo "  $0 -b                  # Rebuild image and run once"
     echo "  $0 -d -f               # Run in background and follow logs"

@@ -7,6 +7,7 @@ This document provides comprehensive examples for using the CourseWeb MCP (Model
 The MCP server is available at: `https://api.nthumods.com/mcp`
 
 **Important Search Guidelines:**
+
 - ✅ **DO** search by course name, topic, or instructor name (e.g., "machine learning", "artificial intelligence", "John Doe")
 - ❌ **DON'T** search using course IDs/codes unless specifically needed (e.g., avoid searching "CS535100" directly)
 - 💡 Use the `raw_id` from search results with `get_course_details` or `get_course_syllabus` for detailed information
@@ -21,19 +22,19 @@ const mcpClient = {
       jsonrpc: "2.0",
       method,
       params,
-      id: id || Date.now()
+      id: id || Date.now(),
     };
-    
-    const response = await fetch('https://api.nthumods.com/mcp', {
-      method: 'POST',
+
+    const response = await fetch("https://api.nthumods.com/mcp", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify(request)
+      body: JSON.stringify(request),
     });
-    
+
     return await response.json();
-  }
+  },
 };
 ```
 
@@ -51,6 +52,7 @@ const mcpClient = {
 ```
 
 **Response:**
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -81,6 +83,7 @@ const mcpClient = {
 ```
 
 **Response:**
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -121,6 +124,7 @@ Search for courses using natural language queries. **Returns structured JSON dat
 **Important:** Search by course name, topic, or instructor - NOT by course ID/code.
 
 **Request:**
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -137,6 +141,7 @@ Search for courses using natural language queries. **Returns structured JSON dat
 ```
 
 **Response Structure:**
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -144,7 +149,7 @@ Search for courses using natural language queries. **Returns structured JSON dat
     "content": [
       {
         "type": "text",
-        "text": "{\"query\":\"machine learning\",\"total\":2,\"courses\":[{\"raw_id\":\"11410CS 535100\",\"course\":\"CS535100\",\"department\":\"CS\",\"class\":\"00\",\"name_zh\":\"機器學習\",\"name_en\":\"Machine Learning\",\"teacher_zh\":[\"張三\"],\"teacher_en\":[\"John Doe\"],\"credits\":\"3\",\"times\":[\"M3M4\"],\"venues\":[\"台達館105\"],\"language\":\"zh\",\"semester\":\"11410\",\"brief\":\"Introduction to ML\",\"restrictions\":null,\"note\":null,\"prerequisites\":null,\"capacity\":60,\"cross_discipline\":[],\"ge_type\":null}],\"note\":\"Use raw_id with get_course_details or get_course_syllabus for more information\"}"
+        "text": "{\"query\":\"machine learning\",\"total\":2,\"courses\":[{\"raw_id\":\"11420CS 535100\",\"course\":\"CS535100\",\"department\":\"CS\",\"class\":\"00\",\"name_zh\":\"機器學習\",\"name_en\":\"Machine Learning\",\"teacher_zh\":[\"張三\"],\"teacher_en\":[\"John Doe\"],\"credits\":\"3\",\"times\":[\"M3M4\"],\"venues\":[\"台達館105\"],\"language\":\"zh\",\"semester\":\"11420\",\"brief\":\"Introduction to ML\",\"restrictions\":null,\"note\":null,\"prerequisites\":null,\"capacity\":60,\"cross_discipline\":[],\"ge_type\":null}],\"note\":\"Use raw_id with get_course_details or get_course_syllabus for more information\"}"
       }
     ],
     "isError": false
@@ -154,6 +159,7 @@ Search for courses using natural language queries. **Returns structured JSON dat
 ```
 
 **Parsed Response Data:**
+
 - `query`: The search query used
 - `total`: Number of results found
 - `courses`: Array of course objects, each containing:
@@ -171,6 +177,7 @@ Search for courses using natural language queries. **Returns structured JSON dat
 Get comprehensive information about a specific course using its `raw_id` (obtained from search results). **Returns structured JSON data**.
 
 **Request:**
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -178,7 +185,7 @@ Get comprehensive information about a specific course using its `raw_id` (obtain
   "params": {
     "name": "get_course_details",
     "arguments": {
-      "courseId": "11410CS 535100"
+      "courseId": "11420CS 535100"
     }
   },
   "id": 4
@@ -192,6 +199,7 @@ Get comprehensive information about a specific course using its `raw_id` (obtain
 Retrieve detailed syllabus information including grading breakdown and important dates. Use the `raw_id` from search results.
 
 **Request:**
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -199,7 +207,7 @@ Retrieve detailed syllabus information including grading breakdown and important
   "params": {
     "name": "get_course_syllabus",
     "arguments": {
-      "courseId": "11410CS 535100"
+      "courseId": "11420CS 535100"
     }
   },
   "id": 5
@@ -207,6 +215,7 @@ Retrieve detailed syllabus information including grading breakdown and important
 ```
 
 **Response:** Returns structured syllabus data including:
+
 - `syllabus`: objectives, description, requirements, prerequisites, note, restrictions
 - `grading`: Array of grading components with type and percentage
 - `important_dates`: Array of important dates with title and date
@@ -217,6 +226,7 @@ Retrieve detailed syllabus information including grading breakdown and important
 Get information for multiple courses at once by their `raw_ids`.
 
 **Request:**
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -224,7 +234,7 @@ Get information for multiple courses at once by their `raw_ids`.
   "params": {
     "name": "get_multiple_courses",
     "arguments": {
-      "courseIds": ["11410CS 535100", "11410EE 200201", "11410MATH 101"]
+      "courseIds": ["11420CS 535100", "11420EE 200201", "11420MATH 101"]
     }
   },
   "id": 6
@@ -238,6 +248,7 @@ Get information for multiple courses at once by their `raw_ids`.
 Search for courses using multiple query strings and optional filters. **Perfect for comparing different topics** or finding courses across multiple criteria.
 
 **Request:**
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -245,12 +256,16 @@ Search for courses using multiple query strings and optional filters. **Perfect 
   "params": {
     "name": "bulk_search_courses",
     "arguments": {
-      "queries": ["machine learning", "data science", "artificial intelligence"],
+      "queries": [
+        "machine learning",
+        "data science",
+        "artificial intelligence"
+      ],
       "limit": 5,
       "filters": {
         "department": "CS",
         "language": "zh",
-        "semester": "11410"
+        "semester": "11420"
       }
     }
   },
@@ -259,6 +274,7 @@ Search for courses using multiple query strings and optional filters. **Perfect 
 ```
 
 **Response Structure:**
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -276,6 +292,7 @@ Search for courses using multiple query strings and optional filters. **Perfect 
 ```
 
 **Parsed Response Data:**
+
 - `filters_applied`: The filters that were applied to all queries
 - `results`: Array of search results, one per query:
   - `query`: The search query
@@ -283,9 +300,10 @@ Search for courses using multiple query strings and optional filters. **Perfect 
   - `courses`: Array of course objects (same structure as `search_courses`)
 
 **Available Filters:**
+
 - `department`: Filter by department code (e.g., "CS", "EE", "MATH")
 - `language`: Filter by language (e.g., "zh", "en")
-- `semester`: Filter by semester (e.g., "11410", "11420")
+- `semester`: Filter by semester (e.g., "11420", "11420")
 
 ## AI Chatbot Integration Examples
 
@@ -326,12 +344,14 @@ capabilities:
 **User:** "I'm interested in AI and machine learning courses for next semester"
 
 **AI Assistant using MCP:**
+
 1. Call `search_courses` with query "artificial intelligence machine learning"
 2. Parse the structured JSON response to get `raw_id` for each course
 3. Call `get_course_details` for promising results using their `raw_id`
 4. Provide formatted recommendations with prerequisites, instructors, schedules, and restrictions
 
 **Example workflow:**
+
 ```
 Step 1: search_courses("artificial intelligence machine learning", limit=10)
   → Returns structured JSON with courses array containing raw_id for each
@@ -345,8 +365,9 @@ Step 3: Present formatted recommendations to user
 **User:** "What are the requirements and grading for CS 535100?"
 
 **AI Assistant using MCP:**
+
 1. First search for the course: `search_courses("CS 535", limit=5)` to find the exact `raw_id`
-2. Call `get_course_syllabus` with the `raw_id` (e.g., "11410CS 535100")
+2. Call `get_course_syllabus` with the `raw_id` (e.g., "11420CS 535100")
 3. Parse structured JSON response containing syllabus, grading, and important_dates
 4. Present formatted academic planning information with grading breakdown
 
@@ -357,12 +378,14 @@ Step 3: Present formatted recommendations to user
 **User:** "Compare AI-related courses in Computer Science department"
 
 **AI Assistant using MCP:**
+
 1. Call `bulk_search_courses` with queries=["machine learning", "deep learning", "artificial intelligence"] and filters={department: "CS"}
 2. Parse the structured results for each query
 3. Extract key differences: instructors, credits, prerequisites, schedules
 4. Create comparison table showing strengths of each course
 
 **Example:**
+
 ```json
 {
   "name": "bulk_search_courses",
@@ -371,7 +394,7 @@ Step 3: Present formatted recommendations to user
     "limit": 3,
     "filters": {
       "department": "CS",
-      "semester": "11410"
+      "semester": "11420"
     }
   }
 }
@@ -382,6 +405,7 @@ Step 3: Present formatted recommendations to user
 **User:** "Find English-taught CS courses about databases, networks, or security"
 
 **AI Assistant using MCP:**
+
 1. Call `bulk_search_courses` with:
    - queries: ["database", "computer networks", "security"]
    - filters: {department: "CS", language: "en"}
@@ -488,7 +512,7 @@ curl -X POST https://api.nthumods.com/search \
    ↓ Returns structured JSON with courses array
    ↓ Each course has raw_id field
 
-2. Extract raw_id from results (e.g., "11410CS 535100")
+2. Extract raw_id from results (e.g., "11420CS 535100")
    ↓
 
 3. get_course_details(raw_id) OR get_course_syllabus(raw_id)

@@ -1,0 +1,102 @@
+# CourseWeb Data Sync - Docker Compose Configuration
+#
+# This docker-compose file provides an example of running the course scraper
+# as a standalone service that scrapes course data daily.
+#
+# Usage:
+#   1. Copy .env.example to .env and configure your credentials
+#   2. Run: docker-compose up -d
+#
+# The service will:
+#   - Run course scraping on a daily schedule (default: 8:00 AM GMT+8)
+#   - Push course data to Supabase database
+#   - Sync search index to Algolia
+#
+# Available modes:
+#   - scheduled (default): Runs on cron schedule
+#   - once: Runs once and exits
+#
+# For one-time sync: docker-compose run --rm data-sync-once
+
+services:
+  # Scheduled daily sync service
+  data-sync:
+    image: ghcr.io/nthumodifications/courseweb-data-sync:latest
+    container_name: courseweb-data-sync
+    restart: unless-stopped
+    command:
+      [
+        "bun",
+        "run",
+        "src/update-courses.ts",
+        "${CRON_PATTERN:-0 0 * * *}",
+        "${SEMESTER:-11420}",
+      ]
+    environment:
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - ALGOLIA_APP_ID=${ALGOLIA_APP_ID}
+      - ALGOLIA_API_KEY=${ALGOLIA_API_KEY}
+      - SEMESTER=${SEMESTER:-11420}
+      - CRON_PATTERN=${CRON_PATTERN:-0 0 * * *}
+      - TZ=Asia/Taipei
+    # Uncomment to use local .env file
+    # env_file:
+    #   - .env
+    healthcheck:
+      test: ["CMD", "bun", "--version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+
+  # One-time sync service (use with: docker-compose run --rm data-sync-once)
+  data-sync-once:
+    image: ghcr.io/nthumodifications/courseweb-data-sync:latest
+    container_name: courseweb-data-sync-once
+    command: ["bun", "run", "src/sync-courses.ts", "${SEMESTER:-11420}"]
+    environment:
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - ALGOLIA_APP_ID=${ALGOLIA_APP_ID}
+      - ALGOLIA_API_KEY=${ALGOLIA_API_KEY}
+      - SEMESTER=${SEMESTER:-11420}
+      - TZ=Asia/Taipei
+    # Uncomment to use local .env file
+    # env_file:
+    #   - .env
+    profiles:
+      - manual
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+
+# Network configuration (optional)
+networks:
+  default:
+    name: courseweb-network
+    driver: bridge
