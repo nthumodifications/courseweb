@@ -13,7 +13,7 @@ import {
 import type { SyncResult } from "./types";
 
 export const syncCourses = async (
-  semester: string = "11410",
+  semester: string = "11420",
 ): Promise<SyncResult> => {
   try {
     console.log("🚀 Starting course synchronization...");
@@ -66,7 +66,7 @@ export default syncCourses;
 
 // If this file is run directly, execute the sync
 if (require.main === module) {
-  const semester = process.argv[2] || "11410";
+  const semester = process.argv[2] || "11420";
   console.log(`Running sync for semester: ${semester}`);
 
   syncCourses(semester)

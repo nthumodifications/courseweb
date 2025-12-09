@@ -36,11 +36,13 @@ const MCP_TOOLS = [
       properties: {
         query: {
           type: "string",
-          description: "Search query for courses. Use course name, topic, or instructor name (e.g., 'machine learning', 'artificial intelligence', 'John Doe'). Avoid using course codes/IDs.",
+          description:
+            "Search query for courses. Use course name, topic, or instructor name (e.g., 'machine learning', 'artificial intelligence', 'John Doe'). Avoid using course codes/IDs.",
         },
         limit: {
           type: "number",
-          description: "Maximum number of results to return (default: 10, max: 50)",
+          description:
+            "Maximum number of results to return (default: 10, max: 50)",
           minimum: 1,
           maximum: 50,
         },
@@ -57,7 +59,8 @@ const MCP_TOOLS = [
       properties: {
         courseId: {
           type: "string",
-          description: "Course raw_id (from search results, e.g., '11410CS 535100')",
+          description:
+            "Course raw_id (from search results, e.g., '11420CS 535100')",
         },
       },
       required: ["courseId"],
@@ -72,7 +75,8 @@ const MCP_TOOLS = [
       properties: {
         courseId: {
           type: "string",
-          description: "Course raw_id (from search results, e.g., '11410CS 535100')",
+          description:
+            "Course raw_id (from search results, e.g., '11420CS 535100')",
         },
       },
       required: ["courseId"],
@@ -90,7 +94,8 @@ const MCP_TOOLS = [
           items: {
             type: "string",
           },
-          description: "Array of course raw_ids to retrieve (e.g., ['11410CS 535100', '11410EE 200201'])",
+          description:
+            "Array of course raw_ids to retrieve (e.g., ['11420CS 535100', '11420EE 200201'])",
         },
       },
       required: ["courseIds"],
@@ -108,11 +113,13 @@ const MCP_TOOLS = [
           items: {
             type: "string",
           },
-          description: "Array of search queries (e.g., ['machine learning', 'data science', 'artificial intelligence'])",
+          description:
+            "Array of search queries (e.g., ['machine learning', 'data science', 'artificial intelligence'])",
         },
         limit: {
           type: "number",
-          description: "Maximum number of results to return per query (default: 5, max: 20)",
+          description:
+            "Maximum number of results to return per query (default: 5, max: 20)",
           minimum: 1,
           maximum: 20,
         },
@@ -157,137 +164,141 @@ const MCP_RESOURCES = [
 ];
 
 const app = new Hono()
-  .post(
-    "/",
-    zValidator("json", JsonRpcRequestSchema),
-    async (c) => {
-      const request = c.req.valid("json");
-      const { method, params, id } = request;
+  .post("/", zValidator("json", JsonRpcRequestSchema), async (c) => {
+    const request = c.req.valid("json");
+    const { method, params, id } = request;
 
-      try {
-        switch (method) {
-          case "initialize": {
-            return c.json({
-              jsonrpc: "2.0",
-              result: {
-                protocolVersion: "2024-11-05",
-                capabilities: {
-                  tools: {
-                    listChanged: false,
-                  },
-                  resources: {
-                    subscribe: false,
-                    listChanged: false,
-                  },
+    try {
+      switch (method) {
+        case "initialize": {
+          return c.json({
+            jsonrpc: "2.0",
+            result: {
+              protocolVersion: "2024-11-05",
+              capabilities: {
+                tools: {
+                  listChanged: false,
                 },
-                serverInfo: {
-                  name: "courseweb-mcp-server",
-                  version: "1.0.0",
+                resources: {
+                  subscribe: false,
+                  listChanged: false,
                 },
               },
-              id,
-            });
-          }
-
-          case "tools/list": {
-            return c.json({
-              jsonrpc: "2.0",
-              result: {
-                tools: MCP_TOOLS,
+              serverInfo: {
+                name: "courseweb-mcp-server",
+                version: "1.0.0",
               },
-              id,
-            });
-          }
+            },
+            id,
+          });
+        }
 
-          case "resources/list": {
-            return c.json({
-              jsonrpc: "2.0",
-              result: {
-                resources: MCP_RESOURCES,
-              },
-              id,
-            });
-          }
+        case "tools/list": {
+          return c.json({
+            jsonrpc: "2.0",
+            result: {
+              tools: MCP_TOOLS,
+            },
+            id,
+          });
+        }
 
-          case "tools/call": {
-            const { name, arguments: args } = params || {};
-            
-            switch (name) {
-              case "search_courses": {
-                const { query, limit = 10 } = args;
-                const index = algolia(c);
-                
-                try {
-                  const { hits } = await index.search(query, {
-                    hitsPerPage: Math.min(limit, 50),
-                  });
-                  
-                  // Format results as structured JSON similar to CourseListItem
-                  const courses = hits.map((hit: any) => ({
-                    raw_id: hit.raw_id,
-                    course: hit.course,
-                    department: hit.department,
-                    class: hit.class,
-                    name_zh: hit.name_zh,
-                    name_en: hit.name_en,
-                    teacher_zh: hit.teacher_zh || [],
-                    teacher_en: hit.teacher_en || [],
-                    credits: hit.credits,
-                    times: hit.times || [],
-                    venues: hit.venues || [],
-                    language: hit.language,
-                    semester: hit.semester,
-                    brief: hit.brief,
-                    restrictions: hit.restrictions,
-                    note: hit.note,
-                    prerequisites: hit.prerequisites,
-                    capacity: hit.capacity,
-                    cross_discipline: hit.cross_discipline || [],
-                    ge_type: hit.ge_type,
-                  }));
-                  
-                  return c.json({
-                    jsonrpc: "2.0",
-                    result: {
-                      content: [
-                        {
-                          type: "text",
-                          text: JSON.stringify({
-                            query,
-                            total: hits.length,
-                            courses,
-                            note: "Use raw_id with get_course_details or get_course_syllabus for more information",
-                          }, null, 2),
-                        },
-                      ],
-                      isError: false,
-                    },
-                    id,
-                  });
-                } catch (error) {
-                  throw new Error(`Search failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-                }
-              }
+        case "resources/list": {
+          return c.json({
+            jsonrpc: "2.0",
+            result: {
+              resources: MCP_RESOURCES,
+            },
+            id,
+          });
+        }
 
-              case "get_course_details": {
-                const { courseId } = args;
-                const { data, error } = await supabase_server(c)
-                  .from("courses")
-                  .select("*")
-                  .eq("raw_id", courseId)
-                  .single();
-                  
-                if (error || !data) {
-                  throw new Error(`Course not found: ${courseId}`);
-                }
-                
+        case "tools/call": {
+          const { name, arguments: args } = params || {};
+
+          switch (name) {
+            case "search_courses": {
+              const { query, limit = 10 } = args;
+              const index = algolia(c);
+
+              try {
+                const { hits } = await index.search(query, {
+                  hitsPerPage: Math.min(limit, 50),
+                });
+
+                // Format results as structured JSON similar to CourseListItem
+                const courses = hits.map((hit: any) => ({
+                  raw_id: hit.raw_id,
+                  course: hit.course,
+                  department: hit.department,
+                  class: hit.class,
+                  name_zh: hit.name_zh,
+                  name_en: hit.name_en,
+                  teacher_zh: hit.teacher_zh || [],
+                  teacher_en: hit.teacher_en || [],
+                  credits: hit.credits,
+                  times: hit.times || [],
+                  venues: hit.venues || [],
+                  language: hit.language,
+                  semester: hit.semester,
+                  brief: hit.brief,
+                  restrictions: hit.restrictions,
+                  note: hit.note,
+                  prerequisites: hit.prerequisites,
+                  capacity: hit.capacity,
+                  cross_discipline: hit.cross_discipline || [],
+                  ge_type: hit.ge_type,
+                }));
+
                 return c.json({
                   jsonrpc: "2.0",
                   result: {
                     content: [
                       {
                         type: "text",
-                        text: JSON.stringify({
+                        text: JSON.stringify(
+                          {
+                            query,
+                            total: hits.length,
+                            courses,
+                            note: "Use raw_id with get_course_details or get_course_syllabus for more information",
+                          },
+                          null,
+                          2,
+                        ),
+                      },
+                    ],
+                    isError: false,
+                  },
+                  id,
+                });
+              } catch (error) {
+                throw new Error(
+                  `Search failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+                );
+              }
+            }
+
+            case "get_course_details": {
+              const { courseId } = args;
+              const { data, error } = await supabase_server(c)
+                .from("courses")
+                .select("*")
+                .eq("raw_id", courseId)
+                .single();
+
+              if (error || !data) {
+                throw new Error(`Course not found: ${courseId}`);
+              }
+
+              return c.json({
+                jsonrpc: "2.0",
+                result: {
+                  content: [
+                    {
+                      type: "text",
+                      text: JSON.stringify(
+                        {
                           raw_id: data.raw_id,
                           course: data.course,
                           department: data.department,
@@ -310,42 +321,53 @@ const app = new Hono()
                           compulsory_for: data.compulsory_for || [],
                           elective_for: data.elective_for || [],
                           first_specialization: data.first_specialization || [],
-                          second_specialization: data.second_specialization || [],
+                          second_specialization:
+                            data.second_specialization || [],
                           reserve: data.reserve,
-                        }, null, 2),
-                      },
-                    ],
-                    isError: false,
-                  },
-                  id,
-                });
+                        },
+                        null,
+                        2,
+                      ),
+                    },
+                  ],
+                  isError: false,
+                },
+                id,
+              });
+            }
+
+            case "get_course_syllabus": {
+              const { courseId } = args;
+              const { data, error } = await supabase_server(c)
+                .from("courses")
+                .select(
+                  `*, course_syllabus ( * ), course_scores ( * ), course_dates ( * )`,
+                )
+                .eq("raw_id", courseId)
+                .single();
+
+              if (error || !data) {
+                throw new Error(`Course syllabus not found: ${courseId}`);
               }
 
-              case "get_course_syllabus": {
-                const { courseId } = args;
-                const { data, error } = await supabase_server(c)
-                  .from("courses")
-                  .select(
-                    `*, course_syllabus ( * ), course_scores ( * ), course_dates ( * )`
-                  )
-                  .eq("raw_id", courseId)
-                  .single();
-                  
-                if (error || !data) {
-                  throw new Error(`Course syllabus not found: ${courseId}`);
-                }
-                
-                const syllabusInfo = Array.isArray(data.course_syllabus) ? data.course_syllabus[0] : null;
-                const scores = Array.isArray(data.course_scores) ? data.course_scores : [];
-                const dates = Array.isArray(data.course_dates) ? data.course_dates : [];
-                
-                return c.json({
-                  jsonrpc: "2.0",
-                  result: {
-                    content: [
-                      {
-                        type: "text",
-                        text: JSON.stringify({
+              const syllabusInfo = Array.isArray(data.course_syllabus)
+                ? data.course_syllabus[0]
+                : null;
+              const scores = Array.isArray(data.course_scores)
+                ? data.course_scores
+                : [];
+              const dates = Array.isArray(data.course_dates)
+                ? data.course_dates
+                : [];
+
+              return c.json({
+                jsonrpc: "2.0",
+                result: {
+                  content: [
+                    {
+                      type: "text",
+                      text: JSON.stringify(
+                        {
                           raw_id: data.raw_id,
                           course: data.course,
                           name_zh: data.name_zh,
@@ -369,38 +391,44 @@ const app = new Hono()
                             title: d.title,
                             date: d.date,
                           })),
-                          scores: data.course_scores ? {
-                            type: data.course_scores.type,
-                            average: data.course_scores.average,
-                            std_dev: data.course_scores.std_dev,
-                          } : null,
-                        }, null, 2),
-                      },
-                    ],
-                    isError: false,
-                  },
-                  id,
-                });
+                          scores: data.course_scores
+                            ? {
+                                type: data.course_scores.type,
+                                average: data.course_scores.average,
+                                std_dev: data.course_scores.std_dev,
+                              }
+                            : null,
+                        },
+                        null,
+                        2,
+                      ),
+                    },
+                  ],
+                  isError: false,
+                },
+                id,
+              });
+            }
+
+            case "get_multiple_courses": {
+              const { courseIds } = args;
+              const { data, error } = await supabase_server(c)
+                .from("courses")
+                .select("*")
+                .in("raw_id", courseIds);
+
+              if (error) {
+                throw new Error(`Failed to fetch courses: ${error.message}`);
               }
 
-              case "get_multiple_courses": {
-                const { courseIds } = args;
-                const { data, error } = await supabase_server(c)
-                  .from("courses")
-                  .select("*")
-                  .in("raw_id", courseIds);
-                  
-                if (error) {
-                  throw new Error(`Failed to fetch courses: ${error.message}`);
-                }
-                
-                return c.json({
-                  jsonrpc: "2.0",
-                  result: {
-                    content: [
-                      {
-                        type: "text",
-                        text: JSON.stringify({
+              return c.json({
+                jsonrpc: "2.0",
+                result: {
+                  content: [
+                    {
+                      type: "text",
+                      text: JSON.stringify(
+                        {
                           total: data.length,
                           courses: data.map((course: any) => ({
                             raw_id: course.raw_id,
@@ -420,175 +448,186 @@ const app = new Hono()
                             note: course.note,
                             restrictions: course.restrictions,
                           })),
-                        }, null, 2),
+                        },
+                        null,
+                        2,
+                      ),
+                    },
+                  ],
+                  isError: false,
+                },
+                id,
+              });
+            }
+
+            case "bulk_search_courses": {
+              const { queries, limit = 5, filters = {} } = args;
+              const index = algolia(c);
+
+              try {
+                // Build Algolia filters if provided
+                const algoliaFilters: string[] = [];
+                if (filters.department) {
+                  algoliaFilters.push(`department:"${filters.department}"`);
+                }
+                if (filters.language) {
+                  algoliaFilters.push(`language:"${filters.language}"`);
+                }
+                if (filters.semester) {
+                  algoliaFilters.push(`semester:"${filters.semester}"`);
+                }
+
+                // Perform searches for each query
+                const searchPromises = queries.map((query: string) =>
+                  index.search(query, {
+                    hitsPerPage: Math.min(limit, 20),
+                    filters: algoliaFilters.join(" AND ") || undefined,
+                  }),
+                );
+
+                const results = await Promise.all(searchPromises);
+
+                // Format results
+                const formattedResults = results.map((result, idx) => ({
+                  query: queries[idx],
+                  total: result.hits.length,
+                  courses: result.hits.map((hit: any) => ({
+                    raw_id: hit.raw_id,
+                    course: hit.course,
+                    department: hit.department,
+                    class: hit.class,
+                    name_zh: hit.name_zh,
+                    name_en: hit.name_en,
+                    teacher_zh: hit.teacher_zh || [],
+                    teacher_en: hit.teacher_en || [],
+                    credits: hit.credits,
+                    times: hit.times || [],
+                    venues: hit.venues || [],
+                    language: hit.language,
+                    semester: hit.semester,
+                    brief: hit.brief,
+                    restrictions: hit.restrictions,
+                    note: hit.note,
+                    capacity: hit.capacity,
+                  })),
+                }));
+
+                return c.json({
+                  jsonrpc: "2.0",
+                  result: {
+                    content: [
+                      {
+                        type: "text",
+                        text: JSON.stringify(
+                          {
+                            filters_applied: filters,
+                            results: formattedResults,
+                            note: "Use raw_id with get_course_details or get_course_syllabus for more information",
+                          },
+                          null,
+                          2,
+                        ),
                       },
                     ],
                     isError: false,
                   },
                   id,
                 });
+              } catch (error) {
+                throw new Error(
+                  `Bulk search failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+                );
               }
-
-              case "bulk_search_courses": {
-                const { queries, limit = 5, filters = {} } = args;
-                const index = algolia(c);
-                
-                try {
-                  // Build Algolia filters if provided
-                  const algoliaFilters: string[] = [];
-                  if (filters.department) {
-                    algoliaFilters.push(`department:"${filters.department}"`);
-                  }
-                  if (filters.language) {
-                    algoliaFilters.push(`language:"${filters.language}"`);
-                  }
-                  if (filters.semester) {
-                    algoliaFilters.push(`semester:"${filters.semester}"`);
-                  }
-                  
-                  // Perform searches for each query
-                  const searchPromises = queries.map((query: string) =>
-                    index.search(query, {
-                      hitsPerPage: Math.min(limit, 20),
-                      filters: algoliaFilters.join(" AND ") || undefined,
-                    })
-                  );
-                  
-                  const results = await Promise.all(searchPromises);
-                  
-                  // Format results
-                  const formattedResults = results.map((result, idx) => ({
-                    query: queries[idx],
-                    total: result.hits.length,
-                    courses: result.hits.map((hit: any) => ({
-                      raw_id: hit.raw_id,
-                      course: hit.course,
-                      department: hit.department,
-                      class: hit.class,
-                      name_zh: hit.name_zh,
-                      name_en: hit.name_en,
-                      teacher_zh: hit.teacher_zh || [],
-                      teacher_en: hit.teacher_en || [],
-                      credits: hit.credits,
-                      times: hit.times || [],
-                      venues: hit.venues || [],
-                      language: hit.language,
-                      semester: hit.semester,
-                      brief: hit.brief,
-                      restrictions: hit.restrictions,
-                      note: hit.note,
-                      capacity: hit.capacity,
-                    })),
-                  }));
-                  
-                  return c.json({
-                    jsonrpc: "2.0",
-                    result: {
-                      content: [
-                        {
-                          type: "text",
-                          text: JSON.stringify({
-                            filters_applied: filters,
-                            results: formattedResults,
-                            note: "Use raw_id with get_course_details or get_course_syllabus for more information",
-                          }, null, 2),
-                        },
-                      ],
-                      isError: false,
-                    },
-                    id,
-                  });
-                } catch (error) {
-                  throw new Error(`Bulk search failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-                }
-              }
-
-              default:
-                throw new Error(`Unknown tool: ${name}`);
             }
-          }
 
-          case "resources/read": {
-            const { uri } = params || {};
-            
-            switch (uri) {
-              case "courseweb://courses/search":
-                return c.json({
-                  jsonrpc: "2.0",
-                  result: {
-                    contents: [
-                      {
-                        uri,
-                        mimeType: "application/json",
-                        text: JSON.stringify({
-                          description: "Use the search_courses tool to search for courses",
-                          example: {
-                            method: "tools/call",
-                            params: {
-                              name: "search_courses",
-                              arguments: {
-                                query: "machine learning",
-                                limit: 10,
-                              },
+            default:
+              throw new Error(`Unknown tool: ${name}`);
+          }
+        }
+
+        case "resources/read": {
+          const { uri } = params || {};
+
+          switch (uri) {
+            case "courseweb://courses/search":
+              return c.json({
+                jsonrpc: "2.0",
+                result: {
+                  contents: [
+                    {
+                      uri,
+                      mimeType: "application/json",
+                      text: JSON.stringify({
+                        description:
+                          "Use the search_courses tool to search for courses",
+                        example: {
+                          method: "tools/call",
+                          params: {
+                            name: "search_courses",
+                            arguments: {
+                              query: "machine learning",
+                              limit: 10,
                             },
                           },
-                        }),
-                      },
-                    ],
-                  },
-                  id,
-                });
+                        },
+                      }),
+                    },
+                  ],
+                },
+                id,
+              });
 
-              case "courseweb://courses/all":
-                // This could be expensive, so limit to essential info
-                const { data, error } = await supabase_server(c)
-                  .from("courses")
-                  .select("raw_id, course, name_zh, name_en, teacher_zh, teacher_en, credits, department")
-                  .limit(1000);
-                  
-                if (error) {
-                  throw new Error(`Failed to fetch courses: ${error.message}`);
-                }
-                
-                return c.json({
-                  jsonrpc: "2.0",
-                  result: {
-                    contents: [
-                      {
-                        uri,
-                        mimeType: "application/json",
-                        text: JSON.stringify({
-                          courses: data,
-                          count: data.length,
-                          note: "Limited to first 1000 courses. Use search_courses for specific queries.",
-                        }),
-                      },
-                    ],
-                  },
-                  id,
-                });
+            case "courseweb://courses/all":
+              // This could be expensive, so limit to essential info
+              const { data, error } = await supabase_server(c)
+                .from("courses")
+                .select(
+                  "raw_id, course, name_zh, name_en, teacher_zh, teacher_en, credits, department",
+                )
+                .limit(1000);
 
-              default:
-                throw new Error(`Unknown resource: ${uri}`);
-            }
+              if (error) {
+                throw new Error(`Failed to fetch courses: ${error.message}`);
+              }
+
+              return c.json({
+                jsonrpc: "2.0",
+                result: {
+                  contents: [
+                    {
+                      uri,
+                      mimeType: "application/json",
+                      text: JSON.stringify({
+                        courses: data,
+                        count: data.length,
+                        note: "Limited to first 1000 courses. Use search_courses for specific queries.",
+                      }),
+                    },
+                  ],
+                },
+                id,
+              });
+
+            default:
+              throw new Error(`Unknown resource: ${uri}`);
           }
-
-          default:
-            throw new Error(`Unknown method: ${method}`);
         }
-      } catch (error) {
-        return c.json({
-          jsonrpc: "2.0",
-          error: {
-            code: -32603,
-            message: error instanceof Error ? error.message : "Internal error",
-            data: error instanceof Error ? error.stack : undefined,
-          },
-          id,
-        });
+
+        default:
+          throw new Error(`Unknown method: ${method}`);
       }
+    } catch (error) {
+      return c.json({
+        jsonrpc: "2.0",
+        error: {
+          code: -32603,
+          message: error instanceof Error ? error.message : "Internal error",
+          data: error instanceof Error ? error.stack : undefined,
+        },
+        id,
+      });
     }
-  )
+  })
   .get("/", (c) => {
     return c.json({
       name: "CourseWeb MCP Server",
