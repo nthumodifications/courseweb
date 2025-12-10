@@ -24,7 +24,7 @@ import SemesterSelector from "./SemesterSelector";
 import Link from "next/link";
 import { Label } from "@courseweb/ui";
 import useCustomMenu from "@/app/[lang]/(mods-pages)/courses/useCustomMenu";
-import { lastSemester } from "@/const/semester";
+import { lastSemester } from "@courseweb/shared";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { MinimalCourse } from "@/types/courses";
 

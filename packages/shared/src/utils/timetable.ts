@@ -89,10 +89,11 @@ export const createTimetableFromCourses = (
   return newTimetableData;
 };
 
-export const colorMapFromCourses = (courseIds: string[], colors: string[]) => {
+export const colorMapFromCourses = (courseIds: string[], colors?: string[]) => {
   const colorMap: { [id: string]: string } = {};
+  const safeColors = colors ?? timetableColors[Object.keys(timetableColors)[0]];
   courseIds.forEach((id, index) => {
-    colorMap[id] = colors[index % colors.length];
+    colorMap[id] = safeColors[index % safeColors.length];
   });
   return colorMap;
 };

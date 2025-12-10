@@ -1,6 +1,6 @@
 import { MinimalCourse } from "@/types/courses";
 import { ResolvingMetadata } from "next";
-import { lastSemester } from "@/const/semester";
+import { lastSemester } from "@courseweb/shared";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@courseweb/ui";

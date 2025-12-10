@@ -5,10 +5,10 @@
   "main": "src/index.ts",
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm",
-    "dev": "tsup src/index.ts --format cjs,esm --watch",
+    "dev": "bun src/index.ts --watch",
     "clean": "rm -rf dist",
-    "sync:once": "tsx src/sync-courses.ts",
-    "sync:scheduled": "tsx src/update-courses.ts",
+    "sync:once": "bun src/sync-courses.ts",
+    "sync:scheduled": "bun src/update-courses.ts",
     "docker:build": "docker build -t courseweb-data-sync .",
     "docker:run": "docker run --env-file .env courseweb-data-sync",
     "lint": "eslint src --ext .ts,.tsx",
@@ -20,13 +20,14 @@
     "scraping",
     "cron"
   ],
-  "author": "CourseWeb Team",
+  "author": "NTHUMods Team",
   "license": "MIT",
   "dependencies": {
-    "node-schedule": "^2.1.1",
-    "linkedom": "^0.18.4",
     "@supabase/supabase-js": "^2.45.4",
-    "algoliasearch": "^4.24.0"
+    "algoliasearch": "^4.24.0",
+    "bun": "^1.3.4",
+    "linkedom": "^0.18.4",
+    "node-schedule": "^2.1.1"
   },
   "devDependencies": {
     "@courseweb/eslint-config": "*",

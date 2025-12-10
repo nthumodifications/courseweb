@@ -2,7 +2,7 @@ import { useSettings } from "@/hooks/contexts/settings";
 import { CourseTimeslotData, TimetableDim } from "@/types/timetable";
 import { forwardRef, HTMLAttributes } from "react";
 import { VenueChip } from "./VenueChip";
-import { scheduleTimeSlots } from "@/const/timetable";
+import { scheduleTimeSlots } from "@courseweb/shared";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { cn } from "@courseweb/ui";
 
@@ -87,12 +87,14 @@ const TimetableSlotVertical = forwardRef<HTMLDivElement, TimetableSlotProps>(
                   {course.course.name_en}
                 </span>
               ))}
-            {preferences.display.time && (
-              <span className="text-xs" id="time_slot">
-                {scheduleTimeSlots[course.startTime].start} -{" "}
-                {scheduleTimeSlots[course.endTime].end}
-              </span>
-            )}
+            {preferences.display.time &&
+              scheduleTimeSlots[course.startTime] &&
+              scheduleTimeSlots[course.endTime] && (
+                <span className="text-xs" id="time_slot">
+                  {scheduleTimeSlots[course.startTime].start} -{" "}
+                  {scheduleTimeSlots[course.endTime].end}
+                </span>
+              )}
           </div>
           {preferences.display.venue && (
             <div className="flex flex-row justify-end items-center space-x-1">

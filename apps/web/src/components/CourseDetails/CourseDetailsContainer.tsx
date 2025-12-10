@@ -22,7 +22,7 @@ import { Alert, AlertDescription } from "@courseweb/ui";
 import { Badge } from "@courseweb/ui";
 import { CourseDefinition } from "@/config/supabase";
 import { ScrollArea, ScrollBar } from "@courseweb/ui";
-import { timetableColors } from "@/const/timetableColors";
+import { timetableColors } from "@courseweb/shared";
 import dynamicFn from "next/dynamic";
 import { Language } from "@/types/settings";
 import {

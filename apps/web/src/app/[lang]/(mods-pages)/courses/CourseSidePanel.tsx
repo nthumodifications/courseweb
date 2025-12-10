@@ -7,7 +7,7 @@ import TimetableCourseListWithSemester from "./TimetableCourseListWithSemester";
 import FavouritesCourseList from "./FavouritesCourseList";
 import useCustomMenu from "./useCustomMenu";
 import { useMemo } from "react";
-import { lastSemester } from "@/const/semester";
+import { lastSemester } from "@courseweb/shared";
 
 const CourseSidePanel = () => {
   const dict = useDictionary();

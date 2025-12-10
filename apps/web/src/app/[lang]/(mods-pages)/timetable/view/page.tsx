@@ -7,7 +7,7 @@ import supabase from "@/config/supabase";
 import { createTimetableFromCourses } from "@/helpers/timetable";
 import { MinimalCourse } from "@/types/courses";
 import { useMemo, useState } from "react";
-import { lastSemester } from "@/const/semester";
+import { lastSemester } from "@courseweb/shared";
 import SemesterSwitcher from "@/components/Timetable/SemesterSwitcher";
 import { renderTimetableSlot } from "@/helpers/timetable_course";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";

@@ -21,7 +21,7 @@ const sessionStorageCache = createInfiniteHitsSessionStorageCache();
 import { Separator } from "@courseweb/ui";
 import { Drawer, DrawerContent, DrawerTrigger } from "@courseweb/ui";
 import { Button } from "@courseweb/ui";
-import { lastSemester } from "@/const/semester";
+import { lastSemester } from "@courseweb/shared";
 import useDictionary from "@/dictionaries/useDictionary";
 import PlannerFilters from "./PlannerFilters";
 import SearchContainer from "./PlannerSearchContainer";

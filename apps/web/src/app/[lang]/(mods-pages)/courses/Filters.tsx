@@ -1,13 +1,11 @@
 import useDictionary from "@/dictionaries/useDictionary";
-import { departments } from "@/const/departments";
-import { GETargetCodes } from "@/const/ge_target";
+import { departments, GETargetCodes, semesterInfo } from "@courseweb/shared";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@courseweb/ui";
-import { semesterInfo } from "@/const/semester";
 import ClassRefinementItem from "./ClasssRefinementItem";
 import ExpandableClassFilter from "../student/planner/course-picker/ExpandableClassFilter";
 import ExpandableFilter from "../student/planner/course-picker/ExpandableFilter";

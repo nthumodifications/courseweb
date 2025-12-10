@@ -8,7 +8,7 @@ import { Badge } from "@courseweb/ui";
 import { Button } from "@courseweb/ui";
 import useCustomRefinementList from "@/app/[lang]/(mods-pages)/courses/useCustomRefinementList";
 import useCustomMenu from "@/app/[lang]/(mods-pages)/courses/useCustomMenu";
-import { lastSemester } from "@/const/semester";
+import { lastSemester } from "@courseweb/shared";
 import { getFormattedClassCode } from "@/helpers/courses";
 
 type ExpandableClassFilterProps = {

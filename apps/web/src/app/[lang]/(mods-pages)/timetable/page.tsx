@@ -9,7 +9,7 @@ import { MinimalCourse } from "@/types/courses";
 import { renderTimetableSlot } from "@/helpers/timetable_course";
 import TimetableSidebar from "@/components/Timetable/TimetableSidebar";
 import { useSwipeable } from "react-swipeable";
-import { semesterInfo } from "@/const/semester";
+import { semesterInfo } from "@courseweb/shared";
 import { useHeaderPortal } from "@/components/Portal/HeaderPortal";
 import { useEffect } from "react";
 

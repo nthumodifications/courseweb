@@ -15,7 +15,7 @@ import { useSearchParams } from "next/navigation";
 import useCustomRefinementList from "./useCustomRefinementList";
 import { getFormattedClassCode } from "@/helpers/courses";
 import useCustomMenu from "@/app/[lang]/(mods-pages)/courses/useCustomMenu";
-import { lastSemester } from "@/const/semester";
+import { lastSemester } from "@courseweb/shared";
 
 const ClassRefinementItem = ({
   limit = 10,

@@ -1,5 +1,9 @@
 import supabase, { CourseDefinition } from "@/config/supabase";
-import { scheduleTimeSlots } from "@/const/timetable";
+import {
+  scheduleTimeSlots,
+  semesterInfo,
+  timetableColors,
+} from "@courseweb/shared";
 import {
   colorMapFromCourses,
   createTimetableFromCourses,
@@ -9,8 +13,6 @@ import * as ics from "ics";
 import { NextResponse } from "next/server";
 import { fromZonedTime } from "date-fns-tz";
 import { MinimalCourse } from "@/types/courses";
-import { semesterInfo } from "@/const/semester";
-import { timetableColors } from "@/const/timetableColors";
 import client from "@/config/api";
 
 export async function GET(request: Request) {
@@ -58,16 +60,25 @@ export async function GET(request: Request) {
     if (!res.ok) return NextResponse.error();
     else {
       const data = await res.json();
+      const colors =
+        timetableColors[theme] ??
+        timetableColors[Object.keys(timetableColors)[0]];
       const colorMap = colorMapFromCourses(
         data!.map((m: CourseDefinition) => m.raw_id),
-        timetableColors[theme],
+        colors,
       );
       const timetableData = createTimetableFromCourses(
         data! as MinimalCourse[],
         colorMap,
       );
+      // Filter out courses with invalid time slots
+      const validTimetableData = timetableData.filter(
+        (course) =>
+          scheduleTimeSlots[course.startTime] &&
+          scheduleTimeSlots[course.endTime],
+      );
       const icss = ics.createEvents(
-        timetableData.map((course) => {
+        validTimetableData.map((course) => {
           const start = fromZonedTime(
             parse(
               scheduleTimeSlots[course.startTime]!.start,

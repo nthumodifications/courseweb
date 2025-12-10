@@ -13,7 +13,7 @@ import {
 } from "@courseweb/ui";
 import useCustomRefinementList from "./useCustomRefinementList";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
-import { scheduleTimeSlots } from "@/const/timetable";
+import { scheduleTimeSlots } from "@courseweb/shared";
 import useDictionary from "@/dictionaries/useDictionary";
 
 type TimeslotFilterItemProps = {

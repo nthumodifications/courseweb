@@ -2,14 +2,14 @@
 import { EventData } from "@/types/calendar_event";
 import { format, formatRelative, getDay, isSameDay } from "date-fns";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
-import { scheduleTimeSlots } from "@/const/timetable";
+import { scheduleTimeSlots } from "@courseweb/shared";
 import { FC, useMemo, useState, useEffect } from "react";
 import { useSettings } from "@/hooks/contexts/settings";
 import useDictionary from "@/dictionaries/useDictionary";
 import { getLocale } from "@/helpers/dateLocale";
 import { Cloud, MapPin, Clock } from "lucide-react";
 import { apps } from "@/const/apps";
-import { getSemester, lastSemester } from "@/const/semester";
+import { getSemester, lastSemester } from "@courseweb/shared";
 import { createTimetableFromCourses } from "@/helpers/timetable";
 import { MinimalCourse } from "@/types/courses";
 import useTime from "@/hooks/useTime";
@@ -149,7 +149,7 @@ const TodaySchedule: FC = () => {
               </div>
               <div className="text-xs text-muted-foreground align-baseline">
                 <Clock className="size-3 inline mr-1" />
-                {`${scheduleTimeSlots[t.startTime].start} - ${scheduleTimeSlots[t.endTime].end}`}
+                {`${scheduleTimeSlots[t.startTime]?.start ?? "?"} - ${scheduleTimeSlots[t.endTime]?.end ?? "?"}`}
               </div>
               <div className="text-xs text-muted-foreground align-baseline">
                 <MapPin className="size-3 inline mr-1" />

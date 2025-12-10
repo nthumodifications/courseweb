@@ -3,7 +3,7 @@ import { fullWidthToHalfWidth } from "@/helpers/characters";
 import { Database } from "@/types/supabase";
 import jsdom from "jsdom";
 import { Department } from "@/types/courses";
-import { departments } from "@/const/departments";
+import { departments } from "@courseweb/shared";
 import { NextResponse } from "next/server";
 import algolia from "@/config/algolia_server";
 import { kv } from "@vercel/kv";

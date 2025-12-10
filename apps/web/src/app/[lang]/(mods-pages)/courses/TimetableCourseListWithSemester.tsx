@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import TimetableCourseList from "@/components/Timetable/TimetableCourseList";
 import useCustomMenu from "./useCustomMenu";
-import { lastSemester } from "@/const/semester";
+import { lastSemester } from "@courseweb/shared";
 
 const TimetableCourseListWithSemester = () => {
   const { items } = useCustomMenu({

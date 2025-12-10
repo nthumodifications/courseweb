@@ -7,6 +7,7 @@ export * from "./venues";
 export * from "./timetable";
 export * from "./timetableColors";
 export * from "./class_code";
+export * from "./ge_target";
 
 // Common UI constants that might be shared
 export const MOBILE_BREAKPOINT = 768;

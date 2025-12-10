@@ -1,8 +1,7 @@
-import { scheduleTimeSlots } from "@/const/timetable";
+import { scheduleTimeSlots, timetableColors } from "@courseweb/shared";
 import { CourseTimeslotData } from "@/types/timetable";
 import { MinimalCourse } from "@/types/courses";
 import { getBrightness, getContrastColor } from "./colors";
-import { timetableColors } from "@/const/timetableColors";
 import { hasTimes } from "./courses";
 
 export const createTimetableFromCourses = (
@@ -89,10 +88,11 @@ export const createTimetableFromCourses = (
   return newTimetableData;
 };
 
-export const colorMapFromCourses = (courseIds: string[], colors: string[]) => {
+export const colorMapFromCourses = (courseIds: string[], colors?: string[]) => {
   const colorMap: { [id: string]: string } = {};
+  const safeColors = colors ?? timetableColors[Object.keys(timetableColors)[0]];
   courseIds.forEach((id, index) => {
-    colorMap[id] = colors[index % colors.length];
+    colorMap[id] = safeColors[index % safeColors.length];
   });
   return colorMap;
 };

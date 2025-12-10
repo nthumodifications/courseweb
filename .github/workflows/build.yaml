@@ -75,69 +75,69 @@ jobs:
           command: deploy src/index.ts
           packageManager: bun
 
-  build-and-push-web:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    environment: production
-    permissions: write-all
-    steps:
-      # Checkout the repository
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
+  # build-and-push-web:
+  #   runs-on: ubuntu-latest
+  #   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+  #   environment: production
+  #   permissions: write-all
+  #   steps:
+  #     # Checkout the repository
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+  #       with:
+  #         submodules: recursive
 
-      # Log in to GitHub Container Registry
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+  #     # Log in to GitHub Container Registry
+  #     - name: Log in to GHCR
+  #       uses: docker/login-action@v3
+  #       with:
+  #         registry: ghcr.io
+  #         username: ${{ github.repository_owner }}
+  #         password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Create .env file with secrets
-      - name: Create .env file
-        run: |
-          echo "NEXT_PUBLIC_ALGOLIA_APP_ID=${{ secrets.NEXT_PUBLIC_ALGOLIA_APP_ID }}" >> .env
-          echo "NEXT_PUBLIC_ALGOLIA_SEARCH_KEY=${{ secrets.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY }}" >> .env
-          echo "NEXT_PUBLIC_ALGOLIA_TEMP_APP_ID=${{ secrets.NEXT_PUBLIC_ALGOLIA_TEMP_APP_ID }}" >> .env
-          echo "NEXT_PUBLIC_ALGOLIA_TEMP_SEARCH_KEY=${{ secrets.NEXT_PUBLIC_ALGOLIA_TEMP_SEARCH_KEY }}" >> .env
-          echo "NEXT_PUBLIC_SENTRY_DSN=${{ secrets.NEXT_PUBLIC_SENTRY_DSN }}" >> .env
-          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" >> .env
-          echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" >> .env
-          echo "NEXT_PUBLIC_TURNSTILE_SITE_KEY=${{ secrets.NEXT_PUBLIC_TURNSTILE_SITE_KEY }}" >> .env
-          echo "SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}" >> .env
-          echo "SENTRY_ORG=${{ secrets.SENTRY_ORG }}" >> .env
-          echo "SENTRY_PROJECT=${{ secrets.SENTRY_PROJECT }}" >> .env
-          echo "SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" >> .env
-          echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> .env
-          echo "FIREBASE_SERVICE_ACCOUNT=${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" >> .env
+  #     # Create .env file with secrets
+  #     - name: Create .env file
+  #       run: |
+  #         echo "NEXT_PUBLIC_ALGOLIA_APP_ID=${{ secrets.NEXT_PUBLIC_ALGOLIA_APP_ID }}" >> .env
+  #         echo "NEXT_PUBLIC_ALGOLIA_SEARCH_KEY=${{ secrets.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY }}" >> .env
+  #         echo "NEXT_PUBLIC_ALGOLIA_TEMP_APP_ID=${{ secrets.NEXT_PUBLIC_ALGOLIA_TEMP_APP_ID }}" >> .env
+  #         echo "NEXT_PUBLIC_ALGOLIA_TEMP_SEARCH_KEY=${{ secrets.NEXT_PUBLIC_ALGOLIA_TEMP_SEARCH_KEY }}" >> .env
+  #         echo "NEXT_PUBLIC_SENTRY_DSN=${{ secrets.NEXT_PUBLIC_SENTRY_DSN }}" >> .env
+  #         echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" >> .env
+  #         echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" >> .env
+  #         echo "NEXT_PUBLIC_TURNSTILE_SITE_KEY=${{ secrets.NEXT_PUBLIC_TURNSTILE_SITE_KEY }}" >> .env
+  #         echo "SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}" >> .env
+  #         echo "SENTRY_ORG=${{ secrets.SENTRY_ORG }}" >> .env
+  #         echo "SENTRY_PROJECT=${{ secrets.SENTRY_PROJECT }}" >> .env
+  #         echo "SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" >> .env
+  #         echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> .env
+  #         echo "FIREBASE_SERVICE_ACCOUNT=${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" >> .env
 
-      # Build and tag Docker image for web app
-      - name: Build Web App Docker image
-        run: |
-          docker build -f apps/web/Dockerfile . \
-            -t ${{ env.IMAGE_NAME }}-web:${{ github.sha }} \
-            -t ${{ env.IMAGE_NAME }}-web:latest
+  #     # Build and tag Docker image for web app
+  #     - name: Build Web App Docker image
+  #       run: |
+  #         docker build -f apps/web/Dockerfile . \
+  #           -t ${{ env.IMAGE_NAME }}-web:${{ github.sha }} \
+  #           -t ${{ env.IMAGE_NAME }}-web:latest
 
-      # Push Docker image to GHCR
-      - name: Push Web App Docker image
-        run: |
-          docker push ${{ env.IMAGE_NAME }}-web:${{ github.sha }}
-          docker push ${{ env.IMAGE_NAME }}-web:latest
+  #     # Push Docker image to GHCR
+  #     - name: Push Web App Docker image
+  #       run: |
+  #         docker push ${{ env.IMAGE_NAME }}-web:${{ github.sha }}
+  #         docker push ${{ env.IMAGE_NAME }}-web:latest
 
-      # Clean up .env file (security step)
-      - name: Clean up .env
-        if: always()
-        run: |
-          rm -f .env
+  #     # Clean up .env file (security step)
+  #     - name: Clean up .env
+  #       if: always()
+  #       run: |
+  #         rm -f .env
 
-      # Trigger Coolify deployment (optional webhook)
-      - name: Trigger Coolify deployment
-        run: |
-          curl --request GET "${{ secrets.COOLIFY_WEBHOOK }}" \
-            --header "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}"
-        if: success()
+  #     # Trigger Coolify deployment (optional webhook)
+  #     - name: Trigger Coolify deployment
+  #       run: |
+  #         curl --request GET "${{ secrets.COOLIFY_WEBHOOK }}" \
+  #           --header "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}"
+  #       if: success()
 
   build-and-push-data-sync:
     runs-on: ubuntu-latest
@@ -170,33 +170,33 @@ jobs:
           docker push ${{ env.IMAGE_NAME }}-data-sync:${{ github.sha }}
           docker push ${{ env.IMAGE_NAME }}-data-sync:latest
 
-  build-and-push-secure-api:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    environment: production
-    permissions: write-all
-    steps:
-      # Checkout the repository
-      - name: Checkout code
-        uses: actions/checkout@v4
+  # build-and-push-secure-api:
+  #   runs-on: ubuntu-latest
+  #   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+  #   environment: production
+  #   permissions: write-all
+  #   steps:
+  #     # Checkout the repository
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
 
-      # Log in to GitHub Container Registry
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+  #     # Log in to GitHub Container Registry
+  #     - name: Log in to GHCR
+  #       uses: docker/login-action@v3
+  #       with:
+  #         registry: ghcr.io
+  #         username: ${{ github.repository_owner }}
+  #         password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Build and tag Docker image for secure-api
-      - name: Build Secure API Docker image
-        run: |
-          docker build -f services/secure-api/Dockerfile . \
-            -t ${{ env.IMAGE_NAME }}-secure-api:${{ github.sha }} \
-            -t ${{ env.IMAGE_NAME }}-secure-api:latest
+  #     # Build and tag Docker image for secure-api
+  #     - name: Build Secure API Docker image
+  #       run: |
+  #         docker build -f services/secure-api/Dockerfile . \
+  #           -t ${{ env.IMAGE_NAME }}-secure-api:${{ github.sha }} \
+  #           -t ${{ env.IMAGE_NAME }}-secure-api:latest
 
-      # Push Docker image to GHCR
-      - name: Push Secure API Docker image
-        run: |
-          docker push ${{ env.IMAGE_NAME }}-secure-api:${{ github.sha }}
-          docker push ${{ env.IMAGE_NAME }}-secure-api:latest
+  #     # Push Docker image to GHCR
+  #     - name: Push Secure API Docker image
+  #       run: |
+  #         docker push ${{ env.IMAGE_NAME }}-secure-api:${{ github.sha }}
+  #         docker push ${{ env.IMAGE_NAME }}-secure-api:latest

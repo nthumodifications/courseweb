@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "@courseweb/ui";
 import { toPrettySemester } from "@/helpers/semester";
-import { lastSemester, semesterInfo } from "@/const/semester";
+import { lastSemester, semesterInfo } from "@courseweb/shared";
 
 const SemesterSelector = () => {
   const [initialized, setInitialized] = useState(false);

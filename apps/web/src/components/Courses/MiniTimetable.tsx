@@ -9,7 +9,7 @@ import {
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { createTimetableFromCourses } from "@/helpers/timetable";
 import { MinimalCourse, Semester } from "@/types/courses";
-import { scheduleTimeSlots } from "@/const/timetable";
+import { scheduleTimeSlots } from "@courseweb/shared";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useMemo } from "react";
 

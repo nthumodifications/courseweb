@@ -1,5 +1,5 @@
 import { useSettings } from "@/hooks/contexts/settings";
-import { currentSemester } from "@/const/semester";
+import { currentSemester } from "@courseweb/shared";
 import { useMemo } from "react";
 
 const CurrentSemesterLabel = ({ language }: { language: "en" | "zh" }) => {

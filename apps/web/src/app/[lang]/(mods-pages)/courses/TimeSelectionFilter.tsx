@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@courseweb/ui";
-import { scheduleTimeSlots } from "@/const/timetable";
+import { scheduleTimeSlots } from "@courseweb/shared";
 import { MinimalCourse } from "@/types/courses";
 
 type TimeSelectionFilterProps = {

@@ -1,5 +1,5 @@
 import { Button } from "@courseweb/ui";
-import { lastSemester } from "@/const/semester";
+import { lastSemester } from "@courseweb/shared";
 import useDictionary from "@/dictionaries/useDictionary";
 import { Undo } from "lucide-react";
 import { useClearRefinements, useInstantSearch } from "react-instantsearch";

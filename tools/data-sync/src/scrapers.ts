@@ -54,7 +54,6 @@ export const scrapeArchivedCourses = async (
     throw new Error("ACIXSTORE not found in landing page");
   }
   const acixStore = acixStoreMatch[1];
-
   // Fetch OCR results with retry
   const ocrResults = await retryWithBackoff(
     async () => {
@@ -164,7 +163,6 @@ export const scrapeArchivedCourses = async (
             YS: `${yearSemester.slice(0, 3)}|${yearSemester.slice(3, 5)}`,
             cond: "a",
             cou_code: `${department.code}`,
-            auth_num: `${ocrResults}`,
           }),
           method: "POST",
         });
@@ -693,7 +691,7 @@ export const scrapeSyllabus = async (
         };
 
         const algolia = createAlgoliaClient(env);
-        const index = algolia.initIndex("courses");
+        const index = algolia.initIndex("nthu_courses");
         await retryWithBackoff(
           async () => {
             await index.saveObject(algoliaCourse);
@@ -791,7 +789,7 @@ export const syncCoursesToAlgolia = async (
 
       await retryWithBackoff(
         async () => {
-          const index = algolia.initIndex("courses");
+          const index = algolia.initIndex("nthu_courses");
           const { taskIDs } = await index.saveObjects(algoliaChunk);
           console.log(
             `Saved ${algoliaChunk.length} courses to Algolia, taskID: ${taskIDs}`,

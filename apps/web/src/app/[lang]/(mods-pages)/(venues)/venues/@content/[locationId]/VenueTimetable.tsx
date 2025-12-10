@@ -6,7 +6,7 @@ import {
   createTimetableFromCourses,
 } from "@/helpers/timetable";
 import { MinimalCourse } from "@/types/courses";
-import { timetableColors } from "@/const/timetableColors";
+import { timetableColors } from "@courseweb/shared";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 
 type VenueTimetableProps = {
@@ -15,9 +15,12 @@ type VenueTimetableProps = {
 const VenueTimetable = ({ courses }: VenueTimetableProps) => {
   const { timetableTheme } = useUserTimetable();
   console.log(timetableTheme);
+  const colors =
+    timetableColors[timetableTheme] ??
+    timetableColors[Object.keys(timetableColors)[0]];
   const colorMap = colorMapFromCourses(
     courses.map((i) => i.raw_id),
-    timetableColors[timetableTheme],
+    colors,
   );
   const timetable = createTimetableFromCourses(
     courses as MinimalCourse[],

@@ -8,7 +8,7 @@ import { Heart, Minus, Plus } from "lucide-react";
 import { Button } from "@courseweb/ui";
 import { useLocalStorage } from "usehooks-ts";
 import { toast } from "@courseweb/ui";
-import { lastSemester } from "@/const/semester";
+import { lastSemester } from "@courseweb/shared";
 
 const SelectCourseButton = ({ courseId }: { courseId: RawCourseID }) => {
   const { isCourseSelected, addCourse, deleteCourse } = useUserTimetable();

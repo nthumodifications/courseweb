@@ -10,10 +10,10 @@ import {
 } from "react";
 import { CourseDefinition } from "@/config/supabase";
 import { RawCourseID } from "@/types/courses";
-import { lastSemester } from "@/const/semester";
+import { lastSemester, timetableColors } from "@courseweb/shared";
 import { getSemesterFromID } from "@/helpers/courses";
 import { event } from "@/lib/gtag";
-import { timetableColors } from "@/const/timetableColors";
+
 import { useQuery } from "@tanstack/react-query";
 import useSyncedStorage from "../useSyncedStorage";
 import client from "@/config/api";
@@ -104,7 +104,9 @@ const useUserTimetableProvider = (loadCourse = true) => {
   const setTimetableTheme = useCallback(
     (theme: string) => {
       //if theme updated, remap colors and override all
-      const newColors = timetableColors[theme];
+      const newColors =
+        timetableColors[theme] ??
+        timetableColors[Object.keys(timetableColors)[0]];
       const newColorMap: { [courseID: string]: string } = {};
 
       const coursesCopy = { ...courses };

@@ -36,7 +36,7 @@ import { SemesterDocType } from "./rxdb";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { semesterInfo } from "@/const/semester";
+import { semesterInfo } from "@courseweb/shared";
 
 // Define the validation schema with Zod
 const semesterFormSchema = z.object({

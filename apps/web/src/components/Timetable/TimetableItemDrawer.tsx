@@ -16,7 +16,7 @@ import { useQuery } from "@tanstack/react-query";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useMediaQuery } from "usehooks-ts";
 import { Dialog, DialogContent, DialogTrigger } from "@courseweb/ui";
-import { currentSemester } from "@/const/semester";
+import { currentSemester } from "@courseweb/shared";
 import client from "@/config/api";
 import CourseTagList from "@/components/Courses/CourseTagsList";
 import { CourseDefinition } from "@/config/supabase";

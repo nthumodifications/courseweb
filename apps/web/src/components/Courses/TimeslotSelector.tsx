@@ -1,4 +1,4 @@
-import { scheduleTimeSlots } from "@/const/timetable";
+import { scheduleTimeSlots } from "@courseweb/shared";
 import { FC } from "react";
 
 const TimeslotSelector: FC<{

@@ -17,7 +17,7 @@ const searchClient = algoliasearch(
 const sessionStorageCache = createInfiniteHitsSessionStorageCache();
 
 import SearchContainer from "./SearchContainer";
-import { lastSemester } from "@/const/semester";
+import { lastSemester } from "@courseweb/shared";
 import useDictionary from "@/dictionaries/useDictionary";
 import CourseSidePanel from "./CourseSidePanel";
 
