@@ -13,61 +13,39 @@ WORKDIR /app
 
 # Copy root package files
 COPY package.json bun.lock ./
-COPY turbo.json ./
 
-# Copy workspace package files
-COPY packages/shared/package.json ./packages/shared/package.json
-COPY packages/database/package.json ./packages/database/package.json
+# Copy only the workspace package.json that data-sync depends on
 COPY packages/eslint-config/package.json ./packages/eslint-config/package.json
 COPY tools/data-sync/package.json ./tools/data-sync/package.json
 
-# Install dependencies
-RUN bun install --frozen-lockfile
-
-# Build dependencies and copy source code
-FROM base AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-
-# Build shared packages first
-RUN cd packages/shared && bun run build || true
-RUN cd packages/database && bun run build || true
-RUN cd packages/eslint-config && bun run build || true
-
-# Build data-sync
-RUN cd tools/data-sync && bun run build || true
+# Install dependencies (can't use --frozen-lockfile in Docker with partial monorepo)
+RUN bun install
 
 # Production image
 FROM base AS runner
 WORKDIR /app
 
-# Copy built application and dependencies
-COPY --from=builder /app/tools/data-sync/src ./src
-COPY --from=builder /app/tools/data-sync/package.json .
-COPY --from=builder /app/tools/data-sync/tsconfig.json .
-
-# Copy necessary workspace packages
-COPY --from=builder /app/packages ./packages
-COPY --from=builder /app/node_modules ./node_modules
-
-# Install production dependencies
-RUN bun install --frozen-lockfile --production
-
-# Create non-root user for security
+# Create non-root user for security first
 RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nextjs -u 1001
+    adduser -S bunuser -u 1001
 
-# Change ownership of the app directory
-RUN chown -R nextjs:nodejs /app
-USER nextjs
+# Switch to non-root user before copying files
+USER bunuser
 
-# Expose health check endpoint (optional)
-EXPOSE 3000
+# Copy installed node_modules with correct ownership
+COPY --from=deps --chown=bunuser:nodejs /app/node_modules ./node_modules
+
+# Copy only the data-sync source code with correct ownership
+COPY --chown=bunuser:nodejs tools/data-sync/src ./src
+COPY --chown=bunuser:nodejs tools/data-sync/package.json ./package.json
+COPY --chown=bunuser:nodejs tools/data-sync/tsconfig.json ./tsconfig.json
+
+# Copy eslint-config if needed at runtime
+COPY --chown=bunuser:nodejs packages/eslint-config ./packages/eslint-config
 
 # Default command - run sync once and exit
 CMD ["bun", "run", "src/sync-courses.ts"]
 
-# Health check (optional)
+# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD bun --version || exit 1
