@@ -249,6 +249,7 @@ export const scrapeArchivedCourses = async (
             text
               .replace(/<[^>]*>/g, "")
               .replace(/&nbsp;/gi, " ")
+              .replace(/&#160;/gi, " ")
               .trim(),
           );
 
@@ -284,6 +285,7 @@ export const scrapeArchivedCourses = async (
               let cleanedText = text
                 .replace(/<[^>]*>/g, "")
                 .replace(/&nbsp;/gi, " ")
+                .replace(/&#160;/gi, " ")
                 .trim();
 
               course_restriction = cleanedText;
@@ -291,6 +293,7 @@ export const scrapeArchivedCourses = async (
               let cleanedText = text
                 .replace(/<[^>]*>/g, "")
                 .replace(/&nbsp;/gi, " ")
+                .replace(/&#160;/gi, " ")
                 .trim();
 
               cleanedText.split("/").forEach((text) => {
@@ -300,6 +303,7 @@ export const scrapeArchivedCourses = async (
               let cleanedText = text
                 .replace(/<[^>]*>/g, "")
                 .replace(/&nbsp;/gi, " ")
+                .replace(/&#160;/gi, " ")
                 .trim();
 
               cleanedText.split("/").forEach((text) => {
@@ -313,6 +317,7 @@ export const scrapeArchivedCourses = async (
               let cleanedText = text
                 .replace(/<[^>]*>/g, "")
                 .replace(/&nbsp;/gi, " ")
+                .replace(/&#160;/gi, " ")
                 .trim();
               // replace empty string case to be ' ' so that it will be exactly
               // the same as sync-courses function
