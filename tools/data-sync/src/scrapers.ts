@@ -163,6 +163,7 @@ export const scrapeArchivedCourses = async (
             YS: `${yearSemester.slice(0, 3)}|${yearSemester.slice(3, 5)}`,
             cond: "a",
             cou_code: `${department.code}`,
+            auth_num: `${ocrResults}`,
           }),
           method: "POST",
         });
