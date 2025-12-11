@@ -4,6 +4,12 @@ import useUserTimetable from "./contexts/useUserTimetable";
 import { useAuth } from "react-oidc-context";
 import { event as gtagEvent } from "@/lib/gtag";
 
+export interface QuotaError {
+  isQuotaExceeded: true;
+  retryAfter?: number; // seconds to wait before retry
+  message: string;
+}
+
 export interface ToolCall {
   name: string;
   args?: Record<string, unknown>;
@@ -56,6 +62,7 @@ export function useAIChat(options: UseAIChatOptions = {}) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [quotaError, setQuotaError] = useState<QuotaError | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   // Get user's current courses from timetable
@@ -198,6 +205,32 @@ export function useAIChat(options: UseAIChatOptions = {}) {
         });
 
         if (!response.ok) {
+          if (response.status === 401) {
+            throw new Error("請先登入以使用 AI 課程助手");
+          }
+          if (response.status === 403) {
+            throw new Error("您沒有權限使用此功能");
+          }
+          if (response.status === 429) {
+            // Parse retry-after from response if available
+            const retryAfter = response.headers.get("Retry-After");
+            const retrySeconds = retryAfter
+              ? parseInt(retryAfter, 10)
+              : undefined;
+
+            setQuotaError({
+              isQuotaExceeded: true,
+              retryAfter: retrySeconds,
+              message: "API 配額已超出限制，請稍後再試或使用您自己的 API Key",
+            });
+
+            // Remove the streaming message
+            setMessages((prev) =>
+              prev.filter((m) => m.id !== assistantMessage.id),
+            );
+            setIsLoading(false);
+            return;
+          }
           throw new Error(`Chat request failed: ${response.status}`);
         }
 
@@ -230,6 +263,40 @@ export function useAIChat(options: UseAIChatOptions = {}) {
               try {
                 const parsed = JSON.parse(data);
                 console.log("Parsed SSE event:", parsed);
+
+                // Handle text chunks
+                // Handle quota exceeded error from streaming response
+                if (parsed.type === "error" && parsed.data) {
+                  const errorData =
+                    typeof parsed.data === "string"
+                      ? parsed.data
+                      : JSON.stringify(parsed.data);
+                  if (
+                    errorData.includes("429") ||
+                    errorData.includes("RESOURCE_EXHAUSTED") ||
+                    errorData.includes("quota")
+                  ) {
+                    // Extract retry delay if available
+                    const retryMatch = errorData.match(/retry.*?(\d+)/i);
+                    const retrySeconds = retryMatch
+                      ? parseInt(retryMatch[1], 10)
+                      : undefined;
+
+                    setQuotaError({
+                      isQuotaExceeded: true,
+                      retryAfter: retrySeconds,
+                      message:
+                        "API 配額已超出限制，請稍後再試或使用您自己的 API Key",
+                    });
+
+                    // Remove the streaming message
+                    setMessages((prev) =>
+                      prev.filter((m) => m.id !== assistantMessage.id),
+                    );
+                    setIsLoading(false);
+                    return;
+                  }
+                }
 
                 // Handle text chunks
                 if (parsed.type === "text" && parsed.data) {
@@ -376,15 +443,23 @@ export function useAIChat(options: UseAIChatOptions = {}) {
   const clear = useCallback(() => {
     setMessages([]);
     setError(null);
+    setQuotaError(null);
+  }, []);
+
+  // Clear quota error
+  const clearQuotaError = useCallback(() => {
+    setQuotaError(null);
   }, []);
 
   return {
     messages,
     isLoading,
     error,
+    quotaError,
     sendMessage,
     cancel,
     clear,
+    clearQuotaError,
     getUserContext,
   };
 }

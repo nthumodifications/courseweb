@@ -467,5 +467,16 @@
       "support_us": "支持我們"
     }
   },
+  "chat": {
+    "login_required": "請先登入以使用 AI 課程助手功能",
+    "title": "AI 課程助手",
+    "welcome": "歡迎使用 AI 課程助手",
+    "welcome_description": "我可以幫你搜尋課程、規劃課表、查詢畢業學分。試試下面的建議或直接輸入你的問題！",
+    "quota_exceeded_title": "API 配額已超出",
+    "quota_exceeded_description": "我們的 API 配額已達上限。您可以使用自己的 Gemini API Key 來繼續使用 AI 課程助手。",
+    "retry_after": "預計",
+    "seconds": "秒後可重試",
+    "open_settings": "開啟設定"
+  },
   "test": {}
 }

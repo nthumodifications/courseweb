@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { streamChat } from "./gemini";
 import type { ChatRequest } from "./types";
+import { auth } from "../utils/auth";
 
 // Extend Bindings type to include GOOGLE_AI_API_KEY
 type Bindings = {
@@ -8,6 +9,8 @@ type Bindings = {
 };
 
 const chat = new Hono<{ Bindings: Bindings }>()
+  // Apply auth middleware - requires user to be authenticated (no specific scope required)
+  .use("/*", auth())
   .post("/", async (c) => {
     const body = await c.req.json<ChatRequest>();
     const { messages, userContext, apiKey } = body;
@@ -84,6 +87,7 @@ const chat = new Hono<{ Bindings: Bindings }>()
       version: "1.0.0",
       model: "gemini-2.0-flash-exp",
       description: "AI course planning assistant",
+      requiresAuth: true,
     });
   });
 

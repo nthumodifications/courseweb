@@ -1,6 +1,6 @@
 "use client";
 import { createContext, useContext, useState, ReactNode } from "react";
-import { useAIChat, ChatMessage } from "@/hooks/useAIChat";
+import { useAIChat, ChatMessage, QuotaError } from "@/hooks/useAIChat";
 
 interface ChatContextValue {
   isOpen: boolean;
@@ -8,9 +8,11 @@ interface ChatContextValue {
   messages: ChatMessage[];
   isLoading: boolean;
   error: string | null;
+  quotaError: QuotaError | null;
   sendMessage: (content: string) => Promise<void>;
   cancel: () => void;
   clear: () => void;
+  clearQuotaError: () => void;
 }
 
 const ChatContext = createContext<ChatContextValue | null>(null);

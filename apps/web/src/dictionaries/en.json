@@ -467,5 +467,16 @@
       "support_us": "Support Us"
     }
   },
+  "chat": {
+    "login_required": "Please sign in to use the AI Course Assistant",
+    "title": "AI Course Assistant",
+    "welcome": "Welcome to AI Course Assistant",
+    "welcome_description": "I can help you search for courses, plan your timetable, and check graduation requirements. Try the suggestions below or type your question!",
+    "quota_exceeded_title": "API Quota Exceeded",
+    "quota_exceeded_description": "Our API quota has been reached. You can use your own Gemini API Key to continue using the AI Course Assistant.",
+    "retry_after": "Estimated retry available in",
+    "seconds": "seconds",
+    "open_settings": "Open Settings"
+  },
   "test": {}
 }
