@@ -19,17 +19,17 @@
   "dependencies": {
     "date-fns": "^3.6.0",
     "date-fns-tz": "^3.0.1",
-    "zod": "^3.22.4",
-    "uuid": "^9.0.1",
+    "zod": "^4.1.13",
+    "uuid": "^13.0.0",
     "clsx": "^2.0.0"
   },
   "devDependencies": {
     "@courseweb/eslint-config": "*",
-    "@types/node": "^20.10.7",
-    "@types/uuid": "^10.0.0",
-    "eslint": "^8.57.0",
+    "@types/node": "^25.0.2",
+    "@types/uuid": "^11.0.0",
+    "eslint": "^9.39.2",
     "tsup": "^8.0.1",
-    "typescript": "^5.4.4"
+    "typescript": "^5.9.3"
   },
   "eslintConfig": {
     "extends": [

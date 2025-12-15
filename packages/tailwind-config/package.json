@@ -9,12 +9,12 @@
     "base.js"
   ],
   "devDependencies": {
-    "tailwindcss": "^3.4.7"
+    "tailwindcss": "^4.1.18"
   },
   "dependencies": {
     "tailwindcss-animate": "^1.0.7",
     "@tailwindcss/typography": "^0.5.13",
-    "tailwind-scrollbar": "^3.1.0",
+    "tailwind-scrollbar": "^4.0.2",
     "@tailwindcss/container-queries": "^0.1.1"
   }
 }
