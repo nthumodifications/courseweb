@@ -79,6 +79,7 @@
     "react-turnstile": "^1.1.4",
     "recharts": "^2.12.7",
     "remark-gfm": "^4.0.1",
+    "rrule": "^2.8.1",
     "rxdb": "^16.11.0",
     "rxdb-hooks": "^5.0.2",
     "rxjs": "^7.8.1",
@@ -93,7 +94,8 @@
     "usehooks-ts": "^3.1.0",
     "uuid": "^9.0.1",
     "vaul": "^0.8.9",
-    "zod": "^3.22.4"
+    "zod": "^3.22.4",
+    "zustand": "^5.0.9"
   },
   "devDependencies": {
     "@courseweb/eslint-config": "*",

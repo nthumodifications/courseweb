@@ -15,6 +15,7 @@ import { RxDBQueryBuilderPlugin } from "rxdb/plugins/query-builder";
 import { RxDBUpdatePlugin } from "rxdb/plugins/update";
 import { v4 as uuidv4 } from "uuid";
 import { wrappedValidateZSchemaStorage } from "rxdb/plugins/validate-z-schema";
+import { calendarEventsSchemaV0, calendarsSchemaV0 } from "./rxdb-calendar-v2";
 
 // create collection based on CalendarEvent
 const eventsSchema = {
@@ -169,6 +170,7 @@ export const initializeRxDB = async () => {
   });
 
   await db.addCollections({
+    // Old events collection - kept for migration compatibility
     events: {
       schema: eventsSchema,
       migrationStrategies: {
@@ -275,6 +277,13 @@ export const initializeRxDB = async () => {
     },
     timetablesync: {
       schema: timetableSyncSchema,
+    },
+    // New calendar v2 collections
+    calendar_events: {
+      schema: calendarEventsSchemaV0,
+    },
+    calendars: {
+      schema: calendarsSchemaV0,
     },
   });
 
