@@ -11,7 +11,10 @@
     "lint": "next lint --fix",
     "type-check": "tsc --noEmit",
     "clean": "rm -rf .next dist",
-    "gentype": "bunx supabase gen types typescript --project-id \"cmzdlrqfpuktcczvsobs\" --schema public > src/types/supabase.ts"
+    "gentype": "bunx supabase gen types typescript --project-id \"cmzdlrqfpuktcczvsobs\" --schema public > src/types/supabase.ts",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage"
   },
   "dependencies": {
     "@courseweb/api-types": "*",
@@ -99,6 +102,10 @@
   },
   "devDependencies": {
     "@courseweb/eslint-config": "*",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.1",
+    "@testing-library/user-event": "^14.6.1",
     "@types/jsdom": "^21.1.7",
     "@types/jsonwebtoken": "^9.0.6",
     "@types/leaflet": "^1.9.11",
@@ -109,11 +116,14 @@
     "@types/react-dom": "18.3.0",
     "@types/react-transition-group": "^4.4.10",
     "@types/uuid": "^10.0.0",
+    "@vitejs/plugin-react": "^5.1.2",
     "eslint": "8.57.0",
     "eslint-config-next": "14.2.26",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-unused-imports": "^4.1.3",
-    "prettier": "3.3.3"
+    "happy-dom": "^20.0.11",
+    "prettier": "3.3.3",
+    "vitest": "^4.0.16"
   },
   "eslintConfig": {
     "extends": [
