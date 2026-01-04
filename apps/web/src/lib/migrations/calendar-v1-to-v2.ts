@@ -317,7 +317,7 @@ function convertOldRepeatToRRule(oldEvent: EventDocType): string {
 
   if (oldEvent.repeat.mode === "count") {
     ruleOptions.count = oldEvent.repeat.value;
-  } else if (oldEvent.repeat.mode === "date") {
+  } else if (oldEvent.repeat.mode === "date" && oldEvent.repeat.value) {
     ruleOptions.until = new Date(oldEvent.repeat.value);
   }
 

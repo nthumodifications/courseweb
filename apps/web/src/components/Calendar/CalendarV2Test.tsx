@@ -34,8 +34,8 @@ export function CalendarV2Test() {
           deleted: false,
         },
       })
-      .$.subscribe((calendars) => {
-        setCalendars(calendars.map((c) => c.toJSON()));
+      .$.subscribe((calendars: any) => {
+        setCalendars(calendars.map((c: any) => c.toJSON()));
       });
 
     return () => subscription.unsubscribe();
@@ -60,7 +60,7 @@ export function CalendarV2Test() {
         },
       })
       .exec()
-      .then((allEvents) => {
+      .then((allEvents: any) => {
         setStats({
           total: allEvents.length,
           visible: events.length,

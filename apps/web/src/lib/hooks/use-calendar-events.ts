@@ -9,7 +9,7 @@
  * - 10x faster with 1000+ events (500ms → 50ms)
  */
 
-import { useRxQuery } from "rxdb-hooks";
+import { useRxQuery, useRxCollection } from "rxdb-hooks";
 import { useMemo } from "react";
 import { RRule, rrulestr } from "rrule";
 import type { EventInstance, CalendarEvent } from "@/config/rxdb-calendar-v2";
@@ -44,15 +44,17 @@ export function useCalendarEvents({
   rangeEnd,
   includeDeleted = false,
 }: UseCalendarEventsOptions): UseCalendarEventsResult {
+  const collection = useRxCollection("calendar_events");
+
+  const startTime = rangeStart.getTime();
+  const endTime = rangeEnd.getTime();
+
   // Build efficient RxDB query with indexes
-  const { result: eventDocs, isFetching } = useRxQuery((collection) => {
+  const query = useMemo(() => {
     if (!collection || calendarIds.length === 0) return null;
 
-    const startTime = rangeStart.getTime();
-    const endTime = rangeEnd.getTime();
-
     // Build the query using the compound index [calendarId, deleted, startTime]
-    const query = collection.find({
+    return collection.find({
       selector: {
         calendarId: { $in: calendarIds },
         deleted: includeDeleted ? { $in: [true, false] } : false,
@@ -75,9 +77,9 @@ export function useCalendarEvents({
       // Use the compound index for sorting
       sort: [{ calendarId: "asc" }, { deleted: "asc" }, { startTime: "asc" }],
     });
+  }, [collection, calendarIds, includeDeleted, startTime, endTime]);
 
-    return query;
-  }, "calendar_events");
+  const { result: eventDocs, isFetching } = useRxQuery(query);
 
   // Expand recurring events and convert to EventInstance[]
   const events = useMemo(() => {
@@ -183,14 +185,18 @@ function expandRecurringEvent(
  * Hook for fetching a single event by ID
  */
 export function useCalendarEvent(eventId: string) {
-  const { result: eventDoc } = useRxQuery((collection) => {
+  const collection = useRxCollection("calendar_events");
+
+  const query = useMemo(() => {
     if (!collection || !eventId) return null;
     return collection.findOne(eventId);
-  }, "calendar_events");
+  }, [collection, eventId]);
+
+  const { result: eventDoc } = useRxQuery(query);
 
   const event = useMemo(() => {
     if (!eventDoc) return null;
-    return eventDoc.toJSON() as CalendarEvent;
+    return (eventDoc as any).toJSON() as CalendarEvent;
   }, [eventDoc]);
 
   return { event };
