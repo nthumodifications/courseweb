@@ -3,7 +3,7 @@
  * Wires together all calendar views, dialogs, and state management
  */
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useCalendarUIStore } from "@/lib/store/calendar-ui-store";
 import { useCalendarEvents } from "@/lib/hooks/use-calendar-events";
 import { useCalendars } from "@/lib/hooks/use-calendars";
@@ -29,9 +29,15 @@ import {
 import type { CalendarEvent } from "@/config/rxdb-calendar-v2";
 import { Button } from "@courseweb/ui";
 import { Plus } from "lucide-react";
+import { DragDropCalendar } from "./DragDropCalendar";
+import { CalendarSidebar } from "./CalendarSidebar";
+import { CalendarSearch } from "./CalendarSearch";
 
 export function CalendarApp() {
   const db = useRxDB();
+
+  // Local state for search
+  const [searchQuery, setSearchQuery] = useState("");
 
   // UI state from Zustand
   const {
@@ -42,6 +48,7 @@ export function CalendarApp() {
     selectedEventId,
     setView,
     setSelectedDate,
+    setVisibleCalendars,
     openEventDialog,
     closeEventDialog,
   } = useCalendarUIStore();
@@ -83,11 +90,24 @@ export function CalendarApp() {
   }, [currentView, selectedDate]);
 
   // Fetch events for current range
-  const { events, loading: eventsLoading } = useCalendarEvents(
+  const { events: allEvents, loading: eventsLoading } = useCalendarEvents(
     visibleCalendarIds,
     rangeStart,
     rangeEnd,
   );
+
+  // Filter events based on search query
+  const events = useMemo(() => {
+    if (!searchQuery.trim()) return allEvents;
+
+    const query = searchQuery.toLowerCase();
+    return allEvents.filter(
+      (event) =>
+        event.title.toLowerCase().includes(query) ||
+        event.description?.toLowerCase().includes(query) ||
+        event.location?.toLowerCase().includes(query),
+    );
+  }, [allEvents, searchQuery]);
 
   // Find selected event for editing
   const selectedEvent = useMemo(() => {
@@ -188,6 +208,21 @@ export function CalendarApp() {
     await deleteEvent(db, eventId);
   };
 
+  // Calendar visibility handlers
+  const handleToggleCalendar = (calendarId: string) => {
+    const newVisibleIds = visibleCalendarIds.includes(calendarId)
+      ? visibleCalendarIds.filter((id) => id !== calendarId)
+      : [...visibleCalendarIds, calendarId];
+    setVisibleCalendars(newVisibleIds);
+  };
+
+  // Time slot click handler for quick event creation
+  const handleTimeSlotClick = (date: Date, time?: string) => {
+    // Set the date and open dialog
+    setSelectedDate(date);
+    openEventDialog();
+  };
+
   // Loading state
   if (calendarsLoading || !db) {
     return (
@@ -201,90 +236,116 @@ export function CalendarApp() {
   }
 
   return (
-    <div className="flex flex-col h-full" data-testid="calendar-app">
-      {/* Header with controls */}
-      <div className="border-b bg-white p-4">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold">Calendar</h1>
-          <Button
-            onClick={() => openEventDialog()}
-            data-testid="calendar-app-add-event"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            New Event
-          </Button>
-        </div>
-
-        <CalendarControls
-          currentView={currentView}
+    <DragDropCalendar>
+      <div className="flex h-full" data-testid="calendar-app">
+        {/* Sidebar with calendars and mini calendar */}
+        <CalendarSidebar
+          calendars={calendars.map((cal) => ({
+            id: cal.id,
+            name: cal.name,
+            color: cal.color,
+            isVisible: visibleCalendarIds.includes(cal.id),
+          }))}
           selectedDate={selectedDate}
-          onViewChange={setView}
-          onPrevious={handlePrevious}
-          onNext={handleNext}
-          onToday={handleToday}
+          visibleCalendarIds={visibleCalendarIds}
+          onToggleCalendar={handleToggleCalendar}
+          onDateSelect={setSelectedDate}
         />
-      </div>
 
-      {/* Calendar view */}
-      <div className="flex-1 overflow-auto bg-gray-50">
-        {eventsLoading ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-gray-600">Loading events...</div>
+        {/* Main calendar area */}
+        <div className="flex flex-col flex-1">
+          {/* Header with controls */}
+          <div className="border-b bg-white p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h1 className="text-2xl font-bold">Calendar</h1>
+              <div className="flex items-center gap-2">
+                <CalendarSearch
+                  value={searchQuery}
+                  onChange={setSearchQuery}
+                  className="w-64"
+                />
+                <Button
+                  onClick={() => openEventDialog()}
+                  data-testid="calendar-app-add-event"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Event
+                </Button>
+              </div>
+            </div>
+
+            <CalendarControls
+              currentView={currentView}
+              selectedDate={selectedDate}
+              onViewChange={setView}
+              onPrevious={handlePrevious}
+              onNext={handleNext}
+              onToday={handleToday}
+            />
           </div>
-        ) : (
-          <>
-            {currentView === "week" && (
-              <WeekView
-                weekStart={selectedDate}
-                events={events}
-                onEventClick={handleEventClick}
-                getCalendarColor={getCalendarColor}
-                showTimeGrid={true}
-              />
-            )}
 
-            {currentView === "month" && (
-              <MonthView
-                currentMonth={selectedDate}
-                events={events}
-                onEventClick={handleEventClick}
-                onDateClick={handleDateClick}
-                getCalendarColor={getCalendarColor}
-                maxEventsPerDay={3}
-              />
-            )}
+          {/* Calendar view */}
+          <div className="flex-1 overflow-auto bg-gray-50">
+            {eventsLoading ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-gray-600">Loading events...</div>
+              </div>
+            ) : (
+              <>
+                {currentView === "week" && (
+                  <WeekView
+                    weekStart={selectedDate}
+                    events={events}
+                    onEventClick={handleEventClick}
+                    getCalendarColor={getCalendarColor}
+                    showTimeGrid={true}
+                  />
+                )}
 
-            {currentView === "day" && (
-              <DayView
-                date={selectedDate}
-                events={events}
-                onEventClick={handleEventClick}
-                getCalendarColor={getCalendarColor}
-              />
-            )}
+                {currentView === "month" && (
+                  <MonthView
+                    currentMonth={selectedDate}
+                    events={events}
+                    onEventClick={handleEventClick}
+                    onDateClick={handleDateClick}
+                    getCalendarColor={getCalendarColor}
+                    maxEventsPerDay={3}
+                  />
+                )}
 
-            {currentView === "agenda" && (
-              <AgendaView
-                events={events}
-                onEventClick={handleEventClick}
-                getCalendarColor={getCalendarColor}
-                showPastEvents={false}
-              />
+                {currentView === "day" && (
+                  <DayView
+                    date={selectedDate}
+                    events={events}
+                    onEventClick={handleEventClick}
+                    getCalendarColor={getCalendarColor}
+                  />
+                )}
+
+                {currentView === "agenda" && (
+                  <AgendaView
+                    events={events}
+                    onEventClick={handleEventClick}
+                    getCalendarColor={getCalendarColor}
+                    showPastEvents={false}
+                  />
+                )}
+              </>
             )}
-          </>
-        )}
+          </div>
+
+          {/* Event dialog */}
+          <EventDialog
+            open={eventDialogOpen}
+            onOpenChange={closeEventDialog}
+            event={selectedEvent}
+            defaultCalendarId={visibleCalendarIds[0]}
+            defaultDate={selectedDate}
+            onSave={handleSaveEvent}
+            onDelete={handleDeleteEvent}
+          />
+        </div>
       </div>
-
-      {/* Event dialog */}
-      <EventDialog
-        open={eventDialogOpen}
-        onOpenChange={closeEventDialog}
-        event={selectedEvent}
-        defaultCalendarId={visibleCalendarIds[0]}
-        defaultDate={selectedDate}
-        onSave={handleSaveEvent}
-        onDelete={handleDeleteEvent}
-      />
-    </div>
+    </DragDropCalendar>
   );
 }
