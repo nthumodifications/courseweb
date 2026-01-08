@@ -90,11 +90,11 @@ export function CalendarApp() {
   }, [currentView, selectedDate]);
 
   // Fetch events for current range
-  const { events: allEvents, loading: eventsLoading } = useCalendarEvents(
-    visibleCalendarIds,
+  const { events: allEvents, isFetching: eventsLoading } = useCalendarEvents({
+    calendarIds: visibleCalendarIds,
     rangeStart,
     rangeEnd,
-  );
+  });
 
   // Filter events based on search query
   const events = useMemo(() => {
