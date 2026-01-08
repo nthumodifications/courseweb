@@ -15,6 +15,7 @@ import {
   createEvent,
   updateEvent,
   deleteEvent,
+  type CreateEventParams,
 } from "@/lib/utils/calendar-event-utils";
 import { useRxDB } from "rxdb-hooks";
 import {
@@ -169,37 +170,60 @@ export function CalendarApp() {
   const handleSaveEvent = async (data: EventFormData) => {
     if (!db) throw new Error("Database not initialized");
 
-    // Convert form data to event data
-    const startDateTime = data.allDay
-      ? new Date(`${data.startDate}T00:00:00`)
-      : new Date(`${data.startDate}T${data.startTime}`);
-
-    const endDateTime = data.allDay
-      ? new Date(`${data.endDate}T23:59:59`)
-      : new Date(`${data.endDate}T${data.endTime}`);
-
-    const eventData = {
-      calendarId: data.calendarId,
-      title: data.title,
-      description: data.description || "",
-      location: data.location || "",
-      startTime: startDateTime.getTime(),
-      endTime: endDateTime.getTime(),
-      allDay: data.allDay,
-      tags: data.tags,
-      rrule: data.rrule,
-      source: "user" as const,
-    };
-
     if (selectedEvent) {
       // Update existing event
+      // Convert form data for update
+      const startDateTime = data.allDay
+        ? new Date(`${data.startDate}T00:00:00`)
+        : new Date(`${data.startDate}T${data.startTime}`);
+
+      const endDateTime = data.allDay
+        ? new Date(`${data.endDate}T23:59:59`)
+        : new Date(`${data.endDate}T${data.endTime}`);
+
       await updateEvent(db, {
         id: selectedEvent.id,
-        ...eventData,
+        title: data.title,
+        description: data.description,
+        location: data.location,
+        startTime: startDateTime.getTime(),
+        endTime: endDateTime.getTime(),
+        allDay: data.allDay,
+        tags: data.tags,
+        rrule: data.rrule,
       });
     } else {
       // Create new event
-      await createEvent(db, eventData);
+      // Parse start date and time for creation
+      const startDate = new Date(data.startDate);
+
+      const createParams: CreateEventParams = {
+        calendarId: data.calendarId,
+        title: data.title,
+        description: data.description,
+        location: data.location,
+        startDate,
+        allDay: data.allDay,
+        tags: data.tags,
+        rrule: data.rrule,
+      };
+
+      if (!data.allDay && data.startTime && data.endTime) {
+        // Extract hour and minute from time string (HH:mm)
+        const [startHour, startMinute] = data.startTime.split(":").map(Number);
+        const [endHour, endMinute] = data.endTime.split(":").map(Number);
+
+        // Calculate duration in minutes
+        const startMinutes = startHour * 60 + startMinute;
+        const endMinutes = endHour * 60 + endMinute;
+        const durationMinutes = endMinutes - startMinutes;
+
+        createParams.startHour = startHour;
+        createParams.startMinute = startMinute;
+        createParams.durationMinutes = durationMinutes;
+      }
+
+      await createEvent(db, createParams);
     }
   };
 
