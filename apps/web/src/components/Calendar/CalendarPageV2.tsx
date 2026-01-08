@@ -7,7 +7,7 @@
 
 import React, { useEffect, useState } from "react";
 import { CalendarApp } from "./v2";
-import { useRxDB } from "@/lib/hooks/use-rxdb";
+import { useRxDB } from "rxdb-hooks";
 import { useCalendars } from "@/lib/hooks/use-calendars";
 import { useCalendarUIStore } from "@/lib/store/calendar-ui-store";
 

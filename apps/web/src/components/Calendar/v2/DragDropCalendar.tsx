@@ -16,7 +16,7 @@ import {
 } from "@dnd-kit/core";
 import type { CalendarEvent } from "@/config/rxdb-calendar-v2";
 import { updateEvent } from "@/lib/utils/calendar-event-utils";
-import { useRxDB } from "@/lib/hooks/use-rxdb";
+import { useRxDB } from "rxdb-hooks";
 import { parse, addMinutes } from "date-fns";
 
 interface DragDropCalendarProps {

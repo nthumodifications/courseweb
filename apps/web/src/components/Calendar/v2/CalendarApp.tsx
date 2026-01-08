@@ -16,7 +16,7 @@ import {
   updateEvent,
   deleteEvent,
 } from "@/lib/utils/calendar-event-utils";
-import { useRxDB } from "@/lib/hooks/use-rxdb";
+import { useRxDB } from "rxdb-hooks";
 import {
   addDays,
   startOfWeek,

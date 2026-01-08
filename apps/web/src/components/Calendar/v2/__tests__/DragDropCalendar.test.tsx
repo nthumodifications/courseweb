@@ -2,11 +2,11 @@ import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { DragDropCalendar } from "../DragDropCalendar";
-import { useRxDB } from "@/lib/hooks/use-rxdb";
+import { useRxDB } from "rxdb-hooks";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 
 // Mock dependencies
-vi.mock("@/lib/hooks/use-rxdb");
+vi.mock("rxdb-hooks");
 vi.mock("@/lib/utils/calendar-event-utils", () => ({
   updateEvent: vi.fn().mockResolvedValue(undefined),
 }));
