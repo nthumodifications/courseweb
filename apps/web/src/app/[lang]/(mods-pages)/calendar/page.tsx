@@ -1,9 +1,9 @@
 "use client";
 import { NextPage } from "next";
-import CalendarPage from "@/components/Calendar/CalendarPage";
+import CalendarPageV2 from "@/components/Calendar/CalendarPageV2";
 
-const TodayPage: NextPage = () => {
-  return <CalendarPage />;
+const CalendarPage: NextPage = () => {
+  return <CalendarPageV2 />;
 };
 
-export default TodayPage;
+export default CalendarPage;
