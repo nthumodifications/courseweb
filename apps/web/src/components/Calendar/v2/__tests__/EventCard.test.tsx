@@ -16,7 +16,7 @@ describe("EventCard", () => {
     location: "Test Location",
     startTime: new Date("2026-01-15T10:00:00Z").getTime(),
     endTime: new Date("2026-01-15T11:00:00Z").getTime(),
-    allDay: false,
+    isAllDay: false,
     exdates: [],
     tags: ["work", "important"],
     source: "user",
@@ -59,7 +59,7 @@ describe("EventCard", () => {
     });
 
     it("should show all-day indicator for all-day events", () => {
-      const allDayEvent = { ...baseEvent, allDay: true };
+      const allDayEvent = { ...baseEvent, isAllDay: true };
       render(<EventCard event={allDayEvent} />);
       expect(screen.getByText("All day")).toBeInTheDocument();
     });
@@ -176,7 +176,7 @@ describe("EventList", () => {
       location: "",
       startTime: new Date("2026-01-15T10:00:00Z").getTime(),
       endTime: new Date("2026-01-15T11:00:00Z").getTime(),
-      allDay: false,
+      isAllDay: false,
       exdates: [],
       tags: [],
       source: "user",
@@ -193,7 +193,7 @@ describe("EventList", () => {
       location: "",
       startTime: new Date("2026-01-16T14:00:00Z").getTime(),
       endTime: new Date("2026-01-16T15:00:00Z").getTime(),
-      allDay: false,
+      isAllDay: false,
       exdates: [],
       tags: [],
       source: "user",

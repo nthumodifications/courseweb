@@ -28,7 +28,7 @@ describe("DraggableEvent", () => {
     location: "Test Location",
     startTime: new Date("2024-01-15T10:00:00").getTime(),
     endTime: new Date("2024-01-15T11:00:00").getTime(),
-    allDay: false,
+    isAllDay: false,
     tags: [],
     source: "user" as const,
     deleted: false,

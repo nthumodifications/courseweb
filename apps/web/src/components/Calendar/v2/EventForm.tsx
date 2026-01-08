@@ -19,7 +19,7 @@ const eventFormSchema = z
     description: z.string().optional(),
     location: z.string().optional(),
     calendarId: z.string().min(1, "Calendar is required"),
-    allDay: z.boolean(),
+    isAllDay: z.boolean(),
     startDate: z.string(), // ISO date string
     startTime: z.string().optional(), // HH:mm format
     endDate: z.string(), // ISO date string
@@ -30,7 +30,7 @@ const eventFormSchema = z
   .refine(
     (data) => {
       // If not all-day, time fields are required
-      if (!data.allDay) {
+      if (!data.isAllDay) {
         return Boolean(data.startTime && data.endTime);
       }
       return true;
@@ -95,13 +95,13 @@ export function EventForm({
           description: event.description || "",
           location: event.location || "",
           calendarId: event.calendarId,
-          allDay: event.allDay,
+          isAllDay: event.isAllDay,
           startDate: format(new Date(event.startTime), "yyyy-MM-dd"),
-          startTime: event.allDay
+          startTime: event.isAllDay
             ? undefined
             : format(new Date(event.startTime), "HH:mm"),
           endDate: format(new Date(event.endTime), "yyyy-MM-dd"),
-          endTime: event.allDay
+          endTime: event.isAllDay
             ? undefined
             : format(new Date(event.endTime), "HH:mm"),
           tags: event.tags || [],
@@ -112,7 +112,7 @@ export function EventForm({
           description: "",
           location: "",
           calendarId: defaultCalendarId,
-          allDay: false,
+          isAllDay: false,
           startDate: format(defaultDate, "yyyy-MM-dd"),
           startTime: format(defaultDate, "HH:mm"),
           endDate: format(defaultDate, "yyyy-MM-dd"),
@@ -125,7 +125,7 @@ export function EventForm({
         },
   });
 
-  const allDay = watch("allDay");
+  const isAllDay = watch("allDay");
   const tags = watch("tags");
   const rrule = watch("rrule");
 

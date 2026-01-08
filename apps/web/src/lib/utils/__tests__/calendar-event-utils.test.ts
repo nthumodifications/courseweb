@@ -37,12 +37,12 @@ describe("calendar-event-utils", () => {
       const event = createEventData({
         calendarId: "cal-1",
         title: "All Day Event",
-        allDay: true,
+        isAllDay: true,
         startDate: new Date("2026-01-15T00:00:00Z"),
       });
 
       expect(event.title).toBe("All Day Event");
-      expect(event.allDay).toBe(true);
+      expect(event.isAllDay).toBe(true);
       expect(event.calendarId).toBe("cal-1");
       expect(event.source).toBe("user");
       expect(event.deleted).toBe(false);
@@ -53,7 +53,7 @@ describe("calendar-event-utils", () => {
       const event = createEventData({
         calendarId: "cal-1",
         title: "Meeting",
-        allDay: false,
+        isAllDay: false,
         startDate: new Date("2026-01-15T00:00:00Z"),
         startHour: 14,
         startMinute: 30,
@@ -61,7 +61,7 @@ describe("calendar-event-utils", () => {
       });
 
       expect(event.title).toBe("Meeting");
-      expect(event.allDay).toBe(false);
+      expect(event.isAllDay).toBe(false);
       expect(event.endTime - event.startTime).toBe(90 * 60 * 1000);
     });
 
@@ -99,7 +99,7 @@ describe("calendar-event-utils", () => {
         location: "",
         startTime: Date.now(),
         endTime: Date.now() + 3600000,
-        allDay: false,
+        isAllDay: false,
         exdates: [],
         tags: [],
         source: "user",
@@ -139,7 +139,7 @@ describe("calendar-event-utils", () => {
         location: "",
         startTime: Date.now(),
         endTime: Date.now() + 3600000,
-        allDay: false,
+        isAllDay: false,
         exdates: [],
         tags: [],
         source: "user",
@@ -262,7 +262,7 @@ describe("calendar-event-utils", () => {
         location: "",
         startTime: Date.now(),
         endTime: Date.now() + 3600000,
-        allDay: false,
+        isAllDay: false,
         rrule: "FREQ=DAILY;COUNT=10",
         exdates: [],
         tags: [],
@@ -311,7 +311,7 @@ describe("calendar-event-utils", () => {
         location: "",
         startTime: Date.now(),
         endTime: Date.now() + 3600000,
-        allDay: false,
+        isAllDay: false,
         rrule: "FREQ=DAILY;COUNT=10",
         exdates: [exclusionTimestamp],
         tags: [],
@@ -361,7 +361,7 @@ describe("calendar-event-utils", () => {
         location: "Location",
         startTime: new Date("2026-01-15T10:00:00Z").getTime(),
         endTime: new Date("2026-01-15T11:00:00Z").getTime(),
-        allDay: false,
+        isAllDay: false,
         exdates: [],
         tags: ["work"],
         source: "user",
@@ -407,7 +407,7 @@ describe("calendar-event-utils", () => {
         location: "",
         startTime: Date.now(),
         endTime: Date.now() + 3600000,
-        allDay: false,
+        isAllDay: false,
         exdates: [],
         tags: ["work"],
         source: "user",
@@ -436,7 +436,7 @@ describe("calendar-event-utils", () => {
         location: "",
         startTime: Date.now(),
         endTime: Date.now() + 3600000,
-        allDay: false,
+        isAllDay: false,
         exdates: [],
         tags: [],
         source: "user",
@@ -466,7 +466,7 @@ describe("calendar-event-utils", () => {
           location: "Room 101",
           startTime: Date.now(),
           endTime: Date.now() + 3600000,
-          allDay: false,
+          isAllDay: false,
           exdates: [],
           tags: [],
           source: "user",
@@ -483,7 +483,7 @@ describe("calendar-event-utils", () => {
           location: "Cafeteria",
           startTime: Date.now(),
           endTime: Date.now() + 3600000,
-          allDay: false,
+          isAllDay: false,
           exdates: [],
           tags: [],
           source: "user",
@@ -516,7 +516,7 @@ describe("calendar-event-utils", () => {
           location: "",
           startTime: Date.now(),
           endTime: Date.now() + 3600000,
-          allDay: true,
+          isAllDay: true,
           exdates: [],
           tags: ["work"],
           source: "user",
@@ -533,7 +533,7 @@ describe("calendar-event-utils", () => {
           location: "",
           startTime: Date.now(),
           endTime: Date.now() + 3600000,
-          allDay: false,
+          isAllDay: false,
           rrule: "FREQ=DAILY;COUNT=5",
           exdates: [],
           tags: [],
@@ -551,7 +551,7 @@ describe("calendar-event-utils", () => {
           location: "",
           startTime: Date.now(),
           endTime: Date.now() + 3600000,
-          allDay: false,
+          isAllDay: false,
           exdates: [],
           tags: [],
           source: "user",
@@ -571,7 +571,7 @@ describe("calendar-event-utils", () => {
       expect(stats.total).toBe(3);
       expect(stats.deleted).toBe(1);
       expect(stats.recurring).toBe(1);
-      expect(stats.allDay).toBe(1);
+      expect(stats.isAllDay).toBe(1);
       expect(stats.tagged).toBe(1);
     });
   });

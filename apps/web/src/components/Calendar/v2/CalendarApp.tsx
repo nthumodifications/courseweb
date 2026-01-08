@@ -173,11 +173,11 @@ export function CalendarApp() {
     if (selectedEvent) {
       // Update existing event
       // Convert form data for update
-      const startDateTime = data.allDay
+      const startDateTime = data.isAllDay
         ? new Date(`${data.startDate}T00:00:00`)
         : new Date(`${data.startDate}T${data.startTime}`);
 
-      const endDateTime = data.allDay
+      const endDateTime = data.isAllDay
         ? new Date(`${data.endDate}T23:59:59`)
         : new Date(`${data.endDate}T${data.endTime}`);
 
@@ -188,7 +188,7 @@ export function CalendarApp() {
         location: data.location,
         startTime: startDateTime.getTime(),
         endTime: endDateTime.getTime(),
-        allDay: data.allDay,
+        isAllDay: data.isAllDay,
         tags: data.tags,
         rrule: data.rrule,
       });
@@ -203,12 +203,12 @@ export function CalendarApp() {
         description: data.description,
         location: data.location,
         startDate,
-        allDay: data.allDay,
+        isAllDay: data.isAllDay,
         tags: data.tags,
         rrule: data.rrule,
       };
 
-      if (!data.allDay && data.startTime && data.endTime) {
+      if (!data.isAllDay && data.startTime && data.endTime) {
         // Extract hour and minute from time string (HH:mm)
         const [startHour, startMinute] = data.startTime.split(":").map(Number);
         const [endHour, endMinute] = data.endTime.split(":").map(Number);

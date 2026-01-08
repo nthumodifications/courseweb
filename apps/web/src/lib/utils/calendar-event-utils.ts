@@ -19,7 +19,7 @@ export interface CreateEventParams {
   title: string;
   description?: string;
   location?: string;
-  allDay?: boolean;
+  isAllDay?: boolean;
   startDate: Date;
   startHour?: number;
   startMinute?: number;
@@ -36,7 +36,7 @@ export interface UpdateEventParams {
   location?: string;
   startTime?: number;
   endTime?: number;
-  allDay?: boolean;
+  isAllDay?: boolean;
   rrule?: string;
   tags?: string[];
   metadata?: Record<string, any>;
@@ -58,7 +58,7 @@ export function createEventData(params: CreateEventParams): CalendarEvent {
   let startTime: number;
   let endTime: number;
 
-  if (params.allDay) {
+  if (params.isAllDay) {
     const timestamps = createAllDayTimestamps(params.startDate, timezone);
     startTime = timestamps.startTime;
     endTime = timestamps.endTime;
@@ -86,7 +86,7 @@ export function createEventData(params: CreateEventParams): CalendarEvent {
     location: params.location || "",
     startTime,
     endTime,
-    allDay: params.allDay || false,
+    isAllDay: params.isAllDay || false,
     rrule: params.rrule,
     exdates: [],
     tags: params.tags || [],
@@ -466,7 +466,7 @@ export async function getCalendarStatistics(
   total: number;
   deleted: number;
   recurring: number;
-  allDay: number;
+  isAllDay: number;
   tagged: number;
 }> {
   const events = await db.calendar_events
@@ -483,7 +483,7 @@ export async function getCalendarStatistics(
     total: eventData.length,
     deleted: eventData.filter((e) => e.deleted).length,
     recurring: eventData.filter((e) => e.rrule).length,
-    allDay: eventData.filter((e) => e.allDay).length,
+    isAllDay: eventData.filter((e) => e.isAllDay).length,
     tagged: eventData.filter((e) => e.tags && e.tags.length > 0).length,
   };
 }

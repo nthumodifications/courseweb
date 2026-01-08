@@ -97,7 +97,7 @@ export function EventCard({
       </div>
 
       {/* Event Time and Duration */}
-      {showTime && !event.allDay && (
+      {showTime && !event.isAllDay && (
         <div className="mt-1 flex items-center gap-2 text-xs text-gray-600">
           <span>{formatTimeInTimezone(startDate)}</span>
           {showDuration && (
@@ -107,7 +107,7 @@ export function EventCard({
       )}
 
       {/* All-Day Indicator */}
-      {event.allDay && mode !== "compact" && (
+      {event.isAllDay && mode !== "compact" && (
         <div className="mt-1 text-xs text-gray-600">All day</div>
       )}
 

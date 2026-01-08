@@ -137,7 +137,7 @@ export function WeekView({
                   {daysOfWeek.map((day) => {
                     const dayKey = day.toDateString();
                     const timedEvents =
-                      eventsByDay[dayKey]?.filter((e) => !e.allDay) || [];
+                      eventsByDay[dayKey]?.filter((e) => !e.isAllDay) || [];
                     const hourEvents = timedEvents.filter((event) => {
                       const eventHour = new Date(event.startTime).getHours();
                       return eventHour === hour;
@@ -176,7 +176,7 @@ export function WeekView({
             {daysOfWeek.map((day) => {
               const dayKey = day.toDateString();
               const allDayEvents =
-                eventsByDay[dayKey]?.filter((e) => e.allDay) || [];
+                eventsByDay[dayKey]?.filter((e) => e.isAllDay) || [];
 
               return (
                 <div
@@ -341,7 +341,7 @@ export function MonthView({
                     key={event.id}
                     event={event}
                     mode="compact"
-                    showTime={!event.allDay}
+                    showTime={!event.isAllDay}
                     onClick={(e) => {
                       e.stopPropagation?.();
                       onEventClick?.(event);
@@ -408,9 +408,9 @@ export function DayView({
     (_, i) => startHour + i,
   );
 
-  const allDayEvents = events.filter((e) => e.allDay);
+  const allDayEvents = events.filter((e) => e.isAllDay);
   const timedEvents = events
-    .filter((e) => !e.allDay)
+    .filter((e) => !e.isAllDay)
     .sort((a, b) => a.startTime - b.startTime);
 
   return (
