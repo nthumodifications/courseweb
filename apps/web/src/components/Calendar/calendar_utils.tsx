@@ -45,7 +45,7 @@ export const eventsToDisplay = (
       const diff = event.end.getTime() - event.start.getTime();
       const newEnd = new Date(newStart.getTime() + diff);
 
-      if (event.allDay) {
+      if (event.isAllDay) {
         // if any day of start to end is within newStart and newEnd, add the event
         if (
           eachDayOfInterval({

@@ -42,7 +42,7 @@ export const timetableToCalendarEvent = (
           t.endTime,
         title: title,
         location: t.venue,
-        allDay: false,
+        isAllDay: false,
         start: startDate,
         end: endDate,
         repeat: {

@@ -125,7 +125,7 @@ export function EventForm({
         },
   });
 
-  const isAllDay = watch("allDay");
+  const isAllDay = watch("isAllDay");
   const tags = watch("tags");
   const rrule = watch("rrule");
 
@@ -191,8 +191,8 @@ export function EventForm({
         <Switch
           id="all-day"
           data-testid="event-form-allday"
-          checked={allDay}
-          onCheckedChange={(checked) => setValue("allDay", checked)}
+          checked={isAllDay}
+          onCheckedChange={(checked) => setValue("isAllDay", checked)}
         />
         <Label htmlFor="all-day" className="cursor-pointer">
           All-day event
@@ -214,7 +214,7 @@ export function EventForm({
           />
         </div>
 
-        {!allDay && (
+        {!isAllDay && (
           <div className="space-y-2">
             <Label htmlFor="start-time" className="flex items-center gap-1">
               <Clock className="h-4 w-4" />
@@ -251,7 +251,7 @@ export function EventForm({
           />
         </div>
 
-        {!allDay && (
+        {!isAllDay && (
           <div className="space-y-2">
             <Label htmlFor="end-time">
               End Time <span className="text-red-500">*</span>

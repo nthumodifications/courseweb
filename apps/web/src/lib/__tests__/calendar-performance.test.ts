@@ -31,7 +31,7 @@ describe("Calendar Performance Tests", () => {
           location: `Location ${i}`,
           startDate: new Date(`2026-01-${(i % 28) + 1}T10:00:00Z`),
           endDate: new Date(`2026-01-${(i % 28) + 1}T11:00:00Z`),
-          allDay: false,
+          isAllDay: false,
         });
       });
 
@@ -224,7 +224,7 @@ describe("Calendar Performance Tests", () => {
           endDate: new Date(
             `2026-${((i % 12) + 1).toString().padStart(2, "0")}-01T11:00:00Z`,
           ),
-          allDay: false,
+          isAllDay: false,
         });
       });
 

@@ -144,6 +144,7 @@ export const EventForm = ({
   const handleSubmit = (data: z.infer<typeof eventFormSchema>) => {
     const eventDef: CalendarEvent = {
       ...data,
+      isAllDay: (data as any).allDay ?? false,
       repeat: data.repeat.type == null ? null : data.repeat,
     };
     onSubmit(eventDef);
@@ -218,7 +219,11 @@ export const EventForm = ({
         const currentTime = new Date();
 
         // If we have defaultEvent with specific times, prioritize those times
-        if (defaultEvent?.start && defaultEvent?.end && !defaultEvent.allDay) {
+        if (
+          defaultEvent?.start &&
+          defaultEvent?.end &&
+          !defaultEvent.isAllDay
+        ) {
           // Use the time portion from defaultEvent but keep current date
           form.setValue(
             "start",

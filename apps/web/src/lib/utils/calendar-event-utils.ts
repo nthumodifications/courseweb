@@ -26,7 +26,6 @@ export interface CreateEventParams {
   durationMinutes?: number;
   rrule?: string;
   tags?: string[];
-  metadata?: Record<string, any>;
 }
 
 export interface UpdateEventParams {
@@ -87,14 +86,13 @@ export function createEventData(params: CreateEventParams): CalendarEvent {
     startTime,
     endTime,
     isAllDay: params.isAllDay || false,
+    timezone: getUserTimezone(),
     rrule: params.rrule,
     exdates: [],
     tags: params.tags || [],
     source: "user",
-    metadata: params.metadata || {},
     deleted: false,
-    createdAt: now,
-    updatedAt: now,
+    lastModified: now,
   };
 
   return event;
@@ -127,7 +125,7 @@ export async function updateEvent(
 
   const updateData: Partial<CalendarEvent> = {
     ...params,
-    updatedAt: Date.now(),
+    lastModified: Date.now(),
   };
 
   await doc.patch(updateData);
@@ -269,8 +267,7 @@ export async function duplicateEvent(
     endTime: originalEvent.endTime + offset,
     rrule: undefined, // Don't duplicate recurrence
     exdates: [],
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
+    lastModified: Date.now(),
   };
 
   const newDoc = await db.calendar_events.insert(newEvent);
@@ -451,8 +448,8 @@ export async function searchEvents(
     .filter(
       (event) =>
         event.title.toLowerCase().includes(lowerQuery) ||
-        event.description.toLowerCase().includes(lowerQuery) ||
-        event.location.toLowerCase().includes(lowerQuery),
+        event.description?.toLowerCase().includes(lowerQuery) ||
+        event.location?.toLowerCase().includes(lowerQuery),
     );
 }
 

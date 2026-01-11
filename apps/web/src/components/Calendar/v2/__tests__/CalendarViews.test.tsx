@@ -21,10 +21,7 @@ describe("WeekView", () => {
     exdates: [],
     tags: [],
     source: "user",
-    metadata: {},
     deleted: false,
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
   };
 
   const allDayEvent: CalendarEvent = {
@@ -195,10 +192,7 @@ describe("MonthView", () => {
       exdates: [],
       tags: [],
       source: "user",
-      metadata: {},
       deleted: false,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
     },
     {
       id: "event-2",
@@ -212,10 +206,7 @@ describe("MonthView", () => {
       exdates: [],
       tags: [],
       source: "user",
-      metadata: {},
       deleted: false,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
     },
     {
       id: "event-3",
@@ -229,10 +220,7 @@ describe("MonthView", () => {
       exdates: [],
       tags: [],
       source: "user",
-      metadata: {},
       deleted: false,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
     },
     {
       id: "event-4",
@@ -246,10 +234,7 @@ describe("MonthView", () => {
       exdates: [],
       tags: [],
       source: "user",
-      metadata: {},
       deleted: false,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
     },
   ];
 
@@ -391,10 +376,7 @@ describe("DayView", () => {
     exdates: [],
     tags: [],
     source: "user",
-    metadata: {},
     deleted: false,
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
   };
 
   const allDayEvent: CalendarEvent = {
@@ -409,10 +391,7 @@ describe("DayView", () => {
     exdates: [],
     tags: [],
     source: "user",
-    metadata: {},
     deleted: false,
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
   };
 
   const defaultProps = {
@@ -515,10 +494,7 @@ describe("AgendaView", () => {
     exdates: [],
     tags: [],
     source: "user",
-    metadata: {},
     deleted: false,
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
   };
 
   const futureEvent: CalendarEvent = {
@@ -533,10 +509,7 @@ describe("AgendaView", () => {
     exdates: [],
     tags: [],
     source: "user",
-    metadata: {},
     deleted: false,
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
   };
 
   const defaultProps = {

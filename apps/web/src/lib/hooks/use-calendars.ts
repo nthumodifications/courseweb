@@ -4,7 +4,7 @@
  * This hook fetches all calendars with reactive updates.
  */
 
-import { useRxQuery } from "rxdb-hooks";
+import { useRxQuery, useRxCollection } from "rxdb-hooks";
 import { useMemo } from "react";
 import type { Calendar } from "@/config/rxdb-calendar-v2";
 
@@ -22,20 +22,25 @@ export interface UseCalendarsResult {
  * ```
  */
 export function useCalendars(): UseCalendarsResult {
-  const { result: calendars, isFetching } = useRxQuery(
-    "calendar_calendars",
-    (collection) =>
-      collection.find({
-        selector: {
-          deleted: { $ne: true },
-        },
-        sort: [{ createdAt: "asc" }],
-      }),
-  );
+  const collection = useRxCollection("calendar_calendars");
+
+  const query = useMemo(() => {
+    if (!collection) return null;
+    // Type assertion needed due to RxDB's generic MangoQuery typing
+    return collection.find({
+      selector: {
+        deleted: { $ne: true },
+      },
+      sort: [{ createdAt: "asc" }],
+    } as any);
+  }, [collection]);
+
+  const { result: calendarDocs, isFetching } = useRxQuery(query ?? undefined);
 
   const calendarsList = useMemo(() => {
-    return calendars ?? [];
-  }, [calendars]);
+    if (!calendarDocs) return [];
+    return calendarDocs.map((doc) => (doc as any).toJSON() as Calendar);
+  }, [calendarDocs]);
 
   return {
     calendars: calendarsList,

@@ -20,10 +20,7 @@ describe("EventCard", () => {
     exdates: [],
     tags: ["work", "important"],
     source: "user",
-    metadata: {},
     deleted: false,
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
   };
 
   describe("rendering", () => {
@@ -180,10 +177,7 @@ describe("EventList", () => {
       exdates: [],
       tags: [],
       source: "user",
-      metadata: {},
       deleted: false,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
     },
     {
       id: "event-2",
@@ -197,10 +191,7 @@ describe("EventList", () => {
       exdates: [],
       tags: [],
       source: "user",
-      metadata: {},
       deleted: false,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
     },
   ];
 

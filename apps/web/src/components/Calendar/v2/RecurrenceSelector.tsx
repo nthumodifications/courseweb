@@ -5,7 +5,7 @@
 import React, { useState, useEffect } from "react";
 import { Button, Label, Input, Switch } from "@courseweb/ui";
 import { Repeat, X } from "lucide-react";
-import { RRule } from "rrule";
+import { RRule, type Weekday } from "rrule";
 import { getRecurrenceSummary } from "@/lib/utils/calendar-rrule-utils";
 
 export interface RecurrenceSelectorProps {
@@ -58,9 +58,11 @@ export function RecurrenceSelector({
         }
 
         if (options.byweekday) {
-          const days = Array.isArray(options.byweekday)
-            ? options.byweekday
-            : [options.byweekday];
+          const days = (
+            Array.isArray(options.byweekday)
+              ? options.byweekday
+              : [options.byweekday]
+          ) as Array<number | Weekday>;
           setWeekdays(days.map((d) => (typeof d === "number" ? d : d.weekday)));
         }
       } catch (error) {

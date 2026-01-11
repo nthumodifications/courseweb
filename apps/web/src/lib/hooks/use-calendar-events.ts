@@ -54,6 +54,7 @@ export function useCalendarEvents({
     if (!collection || calendarIds.length === 0) return null;
 
     // Build the query using the compound index [calendarId, deleted, startTime]
+    // Type assertion needed due to RxDB's generic MangoQuery typing
     return collection.find({
       selector: {
         calendarId: { $in: calendarIds },
@@ -76,10 +77,10 @@ export function useCalendarEvents({
       },
       // Use the compound index for sorting
       sort: [{ calendarId: "asc" }, { deleted: "asc" }, { startTime: "asc" }],
-    });
+    } as any);
   }, [collection, calendarIds, includeDeleted, startTime, endTime]);
 
-  const { result: eventDocs, isFetching } = useRxQuery(query);
+  const { result: eventDocs, isFetching } = useRxQuery(query ?? undefined);
 
   // Expand recurring events and convert to EventInstance[]
   const events = useMemo(() => {
@@ -192,7 +193,7 @@ export function useCalendarEvent(eventId: string) {
     return collection.findOne(eventId);
   }, [collection, eventId]);
 
-  const { result: eventDoc } = useRxQuery(query);
+  const { result: eventDoc } = useRxQuery(query ?? undefined);
 
   const event = useMemo(() => {
     if (!eventDoc) return null;

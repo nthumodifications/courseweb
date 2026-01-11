@@ -106,7 +106,7 @@ export const CalendarWeekContainer = ({
           title: event.summary,
           start: startOfDay(new Date(event.date)),
           end: endOfDay(new Date(event.date)),
-          allDay: true,
+          isAllDay: true,
           color: "#A973D9",
           tag: "NTHU",
           actualEnd: endOfDay(new Date(event.date)),
@@ -150,7 +150,7 @@ export const CalendarWeekContainer = ({
     (day: Date) => {
       const dayEvents = eventsToDisplay(events, startOfDay(day), endOfDay(day))
         .filter((e) => {
-          return !e.allDay;
+          return !e.isAllDay;
         })
         .map((event) => {
           //Determine the text color
@@ -235,7 +235,7 @@ export const CalendarWeekContainer = ({
       endOfDay(displayWeek[6]),
     )
       .filter((e) => {
-        return e.allDay;
+        return e.isAllDay;
       })
       .map((event) => {
         //Determine the text color
@@ -441,7 +441,7 @@ export const CalendarWeekContainer = ({
             defaultEvent={{
               start: newEventTime,
               end: addMinutes(newEventTime, 30),
-              allDay: false,
+              isAllDay: false,
             }}
             onEventAdded={(event) => {
               addEvent(event);

@@ -82,15 +82,14 @@ export function createMockCalendarEvent(
     location: "",
     startTime: new Date("2026-01-10T10:00:00Z").getTime(),
     endTime: new Date("2026-01-10T11:00:00Z").getTime(),
-    allDay: false,
+    isAllDay: false,
+    timezone: "UTC",
     rrule: undefined,
     exdates: [],
     tags: [],
     source: "user",
-    metadata: {},
     deleted: false,
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
+    lastModified: Date.now(),
   };
 
   return { ...baseEvent, ...overrides };

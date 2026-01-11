@@ -11,7 +11,7 @@ export interface CalendarEvent {
   title: string;
   details?: string;
   location?: string;
-  allDay: boolean;
+  isAllDay: boolean;
   start: Date;
   end: Date;
   repeat: null | RepeatDefinition;

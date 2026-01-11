@@ -58,7 +58,7 @@ export const CalendarMonthContainer = ({
           title: event.summary,
           start: startOfDay(new Date(event.date)),
           end: endOfDay(new Date(event.date)),
-          allDay: true,
+          isAllDay: true,
           color: "#A973D9",
           tag: "NTHU",
           actualEnd: endOfDay(new Date(event.date)),
@@ -156,7 +156,7 @@ export const CalendarMonthContainer = ({
         showAcademicCalendar ? [...nthuCalendarEvents, ...events] : events,
         startOfDay(start),
         endOfDay(end),
-      ).filter((e) => e.allDay);
+      ).filter((e) => e.isAllDay);
 
       const allDayEvents = filteredEvents.map((event) => {
         // Snap the event to the start if it starts before the start of the week
@@ -219,7 +219,7 @@ export const CalendarMonthContainer = ({
         showAcademicCalendar ? [...nthuCalendarEvents, ...events] : events,
         startOfDay(day),
         endOfDay(day),
-      ).filter((e) => e.allDay);
+      ).filter((e) => e.isAllDay);
 
       return (
         <Fragment key={day.getTime()}>

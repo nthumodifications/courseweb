@@ -47,7 +47,7 @@ describe("DraggableEvent", () => {
       <DndContext>
         <DraggableEvent
           event={mockEvent}
-          color="#3b82f6"
+          calendarColor="#3b82f6"
           onClick={mockOnClick}
         />
       </DndContext>,
@@ -61,7 +61,7 @@ describe("DraggableEvent", () => {
       <DndContext>
         <DraggableEvent
           event={mockEvent}
-          color="#ef4444"
+          calendarColor="#ef4444"
           onClick={mockOnClick}
         />
       </DndContext>,

@@ -54,10 +54,7 @@ export default function CalendarPageV2() {
             isDefault: true,
             isVisible: true,
             source: "user",
-            metadata: {},
             deleted: false,
-            createdAt: Date.now(),
-            updatedAt: Date.now(),
           });
         } catch (error) {
           console.error("Failed to create default calendar:", error);

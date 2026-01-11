@@ -10,7 +10,7 @@ import { EventCard } from "./EventCard";
 
 interface DraggableEventProps {
   event: CalendarEvent;
-  color: string;
+  calendarColor: string;
   onClick: () => void;
   showTime?: boolean;
   className?: string;
@@ -18,7 +18,7 @@ interface DraggableEventProps {
 
 export function DraggableEvent({
   event,
-  color,
+  calendarColor,
   onClick,
   showTime,
   className,
@@ -47,7 +47,7 @@ export function DraggableEvent({
     >
       <EventCard
         event={event}
-        color={color}
+        calendarColor={calendarColor}
         onClick={onClick}
         showTime={showTime}
       />

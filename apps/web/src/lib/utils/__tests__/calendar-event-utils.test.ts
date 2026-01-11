@@ -103,10 +103,7 @@ describe("calendar-event-utils", () => {
         exdates: [],
         tags: [],
         source: "user",
-        metadata: {},
         deleted: false,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
       };
 
       const db = createMockRxDB({
@@ -143,10 +140,7 @@ describe("calendar-event-utils", () => {
         exdates: [],
         tags: [],
         source: "user",
-        metadata: {},
         deleted: false,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
       };
 
       const mockDoc = {
@@ -267,10 +261,7 @@ describe("calendar-event-utils", () => {
         exdates: [],
         tags: [],
         source: "user",
-        metadata: {},
         deleted: false,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
       };
 
       const mockDoc = {
@@ -316,10 +307,7 @@ describe("calendar-event-utils", () => {
         exdates: [exclusionTimestamp],
         tags: [],
         source: "user",
-        metadata: {},
         deleted: false,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
       };
 
       const mockDoc = {
@@ -367,8 +355,6 @@ describe("calendar-event-utils", () => {
         source: "user",
         metadata: { custom: "field" },
         deleted: false,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
       };
 
       const mockDoc = {
@@ -411,10 +397,7 @@ describe("calendar-event-utils", () => {
         exdates: [],
         tags: ["work"],
         source: "user",
-        metadata: {},
         deleted: false,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
       };
 
       const db = createMockRxDB({
@@ -440,10 +423,7 @@ describe("calendar-event-utils", () => {
         exdates: [],
         tags: [],
         source: "user",
-        metadata: {},
         deleted: false,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
       };
 
       const db = createMockRxDB({
@@ -470,10 +450,7 @@ describe("calendar-event-utils", () => {
           exdates: [],
           tags: [],
           source: "user",
-          metadata: {},
           deleted: false,
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
         },
         {
           id: "event-2",
@@ -487,10 +464,7 @@ describe("calendar-event-utils", () => {
           exdates: [],
           tags: [],
           source: "user",
-          metadata: {},
           deleted: false,
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
         },
       ];
 
@@ -520,10 +494,7 @@ describe("calendar-event-utils", () => {
           exdates: [],
           tags: ["work"],
           source: "user",
-          metadata: {},
           deleted: false,
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
         },
         {
           id: "event-2",
@@ -538,10 +509,7 @@ describe("calendar-event-utils", () => {
           exdates: [],
           tags: [],
           source: "user",
-          metadata: {},
           deleted: false,
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
         },
         {
           id: "event-3",
@@ -555,10 +523,7 @@ describe("calendar-event-utils", () => {
           exdates: [],
           tags: [],
           source: "user",
-          metadata: {},
           deleted: true,
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
         },
       ];
 

@@ -203,7 +203,7 @@ export const EventPopover: FC<
             </div>
             <div className="flex flex-col gap-1 flex-1">
               <h1 className="text-xl font-semibold">{event.title}</h1>
-              {event.allDay ? (
+              {event.isAllDay ? (
                 <p className="text-sm text-slate-500">
                   {format(event.displayStart, "yyyy-M-d")} -{" "}
                   {format(event.displayEnd, "yyyy-M-d")}

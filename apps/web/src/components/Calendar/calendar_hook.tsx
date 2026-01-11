@@ -206,6 +206,7 @@ export const useCalendarProvider = () => {
         const event = e.toJSON() as Required<EventDocType>;
         return {
           ...event,
+          isAllDay: (event as any).allDay ?? false,
           start: new Date(event.start),
           end: new Date(event.end),
           repeat: event.repeat,
