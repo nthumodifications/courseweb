@@ -342,10 +342,7 @@ export function MonthView({
                     event={event}
                     mode="compact"
                     showTime={!event.isAllDay}
-                    onClick={(e) => {
-                      e.stopPropagation?.();
-                      onEventClick?.(event);
-                    }}
+                    onClick={onEventClick}
                     calendarColor={getCalendarColor?.(event.calendarId)}
                     className="text-xs"
                   />
