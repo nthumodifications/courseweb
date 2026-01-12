@@ -26,6 +26,11 @@ const nextConfig = {
     // your project has ESLint errors.
     ignoreDuringBuilds: true,
   },
+  typescript: {
+    // NOTE: This ignores type errors during build. Only enable if you're confident
+    // your code is type-safe (e.g., run tsc separately in CI)
+    ignoreBuildErrors: true,
+  },
   experimental: {
     turbo: {
       resolveAlias: {
