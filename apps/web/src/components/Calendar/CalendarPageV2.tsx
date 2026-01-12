@@ -46,7 +46,7 @@ export default function CalendarPageV2() {
 
       if (calendars.length === 0) {
         try {
-          await db.calendar_calendars.insert({
+          await db.calendars.insert({
             id: "default-calendar",
             name: "My Calendar",
             description: "Default calendar for personal events",
@@ -55,6 +55,7 @@ export default function CalendarPageV2() {
             isVisible: true,
             source: "user",
             deleted: false,
+            lastModified: Date.now(),
           });
         } catch (error) {
           console.error("Failed to create default calendar:", error);
