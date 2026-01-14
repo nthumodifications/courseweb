@@ -281,9 +281,63 @@ export const initializeRxDB = async () => {
     // New calendar v2 collections
     calendar_events: {
       schema: calendarEventsSchemaV0,
+      migrationStrategies: {
+        // v0 to v1: Ensure all required fields exist
+        1: (oldDoc: any) => {
+          console.log("[Migration] Migrating calendar_event:", oldDoc.id);
+
+          // Set default source if missing or invalid
+          if (
+            !oldDoc.source ||
+            !["user", "timetable", "import"].includes(oldDoc.source)
+          ) {
+            oldDoc.source = "user";
+          }
+
+          // Ensure required fields exist
+          if (typeof oldDoc.deleted !== "boolean") {
+            oldDoc.deleted = false;
+          }
+
+          if (typeof oldDoc.lastModified !== "number") {
+            oldDoc.lastModified = Date.now();
+          }
+
+          if (typeof oldDoc.timezone !== "string" || !oldDoc.timezone) {
+            oldDoc.timezone = "Asia/Taipei";
+          }
+
+          return oldDoc;
+        },
+      },
     },
     calendars: {
       schema: calendarsSchemaV0,
+      migrationStrategies: {
+        // v0 to v1: Ensure all required fields exist
+        1: (oldDoc: any) => {
+          console.log("[Migration] Migrating calendar:", oldDoc.id);
+
+          // Set default source if missing
+          if (
+            !oldDoc.source ||
+            !["user", "timetable", "import"].includes(oldDoc.source)
+          ) {
+            oldDoc.source = "user";
+          }
+
+          // Ensure required fields exist
+          if (typeof oldDoc.deleted !== "boolean") {
+            oldDoc.deleted = false;
+          }
+
+          if (typeof oldDoc.lastModified !== "number") {
+            oldDoc.lastModified = Date.now();
+          }
+
+          return oldDoc;
+        },
+      },
     },
   });
 

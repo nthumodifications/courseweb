@@ -65,17 +65,15 @@ describe("calendar-event-utils", () => {
       expect(event.endTime - event.startTime).toBe(90 * 60 * 1000);
     });
 
-    it("should create event with tags and metadata", () => {
+    it("should create event with tags", () => {
       const event = createEventData({
         calendarId: "cal-1",
         title: "Tagged Event",
         startDate: new Date("2026-01-15T00:00:00Z"),
         tags: ["work", "important"],
-        metadata: { customField: "value" },
       });
 
       expect(event.tags).toEqual(["work", "important"]);
-      expect(event.metadata).toEqual({ customField: "value" });
     });
 
     it("should create event with recurrence", () => {
@@ -350,11 +348,12 @@ describe("calendar-event-utils", () => {
         startTime: new Date("2026-01-15T10:00:00Z").getTime(),
         endTime: new Date("2026-01-15T11:00:00Z").getTime(),
         isAllDay: false,
+        timezone: "Asia/Taipei",
         exdates: [],
         tags: ["work"],
         source: "user",
-        metadata: { custom: "field" },
         deleted: false,
+        lastModified: Date.now(),
       };
 
       const mockDoc = {

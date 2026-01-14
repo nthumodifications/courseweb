@@ -10,6 +10,7 @@ import { CalendarApp } from "./v2";
 import { useRxDB } from "rxdb-hooks";
 import { useCalendars } from "@/lib/hooks/use-calendars";
 import { useCalendarUIStore } from "@/lib/store/calendar-ui-store";
+import "@/lib/utils/clear-calendar-db"; // Load clear DB utility
 
 export default function CalendarPageV2() {
   const db = useRxDB();

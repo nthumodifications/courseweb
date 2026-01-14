@@ -24,7 +24,7 @@ import {
  * - Source tracking (user, timetable, import)
  */
 export const calendarEventsSchemaV0 = {
-  version: 0,
+  version: 1,
   primaryKey: "id",
   type: "object",
   properties: {
@@ -164,7 +164,7 @@ export type CalendarEventDocType = ExtractDocumentTypeFromTypedRxJsonSchema<
  * Can represent user calendars, timetable calendars, or subscribed calendars.
  */
 export const calendarsSchemaV0 = {
-  version: 0,
+  version: 1,
   primaryKey: "id",
   type: "object",
   properties: {
