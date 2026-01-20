@@ -24,7 +24,7 @@ export const createTimetableFromCourses = (
       // Split the timeslot string into individual timeslots
       const timeslots = time_str
         .match(/.{1,2}/g)
-        ?.map((day) => ({ day: day[0], time: day[1] })); // Day is "MTWRFS" and time is "123456789abc"
+        ?.map((day) => ({ day: day[0], time: day[1] })); // Day is "MTWRFS" and time is "123456789abcd"
 
       // Group consecutive timeslots by reducing the array
       // 1. get first timeslot, check if next consecutive timeslot is present

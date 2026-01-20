@@ -21,7 +21,7 @@ const MiniTimetable = ({ semester }: { semester: Semester }) => {
     colorMap,
   );
   const timeslots = useMemo(() => {
-    const timeslots = new Array(13).fill([]).map(() => new Array(6).fill(null));
+    const timeslots = new Array(scheduleTimeSlots.length).fill([]).map(() => new Array(6).fill(null));
     for (const course of timetableData) {
       for (let i = course.startTime; i <= course.endTime; i++) {
         timeslots[i][course.dayOfWeek] = course;
