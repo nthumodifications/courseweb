@@ -88,7 +88,7 @@ export async function migrateCalendarV1ToV2(
       isVisible: true,
       source: "user",
       lastModified: now,
-      deleted: false,
+      isDeleted: false,
     } as Calendar);
 
     console.log(`[Migration] Created default calendar: ${defaultCalendarId}`);
@@ -151,7 +151,7 @@ export async function migrateCalendarV1ToV2(
     });
 
     const migratedEvents = await db.calendar_events
-      .find({ selector: { deleted: false } })
+      .find({ selector: { isDeleted: false } })
       .exec();
     console.log(
       `[Migration] Validation: Found ${migratedEvents.length} events in new collection`,
@@ -277,7 +277,7 @@ async function convertOldEventToNew(
     sourceId,
 
     lastModified: now,
-    deleted: false,
+    isDeleted: false,
   };
 
   return newEvent;

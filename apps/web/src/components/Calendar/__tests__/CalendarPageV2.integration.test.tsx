@@ -77,7 +77,7 @@ describe("CalendarPageV2 Integration Tests", () => {
       expect(calendar.id).toBeDefined();
       expect(calendar.name).toBe("My Calendar");
       expect(calendar.source).toBe("user");
-      expect(calendar.deleted).toBe(false);
+      expect(calendar.isDeleted).toBe(false);
       expect(calendar.lastModified).toBeGreaterThan(0);
       expect(calendar.isDefault).toBe(true);
       expect(calendar.isVisible).toBe(true);
@@ -97,7 +97,7 @@ describe("CalendarPageV2 Integration Tests", () => {
         isDefault: false,
         isVisible: true,
         source: "user",
-        deleted: false,
+        isDeleted: false,
         lastModified: Date.now(),
       });
 
@@ -115,7 +115,7 @@ describe("CalendarPageV2 Integration Tests", () => {
           isDefault: false,
           isVisible: true,
           source: "user",
-          deleted: false,
+          isDeleted: false,
           lastModified: Date.now(),
         }),
       ).resolves.toBeDefined();
@@ -130,7 +130,7 @@ describe("CalendarPageV2 Integration Tests", () => {
           isDefault: false,
           isVisible: true,
           source: "invalid_source" as any,
-          deleted: false,
+          isDeleted: false,
           lastModified: Date.now(),
         }),
       ).rejects.toThrow();
@@ -148,7 +148,7 @@ describe("CalendarPageV2 Integration Tests", () => {
         isDefault: true,
         isVisible: true,
         source: "user",
-        deleted: false,
+        isDeleted: false,
         lastModified: Date.now(),
       });
     });
@@ -167,7 +167,7 @@ describe("CalendarPageV2 Integration Tests", () => {
         exdates: [],
         tags: [],
         source: "user",
-        deleted: false,
+        isDeleted: false,
         lastModified: Date.now(),
       });
 
@@ -193,7 +193,7 @@ describe("CalendarPageV2 Integration Tests", () => {
             exdates: [],
             tags: [],
             source: source as "user" | "timetable" | "import",
-            deleted: false,
+            isDeleted: false,
             lastModified: Date.now(),
           }),
         ).resolves.toBeDefined();
@@ -214,7 +214,7 @@ describe("CalendarPageV2 Integration Tests", () => {
           exdates: [],
           tags: [],
           source: "invalid" as any,
-          deleted: false,
+          isDeleted: false,
           lastModified: Date.now(),
         }),
       ).rejects.toThrow();
@@ -248,7 +248,7 @@ describe("CalendarPageV2 Integration Tests", () => {
           exdates: [],
           tags: [],
           source: "user",
-          deleted: false,
+          isDeleted: false,
           lastModified: Date.now(),
         }),
       ).resolves.toBeDefined();
@@ -268,7 +268,7 @@ describe("CalendarPageV2 Integration Tests", () => {
           exdates: [],
           tags: [],
           source: "user",
-          deleted: false,
+          isDeleted: false,
           lastModified: Date.now(),
         }),
       ).rejects.toThrow();

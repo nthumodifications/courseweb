@@ -65,7 +65,7 @@ export function EventCard({
   return (
     <div
       className={cn(
-        "rounded-md border border-gray-200 bg-white p-2 transition-colors hover:bg-gray-50",
+        "rounded-md border bg-card p-2 transition-colors hover:bg-muted/50",
         onClick && "cursor-pointer",
         className,
       )}
@@ -90,7 +90,7 @@ export function EventCard({
         className={cn(
           "font-medium",
           mode === "compact" ? "text-xs" : "text-sm",
-          event.deleted && "text-gray-400 line-through",
+          event.isDeleted && "text-muted-foreground/50 line-through",
         )}
       >
         {event.title}
@@ -98,22 +98,24 @@ export function EventCard({
 
       {/* Event Time and Duration */}
       {showTime && !event.isAllDay && (
-        <div className="mt-1 flex items-center gap-2 text-xs text-gray-600">
+        <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
           <span>{formatTimeInTimezone(startDate)}</span>
           {showDuration && (
-            <span className="text-gray-400">({formatDuration(duration)})</span>
+            <span className="text-muted-foreground/50">
+              ({formatDuration(duration)})
+            </span>
           )}
         </div>
       )}
 
       {/* All-Day Indicator */}
       {event.isAllDay && mode !== "compact" && (
-        <div className="mt-1 text-xs text-gray-600">All day</div>
+        <div className="mt-1 text-xs text-muted-foreground">All day</div>
       )}
 
       {/* Location */}
       {event.location && mode !== "compact" && (
-        <div className="mt-1 flex items-center gap-1 text-xs text-gray-500">
+        <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
           <svg
             className="h-3 w-3"
             fill="none"
@@ -139,7 +141,7 @@ export function EventCard({
 
       {/* Description */}
       {event.description && mode === "detailed" && (
-        <div className="mt-2 text-xs text-gray-600 line-clamp-2">
+        <div className="mt-2 text-xs text-muted-foreground line-clamp-2">
           {event.description}
         </div>
       )}
@@ -160,7 +162,7 @@ export function EventCard({
 
       {/* Recurring Indicator */}
       {event.rrule && mode !== "compact" && (
-        <div className="mt-1 flex items-center gap-1 text-xs text-gray-500">
+        <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
           <svg
             className="h-3 w-3"
             fill="none"
@@ -222,7 +224,7 @@ export function EventList({
   if (events.length === 0) {
     return (
       <div
-        className="flex h-32 items-center justify-center text-sm text-gray-500"
+        className="flex h-32 items-center justify-center text-sm text-muted-foreground"
         data-testid="event-list-empty"
       >
         {emptyMessage}

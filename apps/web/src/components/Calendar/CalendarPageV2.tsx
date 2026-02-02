@@ -23,7 +23,7 @@ export default function CalendarPageV2() {
     if (!loading && calendars.length > 0 && !initialized) {
       // Set all calendars as visible by default
       const allCalendarIds = calendars
-        .filter((cal) => !cal.deleted)
+        .filter((cal) => !cal.isDeleted)
         .map((cal) => cal.id);
 
       if (visibleCalendarIds.length === 0) {
@@ -55,7 +55,7 @@ export default function CalendarPageV2() {
             isDefault: true,
             isVisible: true,
             source: "user",
-            deleted: false,
+            isDeleted: false,
             lastModified: Date.now(),
           });
         } catch (error) {

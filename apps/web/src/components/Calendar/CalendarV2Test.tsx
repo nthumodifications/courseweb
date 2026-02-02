@@ -31,7 +31,7 @@ export function CalendarV2Test() {
     const subscription = db.calendars
       .find({
         selector: {
-          deleted: false,
+          isDeleted: false,
         },
       })
       .$.subscribe((calendars: any) => {
@@ -56,7 +56,7 @@ export function CalendarV2Test() {
     db.calendar_events
       .find({
         selector: {
-          deleted: false,
+          isDeleted: false,
         },
       })
       .exec()

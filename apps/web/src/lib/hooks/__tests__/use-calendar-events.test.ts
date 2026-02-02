@@ -137,17 +137,17 @@ describe("useCalendarEvents", () => {
         createMockCalendarEvent({
           id: "event-1",
           title: "Active Event",
-          deleted: false,
+          isDeleted: false,
         }),
         createMockCalendarEvent({
           id: "event-2",
           title: "Deleted Event",
-          deleted: true,
+          isDeleted: true,
         }),
       ];
 
       const collection = createMockRxCollection(events);
-      const activeEvents = events.filter((e) => !e.deleted);
+      const activeEvents = events.filter((e) => !e.isDeleted);
       const mockDocs = activeEvents.map((e) => ({ toJSON: () => e }));
 
       vi.mocked(useRxCollection).mockReturnValue(collection as any);
@@ -167,7 +167,7 @@ describe("useCalendarEvents", () => {
 
       await waitFor(() => {
         expect(result.current.events).toHaveLength(1);
-        expect(result.current.events[0].deleted).toBe(false);
+        expect(result.current.events[0].isDeleted).toBe(false);
       });
     });
 
@@ -179,12 +179,12 @@ describe("useCalendarEvents", () => {
         createMockCalendarEvent({
           id: "event-1",
           title: "Active Event",
-          deleted: false,
+          isDeleted: false,
         }),
         createMockCalendarEvent({
           id: "event-2",
           title: "Deleted Event",
-          deleted: true,
+          isDeleted: true,
         }),
       ];
 

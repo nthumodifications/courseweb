@@ -31,7 +31,7 @@ describe("DraggableEvent", () => {
     isAllDay: false,
     tags: [],
     source: "user" as const,
-    deleted: false,
+    isDeleted: false,
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };

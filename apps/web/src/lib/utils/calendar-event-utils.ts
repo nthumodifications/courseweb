@@ -77,7 +77,7 @@ export function createEventData(params: CreateEventParams): CalendarEvent {
     endTime = timestamps.endTime;
   }
 
-  const event: CalendarEvent = {
+  const event: any = {
     id: uuidv4(),
     calendarId: params.calendarId,
     title: params.title,
@@ -87,15 +87,19 @@ export function createEventData(params: CreateEventParams): CalendarEvent {
     endTime,
     isAllDay: params.isAllDay || false,
     timezone: getUserTimezone(),
-    rrule: params.rrule,
     exdates: [],
     tags: params.tags || [],
     source: "user",
-    deleted: false,
+    isDeleted: false,
     lastModified: now,
   };
 
-  return event;
+  // Only include rrule if it's defined
+  if (params.rrule) {
+    event.rrule = params.rrule;
+  }
+
+  return event as CalendarEvent;
 }
 
 /**
@@ -123,10 +127,16 @@ export async function updateEvent(
     return null;
   }
 
-  const updateData: Partial<CalendarEvent> = {
+  const updateData: any = {
     ...params,
     lastModified: Date.now(),
   };
+
+  // Remove undefined/null values to avoid schema validation errors
+  // Only include rrule if it's defined and non-null
+  if (!updateData.rrule) {
+    delete updateData.rrule;
+  }
 
   await doc.patch(updateData);
   return doc.toJSON() as CalendarEvent;
@@ -146,8 +156,8 @@ export async function deleteEvent(
   }
 
   await doc.patch({
-    deleted: true,
-    updatedAt: Date.now(),
+    isDeleted: true,
+    lastModified: Date.now(),
   });
 
   return true;
@@ -184,7 +194,7 @@ export async function restoreEvent(
   }
 
   await doc.patch({
-    deleted: false,
+    isDeleted: false,
     updatedAt: Date.now(),
   });
 
@@ -288,7 +298,7 @@ export async function findOverlappingEvents(
     .find({
       selector: {
         calendarId,
-        deleted: false,
+        isDeleted: false,
         $or: [
           {
             startTime: { $lt: endTime },
@@ -394,7 +404,7 @@ export async function getEventsByTag(
   };
 
   if (!includeDeleted) {
-    selector.deleted = false;
+    selector.isDeleted = false;
   }
 
   const events = await db.calendar_events.find({ selector }).exec();
@@ -415,7 +425,7 @@ export async function getEventsBySource(
   };
 
   if (!includeDeleted) {
-    selector.deleted = false;
+    selector.isDeleted = false;
   }
 
   const events = await db.calendar_events.find({ selector }).exec();
@@ -434,7 +444,7 @@ export async function searchEvents(
   const lowerQuery = query.toLowerCase();
 
   const selector: any = {
-    deleted: false,
+    isDeleted: false,
   };
 
   if (calendarIds && calendarIds.length > 0) {
@@ -478,7 +488,7 @@ export async function getCalendarStatistics(
 
   return {
     total: eventData.length,
-    deleted: eventData.filter((e) => e.deleted).length,
+    deleted: eventData.filter((e) => e.isDeleted).length,
     recurring: eventData.filter((e) => e.rrule).length,
     isAllDay: eventData.filter((e) => e.isAllDay).length,
     tagged: eventData.filter((e) => e.tags && e.tags.length > 0).length,

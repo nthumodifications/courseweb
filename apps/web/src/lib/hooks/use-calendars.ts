@@ -22,16 +22,16 @@ export interface UseCalendarsResult {
  * ```
  */
 export function useCalendars(): UseCalendarsResult {
-  const collection = useRxCollection("calendar_calendars");
+  const collection = useRxCollection("calendars");
 
   const query = useMemo(() => {
     if (!collection) return null;
     // Type assertion needed due to RxDB's generic MangoQuery typing
     return collection.find({
       selector: {
-        deleted: { $ne: true },
+        isDeleted: { $ne: true },
       },
-      sort: [{ createdAt: "asc" }],
+      sort: [{ lastModified: "asc" }],
     } as any);
   }, [collection]);
 

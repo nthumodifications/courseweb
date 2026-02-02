@@ -116,7 +116,6 @@ export function RecurrenceSelector({
     until,
     weekdays,
     startDate,
-    onChange,
   ]);
 
   const toggleWeekday = (day: number) => {

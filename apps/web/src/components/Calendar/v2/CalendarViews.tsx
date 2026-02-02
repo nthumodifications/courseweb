@@ -43,6 +43,10 @@ export interface WeekViewProps {
    * Hour range to display [start, end]
    */
   hourRange?: [number, number];
+  /**
+   * Time slot click handler
+   */
+  onTimeSlotClick?: (date: Date, time: Date) => void;
 }
 
 export function WeekView({
@@ -53,12 +57,52 @@ export function WeekView({
   getCalendarColor,
   showTimeGrid = true,
   hourRange = [0, 24],
+  onTimeSlotClick,
 }: WeekViewProps) {
   const daysOfWeek = getDatesInWeek(weekStart, "UTC", weekStartsOn);
   const [startHour, endHour] = hourRange;
   const hours = Array.from(
     { length: endHour - startHour },
     (_, i) => startHour + i,
+  );
+
+  // Hour height in pixels for positioning
+  const HOUR_HEIGHT = 60;
+
+  // Ref for scroll container
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+
+  // Handle time slot click to create event at clicked time
+  const handleTimeSlotClick = React.useCallback(
+    (day: Date, clientY: number, e: React.MouseEvent) => {
+      // Don't open form if clicked on an existing event
+      if ((e.target as HTMLElement).closest("[data-event-card]")) {
+        return;
+      }
+
+      if (!onTimeSlotClick) return;
+
+      const containerRect = scrollContainerRef.current?.getBoundingClientRect();
+      if (!containerRect) return;
+
+      const scrollTop = scrollContainerRef.current?.scrollTop || 0;
+      const offsetY = clientY - containerRect.top + scrollTop;
+
+      // Convert Y position to hours and minutes
+      const totalMinutes = (offsetY / HOUR_HEIGHT) * 60;
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = Math.floor(totalMinutes % 60);
+
+      // Round to nearest 10 minutes
+      const roundedMinutes = Math.round(minutes / 10) * 10;
+
+      // Create time with day and calculated time
+      const clickedTime = new Date(day);
+      clickedTime.setHours(hours, roundedMinutes, 0, 0);
+
+      onTimeSlotClick(day, clickedTime);
+    },
+    [onTimeSlotClick, HOUR_HEIGHT],
   );
 
   // Group events by day
@@ -85,6 +129,84 @@ export function WeekView({
     return grouped;
   }, [events, daysOfWeek]);
 
+  // Render events in a day with absolute positioning and overlap handling
+  const renderEventsInDay = React.useCallback(
+    (day: Date) => {
+      const dayKey = day.toDateString();
+      const timedEvents = eventsByDay[dayKey]?.filter((e) => !e.isAllDay) || [];
+
+      if (timedEvents.length === 0) return null;
+
+      // Group overlapping events
+      const groupedEvents: CalendarEvent[][] = [];
+      timedEvents.forEach((event) => {
+        let added = false;
+        for (const group of groupedEvents) {
+          if (
+            group.some((e) => {
+              const eventStart = event.startTime;
+              const eventEnd = event.endTime;
+              const existingStart = e.startTime;
+              const existingEnd = e.endTime;
+
+              return (
+                (eventStart >= existingStart && eventStart < existingEnd) ||
+                (eventEnd > existingStart && eventEnd <= existingEnd) ||
+                (eventStart <= existingStart && eventEnd >= existingEnd)
+              );
+            })
+          ) {
+            group.push(event);
+            added = true;
+            break;
+          }
+        }
+        if (!added) {
+          groupedEvents.push([event]);
+        }
+      });
+
+      return groupedEvents.map((group) =>
+        group.map((event, index) => {
+          const startDate = new Date(event.startTime);
+          const endDate = new Date(event.endTime);
+
+          const topPosition =
+            startDate.getHours() * HOUR_HEIGHT +
+            (startDate.getMinutes() * HOUR_HEIGHT) / 60;
+          const height =
+            (endDate.getHours() - startDate.getHours()) * HOUR_HEIGHT +
+            ((endDate.getMinutes() - startDate.getMinutes()) * HOUR_HEIGHT) /
+              60;
+
+          return (
+            <div
+              key={event.id}
+              className="absolute pr-0.5"
+              style={{
+                top: `${topPosition}px`,
+                height: `${Math.max(height, 20)}px`,
+                width: `calc(${100 / group.length}% - 2px)`,
+                left: `calc(${(100 / group.length) * index}% + 1px)`,
+              }}
+              data-event-card="true"
+            >
+              <EventCard
+                event={event}
+                mode="compact"
+                showTime={true}
+                onClick={onEventClick}
+                calendarColor={getCalendarColor?.(event.calendarId)}
+                className="h-full"
+              />
+            </div>
+          );
+        }),
+      );
+    },
+    [eventsByDay, HOUR_HEIGHT, onEventClick, getCalendarColor],
+  );
+
   const isToday = (date: Date) => {
     return isSameDay(date, new Date());
   };
@@ -92,27 +214,27 @@ export function WeekView({
   return (
     <div className="flex h-full flex-col" data-testid="week-view">
       {/* Week header with dates */}
-      <div className="grid grid-cols-8 border-b border-gray-200 bg-gray-50">
+      <div className="grid grid-cols-8 border-b bg-muted sticky top-0 z-10">
         {/* Time column header */}
-        <div className="border-r border-gray-200 p-2"></div>
+        <div className="border-r p-2"></div>
 
         {/* Day headers */}
         {daysOfWeek.map((day) => (
           <div
             key={day.toDateString()}
             className={cn(
-              "border-r border-gray-200 p-2 text-center",
-              isToday(day) && "bg-blue-50",
+              "border-r p-2 text-center last:border-r-0",
+              isToday(day) && "bg-primary/10",
             )}
             data-testid={`week-view-header-${format(day, "yyyy-MM-dd")}`}
           >
-            <div className="text-xs font-medium text-gray-600">
+            <div className="text-xs font-medium text-muted-foreground">
               {format(day, "EEE")}
             </div>
             <div
               className={cn(
                 "text-lg font-semibold",
-                isToday(day) ? "text-blue-600" : "text-gray-900",
+                isToday(day) ? "text-primary" : "text-foreground",
               )}
             >
               {format(day, "d")}
@@ -121,82 +243,76 @@ export function WeekView({
         ))}
       </div>
 
-      {/* Week grid with time slots */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="relative">
-          {showTimeGrid && (
-            <div className="grid grid-cols-8">
-              {hours.map((hour) => (
-                <React.Fragment key={hour}>
-                  {/* Time label */}
-                  <div className="border-b border-r border-gray-200 p-1 text-right text-xs text-gray-500">
-                    {format(new Date().setHours(hour, 0, 0, 0), "ha")}
-                  </div>
+      {/* All-day events section */}
+      <div className="grid grid-cols-8 border-b bg-muted/50">
+        <div className="border-r p-2 text-xs text-muted-foreground">
+          All-day
+        </div>
+        {daysOfWeek.map((day) => {
+          const dayKey = day.toDateString();
+          const allDayEvents =
+            eventsByDay[dayKey]?.filter((e) => e.isAllDay) || [];
 
-                  {/* Day cells with events */}
-                  {daysOfWeek.map((day) => {
-                    const dayKey = day.toDateString();
-                    const timedEvents =
-                      eventsByDay[dayKey]?.filter((e) => !e.isAllDay) || [];
-                    const hourEvents = timedEvents.filter((event) => {
-                      const eventHour = new Date(event.startTime).getHours();
-                      return eventHour === hour;
-                    });
-
-                    return (
-                      <div
-                        key={`${day.toDateString()}-${hour}`}
-                        className="min-h-[60px] border-b border-r border-gray-100 p-1"
-                        data-testid={`week-view-cell-${format(day, "yyyy-MM-dd")}-${hour}`}
-                      >
-                        {hourEvents.map((event) => (
-                          <EventCard
-                            key={event.id}
-                            event={event}
-                            mode="compact"
-                            showTime={true}
-                            onClick={onEventClick}
-                            calendarColor={getCalendarColor?.(event.calendarId)}
-                            className="mb-1"
-                          />
-                        ))}
-                      </div>
-                    );
-                  })}
-                </React.Fragment>
+          return (
+            <div
+              key={dayKey}
+              className="space-y-1 border-r p-1 last:border-r-0"
+              data-testid={`week-view-allday-${format(day, "yyyy-MM-dd")}`}
+            >
+              {allDayEvents.map((event) => (
+                <EventCard
+                  key={event.id}
+                  event={event}
+                  mode="compact"
+                  showTime={false}
+                  onClick={onEventClick}
+                  calendarColor={getCalendarColor?.(event.calendarId)}
+                />
               ))}
             </div>
-          )}
+          );
+        })}
+      </div>
 
-          {/* All-day events section */}
-          <div className="grid grid-cols-8 border-b border-gray-200 bg-gray-50">
-            <div className="border-r border-gray-200 p-2 text-xs text-gray-600">
-              All-day
+      {/* Week grid with time slots */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Time labels column */}
+        <div className="flex flex-col border-r bg-muted/20">
+          {hours.slice(1).map((hour) => (
+            <div
+              key={hour}
+              className="text-right text-xs text-muted-foreground pr-2"
+              style={{ height: HOUR_HEIGHT, paddingTop: HOUR_HEIGHT - 16 }}
+            >
+              {format(new Date().setHours(hour, 0, 0, 0), "ha")}
             </div>
-            {daysOfWeek.map((day) => {
-              const dayKey = day.toDateString();
-              const allDayEvents =
-                eventsByDay[dayKey]?.filter((e) => e.isAllDay) || [];
+          ))}
+        </div>
 
-              return (
-                <div
-                  key={dayKey}
-                  className="space-y-1 border-r border-gray-200 p-1"
-                  data-testid={`week-view-allday-${format(day, "yyyy-MM-dd")}`}
-                >
-                  {allDayEvents.map((event) => (
-                    <EventCard
-                      key={event.id}
-                      event={event}
-                      mode="compact"
-                      showTime={false}
-                      onClick={onEventClick}
-                      calendarColor={getCalendarColor?.(event.calendarId)}
+        {/* Time grid with events */}
+        <div className="flex-1 overflow-y-auto" ref={scrollContainerRef}>
+          <div className="flex relative">
+            {daysOfWeek.map((day) => (
+              <div
+                key={day.toDateString()}
+                className="flex-1 relative border-r last:border-r-0"
+                onClick={(e) => handleTimeSlotClick(day, e.clientY, e)}
+              >
+                {/* Hour grid lines */}
+                <div className="absolute inset-0 pointer-events-none">
+                  {hours.map((hour) => (
+                    <div
+                      key={hour}
+                      className="border-b"
+                      style={{ height: HOUR_HEIGHT }}
                     />
                   ))}
                 </div>
-              );
-            })}
+
+                {/* Events positioned absolutely */}
+                {renderEventsInDay(day)}
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -290,11 +406,11 @@ export function MonthView({
   return (
     <div className="flex h-full flex-col" data-testid="month-view">
       {/* Week day headers */}
-      <div className="grid grid-cols-7 border-b border-gray-200 bg-gray-50">
+      <div className="grid grid-cols-7 border-b border bg-muted">
         {orderedWeekDays.map((day) => (
           <div
             key={day}
-            className="border-r border-gray-200 p-2 text-center text-sm font-medium text-gray-700 last:border-r-0"
+            className="border-r border p-2 text-center text-sm font-medium text-foreground last:border-r-0"
           >
             {day}
           </div>
@@ -313,9 +429,9 @@ export function MonthView({
             <div
               key={dateKey}
               className={cn(
-                "min-h-[100px] border-b border-r border-gray-200 p-1 last:border-r-0",
-                !isCurrentMonth(date) && "bg-gray-50",
-                isToday(date) && "bg-blue-50",
+                "min-h-[100px] border-b border-r border p-1 last:border-r-0",
+                !isCurrentMonth(date) && "bg-muted",
+                isToday(date) && "bg-primary/10",
               )}
               onClick={() => onDateClick?.(date)}
               role={onDateClick ? "button" : undefined}
@@ -325,10 +441,10 @@ export function MonthView({
               <div
                 className={cn(
                   "mb-1 text-sm font-medium",
-                  !isCurrentMonth(date) && "text-gray-400",
-                  isCurrentMonth(date) && !isToday(date) && "text-gray-900",
+                  !isCurrentMonth(date) && "text-muted-foreground/50",
+                  isCurrentMonth(date) && !isToday(date) && "text-foreground",
                   isToday(date) &&
-                    "flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-white",
+                    "flex h-6 w-6 items-center justify-center rounded-full bg-primary text-white",
                 )}
               >
                 {format(date, "d")}
@@ -350,7 +466,7 @@ export function MonthView({
 
                 {/* More events indicator */}
                 {hiddenCount > 0 && (
-                  <div className="text-xs text-gray-600">
+                  <div className="text-xs text-muted-foreground">
                     +{hiddenCount} more
                   </div>
                 )}
@@ -413,8 +529,8 @@ export function DayView({
   return (
     <div className="flex h-full flex-col" data-testid="day-view">
       {/* Date header */}
-      <div className="border-b border-gray-200 bg-gray-50 p-4">
-        <div className="text-lg font-semibold text-gray-900">
+      <div className="border-b border bg-muted p-4">
+        <div className="text-lg font-semibold text-foreground">
           {format(date, "EEEE, MMMM d, yyyy")}
         </div>
       </div>
@@ -422,10 +538,10 @@ export function DayView({
       {/* All-day events */}
       {allDayEvents.length > 0 && (
         <div
-          className="border-b border-gray-200 bg-gray-50 p-2"
+          className="border-b border bg-muted p-2"
           data-testid="day-view-allday"
         >
-          <div className="mb-1 text-xs font-medium text-gray-600">
+          <div className="mb-1 text-xs font-medium text-muted-foreground">
             All-day events
           </div>
           <div className="space-y-1">
@@ -449,11 +565,11 @@ export function DayView({
           {hours.map((hour) => (
             <div
               key={hour}
-              className="flex min-h-[60px] border-b border-gray-200"
+              className="flex min-h-[60px] border-b border"
               data-testid={`day-view-hour-${hour}`}
             >
               {/* Time label */}
-              <div className="w-16 border-r border-gray-200 p-2 text-right text-xs text-gray-500">
+              <div className="w-16 border-r border p-2 text-right text-xs text-muted-foreground">
                 {format(new Date().setHours(hour, 0, 0, 0), "ha")}
               </div>
 

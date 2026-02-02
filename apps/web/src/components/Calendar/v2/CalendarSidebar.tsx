@@ -69,9 +69,9 @@ export function CalendarSidebar({
   const isCurrentMonth = (date: Date) => isSameMonth(date, miniCalendarDate);
 
   return (
-    <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-full">
+    <div className="w-64 bg-background border-r border flex flex-col h-full">
       {/* Mini Calendar */}
-      <div className="p-4 border-b border-gray-200">
+      <div className="p-4 border-b border">
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-semibold text-sm">
             {format(miniCalendarDate, "MMMM yyyy")}
@@ -99,7 +99,10 @@ export function CalendarSidebar({
         {/* Mini calendar grid */}
         <div className="grid grid-cols-7 gap-1 text-xs">
           {["S", "M", "T", "W", "T", "F", "S"].map((day, i) => (
-            <div key={i} className="text-center font-medium text-gray-500 py-1">
+            <div
+              key={i}
+              className="text-center font-medium text-muted-foreground py-1"
+            >
               {day}
             </div>
           ))}
@@ -108,10 +111,10 @@ export function CalendarSidebar({
               key={i}
               onClick={() => handleDateClick(date)}
               className={cn(
-                "aspect-square rounded-sm text-center hover:bg-gray-100 transition-colors",
-                !isCurrentMonth(date) && "text-gray-400",
-                isToday(date) && "bg-blue-100 text-blue-700 font-semibold",
-                isSelected(date) && "bg-blue-500 text-white hover:bg-blue-600",
+                "aspect-square rounded-sm text-center hover:bg-muted transition-colors",
+                !isCurrentMonth(date) && "text-muted-foreground/50",
+                isToday(date) && "bg-primary/10 text-primary font-semibold",
+                isSelected(date) && "bg-primary text-white hover:bg-primary/90",
               )}
             >
               {format(date, "d")}
@@ -122,7 +125,7 @@ export function CalendarSidebar({
 
       {/* Calendar List */}
       <div className="flex-1 overflow-hidden flex flex-col">
-        <div className="p-4 border-b border-gray-200">
+        <div className="p-4 border-b border">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-semibold text-sm">My Calendars</h3>
             <div className="flex gap-1">
@@ -159,24 +162,26 @@ export function CalendarSidebar({
               return (
                 <div
                   key={calendar.id}
-                  className="flex items-center justify-between group hover:bg-gray-50 p-2 rounded-md transition-colors"
+                  className="flex items-center justify-between group hover:bg-muted p-2 rounded-md transition-colors"
                 >
                   <div className="flex items-center gap-2 flex-1 min-w-0">
                     <div
                       className="w-3 h-3 rounded-sm flex-shrink-0"
                       style={{ backgroundColor: calendar.color }}
                     />
-                    <span className="text-sm truncate">{calendar.name}</span>
+                    <span className="text-sm truncate text-foreground">
+                      {calendar.name}
+                    </span>
                   </div>
                   <button
                     onClick={() => onToggleCalendar(calendar.id)}
-                    className="flex-shrink-0 p-1 hover:bg-gray-200 rounded transition-colors"
+                    className="flex-shrink-0 p-1 hover:bg-muted rounded transition-colors"
                     title={isVisible ? "Hide calendar" : "Show calendar"}
                   >
                     {isVisible ? (
-                      <Eye className="h-4 w-4 text-gray-600" />
+                      <Eye className="h-4 w-4 text-muted-foreground" />
                     ) : (
-                      <EyeOff className="h-4 w-4 text-gray-400" />
+                      <EyeOff className="h-4 w-4 text-muted-foreground/50" />
                     )}
                   </button>
                 </div>

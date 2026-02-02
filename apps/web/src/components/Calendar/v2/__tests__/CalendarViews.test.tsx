@@ -21,7 +21,7 @@ describe("WeekView", () => {
     exdates: [],
     tags: [],
     source: "user",
-    deleted: false,
+    isDeleted: false,
   };
 
   const allDayEvent: CalendarEvent = {
@@ -192,7 +192,7 @@ describe("MonthView", () => {
       exdates: [],
       tags: [],
       source: "user",
-      deleted: false,
+      isDeleted: false,
     },
     {
       id: "event-2",
@@ -206,7 +206,7 @@ describe("MonthView", () => {
       exdates: [],
       tags: [],
       source: "user",
-      deleted: false,
+      isDeleted: false,
     },
     {
       id: "event-3",
@@ -220,7 +220,7 @@ describe("MonthView", () => {
       exdates: [],
       tags: [],
       source: "user",
-      deleted: false,
+      isDeleted: false,
     },
     {
       id: "event-4",
@@ -234,7 +234,7 @@ describe("MonthView", () => {
       exdates: [],
       tags: [],
       source: "user",
-      deleted: false,
+      isDeleted: false,
     },
   ];
 
@@ -376,7 +376,7 @@ describe("DayView", () => {
     exdates: [],
     tags: [],
     source: "user",
-    deleted: false,
+    isDeleted: false,
   };
 
   const allDayEvent: CalendarEvent = {
@@ -391,7 +391,7 @@ describe("DayView", () => {
     exdates: [],
     tags: [],
     source: "user",
-    deleted: false,
+    isDeleted: false,
   };
 
   const defaultProps = {
@@ -494,7 +494,7 @@ describe("AgendaView", () => {
     exdates: [],
     tags: [],
     source: "user",
-    deleted: false,
+    isDeleted: false,
   };
 
   const futureEvent: CalendarEvent = {
@@ -509,7 +509,7 @@ describe("AgendaView", () => {
     exdates: [],
     tags: [],
     source: "user",
-    deleted: false,
+    isDeleted: false,
   };
 
   const defaultProps = {

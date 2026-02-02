@@ -3,7 +3,7 @@
  * Wires together all calendar views, dialogs, and state management
  */
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useCalendarUIStore } from "@/lib/store/calendar-ui-store";
 import { useCalendarEvents } from "@/lib/hooks/use-calendar-events";
 import { useCalendars } from "@/lib/hooks/use-calendars";
@@ -56,6 +56,16 @@ export function CalendarApp() {
 
   // Fetch calendars
   const { calendars, loading: calendarsLoading } = useCalendars();
+
+  // Initialize all calendars as visible on first load (only if store has never been initialized)
+  useEffect(() => {
+    // Only initialize if we have calendars AND the store has never been persisted
+    // (i.e., this is the very first time the user is loading the calendar)
+    const stored = localStorage.getItem("calendar-ui-store");
+    if (calendars.length > 0 && !stored) {
+      setVisibleCalendars(calendars.map((cal) => cal.id));
+    }
+  }, [calendars, setVisibleCalendars]);
 
   // Calculate date range based on view
   const { rangeStart, rangeEnd } = useMemo(() => {
@@ -241,9 +251,9 @@ export function CalendarApp() {
   };
 
   // Time slot click handler for quick event creation
-  const handleTimeSlotClick = (date: Date, time?: string) => {
-    // Set the date and open dialog
-    setSelectedDate(date);
+  const handleTimeSlotClick = (date: Date, clickedTime: Date) => {
+    // Set the date and open dialog with the clicked time
+    setSelectedDate(clickedTime);
     openEventDialog();
   };
 
@@ -254,7 +264,7 @@ export function CalendarApp() {
         className="flex items-center justify-center h-full"
         data-testid="calendar-app-loading"
       >
-        <div className="text-gray-600">Loading calendar...</div>
+        <div className="text-muted-foreground">Loading calendar...</div>
       </div>
     );
   }
@@ -279,9 +289,9 @@ export function CalendarApp() {
         {/* Main calendar area */}
         <div className="flex flex-col flex-1">
           {/* Header with controls */}
-          <div className="border-b bg-white p-4">
+          <div className="border-b bg-background p-4">
             <div className="flex items-center justify-between mb-4">
-              <h1 className="text-2xl font-bold">Calendar</h1>
+              <h1 className="text-2xl font-bold text-foreground">Calendar</h1>
               <div className="flex items-center gap-2">
                 <CalendarSearch
                   value={searchQuery}
@@ -309,10 +319,10 @@ export function CalendarApp() {
           </div>
 
           {/* Calendar view */}
-          <div className="flex-1 overflow-auto bg-gray-50">
+          <div className="flex-1 overflow-auto bg-muted/20">
             {eventsLoading ? (
               <div className="flex items-center justify-center h-full">
-                <div className="text-gray-600">Loading events...</div>
+                <div className="text-muted-foreground">Loading events...</div>
               </div>
             ) : (
               <>
@@ -323,6 +333,7 @@ export function CalendarApp() {
                     onEventClick={handleEventClick}
                     getCalendarColor={getCalendarColor}
                     showTimeGrid={true}
+                    onTimeSlotClick={handleTimeSlotClick}
                   />
                 )}
 
@@ -361,7 +372,7 @@ export function CalendarApp() {
           {/* Event dialog */}
           <EventDialog
             open={eventDialogOpen}
-            onOpenChange={closeEventDialog}
+            onOpenChange={(open) => !open && closeEventDialog()}
             event={selectedEvent}
             defaultCalendarId={visibleCalendarIds[0]}
             defaultDate={selectedDate}

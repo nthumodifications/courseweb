@@ -45,7 +45,7 @@ describe("calendar-event-utils", () => {
       expect(event.isAllDay).toBe(true);
       expect(event.calendarId).toBe("cal-1");
       expect(event.source).toBe("user");
-      expect(event.deleted).toBe(false);
+      expect(event.isDeleted).toBe(false);
       expect(event.id).toBeTruthy();
     });
 
@@ -101,7 +101,7 @@ describe("calendar-event-utils", () => {
         exdates: [],
         tags: [],
         source: "user",
-        deleted: false,
+        isDeleted: false,
       };
 
       const db = createMockRxDB({
@@ -138,7 +138,7 @@ describe("calendar-event-utils", () => {
         exdates: [],
         tags: [],
         source: "user",
-        deleted: false,
+        isDeleted: false,
       };
 
       const mockDoc = {
@@ -199,7 +199,7 @@ describe("calendar-event-utils", () => {
 
       expect(success).toBe(true);
       expect(mockDoc.patch).toHaveBeenCalledWith(
-        expect.objectContaining({ deleted: true }),
+        expect.objectContaining({ isDeleted: true }),
       );
     });
 
@@ -239,7 +239,7 @@ describe("calendar-event-utils", () => {
 
       expect(success).toBe(true);
       expect(mockDoc.patch).toHaveBeenCalledWith(
-        expect.objectContaining({ deleted: false }),
+        expect.objectContaining({ isDeleted: false }),
       );
     });
   });
@@ -259,7 +259,7 @@ describe("calendar-event-utils", () => {
         exdates: [],
         tags: [],
         source: "user",
-        deleted: false,
+        isDeleted: false,
       };
 
       const mockDoc = {
@@ -305,7 +305,7 @@ describe("calendar-event-utils", () => {
         exdates: [exclusionTimestamp],
         tags: [],
         source: "user",
-        deleted: false,
+        isDeleted: false,
       };
 
       const mockDoc = {
@@ -352,7 +352,7 @@ describe("calendar-event-utils", () => {
         exdates: [],
         tags: ["work"],
         source: "user",
-        deleted: false,
+        isDeleted: false,
         lastModified: Date.now(),
       };
 
@@ -396,7 +396,7 @@ describe("calendar-event-utils", () => {
         exdates: [],
         tags: ["work"],
         source: "user",
-        deleted: false,
+        isDeleted: false,
       };
 
       const db = createMockRxDB({
@@ -422,7 +422,7 @@ describe("calendar-event-utils", () => {
         exdates: [],
         tags: [],
         source: "user",
-        deleted: false,
+        isDeleted: false,
       };
 
       const db = createMockRxDB({
@@ -449,7 +449,7 @@ describe("calendar-event-utils", () => {
           exdates: [],
           tags: [],
           source: "user",
-          deleted: false,
+          isDeleted: false,
         },
         {
           id: "event-2",
@@ -463,7 +463,7 @@ describe("calendar-event-utils", () => {
           exdates: [],
           tags: [],
           source: "user",
-          deleted: false,
+          isDeleted: false,
         },
       ];
 
@@ -493,7 +493,7 @@ describe("calendar-event-utils", () => {
           exdates: [],
           tags: ["work"],
           source: "user",
-          deleted: false,
+          isDeleted: false,
         },
         {
           id: "event-2",
@@ -508,7 +508,7 @@ describe("calendar-event-utils", () => {
           exdates: [],
           tags: [],
           source: "user",
-          deleted: false,
+          isDeleted: false,
         },
         {
           id: "event-3",
@@ -522,7 +522,7 @@ describe("calendar-event-utils", () => {
           exdates: [],
           tags: [],
           source: "user",
-          deleted: true,
+          isDeleted: true,
         },
       ];
 
@@ -533,7 +533,7 @@ describe("calendar-event-utils", () => {
       const stats = await getCalendarStatistics(db as any, "cal-1");
 
       expect(stats.total).toBe(3);
-      expect(stats.deleted).toBe(1);
+      expect(stats.isDeleted).toBe(1);
       expect(stats.recurring).toBe(1);
       expect(stats.isAllDay).toBe(1);
       expect(stats.tagged).toBe(1);

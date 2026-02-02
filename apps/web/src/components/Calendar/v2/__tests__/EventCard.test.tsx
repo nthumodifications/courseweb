@@ -20,7 +20,7 @@ describe("EventCard", () => {
     exdates: [],
     tags: ["work", "important"],
     source: "user",
-    deleted: false,
+    isDeleted: false,
   };
 
   describe("rendering", () => {
@@ -68,7 +68,7 @@ describe("EventCard", () => {
     });
 
     it("should apply strikethrough for deleted events", () => {
-      const deletedEvent = { ...baseEvent, deleted: true };
+      const deletedEvent = { ...baseEvent, isDeleted: true };
       render(<EventCard event={deletedEvent} />);
       const title = screen.getByText("Test Event");
       expect(title).toHaveClass("line-through");
@@ -177,7 +177,7 @@ describe("EventList", () => {
       exdates: [],
       tags: [],
       source: "user",
-      deleted: false,
+      isDeleted: false,
     },
     {
       id: "event-2",
@@ -191,7 +191,7 @@ describe("EventList", () => {
       exdates: [],
       tags: [],
       source: "user",
-      deleted: false,
+      isDeleted: false,
     },
   ];
 

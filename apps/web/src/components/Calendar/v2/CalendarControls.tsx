@@ -74,7 +74,7 @@ export function CalendarControls({
   return (
     <div
       className={cn(
-        "flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3",
+        "flex items-center justify-between border-b border bg-background px-4 py-3",
         className,
       )}
       data-testid="calendar-controls"
@@ -83,7 +83,7 @@ export function CalendarControls({
       <div className="flex items-center gap-2">
         <button
           onClick={onToday}
-          className="rounded border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          className="rounded border border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted/50"
           data-testid="calendar-controls-today"
         >
           Today
@@ -92,7 +92,7 @@ export function CalendarControls({
         <div className="flex items-center gap-1">
           <button
             onClick={onPrevious}
-            className="rounded p-1.5 text-gray-600 hover:bg-gray-100"
+            className="rounded p-1.5 text-muted-foreground hover:bg-muted/50"
             aria-label="Previous period"
             data-testid="calendar-controls-previous"
           >
@@ -113,7 +113,7 @@ export function CalendarControls({
 
           <button
             onClick={onNext}
-            className="rounded p-1.5 text-gray-600 hover:bg-gray-100"
+            className="rounded p-1.5 text-muted-foreground hover:bg-muted/50"
             aria-label="Next period"
             data-testid="calendar-controls-next"
           >
@@ -134,7 +134,7 @@ export function CalendarControls({
         </div>
 
         <h2
-          className="text-lg font-semibold text-gray-900"
+          className="text-lg font-semibold text-foreground"
           data-testid="calendar-controls-date-label"
         >
           {getDateLabel()}
@@ -143,7 +143,7 @@ export function CalendarControls({
 
       {/* Right: View Switcher */}
       <div
-        className="flex rounded-md border border-gray-300"
+        className="flex rounded-md border border"
         role="group"
         aria-label="Calendar view"
         data-testid="calendar-controls-view-switcher"
@@ -156,10 +156,10 @@ export function CalendarControls({
               "px-3 py-1.5 text-sm font-medium transition-colors",
               index === 0 && "rounded-l-md",
               index === views.length - 1 && "rounded-r-md",
-              index > 0 && "border-l border-gray-300",
+              index > 0 && "border-l border",
               currentView === view.value
-                ? "bg-blue-600 text-white"
-                : "bg-white text-gray-700 hover:bg-gray-50",
+                ? "bg-primary text-white"
+                : "bg-background text-foreground hover:bg-muted/50",
             )}
             data-testid={`calendar-controls-view-${view.value}`}
             aria-pressed={currentView === view.value}
@@ -278,7 +278,7 @@ export function MiniCalendar({
   return (
     <div
       className={cn(
-        "w-full max-w-sm rounded-lg border border-gray-200 bg-white p-4",
+        "w-full max-w-sm rounded-lg border border bg-background p-4",
         className,
       )}
       data-testid="mini-calendar"
@@ -287,7 +287,7 @@ export function MiniCalendar({
       <div className="mb-4 flex items-center justify-between">
         <button
           onClick={goToPreviousMonth}
-          className="rounded p-1 hover:bg-gray-100"
+          className="rounded p-1 hover:bg-muted/50"
           aria-label="Previous month"
           data-testid="mini-calendar-previous"
         >
@@ -315,7 +315,7 @@ export function MiniCalendar({
 
         <button
           onClick={goToNextMonth}
-          className="rounded p-1 hover:bg-gray-100"
+          className="rounded p-1 hover:bg-muted/50"
           aria-label="Next month"
           data-testid="mini-calendar-next"
         >
@@ -340,7 +340,7 @@ export function MiniCalendar({
         {weekDays.map((day) => (
           <div
             key={day}
-            className="text-center text-xs font-medium text-gray-500"
+            className="text-center text-xs font-medium text-muted-foreground"
           >
             {day}
           </div>
@@ -355,16 +355,18 @@ export function MiniCalendar({
             onClick={() => onDateSelect(date)}
             className={cn(
               "relative aspect-square rounded p-1 text-sm",
-              isCurrentMonth(date) ? "text-gray-900" : "text-gray-400",
+              isCurrentMonth(date)
+                ? "text-foreground"
+                : "text-muted-foreground/50",
               isToday(date) && "font-bold",
-              isSelected(date) && "bg-blue-600 text-white",
-              !isSelected(date) && "hover:bg-gray-100",
+              isSelected(date) && "bg-primary text-white",
+              !isSelected(date) && "hover:bg-muted/50",
             )}
             data-testid={`mini-calendar-day-${format(date, "yyyy-MM-dd")}`}
           >
             {date.getDate()}
             {hasEvents(date) && (
-              <div className="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-blue-600" />
+              <div className="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-primary" />
             )}
           </button>
         ))}

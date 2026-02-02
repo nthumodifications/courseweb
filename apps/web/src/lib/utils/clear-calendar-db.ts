@@ -11,7 +11,7 @@ export async function clearCalendarDB() {
 
     // Close any existing connections
     const databases = await indexedDB.databases?.();
-    const dbName = "courseweb"; // Update if your DB name is different
+    const dbName = "nthumods-calendar";
 
     // Find and close the database
     const dbInfo = databases?.find((db) => db.name === dbName);
@@ -25,7 +25,9 @@ export async function clearCalendarDB() {
 
       request.onsuccess = () => {
         console.log("[ClearDB] Database cleared successfully");
-        console.log("[ClearDB] Please refresh the page");
+        console.log("[ClearDB] Reloading page...");
+        // Force reload to reinitialize with clean database
+        window.location.reload();
         resolve();
       };
 

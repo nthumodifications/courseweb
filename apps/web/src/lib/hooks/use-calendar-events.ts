@@ -53,12 +53,12 @@ export function useCalendarEvents({
   const query = useMemo(() => {
     if (!collection || calendarIds.length === 0) return null;
 
-    // Build the query using the compound index [calendarId, deleted, startTime]
+    // Build the query using the compound index [calendarId, isDeleted, startTime]
     // Type assertion needed due to RxDB's generic MangoQuery typing
     return collection.find({
       selector: {
         calendarId: { $in: calendarIds },
-        deleted: includeDeleted ? { $in: [true, false] } : false,
+        isDeleted: includeDeleted ? { $in: [true, false] } : false,
         $or: [
           // Case 1: Non-recurring events that overlap with the range
           // Event starts before range ends AND event ends after range starts
@@ -76,7 +76,7 @@ export function useCalendarEvents({
         ],
       },
       // Use the compound index for sorting
-      sort: [{ calendarId: "asc" }, { deleted: "asc" }, { startTime: "asc" }],
+      sort: [{ calendarId: "asc" }, { isDeleted: "asc" }, { startTime: "asc" }],
     } as any);
   }, [collection, calendarIds, includeDeleted, startTime, endTime]);
 
@@ -84,6 +84,9 @@ export function useCalendarEvents({
 
   // Expand recurring events and convert to EventInstance[]
   const events = useMemo(() => {
+    // Return empty array if no calendars are visible
+    if (calendarIds.length === 0) return [];
+
     if (!eventDocs) return [];
 
     const expanded: EventInstance[] = [];
@@ -106,7 +109,7 @@ export function useCalendarEvents({
     expanded.sort((a, b) => a.instanceStart - b.instanceStart);
 
     return expanded;
-  }, [eventDocs, rangeStart, rangeEnd]);
+  }, [eventDocs, rangeStart, rangeEnd, calendarIds.length]);
 
   return { events, isFetching };
 }

@@ -24,7 +24,7 @@ import {
  * - Source tracking (user, timetable, import)
  */
 export const calendarEventsSchemaV0 = {
-  version: 1,
+  version: 5,
   primaryKey: "id",
   type: "object",
   properties: {
@@ -52,11 +52,13 @@ export const calendarEventsSchemaV0 = {
       type: "number",
       minimum: 0,
       maximum: 9999999999999, // Max timestamp
+      multipleOf: 1,
     },
     endTime: {
       type: "number",
       minimum: 0,
       maximum: 9999999999999,
+      multipleOf: 1,
     },
     timezone: {
       type: "string",
@@ -72,12 +74,14 @@ export const calendarEventsSchemaV0 = {
         type: "number",
         minimum: 0,
         maximum: 9999999999999,
+        multipleOf: 1,
       },
     },
     recurrenceId: {
       type: "number",
       minimum: 0,
       maximum: 9999999999999,
+      multipleOf: 1,
     },
     // Metadata
     color: {
@@ -92,6 +96,7 @@ export const calendarEventsSchemaV0 = {
     source: {
       type: "string",
       enum: ["user", "timetable", "import"],
+      maxLength: 20,
     },
     sourceId: {
       type: "string",
@@ -101,8 +106,9 @@ export const calendarEventsSchemaV0 = {
       type: "number",
       minimum: 0,
       maximum: 9999999999999,
+      multipleOf: 1,
     },
-    deleted: {
+    isDeleted: {
       type: "boolean",
     },
     // Future features
@@ -134,18 +140,14 @@ export const calendarEventsSchemaV0 = {
     "startTime",
     "endTime",
     "timezone",
+    "source",
     "lastModified",
-    "deleted",
+    "isDeleted",
   ],
   indexes: [
     "calendarId", // Filter by calendar
     "startTime", // Sort by start time
-    "endTime", // Query by end time
-    ["startTime", "endTime"], // Compound index for efficient range queries
-    "source", // Filter by source
-    "deleted", // Filter out deleted
-    "lastModified", // For sync
-    ["calendarId", "deleted", "startTime"], // Compound for common query pattern
+    ["calendarId", "isDeleted", "startTime"], // Compound for common query pattern
   ],
 } as const;
 
@@ -164,7 +166,7 @@ export type CalendarEventDocType = ExtractDocumentTypeFromTypedRxJsonSchema<
  * Can represent user calendars, timetable calendars, or subscribed calendars.
  */
 export const calendarsSchemaV0 = {
-  version: 1,
+  version: 5,
   primaryKey: "id",
   type: "object",
   properties: {
@@ -191,6 +193,7 @@ export const calendarsSchemaV0 = {
     source: {
       type: "string",
       enum: ["user", "timetable", "subscription"],
+      maxLength: 20,
     },
     // For timetable-sourced calendars
     semesterId: {
@@ -210,8 +213,9 @@ export const calendarsSchemaV0 = {
       type: "number",
       minimum: 0,
       maximum: 9999999999999,
+      multipleOf: 1,
     },
-    deleted: {
+    isDeleted: {
       type: "boolean",
     },
   },
@@ -223,9 +227,9 @@ export const calendarsSchemaV0 = {
     "isVisible",
     "source",
     "lastModified",
-    "deleted",
+    "isDeleted",
   ],
-  indexes: ["source", "isVisible", "deleted", "lastModified"],
+  indexes: [],
 } as const;
 
 export const calendarsSchemaTyped = toTypedRxJsonSchema(calendarsSchemaV0);
