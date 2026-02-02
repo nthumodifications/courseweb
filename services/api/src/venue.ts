@@ -2,8 +2,12 @@ import { Hono } from "hono";
 import supabase_server from "./config/supabase_server";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
+import type { Bindings } from "./index";
+import { venueRateLimitMiddleware } from "./utils/rate-limit";
 
-const app = new Hono()
+const app = new Hono<{ Bindings: Bindings }>()
+  // Rate limiting middleware for all venue routes
+  .use("*", venueRateLimitMiddleware)
   .get("/", async (c) => {
     const { data, error } = await supabase_server(c)
       .from("distinct_venues")

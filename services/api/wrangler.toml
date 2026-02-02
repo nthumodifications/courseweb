@@ -19,3 +19,11 @@ head_sampling_rate = 1
 binding = "DB"
 database_name = "data-d1"
 database_id = "c6b4c91d-35a1-4218-9226-a8ab217150fb"
+
+[[ratelimits]]
+name = "VENUE_RATE_LIMITER"
+namespace_id = "1001"
+
+  [ratelimits.simple]
+  limit = 100
+  period = 60
