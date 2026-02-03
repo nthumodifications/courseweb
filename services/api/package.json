@@ -42,7 +42,7 @@
     "prisma": "^6.6.0",
     "rxdb": "^16.9.0",
     "uuid": "^11.1.0",
-    "wrangler": "^4.10.0",
+    "wrangler": "^4.61.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {
