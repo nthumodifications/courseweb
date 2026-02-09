@@ -24,22 +24,22 @@
   "dependencies": {
     "@courseweb/shared": "*",
     "@courseweb/database": "*",
-    "@hono/zod-validator": "^0.4.3",
-    "@prisma/client": "^6.5.0",
+    "@hono/zod-validator": "^0.7.6",
+    "@prisma/client": "^7.3.0",
     "@tailwindcss/cli": "^4.0.16",
     "date-fns": "^4.1.0",
     "firebase-admin": "^13.2.0",
     "hono": "^4.7.5",
-    "ical-generator": "^9.0.0",
+    "ical-generator": "^10.0.0",
     "jose": "^6.0.10",
-    "prisma": "^6.5.0",
+    "prisma": "^7.3.0",
     "rxdb": "^16.8.1",
-    "tailwindcss": "^4.0.16"
+    "tailwindcss": "^4.1.18"
   },
   "devDependencies": {
     "@courseweb/eslint-config": "*",
     "@types/bun": "latest",
-    "typescript": "^5.4.4"
+    "typescript": "^5.9.3"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
