@@ -134,7 +134,7 @@ const ShareSyncTimetableDialog = ({
                     {dict.dialogs.ShareSyncTimetableDialog.links.email}
                   </Link>
                 </Button>
-                <Button variant="outline" asChild disabled>
+                <Button variant="outline" asChild>
                   <Link href={webcalLink} target="_blank">
                     <Calendar className="w-4 h-4 mr-2" /> Sync To Calendar
                   </Link>

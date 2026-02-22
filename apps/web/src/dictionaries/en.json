@@ -271,7 +271,7 @@
       "success_title": "Generated Successfully",
       "success_description": "The timetable image has been downloaded to your device. Please check your browser's download folder or click the image to copy to clipboard.",
       "download_error": "Download Failed",
-      "download_error_description": "Failed to generate the image. Please try again or contact support.",
+      "download_error_description": "Failed to download the calendar file. Please try again or contact support.",
       "close": "Close"
     },
     "ShareSyncTimetableDialog": {

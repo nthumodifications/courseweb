@@ -211,11 +211,25 @@ const DownloadTimetableDialog = ({ icsfileLink }: { icsfileLink: string }) => {
 
   const handleDownloadCalendar = async () => {
     const filename = `${new Date().toISOString()}_timetable.ics`;
-    const link = document.createElement("a");
-    link.download = filename;
-    link.href = icsfileLink;
-    link.target = "_blank";
-    link.click();
+    try {
+      const res = await fetch(icsfileLink);
+      if (!res.ok) throw new Error(`Server error: ${res.status}`);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Calendar download failed:", err);
+      toast({
+        title: dict.dialogs.DownloadTimetableDialog.download_error,
+        description:
+          dict.dialogs.DownloadTimetableDialog.download_error_description,
+        variant: "destructive",
+      });
+    }
   };
 
   return (
