@@ -5,6 +5,7 @@ import type { RateLimit } from "@cloudflare/workers-types";
 
 import acaCalendar from "./aca-calendar";
 import calendarProxy from "./calendar-proxy";
+import timetableIcs from "./timetable-ics";
 import weather from "./weather";
 import course from "./course";
 import venue from "./venue";
@@ -40,6 +41,7 @@ export const app = new Hono<{ Bindings: Bindings }>()
   })
   .route("/acacalendar", acaCalendar)
   .route("/calendar", calendarProxy)
+  .route("/timetable", timetableIcs)
   .route("/weather", weather)
   .route("/course", course)
   .route("/venue", venue)
