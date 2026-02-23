@@ -2,14 +2,121 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import supabase_server from "./config/supabase_server";
-import {
-  scheduleTimeSlots,
-  semesterInfo,
-  createTimetableFromCourses,
-  colorMapFromCourses,
-  timetableColors,
-} from "@courseweb/shared";
-import type { MinimalCourse } from "@courseweb/shared";
+
+// ── Inlined from @courseweb/shared ───────────────────────────────────────────
+// Importing @courseweb/shared via the root tsconfig path alias resolves to the
+// package's TypeScript source files, which are outside this package's rootDir.
+// The constants and logic needed here are small enough to inline directly.
+
+const SCHEDULE_TIME_SLOTS = [
+  { time: "1", start: "08:00", end: "08:50" },
+  { time: "2", start: "09:00", end: "09:50" },
+  { time: "3", start: "10:10", end: "11:00" },
+  { time: "4", start: "11:10", end: "12:00" },
+  { time: "n", start: "12:10", end: "13:00" },
+  { time: "5", start: "13:20", end: "14:10" },
+  { time: "6", start: "14:20", end: "15:10" },
+  { time: "7", start: "15:30", end: "16:20" },
+  { time: "8", start: "16:30", end: "17:20" },
+  { time: "9", start: "17:30", end: "18:20" },
+  { time: "a", start: "18:30", end: "19:20" },
+  { time: "b", start: "19:30", end: "20:20" },
+  { time: "c", start: "20:30", end: "21:20" },
+  { time: "d", start: "21:30", end: "22:20" },
+] as const;
+
+const SLOT_INDEX: Record<string, number> = Object.fromEntries(
+  SCHEDULE_TIME_SLOTS.map((s, i) => [s.time, i]),
+);
+
+const SEMESTER_INFO = [
+  { id: "10810", begins: new Date(2019, 8, 9), ends: new Date(2020, 0, 12) },
+  { id: "10820", begins: new Date(2020, 1, 17), ends: new Date(2020, 5, 21) },
+  { id: "10910", begins: new Date(2020, 8, 14), ends: new Date(2021, 0, 29) },
+  { id: "10920", begins: new Date(2021, 1, 22), ends: new Date(2021, 5, 25) },
+  { id: "11010", begins: new Date(2021, 8, 13), ends: new Date(2022, 0, 14) },
+  { id: "11020", begins: new Date(2022, 1, 14), ends: new Date(2022, 5, 17) },
+  { id: "11110", begins: new Date(2022, 8, 12), ends: new Date(2023, 0, 13) },
+  { id: "11120", begins: new Date(2023, 1, 13), ends: new Date(2023, 5, 16) },
+  { id: "11210", begins: new Date(2023, 8, 11), ends: new Date(2024, 0, 12) },
+  { id: "11220", begins: new Date(2024, 1, 19), ends: new Date(2024, 5, 23) },
+  { id: "11310", begins: new Date(2024, 8, 2), ends: new Date(2024, 11, 22) },
+  { id: "11320", begins: new Date(2025, 1, 17), ends: new Date(2025, 5, 8) },
+  { id: "11410", begins: new Date(2025, 8, 1), ends: new Date(2025, 11, 21) },
+  { id: "11420", begins: new Date(2026, 1, 23), ends: new Date(2026, 5, 14) },
+];
+
+type CourseRow = {
+  raw_id: string;
+  name_zh: string | null;
+  name_en: string | null;
+  times: string[] | null;
+  venues: string[] | null;
+  teacher_zh: string[] | null;
+  teacher_en: string[] | null;
+};
+
+type TimeslotEvent = {
+  course: CourseRow;
+  venue: string;
+  dayOfWeek: number; // 0=Mon … 5=Sat (MTWRFS)
+  startTime: number; // index into SCHEDULE_TIME_SLOTS
+  endTime: number;
+};
+
+/** Parse a course's times strings into discrete calendar timeslot events. */
+function courseToEvents(course: CourseRow): TimeslotEvent[] {
+  const events: TimeslotEvent[] = [];
+  if (!course.times) return events;
+
+  course.times.forEach((timeStr, venueIndex) => {
+    if (!timeStr.trim()) return;
+    // Each 2-char chunk is "<day><slot>", e.g. "M1", "T3", "Ra"
+    const slots = timeStr.match(/.{1,2}/g)?.map((chunk) => ({
+      day: chunk[0] as string,
+      time: chunk[1] as string,
+    }));
+    if (!slots) return;
+
+    // Group consecutive slots on the same day into single events
+    const groups: { day: string; time: string }[][] = [];
+    for (const slot of slots) {
+      const last = groups[groups.length - 1];
+      const lastSlot = last?.[last.length - 1];
+      if (
+        last &&
+        lastSlot &&
+        lastSlot.day === slot.day &&
+        SLOT_INDEX[lastSlot.time] !== undefined &&
+        SLOT_INDEX[slot.time] !== undefined &&
+        SLOT_INDEX[lastSlot.time]! + 1 === SLOT_INDEX[slot.time]
+      ) {
+        last.push(slot);
+      } else {
+        groups.push([slot]);
+      }
+    }
+
+    for (const group of groups) {
+      const indices = group.map((s) => SLOT_INDEX[s.time] ?? -1);
+      const startTime = Math.min(...indices);
+      const endTime = Math.max(...indices);
+      if (startTime < 0 || endTime < 0) continue;
+      const firstDay = group[0];
+      if (!firstDay) continue;
+      events.push({
+        course,
+        venue: course.venues?.[venueIndex] ?? "",
+        dayOfWeek: "MTWRFS".indexOf(firstDay.day),
+        startTime,
+        endTime,
+      });
+    }
+  });
+
+  return events;
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 const CALENDAR_HEADERS = {
   "Content-Type": "text/calendar; charset=utf-8",
@@ -23,7 +130,6 @@ function pad(i: number): string {
   return i < 10 ? `0${i}` : `${i}`;
 }
 
-// Format a Date as YYYYMMDDTHHMMSSZ (UTC)
 function formatDateTime(date: Date): string {
   return (
     `${date.getUTCFullYear()}${pad(date.getUTCMonth() + 1)}${pad(date.getUTCDate())}` +
@@ -31,13 +137,12 @@ function formatDateTime(date: Date): string {
   );
 }
 
-// Parse "HH:mm" (Asia/Taipei = UTC+8, no DST) into UTC hours/minutes
+// Asia/Taipei is always UTC+8 (no DST)
 function taipeiTimeToUtc(timeStr: string): { hours: number; minutes: number } {
-  const [hour, minute] = timeStr.split(":").map(Number);
-  return { hours: (hour - 8 + 24) % 24, minutes: minute };
+  const [h, m] = timeStr.split(":").map(Number);
+  return { hours: ((h ?? 0) - 8 + 24) % 24, minutes: m ?? 0 };
 }
 
-// Escape special characters in ICS text fields
 function escapeIcsText(text: string): string {
   return text
     .replace(/\\/g, "\\\\")
@@ -46,21 +151,16 @@ function escapeIcsText(text: string): string {
     .replace(/\n/g, "\\n");
 }
 
-// Find the first occurrence of a target day-of-week on or after startDate.
-// targetDayOfWeek: 0=Mon, 1=Tue, ..., 5=Sat (MTWRFS indexing)
-// startDate should be the semester start expressed as UTC midnight-minus-8h
-// (i.e. fromZonedTime(semesterBegins, "Asia/Taipei")), which causes getUTCDay()
-// to return one day earlier than the Taipei calendar date — matching the original logic.
-function getFirstOccurrenceOfDayOfWeek(
-  startDate: Date,
-  targetDayOfWeek: number,
-): Date {
-  const jsDayOfWeek = targetDayOfWeek + 1; // MTWRFS 0-index → JS 1=Mon..6=Sat
-  const startDayOfWeek = startDate.getUTCDay();
-  const daysToAdd = (7 + jsDayOfWeek - startDayOfWeek) % 7;
-  const result = new Date(startDate);
-  result.setUTCDate(result.getUTCDate() + daysToAdd);
-  return result;
+// Find the first occurrence of targetDayOfWeek on or after startDate (UTC).
+// targetDayOfWeek is MTWRFS-indexed (0=Mon…5=Sat). startDate is already
+// adjusted to UTC-midnight-minus-8h so getUTCDay() is one day before the
+// Taipei calendar date, matching fromZonedTime(date, "Asia/Taipei") behaviour.
+function firstOccurrence(startDate: Date, targetDayOfWeek: number): Date {
+  const jsDow = targetDayOfWeek + 1; // convert MTWRFS index to JS 1=Mon…6=Sat
+  const daysToAdd = (7 + jsDow - startDate.getUTCDay()) % 7;
+  const d = new Date(startDate);
+  d.setUTCDate(d.getUTCDate() + daysToAdd);
+  return d;
 }
 
 const app = new Hono().get(
@@ -73,15 +173,14 @@ const app = new Hono().get(
     }),
   ),
   async (c) => {
-    const { semester, theme: themeParam } = c.req.valid("query");
-    const semesterObj = semesterInfo.find((sem) => sem.id === semester);
-    // The course list is passed as a comma-separated value under the dynamic key
+    const { semester } = c.req.valid("query");
+    const semObj = SEMESTER_INFO.find((s) => s.id === semester);
+    // Courses are passed as a comma-separated value under the dynamic key
     // "semester_<id>" (e.g. semester_11420=course1,course2,...)
     const coursesParam = c.req.query(`semester_${semester}`);
-    const courses_ids = coursesParam?.split(",").filter(Boolean) ?? [];
-    const theme = themeParam ?? Object.keys(timetableColors)[0];
+    const courseIds = coursesParam?.split(",").filter(Boolean) ?? [];
 
-    if (!semesterObj || courses_ids.length === 0) {
+    if (!semObj || courseIds.length === 0) {
       return new Response("Bad Request: missing semester or course ids", {
         status: 400,
       });
@@ -90,100 +189,75 @@ const app = new Hono().get(
     try {
       const { data, error } = await supabase_server(c)
         .from("courses")
-        .select("*")
-        .in("raw_id", courses_ids);
+        .select(
+          "raw_id, name_zh, name_en, times, venues, teacher_zh, teacher_en",
+        )
+        .in("raw_id", courseIds);
 
-      if (error) {
-        console.error("Supabase error fetching courses for ICS:", error);
+      if (error || !data || data.length === 0) {
+        if (error)
+          console.error("Supabase error fetching courses for ICS:", error);
         return new Response(EMPTY_CALENDAR, {
           status: 200,
           headers: CALENDAR_HEADERS,
         });
       }
 
-      if (!data || data.length === 0) {
-        return new Response(EMPTY_CALENDAR, {
-          status: 200,
-          headers: CALENDAR_HEADERS,
-        });
-      }
-
-      const colors =
-        timetableColors[theme] ??
-        timetableColors[Object.keys(timetableColors)[0]];
-      const colorMap = colorMapFromCourses(
-        data.map((m) => m.raw_id),
-        colors,
-      );
-      const timetableData = createTimetableFromCourses(
-        data as MinimalCourse[],
-        colorMap,
-      );
-      const validTimetableData = timetableData.filter(
-        (course) =>
-          scheduleTimeSlots[course.startTime] &&
-          scheduleTimeSlots[course.endTime],
-      );
-
-      if (validTimetableData.length === 0) {
-        return new Response(EMPTY_CALENDAR, {
-          status: 200,
-          headers: CALENDAR_HEADERS,
-        });
-      }
-
-      // Convert semester boundary dates from Asia/Taipei midnight to UTC.
-      // semesterObj.begins is constructed as new Date(year, month, day) which in
-      // a UTC runtime equals 00:00 UTC. Subtracting 8 hours yields the UTC
-      // equivalent of midnight Taipei time — identical to fromZonedTime(date, "Asia/Taipei").
-      const semStart = new Date(semesterObj.begins.getTime() - 8 * 60 * 60 * 1000);
-      const semEnd = new Date(semesterObj.ends.getTime() - 8 * 60 * 60 * 1000);
-
+      // semObj.begins = new Date(year, month, day) — UTC midnight in a UTC runtime.
+      // Subtract 8h to get the UTC equivalent of Taipei midnight, identical to
+      // fromZonedTime(semObj.begins, "Asia/Taipei") in the original Next.js route.
+      const semStart = new Date(semObj.begins.getTime() - 8 * 60 * 60 * 1000);
+      const semEnd = new Date(semObj.ends.getTime() - 8 * 60 * 60 * 1000);
       const dayAbbr = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
 
-      const eventBlocks = validTimetableData.map((course) => {
-        const startSlot = scheduleTimeSlots[course.startTime]!;
-        const endSlot = scheduleTimeSlots[course.endTime]!;
-        const startUtc = taipeiTimeToUtc(startSlot.start);
-        const endUtc = taipeiTimeToUtc(endSlot.end);
-        const day = dayAbbr[course.dayOfWeek];
+      const eventBlocks: string[] = [];
+      for (const row of data as CourseRow[]) {
+        for (const ev of courseToEvents(row)) {
+          const startSlot = SCHEDULE_TIME_SLOTS[ev.startTime];
+          const endSlot = SCHEDULE_TIME_SLOTS[ev.endTime];
+          if (!startSlot || !endSlot) continue;
 
-        const firstOccurrence = getFirstOccurrenceOfDayOfWeek(
-          semStart,
-          course.dayOfWeek,
-        );
+          const startUtc = taipeiTimeToUtc(startSlot.start);
+          const endUtc = taipeiTimeToUtc(endSlot.end);
+          const day = dayAbbr[ev.dayOfWeek];
 
-        const dtStart = new Date(firstOccurrence);
-        dtStart.setUTCHours(startUtc.hours, startUtc.minutes, 0, 0);
+          const occ = firstOccurrence(semStart, ev.dayOfWeek);
+          const dtStart = new Date(occ);
+          dtStart.setUTCHours(startUtc.hours, startUtc.minutes, 0, 0);
+          const dtEnd = new Date(occ);
+          dtEnd.setUTCHours(endUtc.hours, endUtc.minutes, 0, 0);
 
-        const dtEnd = new Date(firstOccurrence);
-        dtEnd.setUTCHours(endUtc.hours, endUtc.minutes, 0, 0);
+          const title = row.name_zh ?? row.name_en ?? "Course";
+          const desc = [
+            row.name_en,
+            row.teacher_zh?.join(", "),
+            row.teacher_en?.join(", "),
+            `https://nthumods.com/courses/${encodeURIComponent(row.raw_id)}`,
+          ]
+            .filter(Boolean)
+            .join("\\n");
 
-        const title = course.course.name_zh ?? course.course.name_en ?? "Course";
-        const descParts = [
-          course.course.name_en,
-          Array.isArray(course.course.teacher_zh)
-            ? course.course.teacher_zh.join(", ")
-            : course.course.teacher_zh,
-          Array.isArray(course.course.teacher_en)
-            ? course.course.teacher_en.join(", ")
-            : course.course.teacher_en,
-          `https://nthumods.com/courses/${encodeURIComponent(course.course.raw_id)}`,
-        ]
-          .filter(Boolean)
-          .join("\\n");
+          eventBlocks.push(
+            [
+              "BEGIN:VEVENT",
+              `DTSTART:${formatDateTime(dtStart)}`,
+              `DTEND:${formatDateTime(dtEnd)}`,
+              `RRULE:FREQ=WEEKLY;BYDAY=${day};INTERVAL=1;UNTIL=${formatDateTime(semEnd)}`,
+              `SUMMARY:${escapeIcsText(title)}`,
+              `DESCRIPTION:${desc}`,
+              `LOCATION:${escapeIcsText(ev.venue)}`,
+              "END:VEVENT",
+            ].join("\r\n"),
+          );
+        }
+      }
 
-        return [
-          "BEGIN:VEVENT",
-          `DTSTART:${formatDateTime(dtStart)}`,
-          `DTEND:${formatDateTime(dtEnd)}`,
-          `RRULE:FREQ=WEEKLY;BYDAY=${day};INTERVAL=1;UNTIL=${formatDateTime(semEnd)}`,
-          `SUMMARY:${escapeIcsText(title)}`,
-          `DESCRIPTION:${descParts}`,
-          `LOCATION:${escapeIcsText(course.venue ?? "")}`,
-          "END:VEVENT",
-        ].join("\r\n");
-      });
+      if (eventBlocks.length === 0) {
+        return new Response(EMPTY_CALENDAR, {
+          status: 200,
+          headers: CALENDAR_HEADERS,
+        });
+      }
 
       const icsContent =
         [
