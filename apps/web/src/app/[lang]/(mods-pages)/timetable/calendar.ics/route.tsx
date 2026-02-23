@@ -124,8 +124,8 @@ export async function GET(request: Request) {
         );
 
         return {
-          title: course.course.name_zh!,
-          description: `${course.course.name_en!}\n${course.course.teacher_zh}\n${course.course.teacher_en}\nhttps://nthumods.com/courses/${encodeURIComponent(course.course.raw_id)}`,
+          title: course.course.name_zh || course.course.name_en || course.course.raw_id,
+          description: `${course.course.name_en || ""}\n${course.course.teacher_zh || ""}\n${course.course.teacher_en || ""}\nhttps://nthumods.com/courses/${encodeURIComponent(course.course.raw_id)}`,
           location: course.venue,
           start: [
             firstOccurrence.getFullYear(),

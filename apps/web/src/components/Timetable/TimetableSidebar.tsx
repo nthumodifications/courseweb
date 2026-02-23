@@ -54,7 +54,7 @@ const TimetableSidebar = ({
     )
     .join("&")}&colorMap=${encodeURIComponent(JSON.stringify(colorMap))}`;
   const webcalLink = `webcals://nthumods.com/timetable/calendar.ics?semester=${semester}&${`semester_${semester}=${(courses[semester] ?? []).map((id) => encodeURI(id)).join(",")}`}`;
-  const icsfileLink = `https://nthumods.com/timetable/calendar.ics?semester=${semester}&${`semester_${semester}=${(courses[semester] ?? []).map((id) => encodeURI(id)).join(",")}`}`;
+  const icsfileLink = `/timetable/calendar.ics?semester=${semester}&${`semester_${semester}=${(courses[semester] ?? []).map((id) => encodeURI(id)).join(",")}`}`;
 
   const handleGroupByDepartment = (semester: string) => {
     const semesterCourses = getSemesterCourses(semester);
