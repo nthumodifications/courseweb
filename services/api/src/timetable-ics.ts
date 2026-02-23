@@ -67,20 +67,19 @@ const app = new Hono().get(
   "/calendar.ics",
   zValidator(
     "query",
-    z
-      .object({
-        semester: z.string(),
-        theme: z.string().optional(),
-      })
-      .catchall(z.string()),
+    z.object({
+      semester: z.string(),
+      theme: z.string().optional(),
+    }),
   ),
   async (c) => {
-    const query = c.req.valid("query");
-    const semester = query.semester;
+    const { semester, theme: themeParam } = c.req.valid("query");
     const semesterObj = semesterInfo.find((sem) => sem.id === semester);
-    const coursesParam = query[`semester_${semester}`];
+    // The course list is passed as a comma-separated value under the dynamic key
+    // "semester_<id>" (e.g. semester_11420=course1,course2,...)
+    const coursesParam = c.req.query(`semester_${semester}`);
     const courses_ids = coursesParam?.split(",").filter(Boolean) ?? [];
-    const theme = query.theme ?? Object.keys(timetableColors)[0];
+    const theme = themeParam ?? Object.keys(timetableColors)[0];
 
     if (!semesterObj || courses_ids.length === 0) {
       return new Response("Bad Request: missing semester or course ids", {
