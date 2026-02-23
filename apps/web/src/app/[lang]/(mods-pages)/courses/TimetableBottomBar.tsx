@@ -14,8 +14,8 @@ const TimetableBottomBar = () => {
         `semester_${sem}=${courses[sem].map((id) => encodeURI(id)).join(",")}`,
     )
     .join("&")}&colorMap=${encodeURIComponent(JSON.stringify(colorMap))}`;
-  const webcalLink = `webcals://nthumods.com/timetable/calendar.ics?semester=${semester}&${`semester_${semester}=${(courses[semester] ?? []).map((id) => encodeURI(id)).join(",")}`}`;
-  const icsfileLink = `https://nthumods.com/timetable/calendar.ics?semester=${semester}&${`semester_${semester}=${(courses[semester] ?? []).map((id) => encodeURI(id)).join(",")}`}`;
+  const webcalLink = `webcals://api.nthumods.com/timetable/calendar.ics?semester=${semester}&${`semester_${semester}=${(courses[semester] ?? []).map((id) => encodeURI(id)).join(",")}`}`;
+  const icsfileLink = `https://api.nthumods.com/timetable/calendar.ics?semester=${semester}&${`semester_${semester}=${(courses[semester] ?? []).map((id) => encodeURI(id)).join(",")}`}`;
 
   return (
     <div className="flex flex-row justify-stretch gap-2 pt-2">
