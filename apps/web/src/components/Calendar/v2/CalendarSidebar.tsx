@@ -20,7 +20,10 @@ import {
   Settings,
 } from "lucide-react";
 import { Button, cn } from "@courseweb/ui";
-import { getMonthGridDates } from "@/lib/utils/calendar-date-utils";
+import {
+  getMonthGridDates,
+  getUserTimezone,
+} from "@/lib/utils/calendar-date-utils";
 
 interface Calendar {
   id: string;
@@ -50,7 +53,7 @@ export function CalendarSidebar({
 }: CalendarSidebarProps) {
   const [miniCalendarDate, setMiniCalendarDate] = React.useState(new Date());
 
-  const gridDates = getMonthGridDates(miniCalendarDate, "UTC", 0);
+  const gridDates = getMonthGridDates(miniCalendarDate, getUserTimezone(), 0);
 
   const handlePrevMonth = () => {
     setMiniCalendarDate(subMonths(miniCalendarDate, 1));
@@ -69,9 +72,9 @@ export function CalendarSidebar({
   const isCurrentMonth = (date: Date) => isSameMonth(date, miniCalendarDate);
 
   return (
-    <div className="w-64 bg-background border-r border flex flex-col h-full">
+    <div className="w-64 bg-background border-r flex flex-col h-full">
       {/* Mini Calendar */}
-      <div className="p-4 border-b border">
+      <div className="p-4 border-b">
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-semibold text-sm">
             {format(miniCalendarDate, "MMMM yyyy")}
@@ -125,7 +128,7 @@ export function CalendarSidebar({
 
       {/* Calendar List */}
       <div className="flex-1 overflow-hidden flex flex-col">
-        <div className="p-4 border-b border">
+        <div className="p-4 border-b">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-semibold text-sm">My Calendars</h3>
             <div className="flex gap-1">

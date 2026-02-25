@@ -11,8 +11,10 @@ import { EventCard } from "./EventCard";
 interface DraggableEventProps {
   event: CalendarEvent;
   calendarColor: string;
-  onClick: () => void;
+  onClick?: (event: CalendarEvent) => void;
   showTime?: boolean;
+  mode?: "compact" | "normal" | "detailed";
+  variant?: "default" | "solid" | "timed";
   className?: string;
 }
 
@@ -21,6 +23,8 @@ export function DraggableEvent({
   calendarColor,
   onClick,
   showTime,
+  mode = "compact",
+  variant = "default",
   className,
 }: DraggableEventProps) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
@@ -47,6 +51,8 @@ export function DraggableEvent({
     >
       <EventCard
         event={event}
+        mode={mode}
+        variant={variant}
         calendarColor={calendarColor}
         onClick={onClick}
         showTime={showTime}

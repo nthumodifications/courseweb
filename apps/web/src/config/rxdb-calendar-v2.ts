@@ -262,7 +262,7 @@ export interface CalendarEvent {
   sourceId?: string;
 
   lastModified: number;
-  deleted: boolean;
+  isDeleted: boolean;
 
   reminders?: Array<{
     id: string;
@@ -293,5 +293,5 @@ export interface Calendar {
   subscriptionUrl?: string;
   lastSync?: number;
   lastModified: number;
-  deleted: boolean;
+  isDeleted: boolean;
 }

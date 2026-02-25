@@ -25,6 +25,13 @@ export interface EventCardProps {
    */
   mode?: "compact" | "normal" | "detailed";
   /**
+   * Visual variant affects styling
+   * - default: Border-left with card background
+   * - solid: Solid color background (for all-day/multi-day events)
+   * - timed: Solid background for timed events in week/day view
+   */
+  variant?: "default" | "solid" | "timed";
+  /**
    * Show event time
    */
   showTime?: boolean;
@@ -49,6 +56,7 @@ export interface EventCardProps {
 export function EventCard({
   event,
   mode = "normal",
+  variant = "default",
   showTime = true,
   showDuration = false,
   onClick,
@@ -62,17 +70,53 @@ export function EventCard({
   const duration = getEventDuration(event.startTime, event.endTime);
   const startDate = new Date(event.startTime);
 
+  // Convert hex color to rgba for background
+  const hexToRgba = (hex: string, alpha: number) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
+
+  // Determine styling based on variant
+  const isSolidVariant = variant === "solid";
+  const backgroundColor = isSolidVariant
+    ? calendarColor // Solid color for all-day events
+    : variant === "timed"
+      ? hexToRgba(calendarColor, 0.15) // Light transparent for timed events
+      : undefined;
+  const textColor = isSolidVariant ? "#ffffff" : undefined;
+
   return (
     <div
       className={cn(
-        "rounded-md border bg-card p-2 transition-colors hover:bg-muted/50",
+        "rounded-sm transition-colors overflow-hidden",
         onClick && "cursor-pointer",
+        // Default variant styling
+        variant === "default" && "border bg-card p-2 hover:bg-muted/50",
+        // Solid variant styling (all-day/multi-day events)
+        variant === "solid" && "px-2 py-1.5 hover:opacity-90 border-0",
+        // Timed variant styling (week/day view timed events) - left border with transparent bg
+        variant === "timed" &&
+          "px-2 py-1.5 hover:bg-muted/10 border-l-4 border-0",
         className,
       )}
       onClick={handleClick}
       style={{
-        borderLeftColor: calendarColor,
-        borderLeftWidth: "3px",
+        ...(variant === "default"
+          ? {
+              borderLeftColor: calendarColor,
+              borderLeftWidth: "3px",
+            }
+          : variant === "timed"
+            ? {
+                backgroundColor,
+                borderLeftColor: calendarColor,
+              }
+            : {
+                backgroundColor,
+                color: textColor,
+              }),
       }}
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
@@ -88,9 +132,10 @@ export function EventCard({
       {/* Event Title */}
       <div
         className={cn(
-          "font-medium",
-          mode === "compact" ? "text-xs" : "text-sm",
-          event.isDeleted && "text-muted-foreground/50 line-through",
+          "truncate leading-tight",
+          mode === "compact" ? "text-xs font-semibold" : "text-sm font-medium",
+          variant === "timed" && "text-xs font-semibold",
+          event.isDeleted && "opacity-50 line-through",
         )}
       >
         {event.title}
@@ -98,10 +143,18 @@ export function EventCard({
 
       {/* Event Time and Duration */}
       {showTime && !event.isAllDay && (
-        <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-          <span>{formatTimeInTimezone(startDate)}</span>
+        <div
+          className={cn(
+            "flex items-center gap-1 mt-0.5",
+            variant === "default" && "text-muted-foreground",
+            isSolidVariant && "opacity-80",
+          )}
+        >
+          <span className="text-xs leading-tight">
+            {formatTimeInTimezone(startDate)}
+          </span>
           {showDuration && (
-            <span className="text-muted-foreground/50">
+            <span className="opacity-75 text-xs">
               ({formatDuration(duration)})
             </span>
           )}
@@ -152,7 +205,7 @@ export function EventCard({
           {event.tags.map((tag) => (
             <span
               key={tag}
-              className="rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-700"
+              className="rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground"
             >
               {tag}
             </span>
@@ -265,7 +318,9 @@ export function EventList({
     <div className="space-y-4" data-testid="event-list-grouped">
       {Object.entries(groupedEvents).map(([dateKey, dateEvents]) => (
         <div key={dateKey}>
-          <h3 className="mb-2 text-sm font-medium text-gray-700">{dateKey}</h3>
+          <h3 className="mb-2 text-sm font-medium text-foreground">
+            {dateKey}
+          </h3>
           <div className="space-y-2">
             {dateEvents.map((event) => (
               <EventCard

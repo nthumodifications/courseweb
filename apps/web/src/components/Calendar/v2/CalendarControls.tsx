@@ -74,7 +74,7 @@ export function CalendarControls({
   return (
     <div
       className={cn(
-        "flex items-center justify-between border-b border bg-background px-4 py-3",
+        "flex items-center justify-between bg-background px-4 py-3",
         className,
       )}
       data-testid="calendar-controls"
@@ -83,7 +83,7 @@ export function CalendarControls({
       <div className="flex items-center gap-2">
         <button
           onClick={onToday}
-          className="rounded border border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted/50"
+          className="rounded border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted/50"
           data-testid="calendar-controls-today"
         >
           Today
@@ -143,7 +143,7 @@ export function CalendarControls({
 
       {/* Right: View Switcher */}
       <div
-        className="flex rounded-md border border"
+        className="flex rounded-md border"
         role="group"
         aria-label="Calendar view"
         data-testid="calendar-controls-view-switcher"
@@ -156,7 +156,7 @@ export function CalendarControls({
               "px-3 py-1.5 text-sm font-medium transition-colors",
               index === 0 && "rounded-l-md",
               index === views.length - 1 && "rounded-r-md",
-              index > 0 && "border-l border",
+              index > 0 && "border-l",
               currentView === view.value
                 ? "bg-primary text-white"
                 : "bg-background text-foreground hover:bg-muted/50",
@@ -278,7 +278,7 @@ export function MiniCalendar({
   return (
     <div
       className={cn(
-        "w-full max-w-sm rounded-lg border border bg-background p-4",
+        "w-full max-w-sm rounded-lg border bg-background p-4",
         className,
       )}
       data-testid="mini-calendar"

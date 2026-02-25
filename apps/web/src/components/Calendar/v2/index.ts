@@ -5,6 +5,7 @@
 
 // Main app
 export { CalendarApp } from "./CalendarApp";
+export { CalendarAppWithTimetable } from "./CalendarAppWithTimetable";
 
 // Views
 export { WeekView, MonthView, DayView, AgendaView } from "./CalendarViews";

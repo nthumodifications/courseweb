@@ -168,15 +168,16 @@ export const initializeRxDB = async () => {
             storage: getRxStorageDexie(),
           })
         : getRxStorageDexie();
-    // Try to remove existing database first in development
-    if (process.env.NODE_ENV === "development") {
-      try {
-        await removeRxDatabase("nthumods-calendar", storage);
-        console.log("[RxDB] Removed existing database");
-      } catch (e) {
-        // Database doesn't exist, that's fine
-      }
-    }
+    // Database persistence enabled - not clearing on reload
+    // Note: If you need to clear the database for testing, manually delete it from DevTools > Application > IndexedDB
+    // if (process.env.NODE_ENV === "development") {
+    //   try {
+    //     await removeRxDatabase("nthumods-calendar", storage);
+    //     console.log("[RxDB] Removed existing database");
+    //   } catch (e) {
+    //     // Database doesn't exist, that's fine
+    //   }
+    // }
 
     const db = await createRxDatabase({
       name: "nthumods-calendar",

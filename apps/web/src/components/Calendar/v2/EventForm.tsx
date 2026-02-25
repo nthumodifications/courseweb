@@ -12,6 +12,8 @@ import { format } from "date-fns";
 import type { CalendarEvent } from "@/config/rxdb-calendar-v2";
 import { RecurrenceSelector } from "./RecurrenceSelector";
 
+const DEFAULT_EVENT_DURATION_MS = 60 * 60 * 1000; // 1 hour in milliseconds
+
 // Form validation schema
 const eventFormSchema = z
   .object({
@@ -117,7 +119,7 @@ export function EventForm({
           startTime: format(defaultDate, "HH:mm"),
           endDate: format(defaultDate, "yyyy-MM-dd"),
           endTime: format(
-            new Date(defaultDate.getTime() + 60 * 60 * 1000),
+            new Date(defaultDate.getTime() + DEFAULT_EVENT_DURATION_MS),
             "HH:mm",
           ),
           tags: [],

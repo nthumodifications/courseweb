@@ -290,7 +290,7 @@ export function CalendarApp() {
         <div className="flex flex-col flex-1">
           {/* Header with controls */}
           <div className="border-b bg-background p-4">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-2">
               <h1 className="text-2xl font-bold text-foreground">Calendar</h1>
               <div className="flex items-center gap-2">
                 <CalendarSearch
@@ -319,7 +319,7 @@ export function CalendarApp() {
           </div>
 
           {/* Calendar view */}
-          <div className="flex-1 overflow-auto bg-muted/20">
+          <div className="flex-1 overflow-auto">
             {eventsLoading ? (
               <div className="flex items-center justify-center h-full">
                 <div className="text-muted-foreground">Loading events...</div>
@@ -354,6 +354,7 @@ export function CalendarApp() {
                     events={events}
                     onEventClick={handleEventClick}
                     getCalendarColor={getCalendarColor}
+                    onTimeSlotClick={handleTimeSlotClick}
                   />
                 )}
 

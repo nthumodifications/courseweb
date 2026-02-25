@@ -6,11 +6,11 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { CalendarApp } from "./v2";
+import { CalendarAppWithTimetable } from "./v2/CalendarAppWithTimetable";
+import { CalendarMigrationDialog } from "./CalendarMigrationDialog";
 import { useRxDB } from "rxdb-hooks";
 import { useCalendars } from "@/lib/hooks/use-calendars";
 import { useCalendarUIStore } from "@/lib/store/calendar-ui-store";
-import "@/lib/utils/clear-calendar-db"; // Load clear DB utility
 
 export default function CalendarPageV2() {
   const db = useRxDB();
@@ -84,8 +84,9 @@ export default function CalendarPageV2() {
   }
 
   return (
-    <div className="h-screen flex flex-col">
-      <CalendarApp />
+    <div className="flex flex-col overflow-hidden -mt-4 md:-ml-2 h-[calc(100vh-var(--header-height))]">
+      <CalendarMigrationDialog />
+      <CalendarAppWithTimetable />
     </div>
   );
 }
