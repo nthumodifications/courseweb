@@ -89,12 +89,7 @@ const app = new Hono()
   .use(
     "*",
     cors({
-      origin: [
-        "http://localhost:3000",
-        "https://nthumods.com",
-        "https://course.nthumods.com",
-        "https://courseweb-git-feat-new-auth-api-nthumods.vercel.app",
-      ],
+      origin: ["*"],
       allowHeaders: ["Authorization", "Content-Type"],
       allowMethods: ["GET", "POST"],
       credentials: true,
@@ -641,13 +636,13 @@ const app = new Hono()
         ]);
 
         /*
-        OPTIONAL. Access Token hash value. 
-        Its value is the base64url encoding of the left-most half of the hash 
-        of the octets of the ASCII representation of the access_token value, 
-        where the hash algorithm used is the hash algorithm used in the 
-        alg parameter of the ID Token's JWS [JWS] header. 
-        For instance, if the alg is RS256, hash the access_token value with SHA-256, 
-        then take the left-most 128 bits and base64url encode them. 
+        OPTIONAL. Access Token hash value.
+        Its value is the base64url encoding of the left-most half of the hash
+        of the octets of the ASCII representation of the access_token value,
+        where the hash algorithm used is the hash algorithm used in the
+        alg parameter of the ID Token's JWS [JWS] header.
+        For instance, if the alg is RS256, hash the access_token value with SHA-256,
+        then take the left-most 128 bits and base64url encode them.
         The at_hash value is a case sensitive string.
         */
         const at_hash = await generateAtHash(accessToken);
