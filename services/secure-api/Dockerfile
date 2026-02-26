@@ -13,7 +13,15 @@ COPY turbo.json ./
 COPY packages/shared/package.json ./packages/shared/package.json
 COPY packages/database/package.json ./packages/database/package.json
 COPY packages/eslint-config/package.json ./packages/eslint-config/package.json
+COPY packages/api-types/package.json ./packages/api-types/package.json
+COPY packages/tailwind-config/package.json ./packages/tailwind-config/package.json
+COPY packages/ui/package.json ./packages/ui/package.json
 COPY services/secure-api/package.json ./services/secure-api/package.json
+COPY services/api/package.json ./services/api/package.json
+COPY apps/web/package.json ./apps/web/package.json
+COPY tools/build-scripts/package.json ./tools/build-scripts/package.json
+COPY tools/data-sync/package.json ./tools/data-sync/package.json
+COPY tools/dict-manager/package.json ./tools/dict-manager/package.json
 
 # Install dependencies
 RUN bun install --frozen-lockfile
