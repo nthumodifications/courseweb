@@ -1,6 +1,5 @@
 "use client";
 import Timetable from "@/components/Timetable/Timetable";
-import { NextPage } from "next";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { useLocalStorage } from "usehooks-ts";
 import SemesterSwitcher from "@/components/Timetable/SemesterSwitcher";
@@ -13,7 +12,7 @@ import { semesterInfo } from "@courseweb/shared";
 import { useHeaderPortal } from "@/components/Portal/HeaderPortal";
 import { useEffect } from "react";
 
-const TimetablePage: NextPage = () => {
+const TimetablePage = () => {
   const { getSemesterCourses, semester, setSemester, colorMap } =
     useUserTimetable();
   const [vertical, setVertical] = useLocalStorage("timetable_vertical", true);

@@ -1,20 +1,19 @@
 "use client";
 import * as I from "lucide-react";
 import { FC, useEffect, useMemo } from "react";
-import { usePathname, useRouter } from "next/navigation";
-import { Route } from "next";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useSettings } from "@/hooks/contexts/settings";
 import useDictionary from "@/dictionaries/useDictionary";
 import { Separator } from "@courseweb/ui";
 
 const BottomNav: FC = () => {
-  const pathname = usePathname();
+  const { pathname } = useLocation();
   const { language } = useSettings();
   const dict = useDictionary();
-  const router = useRouter();
+  const navigate = useNavigate();
   const links: {
     title: string;
-    href: Route;
+    href: string;
     icon: JSX.Element;
     color: string;
   }[] = useMemo(
@@ -48,10 +47,8 @@ const BottomNav: FC = () => {
   );
 
   useEffect(() => {
-    links.forEach((link) => {
-      router.prefetch(link.href);
-    });
-  }, [links, router]);
+    // prefetch is not available in react-router-dom
+  }, [links]);
 
   return (
     <div className="fixed w-full bottom-0 md:hidden flex-col h-[5rem] bg-background z-50 flex">
@@ -61,7 +58,7 @@ const BottomNav: FC = () => {
           <div
             className={`flex flex-col items-center gap-1 ${link.href == pathname ? "text-primary" : "text-gray-400"}`}
             key={index}
-            onClick={() => router.push(link.href)}
+            onClick={() => navigate(link.href)}
           >
             <span className="w-6 h-6">{link.icon}</span>
             <span className="text-xs font-semibold select-none">

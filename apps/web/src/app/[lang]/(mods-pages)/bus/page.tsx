@@ -19,7 +19,7 @@ import { GreenLineIcon } from "@/components/BusIcons/GreenLineIcon";
 import { NandaLineIcon } from "@/components/BusIcons/NandaLineIcon";
 import { Route1LineIcon } from "@/components/BusIcons/Route1LineIcon";
 import { Route2LineIcon } from "@/components/BusIcons/Route2LineIcon";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { getTimeOnDate } from "@/helpers/bus";
 import useDictionary from "@/dictionaries/useDictionary";
 import OpenCollectiveSponsorBanner from "@/components/Sponsorship/OpenCollectiveSponsorBanner";
@@ -71,7 +71,7 @@ const BusListingItem = ({
     return arrival;
   }, [arrival, refTime, dict]);
 
-  const router = useRouter();
+  const navigate = useNavigate();
   const route =
     line == "nanda" || line == "route1" || line == "route2" ? "nanda" : "main";
 
@@ -81,7 +81,7 @@ const BusListingItem = ({
     direction == "up" ? 0 : line == "green" ? 5 : line == "red" ? 4 : 0;
 
   const handleItemClick = () => {
-    router.push(
+    navigate(
       `/${language}/bus/${route}/${line == "nanda" || line == "route1" || line == "route2" ? `${line}_${direction}` : line}?return_url=/${language}/bus?tab=${tab}`,
     );
   };
@@ -119,7 +119,7 @@ const BusListingItem = ({
       <div className="flex flex-row gap-2">
         <div
           className="justify-center items-center gap-2 inline-flex cursor-pointer"
-          onClick={() => router.push(`/${language}/bus/${route}`)}
+          onClick={() => navigate(`/${language}/bus/${route}`)}
         >
           <Timer className="w-4 h-4" />
           <div className="text-center text-sm font-medium">
@@ -143,9 +143,9 @@ const BusPage = () => {
   const { language } = useSettings();
   const time = useTime();
   const dict = useDictionary();
-  const searchParams = useSearchParams();
+  const [searchParams] = useSearchParams();
   const [tab, setTab] = useState("north_gate");
-  const router = useRouter();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (searchParams.has("tab")) {
@@ -446,7 +446,7 @@ const BusPage = () => {
 
   const handleTabChange = (tab: string) => {
     setTab(tab);
-    router.replace(`?tab=${tab}`);
+    navigate(`?tab=${tab}`, { replace: true });
   };
 
   if (isLoading) {

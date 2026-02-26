@@ -7,12 +7,12 @@ import {
   ResizablePanelGroup,
 } from "@courseweb/ui";
 import { useMediaQuery } from "usehooks-ts";
-import { InstantSearchNext } from "react-instantsearch-nextjs";
+import { InstantSearch } from "react-instantsearch";
 import { useMemo } from "react";
 
 const searchClient = algoliasearch(
-  process.env.NEXT_PUBLIC_ALGOLIA_APP_ID!,
-  process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY!,
+  import.meta.env.VITE_ALGOLIA_APP_ID!,
+  import.meta.env.VITE_ALGOLIA_SEARCH_KEY!,
 );
 const sessionStorageCache = createInfiniteHitsSessionStorageCache();
 
@@ -37,7 +37,7 @@ const CourseSearchContainer = () => {
   );
 
   return (
-    <InstantSearchNext
+    <InstantSearch
       searchClient={searchClient}
       indexName="nthu_courses"
       initialUiState={initialUiState}
@@ -69,7 +69,7 @@ const CourseSearchContainer = () => {
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>
-    </InstantSearchNext>
+    </InstantSearch>
   );
 };
 

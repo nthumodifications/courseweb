@@ -5,7 +5,7 @@ import { Button } from "@courseweb/ui";
 import { Badge } from "@courseweb/ui";
 import FullLogo from "./Branding/FullLogo";
 import NTHUModsLogo from "./Branding/NTHUModsLogo";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { getYear } from "date-fns";
 
 const Footer = () => {
@@ -25,37 +25,37 @@ const Footer = () => {
         </div>
         <div className="flex gap-2">
           <Button className="h-8 w-8" variant="ghost" size="icon" asChild>
-            <Link
+            <a
               target="_blank"
               href="https://github.com/nthumodifications/courseweb"
             >
               <Github size="20" className="text-muted-foreground" />
-            </Link>
+            </a>
           </Button>
           <Button className="h-8 w-8" variant="ghost" size="icon" asChild>
-            <Link target="_blank" href="mailto:nthumods@gmail.com">
+            <a target="_blank" href="mailto:nthumods@gmail.com">
               <Mail size="20" className="text-muted-foreground" />
-            </Link>
+            </a>
           </Button>
           <Button className="h-8 w-8" variant="ghost" size="icon" asChild>
-            <Link target="_blank" href="https://www.instagram.com/nthumods">
+            <a target="_blank" href="https://www.instagram.com/nthumods">
               <Instagram size="20" className="text-muted-foreground" />
-            </Link>
+            </a>
           </Button>
           <Button className="h-8 w-8" variant="ghost" size="icon" asChild>
-            <Link target="_blank" href="https://facebook.com/nthumods">
+            <a target="_blank" href="https://facebook.com/nthumods">
               <Facebook size="20" className="text-muted-foreground" />
-            </Link>
+            </a>
           </Button>
         </div>
       </div>
 
       <div className="flex flex-row text-muted-foreground text-sm [&>a]:mr-4 [&>a]:w-max flex-wrap">
-        <Link href={"/contribute"}>Contribute</Link>
-        <Link href={"/issues"}>Report an Issue</Link>
-        <Link href={"/team"}>Team</Link>
-        <Link href={"/privacy-policy"}>Privacy Policy</Link>
-        <Link href={"/proxy-login"}>Proxy Login</Link>
+        <Link to={"/contribute"}>Contribute</Link>
+        <Link to={"/issues"}>Report an Issue</Link>
+        <Link to={"/team"}>Team</Link>
+        <Link to={"/privacy-policy"}>Privacy Policy</Link>
+        <Link to={"/proxy-login"}>Proxy Login</Link>
       </div>
 
       <div className="flex flex-col gap-1">

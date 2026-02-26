@@ -1,5 +1,5 @@
 "use client";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import useDictionary from "@/dictionaries/useDictionary";
 import { CalendarPlus, ArrowRight } from "lucide-react";
@@ -23,7 +23,7 @@ export const NoClassPickedReminder = () => {
         <h3 className="font-medium text-purple-800 dark:text-purple-300">
           {dict.today.noclass_reminder.reminder}
         </h3>
-        <Link href={`/${language}/courses`} className="inline-block">
+        <Link to={`/${language}/courses`} className="inline-block">
           <Button
             variant="outline"
             size="sm"

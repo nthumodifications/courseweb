@@ -1,20 +1,28 @@
-import Script from "next/script";
+"use client";
+import { useEffect } from "react";
+import { useParams } from "react-router-dom";
 import Footer from "@/components/Footer";
 
+const useMermaid = () => {
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.type = "module";
+    script.textContent = `
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({startOnLoad: true});
+      mermaid.contentLoaded();
+    `;
+    document.body.appendChild(script);
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+};
+
 const ProxyLoginExplainerZH = () => {
+  useMermaid();
   return (
     <div className="px-4 py-8">
-      <Script
-        id="mermaid"
-        type="module"
-        strategy="afterInteractive"
-        dangerouslySetInnerHTML={{
-          __html: `
-                import mermaid from "https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.esm.min.mjs";
-                mermaid.initialize({startOnLoad: true});
-                mermaid.contentLoaded();`,
-        }}
-      />
       <div id="hero" className="flex flex-col gap-4 py-8">
         <h1 className="text-5xl font-bold">NTHUMods 代理登入說明</h1>
         <p className="text-gray-600 dark:text-gray-400">更新時間: 2025/03/04</p>
@@ -147,19 +155,9 @@ const ProxyLoginExplainerZH = () => {
 
 // English Version
 const ProxyLoginExplainerEN = () => {
+  useMermaid();
   return (
     <div className="px-4 py-8">
-      <Script
-        id="mermaid"
-        type="module"
-        strategy="afterInteractive"
-        dangerouslySetInnerHTML={{
-          __html: `
-                import mermaid from "https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.esm.min.mjs";
-                mermaid.initialize({startOnLoad: true});
-                mermaid.contentLoaded();`,
-        }}
-      />
       <div id="hero" className="flex flex-col gap-4 py-8">
         <h1 className="text-5xl font-bold">NTHUMods Proxy Login Explained</h1>
         <p className="text-gray-600 dark:text-gray-400">
@@ -316,21 +314,10 @@ const ProxyLoginExplainerEN = () => {
     </div>
   );
 };
-type LangProps = {
-  params: {
-    lang: string;
-  };
-};
-
-const ProxyLoginExplainerPage = ({ params }: LangProps) => {
+const ProxyLoginExplainerPage = () => {
+  const { lang } = useParams<{ lang: string }>();
   return (
-    <>
-      {params.lang === "zh" ? (
-        <ProxyLoginExplainerZH />
-      ) : (
-        <ProxyLoginExplainerEN />
-      )}
-    </>
+    <>{lang === "zh" ? <ProxyLoginExplainerZH /> : <ProxyLoginExplainerEN />}</>
   );
 };
 

@@ -1,12 +1,10 @@
 "use client";
 import useDictionary from "@/dictionaries/useDictionary";
 import { ArrowRight } from "lucide-react";
-import Link from "next/link";
-
 const OpenCollectiveSponsorBanner = () => {
   const dict = useDictionary();
   return (
-    <Link
+    <a
       href="https://opencollective.com/nthumods"
       target="_blank"
       rel="noopener noreferrer"
@@ -26,7 +24,7 @@ const OpenCollectiveSponsorBanner = () => {
         </div>
         <ArrowRight size={14} className="text-gray-400" />
       </div>
-    </Link>
+    </a>
   );
 };
 

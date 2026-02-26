@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogTrigger } from "@courseweb/ui";
 import { ScrollArea } from "@courseweb/ui";
 import { Button } from "@courseweb/ui";
 import AppItem from "./AppItem";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import SponsorshipBanner from "@/components/Sponsorship/SponsorshipBanner";
 
 const AppList = () => {

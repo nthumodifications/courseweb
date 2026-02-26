@@ -1,7 +1,7 @@
 import { GripVertical, Plus, Heart, Minus } from "lucide-react";
 import { useSettings } from "@/hooks/contexts/settings";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useMemo } from "react";
 import { hasTimes } from "@/helpers/courses";
@@ -35,8 +35,8 @@ import client from "@/config/api";
 
 const TimetableCourseListItem = ({ course }: { course: MinimalCourse }) => {
   const { language } = useSettings();
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const { addCourse, deleteCourse, isCourseSelected } = useUserTimetable();
 
@@ -71,7 +71,7 @@ const TimetableCourseListItem = ({ course }: { course: MinimalCourse }) => {
       <div
         className="flex flex-col flex-1"
         onClick={() =>
-          router.push(
+          navigate(
             `/${language}/courses/${course.raw_id}?${searchParams.toString()}`,
           )
         }
@@ -142,7 +142,7 @@ const TimetableCourseListItem = ({ course }: { course: MinimalCourse }) => {
 export const FavouritesCourseList = ({}: {}) => {
   const { language } = useSettings();
   const dict = useDictionary();
-  const router = useRouter();
+  const navigate = useNavigate();
   const [favourites, setFavourites] = useLocalStorage<string[]>(
     "course_favourites",
     [],

@@ -431,7 +431,7 @@ const GenericIssueForm = ({ children }: { children?: ReactNode }) => {
               <p className="text-xs">{"Markdown GFM enabled!"}</p>
             </div>
             <Turnstile
-              sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
+              sitekey={import.meta.env.VITE_TURNSTILE_SITE_KEY!}
               onVerify={(token) => setToken(token)}
               size="flexible"
             />

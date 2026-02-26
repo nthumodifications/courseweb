@@ -1,7 +1,7 @@
 "use client";
 import { format } from "date-fns";
 import { AlertTriangle, ChevronLeft, ArrowRight } from "lucide-react";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import DownloadSyllabus from "./DownloadSyllabus";
 import { Fade } from "@courseweb/ui";
 import { toPrettySemester } from "@/helpers/semester";
@@ -23,7 +23,7 @@ import { Badge } from "@courseweb/ui";
 import { CourseDefinition } from "@/config/supabase";
 import { ScrollArea, ScrollBar } from "@courseweb/ui";
 import { timetableColors } from "@courseweb/shared";
-import dynamicFn from "next/dynamic";
+import { lazy, Suspense } from "react";
 import { Language } from "@/types/settings";
 import {
   Table,
@@ -43,10 +43,10 @@ import useDictionary from "@/dictionaries/useDictionary";
 import { useQuery } from "@tanstack/react-query";
 import CourseDetailsSkeleton from "./CourseDetailsSkeleton";
 
-const PDFViewerDynamic = dynamicFn(
+const PDFViewerDynamic = lazy(
   () => import("@/components/CourseDetails/PDFViewer"),
 );
-const SelectCourseButtonDynamic = dynamicFn(
+const SelectCourseButtonDynamic = lazy(
   () => import("@/components/Courses/SelectCourseButton"),
 );
 
@@ -154,7 +154,7 @@ const CourseDetailContainer = ({
           <h1 className="text-2xl font-bold">404</h1>
           <p className="text-xl">找不到課程</p>
 
-          <Link href="../">
+          <Link to="../">
             <Button size="sm" variant="outline">
               <ChevronLeft /> Back
             </Button>
@@ -223,7 +223,9 @@ const CourseDetailContainer = ({
               <CrossDisciplineTagList course={course} />
             </div>
             <div className="hidden md:flex flex-col gap-2 absolute top-0 right-0 mt-4 mr-4">
-              <SelectCourseButtonDynamic courseId={course.raw_id} />
+              <Suspense fallback={null}>
+                <SelectCourseButtonDynamic courseId={course.raw_id} />
+              </Suspense>
               <ShareCourseButton
                 link={`https://nthumods.com/courses/${course.raw_id}`}
                 displayName={`${course.name_zh} ${course.teacher_zh.join(",")}`}
@@ -240,7 +242,9 @@ const CourseDetailContainer = ({
                 displayName={`${course.name_zh} ${course.teacher_zh.join(",")}`}
               />
               <div className="flex-1 flex flex-col">
-                <SelectCourseButtonDynamic courseId={course.raw_id} />
+                <Suspense fallback={null}>
+                  <SelectCourseButtonDynamic courseId={course.raw_id} />
+                </Suspense>
               </div>
             </div>
           </div>
@@ -266,9 +270,11 @@ const CourseDetailContainer = ({
                     {course.course_syllabus!.content ?? (
                       <div className="flex flex-col gap-2">
                         <DownloadSyllabus courseId={course.raw_id} />
-                        <PDFViewerDynamic
-                          file={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/syllabus/${encodeURIComponent(course.raw_id)}.pdf`}
-                        />
+                        <Suspense fallback={null}>
+                          <PDFViewerDynamic
+                            file={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/syllabus/${encodeURIComponent(course.raw_id)}.pdf`}
+                          />
+                        </Suspense>
                       </div>
                     )}
                   </p>
@@ -367,7 +373,7 @@ const CourseDetailContainer = ({
                   </h3>
                   <Button variant="ghost" asChild>
                     <Link
-                      href={`/${lang}/courses?nthu_courses%5BrefinementList%5D%5Bdepartment%5D%5B0%5D=${course.department}&nthu_courses%5Bquery%5D=${course.name_zh} ${course.teacher_zh.join(" ")}`}
+                      to={`/${lang}/courses?nthu_courses%5BrefinementList%5D%5Bdepartment%5D%5B0%5D=${course.department}&nthu_courses%5Bquery%5D=${course.name_zh} ${course.teacher_zh.join(" ")}`}
                     >
                       查看更多 <ArrowRight className="ml-2 w-4 h-4" />
                     </Link>
@@ -415,7 +421,7 @@ const CourseDetailContainer = ({
                         </TableCell>
                         <TableCell className="p-0">
                           <Button variant="ghost" size="icon" asChild>
-                            <Link href={`/${lang}/courses/${m.raw_id}`}>
+                            <Link to={`/${lang}/courses/${m.raw_id}`}>
                               <ArrowRight size={16} />
                             </Link>
                           </Button>
@@ -490,7 +496,7 @@ const CourseDetailContainer = ({
                     {course.compulsory_for?.map((m, index) => (
                       <Link
                         key={index}
-                        href={`/${lang}/courses?nthu_courses%5BrefinementList%5D%5Bcompulsory_for%5D%5B0%5D=${course.compulsory_for}`}
+                        to={`/${lang}/courses?nthu_courses%5BrefinementList%5D%5Bcompulsory_for%5D%5B0%5D=${course.compulsory_for}`}
                       >
                         <Badge variant="outline">
                           {getFormattedClassCode(m, course.semester, lang)}
@@ -509,7 +515,7 @@ const CourseDetailContainer = ({
                     {course.elective_for?.map((m, index) => (
                       <Link
                         key={index}
-                        href={`/${lang}/courses?nthu_courses%5BrefinementList%5D%5Belective_for%5D%5B0%5D=${course.elective_for}`}
+                        to={`/${lang}/courses?nthu_courses%5BrefinementList%5D%5Belective_for%5D%5B0%5D=${course.elective_for}`}
                       >
                         <Badge variant="outline">
                           {getFormattedClassCode(m, course.semester, lang)}
@@ -528,7 +534,7 @@ const CourseDetailContainer = ({
                     {course.first_specialization?.map((m, index) => (
                       <Link
                         key={index}
-                        href={`/${lang}/courses?nthu_courses%5BrefinementList%5D%5Bfirst_specialization%5D%5B0%5D=${course.first_specialization}`}
+                        to={`/${lang}/courses?nthu_courses%5BrefinementList%5D%5Bfirst_specialization%5D%5B0%5D=${course.first_specialization}`}
                       >
                         <Badge variant="outline">{m}</Badge>
                       </Link>
@@ -545,7 +551,7 @@ const CourseDetailContainer = ({
                     {course.second_specialization?.map((m, index) => (
                       <Link
                         key={index}
-                        href={`/${lang}/courses?nthu_courses%5BrefinementList%5D%5Bsecond_specialization%5D%5B0%5D=${course.second_specialization}`}
+                        to={`/${lang}/courses?nthu_courses%5BrefinementList%5D%5Bsecond_specialization%5D%5B0%5D=${course.second_specialization}`}
                       >
                         <Badge variant="outline">{m}</Badge>
                       </Link>

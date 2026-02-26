@@ -10,9 +10,9 @@ import {
 } from "lucide-react";
 import { useSettings } from "@/hooks/contexts/settings";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import useDictionary from "@/dictionaries/useDictionary";
-import { useMemo } from "react";
+import { lazy, Suspense, useMemo } from "react";
 import useSyncedStorage from "@/hooks/useSyncedStorage";
 import {
   hasConflictingTimeslots,
@@ -20,7 +20,6 @@ import {
   hasTimes,
 } from "@/helpers/courses";
 import { MinimalCourse, RawCourseID } from "@/types/courses";
-import dynamic from "next/dynamic";
 import { Button } from "@courseweb/ui";
 import {
   DndContext,
@@ -61,31 +60,43 @@ import {
   SelectValue,
 } from "@courseweb/ui";
 
-export const DownloadTimetableDialogDynamic = dynamic(
+const DownloadTimetableDialogLazy = lazy(
   () => import("./DownloadTimetableDialog"),
-  {
-    ssr: false,
-    loading: () => (
+);
+export const DownloadTimetableDialogDynamic = () => (
+  <Suspense
+    fallback={
       <Button variant="outline" disabled>
         <Loader2 className="w-4 h-4 animate-spin" />
       </Button>
-    ),
-  },
+    }
+  >
+    <DownloadTimetableDialogLazy />
+  </Suspense>
 );
-export const ShareSyncTimetableDialogDynamic = dynamic(
+
+const ShareSyncTimetableDialogLazy = lazy(
   () => import("./ShareSyncTimetableDialog"),
-  {
-    ssr: false,
-    loading: () => (
+);
+export const ShareSyncTimetableDialogDynamic = () => (
+  <Suspense
+    fallback={
       <Button variant="outline" disabled>
         <Loader2 className="w-4 h-4 animate-spin" />
       </Button>
-    ),
-  },
+    }
+  >
+    <ShareSyncTimetableDialogLazy />
+  </Suspense>
 );
-export const CourseSearchContainerDynamic = dynamic(
+
+const CourseSearchContainerLazy = lazy(
   () => import("@/app/[lang]/(mods-pages)/courses/CourseSearchContainer"),
-  { ssr: false, loading: () => <Loader2 className="w-4 h-4 animate-spin" /> },
+);
+export const CourseSearchContainerDynamic = () => (
+  <Suspense fallback={<Loader2 className="w-4 h-4 animate-spin" />}>
+    <CourseSearchContainerLazy />
+  </Suspense>
 );
 
 interface DisplaySettings {
@@ -258,7 +269,7 @@ export const TimetableCourseList = ({
 }) => {
   const { language } = useSettings();
   const dict = useDictionary();
-  const router = useRouter();
+  const navigate = useNavigate();
 
   const { getSemesterCourses, courses, addCourse, colorMap, setCourses } =
     useUserTimetable();
@@ -388,7 +399,7 @@ export const TimetableCourseList = ({
             <div className="flex flex-row gap-2">
               <Button
                 variant="outline"
-                onClick={() => router.push(`/${language}/courses`)}
+                onClick={() => navigate(`/${language}/courses`)}
               >
                 <Search className="w-4 h-4" /> {dict.timetable.all_courses}
               </Button>

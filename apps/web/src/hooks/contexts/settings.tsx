@@ -1,5 +1,5 @@
 "use client";
-import { useParams, usePathname, useRouter } from "next/navigation";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 import {
   FC,
   PropsWithChildren,
@@ -39,8 +39,9 @@ type HeadlessAISStorage =
     };
 const useSettingsProvider = () => {
   const language = useParams().lang as Language;
-  const router = useRouter();
-  const pathname = usePathname();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const pathname = location.pathname;
   const [cookies, setCookie, removeCookie] = useCookies([
     "theme",
     "locale",
@@ -64,7 +65,7 @@ const useSettingsProvider = () => {
       path: "/",
       expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
     });
-    router.push(`/${newLang}/` + pathname.split("/").slice(2).join("/"));
+    navigate(`/${newLang}/` + pathname.split("/").slice(2).join("/"));
   };
 
   //check if cookies 'locale' exists, else set it

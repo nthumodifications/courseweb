@@ -1,5 +1,4 @@
 import { Fade } from "@courseweb/ui";
-import Link from "next/link";
 import { PropsWithChildren } from "react";
 
 export const metadata = {
@@ -16,7 +15,7 @@ export default function ClientLayout({ children }: PropsWithChildren<{}>) {
         {children}
         <div className="text-xs text-center text-muted-foreground pt-10">
           資料來自
-          <Link
+          <a
             href="https://affairs.site.nthu.edu.tw/p/412-1165-20979.php?Lang=zh-tw"
             target="_blank"
             rel="noopener noreferrer"
@@ -24,9 +23,9 @@ export default function ClientLayout({ children }: PropsWithChildren<{}>) {
           >
             {" "}
             南大公車{" "}
-          </Link>
+          </a>
           及
-          <Link
+          <a
             href="https://affairs.site.nthu.edu.tw/p/412-1165-20978.php?Lang=zh-tw"
             target="_blank"
             rel="noopener noreferrer"
@@ -34,7 +33,7 @@ export default function ClientLayout({ children }: PropsWithChildren<{}>) {
           >
             {" "}
             校本部公車{" "}
-          </Link>
+          </a>
           ，如有錯誤請在回饋回報。
         </div>
       </>

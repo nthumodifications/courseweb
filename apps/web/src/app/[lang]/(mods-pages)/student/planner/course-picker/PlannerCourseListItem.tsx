@@ -2,7 +2,7 @@
 import { CourseDefinition, CourseSyllabusView } from "@/config/supabase";
 import useDictionary from "@/dictionaries/useDictionary";
 import { FC, memo } from "react";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { Button } from "@courseweb/ui";
 import { useSettings } from "@/hooks/contexts/settings";
 import {
@@ -10,7 +10,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@courseweb/ui";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams } from "react-router-dom";
 import { ChevronDown, Minus, Plus } from "lucide-react";
 import CourseTagList from "@/components/Courses/CourseTagsList";
 import { MinimalCourse } from "@/types/courses";
@@ -26,7 +26,7 @@ const PlannerCourseListItem: FC<PlannerCourseListItemProps> = memo(
   ({ course, hasTaken = false, onAdd, onRemove }) => {
     const dict = useDictionary();
     const { language } = useSettings();
-    const searchParams = useSearchParams();
+    const [searchParams] = useSearchParams();
 
     const courseTitle =
       language === "zh"
@@ -60,7 +60,7 @@ const PlannerCourseListItem: FC<PlannerCourseListItemProps> = memo(
               </div>
               <Link
                 className="font-semibold"
-                href={`/${language}/courses/${course.raw_id}?${searchParams.toString()}`}
+                to={`/${language}/courses/${course.raw_id}?${searchParams.toString()}`}
               >
                 {courseTitle}
               </Link>

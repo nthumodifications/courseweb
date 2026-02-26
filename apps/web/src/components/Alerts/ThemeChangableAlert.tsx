@@ -1,5 +1,5 @@
 import useDictionary from "@/dictionaries/useDictionary";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import React from "react";
 import { Info, X } from "lucide-react";
 import { useLocalStorage } from "usehooks-ts";
@@ -16,7 +16,7 @@ const ThemeChangableAlert = () => {
       <Info className="h-4 w-4" />
       <AlertTitle>{dict.alerts.TimetableCourseList.text}</AlertTitle>
       <AlertDescription>
-        <Link href="/settings">
+        <Link to="/settings">
           <Button
             variant="ghost"
             color="success"

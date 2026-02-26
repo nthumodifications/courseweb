@@ -1,5 +1,5 @@
 import { Codepen, Database, Globe } from "lucide-react";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import EmptyIssueForm from "./EmptyIssueForm";
 import { Separator } from "@courseweb/ui";
 import Footer from "@/components/Footer";
@@ -16,7 +16,7 @@ const IssueButton = ({
   href: string;
 }) => {
   return (
-    <Link href={href}>
+    <Link to={href}>
       <div className="flex flex-col flex-1 p-5 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800">
         <div className="flex-1 py-8 items-center">{icon}</div>
         <h3 className="text-2xl">{title}</h3>

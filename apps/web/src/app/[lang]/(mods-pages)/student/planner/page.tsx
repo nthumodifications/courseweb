@@ -10,7 +10,7 @@ import {
 } from "@courseweb/ui";
 import { v4 as uuidv4 } from "uuid";
 import { useRxCollection } from "rxdb-hooks";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 
 // Import data functions
 import {
@@ -101,7 +101,7 @@ function GraduationPlanner() {
   >(null);
   const [showBulkMenu, setShowBulkMenu] = useState(false);
 
-  const router = useRouter();
+  const navigate = useNavigate();
 
   // RxDB collections
   const foldersCol = useRxCollection<FolderDocType>("folders");

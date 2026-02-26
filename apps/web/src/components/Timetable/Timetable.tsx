@@ -18,7 +18,7 @@ import {
   useState,
 } from "react";
 import TimetableSlotHorizontal from "@/components/Timetable/TimetableSlotHorizontal";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { useSettings } from "@/hooks/contexts/settings";
 import { BlankTimeslotBody } from "./BlankTimeslotBody";
 

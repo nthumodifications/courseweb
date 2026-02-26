@@ -1,7 +1,5 @@
 import useDictionary from "@/dictionaries/useDictionary";
 import { Button } from "@courseweb/ui";
-import Link from "next/link";
-
 const Dev = () => {
   const dict = useDictionary();
 
@@ -13,9 +11,9 @@ const Dev = () => {
       <span className="font-bold text-2xl">{dict.help.dev.title}</span>
       <span className="">{dict.help.dev.description}</span>
       <div>
-        <Link target="_blank" href="https://forms.gle/LKYiVhLVwRGL44pz6">
+        <a target="_blank" href="https://forms.gle/LKYiVhLVwRGL44pz6">
           <Button variant="outline">{dict.help.dev.feedback}</Button>
-        </Link>
+        </a>
       </div>
     </div>
   );

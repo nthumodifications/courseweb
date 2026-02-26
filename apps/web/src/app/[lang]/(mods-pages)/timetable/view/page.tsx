@@ -1,8 +1,6 @@
 "use client";
 import Timetable from "@/components/Timetable/Timetable";
-import { NextPage } from "next";
-import { useRouter } from "next/navigation";
-import { useSearchParams } from "next/navigation";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import supabase from "@/config/supabase";
 import { createTimetableFromCourses } from "@/helpers/timetable";
 import { MinimalCourse } from "@/types/courses";
@@ -23,9 +21,9 @@ import { useQuery } from "@tanstack/react-query";
 import { Separator } from "@courseweb/ui";
 import client from "@/config/api";
 
-const ViewTimetablePage: NextPage = () => {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+const ViewTimetablePage = () => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { currentColors, setCourses, setColorMap } = useUserTimetable();
   const [semester, setSemester] = useState<string>(lastSemester.id);
   const colorMap = JSON.parse(
@@ -33,7 +31,7 @@ const ViewTimetablePage: NextPage = () => {
   );
 
   const courseCodes = useMemo(() => {
-    if (searchParams.size > 0) {
+    if (searchParams.toString().length > 0) {
       //get all entries with the key 'semester_{semesterId}'
       const courseCodes: { [sem: string]: string[] } = {};
       searchParams.forEach((value, key) => {
@@ -47,7 +45,10 @@ const ViewTimetablePage: NextPage = () => {
     }
   }, [searchParams]);
 
-  if (!courseCodes) router.back();
+  if (!courseCodes) {
+    navigate(-1);
+    return null;
+  }
 
   const {
     data: courses = [],
@@ -78,7 +79,7 @@ const ViewTimetablePage: NextPage = () => {
   const handleImportCourses = () => {
     setCourses(courseCodes!);
     setColorMap(colorMap);
-    router.push("/timetable");
+    navigate("/timetable");
   };
 
   const handleImportThisSemester = () => {
@@ -91,7 +92,7 @@ const ViewTimetablePage: NextPage = () => {
       partialColorMap[code] = currentColors[index];
     });
     setColorMap((colorMap) => ({ ...colorMap, ...partialColorMap }));
-    router.push("/timetable");
+    navigate("/timetable");
   };
 
   return (

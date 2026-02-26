@@ -1,6 +1,6 @@
 import { AlertTriangle } from "lucide-react";
 import { Button } from "@courseweb/ui";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import useDictionary from "@/dictionaries/useDictionary";
 
 const CommentsNotSignedIn = () => {
@@ -17,7 +17,7 @@ const CommentsNotSignedIn = () => {
         </p>
       </div>
       <Button asChild>
-        <Link href="/settings#account">{dict.settings.account.signin}</Link>
+        <Link to="/settings#account">{dict.settings.account.signin}</Link>
       </Button>
     </div>
   );

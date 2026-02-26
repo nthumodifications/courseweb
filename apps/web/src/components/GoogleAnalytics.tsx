@@ -1,13 +1,13 @@
 "use client";
-import Script from "next/script";
 import * as gtag from "@/lib/gtag";
 import { useEffect } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { useLocation, useSearchParams } from "react-router-dom";
 import { useSettings } from "@/hooks/contexts/settings";
 
 const GoogleAnalytics = () => {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const location = useLocation();
+  const pathname = location.pathname;
+  const [searchParams] = useSearchParams();
   const { analytics } = useSettings();
 
   useEffect(() => {
@@ -16,17 +16,16 @@ const GoogleAnalytics = () => {
   }, [pathname, searchParams]);
 
   if (!analytics) return <></>;
-  if (process.env.NODE_ENV !== "production") return <></>;
+  if (!import.meta.env.PROD) return <></>;
 
   return (
     <>
-      <Script
-        strategy="afterInteractive"
+      <script
+        async
         src={`https://www.googletagmanager.com/gtag/js?id=${gtag.GA_TRACKING_ID}`}
       />
-      <Script
+      <script
         id="gtag-init"
-        strategy="afterInteractive"
         dangerouslySetInnerHTML={{
           __html: `
                     window.dataLayer = window.dataLayer || [];

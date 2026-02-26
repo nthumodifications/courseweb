@@ -2,12 +2,12 @@ import { apps } from "@/const/apps";
 import React from "react";
 import { useCallback } from "react";
 import useDictionary from "@/dictionaries/useDictionary";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import { toast } from "@courseweb/ui";
 import { event } from "@/lib/gtag";
 const useLaunchApp = (app: (typeof apps)[number]) => {
   const dict = useDictionary();
-  const router = useRouter();
+  const navigate = useNavigate();
 
   const launchFn = useCallback(async () => {
     event({
@@ -15,8 +15,8 @@ const useLaunchApp = (app: (typeof apps)[number]) => {
       category: "app",
       label: "open_app_" + app.id,
     });
-    router.push(app.href);
-  }, [router, app]);
+    navigate(app.href);
+  }, [navigate, app]);
 
   return [launchFn] as const;
 };

@@ -1,13 +1,13 @@
 "use client"; // Error components must be Client Components
-import * as Sentry from "@sentry/nextjs";
+import * as Sentry from "@sentry/browser";
 import { useEffect } from "react";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { AlertOctagon, View } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@courseweb/ui";
 import { Button } from "@courseweb/ui";
 import NTHUModsLogo from "@/components/Branding/NTHUModsLogo";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@courseweb/ui";
-import { useParams } from "next/navigation";
+import { useParams } from "react-router-dom";
 import {
   Collapsible,
   CollapsibleContent,
@@ -15,10 +15,10 @@ import {
 } from "@courseweb/ui";
 export default function Error({
   error,
-  reset,
+  resetErrorBoundary: reset,
 }: {
-  error: Error & { digest?: string };
-  reset: () => void;
+  error: Error;
+  resetErrorBoundary: () => void;
 }) {
   const { lang } = useParams();
 
