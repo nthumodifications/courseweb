@@ -58,9 +58,6 @@ COPY --from=builder /usr/src/app/services/secure-api/prisma ./prisma
 COPY --from=builder /usr/src/app/packages ./packages
 COPY --from=builder /usr/src/app/node_modules ./node_modules
 
-# Install production dependencies
-RUN bun install --frozen-lockfile --production
-
 # Generate Prisma client in production
 RUN bun run prisma:generate
 
