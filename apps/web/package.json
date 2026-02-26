@@ -108,7 +108,7 @@
   },
   "eslintConfig": {
     "extends": [
-      "@courseweb/eslint-config/next"
+      "@courseweb/eslint-config"
     ]
   }
 }

@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   Dialog,
   DialogContent,
@@ -33,6 +33,7 @@ export function CourseDetailsDialog({
   onEdit,
 }: CourseDetailsDialogProps) {
   const navigate = useNavigate();
+  const { lang } = useParams<{ lang: string }>();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -86,7 +87,9 @@ export function CourseDetailsDialog({
               <Button
                 variant="outline"
                 className="w-full mt-4"
-                onClick={() => navigate(`/zh/courses/${selectedCourse.raw_id}`)}
+                onClick={() =>
+                  navigate(`/${lang}/courses/${selectedCourse.raw_id}`)
+                }
               >
                 <Eye className="h-4 w-4 mr-2" />
                 查看完整課程資訊

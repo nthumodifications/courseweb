@@ -1,10 +1,11 @@
 import { AlertTriangle } from "lucide-react";
 import { Button } from "@courseweb/ui";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import useDictionary from "@/dictionaries/useDictionary";
 
 const CommentsNotSignedIn = () => {
   const dict = useDictionary();
+  const { lang } = useParams<{ lang: string }>();
   return (
     <div className=" flex items-center space-x-4 rounded-md border p-4">
       <AlertTriangle />
@@ -17,7 +18,9 @@ const CommentsNotSignedIn = () => {
         </p>
       </div>
       <Button asChild>
-        <Link to="/settings#account">{dict.settings.account.signin}</Link>
+        <Link to={`/${lang}/settings#account`}>
+          {dict.settings.account.signin}
+        </Link>
       </Button>
     </div>
   );

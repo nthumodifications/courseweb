@@ -7,7 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@courseweb/ui";
 import Compact from "@uiw/react-color-compact";
 import { Drawer, DrawerContent, DrawerTrigger } from "@courseweb/ui";
 import { Button } from "@courseweb/ui";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { Book, ExternalLink, CalendarPlus } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@courseweb/ui";
@@ -78,6 +78,7 @@ const ImportantDates = ({ raw_id }: { raw_id: RawCourseID }) => {
 const TimetableCourseQuickAccess = ({ course }: { course: MinimalCourse }) => {
   const { deleteCourse, colorMap, setColor, currentColors } =
     useUserTimetable();
+  const { lang } = useParams<{ lang: string }>();
 
   return (
     <>
@@ -138,7 +139,7 @@ const TimetableCourseQuickAccess = ({ course }: { course: MinimalCourse }) => {
       <div className="p-4 flex flex-col gap-4">
         <div className="grid grid-cols-3 gap-2">
           <Button variant="outline" asChild>
-            <Link to={`/courses/${course.raw_id}`}>
+            <Link to={`/${lang}/courses/${course.raw_id}`}>
               <ExternalLink className="w-4 h-4 mr-2" />
               課程詳情
             </Link>

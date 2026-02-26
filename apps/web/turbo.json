@@ -4,23 +4,21 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**"],
+      "outputs": ["dist/**"],
       "env": [
-        "NEXT_PUBLIC_SUPABASE_URL",
-        "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+        "VITE_SUPABASE_URL",
+        "VITE_SUPABASE_ANON_KEY",
         "SENTRY_AUTH_TOKEN",
-        "NEXTAUTH_URL",
         "SENTRY_ORG",
         "SENTRY_PROJECT",
-        "NEXTAUTH_SECRET",
-        "NTHU_OAUTH_SECRET_KEY",
-        "NTHU_OAUTH_CLIENT_ID",
-        "ALGOLIA_API_KEY",
-        "KV_URL",
-        "KV_REST_API_URL",
-        "KV_REST_API_TOKEN",
-        "KV_REST_API_READ_ONLY_TOKEN",
-        "TURNSTILE_SECRET_KEY"
+        "VITE_ALGOLIA_APP_ID",
+        "VITE_ALGOLIA_SEARCH_KEY",
+        "VITE_COURSEWEB_API_URL",
+        "VITE_NTHUMODS_AUTH_URL",
+        "VITE_AUTH_CLIENT_ID",
+        "VITE_NTHUMODS_AUTH_REDIRECT",
+        "VITE_NTHUMODS_AUTH_SILENT_REDIRECT",
+        "VITE_TURNSTILE_SITE_KEY"
       ]
     },
     "dev": {

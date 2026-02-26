@@ -1,9 +1,9 @@
 "use client";
 import { CourseDefinition, CourseSyllabusView } from "@/config/supabase";
 import useDictionary from "@/dictionaries/useDictionary";
-import { FC, memo } from "react";
+import { FC, memo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Button } from "@courseweb/ui";
+import { Button, Dialog, DialogContent, DialogTitle } from "@courseweb/ui";
 import { useSettings } from "@/hooks/contexts/settings";
 import {
   Collapsible,
@@ -14,6 +14,8 @@ import { useSearchParams } from "react-router-dom";
 import { ChevronDown, Minus, Plus } from "lucide-react";
 import CourseTagList from "@/components/Courses/CourseTagsList";
 import { MinimalCourse } from "@/types/courses";
+import CourseDetailContainer from "@/components/CourseDetails/CourseDetailsContainer";
+import { Language } from "@/types/settings";
 
 type PlannerCourseListItemProps = {
   course: CourseSyllabusView;
@@ -27,6 +29,7 @@ const PlannerCourseListItem: FC<PlannerCourseListItemProps> = memo(
     const dict = useDictionary();
     const { language } = useSettings();
     const [searchParams] = useSearchParams();
+    const [dialogOpen, setDialogOpen] = useState(false);
 
     const courseTitle =
       language === "zh"
@@ -58,12 +61,26 @@ const PlannerCourseListItem: FC<PlannerCourseListItemProps> = memo(
                   {course.class.padStart(2, "0")}
                 </p>
               </div>
-              <Link
-                className="font-semibold"
-                to={`/${language}/courses/${course.raw_id}?${searchParams.toString()}`}
+              <button
+                className="font-semibold text-left hover:underline cursor-pointer"
+                onClick={() => setDialogOpen(true)}
               >
                 {courseTitle}
-              </Link>
+              </button>
+              <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto p-0 gap-0">
+                  <DialogTitle className="sr-only">{courseTitle}</DialogTitle>
+                  <div className="px-4 py-2 lg:px-8 lg:py-4">
+                    {dialogOpen && (
+                      <CourseDetailContainer
+                        lang={language as Language}
+                        courseId={course.raw_id as string}
+                        modal={true}
+                      />
+                    )}
+                  </div>
+                </DialogContent>
+              </Dialog>
               <div className="space-y-1 self-start w-auto max-w-fit">
                 {course.venues ? (
                   course.venues.map((vn, i) => (

@@ -5,10 +5,11 @@ import { Button } from "@courseweb/ui";
 import { Badge } from "@courseweb/ui";
 import FullLogo from "./Branding/FullLogo";
 import NTHUModsLogo from "./Branding/NTHUModsLogo";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { getYear } from "date-fns";
 
 const Footer = () => {
+  const { lang } = useParams<{ lang: string }>();
   return (
     <div className="py-16 flex flex-col gap-4">
       <div className="flex flex-col md:flex-row justify-between">
@@ -51,11 +52,11 @@ const Footer = () => {
       </div>
 
       <div className="flex flex-row text-muted-foreground text-sm [&>a]:mr-4 [&>a]:w-max flex-wrap">
-        <Link to={"/contribute"}>Contribute</Link>
-        <Link to={"/issues"}>Report an Issue</Link>
-        <Link to={"/team"}>Team</Link>
-        <Link to={"/privacy-policy"}>Privacy Policy</Link>
-        <Link to={"/proxy-login"}>Proxy Login</Link>
+        <Link to={`/${lang}/contribute`}>Contribute</Link>
+        <Link to={`/${lang}/issues`}>Report an Issue</Link>
+        <Link to={`/${lang}/team`}>Team</Link>
+        <Link to={`/${lang}/privacy-policy`}>Privacy Policy</Link>
+        <Link to={`/${lang}/proxy-login`}>Proxy Login</Link>
       </div>
 
       <div className="flex flex-col gap-1">

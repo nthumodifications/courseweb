@@ -1,4 +1,4 @@
-import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
+import { Outlet, useParams } from "react-router-dom";
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import ModsError from "@/app/[lang]/(mods-pages)/error";
@@ -13,13 +13,9 @@ import ConsoleLogger from "@/components/ConsoleLogger";
 import AppSidebar from "@/components/AppSidebar";
 import { Language } from "@/types/settings";
 import { useCookies } from "react-cookie";
-import { Dialog, DialogContent } from "@courseweb/ui";
-import CourseDetailContainer from "@/components/CourseDetails/CourseDetailsContainer";
 
 const MainLayout = () => {
   const { lang } = useParams<{ lang: string }>();
-  const location = useLocation();
-  const backgroundLocation = location.state?.backgroundLocation;
   const [cookies] = useCookies(["sidebar:state"]);
   const defaultOpen = (cookies["sidebar:state"] ?? "true") === "true";
 
@@ -47,12 +43,10 @@ const MainLayout = () => {
                       </div>
                     }
                   >
-                    <Outlet context={{ backgroundLocation }} />
+                    <Outlet />
                   </Suspense>
                 </ErrorBoundary>
               </div>
-              {/* Course modal overlay when navigating from course list */}
-              {backgroundLocation && <CourseModalOverlay />}
             </main>
             <BottomNav />
             <ChatContainer />
@@ -63,36 +57,5 @@ const MainLayout = () => {
     </ChatProvider>
   );
 };
-
-function CourseModalOverlay() {
-  const location = useLocation();
-  const { lang } = useParams<{ lang: string }>();
-  const navigate = useNavigate();
-
-  // Extract courseId from the current URL if it matches the course detail pattern
-  const courseMatch = location.pathname.match(/\/[a-z]{2}\/courses\/([^/]+)/);
-  const courseId = courseMatch ? decodeURI(courseMatch[1]) : null;
-
-  if (!courseId) return null;
-
-  return (
-    <Dialog
-      open={true}
-      onOpenChange={(open) => {
-        if (!open) navigate(-1);
-      }}
-    >
-      <DialogContent className="max-w-6xl p-0 gap-0">
-        <div className="px-4 py-2 lg:px-8 lg:py-4">
-          <CourseDetailContainer
-            lang={(lang as Language) ?? "zh"}
-            courseId={courseId}
-            modal={true}
-          />
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 export default MainLayout;

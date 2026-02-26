@@ -1,6 +1,6 @@
 "use client";
 import Timetable from "@/components/Timetable/Timetable";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import supabase from "@/config/supabase";
 import { createTimetableFromCourses } from "@/helpers/timetable";
 import { MinimalCourse } from "@/types/courses";
@@ -23,6 +23,7 @@ import client from "@/config/api";
 
 const ViewTimetablePage = () => {
   const navigate = useNavigate();
+  const { lang } = useParams<{ lang: string }>();
   const [searchParams] = useSearchParams();
   const { currentColors, setCourses, setColorMap } = useUserTimetable();
   const [semester, setSemester] = useState<string>(lastSemester.id);
@@ -79,7 +80,7 @@ const ViewTimetablePage = () => {
   const handleImportCourses = () => {
     setCourses(courseCodes!);
     setColorMap(colorMap);
-    navigate("/timetable");
+    navigate(`/${lang}/timetable`);
   };
 
   const handleImportThisSemester = () => {
@@ -92,7 +93,7 @@ const ViewTimetablePage = () => {
       partialColorMap[code] = currentColors[index];
     });
     setColorMap((colorMap) => ({ ...colorMap, ...partialColorMap }));
-    navigate("/timetable");
+    navigate(`/${lang}/timetable`);
   };
 
   return (

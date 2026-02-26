@@ -1,13 +1,14 @@
 "use client";
 import useDictionary from "@/dictionaries/useDictionary";
 import { ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 
 const CeranaSponsorBanner = () => {
   const dict = useDictionary();
+  const { lang } = useParams<{ lang: string }>();
   return (
     <Link
-      to="/contribute"
+      to={`/${lang}/contribute`}
       className="block w-full bg-white dark:bg-neutral-800 border border-border rounded-md p-2 hover:border-primary/30 transition-colors group"
     >
       <div className="flex flex-row gap-2 items-center">
