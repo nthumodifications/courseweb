@@ -7,7 +7,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@courseweb/ui";
 import Compact from "@uiw/react-color-compact";
 import { Drawer, DrawerContent, DrawerTrigger } from "@courseweb/ui";
 import { Button } from "@courseweb/ui";
-import { Link, useParams } from "react-router-dom";
 import { Book, ExternalLink, CalendarPlus } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@courseweb/ui";
@@ -15,11 +14,17 @@ import DateContributeForm from "@/components/CourseDetails/DateContributeForm";
 import { useQuery } from "@tanstack/react-query";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useMediaQuery } from "usehooks-ts";
-import { Dialog, DialogContent, DialogTrigger } from "@courseweb/ui";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogTrigger,
+} from "@courseweb/ui";
 import { currentSemester } from "@courseweb/shared";
 import client from "@/config/api";
 import CourseTagList from "@/components/Courses/CourseTagsList";
 import { CourseDefinition } from "@/config/supabase";
+import { useCourseLink } from "@/components/Courses/CourseDialog";
 
 const ImportantDates = ({ raw_id }: { raw_id: RawCourseID }) => {
   const {
@@ -78,7 +83,7 @@ const ImportantDates = ({ raw_id }: { raw_id: RawCourseID }) => {
 const TimetableCourseQuickAccess = ({ course }: { course: MinimalCourse }) => {
   const { deleteCourse, colorMap, setColor, currentColors } =
     useUserTimetable();
-  const { lang } = useParams<{ lang: string }>();
+  const { openCourse } = useCourseLink();
 
   return (
     <>
@@ -138,11 +143,9 @@ const TimetableCourseQuickAccess = ({ course }: { course: MinimalCourse }) => {
       <ImportantDates raw_id={course.raw_id} />
       <div className="p-4 flex flex-col gap-4">
         <div className="grid grid-cols-3 gap-2">
-          <Button variant="outline" asChild>
-            <Link to={`/${lang}/courses/${course.raw_id}`}>
-              <ExternalLink className="w-4 h-4 mr-2" />
-              課程詳情
-            </Link>
+          <Button variant="outline" onClick={() => openCourse(course.raw_id)}>
+            <ExternalLink className="w-4 h-4 mr-2" />
+            課程詳情
           </Button>
           <Button variant="outline" disabled={true}>
             <Book className="w-4 h-4 mr-2" />
@@ -172,6 +175,9 @@ export const TimetableItemDrawer = ({
       <Dialog>
         <DialogTrigger asChild>{children}</DialogTrigger>
         <DialogContent className="sm:max-w-[425px]">
+          <DialogTitle className="sr-only">
+            {course.name_zh} - {course.teacher_zh.join(",")}
+          </DialogTitle>
           <TimetableCourseQuickAccess course={course} />
         </DialogContent>
       </Dialog>

@@ -23,7 +23,7 @@ import { Badge } from "@courseweb/ui";
 import { CourseDefinition } from "@/config/supabase";
 import { ScrollArea, ScrollBar } from "@courseweb/ui";
 import { timetableColors } from "@courseweb/shared";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Language } from "@/types/settings";
 import {
   Table,
@@ -42,6 +42,7 @@ import client from "@/config/api";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useQuery } from "@tanstack/react-query";
 import CourseDetailsSkeleton from "./CourseDetailsSkeleton";
+import { useCourseLink } from "@/components/Courses/CourseDialog";
 
 const PDFViewerDynamic = lazy(
   () => import("@/components/CourseDetails/PDFViewer"),
@@ -101,6 +102,7 @@ const CourseDetailContainer = ({
   modal?: boolean;
 }) => {
   const dict = useDictionary();
+  const { openCourse } = useCourseLink();
 
   // Use React Query to fetch the course data
   const {
@@ -140,6 +142,13 @@ const CourseDetailContainer = ({
     },
     enabled: !!course, // Only fetch if course data is available
   });
+
+  // Update page title for full-page view (not modal)
+  useEffect(() => {
+    if (!modal && course) {
+      document.title = `${course.name_zh} ${course.teacher_zh?.join(",")} | NTHUMods`;
+    }
+  }, [modal, course]);
 
   // Handle loading state
   if (isLoading) {
@@ -420,10 +429,12 @@ const CourseDetailContainer = ({
                           )}
                         </TableCell>
                         <TableCell className="p-0">
-                          <Button variant="ghost" size="icon" asChild>
-                            <Link to={`/${lang}/courses/${m.raw_id}`}>
-                              <ArrowRight size={16} />
-                            </Link>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => openCourse(m.raw_id)}
+                          >
+                            <ArrowRight size={16} />
                           </Button>
                         </TableCell>
                       </TableRow>

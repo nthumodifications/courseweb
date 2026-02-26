@@ -112,22 +112,22 @@ export const router = createBrowserRouter([
               {
                 path: "today",
                 element: <TodayPage />,
-                handle: { title: "Today" },
+                handle: { title: "Today", titleZh: "行事曆" },
               },
               {
                 path: "timetable",
                 element: <TimetablePage />,
-                handle: { title: "Timetable" },
+                handle: { title: "Timetable", titleZh: "時間表" },
               },
               {
                 path: "timetable/view",
                 element: <TimetableViewPage />,
-                handle: { title: "Timetable View" },
+                handle: { title: "Timetable View", titleZh: "時間表檢視" },
               },
               {
                 path: "courses",
                 element: <CoursesPage />,
-                handle: { title: "Courses" },
+                handle: { title: "Courses", titleZh: "課表" },
               },
               {
                 path: "courses/:courseId",
@@ -136,7 +136,7 @@ export const router = createBrowserRouter([
               {
                 path: "bus",
                 element: <BusPage />,
-                handle: { title: "Bus" },
+                handle: { title: "Bus", titleZh: "校車" },
               },
               {
                 path: "bus/:route",
@@ -149,17 +149,17 @@ export const router = createBrowserRouter([
               {
                 path: "calendar",
                 element: <CalendarPage />,
-                handle: { title: "Calendar" },
+                handle: { title: "Calendar", titleZh: "日曆" },
               },
               {
                 path: "settings",
                 element: <SettingsPage />,
-                handle: { title: "Settings" },
+                handle: { title: "Settings", titleZh: "設定" },
               },
               {
                 path: "venues",
                 element: <VenuesPage />,
-                handle: { title: "Venues" },
+                handle: { title: "Venues", titleZh: "地點" },
               },
               {
                 path: "venues/:locationId",
@@ -168,57 +168,57 @@ export const router = createBrowserRouter([
               {
                 path: "chat",
                 element: <ChatPage />,
-                handle: { title: "Chat" },
+                handle: { title: "Chat", titleZh: "AI 課程助手" },
               },
               {
                 path: "shops",
                 element: <ShopsPage />,
-                handle: { title: "Shops" },
+                handle: { title: "Shops", titleZh: "餐廳" },
               },
               {
                 path: "apps",
                 element: <AppsPage />,
-                handle: { title: "Apps" },
+                handle: { title: "Apps", titleZh: "功能列表" },
               },
               {
                 path: "student/grades",
                 element: <GradesPage />,
-                handle: { title: "Grades" },
+                handle: { title: "Grades", titleZh: "成績" },
               },
               {
                 path: "student/id",
                 element: <StudentIdPage />,
-                handle: { title: "Student ID" },
+                handle: { title: "Student ID", titleZh: "學生證" },
               },
               {
                 path: "student/parcel",
                 element: <ParcelPage />,
-                handle: { title: "Parcel" },
+                handle: { title: "Parcel", titleZh: "包裹" },
               },
               {
                 path: "student/planner",
                 element: <PlannerPage />,
-                handle: { title: "Planner" },
+                handle: { title: "Planner", titleZh: "畢業規劃" },
               },
               {
                 path: "issues",
                 element: <IssuesPage />,
-                handle: { title: "Issues" },
+                handle: { title: "Issues", titleZh: "問題回報" },
               },
               {
                 path: "contribute",
                 element: <ContributePage />,
-                handle: { title: "Contribute" },
+                handle: { title: "Contribute", titleZh: "貢獻" },
               },
               {
                 path: "team",
                 element: <TeamPage />,
-                handle: { title: "Team" },
+                handle: { title: "Team", titleZh: "團隊" },
               },
               {
                 path: "privacy-policy",
                 element: <PrivacyPage />,
-                handle: { title: "Privacy Policy" },
+                handle: { title: "Privacy Policy", titleZh: "隱私權政策" },
               },
               {
                 path: "proxy-login",
@@ -231,7 +231,7 @@ export const router = createBrowserRouter([
               {
                 path: "offline",
                 element: <OfflinePage />,
-                handle: { title: "Offline" },
+                handle: { title: "Offline", titleZh: "離線" },
               },
               {
                 path: "*",
@@ -242,7 +242,7 @@ export const router = createBrowserRouter([
           {
             path: "waitlist",
             element: <WaitlistPage />,
-            handle: { title: "Waitlist" },
+            handle: { title: "Waitlist", titleZh: "候補" },
           },
         ],
       },

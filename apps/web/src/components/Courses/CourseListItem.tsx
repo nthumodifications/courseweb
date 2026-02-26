@@ -1,12 +1,10 @@
 "use client";
 import { CourseDefinition, CourseSyllabusView } from "@/config/supabase";
 import useDictionary from "@/dictionaries/useDictionary";
-import { FC, memo, useState } from "react";
-import { Link } from "react-router-dom";
+import { FC, memo } from "react";
 import CourseTagList from "./CourseTagsList";
 import SelectCourseButton from "./SelectCourseButton";
 import { Button } from "@courseweb/ui";
-import { Dialog, DialogContent, DialogTitle } from "@courseweb/ui";
 import { useSettings } from "@/hooks/contexts/settings";
 import {
   Collapsible,
@@ -15,12 +13,8 @@ import {
 } from "@courseweb/ui";
 import { useSearchParams } from "react-router-dom";
 import { ChevronDown } from "lucide-react";
-import useUserTimetable, {
-  CourseLocalStorage,
-} from "@/hooks/contexts/useUserTimetable";
-import useSyncedStorage from "@/hooks/useSyncedStorage";
-import CourseDetailContainer from "@/components/CourseDetails/CourseDetailsContainer";
-import { Language } from "@/types/settings";
+import useUserTimetable from "@/hooks/contexts/useUserTimetable";
+import { useCourseLink } from "@/components/Courses/CourseDialog";
 
 // Memoize the CourseListItem component
 const CourseListItem: FC<{
@@ -30,7 +24,7 @@ const CourseListItem: FC<{
   const dict = useDictionary();
   const { language } = useSettings();
   const [searchParams] = useSearchParams();
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const { openCourse } = useCourseLink();
 
   const { currentColors, setHoverCourse } = useUserTimetable();
 
@@ -63,26 +57,12 @@ const CourseListItem: FC<{
             </div>
             <button
               className="font-semibold text-left hover:underline cursor-pointer"
-              onClick={() => setDialogOpen(true)}
+              onClick={() => openCourse(course.raw_id as string)}
               onMouseEnter={() => handleHover(true)}
               onMouseLeave={() => handleHover(false)}
             >
               {courseTitle}
             </button>
-            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-              <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto p-0 gap-0">
-                <DialogTitle className="sr-only">{courseTitle}</DialogTitle>
-                <div className="px-4 py-2 lg:px-8 lg:py-4">
-                  {dialogOpen && (
-                    <CourseDetailContainer
-                      lang={language as Language}
-                      courseId={course.raw_id as string}
-                      modal={true}
-                    />
-                  )}
-                </div>
-              </DialogContent>
-            </Dialog>
             {/* <h3 className="text-sm mt-0 break-words">
               {course.name_en} -{" "}
               <span className="w-max">

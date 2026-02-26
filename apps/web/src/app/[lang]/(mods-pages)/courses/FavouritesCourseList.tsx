@@ -1,12 +1,13 @@
 import { GripVertical, Plus, Heart, Minus } from "lucide-react";
 import { useSettings } from "@/hooks/contexts/settings";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useMemo } from "react";
 import { hasTimes } from "@/helpers/courses";
 import { MinimalCourse } from "@/types/courses";
 import { Button } from "@courseweb/ui";
+import { useCourseLink } from "@/components/Courses/CourseDialog";
 import {
   DndContext,
   closestCenter,
@@ -35,8 +36,8 @@ import client from "@/config/api";
 
 const TimetableCourseListItem = ({ course }: { course: MinimalCourse }) => {
   const { language } = useSettings();
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { openCourse } = useCourseLink();
 
   const { addCourse, deleteCourse, isCourseSelected } = useUserTimetable();
 
@@ -69,12 +70,8 @@ const TimetableCourseListItem = ({ course }: { course: MinimalCourse }) => {
         {...listeners}
       />
       <div
-        className="flex flex-col flex-1"
-        onClick={() =>
-          navigate(
-            `/${language}/courses/${course.raw_id}?${searchParams.toString()}`,
-          )
-        }
+        className="flex flex-col flex-1 cursor-pointer"
+        onClick={() => openCourse(course.raw_id)}
       >
         <span className="text-sm">
           {course.department} {course.course}-{course.class} {course.name_zh} -{" "}
@@ -142,7 +139,6 @@ const TimetableCourseListItem = ({ course }: { course: MinimalCourse }) => {
 export const FavouritesCourseList = ({}: {}) => {
   const { language } = useSettings();
   const dict = useDictionary();
-  const navigate = useNavigate();
   const [favourites, setFavourites] = useLocalStorage<string[]>(
     "course_favourites",
     [],
