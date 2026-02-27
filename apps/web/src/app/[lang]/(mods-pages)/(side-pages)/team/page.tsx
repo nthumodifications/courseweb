@@ -116,7 +116,7 @@ const Team = () => {
                     )}
                     {member.linkedin && (
                       <Button asChild variant="ghost" size="icon">
-                        <a href={`https://linkedin.com/i/${member.linkedin}`}>
+                        <a href={`https://linkedin.com/in/${member.linkedin}`}>
                           <LinkedinIcon />
                         </a>
                       </Button>

@@ -1,4 +1,3 @@
-"use client";
 import * as I from "lucide-react";
 import { FC, useEffect, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";

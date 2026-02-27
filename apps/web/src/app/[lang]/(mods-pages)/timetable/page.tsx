@@ -1,4 +1,3 @@
-"use client";
 import Timetable from "@/components/Timetable/Timetable";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { useLocalStorage } from "usehooks-ts";

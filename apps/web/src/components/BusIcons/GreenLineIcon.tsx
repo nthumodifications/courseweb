@@ -1,5 +1,3 @@
-"use client";
-
 import { SVGProps } from "react";
 
 export const GreenLineIcon = (props: SVGProps<SVGSVGElement>) => (

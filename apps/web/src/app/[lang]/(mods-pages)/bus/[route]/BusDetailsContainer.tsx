@@ -1,4 +1,3 @@
-"use client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@courseweb/ui";
 import { BusDepartureDetails, LineInfo } from "@/libs/bus";
 import {

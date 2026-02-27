@@ -1,4 +1,3 @@
-"use client";
 import { CourseDefinition, CourseSyllabusView } from "@/config/supabase";
 import useDictionary from "@/dictionaries/useDictionary";
 import { FC, memo } from "react";

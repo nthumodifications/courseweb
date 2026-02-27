@@ -1,4 +1,3 @@
-"use client";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import useDictionary from "@/dictionaries/useDictionary";
 import { Button } from "@courseweb/ui";

@@ -1,4 +1,3 @@
-"use client";
 import { GreenLineIcon } from "@/components/BusIcons/GreenLineIcon";
 import { NandaLineIcon } from "@/components/BusIcons/NandaLineIcon";
 import { RedLineIcon } from "@/components/BusIcons/RedLineIcon";

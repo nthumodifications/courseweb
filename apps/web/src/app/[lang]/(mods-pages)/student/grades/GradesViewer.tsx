@@ -1,4 +1,3 @@
-"use client";
 import { useSettings } from "@/hooks/contexts/settings";
 import useDictionary from "@/dictionaries/useDictionary";
 import { Badge } from "@courseweb/ui";

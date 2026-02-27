@@ -1,4 +1,3 @@
-"use client";
 import { useChatContext } from "./ChatProvider";
 import { Button } from "@courseweb/ui";
 import { Sparkles, X } from "lucide-react";

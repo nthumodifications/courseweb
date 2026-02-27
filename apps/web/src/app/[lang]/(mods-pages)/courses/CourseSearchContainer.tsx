@@ -1,4 +1,3 @@
-"use client";
 import { createInfiniteHitsSessionStorageCache } from "instantsearch.js/es/lib/infiniteHitsCache";
 import algoliasearch from "algoliasearch/lite";
 import {

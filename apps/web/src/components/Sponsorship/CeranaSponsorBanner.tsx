@@ -1,4 +1,3 @@
-"use client";
 import useDictionary from "@/dictionaries/useDictionary";
 import { ArrowRight } from "lucide-react";
 import { Link, useParams } from "react-router-dom";

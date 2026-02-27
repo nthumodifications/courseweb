@@ -1,4 +1,3 @@
-"use client";
 import { Button } from "@courseweb/ui";
 import { Dialog, DialogContent, DialogTrigger } from "@courseweb/ui";
 import { ReactNode, useState } from "react";

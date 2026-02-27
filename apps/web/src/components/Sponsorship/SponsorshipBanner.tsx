@@ -1,4 +1,3 @@
-"use client";
 import CeranaSponsorBanner from "./CeranaSponsorBanner";
 import OpenCollectiveSponsorBanner from "./OpenCollectiveSponsorBanner";
 

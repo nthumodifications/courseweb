@@ -1,4 +1,3 @@
-"use client";
 import { lazy, Suspense } from "react";
 import TodaySchedule from "@/components/Today/TodaySchedule";
 import { useLocalStorage } from "usehooks-ts";

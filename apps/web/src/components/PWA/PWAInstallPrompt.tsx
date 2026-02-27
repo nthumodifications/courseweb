@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useEffect } from "react";
 import { Download, Smartphone } from "lucide-react";
 import { Button } from "@courseweb/ui";

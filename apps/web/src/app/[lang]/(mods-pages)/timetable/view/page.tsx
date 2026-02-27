@@ -1,4 +1,3 @@
-"use client";
 import Timetable from "@/components/Timetable/Timetable";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import supabase from "@/config/supabase";

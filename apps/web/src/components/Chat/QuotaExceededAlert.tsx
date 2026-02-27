@@ -1,4 +1,3 @@
-"use client";
 import { AlertCircle, Settings, X } from "lucide-react";
 import { Button } from "@courseweb/ui";
 import { Alert, AlertDescription, AlertTitle } from "@courseweb/ui";

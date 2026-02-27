@@ -4,7 +4,7 @@ import { env } from "hono/adapter";
 import { z } from "zod";
 
 const endpoint = (key: string, accountID: string, namespaceID: string) =>
-  `https://api.cloudflare.com/client/v4/accounts/${accountID}/storage/kv/namespaces/${namespaceID}/values/${key}`;
+  `https://api.cloudflare.com/client/v4/accounts/${accountID}/storage/kv/namespaces/${namespaceID}/values/${encodeURIComponent(key)}`;
 
 const app = new Hono().get(
   "/:slug",
@@ -21,7 +21,7 @@ const app = new Hono().get(
       CLOUDFLARE_KV_API_TOKEN: string;
     }>(c);
 
-    const url = await fetch(
+    const response = await fetch(
       endpoint(
         slug,
         CLOUDFLARE_WORKER_ACCOUNT_ID,
@@ -34,10 +34,26 @@ const app = new Hono().get(
           "Content-Type": "text/plain",
         },
       },
-    ).then((response) => response.text());
+    );
+
+    if (!response.ok) {
+      return c.json({ error: { message: "Link does not exist" } }, 404);
+    }
+
+    const url = await response.text();
 
     if (!url) {
       return c.json({ error: { message: "Link does not exist" } }, 404);
+    }
+
+    // Validate URL is a safe http/https URL
+    try {
+      const parsed = new URL(url);
+      if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+        return c.json({ error: { message: "Invalid redirect URL" } }, 400);
+      }
+    } catch {
+      return c.json({ error: { message: "Invalid redirect URL" } }, 400);
     }
 
     return c.redirect(url);

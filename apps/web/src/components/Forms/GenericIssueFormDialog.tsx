@@ -1,4 +1,3 @@
-"use client";
 import { Button } from "@courseweb/ui";
 import { Input } from "@courseweb/ui";
 import { Label } from "@courseweb/ui";

@@ -1,4 +1,3 @@
-"use client";
 import { useQuery } from "@tanstack/react-query";
 import { useCalendar } from "@/components/Calendar/calendar_hook";
 import { addDays, format, isSameDay, isToday } from "date-fns";

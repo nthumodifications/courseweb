@@ -1,4 +1,3 @@
-"use client";
 import { format } from "date-fns";
 import { AlertTriangle, ChevronLeft, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";

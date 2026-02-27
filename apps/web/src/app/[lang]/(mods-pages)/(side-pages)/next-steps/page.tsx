@@ -1,6 +1,5 @@
 import Footer from "@/components/Footer";
-import { Instagram } from "lucide-react";
-import { Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 const NextStepsZH = () => {
   return (
@@ -102,12 +101,7 @@ const NextStepsEN = () => {
   );
 };
 
-type LangProps = {
-  params: {
-    lang: string;
-  };
-};
-
-export default function NextSteps({ params: { lang } }: LangProps) {
+export default function NextSteps() {
+  const { lang } = useParams<{ lang: string }>();
   return <>{lang === "zh" ? <NextStepsZH /> : <NextStepsEN />}</>;
 }

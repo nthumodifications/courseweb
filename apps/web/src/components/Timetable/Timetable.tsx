@@ -1,4 +1,3 @@
-"use client";
 import TimeslotHeader from "@/components/Timetable/TimeslotHeader";
 import TimetableSlotVertical from "@/components/Timetable/TimetableSlotVertical";
 import { scheduleTimeSlots } from "@courseweb/shared";

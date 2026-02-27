@@ -1,4 +1,3 @@
-"use client";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import useDictionary from "@/dictionaries/useDictionary";

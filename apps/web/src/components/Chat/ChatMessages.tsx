@@ -1,4 +1,3 @@
-"use client";
 import { useRef, useEffect } from "react";
 import { useChatContext } from "./ChatProvider";
 import { ChatMessage } from "./ChatMessage";

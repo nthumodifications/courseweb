@@ -1,4 +1,3 @@
-"use client";
 import { Drawer } from "vaul";
 import { useMediaQuery } from "usehooks-ts";
 import { useChatContext } from "./ChatProvider";

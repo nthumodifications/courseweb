@@ -1,5 +1,3 @@
-"use client";
-
 import { Github, Mail, Instagram, Facebook } from "lucide-react";
 import { Button } from "@courseweb/ui";
 import { Badge } from "@courseweb/ui";

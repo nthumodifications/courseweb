@@ -1,4 +1,3 @@
-"use client";
 import { useState, useCallback, useRef } from "react";
 import useUserTimetable from "./contexts/useUserTimetable";
 import { useAuth } from "react-oidc-context";

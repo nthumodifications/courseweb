@@ -1,4 +1,3 @@
-"use client";
 const TLDLineIcon = () => (
   <svg
     width="30"

@@ -1,5 +1,3 @@
-"use client";
-
 import { useMemo } from "react";
 import { useRefinementList } from "react-instantsearch";
 import { Checkbox } from "@courseweb/ui";

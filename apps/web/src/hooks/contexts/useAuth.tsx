@@ -1,7 +1,6 @@
-"use client";
 import { Language } from "@/types/settings";
 import { useNavigate, useParams } from "react-router-dom";
-import { UserManager, WebStorageStateStore } from "oidc-client-ts";
+import { WebStorageStateStore } from "oidc-client-ts";
 import { PropsWithChildren, useEffect, useState, useMemo } from "react";
 import {
   AuthProvider,
@@ -40,20 +39,7 @@ const OidcAuthProvider = ({ children }: PropsWithChildren) => {
   const navigate = useNavigate();
   const language = useParams().lang as Language;
 
-  // Create config with useMemo to ensure it's available synchronously,
-  // but still check for window to avoid SSR issues
   const oidcConfig = useMemo(() => {
-    if (typeof window === "undefined") {
-      // Return a minimal config for server-side rendering
-      return {
-        authority: "",
-        client_id: "",
-        redirect_uri: "",
-        onSigninCallback: () => {},
-      } as AuthProviderProps;
-    }
-
-    // Full config for client-side
     return {
       authority: import.meta.env.VITE_NTHUMODS_AUTH_URL!,
       client_id: import.meta.env.VITE_AUTH_CLIENT_ID!,

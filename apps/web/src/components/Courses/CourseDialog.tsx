@@ -62,7 +62,7 @@ export const CourseDialogProvider: FC<PropsWithChildren> = ({ children }) => {
 
   const closeDialog = useCallback(() => {
     if (previousUrlRef.current) {
-      window.history.pushState(null, "", previousUrlRef.current);
+      window.history.replaceState(null, "", previousUrlRef.current);
     }
     setCourseId(null);
   }, []);

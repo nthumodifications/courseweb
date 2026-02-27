@@ -1,4 +1,3 @@
-"use client";
 import { useQuery } from "@tanstack/react-query";
 import client from "@/config/api";
 import CourseListItem from "../Courses/CourseListItem";

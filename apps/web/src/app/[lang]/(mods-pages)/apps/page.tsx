@@ -1,4 +1,3 @@
-"use client";
 import { apps, categories } from "@/const/apps";
 import { Settings, Star, ArrowRight } from "lucide-react";
 import useDictionary from "@/dictionaries/useDictionary";

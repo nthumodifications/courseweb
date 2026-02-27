@@ -1,4 +1,3 @@
-"use client";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import {
   FC,

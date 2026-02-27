@@ -1,4 +1,3 @@
-"use client";
 import { useSettings } from "@/hooks/contexts/settings";
 import { Tabs, TabsList, TabsTrigger } from "@courseweb/ui";
 import { FC, SVGProps, useEffect, useMemo, useState } from "react";

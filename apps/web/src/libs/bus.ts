@@ -1,5 +1,3 @@
-"use client";
-
 import client from "@/config/api";
 
 export interface MainBusDepartureDetails {

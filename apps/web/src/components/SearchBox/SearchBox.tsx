@@ -1,4 +1,3 @@
-"use client";
 import { useSearchBox, UseSearchBoxProps } from "react-instantsearch";
 import { Input, Button } from "@courseweb/ui";
 import { useRef, useState } from "react";

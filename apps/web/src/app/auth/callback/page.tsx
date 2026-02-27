@@ -1,4 +1,3 @@
-"use client";
 import { Dialog, DialogContent } from "@courseweb/ui";
 import { toast } from "@courseweb/ui";
 import { Loader2 } from "lucide-react";

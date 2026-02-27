@@ -1,4 +1,3 @@
-"use client";
 import { timetableColors } from "@courseweb/shared";
 import { useSettings } from "@/hooks/contexts/settings";
 import { TimetableThemePreview } from "./TimetableThemePreview";

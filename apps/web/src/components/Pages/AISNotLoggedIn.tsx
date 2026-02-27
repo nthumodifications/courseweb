@@ -1,4 +1,3 @@
-"use client";
 import { BadgeAlert } from "lucide-react";
 
 export const AISNotLoggedIn = () => (

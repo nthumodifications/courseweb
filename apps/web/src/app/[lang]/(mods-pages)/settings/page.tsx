@@ -1,4 +1,3 @@
-"use client";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useSettings } from "@/hooks/contexts/settings";
 import { TimetableThemeList } from "./TimetableThemeList";

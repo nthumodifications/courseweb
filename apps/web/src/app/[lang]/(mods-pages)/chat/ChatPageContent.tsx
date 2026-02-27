@@ -1,4 +1,3 @@
-"use client";
 import { Sparkles, LogIn } from "lucide-react";
 import { ChatMessages } from "@/components/Chat/ChatMessages";
 import { ChatInput } from "@/components/Chat/ChatInput";

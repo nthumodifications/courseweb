@@ -4,6 +4,7 @@ import RootRedirect from "@/layouts/RootRedirect";
 import LangLayout from "@/layouts/LangLayout";
 import MainLayout from "@/layouts/MainLayout";
 import OAuthCallbackRedirect from "@/layouts/OAuthCallbackRedirect";
+import ShortlinkRedirect from "@/layouts/ShortlinkRedirect";
 import AppProviders from "@/layouts/AppProviders";
 
 // Auth callback (outside lang layout)
@@ -97,6 +98,10 @@ export const router = createBrowserRouter([
       {
         path: "/api/auth/callback/nthu_oauth",
         element: <OAuthCallbackRedirect />,
+      },
+      {
+        path: "/l/:slug",
+        element: <ShortlinkRedirect />,
       },
       {
         path: "/:lang",

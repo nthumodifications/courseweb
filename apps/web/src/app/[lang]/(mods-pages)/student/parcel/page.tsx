@@ -1,4 +1,3 @@
-"use client";
 import { AISNotLoggedIn } from "@/components/Pages/AISNotLoggedIn";
 
 const ParcelPage = () => {

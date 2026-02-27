@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useRef, useState, useMemo } from "react";
 import { useRefinementList } from "react-instantsearch";
 import { Input } from "@courseweb/ui";

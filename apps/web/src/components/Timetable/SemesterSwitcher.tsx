@@ -1,4 +1,3 @@
-"use client";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { semesterInfo } from "@courseweb/shared";

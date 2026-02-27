@@ -1,4 +1,3 @@
-"use client"; // Error components must be Client Components
 import * as Sentry from "@sentry/browser";
 import { useEffect } from "react";
 import { Link } from "react-router-dom";

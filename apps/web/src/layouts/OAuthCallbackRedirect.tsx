@@ -3,7 +3,9 @@ import { useEffect } from "react";
 const OAuthCallbackRedirect = () => {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const redirectUrl = new URL("https://auth.nthumods.com/oauth/nthu");
+    const redirectUrl = new URL(
+      `${import.meta.env.VITE_NTHUMODS_AUTH_URL}/oauth/nthu`,
+    );
     const code = params.get("code");
     const state = params.get("state");
     const error = params.get("error");

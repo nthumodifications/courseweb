@@ -1,5 +1,3 @@
-"use client";
-
 import { Button } from "@courseweb/ui";
 import { useSettings } from "@/hooks/contexts/settings";
 import { Star } from "lucide-react";
