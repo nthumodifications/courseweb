@@ -1,4 +1,3 @@
-"use client";
 import { ChatMessage as ChatMessageType } from "@/hooks/useAIChat";
 import { cn } from "@/lib/utils";
 import {

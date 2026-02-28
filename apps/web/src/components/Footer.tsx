@@ -1,14 +1,13 @@
-"use client";
-
 import { Github, Mail, Instagram, Facebook } from "lucide-react";
 import { Button } from "@courseweb/ui";
 import { Badge } from "@courseweb/ui";
 import FullLogo from "./Branding/FullLogo";
 import NTHUModsLogo from "./Branding/NTHUModsLogo";
-import Link from "next/link";
+import { Link, useParams } from "react-router-dom";
 import { getYear } from "date-fns";
 
 const Footer = () => {
+  const { lang } = useParams<{ lang: string }>();
   return (
     <div className="py-16 flex flex-col gap-4">
       <div className="flex flex-col md:flex-row justify-between">
@@ -25,37 +24,37 @@ const Footer = () => {
         </div>
         <div className="flex gap-2">
           <Button className="h-8 w-8" variant="ghost" size="icon" asChild>
-            <Link
+            <a
               target="_blank"
               href="https://github.com/nthumodifications/courseweb"
             >
               <Github size="20" className="text-muted-foreground" />
-            </Link>
+            </a>
           </Button>
           <Button className="h-8 w-8" variant="ghost" size="icon" asChild>
-            <Link target="_blank" href="mailto:nthumods@gmail.com">
+            <a target="_blank" href="mailto:nthumods@gmail.com">
               <Mail size="20" className="text-muted-foreground" />
-            </Link>
+            </a>
           </Button>
           <Button className="h-8 w-8" variant="ghost" size="icon" asChild>
-            <Link target="_blank" href="https://www.instagram.com/nthumods">
+            <a target="_blank" href="https://www.instagram.com/nthumods">
               <Instagram size="20" className="text-muted-foreground" />
-            </Link>
+            </a>
           </Button>
           <Button className="h-8 w-8" variant="ghost" size="icon" asChild>
-            <Link target="_blank" href="https://facebook.com/nthumods">
+            <a target="_blank" href="https://facebook.com/nthumods">
               <Facebook size="20" className="text-muted-foreground" />
-            </Link>
+            </a>
           </Button>
         </div>
       </div>
 
       <div className="flex flex-row text-muted-foreground text-sm [&>a]:mr-4 [&>a]:w-max flex-wrap">
-        <Link href={"/contribute"}>Contribute</Link>
-        <Link href={"/issues"}>Report an Issue</Link>
-        <Link href={"/team"}>Team</Link>
-        <Link href={"/privacy-policy"}>Privacy Policy</Link>
-        <Link href={"/proxy-login"}>Proxy Login</Link>
+        <Link to={`/${lang}/contribute`}>Contribute</Link>
+        <Link to={`/${lang}/issues`}>Report an Issue</Link>
+        <Link to={`/${lang}/team`}>Team</Link>
+        <Link to={`/${lang}/privacy-policy`}>Privacy Policy</Link>
+        <Link to={`/${lang}/proxy-login`}>Proxy Login</Link>
       </div>
 
       <div className="flex flex-col gap-1">

@@ -1,4 +1,3 @@
-"use client";
 import { useQuery } from "@tanstack/react-query";
 import {
   getMainBuses,
@@ -11,7 +10,7 @@ import { RedLineIcon } from "@/components/BusIcons/RedLineIcon";
 import { GreenLineIcon } from "@/components/BusIcons/GreenLineIcon";
 import { Route1LineIcon } from "@/components/BusIcons/Route1LineIcon";
 import { Route2LineIcon } from "@/components/BusIcons/Route2LineIcon";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useNavigate } from "react-router-dom";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useEffect } from "react";
 import { Language } from "@/types/settings";
@@ -25,14 +24,14 @@ type BusRouteDetailsPageProps = {
 const BusRouteDetailsPage = () => {
   const { lang, route } = useParams() as { lang: Language; route: string };
   const dict = useDictionary();
-  const router = useRouter();
+  const navigate = useNavigate();
 
   // Redirect to main bus page if route is invalid
   useEffect(() => {
     if (!["main", "nanda", "route1", "route2"].includes(route)) {
-      router.push(`/${lang}/bus`);
+      navigate(`/${lang}/bus`);
     }
-  }, [route, lang, router]);
+  }, [route, lang, navigate]);
 
   const {
     data: mainBusData,

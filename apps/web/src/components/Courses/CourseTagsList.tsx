@@ -1,4 +1,3 @@
-"use client";
 import { CourseDefinition } from "@/config/supabase";
 import useDictionary from "@/dictionaries/useDictionary";
 import { getGECType } from "@/helpers/courses";

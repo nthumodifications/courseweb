@@ -11,7 +11,7 @@ import { Badge } from "@courseweb/ui";
 import { Check, X } from "lucide-react";
 import { Button } from "@courseweb/ui";
 import { useEffect, useState, useCallback, useMemo, memo, useRef } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams } from "react-router-dom";
 import useCustomRefinementList from "./useCustomRefinementList";
 
 const FilterItem = memo(
@@ -44,7 +44,7 @@ const FilterItem = memo(
       limit: limit,
     });
 
-    const searchParams = useSearchParams();
+    const [searchParams] = useSearchParams();
     const [typable, setEnableTyping] = useState(false);
     const [searchValue, setSearchValue] = useState("");
     const [searching, setSearching] = useState(false);

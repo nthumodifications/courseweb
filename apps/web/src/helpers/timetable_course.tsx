@@ -1,4 +1,3 @@
-"use client";
 import TimetableSlotHorizontal from "@/components/Timetable/TimetableSlotHorizontal";
 import TimetableSlotVertical from "@/components/Timetable/TimetableSlotVertical";
 import {

@@ -1,4 +1,3 @@
-"use client";
 import { EventData } from "@/types/calendar_event";
 import { format, formatRelative, getDay, isSameDay } from "date-fns";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";

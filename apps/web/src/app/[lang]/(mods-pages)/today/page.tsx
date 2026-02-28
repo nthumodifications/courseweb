@@ -1,19 +1,20 @@
-"use client";
-import { NextPage } from "next";
+import { lazy, Suspense } from "react";
 import TodaySchedule from "@/components/Today/TodaySchedule";
 import { useLocalStorage } from "usehooks-ts";
-import dynamic from "next/dynamic";
 
-const CalendarPageDynamic = dynamic(
+const CalendarPageDynamic = lazy(
   () => import("@/components/Calendar/CalendarPage"),
-  { ssr: false },
 );
 
-const TodayPage: NextPage = () => {
+const TodayPage = () => {
   const [useNewCalendar] = useLocalStorage("use_new_calendar", false);
 
   if (useNewCalendar) {
-    return <CalendarPageDynamic />;
+    return (
+      <Suspense fallback={null}>
+        <CalendarPageDynamic />
+      </Suspense>
+    );
   } else
     return (
       <div className="h-full grid grid-cols-1 md:grid-cols-[380px_auto] md:grid-rows-1">

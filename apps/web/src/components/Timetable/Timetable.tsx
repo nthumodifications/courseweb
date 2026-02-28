@@ -1,4 +1,3 @@
-"use client";
 import TimeslotHeader from "@/components/Timetable/TimeslotHeader";
 import TimetableSlotVertical from "@/components/Timetable/TimetableSlotVertical";
 import { scheduleTimeSlots } from "@courseweb/shared";
@@ -18,7 +17,7 @@ import {
   useState,
 } from "react";
 import TimetableSlotHorizontal from "@/components/Timetable/TimetableSlotHorizontal";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { useSettings } from "@/hooks/contexts/settings";
 import { BlankTimeslotBody } from "./BlankTimeslotBody";
 

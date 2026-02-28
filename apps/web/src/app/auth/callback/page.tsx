@@ -1,21 +1,20 @@
-"use client";
 import { Dialog, DialogContent } from "@courseweb/ui";
 import { toast } from "@courseweb/ui";
 import { Loader2 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { useAuth } from "react-oidc-context";
 
 export default function AuthCallback() {
   const auth = useAuth();
-  const router = useRouter();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (auth.error) {
       console.error(auth.error);
-      router.push("/");
+      navigate("/");
     }
-  }, [auth, router]);
+  }, [auth, navigate]);
 
   // Add timeout to force logout after 10 seconds
   useEffect(() => {
@@ -37,7 +36,7 @@ export default function AuthCallback() {
 
     // Clean up timeout if component unmounts or auth completes
     return () => clearTimeout(timeout);
-  }, [auth, router]);
+  }, [auth, navigate]);
 
   return (
     <Dialog open={true}>

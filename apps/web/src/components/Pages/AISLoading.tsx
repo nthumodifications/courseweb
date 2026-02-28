@@ -1,4 +1,3 @@
-"use client";
 export const AISLoading = () => (
   <div className="w-full grid place-items-center h-[--content-height]">
     <div className="flex flex-col space-y-4 items-center">

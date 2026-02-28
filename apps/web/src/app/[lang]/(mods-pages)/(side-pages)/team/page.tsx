@@ -1,6 +1,5 @@
 import { Button } from "@courseweb/ui";
 import { Github, Link2, LinkedinIcon } from "lucide-react";
-import Link from "next/link";
 import team from "@/const/team.json";
 import Footer from "@/components/Footer";
 
@@ -54,29 +53,29 @@ const Team = () => {
                   <div className="flex flex-row gap-2">
                     {member.link && (
                       <Button asChild variant="ghost" size="icon">
-                        <Link href={`${member.link}`} target="_blank">
+                        <a href={`${member.link}`} target="_blank">
                           <Link2 />
-                        </Link>
+                        </a>
                       </Button>
                     )}
                     {member.github && (
                       <Button asChild variant="ghost" size="icon">
-                        <Link
+                        <a
                           href={`https://github.com/${member.github}`}
                           target="_blank"
                         >
                           <Github />
-                        </Link>
+                        </a>
                       </Button>
                     )}
                     {member.linkedin && (
                       <Button asChild variant="ghost" size="icon">
-                        <Link
+                        <a
                           href={`https://linkedin.com/in/${member.linkedin}`}
                           target="_blank"
                         >
                           <LinkedinIcon />
-                        </Link>
+                        </a>
                       </Button>
                     )}
                   </div>
@@ -103,25 +102,23 @@ const Team = () => {
                   <div className="flex flex-row gap-2">
                     {member.link && (
                       <Button asChild variant="ghost" size="icon">
-                        <Link href={`${member.link}`}>
+                        <a href={`${member.link}`}>
                           <Link2 />
-                        </Link>
+                        </a>
                       </Button>
                     )}
                     {member.github && (
                       <Button asChild variant="ghost" size="icon">
-                        <Link href={`https://github.com/${member.github}`}>
+                        <a href={`https://github.com/${member.github}`}>
                           <Github />
-                        </Link>
+                        </a>
                       </Button>
                     )}
                     {member.linkedin && (
                       <Button asChild variant="ghost" size="icon">
-                        <Link
-                          href={`https://linkedin.com/i/${member.linkedin}`}
-                        >
+                        <a href={`https://linkedin.com/in/${member.linkedin}`}>
                           <LinkedinIcon />
-                        </Link>
+                        </a>
                       </Button>
                     )}
                   </div>

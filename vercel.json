@@ -1,8 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "turbo run build --filter=@courseweb/web",
-  "outputDirectory": "apps/web/.next",
+  "outputDirectory": "apps/web/dist",
   "installCommand": "bun install",
-  "framework": "nextjs",
-  "ignoreCommand": "git diff --quiet HEAD^ HEAD ./"
+  "framework": "vite",
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD ./",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }

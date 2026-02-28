@@ -1,16 +1,15 @@
-"use client"; // Error components must be Client Components
-import * as Sentry from "@sentry/nextjs";
+import * as Sentry from "@sentry/browser";
 import { useEffect } from "react";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { AlertOctagon } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@courseweb/ui";
 import { Button } from "@courseweb/ui";
 export default function Error({
   error,
-  reset,
+  resetErrorBoundary: reset,
 }: {
-  error: Error & { digest?: string };
-  reset: () => void;
+  error: Error;
+  resetErrorBoundary: () => void;
 }) {
   useEffect(() => {
     Sentry.captureException(error);
@@ -29,11 +28,11 @@ export default function Error({
         </AlertTitle>
         <AlertDescription>{error.message}</AlertDescription>
         <div className="flex flex-row justify-end gap-1">
-          <Link href="https://github.com/nthumodifications/courseweb/issues/new/choose">
+          <a href="https://github.com/nthumodifications/courseweb/issues/new/choose">
             <Button variant="destructive" size="sm">
               Report issue
             </Button>
-          </Link>
+          </a>
           <Button
             variant="outline"
             size="sm"

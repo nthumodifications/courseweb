@@ -176,7 +176,6 @@ const DownloadTimetableComponent = () => {
             </DialogDescription>
           </DialogHeader>
           <ScrollArea className="max-h-[70dvh]">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             {generatedImg && (
               <img
                 src={generatedImg}

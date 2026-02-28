@@ -1,4 +1,3 @@
-"use client";
 import { useState, useCallback, useRef } from "react";
 import useUserTimetable from "./contexts/useUserTimetable";
 import { useAuth } from "react-oidc-context";
@@ -58,7 +57,7 @@ interface UseAIChatOptions {
 
 export function useAIChat(options: UseAIChatOptions = {}) {
   const apiEndpoint =
-    options.apiEndpoint || `${process.env.NEXT_PUBLIC_COURSEWEB_API_URL}/chat`;
+    options.apiEndpoint || `${import.meta.env.VITE_COURSEWEB_API_URL}/chat`;
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

@@ -16,7 +16,7 @@ import {
   Inbox,
 } from "lucide-react";
 import { useMemo } from "react";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 
 interface FolderNavigationProps {
   plannerInfo: PlannerDataDocType | null;
@@ -160,13 +160,13 @@ export function FolderNavigation({
       {/* Footer Actions */}
       <div className="p-4 border-t border-border flex flex-col gap-2">
         <Button variant="outline" className="w-full" asChild>
-          <Link
+          <a
             href="https://registra.site.nthu.edu.tw/p/412-1211-1826.php?Lang=zh-tw"
             target="_blank"
           >
             <FileText className="h-4 w-4 mr-2" />
             畢業學分PDF
-          </Link>
+          </a>
         </Button>
       </div>
     </div>

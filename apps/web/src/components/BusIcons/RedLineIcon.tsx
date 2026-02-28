@@ -1,4 +1,3 @@
-"use client";
 import { SVGProps } from "react";
 export const RedLineIcon = (props: SVGProps<SVGSVGElement>) => (
   <svg

@@ -13,7 +13,6 @@ import {
 } from "@courseweb/ui";
 import { Button } from "@courseweb/ui";
 import { Input } from "@courseweb/ui";
-import Link from "next/link";
 import { Skeleton } from "@courseweb/ui";
 import client from "@/config/api";
 
@@ -125,19 +124,19 @@ const ShareSyncTimetableDialog = ({
                   {dict.dialogs.ShareSyncTimetableDialog["category:links"]}
                 </h3>
                 <Button variant="outline" asChild>
-                  <Link
+                  <a
                     // Subject: Here is My Timetable, Body: My Timetable can be found on NTHUMODS at {shareLink}
                     href={`mailto:?subject=Here is My Timetable&body=My Timetable can be found on NTHUMODS at ${link}`}
                     target="_blank"
                   >
                     <Mail className="w-4 h-4 mr-2" />
                     {dict.dialogs.ShareSyncTimetableDialog.links.email}
-                  </Link>
+                  </a>
                 </Button>
                 <Button variant="outline" asChild>
-                  <Link href={webcalLink} target="_blank">
+                  <a href={webcalLink} target="_blank">
                     <Calendar className="w-4 h-4 mr-2" /> Sync To Calendar
-                  </Link>
+                  </a>
                 </Button>
               </div>
             </div>

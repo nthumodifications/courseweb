@@ -1,9 +1,7 @@
-"use client";
-import { NextPage } from "next";
 import CalendarPage from "@/components/Calendar/CalendarPage";
 
-const TodayPage: NextPage = () => {
+const CalendarRoute = () => {
   return <CalendarPage />;
 };
 
-export default TodayPage;
+export default CalendarRoute;

@@ -1,6 +1,6 @@
 import { Repeat, Plus, EllipsisVertical } from "lucide-react";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import useDictionary from "@/dictionaries/useDictionary";
 import { Button } from "@courseweb/ui";
 import {
@@ -45,7 +45,7 @@ const TimetableSidebar = ({
     currentColors,
   } = useUserTimetable();
 
-  const router = useRouter();
+  const navigate = useNavigate();
 
   const shareLink = `https://nthumods.com/timetable/view?${Object.keys(courses)
     .map(

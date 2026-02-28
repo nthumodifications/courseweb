@@ -13,8 +13,6 @@ export * from "./ge_target";
 export const MOBILE_BREAKPOINT = 768;
 export const DESKTOP_BREAKPOINT = 1024;
 
-// API constants placeholder
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
 export const DEFAULT_PAGE_SIZE = 20;
 
 // Time constants

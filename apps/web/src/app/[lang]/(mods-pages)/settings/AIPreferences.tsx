@@ -1,4 +1,3 @@
-"use client";
 import { useState, useEffect } from "react";
 import useDictionary from "@/dictionaries/useDictionary";
 import {
@@ -131,7 +130,7 @@ export function AIPreferencesPanel() {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_COURSEWEB_API_URL}/chat`,
+        `${import.meta.env.VITE_COURSEWEB_API_URL}/chat`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

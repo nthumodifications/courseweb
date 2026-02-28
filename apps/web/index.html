@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="zh" translate="no">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta
+      name="theme-color"
+      media="(prefers-color-scheme: light)"
+      content="#ffffff"
+    />
+    <meta
+      name="theme-color"
+      media="(prefers-color-scheme: dark)"
+      content="#171717"
+    />
+    <meta name="apple-mobile-web-app-title" content="NTHUMods" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="application-name" content="NTHUMods" />
+    <meta name="robots" content="index, follow" />
+    <meta
+      name="description"
+      content="國立清華大學課表、校車時間表、資料整合平臺，學生主導、學生自主開發。"
+    />
+
+    <!-- Open Graph / Social -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="NTHUMods - 清華課程整合平臺" />
+    <meta
+      property="og:description"
+      content="國立清華大學課表、校車時間表、資料整合平臺，學生主導、學生自主開發。"
+    />
+    <meta property="og:url" content="https://nthumods.com" />
+    <meta
+      property="og:image"
+      content="https://nthumods.com/images/icons/icon-512x512.png"
+    />
+    <meta property="og:site_name" content="NTHUMods" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="NTHUMods - 清華課程整合平臺" />
+    <meta
+      name="twitter:description"
+      content="國立清華大學課表、校車時間表、資料整合平臺，學生主導、學生自主開發。"
+    />
+    <meta
+      name="twitter:image"
+      content="https://nthumods.com/images/icons/icon-512x512.png"
+    />
+
+    <!-- Icons -->
+    <link rel="icon" href="/favicon.ico" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="192x192"
+      href="/images/icons/icon-192x192.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="512x512"
+      href="/images/icons/icon-512x512.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="192x192"
+      href="/images/icons/icon-192x192.png"
+    />
+
+    <link rel="canonical" href="https://nthumods.com" />
+    <link rel="alternate" hreflang="en" href="https://nthumods.com/en" />
+    <link rel="alternate" hreflang="zh" href="https://nthumods.com/zh" />
+
+    <!-- Google Fonts: Inter + Noto Sans TC -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Noto+Sans+TC:wght@100..900&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      :root {
+        --font-inter: "Inter", sans-serif;
+        --font-noto: "Noto Sans TC", sans-serif;
+      }
+    </style>
+
+    <!-- Synchronous theme script to prevent FOUC -->
+    <script>
+      (function () {
+        var theme = document.cookie.split("; ").find(function (c) {
+          return c.startsWith("theme=");
+        });
+        var value = theme ? theme.split("=")[1] : null;
+        if (value === "dark") {
+          document.documentElement.classList.add("dark");
+        } else if (value === "light") {
+          document.documentElement.classList.add("light");
+        } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+          document.documentElement.classList.add("dark");
+        } else {
+          document.documentElement.classList.add("light");
+        }
+      })();
+    </script>
+
+    <title>NTHUMods</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

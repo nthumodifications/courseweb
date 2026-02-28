@@ -1,8 +1,6 @@
-"use client";
 import { CourseDefinition, CourseSyllabusView } from "@/config/supabase";
 import useDictionary from "@/dictionaries/useDictionary";
 import { FC, memo } from "react";
-import Link from "next/link";
 import { Button } from "@courseweb/ui";
 import { useSettings } from "@/hooks/contexts/settings";
 import {
@@ -10,10 +8,11 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@courseweb/ui";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams } from "react-router-dom";
 import { ChevronDown, Minus, Plus } from "lucide-react";
 import CourseTagList from "@/components/Courses/CourseTagsList";
 import { MinimalCourse } from "@/types/courses";
+import { useCourseLink } from "@/components/Courses/CourseDialog";
 
 type PlannerCourseListItemProps = {
   course: CourseSyllabusView;
@@ -26,7 +25,8 @@ const PlannerCourseListItem: FC<PlannerCourseListItemProps> = memo(
   ({ course, hasTaken = false, onAdd, onRemove }) => {
     const dict = useDictionary();
     const { language } = useSettings();
-    const searchParams = useSearchParams();
+    const [searchParams] = useSearchParams();
+    const { openCourse } = useCourseLink();
 
     const courseTitle =
       language === "zh"
@@ -58,12 +58,12 @@ const PlannerCourseListItem: FC<PlannerCourseListItemProps> = memo(
                   {course.class.padStart(2, "0")}
                 </p>
               </div>
-              <Link
-                className="font-semibold"
-                href={`/${language}/courses/${course.raw_id}?${searchParams.toString()}`}
+              <button
+                className="font-semibold text-left hover:underline cursor-pointer"
+                onClick={() => openCourse(course.raw_id as string)}
               >
                 {courseTitle}
-              </Link>
+              </button>
               <div className="space-y-1 self-start w-auto max-w-fit">
                 {course.venues ? (
                   course.venues.map((vn, i) => (

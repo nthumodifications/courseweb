@@ -1,5 +1,3 @@
-"use client";
-
 import { Button } from "@courseweb/ui";
 import { Calendar } from "@courseweb/ui";
 import { Popover, PopoverContent, PopoverTrigger } from "@courseweb/ui";

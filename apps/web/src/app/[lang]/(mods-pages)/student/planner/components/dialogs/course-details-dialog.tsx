@@ -1,4 +1,3 @@
-import { useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -9,6 +8,7 @@ import {
 } from "@courseweb/ui";
 import { Button } from "@courseweb/ui";
 import { Users, Check, Edit, Eye, FileText, Info } from "lucide-react";
+import { useCourseLink } from "@/components/Courses/CourseDialog";
 import {
   FolderDocType,
   ItemDocType,
@@ -32,7 +32,7 @@ export function CourseDetailsDialog({
   semesterData,
   onEdit,
 }: CourseDetailsDialogProps) {
-  const router = useRouter();
+  const { openCourse } = useCourseLink();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -86,9 +86,7 @@ export function CourseDetailsDialog({
               <Button
                 variant="outline"
                 className="w-full mt-4"
-                onClick={() =>
-                  router.push(`/zh/courses/${selectedCourse.raw_id}`)
-                }
+                onClick={() => openCourse(selectedCourse.raw_id!)}
               >
                 <Eye className="h-4 w-4 mr-2" />
                 查看完整課程資訊

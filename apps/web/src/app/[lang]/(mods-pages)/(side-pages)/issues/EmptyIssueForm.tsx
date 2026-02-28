@@ -3,34 +3,47 @@ import { Input } from "@courseweb/ui";
 import { Label } from "@courseweb/ui";
 import { Textarea } from "@courseweb/ui";
 import client from "@/config/api";
+import { FormEvent, useState } from "react";
 
 const EmptyIssueForm = () => {
+  const [error, setError] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError(null);
+    const form = new FormData(e.currentTarget);
+    const title = form.get("title");
+    const description = form.get("description");
+    if (typeof title !== "string" || title.length === 0) {
+      setError("Title is required");
+      return;
+    }
+    if (typeof description !== "string" || description.length === 0) {
+      setError("Description is required");
+      return;
+    }
+    try {
+      await client.issue.$post({
+        json: {
+          title,
+          body: description,
+          labels: [],
+        },
+      });
+      setSubmitted(true);
+    } catch {
+      setError("Failed to submit issue. Please try again.");
+    }
+  };
+
+  if (submitted) {
+    return <p className="text-green-600">Issue submitted successfully!</p>;
+  }
+
   return (
-    <form
-      action={async (form) => {
-        "use server";
-        const title = form.get("title");
-        const description = form.get("description");
-        // verify that title and description are not empty and is a string
-        if (typeof title !== "string" || title.length === 0) {
-          throw new Error("Title is required");
-        }
-        if (typeof description !== "string" || description.length === 0) {
-          throw new Error("Description is required");
-        }
-        console.log("sabmitting issue");
-        const createIssue = client.issue.$post;
-        const issue = await createIssue({
-          json: {
-            title,
-            body: description,
-            labels: [],
-          },
-        });
-        console.log("issue submitted", issue);
-      }}
-      className="flex flex-col max-w-2xl gap-4"
-    >
+    <form onSubmit={handleSubmit} className="flex flex-col max-w-2xl gap-4">
+      {error && <p className="text-red-500 text-sm">{error}</p>}
       <div className="flex flex-col gap-2">
         <Label htmlFor="title">{"Title"}</Label>
         <Input id="title" name="title" />

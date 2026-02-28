@@ -1,4 +1,3 @@
-"use client";
 import { createInfiniteHitsSessionStorageCache } from "instantsearch.js/es/lib/infiniteHitsCache";
 import algoliasearch from "algoliasearch/lite";
 import {
@@ -9,12 +8,12 @@ import {
 import { useMediaQuery } from "usehooks-ts";
 import { ScrollArea } from "@courseweb/ui";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@courseweb/ui";
-import { InstantSearchNext } from "react-instantsearch-nextjs";
+import { InstantSearch } from "react-instantsearch";
 import { Calendar, FilterIcon, SearchIcon } from "lucide-react";
 
 const searchClient = algoliasearch(
-  process.env.NEXT_PUBLIC_ALGOLIA_APP_ID!,
-  process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY!,
+  import.meta.env.VITE_ALGOLIA_APP_ID!,
+  import.meta.env.VITE_ALGOLIA_SEARCH_KEY!,
 );
 const sessionStorageCache = createInfiniteHitsSessionStorageCache();
 
@@ -44,7 +43,7 @@ const CourseSearchContainer = (props: CourseSearchContainerProps) => {
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const { courses, getSemesterCourses } = useUserTimetable();
   return (
-    <InstantSearchNext
+    <InstantSearch
       searchClient={searchClient}
       indexName="nthu_courses"
       initialUiState={{
@@ -203,7 +202,7 @@ const CourseSearchContainer = (props: CourseSearchContainerProps) => {
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>
-    </InstantSearchNext>
+    </InstantSearch>
   );
 };
 

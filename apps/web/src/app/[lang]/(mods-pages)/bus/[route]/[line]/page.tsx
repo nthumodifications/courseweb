@@ -1,4 +1,3 @@
-"use client";
 import { GreenLineIcon } from "@/components/BusIcons/GreenLineIcon";
 import { NandaLineIcon } from "@/components/BusIcons/NandaLineIcon";
 import { RedLineIcon } from "@/components/BusIcons/RedLineIcon";
@@ -25,8 +24,8 @@ import {
   getDay,
 } from "date-fns";
 import { Bus, ChevronLeft } from "lucide-react";
-import Link from "next/link";
-import { useParams, useSearchParams } from "next/navigation";
+import { Link } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { useMemo } from "react";
 import { getAllBusData } from "@/libs/bus";
 import { useQuery } from "@tanstack/react-query";
@@ -227,7 +226,7 @@ const linesDict: {
 
 const LineDisplayPage = () => {
   const { line } = useParams() as { line: string };
-  const searchParams = useSearchParams();
+  const [searchParams] = useSearchParams();
   const time = useTime();
   const lineData = linesDict[line] as (typeof linesDict)["green_up"];
 
@@ -606,7 +605,7 @@ const LineDisplayPage = () => {
     <div className="flex flex-col gap-2">
       <div className="flex flex-row items-center px-2 gap-4">
         <Button variant={"ghost"} asChild>
-          <Link href={returnUrl}>
+          <Link to={returnUrl}>
             <ChevronLeft className="w-4 h-4 mr-2" />
           </Link>
         </Button>

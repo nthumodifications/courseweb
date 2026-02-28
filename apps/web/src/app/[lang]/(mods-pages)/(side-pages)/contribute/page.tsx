@@ -1,4 +1,3 @@
-"use client";
 import { Button } from "@courseweb/ui";
 import {
   BugIcon,
@@ -12,10 +11,8 @@ import {
   MessageSquare,
   Sparkles,
 } from "lucide-react";
-import Link from "next/link";
 import IssueFormDialog from "@/components/Forms/IssueFormDialog";
 import Footer from "@/components/Footer";
-import Image from "next/image";
 import useDictionary from "@/dictionaries/useDictionary";
 
 const ContributePage = () => {
@@ -48,7 +45,7 @@ const ContributePage = () => {
               {/* Algolia */}
               <div className="flex flex-col items-center">
                 <div className="bg-background border rounded-lg p-4 shadow-sm">
-                  <Image
+                  <img
                     src="/images/Algolia-mark-blue.png"
                     alt="Algolia"
                     width={64}
@@ -64,7 +61,7 @@ const ContributePage = () => {
               {/* Cerana Studios */}
               <div className="flex flex-col items-center">
                 <div className="bg-background border rounded-lg p-4 shadow-sm">
-                  <Image
+                  <img
                     src="/images/cerana_dc.png"
                     alt="Cerana Studios"
                     width={64}
@@ -130,10 +127,10 @@ const ContributePage = () => {
         </p>
         <div className="flex flex-row gap-4 mb-8">
           <Button variant="outline" asChild>
-            <Link href="https://opencollective.com/nthumods">
+            <a href="https://opencollective.com/nthumods">
               <DollarSign className="w-4 h-4 mr-2" />
               <span>{dict.contribute.financial_support.opencollective}</span>
-            </Link>
+            </a>
           </Button>
         </div>
 
@@ -157,7 +154,7 @@ const ContributePage = () => {
               </div>
             </div>
           </IssueFormDialog>
-          <Link href="mailto:nthumods@gmail.com">
+          <a href="mailto:nthumods@gmail.com">
             <div className="rounded-md hover:shadow-md transition-shadow cursor-pointer  bg-red-600 text-white grid place-items-center w-28 h-28">
               <div className="flex flex-col items-center gap-2">
                 <Mail />
@@ -166,8 +163,8 @@ const ContributePage = () => {
                 </div>
               </div>
             </div>
-          </Link>
-          <Link href="https://instagram.com/nthumods">
+          </a>
+          <a href="https://instagram.com/nthumods">
             <div className="rounded-md hover:shadow-md transition-shadow cursor-pointer  bg-[#515BD4] text-white grid place-items-center w-28 h-28">
               <div className="flex flex-col items-center gap-2">
                 <svg
@@ -182,7 +179,7 @@ const ContributePage = () => {
                 </div>
               </div>
             </div>
-          </Link>
+          </a>
         </div>
 
         <h1 className="text-2xl font-semibold mb-2">
@@ -195,7 +192,7 @@ const ContributePage = () => {
           {dict.contribute.for_developers.bug_reports.description}
         </p>
         <div className="flex flex-row gap-2 mb-8">
-          <Link href="https://github.com/nthumodifications/courseweb/issues/new?assignees=&labels=&projects=&template=bug_report.md&title=">
+          <a href="https://github.com/nthumodifications/courseweb/issues/new?assignees=&labels=&projects=&template=bug_report.md&title=">
             <div className="rounded-md hover:shadow-md transition-shadow cursor-pointer p-4 bg-neutral-800 text-white flex flex-row items-center gap-4">
               <BugIcon />
               <div className="flex flex-col">
@@ -207,8 +204,8 @@ const ContributePage = () => {
                 </div>
               </div>
             </div>
-          </Link>
-          <Link
+          </a>
+          <a
             href="https://github.com/nthumodifications/courseweb/issues/new?assignees=&labels=&projects=&template=feature_request.md&title="
             className="text-inherit no-underline"
           >
@@ -226,7 +223,7 @@ const ContributePage = () => {
                 </div>
               </div>
             </div>
-          </Link>
+          </a>
         </div>
 
         <h2 className="text-xl font-semibold mb-2">
@@ -237,7 +234,7 @@ const ContributePage = () => {
         </p>
         <div className="flex flex-row gap-4 mb-8">
           <Button variant="outline" asChild>
-            <Link href="https://github.com/nthumodifications/courseweb">
+            <a href="https://github.com/nthumodifications/courseweb">
               <svg
                 className="w-4 h-4 mr-2"
                 fill="currentColor"
@@ -248,15 +245,15 @@ const ContributePage = () => {
               <span>
                 {dict.contribute.for_developers.code_design.github_repo}
               </span>
-            </Link>
+            </a>
           </Button>
           <Button variant="outline" asChild>
-            <Link href="https://github.com/nthumodifications/courseweb/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22">
+            <a href="https://github.com/nthumodifications/courseweb/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22">
               <Sparkles />
               <span>
                 {dict.contribute.for_developers.code_design.good_first_issues}
               </span>
-            </Link>
+            </a>
           </Button>
         </div>
 
@@ -270,14 +267,14 @@ const ContributePage = () => {
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Button asChild>
-              <Link href="https://github.com/nthumodifications/courseweb">
+              <a href="https://github.com/nthumodifications/courseweb">
                 {dict.contribute.call_to_action.start_contributing}
-              </Link>
+              </a>
             </Button>
             <Button asChild variant="outline">
-              <Link href="https://opencollective.com/nthumods">
+              <a href="https://opencollective.com/nthumods">
                 {dict.contribute.call_to_action.support_us}
-              </Link>
+              </a>
             </Button>
           </div>
         </div>

@@ -1,8 +1,6 @@
-"use client";
 import { CourseDefinition, CourseSyllabusView } from "@/config/supabase";
 import useDictionary from "@/dictionaries/useDictionary";
-import { FC, memo, useState } from "react";
-import Link from "next/link";
+import { FC, memo } from "react";
 import CourseTagList from "./CourseTagsList";
 import SelectCourseButton from "./SelectCourseButton";
 import { Button } from "@courseweb/ui";
@@ -12,12 +10,10 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@courseweb/ui";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams } from "react-router-dom";
 import { ChevronDown } from "lucide-react";
-import useUserTimetable, {
-  CourseLocalStorage,
-} from "@/hooks/contexts/useUserTimetable";
-import useSyncedStorage from "@/hooks/useSyncedStorage";
+import useUserTimetable from "@/hooks/contexts/useUserTimetable";
+import { useCourseLink } from "@/components/Courses/CourseDialog";
 
 // Memoize the CourseListItem component
 const CourseListItem: FC<{
@@ -26,7 +22,8 @@ const CourseListItem: FC<{
 }> = memo(({ course, hasTaken = false }) => {
   const dict = useDictionary();
   const { language } = useSettings();
-  const searchParams = useSearchParams();
+  const [searchParams] = useSearchParams();
+  const { openCourse } = useCourseLink();
 
   const { currentColors, setHoverCourse } = useUserTimetable();
 
@@ -57,14 +54,14 @@ const CourseListItem: FC<{
                 {course.class.padStart(2, "0")}
               </p>
             </div>
-            <Link
-              className="font-semibold"
-              href={`/${language}/courses/${course.raw_id}?${searchParams.toString()}`}
+            <button
+              className="font-semibold text-left hover:underline cursor-pointer"
+              onClick={() => openCourse(course.raw_id as string)}
               onMouseEnter={() => handleHover(true)}
               onMouseLeave={() => handleHover(false)}
             >
               {courseTitle}
-            </Link>
+            </button>
             {/* <h3 className="text-sm mt-0 break-words">
               {course.name_en} -{" "}
               <span className="w-max">

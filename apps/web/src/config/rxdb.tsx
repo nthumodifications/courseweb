@@ -1,4 +1,3 @@
-"use client";
 import {
   ExtractDocumentTypeFromTypedRxJsonSchema,
   addRxPlugin,
@@ -134,7 +133,7 @@ export type TimetableSyncDocType = ExtractDocumentTypeFromTypedRxJsonSchema<
 >;
 export const initializeRxDB = async () => {
   // create RxDB
-  if (process.env.NODE_ENV === "development") {
+  if (import.meta.env.DEV) {
     await import("rxdb/plugins/dev-mode").then((module) =>
       addRxPlugin(module.RxDBDevModePlugin),
     );
@@ -144,16 +143,15 @@ export const initializeRxDB = async () => {
   addRxPlugin(RxDBQueryBuilderPlugin);
   addRxPlugin(RxDBUpdatePlugin);
 
-  const storage =
-    process.env.NODE_ENV === "development"
-      ? wrappedValidateZSchemaStorage({
-          storage: getRxStorageDexie(),
-        })
-      : getRxStorageDexie();
+  const storage = import.meta.env.DEV
+    ? wrappedValidateZSchemaStorage({
+        storage: getRxStorageDexie(),
+      })
+    : getRxStorageDexie();
   const db = await createRxDatabase({
     name: "nthumods-calendar",
     storage: storage,
-    ignoreDuplicate: process.env.NODE_ENV === "development",
+    ignoreDuplicate: import.meta.env.DEV,
     // Add global options to handle replication protocol metadata
     options: {
       replication: {

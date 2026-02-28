@@ -1,4 +1,3 @@
-"use client";
 import { CloudOff } from "lucide-react";
 
 const OfflinePage = () => (

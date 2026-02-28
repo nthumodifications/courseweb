@@ -1,9 +1,5 @@
-import { Metadata } from "next";
+import { useParams } from "react-router-dom";
 import Footer from "@/components/Footer";
-
-export const metadata: Metadata = {
-  title: "隱私權政策 Privacy Policy",
-};
 
 const PrivacyPolicyZHPage = () => {
   return (
@@ -194,17 +190,10 @@ const PrivacyPolicyENPage = () => {
   );
 };
 
-type LangProps = {
-  params: {
-    lang: string;
-  };
-};
-
-const PrivacyPolicyPage = ({ params }: LangProps) => {
+const PrivacyPolicyPage = () => {
+  const { lang } = useParams<{ lang: string }>();
   return (
-    <>
-      {params.lang === "zh" ? <PrivacyPolicyZHPage /> : <PrivacyPolicyENPage />}
-    </>
+    <>{lang === "zh" ? <PrivacyPolicyZHPage /> : <PrivacyPolicyENPage />}</>
   );
 };
 

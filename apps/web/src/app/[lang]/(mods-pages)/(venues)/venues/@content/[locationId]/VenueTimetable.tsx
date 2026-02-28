@@ -1,4 +1,3 @@
-"use client";
 import Timetable from "@/components/Timetable/Timetable";
 import { renderTimetableSlot } from "@/helpers/timetable_course";
 import {

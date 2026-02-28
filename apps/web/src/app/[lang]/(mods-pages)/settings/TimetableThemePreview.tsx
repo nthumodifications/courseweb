@@ -1,4 +1,3 @@
-"use client";
 import { timetableColors } from "@courseweb/shared";
 
 export const TimetableThemePreview = ({

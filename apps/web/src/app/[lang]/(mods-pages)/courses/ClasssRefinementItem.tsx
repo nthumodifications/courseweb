@@ -11,7 +11,7 @@ import { Badge } from "@courseweb/ui";
 import { Check, X } from "lucide-react";
 import { Button } from "@courseweb/ui";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams } from "react-router-dom";
 import useCustomRefinementList from "./useCustomRefinementList";
 import { getFormattedClassCode } from "@/helpers/courses";
 import useCustomMenu from "@/app/[lang]/(mods-pages)/courses/useCustomMenu";
@@ -44,7 +44,7 @@ const ClassRefinementItem = ({
     [semesterItem],
   );
 
-  const searchParams = useSearchParams();
+  const [searchParams] = useSearchParams();
   useEffect(() => {
     const refinedItems = items.filter((item) => item.isRefined);
     setSelected(refinedItems.map((item) => item.value));

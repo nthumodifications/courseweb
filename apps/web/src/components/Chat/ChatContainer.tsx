@@ -1,4 +1,3 @@
-"use client";
 import { Drawer } from "vaul";
 import { useMediaQuery } from "usehooks-ts";
 import { useChatContext } from "./ChatProvider";
@@ -11,7 +10,7 @@ import { Button } from "@courseweb/ui";
 import { AISettingsDialog } from "./AISettingsDialog";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { useLocation } from "react-router-dom";
 import { useAuth } from "react-oidc-context";
 import useDictionary from "@/dictionaries/useDictionary";
 
@@ -47,7 +46,8 @@ export function ChatContainer() {
   const [width, setWidth] = useState(400);
   const [isResizing, setIsResizing] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const pathname = usePathname();
+  const location = useLocation();
+  const pathname = location.pathname;
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {

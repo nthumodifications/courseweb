@@ -1,4 +1,3 @@
-"use client";
 import { useSettings } from "@/hooks/contexts/settings";
 import useDictionary from "@/dictionaries/useDictionary";
 import { Badge } from "@courseweb/ui";
@@ -20,7 +19,7 @@ import {
 
 import { GradeObject } from "@/types/grades";
 import { toPrettySemester } from "@/helpers/semester";
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@courseweb/ui";
 import { Card, CardContent, CardHeader, CardTitle } from "@courseweb/ui";
 import { Button } from "@courseweb/ui";
@@ -33,19 +32,16 @@ import {
   DialogTrigger,
 } from "@courseweb/ui";
 import { ExternalLink } from "lucide-react";
-import dynamic from "next/dynamic";
 import { distinct } from "rxjs";
 
-const GPAChart = dynamic(async () => (await import("./GPAChart")).GPAChart, {
-  ssr: false,
-});
-const ClassRankChart = dynamic(
-  async () => (await import("./ClassRankChart")).ClassRankChart,
-  { ssr: false },
+const GPAChart = lazy(() =>
+  import("./GPAChart").then((m) => ({ default: m.GPAChart })),
 );
-const DeptRankChart = dynamic(
-  async () => (await import("./DeptRankChart")).DeptRankChart,
-  { ssr: false },
+const ClassRankChart = lazy(() =>
+  import("./ClassRankChart").then((m) => ({ default: m.ClassRankChart })),
+);
+const DeptRankChart = lazy(() =>
+  import("./DeptRankChart").then((m) => ({ default: m.DeptRankChart })),
 );
 
 const SemesterGradeCard = ({
@@ -466,7 +462,9 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
                 <CardTitle>GPA</CardTitle>
               </CardHeader>
               <CardContent>
-                <GPAChart lineData={lineData} />
+                <Suspense fallback={null}>
+                  <GPAChart lineData={lineData} />
+                </Suspense>
               </CardContent>
             </Card>
             <Card className=" min-w-[300px] flex-1">
@@ -474,7 +472,9 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
                 <CardTitle>{dict.grade.class_rank}</CardTitle>
               </CardHeader>
               <CardContent>
-                <ClassRankChart lineData={lineData} />
+                <Suspense fallback={null}>
+                  <ClassRankChart lineData={lineData} />
+                </Suspense>
               </CardContent>
             </Card>
             <Card className=" min-w-[300px] flex-1">
@@ -482,7 +482,9 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
                 <CardTitle>{dict.grade.dept_rank}</CardTitle>
               </CardHeader>
               <CardContent>
-                <DeptRankChart lineData={lineData} />
+                <Suspense fallback={null}>
+                  <DeptRankChart lineData={lineData} />
+                </Suspense>
               </CardContent>
             </Card>
           </div>
@@ -502,13 +504,19 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
             </TabsList>
           </div>
           <TabsContent value="gpa">
-            <GPAChart lineData={lineData} />
+            <Suspense fallback={null}>
+              <GPAChart lineData={lineData} />
+            </Suspense>
           </TabsContent>
           <TabsContent value="class_rank">
-            <ClassRankChart lineData={lineData} />
+            <Suspense fallback={null}>
+              <ClassRankChart lineData={lineData} />
+            </Suspense>
           </TabsContent>
           <TabsContent value="dept_rank">
-            <DeptRankChart lineData={lineData} />
+            <Suspense fallback={null}>
+              <DeptRankChart lineData={lineData} />
+            </Suspense>
           </TabsContent>
         </Tabs>
       )}

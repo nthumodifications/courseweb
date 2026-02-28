@@ -1,5 +1,3 @@
-"use client";
-
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import {
   useRefinementList,

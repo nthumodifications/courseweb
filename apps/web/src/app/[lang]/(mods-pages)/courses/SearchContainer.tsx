@@ -21,7 +21,7 @@ import Filters from "./Filters";
 import CourseSidePanel from "./CourseSidePanel";
 import SearchBox from "@/components/SearchBox/SearchBox";
 import SemesterSelector from "./SemesterSelector";
-import Link from "next/link";
+import { Link, useParams } from "react-router-dom";
 import { Label } from "@courseweb/ui";
 import useCustomMenu from "@/app/[lang]/(mods-pages)/courses/useCustomMenu";
 import { lastSemester } from "@courseweb/shared";
@@ -121,6 +121,7 @@ const SearchContainer = memo(
     sessionStorageCache: InfiniteHitsCache;
   }) => {
     const dict = useDictionary();
+    const { lang } = useParams<{ lang: string }>();
     const { nbHits, processingTimeMS } = useStats();
 
     const { items } = useCustomMenu({
@@ -158,7 +159,7 @@ const SearchContainer = memo(
                 autoFocus
               />
               <Separator orientation="vertical" className="h-full" />
-              <Link href="/zh/chat">
+              <Link to={`/${lang}/chat`}>
                 <Button variant="ghost" size="icon" title="AI 課程助手">
                   <Sparkles size="16" />
                 </Button>

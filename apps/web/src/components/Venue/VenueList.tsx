@@ -1,5 +1,4 @@
-"use client";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { useSettings } from "@/hooks/contexts/settings";
 import { Input } from "@courseweb/ui";
@@ -47,7 +46,7 @@ const VenueList = ({ venues }: { venues: string[] }) => {
             <h2 className="text-lg font-semibold">{ven}</h2>
             <div className="grid grid-cols-2 md:grid-cols-3">
               {grouped[ven].map((venue, i) => (
-                <Link key={i} href={`/${language}/venues/${venue}`}>
+                <Link key={i} to={`/${language}/venues/${venue}`}>
                   <Button className="text-gray-400" variant="ghost">
                     {venue}
                   </Button>

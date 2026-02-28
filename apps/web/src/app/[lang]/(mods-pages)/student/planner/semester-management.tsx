@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useEffect } from "react";
 import { Plus, Trash2, Edit, Save, X, Calendar } from "lucide-react";
 import { Button } from "@courseweb/ui";

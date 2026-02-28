@@ -1,4 +1,3 @@
-"use client";
 import {
   ExtractDocumentTypeFromTypedRxJsonSchema,
   addRxPlugin,
@@ -126,7 +125,7 @@ export type SemesterDocType = ExtractDocumentTypeFromTypedRxJsonSchema<
 >;
 
 export const initializeRxDB = async () => {
-  if (process.env.NODE_ENV === "development") {
+  if (import.meta.env.DEV) {
     await import("rxdb/plugins/dev-mode").then((m) =>
       addRxPlugin(m.RxDBDevModePlugin),
     );
@@ -136,16 +135,15 @@ export const initializeRxDB = async () => {
   addRxPlugin(RxDBQueryBuilderPlugin);
   addRxPlugin(RxDBUpdatePlugin);
 
-  const storage =
-    process.env.NODE_ENV === "development"
-      ? wrappedValidateZSchemaStorage({
-          storage: getRxStorageDexie(),
-        })
-      : getRxStorageDexie();
+  const storage = import.meta.env.DEV
+    ? wrappedValidateZSchemaStorage({
+        storage: getRxStorageDexie(),
+      })
+    : getRxStorageDexie();
   const db = await createRxDatabase({
     name: "grad-planner",
     storage,
-    ignoreDuplicate: process.env.NODE_ENV === "development",
+    ignoreDuplicate: import.meta.env.DEV,
   });
 
   await db.addCollections({

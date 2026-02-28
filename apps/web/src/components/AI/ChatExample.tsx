@@ -1,4 +1,3 @@
-"use client";
 import { useAIChat } from "@/hooks/useAIChat";
 import { Button, Input } from "@courseweb/ui";
 import { useState } from "react";

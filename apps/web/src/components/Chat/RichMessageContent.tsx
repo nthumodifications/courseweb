@@ -1,8 +1,7 @@
-"use client";
 import React, { Suspense } from "react";
 import ReactMarkdown from "react-markdown";
 import { Skeleton } from "@courseweb/ui";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import remarkGfm from "remark-gfm";
 
 // Lazy load heavy components

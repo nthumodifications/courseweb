@@ -7,28 +7,28 @@ import {
 } from "@courseweb/ui";
 import NTHUModsLogo from "@/components/Branding/NTHUModsLogo";
 
-import dynamic from "next/dynamic";
+import { lazy, Suspense } from "react";
 import CurrentSemesterLabel from "./Today/CurrentSemesterLabel";
 import { Language } from "@/types/settings";
 import SponsorshipBanner from "./Sponsorship/SponsorshipBanner";
 import { Badge } from "@courseweb/ui";
 
-const HelpDynamic = dynamic(() => import("@/components/Help/Help"));
+const HelpDynamic = lazy(() => import("@/components/Help/Help"));
 
-const GenericIssueFormDynamic = dynamic(
+const GenericIssueFormDynamic = lazy(
   () => import("@/components/Forms/GenericIssueFormDialog"),
 );
 
-const MinifiedUpcomingEventsDynamic = dynamic(
+const MinifiedUpcomingEventsDynamic = lazy(
   () => import("@/components/Calendar/MinifiedUpcomingEvents"),
 );
 
-const PWAInstallPromptDynamic = dynamic(
+const PWAInstallPromptDynamic = lazy(
   () => import("@/components/PWA/PWAInstallPrompt"),
 );
 
 const AppSidebar = ({ lang }: { lang: Language }) => {
-  const isDevServer = process.env.NODE_ENV === "development";
+  const isDevServer = import.meta.env.DEV;
   return (
     <Sidebar collapsible="offcanvas">
       <SidebarHeader className="p-4">
@@ -43,20 +43,28 @@ const AppSidebar = ({ lang }: { lang: Language }) => {
       </SidebarContent>
       <SidebarFooter className="flex flex-col">
         <div className="px-2 mb-2">
-          <PWAInstallPromptDynamic />
+          <Suspense fallback={null}>
+            <PWAInstallPromptDynamic />
+          </Suspense>
         </div>
         <div className="pl-2">
           <CurrentSemesterLabel language={lang} />
         </div>
         <div className="border-t border-border pt-2">
-          <MinifiedUpcomingEventsDynamic />
+          <Suspense fallback={null}>
+            <MinifiedUpcomingEventsDynamic />
+          </Suspense>
         </div>
         <div className="px-2 mt-2">
           <SponsorshipBanner />
         </div>
         <div className="flex flex-row justify-stretch gap-2 mt-2 px-2">
-          <HelpDynamic />
-          <GenericIssueFormDynamic />
+          <Suspense fallback={null}>
+            <HelpDynamic />
+          </Suspense>
+          <Suspense fallback={null}>
+            <GenericIssueFormDynamic />
+          </Suspense>
         </div>
       </SidebarFooter>
     </Sidebar>

@@ -1,20 +1,19 @@
-"use client";
 import * as I from "lucide-react";
 import { FC, useEffect, useMemo } from "react";
-import { usePathname, useRouter } from "next/navigation";
-import { Route } from "next";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useSettings } from "@/hooks/contexts/settings";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useSidebar } from "@courseweb/ui";
 
 const SideNav: FC = () => {
-  const pathname = usePathname();
+  const location = useLocation();
+  const pathname = location.pathname;
   const { language } = useSettings();
   const dict = useDictionary();
-  const router = useRouter();
+  const navigate = useNavigate();
   const links: {
     title: string;
-    href: Route;
+    href: string;
     icon: JSX.Element;
     color: string;
   }[] = useMemo(
@@ -56,16 +55,14 @@ const SideNav: FC = () => {
   const { setOpenMobile, isMobile } = useSidebar();
 
   useEffect(() => {
-    links.forEach((link) => {
-      router.prefetch(link.href);
-    });
-  }, [links, router]);
+    // prefetch is not available in react-router-dom
+  }, [links]);
 
-  const handleLinkClick = (href: Route) => () => {
+  const handleLinkClick = (href: string) => () => {
     if (isMobile) {
       setOpenMobile(false);
     }
-    router.push(href);
+    navigate(href);
   };
 
   return (

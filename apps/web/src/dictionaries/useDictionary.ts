@@ -1,4 +1,4 @@
-import { useParams } from "next/navigation";
+import { useParams } from "react-router-dom";
 import en from "./en.json";
 import zh from "./zh.json";
 

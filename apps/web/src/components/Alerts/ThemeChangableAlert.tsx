@@ -1,5 +1,5 @@
 import useDictionary from "@/dictionaries/useDictionary";
-import Link from "next/link";
+import { Link, useParams } from "react-router-dom";
 import React from "react";
 import { Info, X } from "lucide-react";
 import { useLocalStorage } from "usehooks-ts";
@@ -9,6 +9,7 @@ import { Button } from "@courseweb/ui";
 const ThemeChangableAlert = () => {
   const [open, setOpen] = useLocalStorage("theme_changable_alert", true);
   const dict = useDictionary();
+  const { lang } = useParams<{ lang: string }>();
 
   if (!open) return <></>;
   return (
@@ -16,7 +17,7 @@ const ThemeChangableAlert = () => {
       <Info className="h-4 w-4" />
       <AlertTitle>{dict.alerts.TimetableCourseList.text}</AlertTitle>
       <AlertDescription>
-        <Link href="/settings">
+        <Link to={`/${lang}/settings`}>
           <Button
             variant="ghost"
             color="success"

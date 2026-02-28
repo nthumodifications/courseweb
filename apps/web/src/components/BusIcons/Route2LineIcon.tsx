@@ -1,4 +1,3 @@
-"use client";
 import { SVGProps } from "react";
 
 export const Route2LineIcon = (props: SVGProps<SVGSVGElement>) => (

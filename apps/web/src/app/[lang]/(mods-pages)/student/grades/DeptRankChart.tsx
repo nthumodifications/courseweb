@@ -1,4 +1,3 @@
-"use client";
 import { toPrettySemester } from "@/helpers/semester";
 import {
   Line,

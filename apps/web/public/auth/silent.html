@@ -1,0 +1,12 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Silent Auth Callback</title>
+  </head>
+  <body>
+    <script src="https://cdn.jsdelivr.net/npm/oidc-client-ts@3/dist/browser/oidc-client-ts.min.js"></script>
+    <script>
+      new oidc.UserManager({ response_mode: "query" }).signinSilentCallback();
+    </script>
+  </body>
+</html>

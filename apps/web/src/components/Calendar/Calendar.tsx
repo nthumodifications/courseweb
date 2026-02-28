@@ -31,10 +31,7 @@ import { timetableToCalendarEvent } from "./timetableToCalendarEvent";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { createTimetableFromCourses } from "@/helpers/timetable";
 import { MinimalCourse } from "@/types/courses";
-import {
-  ErrorBoundary,
-  ErrorComponent,
-} from "next/dist/client/components/error-boundary";
+import { ErrorBoundary } from "react-error-boundary";
 import { useSettings } from "@/hooks/contexts/settings";
 import { useSwipeable } from "react-swipeable";
 import { useRxCollection } from "rxdb-hooks";
@@ -47,7 +44,13 @@ import UpcomingEvents from "./UpcomingEvents";
 import { useIsMobile } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
 
-const CalendarError: ErrorComponent = ({ error, reset }) => {
+const CalendarError = ({
+  error,
+  resetErrorBoundary,
+}: {
+  error: Error;
+  resetErrorBoundary: () => void;
+}) => {
   return <div className="text-red-500">An error occurred: {error.message}</div>;
 };
 
@@ -336,7 +339,7 @@ const Calendar = () => {
   };
 
   return (
-    <ErrorBoundary errorComponent={CalendarError}>
+    <ErrorBoundary FallbackComponent={CalendarError}>
       {availableSync.length > 0 && dbReady && (
         <CalendarTimetableSyncDialog
           request={availableSync[0]}

@@ -1,4 +1,3 @@
-"use client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@courseweb/ui";
 import { BusDepartureDetails, LineInfo } from "@/libs/bus";
 import {
@@ -8,7 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "@courseweb/ui";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useNavigate } from "react-router-dom";
 import { SVGProps, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@courseweb/ui";
 import { ChevronLeft } from "lucide-react";
@@ -225,7 +224,7 @@ const BusDetailsContainer = ({
       </Table>
     );
   };
-  const router = useRouter();
+  const navigate = useNavigate();
 
   const scrollToClosestTime = (now: Date) => {
     console.log(now);
@@ -342,7 +341,7 @@ const BusDetailsContainer = ({
         <div className="w-full flex flex-col gap-4 sticky -top-8 pt-4 z-10 bg-background">
           <div className="flex flex-row items-center px-2 gap-4">
             <Button
-              onClick={() => router.push(`/${lang}/bus`)}
+              onClick={() => navigate(`/${lang}/bus`)}
               size="sm"
               variant="ghost"
               className="px-0"

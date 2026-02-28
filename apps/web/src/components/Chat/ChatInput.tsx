@@ -1,4 +1,3 @@
-"use client";
 import { useState, useRef, KeyboardEvent } from "react";
 import { useChatContext } from "./ChatProvider";
 import { Button } from "@courseweb/ui";

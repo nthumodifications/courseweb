@@ -1,4 +1,3 @@
-"use client";
 import { useState } from "react";
 import { Viewer } from "@react-pdf-viewer/core";
 import { Worker } from "@react-pdf-viewer/core";
