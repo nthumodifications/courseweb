@@ -85,15 +85,17 @@ const SettingsPage = () => {
   ];
 
   return (
-    <div className="flex flex-col lg:flex-row gap-8 max-w-7xl mx-auto px-4 overflow-hidden">
+    <div className="flex flex-col lg:flex-row gap-8 max-w-7xl mx-auto px-4">
       {/* Sidebar - Desktop only */}
-      <div className="hidden lg:block w-[200px] shrink-0">
-        <SettingsSidebar
-          sections={sections}
-          activeSection={activeSection}
-          onSectionClick={scrollToSection}
-        />
-      </div>
+      <aside className="hidden lg:block w-[200px] shrink-0">
+        <div className="sticky top-20 pt-8">
+          <SettingsSidebar
+            sections={sections}
+            activeSection={activeSection}
+            onSectionClick={scrollToSection}
+          />
+        </div>
+      </aside>
 
       {/* Mobile Quick Nav */}
       <div className="lg:hidden">
@@ -115,27 +117,29 @@ const SettingsPage = () => {
           <SettingItem
             title={dict.settings.display.dark_mode.title}
             description=""
-          >
-            <Switch checked={darkMode} onCheckedChange={setDarkMode} />
-          </SettingItem>
+            control={
+              <Switch checked={darkMode} onCheckedChange={setDarkMode} />
+            }
+          />
 
           <SettingItem
             title={dict.settings.display.language.title}
             description=""
-          >
-            <Select
-              value={language}
-              onValueChange={(v) => setLanguage(v as Language)}
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select Language" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="zh">繁體中文</SelectItem>
-                <SelectItem value="en">English</SelectItem>
-              </SelectContent>
-            </Select>
-          </SettingItem>
+            control={
+              <Select
+                value={language}
+                onValueChange={(v) => setLanguage(v as Language)}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select Language" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="zh">繁體中文</SelectItem>
+                  <SelectItem value="en">English</SelectItem>
+                </SelectContent>
+              </Select>
+            }
+          />
         </SettingsSection>
 
         {/* Calendar Settings */}
@@ -147,12 +151,13 @@ const SettingsPage = () => {
           <SettingItem
             title={dict.settings.calendar.academic_calendar.title}
             description={dict.settings.calendar.academic_calendar.description}
-          >
-            <Switch
-              checked={showAcademicCalendar}
-              onCheckedChange={setShowAcademicCalendar}
-            />
-          </SettingItem>
+            control={
+              <Switch
+                checked={showAcademicCalendar}
+                onCheckedChange={setShowAcademicCalendar}
+              />
+            }
+          />
 
           <SettingItem
             title={
@@ -169,12 +174,13 @@ const SettingsPage = () => {
             description={
               dict.settings.calendar.experimental_calendar.description
             }
-          >
-            <Switch
-              checked={useNewCalendar}
-              onCheckedChange={handleUseNewCalendar}
-            />
-          </SettingItem>
+            control={
+              <Switch
+                checked={useNewCalendar}
+                onCheckedChange={handleUseNewCalendar}
+              />
+            }
+          />
         </SettingsSection>
 
         {/* Timetable Settings */}
@@ -213,9 +219,10 @@ const SettingsPage = () => {
           <SettingItem
             title={dict.settings.privacy.analytics.title}
             description={dict.settings.privacy.analytics.description}
-          >
-            <Switch checked={analytics} onCheckedChange={setAnalytics} />
-          </SettingItem>
+            control={
+              <Switch checked={analytics} onCheckedChange={setAnalytics} />
+            }
+          />
         </SettingsSection>
 
         <Footer />
