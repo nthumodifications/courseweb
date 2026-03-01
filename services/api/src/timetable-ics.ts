@@ -8,7 +8,7 @@ import supabase_server from "./config/supabase_server";
 // package's TypeScript source files, which are outside this package's rootDir.
 // The constants and logic needed here are small enough to inline directly.
 
-const SCHEDULE_TIME_SLOTS = [
+export const SCHEDULE_TIME_SLOTS = [
   { time: "1", start: "08:00", end: "08:50" },
   { time: "2", start: "09:00", end: "09:50" },
   { time: "3", start: "10:10", end: "11:00" },
@@ -29,7 +29,7 @@ const SLOT_INDEX: Record<string, number> = Object.fromEntries(
   SCHEDULE_TIME_SLOTS.map((s, i) => [s.time, i]),
 );
 
-const SEMESTER_INFO = [
+export const SEMESTER_INFO = [
   { id: "10810", begins: new Date(2019, 8, 9), ends: new Date(2020, 0, 12) },
   { id: "10820", begins: new Date(2020, 1, 17), ends: new Date(2020, 5, 21) },
   { id: "10910", begins: new Date(2020, 8, 14), ends: new Date(2021, 0, 29) },
@@ -46,7 +46,7 @@ const SEMESTER_INFO = [
   { id: "11420", begins: new Date(2026, 1, 23), ends: new Date(2026, 5, 14) },
 ];
 
-type CourseRow = {
+export type CourseRow = {
   raw_id: string;
   name_zh: string | null;
   name_en: string | null;
@@ -65,7 +65,7 @@ type TimeslotEvent = {
 };
 
 /** Parse a course's times strings into discrete calendar timeslot events. */
-function courseToEvents(course: CourseRow): TimeslotEvent[] {
+export function courseToEvents(course: CourseRow): TimeslotEvent[] {
   const events: TimeslotEvent[] = [];
   if (!course.times) return events;
 
@@ -123,14 +123,14 @@ const CALENDAR_HEADERS = {
   "Content-Disposition": "attachment; filename=timetable.ics",
 };
 
-const EMPTY_CALENDAR =
+export const EMPTY_CALENDAR =
   "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//NTHUMods//Timetable//EN\r\nX-WR-CALNAME:NTHUMods\r\nEND:VCALENDAR\r\n";
 
-function pad(i: number): string {
+export function pad(i: number): string {
   return i < 10 ? `0${i}` : `${i}`;
 }
 
-function formatDateTime(date: Date): string {
+export function formatDateTime(date: Date): string {
   return (
     `${date.getUTCFullYear()}${pad(date.getUTCMonth() + 1)}${pad(date.getUTCDate())}` +
     `T${pad(date.getUTCHours())}${pad(date.getUTCMinutes())}${pad(date.getUTCSeconds())}Z`
@@ -138,12 +138,15 @@ function formatDateTime(date: Date): string {
 }
 
 // Asia/Taipei is always UTC+8 (no DST)
-function taipeiTimeToUtc(timeStr: string): { hours: number; minutes: number } {
+export function taipeiTimeToUtc(timeStr: string): {
+  hours: number;
+  minutes: number;
+} {
   const [h, m] = timeStr.split(":").map(Number);
   return { hours: ((h ?? 0) - 8 + 24) % 24, minutes: m ?? 0 };
 }
 
-function escapeIcsText(text: string): string {
+export function escapeIcsText(text: string): string {
   return text
     .replace(/\\/g, "\\\\")
     .replace(/;/g, "\\;")
@@ -151,16 +154,137 @@ function escapeIcsText(text: string): string {
     .replace(/\n/g, "\\n");
 }
 
+/** Fold long lines per RFC 5545 §3.1 (max 75 octets per line).
+ *  Counts UTF-8 byte length so multi-byte characters (CJK, etc.) are
+ *  accounted for correctly, and never splits inside a surrogate pair. */
+export function foldLine(line: string): string {
+  const encoder = new TextEncoder();
+  const bytes = encoder.encode(line);
+  const MAX = 75;
+  if (bytes.length <= MAX) return line;
+
+  const parts: string[] = [];
+  let offset = 0; // byte offset into `bytes`
+  let isFirst = true;
+
+  while (offset < bytes.length) {
+    // First physical line: up to MAX octets.
+    // Continuation lines: leading SPACE counts as 1 octet, so content ≤ MAX-1.
+    const limit = isFirst ? MAX : MAX - 1;
+    let end = Math.min(offset + limit, bytes.length);
+
+    // Don't cut in the middle of a multi-byte UTF-8 sequence.
+    // UTF-8 continuation bytes match 0b10xxxxxx (0x80..0xBF).
+    while (end > offset && (bytes[end]! & 0xc0) === 0x80) {
+      end--;
+    }
+
+    const chunk = new TextDecoder().decode(bytes.slice(offset, end));
+    parts.push(isFirst ? chunk : " " + chunk);
+    offset = end;
+    isFirst = false;
+  }
+
+  return parts.join("\r\n");
+}
+
 // Find the first occurrence of targetDayOfWeek on or after startDate (UTC).
 // targetDayOfWeek is MTWRFS-indexed (0=Mon…5=Sat). startDate is already
 // adjusted to UTC-midnight-minus-8h so getUTCDay() is one day before the
 // Taipei calendar date, matching fromZonedTime(date, "Asia/Taipei") behaviour.
-function firstOccurrence(startDate: Date, targetDayOfWeek: number): Date {
+export function firstOccurrence(
+  startDate: Date,
+  targetDayOfWeek: number,
+): Date {
   const jsDow = targetDayOfWeek + 1; // convert MTWRFS index to JS 1=Mon…6=Sat
   const daysToAdd = (7 + jsDow - startDate.getUTCDay()) % 7;
   const d = new Date(startDate);
   d.setUTCDate(d.getUTCDate() + daysToAdd);
   return d;
+}
+
+/**
+ * Pure function that generates an ICS calendar string from course data and
+ * semester information. Extracted from the route handler for testability.
+ *
+ * @param courses  Array of course rows from the database.
+ * @param semObj   Semester descriptor with begin/end dates.
+ * @returns A fully-formed iCalendar string (RFC 5545 compliant).
+ */
+export function generateTimetableIcs(
+  courses: CourseRow[],
+  semObj: { begins: Date; ends: Date },
+): string {
+  // semObj.begins = new Date(year, month, day) — UTC midnight in a UTC runtime.
+  // Subtract 8h to get the UTC equivalent of Taipei midnight, identical to
+  // fromZonedTime(semObj.begins, "Asia/Taipei") in the original Next.js route.
+  const semStart = new Date(semObj.begins.getTime() - 8 * 60 * 60 * 1000);
+  const semEnd = new Date(semObj.ends.getTime() - 8 * 60 * 60 * 1000);
+  const dayAbbr = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
+
+  const eventBlocks: string[] = [];
+  for (const row of courses) {
+    for (const ev of courseToEvents(row)) {
+      const startSlot = SCHEDULE_TIME_SLOTS[ev.startTime];
+      const endSlot = SCHEDULE_TIME_SLOTS[ev.endTime];
+      if (!startSlot || !endSlot) continue;
+
+      const startUtc = taipeiTimeToUtc(startSlot.start);
+      const endUtc = taipeiTimeToUtc(endSlot.end);
+      const day = dayAbbr[ev.dayOfWeek];
+
+      const occ = firstOccurrence(semStart, ev.dayOfWeek);
+      const dtStart = new Date(occ);
+      dtStart.setUTCHours(startUtc.hours, startUtc.minutes, 0, 0);
+      const dtEnd = new Date(occ);
+      dtEnd.setUTCHours(endUtc.hours, endUtc.minutes, 0, 0);
+
+      const title = row.name_zh ?? row.name_en ?? "Course";
+      const desc = [
+        row.name_en,
+        row.teacher_zh?.join(", "),
+        row.teacher_en?.join(", "),
+        `https://nthumods.com/courses/${encodeURIComponent(row.raw_id)}`,
+      ]
+        .filter((s): s is string => Boolean(s))
+        .map(escapeIcsText)
+        .join("\\n");
+
+      // UID and DTSTAMP are REQUIRED per RFC 5545 §3.6.1
+      const uid = `${row.raw_id}-${ev.dayOfWeek}-${ev.startTime}@nthumods.com`;
+      const dtstamp = formatDateTime(new Date());
+
+      eventBlocks.push(
+        [
+          "BEGIN:VEVENT",
+          `UID:${uid}`,
+          `DTSTAMP:${dtstamp}`,
+          `DTSTART:${formatDateTime(dtStart)}`,
+          `DTEND:${formatDateTime(dtEnd)}`,
+          `RRULE:FREQ=WEEKLY;BYDAY=${day};INTERVAL=1;UNTIL=${formatDateTime(semEnd)}`,
+          foldLine(`SUMMARY:${escapeIcsText(title)}`),
+          foldLine(`DESCRIPTION:${desc}`),
+          foldLine(`LOCATION:${escapeIcsText(ev.venue)}`),
+          "END:VEVENT",
+        ].join("\r\n"),
+      );
+    }
+  }
+
+  if (eventBlocks.length === 0) {
+    return EMPTY_CALENDAR;
+  }
+
+  return (
+    [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//NTHUMods//Timetable//EN",
+      "X-WR-CALNAME:NTHUMods",
+      ...eventBlocks,
+      "END:VCALENDAR",
+    ].join("\r\n") + "\r\n"
+  );
 }
 
 const app = new Hono().get(
@@ -203,71 +327,7 @@ const app = new Hono().get(
         });
       }
 
-      // semObj.begins = new Date(year, month, day) — UTC midnight in a UTC runtime.
-      // Subtract 8h to get the UTC equivalent of Taipei midnight, identical to
-      // fromZonedTime(semObj.begins, "Asia/Taipei") in the original Next.js route.
-      const semStart = new Date(semObj.begins.getTime() - 8 * 60 * 60 * 1000);
-      const semEnd = new Date(semObj.ends.getTime() - 8 * 60 * 60 * 1000);
-      const dayAbbr = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
-
-      const eventBlocks: string[] = [];
-      for (const row of data as CourseRow[]) {
-        for (const ev of courseToEvents(row)) {
-          const startSlot = SCHEDULE_TIME_SLOTS[ev.startTime];
-          const endSlot = SCHEDULE_TIME_SLOTS[ev.endTime];
-          if (!startSlot || !endSlot) continue;
-
-          const startUtc = taipeiTimeToUtc(startSlot.start);
-          const endUtc = taipeiTimeToUtc(endSlot.end);
-          const day = dayAbbr[ev.dayOfWeek];
-
-          const occ = firstOccurrence(semStart, ev.dayOfWeek);
-          const dtStart = new Date(occ);
-          dtStart.setUTCHours(startUtc.hours, startUtc.minutes, 0, 0);
-          const dtEnd = new Date(occ);
-          dtEnd.setUTCHours(endUtc.hours, endUtc.minutes, 0, 0);
-
-          const title = row.name_zh ?? row.name_en ?? "Course";
-          const desc = [
-            row.name_en,
-            row.teacher_zh?.join(", "),
-            row.teacher_en?.join(", "),
-            `https://nthumods.com/courses/${encodeURIComponent(row.raw_id)}`,
-          ]
-            .filter(Boolean)
-            .join("\\n");
-
-          eventBlocks.push(
-            [
-              "BEGIN:VEVENT",
-              `DTSTART:${formatDateTime(dtStart)}`,
-              `DTEND:${formatDateTime(dtEnd)}`,
-              `RRULE:FREQ=WEEKLY;BYDAY=${day};INTERVAL=1;UNTIL=${formatDateTime(semEnd)}`,
-              `SUMMARY:${escapeIcsText(title)}`,
-              `DESCRIPTION:${desc}`,
-              `LOCATION:${escapeIcsText(ev.venue)}`,
-              "END:VEVENT",
-            ].join("\r\n"),
-          );
-        }
-      }
-
-      if (eventBlocks.length === 0) {
-        return new Response(EMPTY_CALENDAR, {
-          status: 200,
-          headers: CALENDAR_HEADERS,
-        });
-      }
-
-      const icsContent =
-        [
-          "BEGIN:VCALENDAR",
-          "VERSION:2.0",
-          "PRODID:-//NTHUMods//Timetable//EN",
-          "X-WR-CALNAME:NTHUMods",
-          ...eventBlocks,
-          "END:VCALENDAR",
-        ].join("\r\n") + "\r\n";
+      const icsContent = generateTimetableIcs(data as CourseRow[], semObj);
 
       return new Response(icsContent, {
         status: 200,
