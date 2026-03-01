@@ -36,7 +36,7 @@ export const MobileQuickNav = ({
     <>
       <button
         onClick={() => setShowNav(true)}
-        className="fixed bottom-20 right-4 z-50 md:hidden bg-nthu-500 text-white p-3 rounded-full shadow-lg hover:bg-nthu-600 transition-colors"
+        className="fixed bottom-20 right-4 z-50 lg:hidden bg-nthu-500 text-white p-3 rounded-full shadow-lg hover:bg-nthu-600 transition-colors"
         aria-label="Open navigation menu"
       >
         <Menu className="h-5 w-5" />
@@ -44,7 +44,7 @@ export const MobileQuickNav = ({
 
       {showNav && (
         <div
-          className="fixed inset-0 bg-black/50 z-50 md:hidden"
+          className="fixed inset-0 bg-black/50 z-50 lg:hidden"
           onClick={() => setShowNav(false)}
         >
           <div

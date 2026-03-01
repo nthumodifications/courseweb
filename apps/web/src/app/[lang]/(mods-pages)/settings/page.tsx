@@ -94,9 +94,9 @@ const SettingsPage = () => {
 
   return (
     <div className="w-full">
-      <div className="flex flex-col xl:flex-row gap-6 px-4 sm:px-6 lg:px-8">
+      <div className="flex flex-col lg:flex-row gap-6 px-4 sm:px-6">
         {/* Sidebar - Desktop only */}
-        <aside className="hidden xl:block w-[180px] shrink-0">
+        <aside className="hidden lg:block w-[180px] shrink-0">
           <div className="sticky top-20 pt-8">
             <SettingsSidebar
               sections={sections}
@@ -107,7 +107,7 @@ const SettingsPage = () => {
         </aside>
 
         {/* Mobile Quick Nav */}
-        <div className="xl:hidden">
+        <div className="lg:hidden">
           <MobileQuickNav
             sections={sections}
             activeSection={activeSection}
@@ -116,125 +116,129 @@ const SettingsPage = () => {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col gap-6 pb-8 min-w-0 w-full max-w-full xl:max-w-3xl">
-          {/* Display Settings */}
-          <SettingsSection
-            id="display"
-            title={dict.settings.display.title}
-            description={dict.settings.display.description}
-          >
-            <SettingItem
-              title={dict.settings.display.dark_mode.title}
-              description=""
-              control={
-                <Switch checked={darkMode} onCheckedChange={setDarkMode} />
-              }
-            />
-
-            <SettingItem
-              title={dict.settings.display.language.title}
-              description=""
-              control={
-                <Select
-                  value={language}
-                  onValueChange={(v) => setLanguage(v as Language)}
-                >
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Select Language" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="zh">繁體中文</SelectItem>
-                    <SelectItem value="en">English</SelectItem>
-                  </SelectContent>
-                </Select>
-              }
-            />
-          </SettingsSection>
-
-          {/* Calendar Settings */}
-          <SettingsSection
-            id="calendar"
-            title={dict.settings.calendar.title}
-            description={dict.settings.calendar.description}
-          >
-            <SettingItem
-              title={dict.settings.calendar.academic_calendar.title}
-              description={dict.settings.calendar.academic_calendar.description}
-              control={
-                <Switch
-                  checked={showAcademicCalendar}
-                  onCheckedChange={setShowAcademicCalendar}
-                />
-              }
-            />
-
-            <SettingItem
-              title={
-                <div className="flex items-center gap-2">
-                  {dict.settings.calendar.experimental_calendar.title}
-                  <Badge
-                    variant="outline"
-                    className="bg-nthu-purple/10 text-nthu-purple border-nthu-purple/20"
-                  >
-                    {dict.settings.calendar.experimental_calendar.badge}
-                  </Badge>
-                </div>
-              }
-              description={
-                dict.settings.calendar.experimental_calendar.description
-              }
-              control={
-                <Switch
-                  checked={useNewCalendar}
-                  onCheckedChange={handleUseNewCalendar}
-                />
-              }
-            />
-          </SettingsSection>
-
-          {/* Timetable Settings */}
-          <SettingsSection
-            id="timetable"
-            title={dict.settings.timetable.title}
-            description={dict.settings.timetable.description}
-          >
-            <div className="flex flex-col gap-6">
-              <div className="overflow-x-auto -mx-6 px-6">
-                <TimetablePreview />
-              </div>
-              <TimetableThemeList />
-              <TimetablePreferences
-                settings={preferences}
-                onSettingsChange={setPreferences}
+        <div className="flex-1 min-w-0 pb-8">
+          <div className="flex flex-col gap-6 max-w-3xl">
+            {/* Display Settings */}
+            <SettingsSection
+              id="display"
+              title={dict.settings.display.title}
+              description={dict.settings.display.description}
+            >
+              <SettingItem
+                title={dict.settings.display.dark_mode.title}
+                description=""
+                control={
+                  <Switch checked={darkMode} onCheckedChange={setDarkMode} />
+                }
               />
-            </div>
-          </SettingsSection>
 
-          {/* AI Settings */}
-          <SettingsSection
-            id="ai"
-            title={dict.settings.ai.title}
-            description={dict.settings.ai.description}
-          >
-            <AIPreferencesPanel />
-          </SettingsSection>
+              <SettingItem
+                title={dict.settings.display.language.title}
+                description=""
+                control={
+                  <Select
+                    value={language}
+                    onValueChange={(v) => setLanguage(v as Language)}
+                  >
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Select Language" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="zh">繁體中文</SelectItem>
+                      <SelectItem value="en">English</SelectItem>
+                    </SelectContent>
+                  </Select>
+                }
+              />
+            </SettingsSection>
 
-          {/* Privacy Settings */}
-          <SettingsSection
-            id="privacy"
-            title={dict.settings.privacy.title}
-            description={dict.settings.privacy.description}
-          >
-            <SettingItem
-              title={dict.settings.privacy.analytics.title}
-              description={dict.settings.privacy.analytics.description}
-              control={
-                <Switch checked={analytics} onCheckedChange={setAnalytics} />
-              }
-            />
-          </SettingsSection>
+            {/* Calendar Settings */}
+            <SettingsSection
+              id="calendar"
+              title={dict.settings.calendar.title}
+              description={dict.settings.calendar.description}
+            >
+              <SettingItem
+                title={dict.settings.calendar.academic_calendar.title}
+                description={
+                  dict.settings.calendar.academic_calendar.description
+                }
+                control={
+                  <Switch
+                    checked={showAcademicCalendar}
+                    onCheckedChange={setShowAcademicCalendar}
+                  />
+                }
+              />
 
-          <Footer />
+              <SettingItem
+                title={
+                  <div className="flex items-center gap-2">
+                    {dict.settings.calendar.experimental_calendar.title}
+                    <Badge
+                      variant="outline"
+                      className="bg-nthu-purple/10 text-nthu-purple border-nthu-purple/20"
+                    >
+                      {dict.settings.calendar.experimental_calendar.badge}
+                    </Badge>
+                  </div>
+                }
+                description={
+                  dict.settings.calendar.experimental_calendar.description
+                }
+                control={
+                  <Switch
+                    checked={useNewCalendar}
+                    onCheckedChange={handleUseNewCalendar}
+                  />
+                }
+              />
+            </SettingsSection>
+
+            {/* Timetable Settings */}
+            <SettingsSection
+              id="timetable"
+              title={dict.settings.timetable.title}
+              description={dict.settings.timetable.description}
+            >
+              <div className="flex flex-col gap-6">
+                <div className="overflow-x-auto -mx-6 px-6">
+                  <TimetablePreview />
+                </div>
+                <TimetableThemeList />
+                <TimetablePreferences
+                  settings={preferences}
+                  onSettingsChange={setPreferences}
+                />
+              </div>
+            </SettingsSection>
+
+            {/* AI Settings */}
+            <SettingsSection
+              id="ai"
+              title={dict.settings.ai.title}
+              description={dict.settings.ai.description}
+            >
+              <AIPreferencesPanel />
+            </SettingsSection>
+
+            {/* Privacy Settings */}
+            <SettingsSection
+              id="privacy"
+              title={dict.settings.privacy.title}
+              description={dict.settings.privacy.description}
+            >
+              <SettingItem
+                title={dict.settings.privacy.analytics.title}
+                description={dict.settings.privacy.analytics.description}
+                control={
+                  <Switch checked={analytics} onCheckedChange={setAnalytics} />
+                }
+              />
+            </SettingsSection>
+
+            <Footer />
+          </div>
         </div>
       </div>
     </div>
