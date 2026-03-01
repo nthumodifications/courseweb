@@ -94,9 +94,9 @@ const SettingsPage = () => {
 
   return (
     <div className="w-full">
-      <div className="flex flex-col lg:flex-row gap-6 px-4">
+      <div className="flex flex-col xl:flex-row gap-6 px-4 sm:px-6 lg:px-8">
         {/* Sidebar - Desktop only */}
-        <aside className="hidden lg:block w-[180px] shrink-0">
+        <aside className="hidden xl:block w-[180px] shrink-0">
           <div className="sticky top-20 pt-8">
             <SettingsSidebar
               sections={sections}
@@ -107,7 +107,7 @@ const SettingsPage = () => {
         </aside>
 
         {/* Mobile Quick Nav */}
-        <div className="lg:hidden">
+        <div className="xl:hidden">
           <MobileQuickNav
             sections={sections}
             activeSection={activeSection}
@@ -116,7 +116,7 @@ const SettingsPage = () => {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col gap-6 pb-8 min-w-0 max-w-3xl">
+        <div className="flex-1 flex flex-col gap-6 pb-8 min-w-0 w-full max-w-full xl:max-w-3xl">
           {/* Display Settings */}
           <SettingsSection
             id="display"
