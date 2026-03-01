@@ -20,11 +20,6 @@ export const SettingsSidebar = ({
   onSectionClick,
   className,
 }: SettingsSidebarProps) => {
-  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
-    e.preventDefault();
-    onSectionClick?.(id);
-  };
-
   return (
     <nav
       className={cn("space-y-1", className)}
@@ -32,20 +27,21 @@ export const SettingsSidebar = ({
       aria-label="Settings navigation"
     >
       {sections.map((section) => (
-        <a
+        <button
           key={section.id}
-          href={`#${section.id}`}
-          onClick={(e) => handleClick(e, section.id)}
+          type="button"
+          onClick={() => onSectionClick?.(section.id)}
           className={cn(
-            "flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+            "w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
             activeSection === section.id
               ? "bg-nthu-500 text-white"
               : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
           )}
+          aria-current={activeSection === section.id ? "true" : undefined}
         >
-          <span className="h-5 w-5 shrink-0">{section.icon}</span>
+          <span className="shrink-0">{section.icon}</span>
           <span>{section.title}</span>
-        </a>
+        </button>
       ))}
     </nav>
   );
