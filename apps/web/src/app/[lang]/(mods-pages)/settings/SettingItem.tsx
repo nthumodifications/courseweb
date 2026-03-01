@@ -20,7 +20,7 @@ export const SettingItem = ({
     <div
       id={id}
       className={cn(
-        "flex flex-col xs:flex-row xs:items-center xs:justify-between gap-3",
+        "flex flex-row xs:items-center xs:justify-between gap-3",
         className,
       )}
     >
