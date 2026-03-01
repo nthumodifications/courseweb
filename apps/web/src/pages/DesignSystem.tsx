@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -20,51 +20,156 @@ import {
   Settings,
   Search,
   Bell,
+  Palette,
+  Type,
+  Ruler,
+  Box,
+  LayoutGrid,
+  Sparkles,
+  Monitor,
+  CheckCircle,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const DesignSystem = () => {
   const [activeSection, setActiveSection] = useState("colors");
 
-  return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">NTHUMods Design System</h1>
-          <p className="text-muted-foreground text-lg">
-            Comprehensive UI/UX design standards and component library
-          </p>
-        </div>
+  // Scroll tracking similar to settings page
+  const sectionIds = useMemo(
+    () => [
+      "colors",
+      "typography",
+      "spacing",
+      "components",
+      "layout",
+      "animations",
+      "responsive",
+      "best-practices",
+    ],
+    [],
+  );
 
-        {/* Navigation */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          <nav className="lg:col-span-1">
-            <div className="sticky top-4 space-y-1">
-              {[
-                { id: "colors", label: "Color Palette" },
-                { id: "typography", label: "Typography" },
-                { id: "spacing", label: "Spacing System" },
-                { id: "components", label: "Components" },
-                { id: "layout", label: "Layout Patterns" },
-                { id: "animations", label: "Animations" },
-                { id: "responsive", label: "Responsive Design" },
-              ].map((item) => (
+  useEffect(() => {
+    const observerOptions = {
+      root: null,
+      rootMargin: "-20% 0px -70% 0px",
+      threshold: 0,
+    };
+
+    const observerCallback = (entries: IntersectionObserverEntry[]) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          setActiveSection(entry.target.id);
+        }
+      });
+    };
+
+    const observer = new IntersectionObserver(
+      observerCallback,
+      observerOptions,
+    );
+
+    sectionIds.forEach((id) => {
+      const element = document.getElementById(id);
+      if (element) observer.observe(element);
+    });
+
+    return () => observer.disconnect();
+  }, [sectionIds]);
+
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      const yOffset = -80;
+      const y =
+        element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: y, behavior: "smooth" });
+    }
+  };
+
+  const sections = useMemo(
+    () => [
+      {
+        id: "colors",
+        label: "Color Palette",
+        icon: <Palette className="h-5 w-5" />,
+      },
+      {
+        id: "typography",
+        label: "Typography",
+        icon: <Type className="h-5 w-5" />,
+      },
+      {
+        id: "spacing",
+        label: "Spacing System",
+        icon: <Ruler className="h-5 w-5" />,
+      },
+      {
+        id: "components",
+        label: "Components",
+        icon: <Box className="h-5 w-5" />,
+      },
+      {
+        id: "layout",
+        label: "Layout Patterns",
+        icon: <LayoutGrid className="h-5 w-5" />,
+      },
+      {
+        id: "animations",
+        label: "Animations",
+        icon: <Sparkles className="h-5 w-5" />,
+      },
+      {
+        id: "responsive",
+        label: "Responsive Design",
+        icon: <Monitor className="h-5 w-5" />,
+      },
+      {
+        id: "best-practices",
+        label: "Best Practices",
+        icon: <CheckCircle className="h-5 w-5" />,
+      },
+    ],
+    [],
+  );
+
+  return (
+    <div className="w-full">
+      <div className="flex flex-col lg:flex-row gap-6 px-4 sm:px-6">
+        {/* Sidebar - Desktop only */}
+        <aside className="hidden lg:block w-[200px] shrink-0">
+          <div className="sticky top-20 pt-8">
+            <nav className="space-y-1">
+              {sections.map((section) => (
                 <button
-                  key={item.id}
-                  onClick={() => setActiveSection(item.id)}
-                  className={`w-full text-left px-4 py-2 rounded-md transition-colors ${
-                    activeSection === item.id
-                      ? "bg-primary text-primary-foreground"
-                      : "hover:bg-accent hover:text-accent-foreground"
-                  }`}
+                  key={section.id}
+                  onClick={() => scrollToSection(section.id)}
+                  className={cn(
+                    "w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm",
+                    activeSection === section.id
+                      ? "bg-nthu-500/10 text-nthu-500"
+                      : "hover:bg-accent text-muted-foreground",
+                  )}
                 >
-                  {item.label}
+                  <span className="h-5 w-5 shrink-0">{section.icon}</span>
+                  <span className="text-left">{section.label}</span>
                 </button>
               ))}
-            </div>
-          </nav>
+            </nav>
+          </div>
+        </aside>
 
-          <main className="lg:col-span-3 space-y-12">
+        {/* Main Content */}
+        <div className="flex-1 min-w-0 pb-8">
+          {/* Header */}
+          <div className="mb-8 pt-8">
+            <h1 className="text-4xl font-bold mb-2">NTHUMods Design System</h1>
+            <p className="text-muted-foreground text-lg">
+              Comprehensive UI/UX design standards and component library
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-6 min-w-0 space-y-12">
             {/* Colors Section */}
             <section id="colors" className="space-y-6">
               <div>
@@ -1083,7 +1188,7 @@ const DesignSystem = () => {
                 </CardContent>
               </Card>
             </section>
-          </main>
+          </div>
         </div>
       </div>
     </div>

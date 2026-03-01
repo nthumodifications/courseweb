@@ -178,6 +178,10 @@
       "title": "Timetable",
       "description": "Theme, Preview",
       "vertical_preview": "Vertical Preview",
+      "default_view": {
+        "title": "Default View",
+        "description": "Use vertical view when opening timetable page"
+      },
       "language": "Language",
       "align": {
         "title": "Align",

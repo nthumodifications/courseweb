@@ -44,6 +44,10 @@ const SettingsPage = () => {
     "use_new_calendar",
     false,
   );
+  const [timetableVertical, setTimetableVertical] = useLocalStorage(
+    "timetable_vertical",
+    true,
+  );
   const dict = useDictionary();
 
   const sectionIds = useMemo(
@@ -205,6 +209,16 @@ const SettingsPage = () => {
                 <div className="overflow-x-auto">
                   <TimetablePreview />
                 </div>
+                <SettingItem
+                  title={dict.settings.timetable.default_view.title}
+                  description={dict.settings.timetable.default_view.description}
+                  control={
+                    <Switch
+                      checked={timetableVertical}
+                      onCheckedChange={setTimetableVertical}
+                    />
+                  }
+                />
                 <TimetableThemeList />
                 <TimetablePreferences
                   settings={preferences}
