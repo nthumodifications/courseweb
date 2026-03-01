@@ -94,9 +94,9 @@ const SettingsPage = () => {
 
   return (
     <div className="w-full">
-      <div className="flex flex-col lg:flex-row gap-8 max-w-7xl mx-auto px-4">
+      <div className="flex flex-col lg:flex-row gap-6 px-4">
         {/* Sidebar - Desktop only */}
-        <aside className="hidden lg:block w-[200px] shrink-0">
+        <aside className="hidden lg:block w-[180px] shrink-0">
           <div className="sticky top-20 pt-8">
             <SettingsSidebar
               sections={sections}
@@ -116,7 +116,7 @@ const SettingsPage = () => {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col gap-8 pb-8 min-w-0">
+        <div className="flex-1 flex flex-col gap-6 pb-8 min-w-0 max-w-4xl">
           {/* Display Settings */}
           <SettingsSection
             id="display"

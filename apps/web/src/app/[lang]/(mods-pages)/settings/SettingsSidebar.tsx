@@ -37,7 +37,7 @@ export const SettingsSidebar = ({
           href={`#${section.id}`}
           onClick={(e) => handleClick(e, section.id)}
           className={cn(
-            "flex items-center gap-3 px-4 py-2 rounded-md text-sm font-medium transition-colors",
+            "flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
             activeSection === section.id
               ? "bg-nthu-500 text-white"
               : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",

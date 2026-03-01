@@ -18,13 +18,13 @@ export const SettingsSection = ({
 }: SettingsSectionProps) => {
   return (
     <section id={id} className={cn("scroll-mt-20", className)}>
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border px-6 py-4">
-        <h2 className="text-xl font-semibold">{title}</h2>
+      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border px-4 py-3">
+        <h2 className="text-lg font-semibold">{title}</h2>
         {description && (
-          <p className="text-sm text-muted-foreground mt-1">{description}</p>
+          <p className="text-sm text-muted-foreground mt-0.5">{description}</p>
         )}
       </div>
-      <div className="p-6 space-y-4">{children}</div>
+      <div className="p-4 space-y-3">{children}</div>
     </section>
   );
 };
