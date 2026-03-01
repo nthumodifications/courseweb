@@ -55,6 +55,7 @@ const Footer = () => {
         <Link to={`/${lang}/team`}>Team</Link>
         <Link to={`/${lang}/privacy-policy`}>Privacy Policy</Link>
         <Link to={`/${lang}/proxy-login`}>Proxy Login</Link>
+        <Link to={`/${lang}/design-system`}>Design System</Link>
       </div>
 
       <div className="flex flex-col gap-1">

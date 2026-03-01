@@ -2,33 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
-}
-
-/* @font-face {
-  font-family: "CustomFont";
-  src: url("/fonts/InterVariable.woff2") format("woff2");
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "CustomFont";
-  src: url("/fonts/SourceHanSansTW-VF.otf") format("opentype"), url("/fonts/SourceHanSansTW-VF.ttf") format("truetype");
-  font-style: normal;
-  unicode-range: U+4E00-9FFF;
-} */
-
 html {
   font-family: var(--font-inter), var(--font-noto), sans-serif;
 }
@@ -62,8 +35,9 @@ body {
     --card-foreground: 240 10% 3.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
-    --primary: 272.1 71.7% 47.1%;
-    --primary-foreground: 0 0% 98%;
+    /* NTHU Purple as primary brand color */
+    --primary: 273 43% 54%;
+    --primary-foreground: 0 0% 100%;
     --secondary: 240 4.8% 95.9%;
     --secondary-foreground: 240 5.9% 10%;
     --muted: 240 4.8% 95.9%;
@@ -74,7 +48,7 @@ body {
     --destructive-foreground: 0 0% 98%;
     --border: 240 5.9% 90%;
     --input: 240 5.9% 90%;
-    --ring: 240 5% 64.9%;
+    --ring: 273 43% 54%;
     --radius: 0.5rem;
     --header-height: 3.5rem;
     --bottom-nav-height: 5rem;
@@ -89,7 +63,7 @@ body {
     --sidebar-accent: 240 4.8% 95.9%;
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-ring: 273 43% 54%;
   }
 
   .dark {
@@ -99,8 +73,9 @@ body {
     --card-foreground: 0 0% 98%;
     --popover: 240 10% 3.9%;
     --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
+    /* NTHU Purple as primary brand color in dark mode */
+    --primary: 273 43% 64%;
+    --primary-foreground: 0 0% 9%;
     --secondary: 240 3.7% 15.9%;
     --secondary-foreground: 0 0% 98%;
     --muted: 240 3.7% 15.9%;
@@ -111,24 +86,15 @@ body {
     --destructive-foreground: 0 85.7% 97.3%;
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
+    --ring: 273 43% 64%;
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary: 273 43% 64%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 240 3.7% 15.9%;
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-}
-@layer base {
-  * {
-    @apply border-border;
-  }
-  html,
-  body {
-    @apply bg-background text-foreground;
+    --sidebar-ring: 273 43% 64%;
   }
 }
 
@@ -144,6 +110,7 @@ body {
   * {
     @apply border-border;
   }
+  html,
   body {
     @apply bg-background text-foreground;
   }

@@ -2,7 +2,7 @@ import { Outlet, useParams } from "react-router-dom";
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import ModsError from "@/app/[lang]/(mods-pages)/error";
-import { SidebarProvider } from "@courseweb/ui";
+import { SidebarProvider, SidebarInset } from "@courseweb/ui";
 import { CalendarProvider } from "@/components/Calendar/calendar_hook";
 import { HeaderPortalProvider } from "@/components/Portal/HeaderPortal";
 import { ChatProvider, ChatContainer, ChatFAB } from "@/components/Chat";
@@ -29,7 +29,7 @@ const MainLayout = () => {
               <GoogleAnalytics />
               <ConsoleLogger />
               <AppSidebar lang={(lang as Language) ?? "zh"} />
-              <main className="w-full min-h-full">
+              <SidebarInset>
                 <Header />
                 <div className="pt-4 pb-[5rem] md:pb-0 md:pl-2">
                   <ErrorBoundary FallbackComponent={ModsError}>
@@ -49,7 +49,7 @@ const MainLayout = () => {
                     </Suspense>
                   </ErrorBoundary>
                 </div>
-              </main>
+              </SidebarInset>
               <BottomNav />
               <ChatContainer />
               <ChatFAB />

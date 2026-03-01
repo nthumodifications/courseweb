@@ -178,6 +178,10 @@
       "title": "時間表",
       "description": "顔色, 客制化",
       "vertical_preview": "垂直式顯示",
+      "default_view": {
+        "title": "預設視圖",
+        "description": "開啟時間表頁面時使用垂直視圖"
+      },
       "language": "時間表語言",
       "align": {
         "title": "對齊",
