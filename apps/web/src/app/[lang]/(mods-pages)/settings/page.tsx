@@ -85,7 +85,7 @@ const SettingsPage = () => {
   ];
 
   return (
-    <div className="flex flex-col lg:flex-row gap-8 max-w-7xl mx-auto px-4">
+    <div className="flex flex-col lg:flex-row gap-8 max-w-7xl mx-auto px-4 overflow-hidden">
       {/* Sidebar - Desktop only */}
       <div className="hidden lg:block w-[200px] shrink-0">
         <SettingsSidebar
@@ -105,7 +105,7 @@ const SettingsPage = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col gap-8 pb-8">
+      <div className="flex-1 flex flex-col gap-8 pb-8 min-w-0">
         {/* Display Settings */}
         <SettingsSection
           id="display"
@@ -184,7 +184,9 @@ const SettingsPage = () => {
           description={dict.settings.timetable.description}
         >
           <div className="flex flex-col gap-6">
-            <TimetablePreview />
+            <div className="overflow-x-auto -mx-6 px-6">
+              <TimetablePreview />
+            </div>
             <TimetableThemeList />
             <TimetablePreferences
               settings={preferences}
