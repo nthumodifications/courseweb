@@ -117,7 +117,7 @@ const SettingsPage = () => {
 
         {/* Main Content */}
         <div className="flex-1 min-w-0 pb-8">
-          <div className="flex flex-col gap-6 max-w-3xl">
+          <div className="flex flex-col gap-6 min-w-0">
             {/* Display Settings */}
             <SettingsSection
               id="display"
@@ -202,7 +202,7 @@ const SettingsPage = () => {
               description={dict.settings.timetable.description}
             >
               <div className="flex flex-col gap-6">
-                <div className="overflow-x-auto -mx-6 px-6">
+                <div className="overflow-x-auto">
                   <TimetablePreview />
                 </div>
                 <TimetableThemeList />
