@@ -62,7 +62,11 @@ import {
 const DownloadTimetableDialogLazy = lazy(
   () => import("./DownloadTimetableDialog"),
 );
-export const DownloadTimetableDialogDynamic = () => (
+export const DownloadTimetableDialogDynamic = ({
+  icsfileLink,
+}: {
+  icsfileLink: string;
+}) => (
   <Suspense
     fallback={
       <Button variant="outline" disabled>
@@ -70,14 +74,20 @@ export const DownloadTimetableDialogDynamic = () => (
       </Button>
     }
   >
-    <DownloadTimetableDialogLazy />
+    <DownloadTimetableDialogLazy icsfileLink={icsfileLink} />
   </Suspense>
 );
 
 const ShareSyncTimetableDialogLazy = lazy(
   () => import("./ShareSyncTimetableDialog"),
 );
-export const ShareSyncTimetableDialogDynamic = () => (
+export const ShareSyncTimetableDialogDynamic = ({
+  shareLink,
+  webcalLink,
+}: {
+  shareLink: string;
+  webcalLink: string;
+}) => (
   <Suspense
     fallback={
       <Button variant="outline" disabled>
@@ -85,7 +95,10 @@ export const ShareSyncTimetableDialogDynamic = () => (
       </Button>
     }
   >
-    <ShareSyncTimetableDialogLazy />
+    <ShareSyncTimetableDialogLazy
+      shareLink={shareLink}
+      webcalLink={webcalLink}
+    />
   </Suspense>
 );
 
