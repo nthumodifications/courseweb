@@ -6,16 +6,31 @@ import { cn } from "@/lib/utils";
 
 interface Section {
   id: string;
-  label: string;
+  title: string;
   icon: React.ReactNode;
 }
 
 interface MobileQuickNavProps {
   sections: Section[];
+  activeSection: string;
+  onSectionClick?: (id: string) => void;
 }
 
-export const MobileQuickNav = ({ sections }: MobileQuickNavProps) => {
+export const MobileQuickNav = ({
+  sections,
+  activeSection,
+  onSectionClick,
+}: MobileQuickNavProps) => {
   const [showNav, setShowNav] = useState(false);
+
+  const handleSectionClick = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    id: string,
+  ) => {
+    e.preventDefault();
+    setShowNav(false);
+    onSectionClick?.(id);
+  };
 
   return (
     <>
@@ -53,13 +68,16 @@ export const MobileQuickNav = ({ sections }: MobileQuickNavProps) => {
                 <a
                   key={section.id}
                   href={`#${section.id}`}
-                  className="flex items-center gap-3 px-4 py-3 rounded-md hover:bg-accent transition-colors"
-                  onClick={() => setShowNav(false)}
+                  onClick={(e) => handleSectionClick(e, section.id)}
+                  className={cn(
+                    "flex items-center gap-3 px-4 py-3 rounded-md transition-colors",
+                    activeSection === section.id
+                      ? "bg-nthu-500/10 text-nthu-500"
+                      : "hover:bg-accent",
+                  )}
                 >
-                  <span className="h-5 w-5 text-muted-foreground">
-                    {section.icon}
-                  </span>
-                  <span className="text-sm font-medium">{section.label}</span>
+                  <span className="h-5 w-5 shrink-0">{section.icon}</span>
+                  <span className="text-sm font-medium">{section.title}</span>
                 </a>
               ))}
             </nav>
