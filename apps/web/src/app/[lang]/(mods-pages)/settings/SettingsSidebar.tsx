@@ -40,7 +40,7 @@ export const SettingsSidebar = ({
           aria-current={activeSection === section.id ? "true" : undefined}
         >
           <span className="shrink-0">{section.icon}</span>
-          <span>{section.title}</span>
+          <span className="text-left truncate">{section.title}</span>
         </button>
       ))}
     </nav>

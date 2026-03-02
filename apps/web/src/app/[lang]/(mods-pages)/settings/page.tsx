@@ -101,7 +101,7 @@ const SettingsPage = () => {
       <div className="flex flex-col lg:flex-row gap-6 px-4 sm:px-6">
         {/* Sidebar - Desktop only */}
         <aside className="hidden lg:block w-[180px] shrink-0">
-          <div className="sticky top-20 pt-8">
+          <div className="sticky top-[--header-height] pt-8">
             <SettingsSidebar
               sections={sections}
               activeSection={activeSection}
