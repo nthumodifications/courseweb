@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 
 export const useScrollTracking = (sectionIds: string[]) => {
-  const [activeSection, setActiveSection] = useState<string>(sectionIds[0]);
+  const [activeSection, setActiveSection] = useState<string>(
+    sectionIds[0] ?? "",
+  );
+  const sectionKey = sectionIds.join("|");
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -35,7 +38,7 @@ export const useScrollTracking = (sectionIds: string[]) => {
     return () => {
       observer.disconnect();
     };
-  }, [sectionIds]);
+  }, [sectionKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);

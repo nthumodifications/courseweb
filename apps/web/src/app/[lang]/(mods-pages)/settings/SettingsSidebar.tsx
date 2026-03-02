@@ -1,10 +1,10 @@
-import { Monitor, Calendar, LayoutGrid, Sparkles, Shield } from "lucide-react";
+import { type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 interface Section {
   id: string;
   title: string;
-  icon: React.ReactNode;
+  icon: ReactNode;
 }
 
 interface SettingsSidebarProps {

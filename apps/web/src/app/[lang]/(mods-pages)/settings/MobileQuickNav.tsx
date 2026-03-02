@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, type ReactNode } from "react";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Section {
   id: string;
   title: string;
-  icon: React.ReactNode;
+  icon: ReactNode;
 }
 
 interface MobileQuickNavProps {

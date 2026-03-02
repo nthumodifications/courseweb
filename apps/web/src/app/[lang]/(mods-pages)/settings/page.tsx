@@ -181,7 +181,7 @@ const SettingsPage = () => {
                     {dict.settings.calendar.experimental_calendar.title}
                     <Badge
                       variant="outline"
-                      className="bg-nthu-purple/10 text-nthu-purple border-nthu-purple/20"
+                      className="bg-nthu-500/10 text-nthu-600 border-nthu-500/20"
                     >
                       {dict.settings.calendar.experimental_calendar.badge}
                     </Badge>

@@ -25,7 +25,13 @@ export const SettingItem = ({
       )}
     >
       <div className="flex-1 space-y-1">
-        <h3 className="text-sm font-medium">{title}</h3>
+        {typeof title === "string" ? (
+          <h3 className="text-sm font-medium">{title}</h3>
+        ) : (
+          <div className="text-sm font-medium" role="heading" aria-level={3}>
+            {title}
+          </div>
+        )}
         {description && (
           <p className="text-xs text-muted-foreground">{description}</p>
         )}
