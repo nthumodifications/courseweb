@@ -96,7 +96,7 @@ const TimetablePreview = () => {
   );
 
   const isMobile = useMediaQuery("(max-width: 768px)");
-  const [vertical, setVertical] = useState(isMobile);
+  const [vertical, setVertical] = useState(true);
 
   return (
     <div className="flex flex-col gap-2">

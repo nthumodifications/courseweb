@@ -76,6 +76,7 @@ const NextStepsPage = lazy(
 const OfflinePage = lazy(
   () => import("@/app/[lang]/(mods-pages)/offline/page"),
 );
+const DesignSystemPage = lazy(() => import("@/pages/DesignSystem"));
 
 // Separate layout page
 const WaitlistPage = lazy(() => import("@/app/[lang]/waitlist/page"));
@@ -237,6 +238,11 @@ export const router = createBrowserRouter([
                 path: "offline",
                 element: <OfflinePage />,
                 handle: { title: "Offline", titleZh: "離線" },
+              },
+              {
+                path: "design-system",
+                element: <DesignSystemPage />,
+                handle: { title: "Design System", titleZh: "設計系統" },
               },
               {
                 path: "*",
