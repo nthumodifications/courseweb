@@ -25,6 +25,9 @@ const CourseDetailPage = lazy(
   () => import("@/app/[lang]/(mods-pages)/courses/[courseId]/page"),
 );
 const BusPage = lazy(() => import("@/app/[lang]/(mods-pages)/bus/page"));
+const SportsVenuesPage = lazy(
+  () => import("@/app/[lang]/(mods-pages)/sports-venues/page"),
+);
 const BusRoutePage = lazy(
   () => import("@/app/[lang]/(mods-pages)/bus/[route]/page"),
 );
@@ -166,6 +169,11 @@ export const router = createBrowserRouter([
                 path: "venues",
                 element: <VenuesPage />,
                 handle: { title: "Venues", titleZh: "地點" },
+              },
+              {
+                path: "sports-venues",
+                element: <SportsVenuesPage />,
+                handle: { title: "Sports Venues", titleZh: "體育場館" },
               },
               {
                 path: "venues/:locationId",
