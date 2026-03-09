@@ -127,6 +127,20 @@ const SportsVenuesPage = () => {
           );
         })}
       </div>
+
+      {/* Data source */}
+      <div className="mt-4 pb-4 text-xs text-slate-400 dark:text-neutral-500">
+        資料來源：
+        <a
+          href="https://peo178.et.nthu.edu.tw"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline"
+          aria-label="國立清華大學體育中心 (opens in new tab)"
+        >
+          國立清華大學體育中心
+        </a>
+      </div>
     </div>
   );
 };
