@@ -8,6 +8,7 @@ import { Fade } from "@courseweb/ui";
 import { lastSemester } from "@courseweb/shared";
 import { toPrettySemester } from "@/helpers/semester";
 import VenueList from "@/components/Venue/VenueList";
+import VenueOccupancy from "@/components/Venue/VenueOccupancy";
 import client from "@/config/api";
 import useDictionary from "@/dictionaries/useDictionary";
 import { MinimalCourse } from "@/types/courses";
@@ -39,6 +40,7 @@ const VenuesPage = () => {
       <div
         className={`w-full h-full ${venueId ? "hidden md:block" : "block"} overflow-auto`}
       >
+        <VenueOccupancy />
         {venuesLoading ? (
           <div className="grid place-items-center h-64">
             <span className="text-gray-400">Loading...</span>

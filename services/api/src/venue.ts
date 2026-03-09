@@ -5,6 +5,22 @@ import { z } from "zod";
 import type { Bindings } from "./index";
 import { venueRateLimitMiddleware } from "./utils/rate-limit";
 
+const PEO_OCCUPANCY_API =
+  "https://peo178.et.nthu.edu.tw/api/verify/count/report";
+
+type PeoOccupancyItem = {
+  project_id: string;
+  project_name: string;
+  entry_count_now: number;
+  entry_count_today: number;
+};
+
+type PeoOccupancyResponse = {
+  status: number;
+  message: string;
+  data: PeoOccupancyItem[];
+};
+
 const app = new Hono<{ Bindings: Bindings }>()
   // Rate limiting middleware for all venue routes
   .use("*", venueRateLimitMiddleware)
@@ -20,6 +36,17 @@ const app = new Hono<{ Bindings: Bindings }>()
       venue: string;
     }[];
     return c.json(filteredData.map((item) => item.venue));
+  })
+  .get("/occupancy", async (c) => {
+    const res = await fetch(PEO_OCCUPANCY_API);
+    if (!res.ok) {
+      return c.json({ error: "Failed to fetch occupancy data" }, 502);
+    }
+    const json = (await res.json()) as PeoOccupancyResponse;
+    if (json.status !== 200) {
+      return c.json({ error: "Upstream API error" }, 502);
+    }
+    return c.json(json.data);
   })
   .get(
     "/:venueId/courses",
