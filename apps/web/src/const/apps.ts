@@ -8,6 +8,7 @@ import {
   CalendarIcon,
   SquareGanttChart,
   Sparkles,
+  Dumbbell,
 } from "lucide-react";
 
 export const categories: {
@@ -74,6 +75,14 @@ export const apps: {
     title_en: "Bus",
     href: "/bus",
     Icon: Bus,
+  },
+  {
+    id: "sports-venues",
+    category: "campuslife",
+    title_zh: "體育場館使用人數",
+    title_en: "Sports Venue Occupancy",
+    href: "/sports-venues",
+    Icon: Dumbbell,
   },
   {
     id: "shops",
