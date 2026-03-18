@@ -165,8 +165,11 @@ export function PlannerSettings({
 
     try {
       if (isNewPlanner) {
-        // Create a new planner
-        await createPlannerData(plannerCol, data as PlannerDataDocType);
+        // Create a new planner with required includedSemesters field
+        await createPlannerData(plannerCol, {
+          includedSemesters: [],
+          ...data,
+        } as PlannerDataDocType);
       } else {
         // Update existing planner
         await updatePlannerData(plannerCol, data as PlannerDataDocType);
