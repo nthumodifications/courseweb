@@ -58,6 +58,9 @@ const ParcelPage = lazy(
 const PlannerPage = lazy(
   () => import("@/app/[lang]/(mods-pages)/student/planner/page"),
 );
+const PlannerLayout = lazy(
+  () => import("@/app/[lang]/(mods-pages)/student/planner/layout"),
+);
 const IssuesPage = lazy(
   () => import("@/app/[lang]/(mods-pages)/(side-pages)/issues/page"),
 );
@@ -210,9 +213,14 @@ export const router = createBrowserRouter([
                 handle: { title: "Parcel", titleZh: "包裹" },
               },
               {
-                path: "student/planner",
-                element: <PlannerPage />,
-                handle: { title: "Planner", titleZh: "畢業規劃" },
+                element: <PlannerLayout />,
+                children: [
+                  {
+                    path: "student/planner",
+                    element: <PlannerPage />,
+                    handle: { title: "Planner", titleZh: "畢業規劃" },
+                  },
+                ],
               },
               {
                 path: "issues",
