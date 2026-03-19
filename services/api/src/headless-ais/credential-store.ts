@@ -1,11 +1,23 @@
 /**
  * Server-side credential storage with AES-256-GCM encryption.
- * Passwords are encrypted before storage in D1 and never returned in plaintext.
+ *
+ * Key rotation is automatic via HKDF key derivation:
+ * - NTHU_HEADLESS_AIS_ENCRYPTION_KEY is a master key (set once, never rotated)
+ * - Actual encryption keys are derived: HKDF(masterKey, "nthumods-proxy-v{version}")
+ * - Version = floor(daysSinceEpoch / 90) — auto-increments every 90 days
+ * - Credentials expire after 30 days, so max version gap for valid records is 1
+ * - On retrieval, old-version records are lazily re-encrypted with the current key
  */
 import { PrismaClient } from "../generated/client";
 
 const EXPIRY_DAYS = 30;
-const CURRENT_KEY_VERSION = 1;
+const ROTATION_PERIOD_DAYS = 90;
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+/** Deterministic version number based on current time. Increments every 90 days. */
+export function getCurrentKeyVersion(): number {
+  return Math.floor(Date.now() / (ROTATION_PERIOD_DAYS * MS_PER_DAY));
+}
 
 function validateHex(hex: string, label: string): Uint8Array {
   if (!hex || hex.length % 2 !== 0 || !/^[0-9a-fA-F]+$/.test(hex)) {
@@ -14,22 +26,45 @@ function validateHex(hex: string, label: string): Uint8Array {
   return new Uint8Array(hex.match(/.{2}/g)!.map((b) => parseInt(b, 16)));
 }
 
-function keyFromHex(hex: string): Promise<CryptoKey> {
-  const raw = validateHex(hex, "encryption key");
-  if (raw.length !== 32) {
-    throw new Error("Encryption key must be 32 bytes (64 hex chars)");
+/**
+ * Derive a versioned AES-256-GCM key from the master key using HKDF.
+ * Same master key + same version = same derived key (deterministic).
+ */
+async function deriveKey(
+  masterHex: string,
+  version: number,
+): Promise<CryptoKey> {
+  const masterBytes = validateHex(masterHex, "master key");
+  if (masterBytes.length !== 32) {
+    throw new Error("Master key must be 32 bytes (64 hex chars)");
   }
-  return crypto.subtle.importKey("raw", raw, "AES-GCM", false, [
-    "encrypt",
-    "decrypt",
-  ]);
+
+  const masterKey = await crypto.subtle.importKey(
+    "raw",
+    masterBytes,
+    "HKDF",
+    false,
+    ["deriveKey"],
+  );
+
+  const salt = new TextEncoder().encode(`nthumods-proxy-v${version}`);
+  const info = new TextEncoder().encode("aes-gcm-credential-key");
+
+  return crypto.subtle.deriveKey(
+    { name: "HKDF", hash: "SHA-256", salt, info },
+    masterKey,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["encrypt", "decrypt"],
+  );
 }
 
 export async function encryptPassword(
   password: string,
-  keyHex: string,
+  masterHex: string,
+  version: number,
 ): Promise<{ encrypted: string; iv: string; authTag: string }> {
-  const key = await keyFromHex(keyHex);
+  const key = await deriveKey(masterHex, version);
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const encoded = new TextEncoder().encode(password);
 
@@ -54,9 +89,10 @@ export async function decryptPassword(
   encrypted: string,
   iv: string,
   authTag: string,
-  keyHex: string,
+  masterHex: string,
+  version: number,
 ): Promise<string> {
-  const key = await keyFromHex(keyHex);
+  const key = await deriveKey(masterHex, version);
   const ivBytes = validateHex(iv, "IV");
   const cipherBytes = validateHex(encrypted, "ciphertext");
   const authTagBytes = validateHex(authTag, "auth tag");
@@ -78,10 +114,15 @@ export async function storeCredential(
   prisma: PrismaClient,
   studentId: string,
   password: string,
-  keyHex: string,
+  masterHex: string,
 ): Promise<string> {
-  const { encrypted, iv, authTag } = await encryptPassword(password, keyHex);
-  const expiresAt = new Date(Date.now() + EXPIRY_DAYS * 24 * 60 * 60 * 1000);
+  const version = getCurrentKeyVersion();
+  const { encrypted, iv, authTag } = await encryptPassword(
+    password,
+    masterHex,
+    version,
+  );
+  const expiresAt = new Date(Date.now() + EXPIRY_DAYS * MS_PER_DAY);
 
   const record = await prisma.proxyCredential.upsert({
     where: { studentId },
@@ -90,14 +131,14 @@ export async function storeCredential(
       encryptedPassword: encrypted,
       iv,
       authTag,
-      keyVersion: CURRENT_KEY_VERSION,
+      keyVersion: version,
       expiresAt,
     },
     update: {
       encryptedPassword: encrypted,
       iv,
       authTag,
-      keyVersion: CURRENT_KEY_VERSION,
+      keyVersion: version,
       expiresAt,
     },
   });
@@ -108,31 +149,46 @@ export async function storeCredential(
 export async function retrieveCredential(
   prisma: PrismaClient,
   credentialToken: string,
-  keyHex: string,
+  masterHex: string,
 ): Promise<{ studentId: string; password: string } | null> {
   const record = await prisma.proxyCredential.findUnique({
     where: { id: credentialToken },
   });
 
   if (!record || record.expiresAt < new Date()) {
-    // Clean up expired record if found
     if (record) {
       await prisma.proxyCredential.delete({ where: { id: credentialToken } });
     }
     return null;
   }
 
-  if (record.keyVersion !== CURRENT_KEY_VERSION) {
-    // Record was encrypted with an old key — cannot decrypt
-    return null;
-  }
-
+  // Decrypt with the version the record was encrypted with
   const password = await decryptPassword(
     record.encryptedPassword,
     record.iv,
     record.authTag,
-    keyHex,
+    masterHex,
+    record.keyVersion,
   );
+
+  // Lazy re-encryption: if stored with an old key version, re-encrypt with current
+  const currentVersion = getCurrentKeyVersion();
+  if (record.keyVersion < currentVersion) {
+    const { encrypted, iv, authTag } = await encryptPassword(
+      password,
+      masterHex,
+      currentVersion,
+    );
+    await prisma.proxyCredential.update({
+      where: { id: credentialToken },
+      data: {
+        encryptedPassword: encrypted,
+        iv,
+        authTag,
+        keyVersion: currentVersion,
+      },
+    });
+  }
 
   return { studentId: record.studentId, password };
 }
