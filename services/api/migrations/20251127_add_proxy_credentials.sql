@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS "ProxyCredential" (
     "encryptedPassword" TEXT NOT NULL,
     "iv"                TEXT NOT NULL,
     "authTag"           TEXT NOT NULL,
+    "keyVersion"        INTEGER NOT NULL DEFAULT 1,
     "createdAt"         DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "lastUsedAt"        DATETIME NOT NULL,
     "expiresAt"         DATETIME NOT NULL

@@ -102,6 +102,7 @@ model ProxyCredential {
   encryptedPassword String
   iv                String   // AES-256-GCM initialization vector (hex)
   authTag           String   // AES-256-GCM authentication tag (hex)
+  keyVersion        Int      @default(1) // For encryption key rotation
   createdAt         DateTime @default(now())
   lastUsedAt        DateTime @updatedAt
   expiresAt         DateTime

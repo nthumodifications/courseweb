@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useLocalStorage } from "usehooks-ts";
 import type { HeadlessAISStorage, UserJWTDetails } from "@/types/headless_ais";
 import { proxyLogin, proxyRefresh, proxyLogout } from "@/lib/headless-ais-api";
@@ -11,6 +11,9 @@ export function useHeadlessAIS() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Dedup lock: prevents multiple concurrent refresh calls from racing
+  const refreshPromiseRef = useRef<Promise<string> | null>(null);
 
   const isConnected = ais.enabled;
   const user: UserJWTDetails | null = ais.enabled ? ais.user : null;
@@ -30,9 +33,10 @@ export function useHeadlessAIS() {
           studentid,
           user: result.data,
           ACIXSTORE: result.ACIXSTORE,
-          credentialToken: result.credential_token,
+          hasStoredCredentials: result.hasStoredCredentials,
           lastUpdated: Date.now(),
           expired: false,
+          consentGiven: true,
         });
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Login failed.";
@@ -47,12 +51,11 @@ export function useHeadlessAIS() {
 
   /**
    * Returns a valid ACIXSTORE, auto-refreshing if the session has expired
-   * and a credentialToken is stored. Throws if re-login is required manually.
+   * and stored credentials exist (httpOnly cookie). Deduplicates concurrent calls.
    */
   const getACIXSTORE = useCallback(async (): Promise<string> => {
     if (!ais.enabled) throw new Error("Not connected to CCXP");
 
-    // Return cached token if still fresh (assume 30-min session)
     const SESSION_TTL = 30 * 60 * 1000;
     const isStale = Date.now() - ais.lastUpdated > SESSION_TTL;
 
@@ -60,25 +63,35 @@ export function useHeadlessAIS() {
       return ais.ACIXSTORE;
     }
 
-    // Auto-refresh if we have a stored credential token
-    if (ais.credentialToken) {
-      setLoading(true);
-      try {
-        const result = await proxyRefresh(ais.credentialToken);
-        setAis({
-          ...ais,
-          ACIXSTORE: result.ACIXSTORE,
-          credentialToken: result.credential_token,
-          lastUpdated: Date.now(),
-          expired: false,
-        });
-        return result.ACIXSTORE;
-      } catch {
-        setAis({ ...ais, expired: true });
-        throw new Error("Session expired. Please log in again.");
-      } finally {
-        setLoading(false);
+    // Auto-refresh if server-side credentials are stored (cookie carries the token)
+    if (ais.hasStoredCredentials) {
+      // Dedup: if a refresh is already in-flight, wait for it
+      if (refreshPromiseRef.current) {
+        return refreshPromiseRef.current;
       }
+
+      const refreshPromise = (async () => {
+        setLoading(true);
+        try {
+          const result = await proxyRefresh();
+          setAis({
+            ...ais,
+            ACIXSTORE: result.ACIXSTORE,
+            lastUpdated: Date.now(),
+            expired: false,
+          });
+          return result.ACIXSTORE;
+        } catch {
+          setAis({ ...ais, expired: true, hasStoredCredentials: false });
+          throw new Error("Session expired. Please log in again.");
+        } finally {
+          setLoading(false);
+          refreshPromiseRef.current = null;
+        }
+      })();
+
+      refreshPromiseRef.current = refreshPromise;
+      return refreshPromise;
     }
 
     // Session-only mode: can't auto-refresh
@@ -87,16 +100,14 @@ export function useHeadlessAIS() {
   }, [ais, setAis]);
 
   const logout = useCallback(async (): Promise<void> => {
-    if (ais.enabled && ais.credentialToken) {
-      try {
-        await proxyLogout(ais.credentialToken);
-      } catch {
-        // Best-effort: clear local state regardless
-      }
+    try {
+      await proxyLogout(); // Server reads cookie, deletes credential + clears cookie
+    } catch {
+      // Best-effort: clear local state regardless
     }
     setAis({ enabled: false });
     setError(null);
-  }, [ais, setAis]);
+  }, [setAis]);
 
   return {
     ais,
@@ -107,7 +118,6 @@ export function useHeadlessAIS() {
     login,
     logout,
     getACIXSTORE,
-    /** Call this when a CCXP data endpoint returns an auth error */
     invalidateSession: () => {
       if (ais.enabled) setAis({ ...ais, expired: true });
     },

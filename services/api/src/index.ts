@@ -36,10 +36,12 @@ export const app = new Hono<{ Bindings: Bindings }>()
   .use(
     cors({
       origin:
-        process.env.NODE_ENV === "production" ? "https://nthumods.com" : "*",
+        process.env.NODE_ENV === "production"
+          ? "https://nthumods.com"
+          : "http://localhost:5173",
+      credentials: true,
     }),
   )
-  // .use(csrf({ origin: process.env.NODE_ENV === "production" ? 'nthumods.com': 'localhost' }))
   .use(logger())
   .get("/", (c) => {
     return c.text("I AM NTHUMODS UWU");

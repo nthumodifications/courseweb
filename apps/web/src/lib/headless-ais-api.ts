@@ -7,12 +7,11 @@ export type LoginResponse = {
   ACIXSTORE: string;
   passwordExpired: boolean;
   data: UserJWTDetails;
-  credential_token?: string;
+  hasStoredCredentials: boolean;
 };
 
 export type RefreshResponse = {
   ACIXSTORE: string;
-  credential_token: string;
 };
 
 async function post<T>(path: string, body: Record<string, string>): Promise<T> {
@@ -20,6 +19,7 @@ async function post<T>(path: string, body: Record<string, string>): Promise<T> {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams(body).toString(),
+    credentials: "include", // Send httpOnly cookies
   });
 
   const json = await res.json();
@@ -43,18 +43,14 @@ export function proxyLogin(
   });
 }
 
-export function proxyRefresh(
-  credentialToken: string,
-): Promise<RefreshResponse> {
-  return post<RefreshResponse>("/ccxp/auth/refresh", {
-    credential_token: credentialToken,
-  });
+// credential_token is sent automatically via httpOnly cookie
+export function proxyRefresh(): Promise<RefreshResponse> {
+  return post<RefreshResponse>("/ccxp/auth/refresh", {});
 }
 
-export function proxyLogout(credentialToken: string): Promise<void> {
-  return post<void>("/ccxp/auth/logout", {
-    credential_token: credentialToken,
-  });
+// credential_token is sent automatically via httpOnly cookie
+export function proxyLogout(): Promise<void> {
+  return post<void>("/ccxp/auth/logout", {});
 }
 
 export function fetchGrades(ACIXSTORE: string) {

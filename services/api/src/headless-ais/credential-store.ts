@@ -5,9 +5,20 @@
 import { PrismaClient } from "../generated/client";
 
 const EXPIRY_DAYS = 30;
+const CURRENT_KEY_VERSION = 1;
+
+function validateHex(hex: string, label: string): Uint8Array {
+  if (!hex || hex.length % 2 !== 0 || !/^[0-9a-fA-F]+$/.test(hex)) {
+    throw new Error(`Invalid hex value for ${label}`);
+  }
+  return new Uint8Array(hex.match(/.{2}/g)!.map((b) => parseInt(b, 16)));
+}
 
 function keyFromHex(hex: string): Promise<CryptoKey> {
-  const raw = new Uint8Array(hex.match(/.{2}/g)!.map((b) => parseInt(b, 16)));
+  const raw = validateHex(hex, "encryption key");
+  if (raw.length !== 32) {
+    throw new Error("Encryption key must be 32 bytes (64 hex chars)");
+  }
   return crypto.subtle.importKey("raw", raw, "AES-GCM", false, [
     "encrypt",
     "decrypt",
@@ -22,7 +33,6 @@ export async function encryptPassword(
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const encoded = new TextEncoder().encode(password);
 
-  // AES-GCM produces ciphertext + 16-byte auth tag appended
   const cipherBuffer = await crypto.subtle.encrypt(
     { name: "AES-GCM", iv },
     key,
@@ -47,17 +57,10 @@ export async function decryptPassword(
   keyHex: string,
 ): Promise<string> {
   const key = await keyFromHex(keyHex);
-  const ivBytes = new Uint8Array(
-    iv.match(/.{2}/g)!.map((b) => parseInt(b, 16)),
-  );
-  const cipherBytes = new Uint8Array(
-    encrypted.match(/.{2}/g)!.map((b) => parseInt(b, 16)),
-  );
-  const authTagBytes = new Uint8Array(
-    authTag.match(/.{2}/g)!.map((b) => parseInt(b, 16)),
-  );
+  const ivBytes = validateHex(iv, "IV");
+  const cipherBytes = validateHex(encrypted, "ciphertext");
+  const authTagBytes = validateHex(authTag, "auth tag");
 
-  // Reassemble ciphertext + auth tag
   const combined = new Uint8Array(cipherBytes.length + authTagBytes.length);
   combined.set(cipherBytes);
   combined.set(authTagBytes, cipherBytes.length);
@@ -87,12 +90,14 @@ export async function storeCredential(
       encryptedPassword: encrypted,
       iv,
       authTag,
+      keyVersion: CURRENT_KEY_VERSION,
       expiresAt,
     },
     update: {
       encryptedPassword: encrypted,
       iv,
       authTag,
+      keyVersion: CURRENT_KEY_VERSION,
       expiresAt,
     },
   });
@@ -109,7 +114,18 @@ export async function retrieveCredential(
     where: { id: credentialToken },
   });
 
-  if (!record || record.expiresAt < new Date()) return null;
+  if (!record || record.expiresAt < new Date()) {
+    // Clean up expired record if found
+    if (record) {
+      await prisma.proxyCredential.delete({ where: { id: credentialToken } });
+    }
+    return null;
+  }
+
+  if (record.keyVersion !== CURRENT_KEY_VERSION) {
+    // Record was encrypted with an old key — cannot decrypt
+    return null;
+  }
 
   const password = await decryptPassword(
     record.encryptedPassword,
@@ -128,4 +144,12 @@ export async function revokeCredential(
   await prisma.proxyCredential.deleteMany({
     where: { id: credentialToken },
   });
+}
+
+/** Purge all expired credential records from the database. */
+export async function cleanupExpired(prisma: PrismaClient): Promise<number> {
+  const result = await prisma.proxyCredential.deleteMany({
+    where: { expiresAt: { lt: new Date() } },
+  });
+  return result.count;
 }

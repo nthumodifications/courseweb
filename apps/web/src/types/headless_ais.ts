@@ -5,9 +5,10 @@ export type HeadlessAISStorage =
       studentid: string;
       user: UserJWTDetails;
       ACIXSTORE?: string;
-      credentialToken?: string; // Present when server-side credential storage is opted in
+      hasStoredCredentials: boolean; // Whether server-side creds exist (token in httpOnly cookie)
       lastUpdated: number;
       expired: boolean;
+      consentGiven: boolean; // User acknowledged privacy risks
     };
 
 export enum LoginError {
