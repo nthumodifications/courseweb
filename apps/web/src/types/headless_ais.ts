@@ -3,9 +3,9 @@ export type HeadlessAISStorage =
   | {
       enabled: true;
       studentid: string;
-      password: string;
-      encrypted: boolean;
+      user: UserJWTDetails;
       ACIXSTORE?: string;
+      credentialToken?: string; // Present when server-side credential storage is opted in
       lastUpdated: number;
       expired: boolean;
     };

@@ -12,7 +12,6 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
 }
 
 model Folder {
@@ -95,4 +94,17 @@ model Cache {
   key        String   @id
   data       String   // JSON stringified data
   updatedAt  DateTime @updatedAt
+}
+
+model ProxyCredential {
+  id                String   @id @default(uuid())
+  studentId         String   @unique
+  encryptedPassword String
+  iv                String   // AES-256-GCM initialization vector (hex)
+  authTag           String   // AES-256-GCM authentication tag (hex)
+  createdAt         DateTime @default(now())
+  lastUsedAt        DateTime @updatedAt
+  expiresAt         DateTime
+
+  @@index([expiresAt])
 }

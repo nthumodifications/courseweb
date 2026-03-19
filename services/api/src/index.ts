@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
-import type { RateLimit } from "@cloudflare/workers-types";
+import type { RateLimit, Fetcher } from "@cloudflare/workers-types";
 
 import acaCalendar from "./aca-calendar";
 import calendarProxy from "./calendar-proxy";
@@ -26,6 +26,10 @@ export type Bindings = {
   DB: D1Database;
   GOOGLE_AI_API_KEY?: string;
   VENUE_RATE_LIMITER: RateLimit;
+  LOGIN_RATE_LIMITER: RateLimit;
+  BROWSER: Fetcher;
+  NTHU_HEADLESS_AIS_ENCRYPTION_KEY?: string;
+  NTHUMODS_OCR_BASE_URL?: string;
 };
 
 export const app = new Hono<{ Bindings: Bindings }>()
