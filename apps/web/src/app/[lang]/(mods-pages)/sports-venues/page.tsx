@@ -1,13 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
 import client from "@/config/api";
 import { cn } from "@courseweb/ui";
-import { Dumbbell, Droplets, Drama, Users, Circle, ChevronRight, Clock } from "lucide-react";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@courseweb/ui";
+  Dumbbell,
+  Droplets,
+  Drama,
+  Users,
+  Circle,
+  ChevronRight,
+  Clock,
+} from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@courseweb/ui";
 import { useState } from "react";
 import useTime from "@/hooks/useTime";
 
@@ -51,14 +54,17 @@ interface OpeningTimesData {
 }
 
 // Best-effort max capacities — used only to colour the bar
-const CAPACITY_MAP: { keyword: string; capacity: number; Icon: typeof Circle }[] =
-  [
-    { keyword: "游泳池", capacity: 120, Icon: Droplets },
-    { keyword: "羽球", capacity: 80, Icon: Drama },
-    { keyword: "桌球", capacity: 60, Icon: Circle },
-    { keyword: "健身", capacity: 50, Icon: Dumbbell },
-    { keyword: "網球", capacity: 40, Icon: Circle },
-  ];
+const CAPACITY_MAP: {
+  keyword: string;
+  capacity: number;
+  Icon: typeof Circle;
+}[] = [
+  { keyword: "游泳池", capacity: 120, Icon: Droplets },
+  { keyword: "羽球", capacity: 80, Icon: Drama },
+  { keyword: "桌球", capacity: 60, Icon: Circle },
+  { keyword: "健身", capacity: 50, Icon: Dumbbell },
+  { keyword: "網球", capacity: 40, Icon: Circle },
+];
 
 function venueInfo(name: string): { capacity: number; Icon: typeof Circle } {
   for (const entry of CAPACITY_MAP) {
@@ -157,13 +163,7 @@ function matchFacility(
   return match;
 }
 
-const StatusBadge = ({
-  slots,
-  now,
-}: {
-  slots: TimeSlot[];
-  now: Date;
-}) => {
+const StatusBadge = ({ slots, now }: { slots: TimeSlot[]; now: Date }) => {
   const status = getOpenStatus(slots, now);
   if (status.type === "open") {
     return (
@@ -305,7 +305,7 @@ const SportsVenuesPage = () => {
 
   // Build merged list: occupancy items enriched with opening times
   const items = (occupancy ?? []).map((item) => {
-    const facility = openingTimes
+    const facility = openingTimes?.facilities
       ? matchFacility(item.project_name, openingTimes.facilities)
       : undefined;
 
