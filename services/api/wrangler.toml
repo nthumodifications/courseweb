@@ -27,3 +27,6 @@ namespace_id = "1001"
   [ratelimits.simple]
   limit = 100
   period = 60
+
+[triggers]
+crons = ["0 2 * * 1"] # Every Monday at 02:00 UTC

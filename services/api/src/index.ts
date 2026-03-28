@@ -19,8 +19,8 @@ import bus from "./bus";
 import chat from "./chat";
 import graduation from "./graduation";
 import shortlinkRedirect from "./shortlink-redirect";
+import { syncPeoOpeningTimes } from "./scheduled/peo-opening-times";
 import { D1Database } from "@cloudflare/workers-types";
-// Scheduled functions moved to @courseweb/data-sync package
 
 export type Bindings = {
   DB: D1Database;
@@ -57,6 +57,13 @@ export const app = new Hono<{ Bindings: Bindings }>()
   .route("/graduation", graduation)
   .route("/l", shortlinkRedirect);
 
-// Note: Scheduled data sync functionality has been moved to @courseweb/data-sync package
-// This service now only handles API endpoints
-export default app;
+export default {
+  fetch: app.fetch.bind(app),
+  async scheduled(
+    _event: ScheduledEvent,
+    env: Bindings,
+    ctx: ExecutionContext,
+  ) {
+    ctx.waitUntil(syncPeoOpeningTimes(env));
+  },
+};
