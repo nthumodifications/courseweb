@@ -294,13 +294,16 @@ const SportsVenuesPage = () => {
     refetchInterval: 30_000,
   });
 
-  const { data: openingTimes } = useQuery<OpeningTimesData>({
+  const { data: openingTimes } = useQuery<OpeningTimesData | null>({
     queryKey: ["sports-opening-times"],
     queryFn: async () => {
       const res = await (client as any).sports["opening-times"].$get();
+      if (res.status === 202) return null; // sync in progress, retry shortly
       return res.json() as Promise<OpeningTimesData>;
     },
     staleTime: 60 * 60 * 1000, // 1 hour — data barely changes
+    // Keep retrying every 10s until data is ready (first load triggers background sync)
+    refetchInterval: (query) => (query.state.data == null ? 10_000 : false),
   });
 
   // Build merged list: occupancy items enriched with opening times
