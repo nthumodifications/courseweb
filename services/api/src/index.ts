@@ -19,6 +19,7 @@ import bus from "./bus";
 import chat from "./chat";
 import graduation from "./graduation";
 import shortlinkRedirect from "./shortlink-redirect";
+import sports from "./sports";
 import { syncPeoOpeningTimes } from "./scheduled/peo-opening-times";
 import { D1Database } from "@cloudflare/workers-types";
 
@@ -55,7 +56,8 @@ export const app = new Hono<{ Bindings: Bindings }>()
   .route("/bus", bus)
   .route("/chat", chat)
   .route("/graduation", graduation)
-  .route("/l", shortlinkRedirect);
+  .route("/l", shortlinkRedirect)
+  .route("/sports", sports);
 
 export default {
   fetch: app.fetch.bind(app),
