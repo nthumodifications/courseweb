@@ -167,13 +167,17 @@ export async function syncPeoOpeningTimes(env: {
     const name_zh = cells[0].textContent?.trim() ?? "";
     if (!name_zh) continue;
 
-    const links = cells[1].querySelectorAll("a");
+    // Semester PDF links are each in their own <td> — collect from all cells after the name
+    const links: Element[] = [];
+    for (let k = 1; k < cells.length; k++) {
+      cells[k].querySelectorAll("a").forEach((a: Element) => links.push(a));
+    }
     const schedules: FacilitySchedule["schedules"] = [];
 
     for (let j = 0; j < links.length; j++) {
       const href = links[j].getAttribute("href") ?? "";
       const semesterLabel = links[j].textContent?.trim() ?? `學期${j + 1}`;
-      if (!href) continue;
+      if (!href || !href.endsWith(".pdf")) continue;
 
       const pdfUrl = href.startsWith("http")
         ? href
