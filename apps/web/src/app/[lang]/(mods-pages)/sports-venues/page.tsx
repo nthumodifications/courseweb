@@ -53,6 +53,11 @@ interface OpeningTimesData {
   lastUpdated: string;
 }
 
+// Maps occupancy API project_name → canonical display name used in the opening-times data
+const OCCUPANCY_NAME_ALIASES: Record<string, string> = {
+  體能訓練室: "重訓室",
+};
+
 // Best-effort max capacities — used only to colour the bar
 const CAPACITY_MAP: {
   keyword: string;
@@ -62,6 +67,7 @@ const CAPACITY_MAP: {
   { keyword: "游泳池", capacity: 120, Icon: Droplets },
   { keyword: "羽球", capacity: 80, Icon: Drama },
   { keyword: "桌球", capacity: 60, Icon: Circle },
+  { keyword: "重訓", capacity: 100, Icon: Dumbbell },
   { keyword: "健身", capacity: 50, Icon: Dumbbell },
   { keyword: "網球", capacity: 40, Icon: Circle },
 ];
@@ -142,13 +148,21 @@ function getOpenStatus(slots: TimeSlot[], now: Date): OpenStatus {
   return { type: "closed" };
 }
 
-function guessCurrentSemester(semesters: string[]): string {
+/** Returns the semester name that corresponds to today's date. */
+function getCurrentSemesterLabel(): string {
   const month = new Date().getMonth() + 1;
-  let preferred: string;
-  if (month >= 9 || month === 1) preferred = "上學期";
-  else if (month === 2) preferred = "寒假";
-  else if (month >= 3 && month <= 6) preferred = "下學期";
-  else preferred = "暑假";
+  if (month >= 9 || month === 1) return "上學期";
+  if (month === 2) return "寒假";
+  if (month >= 3 && month <= 6) return "下學期";
+  return "暑假";
+}
+
+/**
+ * Returns the best available semester from the list.
+ * Prefers the actual current semester; falls back to the first entry if unavailable.
+ */
+function getBestAvailableSemester(semesters: string[]): string {
+  const preferred = getCurrentSemesterLabel();
   return semesters.find((s) => s.includes(preferred)) ?? semesters[0];
 }
 
@@ -156,14 +170,15 @@ function matchFacility(
   occupancyName: string,
   facilities: FacilitySchedule[],
 ): FacilitySchedule | undefined {
+  const name = OCCUPANCY_NAME_ALIASES[occupancyName] ?? occupancyName;
   // Exact match first
-  let match = facilities.find((f) => f.name_zh === occupancyName);
+  let match = facilities.find((f) => f.name_zh === name);
   if (match) return match;
   // Substring match (occupancy name may be shorter)
   match = facilities.find(
     (f) =>
-      f.name_zh.includes(occupancyName) ||
-      occupancyName.includes(f.name_zh.slice(0, 3)),
+      f.name_zh.includes(name) ||
+      name.includes(f.name_zh.slice(0, 3)),
   );
   return match;
 }
@@ -200,10 +215,11 @@ const ScheduleSheet = ({
   open: boolean;
   onClose: () => void;
 }) => {
-  const currentSemester = guessCurrentSemester(
+  const currentSemesterLabel = getCurrentSemesterLabel();
+  const bestAvailable = getBestAvailableSemester(
     facility.schedules.map((s) => s.semester),
   );
-  const [selectedSemester, setSelectedSemester] = useState(currentSemester);
+  const [selectedSemester, setSelectedSemester] = useState(bestAvailable);
 
   const schedule = facility.schedules.find(
     (s) => s.semester === selectedSemester,
@@ -237,7 +253,7 @@ const ScheduleSheet = ({
               )}
             >
               {s.semester}
-              {s.semester === currentSemester && " (current)"}
+              {s.semester.includes(currentSemesterLabel) && " (current)"}
             </button>
           ))}
         </div>
@@ -320,7 +336,7 @@ const SportsVenuesPage = () => {
       : undefined;
 
     const currentSemester = facility
-      ? guessCurrentSemester(facility.schedules.map((s) => s.semester))
+      ? getBestAvailableSemester(facility.schedules.map((s) => s.semester))
       : null;
     const todaySlots = (() => {
       if (!facility || !currentSemester) return null;
@@ -357,7 +373,8 @@ const SportsVenuesPage = () => {
       {/* Venue list */}
       <div className="flex flex-col divide-y divide-slate-100 dark:divide-neutral-700">
         {items.map(({ item, facility, todaySlots }) => {
-          const { capacity, Icon } = venueInfo(item.project_name);
+          const displayName = OCCUPANCY_NAME_ALIASES[item.project_name] ?? item.project_name;
+          const { capacity, Icon } = venueInfo(displayName);
           const ratio = Math.min(item.entry_count_now / capacity, 1);
           const pct = Math.round(ratio * 100);
 
@@ -374,7 +391,7 @@ const SportsVenuesPage = () => {
                 <Icon className="h-7 w-7 text-nthu-500 shrink-0" />
                 <div className="flex flex-col flex-1 min-w-0">
                   <h3 className="text-slate-800 dark:text-neutral-100 font-bold truncate">
-                    {item.project_name}
+                    {displayName}
                   </h3>
                   {todaySlots !== null && (
                     <StatusBadge slots={todaySlots} now={now} />
@@ -422,7 +439,7 @@ const SportsVenuesPage = () => {
               ),
           )
           .map((facility) => {
-            const currentSemester = guessCurrentSemester(
+            const currentSemester = getBestAvailableSemester(
               facility.schedules.map((s) => s.semester),
             );
             const schedule = facility.schedules.find(
