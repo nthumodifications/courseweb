@@ -1,7 +1,7 @@
 import type { UserJWTDetails } from "@/types/headless_ais";
+import client from "@/config/api";
 
-const API_BASE =
-  import.meta.env.VITE_COURSEWEB_API_URL ?? "https://api.nthumods.com";
+// --- Response types (kept for external consumers) ---
 
 export type LoginResponse = {
   ACIXSTORE: string;
@@ -14,58 +14,72 @@ export type RefreshResponse = {
   ACIXSTORE: string;
 };
 
-async function post<T>(path: string, body: Record<string, string>): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams(body).toString(),
-    credentials: "include", // Send httpOnly cookies
-  });
+// --- Auth endpoints ---
 
-  const json = await res.json();
-
-  if (!res.ok || (json as any).error) {
-    throw new Error((json as any).error?.message ?? "Request failed");
-  }
-
-  return json as T;
-}
-
-export function proxyLogin(
+export async function proxyLogin(
   studentid: string,
   password: string,
   storeCredentials = false,
 ): Promise<LoginResponse> {
-  return post<LoginResponse>("/ccxp/auth/login", {
-    studentid,
-    password,
-    ...(storeCredentials ? { store_credentials: "true" } : {}),
-  });
+  const res = await client.ccxp.auth.login.$post(
+    {
+      form: {
+        studentid,
+        password,
+        ...(storeCredentials ? { store_credentials: "true" } : {}),
+      },
+    },
+    { init: { credentials: "include" } },
+  );
+
+  const json = await res.json();
+  if (!res.ok || "error" in json) {
+    throw new Error((json as any).error?.message ?? "Login failed");
+  }
+  return json as LoginResponse;
 }
 
-// credential_token is sent automatically via httpOnly cookie
-export function proxyRefresh(): Promise<RefreshResponse> {
-  return post<RefreshResponse>("/ccxp/auth/refresh", {});
+export async function proxyRefresh(): Promise<RefreshResponse> {
+  const res = await client.ccxp.auth.refresh.$post(
+    {},
+    { init: { credentials: "include" } },
+  );
+
+  const json = await res.json();
+  if (!res.ok || "error" in json) {
+    throw new Error((json as any).error?.message ?? "Refresh failed");
+  }
+  return json as RefreshResponse;
 }
 
-// credential_token is sent automatically via httpOnly cookie
-export function proxyLogout(): Promise<void> {
-  return post<void>("/ccxp/auth/logout", {});
+export async function proxyLogout(): Promise<void> {
+  await client.ccxp.auth.logout.$post({}, { init: { credentials: "include" } });
 }
+
+// --- Data endpoints ---
 
 export function fetchGrades(ACIXSTORE: string) {
-  return post<unknown>("/ccxp/grades", { ACIXSTORE });
+  return client.ccxp.grades
+    .$post({
+      form: { ACIXSTORE },
+    })
+    .then((res) => res.json());
 }
 
 export function fetchOSACode(ACIXSTORE: string) {
-  return post<unknown>("/ccxp/inthu/code", { ACIXSTORE });
+  return client.ccxp.inthu.code
+    .$post({
+      form: { ACIXSTORE },
+    })
+    .then((res) => res.json());
 }
 
 export function fetchOSAToken(userId: string, refreshToken: string) {
-  return post<unknown>("/ccxp/inthu/token", {
-    user_id: userId,
-    refresh_token: refreshToken,
-  });
+  return client.ccxp.inthu.token
+    .$post({
+      form: { user_id: userId, refreshToken },
+    })
+    .then((res) => res.json());
 }
 
 export function fetchDoorQR(
@@ -73,11 +87,11 @@ export function fetchDoorQR(
   deviceId: string,
   sessionId: string,
 ) {
-  return post<unknown>("/ccxp/inthu/door-access-qr", {
-    auth_token: authToken,
-    device_id: deviceId,
-    session_id: sessionId,
-  });
+  return client.ccxp.inthu["door-access-qr"]
+    .$post({
+      form: { authToken, deviceId, session_id: sessionId },
+    })
+    .then((res) => res.json());
 }
 
 export function fetchParcels(
@@ -85,9 +99,9 @@ export function fetchParcels(
   deviceId: string,
   sessionId: string,
 ) {
-  return post<unknown>("/ccxp/inthu/parcel-information", {
-    auth_token: authToken,
-    device_id: deviceId,
-    session_id: sessionId,
-  });
+  return client.ccxp.inthu["parcel-information"]
+    .$post({
+      form: { authToken, deviceId, session_id: sessionId },
+    })
+    .then((res) => res.json());
 }

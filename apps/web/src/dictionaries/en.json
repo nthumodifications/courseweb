@@ -482,5 +482,26 @@
     "seconds": "seconds",
     "open_settings": "Open Settings"
   },
+  "proxy_login": {
+    "title": "Connect to Academic Information System",
+    "subtitle": "Use your CCXP account to view grades, student ID, and more.",
+    "consent_title": "Privacy & Risk Disclosure",
+    "privacy_risks": [
+      "Your CCXP password is transmitted through the NTHUMods server to the university system.",
+      "If you enable \"auto-refresh\", your password is stored encrypted (AES-256-GCM) on our server. The server operator technically has the ability to decrypt it.",
+      "Your grades, personal information, door access QR codes, and parcel data pass through this service and may be logged.",
+      "This is a student project, not an official NTHU service. No security guarantees are provided.",
+      "Student ID, name, and department are cached in your browser's localStorage and could be exposed if your device is compromised or an XSS vulnerability exists."
+    ],
+    "consent_checkbox": "I have read and understand the above risks, and agree to proceed.",
+    "consent_continue": "Continue",
+    "student_id_label": "Student ID",
+    "password_label": "Password",
+    "password_placeholder": "CCXP Password",
+    "store_credentials_label": "Save credentials for auto-refresh (encrypted on server, auto-deleted after 30 days. Server operator can technically decrypt.)",
+    "login_button": "Connect CCXP Account",
+    "login_loading": "Logging in…",
+    "learn_more": "Learn how proxy login works"
+  },
   "test": {}
 }

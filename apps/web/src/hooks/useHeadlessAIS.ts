@@ -1,22 +1,72 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useReducer, useRef } from "react";
 import { useLocalStorage } from "usehooks-ts";
 import type { HeadlessAISStorage, UserJWTDetails } from "@/types/headless_ais";
 import { proxyLogin, proxyRefresh, proxyLogout } from "@/lib/headless-ais-api";
 
 const STORAGE_KEY = "headless_ais";
+const SESSION_TTL = 30 * 60 * 1000; // 30 minutes
+
+// --- State machine ---
+
+type State =
+  | { status: "idle" }
+  | { status: "logging_in" }
+  | { status: "refreshing" }
+  | { status: "logging_out" }
+  | { status: "error"; message: string };
+
+type Action =
+  | { type: "LOGIN_START" }
+  | { type: "LOGIN_SUCCESS" }
+  | { type: "LOGIN_ERROR"; message: string }
+  | { type: "REFRESH_START" }
+  | { type: "REFRESH_SUCCESS" }
+  | { type: "REFRESH_ERROR"; message: string }
+  | { type: "LOGOUT_START" }
+  | { type: "LOGOUT_DONE" }
+  | { type: "CLEAR_ERROR" };
+
+function reducer(_state: State, action: Action): State {
+  switch (action.type) {
+    case "LOGIN_START":
+      return { status: "logging_in" };
+    case "LOGIN_SUCCESS":
+      return { status: "idle" };
+    case "LOGIN_ERROR":
+      return { status: "error", message: action.message };
+    case "REFRESH_START":
+      return { status: "refreshing" };
+    case "REFRESH_SUCCESS":
+      return { status: "idle" };
+    case "REFRESH_ERROR":
+      return { status: "error", message: action.message };
+    case "LOGOUT_START":
+      return { status: "logging_out" };
+    case "LOGOUT_DONE":
+      return { status: "idle" };
+    case "CLEAR_ERROR":
+      return { status: "idle" };
+  }
+}
+
+// --- Hook ---
 
 export function useHeadlessAIS() {
   const [ais, setAis] = useLocalStorage<HeadlessAISStorage>(STORAGE_KEY, {
     enabled: false,
   });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [state, dispatch] = useReducer(reducer, { status: "idle" });
 
   // Dedup lock: prevents multiple concurrent refresh calls from racing
   const refreshPromiseRef = useRef<Promise<string> | null>(null);
 
   const isConnected = ais.enabled;
   const user: UserJWTDetails | null = ais.enabled ? ais.user : null;
+  const loading =
+    state.status === "logging_in" ||
+    state.status === "refreshing" ||
+    state.status === "logging_out";
+  const error = state.status === "error" ? state.message : null;
 
   const login = useCallback(
     async (
@@ -24,8 +74,7 @@ export function useHeadlessAIS() {
       password: string,
       storeCredentials = false,
     ): Promise<void> => {
-      setLoading(true);
-      setError(null);
+      dispatch({ type: "LOGIN_START" });
       try {
         const result = await proxyLogin(studentid, password, storeCredentials);
         setAis({
@@ -38,12 +87,11 @@ export function useHeadlessAIS() {
           expired: false,
           consentGiven: true,
         });
+        dispatch({ type: "LOGIN_SUCCESS" });
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Login failed.";
-        setError(msg);
+        dispatch({ type: "LOGIN_ERROR", message: msg });
         throw err;
-      } finally {
-        setLoading(false);
       }
     },
     [setAis],
@@ -56,7 +104,6 @@ export function useHeadlessAIS() {
   const getACIXSTORE = useCallback(async (): Promise<string> => {
     if (!ais.enabled) throw new Error("Not connected to CCXP");
 
-    const SESSION_TTL = 30 * 60 * 1000;
     const isStale = Date.now() - ais.lastUpdated > SESSION_TTL;
 
     if (ais.ACIXSTORE && !ais.expired && !isStale) {
@@ -71,7 +118,7 @@ export function useHeadlessAIS() {
       }
 
       const refreshPromise = (async () => {
-        setLoading(true);
+        dispatch({ type: "REFRESH_START" });
         try {
           const result = await proxyRefresh();
           setAis({
@@ -80,12 +127,16 @@ export function useHeadlessAIS() {
             lastUpdated: Date.now(),
             expired: false,
           });
+          dispatch({ type: "REFRESH_SUCCESS" });
           return result.ACIXSTORE;
         } catch {
           setAis({ ...ais, expired: true, hasStoredCredentials: false });
+          dispatch({
+            type: "REFRESH_ERROR",
+            message: "Session expired. Please log in again.",
+          });
           throw new Error("Session expired. Please log in again.");
         } finally {
-          setLoading(false);
           refreshPromiseRef.current = null;
         }
       })();
@@ -100,13 +151,14 @@ export function useHeadlessAIS() {
   }, [ais, setAis]);
 
   const logout = useCallback(async (): Promise<void> => {
+    dispatch({ type: "LOGOUT_START" });
     try {
-      await proxyLogout(); // Server reads cookie, deletes credential + clears cookie
+      await proxyLogout();
     } catch {
       // Best-effort: clear local state regardless
     }
     setAis({ enabled: false });
-    setError(null);
+    dispatch({ type: "LOGOUT_DONE" });
   }, [setAis]);
 
   return {
@@ -115,9 +167,12 @@ export function useHeadlessAIS() {
     isConnected,
     loading,
     error,
+    /** Current state machine status: 'idle' | 'logging_in' | 'refreshing' | 'logging_out' | 'error' */
+    status: state.status,
     login,
     logout,
     getACIXSTORE,
+    clearError: () => dispatch({ type: "CLEAR_ERROR" }),
     invalidateSession: () => {
       if (ais.enabled) setAis({ ...ais, expired: true });
     },

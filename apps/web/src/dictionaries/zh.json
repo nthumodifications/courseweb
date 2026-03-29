@@ -482,5 +482,26 @@
     "seconds": "秒後可重試",
     "open_settings": "開啟設定"
   },
+  "proxy_login": {
+    "title": "連結校務資訊系統",
+    "subtitle": "使用 CCXP 帳號查看成績、學生證等功能。",
+    "consent_title": "隱私與風險聲明",
+    "privacy_risks": [
+      "您的 CCXP 密碼會經由 NTHUMods 伺服器傳輸至校務資訊系統。",
+      "若選擇「自動更新」，密碼會以 AES-256-GCM 加密儲存於伺服器。伺服器管理員在技術上有能力解密。",
+      "您的成績、個人資料、門禁 QR 碼、包裹資訊等資料會經由本服務傳輸，本服務可能記錄這些資料。",
+      "本服務為學生專案，非清華大學官方服務，不提供任何資安擔保。",
+      "學號、姓名、科系等個人資訊會暫存於您的瀏覽器 localStorage 中，若裝置遭入侵或存在 XSS 漏洞可能外洩。"
+    ],
+    "consent_checkbox": "我已閱讀並理解上述風險，同意繼續使用代理登入功能。",
+    "consent_continue": "繼續",
+    "student_id_label": "學號",
+    "password_label": "密碼",
+    "password_placeholder": "CCXP 密碼",
+    "store_credentials_label": "儲存認證以自動更新（加密儲存於伺服器，30 天後自動刪除。伺服器管理員技術上可解密。）",
+    "login_button": "連結 CCXP 帳號",
+    "login_loading": "登入中…",
+    "learn_more": "了解代理登入的運作方式"
+  },
   "test": {}
 }
