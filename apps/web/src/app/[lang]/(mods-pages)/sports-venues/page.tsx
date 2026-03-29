@@ -112,12 +112,17 @@ function toMinutes(hhmm: string): number {
   return h * 60 + m;
 }
 
+function ensureTimeSlotArray(v: unknown): TimeSlot[] {
+  return Array.isArray(v) ? (v as TimeSlot[]) : [];
+}
+
 type OpenStatus =
   | { type: "open"; until: string }
   | { type: "opens"; at: string }
   | { type: "closed" };
 
 function getOpenStatus(slots: TimeSlot[], now: Date): OpenStatus {
+  if (slots.length === 0) return { type: "closed" };
   const nowMin = now.getHours() * 60 + now.getMinutes();
   // Check if currently inside a slot
   for (const slot of slots) {
@@ -242,7 +247,7 @@ const ScheduleSheet = ({
           <>
             <div className="flex flex-col divide-y divide-slate-100 dark:divide-neutral-800">
               {[...DAY_KEYS, "holiday" as const].map((day) => {
-                const slots = schedule.hours![day] as TimeSlot[];
+                const slots = ensureTimeSlotArray(schedule.hours![day]);
                 return (
                   <div key={day} className="flex items-start py-3 gap-4">
                     <span className="w-16 text-sm font-medium text-slate-500 dark:text-neutral-400 shrink-0">
@@ -289,7 +294,9 @@ const SportsVenuesPage = () => {
     queryKey: ["venue-occupancy"],
     queryFn: async () => {
       const res = await client.venue.occupancy.$get();
-      return res.json() as Promise<OccupancyItem[]>;
+      if (!res.ok) throw new Error("Failed to fetch occupancy data");
+      const data = await res.json();
+      return Array.isArray(data) ? (data as OccupancyItem[]) : [];
     },
     refetchInterval: 30_000,
   });
@@ -322,7 +329,7 @@ const SportsVenuesPage = () => {
       );
       if (!schedule?.hours) return null;
       const dayKey = DAY_KEYS[now.getDay()];
-      return schedule.hours[dayKey] as TimeSlot[];
+      return ensureTimeSlotArray(schedule.hours[dayKey]);
     })();
 
     return { item, facility, todaySlots };
@@ -421,8 +428,9 @@ const SportsVenuesPage = () => {
             const schedule = facility.schedules.find(
               (s) => s.semester === currentSemester,
             );
+            const rawTodaySlots = schedule?.hours?.[DAY_KEYS[now.getDay()]];
             const todaySlots = schedule?.hours
-              ? (schedule.hours[DAY_KEYS[now.getDay()]] as TimeSlot[])
+              ? ensureTimeSlotArray(rawTodaySlots)
               : null;
 
             return (

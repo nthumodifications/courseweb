@@ -109,7 +109,29 @@ Rules:
     const text = result.text;
     if (!text) return null;
     const parsed = JSON.parse(text);
-    const { name_en, ...hours } = parsed;
+    const { name_en, ...rawHours } = parsed;
+    const toSlots = (v: unknown): TimeSlot[] => {
+      if (!Array.isArray(v)) return [];
+      return v.filter(
+        (s): s is TimeSlot =>
+          s !== null &&
+          typeof s === "object" &&
+          typeof (s as Record<string, unknown>).open === "string" &&
+          typeof (s as Record<string, unknown>).close === "string",
+      );
+    };
+    // Validate that each day field is an array of valid TimeSlot objects
+    const hours: DaySchedule = {
+      monday: toSlots(rawHours.monday),
+      tuesday: toSlots(rawHours.tuesday),
+      wednesday: toSlots(rawHours.wednesday),
+      thursday: toSlots(rawHours.thursday),
+      friday: toSlots(rawHours.friday),
+      saturday: toSlots(rawHours.saturday),
+      sunday: toSlots(rawHours.sunday),
+      holiday: toSlots(rawHours.holiday),
+      notes: typeof rawHours.notes === "string" ? rawHours.notes : null,
+    };
     return { name_en: name_en ?? facilityNameZh, hours };
   } catch (e) {
     console.error(`Failed to parse PDF ${pdfUrl}:`, e);
