@@ -168,9 +168,9 @@ export async function syncPeoOpeningTimes(env: {
     if (!name_zh) continue;
 
     // Semester PDF links are each in their own <td> — collect from all cells after the name
-    const links: Element[] = [];
+    const links: any[] = [];
     for (let k = 1; k < cells.length; k++) {
-      cells[k].querySelectorAll("a").forEach((a: Element) => links.push(a));
+      cells[k].querySelectorAll("a").forEach((a: any) => links.push(a));
     }
     const schedules: FacilitySchedule["schedules"] = [];
 
