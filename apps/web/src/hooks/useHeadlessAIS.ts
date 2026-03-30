@@ -60,6 +60,16 @@ export function useHeadlessAIS() {
   // Dedup lock: prevents multiple concurrent refresh calls from racing
   const refreshPromiseRef = useRef<Promise<string> | null>(null);
 
+  // In-memory credentials for client-side refresh (never persisted to disk)
+  // Cleared automatically on tab close / page reload
+  const memoryCredsRef = useRef<{
+    studentid: string;
+    password: string;
+  } | null>(null);
+
+  // Tracks whether a logout was initiated, so in-flight refreshes don't resurrect state
+  const loggedOutRef = useRef(false);
+
   const isConnected = ais.enabled;
   const user: UserJWTDetails | null = ais.enabled ? ais.user : null;
   const loading =
@@ -74,9 +84,18 @@ export function useHeadlessAIS() {
       password: string,
       storeCredentials = false,
     ): Promise<void> => {
+      loggedOutRef.current = false;
       dispatch({ type: "LOGIN_START" });
       try {
         const result = await proxyLogin(studentid, password, storeCredentials);
+
+        // If user chose NOT to store on server, keep in memory for client-side refresh
+        if (!storeCredentials) {
+          memoryCredsRef.current = { studentid, password };
+        } else {
+          memoryCredsRef.current = null;
+        }
+
         setAis({
           enabled: true,
           studentid,
@@ -98,8 +117,11 @@ export function useHeadlessAIS() {
   );
 
   /**
-   * Returns a valid ACIXSTORE, auto-refreshing if the session has expired
-   * and stored credentials exist (httpOnly cookie). Deduplicates concurrent calls.
+   * Returns a valid ACIXSTORE, auto-refreshing if the session has expired.
+   * Supports two refresh strategies:
+   * 1. Server-side: httpOnly cookie carries credential_token → proxyRefresh()
+   * 2. Client-side: in-memory credentials (tab-scoped) → proxyLogin() again
+   * Deduplicates concurrent calls.
    */
   const getACIXSTORE = useCallback(async (): Promise<string> => {
     if (!ais.enabled) throw new Error("Not connected to CCXP");
@@ -110,8 +132,10 @@ export function useHeadlessAIS() {
       return ais.ACIXSTORE;
     }
 
-    // Auto-refresh if server-side credentials are stored (cookie carries the token)
-    if (ais.hasStoredCredentials) {
+    const canServerRefresh = ais.hasStoredCredentials;
+    const canClientRefresh = !!memoryCredsRef.current;
+
+    if (canServerRefresh || canClientRefresh) {
       // Dedup: if a refresh is already in-flight, wait for it
       if (refreshPromiseRef.current) {
         return refreshPromiseRef.current;
@@ -120,21 +144,44 @@ export function useHeadlessAIS() {
       const refreshPromise = (async () => {
         dispatch({ type: "REFRESH_START" });
         try {
-          const result = await proxyRefresh();
+          let newACIXSTORE: string;
+
+          if (canServerRefresh) {
+            const result = await proxyRefresh();
+            newACIXSTORE = result.ACIXSTORE;
+          } else {
+            // Client-side refresh: re-login with in-memory credentials
+            const creds = memoryCredsRef.current!;
+            const result = await proxyLogin(
+              creds.studentid,
+              creds.password,
+              false,
+            );
+            newACIXSTORE = result.ACIXSTORE;
+          }
+
+          // Guard against logout racing with refresh
+          if (loggedOutRef.current) {
+            throw new Error("Logged out during refresh.");
+          }
+
           setAis({
             ...ais,
-            ACIXSTORE: result.ACIXSTORE,
+            ACIXSTORE: newACIXSTORE,
             lastUpdated: Date.now(),
             expired: false,
           });
           dispatch({ type: "REFRESH_SUCCESS" });
-          return result.ACIXSTORE;
+          return newACIXSTORE;
         } catch {
-          setAis({ ...ais, expired: true, hasStoredCredentials: false });
-          dispatch({
-            type: "REFRESH_ERROR",
-            message: "Session expired. Please log in again.",
-          });
+          if (!loggedOutRef.current) {
+            setAis({ ...ais, expired: true, hasStoredCredentials: false });
+            memoryCredsRef.current = null;
+            dispatch({
+              type: "REFRESH_ERROR",
+              message: "Session expired. Please log in again.",
+            });
+          }
           throw new Error("Session expired. Please log in again.");
         } finally {
           refreshPromiseRef.current = null;
@@ -145,12 +192,14 @@ export function useHeadlessAIS() {
       return refreshPromise;
     }
 
-    // Session-only mode: can't auto-refresh
+    // No refresh strategy available
     setAis({ ...ais, expired: true });
     throw new Error("Session expired. Please log in again.");
   }, [ais, setAis]);
 
   const logout = useCallback(async (): Promise<void> => {
+    loggedOutRef.current = true;
+    memoryCredsRef.current = null;
     dispatch({ type: "LOGOUT_START" });
     try {
       await proxyLogout();
@@ -167,7 +216,7 @@ export function useHeadlessAIS() {
     isConnected,
     loading,
     error,
-    /** Current state machine status: 'idle' | 'logging_in' | 'refreshing' | 'logging_out' | 'error' */
+    /** Current state machine status */
     status: state.status,
     login,
     logout,

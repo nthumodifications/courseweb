@@ -17,11 +17,12 @@ export async function solveCaptcha(
         continue;
       }
 
-      const answer = await fetch(`${ocrBaseUrl}/?url=${captchaUrl}`).then(
-        (res) => res.text(),
-      );
+      const answer = await fetch(
+        `${ocrBaseUrl}/?url=${encodeURIComponent(captchaUrl)}`,
+      ).then((res) => res.text());
 
-      if (answer.length === 6) return answer;
+      const trimmed = answer.trim();
+      if (trimmed.length === 6) return trimmed;
       console.error(
         `OCR: Got invalid answer length ${answer.length}, retrying`,
       );

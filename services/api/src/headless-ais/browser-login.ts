@@ -52,7 +52,8 @@ async function attemptLogin(
     await page.goto(CCXP_LOGIN_URL, { waitUntil: "domcontentloaded" });
 
     const pageContent: string = await page.evaluate(
-      () => document.documentElement.innerHTML,
+      // Runs in browser context where `document` exists
+      () => (globalThis as any).document.documentElement.innerHTML,
     );
 
     if (!pageContent.includes("國立清華大學 -- 校務資訊系統")) {

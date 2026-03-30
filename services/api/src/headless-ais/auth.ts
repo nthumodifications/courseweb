@@ -2,8 +2,6 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { getCookie, setCookie, deleteCookie } from "hono/cookie";
 import { z } from "zod";
-import { PrismaClient } from "../generated/client";
-import { PrismaD1 } from "@prisma/adapter-d1";
 import type { Bindings } from "../index";
 import { loginToCCXP, CCXPLoginError } from "./browser-login";
 import {
@@ -12,6 +10,7 @@ import {
   revokeCredential,
   cleanupExpired,
 } from "./credential-store";
+import prismaClients from "../prisma/client";
 
 const COOKIE_NAME = "ccxp_credential_token";
 const COOKIE_MAX_AGE = 30 * 24 * 60 * 60; // 30 days in seconds
@@ -29,7 +28,7 @@ function getClientIP(c: {
 function setCredentialCookie(c: any, token: string) {
   setCookie(c, COOKIE_NAME, token, {
     httpOnly: true,
-    secure: true,
+    secure: process.env.NODE_ENV === "production",
     sameSite: "Strict",
     path: "/ccxp/auth",
     maxAge: COOKIE_MAX_AGE,
@@ -42,11 +41,6 @@ function getEncKey(c: any): string {
     process.env.NTHU_HEADLESS_AIS_ENCRYPTION_KEY ??
     ""
   );
-}
-
-function getPrisma(c: any): PrismaClient {
-  const adapter = new PrismaD1(c.env.DB);
-  return new PrismaClient({ adapter } as any);
 }
 
 // Chained route definitions for Hono RPC type inference
@@ -94,7 +88,7 @@ const app = new Hono<{ Bindings: Bindings }>()
         if (store_credentials === "true") {
           const encKey = getEncKey(c);
           if (encKey) {
-            const prisma = getPrisma(c);
+            const prisma = await prismaClients.fetch(c.env.DB);
             const credentialToken = await storeCredential(
               prisma,
               studentid,
@@ -167,7 +161,7 @@ const app = new Hono<{ Bindings: Bindings }>()
       );
     }
 
-    const prisma = getPrisma(c);
+    const prisma = await prismaClients.fetch(c.env.DB);
     const creds = await retrieveCredential(prisma, credentialToken, encKey);
     if (!creds) {
       deleteCookie(c, COOKIE_NAME, { path: "/ccxp/auth" });
@@ -218,15 +212,21 @@ const app = new Hono<{ Bindings: Bindings }>()
   .post("/logout", async (c) => {
     const credentialToken = getCookie(c, COOKIE_NAME);
     if (credentialToken) {
-      const prisma = getPrisma(c);
+      const prisma = await prismaClients.fetch(c.env.DB);
       await revokeCredential(prisma, credentialToken);
     }
     deleteCookie(c, COOKIE_NAME, { path: "/ccxp/auth" });
     return c.json({ success: true });
   })
-  // POST /ccxp/auth/cleanup
+  // POST /ccxp/auth/cleanup — rate-limited to prevent abuse
   .post("/cleanup", async (c) => {
-    const prisma = getPrisma(c);
+    const { success } = await c.env.LOGIN_RATE_LIMITER.limit({
+      key: `cleanup:${getClientIP(c)}`,
+    });
+    if (!success) {
+      return c.json({ error: { message: "Too many requests." } }, 429);
+    }
+    const prisma = await prismaClients.fetch(c.env.DB);
     const count = await cleanupExpired(prisma);
     return c.json({ purged: count });
   });
