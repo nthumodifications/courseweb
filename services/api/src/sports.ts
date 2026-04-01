@@ -13,9 +13,21 @@ const app = new Hono<{ Bindings: Bindings }>().get(
   "/opening-times",
   async (c) => {
     const prisma = await prismaClients.fetch(c.env.DB);
-    const result = await prisma.cache.findUnique({
-      where: { key: SPORTS_CACHE_KEY },
-    });
+    let result = null;
+
+    try {
+      result = await prisma.cache.findUnique({
+        where: { key: SPORTS_CACHE_KEY },
+      });
+    } catch (e) {
+      console.error(
+        "Failed to read SPORTS_CACHE_KEY, clearing corrupted data:",
+        e,
+      );
+      await c.env.DB.prepare("DELETE FROM Cache WHERE key = ? OR key = ?")
+        .bind(SPORTS_CACHE_KEY, SPORTS_SYNCING_KEY)
+        .run();
+    }
 
     if (result) {
       const data: PeoOpeningTimesCache = JSON.parse(result.data);
@@ -23,9 +35,20 @@ const app = new Hono<{ Bindings: Bindings }>().get(
     }
 
     // No cache yet — check if a sync is already in flight (race condition guard)
-    const syncing = await prisma.cache.findUnique({
-      where: { key: SPORTS_SYNCING_KEY },
-    });
+    let syncing = null;
+    try {
+      syncing = await prisma.cache.findUnique({
+        where: { key: SPORTS_SYNCING_KEY },
+      });
+    } catch (e) {
+      console.error(
+        "Failed to read SPORTS_SYNCING_KEY, clearing corrupted data:",
+        e,
+      );
+      await c.env.DB.prepare("DELETE FROM Cache WHERE key = ?")
+        .bind(SPORTS_SYNCING_KEY)
+        .run();
+    }
 
     if (!syncing) {
       // Atomically claim the sync slot before starting background work
