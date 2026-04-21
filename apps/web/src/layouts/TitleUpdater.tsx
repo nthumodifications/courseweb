@@ -59,8 +59,7 @@ const TitleUpdater = () => {
   const handle = matches.at(-1)?.handle as RouteHandle | undefined;
   const isZh = language === "zh";
 
-  const pageTitle =
-    isZh && handle?.titleZh ? handle.titleZh : handle?.title;
+  const pageTitle = isZh && handle?.titleZh ? handle.titleZh : handle?.title;
   const description = isZh
     ? (handle?.descriptionZh ?? DEFAULT_DESCRIPTION_ZH)
     : (handle?.description ?? DEFAULT_DESCRIPTION_EN);
@@ -89,7 +88,7 @@ const TitleUpdater = () => {
       <link rel="canonical" href={canonicalUrl} />
       <link rel="alternate" hreflang="zh" href={zhUrl} />
       <link rel="alternate" hreflang="en" href={enUrl} />
-      <link rel="alternate" hreflang="x-default" href={zhUrl} />
+      <link rel="alternate" hreflang="x-default" href={canonicalUrl} />
 
       <meta property="og:type" content="website" />
       <meta property="og:title" content={fullTitle} />
@@ -97,10 +96,7 @@ const TitleUpdater = () => {
       <meta property="og:url" content={canonicalUrl} />
       <meta property="og:image" content={DEFAULT_OG_IMAGE} />
       <meta property="og:site_name" content="NTHUMods" />
-      <meta
-        property="og:locale"
-        content={lang === "zh" ? "zh_TW" : "en_US"}
-      />
+      <meta property="og:locale" content={lang === "zh" ? "zh_TW" : "en_US"} />
 
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={fullTitle} />

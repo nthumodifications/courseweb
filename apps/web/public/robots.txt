@@ -1,7 +1,4 @@
 User-agent: *
-Allow: /
-
-# Keep private student data and auth routes out of search results
 Disallow: /auth/
 Disallow: /api/
 Disallow: /zh/student/
