@@ -89,6 +89,7 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260421.1",
     "@courseweb/eslint-config": "*",
     "@sentry/vite-plugin": "^2.16.0",
     "@types/leaflet": "^1.9.11",
