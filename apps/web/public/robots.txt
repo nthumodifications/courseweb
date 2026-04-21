@@ -1,0 +1,18 @@
+User-agent: *
+Allow: /
+
+# Keep private student data and auth routes out of search results
+Disallow: /auth/
+Disallow: /api/
+Disallow: /zh/student/
+Disallow: /en/student/
+Disallow: /zh/settings
+Disallow: /en/settings
+Disallow: /zh/proxy-login
+Disallow: /en/proxy-login
+Disallow: /zh/next-steps
+Disallow: /en/next-steps
+Disallow: /zh/waitlist
+Disallow: /en/waitlist
+
+Sitemap: https://nthumods.com/sitemap.xml
