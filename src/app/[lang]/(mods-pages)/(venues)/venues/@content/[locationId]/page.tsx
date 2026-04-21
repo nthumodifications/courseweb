@@ -25,9 +25,23 @@ export const generateMetadata = ({
     params
 }: Props, parent: ResolvingMetadata) => {
     const venueId = decodeURI(params.locationId)
+    const venueUrl = `https://nthumods.com/zh/venues/${encodeURIComponent(params.locationId)}`
     return {
-        ...parent,
-        title: `${venueId}`
+        title: venueId,
+        description: `查看 ${venueId} 的課程時刻表與位置資訊。View course timetable and location info for ${venueId} at NTHU.`,
+        openGraph: {
+            title: `${venueId} | NTHUMods`,
+            description: `查看 ${venueId} 的課程時刻表與位置資訊。`,
+            url: venueUrl,
+        },
+        twitter: {
+            card: 'summary' as const,
+            title: `${venueId} | NTHUMods`,
+            description: `查看 ${venueId} 的課程時刻表與位置資訊。`,
+        },
+        alternates: {
+            canonical: venueUrl,
+        },
     }
 }
 

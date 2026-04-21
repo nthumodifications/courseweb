@@ -20,25 +20,34 @@ import AppUrlListener from '@/components/AppUrlListener';
 export const metadata: Metadata = {
   title: {
     template: '%s | NTHUMods',
-    default: 'NTHUMods',
+    default: 'NTHUMods - 國立清華大學課程資訊平臺',
   },
-  description: '國立清華大學課表、校車時間表、資料整合平臺，學生主導、學生自主開發。',
+  description: '國立清華大學課程查詢、課表規劃、校車時間表、地點查詢資料整合平臺。NTHU course search, timetable planner, and campus bus schedule — student-built.',
   applicationName: "NTHUMods",
   metadataBase: new URL("https://nthumods.com"),
   appleWebApp: {
     title: "NTHUMods",
     statusBarStyle: "black-translucent",
   },
-  robots: "index, follow",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   publisher: "@nthumodifications",
-  alternates:  {
-    canonical: "https://nthumods.com", 
-    languages: { 
+  alternates: {
+    canonical: "https://nthumods.com",
+    languages: {
       "en": "https://nthumods.com/en",
       "zh": "https://nthumods.com/zh"
     }
   },
-  category: "education, reference, courses, timetable, nthu, nthumods, nthumodifications, bus timetable",
+  category: "education",
   keywords: [
     "國立清華大學",
     "國立清華大學課程查詢",
@@ -61,20 +70,38 @@ export const metadata: Metadata = {
     "NTHU Bus Timetable",
     "NTHU Bus",
     "NTHU Bus Schedule",
-    "NTHU Bus Timetable",
-    "NTHU Student Developers"
+    "NTHU Student Developers",
+    "清華大學選課",
+    "清大選課系統",
   ],
   authors: { name: '@nthumodifications', url: 'https://github.com/nthumodifications' },
   creator: '@nthumodifications Team',
   openGraph: {
     type: 'website',
-    title: 'NTHUMods',
-    description: '清大課表、校車時間表、資料整合平臺，學生主導、學生自主開發。',
+    title: 'NTHUMods - 國立清華大學課程資訊平臺',
+    description: '清大課程查詢、課表規劃、校車時間表。NTHU course search, timetable planner, and campus bus schedule.',
     url: 'https://nthumods.com',
     siteName: 'NTHUMods',
     countryName: 'Taiwan',
-    locale: 'en, zh'
-  }
+    locale: 'zh_TW',
+    alternateLocale: 'en_US',
+    images: [
+      {
+        url: '/images/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'NTHUMods - 國立清華大學課程資訊平臺',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'NTHUMods - 國立清華大學課程資訊平臺',
+    description: '清大課程查詢、課表規劃、校車時間表。NTHU course search, timetable planner, and campus bus schedule.',
+    images: ['/images/og-image.png'],
+    creator: '@nthumodifications',
+    site: '@nthumodifications',
+  },
 }
 
 
@@ -110,6 +137,34 @@ export default function RootLayout({
 
   const theme = cookies().get("theme");
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebApplication',
+    name: 'NTHUMods',
+    url: 'https://nthumods.com',
+    description: '國立清華大學課程查詢、課表規劃、校車時間表資料整合平臺。',
+    applicationCategory: 'EducationApplication',
+    operatingSystem: 'Any',
+    inLanguage: ['zh-TW', 'en'],
+    offers: {
+      '@type': 'Offer',
+      price: '0',
+      priceCurrency: 'TWD',
+    },
+    author: {
+      '@type': 'Organization',
+      name: 'NTHUModifications',
+      url: 'https://github.com/nthumodifications',
+    },
+    provider: {
+      '@type': 'CollegeOrUniversity',
+      name: '國立清華大學',
+      alternateName: 'National Tsing Hua University',
+      url: 'https://www.nthu.edu.tw',
+      sameAs: 'https://en.wikipedia.org/wiki/National_Tsing_Hua_University',
+    },
+  }
+
   return (
     <CssVarsProvider defaultMode={(theme?.value as any) ?? 'light'}>
       <NextAuthProvider>
@@ -119,6 +174,12 @@ export default function RootLayout({
               <UserTimetableProvider>
                 <ModalProvider>
                   <html lang={params.lang} translate="no" className={`${theme?.value ?? ''} ${inter.variable} ${noto.variable}`} suppressHydrationWarning>
+                    <head>
+                      <script
+                        type="application/ld+json"
+                        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+                      />
+                    </head>
                     <body>
                       {children}
                       <AppUrlListener/>

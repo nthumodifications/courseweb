@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/badge"
 import supabase, { CourseDefinition, CourseScoreDefinition } from '@/config/supabase';
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { timetableColors } from "@/const/timetableColors";
+import JsonLd from "@/components/JsonLd";
 
 
 type PageProps = {
@@ -29,27 +30,46 @@ type PageProps = {
 }
 
 export async function generateMetadata({ params }: PageProps, parent: ResolvingMetadata) {
-    const course = await getCourseWithSyllabus(decodeURI(params.courseId as string));
+    const courseId = decodeURI(params.courseId as string);
+    const course = await getCourseWithSyllabus(courseId);
 
     if (!course) return {
-        ...parent,
-        title: '404',
-        description: '找不到課程'
+        title: '404 - 找不到課程',
+        description: '找不到課程',
+        robots: { index: false, follow: false },
     }
 
+    const courseCode = `${course.department} ${course.course}-${course.class}`
+    const title = `${courseCode} ${course.name_zh} ${course.name_en}`
+    const teachers = [course.teacher_zh?.join(','), course.teacher_en?.join(',')].filter(Boolean).join(' / ')
+    const brief = course.course_syllabus?.brief ?? ''
+    const description = [teachers, brief].filter(Boolean).join(' — ').slice(0, 200)
+    const courseUrl = `https://nthumods.com/zh/courses/${encodeURIComponent(courseId)}`
+
     return {
-        ...parent,
-        title: `${course?.department} ${course?.course}-${course?.class} ${course!.name_zh} ${course!.name_en}`,
-        description: `${course!.teacher_zh?.join(',')} ${course!.teacher_en?.join(',')} \n ${course!.course_syllabus ? course!.course_syllabus.brief: ""}`,
+        title,
+        description,
+        keywords: [course.name_zh, course.name_en, courseCode, ...(course.teacher_zh ?? []), 'NTHU course', '清大課程'],
         openGraph: {
-            type: 'website',
-            title: `${course?.department} ${course?.course}-${course?.class} ${course!.name_zh} ${course!.name_en} | NTHUMods`,
-            description: `${course!.teacher_zh?.join(',')} ${course!.teacher_en?.join(',')} \n ${course!.course_syllabus ? course!.course_syllabus.brief: ""}`,
-            url: 'https://nthumods.com',
+            type: 'article',
+            title: `${title} | NTHUMods`,
+            description,
+            url: courseUrl,
             siteName: 'NTHUMods',
-            countryName: 'Taiwan',
-            locale: 'en, zh'
-        }
+            locale: 'zh_TW',
+        },
+        twitter: {
+            card: 'summary',
+            title: `${title} | NTHUMods`,
+            description,
+        },
+        alternates: {
+            canonical: courseUrl,
+            languages: {
+                en: `https://nthumods.com/en/courses/${encodeURIComponent(courseId)}`,
+                zh: `https://nthumods.com/zh/courses/${encodeURIComponent(courseId)}`,
+            },
+        },
     }
 }
 
@@ -101,7 +121,29 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
     const timetableData = showTimetable ? createTimetableFromCourses([course as MinimalCourse], colorMap) : [];
     
 
+    const courseJsonLd = {
+        '@context': 'https://schema.org',
+        '@type': 'Course',
+        name: course.name_zh,
+        alternateName: course.name_en,
+        description: course.course_syllabus?.brief ?? `${course.department} ${course.course}-${course.class} ${course.name_zh}`,
+        url: `https://nthumods.com/zh/courses/${encodeURIComponent(courseId)}`,
+        provider: {
+            '@type': 'CollegeOrUniversity',
+            name: '國立清華大學',
+            alternateName: 'National Tsing Hua University',
+            url: 'https://www.nthu.edu.tw',
+        },
+        ...(course.teacher_zh?.length ? {
+            instructor: course.teacher_zh.map(t => ({ '@type': 'Person', name: t })),
+        } : {}),
+        inLanguage: 'zh-TW',
+        educationalLevel: 'University',
+        courseCode: `${course.department} ${course.course}-${course.class}`,
+    }
+
     return <Fade>
+        <JsonLd data={courseJsonLd} />
         <div className="grid grid-cols-1 xl:grid-cols-[auto_240px] pb-6 px-4 text-gray-500 dark:text-gray-300">
             <div className="space-y-2">
                 <div className="flex flex-col md:flex-row md:items-end gap-4">
