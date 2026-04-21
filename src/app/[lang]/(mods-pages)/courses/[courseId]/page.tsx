@@ -23,7 +23,18 @@ import supabase, { CourseDefinition, CourseScoreDefinition } from '@/config/supa
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { timetableColors } from "@/const/timetableColors";
 import JsonLd from "@/components/JsonLd";
+import { lastSemester } from '@/const/semester';
 
+// Allow on-demand rendering for courses not pre-rendered at build time
+export const dynamicParams = true
+
+export async function generateStaticParams() {
+    const { data } = await supabase
+        .from('courses')
+        .select('raw_id')
+        .eq('semester', lastSemester.id)
+    return (data ?? []).map(c => ({ courseId: encodeURIComponent(c.raw_id) }))
+}
 
 type PageProps = {
     params: { courseId?: string }
@@ -121,13 +132,26 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
     const timetableData = showTimetable ? createTimetableFromCourses([course as MinimalCourse], colorMap) : [];
     
 
+    const lang = params.lang ?? 'zh'
+    const courseUrl = `https://nthumods.com/${lang}/courses/${encodeURIComponent(courseId)}`
+
+    const breadcrumbJsonLd = {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+            { '@type': 'ListItem', position: 1, name: '課程查詢', item: `https://nthumods.com/${lang}/courses` },
+            { '@type': 'ListItem', position: 2, name: course.department, item: `https://nthumods.com/${lang}/courses/dept/${course.department}` },
+            { '@type': 'ListItem', position: 3, name: `${course.name_zh}`, item: courseUrl },
+        ],
+    }
+
     const courseJsonLd = {
         '@context': 'https://schema.org',
         '@type': 'Course',
         name: course.name_zh,
         alternateName: course.name_en,
         description: course.course_syllabus?.brief ?? `${course.department} ${course.course}-${course.class} ${course.name_zh}`,
-        url: `https://nthumods.com/zh/courses/${encodeURIComponent(courseId)}`,
+        url: courseUrl,
         provider: {
             '@type': 'CollegeOrUniversity',
             name: '國立清華大學',
@@ -143,6 +167,7 @@ const CourseDetailPage = async ({ params }: PageProps & LangProps) => {
     }
 
     return <Fade>
+        <JsonLd data={breadcrumbJsonLd} />
         <JsonLd data={courseJsonLd} />
         <div className="grid grid-cols-1 xl:grid-cols-[auto_240px] pb-6 px-4 text-gray-500 dark:text-gray-300">
             <div className="space-y-2">

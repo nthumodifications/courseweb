@@ -17,6 +17,10 @@ import ReactQuery from '@/components/ReactQuery';
 import './globals.css'
 import AppUrlListener from '@/components/AppUrlListener';
 
+export function generateStaticParams() {
+  return [{ lang: 'en' }, { lang: 'zh' }]
+}
+
 export const metadata: Metadata = {
   title: {
     template: '%s | NTHUMods',
@@ -137,6 +141,23 @@ export default function RootLayout({
 
   const theme = cookies().get("theme");
 
+  const websiteJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'NTHUMods',
+    url: 'https://nthumods.com',
+    description: '國立清華大學課程查詢、課表規劃、校車時間表資料整合平臺。',
+    inLanguage: ['zh-TW', 'en'],
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: `https://nthumods.com/${params.lang}/courses?textSearch={search_term_string}`,
+      },
+      'query-input': 'required name=search_term_string',
+    },
+  }
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'WebApplication',
@@ -175,6 +196,10 @@ export default function RootLayout({
                 <ModalProvider>
                   <html lang={params.lang} translate="no" className={`${theme?.value ?? ''} ${inter.variable} ${noto.variable}`} suppressHydrationWarning>
                     <head>
+                      <script
+                        type="application/ld+json"
+                        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+                      />
                       <script
                         type="application/ld+json"
                         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
