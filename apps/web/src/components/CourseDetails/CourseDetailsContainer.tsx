@@ -1,6 +1,7 @@
 import { format } from "date-fns";
 import { AlertTriangle, ChevronLeft, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import DownloadSyllabus from "./DownloadSyllabus";
 import { Fade } from "@courseweb/ui";
 import { toPrettySemester } from "@/helpers/semester";
@@ -22,7 +23,7 @@ import { Badge } from "@courseweb/ui";
 import { CourseDefinition } from "@/config/supabase";
 import { ScrollArea, ScrollBar } from "@courseweb/ui";
 import { timetableColors } from "@courseweb/shared";
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense } from "react";
 import { Language } from "@/types/settings";
 import {
   Table,
@@ -142,12 +143,39 @@ const CourseDetailContainer = ({
     enabled: !!course, // Only fetch if course data is available
   });
 
-  // Update page title for full-page view (not modal)
-  useEffect(() => {
-    if (!modal && course) {
-      document.title = `${course.name_zh} ${course.teacher_zh?.join(",")} | NTHUMods`;
-    }
-  }, [modal, course]);
+  // Dynamic SEO metadata for course detail pages (full-page view only)
+  const courseJsonLd =
+    !modal && course
+      ? {
+          "@context": "https://schema.org",
+          "@type": "Course",
+          name: course.name_zh,
+          alternateName: course.name_en,
+          description:
+            course.course_syllabus?.brief ??
+            `清大 ${course.department} ${course.name_zh} 課程`,
+          provider: {
+            "@type": "EducationalOrganization",
+            name: "National Tsing Hua University",
+            alternateName: "國立清華大學",
+            url: "https://www.nthu.edu.tw",
+          },
+          instructor: (course.teacher_zh ?? []).map((t) => ({
+            "@type": "Person",
+            name: t,
+          })),
+          courseCode: `${course.department} ${course.course}-${course.class}`,
+          educationalLevel: "University",
+          inLanguage: "zh-TW",
+          url: `https://nthumods.com/zh/courses/${course.raw_id}`,
+          offers: {
+            "@type": "Offer",
+            price: "0",
+            priceCurrency: "TWD",
+            availability: "https://schema.org/InStock",
+          },
+        }
+      : null;
 
   // Handle loading state
   if (isLoading) {
@@ -187,6 +215,45 @@ const CourseDetailContainer = ({
 
   return (
     <Fade>
+      {!modal && course && (
+        <Helmet>
+          <title>{`${course.name_zh} ${course.teacher_zh?.join("、")} - ${toPrettySemester(course.semester)} 清大${course.department}課程 | NTHUMods`}</title>
+          <meta
+            name="description"
+            content={`清大 ${toPrettySemester(course.semester)} ${course.name_zh}（${course.name_en}）課程資訊，${course.teacher_zh?.join("、")} 授課。查看課程大綱、歷年評分記錄與學生心得。`}
+          />
+          <link
+            rel="canonical"
+            href={`https://nthumods.com/zh/courses/${course.raw_id}`}
+          />
+          <meta
+            property="og:title"
+            content={`${course.name_zh} - ${course.department} | NTHUMods`}
+          />
+          <meta
+            property="og:description"
+            content={`清大 ${course.name_zh}（${course.name_en}），${course.teacher_zh?.join("、")} 授課，${toPrettySemester(course.semester)} 學期。查看課程大綱與歷年資訊。`}
+          />
+          <meta
+            property="og:url"
+            content={`https://nthumods.com/zh/courses/${course.raw_id}`}
+          />
+          <meta name="twitter:card" content="summary" />
+          <meta
+            name="twitter:title"
+            content={`${course.name_zh} - ${course.department} | NTHUMods`}
+          />
+          <meta
+            name="twitter:description"
+            content={`清大 ${course.name_zh}，${course.teacher_zh?.join("、")} 授課，${toPrettySemester(course.semester)} 學期。`}
+          />
+          {courseJsonLd && (
+            <script type="application/ld+json">
+              {JSON.stringify(courseJsonLd)}
+            </script>
+          )}
+        </Helmet>
+      )}
       <div
         className={cn(
           "flex flex-col pb-6 relative",

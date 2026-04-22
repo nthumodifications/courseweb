@@ -1,222 +1,267 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset
-      xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-      xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
-            http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
-<!-- created with Free Online Sitemap Generator www.xml-sitemaps.com -->
+  xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+    http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
 
+  <!-- ==================== COURSES (highest value) ==================== -->
+  <url>
+    <loc>https://nthumods.com/zh/courses</loc>
+    <lastmod>2026-04-21</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.00</priority>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://nthumods.com/zh/courses"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nthumods.com/en/courses"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nthumods.com/zh/courses"/>
+  </url>
+  <url>
+    <loc>https://nthumods.com/en/courses</loc>
+    <lastmod>2026-04-21</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.00</priority>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://nthumods.com/zh/courses"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nthumods.com/en/courses"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nthumods.com/zh/courses"/>
+  </url>
 
-<url>
-  <loc>https://nthumods.com/zh/today</loc>
-  <lastmod>2023-10-19T09:24:27+00:00</lastmod>
-  <priority>1.00</priority>
-</url>
-<url>
-  <loc>https://nthumods.com/zh/timetable</loc>
-  <lastmod>2023-10-19T09:24:27+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
-<url>
-  <loc>https://nthumods.com/zh/courses</loc>
-  <lastmod>2023-10-19T09:24:27+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
-<url>
-  <loc>https://nthumods.com/zh/venues</loc>
-  <lastmod>2023-10-19T09:24:27+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
-<url>
-  <loc>https://nthumods.com/zh/bus</loc>
-  <lastmod>2023-10-19T09:24:27+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
-<url>
-  <loc>https://nthumods.com/zh/settings</loc>
-  <lastmod>2023-10-19T09:24:27+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
-<url>
-  <loc>https://nthumods.com/zh/bus/stop/A1U</loc>
-  <lastmod>2023-10-19T09:24:27+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://nthumods.com/zh/bus/stop/A1D</loc>
-  <lastmod>2023-10-19T09:24:27+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://nthumods.com/zh/bus/stop/A2U</loc>
-  <lastmod>2023-10-19T09:24:27+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://nthumods.com/zh/bus/stop/A2D</loc>
-  <lastmod>2023-10-19T09:24:27+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://nthumods.com/zh/bus/stop/A3U</loc>
-  <lastmod>2023-10-19T09:24:27+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://nthumods.com/zh/bus/stop/A3D</loc>
-  <lastmod>2023-10-19T09:24:27+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://nthumods.com/zh/bus/stop/A4U</loc>
-  <lastmod>2023-10-19T09:24:27+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://nthumods.com/zh/bus/stop/A4D</loc>
-  <lastmod>2023-10-19T09:24:27+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://nthumods.com/zh/bus/stop/A5U</loc>
-  <lastmod>2023-10-19T09:24:27+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://nthumods.com/zh/bus/stop/A5D</loc>
-  <lastmod>2023-10-19T09:24:27+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://nthumods.com/zh/bus/stop/A6U</loc>
-  <lastmod>2023-10-19T09:24:27+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://nthumods.com/zh/bus/stop/A6D</loc>
-  <lastmod>2023-10-19T09:24:27+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://nthumods.com/zh/bus/stop/A7U</loc>
-  <lastmod>2023-10-19T09:24:27+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://nthumods.com/zh/bus/stop/A7D</loc>
-  <lastmod>2023-10-19T09:24:27+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://nthumods.com/zh/bus/stop/A8</loc>
-  <lastmod>2023-10-19T09:24:27+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
+  <!-- ==================== TIMETABLE ==================== -->
+  <url>
+    <loc>https://nthumods.com/zh/timetable</loc>
+    <lastmod>2026-04-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://nthumods.com/zh/timetable"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nthumods.com/en/timetable"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nthumods.com/zh/timetable"/>
+  </url>
+  <url>
+    <loc>https://nthumods.com/en/timetable</loc>
+    <lastmod>2026-04-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://nthumods.com/zh/timetable"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nthumods.com/en/timetable"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nthumods.com/zh/timetable"/>
+  </url>
 
-<url>
-  <loc>https://nthumods.com/en/today</loc>
-  <lastmod>2023-10-19T09:24:27+00:00</lastmod>
-  <priority>1.00</priority>
-</url>
-<url>
-  <loc>https://nthumods.com/en/timetable</loc>
-  <lastmod>2023-10-19T09:24:27+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
-<url>
-  <loc>https://nthumods.com/en/courses</loc>
-  <lastmod>2023-10-19T09:24:27+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
-<url>
-  <loc>https://nthumods.com/en/venues</loc>
-  <lastmod>2023-10-19T09:24:27+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
-<url>
-  <loc>https://nthumods.com/en/bus</loc>
-  <lastmod>2023-10-19T09:24:27+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
-<url>
-  <loc>https://nthumods.com/en/settings</loc>
-  <lastmod>2023-10-19T09:24:27+00:00</lastmod>
-  <priority>0.80</priority>
-</url>
-<url>
-  <loc>https://nthumods.com/en/bus/stop/A1U</loc>
-  <lastmod>2023-10-19T09:24:27+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://nthumods.com/en/bus/stop/A1D</loc>
-  <lastmod>2023-10-19T09:24:27+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://nthumods.com/en/bus/stop/A2U</loc>
-  <lastmod>2023-10-19T09:24:27+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://nthumods.com/en/bus/stop/A2D</loc>
-  <lastmod>2023-10-19T09:24:27+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://nthumods.com/en/bus/stop/A3U</loc>
-  <lastmod>2023-10-19T09:24:27+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://nthumods.com/en/bus/stop/A3D</loc>
-  <lastmod>2023-10-19T09:24:27+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://nthumods.com/en/bus/stop/A4U</loc>
-  <lastmod>2023-10-19T09:24:27+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://nthumods.com/en/bus/stop/A4D</loc>
-  <lastmod>2023-10-19T09:24:27+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://nthumods.com/en/bus/stop/A5U</loc>
-  <lastmod>2023-10-19T09:24:27+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://nthumods.com/en/bus/stop/A5D</loc>
-  <lastmod>2023-10-19T09:24:27+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://nthumods.com/en/bus/stop/A6U</loc>
-  <lastmod>2023-10-19T09:24:27+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://nthumods.com/en/bus/stop/A6D</loc>
-  <lastmod>2023-10-19T09:24:27+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://nthumods.com/en/bus/stop/A7U</loc>
-  <lastmod>2023-10-19T09:24:27+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://nthumods.com/en/bus/stop/A7D</loc>
-  <lastmod>2023-10-19T09:24:27+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
-<url>
-  <loc>https://nthumods.com/en/bus/stop/A8</loc>
-  <lastmod>2023-10-19T09:24:27+00:00</lastmod>
-  <priority>0.64</priority>
-</url>
+  <!-- ==================== TODAY / CALENDAR ==================== -->
+  <url>
+    <loc>https://nthumods.com/zh/today</loc>
+    <lastmod>2026-04-21</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.90</priority>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://nthumods.com/zh/today"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nthumods.com/en/today"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nthumods.com/zh/today"/>
+  </url>
+  <url>
+    <loc>https://nthumods.com/en/today</loc>
+    <lastmod>2026-04-21</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.90</priority>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://nthumods.com/zh/today"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nthumods.com/en/today"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nthumods.com/zh/today"/>
+  </url>
+  <url>
+    <loc>https://nthumods.com/zh/calendar</loc>
+    <lastmod>2026-04-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://nthumods.com/zh/calendar"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nthumods.com/en/calendar"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nthumods.com/zh/calendar"/>
+  </url>
+  <url>
+    <loc>https://nthumods.com/en/calendar</loc>
+    <lastmod>2026-04-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://nthumods.com/zh/calendar"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nthumods.com/en/calendar"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nthumods.com/zh/calendar"/>
+  </url>
+
+  <!-- ==================== BUS ==================== -->
+  <url>
+    <loc>https://nthumods.com/zh/bus</loc>
+    <lastmod>2026-04-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://nthumods.com/zh/bus"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nthumods.com/en/bus"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nthumods.com/zh/bus"/>
+  </url>
+  <url>
+    <loc>https://nthumods.com/en/bus</loc>
+    <lastmod>2026-04-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://nthumods.com/zh/bus"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nthumods.com/en/bus"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nthumods.com/zh/bus"/>
+  </url>
+
+  <!-- ==================== VENUES ==================== -->
+  <url>
+    <loc>https://nthumods.com/zh/venues</loc>
+    <lastmod>2026-04-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.80</priority>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://nthumods.com/zh/venues"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nthumods.com/en/venues"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nthumods.com/zh/venues"/>
+  </url>
+  <url>
+    <loc>https://nthumods.com/en/venues</loc>
+    <lastmod>2026-04-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.80</priority>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://nthumods.com/zh/venues"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nthumods.com/en/venues"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nthumods.com/zh/venues"/>
+  </url>
+
+  <!-- ==================== SPORTS VENUES ==================== -->
+  <url>
+    <loc>https://nthumods.com/zh/sports-venues</loc>
+    <lastmod>2026-04-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.80</priority>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://nthumods.com/zh/sports-venues"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nthumods.com/en/sports-venues"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nthumods.com/zh/sports-venues"/>
+  </url>
+  <url>
+    <loc>https://nthumods.com/en/sports-venues</loc>
+    <lastmod>2026-04-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.80</priority>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://nthumods.com/zh/sports-venues"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nthumods.com/en/sports-venues"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nthumods.com/zh/sports-venues"/>
+  </url>
+
+  <!-- ==================== AI CHAT ==================== -->
+  <url>
+    <loc>https://nthumods.com/zh/chat</loc>
+    <lastmod>2026-04-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.75</priority>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://nthumods.com/zh/chat"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nthumods.com/en/chat"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nthumods.com/zh/chat"/>
+  </url>
+  <url>
+    <loc>https://nthumods.com/en/chat</loc>
+    <lastmod>2026-04-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.75</priority>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://nthumods.com/zh/chat"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nthumods.com/en/chat"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nthumods.com/zh/chat"/>
+  </url>
+
+  <!-- ==================== SHOPS ==================== -->
+  <url>
+    <loc>https://nthumods.com/zh/shops</loc>
+    <lastmod>2026-04-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.70</priority>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://nthumods.com/zh/shops"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nthumods.com/en/shops"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nthumods.com/zh/shops"/>
+  </url>
+  <url>
+    <loc>https://nthumods.com/en/shops</loc>
+    <lastmod>2026-04-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.70</priority>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://nthumods.com/zh/shops"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nthumods.com/en/shops"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nthumods.com/zh/shops"/>
+  </url>
+
+  <!-- ==================== APPS / FEATURES ==================== -->
+  <url>
+    <loc>https://nthumods.com/zh/apps</loc>
+    <lastmod>2026-04-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.70</priority>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://nthumods.com/zh/apps"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nthumods.com/en/apps"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nthumods.com/zh/apps"/>
+  </url>
+  <url>
+    <loc>https://nthumods.com/en/apps</loc>
+    <lastmod>2026-04-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.70</priority>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://nthumods.com/zh/apps"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nthumods.com/en/apps"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nthumods.com/zh/apps"/>
+  </url>
+
+  <!-- ==================== TEAM ==================== -->
+  <url>
+    <loc>https://nthumods.com/zh/team</loc>
+    <lastmod>2026-04-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.60</priority>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://nthumods.com/zh/team"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nthumods.com/en/team"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nthumods.com/zh/team"/>
+  </url>
+  <url>
+    <loc>https://nthumods.com/en/team</loc>
+    <lastmod>2026-04-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.60</priority>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://nthumods.com/zh/team"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nthumods.com/en/team"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nthumods.com/zh/team"/>
+  </url>
+
+  <!-- ==================== CONTRIBUTE ==================== -->
+  <url>
+    <loc>https://nthumods.com/zh/contribute</loc>
+    <lastmod>2026-04-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.60</priority>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://nthumods.com/zh/contribute"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nthumods.com/en/contribute"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nthumods.com/zh/contribute"/>
+  </url>
+  <url>
+    <loc>https://nthumods.com/en/contribute</loc>
+    <lastmod>2026-04-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.60</priority>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://nthumods.com/zh/contribute"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nthumods.com/en/contribute"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nthumods.com/zh/contribute"/>
+  </url>
+
+  <!-- ==================== PRIVACY POLICY ==================== -->
+  <url>
+    <loc>https://nthumods.com/zh/privacy-policy</loc>
+    <lastmod>2026-04-21</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.40</priority>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://nthumods.com/zh/privacy-policy"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nthumods.com/en/privacy-policy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nthumods.com/zh/privacy-policy"/>
+  </url>
+  <url>
+    <loc>https://nthumods.com/en/privacy-policy</loc>
+    <lastmod>2026-04-21</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.40</priority>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://nthumods.com/zh/privacy-policy"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nthumods.com/en/privacy-policy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nthumods.com/zh/privacy-policy"/>
+  </url>
 
 </urlset>
