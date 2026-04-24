@@ -101,14 +101,17 @@ export const router = createBrowserRouter([
       {
         path: "/auth/callback",
         element: <AuthCallbackPage />,
+        handle: { noindex: true },
       },
       {
         path: "/api/auth/callback/nthu_oauth",
         element: <OAuthCallbackRedirect />,
+        handle: { noindex: true },
       },
       {
         path: "/l/:slug",
         element: <ShortlinkRedirect />,
+        handle: { noindex: true },
       },
       {
         path: "/:lang",
@@ -153,7 +156,8 @@ export const router = createBrowserRouter([
                   titleZh: "時間表檢視",
                   description:
                     "View your NTHU course timetable in a clean weekly layout.",
-                  descriptionZh: "以週檢視模式查看清大課表，清楚掌握每日上課時間。",
+                  descriptionZh:
+                    "以週檢視模式查看清大課表，清楚掌握每日上課時間。",
                 },
               },
               {
@@ -284,7 +288,8 @@ export const router = createBrowserRouter([
                 handle: {
                   title: "Grades",
                   titleZh: "成績",
-                  description: "View your NTHU course grades and academic record.",
+                  description:
+                    "View your NTHU course grades and academic record.",
                   descriptionZh: "查看清大個人成績與學業記錄。",
                 },
               },
@@ -366,13 +371,15 @@ export const router = createBrowserRouter([
                 handle: {
                   title: "Privacy Policy",
                   titleZh: "隱私權政策",
-                  description: "NTHUMods privacy policy and data handling practices.",
+                  description:
+                    "NTHUMods privacy policy and data handling practices.",
                   descriptionZh: "NTHUMods 隱私權政策與個人資料處理方式說明。",
                 },
               },
               {
                 path: "proxy-login",
                 element: <ProxyLoginPage />,
+                handle: { noindex: true },
               },
               {
                 path: "next-steps",
@@ -381,7 +388,7 @@ export const router = createBrowserRouter([
               {
                 path: "offline",
                 element: <OfflinePage />,
-                handle: { title: "Offline", titleZh: "離線" },
+                handle: { title: "Offline", titleZh: "離線", noindex: true },
               },
               {
                 path: "design-system",

@@ -3,18 +3,17 @@
 /**
  * Cloudflare Worker entry point for NTHUMods.
  *
- * For regular users: transparently serves the Vite SPA from Workers Assets.
- * For bots hitting course detail pages: fetches minimal course data from the
- * API and uses HTMLRewriter to inject course-specific meta tags before the
- * response leaves the edge — no build-time cost, works for every course.
+ * Goals:
+ * 1) Always serve the SPA shell for HTML navigations (no edge 404 on first load).
+ * 2) Only apply bot-specific SEO meta injection on course detail pages.
+ * 3) Keep asset/API/non-HTML requests untouched.
  */
 
 interface Env {
   ASSETS: Fetcher;
 }
 
-// Covers Google, Bing, social crawlers (LINE, WhatsApp, Telegram, Discord,
-// Twitter/X, Facebook, LinkedIn, Slack, Apple) and popular SEO crawlers.
+// Covers major search/social/SEO crawlers.
 const BOT_UA_FRAGMENTS = [
   "googlebot",
   "bingbot",
@@ -51,57 +50,114 @@ function isBot(userAgent: string): boolean {
   return BOT_UA_FRAGMENTS.some((f) => ua.includes(f));
 }
 
-// Mirrors apps/web/src/helpers/semester.ts — semester like "11210" → "112-1"
+// Mirrors apps/web/src/helpers/semester.ts — semester like "11210" -> "112-1"
 function toPrettySemester(semester: string): string {
+  if (!semester || semester.length < 4) return semester || "";
   const year = semester.slice(0, 3);
-  const term = parseInt(semester.slice(3, 4));
-  return `${year}-${term}`;
+  const term = Number.parseInt(semester.slice(3, 4), 10);
+  return Number.isFinite(term) ? `${year}-${term}` : semester;
 }
 
 interface CourseData {
-  name_zh: string;
-  name_en: string;
+  name_zh?: string;
+  name_en?: string;
   teacher_zh?: string[];
   teacher_en?: string[];
-  semester: string;
-  department: string;
+  semester?: string;
+  department?: string;
+}
+
+function wantsHtml(request: Request): boolean {
+  // Browser navigations usually send text/html in Accept.
+  const accept = request.headers.get("Accept")?.toLowerCase() ?? "";
+  return accept.includes("text/html");
+}
+
+function isLikelyAssetPath(pathname: string): boolean {
+  // Has a file extension (e.g. .js/.css/.png/.ico/.xml/.txt/.map ...).
+  return /\/[^/]+\.[a-z0-9]+$/i.test(pathname);
+}
+
+function shouldServeSpaShell(request: Request, url: URL): boolean {
+  // SPA fallback should only apply to navigational HTML GET/HEAD requests.
+  if (request.method !== "GET" && request.method !== "HEAD") return false;
+  if (!wantsHtml(request)) return false;
+  if (isLikelyAssetPath(url.pathname)) return false;
+  return true;
+}
+
+function matchCourseDetail(
+  pathname: string,
+): { lang: "zh" | "en"; courseId: string } | null {
+  // Exactly: /:lang/courses/:courseId (with optional trailing slash), not deeper paths.
+  const m = pathname.match(/^\/(zh|en)\/courses\/([^/]+)\/?$/);
+  if (!m) return null;
+  return {
+    lang: m[1] as "zh" | "en",
+    courseId: m[2],
+  };
+}
+
+function buildCanonicalUrl(lang: "zh" | "en", rawCourseId: string): string {
+  // Keep canonical stable and safely encoded path segment.
+  return `https://nthumods.com/${lang}/courses/${encodeURIComponent(rawCourseId)}`;
+}
+
+async function getSpaShell(env: Env, origin: string): Promise<Response> {
+  // Force the SPA shell regardless of incoming path.
+  return env.ASSETS.fetch(
+    new Request(`${origin}/index.html`, { method: "GET" }),
+  );
 }
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
-    const userAgent = request.headers.get("User-Agent") ?? "";
-
-    // Fast path: real users go straight to the SPA shell, zero overhead
-    if (!isBot(userAgent)) {
-      return env.ASSETS.fetch(request);
-    }
-
     const url = new URL(request.url);
-    const courseMatch = url.pathname.match(/^\/(zh|en)\/courses\/(.+)$/);
 
-    // Non-course pages: serve normally (static meta tags are fine for bots on
-    // main pages; Google renders JS for those anyway)
-    if (!courseMatch) {
+    // 1) Non-HTML or asset-like requests: pass through unchanged.
+    //    This preserves proper status codes for real static misses, APIs, etc.
+    if (!shouldServeSpaShell(request, url)) {
       return env.ASSETS.fetch(request);
     }
 
-    const lang = courseMatch[1];
-    const courseId = decodeURIComponent(courseMatch[2]);
+    // 2) For ALL HTML navigations, return SPA shell (never edge 404).
+    //    This ensures /zh/courses, /en/courses, /zh/invalid, etc. return 200 + index.html.
+    const spaRes = await getSpaShell(env, url.origin);
+
+    // 3) Only bots on course detail pages get SEO meta rewrites.
+    const userAgent = request.headers.get("User-Agent") ?? "";
+    if (!isBot(userAgent)) {
+      return spaRes;
+    }
+
+    const detail = matchCourseDetail(url.pathname);
+    if (!detail) {
+      return spaRes;
+    }
+
+    const { lang, courseId: encodedCourseId } = detail;
+
+    // Decode safely; malformed sequences should not break routing.
+    let courseId = encodedCourseId;
+    try {
+      courseId = decodeURIComponent(encodedCourseId);
+    } catch {
+      // Keep raw segment if malformed; still serve SPA shell without SEO rewrite.
+      return spaRes;
+    }
 
     try {
-      // Fetch only the lightweight course record — no syllabus needed here
       const apiRes = await fetch(
         `https://api.nthumods.com/course/${encodeURIComponent(courseId)}`,
         {
-          // Cache at the edge for 1 hour to avoid hammering the API
           cf: { cacheTtl: 3600, cacheEverything: true },
         } as RequestInit,
       );
 
-      if (!apiRes.ok) return env.ASSETS.fetch(request);
+      if (!apiRes.ok) return spaRes;
 
       const course = (await apiRes.json()) as CourseData;
-      if (!course?.name_zh) return env.ASSETS.fetch(request);
+      if (!course?.name_zh && !course?.name_en) return spaRes;
 
       const isZh = lang === "zh";
       const teachers = isZh
@@ -109,23 +165,21 @@ export default {
         : (course.teacher_en?.join(", ") ??
           course.teacher_zh?.join(", ") ??
           "");
-      const semester = toPrettySemester(course.semester);
+
+      const semester = toPrettySemester(course.semester ?? "");
+      const nameZh = course.name_zh ?? "";
+      const nameEn = course.name_en ?? "";
+      const dept = course.department ?? "";
 
       const title = isZh
-        ? `${course.name_zh} ${teachers} - 清大${course.department}課程 | NTHUMods`
-        : `${course.name_en} ${teachers} - NTHU ${course.department} | NTHUMods`;
+        ? `${nameZh} ${teachers} - 清大${dept}課程 | NTHUMods`
+        : `${nameEn} ${teachers} - NTHU ${dept} | NTHUMods`;
 
       const description = isZh
-        ? `清大 ${semester} ${course.name_zh}（${course.name_en}），${teachers} 授課。查看課程大綱、評分記錄與歷年開課資訊。`
-        : `NTHU ${semester} ${course.name_en} (${course.name_zh}), taught by ${teachers}. View syllabus, past scores, and course history on NTHUMods.`;
+        ? `清大 ${semester} ${nameZh}（${nameEn}），${teachers} 授課。查看課程大綱、評分記錄與歷年開課資訊。`
+        : `NTHU ${semester} ${nameEn} (${nameZh}), taught by ${teachers}. View syllabus, past scores, and course history on NTHUMods.`;
 
-      const canonicalUrl = `https://nthumods.com/${lang}/courses/${encodeURIComponent(courseId)}`;
-
-      // Serve the SPA shell and rewrite the generic meta tags with
-      // course-specific content before it leaves the edge
-      const spaRes = await env.ASSETS.fetch(
-        new Request(`${url.origin}/index.html`),
-      );
+      const canonicalUrl = buildCanonicalUrl(lang, courseId);
 
       return new HTMLRewriter()
         .on("title", {
@@ -175,8 +229,8 @@ export default {
         })
         .transform(spaRes);
     } catch {
-      // API down or malformed data — always fall back gracefully
-      return env.ASSETS.fetch(request);
+      // API failure or malformed payload: still return valid SPA shell.
+      return spaRes;
     }
   },
 };
