@@ -4,6 +4,19 @@ interface Env {
   ASSETS: Fetcher;
 }
 
+const SUPABASE_URL = "https://cmzdlrqfpuktcczvsobs.supabase.co";
+const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtemRscnFmcHVrdGNjenZzb2JzIiwicm9sZSI6ImFub24iLCJpYXQiOjE2OTkzNDAzNDMsImV4cCI6MjAxNDkxNjM0M30.SJwTEP3fUQ8emcwIZS8sRMC4eStYFrkk2rninsv8CqY";
+
+async function supabaseFetch(path: string): Promise<Response> {
+  return fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+  });
+}
+
 const BOT_UA_FRAGMENTS = [
   "googlebot",
   "bingbot",
@@ -172,9 +185,8 @@ async function handleDepartmentPage(url: URL, env: Env): Promise<Response> {
     env.ASSETS.fetch(new Request(`${url.origin}/index.html`));
 
   try {
-    const apiRes = await fetch(
-      `https://api.nthumods.com/courses?department=${encodeURIComponent(dept)}&limit=500`,
-      { cf: { cacheTtl: 86400, cacheEverything: true } } as RequestInit,
+    const apiRes = await supabaseFetch(
+      `courses?select=raw_id,name_zh,name_en&department=eq.${encodeURIComponent(dept)}&limit=500&order=semester.desc`,
     );
 
     if (!apiRes.ok) {
@@ -382,16 +394,16 @@ function buildSitemapXML(courses: any[]): string {
     .join("\n");
 
   const majorDepts = [
-    "電機工程學系",
-    "資訊工程學系",
-    "動力機械工程學系",
-    "化學工程學系",
-    "材料科學工程學系",
-    "數學系",
-    "物理學系",
-    "化學系",
-    "生命科學系",
-    "經濟學系",
+    "EE",
+    "CS",
+    "PM",
+    "CHE",
+    "MSE",
+    "MATH",
+    "PHYS",
+    "CHEM",
+    "LS",
+    "ECON",
   ];
 
   const deptUrls = majorDepts
@@ -416,21 +428,40 @@ async function generateSitemap(env: Env): Promise<Response> {
     const cached = await cache.match(cacheKey);
     if (cached) return cached;
 
-    const coursesRes = await fetch(
-      "https://api.nthumods.com/courses?limit=10000",
-      { cf: { cacheTtl: 86400, cacheEverything: true } } as RequestInit,
+    // Get latest semester first
+    const latestRes = await supabaseFetch(
+      "courses?select=semester&limit=1&order=semester.desc",
     );
-    if (!coursesRes.ok) return fallbackSitemap();
+    if (!latestRes.ok) return fallbackSitemap();
+    const latestRows = (await latestRes.json()) as any[];
+    if (!Array.isArray(latestRows) || latestRows.length === 0)
+      return fallbackSitemap();
 
-    const allCourses = (await coursesRes.json()) as any[];
-    if (!Array.isArray(allCourses)) return fallbackSitemap();
+    const latestSem = latestRows[0].semester as string;
+    const year = latestSem.slice(0, 3);
+    const term = latestSem[3];
+    const prevSem =
+      term === "2" ? `${year}10` : `${String(Number(year) - 1)}20`;
 
-    // Get last 2 semesters
-    const semesters = [...new Set(allCourses.map((c) => c.semester as string))]
-      .sort()
-      .reverse()
-      .slice(0, 2);
-    const courses = allCourses.filter((c) => semesters.includes(c.semester));
+    // Fetch up to 10000 courses from last 2 semesters via pagination
+    const allCourses: any[] = [];
+    for (const sem of [latestSem, prevSem]) {
+      let offset = 0;
+      const pageSize = 1000;
+      while (true) {
+        const res = await supabaseFetch(
+          `courses?select=raw_id,semester&semester=eq.${sem}&limit=${pageSize}&offset=${offset}`,
+        );
+        if (!res.ok) break;
+        const rows = (await res.json()) as any[];
+        if (!Array.isArray(rows) || rows.length === 0) break;
+        allCourses.push(...rows);
+        if (rows.length < pageSize) break;
+        offset += pageSize;
+        if (allCourses.length >= 10000) break;
+      }
+    }
+    const courses = allCourses;
 
     const xml = buildSitemapXML(courses);
     const response = new Response(xml, {
@@ -465,7 +496,7 @@ export default {
     if (courseMatch) {
       return handleCourseDetailPage(
         courseMatch[1],
-        courseMatch[2],
+        decodeURIComponent(courseMatch[2]),
         env,
         url.origin,
       );
