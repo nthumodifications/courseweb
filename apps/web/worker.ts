@@ -50,8 +50,12 @@ interface CourseMetaData {
 
 function buildCourseMetaData(course: any, lang: string): CourseMetaData {
   const semester = toPrettySemester(course.semester);
-  const teachersZh = (course.teacher_zh as string[]).join("、");
-  const teachersEn = (course.teacher_en as string[]).join(", ");
+  const teachersZh = Array.isArray(course.teacher_zh)
+    ? course.teacher_zh.join("、")
+    : "";
+  const teachersEn = Array.isArray(course.teacher_en)
+    ? course.teacher_en.join(", ")
+    : teachersZh;
 
   const title =
     lang === "zh"
