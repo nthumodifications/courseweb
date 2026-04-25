@@ -10,6 +10,7 @@ interface SEOHeadProps {
   ogImage?: string;
   ogType?: "website" | "article";
   jsonLd?: object | object[];
+  breadcrumbs?: object;
   noindex?: boolean;
   lang?: string;
 }
@@ -21,6 +22,7 @@ const SEOHead = ({
   ogImage = DEFAULT_OG_IMAGE,
   ogType = "website",
   jsonLd,
+  breadcrumbs,
   noindex = false,
   lang = "zh",
 }: SEOHeadProps) => {
@@ -56,11 +58,19 @@ const SEOHead = ({
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={ogImage} />
 
-      {jsonLd && (
-        <script type="application/ld+json">
-          {JSON.stringify(Array.isArray(jsonLd) ? jsonLd : [jsonLd])}
-        </script>
-      )}
+      {(() => {
+        const allJsonLd = breadcrumbs
+          ? [
+              breadcrumbs,
+              ...(Array.isArray(jsonLd) ? jsonLd : jsonLd ? [jsonLd] : []),
+            ]
+          : jsonLd;
+        return allJsonLd ? (
+          <script type="application/ld+json">
+            {JSON.stringify(Array.isArray(allJsonLd) ? allJsonLd : [allJsonLd])}
+          </script>
+        ) : null;
+      })()}
     </Helmet>
   );
 };

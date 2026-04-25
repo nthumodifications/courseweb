@@ -177,6 +177,48 @@ const CourseDetailContainer = ({
         }
       : null;
 
+  const breadcrumbData =
+    !modal && course
+      ? [
+          { name: "首頁", url: `https://nthumods.com/${lang}` },
+          { name: "課程", url: `https://nthumods.com/${lang}/courses` },
+          {
+            name: course.department,
+            url: `https://nthumods.com/${lang}/courses?department=${encodeURIComponent(course.department)}`,
+          },
+          {
+            name: course.name_zh,
+            url: `https://nthumods.com/${lang}/courses/${course.raw_id}`,
+          },
+        ]
+      : null;
+
+  const breadcrumbJsonLd = breadcrumbData
+    ? {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: breadcrumbData.map((item, index) => ({
+          "@type": "ListItem",
+          position: index + 1,
+          name: item.name,
+          item: item.url,
+        })),
+      }
+    : null;
+
+  const webPageJsonLd =
+    !modal && course
+      ? {
+          "@context": "https://schema.org",
+          "@type": "WebPage",
+          name: `${course.name_zh} | NTHUMods`,
+          description: `清大 ${toPrettySemester(course.semester)} ${course.name_zh} 課程資訊`,
+          url: `https://nthumods.com/${lang}/courses/${course.raw_id}`,
+          inLanguage: lang === "en" ? "en-US" : "zh-TW",
+          isPartOf: { "@type": "WebSite", url: "https://nthumods.com" },
+        }
+      : null;
+
   // Handle loading state
   if (isLoading) {
     return <CourseDetailsSkeleton />;
@@ -249,7 +291,9 @@ const CourseDetailContainer = ({
           />
           {courseJsonLd && (
             <script type="application/ld+json">
-              {JSON.stringify(courseJsonLd)}
+              {JSON.stringify(
+                [courseJsonLd, breadcrumbJsonLd, webPageJsonLd].filter(Boolean),
+              )}
             </script>
           )}
         </Helmet>

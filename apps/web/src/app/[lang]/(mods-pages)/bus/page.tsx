@@ -1,4 +1,5 @@
 import { useSettings } from "@/hooks/contexts/settings";
+import { Helmet } from "react-helmet-async";
 import { Tabs, TabsList, TabsTrigger } from "@courseweb/ui";
 import { FC, SVGProps, useEffect, useMemo, useState } from "react";
 import useTime from "@/hooks/useTime";
@@ -466,8 +467,24 @@ const BusPage = () => {
     );
   }
 
+  const busPageJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: "校車時刻表 | NTHUMods",
+    description:
+      "查看清華大學校車即時時刻表，包含校園巴士、南大區間車等路線資訊",
+    url: `https://nthumods.com/${language}/bus`,
+    inLanguage: language === "en" ? "en-US" : "zh-TW",
+    isPartOf: { "@type": "WebSite", url: "https://nthumods.com" },
+  };
+
   return (
     <div className="flex flex-col px-4">
+      <Helmet>
+        <script type="application/ld+json">
+          {JSON.stringify(busPageJsonLd)}
+        </script>
+      </Helmet>
       <Tabs
         defaultValue="north_gate"
         value={tab}
