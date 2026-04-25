@@ -449,24 +449,6 @@ const BusPage = () => {
     navigate(`?tab=${tab}`, { replace: true });
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-[200px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-nthu-500"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex justify-center items-center min-h-[200px]">
-        <div className="text-red-500">
-          Failed to load bus data. Please try again later.
-        </div>
-      </div>
-    );
-  }
-
   const busPageJsonLd = {
     "@context": "https://schema.org",
     "@type": "WebPage",
@@ -478,13 +460,41 @@ const BusPage = () => {
     isPartOf: { "@type": "WebSite", url: "https://nthumods.com" },
   };
 
+  const seoHelmet = (
+    <Helmet>
+      <script type="application/ld+json">
+        {JSON.stringify(busPageJsonLd)}
+      </script>
+    </Helmet>
+  );
+
+  if (isLoading) {
+    return (
+      <>
+        {seoHelmet}
+        <div className="flex justify-center items-center min-h-[200px]">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-nthu-500"></div>
+        </div>
+      </>
+    );
+  }
+
+  if (error) {
+    return (
+      <>
+        {seoHelmet}
+        <div className="flex justify-center items-center min-h-[200px]">
+          <div className="text-red-500">
+            Failed to load bus data. Please try again later.
+          </div>
+        </div>
+      </>
+    );
+  }
+
   return (
     <div className="flex flex-col px-4">
-      <Helmet>
-        <script type="application/ld+json">
-          {JSON.stringify(busPageJsonLd)}
-        </script>
-      </Helmet>
+      {seoHelmet}
       <Tabs
         defaultValue="north_gate"
         value={tab}
