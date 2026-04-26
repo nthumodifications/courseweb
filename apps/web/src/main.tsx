@@ -4,8 +4,12 @@ import { HelmetProvider } from "react-helmet-async";
 import { router } from "@/router";
 
 import * as Sentry from "@sentry/browser";
+import { initializeGTM } from "@/lib/gtm";
 
 import "./app/globals.css";
+
+// Initialize Google Tag Manager
+initializeGTM();
 
 // Initialize Sentry
 if (import.meta.env.PROD) {

@@ -4,6 +4,8 @@ import { Button } from "@courseweb/ui";
 import { Link } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
 import { Language } from "@/types/settings";
+import { useEffect } from "react";
+import { courseEvents } from "@/lib/trackingEvents";
 
 const CourseDetailPage = () => {
   const { lang, courseId: rawCourseId } = useParams<{
@@ -11,6 +13,13 @@ const CourseDetailPage = () => {
     courseId: string;
   }>();
   const courseId = decodeURI(rawCourseId ?? "");
+
+  // Track course detail view
+  useEffect(() => {
+    if (courseId) {
+      courseEvents.viewDetail(courseId, courseId);
+    }
+  }, [courseId]);
 
   return (
     <div className="flex flex-col gap-2 px-2">

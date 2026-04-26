@@ -9,9 +9,10 @@ import TimetableSidebar from "@/components/Timetable/TimetableSidebar";
 import { useSwipeable } from "react-swipeable";
 import { semesterInfo } from "@courseweb/shared";
 import { useHeaderPortal } from "@/components/Portal/HeaderPortal";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 import { useSettings } from "@/hooks/contexts/settings";
+import { timetableEvents } from "@/lib/trackingEvents";
 
 const TimetablePage = () => {
   const { getSemesterCourses, semester, setSemester, colorMap } =
@@ -19,11 +20,32 @@ const TimetablePage = () => {
   const [vertical, setVertical] = useLocalStorage("timetable_vertical", true);
   const { language } = useSettings();
   const { setPortalContent, clearPortalContent } = useHeaderPortal();
+  const previousSemesterRef = useRef(semester);
 
   const timetableData = createTimetableFromCourses(
     getSemesterCourses(semester) as MinimalCourse[],
     colorMap,
   );
+
+  // Track page view and semester changes
+  useEffect(() => {
+    // Track initial page view
+    timetableEvents.viewPlanner?.();
+  }, []);
+
+  // Track semester switches
+  useEffect(() => {
+    if (previousSemesterRef.current !== semester) {
+      timetableEvents.switchSemester(previousSemesterRef.current, semester);
+      previousSemesterRef.current = semester;
+    }
+  }, [semester]);
+
+  // Track view changes
+  useEffect(() => {
+    const viewType = vertical ? "vertical" : "horizontal";
+    timetableEvents.changeView(viewType);
+  }, [vertical]);
 
   // Set the SemesterSwitcher in the header portal
   useEffect(() => {
