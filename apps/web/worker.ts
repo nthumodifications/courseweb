@@ -58,6 +58,8 @@ interface CourseMetaData {
   ogTitle: string;
   ogDescription: string;
   canonicalUrl: string;
+  zhUrl: string;
+  enUrl: string;
   ogType: string;
 }
 
@@ -85,7 +87,10 @@ function buildCourseMetaData(course: any, lang: string): CourseMetaData {
       ? `${course.name_zh} - ${course.department} | NTHUMods`
       : `${course.name_en} - ${course.department} | NTHUMods`;
 
-  const canonicalUrl = `https://nthumods.com/${lang}/courses/${encodeURIComponent(course.raw_id)}`;
+  const courseId = encodeURIComponent(course.raw_id);
+  const canonicalUrl = `https://nthumods.com/${lang}/courses/${courseId}`;
+  const zhUrl = `https://nthumods.com/zh/courses/${courseId}`;
+  const enUrl = `https://nthumods.com/en/courses/${courseId}`;
 
   return {
     title,
@@ -93,6 +98,8 @@ function buildCourseMetaData(course: any, lang: string): CourseMetaData {
     ogTitle,
     ogDescription: description,
     canonicalUrl,
+    zhUrl,
+    enUrl,
     ogType: "article",
   };
 }
@@ -126,7 +133,7 @@ async function handleCourseDetailPage(
       new Request(`${origin}/index.html`),
     );
 
-    return new HTMLRewriter()
+    let rewriter = new HTMLRewriter()
       .on("title", {
         element(el) {
           el.setInnerContent(meta.title);
@@ -171,8 +178,10 @@ async function handleCourseDetailPage(
         element(el) {
           el.setAttribute("href", meta.canonicalUrl);
         },
-      })
-      .transform(shellRes);
+      });
+
+    rewriter = applyHreflang(rewriter, meta.zhUrl, meta.enUrl, meta.zhUrl);
+    return rewriter.transform(shellRes);
   } catch {
     return fallback();
   }
@@ -213,12 +222,14 @@ async function handleDepartmentPage(url: URL, env: Env): Promise<Response> {
         : `${first3.map((c) => c.name_en ?? c.name_zh).join(", ")}... and ${count} more courses.`;
 
     const canonicalUrl = `https://nthumods.com/${lang}/courses?department=${encodeURIComponent(dept)}`;
+    const zhUrl = `https://nthumods.com/zh/courses?department=${encodeURIComponent(dept)}`;
+    const enUrl = `https://nthumods.com/en/courses?department=${encodeURIComponent(dept)}`;
 
     const shellRes = await env.ASSETS.fetch(
       new Request(`${url.origin}/index.html`),
     );
 
-    return new HTMLRewriter()
+    let rewriter = new HTMLRewriter()
       .on("title", {
         element(el) {
           el.setInnerContent(title);
@@ -253,8 +264,9 @@ async function handleDepartmentPage(url: URL, env: Env): Promise<Response> {
         element(el) {
           el.setAttribute("href", canonicalUrl);
         },
-      })
-      .transform(shellRes);
+      });
+    rewriter = applyHreflang(rewriter, zhUrl, enUrl, zhUrl);
+    return rewriter.transform(shellRes);
   } catch {
     return fallback();
   }
@@ -289,11 +301,14 @@ async function handleBusPage(
 
     const canonicalUrl = `https://nthumods.com/${lang}/bus/${route}`;
 
+    const zhUrl = `https://nthumods.com/zh/bus/${route}`;
+    const enUrl = `https://nthumods.com/en/bus/${route}`;
+
     const shellRes = await env.ASSETS.fetch(
       new Request(`${origin}/index.html`),
     );
 
-    return new HTMLRewriter()
+    let rewriter = new HTMLRewriter()
       .on("title", {
         element(el) {
           el.setInnerContent(title);
@@ -328,11 +343,258 @@ async function handleBusPage(
         element(el) {
           el.setAttribute("href", canonicalUrl);
         },
-      })
-      .transform(shellRes);
+      });
+    rewriter = applyHreflang(rewriter, zhUrl, enUrl, zhUrl);
+    return rewriter.transform(shellRes);
   } catch {
     return fallback();
   }
+}
+
+interface PageMeta {
+  title: string;
+  description: string;
+}
+
+// Per-page metadata injected into the HTML shell for bot requests.
+// Keyed by path suffix (without lang prefix) so it works for both /zh and /en.
+const STATIC_PAGE_METADATA: Record<string, { zh: PageMeta; en: PageMeta }> = {
+  "/courses": {
+    zh: {
+      title: "清大課程查詢 | NTHUMods",
+      description:
+        "搜尋清大所有課程，查看課程大綱、評分記錄與學生心得。支援跨系選修、先修課程查詢，快速找到最適合的清華大學課程。",
+    },
+    en: {
+      title: "NTHU Course Search | NTHUMods",
+      description:
+        "Search all NTHU courses, view syllabi, grading policies, past scores, prerequisites, and student reviews at National Tsing Hua University.",
+    },
+  },
+  "/timetable": {
+    zh: {
+      title: "清大個人課表規劃 | NTHUMods",
+      description:
+        "建立並管理您的清大個人課表。輕鬆規劃每週行程、避免衝堂，讓清華大學選課更有效率。",
+    },
+    en: {
+      title: "NTHU Timetable Planner | NTHUMods",
+      description:
+        "Build and manage your NTHU course timetable. Easily plan your weekly schedule and avoid course conflicts at National Tsing Hua University.",
+    },
+  },
+  "/today": {
+    zh: {
+      title: "清大學期行事曆 | NTHUMods",
+      description:
+        "清大學期行事曆與今日行程。掌握國立清華大學重要日程、校園活動與學期節點，不錯過任何重要時刻。",
+    },
+    en: {
+      title: "NTHU Academic Calendar | NTHUMods",
+      description:
+        "NTHU academic calendar and today's schedule. Stay on top of important dates, events, and deadlines at National Tsing Hua University.",
+    },
+  },
+  "/calendar": {
+    zh: {
+      title: "清大學期日曆 | NTHUMods",
+      description:
+        "清大學期日曆，包含重要日期、假期與截止時限。完整呈現國立清華大學學期行事曆，方便統籌個人規劃。",
+    },
+    en: {
+      title: "NTHU Academic Calendar | NTHUMods",
+      description:
+        "NTHU academic calendar with semester dates, holidays, and important deadlines at National Tsing Hua University.",
+    },
+  },
+  "/bus": {
+    zh: {
+      title: "清大校車時刻表 | NTHUMods",
+      description:
+        "清大校車時刻表與路線查詢。掌握國立清華大學各路線校車班次，輕鬆規劃校園內外通勤行程。",
+    },
+    en: {
+      title: "NTHU Campus Bus Schedule | NTHUMods",
+      description:
+        "NTHU campus shuttle bus schedules and routes. Check real-time bus information and plan your commute at National Tsing Hua University.",
+    },
+  },
+  "/venues": {
+    zh: {
+      title: "清大校園場館地圖 | NTHUMods",
+      description:
+        "查詢清大校園教室、建築與設施位置。互動式地圖帶您快速找到國立清華大學各地點，掌握上課地點不迷路。",
+    },
+    en: {
+      title: "NTHU Campus Venues & Map | NTHUMods",
+      description:
+        "Find classrooms, buildings, and facilities on the NTHU campus. Interactive map and location details for National Tsing Hua University.",
+    },
+  },
+  "/sports-venues": {
+    zh: {
+      title: "清大體育場館時間表 | NTHUMods",
+      description:
+        "查詢清大體育場館使用時間表與空閒狀況。球場、游泳池、健身房，掌握國立清華大學各運動設施最新資訊。",
+    },
+    en: {
+      title: "NTHU Sports Facilities | NTHUMods",
+      description:
+        "Check availability and schedules for NTHU sports facilities. Find courts, pools, and gyms at National Tsing Hua University.",
+    },
+  },
+  "/chat": {
+    zh: {
+      title: "清大 AI 課程助手 | NTHUMods",
+      description:
+        "清大 AI 課程助手，即時解答清華大學課程相關問題。選課建議、課程比較、學期規劃，一問即答。",
+    },
+    en: {
+      title: "NTHU AI Course Assistant | NTHUMods",
+      description:
+        "Ask the NTHU AI course assistant anything about courses, schedules, and academic planning at National Tsing Hua University.",
+    },
+  },
+  "/shops": {
+    zh: {
+      title: "清大校園餐廳 | NTHUMods",
+      description:
+        "清大校園餐廳、咖啡廳與店家資訊。查詢國立清華大學校園內各餐飲店家的營業時間與位置。",
+    },
+    en: {
+      title: "NTHU Campus Shops & Restaurants | NTHUMods",
+      description:
+        "Discover restaurants, cafés, and shops on the NTHU campus. Find dining options and store hours at National Tsing Hua University.",
+    },
+  },
+  "/apps": {
+    zh: {
+      title: "NTHUMods 功能總覽 | NTHUMods",
+      description:
+        "探索 NTHUMods 為清大學生提供的所有功能，包含課程查詢、校車時刻、行事曆、場館地圖等一站式服務。",
+    },
+    en: {
+      title: "NTHUMods Features | NTHUMods",
+      description:
+        "Explore all NTHUMods features for NTHU students — courses, bus schedules, calendar, venues, and more in one platform.",
+    },
+  },
+  "/team": {
+    zh: {
+      title: "NTHUMods 開發團隊 | NTHUMods",
+      description:
+        "認識 NTHUMods 背後的清大學生開發團隊，了解這個由清華大學學生自主打造的開源平臺。",
+    },
+    en: {
+      title: "NTHUMods Team | NTHUMods",
+      description:
+        "Meet the NTHU students behind NTHUMods – the open-source course platform for National Tsing Hua University.",
+    },
+  },
+  "/contribute": {
+    zh: {
+      title: "參與 NTHUMods 貢獻 | NTHUMods",
+      description:
+        "參與 NTHUMods 開源貢獻。清大學生自主開發、歡迎所有人一起讓清大資訊平臺更好。",
+    },
+    en: {
+      title: "Contribute to NTHUMods | NTHUMods",
+      description:
+        "Contribute to NTHUMods – the open-source platform built by NTHU students for NTHU students.",
+    },
+  },
+};
+
+function applyHreflang(
+  rewriter: HTMLRewriter,
+  zhUrl: string,
+  enUrl: string,
+  xDefaultUrl: string,
+): HTMLRewriter {
+  return rewriter.on('link[rel="alternate"]', {
+    element(el) {
+      const hreflang = el.getAttribute("hreflang");
+      if (!hreflang) return;
+      if (hreflang === "zh" || hreflang === "zh-TW") {
+        el.setAttribute("hreflang", "zh-TW");
+        el.setAttribute("href", zhUrl);
+      } else if (hreflang === "en") {
+        el.setAttribute("href", enUrl);
+      } else if (hreflang === "x-default") {
+        el.setAttribute("href", xDefaultUrl);
+      }
+    },
+  });
+}
+
+// Sets canonical, hreflang, title, and description for all other bot page requests.
+async function handleGenericBotPage(url: URL, env: Env): Promise<Response> {
+  const pathname = url.pathname;
+  const lang = pathname.startsWith("/en/") || pathname === "/en" ? "en" : "zh";
+
+  // Canonical = current path with no query params
+  const canonicalUrl = `https://nthumods.com${pathname}`;
+  const zhPath = pathname.replace(/^\/(zh|en)(\/|$)/, "/zh$2");
+  const enPath = pathname.replace(/^\/(zh|en)(\/|$)/, "/en$2");
+  const zhUrl = `https://nthumods.com${zhPath}`;
+  const enUrl = `https://nthumods.com${enPath}`;
+
+  // Look up page-specific metadata by stripping the lang prefix
+  const pagePath = pathname.replace(/^\/(zh|en)/, "") || "/";
+  const meta = STATIC_PAGE_METADATA[pagePath]?.[lang];
+
+  const shellRes = await env.ASSETS.fetch(
+    new Request(`${url.origin}/index.html`),
+  );
+
+  let rewriter = new HTMLRewriter().on('link[rel="canonical"]', {
+    element(el) {
+      el.setAttribute("href", canonicalUrl);
+    },
+  });
+
+  rewriter = applyHreflang(rewriter, zhUrl, enUrl, zhUrl);
+
+  if (meta) {
+    rewriter = rewriter
+      .on("title", {
+        element(el) {
+          el.setInnerContent(meta.title);
+        },
+      })
+      .on('meta[name="description"]', {
+        element(el) {
+          el.setAttribute("content", meta.description);
+        },
+      })
+      .on('meta[property="og:title"]', {
+        element(el) {
+          el.setAttribute("content", meta.title);
+        },
+      })
+      .on('meta[property="og:description"]', {
+        element(el) {
+          el.setAttribute("content", meta.description);
+        },
+      })
+      .on('meta[property="og:url"]', {
+        element(el) {
+          el.setAttribute("content", canonicalUrl);
+        },
+      })
+      .on('meta[name="twitter:title"]', {
+        element(el) {
+          el.setAttribute("content", meta.title);
+        },
+      })
+      .on('meta[name="twitter:description"]', {
+        element(el) {
+          el.setAttribute("content", meta.description);
+        },
+      });
+  }
+
+  return rewriter.transform(shellRes);
 }
 
 const FALLBACK_STATIC_SITEMAP = `<?xml version="1.0" encoding="UTF-8"?>
@@ -512,6 +774,13 @@ export default {
     const busMatch = url.pathname.match(/^\/(zh|en)\/bus\/(.+)$/);
     if (busMatch) {
       return handleBusPage(busMatch[1], busMatch[2], env, url.origin);
+    }
+
+    // All other bot requests to lang-prefixed pages: inject correct canonical,
+    // hreflang, title, and description so Google doesn't index generic index.html metadata.
+    const langPageMatch = url.pathname.match(/^\/(zh|en)(\/|$)/);
+    if (langPageMatch) {
+      return handleGenericBotPage(url, env);
     }
 
     return env.ASSETS.fetch(request);
