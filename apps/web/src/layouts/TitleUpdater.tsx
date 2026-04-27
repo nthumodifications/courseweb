@@ -12,9 +12,9 @@ interface RouteHandle {
 const BASE_URL = "https://nthumods.com";
 const DEFAULT_OG_IMAGE = "https://nthumods.com/images/icons/icon-512x512.png";
 const DEFAULT_DESCRIPTION_ZH =
-  "NTHUMods 清大課程整合平臺｜搜尋清大課表、校車時間表、場館資訊、畢業規劃。國立清華大學學生自主開發，提供全方位清大校園資訊服務。";
+  "國立清華大學學生自主開發的免費校園平臺。搜尋課程大綱與歷年評分、建立個人課表、追蹤校車班次、探索場館地圖與畢業學分規劃，一站搞定清大校園生活。";
 const DEFAULT_DESCRIPTION_EN =
-  "NTHUMods – the all-in-one platform for National Tsing Hua University students. Search NTHU courses, check campus bus schedules, find venues, and plan your graduation.";
+  "Student-built platform for National Tsing Hua University. Search courses with syllabi and grade data, build your timetable, check bus schedules, find venues, and plan graduation.";
 
 const websiteJsonLd = {
   "@context": "https://schema.org",
@@ -97,7 +97,9 @@ const TitleUpdater = () => {
 
   const fullTitle = pageTitle
     ? `${pageTitle} | NTHUMods`
-    : "NTHUMods - 清華課程整合平臺";
+    : isZh
+      ? "NTHUMods｜清大課程查詢・課表規劃・校車時刻表"
+      : "NTHUMods | NTHU Course Search & Campus Tools";
 
   const canonicalPath = normalizePath(location.pathname);
   const canonicalUrl = `${BASE_URL}${canonicalPath}`;
