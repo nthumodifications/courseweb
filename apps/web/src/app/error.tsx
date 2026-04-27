@@ -44,7 +44,10 @@ export default function Error({
   const finalLang = (lang as string) ?? "zh";
 
   return (
-    <div className="h-screen w-screen grid place-items-center px-4">
+    <div
+      data-nosnippet
+      className="h-screen w-screen grid place-items-center px-4"
+    >
       <div className="flex flex-col gap-4 max-w-[90vw]">
         <div className="flex flex-col md:flex-row gap-4">
           <NTHUModsLogo width={64} height={64} />
