@@ -261,8 +261,6 @@ export function useAIChat(options: UseAIChatOptions = {}) {
 
               try {
                 const parsed = JSON.parse(data);
-                console.log("Parsed SSE event:", parsed);
-
                 // Handle text chunks
                 // Handle quota exceeded error from streaming response
                 if (parsed.type === "error" && parsed.data) {
@@ -300,7 +298,6 @@ export function useAIChat(options: UseAIChatOptions = {}) {
                 // Handle text chunks
                 if (parsed.type === "text" && parsed.data) {
                   fullContent += parsed.data;
-                  console.log("Updated fullContent:", fullContent);
 
                   // Update streaming message
                   setMessages((prev) =>

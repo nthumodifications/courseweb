@@ -125,7 +125,6 @@ const useUserTimetableProvider = (loadCourse = true) => {
       });
       setColorMap(newColorMap);
       setUserDefinedColors({});
-      console.log("colorMap updated");
       _setTimetableTheme(theme);
     },
     [courses],
@@ -141,7 +140,6 @@ const useUserTimetableProvider = (loadCourse = true) => {
     if (!themes.includes(timetableTheme)) {
       setTimetableTheme(themes[0]);
     }
-    console.log("timetable theme", timetableTheme);
     event({
       action: "selected_theme",
       category: "theme",

@@ -22,7 +22,6 @@ const RefreshOnLoad = () => {
       !auth.isLoading &&
       !hasTriedSignin
     ) {
-      console.log("No auth params, signing in...", auth);
       // Check if user exists in local storage before signing in
       if (auth.user !== null) {
         // Only trigger sign-in if no user exists in storage
@@ -49,7 +48,6 @@ const OidcAuthProvider = ({ children }: PropsWithChildren) => {
       userStore: new WebStorageStateStore({ store: window.localStorage }),
       automaticSilentRenew: true,
       onSigninCallback(user) {
-        console.log("User signed in", user);
         const redirectUri = localStorage.getItem("redirectUri");
         navigate(redirectUri ?? "/");
       },

@@ -100,7 +100,6 @@ const useSyncedStorage = <T = unknown,>(
                 },
               },
             );
-            console.log("updated remote data");
           }
           setDataState({
             value: localData.value,

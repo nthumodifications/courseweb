@@ -25,6 +25,7 @@ import { ScrollArea, ScrollBar } from "@courseweb/ui";
 import { timetableColors } from "@courseweb/shared";
 import { lazy, Suspense } from "react";
 import { Language } from "@/types/settings";
+import { sanitizeCourseHtml } from "@/lib/sanitizeHtml";
 import {
   Table,
   TableBody,
@@ -427,7 +428,9 @@ const CourseDetailContainer = ({
                   </h3>
                   <div
                     className="whitespace-pre-line text-sm"
-                    dangerouslySetInnerHTML={{ __html: course.prerequisites }}
+                    dangerouslySetInnerHTML={{
+                      __html: sanitizeCourseHtml(course.prerequisites),
+                    }}
                   />
                 </div>
               )}

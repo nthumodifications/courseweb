@@ -10,12 +10,9 @@ export async function verifyApiKey(c: Context, next: Next) {
 
     if (authHeader && authHeader.startsWith("ApiKey ")) {
       apiKeyString = authHeader.slice(7); // Remove "ApiKey " prefix
-    } else {
-      // If not in header, check for key in query parameters
-      apiKeyString = c.req.query("key");
     }
 
-    // Validate that we have an API key from one of the sources
+    // Validate that we have an API key from the Authorization header
     if (!apiKeyString) {
       throw new HTTPException(401, { message: "Missing or invalid API key" });
     }
