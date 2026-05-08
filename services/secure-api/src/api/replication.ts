@@ -235,10 +235,8 @@ const app = new Hono()
                 deepCompare(docInDb, writeRow.assumedMasterState) === false)
             ) {
               // Conflict if doc exists and assumedMasterState is different
-              console.log("[PUSH] Conflict detected", docId);
               conflicts.push(docInDb as any);
             } else {
-              console.log("[PUSH] Write", docId);
               // No conflict if doc does not exist or assumedMasterState is the same
               hasWrite = true;
               const docRef = eventsRef.doc(docId);
@@ -465,10 +463,8 @@ const app = new Hono()
                 deepCompare(docInDb, writeRow.assumedMasterState) === false)
             ) {
               // Conflict if doc exists and assumedMasterState is different
-              console.log("[PUSH] Conflict detected", docId);
               conflicts.push(docInDb as any);
             } else {
-              console.log("[PUSH] Write", docId);
               // No conflict if doc does not exist or assumedMasterState is the same
               hasWrite = true;
               const docRef = timetableSyncRef.doc(docId);

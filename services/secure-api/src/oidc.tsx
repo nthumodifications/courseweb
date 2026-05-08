@@ -215,33 +215,26 @@ const app = new Hono()
 
       // check if __session exists
       let sessionId = getCookie(c, "__session");
-      console.log("Session ID:", sessionId);
-
       if (sessionId) {
         // get session on prisma
         const session = await prisma.authSessions.findUnique({
           where: { sessionId },
         });
 
-        console.log("Session:", session);
-
         // check if session exists
         if (session) {
           if (session.expiresAt < new Date()) {
-            console.log("Session expired");
             await prisma.authSessions.delete({
               where: { sessionId },
             });
             sessionId = undefined;
           } else if (session.state == "UNAUTHENTICATED" || !session.userId) {
-            console.log("Session unauthenticated");
             // state unauthenticated, ignore.
           } else if (
             session.state == "AUTHENTICATED" &&
             session.userId &&
             session.expiresAt > new Date()
           ) {
-            console.log("Session authenticated");
             // resume session, we mint a authcode and redirect back to client
             const code = crypto.randomUUID();
             await prisma.authCode.create({
@@ -262,7 +255,6 @@ const app = new Hono()
               `${redirect_uri}?code=${code}&state=${clientState}`,
             );
           } else {
-            console.log("Session invalid");
             // session invalid, delete it
             await prisma.authSessions.delete({
               where: { sessionId },
@@ -270,7 +262,6 @@ const app = new Hono()
             sessionId = undefined;
           }
         } else {
-          console.log("Session not found");
           // session not found, set cookie to empty
           setCookie(c, "__session", "", {
             maxAge: 0,
@@ -374,7 +365,6 @@ const app = new Hono()
         where: { state },
       });
       if (!authRequest) {
-        console.log("Invalid auth request state");
         return c.json({ error: "invalid_request" }, 400);
       }
       await next();
@@ -509,9 +499,6 @@ const app = new Hono()
           codeChallengeMethod: authRequest.codeChallengeMethod,
         },
       });
-      console.log(
-        `/oauth/nthu: Minted new auth code for user ${upsertedUser.userId}`,
-      );
       return c.redirect(`${redirect_uri}?code=${code}&state=${clientState}`);
     },
   )
@@ -667,9 +654,6 @@ const app = new Hono()
         // Delete used auth code
         await prisma.authCode.delete({ where: { code: form.code } });
 
-        console.log(
-          `/token: Minted new tokens with authorization_code grant type for user ${user.userId}`,
-        );
         return c.json({
           access_token: accessToken,
           ...(authCode.scopes.includes("offline_access") && {
@@ -737,9 +721,6 @@ const app = new Hono()
             insertRefreshToken,
             insertAccessToken,
           ]);
-          console.log(
-            `/token: Minted new tokens with refresh_token grant type for user ${user.userId}`,
-          );
           return c.json({
             access_token: newAccessToken,
             refresh_token: newRefreshToken,
@@ -760,7 +741,7 @@ const app = new Hono()
     if (!accessToken) return c.json({ error: "unauthorized" }, 401);
 
     try {
-      const token = await prisma.token.findUnique({
+      const token = await prisma.token.findFirst({
         where: { token: accessToken, type: "ACCESS" },
       });
       if (!token) return c.json({ error: "invalid_token" }, 401);

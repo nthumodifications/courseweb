@@ -25,8 +25,8 @@ export const requireAuth = (requiredScopes: string[] = []) =>
 
     try {
       // Verify the token
-      const token = await prisma.token.findUnique({
-        where: { token: accessToken },
+      const token = await prisma.token.findFirst({
+        where: { token: accessToken, type: "ACCESS" },
       });
       if (!token) throw new Error("Token not found");
       if (token.expiresAt < new Date()) throw new Error("Token expired");

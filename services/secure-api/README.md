@@ -78,36 +78,23 @@ The API currently supports two authentication methods (⚠️ **This dual approa
 
 #### GET /calendar/ics/:userId
 
-Gets a user's calendar in iCalendar format.
-
-**Current Implementation (Insecure):**
+Gets a user's calendar in iCalendar format using a dedicated calendar share token.
 
 ```bash
-curl "https://api.example.com/calendar/ics/user123?key=your-api-key&type=basic"
-```
-
-**Recommended Secure Implementation:**
-
-```bash
-curl -H "Authorization: ApiKey your-api-key" \
-     "https://api.example.com/calendar/ics/user123?type=basic"
+curl "https://api.example.com/calendar/ics/user123?token=calendar-share-token&type=basic"
 ```
 
 **Parameters:**
 
 - `userId` (path): User identifier
+- `token` (query): Calendar share token
 - `type` (query): `basic` or `full` (default: `basic`)
-- `key` (query, deprecated): API key ⚠️ **Security Risk**
-
-**Required Headers:**
-
-- `Authorization`: ApiKey {your-api-key} (recommended method)
 
 **Security Considerations:**
 
-- API keys in URLs are logged by web servers and proxies
-- Use POST method for sensitive operations
-- Implement rate limiting (currently missing)
+- Calendar share tokens are separate from general API keys
+- Revoke unused or leaked share tokens
+- Implement rate limiting
 
 #### GET /calendar
 

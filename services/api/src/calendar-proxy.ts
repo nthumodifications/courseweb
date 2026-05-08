@@ -13,7 +13,7 @@ const app = new Hono<{ Bindings: AppEnv }>().get(
   zValidator(
     "query",
     z.object({
-      key: z.string().optional(),
+      token: z.string(),
       type: z.enum(["basic", "full"]).default("basic"),
     }),
   ),
@@ -26,11 +26,7 @@ const app = new Hono<{ Bindings: AppEnv }>().get(
   async (c) => {
     try {
       const { userId } = c.req.valid("param");
-      const { key, type } = c.req.valid("query");
-
-      if (!key) {
-        return c.json({ error: "Missing API key" }, 400);
-      }
+      const { token, type } = c.req.valid("query");
 
       // Get the secure API URL from environment variable
       const { NTHUMODS_AUTH_URL: secureApiUrl } = env<{
@@ -39,7 +35,7 @@ const app = new Hono<{ Bindings: AppEnv }>().get(
 
       // Construct the URL for the secure API request
       const url = new URL(`${secureApiUrl}/calendar/ics/${userId}`);
-      url.searchParams.set("key", key);
+      url.searchParams.set("token", token);
       url.searchParams.set("type", type);
 
       // Forward the request to the secure API
