@@ -332,7 +332,7 @@ const BusDetailsContainer = ({
   }, [weektab, down.weekday, down.weekend, up.weekday, up.weekend]);
 
   return (
-    <div className="flex flex-col px-4 h-full max-w-xl">
+    <div className="flex flex-col px-4 h-full w-full max-w-xl">
       <Tabs
         defaultValue="weekday"
         value={weektab}
@@ -366,7 +366,7 @@ const BusDetailsContainer = ({
             </TabsTrigger>
           </TabsList>
           <div className="flex flex-col gap-4 py-2" ref={timeSelectorRef}>
-            <div className="justify-start items-start gap-1.5 inline-flex max-w-full overflow-x-auto">
+            <div className="justify-start items-start gap-1.5 flex overflow-x-auto min-w-0">
               {filteredHoursDate.length > 6 &&
                 filteredHoursDate.map((hd) => (
                   <div

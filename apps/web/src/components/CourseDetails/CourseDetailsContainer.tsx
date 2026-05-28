@@ -1,6 +1,7 @@
 import { format } from "date-fns";
 import { AlertTriangle, ChevronLeft, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import DownloadSyllabus from "./DownloadSyllabus";
 import { Fade } from "@courseweb/ui";
 import { toPrettySemester } from "@/helpers/semester";
@@ -22,8 +23,9 @@ import { Badge } from "@courseweb/ui";
 import { CourseDefinition } from "@/config/supabase";
 import { ScrollArea, ScrollBar } from "@courseweb/ui";
 import { timetableColors } from "@courseweb/shared";
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense } from "react";
 import { Language } from "@/types/settings";
+import { sanitizeCourseHtml } from "@/lib/sanitizeHtml";
 import {
   Table,
   TableBody,
@@ -142,12 +144,81 @@ const CourseDetailContainer = ({
     enabled: !!course, // Only fetch if course data is available
   });
 
-  // Update page title for full-page view (not modal)
-  useEffect(() => {
-    if (!modal && course) {
-      document.title = `${course.name_zh} ${course.teacher_zh?.join(",")} | NTHUMods`;
-    }
-  }, [modal, course]);
+  // Dynamic SEO metadata for course detail pages (full-page view only)
+  const courseJsonLd =
+    !modal && course
+      ? {
+          "@context": "https://schema.org",
+          "@type": "Course",
+          name: course.name_zh,
+          alternateName: course.name_en,
+          description:
+            course.course_syllabus?.brief ??
+            `清大 ${course.department} ${course.name_zh} 課程`,
+          provider: {
+            "@type": "EducationalOrganization",
+            name: "National Tsing Hua University",
+            alternateName: "國立清華大學",
+            url: "https://www.nthu.edu.tw",
+          },
+          instructor: (course.teacher_zh ?? []).map((t) => ({
+            "@type": "Person",
+            name: t,
+          })),
+          courseCode: `${course.department} ${course.course}-${course.class}`,
+          educationalLevel: "University",
+          inLanguage: "zh-TW",
+          url: `https://nthumods.com/${lang}/courses/${course.raw_id}`,
+          offers: {
+            "@type": "Offer",
+            price: "0",
+            priceCurrency: "TWD",
+            availability: "https://schema.org/InStock",
+          },
+        }
+      : null;
+
+  const breadcrumbData =
+    !modal && course
+      ? [
+          { name: "首頁", url: `https://nthumods.com/${lang}` },
+          { name: "課程", url: `https://nthumods.com/${lang}/courses` },
+          {
+            name: course.department,
+            url: `https://nthumods.com/${lang}/courses?department=${encodeURIComponent(course.department)}`,
+          },
+          {
+            name: course.name_zh,
+            url: `https://nthumods.com/${lang}/courses/${course.raw_id}`,
+          },
+        ]
+      : null;
+
+  const breadcrumbJsonLd = breadcrumbData
+    ? {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: breadcrumbData.map((item, index) => ({
+          "@type": "ListItem",
+          position: index + 1,
+          name: item.name,
+          item: item.url,
+        })),
+      }
+    : null;
+
+  const webPageJsonLd =
+    !modal && course
+      ? {
+          "@context": "https://schema.org",
+          "@type": "WebPage",
+          name: `${course.name_zh} | NTHUMods`,
+          description: `清大 ${toPrettySemester(course.semester)} ${course.name_zh} 課程資訊`,
+          url: `https://nthumods.com/${lang}/courses/${course.raw_id}`,
+          inLanguage: lang === "en" ? "en-US" : "zh-TW",
+          isPartOf: { "@type": "WebSite", url: "https://nthumods.com" },
+        }
+      : null;
 
   // Handle loading state
   if (isLoading) {
@@ -157,18 +228,24 @@ const CourseDetailContainer = ({
   // Handle error state
   if (error || !course) {
     return (
-      <div className="py-6 px-4">
-        <div className="flex flex-col gap-2 border-l border-neutral-500 pl-4 pr-6">
-          <h1 className="text-2xl font-bold">404</h1>
-          <p className="text-xl">找不到課程</p>
+      <>
+        <Helmet>
+          <meta name="robots" content="noindex, nofollow" />
+          <meta name="googlebot" content="noindex, nofollow" />
+        </Helmet>
+        <div className="py-6 px-4">
+          <div className="flex flex-col gap-2 border-l border-neutral-500 pl-4 pr-6">
+            <h1 className="text-2xl font-bold">404</h1>
+            <p className="text-xl">找不到課程</p>
 
-          <Link to="../">
-            <Button size="sm" variant="outline">
-              <ChevronLeft /> Back
-            </Button>
-          </Link>
+            <Link to="../">
+              <Button size="sm" variant="outline">
+                <ChevronLeft /> Back
+              </Button>
+            </Link>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
@@ -187,6 +264,62 @@ const CourseDetailContainer = ({
 
   return (
     <Fade>
+      {!modal && course && (
+        <Helmet>
+          <title>{`${course.name_zh} ${course.teacher_zh?.join("、")} - ${toPrettySemester(course.semester)} 清大${course.department}課程 | NTHUMods`}</title>
+          <meta
+            name="description"
+            content={`清大 ${toPrettySemester(course.semester)} ${course.name_zh}（${course.name_en}）課程資訊，${course.teacher_zh?.join("、")} 授課。查看課程大綱、歷年評分記錄與學生心得。`}
+          />
+          <link
+            rel="canonical"
+            href={`https://nthumods.com/${lang}/courses/${course.raw_id}`}
+          />
+          <link
+            rel="alternate"
+            hrefLang="zh-TW"
+            href={`https://nthumods.com/zh/courses/${course.raw_id}`}
+          />
+          <link
+            rel="alternate"
+            hrefLang="en"
+            href={`https://nthumods.com/en/courses/${course.raw_id}`}
+          />
+          <link
+            rel="alternate"
+            hrefLang="x-default"
+            href={`https://nthumods.com/zh/courses/${course.raw_id}`}
+          />
+          <meta
+            property="og:title"
+            content={`${course.name_zh} - ${course.department} | NTHUMods`}
+          />
+          <meta
+            property="og:description"
+            content={`清大 ${course.name_zh}（${course.name_en}），${course.teacher_zh?.join("、")} 授課，${toPrettySemester(course.semester)} 學期。查看課程大綱與歷年資訊。`}
+          />
+          <meta
+            property="og:url"
+            content={`https://nthumods.com/${lang}/courses/${course.raw_id}`}
+          />
+          <meta name="twitter:card" content="summary" />
+          <meta
+            name="twitter:title"
+            content={`${course.name_zh} - ${course.department} | NTHUMods`}
+          />
+          <meta
+            name="twitter:description"
+            content={`清大 ${course.name_zh}，${course.teacher_zh?.join("、")} 授課，${toPrettySemester(course.semester)} 學期。`}
+          />
+          {courseJsonLd && (
+            <script type="application/ld+json">
+              {JSON.stringify(
+                [courseJsonLd, breadcrumbJsonLd, webPageJsonLd].filter(Boolean),
+              )}
+            </script>
+          )}
+        </Helmet>
+      )}
       <div
         className={cn(
           "flex flex-col pb-6 relative",
@@ -295,7 +428,9 @@ const CourseDetailContainer = ({
                   </h3>
                   <div
                     className="whitespace-pre-line text-sm"
-                    dangerouslySetInnerHTML={{ __html: course.prerequisites }}
+                    dangerouslySetInnerHTML={{
+                      __html: sanitizeCourseHtml(course.prerequisites),
+                    }}
                   />
                 </div>
               )}

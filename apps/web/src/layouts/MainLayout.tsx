@@ -29,7 +29,7 @@ const MainLayout = () => {
               <GoogleAnalytics />
               <ConsoleLogger />
               <AppSidebar lang={(lang as Language) ?? "zh"} />
-              <SidebarInset>
+              <SidebarInset className="min-w-0 overflow-x-hidden">
                 <Header />
                 <div className="pt-4 pb-[5rem] md:pb-0 md:pl-2">
                   <ErrorBoundary FallbackComponent={ModsError}>

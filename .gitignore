@@ -85,3 +85,4 @@ apps/web/public/workbox-*.js.map
 .playwright-mcp
 .claude/settings.local.json
 tools/data-sync/.env
+.claude/

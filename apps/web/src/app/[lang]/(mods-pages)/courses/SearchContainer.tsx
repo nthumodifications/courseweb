@@ -27,6 +27,7 @@ import useCustomMenu from "@/app/[lang]/(mods-pages)/courses/useCustomMenu";
 import { lastSemester } from "@courseweb/shared";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { MinimalCourse } from "@/types/courses";
+import { courseEvents } from "@/lib/trackingEvents";
 
 type SearchClient = ReturnType<typeof algoliasearch>;
 type InfiniteHitsCache = ReturnType<
@@ -123,6 +124,8 @@ const SearchContainer = memo(
     const dict = useDictionary();
     const { lang } = useParams<{ lang: string }>();
     const { nbHits, processingTimeMS } = useStats();
+    const { query } = useInstantSearch();
+    const previousNbHitsRef = useRef<number>(0);
 
     const { items } = useCustomMenu({
       attribute: "semester",
@@ -134,6 +137,14 @@ const SearchContainer = memo(
     );
     const { getSemesterCourses, colorMap } = useUserTimetable();
     const courses = getSemesterCourses(semester);
+
+    // Track search results
+    useEffect(() => {
+      if (nbHits !== previousNbHitsRef.current && nbHits > 0) {
+        courseEvents.search(query || "all", nbHits);
+        previousNbHitsRef.current = nbHits;
+      }
+    }, [nbHits, query]);
 
     return (
       <div className="flex w-full gap-4">

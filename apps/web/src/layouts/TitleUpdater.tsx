@@ -1,24 +1,169 @@
-import { useEffect } from "react";
-import { useMatches } from "react-router-dom";
-import { useSettings } from "@/hooks/contexts/settings";
+import { Helmet } from "react-helmet-async";
+import { useLocation, useMatches } from "react-router-dom";
 
 interface RouteHandle {
   title?: string;
   titleZh?: string;
+  description?: string;
+  descriptionZh?: string;
+  noindex?: boolean;
 }
+
+const BASE_URL = "https://nthumods.com";
+const DEFAULT_OG_IMAGE = "https://nthumods.com/images/icons/icon-512x512.png";
+const DEFAULT_DESCRIPTION_ZH =
+  "國立清華大學學生自主開發的免費校園平臺。搜尋課程大綱與歷年評分、建立個人課表、追蹤校車班次、探索場館地圖與畢業學分規劃，一站搞定清大校園生活。";
+const DEFAULT_DESCRIPTION_EN =
+  "Student-built platform for National Tsing Hua University. Search courses with syllabi and grade data, build your timetable, check bus schedules, find venues, and plan graduation.";
+
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "NTHUMods",
+  alternateName: ["清大課程平臺", "NTHU Mods", "清華大學選課平臺", "清大選課"],
+  url: BASE_URL,
+  description: DEFAULT_DESCRIPTION_ZH,
+  inLanguage: ["zh-TW", "en"],
+  potentialAction: {
+    "@type": "SearchAction",
+    target: {
+      "@type": "EntryPoint",
+      urlTemplate:
+        "https://nthumods.com/zh/courses?nthu_courses[query]={search_term_string}",
+    },
+    "query-input": "required name=search_term_string",
+  },
+};
+
+const organizationJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "NTHUMods",
+  url: BASE_URL,
+  logo: DEFAULT_OG_IMAGE,
+  description: DEFAULT_DESCRIPTION_ZH,
+  sameAs: ["https://github.com/nthumodifications/courseweb"],
+  parentOrganization: {
+    "@type": "EducationalOrganization",
+    name: "National Tsing Hua University",
+    alternateName: "國立清華大學",
+    url: "https://www.nthu.edu.tw",
+  },
+};
+
+const normalizePath = (pathname: string): string => {
+  if (!pathname || pathname === "/") return "/";
+  const withoutTrailing = pathname.replace(/\/+$/, "");
+  return withoutTrailing || "/";
+};
+
+const replaceLangPrefix = (path: string, lang: "zh" | "en"): string => {
+  const normalized = normalizePath(path);
+  if (normalized === "/") return `/${lang}`;
+  if (/^\/(zh|en)(\/|$)/.test(normalized)) {
+    return normalized.replace(/^\/(zh|en)(?=\/|$)/, `/${lang}`);
+  }
+  return `/${lang}${normalized === "/" ? "" : normalized}`;
+};
+
+const getLangFromPath = (pathname: string): "zh" | "en" => {
+  if (pathname.startsWith("/en/") || pathname === "/en") return "en";
+  return "zh";
+};
+
+const shouldNoindexPath = (pathname: string): boolean => {
+  const p = normalizePath(pathname);
+  return (
+    p === "/auth/callback" ||
+    p === "/api/auth/callback/nthu_oauth" ||
+    p.startsWith("/l/") ||
+    p.endsWith("/proxy-login") ||
+    p.endsWith("/offline")
+  );
+};
 
 const TitleUpdater = () => {
   const matches = useMatches();
-  const { language } = useSettings();
+  const location = useLocation();
+
   const handle = matches.at(-1)?.handle as RouteHandle | undefined;
-  const title =
-    language === "zh" && handle?.titleZh ? handle.titleZh : handle?.title;
+  const pathLang = getLangFromPath(location.pathname);
+  const isZh = pathLang === "zh";
 
-  useEffect(() => {
-    document.title = title ? `${title} | NTHUMods` : "NTHUMods";
-  }, [title]);
+  const pageTitle = isZh ? (handle?.titleZh ?? handle?.title) : handle?.title;
+  const description = isZh
+    ? (handle?.descriptionZh ?? handle?.description ?? DEFAULT_DESCRIPTION_ZH)
+    : (handle?.description ?? handle?.descriptionZh ?? DEFAULT_DESCRIPTION_EN);
 
-  return null;
+  const fullTitle = pageTitle
+    ? `${pageTitle} | NTHUMods`
+    : isZh
+      ? "NTHUMods｜清大課程查詢・課表規劃・校車時刻表"
+      : "NTHUMods | NTHU Course Search & Campus Tools";
+
+  const canonicalPath = normalizePath(location.pathname);
+  const canonicalUrl = `${BASE_URL}${canonicalPath}`;
+
+  const zhPath = replaceLangPrefix(canonicalPath, "zh");
+  const enPath = replaceLangPrefix(canonicalPath, "en");
+
+  const zhUrl = `${BASE_URL}${zhPath}`;
+  const enUrl = `${BASE_URL}${enPath}`;
+  const xDefaultUrl = zhUrl;
+
+  const routeNoindex = Boolean(handle?.noindex);
+  const pathNoindex = shouldNoindexPath(canonicalPath);
+  const robots =
+    routeNoindex || pathNoindex ? "noindex, nofollow" : "index, follow";
+
+  const webPageJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: fullTitle,
+    url: canonicalUrl,
+    description,
+    inLanguage: isZh ? "zh-TW" : "en",
+    isPartOf: {
+      "@type": "WebSite",
+      url: BASE_URL,
+      name: "NTHUMods",
+    },
+  };
+
+  return (
+    <Helmet>
+      <html lang={isZh ? "zh-TW" : "en"} />
+      <title>{fullTitle}</title>
+      <meta name="description" content={description} />
+      <meta name="robots" content={robots} />
+
+      <link rel="canonical" href={canonicalUrl} />
+      {!pathNoindex && (
+        <>
+          <link rel="alternate" hrefLang="zh-TW" href={zhUrl} />
+          <link rel="alternate" hrefLang="en" href={enUrl} />
+          <link rel="alternate" hrefLang="x-default" href={xDefaultUrl} />
+        </>
+      )}
+
+      <meta property="og:type" content="website" />
+      <meta property="og:title" content={fullTitle} />
+      <meta property="og:description" content={description} />
+      <meta property="og:url" content={canonicalUrl} />
+      <meta property="og:image" content={DEFAULT_OG_IMAGE} />
+      <meta property="og:site_name" content="NTHUMods" />
+      <meta property="og:locale" content={isZh ? "zh_TW" : "en_US"} />
+
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={fullTitle} />
+      <meta name="twitter:description" content={description} />
+      <meta name="twitter:image" content={DEFAULT_OG_IMAGE} />
+
+      <script type="application/ld+json">
+        {JSON.stringify([websiteJsonLd, organizationJsonLd, webPageJsonLd])}
+      </script>
+    </Helmet>
+  );
 };
 
 export default TitleUpdater;

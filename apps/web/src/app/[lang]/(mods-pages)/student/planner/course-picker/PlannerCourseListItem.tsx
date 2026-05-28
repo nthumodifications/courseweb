@@ -13,6 +13,7 @@ import { ChevronDown, Minus, Plus } from "lucide-react";
 import CourseTagList from "@/components/Courses/CourseTagsList";
 import { MinimalCourse } from "@/types/courses";
 import { useCourseLink } from "@/components/Courses/CourseDialog";
+import { sanitizeCourseHtml } from "@/lib/sanitizeHtml";
 
 type PlannerCourseListItemProps = {
   course: CourseSyllabusView;
@@ -104,9 +105,11 @@ const PlannerCourseListItem: FC<PlannerCourseListItemProps> = memo(
                   </CollapsibleTrigger>
                   <CollapsibleContent>
                     <p
-                      dangerouslySetInnerHTML={{ __html: course.prerequisites }}
-                      className="text-sm text-neutral-500"
-                    ></p>
+                      className="whitespace-pre-line text-sm text-neutral-500"
+                      dangerouslySetInnerHTML={{
+                        __html: sanitizeCourseHtml(course.prerequisites),
+                      }}
+                    />
                   </CollapsibleContent>
                 </Collapsible>
               )}

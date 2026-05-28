@@ -132,13 +132,13 @@ GET /acacalendar?start=2024-01-01&end=2024-12-31
 #### Get User Calendar (iCal Format)
 
 ```http
-GET /calendar/ical/{userId}?key=api_key&type=basic
+GET /calendar/ical/{userId}?token=calendar_share_token&type=basic
 ```
 
 **Parameters:**
 
 - `userId` (path): User identifier
-- `key` (query): API key for authentication
+- `token` (query): Calendar share token
 - `type` (query): Calendar type (`basic` or `full`, default: `basic`)
 
 **Response:** iCalendar format data

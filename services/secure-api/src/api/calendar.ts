@@ -6,10 +6,120 @@ import { z } from "zod";
 import { createICalendar } from "../utils/icalendar";
 import { addDays } from "date-fns";
 import { getFirebaseAdmin } from "../config/firebase_admin";
-import { validateApiKey } from "../utils/apiKeyValidation";
+import { PrismaClient } from "@prisma/client";
+import { requireAuth } from "../middleware/requireAuth";
+import { sha256hash } from "../utils/sha256";
+
+const prisma = new PrismaClient();
+
+const generateCalendarShareToken = () =>
+  "cal_" +
+  Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString("hex");
+
+const publicCalendarUrl = (c: any, userId: string, token: string) => {
+  const url = new URL(c.req.url);
+  url.pathname = `/api/calendar/ics/${encodeURIComponent(userId)}`;
+  url.search = "";
+  url.searchParams.set("token", token);
+  return url.toString();
+};
 
 const app = new Hono()
-  // Public endpoint for accessing calendar via API key in query parameter
+  .get("/share-tokens", requireAuth(["calendar"]), async (c) => {
+    const tokens = await prisma.calendarShareToken.findMany({
+      where: {
+        userId: c.var.user.userId,
+        revokedAt: null,
+      },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        name: true,
+        includeFullDetails: true,
+        expiresAt: true,
+        createdAt: true,
+        lastUsedAt: true,
+      },
+    });
+
+    return c.json(tokens);
+  })
+  .post(
+    "/share-tokens",
+    requireAuth(["calendar"]),
+    zValidator(
+      "json",
+      z.object({
+        name: z.string().trim().min(1).max(80).default("Calendar share"),
+        includeFullDetails: z.boolean().default(false),
+        expiresAt: z.string().datetime().optional(),
+      }),
+    ),
+    async (c) => {
+      const user = c.var.user;
+      const { name, includeFullDetails, expiresAt } = c.req.valid("json");
+      const token = generateCalendarShareToken();
+      const tokenHash = await sha256hash(token);
+
+      const shareToken = await prisma.calendarShareToken.create({
+        data: {
+          name,
+          tokenHash,
+          userId: user.userId,
+          includeFullDetails,
+          expiresAt: expiresAt ? new Date(expiresAt) : undefined,
+        },
+        select: {
+          id: true,
+          name: true,
+          includeFullDetails: true,
+          expiresAt: true,
+          createdAt: true,
+        },
+      });
+
+      return c.json(
+        {
+          ...shareToken,
+          token,
+          url: publicCalendarUrl(c, user.userId, token),
+        },
+        201,
+      );
+    },
+  )
+  .delete(
+    "/share-tokens/:id",
+    requireAuth(["calendar"]),
+    zValidator(
+      "param",
+      z.object({
+        id: z.string().uuid(),
+      }),
+    ),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const existing = await prisma.calendarShareToken.findFirst({
+        where: {
+          id,
+          userId: c.var.user.userId,
+          revokedAt: null,
+        },
+      });
+
+      if (!existing) {
+        return c.json({ error: "Calendar share token not found" }, 404);
+      }
+
+      await prisma.calendarShareToken.update({
+        where: { id },
+        data: { revokedAt: new Date() },
+      });
+
+      return c.json({ success: true });
+    },
+  )
+  // Public endpoint for accessing calendar via dedicated share token
   .get(
     "/ics/:userId",
     zValidator(
@@ -21,32 +131,50 @@ const app = new Hono()
     zValidator(
       "query",
       z.object({
-        key: z.string(),
+        token: z.string(),
         type: z.enum(["basic", "full"]).default("basic"),
       }),
     ),
     async (c) => {
       const { userId } = c.req.valid("param");
-      const { key: apiKey, type: calendarType } = c.req.valid("query");
+      const { token, type: calendarType } = c.req.valid("query");
 
-      // Validate the API key using our utility function
-      // This function handles validation and updates the lastUsedAt timestamp
-      const apiKeyRecord = await validateApiKey(apiKey, "calendar:read");
+      let includeFullDetails = false;
 
-      // Check if the user ID in the URL matches the API key's user ID
-      if (apiKeyRecord.user.userId !== userId) {
+      const tokenHash = await sha256hash(token);
+      const shareToken = await prisma.calendarShareToken.findUnique({
+        where: { tokenHash },
+        include: {
+          user: {
+            select: {
+              userId: true,
+            },
+          },
+        },
+      });
+
+      if (
+        !shareToken ||
+        shareToken.revokedAt ||
+        (shareToken.expiresAt && shareToken.expiresAt < new Date()) ||
+        shareToken.user.userId !== userId
+      ) {
         throw new HTTPException(403, {
           message: "Unauthorized access to this calendar",
         });
       }
 
+      includeFullDetails =
+        shareToken.includeFullDetails && calendarType === "full";
+
+      await prisma.calendarShareToken.update({
+        where: { id: shareToken.id },
+        data: { lastUsedAt: new Date() },
+      });
+
       try {
         // Generate calendar data using the iCalendar utility
-        const calendar = await createICalendar(
-          userId,
-          calendarType === "full",
-          c,
-        );
+        const calendar = await createICalendar(userId, includeFullDetails, c);
 
         // Set proper content type for iCalendar file
         c.header("Content-Type", "text/calendar");

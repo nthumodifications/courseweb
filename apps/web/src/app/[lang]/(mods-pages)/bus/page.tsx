@@ -1,4 +1,5 @@
 import { useSettings } from "@/hooks/contexts/settings";
+import { Helmet } from "react-helmet-async";
 import { Tabs, TabsList, TabsTrigger } from "@courseweb/ui";
 import { FC, SVGProps, useEffect, useMemo, useState } from "react";
 import useTime from "@/hooks/useTime";
@@ -448,26 +449,52 @@ const BusPage = () => {
     navigate(`?tab=${tab}`, { replace: true });
   };
 
+  const busPageJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: "校車時刻表 | NTHUMods",
+    description:
+      "查看清華大學校車即時時刻表，包含校園巴士、南大區間車等路線資訊",
+    url: `https://nthumods.com/${language}/bus`,
+    inLanguage: language === "en" ? "en-US" : "zh-TW",
+    isPartOf: { "@type": "WebSite", url: "https://nthumods.com" },
+  };
+
+  const seoHelmet = (
+    <Helmet>
+      <script type="application/ld+json">
+        {JSON.stringify(busPageJsonLd)}
+      </script>
+    </Helmet>
+  );
+
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-[200px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-nthu-500"></div>
-      </div>
+      <>
+        {seoHelmet}
+        <div className="flex justify-center items-center min-h-[200px]">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-nthu-500"></div>
+        </div>
+      </>
     );
   }
 
   if (error) {
     return (
-      <div className="flex justify-center items-center min-h-[200px]">
-        <div className="text-red-500">
-          Failed to load bus data. Please try again later.
+      <>
+        {seoHelmet}
+        <div className="flex justify-center items-center min-h-[200px]">
+          <div className="text-red-500">
+            Failed to load bus data. Please try again later.
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
     <div className="flex flex-col px-4">
+      {seoHelmet}
       <Tabs
         defaultValue="north_gate"
         value={tab}

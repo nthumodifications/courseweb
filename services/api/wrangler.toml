@@ -38,3 +38,6 @@ namespace_id = "1002"
 
 [browser]
 binding = "BROWSER"
+
+[triggers]
+crons = ["0 2 * * 1"] # Every Monday at 02:00 UTC

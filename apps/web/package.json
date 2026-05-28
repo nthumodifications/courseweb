@@ -40,6 +40,7 @@
     "cmdk": "^1.1.1",
     "date-fns": "^3.6.0",
     "date-fns-tz": "^3.0.1",
+    "dompurify": "^3.4.2",
     "focus-trap-react": "^11.0.3",
     "framer-motion": "^12.10.1",
     "fuse.js": "^6.6.2",
@@ -89,6 +90,7 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260421.1",
     "@courseweb/eslint-config": "*",
     "@sentry/vite-plugin": "^2.16.0",
     "@types/leaflet": "^1.9.11",
