@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { AISNotLoggedIn } from "@/components/Pages/AISNotLoggedIn";
 import { AISLoading } from "@/components/Pages/AISLoading";
-import { GradesViewer } from "./GradesViewer";
+import GradesViewer from "./GradesViewer";
 import { useHeadlessAIS } from "@/hooks/useHeadlessAIS";
 import { fetchGrades } from "@/lib/headless-ais-api";
 import type { GradeObject } from "@/types/grades";
