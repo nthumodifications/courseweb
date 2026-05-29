@@ -60,9 +60,7 @@ const Calendar = () => {
     "week",
   );
   const {
-    events,
     addEvent,
-    removeEvent,
     displayContainer,
     HOUR_HEIGHT,
     timetableSyncReady,

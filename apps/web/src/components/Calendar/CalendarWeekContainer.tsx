@@ -185,8 +185,9 @@ export const CalendarWeekContainer = ({
 
       return eventsWithLayout.map((event, index) => {
         // Cap display end at midnight to avoid negative heights for events crossing midnight
-        const cappedEnd =
-          event.displayEnd > dayEnd ? dayEnd : event.displayEnd;
+        const cappedEnd = new Date(
+          Math.min(event.displayEnd.getTime(), dayEnd.getTime()),
+        );
         const heightMs = cappedEnd.getTime() - event.displayStart.getTime();
         const height = Math.max(
           HOUR_HEIGHT / 2,
