@@ -14,7 +14,7 @@ import { Separator } from "@courseweb/ui";
 import { useCalendar } from "./calendar_hook";
 import { CurrentTimePointer } from "./CurrentTimePointer";
 import { eventsToDisplay } from "@/components/Calendar/calendar_utils";
-import { getContrastColor, getBrightness } from "@/helpers/colors";
+import { getContrastColor } from "@/helpers/colors";
 import { EventPopover } from "./EventPopover";
 import {
   UIEventHandler,
@@ -237,9 +237,6 @@ export const CalendarWeekContainer = ({
         return e.allDay;
       })
       .map((event) => {
-        //Determine the text color
-        const brightness = getBrightness(event.color);
-        //From the brightness, using the getContrastColor function, create a complementary color that is legible
         const textColor = getContrastColor(event.color);
         let span =
           differenceInDays(
