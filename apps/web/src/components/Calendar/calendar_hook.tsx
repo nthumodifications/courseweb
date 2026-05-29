@@ -121,7 +121,6 @@ export const useCalendarProvider = () => {
     });
     replicationState.error$.subscribe((error) => console.error(error));
     replicationState.start();
-    void replicationState.awaitInitialReplication();
 
     return () => {
       replicationState.cancel();
@@ -195,8 +194,7 @@ export const useCalendarProvider = () => {
     replicationState.start();
     replicationState
       .awaitInitialReplication()
-      .then(() => setTimetableSyncReady(true))
-      .catch((error) => console.error("[timetablesync] Replication error", error));
+      .finally(() => setTimetableSyncReady(true));
 
     return () => {
       replicationState.cancel();

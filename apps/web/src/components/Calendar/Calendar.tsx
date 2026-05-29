@@ -312,20 +312,23 @@ const Calendar = () => {
     request: TimetableSyncRequest,
     accept: boolean,
   ) => {
-    const calendarEvents = timetableToCalendarEvent(request.courses, language);
     if (accept) {
+      const calendarEvents = timetableToCalendarEvent(request.courses, language);
       calendarEvents.forEach((c) => addEvent(c));
-      await timetableSync!.upsert({
-        semester: request.semester,
-        courses: request.courses.map((c) => c.course.raw_id),
-        lastSync: new Date().toISOString(),
-      });
     } else {
       toast({
         title: `Semester ${toPrettySemester(request.semester)} sync cancelled`,
         description: "You can sync again if the timetable changes",
       });
     }
+
+    // Always record the known course set (accepted or dismissed) so the dialog
+    // is not re-shown for the same courses on subsequent mounts/course-changes.
+    await timetableSync!.upsert({
+      semester: request.semester,
+      courses: request.courses.map((c) => c.course.raw_id),
+      lastSync: new Date().toISOString(),
+    });
 
     setAvailableSync((s) => s.filter((r) => r.semester != request.semester));
   };

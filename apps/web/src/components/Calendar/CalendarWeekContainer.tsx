@@ -194,7 +194,7 @@ export const CalendarWeekContainer = ({
         );
 
         return (
-          <EventPopover key={event.id + index} event={event}>
+          <EventPopover key={`${event.id}-${event.displayStart.getTime()}`} event={event}>
             <div
               className="absolute pr-0.5 event-item"
               style={{
