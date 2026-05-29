@@ -59,11 +59,16 @@ const Calendar = () => {
   const [displayMode, setDisplayMode] = useState<"week" | "month" | "upcoming">(
     "week",
   );
-  const { events, addEvent, removeEvent, displayContainer, HOUR_HEIGHT } =
-    useCalendar();
+  const {
+    events,
+    addEvent,
+    removeEvent,
+    displayContainer,
+    HOUR_HEIGHT,
+    timetableSyncReady,
+  } = useCalendar();
   const { courses, colorMap, getSemesterCourses } = useUserTimetable();
   const { language } = useSettings();
-  const [dbReady, setDbReady] = useState(false);
   const isMobile = useIsMobile();
   const dict = useDictionary();
 
@@ -251,20 +256,8 @@ const Calendar = () => {
     [],
   );
 
-  // Check if database is ready
-  useEffect(() => {
-    if (timetableSync) {
-      // Wait a bit to ensure DB is fully initialized
-      const timer = setTimeout(() => {
-        setDbReady(true);
-      }, 1000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [timetableSync]);
-
   const syncTimetable = async () => {
-    if (!timetableSync || !dbReady || Object.keys(courses).length === 0) return;
+    if (!timetableSync || !timetableSyncReady || Object.keys(courses).length === 0) return;
 
     // for each semester, check if its already synced
     const timetableCourses: TimetableSyncRequest[] = [];
@@ -310,37 +303,36 @@ const Calendar = () => {
   };
 
   useEffect(() => {
-    if (dbReady) {
+    if (timetableSyncReady) {
       syncTimetable();
     }
-  }, [courses, timetableSync, dbReady]);
+  }, [courses, timetableSync, timetableSyncReady]);
 
   const handleSyncAccept = async (
     request: TimetableSyncRequest,
     accept: boolean,
   ) => {
-    console.log("Syncing", request.semester, accept);
-    const courses = timetableToCalendarEvent(request.courses, language);
+    const calendarEvents = timetableToCalendarEvent(request.courses, language);
     if (accept) {
-      courses.forEach((c) => addEvent(c));
+      calendarEvents.forEach((c) => addEvent(c));
+      await timetableSync!.upsert({
+        semester: request.semester,
+        courses: request.courses.map((c) => c.course.raw_id),
+        lastSync: new Date().toISOString(),
+      });
     } else {
       toast({
         title: `Semester ${toPrettySemester(request.semester)} sync cancelled`,
         description: "You can sync again if the timetable changes",
       });
     }
-    await timetableSync!.upsert({
-      semester: request.semester,
-      courses: request.courses.map((c) => c.course.raw_id),
-      lastSync: new Date().toISOString(),
-    });
 
     setAvailableSync((s) => s.filter((r) => r.semester != request.semester));
   };
 
   return (
     <ErrorBoundary FallbackComponent={CalendarError}>
-      {availableSync.length > 0 && dbReady && (
+      {availableSync.length > 0 && timetableSyncReady && (
         <CalendarTimetableSyncDialog
           request={availableSync[0]}
           onSyncAccept={handleSyncAccept}

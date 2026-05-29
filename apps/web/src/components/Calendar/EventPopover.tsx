@@ -131,7 +131,6 @@ export const EventPopover: FC<
     else {
       setUpdateDialogOpen(true);
       setWaitingUpdateEvent(newEvent);
-      console.log("1", event, newEvent);
     }
   };
 
@@ -144,7 +143,6 @@ export const EventPopover: FC<
   const handleRepeatedEventUpdate = (type?: UpdateType) => {
     if (!type) return;
     if (waitingUpdateEvent) updateEvent(waitingUpdateEvent, event, type);
-    console.log("2", waitingUpdateEvent);
     setWaitingUpdateEvent(null);
     setUpdateDialogOpen(false);
   };
