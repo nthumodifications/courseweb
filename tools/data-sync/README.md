@@ -228,7 +228,7 @@ Optional variables:
 
 ### Default Semester
 
-The default semester is `11510`. You can override this by:
+The default semester is `11510` (academic year 115, semester 1). You can override this by:
 
 - Passing a different semester parameter to the functions
 - Setting the `SEMESTER` environment variable
