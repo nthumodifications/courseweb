@@ -158,9 +158,9 @@ fi
 
 # Set command based on mode
 if [[ "$MODE" == "once" ]]; then
-    CMD="tsx src/sync-courses.ts $SEMESTER"
+    CMD="bun run src/sync-courses.ts $SEMESTER"
 else
-    CMD="tsx src/update-courses.ts \"$CRON_PATTERN\" $SEMESTER"
+    CMD="bun run src/update-courses.ts \"$CRON_PATTERN\" $SEMESTER"
 fi
 
 # Run container

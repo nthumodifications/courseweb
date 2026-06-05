@@ -7,6 +7,12 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      semester:
+        description: "Semester to sync (e.g. 11510)"
+        required: false
+        default: "11510"
 
 env:
   IMAGE_NAME: ghcr.io/${{ github.repository }}
@@ -138,6 +144,32 @@ jobs:
   #         curl --request GET "${{ secrets.COOLIFY_WEBHOOK }}" \
   #           --header "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}"
   #       if: success()
+
+  run-scraper:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Run course scraper
+        working-directory: tools/data-sync
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID }}
+          ALGOLIA_API_KEY: ${{ secrets.ALGOLIA_API_KEY }}
+          SEMESTER: ${{ github.event.inputs.semester || '11510' }}
+        run: bun run src/sync-courses.ts ${{ github.event.inputs.semester || '11510' }}
 
   build-and-push-data-sync:
     runs-on: ubuntu-latest

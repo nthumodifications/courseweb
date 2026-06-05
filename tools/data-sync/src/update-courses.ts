@@ -107,7 +107,7 @@ export { syncCourseData };
 export default startScheduledSync;
 
 // If this file is run directly, start the scheduled sync
-if (require.main === module) {
+if (import.meta.main) {
   const cronPattern = process.argv[2] || "0 0 * * *";
   const semester = process.argv[3] || "11510";
 
