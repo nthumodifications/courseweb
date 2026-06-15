@@ -6,7 +6,6 @@ export interface ChatMessage {
 export interface ChatRequest {
   messages: ChatMessage[];
   userContext?: UserContext;
-  apiKey?: string; // Optional user-provided key
 }
 
 export interface CourseInfo {
