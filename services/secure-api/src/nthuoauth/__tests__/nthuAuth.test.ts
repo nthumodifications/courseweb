@@ -3,6 +3,9 @@ import nthuAuth from "../nthuAuth";
 import { setCookie } from "hono/cookie";
 import { HTTPException } from "hono/http-exception";
 import { AuthFlow as _RealAuthFlow } from "../authFlow";
+// Capture the real class value NOW (module evaluation time) before any
+// mock.module() call can update the live ESM binding.
+const _realAuthFlow = _RealAuthFlow;
 
 // Mock dependencies
 mock.module("hono/cookie", () => ({
@@ -79,13 +82,16 @@ describe("nthuAuth middleware", () => {
   afterEach(() => {
     // Clean up mocks
     mock.restore();
+    // mock.restore() does NOT clean up mock.module() registrations in Bun 1.x.
+    // Explicitly restore so the next test (same file or next file) sees the
+    // real AuthFlow, not the mock.
+    mock.module("../authFlow", () => ({ AuthFlow: _realAuthFlow }));
   });
 
   afterAll(() => {
-    // Bun's mock.restore() does not always clean up mock.module() between test
-    // files. Explicitly restore the real AuthFlow so authFlow.test.ts (and any
-    // other subsequent file) gets the real implementation.
-    mock.module("../authFlow", () => ({ AuthFlow: _RealAuthFlow }));
+    // Belt-and-suspenders: ensure the registry is clean after this entire
+    // describe block so authFlow.test.ts gets the real implementation.
+    mock.module("../authFlow", () => ({ AuthFlow: _realAuthFlow }));
   });
 
   it("should redirect to login if no code is provided", async () => {
