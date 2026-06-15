@@ -3,9 +3,10 @@ import { streamChat } from "./gemini";
 import type { ChatRequest } from "./types";
 import { auth } from "../utils/auth";
 
-// Extend Bindings type to include GOOGLE_AI_API_KEY
 type Bindings = {
-  GOOGLE_AI_API_KEY?: string;
+  GOOGLE_CLOUD_SERVICE_ACCOUNT?: string;
+  GOOGLE_CLOUD_PROJECT?: string;
+  GOOGLE_CLOUD_LOCATION?: string;
 };
 
 const chat = new Hono<{ Bindings: Bindings }>()
@@ -13,18 +14,32 @@ const chat = new Hono<{ Bindings: Bindings }>()
   .use("/*", auth())
   .post("/", async (c) => {
     const body = await c.req.json<ChatRequest>();
-    const { messages, userContext, apiKey } = body;
+    const { messages, userContext } = body;
 
-    // Use user's API key or fall back to default
-    const effectiveApiKey = apiKey || c.env.GOOGLE_AI_API_KEY;
+    const serviceAccountJson = c.env.GOOGLE_CLOUD_SERVICE_ACCOUNT;
+    const project = c.env.GOOGLE_CLOUD_PROJECT;
+    const location = c.env.GOOGLE_CLOUD_LOCATION || "us-central1";
 
-    if (!effectiveApiKey) {
+    if (!serviceAccountJson || !project) {
       return c.json(
         {
           error:
-            "No API key configured. Please provide your own Gemini API key in settings.",
+            "Vertex AI not configured. Missing GOOGLE_CLOUD_SERVICE_ACCOUNT or GOOGLE_CLOUD_PROJECT.",
         },
-        400,
+        500,
+      );
+    }
+
+    let credentials: object;
+    try {
+      credentials = JSON.parse(atob(serviceAccountJson));
+    } catch {
+      return c.json(
+        {
+          error:
+            "Invalid GOOGLE_CLOUD_SERVICE_ACCOUNT value (expected base64-encoded JSON).",
+        },
+        500,
       );
     }
 
@@ -39,7 +54,9 @@ const chat = new Hono<{ Bindings: Bindings }>()
         async start(controller) {
           try {
             const generator = streamChat(c, messages, userContext || {}, {
-              apiKey: effectiveApiKey,
+              project,
+              location,
+              credentials,
             });
 
             for await (const event of generator) {

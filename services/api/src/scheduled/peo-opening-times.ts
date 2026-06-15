@@ -8,7 +8,7 @@ const PEO_BASE_URL = "https://nthupeo.site.nthu.edu.tw";
 export const SPORTS_CACHE_KEY = "peo_opening_times";
 
 export interface TimeSlot {
-  open: string;  // "HH:MM" 24-hour
+  open: string; // "HH:MM" 24-hour
   close: string; // "HH:MM" 24-hour
 }
 
@@ -51,7 +51,9 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
 async function parsePdfWithGemini(
   pdfUrl: string,
   facilityNameZh: string,
-  apiKey: string,
+  credentials: object,
+  project: string,
+  location: string,
 ): Promise<{ name_en: string; hours: DaySchedule } | null> {
   try {
     const response = await fetch(pdfUrl);
@@ -60,9 +62,17 @@ async function parsePdfWithGemini(
     const pdfBuffer = await response.arrayBuffer();
     const base64Data = arrayBufferToBase64(pdfBuffer);
 
-    const ai = new GoogleGenAI({ apiKey });
+    const ai = new GoogleGenAI({
+      vertexai: true,
+      project,
+      location,
+      googleAuthOptions: {
+        credentials,
+        scopes: ["https://www.googleapis.com/auth/cloud-platform"],
+      },
+    });
     const result = await ai.models.generateContent({
-      model: "gemini-flash-lite-latest",
+      model: "gemini-2.0-flash-lite",
       contents: [
         {
           role: "user",
@@ -141,12 +151,26 @@ Rules:
 
 export async function syncPeoOpeningTimes(env: {
   DB: D1Database;
-  GOOGLE_AI_API_KEY?: string;
+  GOOGLE_CLOUD_SERVICE_ACCOUNT?: string;
+  GOOGLE_CLOUD_PROJECT?: string;
+  GOOGLE_CLOUD_LOCATION?: string;
 }): Promise<void> {
-  if (!env.GOOGLE_AI_API_KEY) {
-    console.warn("GOOGLE_AI_API_KEY not set, skipping PEO opening times sync");
+  if (!env.GOOGLE_CLOUD_SERVICE_ACCOUNT || !env.GOOGLE_CLOUD_PROJECT) {
+    console.warn(
+      "Vertex AI not configured (GOOGLE_CLOUD_SERVICE_ACCOUNT/GOOGLE_CLOUD_PROJECT missing), skipping PEO opening times sync",
+    );
     return;
   }
+
+  let credentials: object;
+  try {
+    credentials = JSON.parse(atob(env.GOOGLE_CLOUD_SERVICE_ACCOUNT));
+  } catch {
+    console.error("Invalid GOOGLE_CLOUD_SERVICE_ACCOUNT value");
+    return;
+  }
+  const project = env.GOOGLE_CLOUD_PROJECT;
+  const location = env.GOOGLE_CLOUD_LOCATION || "us-central1";
 
   // Fetch the PEO page
   const pageResponse = await fetch(PEO_PAGE_URL);
@@ -179,9 +203,7 @@ export async function syncPeoOpeningTimes(env: {
       const semesterLabel = links[j].textContent?.trim() ?? `學期${j + 1}`;
       if (!href || !href.endsWith(".pdf")) continue;
 
-      const pdfUrl = href.startsWith("http")
-        ? href
-        : `${PEO_BASE_URL}${href}`;
+      const pdfUrl = href.startsWith("http") ? href : `${PEO_BASE_URL}${href}`;
 
       schedules.push({ semester: semesterLabel, pdf_url: pdfUrl, hours: null });
     }
@@ -245,7 +267,9 @@ export async function syncPeoOpeningTimes(env: {
         const parsed = await parsePdfWithGemini(
           schedule.pdf_url,
           facility.name_zh,
-          env.GOOGLE_AI_API_KEY,
+          credentials,
+          project,
+          location,
         );
         if (parsed) {
           schedule.hours = parsed.hours;
