@@ -1,7 +1,8 @@
-import { describe, expect, it, mock, beforeEach, afterEach } from "bun:test";
+import { describe, expect, it, mock, beforeEach, afterEach, afterAll } from "bun:test";
 import nthuAuth from "../nthuAuth";
 import { setCookie } from "hono/cookie";
 import { HTTPException } from "hono/http-exception";
+import { AuthFlow as _RealAuthFlow } from "../authFlow";
 
 // Mock dependencies
 mock.module("hono/cookie", () => ({
@@ -78,6 +79,13 @@ describe("nthuAuth middleware", () => {
   afterEach(() => {
     // Clean up mocks
     mock.restore();
+  });
+
+  afterAll(() => {
+    // Bun's mock.restore() does not always clean up mock.module() between test
+    // files. Explicitly restore the real AuthFlow so authFlow.test.ts (and any
+    // other subsequent file) gets the real implementation.
+    mock.module("../authFlow", () => ({ AuthFlow: _RealAuthFlow }));
   });
 
   it("should redirect to login if no code is provided", async () => {
