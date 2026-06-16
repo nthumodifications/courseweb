@@ -65,7 +65,7 @@ const Calendar = () => {
     HOUR_HEIGHT,
     timetableSyncReady,
   } = useCalendar();
-  const { courses, colorMap, getSemesterCourses } = useUserTimetable();
+  const { courses, colorMap, getSemesterCourses, isLoading: coursesLoading } = useUserTimetable();
   const { language } = useSettings();
   const isMobile = useIsMobile();
   const dict = useDictionary();
@@ -255,7 +255,7 @@ const Calendar = () => {
   );
 
   const syncTimetable = async () => {
-    if (!timetableSync || !timetableSyncReady || Object.keys(courses).length === 0) return;
+    if (!timetableSync || !timetableSyncReady || coursesLoading || Object.keys(courses).length === 0) return;
 
     // for each semester, check if its already synced
     const timetableCourses: TimetableSyncRequest[] = [];
@@ -301,10 +301,10 @@ const Calendar = () => {
   };
 
   useEffect(() => {
-    if (timetableSyncReady) {
+    if (timetableSyncReady && !coursesLoading) {
       syncTimetable();
     }
-  }, [courses, timetableSync, timetableSyncReady]);
+  }, [courses, timetableSync, timetableSyncReady, coursesLoading]);
 
   const handleSyncAccept = async (
     request: TimetableSyncRequest,
