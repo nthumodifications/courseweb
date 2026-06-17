@@ -5,6 +5,7 @@ import kvHandler from "./kv_storage";
 import replicationHandler from "./replication";
 import apiKeysHandler from "./apikeys";
 import calendarHandler from "./calendar";
+import courseDatesHandler from "./course-dates";
 
 const app = new Hono()
   .use(
@@ -18,6 +19,7 @@ const app = new Hono()
   .route("/kv", kvHandler)
   .route("/replication", replicationHandler)
   .route("/apikeys", apiKeysHandler)
-  .route("/calendar", calendarHandler);
+  .route("/calendar", calendarHandler)
+  .route("/course-dates", courseDatesHandler);
 
 export default app;

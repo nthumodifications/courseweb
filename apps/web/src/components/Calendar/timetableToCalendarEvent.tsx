@@ -53,6 +53,7 @@ export const timetableToCalendarEvent = (
         },
         color: t.color,
         tag: "course",
+        courseId: t.course.raw_id,
       };
     });
 };

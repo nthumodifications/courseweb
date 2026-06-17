@@ -50,6 +50,36 @@ const app = new Hono()
     },
   )
   .get(
+    "/dates",
+    zValidator(
+      "query",
+      z.object({
+        courses: z.union([z.string(), z.array(z.string())]),
+      }),
+    ),
+    async (c) => {
+      const { courses: _courses } = c.req.valid("query");
+      const courses = Array.isArray(_courses) ? _courses : [_courses];
+      const { data, error } = await supabase_server(c)
+        .from("course_dates")
+        .select("*")
+        .in("raw_id", courses);
+      if (error) {
+        console.error(error);
+        return c.json([]);
+      }
+      return c.json(
+        data.map((d) => ({
+          raw_id: d.raw_id,
+          id: d.id,
+          type: d.type,
+          title: d.title,
+          date: d.date,
+        })),
+      );
+    },
+  )
+  .get(
     "/:courseId",
     zValidator(
       "param",

@@ -16,11 +16,13 @@ import { eventsToDisplay } from "@/components/Calendar/calendar_utils";
 import { getContrastColor, getBrightness } from "@/helpers/colors";
 import { EventPopover } from "./EventPopover";
 import { useMediaQuery } from "usehooks-ts";
-import { Fragment, useCallback } from "react";
+import { Fragment, useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarEventInternal } from "@/components/Calendar/calendar.types";
 import { useSettings } from "@/hooks/contexts/settings";
 import client from "@/config/api";
+import useUserTimetable from "@/hooks/contexts/useUserTimetable";
+import useCourseDates from "@/hooks/useCourseDates";
 
 export const CalendarMonthContainer = ({
   displayMonth,
@@ -31,6 +33,12 @@ export const CalendarMonthContainer = ({
 }) => {
   const { events } = useCalendar();
   const { showAcademicCalendar } = useSettings();
+  const { courses } = useUserTimetable();
+  const enrolledCourseIds = useMemo(
+    () => Object.values(courses).flat(),
+    [courses],
+  );
+  const { getCourseDateForDay } = useCourseDates(enrolledCourseIds);
 
   const isScreenMD = useMediaQuery("(min-width: 768px)");
   const rows_length = Math.ceil(displayMonth.length / 7);
@@ -76,11 +84,13 @@ export const CalendarMonthContainer = ({
         startOfDay(day),
         endOfDay(day),
       ).map((event) => {
-        // Determine the text color
+        const courseDate = event.courseId
+          ? getCourseDateForDay(event.courseId, day)
+          : null;
+        const isNoClass = courseDate?.type === "no_class";
         const brightness = getBrightness(event.color);
-        // From the brightness, using the getContrastColor function, create a complementary color that is legible
-        const textColor = getContrastColor(event.color);
-        return { ...event, textColor };
+        const textColor = isNoClass ? "#fff" : getContrastColor(event.color);
+        return { ...event, textColor, courseDate, isNoClass };
       });
 
       // Group overlapping events
@@ -127,17 +137,21 @@ export const CalendarMonthContainer = ({
           {allSortedEvents.map((event, index) => (
             <EventPopover key={index} event={event}>
               <div
-                className="bg-nthu-500 rounded-md p-0.5 md:p-1 flex flex-row gap-1 items-center hover:shadow-md cursor-pointer transition-shadow select-none"
+                className="rounded-md p-0.5 md:p-1 flex flex-row gap-1 items-center hover:shadow-md cursor-pointer transition-shadow select-none"
                 style={{
-                  background: event.color,
+                  background: event.isNoClass
+                    ? "repeating-linear-gradient(-45deg, #9ca3af, #9ca3af 4px, #6b7280 4px, #6b7280 8px)"
+                    : event.color,
                   color: event.textColor,
                   height: isScreenMD ? 20 : 16,
                   width: "100%",
                 }}
               >
-                <div className="hidden md:inline text-[10px] font-normal leading-none">
-                  {format(event.displayStart, "HH:mm")}
-                </div>
+                {!event.isNoClass && (
+                  <div className="hidden md:inline text-[10px] font-normal leading-none">
+                    {format(event.displayStart, "HH:mm")}
+                  </div>
+                )}
                 <div className="text-xs leading-none whitespace-nowrap overflow-hidden">
                   {event.title}
                 </div>
@@ -147,7 +161,7 @@ export const CalendarMonthContainer = ({
         </div>
       );
     },
-    [events, isScreenMD],
+    [events, isScreenMD, getCourseDateForDay],
   );
 
   const renderAllDayEvents = useCallback(
