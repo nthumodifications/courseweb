@@ -1,5 +1,5 @@
 import { useAuth } from "react-oidc-context";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 
 const API_BASE = import.meta.env.VITE_COURSEWEB_API_URL as string;
 
@@ -51,11 +51,6 @@ export type TimetableGroup = {
   updatedAt: string;
 };
 
-function useAuthHeaders(auth: ReturnType<typeof useAuth>) {
-  const token = auth.user?.access_token;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
 async function parseResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const text = await res.text().catch(() => "");
@@ -66,13 +61,14 @@ async function parseResponse<T>(res: Response): Promise<T> {
 
 export function useTimetableShare() {
   const auth = useAuth();
+  const token = auth.user?.access_token;
 
-  const authHeaders = useCallback(
+  const authHeaders = useMemo(
     () => ({
       "Content-Type": "application/json",
-      ...useAuthHeaders(auth),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     }),
-    [auth.user?.access_token],
+    [token],
   );
 
   const getShareView = useCallback(
@@ -105,7 +101,7 @@ export function useTimetableShare() {
 
   const listOwnShares = useCallback(async (): Promise<SharedTimetable[]> => {
     const res = await fetch(`${API_BASE}/timetable-share`, {
-      headers: authHeaders(),
+      headers: authHeaders,
     });
     return parseResponse<SharedTimetable[]>(res);
   }, [authHeaders]);
@@ -126,7 +122,7 @@ export function useTimetableShare() {
     }): Promise<SharedTimetable & { shareUrl: string }> => {
       const res = await fetch(`${API_BASE}/timetable-share`, {
         method: "POST",
-        headers: authHeaders(),
+        headers: authHeaders,
         body: JSON.stringify(data),
       });
       return parseResponse(res);
@@ -152,7 +148,7 @@ export function useTimetableShare() {
     ): Promise<SharedTimetable> => {
       const res = await fetch(`${API_BASE}/timetable-share/${shareId}`, {
         method: "PUT",
-        headers: authHeaders(),
+        headers: authHeaders,
         body: JSON.stringify(data),
       });
       return parseResponse(res);
@@ -164,7 +160,7 @@ export function useTimetableShare() {
     async (shareId: string): Promise<void> => {
       const res = await fetch(`${API_BASE}/timetable-share/${shareId}`, {
         method: "DELETE",
-        headers: authHeaders(),
+        headers: authHeaders,
       });
       await parseResponse(res);
     },
@@ -173,7 +169,7 @@ export function useTimetableShare() {
 
   const listSaved = useCallback(async (): Promise<SavedTimetable[]> => {
     const res = await fetch(`${API_BASE}/timetable-share/saved`, {
-      headers: authHeaders(),
+      headers: authHeaders,
     });
     return parseResponse<SavedTimetable[]>(res);
   }, [authHeaders]);
@@ -186,7 +182,7 @@ export function useTimetableShare() {
     }): Promise<SavedTimetable> => {
       const res = await fetch(`${API_BASE}/timetable-share/saved`, {
         method: "POST",
-        headers: authHeaders(),
+        headers: authHeaders,
         body: JSON.stringify(data),
       });
       return parseResponse(res);
@@ -201,7 +197,7 @@ export function useTimetableShare() {
     ): Promise<SavedTimetable> => {
       const res = await fetch(`${API_BASE}/timetable-share/saved/${savedId}`, {
         method: "PATCH",
-        headers: authHeaders(),
+        headers: authHeaders,
         body: JSON.stringify(data),
       });
       return parseResponse(res);
@@ -213,7 +209,7 @@ export function useTimetableShare() {
     async (savedId: string): Promise<void> => {
       const res = await fetch(`${API_BASE}/timetable-share/saved/${savedId}`, {
         method: "DELETE",
-        headers: authHeaders(),
+        headers: authHeaders,
       });
       await parseResponse(res);
     },
@@ -228,7 +224,7 @@ export function useTimetableShare() {
     }): Promise<TimetableGroup> => {
       const res = await fetch(`${API_BASE}/timetable-share/group`, {
         method: "POST",
-        headers: authHeaders(),
+        headers: authHeaders,
         body: JSON.stringify(data),
       });
       return parseResponse(res);
@@ -245,7 +241,7 @@ export function useTimetableShare() {
         `${API_BASE}/timetable-share/group/${code}/join`,
         {
           method: "POST",
-          headers: authHeaders(),
+          headers: authHeaders,
           body: JSON.stringify(data),
         },
       );
@@ -260,7 +256,7 @@ export function useTimetableShare() {
         `${API_BASE}/timetable-share/group/${code}/leave`,
         {
           method: "DELETE",
-          headers: authHeaders(),
+          headers: authHeaders,
         },
       );
       await parseResponse(res);

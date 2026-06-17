@@ -15,7 +15,7 @@
     "prisma:migration:apply:local": "wrangler d1 migrations apply data-d1 --local",
     "prisma:migration:apply:remote": "wrangler d1 migrations apply data-d1 --remote",
     "wrangler:types": "bunx wrangler types",
-    "build": "tsc --outDir dist --skipLibCheck --noEmitOnError false --allowJs --noImplicitReturns false --noUnusedLocals false --noUnusedParameters false",
+    "build": "bun run prisma:generate && tsc --outDir dist --skipLibCheck --noEmitOnError false --allowJs --noImplicitReturns false --noUnusedLocals false --noUnusedParameters false",
     "clean": "rm -rf dist",
     "lint": "echo 'API lint check'",
     "test": "echo 'API tests'"
