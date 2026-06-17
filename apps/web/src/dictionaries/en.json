@@ -302,7 +302,8 @@
       "add_date": "Add Date",
       "reset": "Reset",
       "submit": "Submit",
-      "accurate_relavent": "Enter only accurate and relavent information!"
+      "accurate_relavent": "Enter only accurate and relavent information!",
+      "sign_in_required": "Sign in to contribute dates for this course"
     }
   },
   "shops": {

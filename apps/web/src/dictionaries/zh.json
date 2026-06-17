@@ -302,7 +302,8 @@
       "add_date": "加日期",
       "reset": "還原",
       "submit": "送出",
-      "accurate_relavent": "請輸入準確並跟此課程有關的日期"
+      "accurate_relavent": "請輸入準確並跟此課程有關的日期",
+      "sign_in_required": "請登入以貢獻課程日期"
     }
   },
   "shops": {

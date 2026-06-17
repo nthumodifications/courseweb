@@ -30,6 +30,8 @@ import { useSettings } from "@/hooks/contexts/settings";
 import client from "@/config/api";
 import { AddEventButton } from "./AddEventButton";
 import { getNearestTime } from "@courseweb/ui";
+import useUserTimetable from "@/hooks/contexts/useUserTimetable";
+import useCourseDates from "@/hooks/useCourseDates";
 
 export const CalendarWeekContainer = ({
   displayWeek,
@@ -38,6 +40,12 @@ export const CalendarWeekContainer = ({
 }) => {
   const { events, addEvent, displayContainer, HOUR_HEIGHT } = useCalendar();
   const { showAcademicCalendar } = useSettings();
+  const { courses } = useUserTimetable();
+  const enrolledCourseIds = useMemo(
+    () => Object.values(courses).flat(),
+    [courses],
+  );
+  const { getCourseDateForDay } = useCourseDates(enrolledCourseIds);
   const [eventFormOpen, setEventFormOpen] = useState(false);
   const [newEventTime, setNewEventTime] = useState<Date | null>(null);
 
@@ -194,8 +202,22 @@ export const CalendarWeekContainer = ({
           (heightMs / (1000 * 60 * 60)) * HOUR_HEIGHT,
         );
 
+        const courseDate = event.courseId
+          ? getCourseDateForDay(event.courseId, day)
+          : null;
+        const isNoClass = courseDate?.type === "no_class";
+        const isSpecialDate = courseDate && !isNoClass;
+
+        const eventBackground = isNoClass
+          ? "repeating-linear-gradient(-45deg, #9ca3af, #9ca3af 4px, #6b7280 4px, #6b7280 8px)"
+          : event.color;
+        const eventTextColor = isNoClass ? "#fff" : event.textColor;
+
         return (
-          <EventPopover key={`${event.id}-${event.displayStart.getTime()}`} event={event}>
+          <EventPopover
+            key={`${event.id}-${event.displayStart.getTime()}`}
+            event={event}
+          >
             <div
               className="absolute pr-0.5 event-item"
               style={{
@@ -208,8 +230,8 @@ export const CalendarWeekContainer = ({
               }}
             >
               <div
-                className="overflow-hidden rounded-md h-full p-1 flex flex-col gap-1 hover:shadow-md cursor-pointer transition-shadow select-none"
-                style={{ background: event.color, color: event.textColor }}
+                className="relative overflow-hidden rounded-md h-full p-1 flex flex-col gap-1 hover:shadow-md cursor-pointer transition-shadow select-none"
+                style={{ background: eventBackground, color: eventTextColor }}
               >
                 <div className="text-xs leading-none">{event.title}</div>
                 <div className="text-xs font-normal leading-none">
@@ -219,13 +241,18 @@ export const CalendarWeekContainer = ({
                 {event.location && (
                   <div className="text-xs leading-none">{event.location}</div>
                 )}
+                {isSpecialDate && (
+                  <div className="text-[9px] leading-none font-semibold uppercase opacity-90 bg-black/20 rounded px-1 py-0.5 self-start">
+                    {courseDate.type}
+                  </div>
+                )}
               </div>
             </div>
           </EventPopover>
         );
       });
     },
-    [events, HOUR_HEIGHT],
+    [events, HOUR_HEIGHT, getCourseDateForDay],
   );
   const dayEvents = useMemo(() => {
     // Step 1: Prepare events with display information
