@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from "react";
+import { FC, useEffect, useRef, useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,24 +17,27 @@ const CalendarTimetableSyncDialog: FC<{
   onSyncAccept: (request: TimetableSyncRequest, accept: boolean) => void;
 }> = ({ request, onSyncAccept }) => {
   const [open, setOpen] = useState(true);
+  const handledRef = useRef(false);
+
   useEffect(() => {
     setOpen(true);
+    handledRef.current = false;
   }, [request]);
 
-  const handleUserClose = () => {
-    if (open) {
-      setOpen(false);
-      onSyncAccept(request, false);
-    }
-  };
-
-  const handleUserSync = () => {
+  const handleClose = (accept: boolean) => {
+    if (handledRef.current) return;
+    handledRef.current = true;
     setOpen(false);
-    onSyncAccept(request, true);
+    onSyncAccept(request, accept);
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
+    <AlertDialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) handleClose(false);
+      }}
+    >
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Timetable Update Found!</AlertDialogTitle>
@@ -45,10 +48,12 @@ const CalendarTimetableSyncDialog: FC<{
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={handleUserClose}>
+          <AlertDialogCancel onClick={() => handleClose(false)}>
             Cancel
           </AlertDialogCancel>
-          <AlertDialogAction onClick={handleUserSync}>Sync</AlertDialogAction>
+          <AlertDialogAction onClick={() => handleClose(true)}>
+            Sync
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

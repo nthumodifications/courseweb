@@ -63,7 +63,12 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
   );
   const { addEvent, displayContainer, HOUR_HEIGHT, timetableSyncReady } =
     useCalendar();
-  const { courses, colorMap, getSemesterCourses } = useUserTimetable();
+  const {
+    courses,
+    colorMap,
+    getSemesterCourses,
+    isLoading: coursesLoading,
+  } = useUserTimetable();
   const { language } = useSettings();
   const isMobile = useIsMobile();
   const dict = useDictionary();
@@ -256,6 +261,7 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
     if (
       !timetableSync ||
       !timetableSyncReady ||
+      coursesLoading ||
       Object.keys(courses).length === 0
     )
       return;
@@ -304,10 +310,10 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
   };
 
   useEffect(() => {
-    if (timetableSyncReady) {
+    if (timetableSyncReady && !coursesLoading) {
       syncTimetable();
     }
-  }, [courses, timetableSync, timetableSyncReady]);
+  }, [courses, timetableSync, timetableSyncReady, coursesLoading]);
 
   const handleSyncAccept = async (
     request: TimetableSyncRequest,
