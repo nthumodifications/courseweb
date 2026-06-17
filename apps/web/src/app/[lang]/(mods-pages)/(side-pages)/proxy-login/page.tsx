@@ -24,125 +24,95 @@ const ProxyLoginExplainerZH = () => {
     <div className="px-4 py-8">
       <div id="hero" className="flex flex-col gap-4 py-8">
         <h1 className="text-5xl font-bold">NTHUMods 代理登入說明</h1>
-        <p className="text-gray-600 dark:text-gray-400">更新時間: 2025/03/04</p>
+        <p className="text-gray-600 dark:text-gray-400">更新時間: 2026/03/19</p>
       </div>
       <article className="prose prose-neutral dark:prose-invert">
         <h2>什麼是 NTHUMods 代理登入？</h2>
         <p>
-          NTHUMods 代理登入是一個幫助用戶在 NTHUMods
-          平台上安全登入清華大學校務資訊系統（CCXP）的工具。它使用加密技術來保護用戶的帳戶和密碼，確保用戶的資訊安全。這是使用
-          <a href="/zh/web-for-beginners/auth">身份驗證系統</a>的重要組成部分。
+          NTHUMods
+          代理登入是一個選用功能，讓您可以安全地連結清華大學校務資訊系統（CCXP），以使用成績查詢、學生證門禁、宿舍包裹等功能。
+          代理登入與主要的 NTHUMods 帳號（OIDC 登入）完全獨立，您無需先登入
+          NTHUMods 即可使用。
         </p>
 
         <div className="bg-blue-100 dark:bg-blue-900 p-4 rounded-lg">
           <p className="text-sm">
-            <strong>注意：</strong> 如需完整的技術詳情，請參閱
-            <a href="/zh/web-for-beginners/auth">身份驗證與會話管理</a>
-            頁面。本頁面提供簡化的概述。
+            <strong>隱私說明：</strong> 您的 CCXP
+            密碼永遠不會儲存在您的裝置上。若您選擇啟用「自動更新」，密碼會以
+            AES-256-GCM 加密後儲存於我們的伺服器，30 天後自動刪除。
           </p>
         </div>
 
-        <h2>代理登入與其他功能的關係</h2>
-        <p>代理登入功能是 NTHUMods 眾多功能的基礎，它使您能夠安全地訪問：</p>
-        <ul>
-          <li>
-            <a href="/zh/web-for-beginners/course">課程資訊和選課功能</a> -
-            瀏覽、搜尋和管理您的課程
-          </li>
-          <li>
-            <a href="/zh/web-for-beginners/grades">成績查詢系統</a> -
-            安全查看您的學業成績
-          </li>
-          <li>
-            <a href="/zh/web-for-beginners/comment-dates">重要日期與評論系統</a>{" "}
-            - 了解關鍵學術日期和課程評論
-          </li>
-          <li>
-            <a href="/zh/web-for-beginners/misc">其他實用工具</a> - 探索更多
-            NTHUMods 提供的功能
-          </li>
-        </ul>
-
-        <h2>如何使用您的帳戶資訊？</h2>
+        <h2>登入流程</h2>
         <p>
-          在使用 NTHUMods
-          代理登入時，我們需要您的學號和密碼來進行首次登入驗證。登入過程簡述如下：
+          代理登入使用 Puppeteer（真實瀏覽器）來處理 CCXP 的機器人防護，搭配 OCR
+          技術自動解讀驗證碼：
         </p>
         <ol>
-          <li>發送請求到校務資訊系統登入頁面，獲取驗證碼圖片。</li>
-          <li>使用 OCR 技術自動解碼驗證碼。</li>
-          <li>提交學號、密碼和驗證碼進行登入。</li>
-          <li>驗證登入狀態並獲取會話令牌。</li>
+          <li>您在 NTHUMods 輸入學號和密碼。</li>
+          <li>我們的伺服器啟動一個真實瀏覽器，前往 CCXP 登入頁面。</li>
+          <li>使用 OCR 技術自動解碼驗證碼圖片。</li>
+          <li>填寫並送出登入表單。</li>
+          <li>獲取會話令牌（ACIXSTORE），返回給您的裝置。</li>
+          <li>您的密碼此後不再傳輸，只有 ACIXSTORE 用於查詢資料。</li>
         </ol>
-        <p className="font-bold">
-          您的資訊僅存儲在用戶設備上！我們不會儲存任何帳戶資料（我們沒錢幫您們儲存）
-        </p>
 
-        <h2>如何保護您的資訊？</h2>
-        <p>我們採取以下基本步驟來保護您的資訊：</p>
-        <ul>
-          <li>
-            <b>您的資訊僅存儲在用戶設備上</b> -
-            所有敏感信息都不會存儲在我們的服務器上。
-          </li>
-          <li>在您的設備上儲存的密碼會使用 AES-256-CBC 加密技術來加密。</li>
-          <li>基本密碼處理流程：</li>
-          <div className="mermaid">
-            {`
-                    graph TD;
-                        A[用戶輸入密碼] -->|加密| B[加密密碼];
-                        B --> C[存儲於用戶設備];
-                        C -->|需要時解密| D[使用密碼登入];
-                    `}
-          </div>
-          <li>
-            <i>
-              更詳細的加密過程請參閱
-              <a href="/zh/web-for-beginners/auth">身份驗證頁面</a>
-            </i>
-          </li>
-        </ul>
-
-        <h2>代理登入基本流程</h2>
-        <p>以下是代理登入的簡化流程，提供基本了解：</p>
         <div className="mermaid">
           {`
-                graph TD;
-                subgraph 用戶設備
-                    A1[用戶輸入學號和密碼] --> B1[發送登入請求];
-                end
-                subgraph 伺服器
-                    B1 --> C1[獲取並處理驗證碼];
-                    C1 --> F1[驗證登入並建立會話];
-                    F1 -->|成功| G1[返回會話令牌];
-                    F1 -->|失敗| H1[返回錯誤];
-                end
-                G1 --> I1[用戶設備];
-                subgraph 自動更新
-                    J1[需要使用CCXP功能時] --> K1[使用加密密碼自動更新會話];
-                end
-                `}
+            graph TD;
+            subgraph 您的裝置
+                A[輸入學號與密碼] --> B[送出登入請求];
+            end
+            subgraph NTHUMods 伺服器
+                B --> C[啟動真實瀏覽器];
+                C --> D[解碼 CAPTCHA];
+                D --> E[登入 CCXP];
+                E -->|成功| F[回傳 ACIXSTORE];
+                E -->|失敗| G[回傳錯誤];
+            end
+            F --> H[儲存 ACIXSTORE 於裝置];
+            subgraph 資料查詢
+                H --> I[使用 ACIXSTORE 查詢成績等資料];
+            end
+          `}
         </div>
-        <p>
-          <i>
-            如需詳細的流程圖和完整說明，請參閱
-            <a href="/zh/web-for-beginners/auth">身份驗證頁面</a>
-          </i>
-        </p>
 
-        <h2>什麽時候會自動重新驗證？</h2>
+        <h2>自動更新（選用）</h2>
         <p>
-          在JWT過期或有開啓鏈接校務資訊系統的功能時（如
-          <a href="/zh/web-for-beginners/course">課程資訊</a>或
-          <a href="/zh/web-for-beginners/grades">成績查詢</a>
-          ），系統將自動更新您的會話。
+          CCXP 的會話令牌（ACIXSTORE）約 30
+          分鐘後過期。若您勾選「儲存認證以自動更新」，系統會：
         </p>
+        <ul>
+          <li>
+            將您的密碼以 <b>AES-256-GCM</b> 加密後儲存於我們的伺服器。
+          </li>
+          <li>當 ACIXSTORE 過期時，自動重新登入 CCXP 並取得新的令牌。</li>
+          <li>
+            每次更新後，原本的認證金鑰會被替換（令牌輪換），降低外洩風險。
+          </li>
+          <li>30 天後自動刪除儲存的認證資料。</li>
+        </ul>
+        <p>若不勾選，會話過期後需手動重新登入。</p>
+
+        <h2>資安說明</h2>
+        <ul>
+          <li>
+            密碼<b>永遠不會儲存在您的裝置</b>上。
+          </li>
+          <li>伺服器上加密儲存的密碼使用獨立的加密金鑰，且金鑰不對外公開。</li>
+          <li>
+            回傳給裝置的 <code>credentialToken</code> 是不透明的
+            UUID，本身不含密碼資訊。
+          </li>
+          <li>登入端點有速率限制，防止暴力嘗試。</li>
+          <li>您可隨時登出，儲存於伺服器的認證資料將立即刪除。</li>
+        </ul>
 
         <h2>參考連結</h2>
         <p>
-          詳細程式碼請參考我們的{" "}
-          <a href="https://github.com/nthumodifications/courseweb/blob/main/src/lib/headless_ais/headless_ais.ts">
-            NTHUMods Github
+          詳細程式碼請參考{" "}
+          <a href="https://github.com/nthumodifications/courseweb">
+            NTHUMods GitHub
           </a>
           。
         </p>
@@ -152,7 +122,6 @@ const ProxyLoginExplainerZH = () => {
   );
 };
 
-// English Version
 const ProxyLoginExplainerEN = () => {
   useMermaid();
   return (
@@ -160,151 +129,119 @@ const ProxyLoginExplainerEN = () => {
       <div id="hero" className="flex flex-col gap-4 py-8">
         <h1 className="text-5xl font-bold">NTHUMods Proxy Login Explained</h1>
         <p className="text-gray-600 dark:text-gray-400">
-          Last Updated: 2025/03/04
+          Last Updated: 2026/03/19
         </p>
       </div>
       <article className="prose prose-neutral dark:prose-invert">
         <h2>What is NTHUMods Proxy Login?</h2>
         <p>
-          {
-            "NTHUMods Proxy Login is a tool that helps users securely log into the NTHU Academic Information System (CCXP) through the NTHUMods platform. It uses encryption technology to protect users' accounts and passwords, ensuring information security. This is an essential component of our "
-          }
-          <a href="/web-for-beginners/auth">Authentication System</a>.
+          NTHUMods Proxy Login is an optional feature that lets you securely
+          connect your NTHU Academic Information System (CCXP) account to access
+          grades, student ID/door access, and parcel tracking. It is completely
+          independent of your NTHUMods account (OIDC login) — no NTHUMods
+          account is required to use it.
         </p>
 
         <div className="bg-blue-100 dark:bg-blue-900 p-4 rounded-lg">
           <p className="text-sm">
-            <strong>Note:</strong> For complete technical details, please refer
-            to the{" "}
-            <a href="/web-for-beginners/auth">
-              Authentication and Session Management
-            </a>{" "}
-            page. This page provides a simplified overview.
+            <strong>Privacy note:</strong> Your CCXP password is never stored on
+            your device. If you opt in to "auto-refresh", your password is
+            encrypted with AES-256-GCM and stored on our server, and
+            automatically deleted after 30 days.
           </p>
         </div>
 
-        <h2>How Proxy Login Connects to Other Features</h2>
+        <h2>How Login Works</h2>
         <p>
-          The proxy login feature is the foundation for many NTHUMods functions,
-          enabling you to securely access:
-        </p>
-        <ul>
-          <li>
-            <a href="/web-for-beginners/course">
-              Course Information and Registration
-            </a>{" "}
-            - Browse, search, and manage your courses
-          </li>
-          <li>
-            <a href="/web-for-beginners/grades">Grade Query System</a> -
-            Securely view your academic records
-          </li>
-          <li>
-            <a href="/web-for-beginners/comment-dates">
-              Important Dates and Course Reviews
-            </a>{" "}
-            - Stay informed of key academic dates and course feedback
-          </li>
-          <li>
-            <a href="/web-for-beginners/misc">Other Useful Tools</a> - Explore
-            additional features offered by NTHUMods
-          </li>
-        </ul>
-
-        <h2>How We Use Your Account Information</h2>
-        <p>
-          When using NTHUMods Proxy Login, we need your student ID and password
-          for initial login verification. The login process is briefly described
-          as follows:
+          Proxy login uses Puppeteer (a real browser) to handle CCXP's bot
+          protection, combined with OCR technology to solve CAPTCHAs:
         </p>
         <ol>
+          <li>You enter your student ID and password in NTHUMods.</li>
           <li>
-            Send a request to the university information system login page to
-            obtain a CAPTCHA image.
+            Our server launches a real browser and navigates to the CCXP login
+            page.
           </li>
-          <li>Use OCR technology to automatically solve the CAPTCHA.</li>
-          <li>Submit student ID, password, and CAPTCHA solution for login.</li>
-          <li>Verify login status and obtain a session token.</li>
+          <li>OCR technology automatically solves the CAPTCHA image.</li>
+          <li>The login form is submitted.</li>
+          <li>
+            A session token (ACIXSTORE) is obtained and returned to your device.
+          </li>
+          <li>
+            Your password is never transmitted again — only ACIXSTORE is used
+            for data queries.
+          </li>
         </ol>
-        <p className="font-bold">
-          {
-            "Your information is stored only on your device! We do not store any account data (we can't afford to store it for you)"
-          }
-          .
-        </p>
 
-        <h2>How We Protect Your Information</h2>
-        <p>We take the following basic steps to protect your information:</p>
-        <ul>
-          <li>
-            <b>Your information is stored only on your device</b> - All
-            sensitive information is never stored on our servers.
-          </li>
-          <li>
-            Passwords stored on your device are encrypted using AES-256-CBC
-            encryption technology.
-          </li>
-          <li>Basic password handling process:</li>
-          <div className="mermaid">
-            {`
-                    graph TD;
-                        A[User enters password] -->|Encryption| B[Encrypted password];
-                        B --> C[Stored on user device];
-                        C -->|Decryption when needed| D[Use password for login];
-                    `}
-          </div>
-          <li>
-            <i>
-              For more detailed encryption process, please refer to the{" "}
-              <a href="/web-for-beginners/auth">Authentication page</a>
-            </i>
-          </li>
-        </ul>
-
-        <h2>Basic Proxy Login Process</h2>
-        <p>
-          Here is a simplified flow of the proxy login, providing a basic
-          understanding:
-        </p>
         <div className="mermaid">
           {`
-                graph TD;
-                subgraph User Device
-                    A1[User enters ID and password] --> B1[Send login request];
-                end
-                subgraph Server
-                    B1 --> C1[Get and process CAPTCHA];
-                    C1 --> F1[Verify login and establish session];
-                    F1 -->|Success| G1[Return session token];
-                    F1 -->|Failure| H1[Return error];
-                end
-                G1 --> I1[User Device];
-                subgraph Automatic Updates
-                    J1[When CCXP features are needed] --> K1[Automatically update session using encrypted password];
-                end
-                `}
+            graph TD;
+            subgraph Your Device
+                A[Enter student ID and password] --> B[Send login request];
+            end
+            subgraph NTHUMods Server
+                B --> C[Launch real browser];
+                C --> D[Solve CAPTCHA via OCR];
+                D --> E[Login to CCXP];
+                E -->|Success| F[Return ACIXSTORE];
+                E -->|Failure| G[Return error];
+            end
+            F --> H[Store ACIXSTORE on device];
+            subgraph Data Queries
+                H --> I[Use ACIXSTORE to fetch grades, etc.];
+            end
+          `}
         </div>
+
+        <h2>Auto-Refresh (Optional)</h2>
         <p>
-          <i>
-            For detailed flowcharts and complete explanations, please refer to
-            the <a href="/web-for-beginners/auth">Authentication page</a>
-          </i>
+          CCXP session tokens (ACIXSTORE) expire after approximately 30 minutes.
+          If you check "Save credentials for auto-refresh", the system will:
+        </p>
+        <ul>
+          <li>
+            Encrypt your password with <b>AES-256-GCM</b> and store it securely
+            on our server.
+          </li>
+          <li>Automatically re-login to CCXP when your ACIXSTORE expires.</li>
+          <li>
+            Rotate the credential token on each refresh, reducing the risk of
+            compromise.
+          </li>
+          <li>Automatically delete stored credentials after 30 days.</li>
+        </ul>
+        <p>
+          Without this option, you will need to log in again manually when your
+          session expires.
         </p>
 
-        <h2>When Automatic Re-authentication Occurs</h2>
-        <p>
-          When your JWT expires or when you access features linked to the
-          university information system (such as{" "}
-          <a href="/web-for-beginners/course">Course Information</a> or{" "}
-          <a href="/web-for-beginners/grades">Grade Queries</a>), the system
-          automatically updates your session.
-        </p>
+        <h2>Security Details</h2>
+        <ul>
+          <li>
+            Your password is <b>never stored on your device</b>.
+          </li>
+          <li>
+            Server-side encrypted passwords use a private encryption key that is
+            never exposed.
+          </li>
+          <li>
+            The <code>credentialToken</code> returned to your device is an
+            opaque UUID — it contains no password information.
+          </li>
+          <li>
+            The login endpoint is rate-limited to prevent brute-force attacks.
+          </li>
+          <li>
+            You can log out at any time; stored server credentials are
+            immediately deleted.
+          </li>
+        </ul>
 
         <h2>References</h2>
         <p>
           For detailed code, please refer to our{" "}
-          <a href="https://github.com/nthumodifications/courseweb/blob/main/src/lib/headless_ais/headless_ais.ts">
-            NTHUMods Github
+          <a href="https://github.com/nthumodifications/courseweb">
+            NTHUMods GitHub
           </a>
           .
         </p>
@@ -313,6 +250,7 @@ const ProxyLoginExplainerEN = () => {
     </div>
   );
 };
+
 const ProxyLoginExplainerPage = () => {
   const { lang } = useParams<{ lang: string }>();
   return (

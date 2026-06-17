@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@algolia/requester-fetch": "^4.23.3",
+    "@cloudflare/puppeteer": "^1.0.6",
     "@cloudflare/workers-types": "^4.20250414.0",
     "@courseweb/database": "*",
     "@courseweb/shared": "*",

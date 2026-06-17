@@ -8,7 +8,7 @@ const PEO_BASE_URL = "https://nthupeo.site.nthu.edu.tw";
 export const SPORTS_CACHE_KEY = "peo_opening_times";
 
 export interface TimeSlot {
-  open: string;  // "HH:MM" 24-hour
+  open: string; // "HH:MM" 24-hour
   close: string; // "HH:MM" 24-hour
 }
 
@@ -179,9 +179,7 @@ export async function syncPeoOpeningTimes(env: {
       const semesterLabel = links[j].textContent?.trim() ?? `學期${j + 1}`;
       if (!href || !href.endsWith(".pdf")) continue;
 
-      const pdfUrl = href.startsWith("http")
-        ? href
-        : `${PEO_BASE_URL}${href}`;
+      const pdfUrl = href.startsWith("http") ? href : `${PEO_BASE_URL}${href}`;
 
       schedules.push({ semester: semesterLabel, pdf_url: pdfUrl, hours: null });
     }

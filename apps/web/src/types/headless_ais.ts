@@ -3,11 +3,12 @@ export type HeadlessAISStorage =
   | {
       enabled: true;
       studentid: string;
-      password: string;
-      encrypted: boolean;
+      user: UserJWTDetails;
       ACIXSTORE?: string;
+      hasStoredCredentials: boolean; // Whether server-side creds exist (token in httpOnly cookie)
       lastUpdated: number;
       expired: boolean;
+      consentGiven: boolean; // User acknowledged privacy risks
     };
 
 export enum LoginError {

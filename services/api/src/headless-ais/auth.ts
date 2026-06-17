@@ -1,289 +1,234 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
-import { parseHTML } from "linkedom/worker";
+import { getCookie, setCookie, deleteCookie } from "hono/cookie";
 import { z } from "zod";
+import type { Bindings } from "../index";
+import { loginToCCXP, CCXPLoginError } from "./browser-login";
+import {
+  storeCredential,
+  retrieveCredential,
+  revokeCredential,
+  cleanupExpired,
+} from "./credential-store";
+import prismaClients from "../prisma/client";
 
-enum LoginError {
-  IncorrectCredentials = "IncorrectCredentials",
-  CaptchaError = "CaptchaError",
-  Unknown = "Unknown",
+const COOKIE_NAME = "ccxp_credential_token";
+const COOKIE_MAX_AGE = 30 * 24 * 60 * 60; // 30 days in seconds
+
+function getClientIP(c: {
+  req: { header: (name: string) => string | undefined };
+}): string {
+  return (
+    c.req.header("cf-connecting-ip") ??
+    c.req.header("x-forwarded-for")?.split(",")[0]?.trim() ??
+    "unknown-ip"
+  );
 }
 
-type UserJWTDetails = {
-  studentid: string;
-  name_zh: string;
-  name_en: string;
-  department: string;
-  grade: string;
-  email: string;
-};
+function setCredentialCookie(c: any, token: string) {
+  setCookie(c, COOKIE_NAME, token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "Strict",
+    path: "/ccxp/auth",
+    maxAge: COOKIE_MAX_AGE,
+  });
+}
 
-type SignInToCCXPResponse = Promise<
-  | {
-      ACIXSTORE: string;
-      passwordExpired: boolean;
-      data: UserJWTDetails;
-    }
-  | { error: { message: string } }
->;
+function getEncKey(c: any): string {
+  return (
+    c.env.NTHU_HEADLESS_AIS_ENCRYPTION_KEY ??
+    process.env.NTHU_HEADLESS_AIS_ENCRYPTION_KEY ??
+    ""
+  );
+}
 
-const app = new Hono().post(
-  "/login",
-  zValidator(
-    "form",
-    z.object({
-      studentid: z.string().nonempty(),
-      password: z.string().nonempty(),
-    }),
-  ),
-  async (c) => {
-    const { studentid, password } = c.req.valid("form");
-
-    const connectionHeaders = {
-      accept:
-        "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-      "accept-language": "en-US,en;q=0.9",
-      "cache-control": "max-age=0",
-      "upgrade-insecure-requests": "1",
-      Referer: "https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/index.php",
-    };
-
-    let startTime = Date.now();
-    const ocrAndLogin: (
-      _try?: number,
-    ) => Promise<{ ACIXSTORE: string; passwordExpired: boolean }> = async (
-      _try = 0,
-    ) => {
-      if (_try == 3) {
-        throw new Error(LoginError.Unknown);
-      }
-      let tries = 0,
-        pwdstr = "",
-        answer = "";
-      do {
-        tries++;
-        try {
-          console.log("Fetching login page");
-          const res = await fetch(
-            "https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/",
-            {
-              headers: connectionHeaders,
-              body: null,
-              method: "GET",
-            },
-          );
-
-          const resHTML = await res.arrayBuffer().then((buffer) => {
-            const decoder = new TextDecoder("big5");
-            const text = decoder.decode(buffer);
-            return text;
-          });
-
-          // check if title is correct "國立清華大學 -- 校務資訊系統 - "
-          if (!resHTML.includes("國立清華大學 -- 校務資訊系統")) {
-            console.error("Title not found");
-            continue;
-          }
-          pwdstr = resHTML.match(
-            /auth_img\.php\?pwdstr=([a-zA-Z0-9_-]+)/,
-          )?.[1]!;
-          if (!pwdstr) {
-            console.error("pwdstr not found");
-            continue;
-          }
-          console.log("pwdstr: ", pwdstr);
-          console.log("Time taken", Date.now() - startTime);
-
-          startTime = Date.now();
-          //fetch the image and check if its a image/png
-          const img = await fetch(
-            `https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/auth_img.php?pwdstr=${pwdstr}`,
-          ).then((res) => res.blob());
-          if (img.type != "image/png") {
-            console.error("Image is not PNG");
-            continue;
-          }
-          console.error("Valid PNG");
-
-          //fetch the image from the url and send as base64
-          console.log("Fetching CAPTCHA");
-          answer = await fetch(
-            `${process.env.NTHUMODS_OCR_BASE_URL}/?url=https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/auth_img.php?pwdstr=${pwdstr}`,
-          ).then((res) => res.text());
-          console.log("Time taken", Date.now() - startTime);
-
-          if (answer.length == 6) break;
-        } catch (err) {
-          console.error("fetch login err", err);
-          // throw new Error(LoginError.Unknown);
-          continue;
-        }
-      } while (tries < 3);
-      if (tries == 3 || answer.length != 6) {
-        throw new Error("OCR Failed Utterly");
-      }
-      console.log("Attempt Login");
-      const response = await fetch(
-        "https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/pre_select_entry.php",
-        {
-          headers: {
-            ...connectionHeaders,
-            "content-type": "application/x-www-form-urlencoded",
-          },
-          body: `account=${encodeURIComponent(studentid)}&passwd=${encodeURIComponent(password)}&passwd2=${answer}&Submit=%B5n%A4J&fnstr=${pwdstr}`,
-          method: "POST",
-        },
-      );
-
-      const resHTML = await response.arrayBuffer().then((buffer) => {
-        const decoder = new TextDecoder("big5");
-        const text = decoder.decode(buffer);
-        return text;
+// Chained route definitions for Hono RPC type inference
+const app = new Hono<{ Bindings: Bindings }>()
+  // POST /ccxp/auth/login
+  .post(
+    "/login",
+    zValidator(
+      "form",
+      z.object({
+        studentid: z.string().nonempty(),
+        password: z.string().nonempty(),
+        store_credentials: z.string().optional(),
+      }),
+    ),
+    async (c) => {
+      const { success } = await c.env.LOGIN_RATE_LIMITER.limit({
+        key: getClientIP(c),
       });
-
-      if (resHTML.includes("System Error!")) {
-        console.error("System Error!");
-        return await ocrAndLogin(_try++);
-      }
-
-      const redirectMatch = resHTML.match(
-        /(select_entry\.php\?ACIXSTORE=[a-zA-Z0-9_-]+&hint=[0-9]+)/,
-      );
-      if (!redirectMatch) {
-        console.log(resHTML);
-        console.error("Redirect URL not found");
-        return await ocrAndLogin(_try++);
-      }
-      //Check if login credentials are correct
-      const newHTML = await fetch(
-        "https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/" + redirectMatch?.[1],
-        {
-          headers: connectionHeaders,
-          body: null,
-          method: "GET",
-        },
-      )
-        .then((response) => response.arrayBuffer())
-        .then((buffer) => {
-          const decoder = new TextDecoder("big5");
-          const text = decoder.decode(buffer);
-          return text;
-        });
-      console.log("Time taken", Date.now() - startTime);
-      startTime = Date.now();
-
-      const passwordExpired = !!newHTML.match("個人密碼修改");
-      if (resHTML.match("驗證碼輸入錯誤!")) {
-        console.error("CAPTCHA is incorrect");
-        return await ocrAndLogin(_try++);
-      } else if (resHTML.match("15分鐘內登錄錯誤")) {
-        console.error("too many login attempts");
-        throw new Error(LoginError.CaptchaError);
-      }
-      //CAPTCHA IS CORRECT: check if select_entry.php is correct  (if not, then login credentials are wrong)
-      else if (newHTML.match("帳號或密碼錯誤")) {
-        console.error("Login credentials are incorrect");
-        throw new Error(LoginError.IncorrectCredentials);
-      } else if (resHTML.match(/ACIXSTORE=([a-zA-Z0-9_-]+)/)?.length == 0) {
-        console.error("ACIXSTORE not found");
-        return await ocrAndLogin(_try++);
-      } else {
-        const ACIXSTORE = resHTML.match(/ACIXSTORE=([a-zA-Z0-9_-]+)/)?.[1];
-        if (!ACIXSTORE) {
-          console.error("ACIXSTORE not found after login", resHTML);
-          return await ocrAndLogin(_try++);
-        }
-        return { ACIXSTORE, passwordExpired };
-      }
-    };
-    const result = await ocrAndLogin();
-
-    const isExchangeStudent =
-      studentid.startsWith("X") || studentid.startsWith("x");
-
-    const data = await (async () => {
-      if (!isExchangeStudent) {
-        console.log("Fetching user details");
-        const html = await fetch(
-          `https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/4/4.19/JH4j002.php?ACIXSTORE=${result.ACIXSTORE}&user_lang=`,
+      if (!success) {
+        return c.json(
           {
-            headers: {
-              "User-Agent":
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36",
-              Accept: "application/json",
-              "Accept-Encoding": "gzip, deflate, br",
+            error: {
+              message: "Too many login attempts. Please try again later.",
             },
-            body: null,
-            method: "GET",
           },
-        )
-          .then((res) => res.arrayBuffer())
-          .then((arrayBuffer) =>
-            new TextDecoder("big5").decode(new Uint8Array(arrayBuffer)),
-          );
-        const { document: doc } = parseHTML(html, "text/html");
-
-        const form = doc.querySelector('form[name="register"]');
-        if (form == null) {
-          throw new Error(LoginError.Unknown);
-        }
-
-        console.log("Time taken", Date.now() - startTime);
-        startTime = Date.now();
-
-        const firstRow = form.querySelector("tr:nth-child(1)")!;
-        const secondRow = form.querySelector("tr:nth-child(2)")!;
-
-        const data = {
-          studentid:
-            firstRow
-              .querySelector(".class3:nth-child(2)")
-              ?.textContent?.trim() ?? "",
-          name_zh:
-            firstRow
-              .querySelector(".class3:nth-child(4)")
-              ?.textContent?.trim() ?? "",
-          name_en:
-            firstRow
-              .querySelector(".class3:nth-child(6)")
-              ?.textContent?.trim() ?? "",
-          department:
-            secondRow
-              .querySelector(".class3:nth-child(2)")
-              ?.textContent?.trim() ?? "",
-          grade:
-            secondRow
-              .querySelector(".class3:nth-child(4)")
-              ?.textContent?.trim() ?? "",
-          email:
-            form.querySelector('input[name="email"]')?.getAttribute("value") ??
-            "",
-        } as UserJWTDetails;
-
-        if (
-          form
-            .querySelector('input[name="ACIXSTORE"]')
-            ?.getAttribute("value") != result.ACIXSTORE
-        ) {
-          throw new Error(LoginError.Unknown);
-        }
-        return { ...result, data };
-      } else {
-        // Exchange students don't have details page, so we just fill the data with blanks
-        const data = {
-          studentid: studentid,
-          name_zh: "交換生",
-          name_en: "Exchange Student",
-          department: "Have fun!",
-          grade: "9",
-          email: "-",
-        } as UserJWTDetails;
-        return { ...result, data };
+          429,
+        );
       }
-    })();
 
-    return c.json(data);
-  },
-);
+      const { studentid, password, store_credentials } = c.req.valid("form");
+      const ocrBaseUrl =
+        c.env.NTHUMODS_OCR_BASE_URL ?? process.env.NTHUMODS_OCR_BASE_URL ?? "";
+
+      try {
+        const result = await loginToCCXP(
+          c.env.BROWSER,
+          ocrBaseUrl,
+          studentid,
+          password,
+        );
+
+        let hasStoredCredentials = false;
+
+        if (store_credentials === "true") {
+          const encKey = getEncKey(c);
+          if (encKey) {
+            const prisma = await prismaClients.fetch(c.env.DB);
+            const credentialToken = await storeCredential(
+              prisma,
+              studentid,
+              password,
+              encKey,
+            );
+            setCredentialCookie(c, credentialToken);
+            hasStoredCredentials = true;
+          }
+        }
+
+        return c.json({
+          ACIXSTORE: result.ACIXSTORE,
+          passwordExpired: result.passwordExpired,
+          data: result.data,
+          hasStoredCredentials,
+        });
+      } catch (err) {
+        if (err instanceof CCXPLoginError) {
+          const messages: Record<string, string> = {
+            IncorrectCredentials: "Incorrect student ID or password.",
+            CaptchaError:
+              "Too many failed login attempts on CCXP. Please wait 15 minutes.",
+            OCRFailed: "CAPTCHA solving failed. Please try again.",
+            Unknown: "An unexpected error occurred. Please try again.",
+          };
+          return c.json(
+            { error: { message: messages[err.code] ?? "Login failed." } },
+            err.code === "IncorrectCredentials" ? 401 : 500,
+          );
+        }
+        console.error("auth/login error");
+        return c.json({ error: { message: "Login failed." } }, 500);
+      }
+    },
+  )
+  // POST /ccxp/auth/refresh
+  .post("/refresh", async (c) => {
+    const { success } = await c.env.LOGIN_RATE_LIMITER.limit({
+      key: `refresh:${getClientIP(c)}`,
+    });
+    if (!success) {
+      return c.json(
+        {
+          error: {
+            message: "Too many refresh attempts. Please try again later.",
+          },
+        },
+        429,
+      );
+    }
+
+    const credentialToken = getCookie(c, COOKIE_NAME);
+    if (!credentialToken) {
+      return c.json(
+        {
+          error: {
+            message: "No stored credentials found. Please log in again.",
+          },
+        },
+        401,
+      );
+    }
+
+    const encKey = getEncKey(c);
+    if (!encKey) {
+      return c.json(
+        { error: { message: "Server credential storage not configured." } },
+        503,
+      );
+    }
+
+    const prisma = await prismaClients.fetch(c.env.DB);
+    const creds = await retrieveCredential(prisma, credentialToken, encKey);
+    if (!creds) {
+      deleteCookie(c, COOKIE_NAME, { path: "/ccxp/auth" });
+      return c.json(
+        {
+          error: {
+            message:
+              "Credential token expired or not found. Please log in again.",
+          },
+        },
+        401,
+      );
+    }
+
+    const ocrBaseUrl =
+      c.env.NTHUMODS_OCR_BASE_URL ?? process.env.NTHUMODS_OCR_BASE_URL ?? "";
+
+    try {
+      const result = await loginToCCXP(
+        c.env.BROWSER,
+        ocrBaseUrl,
+        creds.studentId,
+        creds.password,
+      );
+
+      // Rotate token: delete old, create new
+      await revokeCredential(prisma, credentialToken);
+      const newToken = await storeCredential(
+        prisma,
+        creds.studentId,
+        creds.password,
+        encKey,
+      );
+      setCredentialCookie(c, newToken);
+
+      return c.json({ ACIXSTORE: result.ACIXSTORE });
+    } catch (err) {
+      if (err instanceof CCXPLoginError) {
+        return c.json(
+          { error: { message: "Re-login failed. Please log in again." } },
+          401,
+        );
+      }
+      return c.json({ error: { message: "Refresh failed." } }, 500);
+    }
+  })
+  // POST /ccxp/auth/logout
+  .post("/logout", async (c) => {
+    const credentialToken = getCookie(c, COOKIE_NAME);
+    if (credentialToken) {
+      const prisma = await prismaClients.fetch(c.env.DB);
+      await revokeCredential(prisma, credentialToken);
+    }
+    deleteCookie(c, COOKIE_NAME, { path: "/ccxp/auth" });
+    return c.json({ success: true });
+  })
+  // POST /ccxp/auth/cleanup — rate-limited to prevent abuse
+  .post("/cleanup", async (c) => {
+    const { success } = await c.env.LOGIN_RATE_LIMITER.limit({
+      key: `cleanup:${getClientIP(c)}`,
+    });
+    if (!success) {
+      return c.json({ error: { message: "Too many requests." } }, 429);
+    }
+    const prisma = await prismaClients.fetch(c.env.DB);
+    const count = await cleanupExpired(prisma);
+    return c.json({ purged: count });
+  });
 
 export default app;

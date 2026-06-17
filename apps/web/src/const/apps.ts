@@ -9,6 +9,9 @@ import {
   SquareGanttChart,
   Sparkles,
   Dumbbell,
+  GraduationCap,
+  CreditCard,
+  Package,
 } from "lucide-react";
 
 export const categories: {
@@ -125,5 +128,29 @@ export const apps: {
     href: "/student/planner",
     Icon: SquareGanttChart,
     beta: true,
+  },
+  {
+    id: "grades",
+    category: "other",
+    title_zh: "成績查詢",
+    title_en: "Grades",
+    href: "/student/grades",
+    Icon: GraduationCap,
+  },
+  {
+    id: "student-id",
+    category: "other",
+    title_zh: "學生證 & 門禁",
+    title_en: "Student ID & Door Access",
+    href: "/student/id",
+    Icon: CreditCard,
+  },
+  {
+    id: "parcel",
+    category: "other",
+    title_zh: "宿舍包裹",
+    title_en: "Parcel Tracking",
+    href: "/student/parcel",
+    Icon: Package,
   },
 ];

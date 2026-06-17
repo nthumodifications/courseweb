@@ -176,9 +176,7 @@ function matchFacility(
   if (match) return match;
   // Substring match (occupancy name may be shorter)
   match = facilities.find(
-    (f) =>
-      f.name_zh.includes(name) ||
-      name.includes(f.name_zh.slice(0, 3)),
+    (f) => f.name_zh.includes(name) || name.includes(f.name_zh.slice(0, 3)),
   );
   return match;
 }
@@ -373,7 +371,8 @@ const SportsVenuesPage = () => {
       {/* Venue list */}
       <div className="flex flex-col divide-y divide-slate-100 dark:divide-neutral-700">
         {items.map(({ item, facility, todaySlots }) => {
-          const displayName = OCCUPANCY_NAME_ALIASES[item.project_name] ?? item.project_name;
+          const displayName =
+            OCCUPANCY_NAME_ALIASES[item.project_name] ?? item.project_name;
           const { capacity, Icon } = venueInfo(displayName);
           const ratio = Math.min(item.entry_count_now / capacity, 1);
           const pct = Math.round(ratio * 100);
