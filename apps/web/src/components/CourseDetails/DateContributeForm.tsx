@@ -78,7 +78,9 @@ const DateContributeForm = ({
       const dates = await res.json();
       console.log("fetched dates", dates);
       if (dates == null) throw new Error("Failed to fetch dates");
-      return dates.map((d) => ({
+      return (
+        dates as { id: number; type: string; title: string; date: string }[]
+      ).map((d) => ({
         id: d.id,
         title: d.title,
         type: d.type as "exam" | "quiz" | "no_class",
@@ -149,9 +151,7 @@ const DateContributeForm = ({
             <p className="text-sm text-muted-foreground text-center">
               {dict.dialogs.DateContributeForm.sign_in_required}
             </p>
-            <Button onClick={() => auth.signinRedirect()}>
-              {dict.auth?.sign_in ?? "Sign in"}
-            </Button>
+            <Button onClick={() => auth.signinRedirect()}>Sign in</Button>
           </div>
         ) : (
           <div className="flex flex-col gap-4">
