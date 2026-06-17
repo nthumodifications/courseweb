@@ -18,7 +18,6 @@ import mcpServer from "./mcp-server";
 import search from "./search";
 import bus from "./bus";
 import chat from "./chat";
-import ai from "./ai";
 import graduation from "./graduation";
 import shortlinkRedirect from "./shortlink-redirect";
 import sports from "./sports";
@@ -58,7 +57,6 @@ export const app = new Hono<{ Bindings: Bindings }>()
   .route("/search", search)
   .route("/bus", bus)
   .route("/chat", chat)
-  .route("/ai", ai)
   .route("/graduation", graduation)
   .route("/l", shortlinkRedirect)
   .route("/sports", sports);
