@@ -32,7 +32,12 @@ const CalendarTimetableSyncDialog: FC<{
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={(isOpen) => { if (!isOpen) handleClose(false); }}>
+    <AlertDialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) handleClose(false);
+      }}
+    >
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Timetable Update Found!</AlertDialogTitle>
@@ -46,7 +51,9 @@ const CalendarTimetableSyncDialog: FC<{
           <AlertDialogCancel onClick={() => handleClose(false)}>
             Cancel
           </AlertDialogCancel>
-          <AlertDialogAction onClick={() => handleClose(true)}>Sync</AlertDialogAction>
+          <AlertDialogAction onClick={() => handleClose(true)}>
+            Sync
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

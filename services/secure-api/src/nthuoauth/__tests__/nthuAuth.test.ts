@@ -1,4 +1,12 @@
-import { describe, expect, it, mock, beforeEach, afterEach, afterAll } from "bun:test";
+import {
+  describe,
+  expect,
+  it,
+  mock,
+  beforeEach,
+  afterEach,
+  afterAll,
+} from "bun:test";
 import nthuAuth from "../nthuAuth";
 import { setCookie } from "hono/cookie";
 import { HTTPException } from "hono/http-exception";

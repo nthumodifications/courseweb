@@ -83,6 +83,15 @@ const OfflinePage = lazy(
   () => import("@/app/[lang]/(mods-pages)/offline/page"),
 );
 const DesignSystemPage = lazy(() => import("@/pages/DesignSystem"));
+const TimetableShareViewPage = lazy(
+  () => import("@/app/[lang]/(mods-pages)/timetable/share/[shareId]/page"),
+);
+const CommunityPage = lazy(
+  () => import("@/app/[lang]/(mods-pages)/community/page"),
+);
+const GroupViewPage = lazy(
+  () => import("@/app/[lang]/(mods-pages)/group/[code]/page"),
+);
 
 // Separate layout page
 const WaitlistPage = lazy(() => import("@/app/[lang]/waitlist/page"));
@@ -404,6 +413,28 @@ export const router = createBrowserRouter([
                   titleZh: "設計系統",
                   noindex: true,
                 },
+              },
+              {
+                path: "timetable/share/:shareId",
+                element: <TimetableShareViewPage />,
+                handle: { title: "Shared Timetable", noindex: true },
+              },
+              {
+                path: "community",
+                element: <CommunityPage />,
+                handle: {
+                  title: "Community Timetables",
+                  titleZh: "社群課表",
+                  description:
+                    "Browse timetables shared by NTHU students. See what courses others are taking and get insights on difficulty and grades.",
+                  descriptionZh:
+                    "瀏覽清大學生分享的課表，了解他人選課情況及課程難易度。",
+                },
+              },
+              {
+                path: "group/:code",
+                element: <GroupViewPage />,
+                handle: { title: "Timetable Group", noindex: true },
               },
               {
                 path: "*",

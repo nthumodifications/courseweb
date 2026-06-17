@@ -111,6 +111,23 @@ export const CourseSearchContainerDynamic = () => (
   </Suspense>
 );
 
+const ShareTimetableDialogLazy = lazy(() => import("./ShareTimetableDialog"));
+export const ShareTimetableDialogDynamic = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => (
+  <Suspense
+    fallback={
+      <Button variant="outline" disabled>
+        <Loader2 className="w-4 h-4 animate-spin" />
+      </Button>
+    }
+  >
+    <ShareTimetableDialogLazy>{children}</ShareTimetableDialogLazy>
+  </Suspense>
+);
+
 interface DisplaySettings {
   englishNames: "add" | "replace" | "none";
   showCourseCode: boolean;
