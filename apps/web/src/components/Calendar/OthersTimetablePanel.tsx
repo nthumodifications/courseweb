@@ -246,7 +246,7 @@ const OthersTimetablePanel = ({
           size="sm"
           variant="outline"
           className="h-7 text-xs"
-          onClick={() => navigate(`/${lang}/community`)}
+          onClick={() => navigate(`/${lang}/timetable/community`)}
         >
           Browse
         </Button>

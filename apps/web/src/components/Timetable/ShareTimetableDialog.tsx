@@ -210,7 +210,7 @@ function GroupsTab({
         sharedTimetableId: selectedShareId || undefined,
       }),
     onSuccess: (group) => {
-      const inviteUrl = `${window.location.origin}/${lang}/group/${group.inviteCode}`;
+      const inviteUrl = `${window.location.origin}/${lang}/timetable/group/${group.inviteCode}`;
       setCreatedInviteUrl(inviteUrl);
       const stored: StoredGroup = {
         code: group.inviteCode,
@@ -342,7 +342,7 @@ function GroupsTab({
         ) : (
           <div className="flex flex-col gap-3">
             {storedGroups.map((g) => {
-              const inviteUrl = `${window.location.origin}/${lang}/group/${g.code}`;
+              const inviteUrl = `${window.location.origin}/${lang}/timetable/group/${g.code}`;
               const isCopied = copiedGroup === g.code;
               return (
                 <div
@@ -373,7 +373,9 @@ function GroupsTab({
                     size="sm"
                     variant="outline"
                     className="h-7 shrink-0"
-                    onClick={() => navigate(`/${lang}/group/${g.code}`)}
+                    onClick={() =>
+                      navigate(`/${lang}/timetable/group/${g.code}`)
+                    }
                   >
                     Open
                   </Button>

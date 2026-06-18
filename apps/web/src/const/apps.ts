@@ -9,6 +9,7 @@ import {
   SquareGanttChart,
   Sparkles,
   Dumbbell,
+  Users,
 } from "lucide-react";
 
 export const categories: {
@@ -99,6 +100,14 @@ export const apps: {
     title_en: "Calendar",
     href: "/calendar",
     Icon: CalendarIcon,
+  },
+  {
+    id: "timetable-community",
+    category: "course",
+    title_zh: "社群課表",
+    title_en: "Community Timetables",
+    href: "/timetable/community",
+    Icon: Users,
   },
   {
     id: "clubs_info",

@@ -134,7 +134,7 @@ const TimetableSidebar = ({
       <Button
         variant="ghost"
         className="w-full justify-start"
-        onClick={() => navigate(`/${lang}/community`)}
+        onClick={() => navigate(`/${lang}/timetable/community`)}
       >
         <Globe className="w-4 h-4 mr-2" />
         Community Timetables
