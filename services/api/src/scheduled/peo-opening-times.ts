@@ -51,9 +51,7 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
 async function parsePdfWithGemini(
   pdfUrl: string,
   facilityNameZh: string,
-  credentials: object,
-  project: string,
-  location: string,
+  apiKey: string,
 ): Promise<{ name_en: string; hours: DaySchedule } | null> {
   try {
     const response = await fetch(pdfUrl);
@@ -62,17 +60,9 @@ async function parsePdfWithGemini(
     const pdfBuffer = await response.arrayBuffer();
     const base64Data = arrayBufferToBase64(pdfBuffer);
 
-    const ai = new GoogleGenAI({
-      vertexai: true,
-      project,
-      location,
-      googleAuthOptions: {
-        credentials,
-        scopes: ["https://www.googleapis.com/auth/cloud-platform"],
-      },
-    });
+    const ai = new GoogleGenAI({ apiKey });
     const result = await ai.models.generateContent({
-      model: "gemini-2.0-flash-lite",
+      model: "gemini-2.0-flash",
       contents: [
         {
           role: "user",
@@ -86,9 +76,18 @@ async function parsePdfWithGemini(
             {
               text: `This is an opening hours schedule PDF for the NTHU (National Tsing Hua University) sports facility: "${facilityNameZh}".
 
-Extract the opening hours and return ONLY a JSON object in this exact format:
+STEP 1 — List ALL distinct time periods found anywhere in the PDF in chronological order
+         (e.g. "09:10-09:40", "09:40-10:20", "13:00-14:00", ...).
+
+STEP 2 — For each day of the week, determine which of those time periods represent
+         PUBLICLY OPEN access (開放 / 一般開放).
+         EXCLUDE: reserved sessions (預約/借場), cleaning (清潔/消毒),
+         maintenance (維修/維護), or anything not open to the general public.
+
+Return ONLY this JSON object:
 {
   "name_en": "English name of the facility",
+  "time_periods": ["HH:MM-HH:MM", ...],
   "monday": [{"open": "HH:MM", "close": "HH:MM"}],
   "tuesday": [{"open": "HH:MM", "close": "HH:MM"}],
   "wednesday": [{"open": "HH:MM", "close": "HH:MM"}],
@@ -101,10 +100,9 @@ Extract the opening hours and return ONLY a JSON object in this exact format:
 }
 
 Rules:
-- Each day is an ARRAY of time slots (a facility may open in the morning, close at noon, then reopen in the afternoon — list each session as a separate object)
+- time_periods lists every distinct period found in the PDF
+- Each day is an ARRAY of PUBLICLY OPEN time slots only; use [] if closed or no public access
 - Use 24-hour HH:MM format
-- If a day is closed, use an empty array []
-- If multiple days share the same hours, still list each day separately
 - "holiday" means national holidays; use [] if closed
 - "name_en" should be the standard English name for this type of facility`,
             },
@@ -149,28 +147,19 @@ Rules:
   }
 }
 
-export async function syncPeoOpeningTimes(env: {
-  DB: D1Database;
-  GOOGLE_CLOUD_SERVICE_ACCOUNT?: string;
-  GOOGLE_CLOUD_PROJECT?: string;
-  GOOGLE_CLOUD_LOCATION?: string;
-}): Promise<void> {
-  if (!env.GOOGLE_CLOUD_SERVICE_ACCOUNT || !env.GOOGLE_CLOUD_PROJECT) {
-    console.warn(
-      "Vertex AI not configured (GOOGLE_CLOUD_SERVICE_ACCOUNT/GOOGLE_CLOUD_PROJECT missing), skipping PEO opening times sync",
-    );
+export async function syncPeoOpeningTimes(
+  env: {
+    DB: D1Database;
+    GOOGLE_AI_API_KEY?: string;
+  },
+  forceSemester?: string,
+): Promise<void> {
+  if (!env.GOOGLE_AI_API_KEY) {
+    console.warn("GOOGLE_AI_API_KEY missing, skipping PEO opening times sync");
     return;
   }
 
-  let credentials: object;
-  try {
-    credentials = JSON.parse(atob(env.GOOGLE_CLOUD_SERVICE_ACCOUNT));
-  } catch {
-    console.error("Invalid GOOGLE_CLOUD_SERVICE_ACCOUNT value");
-    return;
-  }
-  const project = env.GOOGLE_CLOUD_PROJECT;
-  const location = env.GOOGLE_CLOUD_LOCATION || "us-central1";
+  const apiKey = env.GOOGLE_AI_API_KEY;
 
   // Fetch the PEO page
   const pageResponse = await fetch(PEO_PAGE_URL);
@@ -234,7 +223,7 @@ export async function syncPeoOpeningTimes(env: {
           cachedNameEn.set(facility.name_zh, facility.name_en);
         }
         for (const schedule of facility.schedules) {
-          if (schedule.hours !== null) {
+          if (schedule.hours !== null && schedule.semester !== forceSemester) {
             existingParsed.set(schedule.pdf_url, {
               name_en: facility.name_en,
               hours: schedule.hours,
@@ -267,9 +256,7 @@ export async function syncPeoOpeningTimes(env: {
         const parsed = await parsePdfWithGemini(
           schedule.pdf_url,
           facility.name_zh,
-          credentials,
-          project,
-          location,
+          apiKey,
         );
         if (parsed) {
           schedule.hours = parsed.hours;

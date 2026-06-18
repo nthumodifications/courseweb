@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import client from "@/config/api";
 import { cn } from "@courseweb/ui";
 import {
@@ -9,10 +9,13 @@ import {
   Circle,
   ChevronRight,
   Clock,
+  RefreshCw,
+  Loader2,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@courseweb/ui";
 import { useState } from "react";
 import useTime from "@/hooks/useTime";
+import { semesterInfo } from "@courseweb/shared";
 
 type OccupancyItem = {
   project_id: string;
@@ -148,13 +151,18 @@ function getOpenStatus(slots: TimeSlot[], now: Date): OpenStatus {
   return { type: "closed" };
 }
 
-/** Returns the semester name that corresponds to today's date. */
+/** Returns the semester name that corresponds to today's date using actual semester dates. */
 function getCurrentSemesterLabel(): string {
-  const month = new Date().getMonth() + 1;
-  if (month >= 9 || month === 1) return "上學期";
-  if (month === 2) return "寒假";
-  if (month >= 3 && month <= 6) return "下學期";
-  return "暑假";
+  const now = new Date();
+  const active = semesterInfo.find((s) => now >= s.begins && now <= s.ends);
+  if (active) return active.semester === 1 ? "上學期" : "下學期";
+
+  const past = semesterInfo.filter((s) => now > s.ends);
+  if (past.length === 0) return "上學期";
+  const lastEnded = past[past.length - 1];
+  const next = semesterInfo.find((s) => s.begins > now);
+  if (!next) return "暑假";
+  return lastEnded.semester === 1 ? "寒假" : "暑假";
 }
 
 /**
@@ -176,9 +184,7 @@ function matchFacility(
   if (match) return match;
   // Substring match (occupancy name may be shorter)
   match = facilities.find(
-    (f) =>
-      f.name_zh.includes(name) ||
-      name.includes(f.name_zh.slice(0, 3)),
+    (f) => f.name_zh.includes(name) || name.includes(f.name_zh.slice(0, 3)),
   );
   return match;
 }
@@ -220,10 +226,33 @@ const ScheduleSheet = ({
     facility.schedules.map((s) => s.semester),
   );
   const [selectedSemester, setSelectedSemester] = useState(bestAvailable);
+  const [refreshing, setRefreshing] = useState(false);
+  const queryClient = useQueryClient();
 
   const schedule = facility.schedules.find(
     (s) => s.semester === selectedSemester,
   );
+
+  const handleRefresh = async () => {
+    if (refreshing) return;
+    setRefreshing(true);
+    try {
+      const params = selectedSemester
+        ? `?semester=${encodeURIComponent(selectedSemester)}`
+        : "";
+      const res = await fetch(
+        `${import.meta.env.VITE_COURSEWEB_API_URL}/sports/refresh${params}`,
+        { method: "POST" },
+      );
+      if (res.ok) {
+        await queryClient.invalidateQueries({
+          queryKey: ["sports-opening-times"],
+        });
+      }
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   return (
     <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
@@ -239,8 +268,8 @@ const ScheduleSheet = ({
           </SheetTitle>
         </SheetHeader>
 
-        {/* Semester tabs */}
-        <div className="flex gap-2 mb-4 flex-wrap">
+        {/* Semester tabs + refresh button */}
+        <div className="flex gap-2 mb-4 flex-wrap items-center">
           {facility.schedules.map((s) => (
             <button
               key={s.semester}
@@ -256,6 +285,18 @@ const ScheduleSheet = ({
               {s.semester.includes(currentSemesterLabel) && " (current)"}
             </button>
           ))}
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            title="Refresh cache"
+            className="ml-auto p-1 text-slate-400 hover:text-nthu-500 disabled:opacity-50 transition-colors"
+          >
+            {refreshing ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <RefreshCw className="w-4 h-4" />
+            )}
+          </button>
         </div>
 
         {/* Schedule table */}
@@ -373,7 +414,8 @@ const SportsVenuesPage = () => {
       {/* Venue list */}
       <div className="flex flex-col divide-y divide-slate-100 dark:divide-neutral-700">
         {items.map(({ item, facility, todaySlots }) => {
-          const displayName = OCCUPANCY_NAME_ALIASES[item.project_name] ?? item.project_name;
+          const displayName =
+            OCCUPANCY_NAME_ALIASES[item.project_name] ?? item.project_name;
           const { capacity, Icon } = venueInfo(displayName);
           const ratio = Math.min(item.entry_count_now / capacity, 1);
           const pct = Math.round(ratio * 100);
