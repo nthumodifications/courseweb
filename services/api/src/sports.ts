@@ -2,12 +2,14 @@ import { Hono } from "hono";
 import type { Bindings } from "./index";
 import prismaClients from "./prisma/client";
 import type { PeoOpeningTimesCache } from "./scheduled/peo-opening-times";
-import { SPORTS_CACHE_KEY } from "./scheduled/peo-opening-times";
+import {
+  SPORTS_CACHE_KEY,
+  syncPeoOpeningTimes,
+} from "./scheduled/peo-opening-times";
 import peoSeedData from "./scheduled/peo-opening-times-seed.json";
 
-const app = new Hono<{ Bindings: Bindings }>().get(
-  "/opening-times",
-  async (c) => {
+const app = new Hono<{ Bindings: Bindings }>()
+  .get("/opening-times", async (c) => {
     const prisma = await prismaClients.fetch(c.env.DB);
     let result = null;
 
@@ -42,7 +44,34 @@ const app = new Hono<{ Bindings: Bindings }>().get(
     }
 
     return c.json(peoSeedData);
-  },
-);
+  })
+  .post("/refresh", async (c) => {
+    const semester = c.req.query("semester") ?? undefined;
+
+    // Debounce: reject if cache was updated in the last 5 minutes
+    const prisma = await prismaClients.fetch(c.env.DB);
+    const existing = await prisma.cache.findUnique({
+      where: { key: SPORTS_CACHE_KEY },
+    });
+    if (existing) {
+      try {
+        const cached: PeoOpeningTimesCache = JSON.parse(existing.data);
+        const ageMs = Date.now() - new Date(cached.lastUpdated).getTime();
+        if (ageMs < 5 * 60 * 1000) {
+          return c.json(
+            {
+              ok: false,
+              reason: "recently_updated",
+              lastUpdated: cached.lastUpdated,
+            },
+            429,
+          );
+        }
+      } catch {}
+    }
+
+    await syncPeoOpeningTimes(c.env, semester);
+    return c.json({ ok: true, semester: semester ?? "all" });
+  });
 
 export default app;
