@@ -1,6 +1,6 @@
-import { Repeat, Plus, EllipsisVertical, Share2 } from "lucide-react";
+import { Repeat, Plus, EllipsisVertical, Share2, Globe } from "lucide-react";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import useDictionary from "@/dictionaries/useDictionary";
 import { Button } from "@courseweb/ui";
 import {
@@ -46,6 +46,7 @@ const TimetableSidebar = ({
   } = useUserTimetable();
 
   const navigate = useNavigate();
+  const { lang } = useParams<{ lang: string }>();
 
   const shareLink = `https://nthumods.com/timetable/view?${Object.keys(courses)
     .map(
@@ -130,6 +131,14 @@ const TimetableSidebar = ({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+      <Button
+        variant="ghost"
+        className="w-full justify-start"
+        onClick={() => navigate(`/${lang}/timetable/community`)}
+      >
+        <Globe className="w-4 h-4 mr-2" />
+        Community Timetables
+      </Button>
       <Dialog>
         <DialogTitle className="hidden">AddToSem</DialogTitle>
         <DialogTrigger asChild>

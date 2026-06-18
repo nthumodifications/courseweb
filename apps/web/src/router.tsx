@@ -420,7 +420,7 @@ export const router = createBrowserRouter([
                 handle: { title: "Shared Timetable", noindex: true },
               },
               {
-                path: "community",
+                path: "timetable/community",
                 element: <CommunityPage />,
                 handle: {
                   title: "Community Timetables",
@@ -432,7 +432,7 @@ export const router = createBrowserRouter([
                 },
               },
               {
-                path: "group/:code",
+                path: "timetable/group/:code",
                 element: <GroupViewPage />,
                 handle: { title: "Timetable Group", noindex: true },
               },

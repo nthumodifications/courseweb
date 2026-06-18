@@ -7,6 +7,7 @@ import {
   Link,
   Loader2,
   Lock,
+  Plus,
   RefreshCw,
   Share2,
   Trash2,
@@ -46,6 +47,28 @@ import { useAuth } from "react-oidc-context";
 import { toPrettySemester } from "@/helpers/semester";
 import client from "@/config/api";
 import { CourseDefinition } from "@/config/supabase";
+import { useNavigate, useParams } from "react-router-dom";
+
+const LS_GROUPS_KEY = "timetable_groups";
+
+type StoredGroup = {
+  code: string;
+  name: string;
+  semester: string;
+};
+
+function readStoredGroups(): StoredGroup[] {
+  try {
+    return JSON.parse(localStorage.getItem(LS_GROUPS_KEY) ?? "[]");
+  } catch {
+    return [];
+  }
+}
+
+function saveStoredGroup(group: StoredGroup) {
+  const existing = readStoredGroups().filter((g) => g.code !== group.code);
+  localStorage.setItem(LS_GROUPS_KEY, JSON.stringify([group, ...existing]));
+}
 
 type Visibility = "link_only" | "public";
 
@@ -155,9 +178,220 @@ function NoteEditor({
   );
 }
 
+function GroupsTab({
+  semester,
+  ownShares,
+  sharesLoading,
+}: {
+  semester: string;
+  ownShares: SharedTimetable[];
+  sharesLoading: boolean;
+}) {
+  const [groupName, setGroupName] = useState("");
+  const [selectedShareId, setSelectedShareId] = useState("");
+  const [createdInviteUrl, setCreatedInviteUrl] = useState<string | null>(null);
+  const [copiedCreate, setCopiedCreate] = useState(false);
+  const [copiedGroup, setCopiedGroup] = useState<string | null>(null);
+  const [storedGroups, setStoredGroups] =
+    useState<StoredGroup[]>(readStoredGroups);
+  const { createGroup } = useTimetableShare();
+  const navigate = useNavigate();
+  const { lang } = useParams<{ lang: string }>();
+
+  const semesterShares = ownShares.filter((s) =>
+    s.semesters.includes(semester),
+  );
+
+  const createMutation = useMutation({
+    mutationFn: () =>
+      createGroup({
+        name: groupName,
+        semester,
+        sharedTimetableId: selectedShareId || undefined,
+      }),
+    onSuccess: (group) => {
+      const inviteUrl = `${window.location.origin}/${lang}/timetable/group/${group.inviteCode}`;
+      setCreatedInviteUrl(inviteUrl);
+      const stored: StoredGroup = {
+        code: group.inviteCode,
+        name: group.name,
+        semester: group.semester,
+      };
+      saveStoredGroup(stored);
+      setStoredGroups(readStoredGroups());
+      setGroupName("");
+      setSelectedShareId("");
+      toast({ title: "Group created!", description: group.name });
+    },
+    onError: (e: Error) =>
+      toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
+
+  const copyInviteUrl = (url: string, key: string) => {
+    navigator.clipboard.writeText(url).then(() => {
+      setCopiedGroup(key);
+      setTimeout(() => setCopiedGroup(null), 2000);
+    });
+  };
+
+  const copyCreatedUrl = () => {
+    if (!createdInviteUrl) return;
+    navigator.clipboard.writeText(createdInviteUrl).then(() => {
+      setCopiedCreate(true);
+      setTimeout(() => setCopiedCreate(false), 2000);
+    });
+  };
+
+  return (
+    <div className="flex flex-col gap-6 mt-4">
+      <div className="flex flex-col gap-4">
+        <h3 className="text-sm font-semibold">Create a Group</h3>
+        <p className="text-xs text-muted-foreground -mt-2">
+          You need a share link to join. Create one in the "Create Link" tab
+          first.
+        </p>
+
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="group-name">Group name</Label>
+          <Input
+            id="group-name"
+            placeholder="e.g. CS Friends 113-2"
+            value={groupName}
+            onChange={(e) => setGroupName(e.target.value)}
+            maxLength={100}
+          />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <Label>Semester</Label>
+          <p className="text-sm text-muted-foreground">
+            {toPrettySemester(semester)}
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="group-share">Attach your share link (optional)</Label>
+          {sharesLoading ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" /> Loading shares...
+            </div>
+          ) : (
+            <select
+              id="group-share"
+              className="text-sm border rounded-md p-2 bg-background"
+              value={selectedShareId}
+              onChange={(e) => setSelectedShareId(e.target.value)}
+            >
+              <option value="">None</option>
+              {semesterShares.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.displayName || toPrettySemester(s.semesters[0] ?? "")}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+
+        <Button
+          onClick={() => createMutation.mutate()}
+          disabled={createMutation.isPending || !groupName.trim()}
+          className="w-full"
+        >
+          {createMutation.isPending ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Creating...
+            </>
+          ) : (
+            <>
+              <Plus className="h-4 w-4 mr-2" /> Create Group
+            </>
+          )}
+        </Button>
+
+        {createdInviteUrl && (
+          <div className="flex flex-col gap-2 p-3 rounded-lg border bg-muted/30">
+            <p className="text-xs font-medium">
+              Invite link — share this with friends
+            </p>
+            <div className="flex gap-2">
+              <Input
+                value={createdInviteUrl}
+                readOnly
+                className="flex-1 font-mono text-xs"
+              />
+              <Button size="icon" variant="outline" onClick={copyCreatedUrl}>
+                {copiedCreate ? (
+                  <Check className="h-4 w-4" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <Separator />
+
+      <div className="flex flex-col gap-3">
+        <h3 className="text-sm font-semibold">My Groups</h3>
+        {storedGroups.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            No groups yet. Create one above.
+          </p>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {storedGroups.map((g) => {
+              const inviteUrl = `${window.location.origin}/${lang}/timetable/group/${g.code}`;
+              const isCopied = copiedGroup === g.code;
+              return (
+                <div
+                  key={g.code}
+                  className="flex items-center gap-2 p-2 rounded-lg border"
+                >
+                  <div className="flex flex-col flex-1 min-w-0">
+                    <span className="text-sm font-medium truncate">
+                      {g.name}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {toPrettySemester(g.semester)}
+                    </span>
+                  </div>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-7 w-7 shrink-0"
+                    onClick={() => copyInviteUrl(inviteUrl, g.code)}
+                  >
+                    {isCopied ? (
+                      <Check className="h-3.5 w-3.5" />
+                    ) : (
+                      <Copy className="h-3.5 w-3.5" />
+                    )}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 shrink-0"
+                    onClick={() =>
+                      navigate(`/${lang}/timetable/group/${g.code}`)
+                    }
+                  >
+                    Open
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 const ShareTimetableDialog = ({ children }: { children: React.ReactNode }) => {
   const [open, setOpen] = useState(false);
-  const [tab, setTab] = useState<"create" | "manage">("create");
+  const [tab, setTab] = useState<"create" | "manage" | "groups">("create");
   const [visibility, setVisibility] = useState<Visibility>("link_only");
   const [isLive, setIsLive] = useState(true);
   const [isAnonymous, setIsAnonymous] = useState(false);
@@ -260,7 +494,7 @@ const ShareTimetableDialog = ({ children }: { children: React.ReactNode }) => {
 
         <Tabs
           value={tab}
-          onValueChange={(v) => setTab(v as "create" | "manage")}
+          onValueChange={(v) => setTab(v as "create" | "manage" | "groups")}
         >
           <TabsList className="w-full">
             <TabsTrigger value="create" className="flex-1">
@@ -273,6 +507,10 @@ const ShareTimetableDialog = ({ children }: { children: React.ReactNode }) => {
                   {ownShares.length}
                 </Badge>
               )}
+            </TabsTrigger>
+            <TabsTrigger value="groups" className="flex-1">
+              <Users className="h-3.5 w-3.5 mr-1" />
+              Groups
             </TabsTrigger>
           </TabsList>
 
@@ -503,6 +741,14 @@ const ShareTimetableDialog = ({ children }: { children: React.ReactNode }) => {
                 ))}
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="groups">
+            <GroupsTab
+              semester={semester}
+              ownShares={ownShares}
+              sharesLoading={sharesLoading}
+            />
           </TabsContent>
         </Tabs>
       </DialogContent>
