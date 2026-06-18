@@ -1,61 +1,48 @@
-import { GoogleGenAI, FunctionCallingConfigMode } from "@google/genai";
-import type { Content, Part } from "@google/genai";
+import {
+  GoogleGenAI,
+  FunctionCallingConfigMode,
+  createPartFromUri,
+} from "@google/genai";
 import type { ChatMessage, UserContext } from "./types";
 import { TOOL_DECLARATIONS, executeTool } from "./tools";
 import { buildSystemPrompt } from "./system-prompt";
 import type { Context } from "hono";
 
-interface VertexAIChatOptions {
-  project: string;
-  location: string;
-  credentials: object;
+interface GeminiChatOptions {
+  apiKey: string;
   model?: string;
-}
-
-function arrayBufferToBase64(buffer: ArrayBuffer): string {
-  const bytes = new Uint8Array(buffer);
-  let binary = "";
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
-}
-
-function buildAI(options: VertexAIChatOptions): GoogleGenAI {
-  return new GoogleGenAI({
-    vertexai: true,
-    project: options.project,
-    location: options.location,
-    googleAuthOptions: {
-      credentials: options.credentials,
-      scopes: ["https://www.googleapis.com/auth/cloud-platform"],
-    },
-  });
 }
 
 export async function* streamChat(
   c: Context,
   messages: ChatMessage[],
   userContext: UserContext,
-  options: VertexAIChatOptions,
+  options: GeminiChatOptions,
 ): AsyncGenerator<{
   type: "text" | "tool_call" | "tool_result" | "done";
   data?: unknown;
 }> {
-  const ai = buildAI(options);
-  const model = options.model || "gemini-2.0-flash-lite";
+  const ai = new GoogleGenAI({ apiKey: options.apiKey });
+  const model = options.model || "gemini-2.0-flash";
+
+  // Build system prompt with user context
   const systemPrompt = buildSystemPrompt(userContext);
 
+  // Convert messages to Gemini format
   const geminiMessages = messages.map((msg) => ({
     role: msg.role === "assistant" ? "model" : "user",
     parts: [{ text: msg.content }],
   }));
 
   let fullText = "";
-  let currentMessages: Content[] = [...geminiMessages];
-  const MAX_TURNS = 10;
+  let currentMessages: Array<{
+    role: string;
+    parts: Array<{ text?: string; functionResponse?: any }>;
+  }> = [...geminiMessages];
+  const MAX_TURNS = 10; // Prevent infinite loops
   let turnCount = 0;
 
+  // Multi-turn conversation loop to handle multiple tool calls
   while (turnCount < MAX_TURNS) {
     turnCount++;
 
@@ -79,16 +66,20 @@ export async function* streamChat(
       error?: string;
     }> = [];
 
+    // Process the response stream
     for await (const chunk of response) {
+      // Handle text chunks
       if (chunk.text) {
         fullText += chunk.text;
         yield { type: "text", data: chunk.text };
       }
 
+      // Handle function calls
       if (chunk.functionCalls && chunk.functionCalls.length > 0) {
         for (const fc of chunk.functionCalls) {
           yield { type: "tool_call", data: { name: fc.name, args: fc.args } };
 
+          // Execute the tool
           try {
             const result = await executeTool(
               c,
@@ -111,18 +102,19 @@ export async function* streamChat(
       }
     }
 
+    // If no tools were called, we're done
     if (toolResults.length === 0) {
       break;
     }
 
-    const modelParts: Part[] = [];
+    // Add tool results to conversation history for next turn
+    // Handle PDF uploads to Gemini File API
+    const modelParts: any[] = [];
 
     for (const tr of toolResults) {
-      const responseData: Record<string, unknown> = tr.error
-        ? { error: tr.error }
-        : (tr.result as Record<string, unknown>);
+      const response = tr.error ? { error: tr.error } : tr.result;
 
-      // If the tool result contains a PDF URL, fetch it and pass as inline data
+      // Check if this tool result contains a PDF that should be uploaded to Gemini
       if (
         !tr.error &&
         typeof tr.result === "object" &&
@@ -130,17 +122,40 @@ export async function* streamChat(
         "uploadToGemini" in tr.result &&
         "pdfUrl" in tr.result
       ) {
-        const resultObj = tr.result as Record<string, unknown>;
+        const resultObj = tr.result as any;
 
         try {
-          const pdfResponse = await fetch(resultObj.pdfUrl as string);
+          // Fetch the PDF
+          const pdfResponse = await fetch(resultObj.pdfUrl);
           if (!pdfResponse.ok) {
             throw new Error(`Failed to fetch PDF: ${pdfResponse.status}`);
           }
 
-          const pdfBuffer = await pdfResponse.arrayBuffer();
-          const base64Data = arrayBufferToBase64(pdfBuffer);
+          const pdfBlob = await pdfResponse.blob();
 
+          // Upload to Gemini File API
+          const uploadedFile = await ai.files.upload({
+            file: pdfBlob,
+            config: {
+              mimeType: "application/pdf",
+              displayName: `${resultObj.department}_${resultObj.entranceYear}.pdf`,
+            },
+          });
+
+          // Wait for file processing
+          let fileStatus = await ai.files.get({ name: uploadedFile.name! });
+          let attempts = 0;
+          while (fileStatus.state === "PROCESSING" && attempts < 10) {
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+            fileStatus = await ai.files.get({ name: uploadedFile.name! });
+            attempts++;
+          }
+
+          if (fileStatus.state === "FAILED") {
+            throw new Error("File processing failed");
+          }
+
+          // Add function response without upload flag
           const { uploadToGemini, pdfUrl, ...responseWithoutUpload } =
             resultObj;
           modelParts.push({
@@ -148,33 +163,38 @@ export async function* streamChat(
               name: tr.name,
               response: {
                 ...responseWithoutUpload,
-                message: `已解析PDF: ${resultObj.college} ${resultObj.department} ${resultObj.entranceYear} 入學年度畢業學分表`,
+                message: `已上傳並解析PDF: ${resultObj.college} ${resultObj.department} ${resultObj.entranceYear} 入學年度畢業學分表`,
               },
             },
           });
 
-          modelParts.push({
-            inlineData: { mimeType: "application/pdf", data: base64Data },
-          });
+          // Add PDF file reference
+          if (uploadedFile.uri && uploadedFile.mimeType) {
+            modelParts.push(
+              createPartFromUri(uploadedFile.uri, uploadedFile.mimeType),
+            );
+          }
         } catch (error) {
-          console.error("PDF fetch error:", error);
+          console.error("PDF upload error:", error);
+          // Fallback to returning URL only
           const { uploadToGemini, ...fallbackResponse } = resultObj;
           modelParts.push({
             functionResponse: {
               name: tr.name,
               response: {
                 ...fallbackResponse,
-                note: "無法讀取PDF，請使用連結查看",
+                note: "無法上傳PDF，請使用連結查看",
                 error: error instanceof Error ? error.message : "Unknown error",
               },
             },
           });
         }
       } else {
+        // Regular tool response
         modelParts.push({
           functionResponse: {
             name: tr.name,
-            response: responseData,
+            response,
           },
         });
       }
@@ -182,21 +202,27 @@ export async function* streamChat(
 
     currentMessages = [
       ...currentMessages,
-      { role: "model", parts: modelParts },
+      {
+        role: "model",
+        parts: modelParts,
+      },
     ];
+
+    // Continue to next turn to let model respond to tool results
   }
 
   yield { type: "done" };
 }
 
+// Non-streaming version for simpler use cases
 export async function chat(
   c: Context,
   messages: ChatMessage[],
   userContext: UserContext,
-  options: VertexAIChatOptions,
+  options: GeminiChatOptions,
 ): Promise<{ text: string; toolResults: { name: string; result: unknown }[] }> {
-  const ai = buildAI(options);
-  const model = options.model || "gemini-2.0-flash-lite";
+  const ai = new GoogleGenAI({ apiKey: options.apiKey });
+  const model = options.model || "gemini-2.0-flash-exp";
   const systemPrompt = buildSystemPrompt(userContext);
 
   const geminiMessages = messages.map((msg) => ({
@@ -218,6 +244,7 @@ export async function chat(
 
   const toolResults: { name: string; result: unknown }[] = [];
 
+  // Execute any function calls
   if (response.functionCalls) {
     for (const fc of response.functionCalls) {
       const result = await executeTool(

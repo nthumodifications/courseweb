@@ -8,9 +8,7 @@ import prismaClients from "../prisma/client";
 
 type Bindings = {
   DB: import("@cloudflare/workers-types").D1Database;
-  GOOGLE_CLOUD_SERVICE_ACCOUNT?: string;
-  GOOGLE_CLOUD_PROJECT?: string;
-  GOOGLE_CLOUD_LOCATION?: string;
+  GOOGLE_AI_API_KEY?: string;
 };
 
 export interface SyllabusSummary {
@@ -36,16 +34,9 @@ const app = new Hono<{ Bindings: Bindings }>().get(
   zValidator("param", z.object({ courseId: z.string() })),
   async (c) => {
     const { courseId } = c.req.valid("param");
-    const {
-      SUPABASE_URL,
-      GOOGLE_CLOUD_SERVICE_ACCOUNT,
-      GOOGLE_CLOUD_PROJECT,
-      GOOGLE_CLOUD_LOCATION,
-    } = env<{
+    const { SUPABASE_URL, GOOGLE_AI_API_KEY } = env<{
       SUPABASE_URL: string;
-      GOOGLE_CLOUD_SERVICE_ACCOUNT?: string;
-      GOOGLE_CLOUD_PROJECT?: string;
-      GOOGLE_CLOUD_LOCATION?: string;
+      GOOGLE_AI_API_KEY?: string;
     }>(c);
 
     // 1. Check D1 cache — permanent, no TTL
@@ -80,27 +71,12 @@ const app = new Hono<{ Bindings: Bindings }>().get(
       return c.json({ error: "No syllabus available for this course" }, 404);
     }
 
-    // 3. Validate Vertex AI config
-    if (!GOOGLE_CLOUD_SERVICE_ACCOUNT || !GOOGLE_CLOUD_PROJECT) {
-      return c.json({ error: "Vertex AI not configured" }, 500);
+    // 3. Validate API key
+    if (!GOOGLE_AI_API_KEY) {
+      return c.json({ error: "GOOGLE_AI_API_KEY not configured" }, 500);
     }
 
-    let credentials: object;
-    try {
-      credentials = JSON.parse(atob(GOOGLE_CLOUD_SERVICE_ACCOUNT));
-    } catch {
-      return c.json({ error: "Invalid GOOGLE_CLOUD_SERVICE_ACCOUNT" }, 500);
-    }
-
-    const ai = new GoogleGenAI({
-      vertexai: true,
-      project: GOOGLE_CLOUD_PROJECT,
-      location: GOOGLE_CLOUD_LOCATION || "us-central1",
-      googleAuthOptions: {
-        credentials,
-        scopes: ["https://www.googleapis.com/auth/cloud-platform"],
-      },
-    });
+    const ai = new GoogleGenAI({ apiKey: GOOGLE_AI_API_KEY });
 
     // 4. Build prompt content
     const courseName = courseData.name_zh || courseData.name_en || courseId;
@@ -156,7 +132,7 @@ const app = new Hono<{ Bindings: Bindings }>().get(
       : "你是課程分析師。請根據提供的課程資訊，簡潔準確地摘要。用繁體中文回答。以學生視角撰寫，直接切入重點。";
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
+      model: "gemini-2.5-flash",
       contents: [{ role: "user", parts }],
       config: {
         systemInstruction,

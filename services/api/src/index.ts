@@ -27,9 +27,7 @@ import { D1Database } from "@cloudflare/workers-types";
 
 export type Bindings = {
   DB: D1Database;
-  GOOGLE_CLOUD_SERVICE_ACCOUNT?: string;
-  GOOGLE_CLOUD_PROJECT?: string;
-  GOOGLE_CLOUD_LOCATION?: string;
+  GOOGLE_AI_API_KEY?: string;
   VENUE_RATE_LIMITER: RateLimit;
 };
 
