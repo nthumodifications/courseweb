@@ -6,6 +6,7 @@ import {
   Globe,
   Users,
   ChevronRight,
+  Download,
 } from "lucide-react";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { useNavigate, useParams } from "react-router-dom";
@@ -68,48 +69,33 @@ const TimetableSidebar = ({
     staleTime: 60_000,
   });
 
-  const shareLink = `https://nthumods.com/timetable/view?${Object.keys(courses)
-    .map(
-      (sem) =>
-        `semester_${sem}=${courses[sem].map((id) => encodeURI(id)).join(",")}`,
-    )
-    .join("&")}&colorMap=${encodeURIComponent(JSON.stringify(colorMap))}`;
   const apiBase = import.meta.env.VITE_COURSEWEB_API_URL;
   const icsQuery = `semester=${semester}&semester_${semester}=${(courses[semester] ?? []).map((id) => encodeURI(id)).join(",")}`;
-  const webcalLink = `${apiBase.replace(/^https?/, "webcals")}/timetable/calendar.ics?${icsQuery}`;
   const icsfileLink = `${apiBase}/timetable/calendar.ics?${icsQuery}`;
 
   const handleGroupByDepartment = (semester: string) => {
     const semesterCourses = getSemesterCourses(semester);
     const newColorMap = { ...colorMap };
-
     const departments = semesterCourses.reduce((acc, course) => {
-      if (!acc.includes(course.department)) {
-        acc.push(course.department);
-      }
+      if (!acc.includes(course.department)) acc.push(course.department);
       return acc;
     }, [] as string[]);
-
     for (let i = 0; i < departments.length; i++) {
       const color = currentColors[i % currentColors.length];
-
       semesterCourses
         .filter((course) => course.department === departments[i])
         .forEach((course) => {
           newColorMap[course.raw_id] = color;
         });
     }
-
     setColorMap(newColorMap);
   };
 
   const sortByCredits = (semester: string) => {
     const semesterCourses = getSemesterCourses(semester);
-
     const sortedCourses = [...semesterCourses].sort(
       (a, b) => b.credits - a.credits,
     );
-
     setCourses({
       ...courses,
       [semester]: sortedCourses.map((course) => course.raw_id),
@@ -117,49 +103,25 @@ const TimetableSidebar = ({
   };
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-2 grid-rows-2 gap-2">
-        <Button variant="outline" onClick={() => setVertical(!vertical)}>
-          <Repeat className="w-4 h-4 mr-1" />{" "}
-          {vertical
-            ? dict.timetable.actions.horizontal_view
-            : dict.timetable.actions.vertical_view}
-        </Button>
-        <DownloadTimetableDialogDynamic icsfileLink={icsfileLink} />
-        <ShareTimetableDialogDynamic>
+    <div className="flex flex-col gap-3">
+      {/* Primary action — add courses */}
+      <Dialog>
+        <DialogTitle className="hidden">AddToSem</DialogTitle>
+        <DialogTrigger asChild>
           <Button variant="outline" className="w-full">
-            <Share2 className="w-4 h-4 mr-1" />
-            Share
+            <Plus className="w-4 h-4 mr-2" />
+            {dict.course.item.add_to_semester}
           </Button>
-        </ShareTimetableDialogDynamic>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline">
-              <EllipsisVertical className="w-4 h-4 mr-2" />
-              {dict.timetable.actions.more_options}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuLabel>Customizations</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => handleGroupByDepartment(semester)}>
-              {dict.timetable.actions.group_dept}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => sortByCredits(semester)}>
-              {dict.timetable.actions.sort_by_credits}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-      <Button
-        variant="ghost"
-        className="w-full justify-start"
-        onClick={() => navigate(`/${lang}/timetable/community`)}
-      >
-        <Globe className="w-4 h-4 mr-2" />
-        Community Timetables
-      </Button>
+        </DialogTrigger>
+        <DialogContent className="p-0 h-[100dvh] max-w-screen w-screen gap-0 px-2 pt-6 md:p-8">
+          <CourseSearchContainerDynamic />
+        </DialogContent>
+      </Dialog>
 
+      {/* Course list — the main content */}
+      <TimetableCourseList semester={semester} vertical={vertical} />
+
+      {/* Groups section — only when signed in */}
       {isAuthenticated && (
         <div className="flex flex-col gap-1">
           <div className="flex items-center justify-between px-1">
@@ -211,19 +173,72 @@ const TimetableSidebar = ({
         </div>
       )}
 
-      <Dialog>
-        <DialogTitle className="hidden">AddToSem</DialogTitle>
-        <DialogTrigger asChild>
-          <Button variant="outline">
-            <Plus className="w-4 h-4 mr-2" />
-            {dict.course.item.add_to_semester}
+      {/* Utility action row + community link */}
+      <div className="flex items-center gap-1 pt-1 border-t">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          title={
+            vertical
+              ? dict.timetable.actions.horizontal_view
+              : dict.timetable.actions.vertical_view
+          }
+          onClick={() => setVertical(!vertical)}
+        >
+          <Repeat className="w-4 h-4" />
+        </Button>
+
+        <DownloadTimetableDialogDynamic icsfileLink={icsfileLink}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            title="Download / export"
+          >
+            <Download className="w-4 h-4" />
           </Button>
-        </DialogTrigger>
-        <DialogContent className="p-0 h-[100dvh] max-w-screen w-screen gap-0 px-2 pt-6 md:p-8">
-          <CourseSearchContainerDynamic />
-        </DialogContent>
-      </Dialog>
-      <TimetableCourseList semester={semester} vertical={vertical} />
+        </DownloadTimetableDialogDynamic>
+
+        <ShareTimetableDialogDynamic>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            title="Share timetable"
+          >
+            <Share2 className="w-4 h-4" />
+          </Button>
+        </ShareTimetableDialogDynamic>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <EllipsisVertical className="w-4 h-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuLabel>Customizations</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => handleGroupByDepartment(semester)}>
+              {dict.timetable.actions.group_dept}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => sortByCredits(semester)}>
+              {dict.timetable.actions.sort_by_credits}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <button
+          type="button"
+          onClick={() => navigate(`/${lang}/timetable/community`)}
+          className="ml-auto flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <Globe className="w-3 h-3" />
+          Community
+        </button>
+      </div>
+
       <OpenCollectiveSponsorBanner />
     </div>
   );

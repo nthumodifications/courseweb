@@ -64,17 +64,21 @@ const DownloadTimetableDialogLazy = lazy(
 );
 export const DownloadTimetableDialogDynamic = ({
   icsfileLink,
+  children,
 }: {
   icsfileLink: string;
+  children?: React.ReactNode;
 }) => (
   <Suspense
     fallback={
-      <Button variant="outline" disabled>
+      <Button variant="ghost" size="icon" className="h-8 w-8" disabled>
         <Loader2 className="w-4 h-4 animate-spin" />
       </Button>
     }
   >
-    <DownloadTimetableDialogLazy icsfileLink={icsfileLink} />
+    <DownloadTimetableDialogLazy icsfileLink={icsfileLink}>
+      {children}
+    </DownloadTimetableDialogLazy>
   </Suspense>
 );
 

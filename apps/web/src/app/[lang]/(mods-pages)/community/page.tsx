@@ -128,8 +128,8 @@ function TimetableDetailDialog({
 }) {
   const navigate = useNavigate();
   const { lang } = useParams<{ lang: string }>();
-  const firstSem = share.semesters[0] ?? "";
-  const courseIds = share.courses[firstSem] ?? [];
+  const [activeSem, setActiveSem] = useState(share.semesters[0] ?? "");
+  const courseIds = share.courses[activeSem] ?? [];
 
   const { data: courses = [] } = useQuery({
     queryKey: ["courses", [...courseIds].sort()],
@@ -141,17 +141,33 @@ function TimetableDetailDialog({
     enabled: courseIds.length > 0,
   });
 
-  const timetableData = createTimetableFromCourses(
-    courses as MinimalCourse[],
-    {},
-  );
+  // Let createTimetableFromCourses generate colors via its default colorMapFromCourses
+  const timetableData = createTimetableFromCourses(courses as MinimalCourse[]);
 
   return (
     <Dialog open onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-4xl h-[80vh] overflow-auto">
         <DialogHeader>
-          <DialogTitle>
-            {share.displayName || toPrettySemester(firstSem)}
+          <DialogTitle className="flex items-center justify-between gap-4 pr-6">
+            <span>{share.displayName || toPrettySemester(activeSem)}</span>
+            {share.semesters.length > 1 && (
+              <div className="flex gap-1">
+                {share.semesters.map((sem) => (
+                  <button
+                    key={sem}
+                    type="button"
+                    onClick={() => setActiveSem(sem)}
+                    className={`px-2 py-0.5 rounded text-xs font-normal border transition-colors ${
+                      activeSem === sem
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "border-border text-muted-foreground hover:border-foreground"
+                    }`}
+                  >
+                    {toPrettySemester(sem)}
+                  </button>
+                ))}
+              </div>
+            )}
           </DialogTitle>
         </DialogHeader>
         <div className="grid grid-cols-1 md:grid-cols-[3fr_2fr] gap-4">
