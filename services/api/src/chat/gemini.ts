@@ -1,4 +1,5 @@
 import { GoogleGenAI, FunctionCallingConfigMode } from "@google/genai";
+import type { Content, Part } from "@google/genai";
 import type { ChatMessage, UserContext } from "./types";
 import { TOOL_DECLARATIONS, executeTool } from "./tools";
 import { buildSystemPrompt } from "./system-prompt";
@@ -51,14 +52,7 @@ export async function* streamChat(
   }));
 
   let fullText = "";
-  let currentMessages: Array<{
-    role: string;
-    parts: Array<{
-      text?: string;
-      functionResponse?: unknown;
-      inlineData?: { mimeType: string; data: string };
-    }>;
-  }> = [...geminiMessages];
+  let currentMessages: Content[] = [...geminiMessages];
   const MAX_TURNS = 10;
   let turnCount = 0;
 
@@ -121,13 +115,12 @@ export async function* streamChat(
       break;
     }
 
-    const modelParts: Array<{
-      functionResponse?: unknown;
-      inlineData?: { mimeType: string; data: string };
-    }> = [];
+    const modelParts: Part[] = [];
 
     for (const tr of toolResults) {
-      const responseData = tr.error ? { error: tr.error } : tr.result;
+      const responseData: Record<string, unknown> = tr.error
+        ? { error: tr.error }
+        : (tr.result as Record<string, unknown>);
 
       // If the tool result contains a PDF URL, fetch it and pass as inline data
       if (
