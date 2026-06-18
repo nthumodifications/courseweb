@@ -64,17 +64,21 @@ const DownloadTimetableDialogLazy = lazy(
 );
 export const DownloadTimetableDialogDynamic = ({
   icsfileLink,
+  children,
 }: {
   icsfileLink: string;
+  children?: React.ReactNode;
 }) => (
   <Suspense
     fallback={
-      <Button variant="outline" disabled>
+      <Button variant="ghost" size="icon" className="h-8 w-8" disabled>
         <Loader2 className="w-4 h-4 animate-spin" />
       </Button>
     }
   >
-    <DownloadTimetableDialogLazy icsfileLink={icsfileLink} />
+    <DownloadTimetableDialogLazy icsfileLink={icsfileLink}>
+      {children}
+    </DownloadTimetableDialogLazy>
   </Suspense>
 );
 
@@ -114,8 +118,10 @@ export const CourseSearchContainerDynamic = () => (
 const ShareTimetableDialogLazy = lazy(() => import("./ShareTimetableDialog"));
 export const ShareTimetableDialogDynamic = ({
   children,
+  initialTab,
 }: {
   children: React.ReactNode;
+  initialTab?: "create" | "manage" | "groups";
 }) => (
   <Suspense
     fallback={
@@ -124,7 +130,9 @@ export const ShareTimetableDialogDynamic = ({
       </Button>
     }
   >
-    <ShareTimetableDialogLazy>{children}</ShareTimetableDialogLazy>
+    <ShareTimetableDialogLazy initialTab={initialTab}>
+      {children}
+    </ShareTimetableDialogLazy>
   </Suspense>
 );
 

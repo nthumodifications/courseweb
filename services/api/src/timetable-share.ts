@@ -430,6 +430,44 @@ const app = new Hono<{ Bindings: Bindings }>()
     return c.json({ ok: true });
   })
 
+  // ── Auth: list groups I'm a member of ────────────────────────────────────────
+  .get("/groups", auth(["calendar"]), async (c) => {
+    const userId = c.get("user").sub!;
+    const prisma = await prismaClients.fetch(c.env.DB);
+
+    const allGroups = await prisma.timetableGroup.findMany({
+      orderBy: { createdAt: "desc" },
+    });
+
+    const myGroups = allGroups.filter((g) => {
+      const members: Array<{ userId: string }> = JSON.parse(g.members);
+      return members.some((m) => m.userId === userId);
+    });
+
+    return c.json(
+      myGroups.map((g) => ({ ...g, members: JSON.parse(g.members) })),
+    );
+  })
+
+  // ── Auth: delete group (creator only) ─────────────────────────────────────────
+  .delete("/group/:code", auth(["calendar"]), async (c) => {
+    const userId = c.get("user").sub!;
+    const { code } = c.req.param();
+    const prisma = await prismaClients.fetch(c.env.DB);
+
+    const group = await prisma.timetableGroup.findUnique({
+      where: { inviteCode: code },
+    });
+    if (!group) throw new HTTPException(404, { message: "Group not found" });
+    if (group.createdBy !== userId)
+      throw new HTTPException(403, {
+        message: "Only the creator can delete this group",
+      });
+
+    await prisma.timetableGroup.delete({ where: { id: group.id } });
+    return c.json({ ok: true });
+  })
+
   // ── Auth: create group ────────────────────────────────────────────────────────
   .post(
     "/group",
@@ -440,11 +478,13 @@ const app = new Hono<{ Bindings: Bindings }>()
         name: z.string().min(1).max(80),
         semester: z.string().length(5),
         sharedTimetableId: z.string().length(8).optional(),
+        creatorLabel: z.string().max(60).optional(),
       }),
     ),
     async (c) => {
       const userId = c.get("user").sub!;
-      const { name, semester, sharedTimetableId } = c.req.valid("json");
+      const { name, semester, sharedTimetableId, creatorLabel } =
+        c.req.valid("json");
       const prisma = await prismaClients.fetch(c.env.DB);
 
       // Verify share belongs to user if provided
@@ -463,7 +503,7 @@ const app = new Hono<{ Bindings: Bindings }>()
             {
               userId,
               sharedTimetableId,
-              label: "Creator",
+              label: creatorLabel ?? "Creator",
               joinedAt: new Date().toISOString(),
             },
           ])

@@ -17,7 +17,16 @@ import { Button } from "@courseweb/ui";
 import { Input } from "@courseweb/ui";
 import { toast } from "@courseweb/ui";
 import { Separator } from "@courseweb/ui";
-import { Copy, Check, Loader2, Users, LogOut, Eye, EyeOff } from "lucide-react";
+import {
+  Copy,
+  Check,
+  Loader2,
+  Users,
+  LogOut,
+  Eye,
+  EyeOff,
+  Trash2,
+} from "lucide-react";
 
 const MEMBER_COLORS = [
   "#3b82f6",
@@ -56,8 +65,14 @@ const GroupViewPage = () => {
   const navigate = useNavigate();
   const { isAuthenticated, user: authUser } = useAuth();
   const { courses: userCourses } = useUserTimetable();
-  const { getGroup, joinGroup, leaveGroup, listOwnShares, createShare } =
-    useTimetableShare();
+  const {
+    getGroup,
+    joinGroup,
+    leaveGroup,
+    deleteGroup,
+    listOwnShares,
+    createShare,
+  } = useTimetableShare();
   const queryClient = useQueryClient();
   const [visibleMembers, setVisibleMembers] = useState<Set<string>>(new Set());
   const [copied, setCopied] = useState(false);
@@ -105,6 +120,7 @@ const GroupViewPage = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["group", code] });
       queryClient.invalidateQueries({ queryKey: ["own-shares"] });
+      queryClient.invalidateQueries({ queryKey: ["my-groups"] });
       toast({ title: "Joined group!" });
     },
     onError: (e: Error) =>
@@ -115,9 +131,21 @@ const GroupViewPage = () => {
     mutationFn: () => leaveGroup(code!),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["group", code] });
+      queryClient.invalidateQueries({ queryKey: ["my-groups"] });
       navigate(-1);
       toast({ title: "Left group" });
     },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteGroup(code!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["my-groups"] });
+      navigate(-1);
+      toast({ title: "Group deleted" });
+    },
+    onError: (e: Error) =>
+      toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
   const toggleMember = (userId: string) => {
@@ -219,6 +247,24 @@ const GroupViewPage = () => {
               <LogOut className="h-4 w-4 mr-1" /> Leave
             </Button>
           )}
+          {isAuthenticated &&
+            currentUserId &&
+            group.createdBy === currentUserId && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => {
+                  if (
+                    window.confirm("Delete this group? This cannot be undone.")
+                  ) {
+                    deleteMutation.mutate();
+                  }
+                }}
+                disabled={deleteMutation.isPending}
+              >
+                <Trash2 className="h-4 w-4 mr-1" /> Delete group
+              </Button>
+            )}
         </div>
       </div>
 
