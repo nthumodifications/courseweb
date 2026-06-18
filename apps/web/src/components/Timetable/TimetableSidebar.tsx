@@ -1,4 +1,4 @@
-import { Repeat, Plus, EllipsisVertical } from "lucide-react";
+import { Repeat, Plus, EllipsisVertical, Share2 } from "lucide-react";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { useNavigate } from "react-router-dom";
 import useDictionary from "@/dictionaries/useDictionary";
@@ -11,7 +11,7 @@ import {
 } from "@courseweb/ui";
 import {
   DownloadTimetableDialogDynamic,
-  ShareSyncTimetableDialogDynamic,
+  ShareTimetableDialogDynamic,
   CourseSearchContainerDynamic,
   TimetableCourseList,
 } from "./TimetableCourseList";
@@ -105,10 +105,12 @@ const TimetableSidebar = ({
             : dict.timetable.actions.vertical_view}
         </Button>
         <DownloadTimetableDialogDynamic icsfileLink={icsfileLink} />
-        <ShareSyncTimetableDialogDynamic
-          shareLink={shareLink}
-          webcalLink={webcalLink}
-        />
+        <ShareTimetableDialogDynamic>
+          <Button variant="outline" className="w-full">
+            <Share2 className="w-4 h-4 mr-1" />
+            Share
+          </Button>
+        </ShareTimetableDialogDynamic>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline">

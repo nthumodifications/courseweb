@@ -35,8 +35,10 @@ import useCourseDates from "@/hooks/useCourseDates";
 
 export const CalendarWeekContainer = ({
   displayWeek,
+  overlayEvents = [],
 }: {
   displayWeek: Date[];
+  overlayEvents?: CalendarEventInternal[];
 }) => {
   const { events, addEvent, displayContainer, HOUR_HEIGHT } = useCalendar();
   const { showAcademicCalendar } = useSettings();
@@ -254,6 +256,62 @@ export const CalendarWeekContainer = ({
     },
     [events, HOUR_HEIGHT, getCourseDateForDay],
   );
+
+  const renderOverlayEventsInDay = useCallback(
+    (day: Date) => {
+      const dayEnd = endOfDay(day);
+      const dayOverlayEvents = eventsToDisplay(
+        overlayEvents,
+        startOfDay(day),
+        dayEnd,
+      )
+        .filter((e) => !e.allDay)
+        .sort((a, b) => a.displayStart.getTime() - b.displayStart.getTime());
+
+      return dayOverlayEvents.map((event) => {
+        const cappedEnd = new Date(
+          Math.min(event.displayEnd.getTime(), dayEnd.getTime()),
+        );
+        const heightMs = cappedEnd.getTime() - event.displayStart.getTime();
+        const height = Math.max(
+          HOUR_HEIGHT / 2,
+          (heightMs / (1000 * 60 * 60)) * HOUR_HEIGHT,
+        );
+        return (
+          <div
+            key={`overlay-${event.id}-${event.displayStart.getTime()}`}
+            className="absolute pr-0.5 pointer-events-none"
+            style={{
+              top:
+                event.displayStart.getHours() * HOUR_HEIGHT +
+                (event.displayStart.getMinutes() * HOUR_HEIGHT) / 60,
+              height,
+              width: "calc(100% - 2px)",
+              left: "1px",
+              opacity: 0.45,
+              zIndex: 1,
+            }}
+          >
+            <div
+              className="rounded-md h-full p-1 flex flex-col gap-1 border-2"
+              style={{
+                borderColor: event.color,
+                background: `${event.color}33`,
+              }}
+            >
+              <div
+                className="text-xs leading-none font-medium"
+                style={{ color: event.color }}
+              >
+                {event.title}
+              </div>
+            </div>
+          </div>
+        );
+      });
+    },
+    [overlayEvents, HOUR_HEIGHT],
+  );
   const dayEvents = useMemo(() => {
     // Step 1: Prepare events with display information
     const dayEvents = eventsToDisplay(
@@ -449,6 +507,7 @@ export const CalendarWeekContainer = ({
                       ))}
                     </div>
                     {renderEventsInDay(day)}
+                    {renderOverlayEventsInDay(day)}
                   </div>
                 ))}
               </div>
