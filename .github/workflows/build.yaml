@@ -269,33 +269,35 @@ jobs:
           docker push ${{ env.IMAGE_NAME }}-data-sync:${{ github.sha }}
           docker push ${{ env.IMAGE_NAME }}-data-sync:latest
 
-  # build-and-push-secure-api:
-  #   runs-on: ubuntu-latest
-  #   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-  #   environment: production
-  #   permissions: write-all
-  #   steps:
-  #     # Checkout the repository
-  #     - name: Checkout code
-  #       uses: actions/checkout@v4
+  build-and-push-secure-api:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment: production
+    permissions: write-all
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-  #     # Log in to GitHub Container Registry
-  #     - name: Log in to GHCR
-  #       uses: docker/login-action@v3
-  #       with:
-  #         registry: ghcr.io
-  #         username: ${{ github.repository_owner }}
-  #         password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-  #     # Build and tag Docker image for secure-api
-  #     - name: Build Secure API Docker image
-  #       run: |
-  #         docker build -f services/secure-api/Dockerfile . \
-  #           -t ${{ env.IMAGE_NAME }}-secure-api:${{ github.sha }} \
-  #           -t ${{ env.IMAGE_NAME }}-secure-api:latest
+      - name: Build Secure API Docker image
+        run: |
+          docker build -f services/secure-api/Dockerfile . \
+            -t ${{ env.IMAGE_NAME }}-secure-api:${{ github.sha }} \
+            -t ${{ env.IMAGE_NAME }}-secure-api:latest
 
-  #     # Push Docker image to GHCR
-  #     - name: Push Secure API Docker image
-  #       run: |
-  #         docker push ${{ env.IMAGE_NAME }}-secure-api:${{ github.sha }}
-  #         docker push ${{ env.IMAGE_NAME }}-secure-api:latest
+      - name: Push Secure API Docker image
+        run: |
+          docker push ${{ env.IMAGE_NAME }}-secure-api:${{ github.sha }}
+          docker push ${{ env.IMAGE_NAME }}-secure-api:latest
+
+      - name: Trigger Coolify deployment
+        if: success()
+        run: |
+          curl --request GET "https://delta.nthumods.com/api/v1/deploy?uuid=ag4g0sg8cosoo0cgcccwg4w8&force=false" \
+            --header "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}"
