@@ -114,8 +114,10 @@ export const CourseSearchContainerDynamic = () => (
 const ShareTimetableDialogLazy = lazy(() => import("./ShareTimetableDialog"));
 export const ShareTimetableDialogDynamic = ({
   children,
+  initialTab,
 }: {
   children: React.ReactNode;
+  initialTab?: "create" | "manage" | "groups";
 }) => (
   <Suspense
     fallback={
@@ -124,7 +126,9 @@ export const ShareTimetableDialogDynamic = ({
       </Button>
     }
   >
-    <ShareTimetableDialogLazy>{children}</ShareTimetableDialogLazy>
+    <ShareTimetableDialogLazy initialTab={initialTab}>
+      {children}
+    </ShareTimetableDialogLazy>
   </Suspense>
 );
 

@@ -8,6 +8,7 @@ import {
   Loader2,
   Lock,
   Plus,
+  QrCode,
   RefreshCw,
   Share2,
   Trash2,
@@ -31,13 +32,20 @@ import { Input } from "@courseweb/ui";
 import { Label } from "@courseweb/ui";
 import { Switch } from "@courseweb/ui";
 import { Badge } from "@courseweb/ui";
-import { Textarea } from "@courseweb/ui";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@courseweb/ui";
 import { Separator } from "@courseweb/ui";
+import { ScrollArea } from "@courseweb/ui";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@courseweb/ui";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import {
   useTimetableShare,
@@ -45,42 +53,31 @@ import {
 } from "@/hooks/useTimetableShare";
 import { useAuth } from "react-oidc-context";
 import { toPrettySemester } from "@/helpers/semester";
+import { semesterInfo } from "@courseweb/shared";
 import client from "@/config/api";
 import { CourseDefinition } from "@/config/supabase";
 import { useNavigate, useParams } from "react-router-dom";
 
-const LS_GROUPS_KEY = "timetable_groups";
-
-type StoredGroup = {
-  code: string;
-  name: string;
-  semester: string;
-};
-
-function readStoredGroups(): StoredGroup[] {
-  try {
-    return JSON.parse(localStorage.getItem(LS_GROUPS_KEY) ?? "[]");
-  } catch {
-    return [];
-  }
-}
-
-function saveStoredGroup(group: StoredGroup) {
-  const existing = readStoredGroups().filter((g) => g.code !== group.code);
-  localStorage.setItem(LS_GROUPS_KEY, JSON.stringify([group, ...existing]));
+function useLang() {
+  const { lang } = useParams<{ lang: string }>();
+  return lang ?? "en";
 }
 
 type Visibility = "link_only" | "public";
 
-function ShareLinkPanel({
+// ── Compact share list item with collapsible QR ──────────────────────────────
+function ShareListItem({
   share,
   onDelete,
 }: {
-  share: SharedTimetable & { shareUrl: string };
+  share: SharedTimetable;
   onDelete: () => void;
 }) {
+  const [expanded, setExpanded] = useState(false);
+  const [showQr, setShowQr] = useState(false);
   const [copied, setCopied] = useState(false);
-  const url = `${window.location.origin}/${window.location.pathname.split("/")[1]}/timetable/share/${share.id}`;
+  const lang = useLang();
+  const url = `${window.location.origin}/${lang}/timetable/share/${share.id}`;
 
   const copy = () => {
     navigator.clipboard.writeText(url).then(() => {
@@ -90,58 +87,87 @@ function ShareLinkPanel({
   };
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex gap-2">
-        <Input value={url} readOnly className="flex-1 font-mono text-sm" />
-        <Button size="icon" variant="outline" onClick={copy}>
+    <div className="rounded-lg border overflow-hidden">
+      <div className="flex items-center gap-2 px-3 py-2">
+        <div className="flex flex-col flex-1 min-w-0">
+          <span className="text-sm font-medium truncate">
+            {share.displayName || toPrettySemester(share.semesters[0] ?? "")}
+          </span>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            {share.isLive ? (
+              <span className="flex items-center gap-0.5">
+                <RefreshCw className="h-2.5 w-2.5" /> Live
+              </span>
+            ) : (
+              <span className="flex items-center gap-0.5">
+                <Lock className="h-2.5 w-2.5" /> Snapshot
+              </span>
+            )}
+            {share.visibility === "public" && (
+              <span className="flex items-center gap-0.5">
+                <Globe className="h-2.5 w-2.5" /> Public
+              </span>
+            )}
+          </div>
+        </div>
+        <Button
+          size="icon"
+          variant="ghost"
+          className="h-7 w-7 shrink-0"
+          onClick={copy}
+        >
           {copied ? (
-            <Check className="h-4 w-4" />
+            <Check className="h-3.5 w-3.5" />
           ) : (
-            <Copy className="h-4 w-4" />
+            <Copy className="h-3.5 w-3.5" />
           )}
         </Button>
+        <Button
+          size="icon"
+          variant="ghost"
+          className="h-7 w-7 shrink-0"
+          onClick={() => setExpanded((v) => !v)}
+        >
+          <ChevronDown
+            className={`h-3.5 w-3.5 transition-transform duration-150 ${expanded ? "rotate-180" : ""}`}
+          />
+        </Button>
       </div>
-      <div className="flex gap-2 items-start">
-        <div className="p-2 bg-white rounded border">
-          <QRCodeSVG value={url} size={120} />
-        </div>
-        <div className="flex flex-col gap-2 flex-1">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            {share.isLive ? (
-              <>
-                <RefreshCw className="h-3 w-3" /> Live sync
-              </>
-            ) : (
-              <>
-                <Lock className="h-3 w-3" /> Snapshot
-              </>
-            )}
+
+      {expanded && (
+        <div className="border-t px-3 py-3 flex flex-col gap-3 bg-muted/20">
+          <Input value={url} readOnly className="font-mono text-xs h-7" />
+          <div className="flex items-center justify-between">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 text-xs px-2"
+              onClick={() => setShowQr((v) => !v)}
+            >
+              <QrCode className="h-3 w-3 mr-1" />
+              {showQr ? "Hide QR" : "Show QR"}
+            </Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              className="h-7 text-xs px-2"
+              onClick={onDelete}
+            >
+              <Trash2 className="h-3 w-3 mr-1" /> Delete
+            </Button>
           </div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            {share.visibility === "public" ? (
-              <>
-                <Globe className="h-3 w-3" /> Public gallery
-              </>
-            ) : (
-              <>
-                <Link className="h-3 w-3" /> Link only
-              </>
-            )}
-          </div>
-          <Button
-            size="sm"
-            variant="destructive"
-            className="mt-auto"
-            onClick={onDelete}
-          >
-            <Trash2 className="h-3 w-3 mr-1" /> Delete link
-          </Button>
+          {showQr && (
+            <div className="flex justify-center p-3 bg-white rounded border">
+              <QRCodeSVG value={url} size={96} />
+            </div>
+          )}
         </div>
-      </div>
+      )}
     </div>
   );
 }
 
+// ── Course note editor ────────────────────────────────────────────────────────
 function NoteEditor({
   courseId,
   courseNote,
@@ -178,220 +204,181 @@ function NoteEditor({
   );
 }
 
-function GroupsTab({
-  semester,
-  ownShares,
-  sharesLoading,
-}: {
-  semester: string;
-  ownShares: SharedTimetable[];
-  sharesLoading: boolean;
-}) {
+// ── Groups tab — create a group with semester picker + nickname ───────────────
+function GroupsTab({ semester: activeSemester }: { semester: string }) {
   const [groupName, setGroupName] = useState("");
-  const [selectedShareId, setSelectedShareId] = useState("");
-  const [createdInviteUrl, setCreatedInviteUrl] = useState<string | null>(null);
-  const [copiedCreate, setCopiedCreate] = useState(false);
-  const [copiedGroup, setCopiedGroup] = useState<string | null>(null);
-  const [storedGroups, setStoredGroups] =
-    useState<StoredGroup[]>(readStoredGroups);
-  const { createGroup } = useTimetableShare();
+  const [groupSemester, setGroupSemester] = useState(activeSemester);
+  const [creatorLabel, setCreatorLabel] = useState("");
+  const [created, setCreated] = useState<{
+    inviteCode: string;
+    name: string;
+  } | null>(null);
+  const [copiedInvite, setCopiedInvite] = useState(false);
+
+  const { courses } = useUserTimetable();
+  const { createShare, createGroup } = useTimetableShare();
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { lang } = useParams<{ lang: string }>();
 
-  const semesterShares = ownShares.filter((s) =>
-    s.semesters.includes(semester),
-  );
+  const recentSemesters = [...semesterInfo].reverse().slice(0, 10);
 
   const createMutation = useMutation({
-    mutationFn: () =>
-      createGroup({
-        name: groupName,
-        semester,
-        sharedTimetableId: selectedShareId || undefined,
-      }),
+    mutationFn: async () => {
+      // Auto-create a live share for the chosen semester
+      const share = await createShare({
+        displayName: groupName.trim(),
+        semesters: [groupSemester],
+        courses: { [groupSemester]: courses[groupSemester] ?? [] },
+        isLive: true,
+        visibility: "link_only",
+      });
+      return createGroup({
+        name: groupName.trim(),
+        semester: groupSemester,
+        sharedTimetableId: share.id,
+        creatorLabel: creatorLabel.trim() || undefined,
+      });
+    },
     onSuccess: (group) => {
-      const inviteUrl = `${window.location.origin}/${lang}/timetable/group/${group.inviteCode}`;
-      setCreatedInviteUrl(inviteUrl);
-      const stored: StoredGroup = {
-        code: group.inviteCode,
-        name: group.name,
-        semester: group.semester,
-      };
-      saveStoredGroup(stored);
-      setStoredGroups(readStoredGroups());
-      setGroupName("");
-      setSelectedShareId("");
-      toast({ title: "Group created!", description: group.name });
+      queryClient.invalidateQueries({ queryKey: ["my-groups"] });
+      queryClient.invalidateQueries({ queryKey: ["own-shares"] });
+      setCreated({ inviteCode: group.inviteCode, name: group.name });
     },
     onError: (e: Error) =>
       toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
-  const copyInviteUrl = (url: string, key: string) => {
-    navigator.clipboard.writeText(url).then(() => {
-      setCopiedGroup(key);
-      setTimeout(() => setCopiedGroup(null), 2000);
+  const inviteUrl = created
+    ? `${window.location.origin}/${lang}/timetable/group/${created.inviteCode}`
+    : null;
+
+  const copyInvite = () => {
+    if (!inviteUrl) return;
+    navigator.clipboard.writeText(inviteUrl).then(() => {
+      setCopiedInvite(true);
+      setTimeout(() => setCopiedInvite(false), 2000);
     });
   };
 
-  const copyCreatedUrl = () => {
-    if (!createdInviteUrl) return;
-    navigator.clipboard.writeText(createdInviteUrl).then(() => {
-      setCopiedCreate(true);
-      setTimeout(() => setCopiedCreate(false), 2000);
-    });
-  };
+  if (created && inviteUrl) {
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="text-center py-2">
+          <p className="font-semibold">{created.name}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Group created — share the link below
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Input
+            value={inviteUrl}
+            readOnly
+            className="font-mono text-xs flex-1"
+          />
+          <Button size="icon" variant="outline" onClick={copyInvite}>
+            {copiedInvite ? (
+              <Check className="h-4 w-4" />
+            ) : (
+              <Copy className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+        <Button
+          className="w-full"
+          onClick={() =>
+            navigate(`/${lang}/timetable/group/${created.inviteCode}`)
+          }
+        >
+          Open group <ChevronRight className="h-4 w-4 ml-1" />
+        </Button>
+        <Button
+          variant="ghost"
+          className="w-full"
+          onClick={() => {
+            setCreated(null);
+            setGroupName("");
+            setCreatorLabel("");
+          }}
+        >
+          Create another
+        </Button>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col gap-6 mt-4">
-      <div className="flex flex-col gap-4">
-        <h3 className="text-sm font-semibold">Create a Group</h3>
-        <p className="text-xs text-muted-foreground -mt-2">
-          You need a share link to join. Create one in the "Create Link" tab
-          first.
-        </p>
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="group-name">Group name</Label>
+        <Input
+          id="group-name"
+          placeholder="e.g. CS Friends 113-2"
+          value={groupName}
+          onChange={(e) => setGroupName(e.target.value)}
+          maxLength={80}
+        />
+      </div>
 
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="group-name">Group name</Label>
-          <Input
-            id="group-name"
-            placeholder="e.g. CS Friends 113-2"
-            value={groupName}
-            onChange={(e) => setGroupName(e.target.value)}
-            maxLength={100}
-          />
-        </div>
-
+      <div className="grid grid-cols-2 gap-3">
         <div className="flex flex-col gap-2">
           <Label>Semester</Label>
-          <p className="text-sm text-muted-foreground">
-            {toPrettySemester(semester)}
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="group-share">Attach your share link (optional)</Label>
-          {sharesLoading ? (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" /> Loading shares...
-            </div>
-          ) : (
-            <select
-              id="group-share"
-              className="text-sm border rounded-md p-2 bg-background"
-              value={selectedShareId}
-              onChange={(e) => setSelectedShareId(e.target.value)}
-            >
-              <option value="">None</option>
-              {semesterShares.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.displayName || toPrettySemester(s.semesters[0] ?? "")}
-                </option>
+          <Select value={groupSemester} onValueChange={setGroupSemester}>
+            <SelectTrigger className="text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {recentSemesters.map((s) => (
+                <SelectItem key={s.id} value={s.id}>
+                  {toPrettySemester(s.id)}
+                </SelectItem>
               ))}
-            </select>
-          )}
+            </SelectContent>
+          </Select>
         </div>
-
-        <Button
-          onClick={() => createMutation.mutate()}
-          disabled={createMutation.isPending || !groupName.trim()}
-          className="w-full"
-        >
-          {createMutation.isPending ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Creating...
-            </>
-          ) : (
-            <>
-              <Plus className="h-4 w-4 mr-2" /> Create Group
-            </>
-          )}
-        </Button>
-
-        {createdInviteUrl && (
-          <div className="flex flex-col gap-2 p-3 rounded-lg border bg-muted/30">
-            <p className="text-xs font-medium">
-              Invite link — share this with friends
-            </p>
-            <div className="flex gap-2">
-              <Input
-                value={createdInviteUrl}
-                readOnly
-                className="flex-1 font-mono text-xs"
-              />
-              <Button size="icon" variant="outline" onClick={copyCreatedUrl}>
-                {copiedCreate ? (
-                  <Check className="h-4 w-4" />
-                ) : (
-                  <Copy className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-          </div>
-        )}
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="creator-label">Your nickname</Label>
+          <Input
+            id="creator-label"
+            placeholder="How you appear"
+            value={creatorLabel}
+            onChange={(e) => setCreatorLabel(e.target.value)}
+            maxLength={60}
+          />
+        </div>
       </div>
 
-      <Separator />
+      <p className="text-xs text-muted-foreground -mt-1">
+        Your timetable for {toPrettySemester(groupSemester)} will be linked
+        automatically.
+      </p>
 
-      <div className="flex flex-col gap-3">
-        <h3 className="text-sm font-semibold">My Groups</h3>
-        {storedGroups.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            No groups yet. Create one above.
-          </p>
+      <Button
+        className="w-full"
+        onClick={() => createMutation.mutate()}
+        disabled={!groupName.trim() || createMutation.isPending}
+      >
+        {createMutation.isPending ? (
+          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
         ) : (
-          <div className="flex flex-col gap-3">
-            {storedGroups.map((g) => {
-              const inviteUrl = `${window.location.origin}/${lang}/timetable/group/${g.code}`;
-              const isCopied = copiedGroup === g.code;
-              return (
-                <div
-                  key={g.code}
-                  className="flex items-center gap-2 p-2 rounded-lg border"
-                >
-                  <div className="flex flex-col flex-1 min-w-0">
-                    <span className="text-sm font-medium truncate">
-                      {g.name}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {toPrettySemester(g.semester)}
-                    </span>
-                  </div>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-7 w-7 shrink-0"
-                    onClick={() => copyInviteUrl(inviteUrl, g.code)}
-                  >
-                    {isCopied ? (
-                      <Check className="h-3.5 w-3.5" />
-                    ) : (
-                      <Copy className="h-3.5 w-3.5" />
-                    )}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-7 shrink-0"
-                    onClick={() =>
-                      navigate(`/${lang}/timetable/group/${g.code}`)
-                    }
-                  >
-                    Open
-                  </Button>
-                </div>
-              );
-            })}
-          </div>
+          <Users className="h-4 w-4 mr-2" />
         )}
-      </div>
+        Create Group
+      </Button>
     </div>
   );
 }
 
-const ShareTimetableDialog = ({ children }: { children: React.ReactNode }) => {
+// ── Main dialog ───────────────────────────────────────────────────────────────
+const ShareTimetableDialog = ({
+  children,
+  initialTab = "create",
+}: {
+  children: React.ReactNode;
+  initialTab?: "create" | "manage" | "groups";
+}) => {
   const [open, setOpen] = useState(false);
-  const [tab, setTab] = useState<"create" | "manage" | "groups">("create");
+  const [tab, setTab] = useState<"create" | "manage" | "groups">(initialTab);
   const [visibility, setVisibility] = useState<Visibility>("link_only");
   const [isLive, setIsLive] = useState(true);
   const [isAnonymous, setIsAnonymous] = useState(false);
@@ -403,13 +390,12 @@ const ShareTimetableDialog = ({ children }: { children: React.ReactNode }) => {
     Record<string, { grade?: string; difficulty?: number; attendance?: string }>
   >({});
 
-  const { courses, semester, getSemesterCourses, colorMap } =
-    useUserTimetable();
+  const { courses, semester, colorMap } = useUserTimetable();
   const { isAuthenticated } = useAuth();
   const { createShare, deleteShare, listOwnShares } = useTimetableShare();
   const queryClient = useQueryClient();
 
-  // Multi-semester selection — default to active semester
+  // Multi-semester selection
   const [selectedSemesters, setSelectedSemesters] = useState<string[]>([
     semester,
   ]);
@@ -499,8 +485,8 @@ const ShareTimetableDialog = ({ children }: { children: React.ReactNode }) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
+      <DialogContent className="max-w-lg flex flex-col max-h-[90dvh] overflow-hidden">
+        <DialogHeader className="shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <Share2 className="h-5 w-5" /> Share Timetable
           </DialogTitle>
@@ -516,8 +502,9 @@ const ShareTimetableDialog = ({ children }: { children: React.ReactNode }) => {
         <Tabs
           value={tab}
           onValueChange={(v) => setTab(v as "create" | "manage" | "groups")}
+          className="flex flex-col flex-1 min-h-0"
         >
-          <TabsList className="w-full">
+          <TabsList className="w-full shrink-0">
             <TabsTrigger value="create" className="flex-1">
               Create Link
             </TabsTrigger>
@@ -535,271 +522,266 @@ const ShareTimetableDialog = ({ children }: { children: React.ReactNode }) => {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="create" className="flex flex-col gap-4 mt-4">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="share-name">Name (optional)</Label>
-              <Input
-                id="share-name"
-                placeholder={`${toPrettySemester(semester)} Timetable`}
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                maxLength={100}
-              />
-            </div>
+          {/* ── Create Link tab ─────────────────────────────────────────────── */}
+          <TabsContent value="create" className="flex-1 mt-0 min-h-0">
+            <ScrollArea className="h-full max-h-[55vh] pr-1">
+              <div className="flex flex-col gap-4 py-3">
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="share-name">Name (optional)</Label>
+                  <Input
+                    id="share-name"
+                    placeholder={`${toPrettySemester(semester)} Timetable`}
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    maxLength={100}
+                  />
+                </div>
 
-            {allSemestersWithCourses.length > 0 && (
-              <div className="flex flex-col gap-2">
-                <Label>Semesters</Label>
-                <div className="flex flex-wrap gap-2">
-                  {allSemestersWithCourses.map((sem) => (
-                    <button
-                      key={sem}
-                      type="button"
-                      onClick={() => toggleSemester(sem)}
-                      className={`px-3 py-1 rounded-full text-xs border transition-colors ${
-                        selectedSemesters.includes(sem)
-                          ? "bg-primary text-primary-foreground border-primary"
-                          : "bg-background border-border text-muted-foreground hover:border-foreground"
-                      }`}
+                {allSemestersWithCourses.length > 0 && (
+                  <div className="flex flex-col gap-2">
+                    <Label>Semesters</Label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {allSemestersWithCourses.map((sem) => (
+                        <button
+                          key={sem}
+                          type="button"
+                          onClick={() => toggleSemester(sem)}
+                          className={`px-2.5 py-1 rounded-full text-xs border transition-colors ${
+                            selectedSemesters.includes(sem)
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-background border-border text-muted-foreground hover:border-foreground"
+                          }`}
+                        >
+                          {toPrettySemester(sem)} ·{" "}
+                          {(courses[sem] ?? []).length}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>Live sync</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Viewers always see your latest courses
+                      </p>
+                    </div>
+                    <Switch checked={isLive} onCheckedChange={setIsLive} />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>Public gallery</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Appears in community timetable browser
+                      </p>
+                    </div>
+                    <Switch
+                      checked={visibility === "public"}
+                      onCheckedChange={(v) =>
+                        setVisibility(v ? "public" : "link_only")
+                      }
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>Anonymous</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Hide your identity from viewers
+                      </p>
+                    </div>
+                    <Switch
+                      checked={isAnonymous}
+                      onCheckedChange={setIsAnonymous}
+                    />
+                  </div>
+                </div>
+
+                <Separator />
+
+                <Collapsible open={notesOpen} onOpenChange={setNotesOpen}>
+                  <CollapsibleTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-between h-8 px-2"
                     >
-                      {toPrettySemester(sem)} · {(courses[sem] ?? []).length}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+                      <span className="text-sm">Course notes</span>
+                      {notesOpen ? (
+                        <ChevronDown className="h-4 w-4" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="flex flex-col gap-3 mt-2">
+                    <p className="text-xs text-muted-foreground">
+                      Add notes visible to anyone viewing your timetable.
+                    </p>
+                    {semesterCourses.map((c) => (
+                      <NoteEditor
+                        key={c.raw_id}
+                        courseId={c.raw_id}
+                        courseNote={courseNotes[c.raw_id] ?? ""}
+                        courseName={c.name_zh || c.name_en}
+                        onSave={(note) =>
+                          setCourseNotes((prev) => ({
+                            ...prev,
+                            [c.raw_id]: note,
+                          }))
+                        }
+                      />
+                    ))}
+                  </CollapsibleContent>
+                </Collapsible>
 
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>Live sync</Label>
-                  <p className="text-xs text-muted-foreground">
-                    Viewers always see your latest courses
-                  </p>
-                </div>
-                <Switch checked={isLive} onCheckedChange={setIsLive} />
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>Public gallery</Label>
-                  <p className="text-xs text-muted-foreground">
-                    Appears in community timetable browser
-                  </p>
-                </div>
-                <Switch
-                  checked={visibility === "public"}
-                  onCheckedChange={(v) =>
-                    setVisibility(v ? "public" : "link_only")
-                  }
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>Anonymous</Label>
-                  <p className="text-xs text-muted-foreground">
-                    Hide your identity from viewers
-                  </p>
-                </div>
-                <Switch
-                  checked={isAnonymous}
-                  onCheckedChange={setIsAnonymous}
-                />
-              </div>
-            </div>
+                {visibility === "public" && (
+                  <Collapsible open={gradeMode} onOpenChange={setGradeMode}>
+                    <CollapsibleTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-between h-8 px-2"
+                      >
+                        <span className="text-sm">
+                          Grade & difficulty context
+                        </span>
+                        {gradeMode ? (
+                          <ChevronDown className="h-4 w-4" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="flex flex-col gap-3 mt-2">
+                      <p className="text-xs text-muted-foreground">
+                        Help juniors understand this semester. Optional.
+                      </p>
+                      {semesterCourses.map((c) => (
+                        <div key={c.raw_id} className="flex flex-col gap-1">
+                          <span className="text-sm font-medium truncate">
+                            {c.name_zh}
+                          </span>
+                          <div className="flex gap-2">
+                            <Input
+                              placeholder="Grade (A+, A, ...)"
+                              maxLength={3}
+                              className="h-7 text-sm w-24"
+                              value={gradeContext[c.raw_id]?.grade ?? ""}
+                              onChange={(e) =>
+                                setGradeContext((prev) => ({
+                                  ...prev,
+                                  [c.raw_id]: {
+                                    ...prev[c.raw_id],
+                                    grade: e.target.value,
+                                  },
+                                }))
+                              }
+                            />
+                            <Input
+                              placeholder="Difficulty 1-5"
+                              type="number"
+                              min={1}
+                              max={5}
+                              className="h-7 text-sm w-28"
+                              value={gradeContext[c.raw_id]?.difficulty ?? ""}
+                              onChange={(e) =>
+                                setGradeContext((prev) => ({
+                                  ...prev,
+                                  [c.raw_id]: {
+                                    ...prev[c.raw_id],
+                                    difficulty: Number(e.target.value),
+                                  },
+                                }))
+                              }
+                            />
+                            <Input
+                              placeholder="Attendance"
+                              className="h-7 text-sm flex-1"
+                              value={gradeContext[c.raw_id]?.attendance ?? ""}
+                              onChange={(e) =>
+                                setGradeContext((prev) => ({
+                                  ...prev,
+                                  [c.raw_id]: {
+                                    ...prev[c.raw_id],
+                                    attendance: e.target.value,
+                                  },
+                                }))
+                              }
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </CollapsibleContent>
+                  </Collapsible>
+                )}
 
-            <Separator />
-
-            <Collapsible open={notesOpen} onOpenChange={setNotesOpen}>
-              <CollapsibleTrigger asChild>
                 <Button
-                  variant="ghost"
-                  className="w-full justify-between h-8 px-2"
+                  onClick={() => createMutation.mutate()}
+                  disabled={
+                    createMutation.isPending ||
+                    selectedSemesters.length === 0 ||
+                    allSelectedCourseIds.length === 0
+                  }
+                  className="w-full"
                 >
-                  <span className="text-sm">Course notes</span>
-                  {notesOpen ? (
-                    <ChevronDown className="h-4 w-4" />
+                  {createMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />{" "}
+                      Generating...
+                    </>
                   ) : (
-                    <ChevronRight className="h-4 w-4" />
+                    <>
+                      <Link className="h-4 w-4 mr-2" /> Generate Share Link
+                    </>
                   )}
                 </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="flex flex-col gap-3 mt-2">
-                <p className="text-xs text-muted-foreground">
-                  Add notes visible to anyone who views your timetable (e.g. "no
-                  attendance", "heavy workload")
-                </p>
-                {semesterCourses.map((c) => (
-                  <NoteEditor
-                    key={c.raw_id}
-                    courseId={c.raw_id}
-                    courseNote={courseNotes[c.raw_id] ?? ""}
-                    courseName={c.name_zh || c.name_en}
-                    onSave={(note) =>
-                      setCourseNotes((prev) => ({ ...prev, [c.raw_id]: note }))
-                    }
-                  />
-                ))}
-              </CollapsibleContent>
-            </Collapsible>
-
-            {visibility === "public" && (
-              <Collapsible open={gradeMode} onOpenChange={setGradeMode}>
-                <CollapsibleTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-between h-8 px-2"
-                  >
-                    <span className="text-sm">Grade & difficulty context</span>
-                    {gradeMode ? (
-                      <ChevronDown className="h-4 w-4" />
-                    ) : (
-                      <ChevronRight className="h-4 w-4" />
-                    )}
-                  </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="flex flex-col gap-3 mt-2">
-                  <p className="text-xs text-muted-foreground">
-                    Help juniors understand this semester. Optional.
+                {selectedSemesters.length === 0 && (
+                  <p className="text-xs text-center text-muted-foreground">
+                    Select at least one semester
                   </p>
-                  {semesterCourses.map((c) => (
-                    <div key={c.raw_id} className="flex flex-col gap-1">
-                      <span className="text-sm font-medium truncate">
-                        {c.name_zh}
-                      </span>
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder="Grade (A+, A, ...)"
-                          maxLength={3}
-                          className="h-7 text-sm w-24"
-                          value={gradeContext[c.raw_id]?.grade ?? ""}
-                          onChange={(e) =>
-                            setGradeContext((prev) => ({
-                              ...prev,
-                              [c.raw_id]: {
-                                ...prev[c.raw_id],
-                                grade: e.target.value,
-                              },
-                            }))
-                          }
-                        />
-                        <Input
-                          placeholder="Difficulty 1-5"
-                          type="number"
-                          min={1}
-                          max={5}
-                          className="h-7 text-sm w-28"
-                          value={gradeContext[c.raw_id]?.difficulty ?? ""}
-                          onChange={(e) =>
-                            setGradeContext((prev) => ({
-                              ...prev,
-                              [c.raw_id]: {
-                                ...prev[c.raw_id],
-                                difficulty: Number(e.target.value),
-                              },
-                            }))
-                          }
-                        />
-                        <Input
-                          placeholder="Attendance"
-                          className="h-7 text-sm flex-1"
-                          value={gradeContext[c.raw_id]?.attendance ?? ""}
-                          onChange={(e) =>
-                            setGradeContext((prev) => ({
-                              ...prev,
-                              [c.raw_id]: {
-                                ...prev[c.raw_id],
-                                attendance: e.target.value,
-                              },
-                            }))
-                          }
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </CollapsibleContent>
-              </Collapsible>
-            )}
-
-            <Button
-              onClick={() => createMutation.mutate()}
-              disabled={
-                createMutation.isPending ||
-                selectedSemesters.length === 0 ||
-                allSelectedCourseIds.length === 0
-              }
-              className="w-full"
-            >
-              {createMutation.isPending ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />{" "}
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Link className="h-4 w-4 mr-2" /> Generate Share Link
-                </>
-              )}
-            </Button>
-            {selectedSemesters.length === 0 && (
-              <p className="text-xs text-center text-muted-foreground">
-                Select at least one semester
-              </p>
-            )}
-            {selectedSemesters.length > 0 &&
-              allSelectedCourseIds.length === 0 && (
-                <p className="text-xs text-center text-muted-foreground">
-                  Add courses first
-                </p>
-              )}
+                )}
+                {selectedSemesters.length > 0 &&
+                  allSelectedCourseIds.length === 0 && (
+                    <p className="text-xs text-center text-muted-foreground">
+                      Add courses first
+                    </p>
+                  )}
+              </div>
+            </ScrollArea>
           </TabsContent>
 
-          <TabsContent value="manage" className="mt-4">
-            {sharesLoading ? (
-              <div className="flex justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : ownShares.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground text-sm">
-                No share links yet. Create one in the "Create Link" tab.
-              </div>
-            ) : (
-              <div className="flex flex-col gap-6">
-                {ownShares.map((share) => (
-                  <div key={share.id} className="flex flex-col gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-sm">
-                        {share.displayName ||
-                          toPrettySemester(share.semesters[0] ?? "")}
-                      </span>
-                      {share.isLive && (
-                        <Badge variant="secondary" className="text-xs">
-                          Live
-                        </Badge>
-                      )}
-                      {share.visibility === "public" && (
-                        <Badge variant="outline" className="text-xs">
-                          <Globe className="h-2.5 w-2.5 mr-1" />
-                          Public
-                        </Badge>
-                      )}
-                    </div>
-                    <ShareLinkPanel
-                      share={{ ...share, shareUrl: "" }}
+          {/* ── My Links tab ───────────────────────────────────────────────── */}
+          <TabsContent value="manage" className="flex-1 mt-0 min-h-0">
+            <ScrollArea className="h-full max-h-[55vh] pr-1">
+              <div className="flex flex-col gap-2 py-3">
+                {sharesLoading ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : ownShares.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground text-sm">
+                    No share links yet. Create one in the "Create Link" tab.
+                  </div>
+                ) : (
+                  ownShares.map((share) => (
+                    <ShareListItem
+                      key={share.id}
+                      share={share}
                       onDelete={() => deleteMutation.mutate(share.id)}
                     />
-                    <Separator />
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
-            )}
+            </ScrollArea>
           </TabsContent>
 
-          <TabsContent value="groups">
-            <GroupsTab
-              semester={semester}
-              ownShares={ownShares}
-              sharesLoading={sharesLoading}
-            />
+          {/* ── Groups tab ─────────────────────────────────────────────────── */}
+          <TabsContent value="groups" className="flex-1 mt-0 min-h-0">
+            <ScrollArea className="h-full max-h-[55vh] pr-1">
+              <div className="py-3">
+                <GroupsTab semester={semester} />
+              </div>
+            </ScrollArea>
           </TabsContent>
         </Tabs>
       </DialogContent>

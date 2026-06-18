@@ -1,4 +1,12 @@
-import { Repeat, Plus, EllipsisVertical, Share2, Globe } from "lucide-react";
+import {
+  Repeat,
+  Plus,
+  EllipsisVertical,
+  Share2,
+  Globe,
+  Users,
+  ChevronRight,
+} from "lucide-react";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { useNavigate, useParams } from "react-router-dom";
 import useDictionary from "@/dictionaries/useDictionary";
@@ -24,6 +32,10 @@ import {
   DropdownMenuTrigger,
 } from "@courseweb/ui";
 import OpenCollectiveSponsorBanner from "../Sponsorship/OpenCollectiveSponsorBanner";
+import { useAuth } from "react-oidc-context";
+import { useQuery } from "@tanstack/react-query";
+import { useTimetableShare } from "@/hooks/useTimetableShare";
+import { toPrettySemester } from "@/helpers/semester";
 
 const TimetableSidebar = ({
   vertical,
@@ -47,6 +59,14 @@ const TimetableSidebar = ({
 
   const navigate = useNavigate();
   const { lang } = useParams<{ lang: string }>();
+  const { isAuthenticated } = useAuth();
+  const { listMyGroups } = useTimetableShare();
+  const { data: myGroups = [] } = useQuery({
+    queryKey: ["my-groups"],
+    queryFn: listMyGroups,
+    enabled: isAuthenticated,
+    staleTime: 60_000,
+  });
 
   const shareLink = `https://nthumods.com/timetable/view?${Object.keys(courses)
     .map(
@@ -139,6 +159,58 @@ const TimetableSidebar = ({
         <Globe className="w-4 h-4 mr-2" />
         Community Timetables
       </Button>
+
+      {isAuthenticated && (
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center justify-between px-1">
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Groups
+            </span>
+            <ShareTimetableDialogDynamic initialTab="groups">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                title="Create a group"
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </Button>
+            </ShareTimetableDialogDynamic>
+          </div>
+          {myGroups.length === 0 ? (
+            <ShareTimetableDialogDynamic initialTab="groups">
+              <button
+                type="button"
+                className="text-xs text-muted-foreground hover:text-foreground px-1 py-1 text-left transition-colors"
+              >
+                + Create or join a group
+              </button>
+            </ShareTimetableDialogDynamic>
+          ) : (
+            myGroups.map((group) => (
+              <button
+                key={group.id}
+                type="button"
+                className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-accent transition-colors text-left w-full"
+                onClick={() =>
+                  navigate(`/${lang}/timetable/group/${group.inviteCode}`)
+                }
+              >
+                <Users className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                <span className="flex-1 min-w-0">
+                  <span className="text-sm truncate block">{group.name}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {toPrettySemester(group.semester)} · {group.members.length}{" "}
+                    member{group.members.length !== 1 ? "s" : ""}
+                  </span>
+                </span>
+                <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+              </button>
+            ))
+          )}
+        </div>
+      )}
+
       <Dialog>
         <DialogTitle className="hidden">AddToSem</DialogTitle>
         <DialogTrigger asChild>
