@@ -23,7 +23,7 @@ export async function* streamChat(
   data?: unknown;
 }> {
   const ai = new GoogleGenAI({ apiKey: options.apiKey });
-  const model = options.model || "gemini-flash-lite-latest";
+  const model = options.model || "gemini-2.0-flash";
 
   // Build system prompt with user context
   const systemPrompt = buildSystemPrompt(userContext);
@@ -33,21 +33,6 @@ export async function* streamChat(
     role: msg.role === "assistant" ? "model" : "user",
     parts: [{ text: msg.content }],
   }));
-
-  // Initial generation with tools
-  const response = await ai.models.generateContentStream({
-    model,
-    contents: geminiMessages,
-    config: {
-      systemInstruction: systemPrompt,
-      tools: [{ functionDeclarations: TOOL_DECLARATIONS }],
-      toolConfig: {
-        functionCallingConfig: {
-          mode: FunctionCallingConfigMode.AUTO,
-        },
-      },
-    },
-  });
 
   let fullText = "";
   let currentMessages: Array<{
@@ -80,13 +65,11 @@ export async function* streamChat(
       result?: unknown;
       error?: string;
     }> = [];
-    let turnHasText = false;
 
     // Process the response stream
     for await (const chunk of response) {
       // Handle text chunks
       if (chunk.text) {
-        turnHasText = true;
         fullText += chunk.text;
         yield { type: "text", data: chunk.text };
       }
