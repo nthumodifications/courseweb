@@ -58,14 +58,24 @@ const app = new Hono<{ Bindings: Bindings }>()
         const cached: PeoOpeningTimesCache = JSON.parse(existing.data);
         const ageMs = Date.now() - new Date(cached.lastUpdated).getTime();
         if (ageMs < 5 * 60 * 1000) {
-          return c.json(
-            {
-              ok: false,
-              reason: "recently_updated",
-              lastUpdated: cached.lastUpdated,
-            },
-            429,
-          );
+          // Bypass debounce if the target semester has never been parsed
+          const semesterHasData = semester
+            ? cached.facilities.some((f) =>
+                f.schedules.some(
+                  (s) => s.semester === semester && s.hours !== null,
+                ),
+              )
+            : true;
+          if (semesterHasData) {
+            return c.json(
+              {
+                ok: false,
+                reason: "recently_updated",
+                lastUpdated: cached.lastUpdated,
+              },
+              429,
+            );
+          }
         }
       } catch {}
     }
