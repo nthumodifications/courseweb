@@ -409,31 +409,48 @@ const ShareTimetableDialog = ({ children }: { children: React.ReactNode }) => {
   const { createShare, deleteShare, listOwnShares } = useTimetableShare();
   const queryClient = useQueryClient();
 
+  // Multi-semester selection — default to active semester
+  const [selectedSemesters, setSelectedSemesters] = useState<string[]>([
+    semester,
+  ]);
+  const allSemestersWithCourses = Object.keys(courses).filter(
+    (s) => (courses[s] ?? []).length > 0,
+  );
+  const toggleSemester = (sem: string) => {
+    setSelectedSemesters((prev) =>
+      prev.includes(sem) ? prev.filter((s) => s !== sem) : [...prev, sem],
+    );
+  };
+  const allSelectedCourseIds = selectedSemesters.flatMap(
+    (s) => courses[s] ?? [],
+  );
+
   const { data: ownShares = [], isLoading: sharesLoading } = useQuery({
     queryKey: ["own-shares"],
     queryFn: listOwnShares,
     enabled: open && isAuthenticated,
   });
 
-  const semesterCourseIds = courses[semester] ?? [];
   const { data: semesterCourses = [] } = useQuery({
-    queryKey: ["courses", [...semesterCourseIds].sort()],
+    queryKey: ["courses", [...allSelectedCourseIds].sort()],
     queryFn: async () => {
-      if (!semesterCourseIds.length) return [];
+      if (!allSelectedCourseIds.length) return [];
       const res = await client.course.$get({
-        query: { courses: semesterCourseIds },
+        query: { courses: allSelectedCourseIds },
       });
       return res.json() as Promise<CourseDefinition[]>;
     },
-    enabled: open && semesterCourseIds.length > 0,
+    enabled: open && allSelectedCourseIds.length > 0,
   });
 
   const createMutation = useMutation({
     mutationFn: () =>
       createShare({
         displayName: displayName || undefined,
-        semesters: [semester],
-        courses: { [semester]: semesterCourseIds },
+        semesters: selectedSemesters,
+        courses: Object.fromEntries(
+          selectedSemesters.map((s) => [s, courses[s] ?? []]),
+        ),
         courseNotes,
         visibility,
         isLive,
@@ -488,7 +505,11 @@ const ShareTimetableDialog = ({ children }: { children: React.ReactNode }) => {
             <Share2 className="h-5 w-5" /> Share Timetable
           </DialogTitle>
           <DialogDescription>
-            {toPrettySemester(semester)} · {semesterCourseIds.length} courses
+            {selectedSemesters.length === 0
+              ? "No semesters selected"
+              : selectedSemesters.length === 1
+                ? `${toPrettySemester(selectedSemesters[0])} · ${allSelectedCourseIds.length} courses`
+                : `${selectedSemesters.length} semesters · ${allSelectedCourseIds.length} courses`}
           </DialogDescription>
         </DialogHeader>
 
@@ -525,6 +546,28 @@ const ShareTimetableDialog = ({ children }: { children: React.ReactNode }) => {
                 maxLength={100}
               />
             </div>
+
+            {allSemestersWithCourses.length > 0 && (
+              <div className="flex flex-col gap-2">
+                <Label>Semesters</Label>
+                <div className="flex flex-wrap gap-2">
+                  {allSemestersWithCourses.map((sem) => (
+                    <button
+                      key={sem}
+                      type="button"
+                      onClick={() => toggleSemester(sem)}
+                      className={`px-3 py-1 rounded-full text-xs border transition-colors ${
+                        selectedSemesters.includes(sem)
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-background border-border text-muted-foreground hover:border-foreground"
+                      }`}
+                    >
+                      {toPrettySemester(sem)} · {(courses[sem] ?? []).length}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between">
@@ -680,7 +723,9 @@ const ShareTimetableDialog = ({ children }: { children: React.ReactNode }) => {
             <Button
               onClick={() => createMutation.mutate()}
               disabled={
-                createMutation.isPending || semesterCourseIds.length === 0
+                createMutation.isPending ||
+                selectedSemesters.length === 0 ||
+                allSelectedCourseIds.length === 0
               }
               className="w-full"
             >
@@ -695,11 +740,17 @@ const ShareTimetableDialog = ({ children }: { children: React.ReactNode }) => {
                 </>
               )}
             </Button>
-            {semesterCourseIds.length === 0 && (
+            {selectedSemesters.length === 0 && (
               <p className="text-xs text-center text-muted-foreground">
-                Add courses first
+                Select at least one semester
               </p>
             )}
+            {selectedSemesters.length > 0 &&
+              allSelectedCourseIds.length === 0 && (
+                <p className="text-xs text-center text-muted-foreground">
+                  Add courses first
+                </p>
+              )}
           </TabsContent>
 
           <TabsContent value="manage" className="mt-4">

@@ -6,6 +6,7 @@ import {
   type TimetableGroup,
 } from "@/hooks/useTimetableShare";
 import { useAuth } from "react-oidc-context";
+import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import client from "@/config/api";
 import { MinimalCourse } from "@/types/courses";
 import { createTimetableFromCourses } from "@/helpers/timetable";
@@ -13,6 +14,7 @@ import { CourseTimeslotData } from "@/types/timetable";
 import Timetable from "@/components/Timetable/Timetable";
 import { toPrettySemester } from "@/helpers/semester";
 import { Button } from "@courseweb/ui";
+import { Input } from "@courseweb/ui";
 import { toast } from "@courseweb/ui";
 import { Separator } from "@courseweb/ui";
 import { Copy, Check, Loader2, Users, LogOut, Eye, EyeOff } from "lucide-react";
@@ -52,13 +54,14 @@ const GroupViewPage = () => {
   const { code } = useParams<{ code: string; lang: string }>();
   const { lang } = useParams<{ lang: string }>();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
-  const { getGroup, joinGroup, leaveGroup, listOwnShares } =
+  const { isAuthenticated, user: authUser } = useAuth();
+  const { courses: userCourses } = useUserTimetable();
+  const { getGroup, joinGroup, leaveGroup, listOwnShares, createShare } =
     useTimetableShare();
   const queryClient = useQueryClient();
   const [visibleMembers, setVisibleMembers] = useState<Set<string>>(new Set());
   const [copied, setCopied] = useState(false);
-  const [selectedShareId, setSelectedShareId] = useState("");
+  const [displayName, setDisplayName] = useState("");
 
   const { data: group, isLoading } = useQuery({
     queryKey: ["group", code],
@@ -75,9 +78,33 @@ const GroupViewPage = () => {
   });
 
   const joinMutation = useMutation({
-    mutationFn: () => joinGroup(code!, { sharedTimetableId: selectedShareId }),
+    mutationFn: async () => {
+      const name = displayName.trim();
+      if (!name) throw new Error("Please enter your name");
+
+      const sem = group?.semester;
+      if (!sem) throw new Error("Group not loaded");
+
+      // Reuse existing share for this semester, or auto-create one
+      const existingShare = ownShares.find((s) => s.semesters.includes(sem));
+      let shareId = existingShare?.id;
+
+      if (!shareId) {
+        const created = await createShare({
+          displayName: name,
+          semesters: [sem],
+          courses: { [sem]: userCourses[sem] ?? [] },
+          isLive: true,
+          visibility: "link_only",
+        });
+        shareId = created.id;
+      }
+
+      return joinGroup(code!, { sharedTimetableId: shareId, label: name });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["group", code] });
+      queryClient.invalidateQueries({ queryKey: ["own-shares"] });
       toast({ title: "Joined group!" });
     },
     onError: (e: Error) =>
@@ -102,8 +129,12 @@ const GroupViewPage = () => {
     });
   };
 
+  const currentUserId = authUser?.profile?.sub;
+  const isAlreadyMember =
+    !!group && group.members.some((m) => m.userId === currentUserId);
+
   const copyInviteUrl = () => {
-    const url = `${window.location.origin}/${lang}/group/${code}`;
+    const url = `${window.location.origin}/${lang}/timetable/group/${code}`;
     navigator.clipboard.writeText(url).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -178,7 +209,7 @@ const GroupViewPage = () => {
             )}
             Copy invite link
           </Button>
-          {isAuthenticated && (
+          {isAuthenticated && isAlreadyMember && (
             <Button
               variant="ghost"
               size="sm"
@@ -248,32 +279,25 @@ const GroupViewPage = () => {
             })}
           </div>
 
-          {isAuthenticated && (
+          {isAuthenticated && !isAlreadyMember && (
             <>
               <Separator />
               <div className="flex flex-col gap-2">
                 <h3 className="text-sm font-medium">Join this group</h3>
                 <p className="text-xs text-muted-foreground">
-                  Select one of your share links to show your timetable to the
-                  group.
+                  Enter your name so members can identify you. We'll link your
+                  timetable automatically.
                 </p>
-                <select
-                  className="text-sm border rounded-md p-2 bg-background"
-                  value={selectedShareId}
-                  onChange={(e) => setSelectedShareId(e.target.value)}
-                >
-                  <option value="">Select a share link...</option>
-                  {ownShares
-                    .filter((s) => s.semesters.includes(semester))
-                    .map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.displayName || toPrettySemester(s.semesters[0])}
-                      </option>
-                    ))}
-                </select>
+                <Input
+                  placeholder="Your name or nickname"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  maxLength={60}
+                  className="text-sm"
+                />
                 <Button
                   onClick={() => joinMutation.mutate()}
-                  disabled={!selectedShareId || joinMutation.isPending}
+                  disabled={!displayName.trim() || joinMutation.isPending}
                   size="sm"
                 >
                   {joinMutation.isPending ? (
@@ -281,18 +305,6 @@ const GroupViewPage = () => {
                   ) : null}
                   Join Group
                 </Button>
-                {ownShares.filter((s) => s.semesters.includes(semester))
-                  .length === 0 && (
-                  <p className="text-xs text-muted-foreground">
-                    No share links for {toPrettySemester(semester)} yet.{" "}
-                    <button
-                      className="underline"
-                      onClick={() => navigate(`/${lang}/timetable`)}
-                    >
-                      Create one in Timetable
-                    </button>
-                  </p>
-                )}
               </div>
             </>
           )}
