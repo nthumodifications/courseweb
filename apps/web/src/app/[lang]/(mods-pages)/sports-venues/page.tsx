@@ -11,6 +11,7 @@ import {
   Clock,
   RefreshCw,
   Loader2,
+  ExternalLink,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@courseweb/ui";
 import { useState } from "react";
@@ -333,9 +334,35 @@ const ScheduleSheet = ({
                 {schedule.hours.notes}
               </p>
             )}
+            {schedule.pdf_url && (
+              <a
+                href={schedule.pdf_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 inline-flex items-center gap-1 text-xs text-slate-400 hover:text-nthu-500 transition-colors"
+              >
+                <ExternalLink className="w-3 h-3" />
+                原始 PDF
+              </a>
+            )}
           </>
         ) : (
-          <p className="text-sm text-slate-400">Schedule not yet available.</p>
+          <div className="flex flex-col gap-2">
+            <p className="text-sm text-slate-400">
+              Schedule not yet available.
+            </p>
+            {schedule?.pdf_url && (
+              <a
+                href={schedule.pdf_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-sm text-nthu-500 hover:underline"
+              >
+                <ExternalLink className="w-4 h-4" />
+                View original PDF
+              </a>
+            )}
+          </div>
         )}
       </SheetContent>
     </Sheet>
