@@ -215,7 +215,7 @@ function TimetableDetailDialog({
 }
 
 const CommunityPage = () => {
-  const [selectedSemester, setSelectedSemester] = useState<string>("");
+  const [selectedSemester, setSelectedSemester] = useState<string>("all");
   const [offset, setOffset] = useState(0);
   const [selectedShare, setSelectedShare] = useState<SharedTimetable | null>(
     null,
@@ -226,7 +226,7 @@ const CommunityPage = () => {
     queryKey: ["public-timetables", selectedSemester, offset],
     queryFn: () =>
       getPublicGallery({
-        semester: selectedSemester || undefined,
+        semester: selectedSemester === "all" ? undefined : selectedSemester,
         limit: 24,
         offset,
       }),
@@ -259,7 +259,7 @@ const CommunityPage = () => {
             <SelectValue placeholder="All semesters" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All semesters</SelectItem>
+            <SelectItem value="all">All semesters</SelectItem>
             {semesters.map((s) => (
               <SelectItem key={s.id} value={s.id}>
                 {toPrettySemester(s.id)}
