@@ -119,10 +119,10 @@ const DateContributeForm = ({
       date: format(d.date, "yyyy-MM-dd"),
     }));
 
-    const res = await authClient.api["course-dates"][":courseId"].$post({
-      json: { dates: submitDates },
-      param: { courseId },
-    });
+    const res = await authClient.api["course-dates"][":courseId"].$post(
+      { json: { dates: submitDates }, param: { courseId } },
+      { headers: { Authorization: `Bearer ${auth.user?.access_token}` } },
+    );
     if (!res.ok) {
       toast({
         title: "Failed to submit",
