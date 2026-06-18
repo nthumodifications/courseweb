@@ -216,11 +216,30 @@ export function useTimetableShare() {
     [authHeaders],
   );
 
+  const listMyGroups = useCallback(async (): Promise<TimetableGroup[]> => {
+    const res = await fetch(`${API_BASE}/timetable-share/groups`, {
+      headers: authHeaders,
+    });
+    return parseResponse<TimetableGroup[]>(res);
+  }, [authHeaders]);
+
+  const deleteGroup = useCallback(
+    async (code: string): Promise<void> => {
+      const res = await fetch(`${API_BASE}/timetable-share/group/${code}`, {
+        method: "DELETE",
+        headers: authHeaders,
+      });
+      await parseResponse(res);
+    },
+    [authHeaders],
+  );
+
   const createGroup = useCallback(
     async (data: {
       name: string;
       semester: string;
       sharedTimetableId?: string;
+      creatorLabel?: string;
     }): Promise<TimetableGroup> => {
       const res = await fetch(`${API_BASE}/timetable-share/group`, {
         method: "POST",
@@ -270,6 +289,7 @@ export function useTimetableShare() {
     getPublicGallery,
     getGroup,
     listOwnShares,
+    listMyGroups,
     createShare,
     updateShare,
     deleteShare,
@@ -278,6 +298,7 @@ export function useTimetableShare() {
     updateSaved,
     unsaveShare,
     createGroup,
+    deleteGroup,
     joinGroup,
     leaveGroup,
   };

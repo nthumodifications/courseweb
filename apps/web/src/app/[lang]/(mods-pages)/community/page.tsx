@@ -62,7 +62,7 @@ function TimetableCard({
   return (
     <button
       onClick={onClick}
-      className="flex flex-col gap-2 p-4 rounded-xl border hover:border-primary hover:shadow-md transition-all text-left"
+      className="flex flex-col gap-1.5 p-3 rounded-lg border hover:border-primary hover:shadow-sm transition-all text-left"
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex flex-col gap-1">
@@ -128,8 +128,8 @@ function TimetableDetailDialog({
 }) {
   const navigate = useNavigate();
   const { lang } = useParams<{ lang: string }>();
-  const firstSem = share.semesters[0] ?? "";
-  const courseIds = share.courses[firstSem] ?? [];
+  const [activeSem, setActiveSem] = useState(share.semesters[0] ?? "");
+  const courseIds = share.courses[activeSem] ?? [];
 
   const { data: courses = [] } = useQuery({
     queryKey: ["courses", [...courseIds].sort()],
@@ -141,17 +141,33 @@ function TimetableDetailDialog({
     enabled: courseIds.length > 0,
   });
 
-  const timetableData = createTimetableFromCourses(
-    courses as MinimalCourse[],
-    {},
-  );
+  // Let createTimetableFromCourses generate colors via its default colorMapFromCourses
+  const timetableData = createTimetableFromCourses(courses as MinimalCourse[]);
 
   return (
     <Dialog open onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-4xl h-[80vh] overflow-auto">
         <DialogHeader>
-          <DialogTitle>
-            {share.displayName || toPrettySemester(firstSem)}
+          <DialogTitle className="flex items-center justify-between gap-4 pr-6">
+            <span>{share.displayName || toPrettySemester(activeSem)}</span>
+            {share.semesters.length > 1 && (
+              <div className="flex gap-1">
+                {share.semesters.map((sem) => (
+                  <button
+                    key={sem}
+                    type="button"
+                    onClick={() => setActiveSem(sem)}
+                    className={`px-2 py-0.5 rounded text-xs font-normal border transition-colors ${
+                      activeSem === sem
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "border-border text-muted-foreground hover:border-foreground"
+                    }`}
+                  >
+                    {toPrettySemester(sem)}
+                  </button>
+                ))}
+              </div>
+            )}
           </DialogTitle>
         </DialogHeader>
         <div className="grid grid-cols-1 md:grid-cols-[3fr_2fr] gap-4">
@@ -235,15 +251,14 @@ const CommunityPage = () => {
   const semesters = [...semesterInfo].reverse().slice(0, 10);
 
   return (
-    <div className="flex flex-col gap-6 px-4 py-6 max-w-5xl mx-auto w-full">
-      <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-4 px-4 py-4 max-w-5xl mx-auto w-full">
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Globe className="h-5 w-5" />
-          <h1 className="text-xl font-semibold">Timetable Community</h1>
+          <Globe className="h-4 w-4" />
+          <h1 className="text-base font-semibold">Community Timetables</h1>
         </div>
-        <p className="text-sm text-muted-foreground">
-          Browse public timetables shared by NTHU students, complete with course
-          notes and grade context.
+        <p className="text-xs text-muted-foreground hidden sm:block">
+          Public timetables from NTHU students
         </p>
       </div>
 
@@ -270,12 +285,12 @@ const CommunityPage = () => {
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center py-16">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <div className="flex justify-center py-8">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
       ) : data?.items.length === 0 ? (
-        <div className="flex flex-col items-center py-16 gap-3 text-muted-foreground">
-          <Globe className="h-10 w-10 opacity-30" />
+        <div className="flex flex-col items-center py-8 gap-2 text-muted-foreground">
+          <Globe className="h-8 w-8 opacity-30" />
           <p className="text-sm">No public timetables yet for this filter.</p>
           <p className="text-xs">
             Share yours with "Public gallery" enabled to appear here.
@@ -283,7 +298,7 @@ const CommunityPage = () => {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {data?.items.map((share) => (
               <TimetableCard
                 key={share.id}
