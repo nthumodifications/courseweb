@@ -3,6 +3,7 @@ import { AlertTriangle, ChevronLeft, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import DownloadSyllabus from "./DownloadSyllabus";
+import SyllabusSummary from "./SyllabusSummary";
 import { Fade } from "@courseweb/ui";
 import { toPrettySemester } from "@/helpers/semester";
 import CourseTagList from "@/components/Courses/CourseTagsList";
@@ -392,6 +393,7 @@ const CourseDetailContainer = ({
           <Separator />
           <div className={"flex flex-col-reverse lg:flex-row gap-6 w-full"}>
             <div className="flex flex-col gap-4 min-w-0 lg:max-w-[calc(100%-284px)]">
+              {!missingSyllabus && <SyllabusSummary courseId={course.raw_id} />}
               {!missingSyllabus && (
                 <div className="flex flex-col gap-2">
                   <h3 className="font-semibold text-xl" id="brief">

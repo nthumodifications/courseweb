@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import useUserTimetable from "./contexts/useUserTimetable";
 import { useAuth } from "react-oidc-context";
 import { event as gtagEvent } from "@/lib/gtag";
@@ -41,12 +41,22 @@ export interface SemesterCourses {
   courses: CourseInfo[];
 }
 
+export interface SelectedCourseInfo {
+  raw_id: string;
+  name_zh?: string;
+  name_en?: string;
+  times?: string[]; // 2-char pairs e.g. ["M3M4", "W3W4"]
+  credits?: number;
+  semester?: string;
+}
+
 export interface UserContext {
   department?: string;
   entranceYear?: string;
   currentSemester?: string;
   currentYear?: number;
   courseHistory?: SemesterCourses[];
+  selectedCourses?: SelectedCourseInfo[];
   language?: "zh" | "en";
 }
 
@@ -55,14 +65,45 @@ interface UseAIChatOptions {
   userApiKey?: string;
 }
 
+const HISTORY_KEY = "nthumods_chat_history";
+const HISTORY_MAX = 100;
+
 export function useAIChat(options: UseAIChatOptions = {}) {
   const apiEndpoint =
     options.apiEndpoint || `${import.meta.env.VITE_COURSEWEB_API_URL}/chat`;
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    try {
+      const stored = localStorage.getItem(HISTORY_KEY);
+      if (!stored) return [];
+      const parsed = JSON.parse(stored) as ChatMessage[];
+      return parsed.map((m) => ({
+        ...m,
+        timestamp: new Date(m.timestamp),
+        isStreaming: false,
+      }));
+    } catch {
+      return [];
+    }
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [quotaError, setQuotaError] = useState<QuotaError | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Persist chat history to localStorage
+  useEffect(() => {
+    const toSave = messages.filter((m) => !m.isStreaming);
+    if (messages.length === 0) {
+      localStorage.removeItem(HISTORY_KEY);
+    } else if (toSave.length > 0) {
+      try {
+        localStorage.setItem(
+          HISTORY_KEY,
+          JSON.stringify(toSave.slice(-HISTORY_MAX)),
+        );
+      } catch {}
+    }
+  }, [messages]);
 
   // Get user's current courses from timetable
   const { courses, semester, getSemesterCourses } = useUserTimetable();
@@ -70,7 +111,6 @@ export function useAIChat(options: UseAIChatOptions = {}) {
 
   // Build user context from timetable and stored preferences
   const getUserContext = useCallback((): UserContext => {
-    // Try to get department/year from localStorage preferences
     let department: string | undefined;
     let entranceYear: string | undefined;
 
@@ -83,25 +123,22 @@ export function useAIChat(options: UseAIChatOptions = {}) {
       }
     } catch {}
 
-    // Detect language from browser/app settings
     const language =
       typeof navigator !== "undefined" && navigator.language.startsWith("zh")
         ? "zh"
         : "en";
 
-    // Build course history with names
     const courseHistory: SemesterCourses[] = [];
     Object.keys(courses).forEach((sem) => {
       const semesterCourseData = getSemesterCourses(sem);
       if (semesterCourseData && semesterCourseData.length > 0) {
-        // Parse semester info from raw_id (format: YYSSC where YY=year, S=semester)
         const firstCourseId = semesterCourseData[0].raw_id;
-        const yearPart = parseInt(firstCourseId.substring(0, 3)); // e.g., "114"
-        const semesterPart = parseInt(firstCourseId.substring(3, 5)); // e.g., "10"
+        const yearPart = parseInt(firstCourseId.substring(0, 3));
+        const semesterPart = parseInt(firstCourseId.substring(3, 5));
 
         courseHistory.push({
           semester: sem,
-          year: 1911 + yearPart, // ROC year to AD year
+          year: 1911 + yearPart,
           semesterNumber:
             semesterPart === 10 ? 1 : semesterPart === 20 ? 2 : undefined,
           courses: semesterCourseData.map((course) => ({
@@ -113,10 +150,24 @@ export function useAIChat(options: UseAIChatOptions = {}) {
       }
     });
 
-    // Get current academic year
     const currentYear = semester
       ? 1911 + parseInt(semester.substring(0, 3))
       : undefined;
+
+    // Build selected courses list with time/credit info for conflict detection
+    const selectedCourses: SelectedCourseInfo[] = Object.keys(courses).flatMap(
+      (sem) => {
+        const semCourses = getSemesterCourses(sem);
+        return semCourses.map((c) => ({
+          raw_id: c.raw_id,
+          name_zh: c.name_zh,
+          name_en: c.name_en,
+          times: c.times,
+          credits: c.credits,
+          semester: sem,
+        }));
+      },
+    );
 
     return {
       department,
@@ -124,6 +175,7 @@ export function useAIChat(options: UseAIChatOptions = {}) {
       currentSemester: semester,
       currentYear,
       courseHistory,
+      selectedCourses: selectedCourses.length > 0 ? selectedCourses : undefined,
       language,
     };
   }, [courses, semester, getSemesterCourses]);
@@ -142,7 +194,6 @@ export function useAIChat(options: UseAIChatOptions = {}) {
       setIsLoading(true);
       setError(null);
 
-      // Track AI chat message sent
       gtagEvent({
         action: "ai_chat_message_sent",
         category: "AI Chat",
@@ -155,7 +206,6 @@ export function useAIChat(options: UseAIChatOptions = {}) {
         },
       });
 
-      // Create placeholder for assistant response
       const assistantMessage: ChatMessage = {
         id: crypto.randomUUID(),
         role: "assistant",
@@ -166,13 +216,11 @@ export function useAIChat(options: UseAIChatOptions = {}) {
 
       setMessages((prev) => [...prev, assistantMessage]);
 
-      // Setup abort controller for cancellation
       abortControllerRef.current = new AbortController();
 
       try {
         const userContext = getUserContext();
 
-        // Get user API key from settings if available
         let apiKey: string | undefined;
         try {
           const settings = localStorage.getItem("ai_settings");
@@ -211,7 +259,6 @@ export function useAIChat(options: UseAIChatOptions = {}) {
             throw new Error("您沒有權限使用此功能");
           }
           if (response.status === 429) {
-            // Parse retry-after from response if available
             const retryAfter = response.headers.get("Retry-After");
             const retrySeconds = retryAfter
               ? parseInt(retryAfter, 10)
@@ -223,7 +270,6 @@ export function useAIChat(options: UseAIChatOptions = {}) {
               message: "API 配額已超出限制，請稍後再試或使用您自己的 API Key",
             });
 
-            // Remove the streaming message
             setMessages((prev) =>
               prev.filter((m) => m.id !== assistantMessage.id),
             );
@@ -233,13 +279,12 @@ export function useAIChat(options: UseAIChatOptions = {}) {
           throw new Error(`Chat request failed: ${response.status}`);
         }
 
-        // Handle streaming response
         const reader = response.body?.getReader();
         if (!reader) throw new Error("No response body");
 
         const decoder = new TextDecoder();
         let fullContent = "";
-        let buffer = ""; // Buffer for incomplete lines
+        let buffer = "";
         const toolCalls: ToolCall[] = [];
 
         while (true) {
@@ -249,20 +294,18 @@ export function useAIChat(options: UseAIChatOptions = {}) {
           const chunk = decoder.decode(value, { stream: true });
           buffer += chunk;
 
-          // Split by newlines but keep incomplete lines in buffer
           const lines = buffer.split("\n");
-          buffer = lines.pop() || ""; // Keep the last incomplete line in buffer
+          buffer = lines.pop() || "";
 
           for (const line of lines) {
             if (line.startsWith("data: ")) {
               const data = line.slice(6).trim();
               if (data === "[DONE]") continue;
-              if (!data) continue; // Skip empty data
+              if (!data) continue;
 
               try {
                 const parsed = JSON.parse(data);
-                // Handle text chunks
-                // Handle quota exceeded error from streaming response
+
                 if (parsed.type === "error" && parsed.data) {
                   const errorData =
                     typeof parsed.data === "string"
@@ -273,7 +316,6 @@ export function useAIChat(options: UseAIChatOptions = {}) {
                     errorData.includes("RESOURCE_EXHAUSTED") ||
                     errorData.includes("quota")
                   ) {
-                    // Extract retry delay if available
                     const retryMatch = errorData.match(/retry.*?(\d+)/i);
                     const retrySeconds = retryMatch
                       ? parseInt(retryMatch[1], 10)
@@ -286,7 +328,6 @@ export function useAIChat(options: UseAIChatOptions = {}) {
                         "API 配額已超出限制，請稍後再試或使用您自己的 API Key",
                     });
 
-                    // Remove the streaming message
                     setMessages((prev) =>
                       prev.filter((m) => m.id !== assistantMessage.id),
                     );
@@ -295,11 +336,9 @@ export function useAIChat(options: UseAIChatOptions = {}) {
                   }
                 }
 
-                // Handle text chunks
                 if (parsed.type === "text" && parsed.data) {
                   fullContent += parsed.data;
 
-                  // Update streaming message
                   setMessages((prev) =>
                     prev.map((m) =>
                       m.id === assistantMessage.id
@@ -313,7 +352,6 @@ export function useAIChat(options: UseAIChatOptions = {}) {
                   );
                 }
 
-                // Handle tool calls
                 if (parsed.type === "tool_call" && parsed.data) {
                   const toolCall: ToolCall = {
                     name: parsed.data.name,
@@ -321,7 +359,6 @@ export function useAIChat(options: UseAIChatOptions = {}) {
                   };
                   toolCalls.push(toolCall);
 
-                  // Update message with tool call
                   setMessages((prev) =>
                     prev.map((m) =>
                       m.id === assistantMessage.id
@@ -335,7 +372,6 @@ export function useAIChat(options: UseAIChatOptions = {}) {
                   );
                 }
 
-                // Handle tool results
                 if (parsed.type === "tool_result" && parsed.data) {
                   const lastToolCall = toolCalls[toolCalls.length - 1];
                   if (lastToolCall && lastToolCall.name === parsed.data.name) {
@@ -345,7 +381,6 @@ export function useAIChat(options: UseAIChatOptions = {}) {
                       lastToolCall.result = parsed.data.result;
                     }
 
-                    // Update message with tool result
                     setMessages((prev) =>
                       prev.map((m) =>
                         m.id === assistantMessage.id
@@ -361,13 +396,11 @@ export function useAIChat(options: UseAIChatOptions = {}) {
                 }
               } catch (e) {
                 console.error("Failed to parse SSE line:", line, e);
-                // Skip malformed JSON
               }
             }
           }
         }
 
-        // Finalize message
         setMessages((prev) =>
           prev.map((m) =>
             m.id === assistantMessage.id
@@ -376,7 +409,6 @@ export function useAIChat(options: UseAIChatOptions = {}) {
           ),
         );
 
-        // Track successful AI response
         gtagEvent({
           action: "ai_chat_response_received",
           category: "AI Chat",
@@ -389,11 +421,9 @@ export function useAIChat(options: UseAIChatOptions = {}) {
         });
       } catch (err) {
         if ((err as Error).name === "AbortError") {
-          // User cancelled, remove streaming message
           setMessages((prev) =>
             prev.filter((m) => m.id !== assistantMessage.id),
           );
-          // Track cancellation
           gtagEvent({
             action: "ai_chat_cancelled",
             category: "AI Chat",
@@ -412,7 +442,6 @@ export function useAIChat(options: UseAIChatOptions = {}) {
                 : m,
             ),
           );
-          // Track error
           gtagEvent({
             action: "ai_chat_error",
             category: "AI Chat",
@@ -430,19 +459,17 @@ export function useAIChat(options: UseAIChatOptions = {}) {
     [messages, getUserContext, apiEndpoint, user],
   );
 
-  // Cancel ongoing request
   const cancel = useCallback(() => {
     abortControllerRef.current?.abort();
   }, []);
 
-  // Clear chat history
   const clear = useCallback(() => {
     setMessages([]);
     setError(null);
     setQuotaError(null);
+    localStorage.removeItem(HISTORY_KEY);
   }, []);
 
-  // Clear quota error
   const clearQuotaError = useCallback(() => {
     setQuotaError(null);
   }, []);
