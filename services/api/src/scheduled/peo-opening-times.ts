@@ -54,7 +54,13 @@ async function parsePdfWithGemini(
   apiKey: string,
 ): Promise<{ name_en: string; hours: DaySchedule } | null> {
   try {
-    const response = await fetch(pdfUrl);
+    const response = await fetch(pdfUrl, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        Referer: PEO_PAGE_URL,
+      },
+    });
     if (!response.ok) return null;
 
     const pdfBuffer = await response.arrayBuffer();
