@@ -132,7 +132,7 @@ const app = new Hono<{ Bindings: Bindings }>().get(
       : "你是課程分析師。請根據提供的課程資訊，簡潔準確地摘要。用繁體中文回答。以學生視角撰寫，直接切入重點。";
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3.5-flash",
       contents: [{ role: "user", parts }],
       config: {
         systemInstruction,
