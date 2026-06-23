@@ -66,9 +66,11 @@ async function parsePdfWithGemini(
     const pdfBuffer = await response.arrayBuffer();
     const base64Data = arrayBufferToBase64(pdfBuffer);
 
+    const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+
     const ai = new GoogleGenAI({ apiKey });
     const result = await ai.models.generateContent({
-      model: "gemini-2.0-flash",
+      model: "gemini-3.5-flash",
       contents: [
         {
           role: "user",
@@ -81,6 +83,7 @@ async function parsePdfWithGemini(
             },
             {
               text: `This is an opening hours schedule PDF for the NTHU (National Tsing Hua University) sports facility: "${facilityNameZh}".
+Today's date is ${today}.
 
 STEP 1 — List ALL distinct time periods found anywhere in the PDF in chronological order
          (e.g. "09:10-09:40", "09:40-10:20", "13:00-14:00", ...).
@@ -90,7 +93,10 @@ STEP 2 — For each day of the week, determine which of those time periods repre
          EXCLUDE: reserved sessions (預約/借場), cleaning (清潔/消毒),
          maintenance (維修/維護), or anything not open to the general public.
 
-Return ONLY this JSON object:
+If the PDF contains multiple date-range blocks, use the block that contains today's date.
+If today's date is not covered, use the nearest upcoming block.
+
+Return ONLY a single JSON object (not an array):
 {
   "name_en": "English name of the facility",
   "time_periods": ["HH:MM-HH:MM", ...],
@@ -122,7 +128,10 @@ Rules:
 
     const text = result.text;
     if (!text) return null;
-    const parsed = JSON.parse(text);
+    const raw = JSON.parse(text);
+    // Handle array response (model may return one object per date-range block)
+    const parsed = Array.isArray(raw) ? raw[0] : raw;
+    if (!parsed || typeof parsed !== "object") return null;
     const { name_en, ...rawHours } = parsed;
     const toSlots = (v: unknown): TimeSlot[] => {
       if (!Array.isArray(v)) return [];
