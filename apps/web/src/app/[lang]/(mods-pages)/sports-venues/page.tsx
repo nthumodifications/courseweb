@@ -375,6 +375,26 @@ const SportsVenuesPage = () => {
   const now = useTime(60_000); // refresh every minute for status badges
   const [selectedFacility, setSelectedFacility] =
     useState<FacilitySchedule | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const queryClient = useQueryClient();
+
+  const handleGlobalRefresh = async () => {
+    if (refreshing) return;
+    setRefreshing(true);
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_COURSEWEB_API_URL}/sports/refresh`,
+        { method: "POST" },
+      );
+      if (res.ok || res.status === 202) {
+        setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey: ["sports-opening-times"] });
+        }, 30_000);
+      }
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const { data: occupancy, dataUpdatedAt } = useQuery<OccupancyItem[]>({
     queryKey: ["venue-occupancy"],
@@ -428,16 +448,30 @@ const SportsVenuesPage = () => {
         <h1 className="text-base font-semibold text-slate-800 dark:text-neutral-100">
           體育館場
         </h1>
-        {dataUpdatedAt > 0 && (
-          <span className="text-xs text-slate-400">
-            更新於{" "}
-            {new Date(dataUpdatedAt).toLocaleTimeString("zh-TW", {
-              hour: "2-digit",
-              minute: "2-digit",
-              second: "2-digit",
-            })}
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {dataUpdatedAt > 0 && (
+            <span className="text-xs text-slate-400">
+              更新於{" "}
+              {new Date(dataUpdatedAt).toLocaleTimeString("zh-TW", {
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+              })}
+            </span>
+          )}
+          <button
+            onClick={handleGlobalRefresh}
+            disabled={refreshing}
+            title="Refresh schedule cache"
+            className="p-1 text-slate-400 hover:text-nthu-500 disabled:opacity-50 transition-colors"
+          >
+            {refreshing ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <RefreshCw className="w-4 h-4" />
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Venue list */}
