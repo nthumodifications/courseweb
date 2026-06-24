@@ -192,11 +192,9 @@ export async function syncPeoOpeningTimes(
     const cells = rows[i].querySelectorAll("td");
     if (cells.length < 2) continue;
 
-    const rawName = cells[0].textContent ?? "";
-    // Layout/header cells have internal newlines; real facility names are single-line
-    if (rawName.includes("\n")) continue;
-    const name_zh = rawName.trim();
-    if (!name_zh) continue;
+    const name_zh = (cells[0].textContent ?? "").trim();
+    // Layout/header cells have internal newlines after trimming; real names don't
+    if (!name_zh || name_zh.includes("\n")) continue;
 
     // Semester PDF links are each in their own <td> — collect from all cells after the name
     const links: any[] = [];
