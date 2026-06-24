@@ -250,18 +250,19 @@ export async function syncPeoOpeningTimes(
     } catch {}
   }
 
-  // Parse only new/unprocessed PDFs with Gemini
+  // Parse PDFs with Gemini, writing to cache after each facility so partial
+  // progress is preserved if the Worker is killed mid-way (CPU time limit).
   for (const facility of facilities) {
     // Restore cached English name if available
     if (cachedNameEn.has(facility.name_zh)) {
       facility.name_en = cachedNameEn.get(facility.name_zh)!;
     }
 
+    let parsedAny = false;
     for (const schedule of facility.schedules) {
       if (existingParsed.has(schedule.pdf_url)) {
         const cached = existingParsed.get(schedule.pdf_url)!;
         schedule.hours = cached.hours;
-        // Use English name from first successfully parsed PDF for this facility
         if (cached.name_en && cached.name_en !== facility.name_zh) {
           facility.name_en = cached.name_en;
         }
@@ -279,16 +280,31 @@ export async function syncPeoOpeningTimes(
           if (parsed.name_en && parsed.name_en !== facility.name_zh) {
             facility.name_en = parsed.name_en;
           }
+          parsedAny = true;
         }
       }
     }
+
+    // Write after each facility that had new PDFs parsed, so progress survives
+    // if the Worker is killed before all facilities are done.
+    if (parsedAny) {
+      const partial: PeoOpeningTimesCache = {
+        facilities,
+        lastUpdated: new Date().toISOString(),
+      };
+      await prisma.cache.upsert({
+        where: { key: SPORTS_CACHE_KEY },
+        update: { data: JSON.stringify(partial) },
+        create: { key: SPORTS_CACHE_KEY, data: JSON.stringify(partial) },
+      });
+    }
   }
 
+  // Final write to update lastUpdated even if no new PDFs were parsed
   const cacheData: PeoOpeningTimesCache = {
     facilities,
     lastUpdated: new Date().toISOString(),
   };
-
   await prisma.cache.upsert({
     where: { key: SPORTS_CACHE_KEY },
     update: { data: JSON.stringify(cacheData) },
