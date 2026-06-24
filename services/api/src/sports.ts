@@ -80,10 +80,8 @@ const app = new Hono<{ Bindings: Bindings }>()
       } catch {}
     }
 
-    // Background the sync so the Worker doesn't hit the 30-second wall-clock limit.
-    // Cloudflare Workers with waitUntil() can run past the response but within CPU budget.
-    c.executionCtx.waitUntil(syncPeoOpeningTimes(c.env, semester));
-    return c.json({ ok: true, semester: semester ?? "all" }, 202);
+    await syncPeoOpeningTimes(c.env, semester);
+    return c.json({ ok: true, semester: semester ?? "all" });
   });
 
 export default app;
