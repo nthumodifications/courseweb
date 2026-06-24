@@ -245,10 +245,12 @@ const ScheduleSheet = ({
         `${import.meta.env.VITE_COURSEWEB_API_URL}/sports/refresh${params}`,
         { method: "POST" },
       );
-      if (res.ok) {
-        await queryClient.invalidateQueries({
-          queryKey: ["sports-opening-times"],
-        });
+      // 200 = already up-to-date (debounce hit but data exists), 202 = background sync started
+      if (res.ok || res.status === 202) {
+        // Re-poll after 30s to pick up the background sync result
+        setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey: ["sports-opening-times"] });
+        }, 30_000);
       }
     } finally {
       setRefreshing(false);
