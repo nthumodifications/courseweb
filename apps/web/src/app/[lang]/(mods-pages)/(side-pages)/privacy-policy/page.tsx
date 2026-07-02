@@ -6,7 +6,7 @@ const PrivacyPolicyZHPage = () => {
     <div className="px-4 py-8 max-w-prose">
       <div id="hero" className="flex flex-col gap-4 py-8">
         <h1 className="text-5xl font-bold">隱私權政策</h1>
-        <p className="text-gray-600 dark:text-gray-400">更新時間: 2025/02/20</p>
+        <p className="text-muted-foreground">更新時間: 2025/02/20</p>
       </div>
       <article className="prose prose-neutral dark:prose-invert">
         <p>
@@ -82,9 +82,7 @@ const PrivacyPolicyENPage = () => {
     <div className="px-4 py-8">
       <div id="hero" className="flex flex-col gap-4 py-8">
         <h1 className="text-5xl font-bold">Privacy Policy</h1>
-        <p className="text-gray-600 dark:text-gray-400">
-          Last Updated: 2023/12/21
-        </p>
+        <p className="text-muted-foreground">Last Updated: 2023/12/21</p>
       </div>
       <article className="prose prose-neutral dark:prose-invert">
         <p>

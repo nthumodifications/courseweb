@@ -91,7 +91,7 @@ const TimetableCourseQuickAccess = ({ course }: { course: MinimalCourse }) => {
         <div className="flex flex-row gap-4 p-4">
           <Popover>
             <PopoverTrigger>
-              <div className="p-1 rounded-md hover:outline outline-1 outline-slate-400">
+              <div className="p-1 rounded-md hover:outline outline-1 outline-border">
                 <div
                   className="w-4 h-4 rounded-full"
                   style={{ backgroundColor: colorMap[course.raw_id] }}

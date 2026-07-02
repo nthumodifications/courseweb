@@ -8,7 +8,7 @@ const CeranaSponsorBanner = () => {
   return (
     <Link
       to={`/${lang}/contribute`}
-      className="block w-full bg-white dark:bg-neutral-800 border border-border rounded-md p-2 hover:border-primary/30 transition-colors group"
+      className="block w-full bg-card border border-border rounded-md p-2 hover:border-primary/30 transition-colors group"
     >
       <div className="flex flex-row gap-2 items-center">
         <img
@@ -24,7 +24,7 @@ const CeranaSponsorBanner = () => {
           </div>
           <div className="font-medium text-sm">{dict.sponsorship.cerana}</div>
         </div>
-        <ArrowRight size={14} className="text-gray-400" />
+        <ArrowRight size={14} className="text-muted-foreground" />
       </div>
     </Link>
   );

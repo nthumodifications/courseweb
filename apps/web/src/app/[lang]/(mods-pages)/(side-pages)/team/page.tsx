@@ -39,7 +39,7 @@ const Team = () => {
                     alt={member.name_en}
                     className="w-20 h-20 rounded-full m-0"
                   />
-                  <div className="absolute -top-2 -right-2 text-xs p-1 rounded-lg shadow-lg bg-neutral-50 text-black dark:bg-neutral-700 dark:text-white">
+                  <div className="absolute -top-2 -right-2 text-xs p-1 rounded-lg shadow-lg bg-card text-card-foreground">
                     {member.description}
                   </div>
                 </div>

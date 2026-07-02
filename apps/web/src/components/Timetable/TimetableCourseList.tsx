@@ -157,14 +157,14 @@ const TimetableCourseListItem = ({
     >
       {!displaySettings.lockOrder && (
         <GripVertical
-          className="w-4 h-4 text-gray-400"
+          className="w-4 h-4 text-muted-foreground"
           {...attributes}
           {...listeners}
         />
       )}
       <Popover>
         <PopoverTrigger asChild>
-          <div className="p-1 rounded-md hover:outline outline-1 outline-slate-400 mr-2">
+          <div className="p-1 rounded-md hover:outline outline-1 outline-border mr-2">
             <div
               className="w-4 h-4 rounded-full"
               style={{ backgroundColor: colorMap[course.raw_id] }}
@@ -405,7 +405,7 @@ export const TimetableCourseList = ({
         </DndContext>
         {displayCourseData.length == 0 && (
           <div className="flex flex-col items-center space-y-4">
-            <span className="text-lg font-semibold text-gray-400">
+            <span className="text-lg font-semibold text-muted-foreground">
               {dict.timetable.no_courses}
             </span>
             <div className="flex flex-row gap-2">
@@ -543,11 +543,15 @@ export const TimetableCourseList = ({
         <div className="flex flex-row gap-4">
           <div className="space-x-2">
             <span className="font-bold">{displayCourseData.length}</span>
-            <span className="text-gray-600">{dict.timetable.course}</span>
+            <span className="text-muted-foreground">
+              {dict.timetable.course}
+            </span>
           </div>
           <div className="space-x-2">
             <span className="font-bold">{totalCredits}</span>
-            <span className="text-gray-600">{dict.timetable.credits}</span>
+            <span className="text-muted-foreground">
+              {dict.timetable.credits}
+            </span>
           </div>
         </div>
       </div>

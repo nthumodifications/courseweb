@@ -145,7 +145,7 @@ const ContributePage = () => {
         </p>
         <div className="flex flex-row gap-2 mb-8">
           <IssueFormDialog>
-            <div className="rounded-md hover:shadow-md transition-shadow cursor-pointer  bg-neutral-800 text-white grid place-items-center w-28 h-28">
+            <div className="rounded-md hover:shadow-md transition-shadow cursor-pointer  bg-foreground text-background grid place-items-center w-28 h-28">
               <div className="flex flex-col items-center gap-2">
                 <Paperclip />
                 <div className="text-sm no-underline">
@@ -193,7 +193,7 @@ const ContributePage = () => {
         </p>
         <div className="flex flex-row gap-2 mb-8">
           <a href="https://github.com/nthumodifications/courseweb/issues/new?assignees=&labels=&projects=&template=bug_report.md&title=">
-            <div className="rounded-md hover:shadow-md transition-shadow cursor-pointer p-4 bg-neutral-800 text-white flex flex-row items-center gap-4">
+            <div className="rounded-md hover:shadow-md transition-shadow cursor-pointer p-4 bg-foreground text-background flex flex-row items-center gap-4">
               <BugIcon />
               <div className="flex flex-col">
                 <div className="font-bold">
@@ -209,7 +209,7 @@ const ContributePage = () => {
             href="https://github.com/nthumodifications/courseweb/issues/new?assignees=&labels=&projects=&template=feature_request.md&title="
             className="text-inherit no-underline"
           >
-            <div className="rounded-md hover:shadow-md transition-shadow cursor-pointer p-4 bg-neutral-800 text-white flex flex-row items-center gap-4">
+            <div className="rounded-md hover:shadow-md transition-shadow cursor-pointer p-4 bg-foreground text-background flex flex-row items-center gap-4">
               <Lightbulb />
               <div className="flex flex-col">
                 <div className="font-bold">

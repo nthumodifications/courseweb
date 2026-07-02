@@ -24,7 +24,7 @@ const ProxyLoginExplainerZH = () => {
     <div className="px-4 py-8">
       <div id="hero" className="flex flex-col gap-4 py-8">
         <h1 className="text-5xl font-bold">NTHUMods 代理登入說明</h1>
-        <p className="text-gray-600 dark:text-gray-400">更新時間: 2025/03/04</p>
+        <p className="text-muted-foreground">更新時間: 2025/03/04</p>
       </div>
       <article className="prose prose-neutral dark:prose-invert">
         <h2>什麼是 NTHUMods 代理登入？</h2>
@@ -159,9 +159,7 @@ const ProxyLoginExplainerEN = () => {
     <div className="px-4 py-8">
       <div id="hero" className="flex flex-col gap-4 py-8">
         <h1 className="text-5xl font-bold">NTHUMods Proxy Login Explained</h1>
-        <p className="text-gray-600 dark:text-gray-400">
-          Last Updated: 2025/03/04
-        </p>
+        <p className="text-muted-foreground">Last Updated: 2025/03/04</p>
       </div>
       <article className="prose prose-neutral dark:prose-invert">
         <h2>What is NTHUMods Proxy Login?</h2>

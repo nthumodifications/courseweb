@@ -99,7 +99,7 @@ const SortableNavRow = ({
         <GripVertical className="h-4 w-4" />
       </button>
       <def.Icon className="h-4 w-4 text-muted-foreground" />
-      <div className="flex-1 text-sm font-medium">
+      <div className="flex-1 text-sm font-medium text-foreground">
         {language === "zh" ? def.labelZh : def.label}
       </div>
       <Switch

@@ -17,10 +17,10 @@ const IssueButton = ({
 }) => {
   return (
     <Link to={href}>
-      <div className="flex flex-col flex-1 p-5 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800">
+      <div className="flex flex-col flex-1 p-5 cursor-pointer hover:bg-muted">
         <div className="flex-1 py-8 items-center">{icon}</div>
         <h3 className="text-2xl">{title}</h3>
-        <p className="dark:text-gray-600 text-gray-400">{description}</p>
+        <p className="text-muted-foreground">{description}</p>
       </div>
     </Link>
   );

@@ -7,7 +7,7 @@ const OpenCollectiveSponsorBanner = () => {
       href="https://opencollective.com/nthumods"
       target="_blank"
       rel="noopener noreferrer"
-      className="block w-full bg-white dark:bg-neutral-800 border border-border rounded-md p-2 hover:border-primary/30 transition-colors group"
+      className="block w-full bg-card border border-border rounded-md p-2 hover:border-primary/30 transition-colors group"
     >
       <div className="flex flex-row gap-3 items-center justify-between">
         <div className="flex items-center gap-3">
@@ -21,7 +21,7 @@ const OpenCollectiveSponsorBanner = () => {
             </div>
           </div>
         </div>
-        <ArrowRight size={14} className="text-gray-400" />
+        <ArrowRight size={14} className="text-muted-foreground" />
       </div>
     </a>
   );
