@@ -34,6 +34,17 @@ export const CalendarMonthContainer = ({
 
   const isScreenMD = useMediaQuery("(min-width: 768px)");
   const rows_length = Math.ceil(displayMonth.length / 7);
+
+  // Resolve the NTHU event color from the CSS custom property at render time so
+  // that color-utility helpers (getBrightness / getContrastColor) receive an
+  // actual hex value rather than an unresolvable "var(...)" string.
+  const nthuEventColor =
+    typeof window !== "undefined"
+      ? getComputedStyle(document.documentElement)
+          .getPropertyValue("--color-nthu-event")
+          .trim() || "#A973D9"
+      : "#A973D9";
+
   const {
     data: nthuCalendarEvents = [],
     error: calendarError,
@@ -59,7 +70,7 @@ export const CalendarMonthContainer = ({
           start: startOfDay(new Date(event.date)),
           end: endOfDay(new Date(event.date)),
           allDay: true,
-          color: "#A973D9",
+          color: nthuEventColor,
           tag: "NTHU",
           actualEnd: endOfDay(new Date(event.date)),
           repeat: null,
@@ -127,7 +138,7 @@ export const CalendarMonthContainer = ({
           {allSortedEvents.map((event, index) => (
             <EventPopover key={index} event={event}>
               <div
-                className="bg-nthu-500 rounded-md p-0.5 md:p-1 flex flex-row gap-1 items-center hover:shadow-md cursor-pointer transition-shadow select-none"
+                className="bg-primary rounded-md p-0.5 md:p-1 flex flex-row gap-1 items-center hover:shadow-md cursor-pointer transition-shadow select-none"
                 style={{
                   background: event.color,
                   color: event.textColor,
@@ -198,7 +209,7 @@ export const CalendarMonthContainer = ({
             }}
           >
             <div
-              className="bg-nthu-500 rounded-md p-0.5 md:p-1 flex flex-row gap-1 items-center hover:shadow-md cursor-pointer transition-shadow select-none"
+              className="bg-primary rounded-md p-0.5 md:p-1 flex flex-row gap-1 items-center hover:shadow-md cursor-pointer transition-shadow select-none"
               style={{ background: event.color, color: event.textColor }}
             >
               <div className="text-xs leading-none whitespace-nowrap overflow-hidden">
@@ -228,14 +239,14 @@ export const CalendarMonthContainer = ({
           <div
             className={cn(
               "flex flex-col gap-1 min-h-[120px] border-t border-l border-border last:border-b last:border-r",
-              isSameMonth(day, displayMonth[15]) ? "" : "bg-black/5",
+              isSameMonth(day, displayMonth[15]) ? "" : "bg-foreground/5",
             )}
           >
             <div
               className={cn(
                 "text-sm font-semibold cursor-pointer p-0.5",
                 isToday(day)
-                  ? "w-6 h-6 rounded-full bg-nthu-500 text-white flex items-center justify-center"
+                  ? "w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center"
                   : "",
               )}
               onClick={() => onChangeView("week", day)}

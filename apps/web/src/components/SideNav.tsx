@@ -25,38 +25,33 @@ const SideNav: FC = () => {
 
   const allLinks: Record<
     SidebarNavItemId,
-    { title: string; href: string; icon: JSX.Element; color: string }
+    { title: string; href: string; icon: JSX.Element }
   > = useMemo(
     () => ({
       today: {
         title: dict.navigation.today,
         href: `/${language}/today`,
         icon: <I.LayoutList strokeWidth="2" />,
-        color: "#7EC96D",
       },
       timetable: {
         title: dict.navigation.timetable,
         href: `/${language}/timetable`,
         icon: <I.Calendar strokeWidth="2" />,
-        color: "#E47B86",
       },
       bus: {
         title: dict.navigation.bus,
         href: `/${language}/bus`,
         icon: <I.Bus strokeWidth="2" />,
-        color: "#EB8751",
       },
       apps: {
         title: dict.applist.title,
         href: `/${language}/apps`,
         icon: <I.LayoutGrid strokeWidth="2" />,
-        color: "#AEA3C9",
       },
       settings: {
         title: dict.navigation.settings,
         href: `/${language}/settings`,
         icon: <I.Settings strokeWidth="2" />,
-        color: "#B46DD6",
       },
     }),
     [dict, language],
@@ -79,7 +74,7 @@ const SideNav: FC = () => {
     <nav className="h-full w-full flex flex-col justify-start items-start gap-3">
       {visibleLinks.map((link) => (
         <div
-          className={`w-full flex flex-row items-center justify-start gap-2 rounded-md cursor-pointer transition dark:text-slate-300 font-semibold px-3 py-1.5 ${link.href === pathname ? "bg-primary text-primary-foreground" : "text-slate-700 dark:text-slate-300 hover:bg-accent hover:text-accent-foreground"}`}
+          className={`w-full flex flex-row items-center justify-start gap-2 rounded-md cursor-pointer transition font-semibold px-3 py-1.5 ${link.href === pathname ? "bg-primary text-primary-foreground" : "text-sidebar-foreground hover:bg-accent hover:text-accent-foreground"}`}
           key={link.id}
           onClick={handleLinkClick(link.href)}
         >

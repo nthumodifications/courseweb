@@ -74,7 +74,7 @@ const BottomNav: FC = () => {
       >
         {visibleLinks.map((link) => (
           <div
-            className={`flex flex-col items-center gap-1 ${link.href === pathname ? "text-primary" : "text-gray-400"}`}
+            className={`flex flex-col items-center gap-1 ${link.href === pathname ? "text-primary" : "text-muted-foreground"}`}
             key={link.id}
             onClick={() => navigate(link.href)}
           >

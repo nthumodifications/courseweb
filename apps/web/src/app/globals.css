@@ -72,6 +72,8 @@ body {
     --bg-gradient-from: hsl(var(--background));
     --bg-gradient-to: hsl(var(--background));
     --bg-gradient-dir: 135deg;
+    /* NTHU academic calendar event color */
+    --color-nthu-event: #a973d9;
   }
 
   .dark {
@@ -157,6 +159,39 @@ body.bg-noise::before {
   opacity: 0.035;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size: 256px 256px;
+}
+
+/* Allow body background patterns to show through SidebarInset */
+body.bg-gradient [data-sidebar="inset"],
+body.bg-dots [data-sidebar="inset"],
+body.bg-lines [data-sidebar="inset"],
+body.bg-noise [data-sidebar="inset"] {
+  background: transparent !important;
+}
+
+/* Also make the header transparent for background effects */
+body.bg-gradient header,
+body.bg-dots header,
+body.bg-lines header,
+body.bg-noise header {
+  background: transparent !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* ── Density-driven layout spacing ──────────────────────────────────
+   --density-factor: compact=0.75 | comfortable=1.0 | spacious=1.25
+────────────────────────────────────────────────────────────────── */
+
+/* Density-based root spacing variables for use in layouts */
+:root {
+  --content-gap: calc(1rem * var(--density-factor, 1));
+  --card-padding: calc(1rem * var(--density-factor, 1));
+}
+
+/* Density affects main content padding and card-like sections */
+[data-sidebar="inset"] > div {
+  padding-top: calc(1rem * var(--density-factor, 1));
 }
 
 /* Zen Mode — hide chrome, focus on content */
