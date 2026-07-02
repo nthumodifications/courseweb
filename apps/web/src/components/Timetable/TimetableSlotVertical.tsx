@@ -3,7 +3,10 @@ import { CourseTimeslotData, TimetableDim } from "@/types/timetable";
 import { forwardRef, HTMLAttributes } from "react";
 import { VenueChip } from "./VenueChip";
 import { scheduleTimeSlots } from "@courseweb/shared";
-import useUserTimetable from "@/hooks/contexts/useUserTimetable";
+import useUserTimetable, {
+  DEFAULT_FIELD_ORDER,
+  TimetableFieldKey,
+} from "@/hooks/contexts/useUserTimetable";
 import { cn } from "@courseweb/ui";
 
 type TimetableSlotProps = {
@@ -33,11 +36,81 @@ const TimetableSlotVertical = forwardRef<HTMLDivElement, TimetableSlotProps>(
         : preferences.align == "center"
           ? "text-center"
           : "text-right";
+    const justifyContent =
+      (preferences.verticalAlign ?? "top") == "top"
+        ? "justify-start"
+        : (preferences.verticalAlign ?? "top") == "center"
+          ? "justify-center"
+          : "justify-end";
+
+    const fieldOrder: TimetableFieldKey[] =
+      preferences.fieldOrder ?? DEFAULT_FIELD_ORDER;
+    const display = preferences.display;
+
+    const teacherName =
+      displayLang == "zh"
+        ? course.course.teacher_zh?.join(", ")
+        : course.course.teacher_en?.join(", ");
+
+    const renderField = (field: TimetableFieldKey) => {
+      switch (field) {
+        case "code":
+          return display.code ? (
+            <span key="code" className={cn("text-xs font-medium", textAlign)}>
+              {course.course.department + course.course.course}
+            </span>
+          ) : null;
+        case "title":
+          return display.title ? (
+            <span
+              key="title"
+              className={cn("text-xs md:text-sm font-medium w-full", textAlign)}
+            >
+              {displayLang == "zh"
+                ? course.course.name_zh
+                : course.course.name_en}
+            </span>
+          ) : null;
+        case "time":
+          return display.time &&
+            scheduleTimeSlots[course.startTime] &&
+            scheduleTimeSlots[course.endTime] ? (
+            <span key="time" className={cn("text-xs", textAlign)}>
+              {scheduleTimeSlots[course.startTime].start} -{" "}
+              {scheduleTimeSlots[course.endTime].end}
+            </span>
+          ) : null;
+        case "teacher":
+          return display.teacher && teacherName ? (
+            <span key="teacher" className={cn("text-xs", textAlign)}>
+              {teacherName}
+            </span>
+          ) : null;
+        case "venue":
+          return display.venue ? (
+            <div key="venue" className={cn("flex", flexAlign)}>
+              <VenueChip
+                venue={course.venue}
+                color={course.textColor}
+                textColor={course.textColor}
+              />
+            </div>
+          ) : null;
+        case "credits":
+          return display.credits ? (
+            <span key="credits" className={cn("text-xs", textAlign)}>
+              {course.course.credits} cr
+            </span>
+          ) : null;
+        default:
+          return null;
+      }
+    };
 
     return (
       <div
         ref={ref}
-        className={`absolute rounded-md transform translate-y-0.5`}
+        className="absolute rounded-md transform translate-y-0.5"
         style={{
           left:
             tableDim.header.width +
@@ -58,53 +131,13 @@ const TimetableSlotVertical = forwardRef<HTMLDivElement, TimetableSlotProps>(
       >
         <div
           className={cn(
-            "flex flex-col justify-start h-full p-1 select-none",
+            "flex flex-col h-full p-1 select-none gap-0.5 overflow-hidden",
             flexAlign,
+            justifyContent,
           )}
           style={{ color: course.textColor }}
         >
-          <div
-            className={cn(
-              "flex-1 w-full flex flex-col overflow-hidden",
-              flexAlign,
-              textAlign,
-            )}
-          >
-            {preferences.display.code && (
-              <span className="text-xs font-medium" id="time_slot">
-                {course.course.department + course.course.course}
-              </span>
-            )}
-            {preferences.display.title &&
-              (displayLang == "zh" ? (
-                <span
-                  className={cn("text-xs md:text-sm font-medium", textAlign)}
-                >
-                  {course.course.name_zh}
-                </span>
-              ) : (
-                <span className={cn("text-xs font-medium w-full", textAlign)}>
-                  {course.course.name_en}
-                </span>
-              ))}
-            {preferences.display.time &&
-              scheduleTimeSlots[course.startTime] &&
-              scheduleTimeSlots[course.endTime] && (
-                <span className="text-xs" id="time_slot">
-                  {scheduleTimeSlots[course.startTime].start} -{" "}
-                  {scheduleTimeSlots[course.endTime].end}
-                </span>
-              )}
-          </div>
-          {preferences.display.venue && (
-            <div className="flex flex-row justify-end items-center space-x-1">
-              <VenueChip
-                venue={course.venue}
-                color={course.textColor}
-                textColor={course.textColor}
-              />
-            </div>
-          )}
+          {fieldOrder.map((field) => renderField(field))}
         </div>
       </div>
     );
