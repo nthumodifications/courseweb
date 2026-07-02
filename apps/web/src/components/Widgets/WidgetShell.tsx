@@ -28,7 +28,7 @@ export const WidgetShell: FC<WidgetShellProps> = ({
       )}
     >
       {/* Widget header */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-card/50">
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-card text-card-foreground">
         <div className="flex items-center gap-2">
           {dragHandleProps && (
             <button
@@ -40,7 +40,9 @@ export const WidgetShell: FC<WidgetShellProps> = ({
               <GripVertical className="h-4 w-4" />
             </button>
           )}
-          <h3 className="text-sm font-semibold">{title}</h3>
+          <h3 className="text-sm font-semibold text-card-foreground">
+            {title}
+          </h3>
         </div>
         {onRemove && (
           <button
