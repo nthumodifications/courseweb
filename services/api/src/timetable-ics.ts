@@ -44,6 +44,7 @@ export const SEMESTER_INFO = [
   { id: "11320", begins: new Date(2025, 1, 17), ends: new Date(2025, 5, 8) },
   { id: "11410", begins: new Date(2025, 8, 1), ends: new Date(2025, 11, 21) },
   { id: "11420", begins: new Date(2026, 1, 23), ends: new Date(2026, 5, 14) },
+  { id: "11510", begins: new Date(2026, 8, 7), ends: new Date(2026, 11, 27) },
 ];
 
 export type CourseRow = {

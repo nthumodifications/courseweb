@@ -46,11 +46,11 @@ docker build -t courseweb-data-sync .
 docker run --env-file .env courseweb-data-sync
 
 # Run with custom semester
-docker run --env-file .env courseweb-data-sync tsx src/sync-courses.ts 11420
+docker run --env-file .env courseweb-data-sync tsx src/sync-courses.ts 11510
 
 # Run scheduled sync (persistent container)
 docker run -d --env-file .env --name courseweb-sync \
-  courseweb-data-sync tsx src/update-courses.ts "0 8 * * *" 11420
+  courseweb-data-sync tsx src/update-courses.ts "0 8 * * *" 11510
 ```
 
 ### Docker Compose Usage
@@ -112,7 +112,7 @@ npm run sync:once [semester]
 
 This will:
 
-- Scrape archived courses for the specified semester (defaults to 11420)
+- Scrape archived courses for the specified semester (defaults to 11510)
 - Download and process syllabus data
 - Update Algolia search index
 - Exit when complete
@@ -166,16 +166,16 @@ import {
 } from "@courseweb/data-sync";
 
 // One-time sync
-const result = await syncCourses("11420"); // semester parameter optional
+const result = await syncCourses("11510"); // semester parameter optional
 
 // Start scheduled sync
-const job = startScheduledSync("0 8 * * *", "11420"); // cron pattern and semester optional
+const job = startScheduledSync("0 8 * * *", "11510"); // cron pattern and semester optional
 
 // Use individual functions
 const env = validateEnvironment();
-const courses = await scrapeArchivedCourses(env, "11420");
-await scrapeSyllabus(env, "11420", courses);
-await syncCoursesToAlgolia(env, "11420");
+const courses = await scrapeArchivedCourses(env, "11510");
+await scrapeSyllabus(env, "11510", courses);
+await syncCoursesToAlgolia(env, "11510");
 ```
 
 ### Direct Function Usage
@@ -197,13 +197,13 @@ const env: SyncEnvironment = {
 };
 
 // Scrape courses and get results
-const courses = await scrapeArchivedCourses(env, "11420");
+const courses = await scrapeArchivedCourses(env, "11510");
 
 // Process syllabus with scraped courses
-await scrapeSyllabus(env, "11420", courses);
+await scrapeSyllabus(env, "11510", courses);
 
 // Sync to search index
-await syncCoursesToAlgolia(env, "11420");
+await syncCoursesToAlgolia(env, "11510");
 ```
 
 ## Environment Variables
@@ -221,14 +221,14 @@ Optional variables:
 
 | Variable       | Description              | Default       |
 | -------------- | ------------------------ | ------------- |
-| `SEMESTER`     | Default semester to sync | `11420`       |
+| `SEMESTER`     | Default semester to sync | `11510`       |
 | `CRON_PATTERN` | Default cron schedule    | `"0 0 * * *"` |
 
 ## Configuration
 
 ### Default Semester
 
-The default semester is `11420` (Spring 2026). You can override this by:
+The default semester is `11510` (academic year 115, semester 1). You can override this by:
 
 - Passing a different semester parameter to the functions
 - Setting the `SEMESTER` environment variable

@@ -20,7 +20,10 @@ export default function Error({
   const isSumtingWong = Math.random() < 0.1;
 
   return (
-    <div className="h-[--content-height] w-full overflow-x-hidden grid place-items-center px-4">
+    <div
+      data-nosnippet
+      className="h-[--content-height] w-full overflow-x-hidden grid place-items-center px-4"
+    >
       <Alert variant="destructive" color="danger">
         <AlertOctagon />
         <AlertTitle>

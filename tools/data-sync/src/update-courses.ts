@@ -14,7 +14,7 @@ import {
 import type { SyncResult } from "./types";
 
 const syncCourseData = async (
-  semester: string = "11420",
+  semester: string = "11510",
 ): Promise<SyncResult> => {
   try {
     console.log("🚀 Starting scheduled course synchronization...");
@@ -65,7 +65,7 @@ const syncCourseData = async (
 
 export const startScheduledSync = (
   cronPattern: string = "0 0 * * *",
-  semester: string = "11420",
+  semester: string = "11510",
 ) => {
   console.log(
     `📅 Starting scheduled sync with pattern: ${cronPattern} for semester: ${semester}`,
@@ -107,9 +107,9 @@ export { syncCourseData };
 export default startScheduledSync;
 
 // If this file is run directly, start the scheduled sync
-if (require.main === module) {
+if (import.meta.main) {
   const cronPattern = process.argv[2] || "0 0 * * *";
-  const semester = process.argv[3] || "11420";
+  const semester = process.argv[3] || "11510";
 
   console.log(`Starting scheduled sync:`);
   console.log(`  Cron pattern: ${cronPattern}`);

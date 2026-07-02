@@ -7,7 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@courseweb/ui";
 import Compact from "@uiw/react-color-compact";
 import { Drawer, DrawerContent, DrawerTrigger } from "@courseweb/ui";
 import { Button } from "@courseweb/ui";
-import { Book, ExternalLink, CalendarPlus } from "lucide-react";
+import { ExternalLink, CalendarPlus } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@courseweb/ui";
 import DateContributeForm from "@/components/CourseDetails/DateContributeForm";
@@ -147,10 +147,12 @@ const TimetableCourseQuickAccess = ({ course }: { course: MinimalCourse }) => {
             <ExternalLink className="w-4 h-4 mr-2" />
             課程詳情
           </Button>
-          <Button variant="outline" disabled={true}>
-            <Book className="w-4 h-4 mr-2" />
-            學習平臺
-          </Button>
+          <DateContributeForm courseId={course.raw_id}>
+            <Button variant="outline">
+              <CalendarPlus className="w-4 h-4 mr-2" />
+              貢獻日期
+            </Button>
+          </DateContributeForm>
           <Button
             variant="destructive"
             onClick={() => deleteCourse(course.raw_id)}

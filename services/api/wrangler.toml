@@ -1,4 +1,5 @@
 name = "nthumods-api"
+account_id = "50396718bfac13dffb7727aad0e82150"
 main = "src/index.ts"
 compatibility_date = "2025-03-06"
 compatibility_flags = ["nodejs_compat"]

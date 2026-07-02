@@ -97,6 +97,13 @@ export const semesterInfo = [
     begins: new Date(2026, 2 - 1, 23),
     ends: new Date(2026, 6 - 1, 14),
   },
+  {
+    id: "11510",
+    year: 2026,
+    semester: 1,
+    begins: new Date(2026, 9 - 1, 7),
+    ends: new Date(2026, 12 - 1, 27),
+  },
 ];
 
 export const currentSemester = semesterInfo.find((semester) => {

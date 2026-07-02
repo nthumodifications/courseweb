@@ -8,7 +8,7 @@ const PEO_BASE_URL = "https://nthupeo.site.nthu.edu.tw";
 export const SPORTS_CACHE_KEY = "peo_opening_times";
 
 export interface TimeSlot {
-  open: string;  // "HH:MM" 24-hour
+  open: string; // "HH:MM" 24-hour
   close: string; // "HH:MM" 24-hour
 }
 
@@ -54,15 +54,23 @@ async function parsePdfWithGemini(
   apiKey: string,
 ): Promise<{ name_en: string; hours: DaySchedule } | null> {
   try {
-    const response = await fetch(pdfUrl);
+    const response = await fetch(pdfUrl, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        Referer: PEO_PAGE_URL,
+      },
+    });
     if (!response.ok) return null;
 
     const pdfBuffer = await response.arrayBuffer();
     const base64Data = arrayBufferToBase64(pdfBuffer);
 
+    const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+
     const ai = new GoogleGenAI({ apiKey });
     const result = await ai.models.generateContent({
-      model: "gemini-flash-lite-latest",
+      model: "gemini-3.5-flash",
       contents: [
         {
           role: "user",
@@ -75,10 +83,23 @@ async function parsePdfWithGemini(
             },
             {
               text: `This is an opening hours schedule PDF for the NTHU (National Tsing Hua University) sports facility: "${facilityNameZh}".
+Today's date is ${today}.
 
-Extract the opening hours and return ONLY a JSON object in this exact format:
+STEP 1 — List ALL distinct time periods found anywhere in the PDF in chronological order
+         (e.g. "09:10-09:40", "09:40-10:20", "13:00-14:00", ...).
+
+STEP 2 — For each day of the week, determine which of those time periods represent
+         PUBLICLY OPEN access (開放 / 一般開放).
+         EXCLUDE: reserved sessions (預約/借場), cleaning (清潔/消毒),
+         maintenance (維修/維護), or anything not open to the general public.
+
+If the PDF contains multiple date-range blocks, use the block that contains today's date.
+If today's date is not covered, use the nearest upcoming block.
+
+Return ONLY a single JSON object (not an array):
 {
   "name_en": "English name of the facility",
+  "time_periods": ["HH:MM-HH:MM", ...],
   "monday": [{"open": "HH:MM", "close": "HH:MM"}],
   "tuesday": [{"open": "HH:MM", "close": "HH:MM"}],
   "wednesday": [{"open": "HH:MM", "close": "HH:MM"}],
@@ -91,10 +112,9 @@ Extract the opening hours and return ONLY a JSON object in this exact format:
 }
 
 Rules:
-- Each day is an ARRAY of time slots (a facility may open in the morning, close at noon, then reopen in the afternoon — list each session as a separate object)
+- time_periods lists every distinct period found in the PDF
+- Each day is an ARRAY of PUBLICLY OPEN time slots only; use [] if closed or no public access
 - Use 24-hour HH:MM format
-- If a day is closed, use an empty array []
-- If multiple days share the same hours, still list each day separately
 - "holiday" means national holidays; use [] if closed
 - "name_en" should be the standard English name for this type of facility`,
             },
@@ -108,7 +128,10 @@ Rules:
 
     const text = result.text;
     if (!text) return null;
-    const parsed = JSON.parse(text);
+    const raw = JSON.parse(text);
+    // Handle array response (model may return one object per date-range block)
+    const parsed = Array.isArray(raw) ? raw[0] : raw;
+    if (!parsed || typeof parsed !== "object") return null;
     const { name_en, ...rawHours } = parsed;
     const toSlots = (v: unknown): TimeSlot[] => {
       if (!Array.isArray(v)) return [];
@@ -139,14 +162,19 @@ Rules:
   }
 }
 
-export async function syncPeoOpeningTimes(env: {
-  DB: D1Database;
-  GOOGLE_AI_API_KEY?: string;
-}): Promise<void> {
+export async function syncPeoOpeningTimes(
+  env: {
+    DB: D1Database;
+    GOOGLE_AI_API_KEY?: string;
+  },
+  forceSemester?: string,
+): Promise<void> {
   if (!env.GOOGLE_AI_API_KEY) {
-    console.warn("GOOGLE_AI_API_KEY not set, skipping PEO opening times sync");
+    console.warn("GOOGLE_AI_API_KEY missing, skipping PEO opening times sync");
     return;
   }
+
+  const apiKey = env.GOOGLE_AI_API_KEY;
 
   // Fetch the PEO page
   const pageResponse = await fetch(PEO_PAGE_URL);
@@ -164,8 +192,9 @@ export async function syncPeoOpeningTimes(env: {
     const cells = rows[i].querySelectorAll("td");
     if (cells.length < 2) continue;
 
-    const name_zh = cells[0].textContent?.trim() ?? "";
-    if (!name_zh) continue;
+    const name_zh = (cells[0].textContent ?? "").trim();
+    // Layout/header cells have internal newlines after trimming; real names don't
+    if (!name_zh || name_zh.includes("\n")) continue;
 
     // Semester PDF links are each in their own <td> — collect from all cells after the name
     const links: any[] = [];
@@ -179,9 +208,7 @@ export async function syncPeoOpeningTimes(env: {
       const semesterLabel = links[j].textContent?.trim() ?? `學期${j + 1}`;
       if (!href || !href.endsWith(".pdf")) continue;
 
-      const pdfUrl = href.startsWith("http")
-        ? href
-        : `${PEO_BASE_URL}${href}`;
+      const pdfUrl = href.startsWith("http") ? href : `${PEO_BASE_URL}${href}`;
 
       schedules.push({ semester: semesterLabel, pdf_url: pdfUrl, hours: null });
     }
@@ -212,7 +239,7 @@ export async function syncPeoOpeningTimes(env: {
           cachedNameEn.set(facility.name_zh, facility.name_en);
         }
         for (const schedule of facility.schedules) {
-          if (schedule.hours !== null) {
+          if (schedule.hours !== null && schedule.semester !== forceSemester) {
             existingParsed.set(schedule.pdf_url, {
               name_en: facility.name_en,
               hours: schedule.hours,
@@ -223,18 +250,19 @@ export async function syncPeoOpeningTimes(env: {
     } catch {}
   }
 
-  // Parse only new/unprocessed PDFs with Gemini
+  // Parse PDFs with Gemini, writing to cache after each facility so partial
+  // progress is preserved if the Worker is killed mid-way (CPU time limit).
   for (const facility of facilities) {
     // Restore cached English name if available
     if (cachedNameEn.has(facility.name_zh)) {
       facility.name_en = cachedNameEn.get(facility.name_zh)!;
     }
 
+    let parsedAny = false;
     for (const schedule of facility.schedules) {
       if (existingParsed.has(schedule.pdf_url)) {
         const cached = existingParsed.get(schedule.pdf_url)!;
         schedule.hours = cached.hours;
-        // Use English name from first successfully parsed PDF for this facility
         if (cached.name_en && cached.name_en !== facility.name_zh) {
           facility.name_en = cached.name_en;
         }
@@ -245,23 +273,38 @@ export async function syncPeoOpeningTimes(env: {
         const parsed = await parsePdfWithGemini(
           schedule.pdf_url,
           facility.name_zh,
-          env.GOOGLE_AI_API_KEY,
+          apiKey,
         );
         if (parsed) {
           schedule.hours = parsed.hours;
           if (parsed.name_en && parsed.name_en !== facility.name_zh) {
             facility.name_en = parsed.name_en;
           }
+          parsedAny = true;
         }
       }
     }
+
+    // Write after each facility that had new PDFs parsed, so progress survives
+    // if the Worker is killed before all facilities are done.
+    if (parsedAny) {
+      const partial: PeoOpeningTimesCache = {
+        facilities,
+        lastUpdated: new Date().toISOString(),
+      };
+      await prisma.cache.upsert({
+        where: { key: SPORTS_CACHE_KEY },
+        update: { data: JSON.stringify(partial) },
+        create: { key: SPORTS_CACHE_KEY, data: JSON.stringify(partial) },
+      });
+    }
   }
 
+  // Final write to update lastUpdated even if no new PDFs were parsed
   const cacheData: PeoOpeningTimesCache = {
     facilities,
     lastUpdated: new Date().toISOString(),
   };
-
   await prisma.cache.upsert({
     where: { key: SPORTS_CACHE_KEY },
     update: { data: JSON.stringify(cacheData) },

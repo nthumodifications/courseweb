@@ -46,6 +46,25 @@ declare const app: import("hono/hono-base").HonoBase<
       };
     };
   } & {
+    "/dates": {
+      $get: {
+        input: {
+          query: {
+            courses: string | string[];
+          };
+        };
+        output: {
+          raw_id: string;
+          id: number;
+          type: string;
+          title: string;
+          date: string;
+        }[];
+        outputFormat: "json";
+        status: import("hono/utils/http-status").ContentfulStatusCode;
+      };
+    };
+  } & {
     "/:courseId": {
       $get: {
         input: {

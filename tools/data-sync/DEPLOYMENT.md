@@ -91,7 +91,7 @@ gcloud scheduler jobs create http courseweb-sync-daily \
   --http-method POST \
   --oidc-service-account-email courseweb-sync@your-project.iam.gserviceaccount.com \
   --headers "Content-Type=application/json" \
-  --message-body '{"semester":"11420"}'
+  --message-body '{"semester":"11510"}'
 ```
 
 #### Method 2: Cloud Run Jobs (Recommended)
@@ -346,7 +346,7 @@ ALGOLIA_APP_ID=your-algolia-app-id
 ALGOLIA_API_KEY=your-algolia-admin-api-key
 
 # Optional
-SEMESTER=11420                    # Default semester
+SEMESTER=11510                    # Default semester
 CRON_PATTERN="0 8 * * *"         # Default schedule
 ```
 

@@ -3,9 +3,19 @@ import { FC, PropsWithChildren, useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@courseweb/ui";
 import { CalendarEvent, DisplayCalendarEvent } from "./calendar.types";
 import { Button } from "@courseweb/ui";
-import { Delete, Edit, MapPin, Pin, Text, Trash, X } from "lucide-react";
+import {
+  Delete,
+  Edit,
+  MapPin,
+  Pin,
+  Text,
+  Trash,
+  X,
+  CalendarPlus,
+} from "lucide-react";
 import { PopoverClose } from "@radix-ui/react-popover";
 import { UpdateType, useCalendar } from "./calendar_hook";
+import DateContributeForm from "@/components/CourseDetails/DateContributeForm";
 import {
   Dialog,
   DialogContent,
@@ -131,7 +141,6 @@ export const EventPopover: FC<
     else {
       setUpdateDialogOpen(true);
       setWaitingUpdateEvent(newEvent);
-      console.log("1", event, newEvent);
     }
   };
 
@@ -144,7 +153,6 @@ export const EventPopover: FC<
   const handleRepeatedEventUpdate = (type?: UpdateType) => {
     if (!type) return;
     if (waitingUpdateEvent) updateEvent(waitingUpdateEvent, event, type);
-    console.log("2", waitingUpdateEvent);
     setWaitingUpdateEvent(null);
     setUpdateDialogOpen(false);
   };
@@ -163,6 +171,13 @@ export const EventPopover: FC<
         />
         <div className="flex flex-col">
           <div className="flex flex-row justify-end">
+            {event.courseId && (
+              <DateContributeForm courseId={event.courseId}>
+                <Button size="icon" variant="ghost">
+                  <CalendarPlus className="w-4 h-4" />
+                </Button>
+              </DateContributeForm>
+            )}
             {!event.readonly && (
               <AddEventButton
                 defaultEvent={{
