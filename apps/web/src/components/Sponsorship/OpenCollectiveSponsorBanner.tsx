@@ -13,7 +13,7 @@ const OpenCollectiveSponsorBanner = () => {
         <div className="flex items-center gap-3">
           <div className="text-lg text-center w-7">❤️</div>
           <div className="flex flex-col">
-            <div className="font-medium text-sm">
+            <div className="font-medium text-sm text-card-foreground">
               {dict.sponsorship.opencollective.title}
             </div>
             <div className="text-muted-foreground text-xs">

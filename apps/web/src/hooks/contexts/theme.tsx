@@ -67,6 +67,20 @@ const applyThemeConfig = (config: ThemeConfig, isDark: boolean) => {
     root.style.setProperty(`--${key}`, value as string);
   }
 
+  // Derive card/popover from background+foreground when the preset doesn't define them.
+  // Without this, themes that omit --card keep the global default (white), causing
+  // light text from a dark preset to render on a white card background (unreadable).
+  const bgVal = root.style.getPropertyValue("--background");
+  const fgVal = root.style.getPropertyValue("--foreground");
+  if (!("card" in colors)) {
+    root.style.setProperty("--card", bgVal);
+    root.style.setProperty("--card-foreground", fgVal);
+  }
+  if (!("popover" in colors)) {
+    root.style.setProperty("--popover", bgVal);
+    root.style.setProperty("--popover-foreground", fgVal);
+  }
+
   // Apply accent override (overrides --primary and --ring)
   if (config.accentOverride) {
     root.style.setProperty("--primary", config.accentOverride);

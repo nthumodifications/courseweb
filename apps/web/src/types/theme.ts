@@ -7,7 +7,8 @@ export type ThemeFont =
   | "nunito"
   | "dm-sans"
   | "montserrat"
-  | "mono";
+  | "mono"
+  | "lora";
 
 export type ThemeCSSVar =
   | "background"
@@ -126,5 +127,10 @@ export const FONT_DEFINITIONS: Record<
     label: "Mono",
     googleFamily: "JetBrains+Mono:wght@400;500;600;700",
     cssFamily: '"JetBrains Mono", monospace',
+  },
+  lora: {
+    label: "Lora",
+    googleFamily: "Lora:wght@400;500;600;700",
+    cssFamily: '"Lora", serif',
   },
 };

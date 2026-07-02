@@ -22,7 +22,9 @@ const CeranaSponsorBanner = () => {
           <div className="text-muted-foreground text-xs">
             {dict.sponsorship.title}
           </div>
-          <div className="font-medium text-sm">{dict.sponsorship.cerana}</div>
+          <div className="font-medium text-sm text-card-foreground">
+            {dict.sponsorship.cerana}
+          </div>
         </div>
         <ArrowRight size={14} className="text-muted-foreground" />
       </div>
