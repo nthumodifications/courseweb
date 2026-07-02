@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 html {
-  font-family: var(--font-inter), var(--font-noto), sans-serif;
+  font-family: var(--font-family, "Inter", "Noto Sans TC", sans-serif);
   font-size: calc(1rem * var(--font-scale, 1));
 }
 
@@ -65,6 +65,7 @@ body {
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 273 43% 54%;
+    --font-family: "Inter", "Noto Sans TC", sans-serif;
     --font-scale: 1;
     --density-factor: 1;
     --bg-pattern: none;
@@ -112,11 +113,6 @@ body {
       calc(100vh - env(safe-area-inset-top, 0px)) - var(--header-height)
     );
   }
-}
-
-/* Font scale applied to root */
-html {
-  font-size: calc(1rem * var(--font-scale, 1));
 }
 
 /* Background patterns */

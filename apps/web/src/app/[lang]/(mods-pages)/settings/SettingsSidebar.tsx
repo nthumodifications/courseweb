@@ -34,7 +34,7 @@ export const SettingsSidebar = ({
           className={cn(
             "w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
             activeSection === section.id
-              ? "bg-nthu-500 text-white"
+              ? "bg-primary text-primary-foreground"
               : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
           )}
           aria-current={activeSection === section.id ? "true" : undefined}
