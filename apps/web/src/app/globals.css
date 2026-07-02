@@ -4,6 +4,7 @@
 
 html {
   font-family: var(--font-inter), var(--font-noto), sans-serif;
+  font-size: calc(1rem * var(--font-scale, 1));
 }
 
 body {
@@ -64,6 +65,12 @@ body {
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 273 43% 54%;
+    --font-scale: 1;
+    --density-factor: 1;
+    --bg-pattern: none;
+    --bg-gradient-from: hsl(var(--background));
+    --bg-gradient-to: hsl(var(--background));
+    --bg-gradient-dir: 135deg;
   }
 
   .dark {
@@ -95,6 +102,7 @@ body {
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 273 43% 64%;
+    --bg-pattern-color: hsl(var(--border));
   }
 }
 
@@ -104,6 +112,81 @@ body {
       calc(100vh - env(safe-area-inset-top, 0px)) - var(--header-height)
     );
   }
+}
+
+/* Font scale applied to root */
+html {
+  font-size: calc(1rem * var(--font-scale, 1));
+}
+
+/* Background patterns */
+body.bg-gradient {
+  background: linear-gradient(
+    var(--bg-gradient-dir, 135deg),
+    var(--bg-gradient-from),
+    var(--bg-gradient-to)
+  ) !important;
+  background-attachment: fixed !important;
+}
+
+body.bg-dots {
+  background-image: radial-gradient(
+    var(--bg-pattern-color, hsl(var(--border))) 1px,
+    transparent 1px
+  );
+  background-size: calc(16px * var(--density-factor, 1))
+    calc(16px * var(--density-factor, 1));
+}
+
+body.bg-lines {
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent calc(20px * var(--density-factor, 1) - 1px),
+    hsl(var(--border)) calc(20px * var(--density-factor, 1) - 1px),
+    hsl(var(--border)) calc(20px * var(--density-factor, 1))
+  );
+}
+
+body.bg-noise {
+  position: relative;
+}
+
+body.bg-noise::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 256px 256px;
+}
+
+/* Zen Mode — hide chrome, focus on content */
+html.zen-mode aside {
+  display: none !important;
+}
+html.zen-mode header {
+  display: none !important;
+}
+html.zen-mode .fixed.bottom-0 {
+  display: none !important;
+}
+html.zen-mode [data-sidebar="sidebar"] {
+  display: none !important;
+}
+html.zen-mode .pt-4 {
+  padding-top: 0 !important;
+}
+
+/* Compact header mode */
+html.compact-header {
+  --header-height: 2.25rem;
+}
+html.compact-header header {
+  padding-top: 0.375rem;
+  padding-bottom: 0.375rem;
 }
 
 @layer base {

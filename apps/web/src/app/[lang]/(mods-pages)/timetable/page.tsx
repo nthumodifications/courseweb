@@ -13,11 +13,19 @@ import { useEffect, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 import { useSettings } from "@/hooks/contexts/settings";
 import { timetableEvents } from "@/lib/trackingEvents";
+import TimetableAgenda from "@/components/Timetable/TimetableAgenda";
+import TimetableTimeline from "@/components/Timetable/TimetableTimeline";
+import TimetableDots from "@/components/Timetable/TimetableDots";
+import TimetableDayCards from "@/components/Timetable/TimetableDayCards";
+import { LayoutGrid, List, Clock, Grid3X3, Columns2 } from "lucide-react";
 
 const TimetablePage = () => {
   const { getSemesterCourses, semester, setSemester, colorMap } =
     useUserTimetable();
   const [vertical, setVertical] = useLocalStorage("timetable_vertical", true);
+  const [viewMode, setViewMode] = useLocalStorage<
+    "grid" | "agenda" | "timeline" | "dots" | "day-cards"
+  >("timetable_view_mode", "grid");
   const { language } = useSettings();
   const { setPortalContent, clearPortalContent } = useHeaderPortal();
   const previousSemesterRef = useRef(semester);
@@ -50,8 +58,45 @@ const TimetablePage = () => {
   // Set the SemesterSwitcher in the header portal
   useEffect(() => {
     setPortalContent(
-      <div className="flex justify-center w-full">
+      <div className="flex items-center justify-center w-full gap-3">
         <SemesterSwitcher semester={semester} setSemester={setSemester} />
+        <div className="flex items-center gap-1 border border-border rounded-md p-0.5">
+          <button
+            onClick={() => setViewMode("grid")}
+            className={`p-1.5 rounded ${viewMode === "grid" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"} transition-colors`}
+            title="Grid"
+          >
+            <LayoutGrid className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => setViewMode("agenda")}
+            className={`p-1.5 rounded ${viewMode === "agenda" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"} transition-colors`}
+            title="Agenda"
+          >
+            <List className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => setViewMode("timeline")}
+            className={`p-1.5 rounded ${viewMode === "timeline" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"} transition-colors`}
+            title="Timeline"
+          >
+            <Clock className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => setViewMode("dots")}
+            className={`p-1.5 rounded ${viewMode === "dots" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"} transition-colors`}
+            title="Dots"
+          >
+            <Grid3X3 className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => setViewMode("day-cards")}
+            className={`p-1.5 rounded ${viewMode === "day-cards" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"} transition-colors`}
+            title="Day Cards"
+          >
+            <Columns2 className="h-4 w-4" />
+          </button>
+        </div>
       </div>,
     );
 
@@ -59,7 +104,7 @@ const TimetablePage = () => {
     return () => {
       clearPortalContent();
     };
-  }, [semester, setSemester]);
+  }, [semester, setSemester, viewMode, setViewMode]);
 
   const handlers = useSwipeable({
     onSwipedLeft: (eventData) => {
@@ -110,14 +155,27 @@ const TimetablePage = () => {
       </Helmet>
       <div className="flex flex-col w-full h-full">
         <div
-          className={`grid grid-cols-1 md:grid-rows-1 ${!vertical ? "" : "md:grid-cols-[3fr_2fr]"} px-1 py-4 md:p-4 gap-4 md:gap-2`}
+          className={`grid grid-cols-1 md:grid-rows-1 ${viewMode === "grid" && vertical ? "md:grid-cols-[3fr_2fr]" : ""} px-1 py-4 md:p-4 gap-4 md:gap-2`}
         >
-          <div className="w-full h-full" {...handlers}>
-            <Timetable
-              timetableData={timetableData}
-              vertical={vertical}
-              renderTimetableSlot={renderTimetableSlot}
-            />
+          <div
+            className="w-full h-full"
+            {...(viewMode === "grid" ? handlers : {})}
+          >
+            {viewMode === "agenda" ? (
+              <TimetableAgenda timetableData={timetableData} />
+            ) : viewMode === "timeline" ? (
+              <TimetableTimeline timetableData={timetableData} />
+            ) : viewMode === "dots" ? (
+              <TimetableDots timetableData={timetableData} />
+            ) : viewMode === "day-cards" ? (
+              <TimetableDayCards timetableData={timetableData} />
+            ) : (
+              <Timetable
+                timetableData={timetableData}
+                vertical={vertical}
+                renderTimetableSlot={renderTimetableSlot}
+              />
+            )}
           </div>
           <TimetableSidebar vertical={vertical} setVertical={setVertical} />
         </div>
