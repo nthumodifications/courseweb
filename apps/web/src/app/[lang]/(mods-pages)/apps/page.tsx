@@ -85,7 +85,7 @@ const AppList = () => {
               ))}
           </div>
           {pinnedApps.length == 0 && (
-            <p className="text-muted-foreground text-center">
+            <p data-nosnippet className="text-muted-foreground text-center">
               {dict.applist.empty_pinned_apps_reminder}
             </p>
           )}

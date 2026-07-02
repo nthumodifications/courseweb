@@ -41,9 +41,9 @@ const SEOHead = ({
         content={noindex ? "noindex, nofollow" : "index, follow"}
       />
       <link rel="canonical" href={canonicalUrl} />
-      <link rel="alternate" hreflang="zh" href={zhUrl} />
-      <link rel="alternate" hreflang="en" href={enUrl} />
-      <link rel="alternate" hreflang="x-default" href={zhUrl} />
+      <link rel="alternate" hrefLang="zh-TW" href={zhUrl} />
+      <link rel="alternate" hrefLang="en" href={enUrl} />
+      <link rel="alternate" hrefLang="x-default" href={zhUrl} />
 
       <meta property="og:type" content={ogType} />
       <meta property="og:title" content={fullTitle} />

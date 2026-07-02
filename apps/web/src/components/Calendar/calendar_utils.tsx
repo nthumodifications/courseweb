@@ -51,7 +51,9 @@ export const eventsToDisplay = (
           eachDayOfInterval({
             start: startOfDay(start),
             end: endOfDay(end),
-          }).some((d) => isWithinInterval(d, { start: newStart, end: newEnd })) &&
+          }).some((d) =>
+            isWithinInterval(d, { start: newStart, end: newEnd }),
+          ) &&
           (event.excludedDates ?? []).every((d) => !isSameDay(d, newStart))
         ) {
           newEvents.push({
