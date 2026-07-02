@@ -26,7 +26,7 @@ const AppItem = ({
       )}
       onClick={onItemClicked}
     >
-      <div className="p-2 rounded-lg bg-nthu-100 text-nthu-800 grid place-items-center relative">
+      <div className="p-2 rounded-lg bg-primary/10 text-primary grid place-items-center relative">
         <app.Icon size={24} />
         {app.beta && (
           <div className="absolute -top-2 -right-2 bg-blue-500 text-white text-[8px] px-1 rounded-full font-semibold">

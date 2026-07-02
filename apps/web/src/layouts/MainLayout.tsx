@@ -14,6 +14,8 @@ import AppSidebar from "@/components/AppSidebar";
 import { Language } from "@/types/settings";
 import { useCookies } from "react-cookie";
 import { CourseDialogProvider } from "@/components/Courses/CourseDialog";
+import CommandPalette from "@/components/CommandPalette/CommandPalette";
+import CustomCSSInjector from "@/components/CustomCSS/CustomCSSInjector";
 
 const MainLayout = () => {
   const { lang } = useParams<{ lang: string }>();
@@ -53,6 +55,8 @@ const MainLayout = () => {
               <BottomNav />
               <ChatContainer />
               <ChatFAB />
+              <CommandPalette />
+              <CustomCSSInjector />
             </CourseDialogProvider>
           </SidebarProvider>
         </CalendarProvider>

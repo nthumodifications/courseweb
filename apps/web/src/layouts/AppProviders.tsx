@@ -9,6 +9,13 @@ import { Toaster } from "@courseweb/ui";
 import { ClearAuthComponent } from "@/hooks/useClearAuth";
 import TitleUpdater from "@/layouts/TitleUpdater";
 import RootErrorFallback from "@/app/error";
+import { ThemeProvider } from "@/hooks/contexts/theme";
+import { useSettings } from "@/hooks/contexts/settings";
+
+const ThemeWrapper = ({ children }: { children: React.ReactNode }) => {
+  const { darkMode } = useSettings();
+  return <ThemeProvider isDark={darkMode}>{children}</ThemeProvider>;
+};
 
 const AppProviders = () => {
   return (
@@ -17,12 +24,14 @@ const AppProviders = () => {
         <RxDBProvider>
           <ReactQuery>
             <SettingsProvider>
-              <UserTimetableProvider>
-                <TitleUpdater />
-                <Outlet />
-                <Toaster />
-                <ClearAuthComponent />
-              </UserTimetableProvider>
+              <ThemeWrapper>
+                <UserTimetableProvider>
+                  <TitleUpdater />
+                  <Outlet />
+                  <Toaster />
+                  <ClearAuthComponent />
+                </UserTimetableProvider>
+              </ThemeWrapper>
             </SettingsProvider>
           </ReactQuery>
         </RxDBProvider>
