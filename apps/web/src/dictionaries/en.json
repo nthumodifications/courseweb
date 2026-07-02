@@ -150,6 +150,39 @@
     "schedule": "Departure Schedule"
   },
   "settings": {
+    "appearance": {
+      "title": "Appearance",
+      "description": "Theme, Colors, Fonts, Layout",
+      "preset": {
+        "title": "Theme Preset",
+        "description": "Choose a color theme"
+      },
+      "radius": {
+        "title": "Border Radius",
+        "description": "Corner roundness"
+      },
+      "font_scale": {
+        "title": "Font Size",
+        "description": "Adjust text size"
+      },
+      "density": {
+        "title": "Density",
+        "description": "UI spacing",
+        "compact": "Compact",
+        "comfortable": "Default",
+        "spacious": "Spacious"
+      },
+      "background": {
+        "title": "Background",
+        "description": "Page background style",
+        "solid": "Solid",
+        "gradient": "Gradient",
+        "dots": "Dots",
+        "lines": "Lines",
+        "noise": "Noise"
+      },
+      "reset": "Reset to Default"
+    },
     "account": {
       "signin": "Sign In",
       "signout": "Sign Out",
