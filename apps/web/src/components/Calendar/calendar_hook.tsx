@@ -43,6 +43,7 @@ export const calendarContext = createContext<
   displayContainer: { current: null },
   HOUR_HEIGHT: 48,
   labels: [],
+  timetableSyncReady: false,
 });
 
 export const useCalendar = () => useContext(calendarContext);
@@ -59,6 +60,7 @@ export const useCalendarProvider = () => {
     "Birthday",
     "Anniversary",
   ]);
+  const [timetableSyncReady, setTimetableSyncReady] = useState(false);
   const eventsCol = useRxCollection("events");
   const auth = useAuth();
 
@@ -119,9 +121,6 @@ export const useCalendarProvider = () => {
     });
     replicationState.error$.subscribe((error) => console.error(error));
     replicationState.start();
-    replicationState.awaitInitialReplication().then(() => {
-      console.log("[events] Initial replication done");
-    });
 
     return () => {
       replicationState.cancel();
@@ -132,7 +131,11 @@ export const useCalendarProvider = () => {
 
   useEffect(() => {
     if (!timetableSyncCol) return;
-    if (!auth.isAuthenticated) return;
+    if (!auth.isAuthenticated) {
+      setTimetableSyncReady(true);
+      return;
+    }
+    setTimetableSyncReady(false);
     const replicationState = replicateRxCollection<
       TimetableSyncDocType,
       { id: string; serverTimestamp: string }
@@ -189,9 +192,9 @@ export const useCalendarProvider = () => {
     });
     replicationState.error$.subscribe((error) => console.error(error));
     replicationState.start();
-    replicationState.awaitInitialReplication().then(() => {
-      console.log("[events] Initial replication done");
-    });
+    replicationState
+      .awaitInitialReplication()
+      .finally(() => setTimetableSyncReady(true));
 
     return () => {
       replicationState.cancel();
@@ -236,7 +239,6 @@ export const useCalendarProvider = () => {
       await eventsCol!.findOne(event.id).remove();
       return;
     } else {
-      console.log("remove event", event, type);
       switch (type) {
         case UpdateType.THIS:
           // add this date to excluded dates
@@ -282,7 +284,6 @@ export const useCalendarProvider = () => {
     operationEvent: DisplayCalendarEvent,
     type?: UpdateType,
   ) => {
-    console.log("update event", newEvent, type);
     const oldEvent = events.find((e) => e.id === newEvent.id);
     if (!oldEvent) return;
     if (!oldEvent.repeat && !newEvent.repeat) {
@@ -312,7 +313,7 @@ export const useCalendarProvider = () => {
               ...serializeEvent({
                 excludedDates: [
                   ...(oldEvent.excludedDates || []),
-                  operationEvent.start,
+                  operationEvent.displayStart,
                 ],
               }),
             },
@@ -335,7 +336,7 @@ export const useCalendarProvider = () => {
             repeat: {
               ...oldEvent.repeat!,
               mode: "date" as const,
-              value: subDays(operationEvent.start, 1).getTime(),
+              value: subDays(operationEvent.displayStart, 1).getTime(),
             },
           };
           await eventsCol!.findOne(newEvent.id).update({
@@ -407,6 +408,7 @@ export const useCalendarProvider = () => {
     displayContainer,
     HOUR_HEIGHT,
     labels,
+    timetableSyncReady,
   };
 };
 

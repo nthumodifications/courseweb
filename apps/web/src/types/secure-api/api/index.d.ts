@@ -234,6 +234,46 @@ declare const app: import("hono/hono-base").HonoBase<
         };
       },
       "/replication"
+    >
+  | import("hono/types").MergeSchemaPath<
+      {
+        "/:courseId": {
+          $post:
+            | {
+                input: {
+                  param: { courseId: string };
+                  json: {
+                    dates: {
+                      id?: number | undefined;
+                      type: "exam" | "quiz" | "no_class" | "other";
+                      title: string;
+                      date: string;
+                    }[];
+                  };
+                };
+                output: { success: boolean };
+                outputFormat: "json";
+                status: import("hono/utils/http-status").ContentfulStatusCode;
+              }
+            | {
+                input: {
+                  param: { courseId: string };
+                  json: {
+                    dates: {
+                      id?: number | undefined;
+                      type: "exam" | "quiz" | "no_class" | "other";
+                      title: string;
+                      date: string;
+                    }[];
+                  };
+                };
+                output: { error: string };
+                outputFormat: "json";
+                status: 500;
+              };
+        };
+      },
+      "/course-dates"
     >,
   "/"
 >;

@@ -3,6 +3,7 @@ import { AlertTriangle, ChevronLeft, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import DownloadSyllabus from "./DownloadSyllabus";
+import SyllabusSummary from "./SyllabusSummary";
 import { Fade } from "@courseweb/ui";
 import { toPrettySemester } from "@/helpers/semester";
 import CourseTagList from "@/components/Courses/CourseTagsList";
@@ -25,6 +26,7 @@ import { ScrollArea, ScrollBar } from "@courseweb/ui";
 import { timetableColors } from "@courseweb/shared";
 import { lazy, Suspense } from "react";
 import { Language } from "@/types/settings";
+import { sanitizeCourseHtml } from "@/lib/sanitizeHtml";
 import {
   Table,
   TableBody,
@@ -167,7 +169,7 @@ const CourseDetailContainer = ({
           courseCode: `${course.department} ${course.course}-${course.class}`,
           educationalLevel: "University",
           inLanguage: "zh-TW",
-          url: `https://nthumods.com/zh/courses/${course.raw_id}`,
+          url: `https://nthumods.com/${lang}/courses/${course.raw_id}`,
           offers: {
             "@type": "Offer",
             price: "0",
@@ -227,18 +229,24 @@ const CourseDetailContainer = ({
   // Handle error state
   if (error || !course) {
     return (
-      <div className="py-6 px-4">
-        <div className="flex flex-col gap-2 border-l border-neutral-500 pl-4 pr-6">
-          <h1 className="text-2xl font-bold">404</h1>
-          <p className="text-xl">找不到課程</p>
+      <>
+        <Helmet>
+          <meta name="robots" content="noindex, nofollow" />
+          <meta name="googlebot" content="noindex, nofollow" />
+        </Helmet>
+        <div className="py-6 px-4">
+          <div className="flex flex-col gap-2 border-l border-neutral-500 pl-4 pr-6">
+            <h1 className="text-2xl font-bold">404</h1>
+            <p className="text-xl">找不到課程</p>
 
-          <Link to="../">
-            <Button size="sm" variant="outline">
-              <ChevronLeft /> Back
-            </Button>
-          </Link>
+            <Link to="../">
+              <Button size="sm" variant="outline">
+                <ChevronLeft /> Back
+              </Button>
+            </Link>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
@@ -266,6 +274,21 @@ const CourseDetailContainer = ({
           />
           <link
             rel="canonical"
+            href={`https://nthumods.com/${lang}/courses/${course.raw_id}`}
+          />
+          <link
+            rel="alternate"
+            hrefLang="zh-TW"
+            href={`https://nthumods.com/zh/courses/${course.raw_id}`}
+          />
+          <link
+            rel="alternate"
+            hrefLang="en"
+            href={`https://nthumods.com/en/courses/${course.raw_id}`}
+          />
+          <link
+            rel="alternate"
+            hrefLang="x-default"
             href={`https://nthumods.com/zh/courses/${course.raw_id}`}
           />
           <meta
@@ -278,7 +301,7 @@ const CourseDetailContainer = ({
           />
           <meta
             property="og:url"
-            content={`https://nthumods.com/zh/courses/${course.raw_id}`}
+            content={`https://nthumods.com/${lang}/courses/${course.raw_id}`}
           />
           <meta name="twitter:card" content="summary" />
           <meta
@@ -370,6 +393,7 @@ const CourseDetailContainer = ({
           <Separator />
           <div className={"flex flex-col-reverse lg:flex-row gap-6 w-full"}>
             <div className="flex flex-col gap-4 min-w-0 lg:max-w-[calc(100%-284px)]">
+              {!missingSyllabus && <SyllabusSummary courseId={course.raw_id} />}
               {!missingSyllabus && (
                 <div className="flex flex-col gap-2">
                   <h3 className="font-semibold text-xl" id="brief">
@@ -406,7 +430,9 @@ const CourseDetailContainer = ({
                   </h3>
                   <div
                     className="whitespace-pre-line text-sm"
-                    dangerouslySetInnerHTML={{ __html: course.prerequisites }}
+                    dangerouslySetInnerHTML={{
+                      __html: sanitizeCourseHtml(course.prerequisites),
+                    }}
                   />
                 </div>
               )}

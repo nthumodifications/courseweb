@@ -59,11 +59,12 @@ paths:
           schema:
             type: string
           description: User ID
-        - name: key
+        - name: token
           in: query
+          required: true
           schema:
             type: string
-          description: API key for authentication
+          description: Calendar share token
         - name: type
           in: query
           schema:
@@ -79,7 +80,7 @@ paths:
               schema:
                 type: string
         "400":
-          description: Missing API key
+          description: Missing calendar share token
         "404":
           description: User not found
 

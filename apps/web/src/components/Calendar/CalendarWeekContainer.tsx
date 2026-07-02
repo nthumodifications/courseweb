@@ -14,7 +14,7 @@ import { Separator } from "@courseweb/ui";
 import { useCalendar } from "./calendar_hook";
 import { CurrentTimePointer } from "./CurrentTimePointer";
 import { eventsToDisplay } from "@/components/Calendar/calendar_utils";
-import { getContrastColor, getBrightness } from "@/helpers/colors";
+import { getContrastColor } from "@/helpers/colors";
 import { EventPopover } from "./EventPopover";
 import {
   UIEventHandler,
@@ -30,14 +30,24 @@ import { useSettings } from "@/hooks/contexts/settings";
 import client from "@/config/api";
 import { AddEventButton } from "./AddEventButton";
 import { getNearestTime } from "@courseweb/ui";
+import useUserTimetable from "@/hooks/contexts/useUserTimetable";
+import useCourseDates from "@/hooks/useCourseDates";
 
 export const CalendarWeekContainer = ({
   displayWeek,
+  overlayEvents = [],
 }: {
   displayWeek: Date[];
+  overlayEvents?: CalendarEventInternal[];
 }) => {
   const { events, addEvent, displayContainer, HOUR_HEIGHT } = useCalendar();
   const { showAcademicCalendar } = useSettings();
+  const { courses } = useUserTimetable();
+  const enrolledCourseIds = useMemo(
+    () => Object.values(courses).flat(),
+    [courses],
+  );
+  const { getCourseDateForDay } = useCourseDates(enrolledCourseIds);
   const [eventFormOpen, setEventFormOpen] = useState(false);
   const [newEventTime, setNewEventTime] = useState<Date | null>(null);
 
@@ -148,84 +158,159 @@ export const CalendarWeekContainer = ({
 
   const renderEventsInDay = useCallback(
     (day: Date) => {
-      const dayEvents = eventsToDisplay(events, startOfDay(day), endOfDay(day))
-        .filter((e) => {
-          return !e.allDay;
-        })
+      const dayEnd = endOfDay(day);
+      const dayEvents = eventsToDisplay(events, startOfDay(day), dayEnd)
+        .filter((e) => !e.allDay)
         .map((event) => {
-          //Determine the text color
-          const brightness = getBrightness(event.color);
-          //From the brightness, using the getContrastColor function, create a complementary color that is legible
           const textColor = getContrastColor(event.color);
           return { ...event, textColor };
-        });
+        })
+        .sort((a, b) => a.displayStart.getTime() - b.displayStart.getTime());
 
-      // Group overlapping events
-      const groupedEvents: (typeof dayEvents)[] = [];
-      dayEvents.forEach((event) => {
-        let added = false;
-        for (const group of groupedEvents) {
-          if (
-            group.some(
-              (e) =>
-                (event.displayStart >= e.displayStart &&
-                  event.displayStart < e.displayEnd) ||
-                (event.displayEnd > e.displayStart &&
-                  event.displayEnd <= e.displayEnd) ||
-                (event.displayStart <= e.displayStart &&
-                  event.displayEnd >= e.displayEnd),
-            )
-          ) {
-            group.push(event);
-            added = true;
-            break;
-          }
+      // Assign columns with greedy interval-graph coloring
+      const colEndTimes: number[] = [];
+      const eventsWithCol = dayEvents.map((event) => {
+        let colIndex = colEndTimes.findIndex(
+          (t) => t <= event.displayStart.getTime(),
+        );
+        if (colIndex === -1) {
+          colIndex = colEndTimes.length;
+          colEndTimes.push(event.displayEnd.getTime());
+        } else {
+          colEndTimes[colIndex] = event.displayEnd.getTime();
         }
-        if (!added) {
-          groupedEvents.push([event]);
-        }
+        return { ...event, colIndex };
       });
 
-      return groupedEvents.map((group, groupIndex) =>
-        group.map((event, index) => (
-          <EventPopover key={index} event={event}>
+      // Determine total concurrent columns for each event's time span
+      const eventsWithLayout = eventsWithCol.map((event) => {
+        const concurrent = eventsWithCol.filter(
+          (other) =>
+            other.displayStart < event.displayEnd &&
+            other.displayEnd > event.displayStart,
+        );
+        const totalCols = Math.max(...concurrent.map((e) => e.colIndex)) + 1;
+        return { ...event, totalCols };
+      });
+
+      return eventsWithLayout.map((event, index) => {
+        // Cap display end at midnight to avoid negative heights for events crossing midnight
+        const cappedEnd = new Date(
+          Math.min(event.displayEnd.getTime(), dayEnd.getTime()),
+        );
+        const heightMs = cappedEnd.getTime() - event.displayStart.getTime();
+        const height = Math.max(
+          HOUR_HEIGHT / 2,
+          (heightMs / (1000 * 60 * 60)) * HOUR_HEIGHT,
+        );
+
+        const courseDate = event.courseId
+          ? getCourseDateForDay(event.courseId, day)
+          : null;
+        const isNoClass = courseDate?.type === "no_class";
+        const isSpecialDate = courseDate && !isNoClass;
+
+        const eventBackground = isNoClass
+          ? "repeating-linear-gradient(-45deg, #9ca3af, #9ca3af 4px, #6b7280 4px, #6b7280 8px)"
+          : event.color;
+        const eventTextColor = isNoClass ? "#fff" : event.textColor;
+
+        return (
+          <EventPopover
+            key={`${event.id}-${event.displayStart.getTime()}`}
+            event={event}
+          >
             <div
-              className="absolute left-0 w-full pr-0.5 "
+              className="absolute pr-0.5 event-item"
               style={{
                 top:
                   event.displayStart.getHours() * HOUR_HEIGHT +
                   (event.displayStart.getMinutes() * HOUR_HEIGHT) / 60,
-                height:
-                  (event.displayEnd.getHours() -
-                    event.displayStart.getHours()) *
-                    HOUR_HEIGHT +
-                  ((event.displayEnd.getMinutes() -
-                    event.displayStart.getMinutes()) *
-                    HOUR_HEIGHT) /
-                    60,
-                width: `calc(${100 / group.length}% - 2px)`,
-                left: `calc(${(100 / group.length) * index}% + 1px)`,
+                height,
+                width: `calc(${100 / event.totalCols}% - 2px)`,
+                left: `calc(${(100 / event.totalCols) * event.colIndex}% + 1px)`,
               }}
             >
               <div
-                className="overflow-hidden bg-nthu-500 rounded-md h-full p-1 flex flex-col gap-1 hover:shadow-md cursor-pointer transition-shadow select-none"
-                style={{ background: event.color, color: event.textColor }}
+                className="relative overflow-hidden rounded-md h-full p-1 flex flex-col gap-1 hover:shadow-md cursor-pointer transition-shadow select-none"
+                style={{ background: eventBackground, color: eventTextColor }}
               >
                 <div className="text-xs leading-none">{event.title}</div>
                 <div className="text-xs font-normal leading-none">
                   {format(event.displayStart, "HH:mm")} -{" "}
-                  {format(event.displayEnd, "HH:mm")}
+                  {format(cappedEnd, "HH:mm")}
                 </div>
                 {event.location && (
                   <div className="text-xs leading-none">{event.location}</div>
                 )}
+                {isSpecialDate && (
+                  <div className="text-[9px] leading-none font-semibold uppercase opacity-90 bg-black/20 rounded px-1 py-0.5 self-start">
+                    {courseDate.type}
+                  </div>
+                )}
               </div>
             </div>
           </EventPopover>
-        )),
-      );
+        );
+      });
     },
-    [events, HOUR_HEIGHT],
+    [events, HOUR_HEIGHT, getCourseDateForDay],
+  );
+
+  const renderOverlayEventsInDay = useCallback(
+    (day: Date) => {
+      const dayEnd = endOfDay(day);
+      const dayOverlayEvents = eventsToDisplay(
+        overlayEvents,
+        startOfDay(day),
+        dayEnd,
+      )
+        .filter((e) => !e.allDay)
+        .sort((a, b) => a.displayStart.getTime() - b.displayStart.getTime());
+
+      return dayOverlayEvents.map((event) => {
+        const cappedEnd = new Date(
+          Math.min(event.displayEnd.getTime(), dayEnd.getTime()),
+        );
+        const heightMs = cappedEnd.getTime() - event.displayStart.getTime();
+        const height = Math.max(
+          HOUR_HEIGHT / 2,
+          (heightMs / (1000 * 60 * 60)) * HOUR_HEIGHT,
+        );
+        return (
+          <div
+            key={`overlay-${event.id}-${event.displayStart.getTime()}`}
+            className="absolute pr-0.5 pointer-events-none"
+            style={{
+              top:
+                event.displayStart.getHours() * HOUR_HEIGHT +
+                (event.displayStart.getMinutes() * HOUR_HEIGHT) / 60,
+              height,
+              width: "calc(100% - 2px)",
+              left: "1px",
+              opacity: 0.45,
+              zIndex: 1,
+            }}
+          >
+            <div
+              className="rounded-md h-full p-1 flex flex-col gap-1 border-2"
+              style={{
+                borderColor: event.color,
+                background: `${event.color}33`,
+              }}
+            >
+              <div
+                className="text-xs leading-none font-medium"
+                style={{ color: event.color }}
+              >
+                {event.title}
+              </div>
+            </div>
+          </div>
+        );
+      });
+    },
+    [overlayEvents, HOUR_HEIGHT],
   );
   const dayEvents = useMemo(() => {
     // Step 1: Prepare events with display information
@@ -238,9 +323,6 @@ export const CalendarWeekContainer = ({
         return e.allDay;
       })
       .map((event) => {
-        //Determine the text color
-        const brightness = getBrightness(event.color);
-        //From the brightness, using the getContrastColor function, create a complementary color that is legible
         const textColor = getContrastColor(event.color);
         let span =
           differenceInDays(
@@ -425,6 +507,7 @@ export const CalendarWeekContainer = ({
                       ))}
                     </div>
                     {renderEventsInDay(day)}
+                    {renderOverlayEventsInDay(day)}
                   </div>
                 ))}
               </div>

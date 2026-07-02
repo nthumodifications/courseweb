@@ -51,13 +51,19 @@ export const eventsToDisplay = (
           eachDayOfInterval({
             start: startOfDay(start),
             end: endOfDay(end),
-          }).some((d) => isWithinInterval(d, { start: newStart, end: newEnd }))
+          }).some((d) =>
+            isWithinInterval(d, { start: newStart, end: newEnd }),
+          ) &&
+          (event.excludedDates ?? []).every((d) => !isSameDay(d, newStart))
         ) {
           newEvents.push({
             ...event,
             displayStart: newStart,
             displayEnd: newEnd,
           });
+        }
+        if (newStart > end) {
+          break;
         }
       } else {
         if (
@@ -151,7 +157,7 @@ export const getDisplayEndDate = (event: CalendarEvent) => {
   else if (event.repeat.mode === "count") {
     const endDate = getAddFunc(event.repeat.type)(
       event.end,
-      event.repeat.value,
+      (event.repeat.value - 1) * (event.repeat.interval ?? 1),
     );
     return endDate;
   }
@@ -221,31 +227,16 @@ export const getMonthForDisplay = (date: Date) => {
 };
 
 export const serializeEvent = (event: Partial<CalendarEventInternal>) => {
-  // convert dates to ISO string
-  console.log("ser", {
+  return {
     ...event,
     ...(event.start && { start: event.start.toISOString() }),
     ...(event.end && { end: event.end.toISOString() }),
-    ...(event.repeat && {
-      repeat: event.repeat,
-    }),
+    ...(event.repeat && { repeat: event.repeat }),
     ...(event.actualEnd && { actualEnd: event.actualEnd.toISOString() }),
     ...(event.excludedDates && {
       excludedDates: event.excludedDates
         .filter((m) => m && m instanceof Date)
         .map((d) => d.toISOString()),
-    }),
-  });
-  return {
-    ...event,
-    ...(event.start && { start: event.start.toISOString() }),
-    ...(event.end && { end: event.end.toISOString() }),
-    ...(event.repeat && {
-      repeat: event.repeat,
-    }),
-    ...(event.actualEnd && { actualEnd: event.actualEnd.toISOString() }),
-    ...(event.excludedDates && {
-      excludedDates: event.excludedDates.map((d) => d.toISOString()),
     }),
   };
 };

@@ -13,10 +13,12 @@ import shortlink from "./shortlink";
 import issue from "./issue";
 import headlessAis from "./headless-ais";
 import planner from "./planner-replication";
+import timetableShare from "./timetable-share";
 import mcpServer from "./mcp-server";
 import search from "./search";
 import bus from "./bus";
 import chat from "./chat";
+import ai from "./ai";
 import graduation from "./graduation";
 import shortlinkRedirect from "./shortlink-redirect";
 import sports from "./sports";
@@ -51,10 +53,12 @@ export const app = new Hono<{ Bindings: Bindings }>()
   .route("/ccxp", headlessAis)
   .route("/issue", issue)
   .route("/planner", planner)
+  .route("/timetable-share", timetableShare)
   .route("/mcp", mcpServer)
   .route("/search", search)
   .route("/bus", bus)
   .route("/chat", chat)
+  .route("/ai", ai)
   .route("/graduation", graduation)
   .route("/l", shortlinkRedirect)
   .route("/sports", sports);

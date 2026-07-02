@@ -20,6 +20,7 @@ import client from "@/config/api";
 import { Badge } from "@courseweb/ui";
 import WeatherIcon from "./WeatherIcon";
 import { cn } from "@courseweb/ui";
+import useCourseDates from "@/hooks/useCourseDates";
 
 const getRangeOfDays = (start: Date, end: Date) => {
   const days = [];
@@ -30,8 +31,14 @@ const getRangeOfDays = (start: Date, end: Date) => {
 };
 
 const TodaySchedule: FC = () => {
-  const { isCoursesEmpty, colorMap, getSemesterCourses } = useUserTimetable();
+  const { isCoursesEmpty, colorMap, getSemesterCourses, courses } =
+    useUserTimetable();
   const { language, pinnedApps, showAcademicCalendar } = useSettings();
+  const enrolledCourseIds = useMemo(
+    () => Object.values(courses).flat(),
+    [courses],
+  );
+  const { getCourseDateForDay } = useCourseDates(enrolledCourseIds);
   const dict = useDictionary();
   const date = useTime();
   const [isClient, setIsClient] = useState(false);
@@ -134,30 +141,59 @@ const TodaySchedule: FC = () => {
 
     return classesThisDay
       .sort((a, b) => a.startTime - b.startTime)
-      .map((t, index) => (
-        <TimetableItemDrawer course={t.course} key={index}>
-          <div className="flex flex-row gap-2 items-start">
-            <div
-              className="size-4 rounded-sm mt-1"
-              style={{ backgroundColor: t.color }}
-            ></div>
-            <div className="flex flex-col gap-1">
-              <div className="font-semibold">
-                {" "}
-                {language == "zh" ? t.course.name_zh : t.course.name_en}{" "}
-              </div>
-              <div className="text-xs text-muted-foreground align-baseline">
-                <Clock className="size-3 inline mr-1" />
-                {`${scheduleTimeSlots[t.startTime]?.start ?? "?"} - ${scheduleTimeSlots[t.endTime]?.end ?? "?"}`}
-              </div>
-              <div className="text-xs text-muted-foreground align-baseline">
-                <MapPin className="size-3 inline mr-1" />
-                {t.venue}
+      .map((t, index) => {
+        const courseDate = getCourseDateForDay(t.course.raw_id, day);
+        const isNoClass = courseDate?.type === "no_class";
+        const isSpecialDate = courseDate && !isNoClass;
+        return (
+          <TimetableItemDrawer course={t.course} key={index}>
+            <div className="flex flex-row gap-2 items-start">
+              <div
+                className="size-4 rounded-sm mt-1 shrink-0"
+                style={
+                  isNoClass
+                    ? {
+                        background:
+                          "repeating-linear-gradient(-45deg, #9ca3af, #9ca3af 4px, #6b7280 4px, #6b7280 8px)",
+                      }
+                    : { backgroundColor: t.color }
+                }
+              />
+              <div className="flex flex-col gap-1">
+                <div
+                  className={cn(
+                    "font-semibold",
+                    isNoClass && "line-through text-muted-foreground",
+                  )}
+                >
+                  {language == "zh" ? t.course.name_zh : t.course.name_en}
+                </div>
+                {isSpecialDate && (
+                  <Badge
+                    variant="secondary"
+                    className="self-start text-[10px] px-1 py-0"
+                  >
+                    {courseDate.type} · {courseDate.title}
+                  </Badge>
+                )}
+                {isNoClass && (
+                  <div className="text-xs text-muted-foreground">
+                    {courseDate.title || dict.today.noclass}
+                  </div>
+                )}
+                <div className="text-xs text-muted-foreground align-baseline">
+                  <Clock className="size-3 inline mr-1" />
+                  {`${scheduleTimeSlots[t.startTime]?.start ?? "?"} - ${scheduleTimeSlots[t.endTime]?.end ?? "?"}`}
+                </div>
+                <div className="text-xs text-muted-foreground align-baseline">
+                  <MapPin className="size-3 inline mr-1" />
+                  {t.venue}
+                </div>
               </div>
             </div>
-          </div>
-        </TimetableItemDrawer>
-      ));
+          </TimetableItemDrawer>
+        );
+      });
   };
 
   const renderCalendars = (day: Date) => {

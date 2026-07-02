@@ -14,6 +14,7 @@ import { useSearchParams } from "react-router-dom";
 import { ChevronDown } from "lucide-react";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { useCourseLink } from "@/components/Courses/CourseDialog";
+import { sanitizeCourseHtml } from "@/lib/sanitizeHtml";
 
 // Memoize the CourseListItem component
 const CourseListItem: FC<{
@@ -104,9 +105,11 @@ const CourseListItem: FC<{
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <p
-                    dangerouslySetInnerHTML={{ __html: course.prerequisites }}
-                    className="text-sm text-neutral-500"
-                  ></p>
+                    className="whitespace-pre-line text-sm text-neutral-500"
+                    dangerouslySetInnerHTML={{
+                      __html: sanitizeCourseHtml(course.prerequisites),
+                    }}
+                  />
                 </CollapsibleContent>
               </Collapsible>
             )}

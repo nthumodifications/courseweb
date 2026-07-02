@@ -6,7 +6,7 @@ export interface ChatMessage {
 export interface ChatRequest {
   messages: ChatMessage[];
   userContext?: UserContext;
-  apiKey?: string; // Optional user-provided key
+  apiKey?: string;
 }
 
 export interface CourseInfo {
@@ -22,12 +22,22 @@ export interface SemesterCourses {
   courses: CourseInfo[];
 }
 
+export interface SelectedCourseInfo {
+  raw_id: string;
+  name_zh?: string;
+  name_en?: string;
+  times?: string[]; // 2-char pairs e.g. ["M3M4", "W3W4"] ([day_letter][period])
+  credits?: number;
+  semester?: string;
+}
+
 export interface UserContext {
   department?: string; // e.g., "資訊工程學系" (Chinese)
   entranceYear?: string; // e.g., "113"
   currentSemester?: string; // e.g., "11420"
   currentYear?: number; // e.g., 2025 (current academic year)
   courseHistory?: SemesterCourses[]; // All courses across all semesters
+  selectedCourses?: SelectedCourseInfo[]; // All courses in timetable with time info
   language?: "zh" | "en";
 }
 

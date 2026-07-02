@@ -83,6 +83,15 @@ const OfflinePage = lazy(
   () => import("@/app/[lang]/(mods-pages)/offline/page"),
 );
 const DesignSystemPage = lazy(() => import("@/pages/DesignSystem"));
+const TimetableShareViewPage = lazy(
+  () => import("@/app/[lang]/(mods-pages)/timetable/share/[shareId]/page"),
+);
+const CommunityPage = lazy(
+  () => import("@/app/[lang]/(mods-pages)/community/page"),
+);
+const GroupViewPage = lazy(
+  () => import("@/app/[lang]/(mods-pages)/group/[code]/page"),
+);
 
 // Separate layout page
 const WaitlistPage = lazy(() => import("@/app/[lang]/waitlist/page"));
@@ -216,6 +225,7 @@ export const router = createBrowserRouter([
                   titleZh: "設定",
                   description: "Customize your NTHUMods experience.",
                   descriptionZh: "個人化您的 NTHUMods 使用體驗。",
+                  noindex: true,
                 },
               },
               {
@@ -291,6 +301,7 @@ export const router = createBrowserRouter([
                   description:
                     "View your NTHU course grades and academic record.",
                   descriptionZh: "查看清大個人成績與學業記錄。",
+                  noindex: true,
                 },
               },
               {
@@ -301,6 +312,7 @@ export const router = createBrowserRouter([
                   titleZh: "學生證",
                   description: "Digital NTHU student ID card.",
                   descriptionZh: "清大數位學生證。",
+                  noindex: true,
                 },
               },
               {
@@ -311,6 +323,7 @@ export const router = createBrowserRouter([
                   titleZh: "包裹",
                   description: "Track your parcels delivered to NTHU.",
                   descriptionZh: "查詢清大包裹收件狀況。",
+                  noindex: true,
                 },
               },
               {
@@ -326,6 +339,7 @@ export const router = createBrowserRouter([
                         "Plan your path to graduation at NTHU. Track credit requirements, electives, and degree progress at National Tsing Hua University.",
                       descriptionZh:
                         "規劃清大畢業學分路徑。追蹤必修、選修進度，確保符合國立清華大學畢業要求，提早掌握學分缺口。",
+                      noindex: true,
                     },
                   },
                 ],
@@ -384,6 +398,7 @@ export const router = createBrowserRouter([
               {
                 path: "next-steps",
                 element: <NextStepsPage />,
+                handle: { noindex: true },
               },
               {
                 path: "offline",
@@ -393,7 +408,33 @@ export const router = createBrowserRouter([
               {
                 path: "design-system",
                 element: <DesignSystemPage />,
-                handle: { title: "Design System", titleZh: "設計系統" },
+                handle: {
+                  title: "Design System",
+                  titleZh: "設計系統",
+                  noindex: true,
+                },
+              },
+              {
+                path: "timetable/share/:shareId",
+                element: <TimetableShareViewPage />,
+                handle: { title: "Shared Timetable", noindex: true },
+              },
+              {
+                path: "timetable/community",
+                element: <CommunityPage />,
+                handle: {
+                  title: "Community Timetables",
+                  titleZh: "社群課表",
+                  description:
+                    "Browse timetables shared by NTHU students. See what courses others are taking and get insights on difficulty and grades.",
+                  descriptionZh:
+                    "瀏覽清大學生分享的課表，了解他人選課情況及課程難易度。",
+                },
+              },
+              {
+                path: "timetable/group/:code",
+                element: <GroupViewPage />,
+                handle: { title: "Timetable Group", noindex: true },
               },
               {
                 path: "*",
@@ -404,7 +445,7 @@ export const router = createBrowserRouter([
           {
             path: "waitlist",
             element: <WaitlistPage />,
-            handle: { title: "Waitlist", titleZh: "候補" },
+            handle: { title: "Waitlist", titleZh: "候補", noindex: true },
           },
         ],
       },

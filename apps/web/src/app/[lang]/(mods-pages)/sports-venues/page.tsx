@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import client from "@/config/api";
 import { cn } from "@courseweb/ui";
 import {
@@ -9,10 +9,14 @@ import {
   Circle,
   ChevronRight,
   Clock,
+  RefreshCw,
+  Loader2,
+  ExternalLink,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@courseweb/ui";
 import { useState } from "react";
 import useTime from "@/hooks/useTime";
+import { semesterInfo } from "@courseweb/shared";
 
 type OccupancyItem = {
   project_id: string;
@@ -148,13 +152,18 @@ function getOpenStatus(slots: TimeSlot[], now: Date): OpenStatus {
   return { type: "closed" };
 }
 
-/** Returns the semester name that corresponds to today's date. */
+/** Returns the semester name that corresponds to today's date using actual semester dates. */
 function getCurrentSemesterLabel(): string {
-  const month = new Date().getMonth() + 1;
-  if (month >= 9 || month === 1) return "上學期";
-  if (month === 2) return "寒假";
-  if (month >= 3 && month <= 6) return "下學期";
-  return "暑假";
+  const now = new Date();
+  const active = semesterInfo.find((s) => now >= s.begins && now <= s.ends);
+  if (active) return active.semester === 1 ? "上學期" : "下學期";
+
+  const past = semesterInfo.filter((s) => now > s.ends);
+  if (past.length === 0) return "上學期";
+  const lastEnded = past[past.length - 1];
+  const next = semesterInfo.find((s) => s.begins > now);
+  if (!next) return "暑假";
+  return lastEnded.semester === 1 ? "寒假" : "暑假";
 }
 
 /**
@@ -176,9 +185,7 @@ function matchFacility(
   if (match) return match;
   // Substring match (occupancy name may be shorter)
   match = facilities.find(
-    (f) =>
-      f.name_zh.includes(name) ||
-      name.includes(f.name_zh.slice(0, 3)),
+    (f) => f.name_zh.includes(name) || name.includes(f.name_zh.slice(0, 3)),
   );
   return match;
 }
@@ -220,10 +227,35 @@ const ScheduleSheet = ({
     facility.schedules.map((s) => s.semester),
   );
   const [selectedSemester, setSelectedSemester] = useState(bestAvailable);
+  const [refreshing, setRefreshing] = useState(false);
+  const queryClient = useQueryClient();
 
   const schedule = facility.schedules.find(
     (s) => s.semester === selectedSemester,
   );
+
+  const handleRefresh = async () => {
+    if (refreshing) return;
+    setRefreshing(true);
+    try {
+      const params = selectedSemester
+        ? `?semester=${encodeURIComponent(selectedSemester)}`
+        : "";
+      const res = await fetch(
+        `${import.meta.env.VITE_COURSEWEB_API_URL}/sports/refresh${params}`,
+        { method: "POST" },
+      );
+      // 200 = already up-to-date (debounce hit but data exists), 202 = background sync started
+      if (res.ok || res.status === 202) {
+        // Re-poll after 30s to pick up the background sync result
+        setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey: ["sports-opening-times"] });
+        }, 30_000);
+      }
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   return (
     <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
@@ -239,8 +271,8 @@ const ScheduleSheet = ({
           </SheetTitle>
         </SheetHeader>
 
-        {/* Semester tabs */}
-        <div className="flex gap-2 mb-4 flex-wrap">
+        {/* Semester tabs + refresh button */}
+        <div className="flex gap-2 mb-4 flex-wrap items-center">
           {facility.schedules.map((s) => (
             <button
               key={s.semester}
@@ -256,6 +288,18 @@ const ScheduleSheet = ({
               {s.semester.includes(currentSemesterLabel) && " (current)"}
             </button>
           ))}
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            title="Refresh cache"
+            className="ml-auto p-1 text-slate-400 hover:text-nthu-500 disabled:opacity-50 transition-colors"
+          >
+            {refreshing ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <RefreshCw className="w-4 h-4" />
+            )}
+          </button>
         </div>
 
         {/* Schedule table */}
@@ -292,9 +336,35 @@ const ScheduleSheet = ({
                 {schedule.hours.notes}
               </p>
             )}
+            {schedule.pdf_url && (
+              <a
+                href={schedule.pdf_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 inline-flex items-center gap-1 text-xs text-slate-400 hover:text-nthu-500 transition-colors"
+              >
+                <ExternalLink className="w-3 h-3" />
+                原始 PDF
+              </a>
+            )}
           </>
         ) : (
-          <p className="text-sm text-slate-400">Schedule not yet available.</p>
+          <div className="flex flex-col gap-2">
+            <p className="text-sm text-slate-400">
+              Schedule not yet available.
+            </p>
+            {schedule?.pdf_url && (
+              <a
+                href={schedule.pdf_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-sm text-nthu-500 hover:underline"
+              >
+                <ExternalLink className="w-4 h-4" />
+                View original PDF
+              </a>
+            )}
+          </div>
         )}
       </SheetContent>
     </Sheet>
@@ -305,6 +375,26 @@ const SportsVenuesPage = () => {
   const now = useTime(60_000); // refresh every minute for status badges
   const [selectedFacility, setSelectedFacility] =
     useState<FacilitySchedule | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const queryClient = useQueryClient();
+
+  const handleGlobalRefresh = async () => {
+    if (refreshing) return;
+    setRefreshing(true);
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_COURSEWEB_API_URL}/sports/refresh`,
+        { method: "POST" },
+      );
+      if (res.ok || res.status === 202) {
+        setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey: ["sports-opening-times"] });
+        }, 30_000);
+      }
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const { data: occupancy, dataUpdatedAt } = useQuery<OccupancyItem[]>({
     queryKey: ["venue-occupancy"],
@@ -358,22 +448,37 @@ const SportsVenuesPage = () => {
         <h1 className="text-base font-semibold text-slate-800 dark:text-neutral-100">
           體育館場
         </h1>
-        {dataUpdatedAt > 0 && (
-          <span className="text-xs text-slate-400">
-            更新於{" "}
-            {new Date(dataUpdatedAt).toLocaleTimeString("zh-TW", {
-              hour: "2-digit",
-              minute: "2-digit",
-              second: "2-digit",
-            })}
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {dataUpdatedAt > 0 && (
+            <span className="text-xs text-slate-400">
+              更新於{" "}
+              {new Date(dataUpdatedAt).toLocaleTimeString("zh-TW", {
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+              })}
+            </span>
+          )}
+          <button
+            onClick={handleGlobalRefresh}
+            disabled={refreshing}
+            title="Refresh schedule cache"
+            className="p-1 text-slate-400 hover:text-nthu-500 disabled:opacity-50 transition-colors"
+          >
+            {refreshing ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <RefreshCw className="w-4 h-4" />
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Venue list */}
       <div className="flex flex-col divide-y divide-slate-100 dark:divide-neutral-700">
         {items.map(({ item, facility, todaySlots }) => {
-          const displayName = OCCUPANCY_NAME_ALIASES[item.project_name] ?? item.project_name;
+          const displayName =
+            OCCUPANCY_NAME_ALIASES[item.project_name] ?? item.project_name;
           const { capacity, Icon } = venueInfo(displayName);
           const ratio = Math.min(item.entry_count_now / capacity, 1);
           const pct = Math.round(ratio * 100);

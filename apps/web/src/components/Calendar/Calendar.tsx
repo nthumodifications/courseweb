@@ -43,6 +43,8 @@ import { useHeaderPortal } from "@/components/Portal/HeaderPortal";
 import UpcomingEvents from "./UpcomingEvents";
 import { useIsMobile } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
+import type { OverlayEntry } from "./OthersTimetablePanel";
+import { CalendarEventInternal } from "./calendar.types";
 
 const CalendarError = ({
   error,
@@ -54,16 +56,20 @@ const CalendarError = ({
   return <div className="text-red-500">An error occurred: {error.message}</div>;
 };
 
-const Calendar = () => {
+const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
   const [displayDates, setDisplayDates] = useState<Date[]>(getWeek(new Date()));
   const [displayMode, setDisplayMode] = useState<"week" | "month" | "upcoming">(
     "week",
   );
-  const { events, addEvent, removeEvent, displayContainer, HOUR_HEIGHT } =
+  const { addEvent, displayContainer, HOUR_HEIGHT, timetableSyncReady } =
     useCalendar();
-  const { courses, colorMap, getSemesterCourses } = useUserTimetable();
+  const {
+    courses,
+    colorMap,
+    getSemesterCourses,
+    isLoading: coursesLoading,
+  } = useUserTimetable();
   const { language } = useSettings();
-  const [dbReady, setDbReady] = useState(false);
   const isMobile = useIsMobile();
   const dict = useDictionary();
 
@@ -251,20 +257,14 @@ const Calendar = () => {
     [],
   );
 
-  // Check if database is ready
-  useEffect(() => {
-    if (timetableSync) {
-      // Wait a bit to ensure DB is fully initialized
-      const timer = setTimeout(() => {
-        setDbReady(true);
-      }, 1000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [timetableSync]);
-
   const syncTimetable = async () => {
-    if (!timetableSync || !dbReady || Object.keys(courses).length === 0) return;
+    if (
+      !timetableSync ||
+      !timetableSyncReady ||
+      coursesLoading ||
+      Object.keys(courses).length === 0
+    )
+      return;
 
     // for each semester, check if its already synced
     const timetableCourses: TimetableSyncRequest[] = [];
@@ -310,25 +310,30 @@ const Calendar = () => {
   };
 
   useEffect(() => {
-    if (dbReady) {
+    if (timetableSyncReady && !coursesLoading) {
       syncTimetable();
     }
-  }, [courses, timetableSync, dbReady]);
+  }, [courses, timetableSync, timetableSyncReady, coursesLoading]);
 
   const handleSyncAccept = async (
     request: TimetableSyncRequest,
     accept: boolean,
   ) => {
-    console.log("Syncing", request.semester, accept);
-    const courses = timetableToCalendarEvent(request.courses, language);
     if (accept) {
-      courses.forEach((c) => addEvent(c));
+      const calendarEvents = timetableToCalendarEvent(
+        request.courses,
+        language,
+      );
+      calendarEvents.forEach((c) => addEvent(c));
     } else {
       toast({
         title: `Semester ${toPrettySemester(request.semester)} sync cancelled`,
         description: "You can sync again if the timetable changes",
       });
     }
+
+    // Always record the known course set (accepted or dismissed) so the dialog
+    // is not re-shown for the same courses on subsequent mounts/course-changes.
     await timetableSync!.upsert({
       semester: request.semester,
       courses: request.courses.map((c) => c.course.raw_id),
@@ -340,7 +345,7 @@ const Calendar = () => {
 
   return (
     <ErrorBoundary FallbackComponent={CalendarError}>
-      {availableSync.length > 0 && dbReady && (
+      {availableSync.length > 0 && timetableSyncReady && (
         <CalendarTimetableSyncDialog
           request={availableSync[0]}
           onSyncAccept={handleSyncAccept}
@@ -358,7 +363,19 @@ const Calendar = () => {
         </div>
         <div className="w-full h-[80dvh]" {...handlers}>
           {displayMode === "week" && (
-            <CalendarWeekContainer displayWeek={displayDates} />
+            <CalendarWeekContainer
+              displayWeek={displayDates}
+              overlayEvents={overlays.flatMap((o) =>
+                timetableToCalendarEvent(o.timetableData, language).map(
+                  (e) =>
+                    ({
+                      ...e,
+                      actualEnd: e.repeat ? new Date(e.repeat.value) : e.end,
+                      color: o.color,
+                    }) as CalendarEventInternal,
+                ),
+              )}
+            />
           )}
           {displayMode === "month" && (
             <CalendarMonthContainer

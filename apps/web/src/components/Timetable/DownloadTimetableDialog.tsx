@@ -3,7 +3,7 @@ import { Download, Image, Loader2 } from "lucide-react";
 import Timetable from "./Timetable";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { toPng } from "html-to-image";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState, type ReactNode } from "react";
 import { createTimetableFromCourses } from "@/helpers/timetable";
 import { MinimalCourse } from "@/types/courses";
 import {
@@ -205,7 +205,13 @@ const DownloadTimetableComponent = () => {
   );
 };
 
-const DownloadTimetableDialog = ({ icsfileLink }: { icsfileLink: string }) => {
+const DownloadTimetableDialog = ({
+  icsfileLink,
+  children,
+}: {
+  icsfileLink: string;
+  children?: ReactNode;
+}) => {
   const dict = useDictionary();
 
   const handleDownloadCalendar = async () => {
@@ -234,10 +240,12 @@ const DownloadTimetableDialog = ({ icsfileLink }: { icsfileLink: string }) => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline">
-          <Download className="w-4 h-4 mr-1" />{" "}
-          {dict.timetable.actions.download}
-        </Button>
+        {children ?? (
+          <Button variant="outline">
+            <Download className="w-4 h-4 mr-1" />{" "}
+            {dict.timetable.actions.download}
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

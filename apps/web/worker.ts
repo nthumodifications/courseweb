@@ -104,28 +104,48 @@ function buildCourseMetaData(course: any, lang: string): CourseMetaData {
   };
 }
 
+function applyHreflang(
+  rewriter: HTMLRewriter,
+  zhUrl: string,
+  enUrl: string,
+  xDefaultUrl: string,
+): HTMLRewriter {
+  return rewriter.on('link[rel="alternate"]', {
+    element(el) {
+      const hreflang = el.getAttribute("hreflang");
+      if (!hreflang) return;
+      if (hreflang === "zh" || hreflang === "zh-TW") {
+        el.setAttribute("hreflang", "zh-TW");
+        el.setAttribute("href", zhUrl);
+      } else if (hreflang === "en") {
+        el.setAttribute("href", enUrl);
+      } else if (hreflang === "x-default") {
+        el.setAttribute("href", xDefaultUrl);
+      }
+    },
+  });
+}
+
 async function handleCourseDetailPage(
   lang: string,
   courseId: string,
   env: Env,
   origin: string,
 ): Promise<Response> {
-  const fallback = () => env.ASSETS.fetch(new Request(`${origin}/index.html`));
-
   try {
     const apiRes = await fetch(
       `https://api.nthumods.com/course/${encodeURIComponent(courseId)}`,
       { cf: { cacheTtl: 86400, cacheEverything: true } } as RequestInit,
     );
 
-    if (!apiRes.ok) {
-      return fallback();
+    if (!apiRes.ok || apiRes.status === 404) {
+      return handleMissingCourse(lang, env, origin);
     }
 
     const course = (await apiRes.json()) as any;
 
     if (!course?.name_zh) {
-      return fallback();
+      return handleMissingCourse(lang, env, origin);
     }
 
     const meta = buildCourseMetaData(course, lang);
@@ -183,15 +203,45 @@ async function handleCourseDetailPage(
     rewriter = applyHreflang(rewriter, meta.zhUrl, meta.enUrl, meta.zhUrl);
     return rewriter.transform(shellRes);
   } catch {
-    return fallback();
+    return handleMissingCourse(lang, env, origin);
   }
+}
+
+async function handleMissingCourse(
+  lang: string,
+  env: Env,
+  origin: string,
+): Promise<Response> {
+  const shellRes = await env.ASSETS.fetch(new Request(`${origin}/index.html`));
+  const coursesUrl = `https://nthumods.com/${lang}/courses`;
+
+  const notFoundShell = new Response(shellRes.body, {
+    status: 404,
+    statusText: "Not Found",
+    headers: new Headers({
+      ...Object.fromEntries(shellRes.headers),
+      "X-Robots-Tag": "noindex, follow",
+    }),
+  });
+
+  return new HTMLRewriter()
+    .on('meta[name="robots"]', {
+      element(el) {
+        el.setAttribute("content", "noindex, follow");
+      },
+    })
+    .on('link[rel="canonical"]', {
+      element(el) {
+        el.setAttribute("href", coursesUrl);
+      },
+    })
+    .transform(notFoundShell);
 }
 
 async function handleDepartmentPage(url: URL, env: Env): Promise<Response> {
   const dept = url.searchParams.get("department") ?? "";
   const lang = url.pathname.includes("/zh/") ? "zh" : "en";
-  const fallback = () =>
-    env.ASSETS.fetch(new Request(`${url.origin}/index.html`));
+  const fallback = () => handleGenericBotPage(url, env);
 
   try {
     const apiRes = await supabaseFetch(
@@ -300,7 +350,6 @@ async function handleBusPage(
         : `View NTHU ${routeName.en} real-time schedule, route map, and stop information.`;
 
     const canonicalUrl = `https://nthumods.com/${lang}/bus/${route}`;
-
     const zhUrl = `https://nthumods.com/zh/bus/${route}`;
     const enUrl = `https://nthumods.com/en/bus/${route}`;
 
@@ -505,41 +554,17 @@ const STATIC_PAGE_METADATA: Record<string, { zh: PageMeta; en: PageMeta }> = {
   },
 };
 
-function applyHreflang(
-  rewriter: HTMLRewriter,
-  zhUrl: string,
-  enUrl: string,
-  xDefaultUrl: string,
-): HTMLRewriter {
-  return rewriter.on('link[rel="alternate"]', {
-    element(el) {
-      const hreflang = el.getAttribute("hreflang");
-      if (!hreflang) return;
-      if (hreflang === "zh" || hreflang === "zh-TW") {
-        el.setAttribute("hreflang", "zh-TW");
-        el.setAttribute("href", zhUrl);
-      } else if (hreflang === "en") {
-        el.setAttribute("href", enUrl);
-      } else if (hreflang === "x-default") {
-        el.setAttribute("href", xDefaultUrl);
-      }
-    },
-  });
-}
-
 // Sets canonical, hreflang, title, and description for all other bot page requests.
 async function handleGenericBotPage(url: URL, env: Env): Promise<Response> {
   const pathname = url.pathname;
   const lang = pathname.startsWith("/en/") || pathname === "/en" ? "en" : "zh";
 
-  // Canonical = current path with no query params
   const canonicalUrl = `https://nthumods.com${pathname}`;
   const zhPath = pathname.replace(/^\/(zh|en)(\/|$)/, "/zh$2");
   const enPath = pathname.replace(/^\/(zh|en)(\/|$)/, "/en$2");
   const zhUrl = `https://nthumods.com${zhPath}`;
   const enUrl = `https://nthumods.com${enPath}`;
 
-  // Look up page-specific metadata by stripping the lang prefix
   const pagePath = pathname.replace(/^\/(zh|en)/, "") || "/";
   const meta = STATIC_PAGE_METADATA[pagePath]?.[lang];
 
@@ -623,35 +648,81 @@ function buildSitemapXML(courses: any[]): string {
     { path: "/en/timetable", priority: "0.90", changefreq: "weekly" },
     { path: "/zh/today", priority: "0.85", changefreq: "daily" },
     { path: "/en/today", priority: "0.85", changefreq: "daily" },
+    { path: "/zh/calendar", priority: "0.85", changefreq: "weekly" },
+    { path: "/en/calendar", priority: "0.85", changefreq: "weekly" },
     { path: "/zh/bus", priority: "0.80", changefreq: "daily" },
     { path: "/en/bus", priority: "0.80", changefreq: "daily" },
+    { path: "/zh/bus/main", priority: "0.75", changefreq: "weekly" },
+    { path: "/en/bus/main", priority: "0.75", changefreq: "weekly" },
+    { path: "/zh/bus/nanda", priority: "0.75", changefreq: "weekly" },
+    { path: "/en/bus/nanda", priority: "0.75", changefreq: "weekly" },
     { path: "/zh/venues", priority: "0.70", changefreq: "weekly" },
     { path: "/en/venues", priority: "0.70", changefreq: "weekly" },
+    { path: "/zh/sports-venues", priority: "0.70", changefreq: "weekly" },
+    { path: "/en/sports-venues", priority: "0.70", changefreq: "weekly" },
+    { path: "/zh/chat", priority: "0.65", changefreq: "monthly" },
+    { path: "/en/chat", priority: "0.65", changefreq: "monthly" },
+    { path: "/zh/shops", priority: "0.65", changefreq: "weekly" },
+    { path: "/en/shops", priority: "0.65", changefreq: "weekly" },
+    { path: "/zh/apps", priority: "0.65", changefreq: "monthly" },
+    { path: "/en/apps", priority: "0.65", changefreq: "monthly" },
     { path: "/zh/team", priority: "0.50", changefreq: "monthly" },
     { path: "/en/team", priority: "0.50", changefreq: "monthly" },
     { path: "/zh/contribute", priority: "0.50", changefreq: "monthly" },
     { path: "/en/contribute", priority: "0.50", changefreq: "monthly" },
+    { path: "/zh/privacy-policy", priority: "0.40", changefreq: "yearly" },
+    { path: "/en/privacy-policy", priority: "0.40", changefreq: "yearly" },
   ];
 
   const staticUrls = staticPages
-    .map(
-      (p) =>
-        `  <url><loc>https://nthumods.com${p.path}</loc><changefreq>${p.changefreq}</changefreq><priority>${p.priority}</priority></url>`,
-    )
+    .map((p) => {
+      const zhPath = p.path
+        .replace(/^\/(zh|en)\//, "/zh/")
+        .replace(/^\/(zh|en)$/, "/zh");
+      const enPath = p.path
+        .replace(/^\/(zh|en)\//, "/en/")
+        .replace(/^\/(zh|en)$/, "/en");
+      const zhUrl = `https://nthumods.com${zhPath}`;
+      const enUrl = `https://nthumods.com${enPath}`;
+      const loc = `https://nthumods.com${p.path}`;
+      return `  <url>
+    <loc>${loc}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>${p.changefreq}</changefreq>
+    <priority>${p.priority}</priority>
+    <xhtml:link rel="alternate" hreflang="zh-TW" href="${zhUrl}"/>
+    <xhtml:link rel="alternate" hreflang="en" href="${enUrl}"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="${zhUrl}"/>
+  </url>`;
+    })
     .join("\n");
 
+  // Each course gets BOTH zh and en URL entries so Google indexes both language versions
   const courseUrls = courses
-    .map((course) => {
+    .flatMap((course) => {
       const courseId = encodeURIComponent(course.raw_id);
-      return `  <url>
-    <loc>https://nthumods.com/zh/courses/${courseId}</loc>
+      const zhUrl = `https://nthumods.com/zh/courses/${courseId}`;
+      const enUrl = `https://nthumods.com/en/courses/${courseId}`;
+      return [
+        `  <url>
+    <loc>${zhUrl}</loc>
     <lastmod>${today}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.80</priority>
-    <xhtml:link rel="alternate" hreflang="zh-TW" href="https://nthumods.com/zh/courses/${courseId}"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://nthumods.com/en/courses/${courseId}"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://nthumods.com/zh/courses/${courseId}"/>
-  </url>`;
+    <changefreq>monthly</changefreq>
+    <priority>0.75</priority>
+    <xhtml:link rel="alternate" hreflang="zh-TW" href="${zhUrl}"/>
+    <xhtml:link rel="alternate" hreflang="en" href="${enUrl}"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="${zhUrl}"/>
+  </url>`,
+        `  <url>
+    <loc>${enUrl}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.70</priority>
+    <xhtml:link rel="alternate" hreflang="zh-TW" href="${zhUrl}"/>
+    <xhtml:link rel="alternate" hreflang="en" href="${enUrl}"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="${zhUrl}"/>
+  </url>`,
+      ];
     })
     .join("\n");
 
@@ -669,14 +740,36 @@ function buildSitemapXML(courses: any[]): string {
   ];
 
   const deptUrls = majorDepts
-    .map(
-      (dept) =>
-        `  <url><loc>https://nthumods.com/zh/courses?department=${encodeURIComponent(dept)}</loc><changefreq>weekly</changefreq><priority>0.70</priority></url>`,
-    )
+    .flatMap((dept) => {
+      const zhUrl = `https://nthumods.com/zh/courses?department=${encodeURIComponent(dept)}`;
+      const enUrl = `https://nthumods.com/en/courses?department=${encodeURIComponent(dept)}`;
+      return [
+        `  <url>
+    <loc>${zhUrl}</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.65</priority>
+    <xhtml:link rel="alternate" hreflang="zh-TW" href="${zhUrl}"/>
+    <xhtml:link rel="alternate" hreflang="en" href="${enUrl}"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="${zhUrl}"/>
+  </url>`,
+        `  <url>
+    <loc>${enUrl}</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.60</priority>
+    <xhtml:link rel="alternate" hreflang="zh-TW" href="${zhUrl}"/>
+    <xhtml:link rel="alternate" hreflang="en" href="${enUrl}"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="${zhUrl}"/>
+  </url>`,
+      ];
+    })
     .join("\n");
 
   return `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+          http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
 ${staticUrls}
 ${courseUrls}
 ${deptUrls}
@@ -728,7 +821,7 @@ async function generateSitemap(env: Env): Promise<Response> {
     const xml = buildSitemapXML(courses);
     const response = new Response(xml, {
       headers: {
-        "Content-Type": "application/xml",
+        "Content-Type": "application/xml; charset=utf-8",
         "Cache-Control": "public, max-age=86400",
       },
     });
@@ -754,6 +847,7 @@ export default {
       return env.ASSETS.fetch(request);
     }
 
+    // Course detail page
     const courseMatch = url.pathname.match(/^\/(zh|en)\/courses\/(.+)$/);
     if (courseMatch) {
       return handleCourseDetailPage(
@@ -764,6 +858,7 @@ export default {
       );
     }
 
+    // Department-filtered course list
     const deptMatch =
       url.pathname.match(/^\/(zh|en)\/courses$/) &&
       url.searchParams.has("department");
@@ -771,6 +866,7 @@ export default {
       return handleDepartmentPage(url, env);
     }
 
+    // Bus route/line pages
     const busMatch = url.pathname.match(/^\/(zh|en)\/bus\/(.+)$/);
     if (busMatch) {
       return handleBusPage(busMatch[1], busMatch[2], env, url.origin);

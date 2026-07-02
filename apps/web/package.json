@@ -40,6 +40,7 @@
     "cmdk": "^1.1.1",
     "date-fns": "^3.6.0",
     "date-fns-tz": "^3.0.1",
+    "dompurify": "^3.4.2",
     "focus-trap-react": "^11.0.3",
     "framer-motion": "^12.10.1",
     "fuse.js": "^6.6.2",
