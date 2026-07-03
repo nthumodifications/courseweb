@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@courseweb/ui";
 import { RotateCcw, Link2, Check } from "lucide-react";
 import { useLocation } from "react-router-dom";
+import useDictionary from "@/dictionaries/useDictionary";
 
 const RADIUS_OPTIONS: { value: ThemeRadius; label: string }[] = [
   { value: "none", label: "□" },
@@ -52,6 +53,7 @@ export const ThemeSection = () => {
   } = useTheme();
   const [copied, setCopied] = useState(false);
   const location = useLocation();
+  const dict = useDictionary();
 
   // Import theme from URL ?theme= param on mount
   useEffect(() => {
@@ -116,7 +118,9 @@ export const ThemeSection = () => {
     <div className="flex flex-col gap-6">
       {/* Preset Grid */}
       <div>
-        <h3 className="text-sm font-medium mb-3">Theme Preset / 主題</h3>
+        <h3 className="text-sm font-medium mb-3">
+          {dict.settings.appearance.preset.title}
+        </h3>
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
           {THEME_PRESETS.map((preset) => (
             <button
@@ -155,7 +159,9 @@ export const ThemeSection = () => {
 
       {/* Font */}
       <div>
-        <h3 className="text-sm font-medium mb-3">Font Family / 字體</h3>
+        <h3 className="text-sm font-medium mb-3">
+          {dict.settings.appearance.font.title}
+        </h3>
         <div className="flex gap-2 flex-wrap">
           {(Object.keys(FONT_DEFINITIONS) as ThemeFont[]).map((f) => (
             <button
@@ -177,7 +183,9 @@ export const ThemeSection = () => {
 
       {/* Border Radius */}
       <div>
-        <h3 className="text-sm font-medium mb-3">Border Radius / 圓角</h3>
+        <h3 className="text-sm font-medium mb-3">
+          {dict.settings.appearance.radius.title}
+        </h3>
         <div className="flex gap-2 flex-wrap">
           {RADIUS_OPTIONS.map((opt) => (
             <button
@@ -213,7 +221,9 @@ export const ThemeSection = () => {
 
       {/* Font Scale */}
       <div>
-        <h3 className="text-sm font-medium mb-1">Font Size / 字體大小</h3>
+        <h3 className="text-sm font-medium mb-1">
+          {dict.settings.appearance.font_scale.title}
+        </h3>
         <div className="flex items-center gap-3">
           <span className="text-xs text-muted-foreground">小</span>
           <input
@@ -234,7 +244,9 @@ export const ThemeSection = () => {
 
       {/* Density */}
       <div>
-        <h3 className="text-sm font-medium mb-3">Density / 密度</h3>
+        <h3 className="text-sm font-medium mb-3">
+          {dict.settings.appearance.density.title}
+        </h3>
         <div className="flex gap-2">
           {DENSITY_OPTIONS.map((opt) => (
             <button
@@ -256,7 +268,9 @@ export const ThemeSection = () => {
 
       {/* Background */}
       <div>
-        <h3 className="text-sm font-medium mb-3">Background / 背景</h3>
+        <h3 className="text-sm font-medium mb-3">
+          {dict.settings.appearance.background.title}
+        </h3>
         <div className="flex gap-2 flex-wrap">
           {BACKGROUND_OPTIONS.map((opt) => (
             <button
@@ -300,7 +314,9 @@ export const ThemeSection = () => {
 
       {/* Accent Color Override */}
       <div>
-        <h3 className="text-sm font-medium mb-3">Accent Color / 強調色</h3>
+        <h3 className="text-sm font-medium mb-3">
+          {dict.settings.appearance.accent.title}
+        </h3>
         <div className="flex items-center gap-3">
           <input
             type="color"
@@ -310,7 +326,7 @@ export const ThemeSection = () => {
             title="Pick accent color"
           />
           <span className="text-xs text-muted-foreground flex-1">
-            Overrides the preset's primary color
+            {dict.settings.appearance.accent.description}
           </span>
           {config.accentOverride && (
             <button
@@ -336,7 +352,9 @@ export const ThemeSection = () => {
           ) : (
             <Link2 className="h-3.5 w-3.5" />
           )}
-          {copied ? "Copied!" : "Share Theme"}
+          {copied
+            ? dict.settings.appearance.copied
+            : dict.settings.appearance.share_theme}
         </Button>
         <Button
           variant="outline"
@@ -345,7 +363,7 @@ export const ThemeSection = () => {
           className="gap-2"
         >
           <RotateCcw className="h-3.5 w-3.5" />
-          Reset
+          {dict.settings.appearance.reset}
         </Button>
       </div>
     </div>

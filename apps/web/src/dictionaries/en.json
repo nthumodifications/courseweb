@@ -181,6 +181,15 @@
         "lines": "Lines",
         "noise": "Noise"
       },
+      "font": {
+        "title": "Font Family"
+      },
+      "accent": {
+        "title": "Accent Color",
+        "description": "Overrides the preset's primary color"
+      },
+      "share_theme": "Share Theme",
+      "copied": "Copied!",
       "reset": "Reset to Default"
     },
     "account": {
@@ -205,6 +214,16 @@
       },
       "language": {
         "title": "Language"
+      },
+      "compact_header": {
+        "title": "Compact Header",
+        "description": "Reduce the height of the top header bar"
+      },
+      "bottom_nav": {
+        "title": "Bottom Navigation"
+      },
+      "sidebar_nav": {
+        "title": "Sidebar Navigation"
       }
     },
     "timetable": {
@@ -226,7 +245,9 @@
       "slot_title": "Title",
       "slot_code": "Code",
       "slot_time": "Time",
-      "slot_venue": "Venue"
+      "slot_venue": "Venue",
+      "alignment": "Alignment",
+      "fields_order": "Fields & Order"
     },
     "privacy": {
       "title": "Privacy",
@@ -247,6 +268,11 @@
         "title": "Calendar",
         "badge": "Experimental",
         "description": "Use the new Calendar on the Today Page."
+      },
+      "widget_dashboard": {
+        "title": "Widget Dashboard",
+        "description": "Replace Today page with a customizable widget grid",
+        "customize": "Customize widgets:"
       }
     },
     "ai": {
@@ -276,6 +302,14 @@
         "invalid": "✗ Invalid API Key or connection failed"
       },
       "save": "Save Settings"
+    },
+    "advanced": {
+      "title": "Advanced",
+      "description": "Custom CSS, Developer Options",
+      "custom_css": {
+        "title": "Custom CSS",
+        "description": "Inject custom CSS into the page. Applied globally after all other styles."
+      }
     }
   },
   "pages": {

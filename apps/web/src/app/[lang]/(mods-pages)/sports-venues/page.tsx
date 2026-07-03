@@ -207,7 +207,7 @@ const StatusBadge = ({ slots, now }: { slots: TimeSlot[]; now: Date }) => {
     );
   }
   return (
-    <span className="text-sm font-semibold text-slate-400 dark:text-neutral-500 whitespace-nowrap">
+    <span className="text-sm font-semibold text-muted-foreground whitespace-nowrap">
       CLOSED TODAY
     </span>
   );
@@ -264,7 +264,7 @@ const ScheduleSheet = ({
           <SheetTitle>
             {facility.name_zh}
             {facility.name_en !== facility.name_zh && (
-              <span className="ml-2 text-sm font-normal text-slate-500">
+              <span className="ml-2 text-sm font-normal text-muted-foreground">
                 {facility.name_en}
               </span>
             )}
@@ -280,8 +280,8 @@ const ScheduleSheet = ({
               className={cn(
                 "px-3 py-1 rounded-full text-sm border transition-colors",
                 s.semester === selectedSemester
-                  ? "bg-nthu-500 text-white border-nthu-500"
-                  : "border-slate-200 dark:border-neutral-700 text-slate-600 dark:text-neutral-400",
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "border-border text-muted-foreground",
               )}
             >
               {s.semester}
@@ -292,7 +292,7 @@ const ScheduleSheet = ({
             onClick={handleRefresh}
             disabled={refreshing}
             title="Refresh cache"
-            className="ml-auto p-1 text-slate-400 hover:text-nthu-500 disabled:opacity-50 transition-colors"
+            className="ml-auto p-1 text-muted-foreground hover:text-primary disabled:opacity-50 transition-colors"
           >
             {refreshing ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -305,23 +305,22 @@ const ScheduleSheet = ({
         {/* Schedule table */}
         {schedule?.hours ? (
           <>
-            <div className="flex flex-col divide-y divide-slate-100 dark:divide-neutral-800">
+            <div className="flex flex-col divide-y divide-border">
               {[...DAY_KEYS, "holiday" as const].map((day) => {
                 const slots = ensureTimeSlotArray(schedule.hours![day]);
                 return (
                   <div key={day} className="flex items-start py-3 gap-4">
-                    <span className="w-16 text-sm font-medium text-slate-500 dark:text-neutral-400 shrink-0">
+                    <span className="w-16 text-sm font-medium text-muted-foreground dark:text-neutral-400 shrink-0">
                       {DAY_LABELS[day]}
                     </span>
                     <div className="flex flex-col gap-1">
                       {slots.length === 0 ? (
-                        <span className="text-sm text-slate-400">Closed</span>
+                        <span className="text-sm text-muted-foreground">
+                          Closed
+                        </span>
                       ) : (
                         slots.map((slot, i) => (
-                          <span
-                            key={i}
-                            className="text-sm text-slate-800 dark:text-neutral-100"
-                          >
+                          <span key={i} className="text-sm text-foreground">
                             {slot.open} – {slot.close}
                           </span>
                         ))
@@ -332,7 +331,7 @@ const ScheduleSheet = ({
               })}
             </div>
             {schedule.hours.notes && (
-              <p className="mt-3 text-xs text-slate-400 dark:text-neutral-500">
+              <p className="mt-3 text-xs text-muted-foreground">
                 {schedule.hours.notes}
               </p>
             )}
@@ -341,7 +340,7 @@ const ScheduleSheet = ({
                 href={schedule.pdf_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-3 inline-flex items-center gap-1 text-xs text-slate-400 hover:text-nthu-500 transition-colors"
+                className="mt-3 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
               >
                 <ExternalLink className="w-3 h-3" />
                 原始 PDF
@@ -350,7 +349,7 @@ const ScheduleSheet = ({
           </>
         ) : (
           <div className="flex flex-col gap-2">
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-muted-foreground">
               Schedule not yet available.
             </p>
             {schedule?.pdf_url && (
@@ -358,7 +357,7 @@ const ScheduleSheet = ({
                 href={schedule.pdf_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-sm text-nthu-500 hover:underline"
+                className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
               >
                 <ExternalLink className="w-4 h-4" />
                 View original PDF
@@ -445,12 +444,10 @@ const SportsVenuesPage = () => {
     <div className="flex flex-col px-4">
       {/* Header */}
       <div className="flex items-center justify-between py-3">
-        <h1 className="text-base font-semibold text-slate-800 dark:text-neutral-100">
-          體育館場
-        </h1>
+        <h1 className="text-base font-semibold text-foreground">體育館場</h1>
         <div className="flex items-center gap-2">
           {dataUpdatedAt > 0 && (
-            <span className="text-xs text-slate-400">
+            <span className="text-xs text-muted-foreground">
               更新於{" "}
               {new Date(dataUpdatedAt).toLocaleTimeString("zh-TW", {
                 hour: "2-digit",
@@ -463,7 +460,7 @@ const SportsVenuesPage = () => {
             onClick={handleGlobalRefresh}
             disabled={refreshing}
             title="Refresh schedule cache"
-            className="p-1 text-slate-400 hover:text-nthu-500 disabled:opacity-50 transition-colors"
+            className="p-1 text-muted-foreground hover:text-primary disabled:opacity-50 transition-colors"
           >
             {refreshing ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -475,7 +472,7 @@ const SportsVenuesPage = () => {
       </div>
 
       {/* Venue list */}
-      <div className="flex flex-col divide-y divide-slate-100 dark:divide-neutral-700">
+      <div className="flex flex-col divide-y divide-border">
         {items.map(({ item, facility, todaySlots }) => {
           const displayName =
             OCCUPANCY_NAME_ALIASES[item.project_name] ?? item.project_name;
@@ -493,9 +490,9 @@ const SportsVenuesPage = () => {
                 )}
                 onClick={() => facility && setSelectedFacility(facility)}
               >
-                <Icon className="h-7 w-7 text-nthu-500 shrink-0" />
+                <Icon className="h-7 w-7 text-primary shrink-0" />
                 <div className="flex flex-col flex-1 min-w-0">
-                  <h3 className="text-slate-800 dark:text-neutral-100 font-bold truncate">
+                  <h3 className="text-foreground font-bold truncate">
                     {displayName}
                   </h3>
                   {todaySlots !== null && (
@@ -511,12 +508,12 @@ const SportsVenuesPage = () => {
                   {item.entry_count_now} 人
                 </span>
                 {facility && (
-                  <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
+                  <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
                 )}
               </div>
 
               {/* Progress bar */}
-              <div className="relative h-2 w-full rounded-full bg-slate-200 dark:bg-neutral-700 overflow-hidden">
+              <div className="relative h-2 w-full rounded-full bg-muted overflow-hidden">
                 <div
                   className={cn(
                     "h-full rounded-full transition-all duration-700",
@@ -527,7 +524,7 @@ const SportsVenuesPage = () => {
               </div>
 
               {/* Bottom row */}
-              <div className="flex flex-row justify-between text-sm text-slate-500 dark:text-neutral-400">
+              <div className="flex flex-row justify-between text-sm text-muted-foreground dark:text-neutral-400">
                 <span>使用率 {pct}%</span>
                 <span>今日進場 {item.entry_count_today} 人</span>
               </div>
@@ -561,26 +558,26 @@ const SportsVenuesPage = () => {
                 className="flex flex-row items-center gap-4 py-4 cursor-pointer"
                 onClick={() => setSelectedFacility(facility)}
               >
-                <Users className="h-7 w-7 text-nthu-500 shrink-0" />
+                <Users className="h-7 w-7 text-primary shrink-0" />
                 <div className="flex flex-col flex-1 min-w-0">
-                  <h3 className="text-slate-800 dark:text-neutral-100 font-bold truncate">
+                  <h3 className="text-foreground font-bold truncate">
                     {facility.name_zh}
                   </h3>
                   {todaySlots !== null && (
                     <StatusBadge slots={todaySlots} now={now} />
                   )}
                 </div>
-                <div className="flex items-center gap-1 text-xs text-slate-400">
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
                   <Clock className="w-3 h-3" />
                 </div>
-                <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
+                <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
               </div>
             );
           })}
       </div>
 
       {/* Data source */}
-      <div className="mt-4 pb-4 text-xs text-slate-400 dark:text-neutral-500">
+      <div className="mt-4 pb-4 text-xs text-muted-foreground">
         資料來源：
         <a
           href="https://peo178.et.nthu.edu.tw"
