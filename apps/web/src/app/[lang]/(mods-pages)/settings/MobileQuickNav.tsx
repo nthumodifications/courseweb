@@ -62,7 +62,7 @@ export const MobileQuickNav = ({
       <button
         ref={triggerRef}
         onClick={() => setShowNav(true)}
-        className="fixed bottom-20 right-4 z-50 lg:hidden bg-nthu-500 text-white p-3 rounded-full shadow-lg hover:bg-nthu-600 transition-colors"
+        className="fixed bottom-20 right-4 z-50 lg:hidden bg-primary text-primary-foreground p-3 rounded-full shadow-lg hover:bg-primary/90 transition-colors"
         aria-label="Open navigation menu"
       >
         <Menu className="h-5 w-5" />
@@ -99,7 +99,7 @@ export const MobileQuickNav = ({
                   className={cn(
                     "w-full flex items-center gap-3 px-4 py-3 rounded-md transition-colors",
                     activeSection === section.id
-                      ? "bg-nthu-500/10 text-nthu-500"
+                      ? "bg-primary/10 text-primary"
                       : "hover:bg-accent",
                   )}
                   aria-current={

@@ -17,15 +17,36 @@ import { useQuery } from "@tanstack/react-query";
 import useSyncedStorage from "../useSyncedStorage";
 import client from "@/config/api";
 
+export type TimetableFieldKey =
+  | "code"
+  | "title"
+  | "time"
+  | "teacher"
+  | "venue"
+  | "credits";
+
+export const DEFAULT_FIELD_ORDER: TimetableFieldKey[] = [
+  "code",
+  "title",
+  "time",
+  "teacher",
+  "venue",
+  "credits",
+];
+
 export interface TimetableDisplayPreferences {
   language: "app" | "zh" | "en";
   align: "left" | "center" | "right";
+  verticalAlign: "top" | "center" | "bottom";
   display: {
     title: boolean;
     code: boolean;
     time: boolean;
     venue: boolean;
+    teacher: boolean;
+    credits: boolean;
   };
+  fieldOrder: TimetableFieldKey[];
 }
 
 export type CourseLocalStorage = { [sem: string]: RawCourseID[] };
@@ -59,12 +80,16 @@ const userTimetableContext = createContext<
   preferences: {
     language: "app",
     align: "center",
+    verticalAlign: "top",
     display: {
       title: true,
       code: false,
       time: true,
       venue: true,
+      teacher: false,
+      credits: false,
     },
+    fieldOrder: DEFAULT_FIELD_ORDER,
   },
   setPreferences: () => {},
 });
@@ -91,12 +116,16 @@ const useUserTimetableProvider = (loadCourse = true) => {
       {
         language: "app",
         align: "center",
+        verticalAlign: "top",
         display: {
           title: true,
           code: false,
           time: true,
           venue: true,
+          teacher: false,
+          credits: false,
         },
+        fieldOrder: DEFAULT_FIELD_ORDER,
       },
     );
   const [semester, setSemester] = useState<string>(lastSemester.id);

@@ -73,13 +73,13 @@ const IntroAnimation = () => (
 
 const CoursesAnimation = () => (
   <motion.div
-    className="w-full h-full relative p-2 bg-gray-50"
+    className="w-full h-full relative p-2 bg-muted"
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
     transition={{ duration: 0.5 }}
   >
     {/* Time column labels */}
-    <div className="absolute left-1 top-0 h-full w-8 flex flex-col text-[10px] text-gray-500">
+    <div className="absolute left-1 top-0 h-full w-8 flex flex-col text-[10px] text-muted-foreground">
       {["9:00", "10:00", "11:00", "12:00", "13:00", "14:00"].map((time, i) => (
         <div
           key={`time-${i}`}
@@ -95,7 +95,7 @@ const CoursesAnimation = () => (
     {[...Array(6)].map((_, i) => (
       <motion.div
         key={`h-${i}`}
-        className="absolute left-8 right-0 h-px bg-gray-200"
+        className="absolute left-8 right-0 h-px bg-border"
         style={{ top: `${15 + i * 14}%` }}
         initial={{ scaleX: 0 }}
         animate={{ scaleX: 1 }}
@@ -107,7 +107,7 @@ const CoursesAnimation = () => (
     {[...Array(4)].map((_, i) => (
       <motion.div
         key={`v-${i}`}
-        className="absolute top-0 bottom-0 w-px bg-gray-200"
+        className="absolute top-0 bottom-0 w-px bg-border"
         style={{ left: `${30 + i * 22}%` }}
         initial={{ scaleY: 0 }}
         animate={{ scaleY: 1 }}
@@ -151,7 +151,7 @@ const CoursesAnimation = () => (
         title: "電腦網路",
         code: "CS3051",
         color: "bg-yellow-500",
-        textColor: "text-gray-800",
+        textColor: "text-foreground",
         top: "57%",
         left: "74%",
         width: "21%",
@@ -208,7 +208,7 @@ const DashboardAnimation = () => (
           <Cloud size={14} className="text-blue-500" />
           <span className="font-medium">26°</span>
           <span className="text-muted-foreground text-xs">18°</span>
-          <div className="ml-1 text-xs bg-gray-200 px-1 rounded-full">10%</div>
+          <div className="ml-1 text-xs bg-muted px-1 rounded-full">10%</div>
         </div>
       </div>
 
@@ -291,10 +291,10 @@ const BusAnimation = () => (
       <span className="text-sm font-medium">Campus Bus Schedule</span>
     </motion.div>
 
-    <motion.div className="relative flex-1 bg-gray-50 rounded-md overflow-hidden">
+    <motion.div className="relative flex-1 bg-muted rounded-md overflow-hidden">
       {/* Bus route line */}
       <motion.div
-        className="absolute top-1/2 left-0 w-full h-1 bg-gray-300"
+        className="absolute top-1/2 left-0 w-full h-1 bg-border"
         initial={{ scaleX: 0 }}
         animate={{ scaleX: 1 }}
         transition={{ duration: 1 }}
@@ -346,7 +346,7 @@ const ToolsAnimation = () => (
     ].map((tool, i) => (
       <motion.div
         key={i}
-        className="flex flex-col items-center justify-center bg-white p-4 rounded-md shadow-sm border"
+        className="flex flex-col items-center justify-center bg-card p-4 rounded-md shadow-sm border"
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.4, delay: i * 0.1 }}

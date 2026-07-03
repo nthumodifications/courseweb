@@ -9,15 +9,11 @@ const TimeslotHeader = forwardRef<
   return (
     <tr className="h-0.5">
       <td className="flex flex-col py-1 justify-between">
-        <span className="text-[10px] text-gray-700 dark:text-gray-400">
-          {start}
-        </span>
-        <span className="text-xs font-semibold p-0.5 rounded-full bg-gray-100 dark:bg-neutral-800 my-1">
+        <span className="text-[10px] text-muted-foreground">{start}</span>
+        <span className="text-xs font-semibold p-0.5 rounded-full bg-muted my-1">
           {time}
         </span>
-        <span className="text-[10px] text-gray-700 dark:text-gray-400">
-          {end}
-        </span>
+        <span className="text-[10px] text-muted-foreground">{end}</span>
       </td>
       <td className="p-0.5 h-[inherit]" ref={firstRow ? ref : null}>
         <BlankTimeslotBody />

@@ -150,6 +150,39 @@
     "schedule": "發車時刻表"
   },
   "settings": {
+    "appearance": {
+      "title": "外觀",
+      "description": "主題、顏色、字體、版面",
+      "preset": {
+        "title": "主題預設",
+        "description": "選擇配色主題"
+      },
+      "radius": {
+        "title": "圓角",
+        "description": "邊框圓角大小"
+      },
+      "font_scale": {
+        "title": "字體大小",
+        "description": "調整文字大小"
+      },
+      "density": {
+        "title": "密度",
+        "description": "介面間距",
+        "compact": "緊湊",
+        "comfortable": "適中",
+        "spacious": "寬鬆"
+      },
+      "background": {
+        "title": "背景",
+        "description": "頁面背景樣式",
+        "solid": "純色",
+        "gradient": "漸層",
+        "dots": "點狀",
+        "lines": "線條",
+        "noise": "噪點"
+      },
+      "reset": "重設為預設值"
+    },
     "account": {
       "signin": "登入",
       "signout": "登出",

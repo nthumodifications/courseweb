@@ -99,7 +99,7 @@ const Header = () => {
   };
 
   return (
-    <header className="h-[--header-height] w-full bg-white border-border border-b dark:bg-background px-2 md:px-4 py-4 md:col-span-2 flex flex-row items-center z-50 gap-4 sticky top-0">
+    <header className="h-[--header-height] w-full bg-background border-border border-b px-2 md:px-4 py-4 md:col-span-2 flex flex-row items-center z-50 gap-4 sticky top-0">
       <SidebarTrigger />
       <div className="flex flex-1 items-center">
         <div
@@ -113,7 +113,9 @@ const Header = () => {
           <DropdownMenuTrigger>
             <div className="text-left">
               <div className="text-sm">{user.profile.name}</div>
-              <div className="text-xs text-gray-500">{user.profile.sub}</div>
+              <div className="text-xs text-muted-foreground">
+                {user.profile.sub}
+              </div>
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="min-w-56">

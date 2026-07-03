@@ -20,13 +20,13 @@ const ComponentSkeleton = () => {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-row gap-4">
-        <Skeleton className="flex-1 p-2 bg-gray-100 dark:bg-neutral-800 rounded-md w-[300px] h-[40px]" />
+        <Skeleton className="flex-1 p-2 bg-muted rounded-md w-[300px] h-[40px]" />
         <Skeleton className="w-[40px] h-[40px] rounded-full" />
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col">
           <Skeleton className="text-lg font-semibold w-[150px] h-[24px]" />
-          <Skeleton className="p-2 bg-white rounded-md w-[100px] h-[100px]" />
+          <Skeleton className="p-2 bg-card rounded-md w-[100px] h-[100px]" />
         </div>
         <div className="flex flex-col space-y-2">
           <Skeleton className="text-lg font-semibold w-[150px] h-[24px]" />
@@ -104,7 +104,7 @@ const ShareSyncTimetableDialog = ({
                 type="text"
                 value={link}
                 readOnly
-                className="flex-1 p-2 bg-gray-100 dark:bg-neutral-800 rounded-md"
+                className="flex-1 p-2 bg-muted rounded-md"
               />
               <Button onClick={handleCopy}>
                 <Copy className="w-4 h-4" />
@@ -115,7 +115,7 @@ const ShareSyncTimetableDialog = ({
                 <h3 className="text-lg font-semibold">
                   {dict.dialogs.ShareSyncTimetableDialog["category:qr"]}
                 </h3>
-                <div className="p-2 bg-white  rounded-md w-min">
+                <div className="p-2 bg-card  rounded-md w-min">
                   <QRCodeSVG value={link} />
                 </div>
               </div>

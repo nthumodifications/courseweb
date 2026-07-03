@@ -169,7 +169,7 @@ const Timetable: FC<{
                 <td className="min-w-[60px]" ref={headerRow}></td>
                 {scheduleTimeSlots.map((time, index) => (
                   <td className="min-w-[120px] px-2" key={index}>
-                    <div className="flex flex-row justify-between items-baseline  text-gray-400">
+                    <div className="flex flex-row justify-between items-baseline  text-muted-foreground">
                       <span className="text-xs">{time.start}</span>
                       <span className="text-sm font-bold">{time.time}</span>
                       <span className="text-xs">{time.end}</span>
@@ -182,7 +182,7 @@ const Timetable: FC<{
               {days.map((dayStr, index) => (
                 <tr key={index} className="h-0.5">
                   <td className="sticky left-0 z-10 w-28 p-0.5 h-[inherit]">
-                    <div className="w-full text-xs font-semibold bg-gray-100 dark:bg-neutral-800 rounded-md h-20 flex flex-col justify-center">
+                    <div className="w-full text-xs font-semibold bg-muted rounded-md h-20 flex flex-col justify-center">
                       {dayStr}
                     </div>
                   </td>
@@ -222,34 +222,34 @@ const Timetable: FC<{
             <tr className="h-1">
               <td className="w-[40px] min-w-[40px]" ref={headerRow}></td>
               <td className="p-0.5 h-[inherit]">
-                <div className="h-full w-full text-xs font-semibold bg-gray-100 dark:bg-neutral-800 rounded-md py-2">
+                <div className="h-full w-full text-xs font-semibold bg-muted rounded-md py-2">
                   MON
                 </div>
               </td>
               <td className="p-0.5 h-[inherit]">
-                <div className="h-full w-full text-xs font-semibold bg-gray-100 dark:bg-neutral-800 rounded-md py-2">
+                <div className="h-full w-full text-xs font-semibold bg-muted rounded-md py-2">
                   TUE
                 </div>
               </td>
               <td className="p-0.5 h-[inherit]">
-                <div className="h-full w-full text-xs font-semibold bg-gray-100 dark:bg-neutral-800 rounded-md py-2">
+                <div className="h-full w-full text-xs font-semibold bg-muted rounded-md py-2">
                   WED
                 </div>
               </td>
               <td className="p-0.5 h-[inherit]">
-                <div className="h-full w-full text-xs font-semibold bg-gray-100 dark:bg-neutral-800 rounded-md py-2">
+                <div className="h-full w-full text-xs font-semibold bg-muted rounded-md py-2">
                   THU
                 </div>
               </td>
               <td className="p-0.5 h-[inherit]">
-                <div className="h-full w-full text-xs font-semibold bg-gray-100 dark:bg-neutral-800 rounded-md py-2">
+                <div className="h-full w-full text-xs font-semibold bg-muted rounded-md py-2">
                   FRI
                 </div>
               </td>
 
               {showSaturday && (
                 <td className="p-0.5 h-[inherit]">
-                  <div className="h-full w-full text-xs font-semibold bg-gray-100 dark:bg-neutral-800 rounded-md py-2">
+                  <div className="h-full w-full text-xs font-semibold bg-muted rounded-md py-2">
                     SAT
                   </div>
                 </td>

@@ -53,7 +53,9 @@ const CalendarError = ({
   error: Error;
   resetErrorBoundary: () => void;
 }) => {
-  return <div className="text-red-500">An error occurred: {error.message}</div>;
+  return (
+    <div className="text-destructive">An error occurred: {error.message}</div>
+  );
 };
 
 const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {

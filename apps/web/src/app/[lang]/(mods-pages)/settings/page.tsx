@@ -2,6 +2,7 @@
 
 import useDictionary from "@/dictionaries/useDictionary";
 import { useSettings } from "@/hooks/contexts/settings";
+import { useTheme } from "@/hooks/contexts/theme";
 import { TimetableThemeList } from "./TimetableThemeList";
 import TimetablePreview from "./TimetablePreview";
 import {
@@ -20,12 +21,23 @@ import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { useLocalStorage } from "usehooks-ts";
 import { event } from "@/lib/gtag";
 import { AIPreferencesPanel } from "./AIPreferences";
+import { ThemeSection } from "./ThemeSection";
+import { WidgetSection } from "./WidgetSection";
+import { BottomNavSection } from "./BottomNavSection";
+import { SidebarNavSection } from "./SidebarNavSection";
 import { SettingsSidebar } from "./SettingsSidebar";
 import { SettingsSection } from "./SettingsSection";
 import { SettingItem } from "./SettingItem";
 import { MobileQuickNav } from "./MobileQuickNav";
 import { useScrollTracking } from "./useScrollTracking";
-import { Monitor, Calendar, LayoutGrid, Sparkles, Shield } from "lucide-react";
+import {
+  Monitor,
+  Calendar,
+  LayoutGrid,
+  Sparkles,
+  Shield,
+  Palette,
+} from "lucide-react";
 import { useMemo } from "react";
 
 const SettingsPage = () => {
@@ -39,11 +51,17 @@ const SettingsPage = () => {
     analytics,
     setAnalytics,
   } = useSettings();
+  const { compactHeader, toggleCompactHeader } = useTheme();
   const { preferences, setPreferences } = useUserTimetable();
   const [useNewCalendar, setUseNewCalendar] = useLocalStorage(
     "use_new_calendar",
     false,
   );
+  const [useWidgetDashboard, setUseWidgetDashboard] = useLocalStorage(
+    "use_widget_dashboard",
+    false,
+  );
+  const [customCSS, setCustomCSS] = useLocalStorage("custom_css", "");
   const [timetableVertical, setTimetableVertical] = useLocalStorage(
     "timetable_vertical",
     true,
@@ -51,7 +69,15 @@ const SettingsPage = () => {
   const dict = useDictionary();
 
   const sectionIds = useMemo(
-    () => ["display", "calendar", "timetable", "ai", "privacy"],
+    () => [
+      "appearance",
+      "display",
+      "calendar",
+      "timetable",
+      "ai",
+      "privacy",
+      "advanced",
+    ],
     [],
   );
   const { activeSection, scrollToSection } = useScrollTracking(sectionIds);
@@ -67,6 +93,11 @@ const SettingsPage = () => {
 
   const sections = useMemo(
     () => [
+      {
+        id: "appearance",
+        title: dict.settings.appearance.title,
+        icon: <Palette className="h-5 w-5" />,
+      },
       {
         id: "display",
         title: dict.settings.display.title,
@@ -91,6 +122,11 @@ const SettingsPage = () => {
         id: "privacy",
         title: dict.settings.privacy.title,
         icon: <Shield className="h-5 w-5" />,
+      },
+      {
+        id: "advanced",
+        title: "Advanced",
+        icon: <LayoutGrid className="h-5 w-5" />,
       },
     ],
     [dict],
@@ -122,6 +158,15 @@ const SettingsPage = () => {
         {/* Main Content */}
         <div className="flex-1 min-w-0 pb-8">
           <div className="flex flex-col gap-6 min-w-0">
+            {/* Appearance Settings */}
+            <SettingsSection
+              id="appearance"
+              title={dict.settings.appearance.title}
+              description={dict.settings.appearance.description}
+            >
+              <ThemeSection />
+            </SettingsSection>
+
             {/* Display Settings */}
             <SettingsSection
               id="display"
@@ -154,6 +199,31 @@ const SettingsPage = () => {
                   </Select>
                 }
               />
+
+              <SettingItem
+                title="Compact Header / 精簡標頭"
+                description="Reduce the height of the top header bar"
+                control={
+                  <Switch
+                    checked={compactHeader}
+                    onCheckedChange={toggleCompactHeader}
+                  />
+                }
+              />
+
+              <div>
+                <label className="text-sm font-medium block mb-2">
+                  Bottom Navigation / 底部導航
+                </label>
+                <BottomNavSection />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium block mb-2">
+                  Sidebar Navigation / 側邊導航
+                </label>
+                <SidebarNavSection />
+              </div>
             </SettingsSection>
 
             {/* Calendar Settings */}
@@ -181,7 +251,7 @@ const SettingsPage = () => {
                     {dict.settings.calendar.experimental_calendar.title}
                     <Badge
                       variant="outline"
-                      className="bg-nthu-500/10 text-nthu-600 border-nthu-500/20"
+                      className="bg-primary/10 text-primary border-primary/20"
                     >
                       {dict.settings.calendar.experimental_calendar.badge}
                     </Badge>
@@ -197,6 +267,26 @@ const SettingsPage = () => {
                   />
                 }
               />
+
+              <SettingItem
+                title="Widget Dashboard"
+                description="Replace Today page with a customizable widget grid"
+                control={
+                  <Switch
+                    checked={useWidgetDashboard}
+                    onCheckedChange={setUseWidgetDashboard}
+                  />
+                }
+              />
+
+              {useWidgetDashboard && (
+                <div>
+                  <p className="text-sm font-medium mb-3 mt-2 text-muted-foreground">
+                    Customize widgets:
+                  </p>
+                  <WidgetSection />
+                </div>
+              )}
             </SettingsSection>
 
             {/* Timetable Settings */}
@@ -249,6 +339,30 @@ const SettingsPage = () => {
                   <Switch checked={analytics} onCheckedChange={setAnalytics} />
                 }
               />
+            </SettingsSection>
+
+            {/* Advanced Settings */}
+            <SettingsSection
+              id="advanced"
+              title="Advanced"
+              description="Custom CSS, Developer Options"
+            >
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium">Custom CSS</label>
+                <p className="text-xs text-muted-foreground">
+                  Inject custom CSS into the page. Applied globally after all
+                  other styles.
+                </p>
+                <textarea
+                  value={customCSS}
+                  onChange={(e) => setCustomCSS(e.target.value)}
+                  placeholder={
+                    "/* Your custom CSS here */\n.example { color: red; }"
+                  }
+                  className="w-full h-40 p-3 text-xs font-mono bg-muted rounded-lg border border-border outline-none resize-y focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground/50"
+                  spellCheck={false}
+                />
+              </div>
             </SettingsSection>
 
             <Footer />
