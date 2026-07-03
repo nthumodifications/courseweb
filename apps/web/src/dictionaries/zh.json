@@ -181,6 +181,15 @@
         "lines": "線條",
         "noise": "噪點"
       },
+      "font": {
+        "title": "字體"
+      },
+      "accent": {
+        "title": "強調色",
+        "description": "覆蓋預設主題的主要顏色"
+      },
+      "share_theme": "分享主題",
+      "copied": "已複製！",
       "reset": "重設為預設值"
     },
     "account": {
@@ -205,6 +214,16 @@
       },
       "language": {
         "title": "語言 Language"
+      },
+      "compact_header": {
+        "title": "精簡標頭",
+        "description": "降低頂部標頭列的高度"
+      },
+      "bottom_nav": {
+        "title": "底部導航"
+      },
+      "sidebar_nav": {
+        "title": "側邊導航"
       }
     },
     "timetable": {
@@ -226,7 +245,9 @@
       "slot_title": "課程名稱",
       "slot_code": "課程代碼",
       "slot_time": "時間",
-      "slot_venue": "地點"
+      "slot_venue": "地點",
+      "alignment": "對齊",
+      "fields_order": "欄位與順序"
     },
     "privacy": {
       "title": "隱私",
@@ -247,6 +268,11 @@
         "title": "日曆",
         "badge": "實驗",
         "description": "在行事曆頁面使用新的日曆功能。"
+      },
+      "widget_dashboard": {
+        "title": "小工具儀表板",
+        "description": "用可自訂小工具格替換今日頁面",
+        "customize": "自訂小工具："
       }
     },
     "ai": {
@@ -276,6 +302,14 @@
         "invalid": "✗ API Key 無效或連接失敗"
       },
       "save": "儲存設定"
+    },
+    "advanced": {
+      "title": "進階",
+      "description": "自訂 CSS、開發者選項",
+      "custom_css": {
+        "title": "自訂 CSS",
+        "description": "在頁面中注入自訂 CSS，會在所有樣式之後全域套用。"
+      }
     }
   },
   "pages": {

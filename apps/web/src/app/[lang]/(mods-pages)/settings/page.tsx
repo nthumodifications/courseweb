@@ -125,7 +125,7 @@ const SettingsPage = () => {
       },
       {
         id: "advanced",
-        title: "Advanced",
+        title: dict.settings.advanced.title,
         icon: <LayoutGrid className="h-5 w-5" />,
       },
     ],
@@ -201,8 +201,8 @@ const SettingsPage = () => {
               />
 
               <SettingItem
-                title="Compact Header / 精簡標頭"
-                description="Reduce the height of the top header bar"
+                title={dict.settings.display.compact_header.title}
+                description={dict.settings.display.compact_header.description}
                 control={
                   <Switch
                     checked={compactHeader}
@@ -213,14 +213,14 @@ const SettingsPage = () => {
 
               <div>
                 <label className="text-sm font-medium block mb-2">
-                  Bottom Navigation / 底部導航
+                  {dict.settings.display.bottom_nav.title}
                 </label>
                 <BottomNavSection />
               </div>
 
               <div>
                 <label className="text-sm font-medium block mb-2">
-                  Sidebar Navigation / 側邊導航
+                  {dict.settings.display.sidebar_nav.title}
                 </label>
                 <SidebarNavSection />
               </div>
@@ -269,8 +269,10 @@ const SettingsPage = () => {
               />
 
               <SettingItem
-                title="Widget Dashboard"
-                description="Replace Today page with a customizable widget grid"
+                title={dict.settings.calendar.widget_dashboard.title}
+                description={
+                  dict.settings.calendar.widget_dashboard.description
+                }
                 control={
                   <Switch
                     checked={useWidgetDashboard}
@@ -282,7 +284,7 @@ const SettingsPage = () => {
               {useWidgetDashboard && (
                 <div>
                   <p className="text-sm font-medium mb-3 mt-2 text-muted-foreground">
-                    Customize widgets:
+                    {dict.settings.calendar.widget_dashboard.customize}
                   </p>
                   <WidgetSection />
                 </div>
@@ -344,14 +346,15 @@ const SettingsPage = () => {
             {/* Advanced Settings */}
             <SettingsSection
               id="advanced"
-              title="Advanced"
-              description="Custom CSS, Developer Options"
+              title={dict.settings.advanced.title}
+              description={dict.settings.advanced.description}
             >
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium">Custom CSS</label>
+                <label className="text-sm font-medium">
+                  {dict.settings.advanced.custom_css.title}
+                </label>
                 <p className="text-xs text-muted-foreground">
-                  Inject custom CSS into the page. Applied globally after all
-                  other styles.
+                  {dict.settings.advanced.custom_css.description}
                 </p>
                 <textarea
                   value={customCSS}

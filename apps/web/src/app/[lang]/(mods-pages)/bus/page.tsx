@@ -99,14 +99,14 @@ const BusListingItem = ({
       >
         <Icon className="h-7 w-7" />
         <div className="flex flex-row flex-wrap gap-2">
-          <h3 className="text-slate-800 dark:text-neutral-100 font-bold">
+          <h3 className="text-foreground font-bold">
             <span>{title}</span>
             {destination && <span>-{destination}</span>}
           </h3>
         </div>
         <div
           className={cn(
-            "flex-1 text-right text-slate-800 dark:text-neutral-200 font-bold whitespace-nowrap",
+            "flex-1 text-right text-foreground font-bold whitespace-nowrap",
             displayTime == dict.bus.departing ? "text-nthu-500" : "",
           )}
         >
@@ -511,7 +511,7 @@ const BusPage = () => {
             {dict.bus.nanda}
           </TabsTrigger>
         </TabsList>
-        <div className="flex flex-col px-2 divide-y divide-slate-100 dark:divide-neutral-700">
+        <div className="flex flex-col px-2 divide-y divide-border">
           {displayBuses.map((bus, index) => (
             <BusListingItem key={index} {...bus} refTime={time} />
           ))}

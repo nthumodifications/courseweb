@@ -614,7 +614,7 @@ const LineDisplayPage = () => {
             <>
               <Route1LineIcon />
               <Route2LineIcon />
-              <h3 className="text-slate-800 dark:text-neutral-200 font-bold">
+              <h3 className="text-foreground font-bold">
                 {language == "zh"
                   ? "南大校車 經台積館 & 經教育學院"
                   : "Nanda Via TSMC & COE"}
@@ -623,7 +623,7 @@ const LineDisplayPage = () => {
           ) : (
             <>
               <lineData.Icon />
-              <h3 className="text-slate-800 dark:text-neutral-200 font-bold">
+              <h3 className="text-foreground font-bold">
                 {language == "zh" ? lineData.title_zh : lineData.title_en}
               </h3>
             </>
@@ -636,7 +636,7 @@ const LineDisplayPage = () => {
             ? displayText.map((m, i) => (
                 <div key={i} className={cn("items-stretch gap-4 inline-flex")}>
                   <div className="h-auto relative w-5">
-                    <div className="absolute top-0 left-[calc(50%-2px)] w-1 h-1/2 bg-slate-200 z-10" />
+                    <div className="absolute top-0 left-[calc(50%-2px)] w-1 h-1/2 bg-border z-10" />
                     {m.state == BusStationState.ARRIVING && (
                       <div className="absolute top-[calc(-10px)] w-5 h-5 bg-nthu-500 rounded-full z-20 grid place-items-center">
                         <Bus className="w-3.5 h-3.5 text-white" />
@@ -652,9 +652,9 @@ const LineDisplayPage = () => {
                         <Bus className="w-3.5 h-3.5 text-white" />
                       </div>
                     )}
-                    <div className="absolute left-[calc(50%-6px)] top-[calc(50%-6px)] w-3 h-3 bg-slate-200 rounded-full z-10" />
+                    <div className="absolute left-[calc(50%-6px)] top-[calc(50%-6px)] w-3 h-3 bg-border rounded-full z-10" />
                     {i != displayText.length - 1 && (
-                      <div className="absolute top-1/2 left-[calc(50%-2px)] w-1 h-1/2 bg-slate-200 z-10" />
+                      <div className="absolute top-1/2 left-[calc(50%-2px)] w-1 h-1/2 bg-border z-10" />
                     )}
                   </div>
                   <div
@@ -663,12 +663,12 @@ const LineDisplayPage = () => {
                       m.state > BusStationState.AT_STATION ? "opacity-30" : "",
                     )}
                   >
-                    <div className="text-slate-800 dark:text-slate-200 text-base font-bold">
+                    <div className="text-foreground text-base font-bold">
                       {m.station}
                     </div>
                     <div className="flex-1 text-right flex items-center justify-end gap-2">
                       {m.bus && "type" in m.bus && (
-                        <div className="text-slate-800 dark:text-neutral-200">
+                        <div className="text-foreground">
                           {m.bus.type === "route1" ? (
                             <Route1LineIcon width={15} height={15} />
                           ) : m.bus.type === "route2" ? (
@@ -681,7 +681,7 @@ const LineDisplayPage = () => {
                           "text-base font-bold",
                           m.state == BusStationState.AT_STATION
                             ? "text-nthu-500"
-                            : "text-slate-600 dark:text-slate-400",
+                            : "text-muted-foreground",
                         )}
                       >
                         {m.time}
@@ -693,7 +693,7 @@ const LineDisplayPage = () => {
             : displayText.map((m, i) => (
                 <div key={i} className={cn("items-stretch gap-4 inline-flex")}>
                   <div className="h-auto relative w-5">
-                    <div className="absolute top-0 left-[calc(50%-2px)] w-1 h-1/2 bg-slate-200 z-10" />
+                    <div className="absolute top-0 left-[calc(50%-2px)] w-1 h-1/2 bg-border z-10" />
                     {m.state == BusStationState.ARRIVING && (
                       <div className="absolute top-[calc(-10px)] w-5 h-5 bg-nthu-500 rounded-full z-20 grid place-items-center">
                         <Bus className="w-3.5 h-3.5 text-white" />
@@ -709,9 +709,9 @@ const LineDisplayPage = () => {
                         <Bus className="w-3.5 h-3.5 text-white" />
                       </div>
                     )}
-                    <div className="absolute left-[calc(50%-6px)] top-[calc(50%-6px)] w-3 h-3 bg-slate-200 rounded-full z-10" />
+                    <div className="absolute left-[calc(50%-6px)] top-[calc(50%-6px)] w-3 h-3 bg-border rounded-full z-10" />
                     {i != displayText.length - 1 && (
-                      <div className="absolute top-1/2 left-[calc(50%-2px)] w-1 h-1/2 bg-slate-200 z-10" />
+                      <div className="absolute top-1/2 left-[calc(50%-2px)] w-1 h-1/2 bg-border z-10" />
                     )}
                   </div>
                   <div
@@ -720,7 +720,7 @@ const LineDisplayPage = () => {
                       m.state > BusStationState.AT_STATION ? "opacity-30" : "",
                     )}
                   >
-                    <div className="text-slate-800 dark:text-slate-200 text-base font-bold">
+                    <div className="text-foreground text-base font-bold">
                       {m.station}
                     </div>
                     <div
@@ -728,7 +728,7 @@ const LineDisplayPage = () => {
                         "flex-1 text-right text-base font-bold",
                         m.state == BusStationState.AT_STATION
                           ? "text-nthu-500"
-                          : "text-slate-600 dark:text-slate-400",
+                          : "text-muted-foreground",
                       )}
                     >
                       {m.time}

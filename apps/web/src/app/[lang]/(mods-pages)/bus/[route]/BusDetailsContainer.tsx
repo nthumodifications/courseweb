@@ -94,15 +94,13 @@ const BusDetailsContainer = ({
             <TableRow key={i}>
               {bus.up ? (
                 <TableCell
-                  className={cn(
-                    "text-slate-800 dark:text-neutral-200 border border-border",
-                  )}
+                  className={cn("text-foreground border border-border")}
                   data-time={bus.up.time}
                 >
                   <div className="flex flex-row gap-2 items-center justify-center">
                     {bus.up.route == "校園公車" && (
                       <div className="flex flex-row gap-2 items-center flex-1">
-                        <div className="text-slate-800 dark:text-neutral-200">
+                        <div className="text-foreground">
                           {bus.up.line == "green" ? (
                             <GreenLineIcon width={15} height={15} />
                           ) : (
@@ -110,7 +108,7 @@ const BusDetailsContainer = ({
                           )}
                         </div>
                         <div className="flex flex-wrap gap-2 items-center">
-                          <div className="text-slate-800 dark:text-neutral-200">
+                          <div className="text-foreground">
                             {bus.up.dep_stop}
                           </div>
                           {bus.up.description.includes("巴士") && (
@@ -123,7 +121,7 @@ const BusDetailsContainer = ({
                     )}
                     {bus.up.route == "南大區間車" && (
                       <div className="flex flex-row gap-2 items-center flex-1">
-                        <div className="text-slate-800 dark:text-neutral-200">
+                        <div className="text-foreground">
                           {"type" in bus.up && bus.up.type == "route1" ? (
                             <Route1LineIcon width={15} height={15} />
                           ) : "type" in bus.up && bus.up.type == "route2" ? (
@@ -131,7 +129,7 @@ const BusDetailsContainer = ({
                           ) : null}
                         </div>
                         <div className="flex flex-wrap gap-2 items-center">
-                          <div className="text-slate-800 dark:text-neutral-200">
+                          <div className="text-foreground">
                             {bus.up.type == "route1"
                               ? dict.bus.route1_line
                               : dict.bus.route2_line}
@@ -149,9 +147,7 @@ const BusDetailsContainer = ({
                         </div>
                       </div>
                     )}
-                    <div className="text-slate-800 dark:text-neutral-200">
-                      {bus.up.time}
-                    </div>
+                    <div className="text-foreground">{bus.up.time}</div>
                   </div>
                 </TableCell>
               ) : (
@@ -159,15 +155,13 @@ const BusDetailsContainer = ({
               )}
               {bus.down ? (
                 <TableCell
-                  className={cn(
-                    "text-slate-800 dark:text-neutral-200 border border-border",
-                  )}
+                  className={cn("text-foreground border border-border")}
                   data-time={bus.down.time}
                 >
                   <div className="flex flex-row gap-2 items-center justify-center">
                     {bus.down.route == "校園公車" && (
                       <div className="flex flex-row gap-2 items-center flex-1">
-                        <div className="text-slate-800 dark:text-neutral-200">
+                        <div className="text-foreground">
                           {bus.down.line == "green" ? (
                             <GreenLineIcon width={15} height={15} />
                           ) : (
@@ -175,7 +169,7 @@ const BusDetailsContainer = ({
                           )}
                         </div>
                         <div className="flex flex-wrap gap-2 items-center">
-                          <div className="text-slate-800 dark:text-neutral-200">
+                          <div className="text-foreground">
                             {bus.down.dep_stop}
                           </div>
                           {bus.down.description.includes("巴士") && (
@@ -188,7 +182,7 @@ const BusDetailsContainer = ({
                     )}
                     {bus.down.route == "南大區間車" && (
                       <div className="flex flex-row gap-2 items-center flex-1">
-                        <div className="text-slate-800 dark:text-neutral-200">
+                        <div className="text-foreground">
                           {"type" in bus.down && bus.down.type == "route1" ? (
                             <Route1LineIcon width={15} height={15} />
                           ) : "type" in bus.down &&
@@ -197,7 +191,7 @@ const BusDetailsContainer = ({
                           ) : null}
                         </div>
                         <div className="flex flex-wrap gap-2 items-center">
-                          <div className="text-slate-800 dark:text-neutral-200">
+                          <div className="text-foreground">
                             {bus.down.type == "route1"
                               ? dict.bus.route1_line
                               : dict.bus.route2_line}
@@ -210,9 +204,7 @@ const BusDetailsContainer = ({
                         </div>
                       </div>
                     )}
-                    <div className="text-slate-800 dark:text-neutral-200">
-                      {bus.down.time}
-                    </div>
+                    <div className="text-foreground">{bus.down.time}</div>
                   </div>
                 </TableCell>
               ) : (
@@ -351,9 +343,7 @@ const BusDetailsContainer = ({
             {routes.map(({ Icon, title }) => (
               <div className="flex flex-row gap-4 items-center" key={title}>
                 <Icon />
-                <h3 className="text-slate-800 dark:text-neutral-200 font-bold">
-                  {title}
-                </h3>
+                <h3 className="text-foreground font-bold">{title}</h3>
               </div>
             ))}
           </div>
@@ -373,13 +363,13 @@ const BusDetailsContainer = ({
                     className={cn(
                       "px-4 py-2 rounded-md border-2 justify-center items-center gap-2 flex cursor-pointer",
                       !isSameHour(hd, selectedHour)
-                        ? "border-slate-200 dark:border-slate-700"
-                        : "border-nthu-500",
+                        ? "border-border"
+                        : "border-primary",
                     )}
                     key={hd.toString()}
                     onClick={() => handleTimeSelected(hd)}
                   >
-                    <div className="text-slate-900 dark:text-slate-100 text-sm font-medium leading-normal w-max">
+                    <div className="text-foreground text-sm font-medium leading-normal w-max">
                       {/* 7 am */}
                       {format(hd, "h a")}
                     </div>

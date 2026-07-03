@@ -34,7 +34,7 @@ const ProxyLoginExplainerZH = () => {
           <a href="/zh/web-for-beginners/auth">身份驗證系統</a>的重要組成部分。
         </p>
 
-        <div className="bg-blue-100 dark:bg-blue-900 p-4 rounded-lg">
+        <div className="bg-primary/10 p-4 rounded-lg">
           <p className="text-sm">
             <strong>注意：</strong> 如需完整的技術詳情，請參閱
             <a href="/zh/web-for-beginners/auth">身份驗證與會話管理</a>
@@ -170,7 +170,7 @@ const ProxyLoginExplainerEN = () => {
           <a href="/web-for-beginners/auth">Authentication System</a>.
         </p>
 
-        <div className="bg-blue-100 dark:bg-blue-900 p-4 rounded-lg">
+        <div className="bg-primary/10 p-4 rounded-lg">
           <p className="text-sm">
             <strong>Note:</strong> For complete technical details, please refer
             to the{" "}

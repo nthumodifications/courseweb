@@ -141,7 +141,7 @@ const TimetablePreferences: React.FC<SettingsControlProps> = ({
       {/* 2D Alignment picker */}
       <div className="flex flex-row items-start gap-4">
         <label className="font-bold text-sm pt-1 flex-1">
-          Alignment / 對齊
+          {dict.settings.timetable.alignment}
         </label>
         <div className="grid grid-cols-3 gap-1 w-28">
           {ALIGN_GRID.map(([h, v]) => (
@@ -165,7 +165,7 @@ const TimetablePreferences: React.FC<SettingsControlProps> = ({
       {/* Field display & order */}
       <div>
         <label className="font-bold text-sm mb-2 block">
-          Fields &amp; Order / 欄位與順序
+          {dict.settings.timetable.fields_order}
         </label>
         <div className="flex flex-col gap-1">
           {fieldOrder.map((field, idx) => {
