@@ -40,12 +40,12 @@ export function CourseList({
   onDeleteCourse,
 }: CourseListProps) {
   return (
-    <ScrollArea className="h-[calc(100vh-13rem)]">
+    <ScrollArea className="h-full flex-1 min-h-0 overflow-y-auto">
       {viewMode === "list" ? (
         <div className="space-y-2 p-2">
-          {courses.map((course, index) => (
+          {courses.map((course) => (
             <CourseListItem
-              key={index}
+              key={course.uuid}
               course={course}
               isSelected={selectedCourse?.uuid === course.uuid}
               isMultiSelected={!!selectedCourses[course.uuid]}
@@ -64,7 +64,7 @@ export function CourseList({
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-2 p-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 p-2">
           {courses.map((course) => (
             <CourseGridItem
               key={course.uuid}
@@ -81,6 +81,7 @@ export function CourseList({
                 onSemesterChange(course.uuid, semester)
               }
               semesters={semesters}
+              onDeleteCourse={() => onDeleteCourse(course)}
             />
           ))}
         </div>

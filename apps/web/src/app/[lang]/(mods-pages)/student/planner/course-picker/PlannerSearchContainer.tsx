@@ -3,9 +3,9 @@ import {
   useInfiniteHits,
   useInstantSearch,
 } from "react-instantsearch";
+import useDictionary from "@/dictionaries/useDictionary";
 import { createInfiniteHitsSessionStorageCache } from "instantsearch.js/es/lib/infiniteHitsCache";
 import algoliasearch from "algoliasearch/lite";
-import useDictionary from "@/dictionaries/useDictionary";
 import { ScrollArea } from "@courseweb/ui";
 import ResetFiltersButton from "@/app/[lang]/(mods-pages)/courses/ResetFiltersButton";
 import { useEffect, useRef } from "react";
@@ -29,6 +29,7 @@ type InfiniteHitsProps = {
   items: ItemDocType[];
 } & Parameters<typeof useInfiniteHits>[0];
 export function InfiniteHits(props: InfiniteHitsProps) {
+  const dict = useDictionary();
   const { hits, isLastPage, showMore } = useInfiniteHits({
     showPrevious: false,
     ...props,
@@ -71,19 +72,22 @@ export function InfiniteHits(props: InfiniteHitsProps) {
             />
           ))}
           <li ref={sentinelRef} />
-          {status === "stalled" ||
-            (status === "loading" && (
-              <>
-                <CourseListItemSkeleton />
-                <CourseListItemSkeleton />
-                <CourseListItemSkeleton />
-              </>
-            ))}
+          {(status === "stalled" || status === "loading") && (
+            <>
+              <CourseListItemSkeleton />
+              <CourseListItemSkeleton />
+              <CourseListItemSkeleton />
+            </>
+          )}
           {status == "error" && (
-            <li className="text-center text-gray-500">An Error Occured</li>
+            <li className="text-center text-gray-500">
+              {dict.planner.coursePicker.errorOccurred}
+            </li>
           )}
           {isLastPage && (
-            <li className="text-center text-gray-500">No more results</li>
+            <li className="text-center text-gray-500">
+              {dict.planner.coursePicker.noMoreResults}
+            </li>
           )}
           <div className="h-32 w-full"></div>
         </ul>

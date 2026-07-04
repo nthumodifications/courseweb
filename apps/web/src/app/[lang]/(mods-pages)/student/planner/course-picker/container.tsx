@@ -7,9 +7,9 @@ import {
 } from "@courseweb/ui";
 import { useMediaQuery } from "usehooks-ts";
 import { ScrollArea } from "@courseweb/ui";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@courseweb/ui";
-import { InstantSearch } from "react-instantsearch";
-import { Calendar, FilterIcon, SearchIcon } from "lucide-react";
+import { Badge } from "@courseweb/ui";
+import { InstantSearch, useCurrentRefinements } from "react-instantsearch";
+import { Calendar, FilterIcon } from "lucide-react";
 
 const searchClient = algoliasearch(
   import.meta.env.VITE_ALGOLIA_APP_ID!,
@@ -37,11 +37,148 @@ type CourseSearchContainerProps = {
   items: ItemDocType[];
 };
 
+/**
+ * Shared "courses you've taken" content: lets the user quickly add courses
+ * they've already scheduled in other semesters that aren't in the current
+ * folder yet. Used for both the desktop split panel and the mobile drawer so
+ * mobile no longer shows a placeholder stub.
+ */
+const TakenCoursesPanel = ({
+  items,
+  onAdd,
+}: {
+  items: ItemDocType[];
+  onAdd: (course: MinimalCourse, keepSemester?: boolean) => void;
+}) => {
+  const dict = useDictionary();
+  const { courses, getSemesterCourses } = useUserTimetable();
+
+  return (
+    <div className="p-4">
+      {Object.keys(courses).length > 0 ? (
+        Object.keys(courses).map((sem) => {
+          const semester = getSemesterCourses(sem);
+          const addableCourses = semester
+            .filter(
+              (course) => !items.some((item) => item.raw_id === course.raw_id),
+            )
+            .map((course) => {
+              // if course name matches, mark as similar found
+              const isSimilar = items.some(
+                (item) =>
+                  item.title === course.name_zh ||
+                  item.id === course.raw_id.slice(5),
+              );
+              return {
+                ...course,
+                isSimilar,
+              };
+            });
+
+          return addableCourses.length > 0 ? (
+            <div key={sem} className="mb-6">
+              <h2 className="text-lg font-bold mb-3 flex items-center">
+                <Calendar className="h-4 w-4 mr-2" />
+                {dict.course.refine.semester} {sem}
+              </h2>
+              <div className="space-y-3">
+                {addableCourses.map((course) => (
+                  <div
+                    key={course.raw_id}
+                    className="p-3 border rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors"
+                  >
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="font-medium">{course.name_zh}</p>
+                        <div className="flex items-center mt-1 text-sm text-muted-foreground">
+                          <span className="mr-2">{course.raw_id.slice(5)}</span>
+                          {course.credits && (
+                            <span className="bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded text-xs">
+                              {course.credits} 學分
+                            </span>
+                          )}
+                          {course.isSimilar && (
+                            <span className="bg-yellow-100 dark:bg-yellow-800 px-2 py-0.5 rounded text-xs ml-2">
+                              已有加入相似課程
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onAdd(course as MinimalCourse, true)}
+                      >
+                        {dict.course.item.add_to_semester}
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null;
+        })
+      ) : (
+        <div className="flex flex-col items-center justify-center h-48 text-muted-foreground">
+          <p className="text-center">
+            {dict.planner.coursePicker.noCoursesAvailable}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+/**
+ * Number of Algolia refinements currently active. The `semester` menu is
+ * excluded since it always has a value selected (it's a required selector,
+ * not an optional filter).
+ */
+const useActiveFilterCount = () => {
+  const { items } = useCurrentRefinements();
+  return items
+    .filter((item) => item.attribute !== "semester")
+    .reduce((sum, item) => sum + item.refinements.length, 0);
+};
+
+/**
+ * Mobile filter trigger button, with a numeric badge showing how many
+ * filters are currently active. The count is folded into the aria-label too
+ * so screen reader users get the same information as the visible badge.
+ */
+const FilterDrawerTrigger = () => {
+  const dict = useDictionary();
+  const activeFilterCount = useActiveFilterCount();
+  const label =
+    activeFilterCount > 0
+      ? `${dict.planner.coursePicker.filters} (${activeFilterCount})`
+      : dict.planner.coursePicker.filters;
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      className="relative h-11 w-11"
+      aria-label={label}
+      title={label}
+    >
+      <FilterIcon size="16" />
+      {activeFilterCount > 0 && (
+        <Badge
+          variant="default"
+          className="absolute -top-1 -right-1 h-5 min-w-5 px-1 flex items-center justify-center rounded-full text-[10px] leading-none pointer-events-none"
+        >
+          {activeFilterCount}
+        </Badge>
+      )}
+    </Button>
+  );
+};
+
 const CourseSearchContainer = (props: CourseSearchContainerProps) => {
   const dict = useDictionary();
   const { language } = useSettings();
   const isDesktop = useMediaQuery("(min-width: 1024px)");
-  const { courses, getSemesterCourses } = useUserTimetable();
   return (
     <InstantSearch
       searchClient={searchClient}
@@ -53,7 +190,13 @@ const CourseSearchContainer = (props: CourseSearchContainerProps) => {
           },
         },
       }}
-      routing
+      // This InstantSearch instance only powers the in-dialog course picker
+      // (no dedicated URL/route of its own), unlike the main `/courses` page
+      // search which relies on `routing` for shareable deep links. Leaving
+      // routing on here just pushed a new browser-history entry on every
+      // keystroke/refinement, making the back button unusable after a
+      // search. Disabled since no deep-linking feature depends on it.
+      routing={false}
     >
       <div className="flex flex-col h-full max-h-[90dvh] gap-4 md:gap-8">
         <div className="">
@@ -66,9 +209,7 @@ const CourseSearchContainer = (props: CourseSearchContainerProps) => {
             <div className="md:hidden">
               <Drawer>
                 <DrawerTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <FilterIcon size="16" />
-                  </Button>
+                  <FilterDrawerTrigger />
                 </DrawerTrigger>
                 <DrawerContent>
                   <ScrollArea className="w-full max-h-[90vh] overflow-auto">
@@ -84,13 +225,22 @@ const CourseSearchContainer = (props: CourseSearchContainerProps) => {
             <div className="md:hidden">
               <Drawer>
                 <DrawerTrigger asChild>
-                  <Button variant="ghost" size="icon">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-11 w-11"
+                    aria-label={dict.planner.coursePicker.takenCourses}
+                    title={dict.planner.coursePicker.takenCourses}
+                  >
                     <Calendar size="16" />
                   </Button>
                 </DrawerTrigger>
                 <DrawerContent>
                   <ScrollArea className="w-full max-h-[80vh] overflow-auto p-2">
-                    {"courses you've taken"}
+                    <TakenCoursesPanel
+                      items={props.items}
+                      onAdd={props.onAdd}
+                    />
                   </ScrollArea>
                 </DrawerContent>
               </Drawer>
@@ -119,85 +269,7 @@ const CourseSearchContainer = (props: CourseSearchContainerProps) => {
             className="hidden md:block"
           >
             <ScrollArea className="w-full max-h-[80vh] overflow-auto p-2">
-              <div className="p-4">
-                {Object.keys(courses).length > 0 ? (
-                  Object.keys(courses).map((sem) => {
-                    const semester = getSemesterCourses(sem);
-                    const addableCourses = semester
-                      .filter(
-                        (course) =>
-                          !props.items.some(
-                            (item) => item.raw_id === course.raw_id,
-                          ),
-                      )
-                      .map((course) => {
-                        // if course name matches, mark as similar found
-                        const isSimilar = props.items.some(
-                          (item) =>
-                            item.title === course.name_zh ||
-                            item.id === course.raw_id.slice(5),
-                        );
-                        return {
-                          ...course,
-                          isSimilar,
-                        };
-                      });
-
-                    return addableCourses.length > 0 ? (
-                      <div key={sem} className="mb-6">
-                        <h2 className="text-lg font-bold mb-3 flex items-center">
-                          <Calendar className="h-4 w-4 mr-2" />
-                          {dict.course.refine.semester} {sem}
-                        </h2>
-                        <div className="space-y-3">
-                          {addableCourses.map((course) => (
-                            <div
-                              key={course.raw_id}
-                              className="p-3 border rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors"
-                            >
-                              <div className="flex justify-between items-center">
-                                <div>
-                                  <p className="font-medium">
-                                    {course.name_zh}
-                                  </p>
-                                  <div className="flex items-center mt-1 text-sm text-muted-foreground">
-                                    <span className="mr-2">
-                                      {course.raw_id.slice(5)}
-                                    </span>
-                                    {course.credits && (
-                                      <span className="bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded text-xs">
-                                        {course.credits} 學分
-                                      </span>
-                                    )}
-                                    {course.isSimilar && (
-                                      <span className="bg-yellow-100 dark:bg-yellow-800 px-2 py-0.5 rounded text-xs ml-2">
-                                        已有加入相似課程
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() =>
-                                    props.onAdd(course as MinimalCourse, true)
-                                  }
-                                >
-                                  {"Add"}
-                                </Button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ) : null;
-                  })
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-48 text-muted-foreground">
-                    <p className="text-center">{"No courses available"}</p>
-                  </div>
-                )}
-              </div>
+              <TakenCoursesPanel items={props.items} onAdd={props.onAdd} />
             </ScrollArea>
           </ResizablePanel>
         </ResizablePanelGroup>

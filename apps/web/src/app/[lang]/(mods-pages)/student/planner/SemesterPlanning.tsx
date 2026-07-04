@@ -1,5 +1,5 @@
+import { useDraggable, useDroppable } from "@dnd-kit/core";
 import {
-  Plus,
   MoreHorizontal,
   Edit,
   Eye,
@@ -8,7 +8,7 @@ import {
   CircleDashed,
   CircleDot,
   MinusCircle,
-  Calendar,
+  Plus,
 } from "lucide-react";
 import { Button } from "@courseweb/ui";
 import { Progress } from "@courseweb/ui";
@@ -30,6 +30,21 @@ import {
 import { ScrollArea } from "@courseweb/ui";
 import { FolderDocType, ItemDocType, SemesterDocType } from "./rxdb";
 import { CourseStatus } from "@/app/[lang]/(mods-pages)/student/planner/types";
+import {
+  getStatusBadgeClass,
+  getStatusIcon,
+  getStatusLabel,
+} from "./lib/status";
+import { useConfirm } from "./lib/use-confirm";
+import { CreateCourseDialog } from "./components/dialogs/create-course-dialog";
+import useDictionary from "@/dictionaries/useDictionary";
+import { useState } from "react";
+
+// Named constant instead of a magic number: the credit cap used to size the
+// "total credits" progress bar for a single semester.
+const MAX_CREDITS_PER_SEMESTER = 25;
+
+type Dict = ReturnType<typeof useDictionary>;
 
 interface SemesterPlanningProps {
   folders: FolderDocType[];
@@ -43,6 +58,230 @@ interface SemesterPlanningProps {
   onStatusChange: (uuid: string, status: CourseStatus) => void;
   onSemesterChange: (uuid: string, semester: string | undefined) => void;
   onDelete: (course: ItemDocType) => void;
+  onCreateCourse: (newCourse: {
+    uuid: string;
+    id: string;
+    title: string;
+    credits: number;
+    status: CourseStatus;
+    parent: string;
+    order: number;
+    dependson: string[];
+  }) => Promise<void>;
+}
+
+interface SemesterCourseRowProps {
+  course: ItemDocType;
+  dict: Dict;
+  onViewDetails: (course: ItemDocType) => void;
+  onEdit: (course: ItemDocType) => void;
+  onStatusChange: (uuid: string, status: CourseStatus) => void;
+  onSemesterChange: (uuid: string, semester: string | undefined) => void;
+  onDeleteRequest: (course: ItemDocType) => void;
+}
+
+function SemesterCourseRow({
+  course,
+  dict,
+  onViewDetails,
+  onEdit,
+  onStatusChange,
+  onSemesterChange,
+  onDeleteRequest,
+}: SemesterCourseRowProps) {
+  // Draggable course row (dnd-kit) - lets the user drag a scheduled course
+  // back out to another semester or into a folder.
+  const { attributes, listeners, setNodeRef, transform, isDragging } =
+    useDraggable({
+      id: `course-${course.uuid}`,
+      data: { type: "course", course },
+    });
+
+  const style = transform
+    ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` }
+    : undefined;
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...listeners}
+      {...attributes}
+      className={`p-2 rounded-md border border-border bg-neutral-50 dark:bg-neutral-800 flex justify-between items-center touch-none cursor-grab active:cursor-grabbing ${
+        isDragging ? "opacity-50" : ""
+      }`}
+    >
+      <div className="flex-1 min-w-0 overflow-hidden mr-2">
+        <div className="flex items-center gap-1 mb-1 flex-wrap">
+          <Badge variant="outline" className="text-xs">
+            {course.id}
+          </Badge>
+          <Badge variant="secondary" className="text-xs">
+            {course.credits} {dict.planner.semester.creditsUnit}
+          </Badge>
+          <Badge
+            className={`${getStatusBadgeClass(course.status as CourseStatus)} text-xs flex items-center gap-1`}
+          >
+            {getStatusIcon(course.status as CourseStatus)}
+            {getStatusLabel(course.status as CourseStatus, dict.planner.status)}
+          </Badge>
+        </div>
+        <div className="text-sm font-medium truncate max-w-full">
+          {course.title}
+        </div>
+      </div>
+      <div className="flex items-center flex-shrink-0">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-11 w-11"
+          aria-label={dict.planner.semester.viewDetailsAriaLabel}
+          title={dict.planner.semester.viewDetailsAriaLabel}
+          onClick={() => onViewDetails(course)}
+        >
+          <Eye className="h-4 w-4" />
+        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-11 w-11"
+              aria-label={dict.planner.semester.moreActionsAriaLabel}
+              title={dict.planner.semester.moreActionsAriaLabel}
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => onEdit(course)}>
+              <Edit className="h-4 w-4 mr-2" />
+              {dict.planner.semester.editCourse}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => onStatusChange(course.uuid, "completed")}
+            >
+              <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" />
+              {dict.planner.semester.markAs}{" "}
+              {getStatusLabel("completed", dict.planner.status)}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => onStatusChange(course.uuid, "in-progress")}
+            >
+              <CircleDot className="h-4 w-4 mr-2 text-yellow-500" />
+              {dict.planner.semester.markAs}{" "}
+              {getStatusLabel("in-progress", dict.planner.status)}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => onStatusChange(course.uuid, "planned")}
+            >
+              <CircleDashed className="h-4 w-4 mr-2 text-neutral-400" />
+              {dict.planner.semester.markAs}{" "}
+              {getStatusLabel("planned", dict.planner.status)}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="text-red-400 cursor-pointer"
+              onClick={() => onSemesterChange(course.uuid, undefined)}
+            >
+              <MinusCircle className="h-4 w-4 mr-2" />
+              {dict.planner.semester.removeFromSemester}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="text-red-400 cursor-pointer"
+              onClick={() => onDeleteRequest(course)}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              {dict.planner.semester.deleteCourse}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </div>
+  );
+}
+
+interface SemesterSummaryCardProps {
+  semester: SemesterDocType;
+  isActive: boolean;
+  totalCredits: number;
+  dict: Dict;
+  onSelect: () => void;
+}
+
+function SemesterSummaryCard({
+  semester,
+  isActive,
+  totalCredits,
+  dict,
+  onSelect,
+}: SemesterSummaryCardProps) {
+  // Droppable target so a course can be dropped directly onto a semester
+  // card to assign it, without first selecting that semester.
+  const { setNodeRef, isOver } = useDroppable({
+    id: `semester-${semester.id}`,
+    data: { type: "semester", semesterId: semester.id },
+  });
+
+  return (
+    <Card
+      ref={setNodeRef}
+      className={`bg-background border ${
+        isActive
+          ? "border-primary"
+          : isOver
+            ? "border-primary/70 bg-primary/5"
+            : "border-border"
+      } cursor-pointer transition-all hover:border-primary`}
+      onClick={onSelect}
+    >
+      <CardHeader className="p-3">
+        <div className="flex justify-between items-center">
+          <CardTitle className="text-sm">{semester.name}</CardTitle>
+        </div>
+        <CardDescription className="text-sm flex items-center gap-1">
+          <Badge
+            className={`${getStatusBadgeClass(semester.status as CourseStatus)} text-xs`}
+          >
+            {getStatusLabel(
+              semester.status as CourseStatus,
+              dict.planner.status,
+            )}
+          </Badge>
+          {totalCredits} {dict.planner.semester.creditsUnit}
+        </CardDescription>
+      </CardHeader>
+    </Card>
+  );
+}
+
+interface CurrentSemesterDropZoneProps {
+  semesterId: string;
+  className: string;
+  children: React.ReactNode;
+}
+
+function CurrentSemesterDropZone({
+  semesterId,
+  className,
+  children,
+}: CurrentSemesterDropZoneProps) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: `semester-active-${semesterId}`,
+    data: { type: "semester", semesterId },
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`border-2 border-dashed rounded-md p-2 ${className} ${
+        isOver ? "border-primary bg-primary/5" : ""
+      }`}
+    >
+      {children}
+    </div>
+  );
 }
 
 export function SemesterPlanning({
@@ -57,32 +296,11 @@ export function SemesterPlanning({
   onStatusChange,
   onSemesterChange,
   onDelete,
+  onCreateCourse,
 }: SemesterPlanningProps) {
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "completed":
-        return <Badge className="bg-green-600 min-w-max">已完成</Badge>;
-      case "in-progress":
-        return <Badge className="bg-yellow-600 min-w-max">進行中</Badge>;
-      default:
-        return (
-          <Badge className="min-w-max" variant="outline">
-            計劃中
-          </Badge>
-        );
-    }
-  };
-
-  const getStatusClass = (status: string) => {
-    switch (status) {
-      case "completed":
-        return "border-green-500/30 bg-green-500/10";
-      case "in-progress":
-        return "border-yellow-500/30 bg-yellow-500/10";
-      default:
-        return "border-border bg-neutral-800";
-    }
-  };
+  const dict = useDictionary();
+  const { confirm, ConfirmDialog } = useConfirm();
+  const [createCourseOpen, setCreateCourseOpen] = useState(false);
 
   const topFolders = folders.filter((folder) => folder.parent === "planner-1");
 
@@ -120,33 +338,59 @@ export function SemesterPlanning({
     return { folder, totalCredits };
   });
 
-  // Track whether a dragged course was dropped into a valid target
-  const handleDragStart = (e: React.DragEvent, course: ItemDocType) => {
-    e.dataTransfer.setData("text/plain", JSON.stringify(course));
-    // Add a custom property to track the source semester
-    e.dataTransfer.setData("source-semester", course.semester || "");
-  };
-
-  const handleDragEnd = (e: React.DragEvent, course: ItemDocType) => {
-    // If the course was not dropped in a valid drop target
-    // (dropEffect is "none" when not dropped in a valid target)
-    if (e.dataTransfer.dropEffect === "none") {
-      // Remove the course from its current semester
-      onSemesterChange(course.uuid, undefined);
+  const handleDeleteRequest = async (course: ItemDocType) => {
+    const confirmed = await confirm({
+      title: dict.planner.semester.deleteCourseConfirmTitle,
+      description: dict.planner.semester.deleteCourseConfirmDescription,
+      confirmLabel: dict.planner.common.delete,
+      cancelLabel: dict.planner.common.cancel,
+      destructive: true,
+    });
+    if (confirmed) {
+      onDelete(course);
     }
   };
 
+  // Reuses the shared course-creation callback, then scopes the new course
+  // to whichever semester is currently being viewed.
+  const handleCreateCourseForSemester = async (newCourse: {
+    uuid: string;
+    id: string;
+    title: string;
+    credits: number;
+    status: CourseStatus;
+    parent: string | null;
+    order: number;
+    dependson: string[];
+  }) => {
+    await onCreateCourse({
+      ...newCourse,
+      parent: newCourse.parent ?? "planner-1",
+    });
+    if (currentSemester) {
+      await onSemesterChange(newCourse.uuid, currentSemester);
+    }
+  };
+
+  const currentSemesterStatusClass = (() => {
+    const status = semesters.find((s) => s.id === currentSemester)?.status;
+    if (status === "completed") return "border-green-500/30";
+    if (status === "in-progress") return "border-yellow-500/30";
+    return "border-border";
+  })();
+
   return (
-    <ScrollArea className="flex-1">
+    <ScrollArea className="flex-1 w-full">
       <div className="p-4 space-y-4">
         {semesters.length === 0 ? (
           <Card className="border-border">
             <CardContent className="pt-6 pb-6 flex flex-col items-center justify-center">
               <div className="text-center space-y-3">
-                <h3 className="font-medium text-lg">尚未設定任何學期</h3>
+                <h3 className="font-medium text-lg">
+                  {dict.planner.semester.emptyTitle}
+                </h3>
                 <p className="text-neutral-400">
-                  請點擊右上角的 <Calendar className="size-4 inline" />{" "}
-                  按鈕來創建您的第一個學期
+                  {dict.planner.semester.emptyDescription}
                 </p>
               </div>
             </CardContent>
@@ -157,23 +401,14 @@ export function SemesterPlanning({
               {semesters
                 .filter((s) => s.isActive)
                 .map((semester) => (
-                  <Card
+                  <SemesterSummaryCard
                     key={semester.id}
-                    className={`bg-background border ${semester.id === currentSemester ? "border-primary" : "border-border"} cursor-pointer transition-all hover:border-primary`}
-                    onClick={() => setCurrentSemester(semester.id)}
-                  >
-                    <CardHeader className="p-3">
-                      <div className="flex justify-between items-center">
-                        <CardTitle className="text-sm">
-                          {semester.name}
-                        </CardTitle>
-                      </div>
-                      <CardDescription className="text-sm">
-                        {getStatusBadge(semester.status)}{" "}
-                        {getTotalCreditsBySemester(semester.id)} 學分
-                      </CardDescription>
-                    </CardHeader>
-                  </Card>
+                    semester={semester}
+                    isActive={semester.id === currentSemester}
+                    totalCredits={getTotalCreditsBySemester(semester.id)}
+                    dict={dict}
+                    onSelect={() => setCurrentSemester(semester.id)}
+                  />
                 ))}
             </div>
 
@@ -181,163 +416,69 @@ export function SemesterPlanning({
               <div>
                 <div className="flex justify-between items-center mb-2">
                   <h3 className="font-medium">
-                    {semesters.find((s) => s.id === currentSemester)?.name} 課程
+                    {semesters.find((s) => s.id === currentSemester)?.name}{" "}
+                    {dict.planner.semester.coursesSuffix}
                   </h3>
-                  <Button size="sm">
+                  <Button size="sm" onClick={() => setCreateCourseOpen(true)}>
                     <Plus className="h-4 w-4 mr-2" />
-                    新增課程
+                    {dict.planner.courseList.addCourse}
                   </Button>
+
+                  <CreateCourseDialog
+                    open={createCourseOpen}
+                    onOpenChange={setCreateCourseOpen}
+                    onCreateCourse={handleCreateCourseForSemester}
+                  />
                 </div>
 
-                <div
-                  className={`border-2 border-dashed rounded-md p-2 ${
-                    semesters.find((s) => s.id === currentSemester)?.status ===
-                    "completed"
-                      ? "border-green-500/30"
-                      : semesters.find((s) => s.id === currentSemester)
-                            ?.status === "in-progress"
-                        ? "border-yellow-500/30"
-                        : "border-border"
-                  }`}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    // Handle drop logic here
-                    try {
-                      const courseData = JSON.parse(
-                        e.dataTransfer.getData("text/plain"),
-                      );
-                      onSemesterChange(courseData.uuid, currentSemester);
-                    } catch (error) {
-                      console.error("Error parsing course data:", error);
-                    }
-                  }}
+                <CurrentSemesterDropZone
+                  semesterId={currentSemester}
+                  className={currentSemesterStatusClass}
                 >
                   <div className="space-y-1 min-h-[100px]">
-                    {getCoursesBySemester(currentSemester).map(
-                      (course, index) => (
-                        <div
-                          key={index}
-                          className="p-2 rounded-md border border-border bg-neutral-50 dark:bg-neutral-800 flex justify-between items-center"
-                          draggable
-                          onDragStart={(e) => handleDragStart(e, course)}
-                          onDragEnd={(e) => handleDragEnd(e, course)}
-                        >
-                          <div className="flex-1 min-w-0 overflow-hidden mr-2">
-                            <div className="flex items-center gap-1 mb-1 flex-wrap">
-                              <Badge variant="outline" className="text-xs">
-                                {course.id}
-                              </Badge>
-                              <Badge variant="secondary" className="text-xs">
-                                {course.credits}學分
-                              </Badge>
-                            </div>
-                            <div className="text-sm font-medium truncate max-w-full">
-                              {course.title}
-                            </div>
-                          </div>
-                          <div className="flex items-center flex-shrink-0">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => onViewDetails(course)}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8"
-                                >
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent>
-                                <DropdownMenuItem
-                                  onClick={() => onEdit(course)}
-                                >
-                                  <Edit className="h-4 w-4 mr-2" />
-                                  編輯課程
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    onStatusChange(course.uuid, "completed")
-                                  }
-                                >
-                                  <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" />
-                                  標記為已完成
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    onStatusChange(course.uuid, "in-progress")
-                                  }
-                                >
-                                  <CircleDot className="h-4 w-4 mr-2 text-yellow-500" />
-                                  標記為進行中
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    onStatusChange(course.uuid, "planned")
-                                  }
-                                >
-                                  <CircleDashed className="h-4 w-4 mr-2 text-neutral-400" />
-                                  標記為計劃中
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator className="bg-neutral-700" />
-                                <DropdownMenuItem
-                                  className="text-red-400 cursor-pointer"
-                                  onClick={() =>
-                                    onSemesterChange(course.uuid, undefined)
-                                  }
-                                >
-                                  <MinusCircle className="h-4 w-4 mr-2" />
-                                  從學期移除
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  className="text-red-400 cursor-pointer"
-                                  onClick={() => onDelete(course)}
-                                >
-                                  <Trash2 className="h-4 w-4 mr-2" />
-                                  移除課程
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </div>
-                      ),
-                    )}
+                    {getCoursesBySemester(currentSemester).map((course) => (
+                      <SemesterCourseRow
+                        key={course.uuid}
+                        course={course}
+                        dict={dict}
+                        onViewDetails={onViewDetails}
+                        onEdit={onEdit}
+                        onStatusChange={onStatusChange}
+                        onSemesterChange={onSemesterChange}
+                        onDeleteRequest={handleDeleteRequest}
+                      />
+                    ))}
 
                     {getCoursesBySemester(currentSemester).length === 0 && (
-                      <div className="flex items-center justify-center h-24 text-neutral-400">
-                        <p>拖曳課程到此處或點擊新增課程</p>
+                      <div className="flex items-center justify-center h-24 text-neutral-400 text-center px-4">
+                        <p>{dict.planner.semester.dropHint}</p>
                       </div>
                     )}
                   </div>
-                </div>
+                </CurrentSemesterDropZone>
               </div>
             )}
 
             {currentSemester && (
               <Card className="border-border">
                 <CardHeader className="p-3">
-                  <CardTitle className="text-base">學期統計</CardTitle>
+                  <CardTitle className="text-base">
+                    {dict.planner.semester.statsTitle}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="p-3 pt-0">
                   <div className="space-y-2">
                     <div>
                       <div className="flex justify-between items-center mb-1 text-sm">
-                        <span>總學分</span>
+                        <span>{dict.planner.semester.totalCredits}</span>
                         <span>
                           {getTotalCreditsBySemester(currentSemester)}
                         </span>
                       </div>
                       <Progress
                         value={
-                          (getTotalCreditsBySemester(currentSemester) / 25) *
+                          (getTotalCreditsBySemester(currentSemester) /
+                            MAX_CREDITS_PER_SEMESTER) *
                           100
                         }
                         className="h-2"
@@ -354,7 +495,8 @@ export function SemesterPlanning({
                             {folder.folder.title}
                           </p>
                           <p className="font-medium">
-                            {folder.totalCredits} 學分
+                            {folder.totalCredits}{" "}
+                            {dict.planner.semester.creditsUnit}
                           </p>
                         </div>
                       ))}
@@ -366,6 +508,7 @@ export function SemesterPlanning({
           </>
         )}
       </div>
+      {ConfirmDialog}
     </ScrollArea>
   );
 }

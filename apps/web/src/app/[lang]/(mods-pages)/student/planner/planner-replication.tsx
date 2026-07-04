@@ -79,17 +79,28 @@ export const PlannerReplicationProvider: FC<PropsWithChildren> = ({
     // Prevent multiple simultaneous sign-in attempts
     if (isSigningIn) return;
 
-    // Attempt silent sign-in to get the planner scope
+    // Attempt silent sign-in to get the planner scope. This used to call
+    // `signinRedirect()`, which navigates the whole page away — jarring UX
+    // for something that should be an invisible background token refresh.
+    // `signinSilent()` renews the session (e.g. via a hidden iframe) without
+    // leaving the page.
     setIsSigningIn(true);
     console.log("Planner scope missing, attempting silent sign-in");
 
     auth
-      .signinRedirect()
+      .signinSilent()
       .then(() => {
         console.log("Silent sign-in completed");
       })
       .catch((err) => {
         console.error("Silent sign-in failed:", err);
+      })
+      .finally(() => {
+        // Reset regardless of outcome — otherwise a failed attempt
+        // permanently wedges the UI in a "signing in" state with no way
+        // to recover (isSigningIn would stay true forever, and the effect
+        // above bails out early whenever it's true).
+        setIsSigningIn(false);
       });
   }, [auth, isSigningIn]);
 
@@ -163,7 +174,7 @@ export const PlannerReplicationProvider: FC<PropsWithChildren> = ({
           // Filter out _unsorted folder if it somehow exists in pulled data
           if (data.documents) {
             data.documents = data.documents.filter(
-              (doc) => doc.id !== "_unsorted",
+              (doc: { id: string }) => doc.id !== "_unsorted",
             );
           }
 
@@ -204,18 +215,23 @@ export const PlannerReplicationProvider: FC<PropsWithChildren> = ({
       live: true,
       push: {
         async handler(changeRows) {
-          const response = await client.planner.items.push.$post(
-            {
-              json: changeRows,
-            },
-            {
-              headers: {
-                Authorization: `Bearer ${auth.user?.access_token}`,
+          try {
+            const response = await client.planner.items.push.$post(
+              {
+                json: changeRows,
               },
-            },
-          );
-          const conflicts = await response.json();
-          return conflicts as WithDeleted<ItemDocType>[];
+              {
+                headers: {
+                  Authorization: `Bearer ${auth.user?.access_token}`,
+                },
+              },
+            );
+            const conflicts = await response.json();
+            return conflicts as WithDeleted<ItemDocType>[];
+          } catch (error) {
+            console.error("Error pushing items:", error);
+            return [];
+          }
         },
       },
       pull: {

@@ -10,13 +10,20 @@ import {
 import { v4 as uuidv4 } from "uuid";
 import { useRxCollection } from "rxdb-hooks";
 import { useNavigate } from "react-router-dom";
+import { useMediaQuery } from "usehooks-ts";
+import useDictionary from "@/dictionaries/useDictionary";
+import {
+  DndContext,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import { FolderTree, BookOpen, CalendarDays } from "lucide-react";
 
 // Import data functions
-import {
-  ensureUnsortedFolder,
-  getFolders,
-  toggleFolderExpansion,
-} from "./data/folders";
+import { ensureUnsortedFolder, getFolders } from "./data/folders";
 import {
   updateCourseItem,
   updateCourseStatus,
@@ -58,6 +65,13 @@ import { CourseSearchDialog } from "./components/dialogs/course-search-dialog";
 import { CreateCourseDialog } from "./components/dialogs/create-course-dialog";
 
 function GraduationPlanner() {
+  const dict = useDictionary();
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
+  const [mobileView, setMobileView] = useState<
+    "folders" | "courses" | "semester"
+  >("folders");
+  const [statusFilter, setStatusFilter] = useState<CourseStatus | "all">("all");
+
   const [folderData, setFolderData] = useState<FolderDocType[]>([]);
   const [courseData, setCourseData] = useState<ItemDocType[]>([]);
   const [semesterData, setSemesterData] = useState<SemesterDocType[]>([]);
@@ -97,9 +111,15 @@ function GraduationPlanner() {
   const [lastSelectedCourseUuid, setLastSelectedCourseUuid] = useState<
     string | null
   >(null);
-  const [showBulkMenu, setShowBulkMenu] = useState(false);
 
   const navigate = useNavigate();
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 150, tolerance: 5 },
+    }),
+  );
 
   // RxDB collections
   const foldersCol = useRxCollection<FolderDocType>("folders");
@@ -181,14 +201,12 @@ function GraduationPlanner() {
     };
   }, [foldersCol, coursesCol, plannerCol, semestersCol]);
 
-  // Toggle folder expansion
-  const handleToggleFolder = async (folderId: string) => {
+  // Toggle folder expansion (local UI state only — not persisted)
+  const handleToggleFolder = (folderId: string) => {
     setExpandedFolders((prev) => ({
       ...prev,
       [folderId]: !prev[folderId],
     }));
-
-    await toggleFolderExpansion(foldersCol!, folderId);
   };
 
   // Get child folders
@@ -213,6 +231,13 @@ function GraduationPlanner() {
     }
 
     return courses;
+  };
+
+  // Filter courses by folder, then further by the selected status filter
+  const getFilteredCoursesByFolder = (folderId: string | undefined) => {
+    const courses = getCoursesByFolder(folderId);
+    if (statusFilter === "all") return courses;
+    return courses.filter((course) => course.status === statusFilter);
   };
 
   // Get courses by semester
@@ -269,11 +294,17 @@ function GraduationPlanner() {
     const useCredits = folder.metric === "credits";
     const values = useCredits ? stats.credits : stats.counts;
 
+    // The denominator should reflect the actual target: `max` when a max
+    // requirement is configured, otherwise `min`. A target of 0 means "no
+    // requirement configured" — callers must treat that as "not applicable",
+    // not "already complete".
+    const total = folder.max && folder.max > 0 ? folder.max : folder.min;
+
     return {
       completed: values["completed"],
       inProgress: values["in-progress"],
       pending: values["planned"],
-      total: folder.min,
+      total,
     };
   };
 
@@ -450,16 +481,14 @@ function GraduationPlanner() {
   // Clear selections
   const clearSelections = () => {
     setSelectedCourses({});
-    setShowBulkMenu(false);
   };
 
   // Get selected course count
   const getSelectedCount = () => Object.keys(selectedCourses).length;
 
-  // Effect to show/hide bulk menu based on selections
-  useEffect(() => {
-    setShowBulkMenu(getSelectedCount() > 0);
-  }, [selectedCourses]);
+  // Whether the bulk action menu should be visible - derived directly from
+  // selection state during render rather than mirrored into its own state.
+  const showBulkMenu = getSelectedCount() > 0;
 
   // Bulk actions
   const handleBulkStatusChange = async (status: CourseStatus) => {
@@ -519,215 +548,322 @@ function GraduationPlanner() {
     return null;
   };
 
-  return (
-    <div className="flex overflow-hidden -mt-4 md:-mb-0 md:-ml-2 h-[calc(100vh-var(--header-height))]">
-      {/* Left Sidebar - Folder Navigation */}
-      <FolderNavigation
-        plannerInfo={plannerInfo}
-        completedCredits={completedCredits}
-        inProgressCredits={inProgressCredits}
-        plannedCredits={plannedCredits}
-        progressPercentage={progressPercentage}
-        folderData={folderData}
-        expandedFolders={expandedFolders}
-        selectedFolder={selectedFolder}
-        onToggleFolder={handleToggleFolder}
-        onSelectFolder={setSelectedFolder}
-        getFolderCompletion={getFolderCompletion}
-        getChildFolders={getChildFoldersFromState}
-        onOpenFolderManagement={() => setFolderManagementOpen(true)}
-        onOpenPlannerSettings={() => setPlannerSettingsOpen(true)}
-      />
+  // dnd-kit drag end handler - single source of truth for all drag
+  // interactions across the folder sidebar, course list, and semester pane.
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    // Dropped outside any valid target - explicit no-op, nothing is
+    // unscheduled or deleted (unlike the old HTML5 dropEffect check).
+    if (!over) return;
 
-      {/* Middle Pane - Course List */}
-      <div className="flex-1 flex flex-col border-r border-border">
-        <CourseListHeader
+    const activeData = active.data.current as
+      | { type?: string; course?: ItemDocType }
+      | undefined;
+    const overData = over.data.current as
+      | { type?: string; semesterId?: string; folderId?: string }
+      | undefined;
+
+    if (activeData?.type !== "course" || !activeData.course) return;
+
+    if (overData?.type === "semester" && overData.semesterId !== undefined) {
+      handleUpdateCourseSemester(activeData.course.uuid, overData.semesterId);
+    } else if (overData?.type === "folder" && overData.folderId !== undefined) {
+      updateCourseItem(coursesCol!, {
+        ...activeData.course,
+        parent: overData.folderId,
+      });
+    }
+  };
+
+  const showFolders = isDesktop || mobileView === "folders";
+  const showCourses = isDesktop || mobileView === "courses";
+  const showSemester = isDesktop || mobileView === "semester";
+
+  return (
+    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+      <div className="flex overflow-hidden -mt-4 md:-mb-0 md:-ml-2 h-[calc(100vh-var(--header-height))]">
+        {/* Left Sidebar - Folder Navigation */}
+        {showFolders && (
+          <FolderNavigation
+            plannerInfo={plannerInfo}
+            completedCredits={completedCredits}
+            inProgressCredits={inProgressCredits}
+            plannedCredits={plannedCredits}
+            progressPercentage={progressPercentage}
+            folderData={folderData}
+            courseData={courseData}
+            expandedFolders={expandedFolders}
+            selectedFolder={selectedFolder}
+            onToggleFolder={handleToggleFolder}
+            onSelectFolder={setSelectedFolder}
+            getFolderCompletion={getFolderCompletion}
+            getChildFolders={getChildFoldersFromState}
+            onOpenFolderManagement={() => setFolderManagementOpen(true)}
+            onOpenPlannerSettings={() => setPlannerSettingsOpen(true)}
+          />
+        )}
+
+        {/* Middle Pane - Course List */}
+        {showCourses && (
+          <div className="w-full lg:flex-1 lg:min-w-0 flex flex-col min-h-0 lg:border-r lg:border-border">
+            <CourseListHeader
+              selectedFolder={selectedFolder}
+              folderData={folderData}
+              courseCount={
+                selectedFolder ? getCoursesByFolder(selectedFolder).length : 0
+              }
+              hasChildren={
+                selectedFolder
+                  ? getChildFoldersFromState(selectedFolder).length > 0
+                  : false
+              }
+              onOpenCourseSearch={() => setCourseSearchOpen(true)}
+              createCourseOpen={createCourseOpen}
+              setCreateCourseOpen={setCreateCourseOpen}
+              onCreateCourse={handleCreateCourse}
+            />
+
+            <Tabs
+              value={viewMode}
+              className="flex-1 flex flex-col min-h-0"
+              onValueChange={(value) => setViewMode(value as "list" | "grid")}
+            >
+              <div className="p-2 border-b border-border flex items-center justify-between shrink-0">
+                <TabsList className="border-border">
+                  <TabsTrigger value="list">
+                    {dict.planner.courseList.viewModeList}
+                  </TabsTrigger>
+                  <TabsTrigger value="grid">
+                    {dict.planner.courseList.viewModeGrid}
+                  </TabsTrigger>
+                </TabsList>
+
+                <Select
+                  value={statusFilter}
+                  onValueChange={(value) =>
+                    setStatusFilter(value as CourseStatus | "all")
+                  }
+                >
+                  <SelectTrigger className="w-[180px] border-border">
+                    <SelectValue
+                      placeholder={dict.planner.courseList.statusFilterLabel}
+                    />
+                  </SelectTrigger>
+                  <SelectContent className="border-border">
+                    <SelectItem value="all">
+                      {dict.planner.courseList.statusFilterAll}
+                    </SelectItem>
+                    <SelectItem value="completed">
+                      {dict.planner.status.completed}
+                    </SelectItem>
+                    <SelectItem value="in-progress">
+                      {dict.planner.status.inProgress}
+                    </SelectItem>
+                    <SelectItem value="planned">
+                      {dict.planner.status.planned}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Empty States */}
+              {getEmptyStateType() && (
+                <CourseListEmpty
+                  type={getEmptyStateType() as any}
+                  courseData={courseData}
+                  selectedFolder={selectedFolder}
+                  childFolders={
+                    selectedFolder
+                      ? getChildFoldersFromState(selectedFolder)
+                      : []
+                  }
+                  onSelectFolder={setSelectedFolder}
+                  onOpenFolderManagement={() => setFolderManagementOpen(true)}
+                  onOpenSemesterManagement={() =>
+                    setSemesterManagementOpen(true)
+                  }
+                  onOpenCourseSearch={() => setCourseSearchOpen(true)}
+                  createCourseOpen={createCourseOpen}
+                  setCreateCourseOpen={setCreateCourseOpen}
+                  onCreateCourse={handleCreateCourse}
+                />
+              )}
+
+              {/* Course List/Grid */}
+              {selectedFolder &&
+                getFilteredCoursesByFolder(selectedFolder).length > 0 && (
+                  <TabsContent value={viewMode} className="m-0 flex-1 min-h-0">
+                    <CourseList
+                      viewMode={viewMode}
+                      courses={getFilteredCoursesByFolder(selectedFolder)}
+                      selectedCourse={selectedCourse}
+                      selectedCourses={selectedCourses}
+                      folders={folderData}
+                      semesters={semesterData}
+                      onCourseClick={setSelectedCourse}
+                      onCourseSelect={handleCourseSelect}
+                      onViewDetails={(course) => {
+                        setSelectedCourse(course);
+                        setCourseDetailsOpen(true);
+                      }}
+                      onEdit={(course) => {
+                        setSelectedCourse(course);
+                        setEditCourseOpen(true);
+                      }}
+                      onStatusChange={handleUpdateCourseStatus}
+                      onSemesterChange={handleUpdateCourseSemester}
+                      onDeleteCourse={handleItemRemove}
+                    />
+                  </TabsContent>
+                )}
+            </Tabs>
+          </div>
+        )}
+
+        {/* Right Pane - Semester Planning */}
+        {showSemester && (
+          <div className="w-full lg:w-96 lg:shrink-0 lg:max-w-[28rem] flex flex-col min-h-0">
+            <SemesterHeader
+              onOpenSemesterManagement={() => setSemesterManagementOpen(true)}
+            />
+
+            <SemesterPlanning
+              folders={folderData}
+              semesters={semesterData}
+              currentSemester={currentSemester}
+              setCurrentSemester={setCurrentSemester}
+              getCoursesBySemester={getCoursesBySemester}
+              getTotalCreditsBySemester={getTotalCreditsBySemester}
+              onViewDetails={(course) => {
+                setSelectedCourse(course);
+                setCourseDetailsOpen(true);
+              }}
+              onEdit={(course) => {
+                setSelectedCourse(course);
+                setEditCourseOpen(true);
+              }}
+              onDelete={handleItemRemove}
+              onStatusChange={handleUpdateCourseStatus}
+              onSemesterChange={handleUpdateCourseSemester}
+              onCreateCourse={handleCreateCourse}
+            />
+          </div>
+        )}
+
+        {/* Mobile/tablet pane switcher - sits directly above the global
+            BottomNav (which itself disappears at md/768px). Visible for the
+            whole <1024px range required by the responsive spec; the bottom
+            offset collapses to 0 once the global nav is gone at md+. */}
+        {!isDesktop && (
+          <div className="fixed inset-x-0 bottom-[5rem] md:bottom-0 lg:hidden z-40 bg-background border-t border-border grid grid-cols-3">
+            <button
+              type="button"
+              className={`flex flex-col items-center justify-center gap-1 py-2 min-h-[44px] ${
+                mobileView === "folders" ? "text-primary" : "text-neutral-400"
+              }`}
+              onClick={() => setMobileView("folders")}
+            >
+              <FolderTree className="h-5 w-5" />
+              <span className="text-xs font-medium">
+                {dict.planner.mobileNav.folders}
+              </span>
+            </button>
+            <button
+              type="button"
+              className={`flex flex-col items-center justify-center gap-1 py-2 min-h-[44px] ${
+                mobileView === "courses" ? "text-primary" : "text-neutral-400"
+              }`}
+              onClick={() => setMobileView("courses")}
+            >
+              <BookOpen className="h-5 w-5" />
+              <span className="text-xs font-medium">
+                {dict.planner.mobileNav.courses}
+              </span>
+            </button>
+            <button
+              type="button"
+              className={`flex flex-col items-center justify-center gap-1 py-2 min-h-[44px] ${
+                mobileView === "semester" ? "text-primary" : "text-neutral-400"
+              }`}
+              onClick={() => setMobileView("semester")}
+            >
+              <CalendarDays className="h-5 w-5" />
+              <span className="text-xs font-medium">
+                {dict.planner.mobileNav.semesters}
+              </span>
+            </button>
+          </div>
+        )}
+
+        {/* Dialogs */}
+        {selectedCourse && (
+          <>
+            <CourseDetailsDialog
+              open={courseDetailsOpen}
+              onOpenChange={setCourseDetailsOpen}
+              selectedCourse={selectedCourse}
+              folderData={folderData}
+              semesterData={semesterData}
+              onEdit={() => {
+                setCourseDetailsOpen(false);
+                setEditCourseOpen(true);
+              }}
+            />
+
+            <CourseEditDialog
+              open={editCourseOpen}
+              onOpenChange={setEditCourseOpen}
+              selectedCourse={selectedCourse}
+              semesterData={semesterData}
+              leafFolders={getLeafFolders()}
+              onSave={handleUpdateCourse}
+            />
+          </>
+        )}
+
+        {/* Course Search Dialog */}
+        <CourseSearchDialog
+          open={courseSearchOpen}
+          onOpenChange={setCourseSearchOpen}
           selectedFolder={selectedFolder}
           folderData={folderData}
-          courseCount={
-            selectedFolder ? getCoursesByFolder(selectedFolder).length : 0
-          }
-          hasChildren={
-            selectedFolder
-              ? getChildFoldersFromState(selectedFolder).length > 0
-              : false
-          }
-          onOpenCourseSearch={() => setCourseSearchOpen(true)}
-          createCourseOpen={createCourseOpen}
-          setCreateCourseOpen={setCreateCourseOpen}
-          onCreateCourse={handleCreateCourse}
+          onAddCourse={handleCourseAdded}
+          onRemoveCourse={handleCourseRemoved}
+          courseData={courseData}
         />
 
-        <div className="p-2 border-b border-border flex items-center justify-between">
-          <Tabs
-            defaultValue={viewMode}
-            className="w-full"
-            onValueChange={(value) => setViewMode(value as "list" | "grid")}
-          >
-            <div className="flex justify-between items-center">
-              <TabsList className="border-border">
-                <TabsTrigger value="list">列表</TabsTrigger>
-                <TabsTrigger value="grid">網格</TabsTrigger>
-              </TabsList>
-
-              <Select defaultValue="all">
-                <SelectTrigger className="w-[180px] border-border">
-                  <SelectValue placeholder="課程狀態" />
-                </SelectTrigger>
-                <SelectContent className="border-border">
-                  <SelectItem value="all">全部課程</SelectItem>
-                  <SelectItem value="completed">已完成</SelectItem>
-                  <SelectItem value="in-progress">進行中</SelectItem>
-                  <SelectItem value="planned">計劃中</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Empty States */}
-            {getEmptyStateType() && (
-              <CourseListEmpty
-                type={getEmptyStateType() as any}
-                courseData={courseData}
-                selectedFolder={selectedFolder}
-                childFolders={
-                  selectedFolder ? getChildFoldersFromState(selectedFolder) : []
-                }
-                onSelectFolder={setSelectedFolder}
-                onOpenFolderManagement={() => setFolderManagementOpen(true)}
-                onOpenSemesterManagement={() => setSemesterManagementOpen(true)}
-                onOpenCourseSearch={() => setCourseSearchOpen(true)}
-                createCourseOpen={createCourseOpen}
-                setCreateCourseOpen={setCreateCourseOpen}
-                onCreateCourse={handleCreateCourse}
-              />
-            )}
-
-            {/* Course List/Grid */}
-            {selectedFolder &&
-              getCoursesByFolder(selectedFolder).length > 0 && (
-                <TabsContent value={viewMode} className="m-0">
-                  <CourseList
-                    viewMode={viewMode}
-                    courses={getCoursesByFolder(selectedFolder)}
-                    selectedCourse={selectedCourse}
-                    selectedCourses={selectedCourses}
-                    folders={folderData}
-                    semesters={semesterData}
-                    onCourseClick={setSelectedCourse}
-                    onCourseSelect={handleCourseSelect}
-                    onViewDetails={(course) => {
-                      setSelectedCourse(course);
-                      setCourseDetailsOpen(true);
-                    }}
-                    onEdit={(course) => {
-                      setSelectedCourse(course);
-                      setEditCourseOpen(true);
-                    }}
-                    onStatusChange={handleUpdateCourseStatus}
-                    onSemesterChange={handleUpdateCourseSemester}
-                    onDeleteCourse={handleItemRemove}
-                  />
-                </TabsContent>
-              )}
-          </Tabs>
-        </div>
-      </div>
-
-      {/* Right Pane - Semester Planning */}
-      <div className="w-96 flex flex-col">
-        <SemesterHeader
-          onOpenSemesterManagement={() => setSemesterManagementOpen(true)}
+        {/* Management Dialogs */}
+        <FolderManagement
+          isOpen={folderManagementOpen}
+          onClose={() => setFolderManagementOpen(false)}
+          onFoldersUpdated={handleFoldersUpdated}
         />
 
-        <SemesterPlanning
-          folders={folderData}
-          semesters={semesterData}
-          currentSemester={currentSemester}
-          setCurrentSemester={setCurrentSemester}
-          getCoursesBySemester={getCoursesBySemester}
-          getTotalCreditsBySemester={getTotalCreditsBySemester}
-          onViewDetails={(course) => {
-            setSelectedCourse(course);
-            setCourseDetailsOpen(true);
-          }}
-          onEdit={(course) => {
-            setSelectedCourse(course);
-            setEditCourseOpen(true);
-          }}
-          onDelete={handleItemRemove}
-          onStatusChange={handleUpdateCourseStatus}
-          onSemesterChange={handleUpdateCourseSemester}
+        <SemesterManagement
+          isOpen={semesterManagementOpen}
+          onClose={() => setSemesterManagementOpen(false)}
+          onSemestersUpdated={handleSemestersUpdated}
         />
-      </div>
 
-      {/* Dialogs */}
-      {selectedCourse && (
-        <>
-          <CourseDetailsDialog
-            open={courseDetailsOpen}
-            onOpenChange={setCourseDetailsOpen}
-            selectedCourse={selectedCourse}
-            folderData={folderData}
+        <PlannerSettings
+          isOpen={plannerSettingsOpen}
+          onClose={() => setPlannerSettingsOpen(false)}
+          onSettingsUpdated={handlePlannerUpdated}
+        />
+
+        {/* Bulk Action Menu */}
+        {showBulkMenu && (
+          <BulkActionsMenu
+            selectedCount={getSelectedCount()}
             semesterData={semesterData}
-            onEdit={() => {
-              setCourseDetailsOpen(false);
-              setEditCourseOpen(true);
-            }}
+            onStatusChange={handleBulkStatusChange}
+            onSemesterChange={handleBulkSemesterChange}
+            onDelete={handleBulkDelete}
+            onClearSelections={clearSelections}
           />
-
-          <CourseEditDialog
-            open={editCourseOpen}
-            onOpenChange={setEditCourseOpen}
-            selectedCourse={selectedCourse}
-            semesterData={semesterData}
-            leafFolders={getLeafFolders()}
-            onSave={handleUpdateCourse}
-          />
-        </>
-      )}
-
-      {/* Course Search Dialog */}
-      <CourseSearchDialog
-        open={courseSearchOpen}
-        onOpenChange={setCourseSearchOpen}
-        selectedFolder={selectedFolder}
-        folderData={folderData}
-        onAddCourse={handleCourseAdded}
-        onRemoveCourse={handleCourseRemoved}
-        courseData={courseData}
-      />
-
-      {/* Management Dialogs */}
-      <FolderManagement
-        isOpen={folderManagementOpen}
-        onClose={() => setFolderManagementOpen(false)}
-        onFoldersUpdated={handleFoldersUpdated}
-      />
-
-      <SemesterManagement
-        isOpen={semesterManagementOpen}
-        onClose={() => setSemesterManagementOpen(false)}
-        onSemestersUpdated={handleSemestersUpdated}
-      />
-
-      <PlannerSettings
-        isOpen={plannerSettingsOpen}
-        onClose={() => setPlannerSettingsOpen(false)}
-        onSettingsUpdated={handlePlannerUpdated}
-      />
-
-      {/* Bulk Action Menu */}
-      {showBulkMenu && (
-        <BulkActionsMenu
-          selectedCount={getSelectedCount()}
-          semesterData={semesterData}
-          onStatusChange={handleBulkStatusChange}
-          onSemesterChange={handleBulkSemesterChange}
-          onDelete={handleBulkDelete}
-          onClearSelections={clearSelections}
-        />
-      )}
-    </div>
+        )}
+      </div>
+    </DndContext>
   );
 }
 

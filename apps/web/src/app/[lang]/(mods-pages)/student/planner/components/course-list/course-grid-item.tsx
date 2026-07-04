@@ -17,9 +17,9 @@ import {
   Eye,
   MoreHorizontal,
   Trash2,
-  X,
   Calendar,
 } from "lucide-react";
+import { useDraggable } from "@dnd-kit/core";
 import { SemesterSelectionDialog } from "../../components/semester-selection-dialog";
 import { CourseStatus } from "../../types";
 import {
@@ -27,6 +27,14 @@ import {
   ItemDocType,
   SemesterDocType,
 } from "@/app/[lang]/(mods-pages)/student/planner/rxdb";
+import {
+  getStatusBadgeClass,
+  getStatusIcon,
+  getStatusLabel,
+} from "@/app/[lang]/(mods-pages)/student/planner/lib/status";
+import { useConfirm } from "@/app/[lang]/(mods-pages)/student/planner/lib/use-confirm";
+import useDictionary from "@/dictionaries/useDictionary";
+import { getParentName } from "./course-list-item";
 
 interface CourseGridItemProps {
   course: ItemDocType;
@@ -39,6 +47,7 @@ interface CourseGridItemProps {
   onEdit: () => void;
   onStatusChange: (status: CourseStatus) => void;
   onSemesterChange: (semester: string) => void;
+  onDeleteCourse: () => void;
   semesters: SemesterDocType[];
 }
 
@@ -53,50 +62,25 @@ export function CourseGridItem({
   onEdit,
   onStatusChange,
   onSemesterChange,
+  onDeleteCourse,
   semesters,
 }: CourseGridItemProps) {
+  const dict = useDictionary();
+  const { confirm, ConfirmDialog } = useConfirm();
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [isHovering, setIsHovering] = useState(false);
   const [isSemesterDialogOpen, setIsSemesterDialogOpen] = useState(false);
 
-  const getStatusColor = () => {
-    switch (course.status) {
-      case "completed":
-        return "bg-green-500/10 dark:bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/30";
-      case "in-progress":
-        return "bg-blue-500/10 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-500/30";
-      case "failed":
-        return "bg-red-500/10 dark:bg-red-500/20 text-red-700 dark:text-red-400 border-red-500/30";
-      default:
-        return "bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 border-neutral-300 dark:border-neutral-600";
-    }
-  };
-
-  const getStatusText = () => {
-    switch (course.status) {
-      case "completed":
-        return "已完成";
-      case "in-progress":
-        return "進行中";
-      case "failed":
-        return "未通過";
-      default:
-        return "計劃中";
-    }
-  };
-
-  const getStatusIcon = () => {
-    switch (course.status) {
-      case "completed":
-        return <CheckCircle2 className="h-4 w-4 text-green-500" />;
-      case "in-progress":
-        return <CircleDot className="h-4 w-4 text-blue-500" />;
-      case "failed":
-        return <X className="h-4 w-4 text-red-500" />;
-      default:
-        return <CircleDashed className="h-4 w-4 text-neutral-400" />;
-    }
-  };
+  const { attributes, listeners, setNodeRef, transform, isDragging } =
+    useDraggable({
+      id: `course-${course.uuid}`,
+      data: { type: "course", course },
+    });
+  const dragStyle = transform
+    ? {
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+        opacity: isDragging ? 0.5 : 1,
+      }
+    : undefined;
 
   const handleStatusChange = (status: CourseStatus) => {
     setDropdownOpen(false);
@@ -108,6 +92,20 @@ export function CourseGridItem({
     onEdit();
   };
 
+  const handleDeleteCourse = async () => {
+    setDropdownOpen(false);
+    const confirmed = await confirm({
+      title: dict.planner.courseList.deleteConfirmTitle,
+      description: `${course.title} — ${dict.planner.courseList.deleteConfirmDescription}`,
+      confirmLabel: dict.planner.common.delete,
+      cancelLabel: dict.planner.common.cancel,
+      destructive: true,
+    });
+    if (confirmed) {
+      onDeleteCourse();
+    }
+  };
+
   const openSemesterDialog = () => {
     setDropdownOpen(false);
     setIsSemesterDialogOpen(true);
@@ -117,27 +115,43 @@ export function CourseGridItem({
     onSemesterChange(semester);
   };
 
-  const getParentName = () => {
-    const parentFolder = folders.find((folder) => folder.id === course.parent);
-    return parentFolder ? parentFolder.title : "無";
-  };
+  const status = course.status as CourseStatus | null | undefined;
+
+  const parentName = getParentName(
+    course,
+    folders,
+    dict.planner.courseList.noFolder,
+  );
+
+  const semesterStatusText = course.semester
+    ? course.status === "completed"
+      ? `${dict.planner.courseList.completedIn} ${course.semester}`
+      : course.status === "in-progress"
+        ? `${dict.planner.courseList.inProgressIn} ${course.semester}`
+        : `${dict.planner.courseList.plannedFor} ${course.semester}`
+    : dict.planner.courseList.noSemester;
 
   return (
     <div
-      className={`p-3 rounded-md border ${isSelected ? "border-primary" : isMultiSelected ? "border-primary bg-primary/10" : "border-border"} 
-        bg-neutral-50 dark:bg-neutral-800 cursor-pointer hover:border-primary transition-colors duration-200 h-32 flex flex-col group relative`}
+      ref={setNodeRef}
+      style={dragStyle}
+      {...listeners}
+      {...attributes}
+      className={`p-3 rounded-md border ${isSelected ? "border-primary" : isMultiSelected ? "border-primary bg-primary/10" : "border-border"}
+        bg-neutral-50 dark:bg-neutral-800 cursor-pointer hover:border-primary transition-colors duration-200 min-h-32 flex flex-col group relative touch-none`}
       onClick={onClick}
-      onMouseEnter={() => setIsHovering(true)}
-      onMouseLeave={() => setIsHovering(false)}
-      draggable
-      onDragStart={(e) => {
-        e.dataTransfer.setData("text/plain", JSON.stringify(course));
-      }}
     >
-      {/* Selection checkbox - only shown on hover or when selected */}
-      <div
-        className={`absolute right-2 top-2 ${isMultiSelected || isHovering ? "opacity-100" : "opacity-0"} 
-          transition-opacity duration-200 z-10`}
+      {/* Selection checkbox - always rendered, at reduced opacity until hover/focus/selected */}
+      <button
+        type="button"
+        aria-label={dict.planner.courseList.selectCourse}
+        title={dict.planner.courseList.selectCourse}
+        className={`absolute right-1 top-1 p-3.5 flex items-center justify-center rounded ${
+          isMultiSelected
+            ? "opacity-100"
+            : "opacity-60 group-hover:opacity-100 focus-visible:opacity-100"
+        } transition-opacity duration-200 z-10`}
+        onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => {
           e.stopPropagation();
           onSelect(e);
@@ -145,74 +159,78 @@ export function CourseGridItem({
       >
         <div
           className={`w-4 h-4 rounded border flex items-center justify-center
-          ${isMultiSelected ? "bg-primary border-primary" : "border-neutral-500 dark:neutral-50 bg-neutral-50 dark:bg-neutral-800"}`}
+          ${isMultiSelected ? "bg-primary border-primary" : "border-neutral-500 dark:border-neutral-50 bg-neutral-50 dark:bg-neutral-800"}`}
         >
           {isMultiSelected && <Check className="h-3 w-3 text-white" />}
         </div>
-      </div>
+      </button>
 
-      <div className="flex justify-between items-start mb-2">
+      <div className="flex justify-between items-start mb-2 pr-8">
         <Badge variant="outline" className="text-xs">
           {course.id}
         </Badge>
-        <div className="flex">
+        <div
+          className="flex items-center"
+          onPointerDown={(e) => e.stopPropagation()}
+        >
           <Button
             variant="ghost"
             size="icon"
-            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+            className="h-11 w-11 opacity-60 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
+            aria-label={dict.planner.courseList.viewDetails}
+            title={dict.planner.courseList.viewDetails}
             onClick={(e) => {
               e.stopPropagation();
               onViewDetails();
             }}
           >
-            <Eye className="h-3 w-3" />
+            <Eye className="h-4 w-4" />
           </Button>
           <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="h-11 w-11 opacity-60 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
+                aria-label={dict.planner.courseList.moreActions}
+                title={dict.planner.courseList.moreActions}
                 onClick={(e) => e.stopPropagation()}
               >
-                <MoreHorizontal className="h-3 w-3" />
+                <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuItem onClick={handleEdit}>
                 <Edit className="h-4 w-4 mr-2" />
-                編輯課程
+                {dict.planner.courseList.editCourse}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => handleStatusChange("completed")}>
                 <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" />
-                標記為已完成
+                {dict.planner.courseList.markAsCompleted}
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => handleStatusChange("in-progress")}
               >
-                <CircleDot className="h-4 w-4 mr-2 text-blue-500" />
-                標記為進行中
+                <CircleDot className="h-4 w-4 mr-2 text-yellow-500" />
+                {dict.planner.courseList.markAsInProgress}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleStatusChange("planned")}>
                 <CircleDashed className="h-4 w-4 mr-2 text-neutral-400" />
-                標記為計劃中
+                {dict.planner.courseList.markAsPlanned}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={openSemesterDialog}>
                 <Calendar className="h-4 w-4 mr-2" />
-                更改學期
+                {dict.planner.courseList.changeSemester}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                className="text-red-400 cursor-pointer"
-                onClick={() => {
-                  onStatusChange("failed");
-                  setDropdownOpen(false);
-                }}
+                className="text-red-500 dark:text-red-400 cursor-pointer"
+                onClick={handleDeleteCourse}
               >
                 <Trash2 className="h-4 w-4 mr-2" />
-                移除課程
+                {dict.planner.courseList.deleteCourse}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -223,22 +241,18 @@ export function CourseGridItem({
       <div className="mt-auto">
         <div className="flex items-center text-xs gap-1 mb-1">
           <Badge
-            className={`${getStatusColor()} text-xs flex items-center gap-1 py-0 px-1 h-5`}
+            className={`${getStatusBadgeClass(status)} text-xs flex items-center gap-1 py-0 px-1 h-5`}
           >
-            {getStatusIcon()}
-            {getStatusText()}
+            {getStatusIcon(status, "h-4 w-4")}
+            {getStatusLabel(status, dict.planner.status)}
           </Badge>
-          <span className="text-neutral-400">
-            {course.status === "completed"
-              ? `已修於 ${course.semester}`
-              : course.status === "in-progress"
-                ? `修習中 ${course.semester}`
-                : `計劃於 ${course.semester}`}
-          </span>
+          <span className="text-neutral-400">{semesterStatusText}</span>
         </div>
         <div className="flex justify-between items-center text-xs text-neutral-400">
-          <span>{course.credits}學分</span>
-          <span>{course.parent}</span>
+          <span>
+            {course.credits} {dict.course.credits}
+          </span>
+          <span>{parentName}</span>
         </div>
       </div>
 
@@ -250,6 +264,7 @@ export function CourseGridItem({
         currentSemester={course.semester}
         onSemesterSelect={handleSemesterChange}
       />
+      {ConfirmDialog}
     </div>
   );
 }
