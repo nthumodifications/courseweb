@@ -9,8 +9,10 @@ import {
 } from "@courseweb/ui";
 import { toPrettySemester } from "@/helpers/semester";
 import { lastSemester, semesterInfo } from "@courseweb/shared";
+import useDictionary from "@/dictionaries/useDictionary";
 
 const SemesterSelector = () => {
+  const dict = useDictionary();
   const [initialized, setInitialized] = useState(false);
   const { items, refine, canRefine } = useCustomMenu({
     attribute: "semester",
@@ -40,9 +42,14 @@ const SemesterSelector = () => {
 
   return (
     <Select value={selected} onValueChange={handleSelect}>
-      <SelectTrigger className="bg-background">
-        <SelectValue placeholder="Select semester">
-          {selected ? toPrettySemester(selected) + " 學期" : "Select semester"}
+      <SelectTrigger
+        className="bg-background min-h-11"
+        aria-label={dict.planner.coursePicker.selectSemester}
+      >
+        <SelectValue placeholder={dict.planner.coursePicker.selectSemester}>
+          {selected
+            ? toPrettySemester(selected) + " 學期"
+            : dict.planner.coursePicker.selectSemester}
         </SelectValue>
       </SelectTrigger>
       <SelectContent>

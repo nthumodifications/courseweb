@@ -3,6 +3,7 @@ import { useRefinementList } from "react-instantsearch";
 import { Checkbox } from "@courseweb/ui";
 import { cn } from "@courseweb/ui";
 import { Button } from "@courseweb/ui";
+import useDictionary from "@/dictionaries/useDictionary";
 
 type RefinementItem = {
   label: string;
@@ -14,6 +15,8 @@ type RefinementItem = {
 type InlineCheckboxFilterProps = {
   attribute: string;
   limit?: number;
+  synonyms?: Record<string, string>;
+  /** @deprecated use `synonyms` (kept for older call sites that still pass `synonms`) */
   synonms?: Record<string, string>;
   isClassType?: boolean;
   // Custom filter function to filter items
@@ -25,11 +28,14 @@ type InlineCheckboxFilterProps = {
 const InlineCheckboxFilter = ({
   attribute,
   limit = 10,
-  synonms = {},
+  synonyms,
+  synonms,
   isClassType = false,
   filterFn,
   sortFn,
 }: InlineCheckboxFilterProps) => {
+  const dict = useDictionary();
+  const resolvedSynonyms = synonyms ?? synonms ?? {};
   // Use the refinement list hook
   const { refine, items, canToggleShowMore, isShowingMore, toggleShowMore } =
     useRefinementList({
@@ -98,7 +104,9 @@ const InlineCheckboxFilter = ({
               htmlFor={`${attribute}-${item.value}`}
               className="text-sm cursor-pointer flex items-center"
             >
-              <span className="mr-1">{synonms[item.label] || item.label}</span>
+              <span className="mr-1">
+                {resolvedSynonyms[item.label] || item.label}
+              </span>
               <span className="text-muted-foreground text-xs">
                 ({item.count})
               </span>
@@ -113,7 +121,9 @@ const InlineCheckboxFilter = ({
           className="w-full mt-1"
           onClick={() => toggleShowMore()}
         >
-          {isShowingMore ? "Show less" : "Show more"}
+          {isShowingMore
+            ? dict.planner.coursePicker.showLess
+            : dict.planner.coursePicker.showMore}
         </Button>
       )}
     </div>

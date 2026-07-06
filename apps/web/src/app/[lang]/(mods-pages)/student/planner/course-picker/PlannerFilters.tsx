@@ -51,7 +51,7 @@ const PlannerFilters = ({ lang }: PlannerFiltersProps) => {
             searchable={true}
             limit={500}
             clientSearch={true}
-            synonms={departmentSynonyms}
+            synonyms={departmentSynonyms}
           />
         </div>
 
@@ -73,7 +73,7 @@ const PlannerFilters = ({ lang }: PlannerFiltersProps) => {
           <span className="text-sm">{dict.course.refine.language}</span>
           <InlineCheckboxFilter
             attribute="language"
-            synonms={languageSynonyms}
+            synonyms={languageSynonyms}
           />
         </div>
       </div>
@@ -88,7 +88,7 @@ const PlannerFilters = ({ lang }: PlannerFiltersProps) => {
             <span className="text-sm">{dict.course.refine.geTarget}</span>
             <InlineCheckboxFilter
               attribute="ge_target"
-              synonms={geTargetSynonyms}
+              synonyms={geTargetSynonyms}
             />
           </div>
 
@@ -124,7 +124,7 @@ const PlannerFilters = ({ lang }: PlannerFiltersProps) => {
               attribute="venues"
               searchable={true}
               limit={20}
-              placeholder="Search (to display more)..."
+              placeholder={dict.planner.coursePicker.searchToDisplayMore}
             />
           </div>
 
@@ -136,7 +136,7 @@ const PlannerFilters = ({ lang }: PlannerFiltersProps) => {
               attribute="first_specialization"
               searchable={true}
               limit={20}
-              placeholder="Search (to display more)..."
+              placeholder={dict.planner.coursePicker.searchToDisplayMore}
             />
           </div>
 
@@ -148,7 +148,7 @@ const PlannerFilters = ({ lang }: PlannerFiltersProps) => {
               attribute="second_specialization"
               searchable={true}
               limit={20}
-              placeholder="Search (to display more)..."
+              placeholder={dict.planner.coursePicker.searchToDisplayMore}
             />
           </div>
 
@@ -160,7 +160,7 @@ const PlannerFilters = ({ lang }: PlannerFiltersProps) => {
               attribute="cross_discipline"
               searchable={true}
               limit={20}
-              placeholder="Search (to display more)..."
+              placeholder={dict.planner.coursePicker.searchToDisplayMore}
             />
           </div>
         </div>

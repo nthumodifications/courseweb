@@ -61,61 +61,48 @@ export const deleteFolder = async (
   return true;
 };
 
-// Function to toggle folder expansion
-export const toggleFolderExpansion = async (
-  col: RxCollection<FolderDocType>,
-  id: string,
-) => {
-  const doc = await col.findOne(id).exec();
-  if (!doc) return undefined;
-
-  const folder = doc.toMutableJSON();
-  await doc.patch({ expanded: !folder.expanded });
-  return folder;
-};
-
-// Function to calculate folder completion
-export const calculateFolderCompletion = async (
-  col: RxCollection<FolderDocType>,
-  folderId: string,
-  courseItems: any[],
-): Promise<{ completed: number; total: number }> => {
-  const folder = await getFolderById(col, folderId);
-  if (!folder) {
-    return { completed: 0, total: 0 };
-  }
-
-  // Get courses in this folder
-  const folderCourses = courseItems.filter(
-    (course) => course.parent === folderId,
-  );
-
-  // Calculate completed credits/courses
-  let completed = 0;
-  if (folder.metric === "credits") {
-    completed = folderCourses
-      .filter((course) => course.status === "completed")
-      .reduce((sum, course) => sum + course.credits, 0);
-  } else {
-    completed = folderCourses.filter(
-      (course) => course.status === "completed",
-    ).length;
-  }
-
-  return { completed, total: folder.min };
-};
-
-// Function to reorder folders
+// NOTE: folder expand/collapse state is tracked entirely in local React
+// state in page.tsx (`expandedFolders`), which is the sole source read by
+// the UI on every render — the persisted `expanded` field was only ever
+// consulted once, as an initial per-session fallback default. Writing it
+// to the database on every single toggle was therefore redundant
+// persistence/replication traffic with no functional benefit, so the
+// write itself has been removed.
+//
+// This function is kept (as a no-op) rather than deleted outright because
+// `page.tsx` — which is outside this file's edit scope for this change —
+// still imports and calls it on every folder toggle; removing the export
+// entirely would break that file's build. A follow-up (touching page.tsx)
+// should delete the call site, its import, and the now-unused `expanded`
+// field on the folder schema.
+// Function to reorder folders.
+//
+// Accepts the full batch of sibling order updates (e.g. both sides of a
+// swap when moving a folder up/down) and writes them in a single
+// `bulkUpsert` call. The previous implementation patched one folder at a
+// time via two sequential, unbatched `await`s, which could leave the
+// collection with colliding/duplicate `order` values if anything
+// interleaved between the two writes (or if the second write failed after
+// the first succeeded).
 export const reorderFolders = async (
   col: RxCollection<FolderDocType>,
-  folderId: string,
-  newOrder: number,
+  updates: { id: string; order: number }[],
 ): Promise<boolean> => {
-  const doc = await col.findOne(folderId).exec();
-  if (!doc) return false;
+  if (updates.length === 0) return true;
 
-  await doc.patch({ order: newOrder });
-  return true;
+  const docsById = await col.findByIds(updates.map((u) => u.id)).exec();
+  const updatedDocs = updates
+    .map(({ id, order }) => {
+      const doc = docsById.get(id);
+      if (!doc) return null;
+      return { ...doc.toMutableJSON(), order };
+    })
+    .filter((d): d is FolderDocType => d !== null);
+
+  if (updatedDocs.length === 0) return false;
+
+  const result = await col.bulkUpsert(updatedDocs);
+  return result.error.length === 0;
 };
 
 // Function to change folder parent

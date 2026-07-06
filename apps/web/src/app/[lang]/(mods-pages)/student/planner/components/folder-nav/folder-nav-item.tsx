@@ -1,11 +1,8 @@
-import { useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
-import {
-  FolderDocType,
-  ItemDocType,
-} from "@/app/[lang]/(mods-pages)/student/planner/rxdb";
-import { useRxCollection } from "rxdb-hooks";
-import { updateCourseItem } from "../../data/courses";
+import { FolderDocType } from "@/app/[lang]/(mods-pages)/student/planner/rxdb";
+import { useDndContext, useDroppable } from "@dnd-kit/core";
+import { cn } from "@/lib/utils";
+import useDictionary from "@/dictionaries/useDictionary";
 
 interface FolderNavItemProps {
   folder: FolderDocType;
@@ -33,6 +30,7 @@ export function FolderNavItem({
   getFolderCompletion,
   getChildFolders,
 }: FolderNavItemProps) {
+  const dict = useDictionary();
   const { completed, inProgress, pending, total } = getFolderCompletion(
     folder.id,
   );
@@ -42,12 +40,34 @@ export function FolderNavItem({
   const hasChildren = childFolders.length > 0;
   const isExpanded = folder.id != null ? expandedFolders[folder.id] : false;
   const isSelected = selectedFolder === folder.id;
-  const [isDragOver, setIsDragOver] = useState(false);
   const isLeafFolder = !hasChildren;
 
+  // A `total` of 0 means no min/max requirement is configured for this
+  // folder — it must not be read as "already complete" (0 >= 0 would
+  // otherwise be a false positive), the same root cause as the
+  // `calculateFolderCompletion` denominator bug.
+  const hasRequirement = total > 0;
+
+  // Only leaf folders (no children) accept course drops — dropping onto a
+  // parent/category folder doesn't make sense since courses always live in
+  // a specific leaf category.
+  const { setNodeRef, isOver } = useDroppable({
+    id: `folder-${folder.id}`,
+    data: { type: "folder", folderId: folder.id },
+    disabled: !isLeafFolder,
+  });
+
+  // Disabled droppables never report `isOver`, so we can't rely on it to
+  // show a "blocked" cue on non-leaf folders while something is being
+  // dragged. Instead, detect that a drag is in progress at all and use
+  // that to render the blocked affordance on any non-leaf folder.
+  const { active } = useDndContext();
+  const isDraggingSomething = active != null;
+  const isBlockedDropTarget = !isLeafFolder && isDraggingSomething;
+
   const getColorClass = () => {
-    if (folder.id == "_unsorted") {
-      return "";
+    if (folder.id == "_unsorted" || !hasRequirement) {
+      return "bg-neutral-400 dark:bg-neutral-600";
     }
     return completed >= total
       ? "bg-green-500"
@@ -56,61 +76,45 @@ export function FolderNavItem({
         : "bg-red-500";
   };
 
-  const getTextColor = () => {
-    return completed >= total
-      ? "text-green-500"
-      : completed + inProgress >= total
-        ? "text-yellow-500"
-        : "text-red-500";
-  };
+  const unit =
+    folder.metric == "courses"
+      ? dict.planner.sidebar.coursesUnit
+      : dict.planner.sidebar.creditsUnit;
 
-  const handleDragOver = (e: React.DragEvent) => {
-    if (isLeafFolder) {
-      e.preventDefault();
-    }
-  };
-
-  const handleDragEnter = (e: React.DragEvent) => {
-    if (isLeafFolder) {
-      e.preventDefault();
-      setIsDragOver(true);
-    }
-  };
-
-  const handleDragLeave = () => {
-    setIsDragOver(false);
-  };
-
-  const courseCol = useRxCollection<ItemDocType>("items");
-  const handleDrop = (e: React.DragEvent) => {
-    if (isLeafFolder) {
-      e.preventDefault();
-      setIsDragOver(false);
-
-      try {
-        const courseData = JSON.parse(
-          e.dataTransfer.getData("text/plain"),
-        ) as ItemDocType;
-        if (courseData && courseData.uuid) {
-          updateCourseItem(courseCol!, { ...courseData, parent: folder.id });
-        }
-      } catch (error) {
-        console.error("Failed to parse dragged course data:", error);
-      }
-    }
-  };
+  const requirementLabel =
+    folder.min === 0 && folder.max === 0
+      ? dict.planner.sidebar.noRequirement
+      : folder.min < folder.max
+        ? `${folder.min}~${folder.max} ${unit}`
+        : `${folder.min} ${unit}`;
 
   return (
     <div>
       <div
-        className={`flex items-center p-2 rounded-md ${isSelected ? "bg-neutral-100 dark:bg-neutral-800" : isDragOver && isLeafFolder ? "bg-primary/20 border border-primary/50" : "hover:bg-neutral-100/50 dark:hover:bg-neutral-800/50"} cursor-pointer group ${isLeafFolder ? "transition-colors duration-200" : ""}`}
-        onDragOver={handleDragOver}
-        onDragEnter={handleDragEnter}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
+        ref={setNodeRef}
+        className={cn(
+          "flex items-center p-2 rounded-md cursor-pointer group",
+          isLeafFolder && "transition-colors duration-200",
+          isSelected
+            ? "bg-neutral-100 dark:bg-neutral-800"
+            : isOver && isLeafFolder
+              ? "bg-primary/20 border border-primary/50"
+              : "hover:bg-neutral-100/50 dark:hover:bg-neutral-800/50",
+          isBlockedDropTarget && "opacity-60 cursor-not-allowed",
+        )}
       >
-        <div
-          className="mr-2 flex-shrink-0"
+        <button
+          type="button"
+          className="mr-2 flex-shrink-0 p-1 -m-1 rounded"
+          aria-label={
+            hasChildren
+              ? isExpanded
+                ? dict.planner.sidebar.collapseFolder
+                : dict.planner.sidebar.expandFolder
+              : undefined
+          }
+          tabIndex={hasChildren ? 0 : -1}
+          aria-hidden={!hasChildren}
           onClick={(e) => {
             e.stopPropagation();
             if (hasChildren && folder.id != null) {
@@ -127,7 +131,7 @@ export function FolderNavItem({
           ) : (
             <div className="w-4" />
           )}
-        </div>
+        </button>
         <div
           className="flex-1 min-w-0 flex flex-row items-center"
           onClick={() => onSelect(folder.id)}
@@ -143,7 +147,7 @@ export function FolderNavItem({
           <div className="flex items-center mt-1">
             <span
               className={`text-xs font-medium`}
-              title={`Completed: ${completed}, In Progress: ${inProgress}, Planned: ${total - (completed + inProgress)}`}
+              title={`${dict.planner.status.completed}: ${completed}, ${dict.planner.status.inProgress}: ${inProgress}, ${dict.planner.status.planned}: ${Math.max(total - (completed + inProgress), 0)}`}
             >
               <span className="text-green-500">{completed}</span>
               {inProgress > 0 ? (
@@ -153,12 +157,7 @@ export function FolderNavItem({
                 <span className="text-neutral-400">+{pending}</span>
               ) : null}
               {" / "}
-              {folder.min < folder.max
-                ? `${folder.min}~${folder.max}`
-                : folder.min == folder.max
-                  ? ""
-                  : `${folder.min}`}
-              {folder.metric == "courses" ? "門課" : "學分"}
+              {requirementLabel}
             </span>
           </div>
         </div>

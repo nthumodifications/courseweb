@@ -1,18 +1,11 @@
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@courseweb/ui";
-import { Button } from "@courseweb/ui";
-import {
   FolderDocType,
   ItemDocType,
 } from "@/app/[lang]/(mods-pages)/student/planner/rxdb";
 import { MinimalCourse } from "@/types/courses";
 import CourseSearchContainer from "../../course-picker/container";
+import { ResponsiveDialog } from "@/app/[lang]/(mods-pages)/student/planner/components/responsive-dialog";
+import useDictionary from "@/dictionaries/useDictionary";
 
 interface CourseSearchDialogProps {
   open: boolean;
@@ -33,26 +26,24 @@ export function CourseSearchDialog({
   onRemoveCourse,
   courseData,
 }: CourseSearchDialogProps) {
+  const dict = useDictionary();
+  const t = dict.planner.dialogs.search;
   const folderTitle =
     folderData.find((f) => f.id === selectedFolder)?.title || "";
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="border-border min-w-full h-full">
-        <DialogHeader>
-          <DialogTitle>
-            {selectedFolder ? `加入${folderTitle}` : "搜尋課程"}
-          </DialogTitle>
-          <DialogDescription className="text-neutral-400">
-            將課程新增到當前資料夾
-          </DialogDescription>
-        </DialogHeader>
-        <CourseSearchContainer
-          onAdd={onAddCourse}
-          onRemove={onRemoveCourse}
-          items={courseData}
-        />
-      </DialogContent>
-    </Dialog>
+    <ResponsiveDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={selectedFolder ? `${t.addToFolderPrefix}${folderTitle}` : t.title}
+      description={t.description}
+      contentClassName="sm:max-w-5xl w-[95vw] max-h-[85vh] overflow-hidden flex flex-col"
+    >
+      <CourseSearchContainer
+        onAdd={onAddCourse}
+        onRemove={onRemoveCourse}
+        items={courseData}
+      />
+    </ResponsiveDialog>
   );
 }

@@ -1,13 +1,4 @@
 import { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@courseweb/ui";
 import { Button } from "@courseweb/ui";
 import { Input } from "@courseweb/ui";
 import { Label } from "@courseweb/ui";
@@ -18,9 +9,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@courseweb/ui";
-import { Plus } from "lucide-react";
 import { CourseStatus } from "../../types";
 import { v4 as uuidv4 } from "uuid";
+import { ResponsiveDialog } from "@/app/[lang]/(mods-pages)/student/planner/components/responsive-dialog";
+import useDictionary from "@/dictionaries/useDictionary";
 
 interface CreateCourseDialogProps {
   open: boolean;
@@ -36,35 +28,55 @@ interface CreateCourseDialogProps {
     order: number;
     dependson: string[];
   }) => Promise<void>;
-  buttonSize?: "default" | "sm";
-  buttonVariant?: "default" | "outline";
 }
+
+interface FormErrors {
+  id?: string;
+  title?: string;
+  credits?: string;
+}
+
+const initialFormData = {
+  id: "",
+  title: "",
+  credits: 3,
+  status: "planned" as CourseStatus,
+};
 
 export function CreateCourseDialog({
   open,
   onOpenChange,
   selectedFolder,
   onCreateCourse,
-  buttonSize = "default",
-  buttonVariant = "default",
 }: CreateCourseDialogProps) {
+  const dict = useDictionary();
+  const t = dict.planner.dialogs.create;
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
-    id: "",
-    title: "",
-    credits: 3,
-    status: "planned" as CourseStatus,
-  });
+  const [formData, setFormData] = useState(initialFormData);
+  const [errors, setErrors] = useState<FormErrors>({});
 
   const handleChange = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = async () => {
-    if (!formData.id || !formData.title) {
-      // Basic validation
-      return;
+  const validate = (): FormErrors => {
+    const nextErrors: FormErrors = {};
+    if (!formData.id || !formData.id.trim()) {
+      nextErrors.id = t.idRequired;
     }
+    if (!formData.title || !formData.title.trim()) {
+      nextErrors.title = t.titleRequired;
+    }
+    if (Number.isNaN(formData.credits) || formData.credits < 0) {
+      nextErrors.credits = t.creditsInvalid;
+    }
+    return nextErrors;
+  };
+
+  const handleSubmit = async () => {
+    const nextErrors = validate();
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) return;
 
     setIsSubmitting(true);
 
@@ -81,12 +93,8 @@ export function CreateCourseDialog({
       });
 
       // Reset form
-      setFormData({
-        id: "",
-        title: "",
-        credits: 3,
-        status: "planned",
-      });
+      setFormData(initialFormData);
+      setErrors({});
 
       // Close dialog
       onOpenChange(false);
@@ -98,89 +106,107 @@ export function CreateCourseDialog({
   };
 
   const cancelDialog = () => {
-    setFormData({
-      id: "",
-      title: "",
-      credits: 3,
-      status: "planned",
-    });
+    setFormData(initialFormData);
+    setErrors({});
     onOpenChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        <Button size={buttonSize} variant={buttonVariant}>
-          <Plus className="h-4 w-4 mr-2" />
-          建立新課程
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="border-border">
-        <DialogHeader>
-          <DialogTitle>建立新課程</DialogTitle>
-          <DialogDescription>手動創建一個自定義課程</DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4 py-2">
-          <div className="space-y-2">
-            <Label htmlFor="new-course-id">課程代碼</Label>
-            <Input
-              id="new-course-id"
-              className="border-border"
-              placeholder="例如: CSIE1212"
-              value={formData.id}
-              onChange={(e) => handleChange("id", e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="new-course-title">課程名稱</Label>
-            <Input
-              id="new-course-title"
-              className="border-border"
-              placeholder="例如: 程式設計"
-              value={formData.title}
-              onChange={(e) => handleChange("title", e.target.value)}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="new-course-credits">學分數</Label>
-              <Input
-                id="new-course-credits"
-                type="number"
-                value={formData.credits}
-                className="border-border"
-                onChange={(e) =>
-                  handleChange("credits", Number(e.target.value))
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="new-course-status">狀態</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value) => handleChange("status", value)}
-              >
-                <SelectTrigger id="new-course-status" className="border-border">
-                  <SelectValue placeholder="選擇狀態" />
-                </SelectTrigger>
-                <SelectContent className="border-border">
-                  <SelectItem value="completed">已完成</SelectItem>
-                  <SelectItem value="in-progress">進行中</SelectItem>
-                  <SelectItem value="planned">計劃中</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
-        <DialogFooter>
+    <ResponsiveDialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) {
+          setFormData(initialFormData);
+          setErrors({});
+        }
+        onOpenChange(nextOpen);
+      }}
+      title={t.title}
+      description={t.description}
+      footer={
+        <>
           <Button variant="outline" onClick={cancelDialog}>
-            取消
+            {dict.planner.common.cancel}
           </Button>
           <Button onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? "建立中..." : "建立課程"}
+            {isSubmitting ? t.submitting : t.submit}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </>
+      }
+    >
+      <div className="space-y-4 py-2">
+        <div className="space-y-2">
+          <Label htmlFor="new-course-id">{t.courseId}</Label>
+          <Input
+            id="new-course-id"
+            className="border-border"
+            placeholder={t.courseIdPlaceholder}
+            value={formData.id}
+            onChange={(e) => handleChange("id", e.target.value)}
+          />
+          {errors.id && <p className="text-xs text-red-500">{errors.id}</p>}
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="new-course-title">{t.courseTitle}</Label>
+          <Input
+            id="new-course-title"
+            className="border-border"
+            placeholder={t.courseTitlePlaceholder}
+            value={formData.title}
+            onChange={(e) => handleChange("title", e.target.value)}
+          />
+          {errors.title && (
+            <p className="text-xs text-red-500">{errors.title}</p>
+          )}
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="new-course-credits">{t.credits}</Label>
+            <Input
+              id="new-course-credits"
+              type="number"
+              min={0}
+              value={formData.credits}
+              className="border-border"
+              onChange={(e) => {
+                const value = Number(e.target.value);
+                handleChange(
+                  "credits",
+                  Number.isNaN(value) ? 0 : Math.max(0, value),
+                );
+              }}
+            />
+            {errors.credits && (
+              <p className="text-xs text-red-500">{errors.credits}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="new-course-status">{t.status}</Label>
+            <Select
+              value={formData.status}
+              onValueChange={(value) => handleChange("status", value)}
+            >
+              <SelectTrigger id="new-course-status" className="border-border">
+                <SelectValue placeholder={t.statusPlaceholder} />
+              </SelectTrigger>
+              <SelectContent className="border-border">
+                <SelectItem value="completed">
+                  {dict.planner.status.completed}
+                </SelectItem>
+                <SelectItem value="in-progress">
+                  {dict.planner.status.inProgress}
+                </SelectItem>
+                <SelectItem value="planned">
+                  {dict.planner.status.planned}
+                </SelectItem>
+                <SelectItem value="failed">
+                  {dict.planner.status.failed}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
+    </ResponsiveDialog>
   );
 }

@@ -46,11 +46,15 @@ export const updateSemester = async (
     })
     .exec();
 
-  if (doc) {
-    await doc.patch(semester);
-    return doc.toMutableJSON();
+  if (!doc) {
+    // Previously this silently returned the unsaved `semester` input,
+    // which made callers believe the save succeeded even though nothing
+    // was persisted. Throw so callers can detect and surface the failure.
+    throw new Error(`Semester with id ${semester.id} not found`);
   }
-  return semester;
+
+  await doc.patch(semester);
+  return doc.toMutableJSON();
 };
 
 // Function to create semester
@@ -86,8 +90,28 @@ export const toggleSemesterActive = async (
   return semester;
 };
 
+// Term code -> label mapping used whenever a semester name/ID is
+// auto-generated or displayed. "1" = fall/autumn, "2" = spring,
+// "3" = summer. Centralizing this avoids the previous bug where term "3"
+// (summer) was mislabeled as spring by a two-way `term === "1" ? a : b`
+// check that only ever distinguished "1" from "everything else".
+export const SEMESTER_TERM_LABELS: Record<string, string> = {
+  "1": "秋季學期",
+  "2": "春季學期",
+  "3": "暑期",
+};
+
+export const getSemesterTermLabel = (term: string): string =>
+  SEMESTER_TERM_LABELS[term] ?? term;
+
 // Function to generate semester ID
 export const generateSemesterId = (year: string, term: string): string => {
-  // to SSSTT format
-  return `${year}${term.padEnd(2, "0")}`;
+  // ROC semester ID format: 3-digit ROC year + 1-digit term code + a
+  // trailing "0" filler, e.g. year "113" + term "1" (fall) -> "11310",
+  // term "3" (summer) -> "11330". This previously used
+  // `term.padEnd(2, "0")`, which happened to produce the same result for
+  // single-character terms but relied on padEnd's right-padding semantics
+  // rather than an explicit, self-documenting format — fragile if `term`
+  // were ever anything other than a single digit.
+  return `${year}${term}0`;
 };

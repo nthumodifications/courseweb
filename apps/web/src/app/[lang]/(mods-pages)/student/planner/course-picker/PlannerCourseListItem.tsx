@@ -8,7 +8,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@courseweb/ui";
-import { useSearchParams } from "react-router-dom";
 import { ChevronDown, Minus, Plus } from "lucide-react";
 import CourseTagList from "@/components/Courses/CourseTagsList";
 import { MinimalCourse } from "@/types/courses";
@@ -26,7 +25,6 @@ const PlannerCourseListItem: FC<PlannerCourseListItemProps> = memo(
   ({ course, hasTaken = false, onAdd, onRemove }) => {
     const dict = useDictionary();
     const { language } = useSettings();
-    const [searchParams] = useSearchParams();
     const { openCourse } = useCourseLink();
 
     const courseTitle =
@@ -73,7 +71,9 @@ const PlannerCourseListItem: FC<PlannerCourseListItemProps> = memo(
                     </div>
                   ))
                 ) : (
-                  <div className="text-muted-foreground text-xs">No Venues</div>
+                  <div className="text-muted-foreground text-xs">
+                    {dict.planner.coursePicker.noVenues}
+                  </div>
                 )}
               </div>
               <CourseTagList course={course as unknown as CourseDefinition} />

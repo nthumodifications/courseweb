@@ -1,8 +1,9 @@
 import { Button } from "@courseweb/ui";
 import { FolderDocType } from "@/app/[lang]/(mods-pages)/student/planner/rxdb";
-import { Filter, Plus, Search } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { CreateCourseDialog } from "../dialogs/create-course-dialog";
 import { CourseStatus } from "../../types";
+import useDictionary from "@/dictionaries/useDictionary";
 
 interface CourseListHeaderProps {
   selectedFolder: string | null | undefined;
@@ -25,6 +26,7 @@ export function CourseListHeader({
   setCreateCourseOpen,
   onCreateCourse,
 }: CourseListHeaderProps) {
+  const dict = useDictionary();
   const folderTitle =
     folderData.find((f) => f.id === selectedFolder)?.title || "";
 
@@ -33,23 +35,31 @@ export function CourseListHeader({
       <div>
         <h2 className="text-lg font-bold">{folderTitle}</h2>
         <p className="text-sm text-neutral-400">
-          {selectedFolder != undefined ? `${courseCount} 門課程` : "全部課程"}
+          {selectedFolder != undefined
+            ? dict.planner.courseList.courseCount.replace(
+                "{count}",
+                String(courseCount),
+              )
+            : dict.planner.courseList.allCourses}
         </p>
       </div>
       {selectedFolder != undefined && !hasChildren && (
         <div className="flex items-center space-x-2">
+          <Button size="sm" onClick={() => setCreateCourseOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            {dict.planner.courseList.addCourse}
+          </Button>
+
           <CreateCourseDialog
             open={createCourseOpen}
             onOpenChange={setCreateCourseOpen}
             selectedFolder={selectedFolder}
             onCreateCourse={onCreateCourse}
-            buttonSize="sm"
-            buttonVariant="default"
           />
 
           <Button variant="outline" size="sm" onClick={onOpenCourseSearch}>
             <Search className="h-4 w-4 mr-2" />
-            搜尋課程
+            {dict.planner.courseList.searchCourses}
           </Button>
         </div>
       )}
