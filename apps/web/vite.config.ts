@@ -95,6 +95,10 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),
+      "@courseweb/api-types": path.resolve(
+        __dirname,
+        "../../packages/api-types/src",
+      ),
       "@courseweb/ui": path.resolve(__dirname, "../../packages/ui/src"),
       "@courseweb/shared": path.resolve(__dirname, "../../packages/shared/src"),
       "@courseweb/database": path.resolve(

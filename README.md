@@ -30,47 +30,49 @@ This project is organized as a modern monorepo using **Turborepo** for efficient
 ```
 courseweb/
 ├── apps/                    # Applications
-│   ├── web/                # Main Next.js web application
-│   ├── mobile/             # Capacitor mobile app (iOS/Android)
-│   ├── admin/              # Admin dashboard (planned)
-│   └── docs/               # Documentation site (planned)
+│   └── web/                # Main Vite + React web application
 ├── packages/               # Shared packages
-│   ├── ui/                 # Shared React components (40+ components)
-│   ├── shared/             # Shared utilities, types, and constants
+│   ├── api-types/          # Shared Hono API types and client factories
 │   ├── database/           # Database schema and migrations
-│   └── eslint-config/      # Shared ESLint configuration
-├── services/               # Backend services (git submodules)
+│   ├── eslint-config/      # Shared ESLint configuration
+│   ├── shared/             # Shared utilities, types, and constants
+│   ├── tailwind-config/    # Shared Tailwind CSS configuration
+│   ├── ui/                 # Shared React components (40+ components)
+├── services/               # Backend service workspaces
 │   ├── api/                # Main API service (Cloudflare Workers)
-│   ├── secure-api/         # Authentication API service
-│   └── discord-bot/        # Discord integration service
-└── tools/                  # Development and build tools
-    ├── data-sync/          # Course data synchronization tools
-    ├── dict-manager/       # i18n dictionary management CLI
-    └── build-scripts/      # Build automation and CI/CD scripts
+│   └── secure-api/         # Authentication API service
+├── tools/                  # Development and build tools
+│   ├── build-scripts/      # Build automation scripts
+│   ├── data-sync/          # Course data synchronization tools
+│   └── dict-manager/       # i18n dictionary management CLI
+└── docs/                   # Project documentation
 ```
 
 ### Package Overview
 
-| Package                 | Description              | Technology                         |
-| ----------------------- | ------------------------ | ---------------------------------- |
-| `@courseweb/web`        | Main web application     | Next.js 14, App Router, TypeScript |
-| `@courseweb/mobile`     | Mobile application       | Capacitor, Ionic                   |
-| `@courseweb/ui`         | UI component library     | React, Radix UI, Tailwind CSS      |
-| `@courseweb/shared`     | Shared utilities & types | TypeScript                         |
-| `@courseweb/database`   | Database schema          | SQL, Migrations                    |
-| `@courseweb/api`        | Main API service         | Hono, Cloudflare Workers           |
-| `@courseweb/secure-api` | Auth API service         | Hono, Cloudflare Workers           |
+| Package                      | Description                    | Technology                       |
+| ---------------------------- | ------------------------------ | -------------------------------- |
+| `@courseweb/web`             | Main web application           | Vite 5, React 18, React Router 6 |
+| `@courseweb/ui`              | UI component library           | React, Radix UI, Tailwind CSS    |
+| `@courseweb/shared`          | Shared utilities and types     | TypeScript                       |
+| `@courseweb/api-types`       | API types and client factories | TypeScript, Hono RPC             |
+| `@courseweb/database`        | Database schema and migrations | Supabase, SQL                    |
+| `@courseweb/tailwind-config` | Shared Tailwind configuration  | Tailwind CSS                     |
+| `@courseweb/eslint-config`   | Shared lint configuration      | ESLint                           |
+| `@courseweb/api`             | Main API service               | Hono, Cloudflare Workers, D1     |
+| `@courseweb/secure-api`      | Authentication API service     | Hono, Bun, Prisma                |
 
 ## 🚀 Technologies Used
 
 **Frontend:**
 
-- [Next.js 14](https://nextjs.org/) with App Router
-- [React 18](https://reactjs.org/) with Server Components
+- [Vite 5](https://vite.dev/) for development and production builds
+- [React 18](https://react.dev/) with [React Router 6](https://reactrouter.com/)
 - [TypeScript](https://www.typescriptlang.org/) for type safety
 - [Tailwind CSS](https://tailwindcss.com/) for styling
 - [Radix UI](https://www.radix-ui.com/) for accessible components
 - [Framer Motion](https://www.framer.com/motion/) for animations
+- [Vite PWA](https://vite-pwa-org.netlify.app/) for installable and offline-capable web experiences
 
 **Backend:**
 
@@ -79,15 +81,11 @@ courseweb/
 - [Supabase](https://supabase.com/) for database and authentication
 - [Firebase](https://firebase.google.com/) for additional services
 
-**Mobile:**
-
-- [Capacitor](https://capacitorjs.com/) for cross-platform mobile apps
-- [Ionic](https://ionicframework.com/) for mobile UI components
-
 **Infrastructure:**
 
 - [Turborepo](https://turbo.build/) for monorepo management
 - [Vercel](https://vercel.com/) for web deployment
+- [Cloudflare Workers](https://workers.cloudflare.com/) for API and edge deployment
 - [DigitalOcean](https://www.digitalocean.com/) for production hosting
 - [Algolia](https://www.algolia.com/) for search functionality
 
@@ -102,70 +100,80 @@ For issues, feature requests, or bug reports, please [open an issue](https://git
 ### Prerequisites
 
 - **Node.js 20+**
-- **npm** (comes with Node.js)
-- **Git** with submodules support
+- **Bun 1.3+**
+- **Git**
 
 ### Quick Start
 
-1. **Clone the repository with submodules:**
+1. **Clone the repository:**
 
    ```bash
-   git clone --recursive https://github.com/nthumodifications/courseweb.git
+   git clone https://github.com/nthumodifications/courseweb.git
    cd courseweb
    ```
 
 2. **Install dependencies:**
 
    ```bash
-   npm install
+   bun install --frozen-lockfile
    ```
 
-3. **Set up environment variables:**
+3. **Set up frontend environment variables:**
 
    ```bash
-   cp apps/web/.env.local.example apps/web/.env.local
-   # Edit .env.local with your configuration
+   cp apps/web/.env.example apps/web/.env.local
+   # Add the required VITE_* values described below.
    ```
 
-4. **Start development server:**
+4. **Start the web development server:**
 
    ```bash
-   npm run dev
-   # or for faster builds:
-   npm run dev-turbo
+   bun run dev:web
    ```
 
 5. **Open your browser:**
-   Navigate to [http://localhost:3000](http://localhost:3000)
+   Navigate to [http://localhost:5173](http://localhost:5173). If that port is already in use, Vite automatically selects the next available port.
+
+To run the backend services locally in separate terminals:
+
+```bash
+bun run dev:api          # Main API on http://localhost:5001
+bun run dev:secure-api   # Authentication API on http://localhost:5002
+```
+
+`bun run dev` starts development tasks across the entire monorepo. For frontend-only work, prefer `bun run dev:web`.
 
 ### Available Scripts
 
 ```bash
 # Development
-npm run dev                 # Start all development servers
-npm run dev-turbo          # Start with Turbo for faster builds
-npm run dev:web            # Start only web app
-npm run dev:mobile         # Start mobile development
+bun run dev                 # Start development tasks across all workspaces
+bun run dev:web             # Start only the web app
+bun run dev:api             # Start the main API
+bun run dev:secure-api      # Start the authentication API
 
 # Building
-npm run build              # Build all packages and apps
-npm run build:web          # Build only web app
-npm run build:mobile       # Build mobile app
+bun run build               # Build all packages and apps
+bun run build:web           # Build the web app and its dependencies
+bun run build:api           # Build the main API
+bun run build:secure-api    # Build the authentication API
+bun run build:apis          # Build both API services
+bun run build:api-types     # Build the shared API types
 
 # Tools
-npm run dict               # Manage translation dictionary
-npm run sync:once          # Sync course data once
-npm run sync:scheduled     # Start scheduled sync service
-
-# Mobile
-npm run sync:mobile        # Sync mobile app
-npm run build:ios          # Build iOS app
-npm run build:android      # Build Android app
+bun run dict                # Manage the translation dictionary
+bun run dict:create         # Create a translation entry
+bun run dict:remove         # Remove a translation entry
+bun run dict:move           # Move or rename a translation entry
+bun run sync:once           # Sync course data once
+bun run sync:scheduled      # Start the scheduled sync service
 
 # Utilities
-npm run lint               # Lint all packages
-npm run type-check         # TypeScript type checking
-npm run clean              # Clean build artifacts
+bun run lint                # Lint all packages
+bun run test                # Run workspace tests
+bun run format              # Format TypeScript, TSX, and Markdown files
+bun run clean               # Clean build artifacts
+bunx turbo run type-check   # Run TypeScript checks across supported workspaces
 ```
 
 ### Monorepo Commands
@@ -174,35 +182,28 @@ The project uses **Turborepo** for efficient task running:
 
 ```bash
 # Run build for specific package
-npx turbo run build --filter=@courseweb/web
+bunx turbo run build --filter=@courseweb/web
 
 # Run dev for all packages
-npx turbo run dev
+bunx turbo run dev
 
-# Run tests with dependencies
-npx turbo run test --filter=@courseweb/ui...
+# Run type checks
+bunx turbo run type-check
 
 # Clear Turborepo cache
-npx turbo run clean
+bunx turbo run clean
 ```
 
-## 📱 Mobile Development
+## 📱 Progressive Web App
 
-The mobile app is built with **Capacitor** and supports both iOS and Android:
+NTHUMods is an installable Progressive Web App configured through `vite-plugin-pwa`. The manifest, icons, update behavior, and offline caching rules are defined in `apps/web/vite.config.ts`.
 
 ```bash
-# Install mobile dependencies
-cd apps/mobile
-npm install
+# Build the production PWA
+bun run build:web
 
-# Sync web assets to mobile
-npm run sync:mobile
-
-# Run on iOS simulator
-npm run build:ios
-
-# Run on Android emulator
-npm run build:android
+# Preview the production build locally
+bun run --cwd apps/web preview
 ```
 
 ## 🌍 Internationalization
@@ -211,13 +212,13 @@ We use a custom dictionary management system for translations:
 
 ```bash
 # Create new translation entry
-npm run dict -- create "settings.theme" "主題" "Theme"
+bun run dict -- create "settings.theme" "主題" "Theme"
 
 # Remove translation entry
-npm run dict -- remove "old.key"
+bun run dict -- remove "old.key"
 
 # Move/rename translation key
-npm run dict -- move "old.key" "new.key"
+bun run dict -- move "old.key" "new.key"
 ```
 
 ## 🤝 Contributing
@@ -229,7 +230,7 @@ We welcome contributions from everyone! Here's how to get started:
 ```bash
 git clone https://github.com/your-username/courseweb.git
 cd courseweb
-npm install
+bun install --frozen-lockfile
 ```
 
 ### 2. Create a Branch
@@ -245,7 +246,7 @@ git checkout -b fix/bug-description
 - Follow our coding standards (ESLint + Prettier configured)
 - Add tests if applicable
 - Update documentation as needed
-- Test your changes: `npm run dev-turbo`
+- Test your changes with `bun run test` and `bun run build:web`
 
 ### 4. Commit & Push
 
@@ -269,62 +270,63 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/) for commi
 - **Code Style**: We use ESLint + Prettier (automatically configured)
 - **TypeScript**: All new code should be properly typed
 - **Components**: Use shared UI components from `@courseweb/ui` when possible
-- **Testing**: Add tests for new features (we use Vitest)
+- **Testing**: Add tests where applicable and run them with Bun/Turborepo
 - **Performance**: Consider bundle size and runtime performance
 
 ## 🚀 Deployment
 
 ### Web Application (Primary)
 
-The web app is deployed on **Vercel** with automatic deployments from `main` branch.
+The web app is built as a Vite static application. The repository includes:
+
+- `vercel.json` for Vercel builds, with output from `apps/web/dist`
+- `apps/web/wrangler.toml` and `apps/web/worker.ts` for Cloudflare Workers deployment
+
+The API service is deployed to Cloudflare Workers from the `main` branch through GitHub Actions.
 
 **Production**: [nthumods.com](https://nthumods.com)
 
-### Docker Deployment
+### Docker Status
 
-For self-hosting, use the provided Docker configuration:
-
-```bash
-# Build Docker image (run from repository root)
-docker build -f apps/web/Dockerfile -t nthumods-web .
-
-# Run container
-docker run -p 3000:3000 nthumods-web
-```
-
-**Note**: The Dockerfile is located in `apps/web/Dockerfile` but must be run from the repository root to access the monorepo structure and shared packages.
+`apps/web/Dockerfile` still targets the previous Next.js application structure and is not part of the current Vite deployment workflow. It must be migrated before Docker self-hosting is supported again.
 
 ### Environment Variables
 
-Required environment variables (see `apps/web/.env.local.example`):
+Frontend variables are exposed to the browser and must use the `VITE_` prefix. Configure them in `apps/web/.env.local`:
 
 ```env
-# Database
-DATABASE_URL=
-DIRECT_URL=
+# Main API
+VITE_COURSEWEB_API_URL=http://localhost:5001
 
 # Authentication
-NEXTAUTH_SECRET=
-NEXTAUTH_URL=
+VITE_NTHUMODS_AUTH_URL=
+VITE_AUTH_CLIENT_ID=
+VITE_NTHUMODS_AUTH_REDIRECT=http://localhost:5173/auth/callback
+VITE_NTHUMODS_AUTH_SILENT_REDIRECT=http://localhost:5173/auth/silent
 
-# External Services
-SUPABASE_URL=
-SUPABASE_ANON_KEY=
-ALGOLIA_APP_ID=
-ALGOLIA_API_KEY=
+# Supabase
+VITE_SUPABASE_URL=
+VITE_SUPABASE_ANON_KEY=
 
-# Optional
-SENTRY_AUTH_TOKEN=
-TURNSTILE_SECRET_KEY=
+# Search
+VITE_ALGOLIA_APP_ID=
+VITE_ALGOLIA_SEARCH_KEY=
+
+# Turnstile
+VITE_TURNSTILE_SITE_KEY=
+
+# Optional analytics
+VITE_GTM_ID=
 ```
+
+Never place private credentials in a `VITE_*` variable because Vite includes these values in the client bundle. Database URLs, service-role keys, API keys, signing keys, and other server secrets belong in their respective service environments. See `services/api/wrangler.toml`, `services/api/README.md`, and `services/secure-api/.env.example` for backend configuration.
 
 ## 📊 Performance & Monitoring
 
-- **Performance**: Web Vitals monitoring with Vercel Analytics
-- **Error Tracking**: Sentry integration for error monitoring
-- **Search**: Algolia for lightning-fast course search
-- **Caching**: Aggressive caching strategy with Vercel Edge Network
-- **Bundle Analysis**: Built-in bundle analyzer (`npm run analyze`)
+- **Error Tracking**: Sentry integration through the Vite build
+- **Search**: Algolia-powered course search
+- **Offline Support**: Service worker and runtime caching through Vite PWA
+- **Production Builds**: Vite bundling with source maps and Turborepo caching
 
 ## 📄 License
 
