@@ -8,6 +8,7 @@ import {
 import BusDetailsContainer from "./BusDetailsContainer";
 import { RedLineIcon } from "@/components/BusIcons/RedLineIcon";
 import { GreenLineIcon } from "@/components/BusIcons/GreenLineIcon";
+import { NandaLineIcon } from "@/components/BusIcons/NandaLineIcon";
 import { Route1LineIcon } from "@/components/BusIcons/Route1LineIcon";
 import { Route2LineIcon } from "@/components/BusIcons/Route2LineIcon";
 import { useParams, useNavigate } from "react-router-dom";
@@ -187,20 +188,36 @@ const BusRouteDetailsPage = () => {
       </>
     );
   } else if (route === "nanda" && nandaBusData) {
+    const nandaHasRouteSplit = [
+      ...nandaBusData.weekday_bus_schedule_toward_south_campus,
+      ...nandaBusData.weekday_bus_schedule_toward_main_campus,
+      ...nandaBusData.weekend_bus_schedule_toward_south_campus,
+      ...nandaBusData.weekend_bus_schedule_toward_main_campus,
+    ].some((bus) => bus.type === "route1" || bus.type === "route2");
+
     return (
       <>
         {seoHelmet}
         <BusDetailsContainer
-          routes={[
-            {
-              Icon: Route1LineIcon,
-              title: dict.bus.route1_line,
-            },
-            {
-              Icon: Route2LineIcon,
-              title: dict.bus.route2_line,
-            },
-          ]}
+          routes={
+            nandaHasRouteSplit
+              ? [
+                  {
+                    Icon: Route1LineIcon,
+                    title: dict.bus.route1_line,
+                  },
+                  {
+                    Icon: Route2LineIcon,
+                    title: dict.bus.route2_line,
+                  },
+                ]
+              : [
+                  {
+                    Icon: NandaLineIcon,
+                    title: dict.bus.nanda_line,
+                  },
+                ]
+          }
           up={{
             title: dict.bus.to + dict.bus.nanda,
             info: nandaBusData.toward_south_campus_info,

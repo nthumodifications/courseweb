@@ -487,6 +487,68 @@ const LineDisplayPage = () => {
           return { ...bus, stationIndex, stationDepTime };
         })
         .filter((bus) => bus.stationIndex != -1);
+    if (line == "nanda_up")
+      return busses
+        .filter(
+          (bus) =>
+            bus.route == "南大區間車" &&
+            bus.direction == "up" &&
+            "type" in bus &&
+            bus.type === undefined,
+        )
+        .map((bus) => {
+          const startIndex = 0;
+          const startTime = getTimeOnDate(time, bus.time);
+          const stationIndex = lineData.stations_zh.findIndex(
+            (station, i) =>
+              i >= startIndex &&
+              addMinutes(
+                startTime,
+                lineData.timings
+                  .slice(0, i - startIndex)
+                  .reduce((a, b) => a + b, 0),
+              ) >= startOfMinute(time),
+          );
+          const stationDepTime = addMinutes(
+            startTime,
+            lineData.timings
+              .slice(0, stationIndex - startIndex)
+              .reduce((a, b) => a + b, 0),
+          );
+          return { ...bus, stationIndex, stationDepTime };
+        })
+        .filter((bus) => bus.stationIndex != -1);
+    if (line == "nanda_down")
+      return busses
+        .filter(
+          (bus) =>
+            bus.route == "南大區間車" &&
+            bus.direction == "down" &&
+            "type" in bus &&
+            bus.type === undefined,
+        )
+        .map((bus) => {
+          const startIndex = 0;
+          const startTime = getTimeOnDate(time, bus.time);
+          const stationIndex = lineData.stations_zh.findIndex(
+            (station, i) =>
+              i >= startIndex &&
+              addMinutes(
+                startTime,
+                lineData.timings
+                  .slice(0, i - startIndex)
+                  .reduce((a, b) => a + b, 0),
+              ) >= startOfMinute(time),
+          );
+          const stationDepTime = addMinutes(
+            startTime,
+            lineData.timings
+              .slice(0, stationIndex - startIndex)
+              .reduce((a, b) => a + b, 0),
+          );
+          return { ...bus, stationIndex, stationDepTime };
+        })
+        .filter((bus) => bus.stationIndex != -1);
     if (line == "nanda")
       return busses
         .filter(

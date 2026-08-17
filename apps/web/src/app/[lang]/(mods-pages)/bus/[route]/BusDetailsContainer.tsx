@@ -12,6 +12,7 @@ import { SVGProps, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@courseweb/ui";
 import { ChevronLeft } from "lucide-react";
 import { GreenLineIcon } from "@/components/BusIcons/GreenLineIcon";
+import { NandaLineIcon } from "@/components/BusIcons/NandaLineIcon";
 import { RedLineIcon } from "@/components/BusIcons/RedLineIcon";
 import { Route1LineIcon } from "@/components/BusIcons/Route1LineIcon";
 import { Route2LineIcon } from "@/components/BusIcons/Route2LineIcon";
@@ -126,13 +127,17 @@ const BusDetailsContainer = ({
                             <Route1LineIcon width={15} height={15} />
                           ) : "type" in bus.up && bus.up.type == "route2" ? (
                             <Route2LineIcon width={15} height={15} />
-                          ) : null}
+                          ) : (
+                            <NandaLineIcon width={15} height={15} />
+                          )}
                         </div>
                         <div className="flex flex-wrap gap-2 items-center">
                           <div className="text-foreground">
                             {bus.up.type == "route1"
                               ? dict.bus.route1_line
-                              : dict.bus.route2_line}
+                              : bus.up.type == "route2"
+                                ? dict.bus.route2_line
+                                : dict.bus.nanda_line}
                           </div>
                           {bus.up.description.includes("83") && (
                             <div className="text-xs text-white bg-blue-500 px-1 rounded">
@@ -188,13 +193,17 @@ const BusDetailsContainer = ({
                           ) : "type" in bus.down &&
                             bus.down.type == "route2" ? (
                             <Route2LineIcon width={15} height={15} />
-                          ) : null}
+                          ) : (
+                            <NandaLineIcon width={15} height={15} />
+                          )}
                         </div>
                         <div className="flex flex-wrap gap-2 items-center">
                           <div className="text-foreground">
                             {bus.down.type == "route1"
                               ? dict.bus.route1_line
-                              : dict.bus.route2_line}
+                              : bus.down.type == "route2"
+                                ? dict.bus.route2_line
+                                : dict.bus.nanda_line}
                           </div>
                           {bus.down.description.includes("83") && (
                             <div className="text-xs text-white bg-blue-500 px-1 rounded">

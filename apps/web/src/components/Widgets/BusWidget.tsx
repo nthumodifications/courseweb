@@ -74,19 +74,18 @@ const BusWidget: FC<BusWidgetProps> = ({
       }
     }
 
+    const nandaLabel = (type: "route1" | "route2" | undefined) => {
+      if (type === "route1") return language === "zh" ? "南大1路" : "Nanda 1";
+      if (type === "route2") return language === "zh" ? "南大2路" : "Nanda 2";
+      return language === "zh" ? "南大校車" : "Nanda";
+    };
+
     const nandaSchedule = data.nanda[schedule];
     for (const dep of nandaSchedule.toward_south_campus) {
       if (getTimeOnDate(now, dep.time) > now) {
         results.push({
           time: dep.time,
-          lineLabel:
-            dep.type === "route2"
-              ? language === "zh"
-                ? "南大2路"
-                : "Nanda 2"
-              : language === "zh"
-                ? "南大1路"
-                : "Nanda 1",
+          lineLabel: nandaLabel(dep.type),
           directionIcon: "↓",
         });
       }
@@ -95,14 +94,7 @@ const BusWidget: FC<BusWidgetProps> = ({
       if (getTimeOnDate(now, dep.time) > now) {
         results.push({
           time: dep.time,
-          lineLabel:
-            dep.type === "route2"
-              ? language === "zh"
-                ? "南大2路"
-                : "Nanda 2"
-              : language === "zh"
-                ? "南大1路"
-                : "Nanda 1",
+          lineLabel: nandaLabel(dep.type),
           directionIcon: "↑",
         });
       }

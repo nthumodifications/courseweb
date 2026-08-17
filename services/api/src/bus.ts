@@ -190,7 +190,9 @@ const app = new Hono()
 
           if (
             scriptContent.includes("towardNandaInfo") ||
-            scriptContent.includes("weekdayBusScheduleTowardNanda")
+            scriptContent.includes("weekdayBusScheduleTowardNanda") ||
+            scriptContent.includes("towardSouthCampusInfo") ||
+            scriptContent.includes("weekdayBusScheduleTowardSouthCampus")
           ) {
             const intercampusData = extractBusDataFromScript(scriptContent);
             busData = { ...busData, ...intercampusData };
@@ -531,7 +533,8 @@ function extractBusDataFromScript(scriptContent: string): ParsedBusData {
                 }
               }
             }
-            if (Object.keys(obj).length > 0) {
+            // Skip blank template rows (site publishes these as unfilled placeholders, e.g. suspended weekend service)
+            if (Object.keys(obj).length > 0 && obj.time) {
               // Map depStop to the correct format
               if (obj.depStop) {
                 obj.depStop = obj.depStop.trim();
@@ -552,39 +555,75 @@ function extractBusDataFromScript(scriptContent: string): ParsedBusData {
     // Only extract data that actually exists in the script content
     const result: ParsedBusData = {};
 
-    // Define all possible variables to extract
+    // Define all possible variables to extract. `aliases` covers alternate
+    // variable names the site has used for the same data (e.g. it dropped
+    // the "Nanda"-specific naming for generic "SouthCampus" naming outside
+    // of regular semester periods when there is only a single shuttle line).
     const campusVars = [
-      { key: "towardTSMCBuildingInfo", type: "object" },
-      { key: "towardMainGateInfo", type: "object" },
-      { key: "weekdayBusScheduleTowardTSMCBuilding", type: "array" },
-      { key: "weekendBusScheduleTowardTSMCBuilding", type: "array" },
-      { key: "weekdayBusScheduleTowardMainGate", type: "array" },
-      { key: "weekendBusScheduleTowardMainGate", type: "array" },
+      { key: "towardTSMCBuildingInfo", type: "object", aliases: [] },
+      { key: "towardMainGateInfo", type: "object", aliases: [] },
+      {
+        key: "weekdayBusScheduleTowardTSMCBuilding",
+        type: "array",
+        aliases: [],
+      },
+      {
+        key: "weekendBusScheduleTowardTSMCBuilding",
+        type: "array",
+        aliases: [],
+      },
+      { key: "weekdayBusScheduleTowardMainGate", type: "array", aliases: [] },
+      { key: "weekendBusScheduleTowardMainGate", type: "array", aliases: [] },
     ];
 
     const intercampusVars = [
-      { key: "towardNandaInfo", type: "object" },
-      { key: "towardMainCampusInfo", type: "object" },
-      { key: "weekdayBusScheduleTowardNanda", type: "array" },
-      { key: "weekendBusScheduleTowardNanda", type: "array" },
-      { key: "weekdayBusScheduleTowardMainCampus", type: "array" },
-      { key: "weekendBusScheduleTowardMainCampus", type: "array" },
+      {
+        key: "towardNandaInfo",
+        type: "object",
+        aliases: ["towardSouthCampusInfo"],
+      },
+      { key: "towardMainCampusInfo", type: "object", aliases: [] },
+      {
+        key: "weekdayBusScheduleTowardNanda",
+        type: "array",
+        aliases: ["weekdayBusScheduleTowardSouthCampus"],
+      },
+      {
+        key: "weekendBusScheduleTowardNanda",
+        type: "array",
+        aliases: ["weekendBusScheduleTowardSouthCampus"],
+      },
+      {
+        key: "weekdayBusScheduleTowardMainCampus",
+        type: "array",
+        aliases: [],
+      },
+      {
+        key: "weekendBusScheduleTowardMainCampus",
+        type: "array",
+        aliases: [],
+      },
     ];
 
     // Only extract variables that exist in the script
     const allVars = [...campusVars, ...intercampusVars];
 
-    for (const { key, type } of allVars) {
-      if (scriptContent.includes(`const ${key} =`)) {
+    for (const { key, type, aliases } of allVars) {
+      // Try the canonical name first, then fall back to known aliases
+      for (const name of [key, ...aliases]) {
+        if (!scriptContent.includes(`const ${name} =`)) continue;
+
         if (type === "object") {
-          const extracted = extractObject(key);
+          const extracted = extractObject(name);
           if (extracted) {
             (result as any)[key] = extracted;
+            break;
           }
         } else if (type === "array") {
-          const extracted = extractArray(key);
+          const extracted = extractArray(name);
           if (extracted.length > 0) {
             (result as any)[key] = extracted;
+            break;
           }
         }
       }
