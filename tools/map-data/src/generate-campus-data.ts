@@ -23,6 +23,14 @@ const bounds = {
   east: 120.9975,
 };
 
+const CAMPUS_WATER_NAMES: Record<
+  string,
+  NonNullable<CampusAreaFeature["names"]>
+> = {
+  "way/220880239": { zh: "昆明湖", en: "Kun Ming Lake" },
+  "relation/3927538": { zh: "成功湖", en: "Cheng Kung Lake" },
+};
+
 type OsmPoint = { lat: number; lon: number };
 type OsmTags = Record<string, string>;
 type OsmMember = {
@@ -224,11 +232,29 @@ function createAreaParts(
             Boolean(ring),
           )
         : [];
-  return rings.map((ring, index) => ({
-    id: `osm-${element.type}-${element.id}-${index}`,
-    kind,
-    polygon: ring.map(toCoordinate),
-  }));
+  const tags = element.tags ?? {};
+  const elementId = `${element.type}/${element.id}`;
+  const names =
+    kind === "water"
+      ? (CAMPUS_WATER_NAMES[elementId] ??
+        (tags.name
+          ? {
+              zh: tags["name:zh"] ?? tags.name,
+              en: tags["name:en"],
+            }
+          : undefined))
+      : undefined;
+
+  return rings.map((ring, index) => {
+    const polygon = ring.map(toCoordinate);
+    return {
+      id: `osm-${element.type}-${element.id}-${index}`,
+      kind,
+      names,
+      location: polygonCenter(polygon),
+      polygon,
+    };
+  });
 }
 
 function polygonArea(feature: CampusAreaFeature): number {

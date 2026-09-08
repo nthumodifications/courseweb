@@ -130,6 +130,11 @@ function CampusWorld({
     [data.boundary],
   );
 
+  const waterLabels = useMemo(
+    () => data.water.filter((area) => area.names),
+    [data.water],
+  );
+
   return (
     <>
       <color attach="background" args={["#e9efe6"]} />
@@ -166,6 +171,27 @@ function CampusWorld({
         color="#7e1083"
         y={0.09}
       />
+
+      {waterLabels.map((area) => {
+        const world = geoToWorld(area.location, data.origin);
+        const label =
+          language === "en"
+            ? (area.names?.en ?? area.names?.zh)
+            : area.names?.zh;
+        return (
+          <Html
+            key={`${area.id}-label`}
+            position={[world.x, 1, world.z]}
+            center
+            distanceFactor={220}
+            style={{ pointerEvents: "none" }}
+          >
+            <span className="block whitespace-nowrap rounded-full border border-sky-700/20 bg-background/90 px-2 py-1 text-center text-[10px] font-semibold text-sky-900 shadow-sm backdrop-blur-sm dark:text-sky-200">
+              {label}
+            </span>
+          </Html>
+        );
+      })}
 
       {data.buildings.map((building) => {
         const selected = selectedBuilding?.identityId

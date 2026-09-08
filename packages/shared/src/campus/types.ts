@@ -62,6 +62,11 @@ export type CampusLinearFeature = {
 export type CampusAreaFeature = {
   id: string;
   kind: "water" | "boundary";
+  names?: {
+    zh: string;
+    en?: string;
+  };
+  location: LatLon;
   polygon: GeoCoordinate[];
 };
 

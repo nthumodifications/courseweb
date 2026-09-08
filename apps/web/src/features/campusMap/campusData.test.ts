@@ -32,4 +32,14 @@ describe("generated NTHU campus data", () => {
     expect(data.boundary?.polygon.length).toBeGreaterThan(3);
     expect(data.attribution.text).toContain("OpenStreetMap");
   });
+
+  test.each([
+    ["osm-relation-3927538-0", "成功湖", "Cheng Kung Lake"],
+    ["osm-way-220880239-0", "昆明湖", "Kun Ming Lake"],
+  ])("labels %s with its bilingual lake name", (id, zh, en) => {
+    const lake = data.water.find((area) => area.id === id);
+
+    expect(lake?.names).toEqual({ zh, en });
+    expect(lake?.location.lat).toBeGreaterThan(24.79);
+  });
 });
