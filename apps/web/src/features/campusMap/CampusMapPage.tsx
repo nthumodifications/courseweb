@@ -15,7 +15,11 @@ import BuildingInfoPanel from "./BuildingInfoPanel";
 import CampusScene from "./CampusScene";
 import MapSearch from "./MapSearch";
 import { CAMPUS_MAP_DATA_CACHE_VERSION, loadCampusMapData } from "./data";
-import { isCampusBuilding } from "./sceneLogic";
+import {
+  createCampusFeatureLabelNumbers,
+  getCampusFeatureLabelKey,
+  isCampusBuilding,
+} from "./sceneLogic";
 
 function supportsWebGL(): boolean {
   try {
@@ -98,6 +102,13 @@ export default function CampusMapPage() {
     selectedFeature && isCampusBuilding(selectedFeature)
       ? selectedFeature
       : undefined;
+  const featureLabelNumbers = useMemo(
+    () => (data ? createCampusFeatureLabelNumbers(data) : undefined),
+    [data],
+  );
+  const selectedFeatureLabelNumber = selectedFeature
+    ? featureLabelNumbers?.get(getCampusFeatureLabelKey(selectedFeature))
+    : undefined;
 
   const requestWarning = data
     ? requestedVenue && !venueIdentity
@@ -213,6 +224,7 @@ export default function CampusMapPage() {
         <div className="pointer-events-none absolute bottom-10 left-0 z-10 w-full max-w-sm p-3 md:bottom-8 md:p-4">
           <BuildingInfoPanel
             feature={selectedFeature}
+            labelNumber={selectedFeatureLabelNumber}
             language={language}
             labels={{
               chineseName: dict.chineseName,

@@ -1,13 +1,19 @@
 import { describe, expect, test } from "bun:test";
 import {
   CAMPUS_FLOOR_HEIGHT,
+  createCampusFeatureLabelNumbers,
   DEFAULT_BUILDING_HEIGHT,
+  getCampusFeatureLabelKey,
   getCampusFeatureGoogleMapsUrl,
   getCampusFeatureNames,
   isCampusBuilding,
   resolveBuildingHeight,
 } from "./sceneLogic";
-import type { CampusAreaFeature, CampusBuilding } from "@courseweb/shared";
+import type {
+  CampusAreaFeature,
+  CampusBuilding,
+  CampusMapData,
+} from "@courseweb/shared";
 
 const building: CampusBuilding = {
   id: "building",
@@ -61,5 +67,29 @@ describe("campus map features", () => {
     expect(getCampusFeatureGoogleMapsUrl(unnamedLake)).toContain(
       "query=24.795%2C120.992",
     );
+  });
+
+  test("numbers visible labels north-to-south and groups building parts", () => {
+    const secondBuildingPart: CampusBuilding = {
+      ...building,
+      id: "building-part-2",
+      identityId: "shared-building",
+      location: { lat: 24.789, lon: 120.991 },
+    };
+    const firstBuildingPart: CampusBuilding = {
+      ...building,
+      identityId: "shared-building",
+    };
+    const data = {
+      buildings: [firstBuildingPart, secondBuildingPart],
+      water: [unnamedLake],
+    } satisfies Pick<CampusMapData, "buildings" | "water">;
+
+    const numbers = createCampusFeatureLabelNumbers(data);
+
+    expect(numbers.size).toBe(2);
+    expect(numbers.get(getCampusFeatureLabelKey(unnamedLake))).toBe(1);
+    expect(numbers.get(getCampusFeatureLabelKey(firstBuildingPart))).toBe(2);
+    expect(numbers.get(getCampusFeatureLabelKey(secondBuildingPart))).toBe(2);
   });
 });

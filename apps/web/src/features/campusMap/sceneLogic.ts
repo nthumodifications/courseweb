@@ -1,4 +1,8 @@
-import type { CampusBuilding, CampusMapFeature } from "@courseweb/shared";
+import type {
+  CampusBuilding,
+  CampusMapData,
+  CampusMapFeature,
+} from "@courseweb/shared";
 
 export const DEFAULT_BUILDING_HEIGHT = 12;
 export const CAMPUS_FLOOR_HEIGHT = 3.4;
@@ -27,6 +31,40 @@ export function isCampusBuilding(
   feature: CampusMapFeature,
 ): feature is CampusBuilding {
   return "geometry" in feature;
+}
+
+export function getCampusFeatureLabelKey(feature: CampusMapFeature): string {
+  return isCampusBuilding(feature)
+    ? (feature.identityId ?? feature.id)
+    : feature.id;
+}
+
+export function createCampusFeatureLabelNumbers(
+  data: Pick<CampusMapData, "buildings" | "water">,
+): ReadonlyMap<string, number> {
+  const firstBuildingByLabel = new Map<string, CampusBuilding>();
+  data.buildings.forEach((building) => {
+    const key = getCampusFeatureLabelKey(building);
+    if (!firstBuildingByLabel.has(key)) {
+      firstBuildingByLabel.set(key, building);
+    }
+  });
+
+  const features = [...firstBuildingByLabel.values(), ...data.water].sort(
+    (left, right) =>
+      right.location.lat - left.location.lat ||
+      left.location.lon - right.location.lon ||
+      getCampusFeatureLabelKey(left).localeCompare(
+        getCampusFeatureLabelKey(right),
+      ),
+  );
+
+  return new Map(
+    features.map((feature, index) => [
+      getCampusFeatureLabelKey(feature),
+      index + 1,
+    ]),
+  );
 }
 
 export function getCampusFeatureNames(feature: CampusMapFeature): {

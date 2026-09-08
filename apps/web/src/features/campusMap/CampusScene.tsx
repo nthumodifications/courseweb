@@ -15,7 +15,9 @@ import BuildingMesh from "./BuildingMesh";
 import CampusCamera from "./CampusCamera";
 import { createAreaGeometry, createRibbonGeometry } from "./sceneGeometry";
 import {
+  createCampusFeatureLabelNumbers,
   getBuildingHeight,
+  getCampusFeatureLabelKey,
   getCampusFeatureNames,
   isCampusBuilding,
 } from "./sceneLogic";
@@ -105,6 +107,10 @@ function CampusWorld({
     });
     return Array.from(firstByBuilding.values());
   }, [data.buildings]);
+  const labelNumbers = useMemo(
+    () => createCampusFeatureLabelNumbers(data),
+    [data],
+  );
 
   const selectedBuilding =
     selectedFeature && isCampusBuilding(selectedFeature)
@@ -167,6 +173,8 @@ function CampusWorld({
         const world = geoToWorld(area.location, data.origin);
         const names = getCampusFeatureNames(area);
         const label = language === "en" ? (names.en ?? names.zh) : names.zh;
+        const labelNumber = labelNumbers.get(getCampusFeatureLabelKey(area));
+        const numberedLabel = `#${labelNumber} ${label}`;
         const selected = area.id === selectedFeature?.id;
         return (
           <Html
@@ -180,7 +188,8 @@ function CampusWorld({
             <button
               type="button"
               data-campus-feature-id={area.id}
-              aria-label={label}
+              data-campus-label-number={labelNumber}
+              aria-label={numberedLabel}
               className={`pointer-events-auto block whitespace-nowrap rounded-full border px-2 py-1 text-center text-[10px] font-semibold shadow-sm backdrop-blur-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                 selected
                   ? "border-primary bg-primary text-primary-foreground"
@@ -192,7 +201,7 @@ function CampusWorld({
                 onSelectFeature(area);
               }}
             >
-              {label}
+              {numberedLabel}
             </button>
           </Html>
         );
@@ -220,6 +229,10 @@ function CampusWorld({
           language === "en"
             ? (building.names.en ?? building.names.zh)
             : building.names.zh;
+        const labelNumber = labelNumbers.get(
+          getCampusFeatureLabelKey(building),
+        );
+        const numberedLabel = `#${labelNumber} ${label}`;
         const selected = selectedBuilding?.identityId
           ? building.identityId === selectedBuilding.identityId
           : building.id === selectedBuilding?.id;
@@ -235,7 +248,8 @@ function CampusWorld({
             <button
               type="button"
               data-campus-feature-id={building.id}
-              aria-label={label}
+              data-campus-label-number={labelNumber}
+              aria-label={numberedLabel}
               className={`pointer-events-auto block whitespace-nowrap rounded-full border px-2 py-1 text-center text-[10px] font-semibold leading-tight shadow-sm backdrop-blur-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                 selected
                   ? "border-primary bg-primary text-primary-foreground"
@@ -247,7 +261,7 @@ function CampusWorld({
                 onSelectFeature(building);
               }}
             >
-              {label}
+              {numberedLabel}
             </button>
           </Html>
         );

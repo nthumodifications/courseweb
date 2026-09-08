@@ -8,6 +8,7 @@ import {
 
 type BuildingInfoPanelProps = {
   feature: CampusMapFeature;
+  labelNumber?: number;
   language: "en" | "zh";
   labels: {
     chineseName: string;
@@ -21,6 +22,7 @@ type BuildingInfoPanelProps = {
 
 export default function BuildingInfoPanel({
   feature,
+  labelNumber,
   language,
   labels,
   onClose,
@@ -45,7 +47,7 @@ export default function BuildingInfoPanel({
             id="campus-feature-title"
             className="font-semibold text-foreground"
           >
-            {title}
+            {labelNumber ? `#${labelNumber} ${title}` : title}
           </h2>
           <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 text-sm">
             <dt className="text-muted-foreground">{labels.chineseName}</dt>
