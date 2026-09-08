@@ -12,6 +12,9 @@ export default defineConfig(({ mode }) => ({
       workbox: {
         disableDevLogs: true,
         navigateFallback: "/index.html",
+        // Keep the optional Three.js experience out of the PWA install path.
+        // The route remains available online and is cached by the browser after use.
+        globIgnores: ["**/campus-map-*.js"],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -95,6 +98,10 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),
+      "@courseweb/api-types": path.resolve(
+        __dirname,
+        "../../packages/api-types/src",
+      ),
       "@courseweb/ui": path.resolve(__dirname, "../../packages/ui/src"),
       "@courseweb/shared": path.resolve(__dirname, "../../packages/shared/src"),
       "@courseweb/database": path.resolve(
@@ -109,6 +116,16 @@ export default defineConfig(({ mode }) => ({
   build: {
     sourcemap: true,
     outDir: "dist",
+    rollupOptions: {
+      output: {
+        chunkFileNames: (chunkInfo) =>
+          chunkInfo.facadeModuleId
+            ?.replaceAll("\\", "/")
+            .endsWith("/src/app/[lang]/(mods-pages)/map/page.tsx")
+            ? "assets/campus-map-[hash].js"
+            : "assets/[name]-[hash].js",
+      },
+    },
   },
   define: {
     __SENTRY_DEBUG__: false,

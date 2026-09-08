@@ -36,6 +36,7 @@
     "dict:remove": "bun run --workspace=@courseweb/dict-manager remove",
     "dict:move": "bun run --workspace=@courseweb/dict-manager move",
     "build:update-imports": "bun run --workspace=@courseweb/build-scripts update:web-imports",
+    "map:generate": "bun run --cwd tools/map-data generate",
     "docker:build": "docker build -f apps/web/Dockerfile -t nthumods-web .",
     "docker:run": "docker run -p 3000:3000 nthumods-web",
     "gentype": "bunx supabase gen types typescript --project-id \"cmzdlrqfpuktcczvsobs\" --schema public > packages/shared/src/types/supabase.ts",

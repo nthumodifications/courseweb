@@ -318,6 +318,23 @@
   "venues": {
     "placeholder": "Select a Venue from the list"
   },
+  "campus_map": {
+    "title": "3D Campus Map",
+    "searchLabel": "Search campus buildings",
+    "searchPlaceholder": "Search 台達, DELTA, or DELTA台達629",
+    "noResults": "No mapped campus building found.",
+    "venueNotMapped": "This venue is not mapped yet",
+    "loading": "Loading the NTHU campus map…",
+    "loadError": "The campus map data could not be loaded.",
+    "webglError": "3D map unavailable",
+    "webglErrorDetail": "This browser or device does not currently support WebGL.",
+    "resetCamera": "Reset camera",
+    "openGoogleMaps": "Open in Google Maps",
+    "coursewebCode": "CourseWeb building code",
+    "closeDetails": "Close building details",
+    "instructions": "Drag to rotate · Scroll to zoom · Right-drag to pan",
+    "viewVenueOnMap": "View on 3D map"
+  },
   "alerts": {
     "TimetableCourseList": {
       "action": "Go Settings",

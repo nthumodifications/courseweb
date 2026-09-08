@@ -5,6 +5,7 @@ export * from "./utils";
 export * from "./types";
 export * from "./constants";
 export * from "./config";
+export * from "./campus";
 
 // Re-export commonly used external libraries for consistency
 export { clsx } from "clsx";

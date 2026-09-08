@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Map } from "lucide-react";
 import { Button } from "@courseweb/ui";
 import { Fade } from "@courseweb/ui";
 import { lastSemester } from "@courseweb/shared";
@@ -67,6 +67,7 @@ const VenuesPage = () => {
 
 function VenueDetail({ venueId }: { venueId: string }) {
   const { lang } = useParams<{ lang: string }>();
+  const dict = useDictionary();
 
   const { data: courses, isLoading } = useQuery({
     queryKey: ["venue-courses", venueId],
@@ -100,6 +101,12 @@ function VenueDetail({ venueId }: { venueId: string }) {
         <h2 className="font-semibold text-xl">
           {venueId} - {toPrettySemester(lastSemester.id)}學期
         </h2>
+        <Button asChild variant="outline" size="sm">
+          <Link to={`/${lang}/map?venue=${encodeURIComponent(venueId)}`}>
+            <Map className="mr-2 h-4 w-4" aria-hidden="true" />
+            {dict.campus_map.viewVenueOnMap}
+          </Link>
+        </Button>
         <Suspense fallback={null}>
           <VenueTimetableDynamic courses={(courses ?? []) as MinimalCourse[]} />
         </Suspense>
