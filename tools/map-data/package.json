@@ -1,0 +1,13 @@
+{
+  "name": "@courseweb/map-data",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Development-time OpenStreetMap pipeline for the NTHU campus map",
+  "scripts": {
+    "generate": "bun src/generate-campus-data.ts"
+  },
+  "dependencies": {
+    "@courseweb/shared": "*"
+  }
+}

@@ -12,6 +12,7 @@
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --dts --clean",
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "test": "bun test src/campus",
     "lint": "eslint src --ext .ts,.tsx --fix",
     "type-check": "tsc --noEmit",
     "clean": "rm -rf dist"

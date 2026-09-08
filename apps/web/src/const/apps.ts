@@ -10,6 +10,7 @@ import {
   Sparkles,
   Dumbbell,
   Users,
+  Map as MapIcon,
 } from "lucide-react";
 
 export const categories: {
@@ -68,6 +69,15 @@ export const apps: {
     title_en: "Venues",
     href: "/venues",
     Icon: MapPin,
+  },
+  {
+    id: "campus-map",
+    category: "campuslife",
+    title_zh: "3D 校園地圖",
+    title_en: "3D Campus Map",
+    href: "/map",
+    Icon: MapIcon,
+    beta: true,
   },
   {
     id: "bus",

@@ -318,6 +318,23 @@
   "venues": {
     "placeholder": "從選項中選一個地點"
   },
+  "campus_map": {
+    "title": "3D 校園地圖",
+    "searchLabel": "搜尋校園建築",
+    "searchPlaceholder": "搜尋台達、DELTA 或 DELTA台達629",
+    "noResults": "找不到已建立地圖位置的校園建築。",
+    "venueNotMapped": "這個地點尚未建立地圖位置",
+    "loading": "正在載入清大校園地圖…",
+    "loadError": "無法載入校園地圖資料。",
+    "webglError": "無法使用 3D 地圖",
+    "webglErrorDetail": "目前的瀏覽器或裝置不支援 WebGL。",
+    "resetCamera": "重設鏡頭",
+    "openGoogleMaps": "使用 Google 地圖開啟",
+    "coursewebCode": "CourseWeb 館舍代碼",
+    "closeDetails": "關閉建築資訊",
+    "instructions": "拖曳旋轉 · 滾輪縮放 · 右鍵拖曳平移",
+    "viewVenueOnMap": "在 3D 地圖查看"
+  },
   "alerts": {
     "TimetableCourseList": {
       "action": "前往設定",

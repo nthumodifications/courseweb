@@ -43,6 +43,7 @@ const SettingsPage = lazy(
 const VenuesPage = lazy(
   () => import("@/app/[lang]/(mods-pages)/(venues)/venues/page"),
 );
+const CampusMapPage = lazy(() => import("@/app/[lang]/(mods-pages)/map/page"));
 const ChatPage = lazy(() => import("@/app/[lang]/(mods-pages)/chat/page"));
 const ShopsPage = lazy(() => import("@/app/[lang]/(mods-pages)/shops/page"));
 const AppsPage = lazy(() => import("@/app/[lang]/(mods-pages)/apps/page"));
@@ -255,6 +256,18 @@ export const router = createBrowserRouter([
               {
                 path: "venues/:locationId",
                 element: <VenuesPage />,
+              },
+              {
+                path: "map",
+                element: <CampusMapPage />,
+                handle: {
+                  title: "3D Campus Map",
+                  titleZh: "3D 校園地圖",
+                  description:
+                    "Explore the NTHU main campus in 3D and locate CourseWeb venues and buildings.",
+                  descriptionZh:
+                    "以 3D 地圖探索清大校本部，搜尋 CourseWeb 上的教室與建築。",
+                },
               },
               {
                 path: "chat",
