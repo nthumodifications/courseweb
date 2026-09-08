@@ -14,7 +14,7 @@ import useDictionary from "@/dictionaries/useDictionary";
 import BuildingInfoPanel from "./BuildingInfoPanel";
 import CampusScene from "./CampusScene";
 import MapSearch from "./MapSearch";
-import { loadCampusMapData } from "./data";
+import { CAMPUS_MAP_DATA_CACHE_VERSION, loadCampusMapData } from "./data";
 import { isCampusBuilding } from "./sceneLogic";
 
 function supportsWebGL(): boolean {
@@ -61,7 +61,7 @@ export default function CampusMapPage() {
   const [resetNonce, setResetNonce] = useState(0);
   const webglAvailable = useMemo(supportsWebGL, []);
   const { data, isLoading, error } = useQuery({
-    queryKey: ["nthu-campus-map", 1],
+    queryKey: ["nthu-campus-map", CAMPUS_MAP_DATA_CACHE_VERSION],
     queryFn: ({ signal }) => loadCampusMapData(signal),
     staleTime: Number.POSITIVE_INFINITY,
   });
