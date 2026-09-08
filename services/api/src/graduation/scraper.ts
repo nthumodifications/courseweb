@@ -132,12 +132,18 @@ export async function scrapeCollegePage(
     // Remaining cells contain year links
     for (let i = 1; i < cells.length; i++) {
       const pdfPattern =
-        /<a[^>]*href=["']([^"']*\.pdf[^"']*)["'][^>]*>(\d{2,3})[^<]*<\/a>/gi;
+        /<a[^>]*href=["']([^"']*\.pdf[^"']*)["'][^>]*>([\s\S]*?)<\/a>/gi;
       let pdfMatch;
 
       while ((pdfMatch = pdfPattern.exec(cells[i])) !== null) {
         let pdfUrl = pdfMatch[1];
-        const year = pdfMatch[2];
+        // Year digits may be wrapped in nested <span>/<font> tags rather
+        // than being direct text, so strip tags before matching.
+        const yearMatch = pdfMatch[2]
+          .replace(/<[^>]+>/g, "")
+          .match(/(\d{2,3})/);
+        if (!yearMatch) continue;
+        const year = yearMatch[1];
 
         if (pdfUrl.startsWith("/")) {
           pdfUrl = BASE_URL + pdfUrl;
@@ -172,13 +178,17 @@ export async function scrapeCollegePage(
       const sectionContent = sectionMatch[3];
 
       const pdfPattern =
-        /<a[^>]*href=["']([^"']*\.pdf[^"']*)["'][^>]*>(\d{2,3})[^<]*[入學]*[年度]*<\/a>/gi;
+        /<a[^>]*href=["']([^"']*\.pdf[^"']*)["'][^>]*>([\s\S]*?)<\/a>/gi;
       const years: YearInfo[] = [];
       let pdfMatch;
 
       while ((pdfMatch = pdfPattern.exec(sectionContent)) !== null) {
         let pdfUrl = pdfMatch[1];
-        const year = pdfMatch[2];
+        const yearMatch = pdfMatch[2]
+          .replace(/<[^>]+>/g, "")
+          .match(/(\d{2,3})/);
+        if (!yearMatch) continue;
+        const year = yearMatch[1];
 
         if (pdfUrl.startsWith("/")) {
           pdfUrl = BASE_URL + pdfUrl;
