@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
   findCampusBuildingForIdentity,
+  isGeoCoordinateInPolygon,
   resolveVenueToCampusIdentity,
   type CampusMapData,
 } from "@courseweb/shared";
@@ -31,6 +32,16 @@ describe("generated NTHU campus data", () => {
     expect(data.water.length).toBeGreaterThan(0);
     expect(data.boundary?.polygon.length).toBeGreaterThan(3);
     expect(data.attribution.text).toContain("OpenStreetMap");
+  });
+
+  test("only contains buildings and water inside the NTHU boundary", () => {
+    expect(data.boundary).toBeDefined();
+    const polygon = data.boundary!.polygon;
+    const isInside = ({ location }: { location: CampusMapData["origin"] }) =>
+      isGeoCoordinateInPolygon([location.lon, location.lat], polygon);
+
+    expect(data.buildings.every(isInside)).toBe(true);
+    expect(data.water.every(isInside)).toBe(true);
   });
 
   test.each([

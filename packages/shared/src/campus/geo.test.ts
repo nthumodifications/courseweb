@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { geoToWorld, worldToGeo } from "./geo";
+import { geoToWorld, isGeoCoordinateInPolygon, worldToGeo } from "./geo";
 
 const origin = { lat: 24.792, lon: 120.993 };
 
@@ -28,5 +28,31 @@ describe("campus geographic conversion", () => {
 
     expect(roundTrip.lat).toBeCloseTo(geographic.lat, 8);
     expect(roundTrip.lon).toBeCloseTo(geographic.lon, 8);
+  });
+});
+
+describe("geographic polygon containment", () => {
+  const polygon = [
+    [120.99, 24.79],
+    [121, 24.79],
+    [121, 24.8],
+    [120.99, 24.8],
+    [120.99, 24.79],
+  ] as const;
+
+  test("includes points inside the polygon", () => {
+    expect(isGeoCoordinateInPolygon([120.995, 24.795], [...polygon])).toBe(
+      true,
+    );
+  });
+
+  test("excludes points outside the polygon", () => {
+    expect(isGeoCoordinateInPolygon([121.01, 24.795], [...polygon])).toBe(
+      false,
+    );
+  });
+
+  test("includes points on the campus boundary", () => {
+    expect(isGeoCoordinateInPolygon([121, 24.795], [...polygon])).toBe(true);
   });
 });
