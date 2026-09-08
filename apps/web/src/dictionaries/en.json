@@ -330,8 +330,10 @@
     "webglErrorDetail": "This browser or device does not currently support WebGL.",
     "resetCamera": "Reset camera",
     "openGoogleMaps": "Open in Google Maps",
+    "chineseName": "Chinese name",
+    "englishName": "English name",
     "coursewebCode": "CourseWeb building code",
-    "closeDetails": "Close building details",
+    "closeDetails": "Close location details",
     "instructions": "Drag to rotate · Scroll to zoom · Right-drag to pan",
     "viewVenueOnMap": "View on 3D map"
   },

@@ -70,6 +70,8 @@ export type CampusAreaFeature = {
   polygon: GeoCoordinate[];
 };
 
+export type CampusMapFeature = CampusBuilding | CampusAreaFeature;
+
 export type CampusMapData = {
   version: 1;
   generatedAt: string;

@@ -1,10 +1,17 @@
 import { Button, ExternalLink, MapPin, X } from "@courseweb/ui";
-import type { CampusBuilding } from "@courseweb/shared";
+import type { CampusMapFeature } from "@courseweb/shared";
+import {
+  getCampusFeatureGoogleMapsUrl,
+  getCampusFeatureNames,
+  isCampusBuilding,
+} from "./sceneLogic";
 
 type BuildingInfoPanelProps = {
-  building: CampusBuilding;
+  feature: CampusMapFeature;
   language: "en" | "zh";
   labels: {
+    chineseName: string;
+    englishName: string;
     coursewebCode: string;
     openGoogleMaps: string;
     closeDetails: string;
@@ -13,25 +20,21 @@ type BuildingInfoPanelProps = {
 };
 
 export default function BuildingInfoPanel({
-  building,
+  feature,
   language,
   labels,
   onClose,
 }: BuildingInfoPanelProps) {
-  const title =
-    language === "en"
-      ? (building.names.en ?? building.names.zh)
-      : building.names.zh;
-  const secondaryName =
-    language === "zh" && building.names.en ? building.names.en : undefined;
-  const googleMapsUrl = building.googleMaps?.query
-    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(building.googleMaps.query)}`
-    : undefined;
+  const names = getCampusFeatureNames(feature);
+  const title = language === "en" ? (names.en ?? names.zh) : names.zh;
+  const googleMapsUrl = getCampusFeatureGoogleMapsUrl(feature);
+  const building = isCampusBuilding(feature) ? feature : undefined;
+  const venue = building?.venue;
 
   return (
     <section
       className="pointer-events-auto w-full rounded-xl border border-border bg-background/95 p-4 shadow-xl backdrop-blur-md"
-      aria-labelledby="campus-building-title"
+      aria-labelledby="campus-feature-title"
     >
       <div className="flex items-start gap-3">
         <div className="mt-0.5 rounded-lg bg-primary/10 p-2 text-primary">
@@ -39,17 +42,20 @@ export default function BuildingInfoPanel({
         </div>
         <div className="min-w-0 flex-1">
           <h2
-            id="campus-building-title"
+            id="campus-feature-title"
             className="font-semibold text-foreground"
           >
             {title}
           </h2>
-          {secondaryName && (
-            <p className="text-sm text-muted-foreground">{secondaryName}</p>
-          )}
-          {building.venue?.code && (
+          <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 text-sm">
+            <dt className="text-muted-foreground">{labels.chineseName}</dt>
+            <dd className="text-foreground">{names.zh}</dd>
+            <dt className="text-muted-foreground">{labels.englishName}</dt>
+            <dd className="text-foreground">{names.en ?? "—"}</dd>
+          </dl>
+          {venue?.code && (
             <p className="mt-2 text-xs text-muted-foreground">
-              {labels.coursewebCode}: {building.venue.code}
+              {labels.coursewebCode}: {venue.code}
             </p>
           )}
         </div>
@@ -64,14 +70,12 @@ export default function BuildingInfoPanel({
         </Button>
       </div>
 
-      {googleMapsUrl && (
-        <Button asChild className="mt-4 w-full">
-          <a href={googleMapsUrl} target="_blank" rel="noopener noreferrer">
-            {labels.openGoogleMaps}
-            <ExternalLink className="ml-2 h-4 w-4" aria-hidden="true" />
-          </a>
-        </Button>
-      )}
+      <Button asChild className="mt-4 w-full">
+        <a href={googleMapsUrl} target="_blank" rel="noopener noreferrer">
+          {labels.openGoogleMaps}
+          <ExternalLink className="ml-2 h-4 w-4" aria-hidden="true" />
+        </a>
+      </Button>
     </section>
   );
 }

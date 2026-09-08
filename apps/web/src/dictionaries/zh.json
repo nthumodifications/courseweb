@@ -330,8 +330,10 @@
     "webglErrorDetail": "目前的瀏覽器或裝置不支援 WebGL。",
     "resetCamera": "重設鏡頭",
     "openGoogleMaps": "使用 Google 地圖開啟",
+    "chineseName": "中文名稱",
+    "englishName": "英文名稱",
     "coursewebCode": "CourseWeb 館舍代碼",
-    "closeDetails": "關閉建築資訊",
+    "closeDetails": "關閉地點資訊",
     "instructions": "拖曳旋轉 · 滾輪縮放 · 右鍵拖曳平移",
     "viewVenueOnMap": "在 3D 地圖查看"
   },

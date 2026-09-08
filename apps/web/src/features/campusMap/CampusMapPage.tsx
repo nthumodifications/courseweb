@@ -8,13 +8,14 @@ import {
   findCampusBuildingForIdentity,
   getCampusBuildingIdentity,
   resolveVenueToCampusIdentity,
-  type CampusBuilding,
+  type CampusMapFeature,
 } from "@courseweb/shared";
 import useDictionary from "@/dictionaries/useDictionary";
 import BuildingInfoPanel from "./BuildingInfoPanel";
 import CampusScene from "./CampusScene";
 import MapSearch from "./MapSearch";
 import { loadCampusMapData } from "./data";
+import { isCampusBuilding } from "./sceneLogic";
 
 function supportsWebGL(): boolean {
   try {
@@ -84,13 +85,19 @@ export default function CampusMapPage() {
   const identity = requestedIdentityId
     ? getCampusBuildingIdentity(requestedIdentityId)
     : venueIdentity;
-  const selectedBuilding = data
+  const selectedFeature: CampusMapFeature | undefined = data
     ? identity
       ? findCampusBuildingForIdentity(data, identity.id)
       : requestedFeatureId
-        ? data.buildings.find((building) => building.id === requestedFeatureId)
+        ? (data.buildings.find(
+            (building) => building.id === requestedFeatureId,
+          ) ?? data.water.find((area) => area.id === requestedFeatureId))
         : undefined
     : undefined;
+  const selectedBuilding =
+    selectedFeature && isCampusBuilding(selectedFeature)
+      ? selectedFeature
+      : undefined;
 
   const requestWarning = data
     ? requestedVenue && !venueIdentity
@@ -108,10 +115,13 @@ export default function CampusMapPage() {
     setSearchParams(next);
   };
 
-  const selectBuilding = (building: CampusBuilding) => {
+  const selectFeature = (feature: CampusMapFeature) => {
     const next = new URLSearchParams();
-    if (building.identityId) next.set("building", building.identityId);
-    else next.set("feature", building.id);
+    if (isCampusBuilding(feature) && feature.identityId) {
+      next.set("building", feature.identityId);
+    } else {
+      next.set("feature", feature.id);
+    }
     setSearchParams(next);
   };
 
@@ -157,10 +167,10 @@ export default function CampusMapPage() {
       >
         <CampusScene
           data={data}
-          selectedBuilding={selectedBuilding}
+          selectedFeature={selectedFeature}
           resetNonce={resetNonce}
           language={language}
-          onSelectBuilding={selectBuilding}
+          onSelectFeature={selectFeature}
           webglFallback={sceneFallback}
         />
       </ErrorBoundary>
@@ -199,12 +209,14 @@ export default function CampusMapPage() {
         </Button>
       </div>
 
-      {selectedBuilding && (
+      {selectedFeature && (
         <div className="pointer-events-none absolute bottom-10 left-0 z-10 w-full max-w-sm p-3 md:bottom-8 md:p-4">
           <BuildingInfoPanel
-            building={selectedBuilding}
+            feature={selectedFeature}
             language={language}
             labels={{
+              chineseName: dict.chineseName,
+              englishName: dict.englishName,
               coursewebCode: dict.coursewebCode,
               openGoogleMaps: dict.openGoogleMaps,
               closeDetails: dict.closeDetails,

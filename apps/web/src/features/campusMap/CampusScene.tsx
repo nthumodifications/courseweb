@@ -7,23 +7,18 @@ import {
   type CampusAreaFeature,
   type CampusBuilding,
   type CampusLinearFeature,
+  type CampusMapFeature,
   type CampusMapData,
   type LatLon,
 } from "@courseweb/shared";
 import BuildingMesh from "./BuildingMesh";
 import CampusCamera from "./CampusCamera";
 import { createAreaGeometry, createRibbonGeometry } from "./sceneGeometry";
-import { getBuildingHeight } from "./sceneLogic";
-
-const LABEL_PRIORITY = new Set([
-  "delta",
-  "mxic",
-  "tsmc",
-  "general-ii",
-  "physics",
-  "hss",
-  "student-union",
-]);
+import {
+  getBuildingHeight,
+  getCampusFeatureNames,
+  isCampusBuilding,
+} from "./sceneLogic";
 
 type SurfaceProps = {
   areas: CampusAreaFeature[];
@@ -69,18 +64,18 @@ function LinearFeatures({ features, origin, color, y }: LinearFeaturesProps) {
 
 type CampusWorldProps = {
   data: CampusMapData;
-  selectedBuilding?: CampusBuilding;
+  selectedFeature?: CampusMapFeature;
   resetNonce: number;
   language: "en" | "zh";
-  onSelectBuilding: (building: CampusBuilding) => void;
+  onSelectFeature: (feature: CampusMapFeature) => void;
 };
 
 function CampusWorld({
   data,
-  selectedBuilding,
+  selectedFeature,
   resetNonce,
   language,
-  onSelectBuilding,
+  onSelectFeature,
 }: CampusWorldProps) {
   const materials = useMemo(
     () => ({
@@ -101,19 +96,20 @@ function CampusWorld({
   );
 
   const labelBuildings = useMemo(() => {
-    const firstByIdentity = new Map<string, CampusBuilding>();
+    const firstByBuilding = new Map<string, CampusBuilding>();
     data.buildings.forEach((building) => {
-      if (
-        building.identityId &&
-        (LABEL_PRIORITY.has(building.identityId) ||
-          building.identityId === selectedBuilding?.identityId) &&
-        !firstByIdentity.has(building.identityId)
-      ) {
-        firstByIdentity.set(building.identityId, building);
+      const key = building.identityId ?? building.id;
+      if (!firstByBuilding.has(key)) {
+        firstByBuilding.set(key, building);
       }
     });
-    return Array.from(firstByIdentity.values());
-  }, [data.buildings, selectedBuilding?.identityId]);
+    return Array.from(firstByBuilding.values());
+  }, [data.buildings]);
+
+  const selectedBuilding =
+    selectedFeature && isCampusBuilding(selectedFeature)
+      ? selectedFeature
+      : undefined;
 
   const boundaryLines = useMemo<CampusLinearFeature[]>(
     () =>
@@ -128,11 +124,6 @@ function CampusWorld({
           ]
         : [],
     [data.boundary],
-  );
-
-  const waterLabels = useMemo(
-    () => data.water.filter((area) => area.names),
-    [data.water],
   );
 
   return (
@@ -172,23 +163,37 @@ function CampusWorld({
         y={0.09}
       />
 
-      {waterLabels.map((area) => {
+      {data.water.map((area) => {
         const world = geoToWorld(area.location, data.origin);
-        const label =
-          language === "en"
-            ? (area.names?.en ?? area.names?.zh)
-            : area.names?.zh;
+        const names = getCampusFeatureNames(area);
+        const label = language === "en" ? (names.en ?? names.zh) : names.zh;
+        const selected = area.id === selectedFeature?.id;
         return (
           <Html
             key={`${area.id}-label`}
             position={[world.x, 1, world.z]}
             center
             distanceFactor={220}
+            zIndexRange={[5, 0]}
             style={{ pointerEvents: "none" }}
           >
-            <span className="block whitespace-nowrap rounded-full border border-sky-700/20 bg-background/90 px-2 py-1 text-center text-[10px] font-semibold text-sky-900 shadow-sm backdrop-blur-sm dark:text-sky-200">
+            <button
+              type="button"
+              data-campus-feature-id={area.id}
+              aria-label={label}
+              className={`pointer-events-auto block whitespace-nowrap rounded-full border px-2 py-1 text-center text-[10px] font-semibold shadow-sm backdrop-blur-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                selected
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-sky-700/20 bg-background/90 text-sky-900 hover:bg-sky-100 dark:text-sky-200 dark:hover:bg-sky-950"
+              }`}
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={(event) => {
+                event.stopPropagation();
+                onSelectFeature(area);
+              }}
+            >
               {label}
-            </span>
+            </button>
           </Html>
         );
       })}
@@ -204,7 +209,7 @@ function CampusWorld({
             origin={data.origin}
             materials={materials}
             selected={selected}
-            onSelect={onSelectBuilding}
+            onSelect={onSelectFeature}
           />
         );
       })}
@@ -215,23 +220,41 @@ function CampusWorld({
           language === "en"
             ? (building.names.en ?? building.names.zh)
             : building.names.zh;
+        const selected = selectedBuilding?.identityId
+          ? building.identityId === selectedBuilding.identityId
+          : building.id === selectedBuilding?.id;
         return (
           <Html
-            key={building.identityId}
+            key={`${building.identityId ?? building.id}-label`}
             position={[world.x, getBuildingHeight(building) + 7, world.z]}
             center
             distanceFactor={260}
+            zIndexRange={[5, 0]}
             style={{ pointerEvents: "none" }}
           >
-            <span className="block max-w-32 rounded-full border border-primary/20 bg-background/90 px-2 py-1 text-center text-[10px] font-semibold leading-tight text-foreground shadow-sm backdrop-blur-sm">
+            <button
+              type="button"
+              data-campus-feature-id={building.id}
+              aria-label={label}
+              className={`pointer-events-auto block whitespace-nowrap rounded-full border px-2 py-1 text-center text-[10px] font-semibold leading-tight shadow-sm backdrop-blur-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                selected
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-primary/20 bg-background/90 text-foreground hover:bg-primary/10"
+              }`}
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={(event) => {
+                event.stopPropagation();
+                onSelectFeature(building);
+              }}
+            >
               {label}
-            </span>
+            </button>
           </Html>
         );
       })}
 
       <CampusCamera
-        focusBuilding={selectedBuilding}
+        focusFeature={selectedFeature}
         origin={data.origin}
         resetNonce={resetNonce}
       />
