@@ -67,7 +67,9 @@ export default function CampusMapPage() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["nthu-campus-map", CAMPUS_MAP_DATA_CACHE_VERSION],
     queryFn: ({ signal }) => loadCampusMapData(signal),
-    staleTime: Number.POSITIVE_INFINITY,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: "always",
   });
 
   const availableIdentityIds = useMemo(

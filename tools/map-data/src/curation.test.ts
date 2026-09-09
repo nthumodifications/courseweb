@@ -31,7 +31,7 @@ describe("campus map curation", () => {
       sourceIds: ["way/1230511808"],
       name: "科學樓",
     });
-    expect(curation.excluded).toEqual([]);
+    expect(curation.excluded).toEqual([1]);
     expect(curation.renamed).toEqual({});
     expect(curation.groups).toEqual([]);
   });

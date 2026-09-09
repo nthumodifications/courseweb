@@ -1383,7 +1383,7 @@
       "name": "校園建築"
     }
   ],
-  "excluded": [],
+  "excluded": [1],
   "renamed": {},
   "groups": []
 }
