@@ -99,12 +99,14 @@ describe("campus map features", () => {
       id: "first",
       identityId: "identity-a",
       labelGroupId: "curation:shared",
+      labelNumber: 40,
     };
     const second = {
       ...building,
       id: "second",
       identityId: "identity-b",
       labelGroupId: "curation:shared",
+      labelNumber: 40,
     };
     const numbers = createCampusFeatureLabelNumbers({
       buildings: [first, second],
@@ -113,5 +115,6 @@ describe("campus map features", () => {
 
     expect(getCampusFeatureLabelKey(first)).toBe("curation:shared");
     expect(numbers.size).toBe(1);
+    expect(numbers.get("curation:shared")).toBe(40);
   });
 });

@@ -9,9 +9,17 @@ import {
   type CampusMapData,
   type GeoCoordinate,
 } from "../../../packages/shared/src/campus";
-import { applyCampusMapCuration, loadCampusMapCuration } from "./curation";
+import {
+  applyCampusMapCuration,
+  loadCampusMapCuration,
+  syncCampusMapLabelCatalog,
+  writeCampusMapCuration,
+} from "./curation";
 
-const OVERPASS_ENDPOINT = "https://overpass-api.de/api/interpreter";
+const OVERPASS_ENDPOINTS = [
+  "https://overpass.kumi.systems/api/interpreter",
+  "https://overpass-api.de/api/interpreter",
+];
 const CURATION_PATH = resolve(import.meta.dir, "../campus-map-curation.json");
 const OUTPUT_PATH = resolve(
   import.meta.dir,
@@ -268,37 +276,67 @@ function polygonArea(feature: CampusAreaFeature): number {
   );
 }
 
-async function main() {
-  const curation = await loadCampusMapCuration(CURATION_PATH);
-  const url = `${OVERPASS_ENDPOINT}?data=${encodeURIComponent(query)}`;
-  const response = await fetch(url, {
-    headers: {
-      Accept: "application/json",
-      "User-Agent":
-        "NTHUMods-CourseWeb-map-data/1.0 (https://github.com/nthumodifications/courseweb)",
-    },
-  });
-  if (!response.ok) {
-    throw new Error(
-      `Overpass request failed: ${response.status} ${response.statusText}`,
-    );
+async function fetchOverpassData(): Promise<OverpassResponse> {
+  const failures: string[] = [];
+
+  for (const endpoint of OVERPASS_ENDPOINTS) {
+    try {
+      const response = await fetch(
+        `${endpoint}?data=${encodeURIComponent(query)}`,
+        {
+          headers: {
+            Accept: "application/json",
+            "User-Agent":
+              "NTHUMods-CourseWeb-map-data/1.0 (https://github.com/nthumodifications/courseweb)",
+          },
+        },
+      );
+      if (response.ok) return (await response.json()) as OverpassResponse;
+      failures.push(`${endpoint}: ${response.status} ${response.statusText}`);
+    } catch (error) {
+      failures.push(
+        `${endpoint}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
   }
 
-  const osm = (await response.json()) as OverpassResponse;
+  throw new Error(`All Overpass endpoints failed:\n${failures.join("\n")}`);
+}
+
+async function main() {
+  const curation = await loadCampusMapCuration(CURATION_PATH);
+  const osm = await fetchOverpassData();
   const sourceBuildings = osm.elements
     .filter((element) => Boolean(element.tags?.building))
     .flatMap(createBuildingParts);
-  const buildings = applyCampusMapCuration(sourceBuildings, curation);
   const lines = osm.elements
     .map(createLinearFeature)
     .filter((feature): feature is CampusLinearFeature => Boolean(feature));
-  const water = osm.elements
+  const sourceWater = osm.elements
     .filter(
       (element) =>
         element.tags?.natural === "water" ||
         element.tags?.waterway === "riverbank",
     )
     .flatMap((element) => createAreaParts(element, "water"));
+  const curationBeforeSync = process.argv.includes("--reset-labels")
+    ? { ...curation, labels: [] }
+    : curation;
+  const syncedCuration = process.argv.includes("--sync-labels")
+    ? syncCampusMapLabelCatalog(
+        sourceBuildings,
+        sourceWater,
+        curationBeforeSync,
+      )
+    : curation;
+  if (syncedCuration !== curation) {
+    await writeCampusMapCuration(CURATION_PATH, syncedCuration);
+  }
+  const { buildings, water } = applyCampusMapCuration(
+    sourceBuildings,
+    sourceWater,
+    syncedCuration,
+  );
   const boundaries = osm.elements
     .filter(
       (element) =>
@@ -332,7 +370,7 @@ async function main() {
       `${data.paths.length} paths, ${data.water.length} water areas, ` +
       `${data.buildings.filter((building) => building.identityId).length} recognized CourseWeb building parts.\n` +
       `Curation excluded ${sourceBuildings.length - buildings.length} building parts, ` +
-      `with ${curation.groups.length} label groups and ${Object.keys(curation.renamed).length} name overrides.`,
+      `with ${syncedCuration.groups.length} label groups and ${Object.keys(syncedCuration.renamed).length} name overrides.`,
   );
 }
 

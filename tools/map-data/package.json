@@ -5,7 +5,8 @@
   "type": "module",
   "description": "Development-time OpenStreetMap pipeline for the NTHU campus map",
   "scripts": {
-    "generate": "bun src/generate-campus-data.ts"
+    "generate": "bun src/generate-campus-data.ts",
+    "sync-labels": "bun src/generate-campus-data.ts --sync-labels"
   },
   "dependencies": {
     "@courseweb/shared": "*"

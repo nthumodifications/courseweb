@@ -29,6 +29,7 @@ export type CampusBuilding = {
   id: string;
   identityId?: string;
   labelGroupId?: string;
+  labelNumber?: number;
   source: {
     type: "way" | "relation";
     id: number;
@@ -63,6 +64,7 @@ export type CampusLinearFeature = {
 export type CampusAreaFeature = {
   id: string;
   kind: "water" | "boundary";
+  labelNumber?: number;
   names?: {
     zh: string;
     en?: string;

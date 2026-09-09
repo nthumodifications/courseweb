@@ -59,11 +59,18 @@ export function createCampusFeatureLabelNumbers(
       ),
   );
 
+  const reservedNumbers = new Set(
+    features
+      .map((feature) => feature.labelNumber)
+      .filter((number): number is number => number !== undefined),
+  );
+  let nextNumber = 1;
   return new Map(
-    features.map((feature, index) => [
-      getCampusFeatureLabelKey(feature),
-      index + 1,
-    ]),
+    features.map((feature) => {
+      while (reservedNumbers.has(nextNumber)) nextNumber += 1;
+      const number = feature.labelNumber ?? nextNumber++;
+      return [getCampusFeatureLabelKey(feature), number];
+    }),
   );
 }
 

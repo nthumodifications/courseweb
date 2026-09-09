@@ -5,6 +5,7 @@ import {
   applyCampusMapCuration,
   loadCampusMapCuration,
   parseCampusMapCuration,
+  syncCampusMapLabelCatalog,
 } from "./curation";
 
 function building(id: number): CampusBuilding {
@@ -23,17 +24,32 @@ describe("campus map curation", () => {
       fileURLToPath(new URL("../campus-map-curation.json", import.meta.url)),
     );
 
-    expect(curation).toEqual({ excluded: [], renamed: {}, groups: [] });
+    expect(curation.labels).toHaveLength(229);
+    expect(curation.labels[0]).toEqual({
+      number: 1,
+      featureIds: ["osm-way-1230511808-0"],
+      sourceIds: ["way/1230511808"],
+      name: "科學樓",
+    });
+    expect(curation.excluded).toEqual([]);
+    expect(curation.renamed).toEqual({});
+    expect(curation.groups).toEqual([]);
   });
 
-  test("excludes, renames, and groups buildings by stable OSM source IDs", () => {
+  test("excludes, renames, and groups buildings by hardcoded label numbers", () => {
     const curation = parseCampusMapCuration({
-      excluded: ["way/1"],
-      renamed: { "way/2": { zh: "機車塔", en: "Motorcycle Parking Tower" } },
+      labels: [1, 2, 3, 4].map((number) => ({
+        number,
+        featureIds: [`osm-way-${number}-0`],
+        sourceIds: [`way/${number}`],
+        name: `Building ${number}`,
+      })),
+      excluded: [1],
+      renamed: { "2": { zh: "機車塔", en: "Motorcycle Parking Tower" } },
       groups: [
         {
           id: "shared-building",
-          sourceIds: ["way/3", "way/4"],
+          labelNumbers: [3, 4],
           zh: "共同建築",
           en: "Shared Building",
         },
@@ -42,34 +58,82 @@ describe("campus map curation", () => {
 
     const result = applyCampusMapCuration(
       [building(1), building(2), building(3), building(4)],
+      [],
       curation,
-    );
+    ).buildings;
 
     expect(result).toHaveLength(3);
+    expect(result[0].labelNumber).toBe(2);
     expect(result[0].names).toEqual({
       zh: "機車塔",
       en: "Motorcycle Parking Tower",
     });
     expect(result[1].labelGroupId).toBe("curation:shared-building");
     expect(result[2].labelGroupId).toBe("curation:shared-building");
+    expect(result[1].labelNumber).toBe(3);
+    expect(result[2].labelNumber).toBe(3);
     expect(result[1].names).toEqual({ zh: "共同建築", en: "Shared Building" });
   });
 
-  test("rejects unstable source IDs and duplicate group membership", () => {
+  test("syncs new labels once and preserves their assigned numbers", () => {
+    const initial = parseCampusMapCuration({
+      labels: [],
+      excluded: [],
+      renamed: {},
+      groups: [],
+    });
+    const synced = syncCampusMapLabelCatalog(
+      [building(1), { ...building(2), location: { lat: 24.8, lon: 120.99 } }],
+      [],
+      initial,
+    );
+    const resynced = syncCampusMapLabelCatalog(
+      [building(1), building(2), building(3)],
+      [],
+      synced,
+    );
+
+    expect(synced.labels.map((label) => label.sourceIds[0])).toEqual([
+      "way/2",
+      "way/1",
+    ]);
+    expect(
+      resynced.labels.find((label) => label.sourceIds[0] === "way/2")?.number,
+    ).toBe(1);
+    expect(
+      resynced.labels.find((label) => label.sourceIds[0] === "way/3")?.number,
+    ).toBe(3);
+  });
+
+  test("rejects invalid feature IDs and duplicate group membership", () => {
     expect(() =>
       parseCampusMapCuration({
-        excluded: ["osm-way-1-0"],
+        labels: [
+          {
+            number: 1,
+            featureIds: ["invalid"],
+            sourceIds: ["way/1"],
+            name: "Invalid",
+          },
+        ],
+        excluded: [],
         renamed: {},
         groups: [],
       }),
-    ).toThrow("way/123");
+    ).toThrow("generated osm-way-123-0");
     expect(() =>
       parseCampusMapCuration({
+        labels: [1].map((number) => ({
+          number,
+          featureIds: [`osm-way-${number}-0`],
+          sourceIds: [`way/${number}`],
+          name: "Building",
+        })),
         excluded: [],
         renamed: {},
         groups: [
-          { id: "a", sourceIds: ["way/1"], zh: "A" },
-          { id: "b", sourceIds: ["way/1"], zh: "B" },
+          { id: "a", labelNumbers: [1, 2], zh: "A" },
+          { id: "b", labelNumbers: [1, 3], zh: "B" },
         ],
       }),
     ).toThrow("multiple groups");
