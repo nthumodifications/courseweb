@@ -115,4 +115,34 @@ describe("generated NTHU campus data", () => {
 
     expect(lake?.holes).toHaveLength(2);
   });
+
+  test("contains recognizable procedural campus environment geometry", () => {
+    const count = (kind: (typeof data.areas)[number]["kind"]) =>
+      data.areas.filter((area) => area.kind === kind).length;
+
+    expect(count("grass")).toBe(28);
+    expect(count("park")).toBe(0);
+    expect(count("wood")).toBe(10);
+    expect(count("sports-pitch")).toBe(6);
+    expect(count("athletics-track")).toBe(1);
+    expect(count("parking")).toBe(23);
+    expect(data.trees).toHaveLength(33);
+    expect(data.roads.every((road) => Boolean(road.roadClass))).toBe(true);
+  });
+
+  test("keeps the athletics track hole and a distinct baseball surface", () => {
+    const track = data.areas.find(
+      (area) => area.id === "osm-relation-3809891-0",
+    );
+    const baseball = data.areas.find(
+      (area) => area.id === "osm-way-97344543-0",
+    );
+
+    expect(track?.kind).toBe("athletics-track");
+    expect(track?.holes).toHaveLength(1);
+    expect(baseball).toMatchObject({
+      kind: "sports-pitch",
+      sport: "baseball",
+    });
+  });
 });

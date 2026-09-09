@@ -13,6 +13,7 @@ import {
 } from "@courseweb/shared";
 import BuildingMesh from "./BuildingMesh";
 import CampusCamera from "./CampusCamera";
+import CampusTrees from "./CampusTrees";
 import { createAreaGeometry, createRibbonGeometry } from "./sceneGeometry";
 import {
   createCampusFeatureLabelNumbers,
@@ -48,12 +49,19 @@ type LinearFeaturesProps = {
   origin: LatLon;
   color: string;
   y: number;
+  widthOffset?: number;
 };
 
-function LinearFeatures({ features, origin, color, y }: LinearFeaturesProps) {
+function LinearFeatures({
+  features,
+  origin,
+  color,
+  y,
+  widthOffset = 0,
+}: LinearFeaturesProps) {
   const geometry = useMemo(
-    () => createRibbonGeometry(features, origin),
-    [features, origin],
+    () => createRibbonGeometry(features, origin, widthOffset),
+    [features, origin, widthOffset],
   );
   useEffect(() => () => geometry.dispose(), [geometry]);
   if (features.length === 0) return null;
@@ -117,6 +125,37 @@ function CampusWorld({
       ? selectedFeature
       : undefined;
 
+  const environment = useMemo(
+    () => ({
+      grass: data.areas.filter((area) => area.kind === "grass"),
+      park: data.areas.filter((area) => area.kind === "park"),
+      wood: data.areas.filter((area) => area.kind === "wood"),
+      sports: data.areas.filter(
+        (area) =>
+          area.kind === "sports-pitch" &&
+          !area.sport?.match(/baseball|softball/),
+      ),
+      baseball: data.areas.filter(
+        (area) =>
+          area.kind === "sports-pitch" &&
+          Boolean(area.sport?.match(/baseball|softball/)),
+      ),
+      track: data.areas.filter((area) => area.kind === "athletics-track"),
+      parking: data.areas.filter((area) => area.kind === "parking"),
+    }),
+    [data.areas],
+  );
+  const roads = useMemo(
+    () => ({
+      major: data.roads.filter((road) => road.roadClass === "major"),
+      local: data.roads.filter(
+        (road) => !road.roadClass || road.roadClass === "local",
+      ),
+      service: data.roads.filter((road) => road.roadClass === "service"),
+    }),
+    [data.roads],
+  );
+
   const boundaryLines = useMemo<CampusLinearFeature[]>(
     () =>
       data.boundary
@@ -145,29 +184,91 @@ function CampusWorld({
       </mesh>
 
       <Surface
+        areas={environment.grass}
+        origin={data.origin}
+        color="#b8cdaa"
+        y={0}
+      />
+      <Surface
+        areas={environment.park}
+        origin={data.origin}
+        color="#aac5a3"
+        y={0.005}
+      />
+      <Surface
+        areas={environment.wood}
+        origin={data.origin}
+        color="#91ab8c"
+        y={0.01}
+      />
+      <Surface
+        areas={environment.sports}
+        origin={data.origin}
+        color="#a7bf96"
+        y={0.02}
+      />
+      <Surface
+        areas={environment.baseball}
+        origin={data.origin}
+        color="#c5aa80"
+        y={0.021}
+      />
+      <Surface
+        areas={environment.track}
+        origin={data.origin}
+        color="#b97d6c"
+        y={0.025}
+      />
+      <Surface
+        areas={environment.parking}
+        origin={data.origin}
+        color="#c7c1b5"
+        y={0.03}
+      />
+      <Surface
         areas={data.water}
         origin={data.origin}
         color="#88bfd1"
-        y={0.02}
+        y={0.04}
       />
       <LinearFeatures
         features={data.roads}
         origin={data.origin}
-        color="#f8f4ea"
+        color="#a79f91"
         y={0.05}
+        widthOffset={1.6}
+      />
+      <LinearFeatures
+        features={roads.major}
+        origin={data.origin}
+        color="#f3e8d3"
+        y={0.055}
+      />
+      <LinearFeatures
+        features={roads.local}
+        origin={data.origin}
+        color="#eee9df"
+        y={0.056}
+      />
+      <LinearFeatures
+        features={roads.service}
+        origin={data.origin}
+        color="#ddd8cf"
+        y={0.057}
       />
       <LinearFeatures
         features={data.paths}
         origin={data.origin}
-        color="#c7bfae"
-        y={0.07}
+        color="#aa9e88"
+        y={0.065}
       />
       <LinearFeatures
         features={boundaryLines}
         origin={data.origin}
         color="#7e1083"
-        y={0.09}
+        y={0.075}
       />
+      <CampusTrees trees={data.trees} origin={data.origin} y={0.04} />
 
       {data.water.map((area) => {
         const world = geoToWorld(area.location, data.origin);

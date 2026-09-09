@@ -31,9 +31,23 @@ describe("campus map curation", () => {
       sourceIds: ["way/1230511808"],
       name: "科學樓",
     });
-    expect(curation.excluded).toEqual([1]);
-    expect(curation.renamed).toEqual({});
-    expect(curation.groups).toEqual([]);
+    expect(curation.excluded).toHaveLength(108);
+    expect(curation.excluded).toContain(1);
+    expect(Object.keys(curation.renamed)).toEqual([
+      "53",
+      "98",
+      "104",
+      "124",
+      "202",
+    ]);
+    expect(curation.groups.map(({ id }) => id)).toEqual([
+      "hung-dorm",
+      "shiue-dorm",
+      "yi-dorm",
+      "cheng-dorm",
+      "shyr-dorm",
+      "West-Yuan-Faculty-Residences",
+    ]);
   });
 
   test("excludes, renames, and groups buildings by hardcoded label numbers", () => {

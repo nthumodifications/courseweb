@@ -58,13 +58,25 @@ export type CampusBuilding = {
 export type CampusLinearFeature = {
   id: string;
   kind: "road" | "path";
+  roadClass?: "major" | "local" | "service";
   points: GeoCoordinate[];
   width: number;
 };
 
+export type CampusAreaKind =
+  | "water"
+  | "boundary"
+  | "grass"
+  | "park"
+  | "wood"
+  | "sports-pitch"
+  | "athletics-track"
+  | "parking";
+
 export type CampusAreaFeature = {
   id: string;
-  kind: "water" | "boundary";
+  kind: CampusAreaKind;
+  sport?: string;
   labelNumber?: number;
   names?: {
     zh: string;
@@ -73,6 +85,11 @@ export type CampusAreaFeature = {
   location: LatLon;
   polygon: GeoCoordinate[];
   holes?: GeoCoordinate[][];
+};
+
+export type CampusTree = {
+  id: string;
+  location: LatLon;
 };
 
 export type CampusMapFeature = CampusBuilding | CampusAreaFeature;
@@ -96,5 +113,7 @@ export type CampusMapData = {
   roads: CampusLinearFeature[];
   paths: CampusLinearFeature[];
   water: CampusAreaFeature[];
+  areas: CampusAreaFeature[];
+  trees: CampusTree[];
   boundary?: CampusAreaFeature;
 };

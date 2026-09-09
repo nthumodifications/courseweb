@@ -7,6 +7,7 @@ import {
   type CampusBuilding,
   type CampusLinearFeature,
   type CampusMapData,
+  type CampusTree,
   type GeoCoordinate,
 } from "../../../packages/shared/src/campus";
 import {
@@ -15,6 +16,17 @@ import {
   syncCampusMapLabelCatalog,
   writeCampusMapCuration,
 } from "./curation";
+import {
+  classifyEnvironmentArea,
+  closeRing,
+  extractTreeLocations,
+  pointInPolygons,
+  relationPolygonRings,
+  type OsmElement,
+  type OsmPoint,
+  type OsmPolygonRings,
+  type OsmTags,
+} from "./osmEnvironment";
 
 const OVERPASS_ENDPOINTS = [
   "https://overpass.kumi.systems/api/interpreter",
@@ -41,21 +53,6 @@ const CAMPUS_WATER_NAMES: Record<
   "relation/3927538": { zh: "成功湖", en: "Cheng Kung Lake" },
 };
 
-type OsmPoint = { lat: number; lon: number };
-type OsmTags = Record<string, string>;
-type OsmMember = {
-  type: "way" | "node" | "relation";
-  ref: number;
-  role?: string;
-  geometry?: OsmPoint[];
-};
-type OsmElement = {
-  type: "way" | "node" | "relation";
-  id: number;
-  tags?: OsmTags;
-  geometry?: OsmPoint[];
-  members?: OsmMember[];
-};
 type OverpassResponse = {
   osm3s?: { timestamp_osm_base?: string };
   elements: OsmElement[];
@@ -70,6 +67,16 @@ const query = `[out:json][timeout:90];
   way["natural"="water"](${bbox});
   relation["natural"="water"](${bbox});
   way["waterway"="riverbank"](${bbox});
+  way["leisure"~"^(pitch|track|park)$"](${bbox});
+  relation["leisure"~"^(pitch|track|park)$"](${bbox});
+  way["landuse"~"^(grass|recreation_ground|forest)$"](${bbox});
+  relation["landuse"~"^(grass|recreation_ground|forest)$"](${bbox});
+  way["natural"="wood"](${bbox});
+  relation["natural"="wood"](${bbox});
+  way["amenity"="parking"](${bbox});
+  relation["amenity"="parking"](${bbox});
+  node["natural"="tree"](${bbox});
+  way["natural"="tree_row"](${bbox});
   relation["amenity"="university"]["name"~"清華|Tsing Hua"](${bbox});
 );
 out body geom;`;
@@ -80,97 +87,6 @@ function roundCoordinate(value: number): number {
 
 function toCoordinate(point: OsmPoint): GeoCoordinate {
   return [roundCoordinate(point.lon), roundCoordinate(point.lat)];
-}
-
-function samePoint(a: OsmPoint, b: OsmPoint): boolean {
-  return a.lat === b.lat && a.lon === b.lon;
-}
-
-function closeRing(points: OsmPoint[]): OsmPoint[] | undefined {
-  if (points.length < 3) return undefined;
-  return samePoint(points[0], points.at(-1)!) ? points : [...points, points[0]];
-}
-
-function stitchRings(segments: OsmPoint[][]): OsmPoint[][] {
-  const remaining = segments
-    .filter((segment) => segment.length >= 2)
-    .map((segment) => [...segment]);
-  const rings: OsmPoint[][] = [];
-
-  while (remaining.length > 0) {
-    const ring = remaining.shift()!;
-    let madeProgress = true;
-
-    while (!samePoint(ring[0], ring.at(-1)!) && madeProgress) {
-      madeProgress = false;
-      const tail = ring.at(-1)!;
-      const index = remaining.findIndex(
-        (segment) =>
-          samePoint(segment[0], tail) || samePoint(segment.at(-1)!, tail),
-      );
-      if (index >= 0) {
-        const [next] = remaining.splice(index, 1);
-        if (samePoint(next.at(-1)!, tail)) next.reverse();
-        ring.push(...next.slice(1));
-        madeProgress = true;
-      }
-    }
-
-    const closed = closeRing(ring);
-    if (closed) rings.push(closed);
-  }
-
-  return rings;
-}
-
-type OsmPolygonRings = {
-  outer: OsmPoint[];
-  holes: OsmPoint[][];
-};
-
-function pointInRing(point: OsmPoint, ring: OsmPoint[]): boolean {
-  let inside = false;
-  for (
-    let index = 0, previous = ring.length - 1;
-    index < ring.length;
-    index += 1
-  ) {
-    const currentPoint = ring[index];
-    const previousPoint = ring[previous];
-    const crossesLatitude =
-      currentPoint.lat > point.lat !== previousPoint.lat > point.lat;
-    const longitudeAtLatitude =
-      ((previousPoint.lon - currentPoint.lon) *
-        (point.lat - currentPoint.lat)) /
-        (previousPoint.lat - currentPoint.lat) +
-      currentPoint.lon;
-    if (crossesLatitude && point.lon < longitudeAtLatitude) inside = !inside;
-    previous = index;
-  }
-  return inside;
-}
-
-function relationPolygonRings(element: OsmElement): OsmPolygonRings[] {
-  const members = element.members ?? [];
-  const polygons = stitchRings(
-    members
-      .filter((member) => (member.role ?? "outer") === "outer")
-      .map((member) => member.geometry ?? []),
-  ).map((outer) => ({ outer, holes: [] }));
-  const innerRings = stitchRings(
-    members
-      .filter((member) => member.role === "inner")
-      .map((member) => member.geometry ?? []),
-  );
-
-  for (const hole of innerRings) {
-    const containingPolygon = polygons.find(({ outer }) =>
-      pointInRing(hole[0], outer),
-    );
-    containingPolygon?.holes.push(hole);
-  }
-
-  return polygons;
 }
 
 function polygonCenter(points: GeoCoordinate[]): { lat: number; lon: number } {
@@ -258,6 +174,15 @@ function roadWidth(highway: string): number {
   return widths[highway] ?? 2;
 }
 
+function roadClass(
+  highway: string,
+): NonNullable<CampusLinearFeature["roadClass"]> | undefined {
+  if (["primary", "secondary", "tertiary"].includes(highway)) return "major";
+  if (highway === "residential") return "local";
+  if (highway === "service") return "service";
+  return undefined;
+}
+
 function createLinearFeature(
   element: OsmElement,
 ): CampusLinearFeature | undefined {
@@ -270,6 +195,7 @@ function createLinearFeature(
   return {
     id: `osm-way-${element.id}`,
     kind,
+    ...(kind === "road" ? { roadClass: roadClass(highway) } : {}),
     points: element.geometry.map(toCoordinate),
     width: roadWidth(highway),
   };
@@ -278,6 +204,7 @@ function createLinearFeature(
 function createAreaParts(
   element: OsmElement,
   kind: CampusAreaFeature["kind"],
+  sport?: string,
 ): CampusAreaFeature[] {
   const polygons =
     element.type === "relation"
@@ -305,6 +232,7 @@ function createAreaParts(
     return {
       id: `osm-${element.type}-${element.id}-${index}`,
       kind,
+      ...(sport ? { sport } : {}),
       names,
       location: polygonCenter(polygon),
       polygon,
@@ -313,6 +241,62 @@ function createAreaParts(
         : {}),
     };
   });
+}
+
+function pointInsideCampus(
+  point: { lat: number; lon: number },
+  campusPolygons: OsmPolygonRings[],
+): boolean {
+  return pointInPolygons(point, campusPolygons);
+}
+
+function createEnvironmentAreas(
+  elements: OsmElement[],
+  campusPolygons: OsmPolygonRings[],
+): CampusAreaFeature[] {
+  return elements.flatMap((element) => {
+    const classification = classifyEnvironmentArea(element.tags ?? {});
+    if (!classification) return [];
+    return createAreaParts(
+      element,
+      classification.kind,
+      classification.sport,
+    ).filter((area) => pointInsideCampus(area.location, campusPolygons));
+  });
+}
+
+function createTrees(
+  elements: OsmElement[],
+  campusPolygons: OsmPolygonRings[],
+): CampusTree[] {
+  return elements.flatMap((element) =>
+    extractTreeLocations(element).flatMap((location, index) => {
+      if (!pointInsideCampus(location, campusPolygons)) return [];
+      const suffix = element.type === "way" ? `-${index}` : "";
+      return [
+        {
+          id: `osm-${element.type}-${element.id}${suffix}`,
+          location: {
+            lat: roundCoordinate(location.lat),
+            lon: roundCoordinate(location.lon),
+          },
+        },
+      ];
+    }),
+  );
+}
+
+function countIncludedTreeRows(
+  elements: OsmElement[],
+  campusPolygons: OsmPolygonRings[],
+): number {
+  return elements.filter(
+    (element) =>
+      element.tags?.natural === "tree_row" &&
+      extractTreeLocations(element).some((location) =>
+        pointInsideCampus(location, campusPolygons),
+      ),
+  ).length;
 }
 
 function polygonArea(feature: CampusAreaFeature): number {
@@ -354,6 +338,14 @@ async function fetchOverpassData(): Promise<OverpassResponse> {
 async function main() {
   const curation = await loadCampusMapCuration(CURATION_PATH);
   const osm = await fetchOverpassData();
+  const campusBoundaryElements = osm.elements.filter(
+    (element) =>
+      element.type === "relation" && element.tags?.amenity === "university",
+  );
+  const campusPolygons = campusBoundaryElements.flatMap(relationPolygonRings);
+  if (campusPolygons.length === 0) {
+    throw new Error("The NTHU campus boundary was missing from Overpass data");
+  }
   const sourceBuildings = osm.elements
     .filter((element) => Boolean(element.tags?.building))
     .flatMap(createBuildingParts);
@@ -385,13 +377,20 @@ async function main() {
     sourceWater,
     syncedCuration,
   );
-  const boundaries = osm.elements
-    .filter(
-      (element) =>
-        element.type === "relation" && element.tags?.amenity === "university",
-    )
+  const boundaries = campusBoundaryElements
     .flatMap((element) => createAreaParts(element, "boundary"))
     .sort((a, b) => polygonArea(b) - polygonArea(a));
+  const areas = createEnvironmentAreas(osm.elements, campusPolygons);
+  const trees = createTrees(osm.elements, campusPolygons);
+  const includedIndividualTrees = osm.elements.filter(
+    (element) =>
+      element.type === "node" &&
+      element.tags?.natural === "tree" &&
+      element.lat !== undefined &&
+      element.lon !== undefined &&
+      pointInsideCampus({ lat: element.lat, lon: element.lon }, campusPolygons),
+  ).length;
+  const includedTreeRows = countIncludedTreeRows(osm.elements, campusPolygons);
 
   const data: CampusMapData = {
     version: 1,
@@ -407,6 +406,8 @@ async function main() {
     roads: lines.filter((feature) => feature.kind === "road"),
     paths: lines.filter((feature) => feature.kind === "path"),
     water,
+    areas,
+    trees,
     boundary: boundaries[0],
   };
 
@@ -417,6 +418,13 @@ async function main() {
       `${data.buildings.length} building parts, ${data.roads.length} roads, ` +
       `${data.paths.length} paths, ${data.water.length} water areas, ` +
       `${data.buildings.filter((building) => building.identityId).length} recognized CourseWeb building parts.\n` +
+      `${areas.filter((area) => area.kind === "grass").length} grass, ` +
+      `${areas.filter((area) => area.kind === "park").length} park, ` +
+      `${areas.filter((area) => area.kind === "wood").length} wood, ` +
+      `${areas.filter((area) => area.kind === "sports-pitch").length} sports pitch, ` +
+      `${areas.filter((area) => area.kind === "athletics-track").length} track, ` +
+      `${areas.filter((area) => area.kind === "parking").length} parking areas.\n` +
+      `${trees.length} rendered trees from ${includedIndividualTrees} individual tree nodes and ${includedTreeRows} tree rows.\n` +
       `Curation excluded ${sourceBuildings.length - buildings.length} building parts, ` +
       `with ${syncedCuration.groups.length} label groups and ${Object.keys(syncedCuration.renamed).length} name overrides.`,
   );

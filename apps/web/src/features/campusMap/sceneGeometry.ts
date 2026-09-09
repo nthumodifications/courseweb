@@ -83,6 +83,7 @@ export function createAreaGeometry(
 export function createRibbonGeometry(
   features: CampusLinearFeature[],
   origin: LatLon,
+  widthOffset = 0,
 ): BufferGeometry {
   const positions: number[] = [];
   const indices: number[] = [];
@@ -96,7 +97,7 @@ export function createRibbonGeometry(
       const length = Math.hypot(dx, dz);
       if (length < 0.05) continue;
 
-      const halfWidth = feature.width / 2;
+      const halfWidth = Math.max(0, feature.width + widthOffset) / 2;
       const offsetX = (-dz / length) * halfWidth;
       const offsetZ = (dx / length) * halfWidth;
       const base = positions.length / 3;

@@ -25,6 +25,17 @@ describe("campus map data normalization", () => {
     expect(normalized.water[0].location).not.toEqual(data.origin);
   });
 
+  test("provides empty environment arrays for legacy map data", () => {
+    const legacyData = structuredClone(data) as Partial<CampusMapData>;
+    delete legacyData.areas;
+    delete legacyData.trees;
+
+    const normalized = normalizeCampusMapData(legacyData);
+
+    expect(normalized.areas).toEqual([]);
+    expect(normalized.trees).toEqual([]);
+  });
+
   test("rejects unsupported input", () => {
     expect(() => normalizeCampusMapData({ version: 0 })).toThrow(
       "unsupported format",
