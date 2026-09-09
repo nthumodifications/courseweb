@@ -1383,7 +1383,65 @@
       "name": "校園建築"
     }
   ],
-  "excluded": [1],
-  "renamed": {},
-  "groups": []
+  "excluded": [96, 201, 114, 122, 68, 8, 28, 63, 83, 75, 5, 20, 51, 48, 39, 32, 17, 21, 6, 25, 31, 52, 36, 38, 40, 30, 14, 2, 10, 206, 212, 207, 204, 209, 192, 149, 110, 106, 103, 90, 97, 187, 173, 195, 188, 191, 199, 194, 198, 179, 178, 193, 185, 190, 186, 177, 166, 171, 172, 170, 175, 168, 163, 151, 133, 126, 226, 222, 224, 213, 210, 211, 208, 200, 205, 203, 216, 217, 218, 225, 228, 229, 141, 146, 128, 117, 118, 125, 127, 1, 3, 4, 7, 16, 27, 19, 49, 11, 13, 26, 24, 23, 44, 59, 56, 60, 65, 12],
+  "renamed": {
+    "53": {
+      "zh": "機車塔",
+      "en": "Parking lot for motorcycles"
+    },
+    "104": {
+      "zh": "成功湖畔社辦",
+      "en": "Societies Office by the Cheng Kung Lake"
+    },
+    "98": {
+      "zh": "校友中心",
+      "en": "Alumni Service Center"
+    },
+    "124": {
+      "zh": "梅園",
+      "en": "Plum Garden"
+    },
+    "202": {
+      "zh": "奕園",
+      "en": "Yi Yuan"
+    }
+  },
+  "groups": [
+    {
+      "id": "hung-dorm",
+      "labelNumbers": [153, 156, 157, 158, 159, 160, 161, 162, 164],
+      "zh": "鴻齋",
+      "en": "Hung Dormitory"
+    },
+    {
+      "id": "shiue-dorm",
+      "labelNumbers": [167, 169],
+      "zh": "學齋",
+      "en": "Shiue Dormitory"
+    },
+    {
+      "id": "yi-dorm",
+      "labelNumbers": [144, 148],
+      "zh": "義齋",
+      "en": "Yi Dormitory"
+    },
+    {
+      "id": "cheng-dorm",
+      "labelNumbers": [137, 138],
+      "zh": "誠齋",
+      "en": "Cheng Dormitory"
+    },
+    {
+      "id": "shyr-dorm",
+      "labelNumbers": [132, 134],
+      "zh": "實齋",
+      "en": "Shyr Dormitory"
+    },
+    {
+      "id": "West-Yuan-Faculty-Residences",
+      "labelNumbers": [18, 33, 42, 55, 29, 34, 35, 41, 43, 47, 50, 37, 45, 46, 15, 22],
+      "zh": "西院宿舍",
+      "en": "West Yuan Faculty Residences"
+    }
+  ]
 }
