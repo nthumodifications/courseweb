@@ -5,8 +5,8 @@ import type {
   LatLon,
 } from "@courseweb/shared";
 
-const CAMPUS_DATA_URL = `${import.meta.env.BASE_URL}data/nthu-main-campus.json`;
-export const CAMPUS_MAP_DATA_CACHE_VERSION = 2;
+export const CAMPUS_MAP_DATA_CACHE_VERSION = 3;
+const CAMPUS_DATA_URL = `${import.meta.env.BASE_URL}data/nthu-main-campus.json?v=${CAMPUS_MAP_DATA_CACHE_VERSION}`;
 
 function hasCampusMapDataShape(value: unknown): boolean {
   if (!value || typeof value !== "object") return false;
@@ -86,7 +86,7 @@ export function normalizeCampusMapData(value: unknown): CampusMapData {
 export async function loadCampusMapData(
   signal?: AbortSignal,
 ): Promise<CampusMapData> {
-  const response = await fetch(CAMPUS_DATA_URL, { signal });
+  const response = await fetch(CAMPUS_DATA_URL, { signal, cache: "no-store" });
   if (!response.ok) {
     throw new Error(`Campus map data request failed (${response.status})`);
   }

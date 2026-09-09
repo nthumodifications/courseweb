@@ -92,4 +92,26 @@ describe("campus map features", () => {
     expect(numbers.get(getCampusFeatureLabelKey(firstBuildingPart))).toBe(2);
     expect(numbers.get(getCampusFeatureLabelKey(secondBuildingPart))).toBe(2);
   });
+
+  test("uses a manual label group before CourseWeb identity", () => {
+    const first = {
+      ...building,
+      id: "first",
+      identityId: "identity-a",
+      labelGroupId: "curation:shared",
+    };
+    const second = {
+      ...building,
+      id: "second",
+      identityId: "identity-b",
+      labelGroupId: "curation:shared",
+    };
+    const numbers = createCampusFeatureLabelNumbers({
+      buildings: [first, second],
+      water: [],
+    });
+
+    expect(getCampusFeatureLabelKey(first)).toBe("curation:shared");
+    expect(numbers.size).toBe(1);
+  });
 });

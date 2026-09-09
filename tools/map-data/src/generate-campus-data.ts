@@ -9,8 +9,10 @@ import {
   type CampusMapData,
   type GeoCoordinate,
 } from "../../../packages/shared/src/campus";
+import { applyCampusMapCuration, loadCampusMapCuration } from "./curation";
 
 const OVERPASS_ENDPOINT = "https://overpass-api.de/api/interpreter";
+const CURATION_PATH = resolve(import.meta.dir, "../campus-map-curation.json");
 const OUTPUT_PATH = resolve(
   import.meta.dir,
   "../../../apps/web/public/data/nthu-main-campus.json",
@@ -267,6 +269,7 @@ function polygonArea(feature: CampusAreaFeature): number {
 }
 
 async function main() {
+  const curation = await loadCampusMapCuration(CURATION_PATH);
   const url = `${OVERPASS_ENDPOINT}?data=${encodeURIComponent(query)}`;
   const response = await fetch(url, {
     headers: {
@@ -282,9 +285,10 @@ async function main() {
   }
 
   const osm = (await response.json()) as OverpassResponse;
-  const buildings = osm.elements
+  const sourceBuildings = osm.elements
     .filter((element) => Boolean(element.tags?.building))
     .flatMap(createBuildingParts);
+  const buildings = applyCampusMapCuration(sourceBuildings, curation);
   const lines = osm.elements
     .map(createLinearFeature)
     .filter((feature): feature is CampusLinearFeature => Boolean(feature));
@@ -326,7 +330,9 @@ async function main() {
     `Generated ${OUTPUT_PATH}\n` +
       `${data.buildings.length} building parts, ${data.roads.length} roads, ` +
       `${data.paths.length} paths, ${data.water.length} water areas, ` +
-      `${data.buildings.filter((building) => building.identityId).length} recognized CourseWeb building parts.`,
+      `${data.buildings.filter((building) => building.identityId).length} recognized CourseWeb building parts.\n` +
+      `Curation excluded ${sourceBuildings.length - buildings.length} building parts, ` +
+      `with ${curation.groups.length} label groups and ${Object.keys(curation.renamed).length} name overrides.`,
   );
 }
 

@@ -1,0 +1,12 @@
+{
+  "_instructions": {
+    "apply": "Run: bun run map:generate",
+    "sourceIdFormat": "Use way/123 or relation/123 from a building's source field.",
+    "excluded": "Add source IDs that should not appear on the map.",
+    "renamed": "Map a source ID to a bilingual display name.",
+    "groups": "Give multiple source IDs one shared label and bilingual name. Group IDs must be unique."
+  },
+  "excluded": [],
+  "renamed": {},
+  "groups": []
+}

@@ -28,6 +28,7 @@ export type CampusBuildingIdentity = {
 export type CampusBuilding = {
   id: string;
   identityId?: string;
+  labelGroupId?: string;
   source: {
     type: "way" | "relation";
     id: number;

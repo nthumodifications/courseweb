@@ -100,7 +100,7 @@ function CampusWorld({
   const labelBuildings = useMemo(() => {
     const firstByBuilding = new Map<string, CampusBuilding>();
     data.buildings.forEach((building) => {
-      const key = building.identityId ?? building.id;
+      const key = getCampusFeatureLabelKey(building);
       if (!firstByBuilding.has(key)) {
         firstByBuilding.set(key, building);
       }
@@ -208,9 +208,10 @@ function CampusWorld({
       })}
 
       {data.buildings.map((building) => {
-        const selected = selectedBuilding?.identityId
-          ? building.identityId === selectedBuilding.identityId
-          : building.id === selectedBuilding?.id;
+        const selected = selectedBuilding
+          ? getCampusFeatureLabelKey(building) ===
+            getCampusFeatureLabelKey(selectedBuilding)
+          : false;
         return (
           <BuildingMesh
             key={building.id}
@@ -233,12 +234,13 @@ function CampusWorld({
           getCampusFeatureLabelKey(building),
         );
         const numberedLabel = `#${labelNumber} ${label}`;
-        const selected = selectedBuilding?.identityId
-          ? building.identityId === selectedBuilding.identityId
-          : building.id === selectedBuilding?.id;
+        const selected = selectedBuilding
+          ? getCampusFeatureLabelKey(building) ===
+            getCampusFeatureLabelKey(selectedBuilding)
+          : false;
         return (
           <Html
-            key={`${building.identityId ?? building.id}-label`}
+            key={`${getCampusFeatureLabelKey(building)}-label`}
             position={[world.x, getBuildingHeight(building) + 7, world.z]}
             center
             distanceFactor={260}

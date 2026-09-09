@@ -35,7 +35,7 @@ export function isCampusBuilding(
 
 export function getCampusFeatureLabelKey(feature: CampusMapFeature): string {
   return isCampusBuilding(feature)
-    ? (feature.identityId ?? feature.id)
+    ? (feature.labelGroupId ?? feature.identityId ?? feature.id)
     : feature.id;
 }
 
