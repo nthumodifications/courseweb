@@ -2,7 +2,6 @@ import { mkdir } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import {
   findCampusIdentityForOsmFeature,
-  isGeoCoordinateInPolygon,
   NTHU_MAIN_CAMPUS_ORIGIN,
   type CampusAreaFeature,
   type CampusBuilding,
@@ -11,11 +10,7 @@ import {
   type GeoCoordinate,
 } from "../../../packages/shared/src/campus";
 
-const OVERPASS_ENDPOINTS = [
-  "https://overpass.kumi.systems/api/interpreter",
-  "https://overpass-api.de/api/interpreter",
-];
-const NTHU_MAIN_CAMPUS_RELATION_ID = 3_605_515;
+const OVERPASS_ENDPOINT = "https://overpass-api.de/api/interpreter";
 const OUTPUT_PATH = resolve(
   import.meta.dir,
   "../../../apps/web/public/data/nthu-main-campus.json",
@@ -65,7 +60,7 @@ const query = `[out:json][timeout:90];
   way["natural"="water"](${bbox});
   relation["natural"="water"](${bbox});
   way["waterway"="riverbank"](${bbox});
-  relation(${NTHU_MAIN_CAMPUS_RELATION_ID});
+  relation["amenity"="university"]["name"~"清華|Tsing Hua"](${bbox});
 );
 out body geom;`;
 
@@ -271,42 +266,29 @@ function polygonArea(feature: CampusAreaFeature): number {
   );
 }
 
-async function fetchOverpassData(): Promise<OverpassResponse> {
-  const failures: string[] = [];
-
-  for (const endpoint of OVERPASS_ENDPOINTS) {
-    try {
-      const response = await fetch(
-        `${endpoint}?data=${encodeURIComponent(query)}`,
-        {
-          headers: {
-            Accept: "application/json",
-            "User-Agent":
-              "NTHUMods-CourseWeb-map-data/1.0 (https://github.com/nthumodifications/courseweb)",
-          },
-        },
-      );
-      if (response.ok) return (await response.json()) as OverpassResponse;
-      failures.push(`${endpoint}: ${response.status} ${response.statusText}`);
-    } catch (error) {
-      failures.push(
-        `${endpoint}: ${error instanceof Error ? error.message : String(error)}`,
-      );
-    }
+async function main() {
+  const url = `${OVERPASS_ENDPOINT}?data=${encodeURIComponent(query)}`;
+  const response = await fetch(url, {
+    headers: {
+      Accept: "application/json",
+      "User-Agent":
+        "NTHUMods-CourseWeb-map-data/1.0 (https://github.com/nthumodifications/courseweb)",
+    },
+  });
+  if (!response.ok) {
+    throw new Error(
+      `Overpass request failed: ${response.status} ${response.statusText}`,
+    );
   }
 
-  throw new Error(`All Overpass endpoints failed:\n${failures.join("\n")}`);
-}
-
-async function main() {
-  const osm = await fetchOverpassData();
-  const candidateBuildings = osm.elements
+  const osm = (await response.json()) as OverpassResponse;
+  const buildings = osm.elements
     .filter((element) => Boolean(element.tags?.building))
     .flatMap(createBuildingParts);
   const lines = osm.elements
     .map(createLinearFeature)
     .filter((feature): feature is CampusLinearFeature => Boolean(feature));
-  const candidateWater = osm.elements
+  const water = osm.elements
     .filter(
       (element) =>
         element.tags?.natural === "water" ||
@@ -316,24 +298,10 @@ async function main() {
   const boundaries = osm.elements
     .filter(
       (element) =>
-        element.type === "relation" &&
-        element.id === NTHU_MAIN_CAMPUS_RELATION_ID,
+        element.type === "relation" && element.tags?.amenity === "university",
     )
     .flatMap((element) => createAreaParts(element, "boundary"))
     .sort((a, b) => polygonArea(b) - polygonArea(a));
-  const boundary = boundaries[0];
-  if (!boundary) {
-    throw new Error("NTHU main campus boundary was not returned by Overpass");
-  }
-
-  const isInsideCampus = ({ lat, lon }: { lat: number; lon: number }) =>
-    boundaries.some((part) =>
-      isGeoCoordinateInPolygon([lon, lat], part.polygon),
-    );
-  const buildings = candidateBuildings.filter((building) =>
-    isInsideCampus(building.location),
-  );
-  const water = candidateWater.filter((area) => isInsideCampus(area.location));
 
   const data: CampusMapData = {
     version: 1,
@@ -349,7 +317,7 @@ async function main() {
     roads: lines.filter((feature) => feature.kind === "road"),
     paths: lines.filter((feature) => feature.kind === "path"),
     water,
-    boundary,
+    boundary: boundaries[0],
   };
 
   await mkdir(dirname(OUTPUT_PATH), { recursive: true });
@@ -358,10 +326,7 @@ async function main() {
     `Generated ${OUTPUT_PATH}\n` +
       `${data.buildings.length} building parts, ${data.roads.length} roads, ` +
       `${data.paths.length} paths, ${data.water.length} water areas, ` +
-      `${data.buildings.filter((building) => building.identityId).length} recognized CourseWeb building parts.\n` +
-      `Used ${boundaries.length} NTHU boundary polygon parts. ` +
-      `Excluded ${candidateBuildings.length - buildings.length} off-campus building parts and ` +
-      `${candidateWater.length - water.length} off-campus water areas.`,
+      `${data.buildings.filter((building) => building.identityId).length} recognized CourseWeb building parts.`,
   );
 }
 

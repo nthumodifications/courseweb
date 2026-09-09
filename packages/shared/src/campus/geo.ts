@@ -1,4 +1,4 @@
-import type { GeoCoordinate, LatLon, WorldPosition } from "./types";
+import type { LatLon, WorldPosition } from "./types";
 
 const EARTH_RADIUS_METERS = 6_378_137;
 const DEGREES_TO_RADIANS = Math.PI / 180;
@@ -41,53 +41,4 @@ export function worldToGeo(
       (EARTH_RADIUS_METERS * DEGREES_TO_RADIANS * Math.cos(meanLatitude));
 
   return { lat, lon };
-}
-
-function isPointOnSegment(
-  point: GeoCoordinate,
-  start: GeoCoordinate,
-  end: GeoCoordinate,
-): boolean {
-  const [x, y] = point;
-  const [startX, startY] = start;
-  const [endX, endY] = end;
-  const cross = (x - startX) * (endY - startY) - (y - startY) * (endX - startX);
-  if (Math.abs(cross) > Number.EPSILON * 100) return false;
-
-  return (
-    x >= Math.min(startX, endX) &&
-    x <= Math.max(startX, endX) &&
-    y >= Math.min(startY, endY) &&
-    y <= Math.max(startY, endY)
-  );
-}
-
-/** Returns whether a GeoJSON coordinate is inside or on a polygon boundary. */
-export function isGeoCoordinateInPolygon(
-  point: GeoCoordinate,
-  polygon: GeoCoordinate[],
-): boolean {
-  if (polygon.length < 3) return false;
-
-  const [x, y] = point;
-  let inside = false;
-
-  for (
-    let index = 0, previous = polygon.length - 1;
-    index < polygon.length;
-    previous = index++
-  ) {
-    const start = polygon[previous];
-    const end = polygon[index];
-    if (isPointOnSegment(point, start, end)) return true;
-
-    const [startX, startY] = start;
-    const [endX, endY] = end;
-    const intersects =
-      startY > y !== endY > y &&
-      x < ((endX - startX) * (y - startY)) / (endY - startY) + startX;
-    if (intersects) inside = !inside;
-  }
-
-  return inside;
 }
