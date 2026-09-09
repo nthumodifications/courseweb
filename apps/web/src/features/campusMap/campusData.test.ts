@@ -44,6 +44,34 @@ describe("generated NTHU campus data", () => {
     expect(data.water.every(isInside)).toBe(true);
   });
 
+  test("applies manually curated building exclusions", () => {
+    const excludedOsmWayIds = new Set([
+      246149140, 1071279813, 1071316694, 1071279832, 1071279812, 1071279814,
+      180522519, 180522508, 180522506, 180522521, 180522524, 722953421,
+      180365526, 180522500, 254990721, 749979081, 180546697, 180546710,
+    ]);
+
+    expect(
+      data.buildings.some(
+        (building) =>
+          building.source.type === "way" &&
+          excludedOsmWayIds.has(building.source.id),
+      ),
+    ).toBe(false);
+  });
+
+  test("renames the curated motorcycle parking tower", () => {
+    const motorcycleTower = data.buildings.find(
+      (building) =>
+        building.source.type === "way" && building.source.id === 180522514,
+    );
+
+    expect(motorcycleTower?.names).toEqual({
+      zh: "機車塔",
+      en: "Motorcycle Parking Tower",
+    });
+  });
+
   test.each([
     ["osm-relation-3927538-0", "成功湖", "Cheng Kung Lake"],
     ["osm-way-220880239-0", "昆明湖", "Kun Ming Lake"],

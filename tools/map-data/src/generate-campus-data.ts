@@ -36,6 +36,34 @@ const CAMPUS_WATER_NAMES: Record<
   "relation/3927538": { zh: "成功湖", en: "Cheng Kung Lake" },
 };
 
+const EXCLUDED_BUILDING_LABEL_KEYS = new Set([
+  "osm-way-246149140-0",
+  "osm-way-1071279813-0",
+  "osm-way-1071316694-0",
+  "osm-way-1071279832-0",
+  "osm-way-1071279812-0",
+  "osm-way-1071279814-0",
+  "osm-way-180522519-0",
+  "osm-way-180522508-0",
+  "chemistry-ii",
+  "osm-way-180522521-0",
+  "materials-science",
+  "osm-way-722953421-0",
+  "engineering-i",
+  "general-ii",
+  "osm-way-254990721-0",
+  "osm-way-749979081-0",
+  "osm-way-180546697-0",
+  "osm-way-180546710-0",
+]);
+
+const BUILDING_NAME_OVERRIDES: Record<string, CampusBuilding["names"]> = {
+  "osm-way-180522514-0": {
+    zh: "機車塔",
+    en: "Motorcycle Parking Tower",
+  },
+};
+
 type OsmPoint = { lat: number; lon: number };
 type OsmTags = Record<string, string>;
 type OsmMember = {
@@ -193,6 +221,15 @@ function createBuildingParts(element: OsmElement): CampusBuilding[] {
   });
 }
 
+function buildingLabelKey(building: CampusBuilding): string {
+  return building.identityId ?? building.id;
+}
+
+function applyBuildingCuration(building: CampusBuilding): CampusBuilding {
+  const names = BUILDING_NAME_OVERRIDES[buildingLabelKey(building)];
+  return names ? { ...building, names } : building;
+}
+
 function roadWidth(highway: string): number {
   const widths: Record<string, number> = {
     primary: 8,
@@ -330,9 +367,15 @@ async function main() {
     boundaries.some((part) =>
       isGeoCoordinateInPolygon([lon, lat], part.polygon),
     );
-  const buildings = candidateBuildings.filter((building) =>
+  const buildingsInsideBoundary = candidateBuildings.filter((building) =>
     isInsideCampus(building.location),
   );
+  const buildings = buildingsInsideBoundary
+    .filter(
+      (building) =>
+        !EXCLUDED_BUILDING_LABEL_KEYS.has(buildingLabelKey(building)),
+    )
+    .map(applyBuildingCuration);
   const water = candidateWater.filter((area) => isInsideCampus(area.location));
 
   const data: CampusMapData = {
@@ -360,7 +403,8 @@ async function main() {
       `${data.paths.length} paths, ${data.water.length} water areas, ` +
       `${data.buildings.filter((building) => building.identityId).length} recognized CourseWeb building parts.\n` +
       `Used ${boundaries.length} NTHU boundary polygon parts. ` +
-      `Excluded ${candidateBuildings.length - buildings.length} off-campus building parts and ` +
+      `Excluded ${candidateBuildings.length - buildingsInsideBoundary.length} off-campus building parts, ` +
+      `${buildingsInsideBoundary.length - buildings.length} manually curated building parts, and ` +
       `${candidateWater.length - water.length} off-campus water areas.`,
   );
 }

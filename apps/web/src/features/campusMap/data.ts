@@ -6,7 +6,7 @@ import type {
 } from "@courseweb/shared";
 
 const CAMPUS_DATA_URL = `${import.meta.env.BASE_URL}data/nthu-main-campus.json`;
-export const CAMPUS_MAP_DATA_CACHE_VERSION = 3;
+export const CAMPUS_MAP_DATA_CACHE_VERSION = 4;
 
 function hasCampusMapDataShape(value: unknown): boolean {
   if (!value || typeof value !== "object") return false;
