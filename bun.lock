@@ -218,6 +218,7 @@
         "@cloudflare/workers-types": "^4.20260421.1",
         "@courseweb/eslint-config": "*",
         "@sentry/vite-plugin": "^2.16.0",
+        "@types/bun": "^1.4.2",
         "@types/leaflet": "^1.9.11",
         "@types/node": "20.10.7",
         "@types/react": "18.3.3",

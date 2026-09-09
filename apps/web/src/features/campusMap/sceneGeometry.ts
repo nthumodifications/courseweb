@@ -2,6 +2,7 @@ import {
   BufferGeometry,
   ExtrudeGeometry,
   Float32BufferAttribute,
+  Path,
   Shape,
   ShapeGeometry,
 } from "three";
@@ -22,12 +23,29 @@ function coordinateToWorld(
   return geoToWorld({ lat, lon }, origin);
 }
 
-function createShape(points: GeoCoordinate[], origin: LatLon): Shape {
-  const shape = new Shape();
+function addRingToPath(
+  path: Shape | Path,
+  points: GeoCoordinate[],
+  origin: LatLon,
+): void {
   points.forEach((point, index) => {
     const world = coordinateToWorld(point, origin);
-    if (index === 0) shape.moveTo(world.x, -world.z);
-    else shape.lineTo(world.x, -world.z);
+    if (index === 0) path.moveTo(world.x, -world.z);
+    else path.lineTo(world.x, -world.z);
+  });
+}
+
+function createShape(
+  points: GeoCoordinate[],
+  origin: LatLon,
+  holes: GeoCoordinate[][] = [],
+): Shape {
+  const shape = new Shape();
+  addRingToPath(shape, points, origin);
+  shape.holes = holes.map((points) => {
+    const hole = new Path();
+    addRingToPath(hole, points, origin);
+    return hole;
   });
   return shape;
 }
@@ -37,7 +55,7 @@ export function createBuildingGeometry(
   origin: LatLon,
 ): ExtrudeGeometry {
   const geometry = new ExtrudeGeometry(
-    createShape(building.geometry.footprint, origin),
+    createShape(building.geometry.footprint, origin, building.geometry.holes),
     {
       depth: getBuildingHeight(building),
       bevelEnabled: false,
@@ -54,7 +72,7 @@ export function createAreaGeometry(
   origin: LatLon,
 ): ShapeGeometry {
   const geometry = new ShapeGeometry(
-    areas.map((area) => createShape(area.polygon, origin)),
+    areas.map((area) => createShape(area.polygon, origin, area.holes)),
     1,
   );
   geometry.rotateX(-Math.PI / 2);

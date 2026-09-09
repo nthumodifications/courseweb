@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
+  CAMPUS_BUILDING_IDENTITIES,
   findCampusBuildingForIdentity,
   resolveVenueToCampusIdentity,
   type CampusMapData,
@@ -10,6 +11,70 @@ const data = (await Bun.file(
 ).json()) as CampusMapData;
 
 describe("generated NTHU campus data", () => {
+  test("reports CourseWeb campus identity coverage without ambiguous mappings", () => {
+    const matchedIds = new Set(
+      data.buildings
+        .map((building) => building.identityId)
+        .filter((id): id is string => Boolean(id)),
+    );
+    const matched = CAMPUS_BUILDING_IDENTITIES.filter((identity) =>
+      matchedIds.has(identity.id),
+    );
+    const unmatched = CAMPUS_BUILDING_IDENTITIES.filter(
+      (identity) => !matchedIds.has(identity.id),
+    );
+    const ambiguous = CAMPUS_BUILDING_IDENTITIES.filter((identity) => {
+      const sourceIds = new Set(
+        data.buildings
+          .filter((building) => building.identityId === identity.id)
+          .map((building) => `${building.source.type}/${building.source.id}`),
+      );
+      return sourceIds.size > 1;
+    });
+
+    console.info(
+      [
+        `Campus identities: ${CAMPUS_BUILDING_IDENTITIES.length}`,
+        `Matched: ${matched.length}`,
+        `Unmatched: ${unmatched.length}`,
+        `Ambiguous: ${ambiguous.length}`,
+        `Unmatched identities: ${unmatched.map(({ id }) => id).join(", ")}`,
+      ].join("\n"),
+    );
+
+    expect(CAMPUS_BUILDING_IDENTITIES).toHaveLength(29);
+    expect(matched).toHaveLength(27);
+    expect(unmatched.map(({ id }) => id)).toEqual([
+      "computer-center",
+      "physics-lab",
+    ]);
+    expect(ambiguous).toEqual([]);
+  });
+
+  test.each([
+    ["delta", "relation", 3815072],
+    ["mxic", "way", 180365523],
+    ["tsmc", "way", 432044412],
+    ["general-ii", "way", 180522500],
+    ["physics", "way", 180522523],
+    ["hss", "relation", 3809408],
+  ] as const)("matches the important %s identity", (identityId, type, id) => {
+    const building = findCampusBuildingForIdentity(data, identityId);
+
+    expect(building?.source).toEqual({ type, id });
+    expect(building?.geometry.footprint.length).toBeGreaterThan(3);
+  });
+
+  test.each(["delta", "hss"])(
+    "preserves the courtyard in the %s multipolygon",
+    (identityId) => {
+      const building = findCampusBuildingForIdentity(data, identityId);
+
+      expect(building?.geometry.holes?.length).toBeGreaterThan(0);
+      expect(building?.geometry.holes?.[0].length).toBeGreaterThan(3);
+    },
+  );
+
   test.each(["台達", "DELTA", "DELTA台達629"])(
     "connects %s to the generated Delta Building footprint",
     (query) => {
@@ -41,5 +106,13 @@ describe("generated NTHU campus data", () => {
 
     expect(lake?.names).toEqual({ zh, en });
     expect(lake?.location.lat).toBeGreaterThan(24.79);
+  });
+
+  test("preserves the islands in Cheng Kung Lake", () => {
+    const lake = data.water.find(
+      (area) => area.id === "osm-relation-3927538-0",
+    );
+
+    expect(lake?.holes).toHaveLength(2);
   });
 });

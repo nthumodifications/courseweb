@@ -46,6 +46,7 @@ export type CampusBuilding = {
   location: LatLon;
   geometry: {
     footprint: GeoCoordinate[];
+    holes?: GeoCoordinate[][];
     height?: number;
     levels?: number;
   };
@@ -71,6 +72,7 @@ export type CampusAreaFeature = {
   };
   location: LatLon;
   polygon: GeoCoordinate[];
+  holes?: GeoCoordinate[][];
 };
 
 export type CampusMapFeature = CampusBuilding | CampusAreaFeature;

@@ -123,12 +123,54 @@ function stitchRings(segments: OsmPoint[][]): OsmPoint[][] {
   return rings;
 }
 
-function relationOuterRings(element: OsmElement): OsmPoint[][] {
-  return stitchRings(
-    (element.members ?? [])
+type OsmPolygonRings = {
+  outer: OsmPoint[];
+  holes: OsmPoint[][];
+};
+
+function pointInRing(point: OsmPoint, ring: OsmPoint[]): boolean {
+  let inside = false;
+  for (
+    let index = 0, previous = ring.length - 1;
+    index < ring.length;
+    index += 1
+  ) {
+    const currentPoint = ring[index];
+    const previousPoint = ring[previous];
+    const crossesLatitude =
+      currentPoint.lat > point.lat !== previousPoint.lat > point.lat;
+    const longitudeAtLatitude =
+      ((previousPoint.lon - currentPoint.lon) *
+        (point.lat - currentPoint.lat)) /
+        (previousPoint.lat - currentPoint.lat) +
+      currentPoint.lon;
+    if (crossesLatitude && point.lon < longitudeAtLatitude) inside = !inside;
+    previous = index;
+  }
+  return inside;
+}
+
+function relationPolygonRings(element: OsmElement): OsmPolygonRings[] {
+  const members = element.members ?? [];
+  const polygons = stitchRings(
+    members
       .filter((member) => (member.role ?? "outer") === "outer")
       .map((member) => member.geometry ?? []),
+  ).map((outer) => ({ outer, holes: [] }));
+  const innerRings = stitchRings(
+    members
+      .filter((member) => member.role === "inner")
+      .map((member) => member.geometry ?? []),
   );
+
+  for (const hole of innerRings) {
+    const containingPolygon = polygons.find(({ outer }) =>
+      pointInRing(hole[0], outer),
+    );
+    containingPolygon?.holes.push(hole);
+  }
+
+  return polygons;
 }
 
 function polygonCenter(points: GeoCoordinate[]): { lat: number; lon: number } {
@@ -155,13 +197,13 @@ function namesFromTags(tags: OsmTags): string[] {
 
 function createBuildingParts(element: OsmElement): CampusBuilding[] {
   const tags = element.tags ?? {};
-  const rawRings =
+  const polygons =
     element.type === "relation"
-      ? relationOuterRings(element)
+      ? relationPolygonRings(element)
       : element.geometry
-        ? [closeRing(element.geometry)].filter((ring): ring is OsmPoint[] =>
-            Boolean(ring),
-          )
+        ? [closeRing(element.geometry)]
+            .filter((ring): ring is OsmPoint[] => Boolean(ring))
+            .map((outer) => ({ outer, holes: [] }))
         : [];
   const identity =
     element.type === "way" || element.type === "relation"
@@ -172,8 +214,8 @@ function createBuildingParts(element: OsmElement): CampusBuilding[] {
         )
       : undefined;
 
-  return rawRings.map((ring, partIndex) => {
-    const footprint = ring.map(toCoordinate);
+  return polygons.map(({ outer, holes }, partIndex) => {
+    const footprint = outer.map(toCoordinate);
     const names = identity?.names ?? {
       zh: tags["name:zh"] ?? tags.name ?? "校園建築",
       en: tags["name:en"],
@@ -188,6 +230,9 @@ function createBuildingParts(element: OsmElement): CampusBuilding[] {
       location: polygonCenter(footprint),
       geometry: {
         footprint,
+        ...(holes.length > 0
+          ? { holes: holes.map((ring) => ring.map(toCoordinate)) }
+          : {}),
         height: parsePositiveNumber(tags.height),
         levels: parsePositiveNumber(tags["building:levels"]),
       },
@@ -234,13 +279,13 @@ function createAreaParts(
   element: OsmElement,
   kind: CampusAreaFeature["kind"],
 ): CampusAreaFeature[] {
-  const rings =
+  const polygons =
     element.type === "relation"
-      ? relationOuterRings(element)
+      ? relationPolygonRings(element)
       : element.geometry
-        ? [closeRing(element.geometry)].filter((ring): ring is OsmPoint[] =>
-            Boolean(ring),
-          )
+        ? [closeRing(element.geometry)]
+            .filter((ring): ring is OsmPoint[] => Boolean(ring))
+            .map((outer) => ({ outer, holes: [] }))
         : [];
   const tags = element.tags ?? {};
   const elementId = `${element.type}/${element.id}`;
@@ -255,14 +300,17 @@ function createAreaParts(
           : undefined))
       : undefined;
 
-  return rings.map((ring, index) => {
-    const polygon = ring.map(toCoordinate);
+  return polygons.map(({ outer, holes }, index) => {
+    const polygon = outer.map(toCoordinate);
     return {
       id: `osm-${element.type}-${element.id}-${index}`,
       kind,
       names,
       location: polygonCenter(polygon),
       polygon,
+      ...(holes.length > 0
+        ? { holes: holes.map((ring) => ring.map(toCoordinate)) }
+        : {}),
     };
   });
 }
