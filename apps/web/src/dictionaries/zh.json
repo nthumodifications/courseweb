@@ -718,6 +718,19 @@
     "no_events": "無行程",
     "no_events_sub": "今天沒有任何行程",
     "add_event": "新增行程",
+    "accessibility": {
+      "calendar": "行事曆",
+      "shortcuts": "行事曆鍵盤快速鍵：方向鍵可捲動或切換期間，T 前往今天，W 顯示週檢視，M 顯示月檢視。",
+      "previous_period": "上一個期間",
+      "next_period": "下一個期間",
+      "today": "前往今天",
+      "view_upcoming": "顯示即將到來的行程",
+      "view_week": "顯示週檢視",
+      "view_month": "顯示月檢視",
+      "select_period": "選擇行事曆日期",
+      "open_day": "開啟 {date} 的週檢視",
+      "create_event_on_date": "在 {date} 新增行程"
+    },
     "updating": "資料更新中",
     "sync": {
       "title": "發現課表更新！",
@@ -764,7 +777,13 @@
       "update_following": "這個及之後的行程",
       "delete_repeat_title": "刪除重複行程",
       "delete_repeat_description": "要刪除所有重複行程，還是只刪除這個行程？",
-      "delete_this": "只刪除這個行程"
+      "delete_this": "只刪除這個行程",
+      "open_event": "開啟 {date} 的行程：{title}",
+      "edit": "編輯行程",
+      "contribute_date": "提供課程日期",
+      "close": "關閉",
+      "delete_focus_target": "行事曆",
+      "form_description": "輸入這個行事曆行程的詳細資訊。"
     },
     "form": {
       "start": "開始",
@@ -790,11 +809,24 @@
       "monthly": "每月",
       "yearly": "每年",
       "color": "顏色",
+      "choose_color": "選擇行程顏色",
+      "color_option": "選擇顏色 {color}",
       "label": "標籤",
       "details": "詳細資訊",
       "add_details": "新增詳細資訊",
       "no_label": "找不到標籤。",
+      "end_before_start": "結束日期不可早於開始日期。",
       "save_event": "儲存行程"
+    },
+    "labels": {
+      "event": "行程",
+      "course": "課程",
+      "meeting": "會議",
+      "assignment": "作業",
+      "exam": "考試",
+      "holiday": "假日",
+      "birthday": "生日",
+      "anniversary": "週年紀念"
     },
     "minified": {
       "no_events": "沒有即將到來的行程"

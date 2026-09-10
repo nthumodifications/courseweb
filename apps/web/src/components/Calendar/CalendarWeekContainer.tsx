@@ -23,6 +23,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarEventInternal } from "./calendar.types";
@@ -33,6 +34,7 @@ import { getNearestTime } from "@courseweb/ui";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import useCourseDates from "@/hooks/useCourseDates";
 import { getLocale } from "@/helpers/dateLocale";
+import useDictionary from "@/dictionaries/useDictionary";
 
 export const CalendarWeekContainer = ({
   displayWeek,
@@ -43,6 +45,7 @@ export const CalendarWeekContainer = ({
 }) => {
   const { events, addEvent, displayContainer, HOUR_HEIGHT } = useCalendar();
   const { language, showAcademicCalendar } = useSettings();
+  const dict = useDictionary();
   const { courses } = useUserTimetable();
   const enrolledCourseIds = useMemo(
     () => Object.values(courses).flat(),
@@ -51,6 +54,7 @@ export const CalendarWeekContainer = ({
   const { getCourseDateForDay } = useCourseDates(enrolledCourseIds);
   const [eventFormOpen, setEventFormOpen] = useState(false);
   const [newEventTime, setNewEventTime] = useState<Date | null>(null);
+  const eventFormTriggerRef = useRef<HTMLElement | null>(null);
 
   // Function to handle clicks on empty time slots
   const handleEmptySlotClick = useCallback(
@@ -59,6 +63,8 @@ export const CalendarWeekContainer = ({
       if ((e.target as HTMLElement).closest(".event-item")) {
         return;
       }
+
+      eventFormTriggerRef.current = e.currentTarget as HTMLElement;
 
       // Calculate the time based on the click position
       const containerRect = displayContainer.current?.getBoundingClientRect();
@@ -91,6 +97,25 @@ export const CalendarWeekContainer = ({
       setEventFormOpen(true);
     },
     [displayContainer, HOUR_HEIGHT],
+  );
+
+  const handleEmptySlotKeyDown = useCallback(
+    (day: Date, event: ReactKeyboardEvent<HTMLDivElement>) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+
+      event.preventDefault();
+      eventFormTriggerRef.current = event.currentTarget;
+      const nearestTime = getNearestTime(new Date(), 10);
+      const keyboardTime = set(day, {
+        hours: nearestTime.hours,
+        minutes: nearestTime.minutes,
+        seconds: 0,
+        milliseconds: 0,
+      });
+      setNewEventTime(keyboardTime);
+      setEventFormOpen(true);
+    },
+    [],
   );
 
   const {
@@ -221,8 +246,9 @@ export const CalendarWeekContainer = ({
             key={`${event.id}-${event.displayStart.getTime()}`}
             event={event}
           >
-            <div
-              className="absolute pr-0.5 event-item"
+            <button
+              type="button"
+              className="absolute border-0 bg-transparent p-0 pr-0.5 text-left event-item focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               style={{
                 top:
                   event.displayStart.getHours() * HOUR_HEIGHT +
@@ -250,7 +276,7 @@ export const CalendarWeekContainer = ({
                   </div>
                 )}
               </div>
-            </div>
+            </button>
           </EventPopover>
         );
       });
@@ -270,6 +296,7 @@ export const CalendarWeekContainer = ({
         .sort((a, b) => a.displayStart.getTime() - b.displayStart.getTime());
 
       return dayOverlayEvents.map((event) => {
+        const textColor = getContrastColor(event.color);
         const cappedEnd = new Date(
           Math.min(event.displayEnd.getTime(), dayEnd.getTime()),
         );
@@ -302,7 +329,7 @@ export const CalendarWeekContainer = ({
             >
               <div
                 className="text-xs leading-none font-medium"
-                style={{ color: event.color }}
+                style={{ color: textColor }}
               >
                 {event.title}
               </div>
@@ -413,21 +440,21 @@ export const CalendarWeekContainer = ({
   const renderAllDayEvents = useCallback(() => {
     return dayEvents.map((event, index) => (
       <EventPopover key={event.id + event.dispStart.getDate()} event={event}>
-        <div
+        <button
+          type="button"
+          className="border-0 bg-transparent p-0 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           style={{
             gridColumn: `${event.gridColumnStart} / span ${event.span}`,
             gridRow: event.gridRowStart,
           }}
         >
           <div
-            className="overflow-hidden bg-nthu-500 rounded-md h-full p-1 sm:p-2 flex flex-col gap-1 hover:shadow-md cursor-pointer transition-shadow select-none"
+            className="overflow-hidden bg-nthu-500 rounded-md h-full p-1 sm:p-2 flex flex-col gap-1"
             style={{ background: event.color, color: event.textColor }}
           >
-            <div className="text-sm leading-none line-clamp-1">
-              {event.title}
-            </div>
+            <div className="text-sm leading-none line-clamp-1">{event.title}</div>
           </div>
-        </div>
+        </button>
       </EventPopover>
     ));
   }, [dayEvents]);
@@ -500,8 +527,15 @@ export const CalendarWeekContainer = ({
                 {displayWeek.map((day, index) => (
                   <div key={day.getTime()} className="relative flex-1">
                     <div
-                      className="flex flex-col border-r border-border flex-1"
+                      className="flex flex-col border-r border-border flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                      role="button"
+                      tabIndex={0}
+                      aria-label={dict.calendar.accessibility.create_event_on_date.replace(
+                        "{date}",
+                        format(day, "PPP", { locale: getLocale(language) }),
+                      )}
                       onClick={(e) => handleEmptySlotClick(day, e.clientY, e)}
+                      onKeyDown={(event) => handleEmptySlotKeyDown(day, event)}
                     >
                       {hours.map((hour, index) => (
                         <div
@@ -531,6 +565,7 @@ export const CalendarWeekContainer = ({
               end: addMinutes(newEventTime, 30),
               allDay: false,
             }}
+            returnFocusRef={eventFormTriggerRef}
             onEventAdded={(event) => {
               addEvent(event);
               setNewEventTime(null);

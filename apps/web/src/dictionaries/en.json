@@ -718,6 +718,19 @@
     "no_events": "No Upcoming Events",
     "no_events_sub": "There are no scheduled events",
     "add_event": "Add Event",
+    "accessibility": {
+      "calendar": "Calendar",
+      "shortcuts": "Calendar keyboard shortcuts: Arrow keys scroll or change the period, T goes to today, W shows the week, and M shows the month.",
+      "previous_period": "Previous period",
+      "next_period": "Next period",
+      "today": "Go to today",
+      "view_upcoming": "Show upcoming events",
+      "view_week": "Show week view",
+      "view_month": "Show month view",
+      "select_period": "Select calendar date",
+      "open_day": "Open week for {date}",
+      "create_event_on_date": "Create event on {date}"
+    },
     "updating": "Updating data",
     "sync": {
       "title": "Timetable update found!",
@@ -764,7 +777,13 @@
       "update_following": "This and following events",
       "delete_repeat_title": "Delete recurring event",
       "delete_repeat_description": "Do you want to delete all recurring events or only this event?",
-      "delete_this": "Delete this event"
+      "delete_this": "Delete this event",
+      "open_event": "Open event {title} on {date}",
+      "edit": "Edit event",
+      "contribute_date": "Contribute course date",
+      "close": "Close",
+      "delete_focus_target": "Calendar",
+      "form_description": "Enter the details for this calendar event."
     },
     "form": {
       "start": "Start",
@@ -790,11 +809,24 @@
       "monthly": "Monthly",
       "yearly": "Yearly",
       "color": "Color",
+      "choose_color": "Choose event color",
+      "color_option": "Select color {color}",
       "label": "Label",
       "details": "Details",
       "add_details": "Add details",
       "no_label": "No label found.",
+      "end_before_start": "End date cannot be before start date.",
       "save_event": "Save Event"
+    },
+    "labels": {
+      "event": "Event",
+      "course": "Course",
+      "meeting": "Meeting",
+      "assignment": "Assignment",
+      "exam": "Exam",
+      "holiday": "Holiday",
+      "birthday": "Birthday",
+      "anniversary": "Anniversary"
     },
     "minified": {
       "no_events": "No upcoming events"

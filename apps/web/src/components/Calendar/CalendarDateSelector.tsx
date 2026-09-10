@@ -17,17 +17,21 @@ export const CalendarDateSelector = ({
   const { language } = useSettings();
 
   const handleDateSelect = (d: Date | undefined) => {
-    setDate(d!);
+    if (!d) return;
     setOpen(false);
+    setDate(d);
   };
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger>
-        <h2 className="text-lg md:text-xl font-semibold md:w-40 w-36 whitespace-nowrap">
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="text-lg md:text-xl font-semibold md:w-40 w-36 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        >
           {format(date, "LLLL yyyy", { locale: getLocale(language) })}{" "}
-          <ChevronDown className="inline size-3" />
-        </h2>
+          <ChevronDown className="inline size-3" aria-hidden="true" />
+        </button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0">
         <ShadcnCalendar

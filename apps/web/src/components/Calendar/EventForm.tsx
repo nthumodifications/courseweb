@@ -11,7 +11,14 @@ import {
   startOfDay,
 } from "date-fns";
 import { cn } from "@courseweb/ui";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from "react";
 import { z } from "zod";
 import { UseFormReturn, useForm, useWatch } from "react-hook-form";
 import { Popover, PopoverContent, PopoverTrigger } from "@courseweb/ui";
@@ -34,7 +41,6 @@ import {
   SelectValue,
 } from "@courseweb/ui";
 import { Button } from "@courseweb/ui";
-import { CirclePicker } from "react-color";
 import { Textarea } from "@courseweb/ui";
 import { CalendarEvent } from "./calendar.types";
 import { eventFormSchema } from "./eventFormSchema";
@@ -52,6 +58,89 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { getLocale } from "@/helpers/dateLocale";
 import { useSettings } from "@/hooks/contexts/settings";
 import useDictionary from "@/dictionaries/useDictionary";
+
+const AccessibleColorPicker = ({
+  color,
+  colors,
+  colorLabel,
+  onChange,
+}: {
+  color: string;
+  colors: string[];
+  colorLabel: (color: string) => string;
+  onChange: (color: string) => void;
+}) => {
+  const swatchRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const selectedIndex = Math.max(colors.indexOf(color), 0);
+  const [activeIndex, setActiveIndex] = useState(selectedIndex);
+
+  useEffect(() => {
+    setActiveIndex(selectedIndex);
+  }, [selectedIndex]);
+
+  useEffect(() => {
+    swatchRefs.current[activeIndex]?.focus();
+  }, []);
+
+  const handleKeyDown = (
+    event: ReactKeyboardEvent<HTMLButtonElement>,
+    index: number,
+  ) => {
+    const columnCount = 5;
+    let nextIndex = index;
+
+    if (event.key === "ArrowRight") nextIndex = (index + 1) % colors.length;
+    if (event.key === "ArrowLeft")
+      nextIndex = (index - 1 + colors.length) % colors.length;
+    if (event.key === "ArrowDown")
+      nextIndex = Math.min(index + columnCount, colors.length - 1);
+    if (event.key === "ArrowUp") nextIndex = Math.max(index - columnCount, 0);
+    if (event.key === "Home") nextIndex = 0;
+    if (event.key === "End") nextIndex = colors.length - 1;
+
+    if (nextIndex !== index) {
+      event.preventDefault();
+      setActiveIndex(nextIndex);
+      onChange(colors[nextIndex]);
+      swatchRefs.current[nextIndex]?.focus();
+      return;
+    }
+
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      onChange(colors[index]);
+    }
+  };
+
+  return (
+    <div
+      role="radiogroup"
+      aria-label={colorLabel(color)}
+      className="flex max-w-[220px] flex-wrap gap-2"
+    >
+      {colors.map((swatchColor, index) => (
+        <button
+          key={swatchColor}
+          ref={(element) => {
+            swatchRefs.current[index] = element;
+          }}
+          type="button"
+          role="radio"
+          aria-checked={swatchColor === color}
+          aria-label={colorLabel(swatchColor)}
+          tabIndex={index === activeIndex ? 0 : -1}
+          className="h-7 w-7 rounded-full border-2 border-white shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          style={{ backgroundColor: swatchColor }}
+          onClick={() => {
+            setActiveIndex(index);
+            onChange(swatchColor);
+          }}
+          onKeyDown={(event) => handleKeyDown(event, index)}
+        />
+      ))}
+    </div>
+  );
+};
 
 export const EventForm = ({
   defaultEvent,
@@ -313,6 +402,7 @@ export const EventForm = ({
                 <PopoverTrigger asChild>
                   <FormControl>
                     <Button
+                      type="button"
                       variant={"outline"}
                       className={cn(
                         "flex-1 justify-start text-left font-normal",
@@ -411,6 +501,7 @@ export const EventForm = ({
                 <PopoverTrigger asChild>
                   <FormControl>
                     <Button
+                      type="button"
                       variant={"outline"}
                       className={cn(
                         "flex-1 justify-start text-left font-normal",
@@ -486,6 +577,7 @@ export const EventForm = ({
               <PopoverTrigger asChild>
                 <FormControl>
                   <Button
+                    type="button"
                     variant={"outline"}
                     className={cn(
                       "w-full justify-start text-left font-normal",
@@ -544,6 +636,7 @@ export const EventForm = ({
               <PopoverTrigger asChild>
                 <FormControl>
                   <Button
+                    type="button"
                     variant={"outline"}
                     className={cn(
                       "w-full justify-start text-left font-normal",
@@ -572,7 +665,8 @@ export const EventForm = ({
                     const startDate = form.getValues("start");
                     if (d < startDate) {
                       form.setError("end", {
-                        message: "End date cannot be before start date",
+                        type: "manual",
+                        message: dict.calendar.form.end_before_start,
                       });
                       return;
                     }
@@ -629,88 +723,123 @@ export const EventForm = ({
             <FormItem>
               <FormLabel>{dict.calendar.form.end_repeat}</FormLabel>
               <div className="space-y-2">
-                <RadioGroup
-                  value={field.value || "count"}
-                  onValueChange={field.onChange}
-                  className="flex flex-col space-y-3"
-                >
+                <FormControl>
+                  <RadioGroup
+                    value={field.value || "count"}
+                    onValueChange={field.onChange}
+                    aria-label={dict.calendar.form.end_repeat}
+                    className="flex flex-col space-y-3"
+                  >
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="count" id="repeat-count" />
+                    <RadioGroupItem
+                      value="count"
+                      id="repeat-count"
+                      aria-label={dict.calendar.form.after}
+                    />
                     <div className="flex-1">
-                      <Label htmlFor="repeat-count" className="block mb-1">
+                      <Label
+                        htmlFor="repeat-count-value"
+                        className="block mb-1"
+                      >
                         {dict.calendar.form.after}
                       </Label>
                       <FormField
                         control={form.control}
                         name="repeat.value"
                         render={({ field: valueField }) => (
-                          <Input
-                            type="number"
-                            min="1"
-                            placeholder={dict.calendar.form.number_occurrences}
-                            disabled={repeatMode !== "count"}
-                            {...valueField}
-                            onChange={(e) => {
-                              const value = parseInt(e.target.value);
-                              valueField.onChange(
-                                isNaN(value) || value < 1 ? 1 : value,
-                              );
-                            }}
-                          />
+                          <>
+                            <FormControl>
+                              <Input
+                                id="repeat-count-value"
+                                type="number"
+                                min="1"
+                                aria-label={
+                                  dict.calendar.form.number_occurrences
+                                }
+                                placeholder={
+                                  dict.calendar.form.number_occurrences
+                                }
+                                disabled={repeatMode !== "count"}
+                                {...valueField}
+                                onChange={(e) => {
+                                  const value = parseInt(e.target.value);
+                                  valueField.onChange(
+                                    isNaN(value) || value < 1 ? 1 : value,
+                                  );
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </>
                         )}
                       />
                     </div>
                   </div>
 
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="date" id="repeat-date" />
+                    <RadioGroupItem
+                      value="date"
+                      id="repeat-date"
+                      aria-label={dict.calendar.form.on_date}
+                    />
                     <div className="flex-1">
-                      <Label htmlFor="repeat-date" className="block mb-1">
-                        {dict.calendar.form.on_date}
-                      </Label>
-                      <FormField
-                        control={form.control}
-                        name="repeat.value"
-                        render={({ field: valueField }) => (
-                          <Popover modal={true}>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant={"outline"}
-                                className="w-full justify-start text-left"
-                                disabled={repeatMode !== "date"}
-                              >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {repeatMode === "date" &&
-                                typeof valueField.value === "number" ? (
-                                  format(new Date(valueField.value), "PPP", {
-                                    locale: getLocale(language),
-                                  })
-                                ) : (
-                                  <span>{dict.calendar.form.pick_end_date}</span>
-                                )}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0">
-                              {repeatMode === "date" && (
-                                <ShadcnCalendar
-                                  mode="single"
-                                  selected={new Date(valueField.value)}
-                                  onSelect={(v) =>
-                                    valueField.onChange(
-                                      v?.getTime() ?? Date.now(),
-                                    )
-                                  }
-                                  initialFocus
-                                  defaultMonth={new Date(valueField.value)}
-                                />
-                              )}
-                            </PopoverContent>
-                          </Popover>
-                        )}
-                      />
+                        <Label htmlFor="repeat-date-value" className="block mb-1">
+                          {dict.calendar.form.on_date}
+                        </Label>
+                        <FormField
+                          control={form.control}
+                          name="repeat.value"
+                          render={({ field: valueField }) => (
+                            <>
+                              <Popover modal={true}>
+                                <PopoverTrigger asChild>
+                                  <FormControl>
+                                    <Button
+                                      id="repeat-date-value"
+                                      type="button"
+                                      variant={"outline"}
+                                      className="w-full justify-start text-left"
+                                      aria-label={dict.calendar.form.on_date}
+                                      disabled={repeatMode !== "date"}
+                                    >
+                                      <CalendarIcon className="mr-2 h-4 w-4" />
+                                      {repeatMode === "date" &&
+                                      typeof valueField.value === "number" ? (
+                                        format(new Date(valueField.value), "PPP", {
+                                          locale: getLocale(language),
+                                        })
+                                      ) : (
+                                        <span>
+                                          {dict.calendar.form.pick_end_date}
+                                        </span>
+                                      )}
+                                    </Button>
+                                  </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0">
+                                  {repeatMode === "date" && (
+                                    <ShadcnCalendar
+                                      mode="single"
+                                      selected={new Date(valueField.value)}
+                                      onSelect={(v) =>
+                                        valueField.onChange(
+                                          v?.getTime() ?? Date.now(),
+                                        )
+                                      }
+                                      initialFocus
+                                      defaultMonth={new Date(valueField.value)}
+                                    />
+                                  )}
+                                </PopoverContent>
+                              </Popover>
+                              <FormMessage />
+                            </>
+                          )}
+                        />
                     </div>
                   </div>
-                </RadioGroup>
+                  </RadioGroup>
+                </FormControl>
               </div>
               <FormMessage />
             </FormItem>
@@ -794,11 +923,11 @@ export const EventForm = ({
                       field.onChange(v === "null" ? null : v)
                     }
                   >
-                    <SelectTrigger>
-                      <FormControl>
+                    <FormControl>
+                      <SelectTrigger>
                         <SelectValue placeholder={dict.calendar.form.select_repeat} />
-                      </FormControl>
-                    </SelectTrigger>
+                      </SelectTrigger>
+                    </FormControl>
                     <SelectContent>
                       <SelectItem value="null">{dict.calendar.form.no_repeat}</SelectItem>
                       <SelectItem value="daily">{dict.calendar.form.daily}</SelectItem>
@@ -826,7 +955,13 @@ export const EventForm = ({
                     <Popover modal={true}>
                       <PopoverTrigger asChild>
                         <FormControl>
-                          <Button variant="outline" className="w-full">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="w-full"
+                            aria-label={dict.calendar.form.choose_color}
+                            aria-haspopup="dialog"
+                          >
                             <div
                               className="w-6 h-6 rounded-full mr-2"
                               style={{ background: field.value }}
@@ -836,12 +971,16 @@ export const EventForm = ({
                         </FormControl>
                       </PopoverTrigger>
                       <PopoverContent>
-                        <CirclePicker
+                        <AccessibleColorPicker
                           color={field.value}
-                          onChangeComplete={(color) =>
-                            field.onChange(color.hex)
-                          }
                           colors={currentColors}
+                          colorLabel={(color) =>
+                            dict.calendar.form.color_option.replace(
+                              "{color}",
+                              color,
+                            )
+                          }
+                          onChange={field.onChange}
                         />
                       </PopoverContent>
                     </Popover>
