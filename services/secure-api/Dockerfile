@@ -22,6 +22,7 @@ COPY apps/web/package.json ./apps/web/package.json
 COPY tools/build-scripts/package.json ./tools/build-scripts/package.json
 COPY tools/data-sync/package.json ./tools/data-sync/package.json
 COPY tools/dict-manager/package.json ./tools/dict-manager/package.json
+COPY tools/map-data/package.json ./tools/map-data/package.json
 
 # Install dependencies
 RUN bun install --frozen-lockfile

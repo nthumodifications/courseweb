@@ -260,26 +260,60 @@ const createCourseQuery = (
     .range(0, MAX_SCAN_ROWS - 1);
 };
 
+/**
+ * `search_courses` is an existing database function that matches through the
+ * PGroonga indexes on the course name and teacher columns. Those indexes
+ * tokenize CJK correctly and cover the `text[]` teacher columns, which
+ * PostgREST cannot express with `ilike` at all.
+ *
+ * Matching in the database also removes the unfiltered bounded scan this
+ * previously needed to find teacher matches, which fetched up to
+ * MAX_SCAN_ROWS full rows on every keystroke.
+ */
+const loadCoursesByRpc = (
+  c: Parameters<typeof supabase_server>[0],
+  keyword: string,
+) =>
+  supabase_server(c)
+    .rpc("search_courses", { keyword })
+    .order("raw_id", { ascending: false })
+    .range(0, MAX_SCAN_ROWS - 1);
+
 const loadCourses = async (
   c: Parameters<typeof supabase_server>[0],
   query: string,
 ) => {
-  // PostgREST cannot apply `ilike` to text[] columns such as teacher_zh. The
-  // scalar `.or(...)` query narrows the common case, while the bounded scan
-  // supplies teacher matches that PostgREST cannot express safely.
-  const requests = query.trim()
-    ? [createCourseQuery(c, query), createCourseQuery(c)]
-    : [createCourseQuery(c)];
-  const results = await Promise.all(requests);
-  const errors = results.map((result) => result.error).filter(Boolean);
-  if (errors.length > 0) throw errors[0];
-
+  const trimmed = query.trim();
   const courses = new Map<string, CourseHit>();
-  for (const result of results) {
-    for (const course of (result.data ?? []) as CourseRow[]) {
+  const collect = (rows: unknown) => {
+    for (const course of (rows ?? []) as CourseRow[]) {
       courses.set(course.raw_id, getCourseHit(course));
     }
+  };
+
+  if (!trimmed) {
+    const { data, error } = await createCourseQuery(c);
+    if (error) throw error;
+    collect(data);
+    return [...courses.values()];
   }
+
+  const { data, error } = await loadCoursesByRpc(c, trimmed);
+  if (!error) {
+    collect(data);
+    return [...courses.values()];
+  }
+
+  // Keep search answering even if the function is unavailable or rejects a
+  // query: degrade to the scalar `ilike` match rather than failing outright.
+  // Teacher matches are lost on this path, which is why it is not the default.
+  console.error("search_courses RPC failed, using ilike fallback:", {
+    message: error.message,
+    code: error.code,
+  });
+  const scalar = await createCourseQuery(c, trimmed);
+  if (scalar.error) throw scalar.error;
+  collect(scalar.data);
   return [...courses.values()];
 };
 
