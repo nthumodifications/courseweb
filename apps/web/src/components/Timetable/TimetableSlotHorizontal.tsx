@@ -5,9 +5,12 @@ import { VenueChip } from "./VenueChip";
 import { scheduleTimeSlots } from "@courseweb/shared";
 import useUserTimetable, {
   DEFAULT_FIELD_ORDER,
+  TIMETABLE_FONT_FAMILIES,
+  TIMETABLE_FONT_SIZE_CLASSES,
   TimetableFieldKey,
 } from "@/hooks/contexts/useUserTimetable";
 import { cn } from "@courseweb/ui";
+import { CalendarClock } from "lucide-react";
 
 type TimetableSlotProps = {
   course: CourseTimeslotData;
@@ -47,6 +50,11 @@ const TimetableSlotHorizontal = forwardRef<HTMLDivElement, TimetableSlotProps>(
     const fieldOrder: TimetableFieldKey[] =
       preferences.fieldOrder ?? DEFAULT_FIELD_ORDER;
     const display = preferences.display;
+    const fontSizeClass =
+      TIMETABLE_FONT_SIZE_CLASSES[preferences.fontSize ?? "sm"];
+    const fontFamily =
+      TIMETABLE_FONT_FAMILIES[preferences.fontFamily ?? "system"];
+    const customItem = course.customItem;
 
     const teacherName =
       displayLang == "zh"
@@ -57,7 +65,10 @@ const TimetableSlotHorizontal = forwardRef<HTMLDivElement, TimetableSlotProps>(
       switch (field) {
         case "code":
           return display.code ? (
-            <span key="code" className={cn("text-xs font-medium", textAlign)}>
+            <span
+              key="code"
+              className={cn(fontSizeClass, "font-medium", textAlign)}
+            >
               {course.course.department + course.course.course}
             </span>
           ) : null;
@@ -66,7 +77,8 @@ const TimetableSlotHorizontal = forwardRef<HTMLDivElement, TimetableSlotProps>(
             <span
               key="title"
               className={cn(
-                "text-xs md:text-sm line-clamp-1 font-medium",
+                fontSizeClass,
+                "line-clamp-1 font-medium min-w-0 break-words",
                 textAlign,
               )}
             >
@@ -79,7 +91,10 @@ const TimetableSlotHorizontal = forwardRef<HTMLDivElement, TimetableSlotProps>(
           return display.time &&
             scheduleTimeSlots[course.startTime] &&
             scheduleTimeSlots[course.endTime] ? (
-            <span key="time" className={cn("text-xs line-clamp-1", textAlign)}>
+            <span
+              key="time"
+              className={cn(fontSizeClass, "line-clamp-1", textAlign)}
+            >
               {scheduleTimeSlots[course.startTime].start} -{" "}
               {scheduleTimeSlots[course.endTime].end}
             </span>
@@ -88,7 +103,7 @@ const TimetableSlotHorizontal = forwardRef<HTMLDivElement, TimetableSlotProps>(
           return display.teacher && teacherName ? (
             <span
               key="teacher"
-              className={cn("text-xs line-clamp-1", textAlign)}
+              className={cn(fontSizeClass, "line-clamp-1", textAlign)}
             >
               {teacherName}
             </span>
@@ -105,7 +120,7 @@ const TimetableSlotHorizontal = forwardRef<HTMLDivElement, TimetableSlotProps>(
           ) : null;
         case "credits":
           return display.credits ? (
-            <span key="credits" className={cn("text-xs", textAlign)}>
+            <span key="credits" className={cn(fontSizeClass, textAlign)}>
               {course.course.credits} cr
             </span>
           ) : null;
@@ -117,7 +132,10 @@ const TimetableSlotHorizontal = forwardRef<HTMLDivElement, TimetableSlotProps>(
     return (
       <div
         ref={ref}
-        className="absolute rounded-md transform translate-y-0.5"
+        className={cn(
+          "absolute rounded-md transform translate-y-0.5",
+          customItem && "border border-dashed",
+        )}
         style={{
           left:
             tableDim.header.width +
@@ -133,6 +151,7 @@ const TimetableSlotHorizontal = forwardRef<HTMLDivElement, TimetableSlotProps>(
           height: tableDim.timetable.height / fraction - 4,
           backgroundColor: course.color,
           color: course.textColor,
+          borderColor: customItem ? course.textColor : undefined,
         }}
         {...props}
       >
@@ -142,8 +161,53 @@ const TimetableSlotHorizontal = forwardRef<HTMLDivElement, TimetableSlotProps>(
             flexAlign,
             justifyContent,
           )}
+          style={{ fontFamily }}
         >
-          {fieldOrder.map((field) => renderField(field))}
+          {customItem ? (
+            <>
+              {display.title && (
+                <span
+                  className={cn(
+                    fontSizeClass,
+                    "line-clamp-1 font-medium min-w-0 break-words",
+                    textAlign,
+                  )}
+                >
+                  <CalendarClock className="inline-block h-3 w-3 mr-0.5 align-[-0.1em]" />
+                  {customItem.title}
+                </span>
+              )}
+              {display.code && customItem.shortCode && (
+                <span className={cn(fontSizeClass, "font-medium", textAlign)}>
+                  {customItem.shortCode}
+                </span>
+              )}
+              {display.time && (
+                <span className={cn(fontSizeClass, "line-clamp-1", textAlign)}>
+                  {scheduleTimeSlots[course.startTime]?.start}–
+                  {scheduleTimeSlots[course.endTime]?.end}
+                </span>
+              )}
+              {display.venue && customItem.venue && (
+                <span className={cn(fontSizeClass, "line-clamp-1", textAlign)}>
+                  {customItem.venue}
+                </span>
+              )}
+              {customItem.note && (
+                <span
+                  className={cn(
+                    fontSizeClass,
+                    "line-clamp-1 opacity-85",
+                    textAlign,
+                  )}
+                >
+                  {customItem.note}
+                </span>
+              )}
+            </>
+          ) : (
+            fieldOrder.map((field) => renderField(field))
+          )}
         </div>
       </div>
     );

@@ -7,6 +7,8 @@ import {
   Users,
   ChevronRight,
   Download,
+  CalendarClock,
+  Trash2,
 } from "lucide-react";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { useNavigate, useParams } from "react-router-dom";
@@ -37,6 +39,18 @@ import { useAuth } from "react-oidc-context";
 import { useQuery } from "@tanstack/react-query";
 import { useTimetableShare } from "@/hooks/useTimetableShare";
 import { toPrettySemester } from "@/helpers/semester";
+import { Popover, PopoverContent, PopoverTrigger } from "@courseweb/ui";
+import Compact from "@uiw/react-color-compact";
+import { useMemo } from "react";
+import { TimetableCustomItemDrawer } from "./TimetableItemDrawer";
+import { CustomTimetableItem } from "@/types/timetable";
+
+const createEmptyCustomItem = (color: string): CustomTimetableItem => ({
+  id: `custom-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+  title: "",
+  color,
+  schedule: ["M1"],
+});
 
 const TimetableSidebar = ({
   vertical,
@@ -56,7 +70,21 @@ const TimetableSidebar = ({
     colorMap,
     setColorMap,
     currentColors,
+    semesterCustomItems,
+    addCustomItem,
+    updateCustomItem,
+    deleteCustomItem,
+    setCustomItemColor,
   } = useUserTimetable();
+
+  const emptyCustomItem = useMemo(
+    () =>
+      createEmptyCustomItem(
+        currentColors[semesterCustomItems.length % currentColors.length] ??
+          "#555555",
+      ),
+    [currentColors, semesterCustomItems.length],
+  );
 
   const navigate = useNavigate();
   const { lang } = useParams<{ lang: string }>();
@@ -104,19 +132,90 @@ const TimetableSidebar = ({
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Primary action — add courses */}
-      <Dialog>
-        <DialogTitle className="hidden">AddToSem</DialogTitle>
-        <DialogTrigger asChild>
+      {/* Primary actions */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <Dialog>
+          <DialogTitle className="hidden">AddToSem</DialogTitle>
+          <DialogTrigger asChild>
+            <Button variant="outline" className="w-full">
+              <Plus className="w-4 h-4 mr-2" />
+              {dict.course.item.add_to_semester}
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="p-0 h-[100dvh] max-w-screen w-screen gap-0 px-2 pt-6 md:p-8">
+            <CourseSearchContainerDynamic />
+          </DialogContent>
+        </Dialog>
+        <TimetableCustomItemDrawer
+          item={emptyCustomItem}
+          onSave={addCustomItem}
+        >
           <Button variant="outline" className="w-full">
-            <Plus className="w-4 h-4 mr-2" />
-            {dict.course.item.add_to_semester}
+            <CalendarClock className="w-4 h-4 mr-2" />
+            {dict.timetable.custom_items.add}
           </Button>
-        </DialogTrigger>
-        <DialogContent className="p-0 h-[100dvh] max-w-screen w-screen gap-0 px-2 pt-6 md:p-8">
-          <CourseSearchContainerDynamic />
-        </DialogContent>
-      </Dialog>
+        </TimetableCustomItemDrawer>
+      </div>
+
+      {semesterCustomItems.length > 0 && (
+        <div className="flex flex-col gap-1">
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide px-1">
+            {dict.timetable.custom_items.title}
+          </span>
+          {semesterCustomItems.map((item) => (
+            <div key={item.id} className="flex items-center gap-1">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    className="p-1 rounded-md hover:outline outline-1 outline-border"
+                    aria-label={dict.timetable.custom_items.color_label}
+                  >
+                    <span
+                      className="block h-4 w-4 rounded-full"
+                      style={{ backgroundColor: item.color }}
+                    />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="p-0 w-auto">
+                  <Compact
+                    color={item.color}
+                    onChange={(color) => setCustomItemColor(item.id, color.hex)}
+                    colors={currentColors}
+                  />
+                </PopoverContent>
+              </Popover>
+              <TimetableCustomItemDrawer
+                item={item}
+                onSave={updateCustomItem}
+                onDelete={() => deleteCustomItem(item.id)}
+              >
+                <button
+                  type="button"
+                  className="flex-1 min-w-0 text-left rounded-md px-2 py-1.5 hover:bg-accent transition-colors"
+                >
+                  <span className="block text-sm truncate">{item.title}</span>
+                  <span className="block text-xs text-muted-foreground truncate">
+                    {item.shortCode ||
+                      item.venue ||
+                      dict.timetable.custom_items.custom_label}
+                  </span>
+                </button>
+              </TimetableCustomItemDrawer>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 shrink-0"
+                onClick={() => deleteCustomItem(item.id)}
+                aria-label={dict.timetable.custom_items.delete}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Course list — the main content */}
       <TimetableCourseList semester={semester} vertical={vertical} />

@@ -2,7 +2,7 @@ import Timetable from "@/components/Timetable/Timetable";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { useLocalStorage } from "usehooks-ts";
 import SemesterSwitcher from "@/components/Timetable/SemesterSwitcher";
-import { createTimetableFromCourses } from "@/helpers/timetable";
+import { createTimetableFromCoursesAndCustomItems } from "@/helpers/timetable";
 import { MinimalCourse } from "@/types/courses";
 import { renderTimetableSlot } from "@/helpers/timetable_course";
 import TimetableSidebar from "@/components/Timetable/TimetableSidebar";
@@ -15,15 +15,21 @@ import { useSettings } from "@/hooks/contexts/settings";
 import { timetableEvents } from "@/lib/trackingEvents";
 
 const TimetablePage = () => {
-  const { getSemesterCourses, semester, setSemester, colorMap } =
-    useUserTimetable();
+  const {
+    getSemesterCourses,
+    getSemesterCustomItems,
+    semester,
+    setSemester,
+    colorMap,
+  } = useUserTimetable();
   const [vertical, setVertical] = useLocalStorage("timetable_vertical", true);
   const { language } = useSettings();
   const { setPortalContent, clearPortalContent } = useHeaderPortal();
   const previousSemesterRef = useRef(semester);
 
-  const timetableData = createTimetableFromCourses(
+  const timetableData = createTimetableFromCoursesAndCustomItems(
     getSemesterCourses(semester) as MinimalCourse[],
+    getSemesterCustomItems(semester),
     colorMap,
   );
 

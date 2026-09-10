@@ -3,6 +3,11 @@ import { CourseTimeslotData } from "@/types/timetable";
 import { scheduleTimeSlots } from "@courseweb/shared";
 import { useSettings } from "@/hooks/contexts/settings";
 import { cn } from "@/lib/utils";
+import { CalendarClock } from "lucide-react";
+import useUserTimetable, {
+  TIMETABLE_FONT_FAMILIES,
+  TIMETABLE_FONT_SIZE_CLASSES,
+} from "@/hooks/contexts/useUserTimetable";
 
 interface TimetableTimelineProps {
   timetableData: CourseTimeslotData[];
@@ -35,6 +40,11 @@ const TimetableTimeline: FC<TimetableTimelineProps> = ({
   className,
 }) => {
   const { language } = useSettings();
+  const { preferences } = useUserTimetable();
+  const fontSizeClass =
+    TIMETABLE_FONT_SIZE_CLASSES[preferences.fontSize ?? "sm"];
+  const fontFamily =
+    TIMETABLE_FONT_FAMILIES[preferences.fontFamily ?? "system"];
 
   // Determine which days have courses
   const daysPresent = [
@@ -115,27 +125,50 @@ const TimetableTimeline: FC<TimetableTimelineProps> = ({
                 const bottom = minutesToTop(timeToMinutes(endSlot.end));
                 const height = Math.max(bottom - top, 20);
                 const name =
-                  language === "zh"
+                  slot.customItem?.title ??
+                  (language === "zh"
                     ? slot.course.name_zh
-                    : slot.course.name_en || slot.course.name_zh;
+                    : slot.course.name_en || slot.course.name_zh);
 
                 return (
                   <div
                     key={i}
-                    className="absolute inset-x-1 rounded overflow-hidden flex flex-col px-1.5 py-0.5"
+                    className={cn(
+                      "absolute inset-x-1 rounded overflow-hidden flex flex-col px-1.5 py-0.5",
+                      slot.customItem && "border border-dashed",
+                    )}
                     style={{
                       top,
                       height,
                       backgroundColor: slot.color,
                       color: slot.textColor,
+                      borderColor: slot.customItem ? slot.textColor : undefined,
+                      fontFamily,
                     }}
                   >
-                    <span className="text-[10px] font-semibold leading-tight truncate">
+                    <span
+                      className={cn(
+                        fontSizeClass,
+                        "font-semibold leading-tight truncate",
+                      )}
+                    >
+                      {slot.customItem && (
+                        <CalendarClock className="inline-block h-3 w-3 mr-0.5" />
+                      )}
                       {name}
                     </span>
                     {height > 32 && slot.venue && (
-                      <span className="text-[10px] opacity-80 truncate">
+                      <span
+                        className={cn(fontSizeClass, "opacity-80 truncate")}
+                      >
                         {slot.venue}
+                      </span>
+                    )}
+                    {height > 44 && slot.customItem?.note && (
+                      <span
+                        className={cn(fontSizeClass, "opacity-80 truncate")}
+                      >
+                        {slot.customItem.note}
                       </span>
                     )}
                   </div>

@@ -3,6 +3,11 @@ import { CourseTimeslotData } from "@/types/timetable";
 import { scheduleTimeSlots } from "@courseweb/shared";
 import { useSettings } from "@/hooks/contexts/settings";
 import { cn } from "@/lib/utils";
+import { CalendarClock } from "lucide-react";
+import useUserTimetable, {
+  TIMETABLE_FONT_FAMILIES,
+  TIMETABLE_FONT_SIZE_CLASSES,
+} from "@/hooks/contexts/useUserTimetable";
 
 const DAY_LABELS: Record<string, { zh: string; en: string }> = {
   0: { zh: "週一", en: "Mon" },
@@ -24,6 +29,11 @@ const TimetableAgenda: FC<TimetableAgendaProps> = ({
   className,
 }) => {
   const { language } = useSettings();
+  const { preferences } = useUserTimetable();
+  const fontSizeClass =
+    TIMETABLE_FONT_SIZE_CLASSES[preferences.fontSize ?? "sm"];
+  const fontFamily =
+    TIMETABLE_FONT_FAMILIES[preferences.fontFamily ?? "system"];
 
   // Group by day of week
   const byDay = timetableData.reduce(
@@ -80,11 +90,13 @@ const TimetableAgenda: FC<TimetableAgendaProps> = ({
                 const startTime = startSlot?.start ?? "";
                 const endTime = endSlot?.end ?? "";
                 const name =
-                  language === "zh"
+                  slot.customItem?.title ??
+                  (language === "zh"
                     ? slot.course.name_zh
-                    : slot.course.name_en || slot.course.name_zh;
-                const teacher =
-                  language === "zh"
+                    : slot.course.name_en || slot.course.name_zh);
+                const teacher = slot.customItem
+                  ? undefined
+                  : language === "zh"
                     ? slot.course.teacher_zh?.join(", ")
                     : slot.course.teacher_en?.join(", ") ||
                       slot.course.teacher_zh?.join(", ");
@@ -92,7 +104,14 @@ const TimetableAgenda: FC<TimetableAgendaProps> = ({
                 return (
                   <div
                     key={idx}
-                    className="flex items-stretch gap-3 rounded-lg overflow-hidden border border-border"
+                    className={cn(
+                      "flex items-stretch gap-3 rounded-lg overflow-hidden border border-border",
+                      slot.customItem && "border-dashed",
+                    )}
+                    style={{
+                      borderColor: slot.customItem ? slot.textColor : undefined,
+                      fontFamily,
+                    }}
                   >
                     {/* Color accent bar */}
                     <div
@@ -102,41 +121,88 @@ const TimetableAgenda: FC<TimetableAgendaProps> = ({
 
                     {/* Time column */}
                     <div className="flex flex-col justify-center items-center py-2 w-16 shrink-0">
-                      <span className="text-xs font-mono text-muted-foreground">
+                      <span
+                        className={cn(
+                          fontSizeClass,
+                          "font-mono text-muted-foreground",
+                        )}
+                      >
                         {startTime}
                       </span>
-                      <span className="text-[10px] text-muted-foreground/60">
+                      <span
+                        className={cn(
+                          fontSizeClass,
+                          "text-muted-foreground/60",
+                        )}
+                      >
                         –
                       </span>
-                      <span className="text-xs font-mono text-muted-foreground">
+                      <span
+                        className={cn(
+                          fontSizeClass,
+                          "font-mono text-muted-foreground",
+                        )}
+                      >
                         {endTime}
                       </span>
                     </div>
 
                     {/* Course info */}
                     <div className="flex flex-col justify-center py-2 pr-3 flex-1 min-w-0">
-                      <span className="text-sm font-medium truncate">
+                      <span
+                        className={cn(
+                          fontSizeClass,
+                          "font-medium truncate min-w-0",
+                        )}
+                        style={{ color: slot.textColor }}
+                      >
+                        {slot.customItem && (
+                          <CalendarClock className="inline-block h-3 w-3 mr-1" />
+                        )}
                         {name}
                       </span>
                       <div className="flex gap-2 mt-0.5 flex-wrap">
                         {teacher && (
-                          <span className="text-xs text-muted-foreground truncate">
+                          <span
+                            className={cn(
+                              fontSizeClass,
+                              "text-muted-foreground truncate",
+                            )}
+                          >
                             {teacher}
                           </span>
                         )}
                         {slot.venue && (
-                          <span className="text-xs text-muted-foreground/70 truncate">
+                          <span
+                            className={cn(
+                              fontSizeClass,
+                              "text-muted-foreground/70 truncate",
+                            )}
+                          >
                             @ {slot.venue}
+                          </span>
+                        )}
+                        {slot.customItem?.note && (
+                          <span
+                            className={cn(
+                              fontSizeClass,
+                              "text-muted-foreground/70 truncate",
+                            )}
+                          >
+                            {slot.customItem.note}
                           </span>
                         )}
                       </div>
                     </div>
 
                     {/* Credits badge */}
-                    {slot.course.credits != null && (
+                    {!slot.customItem && slot.course.credits != null && (
                       <div className="flex items-center pr-3">
                         <span
-                          className="text-xs font-semibold px-1.5 py-0.5 rounded"
+                          className={cn(
+                            fontSizeClass,
+                            "font-semibold px-1.5 py-0.5 rounded",
+                          )}
                           style={{
                             backgroundColor: slot.color + "30",
                             color: slot.color,

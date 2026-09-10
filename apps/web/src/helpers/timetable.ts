@@ -1,5 +1,5 @@
 import { scheduleTimeSlots, timetableColors } from "@courseweb/shared";
-import { CourseTimeslotData } from "@/types/timetable";
+import { CourseTimeslotData, CustomTimetableItem } from "@/types/timetable";
 import { MinimalCourse } from "@/types/courses";
 import { getBrightness, getContrastColor } from "./colors";
 import { hasTimes } from "./courses";
@@ -96,3 +96,96 @@ export const colorMapFromCourses = (courseIds: string[], colors?: string[]) => {
   });
   return colorMap;
 };
+
+const customItemAsCourse = (item: CustomTimetableItem) =>
+  ({
+    raw_id: `custom-${item.id}`,
+    name_zh: item.title,
+    name_en: item.title,
+    department: "CUSTOM",
+    course: item.shortCode ?? "",
+    class: "",
+    credits: 0,
+    venues: item.venue ? [item.venue] : [],
+    times: item.schedule,
+    teacher_zh: [],
+    teacher_en: [],
+  }) as unknown as MinimalCourse;
+
+export const createTimetableFromCustomItems = (
+  items: CustomTimetableItem[],
+): CourseTimeslotData[] => {
+  const timetableData: CourseTimeslotData[] = [];
+
+  items.forEach((item) => {
+    const customCourse = customItemAsCourse(item);
+    item.schedule.forEach((timeString) => {
+      const timeslots = timeString
+        .match(/.{1,2}/g)
+        ?.map((slot) => ({ day: slot[0], time: slot[1] }))
+        .filter(
+          (slot) =>
+            "MTWRFS".includes(slot.day) &&
+            scheduleTimeSlots.some((period) => period.time === slot.time),
+        );
+
+      if (!timeslots?.length) return;
+
+      const groupedTimeslots: { day: string; time: string }[][] = [];
+      timeslots.forEach((current) => {
+        const previousGroup = groupedTimeslots[groupedTimeslots.length - 1];
+        const previous = previousGroup?.[previousGroup.length - 1];
+        const previousIndex = previous
+          ? scheduleTimeSlots.findIndex(
+              (period) => period.time === previous.time,
+            )
+          : -1;
+        const currentIndex = scheduleTimeSlots.findIndex(
+          (period) => period.time === current.time,
+        );
+
+        if (
+          previousGroup &&
+          previous?.day === current.day &&
+          previousIndex + 1 === currentIndex
+        ) {
+          previousGroup.push(current);
+        } else {
+          groupedTimeslots.push([current]);
+        }
+      });
+
+      groupedTimeslots.forEach((group) => {
+        const day = group[0].day;
+        const periodIndexes = group.map((slot) =>
+          scheduleTimeSlots.findIndex((period) => period.time === slot.time),
+        );
+        const color = item.color || "#555555";
+        timetableData.push({
+          course: customCourse,
+          customItem: item,
+          venue: item.venue ?? "",
+          dayOfWeek: "MTWRFS".indexOf(day),
+          startTime: Math.min(...periodIndexes),
+          endTime: Math.max(...periodIndexes),
+          color,
+          textColor: getContrastColor(color),
+        });
+      });
+    });
+  });
+
+  return timetableData;
+};
+
+export const createTimetableFromCoursesAndCustomItems = (
+  courses: MinimalCourse[],
+  customItems: CustomTimetableItem[],
+  colorMap: { [courseId: string]: string } = colorMapFromCourses(
+    courses.map((course) => course.raw_id),
+    timetableColors[Object.keys(timetableColors)[0]],
+  ),
+) => [
+  ...createTimetableFromCourses(courses, colorMap),
+  ...createTimetableFromCustomItems(customItems),
+];

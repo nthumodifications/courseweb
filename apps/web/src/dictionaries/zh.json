@@ -58,7 +58,35 @@
     "lock_order": "鎖定課程順序",
     "reset_default": "恢復預設值",
     "no_courses": "尚未添加課程",
-    "all_courses": "所有課程"
+    "all_courses": "所有課程",
+    "custom_items": {
+      "title": "我的活動",
+      "add": "新增活動",
+      "custom_label": "自訂時間表項目",
+      "editor_title": "編輯時間表活動",
+      "title_label": "標題",
+      "title_placeholder": "例如：兼職工作",
+      "short_code_label": "簡短代號",
+      "short_code_placeholder": "選填標籤",
+      "venue_label": "地點",
+      "venue_placeholder": "選填地點",
+      "days_label": "星期",
+      "start_label": "開始節次",
+      "end_label": "結束節次",
+      "note_label": "備註",
+      "note_placeholder": "選填備註",
+      "color_label": "顏色",
+      "delete": "刪除",
+      "save": "儲存活動",
+      "days": {
+        "M": "週一",
+        "T": "週二",
+        "W": "週三",
+        "R": "週四",
+        "F": "週五",
+        "S": "週六"
+      }
+    }
   },
   "course": {
     "credits": "學分",
@@ -270,7 +298,22 @@
       "slot_time": "時間",
       "slot_venue": "地點",
       "alignment": "對齊",
-      "fields_order": "欄位與順序"
+      "fields_order": "欄位與順序",
+      "font_size": "時段文字大小",
+      "font_size_options": {
+        "xs": "特小",
+        "sm": "小",
+        "base": "中",
+        "lg": "大"
+      },
+      "font_family": "時段字型",
+      "font_family_options": {
+        "system": "系統字型",
+        "sans": "無襯線",
+        "serif": "襯線",
+        "mono": "等寬",
+        "rounded": "圓體"
+      }
     },
     "privacy": {
       "title": "隱私",
