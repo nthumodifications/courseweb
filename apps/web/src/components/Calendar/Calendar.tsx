@@ -109,8 +109,9 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
             onClick={moveBackward}
             size="icon"
             className="hidden md:inline-flex"
+            aria-label={dict.calendar.accessibility.previous_period}
           >
-            <ChevronLeft />
+            <ChevronLeft aria-hidden="true" />
           </Button>
           <CalendarDateSelector date={centerDate} setDate={setDate} />
           <Button
@@ -118,8 +119,9 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
             onClick={moveForward}
             size="icon"
             className="hidden md:inline-flex"
+            aria-label={dict.calendar.accessibility.next_period}
           >
-            <ChevronRight />
+            <ChevronRight aria-hidden="true" />
           </Button>
         </div>
 
@@ -133,14 +135,26 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
             className="mr-2"
           >
             <TabsList className="h-8">
-              <TabsTrigger value="upcoming" className="md:hidden h-7 px-2">
-                <Rows2 className="h-4 w-4" />
+              <TabsTrigger
+                value="upcoming"
+                className="md:hidden h-7 px-2"
+                aria-label={dict.calendar.accessibility.view_upcoming}
+              >
+                <Rows2 className="h-4 w-4" aria-hidden="true" />
               </TabsTrigger>
-              <TabsTrigger value="week" className="h-7 px-2">
-                <Columns4 className="h-4 w-4" />
+              <TabsTrigger
+                value="week"
+                className="h-7 px-2"
+                aria-label={dict.calendar.accessibility.view_week}
+              >
+                <Columns4 className="h-4 w-4" aria-hidden="true" />
               </TabsTrigger>
-              <TabsTrigger value="month" className="h-7 px-2">
-                <Grid3x3 className="h-4 w-4" />
+              <TabsTrigger
+                value="month"
+                className="h-7 px-2"
+                aria-label={dict.calendar.accessibility.view_month}
+              >
+                <Grid3x3 className="h-4 w-4" aria-hidden="true" />
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -150,8 +164,9 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
             size="icon"
             onClick={backToToday}
             className="h-8 hidden md:inline-flex"
+            aria-label={dict.calendar.accessibility.today}
           >
-            <CalendarIcon className="size-4" />
+            <CalendarIcon className="size-4" aria-hidden="true" />
           </Button>
         </div>
       </div>
@@ -164,7 +179,7 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
     return () => {
       clearPortalContent();
     };
-  }, [displayDates, setDate, displayMode]); // Added displayMode as dependency
+  }, [displayDates, setDate, displayMode, language]); // Added displayMode as dependency
 
   //week movers
   const moveBackward = () => {
@@ -231,19 +246,37 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
 
   //listen to keypress events
   const handleKeyPress = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.defaultPrevented) return;
+    const target = e.target as HTMLElement;
+    if (
+      target.matches(
+        "input, textarea, select, button, a, [contenteditable='true']",
+      )
+    ) {
+      return;
+    }
+
+    const key = e.key.toLowerCase();
     if (e.key === "ArrowUp") {
+      e.preventDefault();
       displayContainer.current?.scrollBy(0, -HOUR_HEIGHT);
     } else if (e.key === "ArrowDown") {
+      e.preventDefault();
       displayContainer.current?.scrollBy(0, HOUR_HEIGHT);
     } else if (e.key === "ArrowLeft") {
+      e.preventDefault();
       moveBackward();
     } else if (e.key === "ArrowRight") {
+      e.preventDefault();
       moveForward();
-    } else if (e.key === "t") {
+    } else if (key === "t") {
+      e.preventDefault();
       backToToday();
-    } else if (e.key === "w") {
+    } else if (key === "w") {
+      e.preventDefault();
       handleSwitchMode("week");
-    } else if (e.key === "m") {
+    } else if (key === "m") {
+      e.preventDefault();
       handleSwitchMode("month");
     }
   };
@@ -370,7 +403,29 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
             </AddEventButton>
           </div>
         </div>
-        <div className="w-full h-[80dvh]" {...handlers}>
+        <AddEventButton onEventAdded={handleAddEvent}>
+          <Button
+            className="md:hidden fixed bottom-24 right-8 z-50 rounded-lg shadow-lg"
+            size="icon"
+            aria-label={dict.calendar.add_event}
+          >
+            <Plus aria-hidden="true" />
+          </Button>
+        </AddEventButton>
+        <div
+          className="w-full h-[80dvh]"
+          {...handlers}
+          data-calendar-root
+          role="region"
+          tabIndex={0}
+          aria-label={dict.calendar.accessibility.calendar}
+          aria-describedby="calendar-keyboard-shortcuts"
+          aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight T W M"
+          onKeyDown={handleKeyPress}
+        >
+          <span id="calendar-keyboard-shortcuts" className="sr-only">
+            {dict.calendar.accessibility.shortcuts}
+          </span>
           {displayMode === "week" && (
             <CalendarWeekContainer
               displayWeek={displayDates}
@@ -398,14 +453,6 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
             </div>
           )}
         </div>
-        <AddEventButton onEventAdded={handleAddEvent}>
-          <Button
-            className="md:hidden fixed bottom-24 right-8 z-50 rounded-lg shadow-lg"
-            size="icon"
-          >
-            <Plus />
-          </Button>
-        </AddEventButton>
       </div>
     </ErrorBoundary>
   );

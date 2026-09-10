@@ -24,6 +24,7 @@ import client from "@/config/api";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import useCourseDates from "@/hooks/useCourseDates";
 import { getLocale } from "@/helpers/dateLocale";
+import useDictionary from "@/dictionaries/useDictionary";
 
 export const CalendarMonthContainer = ({
   displayMonth,
@@ -34,6 +35,7 @@ export const CalendarMonthContainer = ({
 }) => {
   const { events } = useCalendar();
   const { language, showAcademicCalendar } = useSettings();
+  const dict = useDictionary();
   const { courses } = useUserTimetable();
   const enrolledCourseIds = useMemo(
     () => Object.values(courses).flat(),
@@ -148,8 +150,9 @@ export const CalendarMonthContainer = ({
             ))}
           {allSortedEvents.map((event, index) => (
             <EventPopover key={index} event={event}>
-              <div
-                className="rounded-md p-0.5 md:p-1 flex flex-row gap-1 items-center hover:shadow-md cursor-pointer transition-shadow select-none"
+              <button
+                type="button"
+                className="rounded-md border-0 bg-transparent p-0.5 md:p-1 flex flex-row gap-1 items-center text-left hover:shadow-md cursor-pointer transition-shadow select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 style={{
                   background: event.isNoClass
                     ? "repeating-linear-gradient(-45deg, #9ca3af, #9ca3af 4px, #6b7280 4px, #6b7280 8px)"
@@ -169,7 +172,7 @@ export const CalendarMonthContainer = ({
                 <div className="text-xs leading-none whitespace-nowrap overflow-hidden">
                   {event.title}
                 </div>
-              </div>
+              </button>
             </EventPopover>
           ))}
         </div>
@@ -217,7 +220,9 @@ export const CalendarMonthContainer = ({
 
       return allDayEvents.map((event, index) => (
         <EventPopover key={index} event={event}>
-          <div
+          <button
+            type="button"
+            className="border-0 bg-transparent p-0 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             style={{
               position: "absolute",
               top: `${event.top}px`,
@@ -233,7 +238,7 @@ export const CalendarMonthContainer = ({
                 {event.title}
               </div>
             </div>
-          </div>
+          </button>
         </EventPopover>
       ));
     },
@@ -259,17 +264,22 @@ export const CalendarMonthContainer = ({
               isSameMonth(day, displayMonth[15]) ? "" : "bg-foreground/5",
             )}
           >
-            <div
+            <button
+              type="button"
               className={cn(
-                "text-sm font-semibold cursor-pointer p-0.5",
+                "border-0 bg-transparent text-sm font-semibold cursor-pointer p-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                 isToday(day)
                   ? "w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center"
                   : "",
               )}
+              aria-label={dict.calendar.accessibility.open_day.replace(
+                "{date}",
+                format(day, "PPP", { locale: getLocale(language) }),
+              )}
               onClick={() => onChangeView("week", day)}
             >
               {format(day, "d", { locale: getLocale(language) })}
-            </div>
+            </button>
             {renderEventsInDay(day, allDayEvents.length)}
           </div>
         </Fragment>
