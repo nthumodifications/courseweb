@@ -69,6 +69,8 @@ CALENDAR_API_KEY=your_google_calendar_api_key
 CWA_API_KEY=your_taiwan_weather_api_key
 ALGOLIA_APP_ID=your_algolia_app_id
 ALGOLIA_API_KEY=your_algolia_api_key
+ALGOLIA_BACKUP_APP_ID=your_backup_algolia_app_id
+ALGOLIA_BACKUP_API_KEY=your_backup_algolia_api_key
 
 # GitHub Integration
 GITHUB_CLIENT_ID=your_github_app_client_id
