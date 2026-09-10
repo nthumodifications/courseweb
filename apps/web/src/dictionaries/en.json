@@ -508,6 +508,88 @@
       "no_events": "No upcoming events"
     }
   },
+  "team": {
+    "recruitment_intro": "Want to help NTHUMods grow?",
+    "recruitment_link": "See our open roles"
+  },
+  "recruit": {
+    "title": "Join NTHUMods",
+    "subtitle": "Help maintain the tools that NTHU students rely on.",
+    "intro": "NTHUMods is student-run and open to people who want to build, improve, organize, or support the project.",
+    "open_roles": "Open roles",
+    "roles": {
+      "maintainer": {
+        "title": "Maintainer",
+        "description": "Keep the project healthy, review changes, and help set technical priorities."
+      },
+      "administrator": {
+        "title": "Administrator",
+        "description": "Help with operations, access, documentation, and the work that keeps the service dependable."
+      },
+      "frontend": {
+        "title": "Frontend helper",
+        "description": "Improve the web experience with accessible, useful interfaces for NTHU students."
+      },
+      "backend": {
+        "title": "Backend helper",
+        "description": "Build and maintain APIs, data workflows, and reliable infrastructure."
+      },
+      "community": {
+        "title": "Community helper",
+        "description": "Connect with students, gather feedback, and help turn needs into improvements."
+      }
+    },
+    "sign_in_prompt": "Sign in to apply. Your application and resume are only sent to the NTHUMods team.",
+    "sign_in": "Sign in to apply",
+    "meet_team": "Learn more about the team",
+    "loading": "Loading recruitment information...",
+    "roles_error": "We could not load the open roles. Please try again later.",
+    "application_error": "We could not load your application status. Please refresh and try again.",
+    "form": {
+      "title": "Application",
+      "description": "Tell us how you would like to help. A resume PDF is required.",
+      "role": "Role",
+      "role_placeholder": "Choose a role",
+      "statement": "Short statement",
+      "statement_placeholder": "What would you like to help with, and what experience should we know about?",
+      "statement_error": "Please write at least 20 characters.",
+      "contact": "Preferred contact method",
+      "contact_placeholder": "Choose a contact preference",
+      "contact_email": "Email",
+      "contact_discord": "Discord",
+      "contact_either": "Either is fine",
+      "github": "GitHub link (optional)",
+      "portfolio": "Portfolio link (optional)",
+      "link_error": "Please enter a complete URL.",
+      "resume": "Resume",
+      "resume_help": "PDF only, up to 5 MB.",
+      "choose_file": "Choose a PDF",
+      "selected_file": "Selected file",
+      "remove_file": "Remove file",
+      "uploading": "Uploading resume...",
+      "submit": "Submit application",
+      "submitting": "Submitting...",
+      "privacy": "We collect your application and resume so the NTHUMods team can review your application. Only authorized team members can access them. Ask us to delete your data at nthumods@gmail.com, and see our",
+      "privacy_link": "privacy policy",
+      "file_required": "Please choose a PDF resume.",
+      "file_type": "The selected file must be a PDF.",
+      "file_size": "The resume must be 5 MB or smaller.",
+      "network_error": "Something went wrong while submitting. Please check your connection and try again.",
+      "already_applied": "You have already submitted an application."
+    },
+    "status": {
+      "submitted": "Submitted",
+      "reviewing": "Under review",
+      "accepted": "Accepted",
+      "rejected": "Not selected"
+    },
+    "application_status": "Application status",
+    "submitted_title": "Application received",
+    "submitted_description": "Thank you for volunteering your time. We will review your application and contact you using your preferred method.",
+    "existing_description": "Your application is already on file. You can return here to check its status.",
+    "footer_link": "Recruitment",
+    "no_roles": "There are no open roles right now. Please check back later."
+  },
   "cancel": "Cancel",
   "privacy_policy": "Privacy Policy",
   "changelog": {

@@ -55,6 +55,7 @@ const Footer = () => {
         <Link to={`/${lang}/contribute`}>Contribute</Link>
         <Link to={`/${lang}/issues`}>Report an Issue</Link>
         <Link to={`/${lang}/team`}>Team</Link>
+        <Link to={`/${lang}/recruit`}>{dict.recruit.footer_link}</Link>
         <Link to={`/${lang}/privacy-policy`}>Privacy Policy</Link>
         <Link to={`/${lang}/changelog`}>{dict.changelog.title}</Link>
         <Link to={`/${lang}/proxy-login`}>Proxy Login</Link>
