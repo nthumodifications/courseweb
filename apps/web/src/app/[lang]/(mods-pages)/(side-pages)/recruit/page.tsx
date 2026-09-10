@@ -242,22 +242,22 @@ const RecruitmentPage = () => {
     : null;
 
   return (
-    <div className="flex flex-col gap-10 px-4 py-8">
+    <div className="flex flex-col gap-6 px-4 py-6 sm:gap-10 sm:py-8">
       <article className="mx-auto w-full max-w-4xl">
-        <div className="mb-10 text-center">
-          <h1 className="mb-4 text-4xl font-bold md:text-5xl">
+        <div className="mb-8 text-left sm:mb-10 sm:text-center">
+          <h1 className="mb-3 text-3xl font-bold sm:mb-4 sm:text-4xl md:text-5xl">
             {dict.recruit.title}
           </h1>
-          <p className="mb-3 text-xl text-muted-foreground">
+          <p className="mb-2 text-lg text-muted-foreground sm:mb-3 sm:text-xl">
             {dict.recruit.subtitle}
           </p>
-          <p className="mx-auto max-w-2xl text-muted-foreground">
+          <p className="mx-auto max-w-2xl text-sm text-muted-foreground sm:text-base">
             {dict.recruit.intro}
           </p>
         </div>
 
-        <section className="mb-10">
-          <h2 className="mb-4 text-2xl font-semibold">
+        <section className="mb-8 sm:mb-10">
+          <h2 className="mb-3 text-xl font-semibold sm:mb-4 sm:text-2xl">
             {dict.recruit.open_roles}
           </h2>
           {rolesLoading ? (
@@ -277,7 +277,7 @@ const RecruitmentPage = () => {
                 return (
                   <Card key={role.id}>
                     <CardHeader>
-                      <CardTitle className="text-xl">
+                      <CardTitle className="text-lg sm:text-xl">
                         {roleCopy.title}
                       </CardTitle>
                     </CardHeader>
@@ -291,12 +291,20 @@ const RecruitmentPage = () => {
           )}
         </section>
 
-        <div className="mb-10 flex flex-wrap items-center gap-4">
-          <Link className="text-primary underline" to={`/${lang}/team`}>
+        {/* Stacked and full width on a phone so the primary action is a real
+            tap target instead of a cramped inline pair. */}
+        <div className="mb-8 flex flex-col-reverse items-stretch gap-3 sm:mb-10 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
+          <Link
+            className="text-center text-primary underline sm:text-left"
+            to={`/${lang}/team`}
+          >
             {dict.recruit.meet_team}
           </Link>
           {!auth.isAuthenticated && !auth.isLoading && (
-            <Button onClick={() => void auth.signinRedirect()}>
+            <Button
+              className="w-full sm:w-auto"
+              onClick={() => void auth.signinRedirect()}
+            >
               {dict.recruit.sign_in}
             </Button>
           )}
