@@ -64,6 +64,7 @@ const Header = () => {
         "use_new_calendar",
         "timetable_vertical",
         "courses",
+        "course_favourites",
         "course_color_map",
         "timetable_theme",
         "user_defined_colors",

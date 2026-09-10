@@ -5,17 +5,18 @@ import { RawCourseID, Semester } from "@/types/courses";
 import { useMemo } from "react";
 import { Heart, Minus, Plus } from "lucide-react";
 import { Button } from "@courseweb/ui";
-import { useLocalStorage } from "usehooks-ts";
 import { toast } from "@courseweb/ui";
 import { lastSemester } from "@courseweb/shared";
 import { courseEvents } from "@/lib/trackingEvents";
 
 const SelectCourseButton = ({ courseId }: { courseId: RawCourseID }) => {
-  const { isCourseSelected, addCourse, deleteCourse } = useUserTimetable();
-  const [favourites, setFavourites] = useLocalStorage<string[]>(
-    "course_favourites",
-    [],
-  );
+  const {
+    isCourseSelected,
+    addCourse,
+    deleteCourse,
+    favourites,
+    setFavourites,
+  } = useUserTimetable();
 
   const dict = useDictionary();
   const courseSemester = courseId.slice(0, 5) as Semester;
