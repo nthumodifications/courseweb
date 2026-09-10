@@ -1,6 +1,7 @@
 import useDictionary from "@/dictionaries/useDictionary";
 import { Download, Image, Loader2 } from "lucide-react";
 import Timetable from "./Timetable";
+import TimetableOffGridSchedule from "./TimetableOffGridSchedule";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { toPng } from "html-to-image";
 import { useCallback, useRef, useState, type ReactNode } from "react";
@@ -28,8 +29,7 @@ const DownloadTimetableComponent = () => {
     semester,
     colorMap,
     currentColors,
-  } =
-    useUserTimetable();
+  } = useUserTimetable();
   const ref = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(false);
   const [generatedImg, setGeneratedImg] = useState<string | null>(null);
@@ -80,10 +80,11 @@ const DownloadTimetableComponent = () => {
           // Show success toast
           toast({
             title: dict.dialogs.DownloadTimetableDialog.success_toast_title,
-            description: dict.dialogs.DownloadTimetableDialog.success_toast_description.replace(
-              "{filename}",
-              filename,
-            ),
+            description:
+              dict.dialogs.DownloadTimetableDialog.success_toast_description.replace(
+                "{filename}",
+                filename,
+              ),
           });
         } catch (downloadError) {
           console.error("Download failed:", downloadError);
@@ -143,7 +144,8 @@ const DownloadTimetableComponent = () => {
           toast({
             title: dict.dialogs.DownloadTimetableDialog.copy_image_failed,
             description:
-              dict.dialogs.DownloadTimetableDialog.copy_image_failed_description,
+              dict.dialogs.DownloadTimetableDialog
+                .copy_image_failed_description,
             variant: "destructive",
           });
         });
@@ -151,7 +153,8 @@ const DownloadTimetableComponent = () => {
       toast({
         title: dict.dialogs.DownloadTimetableDialog.copy_image_unsupported,
         description:
-          dict.dialogs.DownloadTimetableDialog.copy_image_unsupported_description,
+          dict.dialogs.DownloadTimetableDialog
+            .copy_image_unsupported_description,
         variant: "destructive",
       });
     }
@@ -172,11 +175,16 @@ const DownloadTimetableComponent = () => {
       </Button>
       <div className="relative overflow-hidden">
         <div
-          className="absolute h-[915px] w-[539px] px-2 pt-4 pb-8 grid place-items-center bg-background"
+          className="absolute min-h-[915px] w-[539px] px-2 pt-4 pb-8 grid place-items-center bg-background"
           ref={ref}
         >
-          <div className="h-[915px] w-[414px]">
+          <div className="w-[414px]">
             <Timetable timetableData={timetableData} vertical />
+            <TimetableOffGridSchedule
+              timetableData={timetableData}
+              editable={false}
+              className="mt-4"
+            />
           </div>
         </div>
       </div>

@@ -20,54 +20,30 @@ export const timetableGridEnd = timeToMinutes(
   scheduleTimeSlots[scheduleTimeSlots.length - 1]!.end,
 );
 
-export type ClampedTimeRange = {
-  start: number;
-  end: number;
-  clipped: boolean;
-};
+export type CustomTimetableSlotClassification = "grid" | "off-grid";
 
-/** Keep an item visible at the nearest edge when it is outside the grid. */
-export const clampTimeRange = (
-  start: number,
-  end: number,
+/**
+ * A custom slot belongs to the grid only when its complete interval fits
+ * inside the timetable's displayed clock range. Boundary-touching slots fit.
+ */
+export const classifyCustomTimetableSlot = (
+  slot: CustomTimetableSlot,
   gridStart = timetableGridStart,
   gridEnd = timetableGridEnd,
-  minimumDuration = 10,
-): ClampedTimeRange => {
-  const clipped = start < gridStart || end > gridEnd;
-  if (end <= gridStart) {
-    return {
-      start: gridStart,
-      end: Math.min(gridEnd, gridStart + minimumDuration),
-      clipped: true,
-    };
-  }
-  if (start >= gridEnd) {
-    return {
-      start: Math.max(gridStart, gridEnd - minimumDuration),
-      end: gridEnd,
-      clipped: true,
-    };
-  }
-
-  const clampedStart = Math.max(gridStart, start);
-  const clampedEnd = Math.min(gridEnd, end);
-  if (clampedEnd - clampedStart >= minimumDuration) {
-    return { start: clampedStart, end: clampedEnd, clipped };
-  }
-  if (clampedStart === gridStart) {
-    return {
-      start: clampedStart,
-      end: Math.min(gridEnd, clampedStart + minimumDuration),
-      clipped,
-    };
-  }
-  return {
-    start: Math.max(gridStart, clampedEnd - minimumDuration),
-    end: clampedEnd,
-    clipped,
-  };
+): CustomTimetableSlotClassification => {
+  const { start, end } = getCustomSlotTimeRange(slot);
+  return start >= gridStart && end <= gridEnd ? "grid" : "off-grid";
 };
+
+export const isTimetableGridSlot = (slot: CourseTimeslotData) =>
+  !slot.customSlot || classifyCustomTimetableSlot(slot.customSlot) === "grid";
+
+export const getOffGridTimetableData = (data: CourseTimeslotData[]) =>
+  data.filter(
+    (slot) =>
+      slot.customSlot &&
+      classifyCustomTimetableSlot(slot.customSlot) === "off-grid",
+  );
 
 export const getCustomSlotTimeRange = (slot: CustomTimetableSlot) => ({
   start: timeToMinutes(slot.start),

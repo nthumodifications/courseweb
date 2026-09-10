@@ -22,7 +22,10 @@ import { Link } from "react-router-dom";
 import { useSettings } from "@/hooks/contexts/settings";
 import { BlankTimeslotBody } from "./BlankTimeslotBody";
 import { getLocale } from "@/helpers/dateLocale";
-import { addTimetableFractions } from "@/helpers/timetable";
+import {
+  addTimetableFractions,
+  isTimetableGridSlot,
+} from "@/helpers/timetable";
 
 const Timetable: FC<{
   timetableData: CourseTimeslotData[];
@@ -64,13 +67,18 @@ const Timetable: FC<{
     return () => observer.disconnect();
   }, [vertical, timetableData]);
 
-  const timetableDataWithFraction = useMemo(
-    () => addTimetableFractions(timetableData),
+  const gridTimetableData = useMemo(
+    () => timetableData.filter(isTimetableGridSlot),
     [timetableData],
   );
-
-  const showSaturday = timetableData.some((course) => course.dayOfWeek >= 5);
-  const showSunday = timetableData.some((course) => course.dayOfWeek == 6);
+  const timetableDataWithFraction = useMemo(
+    () => addTimetableFractions(gridTimetableData),
+    [gridTimetableData],
+  );
+  const showSaturday = gridTimetableData.some(
+    (course) => course.dayOfWeek >= 5,
+  );
+  const showSunday = gridTimetableData.some((course) => course.dayOfWeek == 6);
 
   const dayLabels = Array.from(
     { length: showSunday ? 7 : showSaturday ? 6 : 5 },
