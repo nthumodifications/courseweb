@@ -10,7 +10,7 @@ export type PersistedTimetableEvent = Partial<CalendarEvent> &
 
 export type TimetableReconcileInput = {
   generated: CalendarEvent[];
-  /** Persisted generated events already narrowed to the semester being visited. */
+  /** Persisted generated roots already narrowed to the semester being visited. */
   persisted: PersistedTimetableEvent[];
   semester: string;
 };
@@ -100,7 +100,8 @@ export const reconcileTimetableEvents = ({
       .map((event) => event.id),
   );
   const persistedGenerated = persisted.filter(
-    (event) => event.courseId != null && !handMadeIds.has(event.id),
+    (event) =>
+      event.courseId != null && !event.parentId && !handMadeIds.has(event.id),
   );
   const generatedById = new Map(
     generated
@@ -114,10 +115,21 @@ export const reconcileTimetableEvents = ({
   const toDelete = persistedGenerated
     .filter((event) => !generatedById.has(event.id))
     .map((event) => event.id);
-  const toUpsert = [...generatedById.values()].filter((event) => {
-    const existing = persistedById.get(event.id);
-    return !existing || !eventsEqual(event, existing);
-  });
+  const toUpsert = [...generatedById.values()]
+    .map((event) => {
+      const existing = persistedById.get(event.id);
+      // A THIS edit is stored as a detached child and the root keeps the
+      // excluded date. Reconciliation owns timetable fields, not local
+      // exceptions, so carry the persisted exclusions onto any root rewrite.
+      const reconciledEvent =
+        existing?.excludedDates && existing.excludedDates.length > 0
+          ? { ...event, excludedDates: existing.excludedDates }
+          : event;
+      return !existing || !eventsEqual(reconciledEvent, existing)
+        ? reconciledEvent
+        : null;
+    })
+    .filter((event): event is CalendarEvent => event !== null);
 
   return { toUpsert, toDelete };
 };

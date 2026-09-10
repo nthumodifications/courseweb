@@ -154,4 +154,29 @@ describe("timetable event reconciliation", () => {
       }),
     ).toEqual({ toUpsert: [], toDelete: [] });
   });
+
+  test("preserves a deleted-this detached child and the root exclusion", () => {
+    const excludedDate = new Date("2026-09-14T01:00:00.000Z");
+    const root = event({ excludedDates: [excludedDate] });
+    const detachedChild = event({
+      id: `${root.id}-2026-09-14T01:00:00.000Z`,
+      title: "Edited Course A",
+      start: excludedDate,
+      end: new Date("2026-09-14T02:00:00.000Z"),
+      repeat: null,
+      parentId: root.id,
+    });
+    const generated = event({ title: "Course A (updated)" });
+
+    const result = reconcileTimetableEvents({
+      generated: [generated],
+      persisted: [persisted(root), persisted(detachedChild)],
+      semester: "11410",
+    });
+
+    expect(result.toDelete).toEqual([]);
+    expect(result.toUpsert).toHaveLength(1);
+    expect(result.toUpsert[0].title).toBe("Course A (updated)");
+    expect(result.toUpsert[0].excludedDates).toEqual([excludedDate]);
+  });
 });

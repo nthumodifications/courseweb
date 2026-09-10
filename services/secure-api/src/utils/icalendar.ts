@@ -52,13 +52,15 @@ export async function createICalendar(
       .doc(userId)
       .collection("events");
 
-    // Optimize Firebase query with proper indexing
-    // Using composite index on start+end for efficient date range filtering
+    // Optimize Firebase query with proper indexing. actualEnd is the last
+    // materialized occurrence for repeated events (and the event end for
+    // one-off events), so querying end would drop long-running series whose
+    // root occurrence is already in the past.
     let eventsSnapshot;
     try {
       eventsSnapshot = await eventsRef
         .where("start", "<=", sixMonthsFromNow.toISOString())
-        .where("end", ">=", currentDate.toISOString())
+        .where("actualEnd", ">=", currentDate.toISOString())
         .orderBy("start", "asc")
         .limit(100) // Reasonable limit for calendar exports
         .get();
@@ -102,9 +104,13 @@ export async function createICalendar(
                 repeating: {
                   freq: event.repeat.type.toUpperCase(),
                   interval: event.repeat.interval || 1,
-                  until: event.repeat.value
-                    ? new Date(event.repeat.value)
-                    : undefined,
+                  ...(event.repeat.mode === "count"
+                    ? { count: event.repeat.value }
+                    : {
+                        until: event.repeat.value
+                          ? new Date(event.repeat.value)
+                          : undefined,
+                      }),
                   exclude: event.excludedDates
                     ? event.excludedDates.map((d: string) => new Date(d))
                     : undefined,

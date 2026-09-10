@@ -13,6 +13,32 @@ import { setPrismaClient } from "./apiKeyValidation";
 // Import after mocking
 import { createICalendar } from "./icalendar";
 
+const trackedFirebase = (docs: unknown[], whereCalls: unknown[][]) => ({
+  adminFirestore: {
+    collection: () => ({
+      doc: () => ({
+        collection: () => {
+          const query = {
+            where: (...args: unknown[]) => {
+              whereCalls.push(args);
+              return query;
+            },
+            orderBy: () => query,
+            limit: () => query,
+            get: async () => ({ docs }),
+          };
+          return query;
+        },
+      }),
+    }),
+  },
+});
+
+const documentFor = (data: Record<string, unknown>) => ({
+  id: String(data.id ?? "fixed-event"),
+  data: () => data,
+});
+
 // Create mock clients
 const mockClient = mockPrismaClient() as any;
 const mockFirebase = mockFirebaseAdmin();
@@ -405,7 +431,7 @@ describe("iCalendar Utility", () => {
     expect(eventText).toContain("LOCATION:Computer Science Building Lab 2");
 
     // Check for recurrence rule - should be weekly
-    expect(eventText).toContain("RRULE:FREQ=WEEKLY;INTERVAL=1");
+    expect(eventText).toContain("RRULE:FREQ=WEEKLY;COUNT=10;INTERVAL=1");
     // Check for excluded dates - the library adds timezone information
     expect(eventText).toContain("EXDATE;TZID=Asia/Taipei:20250605T140000");
   });
@@ -470,7 +496,7 @@ describe("iCalendar Utility", () => {
     expect(eventText).toContain("DTEND:20250519T084500");
 
     // Check for recurrence rule - should be daily
-    expect(eventText).toContain("RRULE:FREQ=DAILY;INTERVAL=1");
+    expect(eventText).toContain("RRULE:FREQ=DAILY;COUNT=20;INTERVAL=1");
     // Check for excluded dates - should have two, but the library combines them into a single property
     expect(eventText).toContain(
       "EXDATE;TZID=Asia/Taipei:20250524T083000,20250525T083000",
@@ -595,5 +621,80 @@ describe("iCalendar Utility", () => {
 
     // Check for recurrence rule - should be yearly with until date
     expect(eventText).toContain("RRULE:FREQ=YEARLY;INTERVAL=1;UNTIL=20300615");
+  });
+
+  test("emits COUNT rather than treating a count as an UNTIL timestamp", async () => {
+    const whereCalls: unknown[][] = [];
+    const firebase = trackedFirebase(
+      [
+        documentFor({
+          id: "count-event",
+          title: "Counted event",
+          start: "2026-09-10T01:00:00.000Z",
+          end: "2026-09-10T02:00:00.000Z",
+          actualEnd: "2026-09-19T02:00:00.000Z",
+          allDay: false,
+          repeat: {
+            type: "daily",
+            interval: 1,
+            mode: "count",
+            value: 10,
+          },
+          excludedDates: [],
+        }),
+      ],
+      whereCalls,
+    );
+
+    const calendar = await createICalendar(
+      "test-user-id",
+      false,
+      undefined,
+      mockClient,
+      firebase,
+    );
+
+    const eventText = Array.from(
+      calendar.matchAll(/BEGIN:VEVENT[\s\S]*?END:VEVENT/g),
+    )[0][0];
+    expect(eventText).toContain("RRULE:FREQ=DAILY;COUNT=10;INTERVAL=1");
+    expect(eventText).not.toContain("UNTIL=");
+    expect(whereCalls[1]?.[0]).toBe("actualEnd");
+  });
+
+  test("queries and exports a repeat whose root is past but actualEnd is future", async () => {
+    const whereCalls: unknown[][] = [];
+    const firebase = trackedFirebase(
+      [
+        documentFor({
+          id: "long-running-event",
+          title: "Long-running event",
+          start: "2020-01-01T01:00:00.000Z",
+          end: "2020-01-01T02:00:00.000Z",
+          actualEnd: "2099-12-31T02:00:00.000Z",
+          allDay: false,
+          repeat: {
+            type: "daily",
+            interval: 1,
+            mode: "date",
+            value: 4102358400000,
+          },
+          excludedDates: [],
+        }),
+      ],
+      whereCalls,
+    );
+
+    const calendar = await createICalendar(
+      "test-user-id",
+      false,
+      undefined,
+      mockClient,
+      firebase,
+    );
+
+    expect(calendar).toContain("SUMMARY:Long-running event");
+    expect(whereCalls[1]?.[0]).toBe("actualEnd");
+    expect(whereCalls[1]?.[1]).toBe(">=");
   });
 });

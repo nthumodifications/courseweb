@@ -1,14 +1,5 @@
 import { useMemo } from "react";
-import {
-  addDays,
-  addMonths,
-  addWeeks,
-  addYears,
-  differenceInCalendarDays,
-  differenceInMonths,
-  differenceInYears,
-  format,
-} from "date-fns";
+import { addDays, format } from "date-fns";
 import { fromZonedTime, toZonedTime } from "date-fns-tz";
 import { useQuery } from "@tanstack/react-query";
 import { semesterInfo } from "@courseweb/shared";
@@ -19,6 +10,7 @@ import {
   CalendarEventInternal,
   DisplayCalendarEvent,
 } from "@/components/Calendar/calendar.types";
+import { getRepeatedStartDays } from "@/components/Calendar/calendar_utils";
 import { timetableToCalendarEvent } from "@/components/Calendar/timetableToCalendarEvent";
 import { createTimetableFromCourses } from "@/helpers/timetable";
 import { useCalendar } from "@/components/Calendar/calendar_hook";
@@ -95,7 +87,7 @@ export type UseUpcomingEventsResult = {
 
 type BaseUpcomingEvent = Omit<UpcomingEvent, "state" | "startsInMinutes">;
 
-type EventDescriptor = {
+export type EventDescriptor = {
   event: CalendarEventInternal;
   source: UpcomingEventSource;
   course?: MinimalCourse;
@@ -116,49 +108,8 @@ const normalizeRepeatValue = (repeat: NonNullable<CalendarEvent["repeat"]>) => {
   return range ? range.end.getTime() - 1 : repeat.value;
 };
 
-
 export const getTaipeiDayStart = (date: Date) =>
   fromTaipeiDateKey(getTaipeiDateKey(date));
-
-const addTaipeiInterval = (
-  date: Date,
-  type: "daily" | "weekly" | "monthly" | "yearly",
-  interval: number,
-) => {
-  const wallDate = toZonedTime(date, UPCOMING_TIME_ZONE);
-  const nextWallDate =
-    type === "daily"
-      ? addDays(wallDate, interval)
-      : type === "weekly"
-        ? addWeeks(wallDate, interval)
-        : type === "monthly"
-          ? addMonths(wallDate, interval)
-          : addYears(wallDate, interval);
-  return fromTaipeiWallDateTime(nextWallDate);
-};
-
-const getInitialOccurrenceIndex = (
-  event: CalendarEventInternal,
-  windowStart: Date,
-) => {
-  if (!event.repeat || event.start >= windowStart) return 0;
-
-  const interval = Math.max(1, event.repeat.interval || 1);
-  const startWall = toZonedTime(event.start, UPCOMING_TIME_ZONE);
-  const windowWall = toZonedTime(windowStart, UPCOMING_TIME_ZONE);
-  const difference =
-    event.repeat.type === "daily"
-      ? differenceInCalendarDays(windowWall, startWall)
-      : event.repeat.type === "weekly"
-        ? Math.floor(differenceInCalendarDays(windowWall, startWall) / 7)
-        : event.repeat.type === "monthly"
-          ? differenceInMonths(windowWall, startWall)
-          : differenceInYears(windowWall, startWall);
-
-  // Keep one occurrence before the window so long-running events can still
-  // overlap the window start.
-  return Math.max(0, Math.floor(difference / interval) - 1);
-};
 
 const isExcludedOccurrence = (event: CalendarEventInternal, start: Date) => {
   const dateKey = getTaipeiDateKey(start);
@@ -201,7 +152,7 @@ const toDisplayCalendarEvent = (
   displayEnd: end,
 });
 
-const expandCalendarEvent = (
+export const expandCalendarEvent = (
   descriptor: EventDescriptor,
   windowStart: Date,
   windowEnd: Date,
@@ -210,23 +161,9 @@ const expandCalendarEvent = (
   const { event, source, course } = descriptor;
   const duration = Math.max(event.end.getTime() - event.start.getTime(), 1);
   const occurrences: BaseUpcomingEvent[] = [];
-  const initialIndex = getInitialOccurrenceIndex(event, windowStart);
-  const repeat = event.repeat;
-  let occurrenceStart =
-    initialIndex === 0
-      ? event.start
-      : addTaipeiInterval(
-          event.start,
-          repeat?.type ?? "daily",
-          (repeat?.interval || 1) * initialIndex,
-        );
+  const occurrenceStarts = getRepeatedStartDays(event, windowStart, windowEnd);
 
-  for (let index = initialIndex; index < initialIndex + 10000; index += 1) {
-    if (repeat?.mode === "count" && index >= repeat.value) break;
-    if (repeat?.mode === "date" && occurrenceStart.getTime() > repeat.value) {
-      break;
-    }
-
+  for (const occurrenceStart of occurrenceStarts) {
     const occurrenceEnd = new Date(occurrenceStart.getTime() + duration);
     if (occurrenceStart >= windowEnd) break;
 
@@ -272,13 +209,6 @@ const expandCalendarEvent = (
           : {}),
       });
     }
-
-    if (!repeat) break;
-    occurrenceStart = addTaipeiInterval(
-      occurrenceStart,
-      repeat.type,
-      repeat.interval || 1,
-    );
   }
 
   return occurrences;
