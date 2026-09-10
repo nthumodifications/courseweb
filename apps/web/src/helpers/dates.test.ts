@@ -1,14 +1,34 @@
 import { describe, expect, test } from "bun:test";
 import {
   fromTaipeiDateKey,
+  formatTaipei,
+  getTaipeiAcademicCalendarQuery,
   getTaipeiDateKey,
   getTaipeiDateRange,
+  getTaipeiWeek,
+  setTaipeiWallClock,
   toAcademicCalendarBoundary,
   isTaipeiToday,
   toTaipeiWallClock,
 } from "./dates";
 
 describe("Taipei academic date helpers", () => {
+  test("formats an instant in Taipei instead of browser-local time", () => {
+    expect(
+      formatTaipei(new Date("2026-09-10T01:00:00.000Z"), "yyyy-MM-dd HH:mm"),
+    ).toBe("2026-09-10 09:00");
+  });
+
+  test("stores a selected Taipei wall-clock time as the Taipei instant", () => {
+    const selectedDate = new Date("2026-09-10T00:00:00.000Z");
+    const start = setTaipeiWallClock(selectedDate, {
+      hours: 9,
+      minutes: 0,
+    });
+
+    expect(start.toISOString()).toBe("2026-09-10T01:00:00.000Z");
+  });
+
   test("keeps a date-only value on its Taipei calendar day", () => {
     const dateKey = "2026-09-14";
     const taipeiMidnight = fromTaipeiDateKey(dateKey);
@@ -41,6 +61,19 @@ describe("Taipei academic date helpers", () => {
     expect(toAcademicCalendarBoundary("2026-09-17")).toBe(
       "2026-09-17T00:00:00.000Z",
     );
+  });
+
+  test("keeps the final Taipei week day in the academic query", () => {
+    const week = getTaipeiWeek(new Date("2026-09-10T01:00:00.000Z"));
+    const query = getTaipeiAcademicCalendarQuery(
+      getTaipeiDateKey(week[0]),
+      getTaipeiDateKey(week[6]),
+    );
+
+    expect(query).toEqual({
+      start: "2026-09-06T00:00:00.000Z",
+      end: "2026-09-13T00:00:00.000Z",
+    });
   });
 });
 

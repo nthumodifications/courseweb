@@ -1,15 +1,4 @@
-import {
-  addDays,
-  addMinutes,
-  differenceInDays,
-  endOfDay,
-  format,
-  getDate,
-  getMonth,
-  getYear,
-  set,
-  startOfDay,
-} from "date-fns";
+import { addMinutes } from "date-fns";
 import { cn } from "@courseweb/ui";
 import {
   useCallback,
@@ -56,6 +45,17 @@ import { CalendarIcon, ChevronDown } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { getLocale } from "@/helpers/dateLocale";
+import {
+  addTaipeiDays,
+  differenceInTaipeiCalendarDays,
+  endOfTaipeiDay,
+  formatTaipei,
+  fromTaipeiCalendarDate,
+  getTaipeiDateKey,
+  setTaipeiWallClock,
+  startOfTaipeiDay,
+  toTaipeiWallClock,
+} from "@/helpers/dates";
 import { useSettings } from "@/hooks/contexts/settings";
 import useDictionary from "@/dictionaries/useDictionary";
 
@@ -166,8 +166,8 @@ export const EventForm = ({
       title: undefined,
       details: undefined,
       allDay: true,
-      start: startOfDay(new Date()),
-      end: endOfDay(new Date()),
+      start: startOfTaipeiDay(new Date()),
+      end: endOfTaipeiDay(new Date()),
       repeat: null,
       color: currentColors[0],
       tag: labels[0],
@@ -262,17 +262,16 @@ export const EventForm = ({
       if (
         !currentStart ||
         !currentEnd ||
-        (currentStart.getHours() === 0 &&
-          currentStart.getMinutes() === 0 &&
-          currentEnd.getHours() === 23 &&
-          currentEnd.getMinutes() === 59)
+        (toTaipeiWallClock(currentStart).getHours() === 0 &&
+          toTaipeiWallClock(currentStart).getMinutes() === 0 &&
+          toTaipeiWallClock(currentEnd).getHours() === 23 &&
+          toTaipeiWallClock(currentEnd).getMinutes() === 59)
       ) {
-        const nearestTime = getNearestTime(new Date(), minuteStep);
-        const defaultStart = set(new Date(), {
-          ...nearestTime,
-          seconds: 0,
-          milliseconds: 0,
-        });
+        const nearestTime = getNearestTime(
+          toTaipeiWallClock(new Date()),
+          minuteStep,
+        );
+        const defaultStart = setTaipeiWallClock(new Date(), nearestTime);
         const defaultEnd = addMinutes(defaultStart, 30);
 
         if (!allDay) {
@@ -305,37 +304,33 @@ export const EventForm = ({
       if (allDay) {
         // Convert to all day event - set to start of day and end of day
         // but preserve the date
-        form.setValue("start", startOfDay(currentStart));
-        form.setValue("end", endOfDay(currentEnd));
+        form.setValue("start", startOfTaipeiDay(currentStart));
+        form.setValue("end", endOfTaipeiDay(currentEnd));
       } else {
         // Convert from all day to specific time
-        const currentTime = new Date();
+        const currentTime = toTaipeiWallClock(new Date());
 
         // If we have defaultEvent with specific times, prioritize those times
         if (defaultEvent?.start && defaultEvent?.end && !defaultEvent.allDay) {
           // Use the time portion from defaultEvent but keep current date
           form.setValue(
             "start",
-            set(currentStart, {
-              hours: defaultEvent.start.getHours(),
-              minutes: defaultEvent.start.getMinutes(),
-              seconds: 0,
-              milliseconds: 0,
+            setTaipeiWallClock(currentStart, {
+              hours: toTaipeiWallClock(defaultEvent.start).getHours(),
+              minutes: toTaipeiWallClock(defaultEvent.start).getMinutes(),
             }),
           );
 
           form.setValue(
             "end",
-            set(currentEnd, {
-              hours: defaultEvent.end.getHours(),
-              minutes: defaultEvent.end.getMinutes(),
-              seconds: 0,
-              milliseconds: 0,
+            setTaipeiWallClock(currentEnd, {
+              hours: toTaipeiWallClock(defaultEvent.end).getHours(),
+              minutes: toTaipeiWallClock(defaultEvent.end).getMinutes(),
             }),
           );
         } else {
           // Otherwise, use current time
-          const defaultStart = set(currentStart, {
+          const defaultStart = setTaipeiWallClock(currentStart, {
             hours: currentTime.getHours(),
             minutes:
               Math.floor(currentTime.getMinutes() / minuteStep) * minuteStep,
@@ -355,10 +350,16 @@ export const EventForm = ({
   // Handle repeat type changes
   useEffect(() => {
     if (repeatType) {
-      // If we're setting up a repeat for a new event
-      if (!defaultEvent || !defaultEvent.repeat) {
+      // Switching back from "No repeat" clears these fields. Restore every
+      // missing part whenever a repeat type is selected, including edits of
+      // events that originally had a different repeat configuration.
+      if (form.getValues("repeat.interval") == null) {
         form.setValue("repeat.interval", 1);
+      }
+      if (form.getValues("repeat.mode") == null) {
         form.setValue("repeat.mode", "count");
+      }
+      if (form.getValues("repeat.value") == null) {
         form.setValue("repeat.value", 1);
       }
     } else {
@@ -383,7 +384,7 @@ export const EventForm = ({
       const dateValue =
         defaultEvent?.repeat?.mode === "date"
           ? defaultEvent.repeat.value
-          : Date.now() + 7 * 24 * 60 * 60 * 1000; // Default to one week in the future
+          : addTaipeiDays(new Date(), 7).getTime(); // Default to one week in the future
       form.setValue("repeat.value", dateValue);
     }
   }, [repeatMode]); // Only dependency is repeatMode
@@ -411,11 +412,11 @@ export const EventForm = ({
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {field.value ? (
-                         format(field.value, "yyyy-LL-dd (EE)", {
-                           locale: getLocale(language),
-                         })
+                        formatTaipei(field.value, "yyyy-LL-dd (EE)", {
+                          locale: getLocale(language),
+                        })
                       ) : (
-                         <span>{dict.calendar.form.pick_date}</span>
+                        <span>{dict.calendar.form.pick_date}</span>
                       )}
                     </Button>
                   </FormControl>
@@ -424,14 +425,18 @@ export const EventForm = ({
                   <PopoverContent className="w-auto p-0">
                     <ShadcnCalendar
                       mode="single"
-                      selected={field.value}
+                      selected={toTaipeiWallClock(field.value)}
                       onSelect={(d) => {
                         if (!d) return;
                         // Preserve time when changing date
-                        const newDate = set(d, {
-                          hours: field.value.getHours(),
-                          minutes: field.value.getMinutes(),
-                        });
+                        const currentTime = toTaipeiWallClock(field.value);
+                        const newDate = setTaipeiWallClock(
+                          fromTaipeiCalendarDate(d),
+                          {
+                            hours: currentTime.getHours(),
+                            minutes: currentTime.getMinutes(),
+                          },
+                        );
 
                         // Calculate difference to maintain duration
                         const diff =
@@ -446,7 +451,7 @@ export const EventForm = ({
                         form.trigger("end");
                       }}
                       initialFocus
-                      defaultMonth={field.value}
+                      defaultMonth={toTaipeiWallClock(field.value)}
                     />
                   </PopoverContent>
                 </PopoverPortal>
@@ -462,7 +467,10 @@ export const EventForm = ({
                     if (isNaN(hours) || isNaN(minutes)) return;
 
                     // Create new date with updated time
-                    const newTime = set(field.value, { hours, minutes });
+                    const newTime = setTaipeiWallClock(field.value, {
+                      hours,
+                      minutes,
+                    });
 
                     // Maintain event duration
                     const duration =
@@ -473,15 +481,17 @@ export const EventForm = ({
                     field.onChange(newTime);
 
                     // Make sure end time doesn't exceed day boundary
-                    if (newEndTime.getTime() > endOfDay(newTime).getTime()) {
-                      form.setValue("end", endOfDay(newTime));
+                    if (
+                      newEndTime.getTime() > endOfTaipeiDay(newTime).getTime()
+                    ) {
+                      form.setValue("end", endOfTaipeiDay(newTime));
                     } else {
                       form.setValue("end", newEndTime);
                     }
 
                     form.trigger("end");
                   }}
-                  value={format(field.value, "HH:mm")}
+                  value={formatTaipei(field.value, "HH:mm")}
                 />
               </FormControl>
             </div>
@@ -510,11 +520,11 @@ export const EventForm = ({
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {field.value ? (
-                         format(field.value, "yyyy-LL-dd (EE)", {
-                           locale: getLocale(language),
-                         })
+                        formatTaipei(field.value, "yyyy-LL-dd (EE)", {
+                          locale: getLocale(language),
+                        })
                       ) : (
-                         <span>{dict.calendar.form.pick_date}</span>
+                        <span>{dict.calendar.form.pick_date}</span>
                       )}
                     </Button>
                   </FormControl>
@@ -523,18 +533,22 @@ export const EventForm = ({
                   <PopoverContent className="w-auto p-0">
                     <ShadcnCalendar
                       mode="single"
-                      selected={field.value}
+                      selected={toTaipeiWallClock(field.value)}
                       onSelect={(d) => {
                         if (!d) return;
                         // Preserve time when changing date
-                        const newDate = set(d, {
-                          hours: field.value.getHours(),
-                          minutes: field.value.getMinutes(),
-                        });
+                        const currentTime = toTaipeiWallClock(field.value);
+                        const newDate = setTaipeiWallClock(
+                          fromTaipeiCalendarDate(d),
+                          {
+                            hours: currentTime.getHours(),
+                            minutes: currentTime.getMinutes(),
+                          },
+                        );
                         field.onChange(newDate);
                       }}
                       initialFocus
-                      defaultMonth={field.value}
+                      defaultMonth={toTaipeiWallClock(field.value)}
                     />
                   </PopoverContent>
                 </PopoverPortal>
@@ -550,10 +564,13 @@ export const EventForm = ({
                     if (isNaN(hours) || isNaN(minutes)) return;
 
                     // Create new date with updated time
-                    const newTime = set(field.value, { hours, minutes });
+                    const newTime = setTaipeiWallClock(field.value, {
+                      hours,
+                      minutes,
+                    });
                     field.onChange(newTime);
                   }}
-                  value={format(field.value, "HH:mm")}
+                  value={formatTaipei(field.value, "HH:mm")}
                 />
               </FormControl>
             </div>
@@ -586,11 +603,11 @@ export const EventForm = ({
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {field.value ? (
-                      format(field.value, "yyyy-LL-dd (EE)", {
+                      formatTaipei(field.value, "yyyy-LL-dd (EE)", {
                         locale: getLocale(language),
                       })
                     ) : (
-                       <span>{dict.calendar.form.pick_date}</span>
+                      <span>{dict.calendar.form.pick_date}</span>
                     )}
                   </Button>
                 </FormControl>
@@ -598,25 +615,27 @@ export const EventForm = ({
               <PopoverContent className="w-auto p-0">
                 <ShadcnCalendar
                   mode="single"
-                  selected={field.value}
+                  selected={toTaipeiWallClock(field.value)}
                   onSelect={(d) => {
                     if (!d) return;
 
                     // Calculate current event duration in days
-                    const diffInDays = differenceInDays(
+                    const diffInDays = differenceInTaipeiCalendarDays(
                       form.getValues("end"),
                       form.getValues("start"),
                     );
 
                     // Update start and end dates while maintaining duration
-                    const startDate = startOfDay(d);
-                    const endDate = endOfDay(addDays(d, diffInDays));
+                    const startDate = fromTaipeiCalendarDate(d);
+                    const endDate = endOfTaipeiDay(
+                      addTaipeiDays(startDate, diffInDays),
+                    );
 
                     field.onChange(startDate);
                     form.setValue("end", endDate);
                     form.trigger("end");
                   }}
-                  defaultMonth={field.value}
+                  defaultMonth={toTaipeiWallClock(field.value)}
                   initialFocus
                 />
               </PopoverContent>
@@ -645,11 +664,11 @@ export const EventForm = ({
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {field.value ? (
-                      format(field.value, "yyyy-LL-dd (EE)", {
+                      formatTaipei(field.value, "yyyy-LL-dd (EE)", {
                         locale: getLocale(language),
                       })
                     ) : (
-                       <span>{dict.calendar.form.pick_date}</span>
+                      <span>{dict.calendar.form.pick_date}</span>
                     )}
                   </Button>
                 </FormControl>
@@ -657,13 +676,16 @@ export const EventForm = ({
               <PopoverContent className="w-auto p-0">
                 <ShadcnCalendar
                   mode="single"
-                  selected={field.value}
+                  selected={toTaipeiWallClock(field.value)}
                   onSelect={(d) => {
                     if (!d) return;
 
                     // Ensure end date is not before start date
                     const startDate = form.getValues("start");
-                    if (d < startDate) {
+                    const endDate = fromTaipeiCalendarDate(d);
+                    if (
+                      getTaipeiDateKey(endDate) < getTaipeiDateKey(startDate)
+                    ) {
                       form.setError("end", {
                         type: "manual",
                         message: dict.calendar.form.end_before_start,
@@ -671,10 +693,10 @@ export const EventForm = ({
                       return;
                     }
 
-                    field.onChange(endOfDay(d));
+                    field.onChange(endOfTaipeiDay(endDate));
                   }}
                   initialFocus
-                  defaultMonth={field.value}
+                  defaultMonth={toTaipeiWallClock(field.value)}
                 />
               </PopoverContent>
             </Popover>
@@ -730,60 +752,63 @@ export const EventForm = ({
                     aria-label={dict.calendar.form.end_repeat}
                     className="flex flex-col space-y-3"
                   >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem
-                      value="count"
-                      id="repeat-count"
-                      aria-label={dict.calendar.form.after}
-                    />
-                    <div className="flex-1">
-                      <Label
-                        htmlFor="repeat-count-value"
-                        className="block mb-1"
-                      >
-                        {dict.calendar.form.after}
-                      </Label>
-                      <FormField
-                        control={form.control}
-                        name="repeat.value"
-                        render={({ field: valueField }) => (
-                          <>
-                            <FormControl>
-                              <Input
-                                id="repeat-count-value"
-                                type="number"
-                                min="1"
-                                aria-label={
-                                  dict.calendar.form.number_occurrences
-                                }
-                                placeholder={
-                                  dict.calendar.form.number_occurrences
-                                }
-                                disabled={repeatMode !== "count"}
-                                {...valueField}
-                                onChange={(e) => {
-                                  const value = parseInt(e.target.value);
-                                  valueField.onChange(
-                                    isNaN(value) || value < 1 ? 1 : value,
-                                  );
-                                }}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </>
-                        )}
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem
+                        value="count"
+                        id="repeat-count"
+                        aria-label={dict.calendar.form.after}
                       />
+                      <div className="flex-1">
+                        <Label
+                          htmlFor="repeat-count-value"
+                          className="block mb-1"
+                        >
+                          {dict.calendar.form.after}
+                        </Label>
+                        <FormField
+                          control={form.control}
+                          name="repeat.value"
+                          render={({ field: valueField }) => (
+                            <>
+                              <FormControl>
+                                <Input
+                                  id="repeat-count-value"
+                                  type="number"
+                                  min="1"
+                                  aria-label={
+                                    dict.calendar.form.number_occurrences
+                                  }
+                                  placeholder={
+                                    dict.calendar.form.number_occurrences
+                                  }
+                                  disabled={repeatMode !== "count"}
+                                  {...valueField}
+                                  onChange={(e) => {
+                                    const value = parseInt(e.target.value);
+                                    valueField.onChange(
+                                      isNaN(value) || value < 1 ? 1 : value,
+                                    );
+                                  }}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </>
+                          )}
+                        />
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem
-                      value="date"
-                      id="repeat-date"
-                      aria-label={dict.calendar.form.on_date}
-                    />
-                    <div className="flex-1">
-                        <Label htmlFor="repeat-date-value" className="block mb-1">
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem
+                        value="date"
+                        id="repeat-date"
+                        aria-label={dict.calendar.form.on_date}
+                      />
+                      <div className="flex-1">
+                        <Label
+                          htmlFor="repeat-date-value"
+                          className="block mb-1"
+                        >
                           {dict.calendar.form.on_date}
                         </Label>
                         <FormField
@@ -805,9 +830,13 @@ export const EventForm = ({
                                       <CalendarIcon className="mr-2 h-4 w-4" />
                                       {repeatMode === "date" &&
                                       typeof valueField.value === "number" ? (
-                                        format(new Date(valueField.value), "PPP", {
-                                          locale: getLocale(language),
-                                        })
+                                        formatTaipei(
+                                          new Date(valueField.value),
+                                          "PPP",
+                                          {
+                                            locale: getLocale(language),
+                                          },
+                                        )
                                       ) : (
                                         <span>
                                           {dict.calendar.form.pick_end_date}
@@ -820,14 +849,22 @@ export const EventForm = ({
                                   {repeatMode === "date" && (
                                     <ShadcnCalendar
                                       mode="single"
-                                      selected={new Date(valueField.value)}
+                                      selected={toTaipeiWallClock(
+                                        new Date(valueField.value),
+                                      )}
                                       onSelect={(v) =>
                                         valueField.onChange(
-                                          v?.getTime() ?? Date.now(),
+                                          v
+                                            ? fromTaipeiCalendarDate(
+                                                v,
+                                              ).getTime()
+                                            : Date.now(),
                                         )
                                       }
                                       initialFocus
-                                      defaultMonth={new Date(valueField.value)}
+                                      defaultMonth={toTaipeiWallClock(
+                                        new Date(valueField.value),
+                                      )}
                                     />
                                   )}
                                 </PopoverContent>
@@ -836,8 +873,8 @@ export const EventForm = ({
                             </>
                           )}
                         />
+                      </div>
                     </div>
-                  </div>
                   </RadioGroup>
                 </FormControl>
               </div>
@@ -865,7 +902,10 @@ export const EventForm = ({
                 <FormItem>
                   <FormLabel>{dict.calendar.form.title}</FormLabel>
                   <FormControl>
-                    <Input placeholder={dict.calendar.form.event_title} {...field} />
+                    <Input
+                      placeholder={dict.calendar.form.event_title}
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -880,7 +920,10 @@ export const EventForm = ({
                 <FormItem>
                   <FormLabel>{dict.calendar.form.location}</FormLabel>
                   <FormControl>
-                    <Input placeholder={dict.calendar.form.location} {...field} />
+                    <Input
+                      placeholder={dict.calendar.form.location}
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -925,15 +968,27 @@ export const EventForm = ({
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder={dict.calendar.form.select_repeat} />
+                        <SelectValue
+                          placeholder={dict.calendar.form.select_repeat}
+                        />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="null">{dict.calendar.form.no_repeat}</SelectItem>
-                      <SelectItem value="daily">{dict.calendar.form.daily}</SelectItem>
-                      <SelectItem value="weekly">{dict.calendar.form.weekly}</SelectItem>
-                      <SelectItem value="monthly">{dict.calendar.form.monthly}</SelectItem>
-                      <SelectItem value="yearly">{dict.calendar.form.yearly}</SelectItem>
+                      <SelectItem value="null">
+                        {dict.calendar.form.no_repeat}
+                      </SelectItem>
+                      <SelectItem value="daily">
+                        {dict.calendar.form.daily}
+                      </SelectItem>
+                      <SelectItem value="weekly">
+                        {dict.calendar.form.weekly}
+                      </SelectItem>
+                      <SelectItem value="monthly">
+                        {dict.calendar.form.monthly}
+                      </SelectItem>
+                      <SelectItem value="yearly">
+                        {dict.calendar.form.yearly}
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

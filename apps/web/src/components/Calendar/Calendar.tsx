@@ -7,7 +7,6 @@ import {
   Plus,
   Rows2,
 } from "lucide-react";
-import { addMonths, addWeeks, subMonths, subWeeks } from "date-fns";
 import { KeyboardEvent, useCallback, useEffect, useRef, useState } from "react";
 import {
   Select,
@@ -21,8 +20,12 @@ import { Button } from "@courseweb/ui";
 import { CalendarEvent, TimetableSyncRequest } from "./calendar.types";
 import { useCalendar } from "./calendar_hook";
 import { AddEventButton } from "./AddEventButton";
-import { getWeek } from "./calendar_utils";
-import { getMonthForDisplay } from "@/components/Calendar/calendar_utils";
+import {
+  addTaipeiDays,
+  addTaipeiMonths,
+  getTaipeiMonthForDisplay,
+  getTaipeiWeek,
+} from "@/helpers/dates";
 import { CalendarDateSelector } from "@/components/Calendar/CalendarDateSelector";
 import { CalendarWeekContainer } from "./CalendarWeekContainer";
 import { CalendarMonthContainer } from "./CalendarMonthContainer";
@@ -71,7 +74,9 @@ const CalendarError = ({
 };
 
 const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
-  const [displayDates, setDisplayDates] = useState<Date[]>(getWeek(new Date()));
+  const [displayDates, setDisplayDates] = useState<Date[]>(
+    getTaipeiWeek(new Date()),
+  );
   const [displayMode, setDisplayMode] = useState<"week" | "month" | "upcoming">(
     "week",
   );
@@ -103,10 +108,10 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
     (date: Date) => {
       switch (displayMode) {
         case "week":
-          setDisplayDates(getWeek(date));
+          setDisplayDates(getTaipeiWeek(date));
           break;
         case "month":
-          setDisplayDates(getMonthForDisplay(date));
+          setDisplayDates(getTaipeiMonthForDisplay(date));
           break;
       }
     },
@@ -202,13 +207,20 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
   const moveBackward = () => {
     switch (displayMode) {
       case "week":
-        setDisplayDates(displayDates.map((d) => subWeeks(d, 1)));
+        setDisplayDates(
+          getTaipeiWeek(
+            addTaipeiDays(
+              displayDates[Math.floor(displayDates.length / 2)],
+              -7,
+            ),
+          ),
+        );
         break;
       case "month":
         // get month of current center date
         const month = displayDates[Math.floor(displayDates.length / 2)];
         // subtract 1 month from the month
-        setDisplayDates(getMonthForDisplay(subMonths(month, 1)));
+        setDisplayDates(getTaipeiMonthForDisplay(addTaipeiMonths(month, -1)));
         break;
     }
   };
@@ -216,13 +228,17 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
   const moveForward = () => {
     switch (displayMode) {
       case "week":
-        setDisplayDates(displayDates.map((d) => addWeeks(d, 1)));
+        setDisplayDates(
+          getTaipeiWeek(
+            addTaipeiDays(displayDates[Math.floor(displayDates.length / 2)], 7),
+          ),
+        );
         break;
       case "month":
         // get month of current center date
         const month = displayDates[Math.floor(displayDates.length / 2)];
         // add 1 month from the month
-        setDisplayDates(getMonthForDisplay(addMonths(month, 1)));
+        setDisplayDates(getTaipeiMonthForDisplay(addTaipeiMonths(month, 1)));
         break;
     }
   };
@@ -230,10 +246,10 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
   const backToToday = () => {
     switch (displayMode) {
       case "week":
-        setDisplayDates(getWeek(new Date()));
+        setDisplayDates(getTaipeiWeek(new Date()));
         break;
       case "month":
-        setDisplayDates(getMonthForDisplay(new Date()));
+        setDisplayDates(getTaipeiMonthForDisplay(new Date()));
         break;
     }
   };
@@ -242,10 +258,10 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
     setDisplayMode(mode);
     switch (mode) {
       case "week":
-        setDisplayDates(getWeek(displayDates[0]));
+        setDisplayDates(getTaipeiWeek(displayDates[0]));
         break;
       case "month":
-        setDisplayDates(getMonthForDisplay(displayDates[0]));
+        setDisplayDates(getTaipeiMonthForDisplay(displayDates[0]));
         break;
       case "upcoming":
         break;
