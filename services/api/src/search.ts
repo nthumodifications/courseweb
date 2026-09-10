@@ -1,7 +1,33 @@
 import { Hono } from "hono";
+import type { Context } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
-import algolia from "./config/algolia";
+import {
+  describeAlgoliaError,
+  getAlgoliaClients,
+  isAlgoliaUnusableError,
+} from "./config/algolia";
+import fallbackSearch from "./search-fallback";
+
+const searchAlgolia = async (c: Context, query: string, searchParams: any) => {
+  const clients = getAlgoliaClients(c);
+  let lastError: unknown;
+  for (const index of clients) {
+    try {
+      return await index.search(query, searchParams);
+    } catch (error) {
+      lastError = error;
+      if (!isAlgoliaUnusableError(error)) {
+        console.error(
+          "Algolia search request bug:",
+          describeAlgoliaError(error),
+        );
+        throw error;
+      }
+    }
+  }
+  throw lastError ?? new Error("Algolia credentials not found");
+};
 
 const app = new Hono()
   .post(
@@ -16,7 +42,7 @@ const app = new Hono()
         attributesToRetrieve: z.array(z.string()).optional(),
         highlightPreTag: z.string().optional().default("<mark>"),
         highlightPostTag: z.string().optional().default("</mark>"),
-      })
+      }),
     ),
     async (c) => {
       const {
@@ -30,7 +56,6 @@ const app = new Hono()
       } = c.req.valid("json");
 
       try {
-        const index = algolia(c);
         const searchParams: any = {
           hitsPerPage: limit,
           highlightPreTag,
@@ -39,9 +64,10 @@ const app = new Hono()
 
         if (filters) searchParams.filters = filters;
         if (facetFilters) searchParams.facetFilters = facetFilters;
-        if (attributesToRetrieve) searchParams.attributesToRetrieve = attributesToRetrieve;
+        if (attributesToRetrieve)
+          searchParams.attributesToRetrieve = attributesToRetrieve;
 
-        const result = await index.search(query, searchParams);
+        const result = await searchAlgolia(c, query, searchParams);
 
         return c.json({
           success: true,
@@ -57,19 +83,19 @@ const app = new Hono()
           },
         });
       } catch (error) {
-        console.error("Search error:", error);
+        console.error("Search error:", describeAlgoliaError(error));
         return c.json(
           {
             success: false,
             error: {
               message: "Search failed",
-              details: error instanceof Error ? error.message : "Unknown error",
+              details: `Algolia request failed (${String(describeAlgoliaError(error).status)})`,
             },
           },
-          500
+          500,
         );
       }
-    }
+    },
   )
   .get(
     "/",
@@ -81,13 +107,18 @@ const app = new Hono()
         filters: z.string().optional(),
         facetFilters: z.string().optional(),
         attributesToRetrieve: z.string().optional(),
-      })
+      }),
     ),
     async (c) => {
-      const { q: query, limit, filters, facetFilters, attributesToRetrieve } = c.req.valid("query");
+      const {
+        q: query,
+        limit,
+        filters,
+        facetFilters,
+        attributesToRetrieve,
+      } = c.req.valid("query");
 
       try {
-        const index = algolia(c);
         const searchParams: any = {
           hitsPerPage: limit,
           highlightPreTag: "<mark>",
@@ -96,9 +127,10 @@ const app = new Hono()
 
         if (filters) searchParams.filters = filters;
         if (facetFilters) searchParams.facetFilters = facetFilters.split(",");
-        if (attributesToRetrieve) searchParams.attributesToRetrieve = attributesToRetrieve.split(",");
+        if (attributesToRetrieve)
+          searchParams.attributesToRetrieve = attributesToRetrieve.split(",");
 
-        const result = await index.search(query, searchParams);
+        const result = await searchAlgolia(c, query, searchParams);
 
         return c.json({
           success: true,
@@ -113,20 +145,21 @@ const app = new Hono()
           },
         });
       } catch (error) {
-        console.error("Search error:", error);
+        console.error("Search error:", describeAlgoliaError(error));
         return c.json(
           {
             success: false,
             error: {
               message: "Search failed",
-              details: error instanceof Error ? error.message : "Unknown error",
+              details: `Algolia request failed (${String(describeAlgoliaError(error).status)})`,
             },
           },
-          500
+          500,
         );
       }
-    }
+    },
   )
+  .route("/fallback", fallbackSearch)
   .get("/info", (c) => {
     return c.json({
       name: "CourseWeb Search API",
@@ -139,12 +172,16 @@ const app = new Hono()
             description: "Advanced search with JSON payload",
             parameters: {
               query: "string (required) - Search query",
-              limit: "number (optional, default: 10, max: 100) - Number of results",
+              limit:
+                "number (optional, default: 10, max: 100) - Number of results",
               filters: "string (optional) - Algolia filters",
               facetFilters: "array (optional) - Facet filters",
-              attributesToRetrieve: "array (optional) - Specific attributes to retrieve",
-              highlightPreTag: "string (optional, default: '<mark>') - HTML tag for highlighting",
-              highlightPostTag: "string (optional, default: '</mark>') - HTML closing tag for highlighting",
+              attributesToRetrieve:
+                "array (optional) - Specific attributes to retrieve",
+              highlightPreTag:
+                "string (optional, default: '<mark>') - HTML tag for highlighting",
+              highlightPostTag:
+                "string (optional, default: '</mark>') - HTML closing tag for highlighting",
             },
           },
           get: {
@@ -152,10 +189,12 @@ const app = new Hono()
             description: "Simple search with query parameters",
             parameters: {
               q: "string (required) - Search query",
-              limit: "number (optional, default: 10, max: 100) - Number of results",
+              limit:
+                "number (optional, default: 10, max: 100) - Number of results",
               filters: "string (optional) - Algolia filters",
               facetFilters: "string (optional) - Comma-separated facet filters",
-              attributesToRetrieve: "string (optional) - Comma-separated attributes to retrieve",
+              attributesToRetrieve:
+                "string (optional) - Comma-separated attributes to retrieve",
             },
           },
         },
@@ -176,7 +215,13 @@ const app = new Hono()
             limit: 10,
             filters: "department:'Computer Science'",
             facetFilters: ["language:English"],
-            attributesToRetrieve: ["course", "name_zh", "name_en", "teacher_zh", "credits"],
+            attributesToRetrieve: [
+              "course",
+              "name_zh",
+              "name_en",
+              "teacher_zh",
+              "credits",
+            ],
           },
         },
       },

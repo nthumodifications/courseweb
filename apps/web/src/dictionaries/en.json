@@ -49,6 +49,11 @@
       "found": "Found",
       "search_placeholder": "Search for your course..."
     },
+    "search": {
+      "error": "Course search encountered an error. The request was not retried against another tier.",
+      "limited_mode": "Search is running in limited mode — some filters and ranking may be unavailable.",
+      "dismiss_limited_mode": "Dismiss limited search mode"
+    },
     "item": {
       "add_to_semester": "Add",
       "remove_from_semester": "Remove"

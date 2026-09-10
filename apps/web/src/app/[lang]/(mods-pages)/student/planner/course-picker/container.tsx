@@ -1,5 +1,4 @@
 import { createInfiniteHitsSessionStorageCache } from "instantsearch.js/es/lib/infiniteHitsCache";
-import algoliasearch from "algoliasearch/lite";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -11,10 +10,6 @@ import { Badge } from "@courseweb/ui";
 import { InstantSearch, useCurrentRefinements } from "react-instantsearch";
 import { Calendar, FilterIcon } from "lucide-react";
 
-const searchClient = algoliasearch(
-  import.meta.env.VITE_ALGOLIA_APP_ID!,
-  import.meta.env.VITE_ALGOLIA_SEARCH_KEY!,
-);
 const sessionStorageCache = createInfiniteHitsSessionStorageCache();
 
 import { Separator } from "@courseweb/ui";
@@ -30,6 +25,9 @@ import { ItemDocType } from "@/app/[lang]/(mods-pages)/student/planner/rxdb";
 import { useSettings } from "@/hooks/contexts/settings";
 import ResetFiltersButton from "../../../courses/ResetFiltersButton";
 import SearchBox from "@/components/SearchBox/SearchBox";
+import { createResilientSearchClient } from "@/lib/search-client";
+
+const searchClient = createResilientSearchClient();
 
 type CourseSearchContainerProps = {
   onAdd: (course: MinimalCourse, keepSemester?: boolean) => void;

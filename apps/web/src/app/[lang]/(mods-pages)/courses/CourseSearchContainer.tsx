@@ -1,5 +1,4 @@
 import { createInfiniteHitsSessionStorageCache } from "instantsearch.js/es/lib/infiniteHitsCache";
-import algoliasearch from "algoliasearch/lite";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -15,11 +14,9 @@ import SearchContainer from "./SearchContainer";
 import { lastSemester } from "@courseweb/shared";
 import useDictionary from "@/dictionaries/useDictionary";
 import CourseSidePanel from "./CourseSidePanel";
+import { createResilientSearchClient } from "@/lib/search-client";
 
-const searchClient = algoliasearch(
-  import.meta.env.VITE_ALGOLIA_APP_ID!,
-  import.meta.env.VITE_ALGOLIA_SEARCH_KEY!,
-);
+const searchClient = createResilientSearchClient();
 const sessionStorageCache = createInfiniteHitsSessionStorageCache();
 
 const CourseSearchContainer = () => {

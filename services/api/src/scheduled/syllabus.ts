@@ -6,7 +6,11 @@ import {
 } from "linkedom/worker";
 import { fullWidthToHalfWidth } from "../utils/characters";
 import { supabaseWithEnv } from "../config/supabase_server";
-import { algoliaWithEnv } from "../config/algolia";
+import {
+  algoliaClientsWithEnv,
+  describeAlgoliaError,
+  isAlgoliaUnusableError,
+} from "../config/algolia";
 
 // Utility function for retry with exponential backoff
 const retryWithBackoff = async <T>(
@@ -15,32 +19,63 @@ const retryWithBackoff = async <T>(
   baseDelay: number = 1000,
   identifier?: string,
 ): Promise<T> => {
-  let lastError: Error = new Error("Unknown error occurred");
+  let lastError: unknown = new Error("Unknown error occurred");
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       return await fn();
     } catch (error) {
-      lastError = error as Error;
+      lastError = error;
 
       if (attempt === maxRetries) {
         const errorMsg = identifier
-          ? `Final attempt failed for ${identifier}: ${lastError.message}`
-          : `Final attempt failed: ${lastError.message}`;
+          ? `Final attempt failed for ${identifier}`
+          : "Final attempt failed";
         console.error(errorMsg);
         throw lastError;
       }
 
       const delay = baseDelay * Math.pow(2, attempt) + Math.random() * 1000; // Add jitter
       const retryMsg = identifier
-        ? `Attempt ${attempt + 1} failed for ${identifier}, retrying in ${Math.round(delay)}ms: ${lastError.message}`
-        : `Attempt ${attempt + 1} failed, retrying in ${Math.round(delay)}ms: ${lastError.message}`;
+        ? `Attempt ${attempt + 1} failed for ${identifier}, retrying in ${Math.round(delay)}ms`
+        : `Attempt ${attempt + 1} failed, retrying in ${Math.round(delay)}ms`;
       console.warn(retryMsg);
       await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
 
   throw lastError;
+};
+
+const withAlgoliaFailover = async <T>(
+  env: Env,
+  operation: (
+    index: ReturnType<typeof algoliaClientsWithEnv>[number],
+  ) => Promise<T>,
+) => {
+  const indexes = algoliaClientsWithEnv(
+    { appId: env.ALGOLIA_APP_ID, apiKey: env.ALGOLIA_API_KEY },
+    {
+      appId: env.ALGOLIA_BACKUP_APP_ID,
+      apiKey: env.ALGOLIA_BACKUP_API_KEY,
+    },
+  );
+  let lastError: unknown;
+  for (const index of indexes) {
+    try {
+      return await operation(index);
+    } catch (error) {
+      lastError = error;
+      if (!isAlgoliaUnusableError(error)) {
+        console.error(
+          "Algolia syllabus write bug:",
+          describeAlgoliaError(error),
+        );
+        throw error;
+      }
+    }
+  }
+  throw lastError ?? new Error("Algolia credentials not found");
 };
 
 interface Department {
@@ -749,16 +784,18 @@ export const scrapeSyllabus = async (
 
         await retryWithBackoff(
           async () => {
-            await algoliaWithEnv(
-              env.ALGOLIA_APP_ID,
-              env.ALGOLIA_API_KEY,
-            ).saveObject(algoliaCourse);
+            await withAlgoliaFailover(env, (index) =>
+              index.saveObject(algoliaCourse),
+            );
           },
           2,
           1000,
           `algolia sync ${raw_id}`,
         ).catch((error) => {
-          console.error(`Failed to sync ${raw_id} to Algolia:`, error);
+          console.error(
+            `Failed to sync ${raw_id} to Algolia:`,
+            describeAlgoliaError(error),
+          );
           // Don't fail the entire process for Algolia sync failures
         });
       }
@@ -840,10 +877,9 @@ export const syncCoursesToAlgolia = async (env: Env, semester: string) => {
 
       await retryWithBackoff(
         async () => {
-          const { taskIDs } = await algoliaWithEnv(
-            env.ALGOLIA_APP_ID,
-            env.ALGOLIA_API_KEY,
-          ).saveObjects(algoliaChunk);
+          const { taskIDs } = await withAlgoliaFailover(env, (index) =>
+            index.saveObjects(algoliaChunk),
+          );
           console.log(
             `Saved ${algoliaChunk.length} courses to Algolia, taskID: ${taskIDs}`,
           );
@@ -857,7 +893,7 @@ export const syncCoursesToAlgolia = async (env: Env, semester: string) => {
     } catch (error) {
       console.error(
         `Error saving chunk ${successfulChunks + 1}/${chunked.length} to Algolia:`,
-        error,
+        describeAlgoliaError(error),
       );
       // Continue with other chunks instead of failing completely
     }
@@ -1036,10 +1072,9 @@ export const restoreAlgoliaFromFile = async (env: Env, fileName: string) => {
     try {
       await retryWithBackoff(
         async () => {
-          const { taskIDs } = await algoliaWithEnv(
-            env.ALGOLIA_APP_ID,
-            env.ALGOLIA_API_KEY,
-          ).saveObjects(chunk);
+          const { taskIDs } = await withAlgoliaFailover(env, (index) =>
+            index.saveObjects(chunk),
+          );
           console.log(
             `Restored ${chunk.length} courses to Algolia, taskID: ${taskIDs}`,
           );
@@ -1054,7 +1089,7 @@ export const restoreAlgoliaFromFile = async (env: Env, fileName: string) => {
     } catch (error) {
       console.error(
         `Error restoring chunk ${successfulChunks + 1}/${chunked.length} to Algolia:`,
-        error,
+        describeAlgoliaError(error),
       );
       // Continue with other chunks instead of failing completely
     }
