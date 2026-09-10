@@ -254,6 +254,10 @@ const configuredClients = () => {
     backend: Exclude<SearchBackend, "fallback">;
     client: AlgoliaSearchClient;
   }> = [];
+  // Bound every tier explicitly. The client defaults to a 2s connect and 5s
+  // read timeout, so one unreachable application can hold up the first search
+  // of a session for seconds before the next tier is even tried.
+  const timeouts = { connect: 1, read: 2, write: 5 };
   const primaryAppId = import.meta.env.VITE_ALGOLIA_APP_ID;
   const primaryKey = import.meta.env.VITE_ALGOLIA_SEARCH_KEY;
   const backupAppId = import.meta.env.VITE_ALGOLIA_BACKUP_APP_ID;
@@ -262,7 +266,9 @@ const configuredClients = () => {
   if (primaryAppId?.trim() && primaryKey?.trim()) {
     clients.push({
       backend: "primary",
-      client: algoliasearch(primaryAppId.trim(), primaryKey.trim()),
+      client: algoliasearch(primaryAppId.trim(), primaryKey.trim(), {
+        timeouts,
+      }),
     });
   }
   if (
@@ -272,7 +278,9 @@ const configuredClients = () => {
   ) {
     clients.push({
       backend: "backup",
-      client: algoliasearch(backupAppId.trim(), backupKey.trim()),
+      client: algoliasearch(backupAppId.trim(), backupKey.trim(), {
+        timeouts,
+      }),
     });
   }
   return clients;
