@@ -34,6 +34,7 @@ import {
   getTaipeiDateRange,
   isTaipeiDateKey,
   TAIPEI_TIME_ZONE,
+  toAcademicCalendarBoundary,
 } from "@/helpers/dates";
 
 export const UPCOMING_TIME_ZONE = TAIPEI_TIME_ZONE;
@@ -43,6 +44,7 @@ export {
   getTaipeiDateKey,
   getTaipeiDateRange,
   isTaipeiDateKey,
+  toAcademicCalendarBoundary,
 };
 const WALL_DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS";
 const DATE_KEY_FORMAT = "yyyy-MM-dd";
@@ -114,10 +116,6 @@ const normalizeRepeatValue = (repeat: NonNullable<CalendarEvent["repeat"]>) => {
   return range ? range.end.getTime() - 1 : repeat.value;
 };
 
-export const toAcademicCalendarBoundary = (dateKey: string) =>
-  // The API truncates ISO inputs to their UTC date before querying Google.
-  // 08:00 in Taipei is 00:00 UTC, preserving the intended Taipei date.
-  fromZonedTime(`${dateKey}T08:00:00.000`, UPCOMING_TIME_ZONE).toISOString();
 
 export const getTaipeiDayStart = (date: Date) =>
   fromTaipeiDateKey(getTaipeiDateKey(date));
@@ -251,7 +249,9 @@ const expandCalendarEvent = (
         location: event.location,
         details: event.details,
         color: event.color,
-        courseId: event.courseId,
+        // Persisted events use null for hand-made entries; the UI type treats
+        // an absent courseId as "not a course event".
+        courseId: event.courseId ?? undefined,
         ...(course ? { course } : {}),
         ...(courseDate
           ? {

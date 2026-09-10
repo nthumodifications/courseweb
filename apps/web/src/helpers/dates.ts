@@ -67,3 +67,11 @@ export const getRangeOfDays = (start: Date, end: Date) => {
   }
   return days;
 };
+
+/**
+ * The academic API truncates ISO inputs to their UTC date before querying
+ * Google, so a Taipei date is sent as 08:00 Taipei — 00:00 UTC — which keeps
+ * the intended calendar date on both sides.
+ */
+export const toAcademicCalendarBoundary = (dateKey: string) =>
+  fromZonedTime(`${dateKey}T08:00:00.000`, TAIPEI_TIME_ZONE).toISOString();

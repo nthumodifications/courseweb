@@ -18,7 +18,7 @@ export interface CalendarEvent {
   repeat: null | RepeatDefinition;
   color: string;
   tag: string | "none";
-  courseId?: string;
+  courseId?: string | null;
   excludedDates?: Date[];
   parentId?: string;
   readonly?: boolean;

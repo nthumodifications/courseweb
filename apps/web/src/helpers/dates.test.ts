@@ -4,7 +4,7 @@ import {
   getTaipeiDateKey,
   getTaipeiDateRange,
   toAcademicCalendarBoundary,
-} from "./useUpcomingEvents";
+} from "./dates";
 
 describe("Taipei academic date helpers", () => {
   test("keeps a date-only value on its Taipei calendar day", () => {
