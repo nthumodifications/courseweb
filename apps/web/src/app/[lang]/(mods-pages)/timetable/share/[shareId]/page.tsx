@@ -6,7 +6,7 @@ import {
 } from "@/hooks/useTimetableShare";
 import { useAuth } from "react-oidc-context";
 import Timetable from "@/components/Timetable/Timetable";
-import { createTimetableFromCourses } from "@/helpers/timetable";
+import { createTimetableFromCoursesAndCustomItems } from "@/helpers/timetable";
 import { MinimalCourse } from "@/types/courses";
 import { renderTimetableSlot } from "@/helpers/timetable_course";
 import client from "@/config/api";
@@ -49,6 +49,7 @@ const ShareViewPage = () => {
     addCourse,
     setCourses,
     setColorMap,
+    setCustomItems,
     currentColors,
   } = useUserTimetable();
   const queryClient = useQueryClient();
@@ -79,8 +80,9 @@ const ShareViewPage = () => {
     enabled: courseIds.length > 0,
   });
 
-  const timetableData = createTimetableFromCourses(
+  const timetableData = createTimetableFromCoursesAndCustomItems(
     courses as MinimalCourse[],
+    share?.customItems?.[activeSem] ?? [],
     {},
   );
   const totalCredits = (courses as MinimalCourse[]).reduce(
@@ -110,6 +112,21 @@ const ShareViewPage = () => {
     });
     addCourse(courseIds);
     setColorMap((prev) => ({ ...prev, ...partialColorMap }));
+    const importedCustomItems = share?.customItems?.[activeSem] ?? [];
+    if (importedCustomItems.length > 0) {
+      setCustomItems((prev) => ({
+        ...prev,
+        [activeSem]: [
+          ...(prev[activeSem] ?? []),
+          ...importedCustomItems.filter(
+            (item) =>
+              !(prev[activeSem] ?? []).some(
+                (current) => current.id === item.id,
+              ),
+          ),
+        ],
+      }));
+    }
     setSemester(activeSem);
     navigate(-1);
     toast({
@@ -196,7 +213,9 @@ const ShareViewPage = () => {
           ) : (
             <Timetable
               timetableData={timetableData}
-              renderTimetableSlot={renderTimetableSlot}
+              renderTimetableSlot={(course, tableDim, vertical) =>
+                renderTimetableSlot(course, tableDim, vertical, false)
+              }
             />
           )}
         </div>

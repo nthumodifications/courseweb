@@ -4,7 +4,7 @@ import Timetable from "./Timetable";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { toPng } from "html-to-image";
 import { useCallback, useRef, useState, type ReactNode } from "react";
-import { createTimetableFromCourses } from "@/helpers/timetable";
+import { createTimetableFromCoursesAndCustomItems } from "@/helpers/timetable";
 import { MinimalCourse } from "@/types/courses";
 import {
   Dialog,
@@ -20,14 +20,15 @@ import { toast } from "@courseweb/ui";
 
 const DownloadTimetableComponent = () => {
   const dict = useDictionary();
-  const { getSemesterCourses, semester, colorMap, currentColors } =
+  const { getSemesterCourses, getSemesterCustomItems, semester, colorMap } =
     useUserTimetable();
   const ref = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(false);
   const [generatedImg, setGeneratedImg] = useState<string | null>(null);
 
-  const timetableData = createTimetableFromCourses(
+  const timetableData = createTimetableFromCoursesAndCustomItems(
     getSemesterCourses(semester) as MinimalCourse[],
+    getSemesterCustomItems(semester),
     colorMap,
   );
 

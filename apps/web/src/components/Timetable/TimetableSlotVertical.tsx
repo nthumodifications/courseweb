@@ -5,9 +5,12 @@ import { VenueChip } from "./VenueChip";
 import { scheduleTimeSlots } from "@courseweb/shared";
 import useUserTimetable, {
   DEFAULT_FIELD_ORDER,
+  TIMETABLE_FONT_FAMILIES,
+  TIMETABLE_FONT_SIZE_CLASSES,
   TimetableFieldKey,
 } from "@/hooks/contexts/useUserTimetable";
 import { cn } from "@courseweb/ui";
+import { CalendarClock } from "lucide-react";
 
 type TimetableSlotProps = {
   course: CourseTimeslotData;
@@ -46,6 +49,11 @@ const TimetableSlotVertical = forwardRef<HTMLDivElement, TimetableSlotProps>(
     const fieldOrder: TimetableFieldKey[] =
       preferences.fieldOrder ?? DEFAULT_FIELD_ORDER;
     const display = preferences.display;
+    const fontSizeClass =
+      TIMETABLE_FONT_SIZE_CLASSES[preferences.fontSize ?? "sm"];
+    const fontFamily =
+      TIMETABLE_FONT_FAMILIES[preferences.fontFamily ?? "system"];
+    const customItem = course.customItem;
 
     const teacherName =
       displayLang == "zh"
@@ -56,7 +64,10 @@ const TimetableSlotVertical = forwardRef<HTMLDivElement, TimetableSlotProps>(
       switch (field) {
         case "code":
           return display.code ? (
-            <span key="code" className={cn("text-xs font-medium", textAlign)}>
+            <span
+              key="code"
+              className={cn(fontSizeClass, "font-medium", textAlign)}
+            >
               {course.course.department + course.course.course}
             </span>
           ) : null;
@@ -64,7 +75,11 @@ const TimetableSlotVertical = forwardRef<HTMLDivElement, TimetableSlotProps>(
           return display.title ? (
             <span
               key="title"
-              className={cn("text-xs md:text-sm font-medium w-full", textAlign)}
+              className={cn(
+                fontSizeClass,
+                "font-medium w-full min-w-0 break-words line-clamp-2 leading-tight",
+                textAlign,
+              )}
             >
               {displayLang == "zh"
                 ? course.course.name_zh
@@ -75,14 +90,21 @@ const TimetableSlotVertical = forwardRef<HTMLDivElement, TimetableSlotProps>(
           return display.time &&
             scheduleTimeSlots[course.startTime] &&
             scheduleTimeSlots[course.endTime] ? (
-            <span key="time" className={cn("text-xs", textAlign)}>
+            <span key="time" className={cn(fontSizeClass, textAlign)}>
               {scheduleTimeSlots[course.startTime].start} -{" "}
               {scheduleTimeSlots[course.endTime].end}
             </span>
           ) : null;
         case "teacher":
           return display.teacher && teacherName ? (
-            <span key="teacher" className={cn("text-xs", textAlign)}>
+            <span
+              key="teacher"
+              className={cn(
+                fontSizeClass,
+                "break-words line-clamp-2",
+                textAlign,
+              )}
+            >
               {teacherName}
             </span>
           ) : null;
@@ -98,7 +120,7 @@ const TimetableSlotVertical = forwardRef<HTMLDivElement, TimetableSlotProps>(
           ) : null;
         case "credits":
           return display.credits ? (
-            <span key="credits" className={cn("text-xs", textAlign)}>
+            <span key="credits" className={cn(fontSizeClass, textAlign)}>
               {course.course.credits} cr
             </span>
           ) : null;
@@ -110,7 +132,10 @@ const TimetableSlotVertical = forwardRef<HTMLDivElement, TimetableSlotProps>(
     return (
       <div
         ref={ref}
-        className="absolute rounded-md transform translate-y-0.5"
+        className={cn(
+          "absolute rounded-md transform translate-y-0.5",
+          customItem && "border border-dashed",
+        )}
         style={{
           left:
             tableDim.header.width +
@@ -126,6 +151,7 @@ const TimetableSlotVertical = forwardRef<HTMLDivElement, TimetableSlotProps>(
               tableDim.timetable.height -
             4,
           backgroundColor: course.color,
+          borderColor: customItem ? course.textColor : undefined,
         }}
         {...props}
       >
@@ -135,9 +161,59 @@ const TimetableSlotVertical = forwardRef<HTMLDivElement, TimetableSlotProps>(
             flexAlign,
             justifyContent,
           )}
-          style={{ color: course.textColor }}
+          style={{ color: course.textColor, fontFamily }}
         >
-          {fieldOrder.map((field) => renderField(field))}
+          {customItem ? (
+            <>
+              {display.title && (
+                <span
+                  className={cn(
+                    fontSizeClass,
+                    "font-medium leading-tight break-words line-clamp-2",
+                    textAlign,
+                  )}
+                >
+                  <CalendarClock className="inline-block h-3 w-3 mr-0.5 align-[-0.1em]" />
+                  {customItem.title}
+                </span>
+              )}
+              {display.code && customItem.shortCode && (
+                <span className={cn(fontSizeClass, "font-medium", textAlign)}>
+                  {customItem.shortCode}
+                </span>
+              )}
+              {display.time && (
+                <span className={cn(fontSizeClass, textAlign)}>
+                  {scheduleTimeSlots[course.startTime]?.start}–
+                  {scheduleTimeSlots[course.endTime]?.end}
+                </span>
+              )}
+              {display.venue && customItem.venue && (
+                <span
+                  className={cn(
+                    fontSizeClass,
+                    "break-words line-clamp-1",
+                    textAlign,
+                  )}
+                >
+                  {customItem.venue}
+                </span>
+              )}
+              {customItem.note && (
+                <span
+                  className={cn(
+                    fontSizeClass,
+                    "opacity-85 break-words line-clamp-2",
+                    textAlign,
+                  )}
+                >
+                  {customItem.note}
+                </span>
+              )}
+            </>
+          ) : (
+            fieldOrder.map((field) => renderField(field))
+          )}
         </div>
       </div>
     );

@@ -1,6 +1,8 @@
 import React, { useCallback } from "react";
 import {
   TimetableDisplayPreferences,
+  TimetableFontFamily,
+  TimetableFontSize,
   TimetableFieldKey,
   DEFAULT_FIELD_ORDER,
 } from "@/hooks/contexts/useUserTimetable";
@@ -119,6 +121,20 @@ const TimetablePreferences: React.FC<SettingsControlProps> = ({
     v: "top" | "center" | "bottom",
   ) => settings.align === h && (settings.verticalAlign ?? "top") === v;
 
+  const handleFontSizeChange = (value: string) => {
+    onSettingsChange({
+      ...settings,
+      fontSize: value as TimetableFontSize,
+    });
+  };
+
+  const handleFontFamilyChange = (value: string) => {
+    onSettingsChange({
+      ...settings,
+      fontFamily: value as TimetableFontFamily,
+    });
+  };
+
   return (
     <div className="flex flex-col gap-4">
       {/* Language */}
@@ -134,6 +150,65 @@ const TimetablePreferences: React.FC<SettingsControlProps> = ({
             <SelectItem value="app">App</SelectItem>
             <SelectItem value="zh">繁體中文</SelectItem>
             <SelectItem value="en">English</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="flex flex-row items-center">
+        <label className="font-bold flex-1 text-sm">
+          {dict.settings.timetable.font_size}
+        </label>
+        <Select
+          value={settings.fontSize ?? "sm"}
+          onValueChange={handleFontSizeChange}
+        >
+          <SelectTrigger className="w-[160px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="xs">
+              {dict.settings.timetable.font_size_options.xs}
+            </SelectItem>
+            <SelectItem value="sm">
+              {dict.settings.timetable.font_size_options.sm}
+            </SelectItem>
+            <SelectItem value="base">
+              {dict.settings.timetable.font_size_options.base}
+            </SelectItem>
+            <SelectItem value="lg">
+              {dict.settings.timetable.font_size_options.lg}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="flex flex-row items-center">
+        <label className="font-bold flex-1 text-sm">
+          {dict.settings.timetable.font_family}
+        </label>
+        <Select
+          value={settings.fontFamily ?? "system"}
+          onValueChange={handleFontFamilyChange}
+        >
+          <SelectTrigger className="w-[160px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="system">
+              {dict.settings.timetable.font_family_options.system}
+            </SelectItem>
+            <SelectItem value="sans">
+              {dict.settings.timetable.font_family_options.sans}
+            </SelectItem>
+            <SelectItem value="serif">
+              {dict.settings.timetable.font_family_options.serif}
+            </SelectItem>
+            <SelectItem value="mono">
+              {dict.settings.timetable.font_family_options.mono}
+            </SelectItem>
+            <SelectItem value="rounded">
+              {dict.settings.timetable.font_family_options.rounded}
+            </SelectItem>
           </SelectContent>
         </Select>
       </div>

@@ -15,8 +15,13 @@ import { event } from "@/lib/gtag";
 
 import { useQuery } from "@tanstack/react-query";
 import useSyncedStorage from "../useSyncedStorage";
-import { mergeCourseStorage, mergeStringArray } from "../syncedStorage";
+import {
+  mergeCourseStorage,
+  mergeCustomTimetableStorage,
+  mergeStringArray,
+} from "../syncedStorage";
 import client from "@/config/api";
+import { CustomTimetableItem, CustomTimetableStorage } from "@/types/timetable";
 
 export type TimetableFieldKey =
   | "code"
@@ -35,10 +40,35 @@ export const DEFAULT_FIELD_ORDER: TimetableFieldKey[] = [
   "credits",
 ];
 
+export type TimetableFontSize = "xs" | "sm" | "base" | "lg";
+export type TimetableFontFamily =
+  | "system"
+  | "sans"
+  | "serif"
+  | "mono"
+  | "rounded";
+
+export const TIMETABLE_FONT_SIZE_CLASSES: Record<TimetableFontSize, string> = {
+  xs: "text-[10px]",
+  sm: "text-xs",
+  base: "text-sm",
+  lg: "text-base",
+};
+
+export const TIMETABLE_FONT_FAMILIES: Record<TimetableFontFamily, string> = {
+  system: "system-ui, sans-serif",
+  sans: "ui-sans-serif, system-ui, sans-serif",
+  serif: "ui-serif, Georgia, serif",
+  mono: "ui-monospace, SFMono-Regular, Menlo, monospace",
+  rounded: 'ui-rounded, "Arial Rounded MT Bold", system-ui, sans-serif',
+};
+
 export interface TimetableDisplayPreferences {
   language: "app" | "zh" | "en";
   align: "left" | "center" | "right";
   verticalAlign: "top" | "center" | "bottom";
+  fontSize: TimetableFontSize;
+  fontFamily: TimetableFontFamily;
   display: {
     title: boolean;
     code: boolean;
@@ -49,6 +79,43 @@ export interface TimetableDisplayPreferences {
   };
   fieldOrder: TimetableFieldKey[];
 }
+
+export const DEFAULT_TIMETABLE_DISPLAY_PREFERENCES: TimetableDisplayPreferences =
+  {
+    language: "app",
+    align: "center",
+    verticalAlign: "top",
+    fontSize: "sm",
+    fontFamily: "system",
+    display: {
+      title: true,
+      code: false,
+      time: true,
+      venue: true,
+      teacher: false,
+      credits: false,
+    },
+    fieldOrder: DEFAULT_FIELD_ORDER,
+  };
+
+const normalizeTimetableDisplayPreferences = (
+  value: Partial<TimetableDisplayPreferences> | undefined,
+): TimetableDisplayPreferences => ({
+  ...DEFAULT_TIMETABLE_DISPLAY_PREFERENCES,
+  ...value,
+  fontSize: value?.fontSize ?? DEFAULT_TIMETABLE_DISPLAY_PREFERENCES.fontSize,
+  fontFamily:
+    value?.fontFamily ?? DEFAULT_TIMETABLE_DISPLAY_PREFERENCES.fontFamily,
+  display: {
+    ...DEFAULT_TIMETABLE_DISPLAY_PREFERENCES.display,
+    ...(value?.display ?? {}),
+  },
+  fieldOrder:
+    value?.fieldOrder?.filter((field) => DEFAULT_FIELD_ORDER.includes(field))
+      .length === DEFAULT_FIELD_ORDER.length
+      ? value.fieldOrder
+      : DEFAULT_FIELD_ORDER,
+});
 
 export type CourseLocalStorage = { [sem: string]: RawCourseID[] };
 
@@ -61,6 +128,10 @@ const userTimetableContext = createContext<
   currentColors: [],
   userDefinedColors: {},
   courses: {},
+  customItems: {},
+  semesterCustomItems: [],
+  getSemesterCustomItems: () => [],
+  setCustomItems: () => {},
   hoverCourse: null,
   setHoverCourse: () => {},
   colorMap: {},
@@ -72,6 +143,10 @@ const userTimetableContext = createContext<
   setTimetableTheme: () => {},
   setUserDefinedColors: () => {},
   setColor: () => {},
+  addCustomItem: () => {},
+  updateCustomItem: () => {},
+  deleteCustomItem: () => {},
+  setCustomItemColor: () => {},
   isCourseSelected: () => false,
   isLoading: true,
   error: null,
@@ -82,6 +157,8 @@ const userTimetableContext = createContext<
     language: "app",
     align: "center",
     verticalAlign: "top",
+    fontSize: "sm",
+    fontFamily: "system",
     display: {
       title: true,
       code: false,
@@ -114,23 +191,48 @@ const useUserTimetableProvider = (loadCourse = true) => {
   const [userDefinedColors, setUserDefinedColors] = useSyncedStorage<{
     [theme_name: string]: string[];
   }>("user_defined_colors", {});
-  const [preferences, setPreferences] =
+  const [storedPreferences, setStoredPreferences] =
     useSyncedStorage<TimetableDisplayPreferences>(
       "timetable_display_preferences",
-      {
-        language: "app",
-        align: "center",
-        verticalAlign: "top",
-        display: {
-          title: true,
-          code: false,
-          time: true,
-          venue: true,
-          teacher: false,
-          credits: false,
-        },
-        fieldOrder: DEFAULT_FIELD_ORDER,
-      },
+      DEFAULT_TIMETABLE_DISPLAY_PREFERENCES,
+    );
+  const preferences = useMemo(
+    () => normalizeTimetableDisplayPreferences(storedPreferences),
+    [storedPreferences],
+  );
+  useEffect(() => {
+    if (
+      !Object.prototype.hasOwnProperty.call(storedPreferences, "fontSize") ||
+      !Object.prototype.hasOwnProperty.call(storedPreferences, "fontFamily")
+    ) {
+      setStoredPreferences(preferences);
+    }
+  }, [preferences, setStoredPreferences, storedPreferences]);
+  const setPreferences = useCallback(
+    (
+      nextPreferences:
+        | TimetableDisplayPreferences
+        | ((
+            previous: TimetableDisplayPreferences,
+          ) => TimetableDisplayPreferences),
+    ) => {
+      setStoredPreferences((previous) => {
+        const normalizedPrevious =
+          normalizeTimetableDisplayPreferences(previous);
+        const nextValue =
+          typeof nextPreferences === "function"
+            ? nextPreferences(normalizedPrevious)
+            : nextPreferences;
+        return normalizeTimetableDisplayPreferences(nextValue);
+      });
+    },
+    [setStoredPreferences],
+  );
+  const [customItems, setCustomItems] =
+    useSyncedStorage<CustomTimetableStorage>(
+      "timetable_custom_items",
+      {},
+      mergeCustomTimetableStorage,
     );
   const [favourites, setFavourites] = useSyncedStorage<string[]>(
     "course_favourites",
@@ -341,6 +443,77 @@ const useUserTimetableProvider = (loadCourse = true) => {
   );
 
   const semesterCourses = courses[semester] ?? [];
+  const semesterCustomItems = Array.isArray(customItems[semester])
+    ? customItems[semester]
+    : [];
+
+  const getSemesterCustomItems = useCallback(
+    (semesterId: string | undefined) =>
+      semesterId && Array.isArray(customItems[semesterId])
+        ? customItems[semesterId]
+        : [],
+    [customItems],
+  );
+
+  const addCustomItem = useCallback(
+    (item: CustomTimetableItem) => {
+      setCustomItems((items) => ({
+        ...items,
+        [semester]: [
+          ...(Array.isArray(items[semester]) ? items[semester] : []),
+          item,
+        ],
+      }));
+      event({
+        action: "add_custom_timetable_item",
+        category: "timetable",
+        label: item.id,
+      });
+    },
+    [semester, setCustomItems],
+  );
+
+  const updateCustomItem = useCallback(
+    (item: CustomTimetableItem) => {
+      setCustomItems((items) => ({
+        ...items,
+        [semester]: (Array.isArray(items[semester]) ? items[semester] : []).map(
+          (current) => (current.id === item.id ? item : current),
+        ),
+      }));
+    },
+    [semester, setCustomItems],
+  );
+
+  const deleteCustomItem = useCallback(
+    (itemId: string) => {
+      setCustomItems((items) => ({
+        ...items,
+        [semester]: (Array.isArray(items[semester])
+          ? items[semester]
+          : []
+        ).filter((item) => item.id !== itemId),
+      }));
+      event({
+        action: "delete_custom_timetable_item",
+        category: "timetable",
+        label: itemId,
+      });
+    },
+    [semester, setCustomItems],
+  );
+
+  const setCustomItemColor = useCallback(
+    (itemId: string, color: string) => {
+      setCustomItems((items) => ({
+        ...items,
+        [semester]: (Array.isArray(items[semester]) ? items[semester] : []).map(
+          (item) => (item.id === itemId ? { ...item, color } : item),
+        ),
+      }));
+    },
+    [semester, setCustomItems],
+  );
 
   const clearCourses = () => {
     setCourses({});
@@ -382,10 +555,18 @@ const useUserTimetableProvider = (loadCourse = true) => {
     isCoursesEmpty,
     error,
     courses,
+    customItems,
+    semesterCustomItems,
+    getSemesterCustomItems,
+    setCustomItems,
     hoverCourse,
     setHoverCourse,
     preferences,
     setPreferences,
+    addCustomItem,
+    updateCustomItem,
+    deleteCustomItem,
+    setCustomItemColor,
     favourites,
     setFavourites,
   };

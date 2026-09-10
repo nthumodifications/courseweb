@@ -1,8 +1,9 @@
 import Timetable from "@/components/Timetable/Timetable";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import supabase from "@/config/supabase";
-import { createTimetableFromCourses } from "@/helpers/timetable";
+import { createTimetableFromCoursesAndCustomItems } from "@/helpers/timetable";
 import { MinimalCourse } from "@/types/courses";
+import { CustomTimetableStorage } from "@/types/timetable";
 import { useMemo, useState } from "react";
 import { lastSemester } from "@courseweb/shared";
 import SemesterSwitcher from "@/components/Timetable/SemesterSwitcher";
@@ -24,11 +25,22 @@ const ViewTimetablePage = () => {
   const navigate = useNavigate();
   const { lang } = useParams<{ lang: string }>();
   const [searchParams] = useSearchParams();
-  const { currentColors, setCourses, setColorMap } = useUserTimetable();
+  const { currentColors, setCourses, setColorMap, setCustomItems } =
+    useUserTimetable();
   const [semester, setSemester] = useState<string>(lastSemester.id);
   const colorMap = JSON.parse(
     decodeURIComponent(searchParams.get("colorMap") ?? "{}"),
   );
+  const sharedCustomItems = useMemo<CustomTimetableStorage>(() => {
+    const value = searchParams.get("customItems");
+    if (!value) return {};
+    try {
+      const parsed = JSON.parse(value);
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch {
+      return {};
+    }
+  }, [searchParams]);
 
   const courseCodes = useMemo(() => {
     if (searchParams.toString().length > 0) {
@@ -66,8 +78,9 @@ const ViewTimetablePage = () => {
       return data;
     },
   });
-  const timetableData = createTimetableFromCourses(
+  const timetableData = createTimetableFromCoursesAndCustomItems(
     courses as MinimalCourse[],
+    sharedCustomItems[semester] ?? [],
     colorMap,
   );
 
@@ -79,6 +92,7 @@ const ViewTimetablePage = () => {
   const handleImportCourses = () => {
     setCourses(courseCodes!);
     setColorMap(colorMap);
+    setCustomItems(sharedCustomItems);
     navigate(`/${lang}/timetable`);
   };
 
@@ -86,6 +100,10 @@ const ViewTimetablePage = () => {
     setCourses((courses) => ({
       ...courses,
       [semester]: courseCodes![semester] ?? [],
+    }));
+    setCustomItems((items) => ({
+      ...items,
+      [semester]: sharedCustomItems[semester] ?? [],
     }));
     const partialColorMap: { [c: string]: string } = {};
     courseCodes![semester].forEach((code, index) => {

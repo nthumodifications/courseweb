@@ -40,7 +40,35 @@
     "lock_order": "Lock Course Order",
     "reset_default": "Reset to Default",
     "no_courses": "No Courses Added (yet)",
-    "all_courses": "All Courses"
+    "all_courses": "All Courses",
+    "custom_items": {
+      "title": "My activities",
+      "add": "Add activity",
+      "custom_label": "Custom timetable item",
+      "editor_title": "Edit timetable activity",
+      "title_label": "Title",
+      "title_placeholder": "e.g. Part-time job",
+      "short_code_label": "Short code",
+      "short_code_placeholder": "Optional label",
+      "venue_label": "Venue",
+      "venue_placeholder": "Optional location",
+      "days_label": "Days",
+      "start_label": "Start period",
+      "end_label": "End period",
+      "note_label": "Note",
+      "note_placeholder": "Optional note",
+      "color_label": "Colour",
+      "delete": "Delete",
+      "save": "Save activity",
+      "days": {
+        "M": "Mon",
+        "T": "Tue",
+        "W": "Wed",
+        "R": "Thu",
+        "F": "Fri",
+        "S": "Sat"
+      }
+    }
   },
   "course": {
     "credits": "Credits",
@@ -252,7 +280,22 @@
       "slot_time": "Time",
       "slot_venue": "Venue",
       "alignment": "Alignment",
-      "fields_order": "Fields & Order"
+      "fields_order": "Fields & Order",
+      "font_size": "Slot font size",
+      "font_size_options": {
+        "xs": "Extra small",
+        "sm": "Small",
+        "base": "Medium",
+        "lg": "Large"
+      },
+      "font_family": "Slot font family",
+      "font_family_options": {
+        "system": "System",
+        "sans": "Sans serif",
+        "serif": "Serif",
+        "mono": "Monospace",
+        "rounded": "Rounded"
+      }
     },
     "privacy": {
       "title": "Privacy",

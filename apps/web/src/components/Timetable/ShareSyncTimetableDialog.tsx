@@ -2,6 +2,7 @@ import { Calendar, Copy, Mail, Share } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { toast } from "@courseweb/ui";
 import {
   Dialog,
@@ -15,6 +16,7 @@ import { Button } from "@courseweb/ui";
 import { Input } from "@courseweb/ui";
 import { Skeleton } from "@courseweb/ui";
 import client from "@/config/api";
+import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 
 const ComponentSkeleton = () => {
   return (
@@ -52,11 +54,21 @@ const ShareSyncTimetableDialog = ({
   const [open, setOpen] = useState(false);
   const dict = useDictionary();
   const [link, setLink] = useState<string | null>(null);
+  const { customItems } = useUserTimetable();
+  const shareLinkWithCustomItems = useMemo(() => {
+    try {
+      const url = new URL(shareLink);
+      url.searchParams.set("customItems", JSON.stringify(customItems));
+      return url.toString();
+    } catch {
+      return shareLink;
+    }
+  }, [customItems, shareLink]);
 
   useEffect(() => {
     if (open) {
       client.shortlink
-        .$put({ query: { url: shareLink } })
+        .$put({ query: { url: shareLinkWithCustomItems } })
         .then((res) => res.text())
         .then((shortLink) => {
           if (typeof shortLink == "object" && "error" in shortLink) {
@@ -69,7 +81,7 @@ const ShareSyncTimetableDialog = ({
           setLink(shortLink as string);
         });
     }
-  }, [open]);
+  }, [open, shareLinkWithCustomItems]);
 
   const handleCopy = () => {
     if (link)

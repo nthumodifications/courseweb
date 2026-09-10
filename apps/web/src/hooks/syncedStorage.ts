@@ -77,6 +77,28 @@ export const mergeCourseStorage = <T extends Record<string, string[]>>(
   return merged as T;
 };
 
+export const mergeCustomTimetableStorage = <
+  T extends Record<string, Array<{ id: string }>>,
+>(
+  local: T,
+  remote: T,
+): T => {
+  const merged: Record<string, Array<{ id: string }>> = {};
+  const semesters = new Set([...Object.keys(local), ...Object.keys(remote)]);
+
+  for (const semester of semesters) {
+    const byId = new Map<string, { id: string }>();
+    const remoteItems = Array.isArray(remote[semester]) ? remote[semester] : [];
+    const localItems = Array.isArray(local[semester]) ? local[semester] : [];
+    for (const item of remoteItems) byId.set(item.id, item);
+    // Local values win when the same item was edited on this device.
+    for (const item of localItems) byId.set(item.id, item);
+    merged[semester] = [...byId.values()];
+  }
+
+  return merged as T;
+};
+
 export const mergeStringArray = (local: string[], remote: string[]) => [
   ...new Set([...local, ...remote]),
 ];
