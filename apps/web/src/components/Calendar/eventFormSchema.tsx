@@ -1,5 +1,5 @@
-import { startOfDay } from "date-fns";
 import { z } from "zod";
+import { getTaipeiDateKey } from "@/helpers/dates";
 const schemaDates = z
   .object({
     start: z.date(),
@@ -55,7 +55,8 @@ export const eventFormSchema = z
     if (
       data.repeat.type !== null &&
       data.repeat.mode === "date" &&
-      startOfDay(new Date(data.repeat.value)) < startOfDay(data.start)
+      getTaipeiDateKey(new Date(data.repeat.value)) <
+        getTaipeiDateKey(data.start)
     ) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
