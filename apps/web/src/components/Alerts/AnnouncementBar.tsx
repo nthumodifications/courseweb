@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, Info, X } from "lucide-react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { useLocalStorage } from "usehooks-ts";
 import { cn } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
@@ -53,8 +53,13 @@ const AnnouncementBar = () => {
   const { data: announcement, isLoading } = useQuery({
     queryKey: ["announcement"],
     queryFn: fetchAnnouncement,
-    staleTime: 1000 * 60 * 60,
-    refetchOnWindowFocus: false,
+    // This table's original use was "Typhoon Koinu: Class Suspended". An hour
+    // of staleness behind a persisted cache would mean a class-suspension
+    // notice reaching a returning student long after it mattered, so keep the
+    // window short and re-check when the tab regains focus.
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
   });
 
   if (
@@ -75,6 +80,15 @@ const AnnouncementBar = () => {
   const linkLabel = isEnglish
     ? (announcement.link_label_en ?? announcement.link_label)
     : (announcement.link_label ?? announcement.link_label_en);
+  // An internal target is stored as a locale-less path such as "/recruit" so
+  // one row serves both languages; it is routed in-app rather than opening a
+  // new tab. Anything absolute stays an external link.
+  const rawLink = announcement.link_url;
+  const isInternalLink = !!rawLink && rawLink.startsWith("/");
+  const internalHref = isInternalLink
+    ? `/${lang === "en" ? "en" : "zh"}${rawLink}`
+    : null;
+
   const severity = announcement.severity as AlertSeverity;
   const style = severityStyles[severity] ?? severityStyles.info;
   const Icon = style.Icon;
@@ -100,16 +114,25 @@ const AnnouncementBar = () => {
           </span>
         )}
       </div>
-      {announcement.link_url && linkLabel && (
-        <a
-          href={announcement.link_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="shrink-0 underline underline-offset-2"
-        >
-          {linkLabel}
-        </a>
-      )}
+      {rawLink &&
+        linkLabel &&
+        (isInternalLink ? (
+          <Link
+            to={internalHref!}
+            className="shrink-0 underline underline-offset-2"
+          >
+            {linkLabel}
+          </Link>
+        ) : (
+          <a
+            href={rawLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="shrink-0 underline underline-offset-2"
+          >
+            {linkLabel}
+          </a>
+        ))}
       {announcement.dismissible && (
         <button
           type="button"
