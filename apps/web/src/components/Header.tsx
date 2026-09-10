@@ -73,9 +73,15 @@ const Header = () => {
       ];
       localStorageKeys.forEach((key) => localStorage.removeItem(key));
 
-      // Clear any other local data (IndexedDB, etc) if needed
-      await eventsCol?.remove();
-      await timetableSyncCol?.remove();
+      // Remove the whole identity-scoped database so its event data,
+      // timetable checkpoints, and replication metadata are all cleared.
+      const calendarDb = eventsCol?.database ?? timetableSyncCol?.database;
+      if (calendarDb) {
+        await calendarDb.remove();
+      } else {
+        await eventsCol?.remove();
+        await timetableSyncCol?.remove();
+      }
       console.log("Local data cleared");
     }
     await handleLogout();
