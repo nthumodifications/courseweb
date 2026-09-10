@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { AlertOctagon } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@courseweb/ui";
 import { Button } from "@courseweb/ui";
+import { reloadApp } from "@/lib/chunk-recovery";
 export default function Error({
   error,
   resetErrorBoundary: reset,
@@ -45,6 +46,9 @@ export default function Error({
             }
           >
             Try again
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => void reloadApp()}>
+            Reload app
           </Button>
         </div>
       </Alert>

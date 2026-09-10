@@ -12,6 +12,9 @@ export default defineConfig(({ mode }) => ({
       workbox: {
         disableDevLogs: true,
         navigateFallback: "/index.html",
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
         // Keep the optional Three.js experience out of the PWA install path.
         // The route remains available online and is cached by the browser after use.
         globIgnores: ["**/campus-map-*.js"],

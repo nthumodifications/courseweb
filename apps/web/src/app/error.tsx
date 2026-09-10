@@ -12,6 +12,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@courseweb/ui";
+import { reloadApp } from "@/lib/chunk-recovery";
 export default function Error({
   error,
   resetErrorBoundary: reset,
@@ -120,6 +121,9 @@ export default function Error({
             </pre>
           </CollapsibleContent>
         </Collapsible>
+        <Button variant="outline" onClick={() => void reloadApp()}>
+          Reload app
+        </Button>
       </div>
     </div>
   );
