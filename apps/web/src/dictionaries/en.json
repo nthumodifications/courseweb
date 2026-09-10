@@ -3,6 +3,24 @@
     "noclass": "No Classes Today",
     "noclass_sub": "Enjoy your day off!",
     "noclass_sem": "Enjoy your holiday!",
+    "upcoming": {
+      "next_up": "Next up",
+      "in_progress": "In progress",
+      "starts_in": "Starts in {minutes} min",
+      "starts_in_one": "Starts in 1 min",
+      "all_day": "All day",
+      "nothing_scheduled": "Nothing else scheduled",
+      "no_events": "No upcoming dates",
+      "no_events_sub": "Your calendar, classes, and NTHU dates will appear here.",
+      "today": "Today",
+      "tomorrow": "Tomorrow",
+      "source": {
+        "calendar": "Calendar",
+        "class": "Class",
+        "academic": "NTHU",
+        "course-date": "Course date"
+      }
+    },
     "noclass_reminder": {
       "reminder": "Haven't chosen your courses yet?",
       "first": "First open",

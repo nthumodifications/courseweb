@@ -3,6 +3,24 @@
     "noclass": "今天沒有課喔！",
     "noclass_sub": "放假吧~",
     "noclass_sem": "放假咯！",
+    "upcoming": {
+      "next_up": "接下來",
+      "in_progress": "進行中",
+      "starts_in": "還有 {minutes} 分鐘開始",
+      "starts_in_one": "還有 1 分鐘開始",
+      "all_day": "全天",
+      "nothing_scheduled": "沒有其他安排",
+      "no_events": "接下來沒有安排",
+      "no_events_sub": "你的行事曆、課表與校務日期會顯示在這裡。",
+      "today": "今天",
+      "tomorrow": "明天",
+      "source": {
+        "calendar": "行事曆",
+        "class": "課程",
+        "academic": "校務",
+        "course-date": "課程日期"
+      }
+    },
     "noclass_reminder": {
       "reminder": "還沒選到課嗎？",
       "first": "先到",
