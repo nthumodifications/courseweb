@@ -8,7 +8,7 @@ import {
   Rows2,
 } from "lucide-react";
 import { addMonths, addWeeks, subMonths, subWeeks } from "date-fns";
-import { KeyboardEvent, useCallback, useEffect, useState } from "react";
+import { KeyboardEvent, useCallback, useEffect, useRef, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -45,6 +45,14 @@ import { useIsMobile } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
 import type { OverlayEntry } from "./OthersTimetablePanel";
 import { CalendarEventInternal } from "./calendar.types";
+import {
+  getTimetableSyncSemesters,
+  reconcileTimetableEvents,
+} from "./timetableReconcile";
+
+type TimetableSyncPrompt = TimetableSyncRequest & {
+  deletionCount: number;
+};
 
 const CalendarError = ({
   error,
@@ -67,13 +75,22 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
   const [displayMode, setDisplayMode] = useState<"week" | "month" | "upcoming">(
     "week",
   );
-  const { addEvent, displayContainer, HOUR_HEIGHT, timetableSyncReady } =
-    useCalendar();
+  const {
+    addEvent,
+    displayContainer,
+    events,
+    eventSyncReady,
+    HOUR_HEIGHT,
+    removeEvents,
+    timetableSyncReady,
+  } = useCalendar();
   const {
     courses,
     colorMap,
     getSemesterCourses,
+    error: coursesError,
     isLoading: coursesLoading,
+    timetableDataReady,
   } = useUserTimetable();
   const { language } = useSettings();
   const isMobile = useIsMobile();
@@ -292,78 +309,140 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
 
   const timetableSync = useRxCollection<TimetableSyncDocType>("timetablesync");
 
-  const [availableSync, setAvailableSync] = useState<TimetableSyncRequest[]>(
-    [],
-  );
+  const [availableSync, setAvailableSync] = useState<TimetableSyncPrompt[]>([]);
+  const applyingSyncRef = useRef(false);
+
+  const getCurrentTimetable = (semester: string) =>
+    createTimetableFromCourses(
+      getSemesterCourses(semester) as MinimalCourse[],
+      colorMap,
+    );
+
+  /**
+   * useUserTimetable retains cached course data while its current-user query
+   * settles. Do not treat a partially materialized semester as an empty one:
+   * that would make reconciliation delete another user's generated events.
+   */
+  const isTimetableDataSettled = () => {
+    if (coursesError || !timetableDataReady) return false;
+    return Object.entries(courses).every(([semester, courseIds]) => {
+      if (!Array.isArray(courseIds)) return false;
+      const loadedCourseIds = getSemesterCourses(semester).map(
+        (course) => course.raw_id,
+      );
+      return (
+        loadedCourseIds.length === courseIds.length &&
+        courseIds.every((courseId) => loadedCourseIds.includes(courseId))
+      );
+    });
+  };
+
+  const persistedEventsForSemester = (semester: string) =>
+    events.filter(
+      (event) =>
+        event.courseId != null && event.courseId.slice(0, 5) === semester,
+    );
 
   const syncTimetable = async () => {
     if (
       !timetableSync ||
       !timetableSyncReady ||
+      !eventSyncReady ||
       coursesLoading ||
-      Object.keys(courses).length === 0
+      !isTimetableDataSettled()
     )
       return;
 
-    // for each semester, check if its already synced
-    const timetableCourses: TimetableSyncRequest[] = [];
-    for (const sem in courses) {
-      const coursesData = getSemesterCourses(sem);
-      // get current synced from db
-      const syncData = await timetableSync
-        .findOne({ selector: { semester: { $eq: sem } } })
-        .exec();
-      if (!syncData) {
-        timetableCourses.push({
-          semester: sem,
-          courses: createTimetableFromCourses(
-            coursesData as MinimalCourse[],
-            colorMap,
-          ),
-          reason: "new",
-        });
-        continue;
-      }
-      // check if courses are modified
-      const syncedCourses = syncData.courses as string[];
-      // compare courses after converting to timetable format, because some courses might not be displayable.
-      const newCourses = createTimetableFromCourses(
-        coursesData as MinimalCourse[],
-        colorMap,
-      );
-      const newCoursesId = newCourses.map((c) => c.course.raw_id);
-      const coursesModified =
-        syncedCourses.filter((c) => !newCoursesId.includes(c)).length > 0 ||
-        newCoursesId.filter((c) => !syncedCourses.includes(c)).length > 0;
-      if (coursesModified) {
-        timetableCourses.push({
-          semester: sem,
-          courses: newCourses,
-          reason: "modified",
-        });
-      }
+    const syncDocuments = await timetableSync.find().exec();
+    const syncBySemester = new Map(
+      syncDocuments.map((document) => [document.semester, document]),
+    );
+    const timetableCourses: TimetableSyncPrompt[] = [];
+    const semesters = getTimetableSyncSemesters(
+      Object.keys(courses),
+      syncDocuments,
+    );
+
+    for (const semester of semesters) {
+      const currentCourses = getCurrentTimetable(semester);
+      const diff = reconcileTimetableEvents({
+        generated: timetableToCalendarEvent(currentCourses, language),
+        persisted: persistedEventsForSemester(semester),
+        semester,
+      });
+      const syncData = syncBySemester.get(semester);
+      const hasChanges = diff.toUpsert.length > 0 || diff.toDelete.length > 0;
+
+      if (!syncData && currentCourses.length === 0 && !hasChanges) continue;
+      if (syncData && !hasChanges) continue;
+
+      timetableCourses.push({
+        semester,
+        courses: currentCourses,
+        reason: syncData ? "modified" : "new",
+        deletionCount: diff.toDelete.length,
+      });
     }
-    // prompt update if required
-    if (timetableCourses.length == 0) return;
+
     setAvailableSync(timetableCourses);
   };
 
   useEffect(() => {
-    if (timetableSyncReady && !coursesLoading) {
+    if (
+      timetableSyncReady &&
+      eventSyncReady &&
+      !coursesLoading &&
+      !coursesError &&
+      !applyingSyncRef.current
+    ) {
       syncTimetable();
     }
-  }, [courses, timetableSync, timetableSyncReady, coursesLoading]);
+  }, [
+    courses,
+    coursesError,
+    coursesLoading,
+    events,
+    eventSyncReady,
+    timetableSync,
+    timetableSyncReady,
+  ]);
 
   const handleSyncAccept = async (
     request: TimetableSyncRequest,
     accept: boolean,
   ) => {
+    if (
+      !timetableSync ||
+      !timetableSyncReady ||
+      !eventSyncReady ||
+      coursesLoading ||
+      !isTimetableDataSettled()
+    ) {
+      return;
+    }
+
+    const currentCourses = getCurrentTimetable(request.semester);
+    const currentEvents = timetableToCalendarEvent(currentCourses, language);
+    const diff = reconcileTimetableEvents({
+      generated: currentEvents,
+      persisted: persistedEventsForSemester(request.semester),
+      semester: request.semester,
+    });
+
     if (accept) {
-      const calendarEvents = timetableToCalendarEvent(
-        request.courses,
-        language,
-      );
-      calendarEvents.forEach((c) => addEvent(c));
+      applyingSyncRef.current = true;
+      try {
+        await removeEvents(diff.toDelete);
+        await Promise.all(diff.toUpsert.map((event) => addEvent(event)));
+      } catch {
+        toast({
+          title: dict.common.error,
+          description: dict.calendar.sync.failed_description,
+        });
+        applyingSyncRef.current = false;
+        return;
+      }
+      applyingSyncRef.current = false;
     } else {
       toast({
         title: dict.calendar.sync.cancelled_title.replace(
@@ -374,25 +453,38 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
       });
     }
 
-    // Always record the known course set (accepted or dismissed) so the dialog
-    // is not re-shown for the same courses on subsequent mounts/course-changes.
-    await timetableSync!.upsert({
-      semester: request.semester,
-      courses: request.courses.map((c) => c.course.raw_id),
-      lastSync: new Date().toISOString(),
-    });
+    // Record the current generated course set only after accepted event writes
+    // have completed. The next pass still compares event content, so a
+    // dismissed diff remains eligible for a later reconciliation prompt.
+    try {
+      await timetableSync.upsert({
+        semester: request.semester,
+        courses: currentCourses.map((c) => c.course.raw_id),
+        lastSync: new Date().toISOString(),
+      });
+    } catch {
+      toast({
+        title: dict.common.error,
+        description: dict.calendar.sync.failed_description,
+      });
+      return;
+    }
 
     setAvailableSync((s) => s.filter((r) => r.semester != request.semester));
   };
 
   return (
     <ErrorBoundary FallbackComponent={CalendarError}>
-      {availableSync.length > 0 && timetableSyncReady && (
-        <CalendarTimetableSyncDialog
-          request={availableSync[0]}
-          onSyncAccept={handleSyncAccept}
-        />
-      )}
+      {availableSync.length > 0 &&
+        timetableSyncReady &&
+        eventSyncReady &&
+        !coursesLoading && (
+          <CalendarTimetableSyncDialog
+            request={availableSync[0]}
+            deletionCount={availableSync[0].deletionCount}
+            onSyncAccept={handleSyncAccept}
+          />
+        )}
       <div className="flex flex-col gap-2 md:gap-6 flex-1 w-full">
         <div className="flex flex-col md:flex-row gap-2 justify-end">
           <div className="md:flex flex-row items-center gap-2 hidden ">

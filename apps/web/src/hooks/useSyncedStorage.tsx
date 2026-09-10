@@ -39,7 +39,7 @@ const useSyncedStorage = <T = unknown,>(
   key: string,
   defaultValue: T,
   mergeData?: MergeData<T>,
-): [T, (newData: T | ((prevData: T) => T)) => void] => {
+): [T, (newData: T | ((prevData: T) => T)) => void, boolean] => {
   const { user, isAuthenticated } = useAuth();
   const [deviceId] = useState(getDeviceId);
   const [localData, setLocalData] = useLocalStorage<SyncedData<T>>(key, {
@@ -262,7 +262,16 @@ const useSyncedStorage = <T = unknown,>(
     [deviceId, setLocalData],
   );
 
-  return [data.value ?? defaultValue, updateData] as const;
+  const isSettled =
+    !isAuthenticated ||
+    !userId ||
+    (isRemoteReadSuccessful &&
+      !isRemoteFetching &&
+      !isRemotePaused &&
+      hasSyncedMetadata(localData) &&
+      reconciledUserRef.current === userId);
+
+  return [data.value ?? defaultValue, updateData, isSettled] as const;
 };
 
 export default useSyncedStorage;

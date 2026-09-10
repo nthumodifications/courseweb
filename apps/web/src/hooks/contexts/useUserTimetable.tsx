@@ -124,6 +124,7 @@ const userTimetableContext = createContext<
   ReturnType<typeof useUserTimetableProvider>
 >({
   getSemesterCourses: () => [],
+  timetableDataReady: false,
   semesterCourses: [],
   timetableTheme: Object.keys(timetableColors)[0],
   currentColors: [],
@@ -176,13 +177,10 @@ const userTimetableContext = createContext<
 });
 
 const useUserTimetableProvider = (loadCourse = true) => {
-  const [courses, setCourses] = useSyncedStorage<CourseLocalStorage>(
-    "courses",
-    {},
-    mergeCourseStorage,
-  );
+  const [courses, setCourses, coursesSyncReady] =
+    useSyncedStorage<CourseLocalStorage>("courses", {}, mergeCourseStorage);
   const [hoverCourse, setHoverCourse] = useState<CourseDefinition | null>(null);
-  const [colorMap, setColorMap] = useSyncedStorage<{
+  const [colorMap, setColorMap, colorMapSyncReady] = useSyncedStorage<{
     [courseID: string]: string;
   }>("course_color_map", {}); //map from courseID to color
   const [timetableTheme, _setTimetableTheme] = useSyncedStorage<string>(
@@ -561,6 +559,7 @@ const useUserTimetableProvider = (loadCourse = true) => {
 
   return {
     getSemesterCourses,
+    timetableDataReady: coursesSyncReady && colorMapSyncReady,
     colorMap,
     semester,
     timetableTheme,

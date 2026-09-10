@@ -15,8 +15,9 @@ import useDictionary from "@/dictionaries/useDictionary";
 
 const CalendarTimetableSyncDialog: FC<{
   request: TimetableSyncRequest;
+  deletionCount: number;
   onSyncAccept: (request: TimetableSyncRequest, accept: boolean) => void;
-}> = ({ request, onSyncAccept }) => {
+}> = ({ request, deletionCount, onSyncAccept }) => {
   const [open, setOpen] = useState(true);
   const handledRef = useRef(false);
   const dict = useDictionary();
@@ -53,6 +54,14 @@ const CalendarTimetableSyncDialog: FC<{
               )
               .replace("{semester}", toPrettySemester(request.semester))}
           </AlertDialogDescription>
+          {deletionCount > 0 && (
+            <AlertDialogDescription>
+              {dict.calendar.sync.deletion_warning.replace(
+                "{count}",
+                String(deletionCount),
+              )}
+            </AlertDialogDescription>
+          )}
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel onClick={() => handleClose(false)}>

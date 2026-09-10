@@ -754,9 +754,11 @@
       "new_reason": "新增",
       "modified_reason": "修改的",
       "description": "在第 {semester} 學期課表中找到{reason}課程。要同步變更嗎？",
+      "deletion_warning": "同步後將移除 {count} 個由課表產生的行事曆行程。",
       "cancel": "取消",
       "cancelled_title": "{semester} 學期同步已取消",
-      "cancelled_description": "課表變更後可以再次同步",
+      "cancelled_description": "行事曆行程未變更；你可以稍後再次同步",
+      "failed_description": "行事曆未標記為已同步，請再試一次。",
       "sync": "同步"
     },
     "tabs": {
