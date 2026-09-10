@@ -1,35 +1,63 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocalStorage } from "usehooks-ts";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "react-oidc-context";
 import authClient from "@/config/auth";
+import {
+  hasSyncedMetadata,
+  nextUpdatedAt,
+  normalizeSyncedData,
+  valuesEqual,
+  type SyncedData,
+} from "./syncedStorage";
 
-interface SyncedData<T> {
-  value: T;
-  lastModified: number;
-}
+const DEVICE_ID_KEY = "nthumods_device_id";
 
-// Utility function to migrate old data formats to the new format
-const migrateDataFormat = <T = unknown,>(data: any) => {
-  if (typeof data === "object" && "lastModified" in data && "value" in data)
-    return data as { value: any; lastModified: number };
-  return { value: data, lastModified: Date.now() } as SyncedData<T>;
+const getDeviceId = () => {
+  if (typeof window === "undefined") return "server";
+
+  const existingDeviceId = window.localStorage.getItem(DEVICE_ID_KEY);
+  if (existingDeviceId) return existingDeviceId;
+
+  const deviceId =
+    typeof crypto.randomUUID === "function"
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  window.localStorage.setItem(DEVICE_ID_KEY, deviceId);
+  return deviceId;
 };
+
+type MergeData<T> = (local: T, remote: T) => T;
 
 const useSyncedStorage = <T = unknown,>(
   key: string,
   defaultValue: T,
+  mergeData?: MergeData<T>,
 ): [T, (newData: T | ((prevData: T) => T)) => void] => {
   const { user, isAuthenticated } = useAuth();
+  const [deviceId] = useState(getDeviceId);
   const [localData, setLocalData] = useLocalStorage<SyncedData<T>>(key, {
     value: defaultValue,
     lastModified: -1,
+    updatedAt: -1,
+    deviceId,
   });
-  const [data, setDataState] = useState<SyncedData<T>>(localData);
+  const [data, setDataState] = useState<SyncedData<T>>(() =>
+    normalizeSyncedData<T>(localData, deviceId),
+  );
+  const userId = user?.profile.sub;
+  const authSessionKey = user?.expires_at ?? 0;
+  const reconciledUserRef = useRef<string>();
+  const uploadedVersionRef = useRef<string>();
 
-  const { data: remoteData, isLoading } = useQuery<SyncedData<T>>({
-    queryKey: ["kv", key],
-    enabled: isAuthenticated,
+  const {
+    data: remoteData,
+    isFetching: isRemoteFetching,
+    isPaused: isRemotePaused,
+    isSuccess: isRemoteReadSuccessful,
+  } = useQuery<SyncedData<T> | null>({
+    queryKey: ["kv", userId ?? "anonymous", authSessionKey, key],
+    enabled: Boolean(isAuthenticated && userId && user?.access_token),
     queryFn: async () => {
       const response = await authClient.api.kv[":key"].$get(
         {
@@ -41,100 +69,191 @@ const useSyncedStorage = <T = unknown,>(
           },
         },
       );
-      const data = await response.json();
-      if (!response.ok || data.error) {
-        throw new Error(data.error || "Unknown error");
+
+      if (response.status === 404) return null;
+
+      const payload = (await response.json()) as {
+        error?: string;
+        [field: string]: unknown;
+      };
+      if (!response.ok || payload.error) {
+        throw new Error(payload.error || "Unknown error");
       }
-      return data as unknown as SyncedData<T>;
+
+      return normalizeSyncedData<T>(payload, deviceId);
     },
   });
 
-  useEffect(() => {
-    // wait for auth to finish loading
-    if (!isAuthenticated) return;
-    // Migrate old data format if necessary
-    const migratedData = migrateDataFormat<T>(localData);
-    if (migratedData !== localData) {
-      setLocalData(migratedData);
-      setDataState(migratedData);
-      // If migration happened, sync the data with kv storage
-      if (user) {
-        authClient.api.kv[":key"].$post(
-          {
-            param: { key },
-            json: migratedData,
+  const postData = useCallback(
+    async (nextData: SyncedData<T>, merge: boolean) => {
+      if (!user || !isAuthenticated) return;
+
+      const response = await authClient.api.kv[":key"].$post(
+        {
+          param: { key },
+          json: {
+            value: nextData.value,
+            lastModified: nextData.lastModified,
+            updatedAt: nextData.updatedAt,
+            deviceId: nextData.deviceId,
+            merge,
           },
-          {
-            headers: {
-              Authorization: `Bearer ${user.access_token}`,
-            },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${user.access_token}`,
           },
-        );
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to sync ${key}: ${response.status}`);
       }
-    }
-  }, [localData, setLocalData, user, isAuthenticated]);
+    },
+    [isAuthenticated, key, user],
+  );
 
-  useEffect(() => {
-    const syncData = async () => {
-      if (user && remoteData) {
-        const localLastModified = localData.lastModified || 0;
-        const remoteLastModified = remoteData.lastModified || 0;
+  const upload = useCallback(
+    (nextData: SyncedData<T>, merge: boolean) => {
+      const version = `${nextData.updatedAt}:${nextData.deviceId}`;
+      if (uploadedVersionRef.current === version) return;
+      uploadedVersionRef.current = version;
 
-        if (localLastModified > remoteLastModified) {
-          // Local data is newer, update remote storage
-          // current data is nested in value: { value: { value: ... } }
-          // so we need to extract the inner value recursively
-
-          if (isAuthenticated) {
-            authClient.api.kv[":key"].$post(
-              {
-                param: { key },
-                json: {
-                  value: localData.value,
-                  lastModified: localLastModified,
-                },
-              },
-              {
-                headers: {
-                  Authorization: `Bearer ${user!.access_token}`,
-                },
-              },
-            );
-          }
-          setDataState({
-            value: localData.value,
-            lastModified: localLastModified,
-          });
-        } else if (localLastModified < remoteLastModified) {
-          // Remote data is newer, update local storage
-          setLocalData(remoteData);
-          setDataState(remoteData);
-        } else {
-          // Data is the same, no action needed
-          setDataState(localData);
+      void postData(nextData, merge).catch((error: unknown) => {
+        if (uploadedVersionRef.current === version) {
+          uploadedVersionRef.current = undefined;
         }
-      } else {
-        setDataState(localData);
-      }
-    };
+        console.error(error);
+      });
+    },
+    [postData],
+  );
 
-    syncData();
-  }, [user, key, localData, setLocalData, remoteData, isAuthenticated]);
+  // Upgrade old local records without ever treating this as proof that the remote read succeeded.
+  useEffect(() => {
+    const normalizedLocalData = normalizeSyncedData<T>(localData, deviceId);
+    setDataState(normalizedLocalData);
+    if (!hasSyncedMetadata(localData)) {
+      setLocalData(normalizedLocalData);
+    }
+  }, [deviceId, localData, setLocalData]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !userId) {
+      // A logout starts a fresh reconciliation on the next login. Local data remains intact.
+      reconciledUserRef.current = undefined;
+      uploadedVersionRef.current = undefined;
+      setDataState(normalizeSyncedData<T>(localData, deviceId));
+      return;
+    }
+
+    // Cached data may be present while React Query is fetching the current user's record.
+    // It is not safe to persist or overwrite local state until that fetch settles successfully.
+    if (
+      !isRemoteReadSuccessful ||
+      isRemoteFetching ||
+      isRemotePaused ||
+      !hasSyncedMetadata(localData)
+    ) {
+      return;
+    }
+
+    const local = normalizeSyncedData<T>(localData, deviceId);
+    const remote = remoteData
+      ? normalizeSyncedData<T>(remoteData, deviceId)
+      : null;
+
+    if (reconciledUserRef.current !== userId) {
+      reconciledUserRef.current = userId;
+
+      if (!remote) {
+        setDataState(local);
+        if (local.updatedAt >= 0) upload(local, Boolean(mergeData));
+        return;
+      }
+
+      if (mergeData) {
+        const mergedValue = mergeData(local.value, remote.value);
+        const localAndRemoteAreEqual = valuesEqual(local.value, remote.value);
+
+        if (localAndRemoteAreEqual) {
+          const winner = local.updatedAt >= remote.updatedAt ? local : remote;
+          setDataState(winner);
+          setLocalData(winner);
+        } else if (valuesEqual(mergedValue, remote.value)) {
+          // The remote snapshot already contains all local values.
+          setDataState(remote);
+          setLocalData(remote);
+        } else {
+          const merged: SyncedData<T> = {
+            value: mergedValue,
+            updatedAt: nextUpdatedAt(
+              Math.max(local.updatedAt, remote.updatedAt),
+            ),
+            lastModified: 0,
+            deviceId,
+          };
+          merged.lastModified = merged.updatedAt;
+          setDataState(merged);
+          setLocalData(merged);
+          upload(merged, true);
+        }
+        return;
+      }
+
+      const winner = local.updatedAt >= remote.updatedAt ? local : remote;
+      setDataState(winner);
+      setLocalData(winner);
+      if (winner === local) upload(local, false);
+      return;
+    }
+
+    if (!remote) {
+      setDataState(local);
+      if (local.updatedAt >= 0) upload(local, false);
+    } else if (local.updatedAt > remote.updatedAt) {
+      setDataState(local);
+      upload(local, false);
+    } else if (local.updatedAt < remote.updatedAt) {
+      setLocalData(remote);
+      setDataState(remote);
+    } else {
+      setDataState(local);
+    }
+  }, [
+    authSessionKey,
+    deviceId,
+    isAuthenticated,
+    isRemoteFetching,
+    isRemotePaused,
+    isRemoteReadSuccessful,
+    localData,
+    mergeData,
+    remoteData,
+    setLocalData,
+    upload,
+    userId,
+  ]);
 
   const updateData = useCallback(
-    async (newData: T | ((prevData: T) => T)) => {
+    (newData: T | ((prevData: T) => T)) => {
       setDataState((prevData) => {
         const value =
           typeof newData === "function"
             ? (newData as (prevData: T) => T)(prevData.value)
             : newData;
-        const newTimestamp = Date.now();
-        const updatedData = { value, lastModified: newTimestamp };
+        const updatedAt = nextUpdatedAt(prevData.updatedAt);
+        const updatedData: SyncedData<T> = {
+          value,
+          updatedAt,
+          lastModified: updatedAt,
+          deviceId,
+        };
         setLocalData(updatedData);
         return updatedData;
       });
     },
-    [setLocalData],
+    [deviceId, setLocalData],
   );
 
   return [data.value ?? defaultValue, updateData] as const;

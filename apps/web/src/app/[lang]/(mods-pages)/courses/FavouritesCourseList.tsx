@@ -31,7 +31,6 @@ import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { useQuery } from "@tanstack/react-query";
 import supabase from "@/config/supabase";
 import { CourseDefinition } from "@/config/supabase";
-import { useLocalStorage } from "usehooks-ts";
 import client from "@/config/api";
 
 const TimetableCourseListItem = ({ course }: { course: MinimalCourse }) => {
@@ -39,12 +38,13 @@ const TimetableCourseListItem = ({ course }: { course: MinimalCourse }) => {
   const [searchParams] = useSearchParams();
   const { openCourse } = useCourseLink();
 
-  const { addCourse, deleteCourse, isCourseSelected } = useUserTimetable();
-
-  const [favourites, setFavourites] = useLocalStorage<string[]>(
-    "course_favourites",
-    [],
-  );
+  const {
+    addCourse,
+    deleteCourse,
+    isCourseSelected,
+    favourites,
+    setFavourites,
+  } = useUserTimetable();
 
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: course.raw_id });
@@ -139,10 +139,7 @@ const TimetableCourseListItem = ({ course }: { course: MinimalCourse }) => {
 export const FavouritesCourseList = ({}: {}) => {
   const { language } = useSettings();
   const dict = useDictionary();
-  const [favourites, setFavourites] = useLocalStorage<string[]>(
-    "course_favourites",
-    [],
-  );
+  const { favourites, setFavourites } = useUserTimetable();
 
   const { data: courses = [], error } = useQuery({
     queryKey: ["courses", [...favourites].sort()],
