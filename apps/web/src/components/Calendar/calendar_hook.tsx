@@ -14,7 +14,12 @@ import {
   DisplayCalendarEvent,
 } from "@/components/Calendar/calendar.types";
 import { useRxCollection, useRxQuery } from "rxdb-hooks";
-import { getDiffFunction, getActualEndDate } from "./calendar_utils";
+import {
+  getDiffFunction,
+  getActualEndDate,
+  getRepeatDefinitionBefore,
+  reanchorSeriesEdit,
+} from "./calendar_utils";
 import { subDays } from "date-fns";
 import {
   serializeEvent,
@@ -443,11 +448,8 @@ export const useCalendarProvider = () => {
   const addEvent = async (event: CalendarEvent) => {
     if (!eventsCol) return;
     await eventsCol.upsert({
-      ...event,
+      ...serializeEvent(event),
       courseId: event.courseId ?? null,
-      start: event.start.toISOString(),
-      end: event.end.toISOString(),
-      repeat: event.repeat,
       actualEnd: getActualEndDate(event),
     });
   };
@@ -489,14 +491,17 @@ export const useCalendarProvider = () => {
           });
           break;
         case UpdateType.FOLLOWING:
-          //set the repeat end date to the new event start date
-          const { displayStart, displayEnd, ...originalEvent } = event;
+          // Keep only the occurrences before the selected one. Count rules
+          // must remain counts; their value is not a timestamp.
+          const { displayStart, ...originalEvent } = event;
+          const repeatBefore = getRepeatDefinitionBefore(event, displayStart);
+          if (!repeatBefore) {
+            await eventsCol!.findOne(event.id).remove();
+            break;
+          }
           const newEvent: CalendarEvent = {
             ...originalEvent,
-            repeat: {
-              ...event.repeat!,
-              value: subDays(displayStart, 1).getTime(),
-            },
+            repeat: repeatBefore,
           };
           await eventsCol!.findOne(event.id).update({
             $set: {
@@ -618,12 +623,15 @@ export const useCalendarProvider = () => {
           break;
         case UpdateType.ALL:
           //just update the event
-          await eventsCol!.findOne(newEvent.id).update({
-            $set: {
-              ...serializeEvent(newEvent),
-              actualEnd: getActualEndDate(newEvent),
-            },
-          });
+          {
+            const seriesEvent = reanchorSeriesEdit(oldEvent, newEvent);
+            await eventsCol!.findOne(newEvent.id).update({
+              $set: {
+                ...serializeEvent(seriesEvent),
+                actualEnd: getActualEndDate(seriesEvent),
+              },
+            });
+          }
           break;
       }
     } else if (oldEvent.repeat && !newEvent.repeat) {

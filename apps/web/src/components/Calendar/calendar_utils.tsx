@@ -9,17 +9,16 @@ import {
   differenceInWeeks,
   differenceInYears,
   eachDayOfInterval,
-  endOfDay,
   endOfMonth,
   endOfWeek,
-  isSameDay,
-  isWithinInterval,
+  format,
   set,
-  startOfDay,
   startOfMonth,
   startOfWeek,
   startOfYear,
 } from "date-fns";
+import { fromZonedTime, toZonedTime } from "date-fns-tz";
+import { TAIPEI_TIME_ZONE } from "@/helpers/dates";
 import {
   CalendarEvent,
   CalendarEventInternal,
@@ -37,25 +36,16 @@ export const eventsToDisplay = (
     // use getRepeatedStartDays to see if matches the range, if over end date, break
     const repeatedDays = getRepeatedStartDays(event, start, end);
     for (const day of repeatedDays) {
-      const newStart = set(event.start, {
-        year: day.getFullYear(),
-        month: day.getMonth(),
-        date: day.getDate(),
-      });
+      const newStart = day;
       //get original difference
       const diff = event.end.getTime() - event.start.getTime();
       const newEnd = new Date(newStart.getTime() + diff);
 
       if (event.allDay) {
-        // if any day of start to end is within newStart and newEnd, add the event
         if (
-          eachDayOfInterval({
-            start: startOfDay(start),
-            end: endOfDay(end),
-          }).some((d) =>
-            isWithinInterval(d, { start: newStart, end: newEnd }),
-          ) &&
-          (event.excludedDates ?? []).every((d) => !isSameDay(d, newStart))
+          newStart < end &&
+          newEnd > start &&
+          !isExcludedOccurrence(event, newStart)
         ) {
           newEvents.push({
             ...event,
@@ -68,14 +58,16 @@ export const eventsToDisplay = (
         }
       } else {
         if (
-          newStart >= start &&
-          newStart <= end &&
-          (event.excludedDates ?? [])?.every((d) => !isSameDay(d, newStart))
+          newStart < end &&
+          newEnd > start &&
+          !isExcludedOccurrence(event, newStart)
         ) {
           newEvents.push({
             ...event,
-            displayStart: newStart,
-            displayEnd: newEnd,
+            displayStart: new Date(
+              Math.max(newStart.getTime(), start.getTime()),
+            ),
+            displayEnd: new Date(Math.min(newEnd.getTime(), end.getTime())),
           });
         }
         // if later than end, break
@@ -119,13 +111,38 @@ export const getDiffFunction = (
 const getRepeatInterval = (event: CalendarEvent) =>
   Math.max(1, Math.trunc(event.repeat?.interval ?? 1));
 
-const setTimeOfDay = (date: Date, source: Date) =>
-  set(date, {
-    hours: source.getHours(),
-    minutes: source.getMinutes(),
-    seconds: source.getSeconds(),
-    milliseconds: source.getMilliseconds(),
-  });
+const WALL_DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS";
+
+/** Convert an instant to a Date whose local fields represent Taipei time. */
+const toTaipeiWallClock = (date: Date) => toZonedTime(date, TAIPEI_TIME_ZONE);
+
+/** Convert a Taipei wall-clock Date back to its real instant. */
+const fromTaipeiWallClock = (date: Date) =>
+  fromZonedTime(format(date, WALL_DATE_TIME_FORMAT), TAIPEI_TIME_ZONE);
+
+const setTaipeiTimeOfDay = (date: Date, source: Date) => {
+  const targetWall = toTaipeiWallClock(date);
+  const sourceWall = toTaipeiWallClock(source);
+  return fromTaipeiWallClock(
+    set(targetWall, {
+      hours: sourceWall.getHours(),
+      minutes: sourceWall.getMinutes(),
+      seconds: sourceWall.getSeconds(),
+      milliseconds: sourceWall.getMilliseconds(),
+    }),
+  );
+};
+
+const addTaipeiCalendarDays = (date: Date, days: number) =>
+  fromTaipeiWallClock(addDays(toTaipeiWallClock(date), days));
+
+const taipeiDateKey = (date: Date) =>
+  format(toTaipeiWallClock(date), "yyyy-MM-dd");
+
+const isExcludedOccurrence = (event: CalendarEvent, start: Date) =>
+  (event.excludedDates ?? []).some(
+    (excludedDate) => taipeiDateKey(excludedDate) === taipeiDateKey(start),
+  );
 
 /**
  * Return the occurrence at a zero-based series index.
@@ -139,33 +156,47 @@ const getOccurrenceStart = (event: CalendarEvent, index: number) => {
   if (index === 0) return new Date(event.start);
 
   const interval = getRepeatInterval(event);
+  const anchorWall = toTaipeiWallClock(event.start);
   switch (event.repeat?.type) {
     case "daily":
-      return addDays(event.start, index * interval);
+      return fromTaipeiWallClock(addDays(anchorWall, index * interval));
     case "weekly":
-      return addWeeks(event.start, index * interval);
+      return fromTaipeiWallClock(addWeeks(anchorWall, index * interval));
     case "monthly": {
-      const targetMonth = addMonths(
-        startOfMonth(event.start),
-        index * interval,
-      );
+      const targetMonth = addMonths(startOfMonth(anchorWall), index * interval);
       const targetDay = Math.min(
-        event.start.getDate(),
+        anchorWall.getDate(),
         endOfMonth(targetMonth).getDate(),
       );
-      return setTimeOfDay(set(targetMonth, { date: targetDay }), event.start);
+      return fromTaipeiWallClock(
+        set(targetMonth, {
+          date: targetDay,
+          hours: anchorWall.getHours(),
+          minutes: anchorWall.getMinutes(),
+          seconds: anchorWall.getSeconds(),
+          milliseconds: anchorWall.getMilliseconds(),
+        }),
+      );
     }
     case "yearly": {
-      const targetYear = addYears(startOfYear(event.start), index * interval);
+      const targetYear = addYears(startOfYear(anchorWall), index * interval);
       const targetMonth = set(targetYear, {
-        month: event.start.getMonth(),
+        month: anchorWall.getMonth(),
         date: 1,
       });
       const targetDay = Math.min(
-        event.start.getDate(),
+        anchorWall.getDate(),
         endOfMonth(targetMonth).getDate(),
       );
-      return setTimeOfDay(set(targetMonth, { date: targetDay }), event.start);
+      return fromTaipeiWallClock(
+        set(targetMonth, {
+          date: targetDay,
+          hours: anchorWall.getHours(),
+          minutes: anchorWall.getMinutes(),
+          seconds: anchorWall.getSeconds(),
+          milliseconds: anchorWall.getMilliseconds(),
+        }),
+      );
     }
     default:
       return new Date(event.start);
@@ -173,27 +204,31 @@ const getOccurrenceStart = (event: CalendarEvent, index: number) => {
 };
 
 const compareCalendarDates = (left: Date, right: Date) =>
-  startOfDay(left).getTime() - startOfDay(right).getTime();
+  taipeiDateKey(left).localeCompare(taipeiDateKey(right));
 
 const getEstimatedOccurrenceIndex = (event: CalendarEvent, date: Date) => {
   const interval = getRepeatInterval(event);
+  const anchorWall = toTaipeiWallClock(event.start);
+  const dateWall = toTaipeiWallClock(date);
   switch (event.repeat?.type) {
     case "daily":
-      return Math.floor(differenceInCalendarDays(date, event.start) / interval);
+      return Math.floor(
+        differenceInCalendarDays(dateWall, anchorWall) / interval,
+      );
     case "weekly":
       return Math.floor(
-        differenceInCalendarDays(date, event.start) / (7 * interval),
+        differenceInCalendarDays(dateWall, anchorWall) / (7 * interval),
       );
     case "monthly":
       return Math.floor(
-        ((date.getFullYear() - event.start.getFullYear()) * 12 +
-          date.getMonth() -
-          event.start.getMonth()) /
+        ((dateWall.getFullYear() - anchorWall.getFullYear()) * 12 +
+          dateWall.getMonth() -
+          anchorWall.getMonth()) /
           interval,
       );
     case "yearly":
       return Math.floor(
-        (date.getFullYear() - event.start.getFullYear()) / interval,
+        (dateWall.getFullYear() - anchorWall.getFullYear()) / interval,
       );
     default:
       return 0;
@@ -290,7 +325,17 @@ export const getRepeatDefinitionBefore = (
   return {
     ...event.repeat,
     mode: "date" as const,
-    value: addDays(startOfDay(occurrenceStart), -1).getTime(),
+    value: addTaipeiCalendarDays(
+      fromTaipeiWallClock(
+        set(toTaipeiWallClock(occurrenceStart), {
+          hours: 0,
+          minutes: 0,
+          seconds: 0,
+          milliseconds: 0,
+        }),
+      ),
+      -1,
+    ).getTime(),
   };
 };
 
@@ -299,7 +344,7 @@ export const reanchorSeriesEdit = <T extends CalendarEvent>(
   rootEvent: CalendarEvent,
   editedEvent: T,
 ) => {
-  const start = setTimeOfDay(rootEvent.start, editedEvent.start);
+  const start = setTaipeiTimeOfDay(rootEvent.start, editedEvent.start);
   const duration = editedEvent.end.getTime() - editedEvent.start.getTime();
   return {
     ...editedEvent,

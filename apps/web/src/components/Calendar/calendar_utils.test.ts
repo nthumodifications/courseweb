@@ -9,6 +9,9 @@ import {
 } from "./calendar_utils";
 import type { CalendarEvent } from "./calendar.types";
 import { eventFormSchema } from "./eventFormSchema";
+import { fromZonedTime } from "date-fns-tz";
+
+const TAIPEI_TIME_ZONE = "Asia/Taipei";
 
 const localDate = (
   year: number,
@@ -16,7 +19,11 @@ const localDate = (
   day: number,
   hours = 0,
   minutes = 0,
-) => new Date(year, month - 1, day, hours, minutes);
+) =>
+  fromZonedTime(
+    `${year.toString().padStart(4, "0")}-${month.toString().padStart(2, "0")}-${day.toString().padStart(2, "0")}T${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:00.000`,
+    TAIPEI_TIME_ZONE,
+  );
 
 const makeEvent = (
   start: Date,
@@ -257,6 +264,56 @@ describe("calendar recurrence", () => {
 
     expect(getActualEndDate(event)).toBe(
       localDate(2026, 3, 31, 10).toISOString(),
+    );
+  });
+
+  test("places recurrence occurrences using Taipei wall-clock time", () => {
+    const event = makeEvent(
+      localDate(2026, 1, 31, 9),
+      localDate(2026, 1, 31, 10),
+      { type: "monthly", interval: 1, mode: "count", value: 3 },
+    );
+
+    expect(
+      eventsToDisplay(
+        [event],
+        localDate(2026, 3, 1),
+        localDate(2026, 4, 1),
+      ).map(({ displayStart }) => displayStart.toISOString()),
+    ).toEqual([localDate(2026, 3, 31, 9).toISOString()]);
+  });
+
+  test("clips a cross-midnight event into both Taipei calendar days", () => {
+    const event = makeEvent(
+      localDate(2026, 9, 10, 23, 30),
+      localDate(2026, 9, 11, 1),
+      null,
+    );
+
+    const firstDay = eventsToDisplay(
+      [event],
+      localDate(2026, 9, 10),
+      localDate(2026, 9, 10, 23, 59),
+    );
+    const secondDay = eventsToDisplay(
+      [event],
+      localDate(2026, 9, 11),
+      localDate(2026, 9, 11, 23, 59),
+    );
+
+    expect(firstDay).toHaveLength(1);
+    expect(firstDay[0].displayStart.toISOString()).toBe(
+      localDate(2026, 9, 10, 23, 30).toISOString(),
+    );
+    expect(firstDay[0].displayEnd.toISOString()).toBe(
+      localDate(2026, 9, 10, 23, 59).toISOString(),
+    );
+    expect(secondDay).toHaveLength(1);
+    expect(secondDay[0].displayStart.toISOString()).toBe(
+      localDate(2026, 9, 11).toISOString(),
+    );
+    expect(secondDay[0].displayEnd.toISOString()).toBe(
+      localDate(2026, 9, 11, 1).toISOString(),
     );
   });
 });
