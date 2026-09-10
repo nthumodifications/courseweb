@@ -1,3 +1,4 @@
+import { startOfDay } from "date-fns";
 import { z } from "zod";
 const schemaDates = z
   .object({
@@ -48,4 +49,18 @@ const schemaDetails = z.object({
   tag: z.string().min(2),
 });
 
-export const eventFormSchema = z.intersection(schemaDates, schemaDetails);
+export const eventFormSchema = z
+  .intersection(schemaDates, schemaDetails)
+  .superRefine((data, context) => {
+    if (
+      data.repeat.type !== null &&
+      data.repeat.mode === "date" &&
+      startOfDay(new Date(data.repeat.value)) < startOfDay(data.start)
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Repeat end date cannot be earlier than event start date.",
+        path: ["repeat", "value"],
+      });
+    }
+  });
