@@ -19,18 +19,48 @@ function generateInviteCode(): string {
 }
 
 const CourseNotesSchema = z.record(z.string());
-const CustomTimetableItemSchema = z.object({
+const CustomTimetableSlotSchema = z.object({
+  day: z.number().int().min(0).max(6),
+  start: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+  end: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+});
+const CustomTimetableItemFields = {
   id: z.string().min(1).max(100),
   title: z.string().min(1).max(80),
   shortCode: z.string().max(20).optional(),
   venue: z.string().max(80).optional(),
   note: z.string().max(200).optional(),
   color: z.string().max(32),
+};
+const ClockCustomTimetableItemSchema = z.object({
+  ...CustomTimetableItemFields,
+  slots: z
+    .array(CustomTimetableSlotSchema)
+    .min(1)
+    .max(42)
+    .refine(
+      (slots) =>
+        slots.every(({ start, end }) => {
+          const toMinutes = (time: string) => {
+            const [hours, minutes] = time.split(":").map(Number);
+            return hours * 60 + minutes;
+          };
+          return toMinutes(end) > toMinutes(start);
+        }),
+      "Each custom timetable slot must end after it starts",
+    ),
+});
+const LegacyCustomTimetableItemSchema = z.object({
+  ...CustomTimetableItemFields,
   schedule: z
     .array(z.string().regex(/^(?:[MTWRFS][1-9nabcdn])+$/))
     .min(1)
     .max(42),
 });
+const CustomTimetableItemSchema = z.union([
+  ClockCustomTimetableItemSchema,
+  LegacyCustomTimetableItemSchema,
+]);
 const CustomItemsSchema = z.record(z.array(CustomTimetableItemSchema));
 const GradeContextSchema = z.record(
   z.object({

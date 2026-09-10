@@ -1,8 +1,146 @@
 import { scheduleTimeSlots, timetableColors } from "@courseweb/shared";
-import { CourseTimeslotData, CustomTimetableItem } from "@/types/timetable";
+import {
+  CourseTimeslotData,
+  CustomTimetableItem,
+  CustomTimetableItemInput,
+  CustomTimetableSlot,
+} from "@/types/timetable";
 import { MinimalCourse } from "@/types/courses";
-import { getBrightness, getContrastColor } from "./colors";
+import { getContrastColor } from "./colors";
 import { hasTimes } from "./courses";
+import { normalizeCustomTimetableItem } from "@/hooks/syncedStorage";
+
+export const timeToMinutes = (time: string): number => {
+  const [hours, minutes] = time.split(":").map(Number);
+  return hours * 60 + minutes;
+};
+
+export const timetableGridStart = timeToMinutes(scheduleTimeSlots[0]!.start);
+export const timetableGridEnd = timeToMinutes(
+  scheduleTimeSlots[scheduleTimeSlots.length - 1]!.end,
+);
+
+export type ClampedTimeRange = {
+  start: number;
+  end: number;
+  clipped: boolean;
+};
+
+/** Keep an item visible at the nearest edge when it is outside the grid. */
+export const clampTimeRange = (
+  start: number,
+  end: number,
+  gridStart = timetableGridStart,
+  gridEnd = timetableGridEnd,
+  minimumDuration = 10,
+): ClampedTimeRange => {
+  const clipped = start < gridStart || end > gridEnd;
+  if (end <= gridStart) {
+    return {
+      start: gridStart,
+      end: Math.min(gridEnd, gridStart + minimumDuration),
+      clipped: true,
+    };
+  }
+  if (start >= gridEnd) {
+    return {
+      start: Math.max(gridStart, gridEnd - minimumDuration),
+      end: gridEnd,
+      clipped: true,
+    };
+  }
+
+  const clampedStart = Math.max(gridStart, start);
+  const clampedEnd = Math.min(gridEnd, end);
+  if (clampedEnd - clampedStart >= minimumDuration) {
+    return { start: clampedStart, end: clampedEnd, clipped };
+  }
+  if (clampedStart === gridStart) {
+    return {
+      start: clampedStart,
+      end: Math.min(gridEnd, clampedStart + minimumDuration),
+      clipped,
+    };
+  }
+  return {
+    start: Math.max(gridStart, clampedEnd - minimumDuration),
+    end: clampedEnd,
+    clipped,
+  };
+};
+
+export const getCustomSlotTimeRange = (slot: CustomTimetableSlot) => ({
+  start: timeToMinutes(slot.start),
+  end: timeToMinutes(slot.end),
+});
+
+export const getTimetableDataTimeRange = (slot: CourseTimeslotData) => {
+  if (slot.customSlot) return getCustomSlotTimeRange(slot.customSlot);
+  const start = scheduleTimeSlots[slot.startTime];
+  const end = scheduleTimeSlots[slot.endTime];
+  return {
+    start: start ? timeToMinutes(start.start) : timetableGridStart,
+    end: end ? timeToMinutes(end.end) : timetableGridEnd,
+  };
+};
+
+const courseTimeSlotKeys = (slot: CourseTimeslotData) => {
+  if (slot.customSlot) return [];
+  return Array.from(
+    { length: slot.endTime - slot.startTime + 1 },
+    (_, index) => `${slot.dayOfWeek}:${slot.startTime + index}`,
+  );
+};
+
+const overlapsForLayout = (
+  left: CourseTimeslotData,
+  right: CourseTimeslotData,
+) => {
+  if (left.dayOfWeek !== right.dayOfWeek) return false;
+  if (!left.customSlot && !right.customSlot) {
+    const rightKeys = new Set(courseTimeSlotKeys(right));
+    return courseTimeSlotKeys(left).some((key) => rightKeys.has(key));
+  }
+  const leftRange = getTimetableDataTimeRange(left);
+  const rightRange = getTimetableDataTimeRange(right);
+  return leftRange.start < rightRange.end && rightRange.start < leftRange.end;
+};
+
+/**
+ * Retains the course row overlap behaviour and extends it to real-time custom
+ * slots. Every overlapping block receives a column, so both blocks remain
+ * readable and clickable even when a custom item crosses a course.
+ */
+export const addTimetableFractions = (data: CourseTimeslotData[]) =>
+  data.reduce(
+    (result, current, index) => {
+      const overlapping = data.filter((candidate) =>
+        overlapsForLayout(current, candidate),
+      );
+      const usedColumns = new Set<number>();
+      result.forEach((previous, previousIndex) => {
+        if (previousIndex < index && overlapsForLayout(current, previous)) {
+          usedColumns.add(previous.fractionIndex);
+        }
+      });
+      let fractionIndex = 1;
+      while (usedColumns.has(fractionIndex)) fractionIndex += 1;
+      result.push({
+        ...current,
+        fraction: Math.max(1, overlapping.length),
+        fractionIndex,
+        timeSlots: courseTimeSlotKeys(current),
+      });
+      return result;
+    },
+    [] as Array<
+      CourseTimeslotData & {
+        fraction: number;
+        fractionIndex: number;
+        timeSlots: string[];
+      }
+    >,
+  );
 
 export const createTimetableFromCourses = (
   data: MinimalCourse[],
@@ -13,74 +151,53 @@ export const createTimetableFromCourses = (
 ) => {
   const newTimetableData: CourseTimeslotData[] = [];
 
-  // For each course, we first seperate the timeslot strings into individual timeslots
-  // Then we group consecutive timeslots into a single item
   data!.forEach((course) => {
-    if (!hasTimes(course)) {
-      return;
-    }
-    course.times.forEach((time_str, index) => {
-      // Split the timeslot string into individual timeslots
-      const timeslots = time_str
-        .match(/.{1,2}/g)
-        ?.map((day) => ({ day: day[0], time: day[1] })); // Day is "MTWRFS" and time is "123456789abcd"
-
-      // Group consecutive timeslots by reducing the array
-      // 1. get first timeslot, check if next consecutive timeslot is present
-      // 2. if present, group them together
-      // 3. if not present, push the group to the groupedTimeslots array
+    if (!hasTimes(course)) return;
+    course.times.forEach((timeString, index) => {
+      const timeslots =
+        timeString
+          .match(/.{1,2}/g)
+          ?.map((day) => ({ day: day[0], time: day[1] })) ?? [];
       const groupedTimeslots: { day: string; time: string }[][] = [];
-      timeslots!.reduce((acc, curr) => {
-        if (acc.length === 0) {
-          acc.push([curr]);
+      timeslots.reduce((groups, current) => {
+        const previousGroup = groups[groups.length - 1];
+        const previous = previousGroup?.[previousGroup.length - 1];
+        const previousIndex = previous
+          ? scheduleTimeSlots.findIndex(
+              (period) => period.time === previous.time,
+            )
+          : -1;
+        const currentIndex = scheduleTimeSlots.findIndex(
+          (period) => period.time === current.time,
+        );
+        if (
+          previousGroup &&
+          previous?.day === current.day &&
+          previousIndex + 1 === currentIndex
+        ) {
+          previousGroup.push(current);
         } else {
-          const last = acc[acc.length - 1];
-          const lastTime = last[last.length - 1];
-          const lastTimeIndex = scheduleTimeSlots
-            .map((m) => m.time)
-            .indexOf(lastTime.time);
-          const currTimeIndex = scheduleTimeSlots
-            .map((m) => m.time)
-            .indexOf(curr.time);
-          // if timeslots are consecutive and on the same day
-          if (
-            lastTimeIndex + 1 === currTimeIndex &&
-            lastTime.day === curr.day
-          ) {
-            last.push(curr);
-          }
-          // else, push to new group
-          else {
-            acc.push([curr]);
-          }
+          groups.push([current]);
         }
-        return acc;
+        return groups;
       }, groupedTimeslots);
 
       groupedTimeslots.forEach((group) => {
-        const day = group[0].day;
+        const day = group[0]!.day;
         const times = group.map((time) =>
-          scheduleTimeSlots.map((m) => m.time).indexOf(time.time),
+          scheduleTimeSlots.findIndex((period) => period.time === time.time),
         );
-
-        //get the start and end time
         const startTime = Math.min(...times);
         const endTime = Math.max(...times);
-        //get the color, mod the index by the length of the color array so that it loops
         const color = colorMap[course.raw_id] || "#555555";
-
-        // Use the WCAG-compliant contrast function for better text legibility
-        const textColor = getContrastColor(color);
-
-        //push to scheduleData
         newTimetableData.push({
-          course: course,
+          course,
           venue: course.venues![index]!,
           dayOfWeek: "MTWRFS".indexOf(day),
-          startTime: startTime,
-          endTime: endTime,
-          color: color,
-          textColor: textColor,
+          startTime,
+          endTime,
+          color,
+          textColor: getContrastColor(color),
         });
       });
     });
@@ -107,80 +224,51 @@ const customItemAsCourse = (item: CustomTimetableItem) =>
     class: "",
     credits: 0,
     venues: item.venue ? [item.venue] : [],
-    times: item.schedule,
+    times: [],
     teacher_zh: [],
     teacher_en: [],
   }) as unknown as MinimalCourse;
 
+const nearestPeriodIndex = (minutes: number, end = false) => {
+  const index = scheduleTimeSlots.findIndex((period) => {
+    const periodMinutes = timeToMinutes(end ? period.end : period.start);
+    return end ? periodMinutes >= minutes : periodMinutes > minutes;
+  });
+  return index >= 0 ? index : scheduleTimeSlots.length - 1;
+};
+
 export const createTimetableFromCustomItems = (
-  items: CustomTimetableItem[],
+  items: CustomTimetableItemInput[],
 ): CourseTimeslotData[] => {
   const timetableData: CourseTimeslotData[] = [];
+  const normalizedItems = items
+    .map(normalizeCustomTimetableItem)
+    .filter((item): item is CustomTimetableItem => item !== null);
 
-  items.forEach((item) => {
+  normalizedItems.forEach((item) => {
     const customCourse = customItemAsCourse(item);
-    item.schedule.forEach((timeString) => {
-      const timeslots = timeString
-        .match(/.{1,2}/g)
-        ?.map((slot) => ({ day: slot[0], time: slot[1] }))
-        .filter(
-          (slot) =>
-            "MTWRFS".includes(slot.day) &&
-            scheduleTimeSlots.some((period) => period.time === slot.time),
-        );
-
-      if (!timeslots?.length) return;
-
-      const groupedTimeslots: { day: string; time: string }[][] = [];
-      timeslots.forEach((current) => {
-        const previousGroup = groupedTimeslots[groupedTimeslots.length - 1];
-        const previous = previousGroup?.[previousGroup.length - 1];
-        const previousIndex = previous
-          ? scheduleTimeSlots.findIndex(
-              (period) => period.time === previous.time,
-            )
-          : -1;
-        const currentIndex = scheduleTimeSlots.findIndex(
-          (period) => period.time === current.time,
-        );
-
-        if (
-          previousGroup &&
-          previous?.day === current.day &&
-          previousIndex + 1 === currentIndex
-        ) {
-          previousGroup.push(current);
-        } else {
-          groupedTimeslots.push([current]);
-        }
-      });
-
-      groupedTimeslots.forEach((group) => {
-        const day = group[0].day;
-        const periodIndexes = group.map((slot) =>
-          scheduleTimeSlots.findIndex((period) => period.time === slot.time),
-        );
-        const color = item.color || "#555555";
-        timetableData.push({
-          course: customCourse,
-          customItem: item,
-          venue: item.venue ?? "",
-          dayOfWeek: "MTWRFS".indexOf(day),
-          startTime: Math.min(...periodIndexes),
-          endTime: Math.max(...periodIndexes),
-          color,
-          textColor: getContrastColor(color),
-        });
+    item.slots.forEach((customSlot) => {
+      const range = getCustomSlotTimeRange(customSlot);
+      const color = item.color || "#555555";
+      timetableData.push({
+        course: customCourse,
+        customItem: item,
+        customSlot,
+        venue: item.venue ?? "",
+        dayOfWeek: customSlot.day,
+        startTime: nearestPeriodIndex(range.start),
+        endTime: nearestPeriodIndex(range.end, true),
+        color,
+        textColor: getContrastColor(color),
       });
     });
   });
-
   return timetableData;
 };
 
 export const createTimetableFromCoursesAndCustomItems = (
   courses: MinimalCourse[],
-  customItems: CustomTimetableItem[],
+  customItems: CustomTimetableItemInput[],
   colorMap: { [courseId: string]: string } = colorMapFromCourses(
     courses.map((course) => course.raw_id),
     timetableColors[Object.keys(timetableColors)[0]],

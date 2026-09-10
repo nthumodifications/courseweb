@@ -1,7 +1,6 @@
 import { FC } from "react";
 import { addDays, format } from "date-fns";
 import { CourseTimeslotData } from "@/types/timetable";
-import { scheduleTimeSlots } from "@courseweb/shared";
 import { useSettings } from "@/hooks/contexts/settings";
 import { cn } from "@/lib/utils";
 import { CalendarClock } from "lucide-react";
@@ -10,6 +9,12 @@ import useUserTimetable, {
   TIMETABLE_FONT_SIZE_CLASSES,
 } from "@/hooks/contexts/useUserTimetable";
 import { getLocale } from "@/helpers/dateLocale";
+import useDictionary from "@/dictionaries/useDictionary";
+import {
+  addTimetableFractions,
+  clampTimeRange,
+  getTimetableDataTimeRange,
+} from "@/helpers/timetable";
 
 interface TimetableTimelineProps {
   timetableData: CourseTimeslotData[];
@@ -21,11 +26,6 @@ const HOUR_HEIGHT = 56;
 const START_HOUR = 7;
 const END_HOUR = 22;
 const TOTAL_HOURS = END_HOUR - START_HOUR;
-
-function timeToMinutes(t: string): number {
-  const [h, m] = t.split(":").map(Number);
-  return h * 60 + m;
-}
 
 function minutesToTop(minutes: number): number {
   const offsetMin = minutes - START_HOUR * 60;
@@ -39,6 +39,7 @@ const TimetableTimeline: FC<TimetableTimelineProps> = ({
   className,
 }) => {
   const { language } = useSettings();
+  const dict = useDictionary();
   const { preferences } = useUserTimetable();
   const fontSizeClass =
     TIMETABLE_FONT_SIZE_CLASSES[preferences.fontSize ?? "sm"];
@@ -50,6 +51,7 @@ const TimetableTimeline: FC<TimetableTimelineProps> = ({
     ...new Set(timetableData.map((s) => s.dayOfWeek)),
   ].sort();
   const days = daysPresent.length > 0 ? daysPresent : [0, 1, 2, 3, 4];
+  const layoutData = addTimetableFractions(timetableData);
 
   const TIME_COL_W = 44;
   const DAY_COL_W = 120;
@@ -100,7 +102,13 @@ const TimetableTimeline: FC<TimetableTimelineProps> = ({
 
         {/* Day columns */}
         {days.map((day) => {
-          const daySlots = timetableData.filter((s) => s.dayOfWeek === day);
+          const daySlots = layoutData
+            .filter((s) => s.dayOfWeek === day)
+            .sort(
+              (a, b) =>
+                getTimetableDataTimeRange(a).start -
+                getTimetableDataTimeRange(b).start,
+            );
           return (
             <div
               key={day}
@@ -118,12 +126,16 @@ const TimetableTimeline: FC<TimetableTimelineProps> = ({
 
               {/* Course blocks */}
               {daySlots.map((slot, i) => {
-                const startSlot = scheduleTimeSlots[slot.startTime];
-                const endSlot = scheduleTimeSlots[slot.endTime];
-                if (!startSlot || !endSlot) return null;
-
-                const top = minutesToTop(timeToMinutes(startSlot.start));
-                const bottom = minutesToTop(timeToMinutes(endSlot.end));
+                const range = getTimetableDataTimeRange(slot);
+                const clippedRange = clampTimeRange(
+                  range.start,
+                  range.end,
+                  START_HOUR * 60,
+                  END_HOUR * 60,
+                  1,
+                );
+                const top = minutesToTop(clippedRange.start);
+                const bottom = minutesToTop(clippedRange.end);
                 const height = Math.max(bottom - top, 20);
                 const name =
                   slot.customItem?.title ??
@@ -135,12 +147,21 @@ const TimetableTimeline: FC<TimetableTimelineProps> = ({
                   <div
                     key={i}
                     className={cn(
-                      "absolute inset-x-1 rounded overflow-hidden flex flex-col px-1.5 py-0.5",
+                      "absolute rounded overflow-hidden flex flex-col px-1.5 py-0.5",
                       slot.customItem && "border border-dashed",
                     )}
+                    title={
+                      clippedRange.clipped
+                        ? dict.timetable.custom_items.clipped_label
+                        : undefined
+                    }
                     style={{
                       top,
                       height,
+                      left:
+                        (slot.fractionIndex - 1) * (DAY_COL_W / slot.fraction) +
+                        4,
+                      width: DAY_COL_W / slot.fraction - 8,
                       backgroundColor: slot.color,
                       color: slot.textColor,
                       borderColor: slot.customItem ? slot.textColor : undefined,
@@ -158,6 +179,14 @@ const TimetableTimeline: FC<TimetableTimelineProps> = ({
                       )}
                       {name}
                     </span>
+                    {height > 30 && slot.customSlot && (
+                      <span
+                        className={cn(fontSizeClass, "opacity-80 truncate")}
+                      >
+                        {slot.customSlot.start}–{slot.customSlot.end}
+                        {clippedRange.clipped && " ↕"}
+                      </span>
+                    )}
                     {height > 32 && slot.venue && (
                       <span
                         className={cn(fontSizeClass, "opacity-80 truncate")}

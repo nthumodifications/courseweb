@@ -49,7 +49,7 @@ const createEmptyCustomItem = (color: string): CustomTimetableItem => ({
   id: `custom-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
   title: "",
   color,
-  schedule: ["M1"],
+  slots: [{ day: 0, start: "08:00", end: "08:50" }],
 });
 
 const TimetableSidebar = ({

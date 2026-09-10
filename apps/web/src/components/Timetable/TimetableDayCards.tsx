@@ -5,12 +5,12 @@ import { scheduleTimeSlots } from "@courseweb/shared";
 import { useSettings } from "@/hooks/contexts/settings";
 import { cn } from "@/lib/utils";
 import { CalendarClock } from "lucide-react";
-import useDictionary from "@/dictionaries/useDictionary";
 import useUserTimetable, {
   TIMETABLE_FONT_FAMILIES,
   TIMETABLE_FONT_SIZE_CLASSES,
 } from "@/hooks/contexts/useUserTimetable";
 import { getLocale } from "@/helpers/dateLocale";
+import { getTimetableDataTimeRange } from "@/helpers/timetable";
 
 interface TimetableDayCardsProps {
   timetableData: CourseTimeslotData[];
@@ -22,7 +22,6 @@ const TimetableDayCards: FC<TimetableDayCardsProps> = ({
   className,
 }) => {
   const { language } = useSettings();
-  const dict = useDictionary();
   const { preferences } = useUserTimetable();
   const fontSizeClass =
     TIMETABLE_FONT_SIZE_CLASSES[preferences.fontSize ?? "sm"];
@@ -31,27 +30,28 @@ const TimetableDayCards: FC<TimetableDayCardsProps> = ({
 
   const byDay: Record<number, CourseTimeslotData[]> = {};
   for (const slot of timetableData) {
-    if (slot.dayOfWeek >= 0 && slot.dayOfWeek <= 4) {
+    if (slot.dayOfWeek >= 0 && slot.dayOfWeek <= 6) {
       if (!byDay[slot.dayOfWeek]) byDay[slot.dayOfWeek] = [];
       byDay[slot.dayOfWeek].push(slot);
     }
   }
 
   const hasSaturday = timetableData.some((s) => s.dayOfWeek === 5);
-  const hasSunday = timetableData.some((s) => s.dayOfWeek >= 6);
-  const days = hasSaturday ? [0, 1, 2, 3, 4, 5] : [0, 1, 2, 3, 4];
+  const hasSunday = timetableData.some((s) => s.dayOfWeek === 6);
+  const days = hasSunday
+    ? [0, 1, 2, 3, 4, 5, 6]
+    : hasSaturday
+      ? [0, 1, 2, 3, 4, 5]
+      : [0, 1, 2, 3, 4];
 
   return (
     <div className={cn("flex flex-col gap-2", className)}>
-      {hasSunday && (
-        <p className="text-xs text-muted-foreground px-3">
-          {dict.timetable.saturday_hidden}
-        </p>
-      )}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 p-3">
         {days.map((day) => {
           const slots = (byDay[day] ?? []).sort(
-            (a, b) => a.startTime - b.startTime,
+            (a, b) =>
+              getTimetableDataTimeRange(a).start -
+              getTimetableDataTimeRange(b).start,
           );
           const dayLabel = format(addDays(new Date(2024, 0, 1), day), "EEE", {
             locale: getLocale(language),
@@ -73,7 +73,14 @@ const TimetableDayCards: FC<TimetableDayCardsProps> = ({
               ) : (
                 <div className="flex flex-col gap-1.5">
                   {slots.map((slot, i) => {
-                    const startSlot = scheduleTimeSlots[slot.startTime];
+                    const startTime =
+                      slot.customSlot?.start ??
+                      scheduleTimeSlots[slot.startTime]?.start ??
+                      "";
+                    const endTime =
+                      slot.customSlot?.end ??
+                      scheduleTimeSlots[slot.endTime]?.end ??
+                      "";
                     const name =
                       slot.customItem?.title ??
                       (language === "zh"
@@ -116,7 +123,7 @@ const TimetableDayCards: FC<TimetableDayCardsProps> = ({
                               "font-mono opacity-80",
                             )}
                           >
-                            {startSlot?.start ?? ""}
+                            {startTime}–{endTime}
                           </span>
                           {slot.customItem?.venue && (
                             <span

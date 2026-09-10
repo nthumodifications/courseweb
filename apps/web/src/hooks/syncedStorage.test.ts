@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import {
   mergeCourseStorage,
   mergeStringArray,
+  normalizeCustomTimetableStorage,
   nextUpdatedAt,
   normalizeSyncedData,
 } from "./syncedStorage";
@@ -46,6 +47,58 @@ describe("synced storage reconciliation", () => {
       lastModified: 123,
       updatedAt: 123,
       deviceId: "device-a",
+    });
+  });
+
+  test("converts legacy period blocks into clock-time slots", () => {
+    expect(
+      normalizeCustomTimetableStorage({
+        "11410": [
+          {
+            id: "job",
+            title: "Job",
+            color: "#123456",
+            schedule: ["M1M2", "W3"],
+          },
+        ],
+      }),
+    ).toEqual({
+      "11410": [
+        {
+          id: "job",
+          title: "Job",
+          color: "#123456",
+          slots: [
+            { day: 0, start: "08:00", end: "09:50" },
+            { day: 2, start: "10:10", end: "11:00" },
+          ],
+        },
+      ],
+    });
+  });
+
+  test("drops malformed legacy records but keeps valid entries", () => {
+    expect(
+      normalizeCustomTimetableStorage({
+        "11410": [
+          { id: "bad", title: "Bad", color: "#000", schedule: ["X0"] },
+          {
+            id: "mixed",
+            title: "Mixed",
+            color: "#111",
+            schedule: ["M1M2X0"],
+          },
+        ],
+      }),
+    ).toEqual({
+      "11410": [
+        {
+          id: "mixed",
+          title: "Mixed",
+          color: "#111",
+          slots: [{ day: 0, start: "08:00", end: "09:50" }],
+        },
+      ],
     });
   });
 });

@@ -11,6 +11,7 @@ import useUserTimetable, {
 } from "@/hooks/contexts/useUserTimetable";
 import { getLocale } from "@/helpers/dateLocale";
 import useDictionary from "@/dictionaries/useDictionary";
+import { getTimetableDataTimeRange } from "@/helpers/timetable";
 
 interface TimetableAgendaProps {
   timetableData: CourseTimeslotData[];
@@ -61,7 +62,11 @@ const TimetableAgenda: FC<TimetableAgendaProps> = ({
   return (
     <div className={cn("flex flex-col gap-4 p-4", className)}>
       {sortedDays.map((day) => {
-        const daySlots = byDay[day].sort((a, b) => a.startTime - b.startTime);
+        const daySlots = byDay[day].sort(
+          (a, b) =>
+            getTimetableDataTimeRange(a).start -
+            getTimetableDataTimeRange(b).start,
+        );
         const dayLabel = format(addDays(new Date(2024, 0, 1), day), "EEE", {
           locale: getLocale(language),
         });
@@ -81,10 +86,14 @@ const TimetableAgenda: FC<TimetableAgendaProps> = ({
             {/* Courses for this day */}
             <div className="flex flex-col gap-1.5 pl-2">
               {daySlots.map((slot, idx) => {
-                const startSlot = scheduleTimeSlots[slot.startTime];
-                const endSlot = scheduleTimeSlots[slot.endTime];
-                const startTime = startSlot?.start ?? "";
-                const endTime = endSlot?.end ?? "";
+                const courseStart =
+                  slot.customSlot?.start ??
+                  scheduleTimeSlots[slot.startTime]?.start ??
+                  "";
+                const courseEnd =
+                  slot.customSlot?.end ??
+                  scheduleTimeSlots[slot.endTime]?.end ??
+                  "";
                 const name =
                   slot.customItem?.title ??
                   (language === "zh"
@@ -123,7 +132,7 @@ const TimetableAgenda: FC<TimetableAgendaProps> = ({
                           "font-mono text-muted-foreground",
                         )}
                       >
-                        {startTime}
+                        {courseStart}
                       </span>
                       <span
                         className={cn(
@@ -139,7 +148,7 @@ const TimetableAgenda: FC<TimetableAgendaProps> = ({
                           "font-mono text-muted-foreground",
                         )}
                       >
-                        {endTime}
+                        {courseEnd}
                       </span>
                     </div>
 

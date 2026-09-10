@@ -18,7 +18,7 @@ export const renderTimetableSlot = (
   if (course.customItem) {
     return (
       <TimetableCustomItemDrawer
-        key={`drawer-${course.customItem.id}-${course.dayOfWeek}-${course.startTime}`}
+        key={`drawer-${course.customItem.id}-${course.dayOfWeek}-${course.customSlot?.start ?? course.startTime}`}
         item={course.customItem}
         editable={customItemEditable}
       >

@@ -96,8 +96,10 @@
       "venue_label": "地點",
       "venue_placeholder": "選填地點",
       "days_label": "星期",
-      "start_label": "開始節次",
-      "end_label": "結束節次",
+      "start_label": "開始時間",
+      "end_label": "結束時間",
+      "time_error": "結束時間必須晚於開始時間。",
+      "clipped_label": "此活動有部分時間超出課表顯示範圍。",
       "note_label": "備註",
       "note_placeholder": "選填備註",
       "color_label": "顏色",
@@ -109,7 +111,8 @@
         "W": "週三",
         "R": "週四",
         "F": "週五",
-        "S": "週六"
+        "S": "週六",
+        "U": "週日"
       }
     }
   },

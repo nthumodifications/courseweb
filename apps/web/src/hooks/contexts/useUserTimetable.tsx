@@ -22,6 +22,7 @@ import {
 } from "../syncedStorage";
 import client from "@/config/api";
 import { CustomTimetableItem, CustomTimetableStorage } from "@/types/timetable";
+import { normalizeCustomTimetableStorage, valuesEqual } from "../syncedStorage";
 
 export type TimetableFieldKey =
   | "code"
@@ -228,12 +229,37 @@ const useUserTimetableProvider = (loadCourse = true) => {
     },
     [setStoredPreferences],
   );
-  const [customItems, setCustomItems] =
+  const [storedCustomItems, setStoredCustomItems] =
     useSyncedStorage<CustomTimetableStorage>(
       "timetable_custom_items",
       {},
       mergeCustomTimetableStorage,
     );
+  const customItems = useMemo(
+    () => normalizeCustomTimetableStorage(storedCustomItems),
+    [storedCustomItems],
+  );
+  const setCustomItems = useCallback(
+    (
+      nextItems:
+        | CustomTimetableStorage
+        | ((previous: CustomTimetableStorage) => CustomTimetableStorage),
+    ) => {
+      setStoredCustomItems((previous) =>
+        normalizeCustomTimetableStorage(
+          typeof nextItems === "function"
+            ? nextItems(normalizeCustomTimetableStorage(previous))
+            : nextItems,
+        ),
+      );
+    },
+    [setStoredCustomItems],
+  );
+  useEffect(() => {
+    if (!valuesEqual(storedCustomItems, customItems)) {
+      setStoredCustomItems(customItems);
+    }
+  }, [customItems, setStoredCustomItems, storedCustomItems]);
   const [favourites, setFavourites] = useSyncedStorage<string[]>(
     "course_favourites",
     [],

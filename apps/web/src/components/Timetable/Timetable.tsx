@@ -22,6 +22,7 @@ import { Link } from "react-router-dom";
 import { useSettings } from "@/hooks/contexts/settings";
 import { BlankTimeslotBody } from "./BlankTimeslotBody";
 import { getLocale } from "@/helpers/dateLocale";
+import { addTimetableFractions } from "@/helpers/timetable";
 
 const Timetable: FC<{
   timetableData: CourseTimeslotData[];
@@ -63,67 +64,20 @@ const Timetable: FC<{
     return () => observer.disconnect();
   }, [vertical, timetableData]);
 
-  const timetableDataWithFraction = useMemo(() => {
-    const slotSums = timetableData.reduce((acc, cur) => {
-      // get the array of [${dayofWeek}${starttime}, ${dayofWeek}${starttime+1}, ...${dayofWeek}${endtime}]
-      const timeSlots = Array.from(
-        { length: cur.endTime - cur.startTime + 1 },
-        (_, i) => `${"MTWRFS"[cur.dayOfWeek]}${cur.startTime + i}`,
-      );
-      // add the array to the accumulator
-      acc.push(...timeSlots);
-      return acc;
-    }, [] as string[]);
+  const timetableDataWithFraction = useMemo(
+    () => addTimetableFractions(timetableData),
+    [timetableData],
+  );
 
-    // calculate slots that are overlapped
-    const slotCounts = slotSums.reduce(
-      (acc, cur) => {
-        acc[cur] = (acc[cur] || 0) + 1;
-        return acc;
-      },
-      {} as Record<string, number>,
-    );
+  const showSaturday = timetableData.some((course) => course.dayOfWeek >= 5);
+  const showSunday = timetableData.some((course) => course.dayOfWeek == 6);
 
-    // reduce through the courses, get the maximum of the sum of overlapped slots, which is their fraction.
-    // if this is the first course with this fraction, set the fractionIndex to 1
-    // else if there is a previous course that has at least one of timeslots overlapping, set the fractionIndex to the previous course's fractionIndex + 1
-    // else set the fractionIndex to 1
-    const timetableDataWithFraction = timetableData.reduce((acc, cur) => {
-      const timeSlots = Array.from(
-        { length: cur.endTime - cur.startTime + 1 },
-        (_, i) => `${"MTWRFS"[cur.dayOfWeek]}${cur.startTime + i}`,
-      );
-      const fraction = Math.max(...timeSlots.map((slot) => slotCounts[slot]));
-      // const fractionIndex = acc.filter(course => timeSlots.some(slot => course.timeSlots.includes(slot))).length > 0
-      //   ? acc.filter(course => timeSlots.some(slot => course.timeSlots.includes(slot)))[0].fractionIndex + 1
-      //   : 1;
-      // the code above doesn't assign fractionIndex > 2 because it always checks the first course in the array, which is always 1
-      // the code below checks if there is any course with the same fraction and fractionIndex > 1, if there is, then the fractionIndex will be the maximum of the fractionIndex + 1
-      const fractionIndex =
-        acc.filter((course) =>
-          timeSlots.some((slot) => course.timeSlots.includes(slot)),
-        ).length > 0
-          ? Math.max(
-              ...acc
-                .filter((course) =>
-                  timeSlots.some((slot) => course.timeSlots.includes(slot)),
-                )
-                .map((course) => course.fractionIndex),
-            ) + 1
-          : 1;
-      acc.push({ ...cur, fraction, fractionIndex, timeSlots });
-      return acc;
-    }, [] as CourseTimeslotDataWithFraction[]);
-
-    return timetableDataWithFraction;
-  }, [timetableData]);
-
-  const showSaturday = timetableData.some((course) => course.dayOfWeek == 5);
-
-  const dayLabels = Array.from({ length: showSaturday ? 6 : 5 }, (_, index) =>
-    format(addDays(new Date(2024, 0, 1), index), "EEE", {
-      locale: getLocale(language),
-    }).toUpperCase(),
+  const dayLabels = Array.from(
+    { length: showSunday ? 7 : showSaturday ? 6 : 5 },
+    (_, index) =>
+      format(addDays(new Date(2024, 0, 1), index), "EEE", {
+        locale: getLocale(language),
+      }).toUpperCase(),
   );
   const days = dayLabels;
 
@@ -257,6 +211,13 @@ const Timetable: FC<{
                 <td className="p-0.5 h-[inherit]">
                   <div className="h-full w-full text-xs font-semibold bg-muted rounded-md py-2">
                     {dayLabels[5]}
+                  </div>
+                </td>
+              )}
+              {showSunday && (
+                <td className="p-0.5 h-[inherit]">
+                  <div className="h-full w-full text-xs font-semibold bg-muted rounded-md py-2">
+                    {dayLabels[6]}
                   </div>
                 </td>
               )}

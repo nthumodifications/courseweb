@@ -11,6 +11,13 @@ import useUserTimetable, {
 } from "@/hooks/contexts/useUserTimetable";
 import { cn } from "@courseweb/ui";
 import { CalendarClock } from "lucide-react";
+import useDictionary from "@/dictionaries/useDictionary";
+import {
+  clampTimeRange,
+  getCustomSlotTimeRange,
+  timetableGridEnd,
+  timetableGridStart,
+} from "@/helpers/timetable";
 
 type TimetableSlotProps = {
   course: CourseTimeslotData;
@@ -23,6 +30,7 @@ const TimetableSlotVertical = forwardRef<HTMLDivElement, TimetableSlotProps>(
   ({ course, tableDim, fraction = 1, fractionIndex = 1, ...props }, ref) => {
     const { language } = useSettings();
     const { preferences } = useUserTimetable();
+    const dict = useDictionary();
 
     const displayLang =
       preferences.language == "app" ? language : preferences.language;
@@ -54,6 +62,15 @@ const TimetableSlotVertical = forwardRef<HTMLDivElement, TimetableSlotProps>(
     const fontFamily =
       TIMETABLE_FONT_FAMILIES[preferences.fontFamily ?? "system"];
     const customItem = course.customItem;
+    const customSlot = course.customSlot;
+    const customRange = customSlot
+      ? clampTimeRange(
+          getCustomSlotTimeRange(customSlot).start,
+          getCustomSlotTimeRange(customSlot).end,
+        )
+      : null;
+    const gridHeight = tableDim.timetable.height * scheduleTimeSlots.length;
+    const gridMinutes = timetableGridEnd - timetableGridStart;
 
     const teacherName =
       displayLang == "zh"
@@ -136,20 +153,46 @@ const TimetableSlotVertical = forwardRef<HTMLDivElement, TimetableSlotProps>(
           "absolute rounded-md transform translate-y-0.5",
           customItem && "border border-dashed",
         )}
+        title={
+          customRange?.clipped
+            ? dict.timetable.custom_items.clipped_label
+            : undefined
+        }
         style={{
-          left:
-            tableDim.header.width +
-            course.dayOfWeek * tableDim.timetable.width +
-            (fractionIndex - 1) * (tableDim.timetable.width / fraction) +
-            2,
-          top:
-            tableDim.header.height +
-            course.startTime * tableDim.timetable.height,
-          width: tableDim.timetable.width / fraction - 4,
-          height:
-            (course.endTime - course.startTime + 1) *
-              tableDim.timetable.height -
-            4,
+          ...(customSlot && customRange
+            ? {
+                left:
+                  tableDim.header.width +
+                  course.dayOfWeek * tableDim.timetable.width +
+                  (fractionIndex - 1) * (tableDim.timetable.width / fraction) +
+                  2,
+                top:
+                  tableDim.header.height +
+                  ((customRange.start - timetableGridStart) / gridMinutes) *
+                    gridHeight,
+                width: tableDim.timetable.width / fraction - 4,
+                height: Math.max(
+                  ((customRange.end - customRange.start) / gridMinutes) *
+                    gridHeight -
+                    4,
+                  24,
+                ),
+              }
+            : {
+                left:
+                  tableDim.header.width +
+                  course.dayOfWeek * tableDim.timetable.width +
+                  (fractionIndex - 1) * (tableDim.timetable.width / fraction) +
+                  2,
+                top:
+                  tableDim.header.height +
+                  course.startTime * tableDim.timetable.height,
+                width: tableDim.timetable.width / fraction - 4,
+                height:
+                  (course.endTime - course.startTime + 1) *
+                    tableDim.timetable.height -
+                  4,
+              }),
           backgroundColor: course.color,
           borderColor: customItem ? course.textColor : undefined,
         }}
@@ -184,8 +227,10 @@ const TimetableSlotVertical = forwardRef<HTMLDivElement, TimetableSlotProps>(
               )}
               {display.time && (
                 <span className={cn(fontSizeClass, textAlign)}>
-                  {scheduleTimeSlots[course.startTime]?.start}–
-                  {scheduleTimeSlots[course.endTime]?.end}
+                  {customSlot
+                    ? `${customSlot.start}–${customSlot.end}`
+                    : `${scheduleTimeSlots[course.startTime]?.start ?? ""}–${scheduleTimeSlots[course.endTime]?.end ?? ""}`}
+                  {customRange?.clipped && " ↕"}
                 </span>
               )}
               {display.venue && customItem.venue && (

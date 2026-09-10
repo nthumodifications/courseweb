@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import SemesterSwitcher from "@/components/Timetable/SemesterSwitcher";
+import { normalizeCustomTimetableStorage } from "@/hooks/syncedStorage";
 
 const ShareViewPage = () => {
   const { shareId } = useParams<{ shareId: string; lang: string }>();
@@ -112,7 +113,10 @@ const ShareViewPage = () => {
     });
     addCourse(courseIds);
     setColorMap((prev) => ({ ...prev, ...partialColorMap }));
-    const importedCustomItems = share?.customItems?.[activeSem] ?? [];
+    const importedCustomItems =
+      normalizeCustomTimetableStorage({
+        [activeSem]: share?.customItems?.[activeSem] ?? [],
+      })[activeSem] ?? [];
     if (importedCustomItems.length > 0) {
       setCustomItems((prev) => ({
         ...prev,

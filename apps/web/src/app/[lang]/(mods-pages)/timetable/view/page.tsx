@@ -3,7 +3,8 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import supabase from "@/config/supabase";
 import { createTimetableFromCoursesAndCustomItems } from "@/helpers/timetable";
 import { MinimalCourse } from "@/types/courses";
-import { CustomTimetableStorage } from "@/types/timetable";
+import { CustomTimetableStorageInput } from "@/types/timetable";
+import { normalizeCustomTimetableStorage } from "@/hooks/syncedStorage";
 import { useMemo, useState } from "react";
 import { lastSemester } from "@courseweb/shared";
 import SemesterSwitcher from "@/components/Timetable/SemesterSwitcher";
@@ -34,7 +35,7 @@ const ViewTimetablePage = () => {
   const colorMap = JSON.parse(
     decodeURIComponent(searchParams.get("colorMap") ?? "{}"),
   );
-  const sharedCustomItems = useMemo<CustomTimetableStorage>(() => {
+  const sharedCustomItems = useMemo<CustomTimetableStorageInput>(() => {
     const value = searchParams.get("customItems");
     if (!value) return {};
     try {
@@ -95,7 +96,7 @@ const ViewTimetablePage = () => {
   const handleImportCourses = () => {
     setCourses(courseCodes!);
     setColorMap(colorMap);
-    setCustomItems(sharedCustomItems);
+    setCustomItems(normalizeCustomTimetableStorage(sharedCustomItems));
     navigate(`/${routeLang}/timetable`);
   };
 
@@ -106,7 +107,10 @@ const ViewTimetablePage = () => {
     }));
     setCustomItems((items) => ({
       ...items,
-      [semester]: sharedCustomItems[semester] ?? [],
+      [semester]:
+        normalizeCustomTimetableStorage({
+          [semester]: sharedCustomItems[semester] ?? [],
+        })[semester] ?? [],
     }));
     const partialColorMap: { [c: string]: string } = {};
     courseCodes![semester].forEach((code, index) => {

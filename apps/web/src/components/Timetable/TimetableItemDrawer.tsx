@@ -1,6 +1,6 @@
 import { CalendarClock, Trash } from "lucide-react";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
-import { PropsWithChildren, useEffect, useMemo, useState } from "react";
+import { PropsWithChildren, useEffect, useState } from "react";
 import { hasTimes } from "@/helpers/courses";
 import { MinimalCourse, RawCourseID } from "@/types/courses";
 import { Popover, PopoverContent, PopoverTrigger } from "@courseweb/ui";
@@ -8,13 +8,6 @@ import Compact from "@uiw/react-color-compact";
 import { Drawer, DrawerContent, DrawerTrigger } from "@courseweb/ui";
 import { Button } from "@courseweb/ui";
 import { Input } from "@courseweb/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@courseweb/ui";
 import { ExternalLink, CalendarPlus } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@courseweb/ui";
@@ -33,7 +26,6 @@ import client from "@/config/api";
 import CourseTagList from "@/components/Courses/CourseTagsList";
 import { CourseDefinition } from "@/config/supabase";
 import { useCourseLink } from "@/components/Courses/CourseDialog";
-import { scheduleTimeSlots } from "@courseweb/shared";
 import {
   CUSTOM_TIMETABLE_DAYS,
   CustomTimetableDay,
@@ -224,24 +216,18 @@ const CustomTimetableItemEditor = ({
 }) => {
   const dict = useDictionary();
   const { currentColors } = useUserTimetable();
-  const firstSchedule = item.schedule[0] ?? "";
-  const initialSlots = firstSchedule.match(/.{1,2}/g) ?? [];
+  const firstSlot = item.slots[0] ?? {
+    day: 0,
+    start: "08:00",
+    end: "08:50",
+  };
   const initialDays = [
     ...new Set(
-      initialSlots
-        .map((slot) => slot[0])
-        .filter((day): day is CustomTimetableDay =>
-          CUSTOM_TIMETABLE_DAYS.includes(day as CustomTimetableDay),
-        ),
+      item.slots
+        .map((slot) => CUSTOM_TIMETABLE_DAYS[slot.day])
+        .filter((day): day is CustomTimetableDay => day !== undefined),
     ),
   ];
-  const initialPeriodIndexes = initialSlots
-    .map((slot) =>
-      scheduleTimeSlots.findIndex((period) => period.time === slot[1]),
-    )
-    .filter((index) => index >= 0);
-  const defaultStart = Math.min(...initialPeriodIndexes);
-  const defaultEnd = Math.max(...initialPeriodIndexes);
 
   const [title, setTitle] = useState(item.title);
   const [shortCode, setShortCode] = useState(item.shortCode ?? "");
@@ -251,12 +237,9 @@ const CustomTimetableItemEditor = ({
   const [selectedDays, setSelectedDays] = useState<CustomTimetableDay[]>(
     initialDays.length > 0 ? initialDays : ["M"],
   );
-  const [startIndex, setStartIndex] = useState(
-    Number.isFinite(defaultStart) ? defaultStart : 0,
-  );
-  const [endIndex, setEndIndex] = useState(
-    Number.isFinite(defaultEnd) ? defaultEnd : 0,
-  );
+  const [startTime, setStartTime] = useState(firstSlot.start);
+  const [endTime, setEndTime] = useState(firstSlot.end);
+  const [timeError, setTimeError] = useState(false);
 
   useEffect(() => {
     setTitle(item.title);
@@ -264,29 +247,18 @@ const CustomTimetableItemEditor = ({
     setVenue(item.venue ?? "");
     setNote(item.note ?? "");
     setColor(item.color);
-    const scheduleSlots = (item.schedule[0] ?? "").match(/.{1,2}/g) ?? [];
     const days = [
       ...new Set(
-        scheduleSlots
-          .map((slot) => slot[0])
-          .filter((day): day is CustomTimetableDay =>
-            CUSTOM_TIMETABLE_DAYS.includes(day as CustomTimetableDay),
-          ),
+        item.slots
+          .map((slot) => CUSTOM_TIMETABLE_DAYS[slot.day])
+          .filter((day): day is CustomTimetableDay => day !== undefined),
       ),
     ];
-    const indexes = scheduleSlots
-      .map((slot) =>
-        scheduleTimeSlots.findIndex((period) => period.time === slot[1]),
-      )
-      .filter((index) => index >= 0);
-    const nextStart = Math.min(...indexes);
-    const nextEnd = Math.max(...indexes);
     setSelectedDays(days.length > 0 ? days : ["M"]);
-    setStartIndex(Number.isFinite(nextStart) ? nextStart : 0);
-    setEndIndex(Number.isFinite(nextEnd) ? nextEnd : 0);
+    setStartTime(item.slots[0]?.start ?? "08:00");
+    setEndTime(item.slots[0]?.end ?? "08:50");
+    setTimeError(false);
   }, [item]);
-
-  const periods = useMemo(() => scheduleTimeSlots, []);
 
   const toggleDay = (day: CustomTimetableDay) => {
     setSelectedDays((days) =>
@@ -300,14 +272,11 @@ const CustomTimetableItemEditor = ({
 
   const handleSave = () => {
     if (!title.trim() || selectedDays.length === 0) return;
-    const safeStart = Math.min(startIndex, endIndex);
-    const safeEnd = Math.max(startIndex, endIndex);
-    const schedule = selectedDays.map((day) =>
-      periods
-        .slice(safeStart, safeEnd + 1)
-        .map((period) => `${day}${period.time}`)
-        .join(""),
-    );
+    if (!startTime || !endTime || endTime <= startTime) {
+      setTimeError(true);
+      return;
+    }
+    setTimeError(false);
 
     onSave({
       ...item,
@@ -316,7 +285,11 @@ const CustomTimetableItemEditor = ({
       venue: venue.trim() || undefined,
       note: note.trim() || undefined,
       color,
-      schedule,
+      slots: selectedDays.map((day) => ({
+        day: CUSTOM_TIMETABLE_DAYS.indexOf(day),
+        start: startTime,
+        end: endTime,
+      })),
     });
   };
 
@@ -389,46 +362,39 @@ const CustomTimetableItemEditor = ({
 
       <div className="grid grid-cols-2 gap-3">
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium">
+          <label className="text-sm font-medium" htmlFor="custom-start-time">
             {dict.timetable.custom_items.start_label}
           </label>
-          <Select
-            value={String(startIndex)}
-            onValueChange={(value) => setStartIndex(Number(value))}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {periods.map((period, index) => (
-                <SelectItem key={period.time} value={String(index)}>
-                  {period.time} · {period.start}–{period.end}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Input
+            id="custom-start-time"
+            type="time"
+            value={startTime}
+            onChange={(event) => {
+              setStartTime(event.target.value);
+              setTimeError(false);
+            }}
+          />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium">
+          <label className="text-sm font-medium" htmlFor="custom-end-time">
             {dict.timetable.custom_items.end_label}
           </label>
-          <Select
-            value={String(endIndex)}
-            onValueChange={(value) => setEndIndex(Number(value))}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {periods.map((period, index) => (
-                <SelectItem key={period.time} value={String(index)}>
-                  {period.time} · {period.start}–{period.end}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Input
+            id="custom-end-time"
+            type="time"
+            value={endTime}
+            onChange={(event) => {
+              setEndTime(event.target.value);
+              setTimeError(false);
+            }}
+          />
         </div>
       </div>
+      {timeError && (
+        <p className="text-sm text-destructive" role="alert">
+          {dict.timetable.custom_items.time_error}
+        </p>
+      )}
 
       <div className="flex flex-col gap-1">
         <label className="text-sm font-medium">
