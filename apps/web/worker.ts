@@ -4,6 +4,45 @@ interface Env {
   ASSETS: Fetcher;
 }
 
+const STATIC_ASSET_EXTENSION_PATTERN =
+  /\.(?:js|mjs|css|map|json|woff2|woff|ttf|png|jpg|svg|webp|ico)$/i;
+
+function isStaticAssetPath(pathname: string): boolean {
+  return (
+    pathname.startsWith("/assets/") ||
+    STATIC_ASSET_EXTENSION_PATTERN.test(pathname)
+  );
+}
+
+function missingAssetResponse(): Response {
+  return new Response("Asset not found", {
+    status: 404,
+    headers: {
+      "Content-Type": "text/plain",
+      "Cache-Control": "no-store",
+    },
+  });
+}
+
+async function fetchStaticAsset(request: Request, env: Env): Promise<Response> {
+  try {
+    const response = await env.ASSETS.fetch(request);
+    const contentType = response.headers
+      .get("content-type")
+      ?.split(";", 1)[0]
+      .trim()
+      .toLowerCase();
+
+    if (!response.ok || contentType === "text/html") {
+      return missingAssetResponse();
+    }
+
+    return response;
+  } catch {
+    return missingAssetResponse();
+  }
+}
+
 const SUPABASE_URL = "https://cmzdlrqfpuktcczvsobs.supabase.co";
 const SUPABASE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtemRscnFmcHVrdGNjenZzb2JzIiwicm9sZSI6ImFub24iLCJpYXQiOjE2OTkzNDAzNDMsImV4cCI6MjAxNDkxNjM0M30.SJwTEP3fUQ8emcwIZS8sRMC4eStYFrkk2rninsv8CqY";
@@ -836,6 +875,10 @@ async function generateSitemap(env: Env): Promise<Response> {
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+
+    if (isStaticAssetPath(url.pathname)) {
+      return fetchStaticAsset(request, env);
+    }
 
     if (url.pathname === "/sitemap.xml") {
       return generateSitemap(env);

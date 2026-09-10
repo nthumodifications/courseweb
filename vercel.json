@@ -5,5 +5,10 @@
   "installCommand": "bun install",
   "framework": "vite",
   "ignoreCommand": "git diff --quiet HEAD^ HEAD ./",
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [
+    {
+      "source": "/((?!assets/|.*\\.[a-zA-Z0-9]+$).*)",
+      "destination": "/index.html"
+    }
+  ]
 }

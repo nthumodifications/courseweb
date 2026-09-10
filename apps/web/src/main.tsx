@@ -5,6 +5,7 @@ import { router } from "@/router";
 
 import * as Sentry from "@sentry/browser";
 import { initializeGTM } from "@/lib/gtm";
+import "@/lib/chunk-recovery";
 
 import "./app/globals.css";
 
