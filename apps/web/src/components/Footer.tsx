@@ -5,9 +5,11 @@ import FullLogo from "./Branding/FullLogo";
 import NTHUModsLogo from "./Branding/NTHUModsLogo";
 import { Link, useParams } from "react-router-dom";
 import { getYear } from "date-fns";
+import useDictionary from "@/dictionaries/useDictionary";
 
 const Footer = () => {
   const { lang } = useParams<{ lang: string }>();
+  const dict = useDictionary();
   return (
     <div className="py-16 flex flex-col gap-4">
       <div className="flex flex-col md:flex-row justify-between">
@@ -53,6 +55,7 @@ const Footer = () => {
         <Link to={`/${lang}/contribute`}>Contribute</Link>
         <Link to={`/${lang}/issues`}>Report an Issue</Link>
         <Link to={`/${lang}/team`}>Team</Link>
+        <Link to={`/${lang}/recruit`}>{dict.recruit.footer_link}</Link>
         <Link to={`/${lang}/privacy-policy`}>Privacy Policy</Link>
         <Link to={`/${lang}/proxy-login`}>Proxy Login</Link>
         <Link to={`/${lang}/design-system`}>Design System</Link>

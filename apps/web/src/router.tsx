@@ -71,6 +71,9 @@ const ContributePage = lazy(
 const TeamPage = lazy(
   () => import("@/app/[lang]/(mods-pages)/(side-pages)/team/page"),
 );
+const RecruitmentPage = lazy(
+  () => import("@/app/[lang]/(mods-pages)/(side-pages)/recruit/page"),
+);
 const PrivacyPage = lazy(
   () => import("@/app/[lang]/(mods-pages)/(side-pages)/privacy-policy/page"),
 );
@@ -390,6 +393,18 @@ export const router = createBrowserRouter([
                     "Meet the NTHU students behind NTHUMods – the open-source course platform for National Tsing Hua University.",
                   descriptionZh:
                     "認識 NTHUMods 背後的清大學生開發團隊，了解這個由清華大學學生自主打造的開源平臺。",
+                },
+              },
+              {
+                path: "recruit",
+                element: <RecruitmentPage />,
+                handle: {
+                  title: "Join NTHUMods",
+                  titleZh: "加入 NTHUMods",
+                  description:
+                    "Apply to help maintain and improve NTHUMods for NTHU students.",
+                  descriptionZh:
+                    "申請加入 NTHUMods，一起維護並改善清大學生使用的服務。",
                 },
               },
               {
