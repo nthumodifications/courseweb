@@ -27,6 +27,12 @@ import { D1Database } from "@cloudflare/workers-types";
 
 export type Bindings = {
   DB: D1Database;
+  SUPABASE_URL: string;
+  SUPABASE_SERVICE_ROLE_KEY: string;
+  ALGOLIA_APP_ID: string;
+  ALGOLIA_API_KEY: string;
+  ALGOLIA_BACKUP_APP_ID?: string;
+  ALGOLIA_BACKUP_API_KEY?: string;
   GOOGLE_AI_API_KEY?: string;
   VENUE_RATE_LIMITER: RateLimit;
 };

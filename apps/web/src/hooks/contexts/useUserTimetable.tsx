@@ -15,6 +15,7 @@ import { event } from "@/lib/gtag";
 
 import { useQuery } from "@tanstack/react-query";
 import useSyncedStorage from "../useSyncedStorage";
+import { mergeCourseStorage, mergeStringArray } from "../syncedStorage";
 import client from "@/config/api";
 
 export type TimetableFieldKey =
@@ -92,12 +93,15 @@ const userTimetableContext = createContext<
     fieldOrder: DEFAULT_FIELD_ORDER,
   },
   setPreferences: () => {},
+  favourites: [],
+  setFavourites: () => {},
 });
 
 const useUserTimetableProvider = (loadCourse = true) => {
   const [courses, setCourses] = useSyncedStorage<CourseLocalStorage>(
     "courses",
     {},
+    mergeCourseStorage,
   );
   const [hoverCourse, setHoverCourse] = useState<CourseDefinition | null>(null);
   const [colorMap, setColorMap] = useSyncedStorage<{
@@ -128,6 +132,11 @@ const useUserTimetableProvider = (loadCourse = true) => {
         fieldOrder: DEFAULT_FIELD_ORDER,
       },
     );
+  const [favourites, setFavourites] = useSyncedStorage<string[]>(
+    "course_favourites",
+    [],
+    mergeStringArray,
+  );
   const [semester, setSemester] = useState<string>(lastSemester.id);
   const setTimetableTheme = useCallback(
     (theme: string) => {
@@ -377,6 +386,8 @@ const useUserTimetableProvider = (loadCourse = true) => {
     setHoverCourse,
     preferences,
     setPreferences,
+    favourites,
+    setFavourites,
   };
 };
 
