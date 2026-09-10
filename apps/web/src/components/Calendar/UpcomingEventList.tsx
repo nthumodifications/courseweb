@@ -93,12 +93,19 @@ const UpcomingEventList: FC<UpcomingEventListProps> = ({
   className,
   emptyContent,
 }) => {
-  const { language } = useSettings();
+  const { language, showAcademicCalendar } = useSettings();
   const dict = useDictionary();
   const now = useTime(60 * 1000);
   const visibleEvents = useMemo(
-    () => events.filter((event) => event.state !== "past").slice(0, maxEvents),
-    [events, maxEvents],
+    () =>
+      events
+        .filter(
+          (event) =>
+            event.state !== "past" &&
+            (event.source !== "academic" || showAcademicCalendar),
+        )
+        .slice(0, maxEvents),
+    [events, maxEvents, showAcademicCalendar],
   );
   const groups = useMemo(() => {
     const grouped = new Map<string, UpcomingEvent[]>();

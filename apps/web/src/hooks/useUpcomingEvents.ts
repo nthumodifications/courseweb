@@ -9,7 +9,7 @@ import {
   differenceInYears,
   format,
 } from "date-fns";
-import { formatInTimeZone, fromZonedTime, toZonedTime } from "date-fns-tz";
+import { fromZonedTime, toZonedTime } from "date-fns-tz";
 import { useQuery } from "@tanstack/react-query";
 import { semesterInfo } from "@courseweb/shared";
 import { EventData } from "@/types/calendar_event";
@@ -27,8 +27,23 @@ import useCourseDates, { CourseDate } from "@/hooks/useCourseDates";
 import useTime from "@/hooks/useTime";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { useSettings } from "@/hooks/contexts/settings";
+import {
+  addTaipeiDays,
+  fromTaipeiDateKey,
+  getTaipeiDateKey,
+  getTaipeiDateRange,
+  isTaipeiDateKey,
+  TAIPEI_TIME_ZONE,
+} from "@/helpers/dates";
 
-export const UPCOMING_TIME_ZONE = "Asia/Taipei";
+export const UPCOMING_TIME_ZONE = TAIPEI_TIME_ZONE;
+export {
+  addTaipeiDays,
+  fromTaipeiDateKey,
+  getTaipeiDateKey,
+  getTaipeiDateRange,
+  isTaipeiDateKey,
+};
 const WALL_DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS";
 const DATE_KEY_FORMAT = "yyyy-MM-dd";
 const MINUTE_IN_MS = 60 * 1000;
@@ -93,25 +108,19 @@ const fromTaipeiWallDateTime = (date: Date) =>
 const fromBrowserWallDateTime = (date: Date) =>
   fromZonedTime(format(date, WALL_DATE_TIME_FORMAT), UPCOMING_TIME_ZONE);
 
-const fromTaipeiDateKey = (dateKey: string) =>
-  fromZonedTime(`${dateKey}T00:00:00.000`, UPCOMING_TIME_ZONE);
+const normalizeRepeatValue = (repeat: NonNullable<CalendarEvent["repeat"]>) => {
+  if (repeat.mode === "count") return repeat.value;
+  const range = getTaipeiDateRange(getTaipeiDateKey(new Date(repeat.value)));
+  return range ? range.end.getTime() - 1 : repeat.value;
+};
 
-const toAcademicCalendarBoundary = (dateKey: string) =>
+export const toAcademicCalendarBoundary = (dateKey: string) =>
   // The API truncates ISO inputs to their UTC date before querying Google.
   // 08:00 in Taipei is 00:00 UTC, preserving the intended Taipei date.
   fromZonedTime(`${dateKey}T08:00:00.000`, UPCOMING_TIME_ZONE).toISOString();
 
-const fromTaipeiDateKeyForDateOnlyComparison = (dateKey: string) =>
-  fromZonedTime(`${dateKey}T08:00:00.000`, UPCOMING_TIME_ZONE);
-
-export const getTaipeiDateKey = (date: Date) =>
-  formatInTimeZone(date, UPCOMING_TIME_ZONE, DATE_KEY_FORMAT);
-
 export const getTaipeiDayStart = (date: Date) =>
   fromTaipeiDateKey(getTaipeiDateKey(date));
-
-export const addTaipeiDays = (date: Date, days: number) =>
-  fromTaipeiWallDateTime(addDays(toZonedTime(date, UPCOMING_TIME_ZONE), days));
 
 const addTaipeiInterval = (
   date: Date,
@@ -170,10 +179,7 @@ const normalizeTimetableEvent = (
   const repeat = event.repeat
     ? {
         ...event.repeat,
-        value: fromZonedTime(
-          `${format(new Date(event.repeat.value), DATE_KEY_FORMAT)}T23:59:59.999`,
-          UPCOMING_TIME_ZONE,
-        ).getTime(),
+        value: normalizeRepeatValue(event.repeat),
       }
     : null;
   return {
@@ -181,7 +187,7 @@ const normalizeTimetableEvent = (
     start,
     end,
     repeat,
-    actualEnd: repeat ? new Date(repeat.value) : end,
+    actualEnd: repeat?.mode === "date" ? new Date(repeat.value) : end,
   };
 };
 
@@ -233,12 +239,7 @@ const expandCalendarEvent = (
     ) {
       const courseDate =
         source === "class" && course
-          ? getCourseDateForDay(
-              course.raw_id,
-              fromTaipeiDateKeyForDateOnlyComparison(
-                getTaipeiDateKey(occurrenceStart),
-              ),
-            )
+          ? getCourseDateForDay(course.raw_id, occurrenceStart)
           : null;
       occurrences.push({
         id: `${source}:${event.id}:${occurrenceStart.getTime()}`,
@@ -281,12 +282,6 @@ const expandCalendarEvent = (
   }
 
   return occurrences;
-};
-
-const dateKeyIsValid = (dateKey: string) => {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return false;
-  const date = fromZonedTime(`${dateKey}T00:00:00.000`, UPCOMING_TIME_ZONE);
-  return !Number.isNaN(date.getTime()) && getTaipeiDateKey(date) === dateKey;
 };
 
 const sourceOrder: Record<UpcomingEventSource, number> = {
@@ -340,7 +335,7 @@ const useUpcomingEvents = (
     [windowStart, windowDays],
   );
   const includeAcademicCalendar =
-    options.includeAcademicCalendar ?? showAcademicCalendar;
+    showAcademicCalendar && (options.includeAcademicCalendar ?? true);
 
   const startKey = getTaipeiDateKey(windowStart);
   const endKey = getTaipeiDateKey(windowEnd);
@@ -365,10 +360,17 @@ const useUpcomingEvents = (
 
   const semesters = useMemo(
     () =>
-      semesterInfo.filter(
-        (semester) =>
-          semester.ends >= windowStart && semester.begins < windowEnd,
-      ),
+      semesterInfo.filter((semester) => {
+        // semesterInfo stores calendar dates as local Date objects. Read the
+        // source date fields, then make the Taipei boundary explicit.
+        const range = getTaipeiDateRange(
+          format(semester.begins, DATE_KEY_FORMAT),
+          format(semester.ends, DATE_KEY_FORMAT),
+        );
+        return (
+          range !== null && range.end > windowStart && range.start < windowEnd
+        );
+      }),
     [windowEnd, windowStart],
   );
   const timetableData = useMemo(
@@ -423,10 +425,7 @@ const useUpcomingEvents = (
     const seenCourseDates = new Set<string>();
     for (const dayStart of dayStarts) {
       for (const slot of timetableData) {
-        const courseDate = getCourseDateForDay(
-          slot.course.raw_id,
-          fromTaipeiDateKeyForDateOnlyComparison(getTaipeiDateKey(dayStart)),
-        );
+        const courseDate = getCourseDateForDay(slot.course.raw_id, dayStart);
         if (!courseDate) continue;
         const dateKey = getTaipeiDateKey(dayStart);
         const id = `course-date:${slot.course.raw_id}:${dateKey}:${courseDate.type}:${courseDate.title}`;
@@ -452,18 +451,16 @@ const useUpcomingEvents = (
 
     const academicEvents: BaseUpcomingEvent[] = includeAcademicCalendar
       ? academicCalendar.flatMap((event) => {
-          if (!event.summary || !dateKeyIsValid(event.date)) return [];
-          const start = fromZonedTime(
-            `${event.date}T00:00:00.000`,
-            UPCOMING_TIME_ZONE,
-          );
+          if (!event.summary || !isTaipeiDateKey(event.date)) return [];
+          const range = getTaipeiDateRange(event.date);
+          if (!range) return [];
           return [
             {
               id: `academic:${event.id}`,
               source: "academic" as const,
               title: event.summary,
-              start,
-              end: addTaipeiDays(start, 1),
+              start: range.start,
+              end: range.end,
               allDay: true,
               color: "#0ea5e9",
             },

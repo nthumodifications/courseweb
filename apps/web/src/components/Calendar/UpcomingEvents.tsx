@@ -19,7 +19,7 @@ const UpcomingEvents = () => {
   const { language } = useSettings();
   const today = useTime();
   const dict = useDictionary();
-  const { events, windowStart } = useUpcomingEvents({ windowDays: 5 });
+  const { events, windowStart } = useUpcomingEvents();
   const days = [0, 1, 2, 3, 4].map((index) =>
     addTaipeiDays(windowStart, index),
   );

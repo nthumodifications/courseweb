@@ -1,5 +1,6 @@
 {
   "today": {
+    "schedule_title": "Today's Schedule",
     "noclass": "No Classes Today",
     "noclass_sub": "Enjoy your day off!",
     "noclass_sem": "Enjoy your holiday!",
@@ -29,6 +30,13 @@
         "academic": "NTHU",
         "course-date": "Course date"
       }
+    },
+    "countdown": {
+      "title": "Semester Countdown",
+      "until_next_semester": "{days} days until next semester",
+      "semester_ended": "Semester ended",
+      "days_left": "days left in semester",
+      "no_data": "No semester data"
     }
   },
   "timetable": {

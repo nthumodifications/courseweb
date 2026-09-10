@@ -1,5 +1,6 @@
 {
   "today": {
+    "schedule_title": "今日課程",
     "noclass": "今天沒有課喔！",
     "noclass_sub": "放假吧~",
     "noclass_sem": "放假囉！",
@@ -29,6 +30,13 @@
         "academic": "校務",
         "course-date": "課程日期"
       }
+    },
+    "countdown": {
+      "title": "學期倒數",
+      "until_next_semester": "距離下學期還有 {days} 天",
+      "semester_ended": "學期已結束",
+      "days_left": "距離學期結束還有",
+      "no_data": "無法取得學期資訊"
     }
   },
   "timetable": {

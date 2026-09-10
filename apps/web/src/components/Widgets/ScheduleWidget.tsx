@@ -1,6 +1,5 @@
 import { FC, useMemo } from "react";
 import { WidgetShell } from "./WidgetShell";
-import { useSettings } from "@/hooks/contexts/settings";
 import useTime from "@/hooks/useTime";
 import { Calendar } from "lucide-react";
 import { formatInTimeZone } from "date-fns-tz";
@@ -22,13 +21,9 @@ const ScheduleWidget: FC<ScheduleWidgetProps> = ({
   dragHandleProps,
   isDragging,
 }) => {
-  const { language } = useSettings();
   const date = useTime();
   const dict = useDictionary();
-  const { events } = useUpcomingEvents({
-    windowDays: 7,
-    includePast: true,
-  });
+  const { events } = useUpcomingEvents({ includePast: true });
 
   const todayCourses = useMemo(
     () =>
@@ -44,7 +39,7 @@ const ScheduleWidget: FC<ScheduleWidgetProps> = ({
     [events],
   );
 
-  const title = language === "zh" ? "今日課程" : "Today's Schedule";
+  const title = dict.today.schedule_title;
 
   return (
     <WidgetShell
@@ -58,7 +53,7 @@ const ScheduleWidget: FC<ScheduleWidgetProps> = ({
           <div className="flex flex-col items-center justify-center py-6 text-center">
             <Calendar className="h-8 w-8 text-muted-foreground/40 mb-2" />
             <p className="text-sm text-muted-foreground">
-              {language === "zh" ? "今天沒有課程" : "No classes today"}
+              {dict.today.noclass}
             </p>
           </div>
         ) : (

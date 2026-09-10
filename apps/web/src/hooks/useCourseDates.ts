@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { isSameDay } from "date-fns";
 import client from "@/config/api";
+import { getTaipeiDateKey } from "@/helpers/dates";
 
 export type CourseDate = {
   raw_id: string;
@@ -38,7 +38,8 @@ const useCourseDates = (courseIds: string[]) => {
   const getCourseDateForDay = useCallback(
     (rawId: string, day: Date): CourseDate | null => {
       const dates = dateMap.get(rawId) ?? [];
-      return dates.find((d) => isSameDay(new Date(d.date), day)) ?? null;
+      const dayKey = getTaipeiDateKey(day);
+      return dates.find((d) => d.date === dayKey) ?? null;
     },
     [dateMap],
   );
