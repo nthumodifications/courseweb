@@ -13,6 +13,35 @@ export interface SyncedData<T> {
   deviceId: string;
 }
 
+export type MergeData<T> = (local: T, remote: T) => T;
+
+export const ANONYMOUS_SYNCED_STORAGE_NAMESPACE = "nthumods-storage-anonymous";
+const SYNCED_STORAGE_NAMESPACE_PREFIX = "nthumods-storage";
+
+/**
+ * Keep local synced-storage names aligned with the calendar database names:
+ * anonymous data has an explicit namespace, while authenticated data uses a
+ * stable subject-derived hash and never places the subject itself in a key.
+ */
+export const getSyncedStorageNamespace = (subject?: string | null) => {
+  if (!subject) return ANONYMOUS_SYNCED_STORAGE_NAMESPACE;
+
+  let firstHash = 2166136261;
+  let secondHash = 2246822519;
+  for (let index = 0; index < subject.length; index += 1) {
+    const code = subject.charCodeAt(index);
+    firstHash = Math.imul(firstHash ^ code, 16777619);
+    secondHash = Math.imul(secondHash ^ (code + index), 16777619);
+  }
+
+  return `${SYNCED_STORAGE_NAMESPACE_PREFIX}-${(firstHash >>> 0)
+    .toString(16)
+    .padStart(8, "0")}${(secondHash >>> 0).toString(16).padStart(8, "0")}`;
+};
+
+export const getSyncedStorageKey = (key: string, subject?: string | null) =>
+  `${getSyncedStorageNamespace(subject)}-${key}`;
+
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
 
@@ -168,11 +197,125 @@ export const normalizeSyncedData = <T = unknown>(
   };
 };
 
+/**
+ * Decode an old unscoped local record for the anonymous namespace. The caller
+ * deliberately keeps the old key, so migration is recoverable and never
+ * silently discards a user's pre-namespace data.
+ */
+export const migrateLegacySyncedData = <T = unknown>(
+  legacyRaw: string | null,
+  scopedRaw: string | null,
+  deviceId: string,
+  now = Date.now(),
+): SyncedData<T> | null => {
+  if (!legacyRaw || scopedRaw !== null) return null;
+
+  try {
+    return normalizeSyncedData<T>(JSON.parse(legacyRaw), deviceId, now);
+  } catch {
+    return null;
+  }
+};
+
 export const nextUpdatedAt = (previous: number, now = Date.now()) =>
   Math.max(now, previous + 1);
 
 export const valuesEqual = (left: unknown, right: unknown) =>
   JSON.stringify(left) === JSON.stringify(right);
+
+export interface SyncedUpload {
+  merge: boolean;
+}
+
+export interface SyncedReconciliation<T> {
+  data: SyncedData<T>;
+  persistLocal: boolean;
+  upload?: SyncedUpload;
+}
+
+/**
+ * Reconcile one already identity-scoped local snapshot with its remote
+ * snapshot. Keeping this decision pure makes the account-transition policy
+ * testable without mounting the whole application provider.
+ */
+export const reconcileSyncedData = <T>(options: {
+  local: SyncedData<T>;
+  remote: SyncedData<T> | null;
+  mergeData?: MergeData<T>;
+  initial: boolean;
+  deviceId: string;
+  now?: number;
+}): SyncedReconciliation<T> => {
+  const {
+    local,
+    remote,
+    mergeData,
+    initial,
+    deviceId,
+    now = Date.now(),
+  } = options;
+
+  if (initial) {
+    if (!remote) {
+      return {
+        data: local,
+        persistLocal: false,
+        ...(local.updatedAt >= 0 && { upload: { merge: Boolean(mergeData) } }),
+      };
+    }
+
+    if (mergeData) {
+      const mergedValue = mergeData(local.value, remote.value);
+      if (valuesEqual(local.value, remote.value)) {
+        return {
+          data: local.updatedAt >= remote.updatedAt ? local : remote,
+          persistLocal: true,
+        };
+      }
+      if (valuesEqual(mergedValue, remote.value)) {
+        return { data: remote, persistLocal: true };
+      }
+
+      const updatedAt = nextUpdatedAt(
+        Math.max(local.updatedAt, remote.updatedAt),
+        now,
+      );
+      const merged: SyncedData<T> = {
+        value: mergedValue,
+        updatedAt,
+        lastModified: updatedAt,
+        deviceId,
+      };
+      return {
+        data: merged,
+        persistLocal: true,
+        upload: { merge: true },
+      };
+    }
+
+    const localWins = local.updatedAt >= remote.updatedAt;
+    return {
+      data: localWins ? local : remote,
+      persistLocal: true,
+      ...(localWins && { upload: { merge: false } }),
+    };
+  }
+
+  if (!remote) {
+    return {
+      data: local,
+      persistLocal: false,
+      ...(local.updatedAt >= 0 && { upload: { merge: false } }),
+    };
+  }
+  if (local.updatedAt > remote.updatedAt) {
+    return { data: local, persistLocal: false, upload: { merge: false } };
+  }
+  if (local.updatedAt < remote.updatedAt) {
+    return { data: remote, persistLocal: true };
+  }
+  return { data: local, persistLocal: false };
+};
 
 export const mergeCourseStorage = <T extends Record<string, string[]>>(
   local: T,

@@ -29,6 +29,7 @@ import { useRxCollection } from "rxdb-hooks";
 import { HeaderPortalOutlet } from "./Portal/HeaderPortal";
 import { useIsMobile } from "@courseweb/ui";
 import { Badge } from "@courseweb/ui";
+import { getSyncedStorageKey } from "@/hooks/syncedStorage";
 
 const Header = () => {
   const {
@@ -70,8 +71,15 @@ const Header = () => {
         "timetable_theme",
         "user_defined_colors",
         "timetable_display_preferences",
+        "timetable-display-settings",
       ];
-      localStorageKeys.forEach((key) => localStorage.removeItem(key));
+      localStorageKeys.forEach((key) => {
+        // Clear the current account and anonymous namespaces, plus the old
+        // unscoped copy. Other account namespaces remain recoverable.
+        localStorage.removeItem(getSyncedStorageKey(key, user?.profile.sub));
+        localStorage.removeItem(getSyncedStorageKey(key));
+        localStorage.removeItem(key);
+      });
 
       // Remove the whole identity-scoped database so its event data,
       // timetable checkpoints, and replication metadata are all cleared.

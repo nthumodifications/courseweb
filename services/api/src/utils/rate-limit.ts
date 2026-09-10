@@ -56,17 +56,14 @@ export const ipWithPathKeyGenerator = (
 };
 
 /**
- * Key generator that uses user ID from query params or headers
+ * Key generator for authenticated requests. The subject set by auth() is
+ * trusted; caller-controlled query parameters and headers are deliberately
+ * ignored so they cannot rotate the bucket.
  */
 export const userIdKeyGenerator = (
   c: Context<{ Bindings: Bindings }>,
 ): string => {
-  const userId =
-    c.req.query("userId") ||
-    c.req.header("x-user-id") ||
-    c.req.header("authorization") ||
-    defaultKeyGenerator(c);
-  return userId;
+  return c.get("user")?.sub || defaultKeyGenerator(c);
 };
 
 /**

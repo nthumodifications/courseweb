@@ -1,13 +1,144 @@
 import { describe, expect, test } from "bun:test";
 import {
+  getSyncedStorageKey,
+  getSyncedStorageNamespace,
   mergeCourseStorage,
   mergeStringArray,
+  migrateLegacySyncedData,
   normalizeCustomTimetableStorage,
   nextUpdatedAt,
   normalizeSyncedData,
+  reconcileSyncedData,
 } from "./syncedStorage";
 
 describe("synced storage reconciliation", () => {
+  test("uses separate subject namespaces and never uploads A to B", () => {
+    const accountAKey = getSyncedStorageKey("courses", "account-a");
+    const accountBKey = getSyncedStorageKey("courses", "account-b");
+    const localRecords = new Map([
+      [
+        accountAKey,
+        normalizeSyncedData({ "11410": ["course-a"] }, "device-a", 100),
+      ],
+    ]);
+    const accountBLocal = localRecords.get(accountBKey) ?? {
+      value: {},
+      lastModified: -1,
+      updatedAt: -1,
+      deviceId: "device-b",
+    };
+
+    const reconciliation = reconcileSyncedData({
+      local: accountBLocal,
+      remote: null,
+      mergeData: mergeCourseStorage,
+      initial: true,
+      deviceId: "device-b",
+      now: 200,
+    });
+
+    expect(getSyncedStorageNamespace("account-a")).not.toBe(
+      getSyncedStorageNamespace("account-b"),
+    );
+    expect(reconciliation.data.value).toEqual({});
+    expect(reconciliation.upload).toBeUndefined();
+    expect(localRecords.get(accountAKey)?.value).toEqual({
+      "11410": ["course-a"],
+    });
+  });
+
+  test("does not merge A's retained snapshot into B's existing remote data", () => {
+    const accountAKey = getSyncedStorageKey("courses", "account-a");
+    const accountBKey = getSyncedStorageKey("courses", "account-b");
+    const localRecords = new Map([
+      [
+        accountAKey,
+        normalizeSyncedData({ "11410": ["course-a"] }, "device-a", 100),
+      ],
+    ]);
+    const accountBLocal = localRecords.get(accountBKey) ?? {
+      value: {},
+      lastModified: -1,
+      updatedAt: -1,
+      deviceId: "device-b",
+    };
+
+    const reconciliation = reconcileSyncedData({
+      local: accountBLocal,
+      remote: normalizeSyncedData({ "11410": ["course-b"] }, "device-b", 150),
+      mergeData: mergeCourseStorage,
+      initial: true,
+      deviceId: "device-b",
+      now: 200,
+    });
+
+    expect(reconciliation.data.value).toEqual({
+      "11410": ["course-b"],
+    });
+    expect(reconciliation.upload).toBeUndefined();
+    expect(localRecords.get(accountAKey)?.value).toEqual({
+      "11410": ["course-a"],
+    });
+  });
+
+  test("keeps anonymous data separate instead of adopting it on sign-in", () => {
+    const anonymousKey = getSyncedStorageKey("courses");
+    const accountKey = getSyncedStorageKey("courses", "account-b");
+    const localRecords = new Map([
+      [
+        anonymousKey,
+        normalizeSyncedData({ "11410": ["anonymous-course"] }, "device-a", 100),
+      ],
+    ]);
+    const accountLocal = localRecords.get(accountKey) ?? {
+      value: {},
+      lastModified: -1,
+      updatedAt: -1,
+      deviceId: "device-b",
+    };
+
+    const reconciliation = reconcileSyncedData({
+      local: accountLocal,
+      remote: null,
+      mergeData: mergeCourseStorage,
+      initial: true,
+      deviceId: "device-b",
+      now: 200,
+    });
+
+    expect(reconciliation.data.value).toEqual({});
+    expect(reconciliation.upload).toBeUndefined();
+    expect(localRecords.get(anonymousKey)?.value).toEqual({
+      "11410": ["anonymous-course"],
+    });
+  });
+
+  test("migrates a legacy record while retaining its original unscoped copy", () => {
+    const legacyRaw = JSON.stringify({
+      value: { "11410": ["legacy-course"] },
+      lastModified: 123,
+    });
+    const scopedKey = getSyncedStorageKey("courses");
+    const localRecords = new Map([["courses", legacyRaw]]);
+    const migrated = migrateLegacySyncedData<Record<string, string[]>>(
+      legacyRaw,
+      null,
+      "device-anonymous",
+      999,
+    );
+
+    expect(migrated).toEqual({
+      value: { "11410": ["legacy-course"] },
+      lastModified: 123,
+      updatedAt: 123,
+      deviceId: "device-anonymous",
+    });
+    localRecords.set(scopedKey, JSON.stringify(migrated));
+    expect(localRecords.get("courses")).toBe(legacyRaw);
+    expect(JSON.parse(localRecords.get(scopedKey)!)).toEqual(migrated);
+    expect(scopedKey).not.toBe("courses");
+  });
+
   test("unions course ids within each semester without duplicates", () => {
     expect(
       mergeCourseStorage(
