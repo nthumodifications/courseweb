@@ -33,7 +33,11 @@ async function fetchStaticAsset(request: Request, env: Env): Promise<Response> {
       .trim()
       .toLowerCase();
 
-    if (!response.ok || contentType === "text/html") {
+    // Only a genuine miss, or the SPA fallback serving index.html in place of
+    // an asset, should 404 here. Anything below 400 must pass through
+    // untouched -- in particular 304, which is what every browser reload of a
+    // cached asset receives after revalidating with If-None-Match.
+    if (response.status >= 400 || contentType === "text/html") {
       return missingAssetResponse();
     }
 
