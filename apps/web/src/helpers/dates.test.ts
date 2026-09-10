@@ -4,6 +4,8 @@ import {
   getTaipeiDateKey,
   getTaipeiDateRange,
   toAcademicCalendarBoundary,
+  isTaipeiToday,
+  toTaipeiWallClock,
 } from "./dates";
 
 describe("Taipei academic date helpers", () => {
@@ -39,5 +41,25 @@ describe("Taipei academic date helpers", () => {
     expect(toAcademicCalendarBoundary("2026-09-17")).toBe(
       "2026-09-17T00:00:00.000Z",
     );
+  });
+});
+
+describe("Taipei today marker", () => {
+  // 2026-09-10T20:25:00Z is still Sep 10 in Los Angeles but already Sep 11
+  // in Taipei — the exact case that made the calendar grid disagree with the
+  // rest of the app.
+  const now = new Date("2026-09-10T20:25:00.000Z");
+
+  test("marks the Taipei day, not the browser's local day", () => {
+    expect(isTaipeiToday(new Date("2026-09-11T00:00:00.000Z"), now)).toBe(true);
+    expect(isTaipeiToday(new Date("2026-09-10T12:00:00.000Z"), now)).toBe(
+      false,
+    );
+  });
+
+  test("reads Taipei wall-clock hours", () => {
+    const wall = toTaipeiWallClock(now);
+    expect(wall.getHours()).toBe(4);
+    expect(wall.getMinutes()).toBe(25);
   });
 });

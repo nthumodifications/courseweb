@@ -75,3 +75,21 @@ export const getRangeOfDays = (start: Date, end: Date) => {
  */
 export const toAcademicCalendarBoundary = (dateKey: string) =>
   fromZonedTime(`${dateKey}T08:00:00.000`, TAIPEI_TIME_ZONE).toISOString();
+
+/**
+ * True when `date` falls on the same Taipei calendar day as `now`.
+ *
+ * date-fns `isToday` compares against the browser's local day, so a user
+ * outside Taiwan sees the wrong column highlighted while the rest of the app
+ * — which is Taipei-based throughout — disagrees with it.
+ */
+export const isTaipeiToday = (date: Date, now: Date = new Date()) =>
+  getTaipeiDateKey(date) === getTaipeiDateKey(now);
+
+/**
+ * The same instant expressed so the local getters (`getHours`, `getMinutes`,
+ * `getMonth`, …) read Taipei wall-clock values. Use it for positioning and
+ * formatting the clock, never for storing or comparing instants.
+ */
+export const toTaipeiWallClock = (date: Date) =>
+  toZonedTime(date, TAIPEI_TIME_ZONE);

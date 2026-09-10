@@ -6,11 +6,11 @@ import {
   getDay,
   isSameMonth,
   isSameWeek,
-  isToday,
   startOfDay,
   startOfWeek,
 } from "date-fns";
 import { cn } from "@courseweb/ui";
+import { isTaipeiToday, toTaipeiWallClock } from "@/helpers/dates";
 import { useCalendar } from "./calendar_hook";
 import { eventsToDisplay } from "@/components/Calendar/calendar_utils";
 import { getContrastColor, getBrightness } from "@/helpers/colors";
@@ -268,7 +268,7 @@ export const CalendarMonthContainer = ({
               type="button"
               className={cn(
                 "border-0 bg-transparent text-sm font-semibold cursor-pointer p-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                isToday(day)
+                isTaipeiToday(day)
                   ? "w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center"
                   : "",
               )}

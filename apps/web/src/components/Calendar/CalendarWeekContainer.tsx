@@ -4,13 +4,13 @@ import {
   endOfDay,
   format,
   isSameMonth,
-  isToday,
   startOfDay,
   set,
   addMinutes,
 } from "date-fns";
 import { cn } from "@courseweb/ui";
 import { Separator } from "@courseweb/ui";
+import { isTaipeiToday, toTaipeiWallClock } from "@/helpers/dates";
 import { useCalendar } from "./calendar_hook";
 import { CurrentTimePointer } from "./CurrentTimePointer";
 import { eventsToDisplay } from "@/components/Calendar/calendar_utils";
@@ -495,14 +495,14 @@ export const CalendarWeekContainer = ({
                 <div
                   className={cn(
                     "text-slate-500 text-xs text-center align-baseline",
-                    isToday(day)
+                    isTaipeiToday(day)
                       ? "rounded-full bg-nthu-500 text-white aspect-square"
                       : "",
                   )}
                 >
                   {format(
                     day,
-                    isSameMonth(day, new Date()) ? "d" : "MMM d",
+                    isSameMonth(day, toTaipeiWallClock(new Date())) ? "d" : "MMM d",
                     { locale: getLocale(language) },
                   )}
                 </div>
