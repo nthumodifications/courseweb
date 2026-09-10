@@ -4,7 +4,7 @@ import useUpcomingEvents from "@/hooks/useUpcomingEvents";
 
 const MinifiedUpcomingEvents = () => {
   const dict = useDictionary();
-  const { events } = useUpcomingEvents({ windowDays: 14 });
+  const { events } = useUpcomingEvents();
 
   return (
     <div className="p-2">

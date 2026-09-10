@@ -1,16 +1,25 @@
 import { FC, useMemo } from "react";
 import { WidgetShell } from "./WidgetShell";
-import { semesterInfo, getSemester } from "@courseweb/shared";
-import { useSettings } from "@/hooks/contexts/settings";
+import { semesterInfo } from "@courseweb/shared";
 import useTime from "@/hooks/useTime";
 import { Timer } from "lucide-react";
+import { format } from "date-fns";
 import { formatInTimeZone } from "date-fns-tz";
 import { Badge, cn } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
 import useUpcomingEvents, {
+  getTaipeiDateRange,
   UPCOMING_TIME_ZONE,
   UpcomingEvent,
 } from "@/hooks/useUpcomingEvents";
+
+const DATE_KEY_FORMAT = "yyyy-MM-dd";
+
+const getSemesterDateRange = (semester: (typeof semesterInfo)[number]) =>
+  getTaipeiDateRange(
+    format(semester.begins, DATE_KEY_FORMAT),
+    format(semester.ends, DATE_KEY_FORMAT),
+  );
 
 interface CountdownWidgetProps {
   onRemove?: () => void;
@@ -78,52 +87,58 @@ const CountdownWidget: FC<CountdownWidgetProps> = ({
   dragHandleProps,
   isDragging,
 }) => {
-  const { language } = useSettings();
+  const dict = useDictionary();
   const date = useTime();
   const { nextEvent } = useUpcomingEvents();
-  const title = language === "zh" ? "學期倒數" : "Semester Countdown";
+  const title = dict.today.countdown.title;
 
   const countdownInfo = useMemo(() => {
-    // Find current semester
-    const curr = getSemester(date);
-    if (!curr) {
+    const current = semesterInfo
+      .map((semester) => ({ semester, range: getSemesterDateRange(semester) }))
+      .find(({ range }) => range && date >= range.start && date < range.end);
+
+    if (!current) {
       // Try to find the next upcoming semester
-      const upcoming = semesterInfo.find((s) => s.begins > date);
+      const upcoming = semesterInfo
+        .map((semester) => ({
+          semester,
+          range: getSemesterDateRange(semester),
+        }))
+        .find(({ range }) => range && range.start > date);
       if (upcoming) {
-        const diff = Math.ceil(
-          (upcoming.begins.getTime() - date.getTime()) / 86400000,
-        );
+        const begins = upcoming.range!.start;
+        const diff = Math.ceil((begins.getTime() - date.getTime()) / 86400000);
         return {
           type: "vacation" as const,
           days: diff,
-          label:
-            language === "zh"
-              ? `距離下學期還有 ${diff} 天`
-              : `${diff} days until next semester`,
+          label: dict.today.countdown.until_next_semester.replace(
+            "{days}",
+            String(diff),
+          ),
           emoji: "🌴",
         };
       }
       return null;
     }
     const daysLeft = Math.ceil(
-      (curr.ends.getTime() - date.getTime()) / 86400000,
+      (current.range!.end.getTime() - date.getTime()) / 86400000,
     );
     if (daysLeft < 0) {
       return {
         type: "past" as const,
         days: 0,
-        label: language === "zh" ? "學期已結束" : "Semester ended",
+        label: dict.today.countdown.semester_ended,
         emoji: "🎉",
       };
     }
     return {
       type: "active" as const,
       days: daysLeft,
-      semId: curr.id,
-      label: language === "zh" ? `距離學期結束還有` : `days left in semester`,
+      semId: current.semester.id,
+      label: dict.today.countdown.days_left,
       emoji: daysLeft <= 14 ? "🔥" : daysLeft <= 30 ? "⏰" : "📚",
     };
-  }, [date, language]);
+  }, [date, dict]);
 
   return (
     <WidgetShell
@@ -137,9 +152,7 @@ const CountdownWidget: FC<CountdownWidgetProps> = ({
         {!countdownInfo ? (
           <div className="flex min-h-[100px] flex-col items-center justify-center text-muted-foreground">
             <Timer className="h-8 w-8 mb-2 text-muted-foreground/40" />
-            <span className="text-sm">
-              {language === "zh" ? "無法取得學期資訊" : "No semester data"}
-            </span>
+            <span className="text-sm">{dict.today.countdown.no_data}</span>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-2 text-center">

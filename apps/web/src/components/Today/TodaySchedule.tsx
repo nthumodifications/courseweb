@@ -25,7 +25,7 @@ import useUpcomingEvents, {
 
 const TodaySchedule: FC = () => {
   const { isCoursesEmpty } = useUserTimetable();
-  const { language, pinnedApps } = useSettings();
+  const { language, pinnedApps, showAcademicCalendar } = useSettings();
   const dict = useDictionary();
   const date = useTime();
   const [isClient, setIsClient] = useState(false);
@@ -33,7 +33,7 @@ const TodaySchedule: FC = () => {
     events: dashboardEvents,
     nextEvent,
     windowStart,
-  } = useUpcomingEvents({ windowDays: 5, includePast: true });
+  } = useUpcomingEvents({ includePast: true });
   const upcomingEvents = useMemo(
     () => dashboardEvents.filter((event) => event.state !== "past"),
     [dashboardEvents],
@@ -151,6 +151,7 @@ const TodaySchedule: FC = () => {
     const events = dashboardEvents.filter(
       (event) =>
         (event.source === "academic" || event.source === "course-date") &&
+        (event.source !== "academic" || showAcademicCalendar) &&
         getTaipeiDateKey(event.start) === getTaipeiDateKey(day),
     );
     return (
