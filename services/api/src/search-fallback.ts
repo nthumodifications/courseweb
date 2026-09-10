@@ -42,6 +42,8 @@ type FilterCondition = {
 
 type FacetFilterGroup = string[];
 
+const MAX_FILTER_LENGTH = 2000;
+
 /**
  * Escape a value embedded in a PostgREST `.or(...)` expression. Backslashes
  * must be escaped first so the escapes added for the other grammar markers
@@ -114,8 +116,11 @@ const parseConditions = (value?: string): FilterCondition[] => {
       : value;
   const conditions: FilterCondition[] = [];
   const matcher =
-    /([A-Za-z_][A-Za-z0-9_]*)\s*(>=|<=|!=|=|>|<|:)\s*(?:"([^"]*)"|'([^']*)'|([^\s()]+))/g;
-  for (const match of source.matchAll(matcher)) {
+    /([A-Za-z_][A-Za-z0-9_]{0,63})[ 	]{0,8}(>=|<=|!=|=|>|<|:)[ 	]{0,8}(?:"([^"]{0,256})"|'([^']{0,256})'|([^\s()]{1,256}))/g;
+  // The filter string is caller-supplied. Bounding both its length and every
+  // quantifier above keeps matching linear instead of leaving the engine free
+  // to backtrack across a long run of identifier characters.
+  for (const match of source.slice(0, MAX_FILTER_LENGTH).matchAll(matcher)) {
     const operator = match[2] as FilterCondition["operator"];
     conditions.push({
       attribute: match[1],

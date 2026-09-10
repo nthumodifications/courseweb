@@ -13,6 +13,12 @@ import {
 
 const DEVICE_ID_KEY = "nthumods_device_id";
 
+const randomSuffix = () => {
+  const bytes = new Uint8Array(8);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+};
+
 const getDeviceId = () => {
   if (typeof window === "undefined") return "server";
 
@@ -22,7 +28,7 @@ const getDeviceId = () => {
   const deviceId =
     typeof crypto.randomUUID === "function"
       ? crypto.randomUUID()
-      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      : `${Date.now()}-${randomSuffix()}`;
   window.localStorage.setItem(DEVICE_ID_KEY, deviceId);
   return deviceId;
 };
