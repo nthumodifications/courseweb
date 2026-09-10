@@ -74,6 +74,9 @@ const TeamPage = lazy(
 const PrivacyPage = lazy(
   () => import("@/app/[lang]/(mods-pages)/(side-pages)/privacy-policy/page"),
 );
+const ChangelogPage = lazy(
+  () => import("@/app/[lang]/(mods-pages)/(side-pages)/changelog/page"),
+);
 const ProxyLoginPage = lazy(
   () => import("@/app/[lang]/(mods-pages)/(side-pages)/proxy-login/page"),
 );
@@ -401,6 +404,16 @@ export const router = createBrowserRouter([
                   description:
                     "NTHUMods privacy policy and data handling practices.",
                   descriptionZh: "NTHUMods 隱私權政策與個人資料處理方式說明。",
+                },
+              },
+              {
+                path: "changelog",
+                element: <ChangelogPage />,
+                handle: {
+                  title: "Changelog",
+                  titleZh: "更新日誌",
+                  description: "Read the latest NTHUMods releases and changes.",
+                  descriptionZh: "查看 NTHUMods 最新版本與更新內容。",
                 },
               },
               {
