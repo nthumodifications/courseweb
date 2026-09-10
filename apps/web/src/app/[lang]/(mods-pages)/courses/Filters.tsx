@@ -60,7 +60,7 @@ const Filters = ({ selectedCourses }: { selectedCourses: MinimalCourse[] }) => {
         </div>
 
         <div className="flex flex-col gap-2">
-          <span className="text-sm">上課時間</span>
+          <span className="text-sm">{dict.course.refine.time}</span>
           <TimeSelectionFilter
             attribute="separate_times"
             selectedCourses={selectedCourses}
@@ -125,7 +125,7 @@ const Filters = ({ selectedCourses }: { selectedCourses: MinimalCourse[] }) => {
               attribute="venues"
               searchable={true}
               limit={20}
-              placeholder="Search (to display more)..."
+              placeholder={dict.planner.coursePicker.searchToDisplayMore}
             />
           </div>
 
@@ -137,7 +137,7 @@ const Filters = ({ selectedCourses }: { selectedCourses: MinimalCourse[] }) => {
               attribute="first_specialization"
               searchable={true}
               limit={20}
-              placeholder="Search (to display more)..."
+              placeholder={dict.planner.coursePicker.searchToDisplayMore}
             />
           </div>
 
@@ -149,7 +149,7 @@ const Filters = ({ selectedCourses }: { selectedCourses: MinimalCourse[] }) => {
               attribute="second_specialization"
               searchable={true}
               limit={20}
-              placeholder="Search (to display more)..."
+              placeholder={dict.planner.coursePicker.searchToDisplayMore}
             />
           </div>
 
@@ -161,7 +161,7 @@ const Filters = ({ selectedCourses }: { selectedCourses: MinimalCourse[] }) => {
               attribute="cross_discipline"
               searchable={true}
               limit={20}
-              placeholder="Search (to display more)..."
+              placeholder={dict.planner.coursePicker.searchToDisplayMore}
             />
           </div>
         </div>

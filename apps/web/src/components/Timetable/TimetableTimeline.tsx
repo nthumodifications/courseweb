@@ -1,4 +1,5 @@
 import { FC } from "react";
+import { addDays, format } from "date-fns";
 import { CourseTimeslotData } from "@/types/timetable";
 import { scheduleTimeSlots } from "@courseweb/shared";
 import { useSettings } from "@/hooks/contexts/settings";
@@ -8,14 +9,12 @@ import useUserTimetable, {
   TIMETABLE_FONT_FAMILIES,
   TIMETABLE_FONT_SIZE_CLASSES,
 } from "@/hooks/contexts/useUserTimetable";
+import { getLocale } from "@/helpers/dateLocale";
 
 interface TimetableTimelineProps {
   timetableData: CourseTimeslotData[];
   className?: string;
 }
-
-const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-const DAY_LABELS_ZH = ["週一", "週二", "週三", "週四", "週五", "週六", "週日"];
 
 // Timeline spans 7:00 to 22:00 (15 hours). Each hour = 56px.
 const HOUR_HEIGHT = 56;
@@ -71,7 +70,9 @@ const TimetableTimeline: FC<TimetableTimelineProps> = ({
             style={{ width: DAY_COL_W, minWidth: DAY_COL_W }}
             className="text-center text-xs font-semibold py-2 text-muted-foreground uppercase border-l border-border"
           >
-            {language === "zh" ? DAY_LABELS_ZH[day] : DAY_LABELS[day]}
+            {format(addDays(new Date(2024, 0, 1), day), "EEE", {
+              locale: getLocale(language),
+            })}
           </div>
         ))}
       </div>

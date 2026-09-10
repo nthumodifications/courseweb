@@ -11,12 +11,12 @@ import BottomNav from "@/components/BottomNav";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import ConsoleLogger from "@/components/ConsoleLogger";
 import AppSidebar from "@/components/AppSidebar";
-import { Language } from "@/types/settings";
 import { useCookies } from "react-cookie";
 import { CourseDialogProvider } from "@/components/Courses/CourseDialog";
 import CommandPalette from "@/components/CommandPalette/CommandPalette";
 import CustomCSSInjector from "@/components/CustomCSS/CustomCSSInjector";
 import AnnouncementBar from "@/components/Alerts/AnnouncementBar";
+import useDictionary from "@/dictionaries/useDictionary";
 
 const WhatsNewDialogDynamic = lazy(
   () => import("@/components/Changelog/WhatsNewDialog"),
@@ -24,6 +24,7 @@ const WhatsNewDialogDynamic = lazy(
 
 const MainLayout = () => {
   const { lang } = useParams<{ lang: string }>();
+  const dict = useDictionary();
   const [cookies] = useCookies(["sidebar:state"]);
   const defaultOpen = (cookies["sidebar:state"] ?? "true") === "true";
 
@@ -35,7 +36,7 @@ const MainLayout = () => {
             <CourseDialogProvider>
               <GoogleAnalytics />
               <ConsoleLogger />
-              <AppSidebar lang={(lang as Language) ?? "zh"} />
+              <AppSidebar lang={lang === "en" ? "en" : "zh"} />
               <SidebarInset className="min-w-0 overflow-x-hidden">
                 <Header />
                 <AnnouncementBar />
@@ -46,7 +47,7 @@ const MainLayout = () => {
                         <div className="grid place-items-center w-full h-screen">
                           <div className="flex flex-col items-center">
                             <span className="mt-2 text-gray-300 dark:text-neutral-700 font-bold text-xl">
-                              Loading 載入中...
+                              {dict.common.loading}
                             </span>
                             <div className="h-2 w-36 bg-gray-300 dark:bg-neutral-700 rounded-full mt-4 animate-pulse"></div>
                           </div>

@@ -13,6 +13,7 @@ import {
   CollapsibleTrigger,
 } from "@courseweb/ui";
 import { reloadApp } from "@/lib/chunk-recovery";
+import useDictionary from "@/dictionaries/useDictionary";
 export default function Error({
   error,
   resetErrorBoundary: reset,
@@ -21,28 +22,28 @@ export default function Error({
   resetErrorBoundary: () => void;
 }) {
   const { lang } = useParams();
+  const dict = useDictionary();
 
   useEffect(() => {
     Sentry.captureException(error);
     console.error(error);
   }, [error]);
 
+  const finalLang = lang === "en" ? "en" : "zh";
   const errorStrings = [
-    "完蛋了，工程師今晚要加班了。",
-    "糟糕，這裡出了點問題。",
-    "哎呀，出了點錯誤。",
-    "Oops! Something went wrong.",
-    "Mistakes were made.",
-    "An error has occurred.",
-    "Error 500: Client Side Error",
-    "進不去？清大是不是沒電了？",
-    "出事了，沒人幫忙修Bug (´。＿。｀)",
+    dict.error.message_1,
+    dict.error.message_2,
+    dict.error.message_3,
+    dict.error.message_4,
+    dict.error.message_5,
+    dict.error.message_6,
+    dict.error.message_7,
+    dict.error.message_8,
+    dict.error.message_9,
   ];
 
   const selectedString =
     errorStrings[Math.floor(Math.random() * errorStrings.length)];
-
-  const finalLang = (lang as string) ?? "zh";
 
   return (
     <div
@@ -56,14 +57,14 @@ export default function Error({
             <h1 className="text-4xl font-bold">{selectedString}</h1>
             <Tabs defaultValue={finalLang}>
               <TabsContent value="zh" className="flex flex-col gap-2">
-                <p className="">NTHUMods 用戶端出現了系統錯誤。請稍後再試。</p>
-                <p className="text-sm text-muted-foreground">你可以試看：</p>
+                <p className="">{dict.error.client_description}</p>
+                <p className="text-sm text-muted-foreground">{dict.error.tips_title}</p>
                 <ul className="list-disc list-inside text-sm text-muted-foreground">
-                  <li>檢查您的網路訊號</li>
-                  <li>清除瀏覽器快取並重新整理頁面</li>
-                  <li>上 Dcard 抱怨</li>
+                  <li>{dict.error.check_connection}</li>
+                  <li>{dict.error.clear_cache}</li>
+                  <li>{dict.error.dcard}</li>
                   <li>
-                    在這裡回報錯誤{" "}
+                    {dict.error.report_here}{" "}
                     <a
                       href="https://github.com/nthumodifications/courseweb/issues/new/choose"
                       className="underline text-purple-500"
@@ -81,15 +82,15 @@ export default function Error({
               </TabsContent>
               <TabsContent value="en" className="flex flex-col gap-2">
                 <p className="">
-                  A client side error has occurred. Please try again later.
+                  {dict.error.client_description}
                 </p>
-                <p className="text-sm text-muted-foreground">You can try:</p>
+                <p className="text-sm text-muted-foreground">{dict.error.tips_title}</p>
                 <ul className="list-disc list-inside text-sm text-muted-foreground">
-                  <li>Checking your internet connection</li>
-                  <li>Clearing your browser cache and refreshing the page</li>
-                  <li>Complaining on Dcard</li>
+                  <li>{dict.error.check_connection}</li>
+                  <li>{dict.error.clear_cache}</li>
+                  <li>{dict.error.dcard}</li>
                   <li>
-                    Reporting this error here{" "}
+                    {dict.error.report_here}{" "}
                     <a
                       href="https://github.com/nthumodifications/courseweb/issues/new/choose"
                       className="underline text-purple-500"
@@ -112,7 +113,7 @@ export default function Error({
           <CollapsibleTrigger asChild>
             <Button variant="outline">
               <View className="mr-2" />
-              <span className="font-mono">Stack Trace</span>
+              <span className="font-mono">{dict.error.stack_trace}</span>
             </Button>
           </CollapsibleTrigger>
           <CollapsibleContent>
@@ -122,7 +123,7 @@ export default function Error({
           </CollapsibleContent>
         </Collapsible>
         <Button variant="outline" onClick={() => void reloadApp()}>
-          Reload app
+          {dict.error.reload_app}
         </Button>
       </div>
     </div>

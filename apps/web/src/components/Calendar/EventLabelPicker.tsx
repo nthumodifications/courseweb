@@ -12,6 +12,7 @@ import {
 } from "@courseweb/ui";
 import { Button } from "@courseweb/ui";
 import { useCalendar } from "./calendar_hook";
+import useDictionary from "@/dictionaries/useDictionary";
 
 export const EventLabelPicker = ({
   value,
@@ -23,6 +24,7 @@ export const EventLabelPicker = ({
   const [open, setOpen] = useState(false);
 
   const { labels } = useCalendar();
+  const dict = useDictionary();
   return (
     <Popover open={open} onOpenChange={setOpen} modal={true}>
       <PopoverTrigger asChild>
@@ -32,15 +34,15 @@ export const EventLabelPicker = ({
           aria-expanded={open}
           className="w-full justify-between"
         >
-          {labels.find((framework) => framework === value) ?? "標籤"}
+          {labels.find((framework) => framework === value) ?? dict.calendar.form.label}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="p-0">
         <Command defaultValue={labels[0]}>
-          <CommandInput placeholder="標籤" />
+          <CommandInput placeholder={dict.calendar.form.label} />
           <CommandList>
-            <CommandEmpty>No label found.</CommandEmpty>
+            <CommandEmpty>{dict.calendar.form.no_label}</CommandEmpty>
             <CommandGroup>
               {labels.map((op) => (
                 <CommandItem

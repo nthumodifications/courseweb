@@ -24,6 +24,7 @@ import client from "@/config/api";
 import { MinimalCourse } from "@/types/courses";
 import { createTimetableFromCourses } from "@/helpers/timetable";
 import { CourseTimeslotData } from "@/types/timetable";
+import useDictionary from "@/dictionaries/useDictionary";
 
 export type OverlayEntry = {
   savedId: string;
@@ -61,6 +62,7 @@ function SavedTimetableItem({
 }) {
   const navigate = useNavigate();
   const { lang } = useParams<{ lang: string }>();
+  const dict = useDictionary();
 
   const share = saved.share;
   const semesters = share?.semesters ?? [];
@@ -91,7 +93,7 @@ function SavedTimetableItem({
       );
       onToggleOverlay({
         savedId: saved.id,
-        label: saved.label ?? "Shared Timetable",
+        label: saved.label ?? dict.calendar.others.shared_timetable,
         color: overlayColor,
         timetableData,
       });
@@ -106,22 +108,22 @@ function SavedTimetableItem({
         <div className="flex flex-col gap-0.5 flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium truncate">
-              {saved.label || "Shared Timetable"}
+              {saved.label || dict.calendar.others.shared_timetable}
             </span>
             {hasNewChanges && (
               <Badge variant="destructive" className="text-xs h-4 px-1">
-                New
+                {dict.calendar.others.new_label}
               </Badge>
             )}
           </div>
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             {saved.syncMode === "live" ? (
               <>
-                <RefreshCw className="h-2.5 w-2.5" /> Live
+                <RefreshCw className="h-2.5 w-2.5" /> {dict.calendar.others.live}
               </>
             ) : (
               <>
-                <Camera className="h-2.5 w-2.5" /> Snapshot
+                <Camera className="h-2.5 w-2.5" /> {dict.calendar.others.snapshot}
               </>
             )}
             {semesters.length > 0 && (
@@ -130,7 +132,7 @@ function SavedTimetableItem({
           </div>
           {!share && (
             <span className="text-xs text-muted-foreground italic">
-              Owner removed this share
+              {dict.calendar.others.owner_removed}
             </span>
           )}
         </div>
@@ -140,7 +142,11 @@ function SavedTimetableItem({
             variant="ghost"
             className="h-7 w-7"
             onClick={handleToggle}
-            title={isOverlaid ? "Hide overlay" : "Show overlay"}
+            title={
+              isOverlaid
+                ? dict.calendar.others.hide_overlay
+                : dict.calendar.others.show_overlay
+            }
           >
             {isOverlaid ? (
               <EyeOff className="h-3.5 w-3.5" />
@@ -154,7 +160,7 @@ function SavedTimetableItem({
               variant="ghost"
               className="h-7 w-7"
               onClick={() => navigate(`/${lang}/timetable/share/${share.id}`)}
-              title="View full page"
+              title={dict.calendar.others.view_full_page}
             >
               <ExternalLink className="h-3.5 w-3.5" />
             </Button>
@@ -164,7 +170,7 @@ function SavedTimetableItem({
             variant="ghost"
             className="h-7 w-7 text-destructive hover:text-destructive"
             onClick={onUnsave}
-            title="Remove"
+            title={dict.calendar.others.remove}
           >
             <Trash2 className="h-3.5 w-3.5" />
           </Button>
@@ -177,7 +183,9 @@ function SavedTimetableItem({
             className="w-3 h-3 rounded-full"
             style={{ backgroundColor: overlayColor }}
           />
-          <span className="text-muted-foreground">Shown in calendar</span>
+          <span className="text-muted-foreground">
+            {dict.calendar.others.shown_in_calendar}
+          </span>
         </div>
       )}
     </div>
@@ -204,6 +212,7 @@ const OthersTimetablePanel = ({
   } = useSavedTimetables();
   const navigate = useNavigate();
   const { lang } = useParams<{ lang: string }>();
+  const dict = useDictionary();
 
   const handleToggleOverlay = (savedId: string, entry: OverlayEntry | null) => {
     if (entry === null) {
@@ -225,7 +234,7 @@ const OthersTimetablePanel = ({
       <div className="flex flex-col items-center justify-center py-8 gap-3 text-center">
         <Users className="h-8 w-8 text-muted-foreground" />
         <p className="text-sm text-muted-foreground">
-          Sign in to save and view others' timetables
+          {dict.calendar.others.sign_in}
         </p>
       </div>
     );
@@ -235,10 +244,13 @@ const OthersTimetablePanel = ({
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <h3 className="text-sm font-medium">Others' Timetables</h3>
+          <h3 className="text-sm font-medium">{dict.calendar.others.title}</h3>
           {totalUnread > 0 && (
             <Badge variant="destructive" className="text-xs h-4 px-1">
-              {totalUnread} new
+              {dict.calendar.others.new_count.replace(
+                "{count}",
+                String(totalUnread),
+              )}
             </Badge>
           )}
         </div>
@@ -248,7 +260,7 @@ const OthersTimetablePanel = ({
           className="h-7 text-xs"
           onClick={() => navigate(`/${lang}/timetable/community`)}
         >
-          Browse
+          {dict.calendar.others.browse}
         </Button>
       </div>
 
@@ -259,10 +271,10 @@ const OthersTimetablePanel = ({
       ) : savedTimetables.length === 0 ? (
         <div className="flex flex-col items-center py-6 gap-2 text-center">
           <p className="text-sm text-muted-foreground">
-            No saved timetables yet.
+            {dict.calendar.others.no_saved}
           </p>
           <p className="text-xs text-muted-foreground">
-            Open a share link and click "Save & follow".
+            {dict.calendar.others.open_save_follow}
           </p>
         </div>
       ) : (

@@ -26,6 +26,7 @@ import {
   Settings,
 } from "lucide-react";
 import { Switch } from "@courseweb/ui";
+import useDictionary from "@/dictionaries/useDictionary";
 
 export type NavItemId = "today" | "timetable" | "bus" | "apps" | "settings";
 
@@ -83,7 +84,15 @@ const SortableNavRow = ({
     useSortable({ id: item.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
   const { language } = useSettings();
+  const dict = useDictionary();
   const def = NAV_ITEM_DEFINITIONS[item.id];
+  const label = {
+    today: dict.navigation.today,
+    timetable: dict.navigation.timetable,
+    bus: dict.navigation.bus,
+    apps: dict.navigation.apps,
+    settings: dict.navigation.settings,
+  }[item.id];
 
   return (
     <div
@@ -100,7 +109,7 @@ const SortableNavRow = ({
       </button>
       <def.Icon className="h-4 w-4 text-muted-foreground" />
       <div className="flex-1 text-sm font-medium text-foreground">
-        {language === "zh" ? def.labelZh : def.label}
+        {label}
       </div>
       <Switch
         checked={item.enabled}
@@ -111,6 +120,7 @@ const SortableNavRow = ({
 };
 
 export const BottomNavSection = () => {
+  const dict = useDictionary();
   const [items, setItems] = useLocalStorage<NavItemConfig[]>(
     "bottom_nav_items",
     DEFAULT_NAV_ITEMS,
@@ -148,8 +158,7 @@ export const BottomNavSection = () => {
   return (
     <div className="flex flex-col gap-3">
       <p className="text-xs text-muted-foreground">
-        Drag to reorder • Toggle to show/hide items in the mobile bottom
-        navigation bar
+        {dict.settings.drag_hint}
       </p>
       <DndContext
         sensors={sensors}

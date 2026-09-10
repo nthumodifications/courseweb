@@ -4,6 +4,7 @@ import CourseListItem from "../Courses/CourseListItem";
 import { Skeleton } from "@courseweb/ui";
 import { AlertCircle } from "lucide-react";
 import { CourseSyllabusView } from "@/config/supabase";
+import useDictionary from "@/dictionaries/useDictionary";
 
 interface CourseListRendererProps {
   rawIds: string[];
@@ -12,6 +13,7 @@ interface CourseListRendererProps {
 export default function CourseListRenderer({
   rawIds,
 }: CourseListRendererProps) {
+  const dict = useDictionary();
   const {
     data: courses,
     isLoading,
@@ -54,7 +56,7 @@ export default function CourseListRenderer({
     return (
       <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 rounded p-3">
         <AlertCircle className="h-4 w-4" />
-        <span>Failed to load courses</span>
+        <span>{dict.chat.course_renderer.load_failed}</span>
       </div>
     );
   }
@@ -62,7 +64,7 @@ export default function CourseListRenderer({
   if (!courses || courses.length === 0) {
     return (
       <div className="text-sm text-muted-foreground bg-muted rounded p-3">
-        No courses found
+        {dict.chat.course_renderer.no_courses}
       </div>
     );
   }

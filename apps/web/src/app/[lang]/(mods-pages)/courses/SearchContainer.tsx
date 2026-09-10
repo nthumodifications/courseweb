@@ -43,6 +43,7 @@ const Hit = memo(({ hit }: { hit: any }) => {
 Hit.displayName = "Hit";
 
 export function InfiniteHits(props: Parameters<typeof useInfiniteHits>[0]) {
+  const dict = useDictionary();
   const { hits, isLastPage, showMore } = useInfiniteHits({
     showPrevious: false,
     ...props,
@@ -103,12 +104,14 @@ export function InfiniteHits(props: Parameters<typeof useInfiniteHits>[0]) {
         {/* Status messages */}
         {status === "error" && (
           <div className="text-center text-gray-500 mt-4">
-            An Error Occurred
+            {dict.common.error}
           </div>
         )}
 
         {isLastPage && hits.length > 0 && status === "idle" && (
-          <div className="text-center text-gray-500 mt-4">No more results</div>
+          <div className="text-center text-gray-500 mt-4">
+            {dict.course.search.no_more_results}
+          </div>
         )}
       </div>
     </div>
@@ -175,7 +178,7 @@ const SearchContainer = memo(
               />
               <Separator orientation="vertical" className="h-full" />
               <Link to={`/${lang}/chat`}>
-                <Button variant="ghost" size="icon" title="AI 課程助手">
+                <Button variant="ghost" size="icon" title={dict.chat.title}>
                   <Sparkles size="16" />
                 </Button>
               </Link>

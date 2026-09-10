@@ -26,9 +26,11 @@ import {
 } from "@courseweb/ui";
 import { DialogClose, DialogDescription } from "@radix-ui/react-dialog";
 import { AddEventButton } from "./AddEventButton";
+import useDictionary from "@/dictionaries/useDictionary";
 
 const ConfirmDeleteEvent: FC<{ event: DisplayCalendarEvent }> = ({ event }) => {
   const { removeEvent } = useCalendar();
+  const dict = useDictionary();
 
   return (
     <Dialog>
@@ -39,15 +41,17 @@ const ConfirmDeleteEvent: FC<{ event: DisplayCalendarEvent }> = ({ event }) => {
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>確認刪除</DialogTitle>
-          <DialogDescription>確定要刪除這個事件嗎?</DialogDescription>
+          <DialogTitle>{dict.calendar.event.confirm_delete_title}</DialogTitle>
+          <DialogDescription>
+            {dict.calendar.event.confirm_delete_description}
+          </DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">取消</Button>
+            <Button variant="outline">{dict.calendar.event.cancel}</Button>
           </DialogClose>
           <Button variant="destructive" onClick={(_) => removeEvent(event)}>
-            刪除
+            {dict.calendar.event.delete}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -59,6 +63,7 @@ const UpdateRepeatedEventDialog: FC<{
   open: boolean;
   onClose: (type?: UpdateType) => void;
 }> = ({ open, onClose }) => {
+  const dict = useDictionary();
   return (
     <Dialog
       open={open}
@@ -69,21 +74,23 @@ const UpdateRepeatedEventDialog: FC<{
       <DialogTrigger asChild></DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>更新重複事件</DialogTitle>
+          <DialogTitle>{dict.calendar.event.update_repeat_title}</DialogTitle>
           <DialogDescription>
-            您要更新所有重複事件還是只更新這個事件？
+            {dict.calendar.event.update_repeat_description}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">取消</Button>
+            <Button variant="outline">{dict.calendar.event.cancel}</Button>
           </DialogClose>
           <Button onClick={(_) => onClose(UpdateType.THIS)}>
-            只更新這個事件
+            {dict.calendar.event.update_this}
           </Button>
-          <Button onClick={(_) => onClose(UpdateType.ALL)}>所有</Button>
+          <Button onClick={(_) => onClose(UpdateType.ALL)}>
+            {dict.calendar.event.all}
+          </Button>
           <Button onClick={(_) => onClose(UpdateType.FOLLOWING)}>
-            這個和之後的事件
+            {dict.calendar.event.update_following}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -95,6 +102,7 @@ const DeleteRepeatedEventDialog: FC<{
   open: boolean;
   onClose: (type?: UpdateType) => void;
 }> = ({ open, onClose }) => {
+  const dict = useDictionary();
   return (
     <Dialog
       open={open}
@@ -105,21 +113,23 @@ const DeleteRepeatedEventDialog: FC<{
       <DialogTrigger asChild></DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>刪除重複事件</DialogTitle>
+          <DialogTitle>{dict.calendar.event.delete_repeat_title}</DialogTitle>
           <DialogDescription>
-            您要刪除所有重複事件還是只刪除這個事件
+            {dict.calendar.event.delete_repeat_description}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">取消</Button>
+            <Button variant="outline">{dict.calendar.event.cancel}</Button>
           </DialogClose>
           <Button onClick={(_) => onClose(UpdateType.THIS)}>
-            只刪除這個事件
+            {dict.calendar.event.delete_this}
           </Button>
-          <Button onClick={(_) => onClose(UpdateType.ALL)}>所有</Button>
+          <Button onClick={(_) => onClose(UpdateType.ALL)}>
+            {dict.calendar.event.all}
+          </Button>
           <Button onClick={(_) => onClose(UpdateType.FOLLOWING)}>
-            這個和之後的事件
+            {dict.calendar.event.update_following}
           </Button>
         </DialogFooter>
       </DialogContent>

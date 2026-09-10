@@ -35,6 +35,7 @@ import client from "@/config/api";
 
 const TimetableCourseListItem = ({ course }: { course: MinimalCourse }) => {
   const { language } = useSettings();
+  const dict = useDictionary();
   const [searchParams] = useSearchParams();
   const { openCourse } = useCourseLink();
 
@@ -90,17 +91,23 @@ const TimetableCourseListItem = ({ course }: { course: MinimalCourse }) => {
                 {hasTimes(course as MinimalCourse) ? (
                   <span className="text-xs">{time}</span>
                 ) : (
-                  <span className="text-xs text-red-500">缺時間</span>
+                  <span className="text-xs text-red-500">
+                    {dict.course.details.missing_time}
+                  </span>
                 )}
               </div>
             );
-          }) || <span className="text-gray-400 text-xs">No Venue</span>}
+          }) || (
+            <span className="text-gray-400 text-xs">
+              {dict.course.details.no_venues}
+            </span>
+          )}
         </div>
       </div>
       <div className="flex flex-col gap-1 items-start">
         <div className="flex flex-row items-center space-x-1">
           <span className="text-base">{course.credits}</span>
-          <span className="text-xs text-gray-400">學分</span>
+          <span className="text-xs text-gray-400">{dict.course.credits}</span>
         </div>
         <div className="flex flex-row">
           <Button
@@ -214,7 +221,7 @@ export const FavouritesCourseList = ({}: {}) => {
         {displayCourseData.length == 0 && (
           <div className="flex flex-col items-center space-y-4">
             <span className="text-lg font-semibold text-gray-400">
-              {"No Favourites Added (yet)"}
+              {dict.course.details.no_favourites}
             </span>
           </div>
         )}

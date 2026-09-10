@@ -1,6 +1,7 @@
 import TimeslotHeader from "@/components/Timetable/TimeslotHeader";
 import TimetableSlotVertical from "@/components/Timetable/TimetableSlotVertical";
 import { scheduleTimeSlots } from "@courseweb/shared";
+import { addDays, format } from "date-fns";
 import {
   CourseTimeslotData,
   CourseTimeslotDataWithFraction,
@@ -20,6 +21,7 @@ import TimetableSlotHorizontal from "@/components/Timetable/TimetableSlotHorizon
 import { Link } from "react-router-dom";
 import { useSettings } from "@/hooks/contexts/settings";
 import { BlankTimeslotBody } from "./BlankTimeslotBody";
+import { getLocale } from "@/helpers/dateLocale";
 
 const Timetable: FC<{
   timetableData: CourseTimeslotData[];
@@ -30,6 +32,7 @@ const Timetable: FC<{
     vertical?: boolean,
   ) => ReactNode;
 }> = ({ timetableData = [], vertical = true, renderTimetableSlot }) => {
+  const { language } = useSettings();
   const headerRow = useRef<HTMLTableCellElement>(null);
   const timetableCell = useRef<HTMLTableCellElement>(null);
   const [tableDim, setTableDim] = useState({
@@ -117,9 +120,12 @@ const Timetable: FC<{
 
   const showSaturday = timetableData.some((course) => course.dayOfWeek == 5);
 
-  const days = showSaturday
-    ? ["MON", "TUE", "WED", "THU", "FRI", "SAT"]
-    : ["MON", "TUE", "WED", "THU", "FRI"];
+  const dayLabels = Array.from({ length: showSaturday ? 6 : 5 }, (_, index) =>
+    format(addDays(new Date(2024, 0, 1), index), "EEE", {
+      locale: getLocale(language),
+    }).toUpperCase(),
+  );
+  const days = dayLabels;
 
   const _renderTimetableSlot = (
     course: CourseTimeslotDataWithFraction,
@@ -223,34 +229,34 @@ const Timetable: FC<{
               <td className="w-[40px] min-w-[40px]" ref={headerRow}></td>
               <td className="p-0.5 h-[inherit]">
                 <div className="h-full w-full text-xs font-semibold bg-muted rounded-md py-2">
-                  MON
+                  {dayLabels[0]}
                 </div>
               </td>
               <td className="p-0.5 h-[inherit]">
                 <div className="h-full w-full text-xs font-semibold bg-muted rounded-md py-2">
-                  TUE
+                  {dayLabels[1]}
                 </div>
               </td>
               <td className="p-0.5 h-[inherit]">
                 <div className="h-full w-full text-xs font-semibold bg-muted rounded-md py-2">
-                  WED
+                  {dayLabels[2]}
                 </div>
               </td>
               <td className="p-0.5 h-[inherit]">
                 <div className="h-full w-full text-xs font-semibold bg-muted rounded-md py-2">
-                  THU
+                  {dayLabels[3]}
                 </div>
               </td>
               <td className="p-0.5 h-[inherit]">
                 <div className="h-full w-full text-xs font-semibold bg-muted rounded-md py-2">
-                  FRI
+                  {dayLabels[4]}
                 </div>
               </td>
 
               {showSaturday && (
                 <td className="p-0.5 h-[inherit]">
                   <div className="h-full w-full text-xs font-semibold bg-muted rounded-md py-2">
-                    SAT
+                    {dayLabels[5]}
                   </div>
                 </td>
               )}

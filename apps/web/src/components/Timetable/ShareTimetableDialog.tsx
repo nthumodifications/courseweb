@@ -60,7 +60,7 @@ import { useNavigate, useParams } from "react-router-dom";
 
 function useLang() {
   const { lang } = useParams<{ lang: string }>();
-  return lang ?? "en";
+  return lang === "en" ? "en" : "zh";
 }
 
 type Visibility = "link_only" | "public";

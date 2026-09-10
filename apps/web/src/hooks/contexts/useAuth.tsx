@@ -36,7 +36,7 @@ const RefreshOnLoad = () => {
 
 const OidcAuthProvider = ({ children }: PropsWithChildren) => {
   const navigate = useNavigate();
-  const language = useParams().lang as Language;
+  const language: Language = useParams().lang === "en" ? "en" : "zh";
 
   const oidcConfig = useMemo(() => {
     return {

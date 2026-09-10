@@ -4,11 +4,13 @@ import { useSettings } from "@/hooks/contexts/settings";
 import { Input } from "@courseweb/ui";
 import { Button } from "@courseweb/ui";
 import type Fuse from "fuse.js";
+import useDictionary from "@/dictionaries/useDictionary";
 
 const VenueList = ({ venues }: { venues: string[] }) => {
   const [filtered, setFiltered] = useState<Fuse.FuseResult<string>[]>([]);
   const [textSearch, setTextSearch] = useState<string>("");
   const { language } = useSettings();
+  const dict = useDictionary();
 
   useEffect(() => {
     (async () => {
@@ -36,7 +38,7 @@ const VenueList = ({ venues }: { venues: string[] }) => {
     <div className="px-8 py-4 space-y-4">
       <Input
         className="sticky top-0"
-        placeholder="Search..."
+        placeholder={dict.common.search}
         value={textSearch}
         onChange={(e) => setTextSearch(e.target.value)}
       />

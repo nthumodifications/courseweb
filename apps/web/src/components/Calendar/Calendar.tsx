@@ -53,8 +53,12 @@ const CalendarError = ({
   error: Error;
   resetErrorBoundary: () => void;
 }) => {
+  const dict = useDictionary();
+
   return (
-    <div className="text-destructive">An error occurred: {error.message}</div>
+    <div className="text-destructive">
+      {dict.common.error}: {error.message}
+    </div>
   );
 };
 
@@ -329,8 +333,11 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
       calendarEvents.forEach((c) => addEvent(c));
     } else {
       toast({
-        title: `Semester ${toPrettySemester(request.semester)} sync cancelled`,
-        description: "You can sync again if the timetable changes",
+        title: dict.calendar.sync.cancelled_title.replace(
+          "{semester}",
+          toPrettySemester(request.semester),
+        ),
+        description: dict.calendar.sync.cancelled_description,
       });
     }
 

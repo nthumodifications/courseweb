@@ -3,6 +3,15 @@
     "noclass": "No Classes Today",
     "noclass_sub": "Enjoy your day off!",
     "noclass_sem": "Enjoy your holiday!",
+    "noclass_reminder": {
+      "reminder": "Haven't chosen your courses yet?",
+      "first": "First open",
+      "courses": "Courses",
+      "choose_courses": "to choose courses",
+      "then": "Next open",
+      "timetable": "Timetable",
+      "check_schedule": "to check your schedule"
+    },
     "upcoming": {
       "next_up": "Next up",
       "in_progress": "In progress",
@@ -20,15 +29,6 @@
         "academic": "NTHU",
         "course-date": "Course date"
       }
-    },
-    "noclass_reminder": {
-      "reminder": "Haven't chosen your courses yet?",
-      "first": "First open",
-      "courses": "Courses",
-      "choose_courses": "to choose courses",
-      "then": "Next open",
-      "timetable": "Timetable",
-      "check_schedule": "to check your schedule"
     }
   },
   "timetable": {
@@ -45,6 +45,10 @@
     "credits": "credits",
     "course": "courses",
     "display_settings": "Display Settings",
+    "priority": "Priority",
+    "conflict": "Schedule conflict",
+    "duplicate": "Duplicate course",
+    "select_display": "Select display",
     "english_names": "English Names",
     "english_names_options": {
       "add": "Add",
@@ -55,10 +59,31 @@
     "show_venue": "Show Venue",
     "show_credits": "Show Credits",
     "show_priority": "Show Priority Number",
+    "saturday_hidden": "Saturday and Sunday courses are not shown in this view",
     "lock_order": "Lock Course Order",
     "reset_default": "Reset to Default",
     "no_courses": "No Courses Added (yet)",
     "all_courses": "All Courses",
+    "view": {
+      "import_title": "Import courses to this device?",
+      "import_description": "Importing courses will overwrite all your courses.",
+      "import_semester": "Import this semester",
+      "import_all": "Import all",
+      "no_venue": "No venue",
+      "courses_unit": "courses",
+      "total_credits": "total credits"
+    },
+    "sidebar": {
+      "groups": "Groups",
+      "create_group": "Create a group",
+      "create_or_join_group": "Create or join a group",
+      "member": "member",
+      "members": "members",
+      "download_export": "Download / export",
+      "share_timetable": "Share timetable",
+      "customizations": "Customizations",
+      "community": "Community"
+    },
     "custom_items": {
       "title": "My activities",
       "add": "Add activity",
@@ -90,6 +115,18 @@
   },
   "course": {
     "credits": "Credits",
+    "tags": {
+      "reserve_prefix": "Reserve",
+      "people": "people",
+      "enrolled_suffix": "enrolled",
+      "sixteen_weeks": "16 weeks",
+      "eighteen_weeks": "18 weeks",
+      "english": "English",
+      "chinese": "Mandarin",
+      "x_class": "X-Class",
+      "general_education": "General Education",
+      "general_education_core": "Core GE"
+    },
     "list": {
       "courses": "Courses",
       "found": "Found",
@@ -98,7 +135,8 @@
     "search": {
       "error": "Course search encountered an error. The request was not retried against another tier.",
       "limited_mode": "Search is running in limited mode — some filters and ranking may be unavailable.",
-      "dismiss_limited_mode": "Dismiss limited search mode"
+      "dismiss_limited_mode": "Dismiss limited search mode",
+      "no_more_results": "No more results"
     },
     "item": {
       "add_to_semester": "Add",
@@ -133,7 +171,19 @@
       "timetable_empty": "Find empty",
       "advanced_filters": "Advanced filters",
       "search_results": "Search results",
-      "results": "results"
+      "results": "results",
+      "mode": "Mode",
+      "includes": "Includes",
+      "exact": "Exact",
+      "time_select_title": "Class time",
+      "selected_slots": "{count} time slots selected",
+      "select_class_time": "Select class time...",
+      "strict_search": "Strict time search",
+      "fill_empty": "Fill Empty Slots",
+      "fill_empty_title": "Fill all slots that aren't used by your selected courses",
+      "occupied_slot": "This time slot is used by a selected course",
+      "selected": "selected",
+      "apply": "Apply"
     },
     "details": {
       "semester": "Semester",
@@ -149,6 +199,22 @@
       "prerequesites": "Prerequisites",
       "timetable": "Timetable",
       "course_list": "Course List",
+      "no_venues": "No Venues",
+      "not_found": "Course not found",
+      "view_more": "View more",
+      "dialog_title": "Course Details",
+      "open_new_tab": "Open in new tab",
+      "missing_time": "Time unavailable",
+      "no_favourites": "No favourites added yet",
+      "taken": "Taken",
+      "restriction_prefix": "Restrictions: ",
+      "note_prefix": "Notes: ",
+      "prerequisites_available": "Prerequisites available",
+      "semester_time_venue": "Semester / Time & Venue",
+      "instructor": "Instructor",
+      "historical_average": "Historical Average Grade",
+      "download_pdf": "Download PDF",
+      "pdf_load_failed": "Failed to load PDF",
       "scores": "Scores",
       "average": "Average",
       "favourites": "Favourites",
@@ -158,7 +224,20 @@
         "percent": "Percentage"
       },
       "ptt": "PTT Reviews",
+      "comments_signin_title": "Sign in to view and post reviews.",
+      "comments_signin_description": "Share your course experience to help other students decide.",
+      "review_terms": {
+        "intro": "Hello! To help everyone receive accurate and meaningful reviews:",
+        "accuracy": "Please keep your contributions truthful and objective, and do not make personal attacks.",
+        "anonymous": "Your contribution is anonymous, but we record the contributor's Student ID privately to prevent abuse. Accounts that violate the rules may be blocked from posting.",
+        "access": "Only students who successfully use proxy login to the Academic Information System can post and view other students' reviews.",
+        "accept": "I have read and agree",
+        "decline": "I do not agree"
+      },
       "related_courses": "Related Courses",
+      "details_updated": "Details Updated:",
+      "syllabus_updated": "Syllabus Updated:",
+      "review_suffix": "review",
       "compulsory": "Compulsory",
       "elective": "Elective",
       "cross_discipline": "Cross Discipline",
@@ -176,7 +255,26 @@
     "timetable": "Timetable",
     "settings": "Settings",
     "venues": "Venues",
-    "bus": "Bus"
+    "bus": "Bus",
+    "apps": "Apps"
+  },
+  "sports": {
+    "title": "Sports Facilities",
+    "updated_at": "Updated",
+    "refresh_cache": "Refresh schedule cache",
+    "current": "(current)",
+    "open_until": "OPEN TILL {time}",
+    "opens_at": "OPENS AT {time}",
+    "closed_today": "CLOSED TODAY",
+    "closed": "Closed",
+    "schedule_unavailable": "Schedule not yet available.",
+    "view_original_pdf": "View original PDF",
+    "occupancy_people": "people",
+    "utilization": "Utilization",
+    "entries_today": "Entries today",
+    "data_source": "Data source:",
+    "source_name": "NTHU Sports Center",
+    "source_aria": "National Tsing Hua University Sports Center (opens in new tab)"
   },
   "bus": {
     "north_gate": "North Gate",
@@ -198,9 +296,18 @@
     "weekdays": "Weekdays",
     "weekends": "Weekends",
     "to": "To ",
-    "schedule": "Departure Schedule"
+    "schedule": "Departure Schedule",
+    "load_error": "Failed to load bus data. Please try again later.",
+    "invalid_line": "Invalid line",
+    "large_bus": "Large bus",
+    "friday_closed": "No service Friday"
   },
   "settings": {
+    "navigation_aria": "Settings navigation",
+    "quick_navigation": "Quick Navigation",
+    "open_navigation": "Open navigation menu",
+    "close_navigation": "Close navigation menu",
+    "drag_hint": "Drag to reorder · Toggle to show or hide navigation items",
     "appearance": {
       "title": "Appearance",
       "description": "Theme, Colors, Fonts, Layout",
@@ -210,11 +317,20 @@
       },
       "radius": {
         "title": "Border Radius",
-        "description": "Corner roundness"
+        "description": "Corner roundness",
+        "options": {
+          "none": "None",
+          "sm": "Small",
+          "md": "Medium",
+          "lg": "Large",
+          "xl": "Extra large"
+        }
       },
       "font_scale": {
         "title": "Font Size",
-        "description": "Adjust text size"
+        "description": "Adjust text size",
+        "small": "Small",
+        "large": "Large"
       },
       "density": {
         "title": "Density",
@@ -226,6 +342,8 @@
       "background": {
         "title": "Background",
         "description": "Page background style",
+        "from": "From",
+        "to": "To",
         "solid": "Solid",
         "gradient": "Gradient",
         "dots": "Dots",
@@ -237,7 +355,8 @@
       },
       "accent": {
         "title": "Accent Color",
-        "description": "Overrides the preset's primary color"
+        "description": "Overrides the preset's primary color",
+        "pick": "Pick accent color"
       },
       "share_theme": "Share Theme",
       "copied": "Copied!",
@@ -286,17 +405,26 @@
         "description": "Use vertical view when opening timetable page"
       },
       "language": "Language",
+      "language_options": {
+        "app": "App language",
+        "zh": "Traditional Chinese",
+        "en": "English"
+      },
       "align": {
         "title": "Align",
         "left": "Left",
         "center": "Center",
-        "right": "Right"
+        "right": "Right",
+        "top": "Top",
+        "bottom": "Bottom"
       },
       "display": "Display",
       "slot_title": "Title",
       "slot_code": "Code",
       "slot_time": "Time",
       "slot_venue": "Venue",
+      "slot_teacher": "Teacher",
+      "slot_credits": "Credits",
       "alignment": "Alignment",
       "fields_order": "Fields & Order",
       "font_size": "Slot font size",
@@ -379,7 +507,12 @@
     }
   },
   "pages": {
-    "ais_loading": "Accessing the academic information system, please wait a moment..."
+    "ais_loading": "Accessing the academic information system, please wait a moment...",
+    "ais_not_logged_in": "No proxy-login account data",
+    "ais_error": "Something went wrong while loading data. Check your login information or try again later.",
+    "offline": "NTHUMods is offline. Please try again later.",
+    "waitlist_title": "Upcoming features? Be the first to know!",
+    "waitlist_message": "Stay tuned for new features from NTHUMods."
   },
   "venues": {
     "placeholder": "Select a Venue from the list"
@@ -402,11 +535,11 @@
     "viewVenueOnMap": "View on 3D map"
   },
   "alerts": {
-    "dismiss": "Dismiss",
     "TimetableCourseList": {
       "action": "Go Settings",
       "text": "You can change your theme in the settings page!"
-    }
+    },
+    "dismiss": "Dismiss"
   },
   "applist": {
     "title": "Apps",
@@ -425,6 +558,16 @@
       },
       "success_title": "Generated Successfully",
       "success_description": "The timetable image has been downloaded to your device. Please check your browser's download folder or click the image to copy to clipboard.",
+      "success_toast_title": "Download successful",
+      "success_toast_description": "The timetable image was downloaded as {filename}",
+      "image_alt": "Timetable preview",
+      "copy_image_title": "Click to copy image to clipboard",
+      "copy_image": "Copy to clipboard",
+      "copy_image_success": "Copy successful",
+      "copy_image_failed": "Copy failed",
+      "copy_image_failed_description": "Unable to copy to clipboard. Please save the image manually.",
+      "copy_image_unsupported": "Copy not supported",
+      "copy_image_unsupported_description": "Your browser does not support copying to the clipboard.",
       "download_error": "Download Failed",
       "download_error_description": "Failed to download the calendar file. Please try again or contact support.",
       "close": "Close"
@@ -453,8 +596,19 @@
       "add_date": "Add Date",
       "reset": "Reset",
       "submit": "Submit",
+      "submit_failed": "Failed to submit",
+      "submitted_title": "Submitted successfully",
+      "submitted_description": "Your contribution has been submitted successfully",
+      "type": "Type",
+      "title_placeholder": "Title",
       "accurate_relavent": "Enter only accurate and relavent information!",
       "sign_in_required": "Sign in to contribute dates for this course"
+    },
+    "ShareCourseButton": {
+      "share_prefix": "Share: ",
+      "share_text_prefix": "Check out this course: ",
+      "link_copied": "Link copied to clipboard",
+      "button": "Share"
     }
   },
   "shops": {
@@ -464,9 +618,11 @@
     "closed": "Closed",
     "closed_today": "Closed Today",
     "area_placeholder": "Select area",
-    "area_all": "Anywhere"
+    "area_all": "Anywhere",
+    "load_error": "Unable to load shop data."
   },
   "help": {
+    "button": "Help",
     "intro": {
       "title": "Welcome to NTHUMODS",
       "description": "NTHUMODS might just be your ultimate companion for academic success at National Tsing Hua University! Here's a quick guide to get you started."
@@ -486,7 +642,12 @@
     "tools": {
       "title": "Need more features?",
       "description": "Link your NTHU account to NTHUMODS and open the door to a treasure trove of additional tools. Seamlessly integrate your academic life by accessing exclusive features tailored to NTHU students.",
-      "connect": "Connect now"
+      "connect": "Connect now",
+      "image_alt": "Toolbox",
+      "calendar": "Calendar",
+      "bus_schedule": "Bus Schedule",
+      "courses": "Courses",
+      "settings": "Settings"
     },
     "dev": {
       "title": "Growing together",
@@ -520,9 +681,19 @@
       "UnknownError": "Something went wrong, please try checking on the NTHU AIS website."
     },
     "logging_in_please_wait": "Logging into your Academic Information System Account...",
-    "not_logged_in_error": "You are not logged in"
+    "not_logged_in_error": "You are not logged in",
+    "suspended_title": "Proxy login temporarily unavailable",
+    "suspended_description": "Proxy login is temporarily unavailable due to limited staffing. Check @nthumods on Instagram for updates."
   },
   "grade": {
+    "gpa": "GPA",
+    "overview": "Overview",
+    "as_of": "As of",
+    "credit": "Credit",
+    "ranking": "Ranking",
+    "course_name": "Course Name",
+    "grade": "Grade",
+    "semesters": "Semesters",
     "class_rank": "Class Ranking",
     "dept_rank": "Department Ranking",
     "passed_credits": "Passed credits",
@@ -547,109 +718,144 @@
     "no_events": "No Upcoming Events",
     "no_events_sub": "There are no scheduled events",
     "add_event": "Add Event",
+    "updating": "Updating data",
+    "sync": {
+      "title": "Timetable update found!",
+      "new_reason": "New",
+      "modified_reason": "Modified",
+      "description": "{reason} courses found in Semester {semester}'s timetable. Do you want to sync the changes?",
+      "cancel": "Cancel",
+      "cancelled_title": "Semester {semester} sync cancelled",
+      "cancelled_description": "You can sync again if the timetable changes",
+      "sync": "Sync"
+    },
+    "tabs": {
+      "upcoming": "Upcoming",
+      "others": "Others",
+      "others_timetables": "Others' Timetables"
+    },
+    "others": {
+      "shared_timetable": "Shared Timetable",
+      "new_label": "New",
+      "live": "Live",
+      "snapshot": "Snapshot",
+      "owner_removed": "Owner removed this share",
+      "hide_overlay": "Hide overlay",
+      "show_overlay": "Show overlay",
+      "view_full_page": "View full page",
+      "remove": "Remove",
+      "shown_in_calendar": "Shown in calendar",
+      "sign_in": "Sign in to save and view others' timetables",
+      "title": "Others' Timetables",
+      "new_count": "{count} new",
+      "browse": "Browse",
+      "no_saved": "No saved timetables yet.",
+      "open_save_follow": "Open a share link and click \"Save & follow\"."
+    },
+    "event": {
+      "confirm_delete_title": "Confirm deletion",
+      "confirm_delete_description": "Are you sure you want to delete this event?",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "update_repeat_title": "Update recurring event",
+      "update_repeat_description": "Do you want to update all recurring events or only this event?",
+      "update_this": "Update this event",
+      "all": "All",
+      "update_following": "This and following events",
+      "delete_repeat_title": "Delete recurring event",
+      "delete_repeat_description": "Do you want to delete all recurring events or only this event?",
+      "delete_this": "Delete this event"
+    },
+    "form": {
+      "start": "Start",
+      "end": "End",
+      "pick_date": "Pick a date",
+      "start_date": "Start Date",
+      "end_date": "End Date",
+      "interval": "Interval",
+      "end_repeat": "End Repeat",
+      "after": "After",
+      "number_occurrences": "Number of occurrences",
+      "on_date": "On date",
+      "pick_end_date": "Pick end date",
+      "title": "Title",
+      "event_title": "Event title",
+      "location": "Location",
+      "all_day": "All Day",
+      "repeat": "Repeat",
+      "select_repeat": "Select repeat frequency",
+      "no_repeat": "No Repeat",
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "color": "Color",
+      "label": "Label",
+      "details": "Details",
+      "add_details": "Add details",
+      "no_label": "No label found.",
+      "save_event": "Save Event"
+    },
     "minified": {
       "no_events": "No upcoming events"
     }
   },
-  "team": {
-    "recruitment_intro": "Want to help NTHUMods grow?",
-    "recruitment_link": "See our open roles"
-  },
-  "recruit": {
-    "title": "Join NTHUMods",
-    "subtitle": "Help maintain the tools that NTHU students rely on.",
-    "intro": "NTHUMods is student-run and open to people who want to build, improve, organize, or support the project.",
-    "open_roles": "Open roles",
-    "roles": {
-      "maintainer": {
-        "title": "Maintainer",
-        "description": "Keep the project healthy, review changes, and help set technical priorities."
-      },
-      "administrator": {
-        "title": "Administrator",
-        "description": "Help with operations, access, documentation, and the work that keeps the service dependable."
-      },
-      "frontend": {
-        "title": "Frontend helper",
-        "description": "Improve the web experience with accessible, useful interfaces for NTHU students."
-      },
-      "backend": {
-        "title": "Backend helper",
-        "description": "Build and maintain APIs, data workflows, and reliable infrastructure."
-      },
-      "community": {
-        "title": "Community helper",
-        "description": "Connect with students, gather feedback, and help turn needs into improvements."
-      }
-    },
-    "sign_in_prompt": "Sign in to apply. Your application and resume are only sent to the NTHUMods team.",
-    "sign_in": "Sign in to apply",
-    "meet_team": "Learn more about the team",
-    "loading": "Loading recruitment information...",
-    "roles_error": "We could not load the open roles. Please try again later.",
-    "application_error": "We could not load your application status. Please refresh and try again.",
-    "form": {
-      "title": "Application",
-      "description": "Tell us how you would like to help. A resume PDF is required.",
-      "role": "Role",
-      "role_placeholder": "Choose a role",
-      "statement": "Short statement",
-      "statement_placeholder": "What would you like to help with, and what experience should we know about?",
-      "statement_error": "Please write at least 20 characters.",
-      "contact": "Preferred contact method",
-      "contact_placeholder": "Choose a contact preference",
-      "contact_email": "Email",
-      "contact_discord": "Discord",
-      "contact_either": "Either is fine",
-      "github": "GitHub link (optional)",
-      "portfolio": "Portfolio link (optional)",
-      "link_error": "Please enter a complete URL.",
-      "resume": "Resume",
-      "resume_help": "PDF only, up to 5 MB.",
-      "choose_file": "Choose a PDF",
-      "selected_file": "Selected file",
-      "remove_file": "Remove file",
-      "uploading": "Uploading resume...",
-      "submit": "Submit application",
-      "submitting": "Submitting...",
-      "privacy": "We collect your application and resume so the NTHUMods team can review your application. Only authorized team members can access them. Ask us to delete your data at nthumods@gmail.com, and see our",
-      "privacy_link": "privacy policy",
-      "file_required": "Please choose a PDF resume.",
-      "file_type": "The selected file must be a PDF.",
-      "file_size": "The resume must be 5 MB or smaller.",
-      "network_error": "Something went wrong while submitting. Please check your connection and try again.",
-      "already_applied": "You have already submitted an application."
-    },
-    "status": {
-      "submitted": "Submitted",
-      "reviewing": "Under review",
-      "accepted": "Accepted",
-      "rejected": "Not selected"
-    },
-    "application_status": "Application status",
-    "submitted_title": "Application received",
-    "submitted_description": "Thank you for volunteering your time. We will review your application and contact you using your preferred method.",
-    "existing_description": "Your application is already on file. You can return here to check its status.",
-    "footer_link": "Recruitment",
-    "no_roles": "There are no open roles right now. Please check back later."
-  },
   "cancel": "Cancel",
   "privacy_policy": "Privacy Policy",
-  "changelog": {
-    "title": "Changelog",
-    "description": "The latest NTHUMods releases and changes.",
-    "release": "Release",
-    "whats_new": "What's new",
-    "dismiss": "Dismiss",
-    "view_all": "View all changes",
-    "types": {
-      "feature": "Feature",
-      "improvement": "Improvement",
-      "fix": "Fix"
-    }
-  },
   "common": {
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "back": "Back",
+    "close": "Close",
+    "loading": "Loading...",
+    "search": "Search...",
+    "selecting": "Selecting...",
+    "all": "All",
+    "no_results": "No results found.",
+    "try_again": "Try Again",
+    "submit": "Submit",
+    "save": "Save",
+    "error": "Error",
+    "coming_soon": "Coming Soon",
+    "share": "Share"
+  },
+  "auth": {
+    "timeout_title": "Authentication timeout",
+    "timeout_description": "The login process took too long. Please try again.",
+    "logging_in": "Logging you into NTHUMods",
+    "please_wait": "Please wait while we complete the authentication process..."
+  },
+  "error": {
+    "message_1": "Something went wrong.",
+    "message_2": "An unexpected error occurred.",
+    "message_3": "Something went wrong on our side.",
+    "message_4": "Oops! Something went wrong.",
+    "message_5": "Mistakes were made.",
+    "message_6": "An error has occurred.",
+    "message_7": "Error 500: Client Side Error",
+    "message_8": "Could not load the page.",
+    "message_9": "A problem needs the team's attention.",
+    "client_description": "A client-side error has occurred. Please try again later.",
+    "tips_title": "You can try:",
+    "check_connection": "Check your internet connection",
+    "clear_cache": "Clear your browser cache and refresh the page",
+    "dcard": "Complain on Dcard",
+    "report_here": "Report this error here",
+    "stack_trace": "Stack Trace",
+    "report_issue": "Report issue",
+    "try_again": "Try again",
+    "reload_app": "Reload app",
+    "something_wong": "Something went wrong"
+  },
+  "footer": {
+    "tagline": "Made with ❤️ by students for students",
+    "contribute": "Contribute",
+    "report_issue": "Report an Issue",
+    "team": "Team",
+    "privacy_policy": "Privacy Policy",
+    "proxy_login": "Proxy Login",
+    "design_system": "Design System",
+    "copyright": "All rights reserved.",
+    "disclaimer": "NTHUMods is not affiliated with National Tsing Hua University. But my graduation depends on them so don't worry."
   },
   "sponsorship": {
     "title": "Supported by",
@@ -723,11 +929,59 @@
     "title": "AI Course Assistant",
     "welcome": "Welcome to AI Course Assistant",
     "welcome_description": "I can help you search for courses, plan your timetable, and check graduation requirements. Try the suggestions below or type your question!",
+    "capabilities": "Search courses · Plan timetables · Check graduation credits",
     "quota_exceeded_title": "API Quota Exceeded",
     "quota_exceeded_description": "Our API quota has been reached. You can use your own Gemini API Key to continue using the AI Course Assistant.",
     "retry_after": "Estimated retry available in",
     "seconds": "seconds",
-    "open_settings": "Open Settings"
+    "open_settings": "Open Settings",
+    "context_title": "Current Context",
+    "department": "Department",
+    "entrance_year": "Entrance Year",
+    "semester_label": "Semester",
+    "current_year": "Current Year",
+    "course_history": "Course History",
+    "not_set": "Not set",
+    "not_available": "N/A",
+    "courses_suffix": "courses across",
+    "semesters_suffix": "semesters",
+    "view_history": "View course history",
+    "ask_placeholder": "Ask about courses, requirements, or your schedule...",
+    "clear": "Clear",
+    "you": "You",
+    "assistant": "AI Assistant",
+    "sending": "Sending...",
+    "send": "Send",
+    "input_placeholder": "Ask me anything about courses...",
+    "keyboard_hint": "Shift + Enter for a new line, Enter to send",
+    "thinking": "Thinking...",
+    "suggestions": {
+      "machine_learning": "Search for machine learning courses",
+      "next_timetable": "Plan next semester's timetable",
+      "graduation_credits": "Check graduation credits",
+      "elective_courses": "Recommend elective courses",
+      "machine_learning_prompt": "Help me search for machine learning courses",
+      "next_timetable_prompt": "Based on my current timetable, what courses can I take next semester?",
+      "graduation_credits_prompt": "Help me check my department's graduation credit requirements",
+      "elective_courses_prompt": "Recommend some elective courses for me"
+    },
+    "course_renderer": {
+      "load_failed": "Failed to load courses",
+      "no_courses": "No courses found"
+    },
+    "timetable_renderer": {
+      "load_failed": "Failed to load timetable",
+      "no_courses": "No courses found",
+      "title": "Suggested timetable",
+      "add": "Add to my timetable",
+      "adding": "Adding...",
+      "contains": "Contains",
+      "courses_suffix": "courses:",
+      "credits_suffix": "credits",
+      "tip": "Tip: Click \"Add to my timetable\" to add all courses to your course list",
+      "add_success": "Added {count} courses to your timetable",
+      "add_failed": "Failed to add courses to timetable"
+    }
   },
   "planner": {
     "status": {
@@ -1055,7 +1309,8 @@
       "searchToDisplayMore": "Search (to display more)...",
       "errorOccurred": "An Error Occurred",
       "noMoreResults": "No more results",
-      "noVenues": "No Venues"
+      "noVenues": "No Venues",
+      "similarCourse": "Similar course already added"
     },
     "bulkActions": {
       "deleteConfirmTitle": "Delete Courses?",
@@ -1069,5 +1324,100 @@
       "clearSelection": "Clear Selection"
     }
   },
-  "test": {}
+  "test": {},
+  "team": {
+    "recruitment_intro": "Want to help NTHUMods grow?",
+    "recruitment_link": "See our open roles"
+  },
+  "recruit": {
+    "title": "Join NTHUMods",
+    "subtitle": "Help maintain the tools that NTHU students rely on.",
+    "intro": "NTHUMods is student-run and open to people who want to build, improve, organize, or support the project.",
+    "open_roles": "Open roles",
+    "roles": {
+      "maintainer": {
+        "title": "Maintainer",
+        "description": "Keep the project healthy, review changes, and help set technical priorities."
+      },
+      "administrator": {
+        "title": "Administrator",
+        "description": "Help with operations, access, documentation, and the work that keeps the service dependable."
+      },
+      "frontend": {
+        "title": "Frontend helper",
+        "description": "Improve the web experience with accessible, useful interfaces for NTHU students."
+      },
+      "backend": {
+        "title": "Backend helper",
+        "description": "Build and maintain APIs, data workflows, and reliable infrastructure."
+      },
+      "community": {
+        "title": "Community helper",
+        "description": "Connect with students, gather feedback, and help turn needs into improvements."
+      }
+    },
+    "sign_in_prompt": "Sign in to apply. Your application and resume are only sent to the NTHUMods team.",
+    "sign_in": "Sign in to apply",
+    "meet_team": "Learn more about the team",
+    "loading": "Loading recruitment information...",
+    "roles_error": "We could not load the open roles. Please try again later.",
+    "application_error": "We could not load your application status. Please refresh and try again.",
+    "form": {
+      "title": "Application",
+      "description": "Tell us how you would like to help. A resume PDF is required.",
+      "role": "Role",
+      "role_placeholder": "Choose a role",
+      "statement": "Short statement",
+      "statement_placeholder": "What would you like to help with, and what experience should we know about?",
+      "statement_error": "Please write at least 20 characters.",
+      "contact": "Preferred contact method",
+      "contact_placeholder": "Choose a contact preference",
+      "contact_email": "Email",
+      "contact_discord": "Discord",
+      "contact_either": "Either is fine",
+      "github": "GitHub link (optional)",
+      "portfolio": "Portfolio link (optional)",
+      "link_error": "Please enter a complete URL.",
+      "resume": "Resume",
+      "resume_help": "PDF only, up to 5 MB.",
+      "choose_file": "Choose a PDF",
+      "selected_file": "Selected file",
+      "remove_file": "Remove file",
+      "uploading": "Uploading resume...",
+      "submit": "Submit application",
+      "submitting": "Submitting...",
+      "privacy": "We collect your application and resume so the NTHUMods team can review your application. Only authorized team members can access them. Ask us to delete your data at nthumods@gmail.com, and see our",
+      "privacy_link": "privacy policy",
+      "file_required": "Please choose a PDF resume.",
+      "file_type": "The selected file must be a PDF.",
+      "file_size": "The resume must be 5 MB or smaller.",
+      "network_error": "Something went wrong while submitting. Please check your connection and try again.",
+      "already_applied": "You have already submitted an application."
+    },
+    "status": {
+      "submitted": "Submitted",
+      "reviewing": "Under review",
+      "accepted": "Accepted",
+      "rejected": "Not selected"
+    },
+    "application_status": "Application status",
+    "submitted_title": "Application received",
+    "submitted_description": "Thank you for volunteering your time. We will review your application and contact you using your preferred method.",
+    "existing_description": "Your application is already on file. You can return here to check its status.",
+    "footer_link": "Recruitment",
+    "no_roles": "There are no open roles right now. Please check back later."
+  },
+  "changelog": {
+    "title": "Changelog",
+    "description": "The latest NTHUMods releases and changes.",
+    "release": "Release",
+    "whats_new": "What's new",
+    "dismiss": "Dismiss",
+    "view_all": "View all changes",
+    "types": {
+      "feature": "Feature",
+      "improvement": "Improvement",
+      "fix": "Fix"
+    }
+  }
 }

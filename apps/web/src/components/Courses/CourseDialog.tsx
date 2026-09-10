@@ -17,6 +17,7 @@ import { ExternalLink } from "lucide-react";
 import CourseDetailContainer from "@/components/CourseDetails/CourseDetailsContainer";
 import { Language } from "@/types/settings";
 import { useSettings } from "@/hooks/contexts/settings";
+import useDictionary from "@/dictionaries/useDictionary";
 
 interface CourseDialogContextValue {
   openCourse: (courseId: string) => void;
@@ -38,6 +39,7 @@ const CourseDialogContext = createContext<CourseDialogContextValue | null>(
  */
 export const CourseDialogProvider: FC<PropsWithChildren> = ({ children }) => {
   const { language } = useSettings();
+  const dict = useDictionary();
   const { lang } = useParams<{ lang: string }>();
   const location = useLocation();
   const [courseId, setCourseId] = useState<string | null>(null);
@@ -53,11 +55,11 @@ export const CourseDialogProvider: FC<PropsWithChildren> = ({ children }) => {
       window.history.pushState(
         { courseDialog: true },
         "",
-        `/${lang}/courses/${newCourseId}`,
+        `/${language}/courses/${newCourseId}`,
       );
       setCourseId(newCourseId);
     },
-    [lang, location.pathname, location.search, courseId],
+    [language, location.pathname, location.search, courseId],
   );
 
   const closeDialog = useCallback(() => {
@@ -95,12 +97,14 @@ export const CourseDialogProvider: FC<PropsWithChildren> = ({ children }) => {
       {courseId && (
         <Dialog open={true} onOpenChange={handleOpenChange}>
           <DialogContent className="max-w-6xl p-0 gap-0">
-            <DialogTitle className="sr-only">Course Details</DialogTitle>
+            <DialogTitle className="sr-only">
+              {dict.course.details.dialog_title}
+            </DialogTitle>
             <div className="flex flex-row justify-end px-8 py-2">
               <Button variant="ghost" asChild>
-                <a href={`/${lang}/courses/${courseId}`} className="mr-2">
+                <a href={`/${language}/courses/${courseId}`} className="mr-2">
                   <ExternalLink className="mr-2 w-4 h-4" />
-                  在新分頁開啟
+                  {dict.course.details.open_new_tab}
                 </a>
               </Button>
             </div>

@@ -7,7 +7,11 @@ const Tools = () => {
   return (
     <div className="flex flex-col gap-2">
       <div className="flex justify-center mb-4">
-        <img src="/images/toolbox.gif" className="w-48 h-48" alt="toolbox" />
+        <img
+          src="/images/toolbox.gif"
+          className="w-48 h-48"
+          alt={dict.help.tools.image_alt}
+        />
       </div>
       <span className="font-bold text-2xl">{dict.help.tools.title}</span>
       <span className="">{dict.help.tools.description}</span>

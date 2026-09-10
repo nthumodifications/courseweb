@@ -1,6 +1,7 @@
 import { useAIChat } from "@/hooks/useAIChat";
 import { Button, Input } from "@courseweb/ui";
 import { useState } from "react";
+import useDictionary from "@/dictionaries/useDictionary";
 
 /**
  * Example component demonstrating how to use the useAIChat hook
@@ -9,6 +10,7 @@ import { useState } from "react";
 export function ChatExample() {
   const { messages, isLoading, sendMessage, clear, getUserContext } =
     useAIChat();
+  const dict = useDictionary();
   const [input, setInput] = useState("");
 
   const handleSend = async () => {
@@ -30,36 +32,41 @@ export function ChatExample() {
   return (
     <div className="flex flex-col h-full max-w-3xl mx-auto p-4">
       <div className="mb-4 p-4 bg-muted rounded-lg">
-        <h3 className="font-semibold mb-2">Current Context</h3>
+        <h3 className="font-semibold mb-2">{dict.chat.context_title}</h3>
         <div className="text-sm space-y-1">
           <p>
-            <strong>Department:</strong> {context.department || "Not set"}
+            <strong>{dict.chat.department}:</strong>{" "}
+            {context.department || dict.chat.not_set}
           </p>
           <p>
-            <strong>Entrance Year:</strong> {context.entranceYear || "Not set"}
+            <strong>{dict.chat.entrance_year}:</strong>{" "}
+            {context.entranceYear || dict.chat.not_set}
           </p>
           <p>
-            <strong>Semester:</strong> {context.currentSemester || "N/A"}
+            <strong>{dict.chat.semester_label}:</strong>{" "}
+            {context.currentSemester || dict.chat.not_available}
           </p>
           <p>
-            <strong>Current Year:</strong> {context.currentYear || "N/A"}
+            <strong>{dict.chat.current_year}:</strong>{" "}
+            {context.currentYear || dict.chat.not_available}
           </p>
           <p>
-            <strong>Course History:</strong>{" "}
+            <strong>{dict.chat.course_history}:</strong>{" "}
             {context.courseHistory?.reduce(
               (sum, sem) => sum + sem.courses.length,
               0,
             ) || 0}{" "}
-            courses across {context.courseHistory?.length || 0} semesters
+            {dict.chat.courses_suffix} {context.courseHistory?.length || 0}{" "}
+            {dict.chat.semesters_suffix}
           </p>
           {context.courseHistory && context.courseHistory.length > 0 && (
             <details className="mt-2">
-              <summary className="cursor-pointer">View course history</summary>
+              <summary className="cursor-pointer">{dict.chat.view_history}</summary>
               <div className="mt-1 space-y-2">
                 {context.courseHistory.map((sem) => (
                   <div key={sem.semester} className="text-xs">
                     <strong>
-                      {sem.year} Semester {sem.semesterNumber}:
+                      {sem.year} {dict.chat.semester_label} {sem.semesterNumber}:
                     </strong>
                     <ul className="list-disc list-inside ml-4">
                       {sem.courses.map((course) => (
@@ -87,7 +94,7 @@ export function ChatExample() {
             }`}
           >
             <div className="text-sm font-semibold mb-1">
-              {message.role === "user" ? "You" : "AI Assistant"}
+              {message.role === "user" ? dict.chat.you : dict.chat.assistant}
             </div>
             <div className="whitespace-pre-wrap">
               {message.content}
@@ -104,18 +111,18 @@ export function ChatExample() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyPress={handleKeyPress}
-          placeholder="Ask about courses, requirements, or your schedule..."
+          placeholder={dict.chat.ask_placeholder}
           disabled={isLoading}
         />
         <Button onClick={handleSend} disabled={isLoading || !input.trim()}>
-          {isLoading ? "Sending..." : "Send"}
+          {isLoading ? dict.chat.sending : dict.chat.send}
         </Button>
         <Button
           variant="outline"
           onClick={clear}
           disabled={messages.length === 0}
         >
-          Clear
+          {dict.chat.clear}
         </Button>
       </div>
     </div>

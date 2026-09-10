@@ -25,6 +25,7 @@ import {
 } from "@courseweb/ui";
 import { scheduleTimeSlots } from "@courseweb/shared";
 import { MinimalCourse } from "@/types/courses";
+import useDictionary from "@/dictionaries/useDictionary";
 
 type TimeSelectionFilterProps = {
   attribute: string;
@@ -50,6 +51,7 @@ const TimeSelectionFilter = ({
 
   const [selectedSlots, setSelectedSlots] = useState<string[]>([]);
   const [pendingSlots, setPendingSlots] = useState<string[]>([]);
+  const dict = useDictionary();
 
   const { refine, items, createURL } = useRefinementList({
     attribute,
@@ -334,11 +336,14 @@ const TimeSelectionFilter = ({
             <div className="flex flex-1 flex-wrap gap-1 items-center">
               {selectedSlots.length > 0 ? (
                 <span className="text-sm text-primary">
-                  {selectedSlots.length} Time Slots Selected
+                  {dict.course.refine.selected_slots.replace(
+                    "{count}",
+                    String(selectedSlots.length),
+                  )}
                 </span>
               ) : (
                 <span className="text-muted-foreground text-sm">
-                  Select class time...
+                  {dict.course.refine.select_class_time}
                 </span>
               )}
             </div>
@@ -347,21 +352,21 @@ const TimeSelectionFilter = ({
 
         <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col overflow-hidden">
           <DialogHeader>
-            <DialogTitle>上課時間</DialogTitle>
+            <DialogTitle>{dict.course.refine.time_select_title}</DialogTitle>
           </DialogHeader>
 
           <div className="overflow-y-auto flex-1">
             <div className="flex flex-col rounded-lg border overflow-hidden">
               <div className="flex items-center justify-between px-4 py-2 border-b">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm">嚴格搜尋時段</span>
+                  <span className="text-sm">{dict.course.refine.strict_search}</span>
                   <Select value={mode} onValueChange={setMode}>
                     <SelectTrigger className="w-[80px] h-7">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="includes">否</SelectItem>
-                      <SelectItem value="exact">是</SelectItem>
+                      <SelectItem value="includes">{dict.course.refine.includes}</SelectItem>
+                      <SelectItem value="exact">{dict.course.refine.exact}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -372,9 +377,9 @@ const TimeSelectionFilter = ({
                     onClick={handleFillEmpty}
                     size="sm"
                     className="text-xs h-7"
-                    title="Fill all slots that aren't used by your selected courses"
+                    title={dict.course.refine.fill_empty_title}
                   >
-                    Fill Empty Slots
+                    {dict.course.refine.fill_empty}
                   </Button>
 
                   <Button
@@ -430,7 +435,7 @@ const TimeSelectionFilter = ({
                           )}
                           title={
                             isOccupied
-                              ? "This time slot is used by a selected course"
+                              ? dict.course.refine.occupied_slot
                               : ""
                           }
                           onMouseDown={(e) => {
@@ -453,16 +458,18 @@ const TimeSelectionFilter = ({
 
           <div className="text-xs text-center text-muted-foreground mt-2">
             {pendingSlots.length > 0 && (
-              <span>{pendingSlots.length} selected</span>
+              <span>
+                {pendingSlots.length} {dict.course.refine.selected}
+              </span>
             )}
           </div>
 
           <DialogFooter className="flex justify-between gap-2 pt-2">
             <Button variant="outline" onClick={handleCancel}>
-              Cancel
+              {dict.common.cancel}
             </Button>
             <Button onClick={handleApply}>
-              Apply <Check className="ml-1 h-4 w-4" />
+              {dict.course.refine.apply} <Check className="ml-1 h-4 w-4" />
             </Button>
           </DialogFooter>
         </DialogContent>

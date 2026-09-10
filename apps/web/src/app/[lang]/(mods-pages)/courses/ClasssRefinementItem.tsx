@@ -16,12 +16,13 @@ import useCustomRefinementList from "./useCustomRefinementList";
 import { getFormattedClassCode } from "@/helpers/courses";
 import useCustomMenu from "@/app/[lang]/(mods-pages)/courses/useCustomMenu";
 import { lastSemester } from "@courseweb/shared";
+import useDictionary from "@/dictionaries/useDictionary";
 
 const ClassRefinementItem = ({
   limit = 10,
   searchable = false,
   clientSearch = false,
-  placeholder = "Search ...",
+  placeholder,
   defaultSearch = "",
 }: {
   limit?: number;
@@ -30,6 +31,8 @@ const ClassRefinementItem = ({
   placeholder?: string;
   defaultSearch?: string;
 }) => {
+  const dict = useDictionary();
+  const resolvedPlaceholder = placeholder ?? dict.planner.coursePicker.search;
   const { items, refine, searchForItems } = useCustomRefinementList({
     attribute: "for_class",
     limit: limit,
@@ -99,9 +102,9 @@ const ClassRefinementItem = ({
         <PopoverTrigger asChild>
           <div className="flex-1 text-left px-4 py-2">
             {searching ? (
-              "Selecting..."
+              dict.common.selecting
             ) : selected.length == 0 ? (
-              "All"
+              dict.common.all
             ) : (
               <div className="flex flex-col gap-1">
                 {selected.map((i) => (
@@ -130,7 +133,7 @@ const ClassRefinementItem = ({
               maxLength={512}
               value={searchValue}
               onValueChange={(value) => search(value)}
-              placeholder={placeholder}
+               placeholder={resolvedPlaceholder}
             />
           )}
           <ScrollArea
@@ -138,7 +141,7 @@ const ClassRefinementItem = ({
             className="h-[300px]"
           >
             <CommandList className="max-h-none">
-              <CommandEmpty>No results found.</CommandEmpty>
+             <CommandEmpty>{dict.common.no_results}</CommandEmpty>
               {items
                 .sort((a, b) => {
                   if (a.isRefined) return -1;

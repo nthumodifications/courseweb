@@ -130,7 +130,7 @@ const Header = () => {
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleOpenConfirmLogout}>
               <LogOut className="w-4 h-4 mr-2" />
-              <span>Log out</span>
+              <span>{dict.settings.account.signout}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

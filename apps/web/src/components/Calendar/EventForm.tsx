@@ -49,6 +49,9 @@ import { useCalendar } from "./calendar_hook";
 import { CalendarIcon, ChevronDown } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { getLocale } from "@/helpers/dateLocale";
+import { useSettings } from "@/hooks/contexts/settings";
+import useDictionary from "@/dictionaries/useDictionary";
 
 export const EventForm = ({
   defaultEvent,
@@ -61,6 +64,8 @@ export const EventForm = ({
 }) => {
   const { currentColors } = useUserTimetable();
   const { labels } = useCalendar();
+  const { language } = useSettings();
+  const dict = useDictionary();
   const minuteStep = 15;
   // Track initialization state outside of the form
   const [hasInitialized, setHasInitialized] = useState(false);
@@ -302,7 +307,7 @@ export const EventForm = ({
         name="start"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Start</FormLabel>
+            <FormLabel>{dict.calendar.form.start}</FormLabel>
             <div className="flex flex-row space-x-2">
               <Popover modal={true}>
                 <PopoverTrigger asChild>
@@ -316,9 +321,11 @@ export const EventForm = ({
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {field.value ? (
-                        format(field.value, "yyyy-LL-dd (EE)")
+                         format(field.value, "yyyy-LL-dd (EE)", {
+                           locale: getLocale(language),
+                         })
                       ) : (
-                        <span>Pick a date</span>
+                         <span>{dict.calendar.form.pick_date}</span>
                       )}
                     </Button>
                   </FormControl>
@@ -398,7 +405,7 @@ export const EventForm = ({
         name="end"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>End</FormLabel>
+            <FormLabel>{dict.calendar.form.end}</FormLabel>
             <div className="flex flex-row space-x-2">
               <Popover modal={true}>
                 <PopoverTrigger asChild>
@@ -412,9 +419,11 @@ export const EventForm = ({
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {field.value ? (
-                        format(field.value, "yyyy-LL-dd (EE)")
+                         format(field.value, "yyyy-LL-dd (EE)", {
+                           locale: getLocale(language),
+                         })
                       ) : (
-                        <span>Pick a date</span>
+                         <span>{dict.calendar.form.pick_date}</span>
                       )}
                     </Button>
                   </FormControl>
@@ -472,7 +481,7 @@ export const EventForm = ({
         name="start"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Start Date</FormLabel>
+            <FormLabel>{dict.calendar.form.start_date}</FormLabel>
             <Popover modal={true}>
               <PopoverTrigger asChild>
                 <FormControl>
@@ -485,9 +494,11 @@ export const EventForm = ({
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {field.value ? (
-                      format(field.value, "yyyy-LL-dd (EE)")
+                      format(field.value, "yyyy-LL-dd (EE)", {
+                        locale: getLocale(language),
+                      })
                     ) : (
-                      <span>Pick a date</span>
+                       <span>{dict.calendar.form.pick_date}</span>
                     )}
                   </Button>
                 </FormControl>
@@ -528,7 +539,7 @@ export const EventForm = ({
         name="end"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>End Date</FormLabel>
+            <FormLabel>{dict.calendar.form.end_date}</FormLabel>
             <Popover modal={true}>
               <PopoverTrigger asChild>
                 <FormControl>
@@ -541,9 +552,11 @@ export const EventForm = ({
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {field.value ? (
-                      format(field.value, "yyyy-LL-dd (EE)")
+                      format(field.value, "yyyy-LL-dd (EE)", {
+                        locale: getLocale(language),
+                      })
                     ) : (
-                      <span>Pick a date</span>
+                       <span>{dict.calendar.form.pick_date}</span>
                     )}
                   </Button>
                 </FormControl>
@@ -590,12 +603,12 @@ export const EventForm = ({
           name="repeat.interval"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Interval</FormLabel>
+              <FormLabel>{dict.calendar.form.interval}</FormLabel>
               <FormControl>
                 <Input
                   type="number"
                   min="1"
-                  placeholder="Interval"
+                  placeholder={dict.calendar.form.interval}
                   {...field}
                   onChange={(e) => {
                     const value = parseInt(e.target.value);
@@ -614,7 +627,7 @@ export const EventForm = ({
           name="repeat.mode"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>End Repeat</FormLabel>
+              <FormLabel>{dict.calendar.form.end_repeat}</FormLabel>
               <div className="space-y-2">
                 <RadioGroup
                   value={field.value || "count"}
@@ -625,7 +638,7 @@ export const EventForm = ({
                     <RadioGroupItem value="count" id="repeat-count" />
                     <div className="flex-1">
                       <Label htmlFor="repeat-count" className="block mb-1">
-                        After
+                        {dict.calendar.form.after}
                       </Label>
                       <FormField
                         control={form.control}
@@ -634,7 +647,7 @@ export const EventForm = ({
                           <Input
                             type="number"
                             min="1"
-                            placeholder="Number of occurrences"
+                            placeholder={dict.calendar.form.number_occurrences}
                             disabled={repeatMode !== "count"}
                             {...valueField}
                             onChange={(e) => {
@@ -653,7 +666,7 @@ export const EventForm = ({
                     <RadioGroupItem value="date" id="repeat-date" />
                     <div className="flex-1">
                       <Label htmlFor="repeat-date" className="block mb-1">
-                        On date
+                        {dict.calendar.form.on_date}
                       </Label>
                       <FormField
                         control={form.control}
@@ -669,9 +682,11 @@ export const EventForm = ({
                                 <CalendarIcon className="mr-2 h-4 w-4" />
                                 {repeatMode === "date" &&
                                 typeof valueField.value === "number" ? (
-                                  format(new Date(valueField.value), "PPP")
+                                  format(new Date(valueField.value), "PPP", {
+                                    locale: getLocale(language),
+                                  })
                                 ) : (
-                                  <span>Pick end date</span>
+                                  <span>{dict.calendar.form.pick_end_date}</span>
                                 )}
                               </Button>
                             </PopoverTrigger>
@@ -719,9 +734,9 @@ export const EventForm = ({
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Title</FormLabel>
+                  <FormLabel>{dict.calendar.form.title}</FormLabel>
                   <FormControl>
-                    <Input placeholder="Event title" {...field} />
+                    <Input placeholder={dict.calendar.form.event_title} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -734,9 +749,9 @@ export const EventForm = ({
               name="location"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Location</FormLabel>
+                  <FormLabel>{dict.calendar.form.location}</FormLabel>
                   <FormControl>
-                    <Input placeholder="Location" {...field} />
+                    <Input placeholder={dict.calendar.form.location} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -755,7 +770,9 @@ export const EventForm = ({
                       onCheckedChange={field.onChange}
                     />
                   </FormControl>
-                  <FormLabel className="cursor-pointer">All Day</FormLabel>
+                  <FormLabel className="cursor-pointer">
+                    {dict.calendar.form.all_day}
+                  </FormLabel>
                   <FormMessage />
                 </FormItem>
               )}
@@ -770,7 +787,7 @@ export const EventForm = ({
               name="repeat.type"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Repeat</FormLabel>
+                  <FormLabel>{dict.calendar.form.repeat}</FormLabel>
                   <Select
                     value={String(field.value || "null")}
                     onValueChange={(v) =>
@@ -779,15 +796,15 @@ export const EventForm = ({
                   >
                     <SelectTrigger>
                       <FormControl>
-                        <SelectValue placeholder="Select repeat frequency" />
+                        <SelectValue placeholder={dict.calendar.form.select_repeat} />
                       </FormControl>
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="null">No Repeat</SelectItem>
-                      <SelectItem value="daily">Daily</SelectItem>
-                      <SelectItem value="weekly">Weekly</SelectItem>
-                      <SelectItem value="monthly">Monthly</SelectItem>
-                      <SelectItem value="yearly">Yearly</SelectItem>
+                      <SelectItem value="null">{dict.calendar.form.no_repeat}</SelectItem>
+                      <SelectItem value="daily">{dict.calendar.form.daily}</SelectItem>
+                      <SelectItem value="weekly">{dict.calendar.form.weekly}</SelectItem>
+                      <SelectItem value="monthly">{dict.calendar.form.monthly}</SelectItem>
+                      <SelectItem value="yearly">{dict.calendar.form.yearly}</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -805,7 +822,7 @@ export const EventForm = ({
                 name="color"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Color</FormLabel>
+                    <FormLabel>{dict.calendar.form.color}</FormLabel>
                     <Popover modal={true}>
                       <PopoverTrigger asChild>
                         <FormControl>
@@ -838,7 +855,7 @@ export const EventForm = ({
                 name="tag"
                 render={({ field }) => (
                   <FormItem className="col-span-2">
-                    <FormLabel>Label</FormLabel>
+                    <FormLabel>{dict.calendar.form.label}</FormLabel>
                     <FormControl>
                       <EventLabelPicker
                         value={field.value}
@@ -857,10 +874,10 @@ export const EventForm = ({
               name="details"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Details</FormLabel>
+                  <FormLabel>{dict.calendar.form.details}</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Add details"
+                      placeholder={dict.calendar.form.add_details}
                       {...field}
                       className="min-h-[100px]"
                     />
@@ -873,7 +890,7 @@ export const EventForm = ({
         </ScrollArea>
 
         <Button type="submit" disabled={!form.formState.isValid}>
-          Save Event
+          {dict.calendar.form.save_event}
         </Button>
       </form>
     </Form>
