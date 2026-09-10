@@ -341,6 +341,7 @@
     "viewVenueOnMap": "在 3D 地圖查看"
   },
   "alerts": {
+    "dismiss": "關閉公告",
     "TimetableCourseList": {
       "action": "前往設定",
       "text": "時間表可以在設定頁面客制化哦！"

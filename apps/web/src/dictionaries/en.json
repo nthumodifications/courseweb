@@ -341,6 +341,7 @@
     "viewVenueOnMap": "View on 3D map"
   },
   "alerts": {
+    "dismiss": "Dismiss",
     "TimetableCourseList": {
       "action": "Go Settings",
       "text": "You can change your theme in the settings page!"
