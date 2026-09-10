@@ -492,6 +492,19 @@
   },
   "cancel": "Cancel",
   "privacy_policy": "Privacy Policy",
+  "changelog": {
+    "title": "Changelog",
+    "description": "The latest NTHUMods releases and changes.",
+    "release": "Release",
+    "whats_new": "What's new",
+    "dismiss": "Dismiss",
+    "view_all": "View all changes",
+    "types": {
+      "feature": "Feature",
+      "improvement": "Improvement",
+      "fix": "Fix"
+    }
+  },
   "common": {
     "cancel": "Cancel"
   },

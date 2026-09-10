@@ -1,5 +1,5 @@
 import { Outlet, useParams } from "react-router-dom";
-import { Suspense } from "react";
+import { lazy, Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import ModsError from "@/app/[lang]/(mods-pages)/error";
 import { SidebarProvider, SidebarInset } from "@courseweb/ui";
@@ -17,6 +17,10 @@ import { CourseDialogProvider } from "@/components/Courses/CourseDialog";
 import CommandPalette from "@/components/CommandPalette/CommandPalette";
 import CustomCSSInjector from "@/components/CustomCSS/CustomCSSInjector";
 import AnnouncementBar from "@/components/Alerts/AnnouncementBar";
+
+const WhatsNewDialogDynamic = lazy(
+  () => import("@/components/Changelog/WhatsNewDialog"),
+);
 
 const MainLayout = () => {
   const { lang } = useParams<{ lang: string }>();
@@ -59,6 +63,9 @@ const MainLayout = () => {
               <ChatFAB />
               <CommandPalette />
               <CustomCSSInjector />
+              <Suspense fallback={null}>
+                <WhatsNewDialogDynamic />
+              </Suspense>
             </CourseDialogProvider>
           </SidebarProvider>
         </CalendarProvider>

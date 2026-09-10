@@ -492,6 +492,19 @@
   },
   "cancel": "取消",
   "privacy_policy": "隱私權政策",
+  "changelog": {
+    "title": "更新日誌",
+    "description": "NTHUMods 最新版本與更新內容。",
+    "release": "版本",
+    "whats_new": "最新消息",
+    "dismiss": "關閉",
+    "view_all": "查看所有更新",
+    "types": {
+      "feature": "新功能",
+      "improvement": "改進",
+      "fix": "修正"
+    }
+  },
   "common": {
     "cancel": "取消"
   },
