@@ -2,22 +2,124 @@ import {
   ExtractDocumentTypeFromTypedRxJsonSchema,
   addRxPlugin,
   createRxDatabase,
-  removeRxDatabase,
   toTypedRxJsonSchema,
 } from "rxdb";
 import { getRxStorageDexie } from "rxdb/plugins/storage-dexie";
 import { Provider } from "rxdb-hooks";
-import { FC, PropsWithChildren, useEffect, useState } from "react";
+import { FC, PropsWithChildren, useEffect, useRef, useState } from "react";
 import { RxDBMigrationPlugin } from "rxdb/plugins/migration-schema";
 import { RxDBStatePlugin } from "rxdb/plugins/state";
 import { RxDBQueryBuilderPlugin } from "rxdb/plugins/query-builder";
 import { RxDBUpdatePlugin } from "rxdb/plugins/update";
-import { v4 as uuidv4 } from "uuid";
 import { wrappedValidateZSchemaStorage } from "rxdb/plugins/validate-z-schema";
+import { useAuth } from "react-oidc-context";
 
-// create collection based on CalendarEvent
+export const ANONYMOUS_CALENDAR_DATABASE_NAME = "nthumods-calendar";
+
+/**
+ * RxDB names and replication metadata are deliberately derived from the OIDC
+ * subject. A stable 64-bit hash keeps the subject out of IndexedDB names and
+ * avoids invalid database-name characters while remaining stable across
+ * sessions.
+ */
+export const getCalendarDatabaseName = (subject?: string | null) => {
+  if (!subject) return ANONYMOUS_CALENDAR_DATABASE_NAME;
+
+  let firstHash = 2166136261;
+  let secondHash = 2246822519;
+  for (let index = 0; index < subject.length; index += 1) {
+    const code = subject.charCodeAt(index);
+    firstHash = Math.imul(firstHash ^ code, 16777619);
+    secondHash = Math.imul(secondHash ^ (code + index), 16777619);
+  }
+
+  return `${ANONYMOUS_CALENDAR_DATABASE_NAME}-${(firstHash >>> 0).toString(16).padStart(8, "0")}${(secondHash >>> 0).toString(16).padStart(8, "0")}`;
+};
+
+export const hasCalendarScope = (scope?: string | null) =>
+  typeof scope === "string" && scope.split(/\s+/).includes("calendar");
+
+const DEFAULT_EVENT_COLOR = "#3b82f6";
+const DEFAULT_EVENT_TAG = "Event";
+const DEFAULT_EVENT_DATE = new Date(0).toISOString();
+
+type MigrationDocument = Record<string, any>;
+
+const toDateTimeString = (value: unknown, fallback: string) => {
+  const date =
+    value instanceof Date
+      ? value
+      : typeof value === "string"
+        ? new Date(value)
+        : null;
+  if (date && !Number.isNaN(date.getTime())) {
+    return date.toISOString();
+  }
+  return fallback;
+};
+
+const migrateEventDocument = (
+  oldDoc: MigrationDocument,
+  includeCourseId: boolean,
+) => {
+  const migrated = { ...oldDoc };
+  migrated.id =
+    typeof migrated.id === "string" && migrated.id.length > 0
+      ? migrated.id
+      : "migrated-event";
+  migrated.title =
+    typeof migrated.title === "string" ? migrated.title : DEFAULT_EVENT_TAG;
+  migrated.allDay =
+    typeof migrated.allDay === "boolean" ? migrated.allDay : false;
+  migrated.start = toDateTimeString(migrated.start, DEFAULT_EVENT_DATE);
+  migrated.end = toDateTimeString(migrated.end, migrated.start);
+  migrated.repeat =
+    migrated.repeat === null ||
+    (typeof migrated.repeat === "object" && !Array.isArray(migrated.repeat))
+      ? migrated.repeat
+      : null;
+  migrated.color =
+    typeof migrated.color === "string" && migrated.color.length > 0
+      ? migrated.color
+      : DEFAULT_EVENT_COLOR;
+  migrated.tag =
+    typeof migrated.tag === "string" && migrated.tag.length > 0
+      ? migrated.tag
+      : DEFAULT_EVENT_TAG;
+  migrated.actualEnd =
+    migrated.actualEnd === null
+      ? null
+      : toDateTimeString(migrated.actualEnd, migrated.end);
+  migrated.details =
+    typeof migrated.details === "string" ? migrated.details : "";
+  migrated.excludedDates = Array.isArray(migrated.excludedDates)
+    ? migrated.excludedDates
+        .map((date: unknown) => toDateTimeString(date, ""))
+        .filter((date: string) => date.length > 0)
+    : [];
+  migrated.parentId =
+    typeof migrated.parentId === "string" ? migrated.parentId : "";
+
+  if (includeCourseId) {
+    migrated.courseId =
+      typeof migrated.courseId === "string" ? migrated.courseId : null;
+  } else {
+    delete migrated.courseId;
+  }
+
+  return migrated;
+};
+
+/** Pure migration helper, exported so the versioned backfill is testable. */
+export const migrateEventToV2 = (oldDoc: MigrationDocument) =>
+  migrateEventDocument(oldDoc, true);
+
+const migrateEventToV1 = (oldDoc: MigrationDocument) =>
+  migrateEventDocument(oldDoc, false);
+
+// Create collection based on CalendarEvent.
 const eventsSchema = {
-  version: 1,
+  version: 2,
   primaryKey: "id",
   type: "object",
   properties: {
@@ -84,6 +186,9 @@ const eventsSchema = {
     parentId: {
       type: ["string"],
     },
+    courseId: {
+      type: ["string", "null"],
+    },
   },
   required: [
     "id",
@@ -95,6 +200,7 @@ const eventsSchema = {
     "color",
     "tag",
     "actualEnd",
+    "courseId",
   ],
 } as const;
 const schemaTyped = toTypedRxJsonSchema(eventsSchema);
@@ -131,7 +237,9 @@ const timetableSyncSchemaTyped = toTypedRxJsonSchema(timetableSyncSchema);
 export type TimetableSyncDocType = ExtractDocumentTypeFromTypedRxJsonSchema<
   typeof timetableSyncSchemaTyped
 >;
-export const initializeRxDB = async () => {
+export const initializeRxDB = async (
+  databaseName = ANONYMOUS_CALENDAR_DATABASE_NAME,
+) => {
   // create RxDB
   if (import.meta.env.DEV) {
     await import("rxdb/plugins/dev-mode").then((module) =>
@@ -149,7 +257,7 @@ export const initializeRxDB = async () => {
       })
     : getRxStorageDexie();
   const db = await createRxDatabase({
-    name: "nthumods-calendar",
+    name: databaseName,
     storage: storage,
     ignoreDuplicate: import.meta.env.DEV,
     // Add global options to handle replication protocol metadata
@@ -170,105 +278,8 @@ export const initializeRxDB = async () => {
     events: {
       schema: eventsSchema,
       migrationStrategies: {
-        1: (oldDoc) => {
-          console.log("Migrating document:", oldDoc.id, oldDoc);
-
-          try {
-            // Special handling for replication protocol documents
-            if (oldDoc.isCheckpoint && oldDoc.itemId) {
-              console.log(
-                "Found replication protocol document, ensuring proper structure",
-              );
-              // This is a replication protocol document
-              if (oldDoc.docData) {
-                // Fix nested _meta
-                if (!oldDoc.docData._meta || oldDoc.docData._meta === null) {
-                  oldDoc.docData._meta = {
-                    lwt: Math.min(Math.max(Date.now(), 1), 1000000000000000),
-                  };
-                }
-
-                // Add any missing required fields in docData to avoid validation errors
-                oldDoc.docData.excludedDates = Array.isArray(
-                  oldDoc.docData.excludedDates,
-                )
-                  ? oldDoc.docData.excludedDates
-                  : [];
-                oldDoc.docData.parentId = oldDoc.docData.parentId || "";
-                oldDoc.docData.details = oldDoc.docData.details || "";
-              }
-
-              return oldDoc;
-            }
-
-            // Regular document handling
-            if (oldDoc.docData && typeof oldDoc.docData === "object") {
-              console.log(
-                "Document has docData structure, handling validation issues",
-              );
-
-              // Always ensure docData._meta is properly initialized with required lwt property
-              const timestamp = Date.now();
-              oldDoc.docData._meta = {
-                lwt: Math.min(Math.max(timestamp, 1), 1000000000000000),
-              };
-
-              // Ensure other required fields are present
-              oldDoc.docData.excludedDates = Array.isArray(
-                oldDoc.docData.excludedDates,
-              )
-                ? oldDoc.docData.excludedDates
-                : [];
-
-              oldDoc.docData.parentId = oldDoc.docData.parentId || "";
-              oldDoc.docData.details = oldDoc.docData.details || "";
-
-              // Remove any nested docData that might be causing issues
-              if (oldDoc.docData.docData) {
-                console.log(
-                  "Found nested docData.docData, removing to avoid validation errors",
-                );
-                delete oldDoc.docData.docData;
-              }
-            }
-
-            // Handle root-level properties
-            if (!oldDoc._meta || oldDoc._meta === null) {
-              const timestamp = Date.now();
-              oldDoc._meta = {
-                lwt: Math.min(Math.max(timestamp, 1), 1000000000000000),
-              };
-            }
-
-            // Ensure other required fields are present at the root level
-            oldDoc.excludedDates = Array.isArray(oldDoc.excludedDates)
-              ? oldDoc.excludedDates
-              : [];
-
-            oldDoc.parentId = oldDoc.parentId || "";
-            oldDoc.details = oldDoc.details || "";
-
-            console.log("Migration completed for document:", oldDoc.id);
-
-            return oldDoc;
-          } catch (error) {
-            console.error(
-              "Error during migration of document:",
-              oldDoc.id,
-              error,
-            );
-
-            // Even if there's an error, try to return a minimally valid document
-            if (oldDoc.docData && typeof oldDoc.docData === "object") {
-              oldDoc.docData._meta = { lwt: Date.now() };
-            }
-            if (!oldDoc._meta || oldDoc._meta === null) {
-              oldDoc._meta = { lwt: Date.now() };
-            }
-
-            return oldDoc;
-          }
-        },
+        1: migrateEventToV1,
+        2: migrateEventToV2,
       },
     },
     timetablesync: {
@@ -280,11 +291,49 @@ export const initializeRxDB = async () => {
 };
 
 export const RxDBProvider: FC<PropsWithChildren> = ({ children }) => {
-  const [db, setDb] = useState<Awaited<ReturnType<typeof initializeRxDB>>>();
+  const auth = useAuth();
+  const subject = auth.isAuthenticated ? auth.user?.profile.sub : null;
+  const databaseName = getCalendarDatabaseName(subject);
+  const [databaseState, setDatabaseState] = useState<{
+    name: string;
+    db: Awaited<ReturnType<typeof initializeRxDB>>;
+  }>();
+  const databaseRef = useRef<Awaited<ReturnType<typeof initializeRxDB>>>();
+  const generationRef = useRef(0);
 
   useEffect(() => {
-    initializeRxDB().then(setDb);
-  }, []);
+    const generation = generationRef.current + 1;
+    generationRef.current = generation;
+    let active = true;
 
-  return <Provider db={db}>{children}</Provider>;
+    setDatabaseState(undefined);
+    const previousDb = databaseRef.current;
+    databaseRef.current = undefined;
+    if (previousDb) void previousDb.close();
+
+    void initializeRxDB(databaseName).then((db) => {
+      if (!active || generationRef.current !== generation) {
+        void db.close();
+        return;
+      }
+      databaseRef.current = db;
+      setDatabaseState({ name: databaseName, db });
+    });
+
+    return () => {
+      active = false;
+      if (databaseRef.current?.name === databaseName) {
+        const db = databaseRef.current;
+        databaseRef.current = undefined;
+        void db.close();
+      }
+    };
+  }, [databaseName]);
+
+  const db =
+    databaseState?.name === databaseName ? databaseState.db : undefined;
+
+  // Unmount consumers while the identity transition is in flight. This
+  // prevents one account's collection from remaining visible for a render.
+  return <Provider db={db}>{db ? children : null}</Provider>;
 };

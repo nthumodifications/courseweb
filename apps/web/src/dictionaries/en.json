@@ -719,6 +719,12 @@
     "no_events_sub": "There are no scheduled events",
     "add_event": "Add Event",
     "updating": "Updating data",
+    "replication": {
+      "local_only": "Calendar events are stored locally on this device",
+      "syncing": "Syncing calendar events…",
+      "error": "Calendar sync is unavailable; changes are local until it recovers",
+      "not_authorised": "Calendar sync is not authorised; changes are local"
+    },
     "sync": {
       "title": "Timetable update found!",
       "new_reason": "New",

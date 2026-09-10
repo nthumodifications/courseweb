@@ -13,19 +13,75 @@ import {
   CalendarEventInternal,
   DisplayCalendarEvent,
 } from "@/components/Calendar/calendar.types";
-import { useRxCollection, useRxDB, useRxQuery } from "rxdb-hooks";
+import { useRxCollection, useRxQuery } from "rxdb-hooks";
 import { getDiffFunction, getActualEndDate } from "./calendar_utils";
 import { subDays } from "date-fns";
 import {
   serializeEvent,
   getDisplayEndDate,
 } from "@/components/Calendar/calendar_utils";
-import { EventDocType, TimetableSyncDocType } from "@/config/rxdb";
-import { toast } from "@courseweb/ui";
+import {
+  EventDocType,
+  getCalendarDatabaseName,
+  hasCalendarScope,
+  migrateEventToV2,
+  TimetableSyncDocType,
+} from "@/config/rxdb";
+import { Badge, toast } from "@courseweb/ui";
 import { replicateRxCollection } from "rxdb/plugins/replication";
 import { useAuth } from "react-oidc-context";
 import authClient from "@/config/auth";
 import { RxCollection, WithDeleted } from "rxdb";
+import useDictionary from "@/dictionaries/useDictionary";
+
+export type CalendarReplicationStatus =
+  | "idle"
+  | "syncing"
+  | "error"
+  | "not-authorised";
+
+export const isNotAuthorisedReplicationError = (error: unknown) => {
+  const seen = new WeakSet<object>();
+  const visit = (value: unknown): boolean => {
+    if (typeof value === "string") {
+      return /\b(?:401|403)\b|unauthori[sz]ed|forbidden/i.test(value);
+    }
+    if (typeof value !== "object" || value === null) return false;
+    if (seen.has(value)) return false;
+    seen.add(value);
+
+    if ("status" in value) {
+      const status = (value as { status?: unknown }).status;
+      if (status === 401 || status === 403) return true;
+    }
+    if (value instanceof Error && visit(value.message)) return true;
+    return Object.values(value).some(visit);
+  };
+
+  return visit(error);
+};
+
+const replicationErrorMessage = (error: unknown) =>
+  error instanceof Error ? error.message : String(error);
+
+const combinedReplicationStatus = (
+  eventStatus: CalendarReplicationStatus,
+  timetableStatus: CalendarReplicationStatus,
+) => {
+  if (
+    eventStatus === "not-authorised" ||
+    timetableStatus === "not-authorised"
+  ) {
+    return "not-authorised" as const;
+  }
+  if (eventStatus === "error" || timetableStatus === "error") {
+    return "error" as const;
+  }
+  if (eventStatus === "syncing" || timetableStatus === "syncing") {
+    return "syncing" as const;
+  }
+  return "idle" as const;
+};
 
 export enum UpdateType {
   THIS = "THIS",
@@ -44,6 +100,9 @@ export const calendarContext = createContext<
   HOUR_HEIGHT: 48,
   labels: [],
   timetableSyncReady: false,
+  replicationStatus: "idle",
+  replicationError: null,
+  replicationIsLocalOnly: true,
 });
 
 export const useCalendar = () => useContext(calendarContext);
@@ -63,16 +122,63 @@ export const useCalendarProvider = () => {
   const [timetableSyncReady, setTimetableSyncReady] = useState(false);
   const eventsCol = useRxCollection("events");
   const auth = useAuth();
+  const subject = auth.isAuthenticated ? auth.user?.profile.sub : undefined;
+  const accessToken = auth.user?.access_token;
+  const hasScope = hasCalendarScope(auth.user?.scope);
+  const [eventReplicationStatus, setEventReplicationStatus] =
+    useState<CalendarReplicationStatus>("idle");
+  const [timetableReplicationStatus, setTimetableReplicationStatus] =
+    useState<CalendarReplicationStatus>("idle");
+  const [eventReplicationError, setEventReplicationError] = useState<
+    string | null
+  >(null);
+  const [timetableReplicationError, setTimetableReplicationError] = useState<
+    string | null
+  >(null);
+
+  const replicationStatus = combinedReplicationStatus(
+    eventReplicationStatus,
+    timetableReplicationStatus,
+  );
+  const replicationError = eventReplicationError ?? timetableReplicationError;
+  const replicationIsLocalOnly = !auth.isAuthenticated || !subject;
 
   useEffect(() => {
     if (!eventsCol) return;
-    if (!auth.isAuthenticated) return;
+    if (!auth.isAuthenticated || !subject) {
+      setEventReplicationStatus("idle");
+      setEventReplicationError(null);
+      return;
+    }
+    if (!hasScope || !accessToken) {
+      setEventReplicationStatus(hasScope ? "idle" : "not-authorised");
+      setEventReplicationError(null);
+      return;
+    }
+
+    let active = true;
+    let isActive = false;
+    let hasError = false;
+    let isNotAuthorised = false;
+    const setStatus = (status: CalendarReplicationStatus) => {
+      if (active) setEventReplicationStatus(status);
+    };
+    const handleError = (error: unknown) => {
+      if (!active) return;
+      isNotAuthorised = isNotAuthorisedReplicationError(error);
+      hasError = !isNotAuthorised;
+      setEventReplicationError(
+        isNotAuthorised ? null : replicationErrorMessage(error),
+      );
+      setStatus(isNotAuthorised ? "not-authorised" : "error");
+    };
+
     const replicationState = replicateRxCollection<
       EventDocType,
       { id: string; serverTimestamp: string }
     >({
       collection: eventsCol as RxCollection<EventDocType>,
-      replicationIdentifier: "events-to-auth-calendar",
+      replicationIdentifier: `events-to-auth-calendar-${getCalendarDatabaseName(subject)}`,
       live: true,
       push: {
         async handler(changeRows) {
@@ -83,10 +189,15 @@ export const useCalendarProvider = () => {
               },
               {
                 headers: {
-                  Authorization: `Bearer ${auth.user?.access_token}`,
+                  Authorization: `Bearer ${accessToken}`,
                 },
               },
             );
+          if (!rawResponse.ok) {
+            throw new Error(
+              `Calendar event push failed with status ${rawResponse.status}`,
+            );
+          }
           const conflictsArray = await rawResponse.json();
           return conflictsArray as WithDeleted<EventDocType>[];
         },
@@ -107,41 +218,98 @@ export const useCalendarProvider = () => {
             },
             {
               headers: {
-                Authorization: `Bearer ${auth.user?.access_token}`,
+                Authorization: `Bearer ${accessToken}`,
               },
             },
           );
+          if (!response.ok) {
+            throw new Error(
+              `Calendar event pull failed with status ${response.status}`,
+            );
+          }
           const data = await response.json();
+          const documents = data.documents as WithDeleted<EventDocType>[];
           return {
-            documents: data.documents as WithDeleted<EventDocType>[],
+            documents: documents.map((document) =>
+              migrateEventToV2(document as Record<string, any>),
+            ) as WithDeleted<EventDocType>[],
             checkpoint: data.checkpoint,
           };
         },
       },
     });
-    replicationState.error$.subscribe((error) => console.error(error));
-    replicationState.start();
+    const subscriptions = [
+      replicationState.active$.subscribe((nextActive) => {
+        isActive = nextActive;
+        if (hasError || isNotAuthorised) return;
+        setStatus(nextActive ? "syncing" : "idle");
+      }),
+      replicationState.error$.subscribe(handleError),
+      replicationState.received$.subscribe(() => {
+        hasError = false;
+        isNotAuthorised = false;
+        setEventReplicationError(null);
+        setStatus(isActive ? "syncing" : "idle");
+      }),
+      replicationState.sent$.subscribe(() => {
+        hasError = false;
+        isNotAuthorised = false;
+        setEventReplicationError(null);
+        setStatus(isActive ? "syncing" : "idle");
+      }),
+    ];
+    setStatus("syncing");
+    void replicationState.start().catch(handleError);
 
     return () => {
-      replicationState.cancel();
+      active = false;
+      subscriptions.forEach((subscription) => subscription.unsubscribe());
+      void replicationState.cancel();
     };
-  }, [auth, eventsCol]);
+  }, [accessToken, auth.isAuthenticated, eventsCol, hasScope, subject]);
 
   const timetableSyncCol = useRxCollection("timetablesync");
 
   useEffect(() => {
     if (!timetableSyncCol) return;
-    if (!auth.isAuthenticated) {
+    if (!auth.isAuthenticated || !subject) {
+      setTimetableReplicationStatus("idle");
+      setTimetableReplicationError(null);
       setTimetableSyncReady(true);
       return;
     }
+    if (!hasScope || !accessToken) {
+      setTimetableReplicationStatus(hasScope ? "idle" : "not-authorised");
+      setTimetableReplicationError(null);
+      setTimetableSyncReady(true);
+      return;
+    }
+
+    let active = true;
+    let isActive = false;
+    let hasError = false;
+    let isNotAuthorised = false;
+    const setStatus = (status: CalendarReplicationStatus) => {
+      if (active) setTimetableReplicationStatus(status);
+    };
+    const handleError = (error: unknown) => {
+      if (!active) return;
+      isNotAuthorised = isNotAuthorisedReplicationError(error);
+      hasError = !isNotAuthorised;
+      setTimetableReplicationError(
+        isNotAuthorised ? null : replicationErrorMessage(error),
+      );
+      setStatus(isNotAuthorised ? "not-authorised" : "error");
+    };
+
     setTimetableSyncReady(false);
+    setStatus("syncing");
     const replicationState = replicateRxCollection<
       TimetableSyncDocType,
       { id: string; serverTimestamp: string }
     >({
       collection: timetableSyncCol as RxCollection<TimetableSyncDocType>,
-      replicationIdentifier: "timetablesync-to-auth-calendar",
+      replicationIdentifier: `timetablesync-to-auth-calendar-${getCalendarDatabaseName(subject)}`,
       live: true,
       push: {
         async handler(changeRows) {
@@ -152,10 +320,15 @@ export const useCalendarProvider = () => {
               },
               {
                 headers: {
-                  Authorization: `Bearer ${auth.user?.access_token}`,
+                  Authorization: `Bearer ${accessToken}`,
                 },
               },
             );
+          if (!rawResponse.ok) {
+            throw new Error(
+              `Timetable sync push failed with status ${rawResponse.status}`,
+            );
+          }
           const conflictsArray =
             (await rawResponse.json()) as WithDeleted<TimetableSyncDocType>[];
           return conflictsArray;
@@ -178,10 +351,15 @@ export const useCalendarProvider = () => {
               },
               {
                 headers: {
-                  Authorization: `Bearer ${auth.user?.access_token}`,
+                  Authorization: `Bearer ${accessToken}`,
                 },
               },
             );
+          if (!response.ok) {
+            throw new Error(
+              `Timetable sync pull failed with status ${response.status}`,
+            );
+          }
           const data = await response.json();
           return {
             documents: data.documents as WithDeleted<TimetableSyncDocType>[],
@@ -190,16 +368,41 @@ export const useCalendarProvider = () => {
         },
       },
     });
-    replicationState.error$.subscribe((error) => console.error(error));
-    replicationState.start();
-    replicationState
+    const subscriptions = [
+      replicationState.active$.subscribe((nextActive) => {
+        isActive = nextActive;
+        if (hasError || isNotAuthorised) return;
+        setStatus(nextActive ? "syncing" : "idle");
+      }),
+      replicationState.error$.subscribe(handleError),
+      replicationState.received$.subscribe(() => {
+        hasError = false;
+        isNotAuthorised = false;
+        setTimetableReplicationError(null);
+        setStatus(isActive ? "syncing" : "idle");
+      }),
+      replicationState.sent$.subscribe(() => {
+        hasError = false;
+        isNotAuthorised = false;
+        setTimetableReplicationError(null);
+        setStatus(isActive ? "syncing" : "idle");
+      }),
+    ];
+    setStatus("syncing");
+    void replicationState.start().catch(handleError);
+    void replicationState
       .awaitInitialReplication()
-      .finally(() => setTimetableSyncReady(true));
+      .then(() => {
+        if (active) setTimetableSyncReady(true);
+      })
+      .catch(handleError);
 
     return () => {
-      replicationState.cancel();
+      active = false;
+      subscriptions.forEach((subscription) => subscription.unsubscribe());
+      void replicationState.cancel();
     };
-  }, [auth, timetableSyncCol]);
+  }, [accessToken, auth.isAuthenticated, hasScope, subject, timetableSyncCol]);
 
   const { result: eventStore } = useRxQuery(eventsCol?.find());
   const events =
@@ -222,8 +425,10 @@ export const useCalendarProvider = () => {
   const displayContainer = useRef<HTMLDivElement>(null);
 
   const addEvent = async (event: CalendarEvent) => {
-    await eventsCol!.upsert({
+    if (!eventsCol) return;
+    await eventsCol.upsert({
       ...event,
+      courseId: event.courseId ?? null,
       start: event.start.toISOString(),
       end: event.end.toISOString(),
       repeat: event.repeat,
@@ -326,6 +531,7 @@ export const useCalendarProvider = () => {
           };
           await eventsCol!.insert({
             ...serializeEvent(newEvent1),
+            courseId: newEvent1.courseId ?? null,
             actualEnd: getActualEndDate(newEvent1),
           });
           break;
@@ -375,6 +581,7 @@ export const useCalendarProvider = () => {
           }
           await eventsCol!.insert({
             ...serializeEvent(newEvent3),
+            courseId: newEvent3.courseId ?? null,
             actualEnd: getActualEndDate(newEvent3),
           });
           break;
@@ -409,13 +616,63 @@ export const useCalendarProvider = () => {
     HOUR_HEIGHT,
     labels,
     timetableSyncReady,
+    replicationStatus,
+    replicationError,
+    replicationIsLocalOnly,
   };
+};
+
+const CalendarReplicationIndicator = ({
+  status,
+  isLocalOnly,
+  hasLocalEvents,
+}: {
+  status: CalendarReplicationStatus;
+  isLocalOnly: boolean;
+  hasLocalEvents: boolean;
+}) => {
+  const dict = useDictionary();
+  if (isLocalOnly && !hasLocalEvents) return null;
+
+  const message = isLocalOnly
+    ? dict.calendar.replication.local_only
+    : status === "syncing"
+      ? dict.calendar.replication.syncing
+      : status === "error"
+        ? dict.calendar.replication.error
+        : status === "not-authorised"
+          ? dict.calendar.replication.not_authorised
+          : null;
+
+  if (!message) return null;
+
+  return (
+    <div className="pointer-events-none fixed bottom-20 right-4 z-40">
+      <Badge
+        variant={
+          status === "error" || status === "not-authorised"
+            ? "destructive"
+            : "outline"
+        }
+        role="status"
+        aria-live="polite"
+        className="bg-background/95 shadow-sm"
+      >
+        {message}
+      </Badge>
+    </div>
+  );
 };
 
 export const CalendarProvider: FC<PropsWithChildren> = ({ children }) => {
   const value = useCalendarProvider();
   return (
     <calendarContext.Provider value={value}>
+      <CalendarReplicationIndicator
+        status={value.replicationStatus}
+        isLocalOnly={value.replicationIsLocalOnly}
+        hasLocalEvents={value.events.length > 0}
+      />
       {children}
     </calendarContext.Provider>
   );

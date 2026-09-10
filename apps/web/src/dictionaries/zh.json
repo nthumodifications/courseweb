@@ -719,6 +719,12 @@
     "no_events_sub": "今天沒有任何行程",
     "add_event": "新增行程",
     "updating": "資料更新中",
+    "replication": {
+      "local_only": "行事曆行程僅儲存在此裝置",
+      "syncing": "正在同步行事曆行程⋯",
+      "error": "行事曆同步無法使用；恢復前變更僅儲存在本機",
+      "not_authorised": "行事曆同步未獲授權；變更僅儲存在本機"
+    },
     "sync": {
       "title": "發現課表更新！",
       "new_reason": "新增",
