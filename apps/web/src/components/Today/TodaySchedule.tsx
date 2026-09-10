@@ -1,16 +1,9 @@
-import { EventData } from "@/types/calendar_event";
-import { format, formatRelative, getDay, isSameDay } from "date-fns";
-import useUserTimetable from "@/hooks/contexts/useUserTimetable";
-import { scheduleTimeSlots } from "@courseweb/shared";
 import { FC, useMemo, useState, useEffect } from "react";
 import { useSettings } from "@/hooks/contexts/settings";
 import useDictionary from "@/dictionaries/useDictionary";
 import { getLocale } from "@/helpers/dateLocale";
 import { Cloud, MapPin, Clock } from "lucide-react";
 import { apps } from "@/const/apps";
-import { getSemester, lastSemester } from "@courseweb/shared";
-import { createTimetableFromCourses } from "@/helpers/timetable";
-import { MinimalCourse } from "@/types/courses";
 import useTime from "@/hooks/useTime";
 import { NoClassPickedReminder } from "./NoClassPickedReminder";
 import { TimetableItemDrawer } from "@/components/Timetable/TimetableItemDrawer";
@@ -20,61 +13,39 @@ import client from "@/config/api";
 import { Badge } from "@courseweb/ui";
 import WeatherIcon from "./WeatherIcon";
 import { cn } from "@courseweb/ui";
-import useCourseDates from "@/hooks/useCourseDates";
-
-const getRangeOfDays = (start: Date, end: Date) => {
-  const days = [];
-  for (let i = start.getTime(); i <= end.getTime(); i += 86400000) {
-    days.push(new Date(i));
-  }
-  return days;
-};
+import { formatInTimeZone } from "date-fns-tz";
+import UpcomingEventList from "@/components/Calendar/UpcomingEventList";
+import { NextUpLine } from "@/components/Widgets/CountdownWidget";
+import useUserTimetable from "@/hooks/contexts/useUserTimetable";
+import useUpcomingEvents, {
+  addTaipeiDays,
+  getTaipeiDateKey,
+  UPCOMING_TIME_ZONE,
+} from "@/hooks/useUpcomingEvents";
 
 const TodaySchedule: FC = () => {
-  const { isCoursesEmpty, colorMap, getSemesterCourses, courses } =
-    useUserTimetable();
-  const { language, pinnedApps, showAcademicCalendar } = useSettings();
-  const enrolledCourseIds = useMemo(
-    () => Object.values(courses).flat(),
-    [courses],
-  );
-  const { getCourseDateForDay } = useCourseDates(enrolledCourseIds);
+  const { isCoursesEmpty } = useUserTimetable();
+  const { language, pinnedApps } = useSettings();
   const dict = useDictionary();
   const date = useTime();
   const [isClient, setIsClient] = useState(false);
+  const {
+    events: dashboardEvents,
+    nextEvent,
+    windowStart,
+  } = useUpcomingEvents({ windowDays: 5, includePast: true });
+  const upcomingEvents = useMemo(
+    () => dashboardEvents.filter((event) => event.state !== "past"),
+    [dashboardEvents],
+  );
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  const curr_sem = useMemo(() => getSemester(date), [date]);
-  const timetableData = useMemo(
-    () =>
-      createTimetableFromCourses(
-        getSemesterCourses(curr_sem?.id) as MinimalCourse[],
-        colorMap,
-      ),
-    [getSemesterCourses, curr_sem, colorMap],
-  );
-  //sort display_courses according to courses[semester]
-  const displayCourseData = useMemo(
-    () => getSemesterCourses(lastSemester.id),
-    [getSemesterCourses],
-  );
-
-  const nextTimetableData = useMemo(
-    () =>
-      createTimetableFromCourses(
-        displayCourseData as MinimalCourse[],
-        colorMap,
-      ),
-    [displayCourseData, colorMap],
-  );
-
-  //get a range of 5 days starting from today
   const days = useMemo(
-    () => getRangeOfDays(date, new Date(date.getTime() + 86400000 * 4)),
-    [date],
+    () => [0, 1, 2, 3, 4].map((index) => addTaipeiDays(windowStart, index)),
+    [windowStart],
   );
 
   const {
@@ -90,39 +61,12 @@ const TodaySchedule: FC = () => {
     },
   });
 
-  const {
-    data: calendar = [],
-    error: calendarError,
-    isLoading: calendarLoading,
-  } = useQuery<EventData[]>({
-    queryKey: [
-      "event",
-      format(days[0], "yyyy-MM-dd"),
-      format(days[4], "yyyy-MM-dd"),
-    ],
-    queryFn: async () => {
-      const res = await client.acacalendar.$get({
-        query: {
-          start: days[0].toISOString(),
-          end: days[4].toISOString(),
-        },
-      });
-      return await res.json();
-    },
-    enabled: showAcademicCalendar && isClient,
-    initialData: [],
-  });
-
   const renderDayTimetable = (day: Date) => {
-    if (!curr_sem)
-      return (
-        <div className="text-gray-500 dark:text-gray-400 text-center text-sm font-semibold">
-          {dict.today.noclass_sem}
-        </div>
-      );
-    const classesThisDay = (
-      curr_sem == lastSemester ? nextTimetableData : timetableData
-    ).filter((t) => t.dayOfWeek == [6, 0, 1, 2, 3, 4, 5][getDay(day)]);
+    const classesThisDay = dashboardEvents.filter(
+      (event) =>
+        event.source === "class" &&
+        getTaipeiDateKey(event.start) === getTaipeiDateKey(day),
+    );
 
     if (classesThisDay.length == 0)
       return (
@@ -139,86 +83,87 @@ const TodaySchedule: FC = () => {
         </div>
       );
 
-    return classesThisDay
-      .sort((a, b) => a.startTime - b.startTime)
-      .map((t, index) => {
-        const courseDate = getCourseDateForDay(t.course.raw_id, day);
-        const isNoClass = courseDate?.type === "no_class";
-        const isSpecialDate = courseDate && !isNoClass;
-        return (
-          <TimetableItemDrawer course={t.course} key={index}>
-            <div className="flex flex-row gap-2 items-start">
-              <div
-                className="size-4 rounded-sm mt-1 shrink-0"
-                style={
-                  isNoClass
-                    ? {
-                        background:
-                          "repeating-linear-gradient(-45deg, #9ca3af, #9ca3af 4px, #6b7280 4px, #6b7280 8px)",
-                      }
-                    : { backgroundColor: t.color }
-                }
-              />
-              <div className="flex flex-col gap-1">
-                <div
-                  className={cn(
-                    "font-semibold",
-                    isNoClass && "line-through text-muted-foreground",
-                  )}
-                >
-                  {language == "zh" ? t.course.name_zh : t.course.name_en}
-                </div>
-                {isSpecialDate && (
-                  <Badge
-                    variant="secondary"
-                    className="self-start text-[10px] px-1 py-0"
-                  >
-                    {courseDate.type} · {courseDate.title}
-                  </Badge>
-                )}
-                {isNoClass && (
-                  <div className="text-xs text-muted-foreground">
-                    {courseDate.title || dict.today.noclass}
-                  </div>
-                )}
-                <div className="text-xs text-muted-foreground align-baseline">
-                  <Clock className="size-3 inline mr-1" />
-                  {`${scheduleTimeSlots[t.startTime]?.start ?? "?"} - ${scheduleTimeSlots[t.endTime]?.end ?? "?"}`}
-                </div>
-                <div className="text-xs text-muted-foreground align-baseline">
-                  <MapPin className="size-3 inline mr-1" />
-                  {t.venue}
-                </div>
-              </div>
+    return classesThisDay.map((event) => {
+      const course = event.course;
+      const isNoClass = event.courseDate?.type === "no_class";
+      const isSpecialDate = event.courseDate && !isNoClass;
+      const content = (
+        <div className="flex flex-row gap-2 items-start">
+          <div
+            className="size-4 rounded-sm mt-1 shrink-0"
+            style={
+              isNoClass
+                ? {
+                    background:
+                      "repeating-linear-gradient(-45deg, #9ca3af, #9ca3af 4px, #6b7280 4px, #6b7280 8px)",
+                  }
+                : { backgroundColor: event.color }
+            }
+          />
+          <div className="flex flex-col gap-1">
+            <div
+              className={cn(
+                "font-semibold",
+                isNoClass && "line-through text-muted-foreground",
+              )}
+            >
+              {event.title}
             </div>
-          </TimetableItemDrawer>
-        );
-      });
+            {isSpecialDate && (
+              <Badge
+                variant="secondary"
+                className="self-start text-[10px] px-1 py-0"
+              >
+                {event.courseDate?.type} · {event.courseDate?.title}
+              </Badge>
+            )}
+            {isNoClass && (
+              <div className="text-xs text-muted-foreground">
+                {event.courseDate?.title || dict.today.noclass}
+              </div>
+            )}
+            <div className="text-xs text-muted-foreground align-baseline">
+              <Clock className="size-3 inline mr-1" />
+              {formatInTimeZone(
+                event.start,
+                UPCOMING_TIME_ZONE,
+                "HH:mm",
+              )} - {formatInTimeZone(event.end, UPCOMING_TIME_ZONE, "HH:mm")}
+            </div>
+            <div className="text-xs text-muted-foreground align-baseline">
+              <MapPin className="size-3 inline mr-1" />
+              {event.location}
+            </div>
+          </div>
+        </div>
+      );
+      return course ? (
+        <TimetableItemDrawer course={course} key={event.id}>
+          {content}
+        </TimetableItemDrawer>
+      ) : (
+        <div key={event.id}>{content}</div>
+      );
+    });
   };
 
   const renderCalendars = (day: Date) => {
-    if (!showAcademicCalendar || !isClient) return <></>;
-    const events = calendar.filter((event) =>
-      isSameDay(new Date(event.date), day),
+    const events = dashboardEvents.filter(
+      (event) =>
+        (event.source === "academic" || event.source === "course-date") &&
+        getTaipeiDateKey(event.start) === getTaipeiDateKey(day),
     );
     return (
-      !calendarLoading &&
-      events.length > 0 &&
-      events.map((event, index) => (
-        <div key={index} className="flex flex-row gap-2 items-start">
-          <div className="size-4 bg-nthu-500 rounded-sm shrink-0 mt-1"></div>
-          <div className="text-sm">{event.summary}</div>
-        </div>
-      ))
+      events.length > 0 && (
+        <UpcomingEventList events={events} compact showDayGroups={false} />
+      )
     );
   };
 
   const renderWeather = (day: Date) => {
     if (!isClient) return null;
 
-    const weatherData = weather?.find(
-      (w) => w.date == format(day, "yyyy-MM-dd"),
-    );
+    const weatherData = weather?.find((w) => w.date == getTaipeiDateKey(day));
     if (!weatherData) return <></>;
 
     // Check if weatherData.weatherData is empty or doesn't contain necessary data
@@ -264,29 +209,31 @@ const TodaySchedule: FC = () => {
     <div className="h-full w-full px-3 md:px-8 space-y-4">
       {isCoursesEmpty && <NoClassPickedReminder />}
       {renderPinnedApps()}
+      <NextUpLine event={nextEvent} />
+      <section className="rounded-lg border border-border p-3">
+        <h2 className="mb-2 text-base font-semibold">
+          {dict.calendar.upcoming_events}
+        </h2>
+        <UpcomingEventList events={upcomingEvents} compact maxEvents={8} />
+      </section>
       {days.map((day) => (
-        <div
-          className="flex flex-col gap-2 pb-4"
-          key={format(day, "EEEE, do MMMM")}
-        >
+        <div className="flex flex-col gap-2 pb-4" key={getTaipeiDateKey(day)}>
           <div className="flex flex-row justify-between">
             <div className="flex flex-row flex-1 items-baseline gap-2">
-              <div
-                className={cn(
-                  "whitespace-nowrap font-semibold text-lg",
-                  !isSameDay(day, date) && "text-muted-foreground",
-                )}
-              >
-                {formatRelative(day, Date.now(), {
-                  locale: getLocale(language),
-                })}
+              <div className="whitespace-nowrap font-semibold text-lg">
+                {getTaipeiDateKey(day) === getTaipeiDateKey(date)
+                  ? dict.today.upcoming.today
+                  : getTaipeiDateKey(day) ===
+                      getTaipeiDateKey(addTaipeiDays(date, 1))
+                    ? dict.today.upcoming.tomorrow
+                    : formatInTimeZone(day, UPCOMING_TIME_ZONE, "EEEE", {
+                        locale: getLocale(language),
+                      })}
               </div>
               <div className="text-sm text-muted-foreground whitespace-nowrap">
-                {format(
-                  day,
-                  isSameDay(day, date) ? "EEE, MMMM do" : "MMMM do",
-                  { locale: getLocale(language) },
-                )}
+                {formatInTimeZone(day, UPCOMING_TIME_ZONE, "MMM do", {
+                  locale: getLocale(language),
+                })}
               </div>
             </div>
             {isClient && !weatherLoading && weather && renderWeather(day)}
