@@ -6,6 +6,7 @@ import { createTimetableFromCoursesAndCustomItems } from "@/helpers/timetable";
 import { MinimalCourse } from "@/types/courses";
 import { renderTimetableSlot } from "@/helpers/timetable_course";
 import TimetableSidebar from "@/components/Timetable/TimetableSidebar";
+import TimetableOffGridSchedule from "@/components/Timetable/TimetableOffGridSchedule";
 import { useSwipeable } from "react-swipeable";
 import { semesterInfo } from "@courseweb/shared";
 import { useHeaderPortal } from "@/components/Portal/HeaderPortal";
@@ -124,6 +125,7 @@ const TimetablePage = () => {
               vertical={vertical}
               renderTimetableSlot={renderTimetableSlot}
             />
+            <TimetableOffGridSchedule timetableData={timetableData} />
           </div>
           <TimetableSidebar vertical={vertical} setVertical={setVertical} />
         </div>

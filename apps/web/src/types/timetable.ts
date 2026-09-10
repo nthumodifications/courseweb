@@ -60,21 +60,6 @@ export type TimetableDim = {
     width: number;
     height: number;
   };
-  extendedHours?: TimetableExtendedHoursGeometry;
-};
-
-export type TimetableBandGeometry = {
-  start: number;
-  end: number;
-  size: number;
-  pixelsPerMinute: number;
-};
-
-export type TimetableExtendedHoursGeometry = {
-  gridSize: number;
-  gridPixelsPerMinute: number;
-  pre: TimetableBandGeometry | null;
-  late: TimetableBandGeometry | null;
 };
 
 export type CourseTimeslotData = {

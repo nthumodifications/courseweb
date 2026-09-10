@@ -107,6 +107,7 @@
       "start_label": "Start time",
       "end_label": "End time",
       "time_error": "End time must be after start time.",
+      "off_grid_schedule_title": "Outside timetable",
       "note_label": "Note",
       "note_placeholder": "Optional note",
       "color_label": "Colour",

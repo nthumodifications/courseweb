@@ -4,8 +4,6 @@ import {
   CustomTimetableItem,
   CustomTimetableItemInput,
   CustomTimetableSlot,
-  TimetableBandGeometry,
-  TimetableExtendedHoursGeometry,
 } from "@/types/timetable";
 import { MinimalCourse } from "@/types/courses";
 import { getContrastColor } from "./colors";
@@ -22,9 +20,6 @@ export const timetableGridEnd = timeToMinutes(
   scheduleTimeSlots[scheduleTimeSlots.length - 1]!.end,
 );
 
-export const TIMETABLE_BAND_MIN_HEIGHT = 48;
-export const TIMETABLE_BAND_MAX_HEIGHT = 240;
-
 export type CustomTimetableSlotClassification = "grid" | "off-grid";
 
 /**
@@ -40,133 +35,20 @@ export const classifyCustomTimetableSlot = (
   return start >= gridStart && end <= gridEnd ? "grid" : "off-grid";
 };
 
+export const isTimetableGridSlot = (slot: CourseTimeslotData) =>
+  !slot.customSlot || classifyCustomTimetableSlot(slot.customSlot) === "grid";
+
+export const getOffGridTimetableData = (data: CourseTimeslotData[]) =>
+  data.filter(
+    (slot) =>
+      slot.customSlot &&
+      classifyCustomTimetableSlot(slot.customSlot) === "off-grid",
+  );
+
 export const getCustomSlotTimeRange = (slot: CustomTimetableSlot) => ({
   start: timeToMinutes(slot.start),
   end: timeToMinutes(slot.end),
 });
-
-export const formatTimetableClock = (minutes: number) => {
-  const hours = Math.floor(minutes / 60);
-  const remainder = minutes % 60;
-  return `${String(hours).padStart(2, "0")}:${String(remainder).padStart(2, "0")}`;
-};
-
-export type TimetableOffGridBounds = {
-  preStart: number | null;
-  lateEnd: number | null;
-};
-
-/** Finds the real clock extent needed by custom slots outside the school grid. */
-export const getTimetableOffGridBounds = (
-  data: CourseTimeslotData[],
-  gridStart = timetableGridStart,
-  gridEnd = timetableGridEnd,
-): TimetableOffGridBounds => {
-  let preStart: number | null = null;
-  let lateEnd: number | null = null;
-
-  data.forEach((slot) => {
-    if (!slot.customSlot) return;
-    const range = getCustomSlotTimeRange(slot.customSlot);
-    if (range.start < gridStart) {
-      preStart =
-        preStart === null ? range.start : Math.min(preStart, range.start);
-    }
-    if (range.end > gridEnd) {
-      lateEnd = lateEnd === null ? range.end : Math.max(lateEnd, range.end);
-    }
-  });
-
-  return { preStart, lateEnd };
-};
-
-const createTimetableBandGeometry = (
-  start: number,
-  end: number,
-  gridPixelsPerMinute: number,
-  minHeight: number,
-  maxHeight: number,
-): TimetableBandGeometry => {
-  const duration = Math.max(0, end - start);
-  const naturalSize = duration * gridPixelsPerMinute;
-  const size = Math.min(maxHeight, Math.max(minHeight, naturalSize));
-  return {
-    start,
-    end,
-    size,
-    pixelsPerMinute: duration > 0 ? size / duration : 0,
-  };
-};
-
-export const getTimetableExtendedHoursGeometry = (
-  data: CourseTimeslotData[],
-  gridSize: number,
-  minHeight = TIMETABLE_BAND_MIN_HEIGHT,
-  maxHeight = TIMETABLE_BAND_MAX_HEIGHT,
-): TimetableExtendedHoursGeometry => {
-  const { preStart, lateEnd } = getTimetableOffGridBounds(data);
-  const gridDuration = timetableGridEnd - timetableGridStart;
-  const gridPixelsPerMinute = gridDuration > 0 ? gridSize / gridDuration : 0;
-
-  return {
-    gridSize,
-    gridPixelsPerMinute,
-    pre:
-      preStart === null
-        ? null
-        : createTimetableBandGeometry(
-            preStart,
-            timetableGridStart,
-            gridPixelsPerMinute,
-            minHeight,
-            maxHeight,
-          ),
-    late:
-      lateEnd === null
-        ? null
-        : createTimetableBandGeometry(
-            timetableGridEnd,
-            lateEnd,
-            gridPixelsPerMinute,
-            minHeight,
-            maxHeight,
-          ),
-  };
-};
-
-export const getTimetableTimePosition = (
-  minutes: number,
-  geometry: TimetableExtendedHoursGeometry,
-) => {
-  const preSize = geometry.pre?.size ?? 0;
-  if (geometry.pre && minutes <= timetableGridStart) {
-    return (minutes - geometry.pre.start) * geometry.pre.pixelsPerMinute;
-  }
-  if (minutes <= timetableGridEnd) {
-    return (
-      preSize + (minutes - timetableGridStart) * geometry.gridPixelsPerMinute
-    );
-  }
-  return (
-    preSize +
-    geometry.gridSize +
-    (minutes - timetableGridEnd) * (geometry.late?.pixelsPerMinute ?? 0)
-  );
-};
-
-export const getTimetableTimeRangePosition = (
-  start: number,
-  end: number,
-  geometry: TimetableExtendedHoursGeometry,
-) => {
-  const startPosition = getTimetableTimePosition(start, geometry);
-  const endPosition = getTimetableTimePosition(end, geometry);
-  return {
-    start: startPosition,
-    end: endPosition,
-    size: Math.max(0, endPosition - startPosition),
-  };
-};
 
 export const getTimetableDataTimeRange = (slot: CourseTimeslotData) => {
   if (slot.customSlot) return getCustomSlotTimeRange(slot.customSlot);

@@ -1,6 +1,7 @@
 import useDictionary from "@/dictionaries/useDictionary";
 import { Download, Image, Loader2 } from "lucide-react";
 import Timetable from "./Timetable";
+import TimetableOffGridSchedule from "./TimetableOffGridSchedule";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { toPng } from "html-to-image";
 import { useCallback, useRef, useState, type ReactNode } from "react";
@@ -179,6 +180,11 @@ const DownloadTimetableComponent = () => {
         >
           <div className="w-[414px]">
             <Timetable timetableData={timetableData} vertical />
+            <TimetableOffGridSchedule
+              timetableData={timetableData}
+              editable={false}
+              className="mt-4"
+            />
           </div>
         </div>
       </div>

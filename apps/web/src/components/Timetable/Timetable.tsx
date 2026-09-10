@@ -5,24 +5,26 @@ import { addDays, format } from "date-fns";
 import {
   CourseTimeslotData,
   CourseTimeslotDataWithFraction,
+  TimeSlot,
   TimetableDim,
 } from "@/types/timetable";
 import {
   FC,
   ReactNode,
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
   useState,
 } from "react";
 import TimetableSlotHorizontal from "@/components/Timetable/TimetableSlotHorizontal";
+import { Link } from "react-router-dom";
 import { useSettings } from "@/hooks/contexts/settings";
 import { BlankTimeslotBody } from "./BlankTimeslotBody";
 import { getLocale } from "@/helpers/dateLocale";
 import {
   addTimetableFractions,
-  formatTimetableClock,
-  getTimetableExtendedHoursGeometry,
+  isTimetableGridSlot,
 } from "@/helpers/timetable";
 
 const Timetable: FC<{
@@ -65,12 +67,18 @@ const Timetable: FC<{
     return () => observer.disconnect();
   }, [vertical, timetableData]);
 
-  const timetableDataWithFraction = useMemo(
-    () => addTimetableFractions(timetableData),
+  const gridTimetableData = useMemo(
+    () => timetableData.filter(isTimetableGridSlot),
     [timetableData],
   );
-  const showSaturday = timetableData.some((course) => course.dayOfWeek >= 5);
-  const showSunday = timetableData.some((course) => course.dayOfWeek == 6);
+  const timetableDataWithFraction = useMemo(
+    () => addTimetableFractions(gridTimetableData),
+    [gridTimetableData],
+  );
+  const showSaturday = gridTimetableData.some(
+    (course) => course.dayOfWeek >= 5,
+  );
+  const showSunday = gridTimetableData.some((course) => course.dayOfWeek == 6);
 
   const dayLabels = Array.from(
     { length: showSunday ? 7 : showSaturday ? 6 : 5 },
@@ -80,16 +88,6 @@ const Timetable: FC<{
       }).toUpperCase(),
   );
   const days = dayLabels;
-  const gridSize =
-    tableDim.timetable[vertical ? "height" : "width"] *
-    scheduleTimeSlots.length;
-  const timetableDim = useMemo(
-    () => ({
-      ...tableDim,
-      extendedHours: getTimetableExtendedHoursGeometry(timetableData, gridSize),
-    }),
-    [gridSize, tableDim, timetableData],
-  );
 
   const _renderTimetableSlot = (
     course: CourseTimeslotDataWithFraction,
@@ -125,68 +123,6 @@ const Timetable: FC<{
     );
   };
 
-  const renderVerticalBand = (
-    band: NonNullable<typeof timetableDim.extendedHours>["pre"],
-    key: string,
-  ) => {
-    if (!band) return null;
-    return (
-      <tr key={key} className="h-0.5" style={{ height: band.size }}>
-        <td
-          className="flex flex-col py-1 justify-between"
-          style={{ height: band.size }}
-        >
-          <span className="text-[10px] text-muted-foreground">
-            {formatTimetableClock(band.start)}
-          </span>
-          <span className="text-[10px] text-muted-foreground">
-            {formatTimetableClock(band.end)}
-          </span>
-        </td>
-        {days.map((_, index) => (
-          <td key={index} className="p-0.5 h-[inherit]">
-            <BlankTimeslotBody />
-          </td>
-        ))}
-      </tr>
-    );
-  };
-
-  const renderHorizontalBandHeader = (
-    band: NonNullable<typeof timetableDim.extendedHours>["pre"],
-    key: string,
-  ) => {
-    if (!band) return null;
-    return (
-      <td
-        key={key}
-        className="p-0.5"
-        style={{ width: band.size, minWidth: band.size }}
-      >
-        <div className="flex flex-col justify-between text-[10px] text-muted-foreground">
-          <span>{formatTimetableClock(band.start)}</span>
-          <span>{formatTimetableClock(band.end)}</span>
-        </div>
-      </td>
-    );
-  };
-
-  const renderHorizontalBandCell = (
-    band: NonNullable<typeof timetableDim.extendedHours>["pre"],
-    key: string,
-  ) => {
-    if (!band) return null;
-    return (
-      <td
-        key={key}
-        className="p-0.5 h-[inherit]"
-        style={{ width: band.size, minWidth: band.size }}
-      >
-        <BlankTimeslotBody />
-      </td>
-    );
-  };
-
   if (!vertical)
     return (
       <div
@@ -199,10 +135,6 @@ const Timetable: FC<{
             <thead>
               <tr>
                 <td className="min-w-[60px]" ref={headerRow}></td>
-                {renderHorizontalBandHeader(
-                  timetableDim.extendedHours?.pre,
-                  "pre-band-header",
-                )}
                 {scheduleTimeSlots.map((time, index) => (
                   <td className="min-w-[120px] px-2" key={index}>
                     <div className="flex flex-row justify-between items-baseline  text-muted-foreground">
@@ -212,10 +144,6 @@ const Timetable: FC<{
                     </div>
                   </td>
                 ))}
-                {renderHorizontalBandHeader(
-                  timetableDim.extendedHours?.late,
-                  "late-band-header",
-                )}
               </tr>
             </thead>
             <tbody>
@@ -226,10 +154,6 @@ const Timetable: FC<{
                       {dayStr}
                     </div>
                   </td>
-                  {renderHorizontalBandCell(
-                    timetableDim.extendedHours?.pre,
-                    "pre-band-cell",
-                  )}
                   {scheduleTimeSlots.map((time, slot) => (
                     <td
                       key={time.time}
@@ -239,10 +163,6 @@ const Timetable: FC<{
                       <BlankTimeslotBody />
                     </td>
                   ))}
-                  {renderHorizontalBandCell(
-                    timetableDim.extendedHours?.late,
-                    "late-band-cell",
-                  )}
                 </tr>
               ))}
             </tbody>
@@ -250,8 +170,8 @@ const Timetable: FC<{
           <div className="absolute top-0 left-0 w-full h-full">
             {timetableDataWithFraction.map((data, index) =>
               renderTimetableSlot
-                ? renderTimetableSlot(data, timetableDim, vertical)
-                : _renderTimetableSlot(data, timetableDim, vertical),
+                ? renderTimetableSlot(data, tableDim, vertical)
+                : _renderTimetableSlot(data, tableDim, vertical),
             )}
           </div>
         </div>
@@ -312,11 +232,6 @@ const Timetable: FC<{
             </tr>
           </thead>
           <tbody>
-            {timetableDim.extendedHours?.pre &&
-              renderVerticalBand(
-                timetableDim.extendedHours.pre,
-                "pre-band-row",
-              )}
             {scheduleTimeSlots.map((time, index) => (
               <TimeslotHeader
                 key={index}
@@ -326,21 +241,15 @@ const Timetable: FC<{
                 firstRow={index == 0}
                 ref={timetableCell}
                 showSaturday={showSaturday}
-                showSunday={showSunday}
               />
             ))}
-            {timetableDim.extendedHours?.late &&
-              renderVerticalBand(
-                timetableDim.extendedHours.late,
-                "late-band-row",
-              )}
           </tbody>
         </table>
         <div className="absolute top-0 left-0 w-full h-full">
           {timetableDataWithFraction.map((data, index) =>
             renderTimetableSlot
-              ? renderTimetableSlot(data, timetableDim, vertical)
-              : _renderTimetableSlot(data, timetableDim, vertical),
+              ? renderTimetableSlot(data, tableDim, vertical)
+              : _renderTimetableSlot(data, tableDim, vertical),
           )}
         </div>
       </div>

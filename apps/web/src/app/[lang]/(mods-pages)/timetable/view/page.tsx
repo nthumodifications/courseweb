@@ -9,6 +9,7 @@ import { useMemo, useState } from "react";
 import { lastSemester } from "@courseweb/shared";
 import SemesterSwitcher from "@/components/Timetable/SemesterSwitcher";
 import { renderTimetableSlot } from "@/helpers/timetable_course";
+import TimetableOffGridSchedule from "@/components/Timetable/TimetableOffGridSchedule";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import {
   Card,
@@ -129,6 +130,7 @@ const ViewTimetablePage = () => {
             timetableData={timetableData}
             renderTimetableSlot={renderTimetableSlot}
           />
+          <TimetableOffGridSchedule timetableData={timetableData} />
         </div>
         <div className="flex flex-col gap-4 px-4">
           <Card>

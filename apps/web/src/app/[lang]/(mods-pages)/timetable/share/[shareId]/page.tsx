@@ -9,6 +9,7 @@ import Timetable from "@/components/Timetable/Timetable";
 import { createTimetableFromCoursesAndCustomItems } from "@/helpers/timetable";
 import { MinimalCourse } from "@/types/courses";
 import { renderTimetableSlot } from "@/helpers/timetable_course";
+import TimetableOffGridSchedule from "@/components/Timetable/TimetableOffGridSchedule";
 import client from "@/config/api";
 import { toPrettySemester } from "@/helpers/semester";
 import { useState } from "react";
@@ -221,6 +222,10 @@ const ShareViewPage = () => {
                 renderTimetableSlot={(course, tableDim, vertical) =>
                   renderTimetableSlot(course, tableDim, vertical, false)
                 }
+              />
+              <TimetableOffGridSchedule
+                timetableData={timetableData}
+                editable={false}
               />
             </div>
           )}
