@@ -32,6 +32,7 @@ import { AddEventButton } from "./AddEventButton";
 import { getNearestTime } from "@courseweb/ui";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import useCourseDates from "@/hooks/useCourseDates";
+import { getLocale } from "@/helpers/dateLocale";
 
 export const CalendarWeekContainer = ({
   displayWeek,
@@ -41,7 +42,7 @@ export const CalendarWeekContainer = ({
   overlayEvents?: CalendarEventInternal[];
 }) => {
   const { events, addEvent, displayContainer, HOUR_HEIGHT } = useCalendar();
-  const { showAcademicCalendar } = useSettings();
+  const { language, showAcademicCalendar } = useSettings();
   const { courses } = useUserTimetable();
   const enrolledCourseIds = useMemo(
     () => Object.values(courses).flat(),
@@ -459,10 +460,10 @@ export const CalendarWeekContainer = ({
                 className="flex flex-col flex-1 items-center justify-center h-full select-none"
               >
                 <div className="md:hidden text-xs font-semibold">
-                  {format(day, "EEEEE")}
+                  {format(day, "EEEEE", { locale: getLocale(language) })}
                 </div>
                 <div className="hidden md:inline text-xs font-semibold">
-                  {format(day, "E")}
+                  {format(day, "E", { locale: getLocale(language) })}
                 </div>
                 <div
                   className={cn(
@@ -472,7 +473,11 @@ export const CalendarWeekContainer = ({
                       : "",
                   )}
                 >
-                  {format(day, isSameMonth(day, new Date()) ? "d" : "MMM d")}
+                  {format(
+                    day,
+                    isSameMonth(day, new Date()) ? "d" : "MMM d",
+                    { locale: getLocale(language) },
+                  )}
                 </div>
               </div>
             ))}

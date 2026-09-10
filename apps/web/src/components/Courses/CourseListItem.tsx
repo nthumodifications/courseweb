@@ -47,7 +47,7 @@ const CourseListItem: FC<{
                 <div
                   className={`flex flex-row items-center justify-center min-w-[65px] py-1 px-2 text-sm select-none rounded-md bg-nthu-400 dark:bg-nthu-600`}
                 >
-                  已修課
+                  {dict.course.details.taken}
                 </div>
               )}
               <p className="text-nthu-500 text-sm font-semibold">
@@ -84,12 +84,12 @@ const CourseListItem: FC<{
             </p>
             {course.restrictions && course.restrictions.length > 0 && (
               <p className="text-xs whitespace-pre-line text-muted-foreground">
-                限制：{course.restrictions}
+                {dict.course.details.restriction_prefix}{course.restrictions}
               </p>
             )}
             {course.note && course.note.length > 0 && (
               <p className="text-xs whitespace-pre-line text-muted-foreground">
-                備注：{course.note}
+                {dict.course.details.note_prefix}{course.note}
               </p>
             )}
             {course.prerequisites && (
@@ -100,7 +100,8 @@ const CourseListItem: FC<{
                     size="sm"
                     className="p-0 h-5 text-xs text-muted-foreground hover:text-foreground"
                   >
-                    有擋修 <ChevronDown className="h-3 w-3 ml-0.5" />
+                    {dict.course.details.prerequisites_available}{" "}
+                    <ChevronDown className="h-3 w-3 ml-0.5" />
                   </Button>
                 </CollapsibleTrigger>
                 <CollapsibleContent>

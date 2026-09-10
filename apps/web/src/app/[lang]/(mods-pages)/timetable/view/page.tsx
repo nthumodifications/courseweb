@@ -19,12 +19,15 @@ import { Button } from "@courseweb/ui";
 import { useQuery } from "@tanstack/react-query";
 import { Separator } from "@courseweb/ui";
 import client from "@/config/api";
+import useDictionary from "@/dictionaries/useDictionary";
 
 const ViewTimetablePage = () => {
   const navigate = useNavigate();
   const { lang } = useParams<{ lang: string }>();
+  const routeLang = lang === "en" ? "en" : "zh";
   const [searchParams] = useSearchParams();
   const { currentColors, setCourses, setColorMap } = useUserTimetable();
+  const dict = useDictionary();
   const [semester, setSemester] = useState<string>(lastSemester.id);
   const colorMap = JSON.parse(
     decodeURIComponent(searchParams.get("colorMap") ?? "{}"),
@@ -79,7 +82,7 @@ const ViewTimetablePage = () => {
   const handleImportCourses = () => {
     setCourses(courseCodes!);
     setColorMap(colorMap);
-    navigate(`/${lang}/timetable`);
+    navigate(`/${routeLang}/timetable`);
   };
 
   const handleImportThisSemester = () => {
@@ -92,7 +95,7 @@ const ViewTimetablePage = () => {
       partialColorMap[code] = currentColors[index];
     });
     setColorMap((colorMap) => ({ ...colorMap, ...partialColorMap }));
-    navigate(`/${lang}/timetable`);
+    navigate(`/${routeLang}/timetable`);
   };
 
   return (
@@ -106,17 +109,19 @@ const ViewTimetablePage = () => {
         <div className="flex flex-col gap-4 px-4">
           <Card>
             <CardHeader>
-              <CardTitle>把課程導入這個裝置嗎？</CardTitle>
+              <CardTitle>{dict.timetable.view.import_title}</CardTitle>
               <CardDescription>
-                Importing courses will overwrite all your courses
+                {dict.timetable.view.import_description}
               </CardDescription>
             </CardHeader>
             <CardFooter>
               <div className="flex flex-row gap-4 justify-end">
                 <Button onClick={handleImportThisSemester}>
-                  Import this semester
+                  {dict.timetable.view.import_semester}
                 </Button>
-                <Button onClick={handleImportCourses}>Import All</Button>
+                <Button onClick={handleImportCourses}>
+                  {dict.timetable.view.import_all}
+                </Button>
               </div>
             </CardFooter>
           </Card>
@@ -144,7 +149,9 @@ const ViewTimetablePage = () => {
                         </div>
                       );
                     }) || (
-                      <span className="text-gray-400 text-xs">No Venue</span>
+                      <span className="text-gray-400 text-xs">
+                        {dict.timetable.view.no_venue}
+                      </span>
                     )}
                   </div>
                 </div>
@@ -154,11 +161,15 @@ const ViewTimetablePage = () => {
           <div className="flex flex-row gap-4 justify-end">
             <div className="space-x-2">
               <span className="font-bold">{courses.length}</span>
-              <span className="text-gray-600">課</span>
+              <span className="text-gray-600">
+                {dict.timetable.view.courses_unit}
+              </span>
             </div>
             <div className="space-x-2">
               <span className="font-bold">{totalCredits}</span>
-              <span className="text-gray-600">總學分</span>
+              <span className="text-gray-600">
+                {dict.timetable.view.total_credits}
+              </span>
             </div>
           </div>
         </div>

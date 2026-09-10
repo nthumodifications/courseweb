@@ -148,7 +148,9 @@ const UpcomingEvents = () => {
       return (
         <div className="flex items-center gap-1 rounded-full bg-muted px-2 py-1 text-sm">
           <Cloud className="h-5 w-5 text-gray-400" />
-          <span className="text-muted-foreground text-xs">資料更新中</span>
+          <span className="text-muted-foreground text-xs">
+            {dict.calendar.updating}
+          </span>
         </div>
       );
     }
@@ -176,7 +178,7 @@ const UpcomingEvents = () => {
         {days.map((day) => (
           <div
             className="flex flex-col gap-2 pb-4 w-full"
-            key={format(day, "EEEE, do MMMM")}
+            key={format(day, "EEEE, do MMMM", { locale: getLocale(language) })}
           >
             <div className="flex flex-row justify-between">
               <div className="flex flex-row flex-1 items-baseline gap-2">

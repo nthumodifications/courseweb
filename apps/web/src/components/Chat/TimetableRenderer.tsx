@@ -4,6 +4,7 @@ import client from "@/config/api";
 import { Button, Skeleton } from "@courseweb/ui";
 import { AlertCircle, Plus, Calendar } from "lucide-react";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
+import useDictionary from "@/dictionaries/useDictionary";
 
 interface TimetableRendererProps {
   rawIds: string[];
@@ -11,6 +12,7 @@ interface TimetableRendererProps {
 
 export default function TimetableRenderer({ rawIds }: TimetableRendererProps) {
   const { addCourse } = useUserTimetable();
+  const dict = useDictionary();
   const [isAdding, setIsAdding] = useState(false);
 
   const {
@@ -49,9 +51,14 @@ export default function TimetableRenderer({ rawIds }: TimetableRendererProps) {
       for (const course of courses) {
         await addCourse(course.raw_id);
       }
-      alert(`已將 ${courses.length} 門課加入課表`);
+      alert(
+        dict.chat.timetable_renderer.add_success.replace(
+          "{count}",
+          String(courses.length),
+        ),
+      );
     } catch (error) {
-      alert("加入課表失敗");
+      alert(dict.chat.timetable_renderer.add_failed);
       console.error(error);
     } finally {
       setIsAdding(false);
@@ -66,7 +73,7 @@ export default function TimetableRenderer({ rawIds }: TimetableRendererProps) {
     return (
       <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 rounded p-3">
         <AlertCircle className="h-4 w-4" />
-        <span>Failed to load timetable</span>
+        <span>{dict.chat.timetable_renderer.load_failed}</span>
       </div>
     );
   }
@@ -74,7 +81,7 @@ export default function TimetableRenderer({ rawIds }: TimetableRendererProps) {
   if (!courses || courses.length === 0) {
     return (
       <div className="text-sm text-muted-foreground bg-muted rounded p-3">
-        No courses found
+        {dict.chat.timetable_renderer.no_courses}
       </div>
     );
   }
@@ -84,7 +91,7 @@ export default function TimetableRenderer({ rawIds }: TimetableRendererProps) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Calendar className="h-5 w-5 text-primary" />
-          <h3 className="font-semibold">建議課表</h3>
+          <h3 className="font-semibold">{dict.chat.timetable_renderer.title}</h3>
         </div>
         <Button
           onClick={handleAddToTimetable}
@@ -93,13 +100,16 @@ export default function TimetableRenderer({ rawIds }: TimetableRendererProps) {
           className="gap-2"
         >
           <Plus className="h-4 w-4" />
-          {isAdding ? "加入中..." : "加入我的課表"}
+          {isAdding
+            ? dict.chat.timetable_renderer.adding
+            : dict.chat.timetable_renderer.add}
         </Button>
       </div>
 
       <div className="bg-background rounded-lg p-4 space-y-3">
         <p className="text-sm text-muted-foreground">
-          包含 {courses.length} 門課程：
+          {dict.chat.timetable_renderer.contains} {courses.length}{" "}
+          {dict.chat.timetable_renderer.courses_suffix}
         </p>
         {courses.map((course) => (
           <div
@@ -121,14 +131,14 @@ export default function TimetableRenderer({ rawIds }: TimetableRendererProps) {
               </div>
             </div>
             <span className="text-sm font-medium text-primary">
-              {course.credits} 學分
+              {course.credits} {dict.chat.timetable_renderer.credits_suffix}
             </span>
           </div>
         ))}
       </div>
 
       <div className="text-xs text-muted-foreground bg-blue-50 dark:bg-blue-950/20 rounded p-2">
-        💡 提示：點擊「加入我的課表」可將所有課程直接加入你的選課清單
+        {dict.chat.timetable_renderer.tip}
       </div>
     </div>
   );

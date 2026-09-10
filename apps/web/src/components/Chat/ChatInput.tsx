@@ -3,10 +3,12 @@ import { useChatContext } from "./ChatProvider";
 import { Button } from "@courseweb/ui";
 import { Textarea } from "@courseweb/ui";
 import { Send, Square } from "lucide-react";
+import useDictionary from "@/dictionaries/useDictionary";
 
 export function ChatInput() {
   const [input, setInput] = useState("");
   const { sendMessage, isLoading, cancel } = useChatContext();
+  const dict = useDictionary();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSubmit = async () => {
@@ -32,7 +34,7 @@ export function ChatInput() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="問我任何關於課程的問題..."
+          placeholder={dict.chat.input_placeholder}
           className="min-h-[44px] max-h-[200px] resize-none"
           rows={1}
           disabled={isLoading}
@@ -50,7 +52,7 @@ export function ChatInput() {
       </div>
 
       <p className="text-xs text-muted-foreground mt-2 text-center">
-        Shift + Enter 換行，Enter 發送
+        {dict.chat.keyboard_hint}
       </p>
     </div>
   );

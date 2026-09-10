@@ -21,9 +21,9 @@ function LoginPrompt() {
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-4">
       <Sparkles className="w-16 h-16 text-muted-foreground mb-6" />
-      <h2 className="text-2xl font-semibold mb-2">AI 課程助手</h2>
+      <h2 className="text-2xl font-semibold mb-2">{dict.chat.title}</h2>
       <p className="text-muted-foreground text-center mb-8 max-w-md">
-        {dict.chat?.login_required ?? "請先登入以使用 AI 課程助手功能"}
+        {dict.chat.login_required}
       </p>
       <Button onClick={handleLogin} size="lg" className="gap-2">
         <LogIn className="w-5 h-5" />
@@ -36,6 +36,7 @@ function LoginPrompt() {
 export function ChatPageContent() {
   const { messages, quotaError, clearQuotaError } = useChatContext();
   const { isAuthenticated, isLoading } = useAuth();
+  const dict = useDictionary();
 
   // Show loading state while checking auth
   if (isLoading) {
@@ -44,7 +45,7 @@ export function ChatPageContent() {
         <div className="flex-1 flex items-center justify-center">
           <div className="animate-pulse flex flex-col items-center gap-4">
             <Sparkles className="w-12 h-12 text-muted-foreground" />
-            <p className="text-muted-foreground">Loading...</p>
+            <p className="text-muted-foreground">{dict.common.loading}</p>
           </div>
         </div>
       </div>
@@ -60,9 +61,9 @@ export function ChatPageContent() {
             <div className="flex items-center gap-3">
               <Sparkles className="w-6 h-6 text-primary" />
               <div>
-                <h1 className="text-xl font-bold">AI 課程助手</h1>
+                <h1 className="text-xl font-bold">{dict.chat.title}</h1>
                 <p className="text-xs text-muted-foreground">
-                  搜尋課程 · 規劃課表 · 查詢畢業學分
+                  {dict.chat.capabilities}
                 </p>
               </div>
             </div>
@@ -92,10 +93,10 @@ export function ChatPageContent() {
               <div className="flex-1 flex flex-col items-center justify-center p-4">
                 <Sparkles className="w-16 h-16 text-muted-foreground mb-6" />
                 <h2 className="text-2xl font-semibold mb-2">
-                  歡迎使用 AI 課程助手
+                  {dict.chat.welcome}
                 </h2>
                 <p className="text-muted-foreground text-center mb-8 max-w-md">
-                  我可以幫你搜尋課程、規劃課表、查詢畢業學分。試試下面的建議或直接輸入你的問題！
+                  {dict.chat.welcome_description}
                 </p>
                 <ChatSuggestions />
               </div>

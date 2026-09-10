@@ -84,6 +84,7 @@ const TimetableCourseQuickAccess = ({ course }: { course: MinimalCourse }) => {
   const { deleteCourse, colorMap, setColor, currentColors } =
     useUserTimetable();
   const { openCourse } = useCourseLink();
+  const dict = useDictionary();
 
   return (
     <>
@@ -128,11 +129,15 @@ const TimetableCourseQuickAccess = ({ course }: { course: MinimalCourse }) => {
                   return (
                     <div key={index} className="text-muted-foreground text-xs">
                       {venue} /{" "}
-                      {hasTimes(course as MinimalCourse) ? time : "缺時間"}
+                      {hasTimes(course as MinimalCourse)
+                        ? time
+                        : dict.course.details.missing_time}
                     </div>
                   );
                 }) || (
-                  <div className="text-muted-foreground text-xs">No Venue</div>
+                  <div className="text-muted-foreground text-xs">
+                    {dict.course.details.no_venues}
+                  </div>
                 )}
               </div>
               <CourseTagList course={course as unknown as CourseDefinition} />
@@ -145,12 +150,12 @@ const TimetableCourseQuickAccess = ({ course }: { course: MinimalCourse }) => {
         <div className="grid grid-cols-3 gap-2">
           <Button variant="outline" onClick={() => openCourse(course.raw_id)}>
             <ExternalLink className="w-4 h-4 mr-2" />
-            課程詳情
+            {dict.course.details.dialog_title}
           </Button>
           <DateContributeForm courseId={course.raw_id}>
             <Button variant="outline">
               <CalendarPlus className="w-4 h-4 mr-2" />
-              貢獻日期
+              {dict.dialogs.DateContributeForm.add_date}
             </Button>
           </DateContributeForm>
           <Button
@@ -158,7 +163,7 @@ const TimetableCourseQuickAccess = ({ course }: { course: MinimalCourse }) => {
             onClick={() => deleteCourse(course.raw_id)}
           >
             <Trash className="w-4 h-4 mr-2" />
-            移除
+            {dict.course.item.remove_from_semester}
           </Button>
         </div>
       </div>

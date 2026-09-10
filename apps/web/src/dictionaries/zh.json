@@ -2,7 +2,7 @@
   "today": {
     "noclass": "今天沒有課喔！",
     "noclass_sub": "放假吧~",
-    "noclass_sem": "放假咯！",
+    "noclass_sem": "放假囉！",
     "noclass_reminder": {
       "reminder": "還沒選到課嗎？",
       "first": "先到",
@@ -10,49 +10,87 @@
       "choose_courses": "選擇課程",
       "then": "後到",
       "timetable": "時間表",
-      "check_schedule": "查看時間表"
+      "check_schedule": "檢視課表"
     }
   },
   "timetable": {
     "actions": {
       "download": "下載",
       "share": "分享/同步",
-      "horizontal_view": "水平視圖",
-      "vertical_view": "垂直視圖",
+       "horizontal_view": "水平檢視",
+       "vertical_view": "垂直檢視",
       "more_options": "更多",
       "sync_ccxp": "同步校務系統",
-      "group_dept": "依系所分顔色",
+      "group_dept": "依系所分顏色",
       "sort_by_credits": "依學分排序"
     },
     "credits": "總學分",
     "course": "課",
     "display_settings": "顯示設定",
+    "priority": "志願序",
+    "conflict": "時間衝堂",
+    "duplicate": "重複課程",
+    "select_display": "選擇顯示方式",
     "english_names": "英文名稱",
     "english_names_options": {
-      "add": "添加",
-      "replace": "替換",
+      "add": "新增",
+      "replace": "取代",
       "hide": "隱藏"
     },
-    "show_course_code": "顯示課程代碼",
+    "show_course_code": "顯示課號",
     "show_venue": "顯示地點",
     "show_credits": "顯示學分",
     "show_priority": "顯示志願順序",
+    "saturday_hidden": "此檢視不顯示週六、週日課程",
     "lock_order": "鎖定課程順序",
     "reset_default": "恢復預設值",
-    "no_courses": "尚未添加課程",
-    "all_courses": "所有課程"
+    "no_courses": "尚未新增課程",
+    "all_courses": "所有課程",
+    "view": {
+      "import_title": "要將課程匯入此裝置嗎？",
+      "import_description": "匯入課程會覆蓋目前所有課程。",
+      "import_semester": "匯入本學期",
+      "import_all": "匯入全部",
+      "no_venue": "無上課地點",
+      "courses_unit": "門課",
+      "total_credits": "總學分"
+    },
+    "sidebar": {
+      "groups": "群組",
+      "create_group": "建立群組",
+      "create_or_join_group": "建立或加入群組",
+      "member": "位成員",
+      "members": "位成員",
+      "download_export": "下載／匯出",
+      "share_timetable": "分享課表",
+      "customizations": "自訂項目",
+      "community": "社群"
+    }
   },
   "course": {
     "credits": "學分",
+    "tags": {
+      "reserve_prefix": "保留",
+      "people": "人",
+      "enrolled_suffix": "選上",
+      "sixteen_weeks": "16 週",
+      "eighteen_weeks": "18 週",
+      "english": "英語",
+      "chinese": "中文",
+      "x_class": "X-Class",
+      "general_education": "通識",
+      "general_education_core": "核通"
+    },
     "list": {
       "courses": "課程",
-      "found": "收到",
+      "found": "找到",
       "search_placeholder": "尋找你要的課程..."
     },
     "search": {
       "error": "課程搜尋發生錯誤。此請求未改用其他搜尋層級重試。",
       "limited_mode": "搜尋目前處於有限模式，部分篩選和排序功能可能無法使用。",
-      "dismiss_limited_mode": "關閉有限搜尋模式提示"
+      "dismiss_limited_mode": "關閉有限搜尋模式提示",
+      "no_more_results": "沒有更多結果"
     },
     "item": {
       "add_to_semester": "加入",
@@ -87,7 +125,19 @@
       "timetable_empty": "找沒課的時間",
       "advanced_filters": "進階篩選",
       "search_results": "搜尋結果",
-      "results": "結果"
+      "results": "結果",
+      "mode": "模式",
+      "includes": "包含",
+      "exact": "完全符合",
+      "time_select_title": "上課時間",
+      "selected_slots": "已選 {count} 個時段",
+      "select_class_time": "選擇上課時間…",
+      "strict_search": "嚴格搜尋時段",
+      "fill_empty": "填入空堂",
+      "fill_empty_title": "填入所有未被已選課程使用的時段",
+      "occupied_slot": "此時段已被已選課程使用",
+      "selected": "已選",
+      "apply": "套用"
     },
     "details": {
       "semester": "學期",
@@ -97,12 +147,28 @@
       "venue_time": "時間地點",
       "class": "系班",
       "brief": "簡介",
-      "remarks": "備注",
+      "remarks": "備註",
       "description": "課程大綱",
       "restrictions": "課程限制",
       "prerequesites": "擋修",
       "timetable": "時間表",
-      "course_list": "課程列表",
+      "course_list": "課程清單",
+      "no_venues": "無上課地點",
+      "not_found": "找不到課程",
+      "view_more": "檢視更多",
+      "dialog_title": "課程詳細資訊",
+      "open_new_tab": "在新分頁開啟",
+      "missing_time": "無上課時間",
+      "no_favourites": "尚未新增收藏課程",
+      "taken": "已修課",
+      "restriction_prefix": "限制：",
+      "note_prefix": "備註：",
+      "prerequisites_available": "有擋修",
+      "semester_time_venue": "學期／時間地點",
+      "instructor": "授課教師",
+      "historical_average": "歷年平均成績",
+      "download_pdf": "下載 PDF",
+      "pdf_load_failed": "PDF 載入失敗",
       "favourites": "已收藏課程",
       "scores": "成績",
       "average": "平均",
@@ -111,26 +177,58 @@
         "gpa": "GPA",
         "percent": "百分比"
       },
-      "ptt": "PTT心得",
+      "ptt": "PTT 心得",
+      "comments_signin_title": "登入後即可檢視和發表評價。",
+      "comments_signin_description": "分享你的修課經驗，幫助其他同學做決定。",
+      "review_terms": {
+        "intro": "同學們好～為了讓大家獲得準確且有意義的評價：",
+        "accuracy": "請確保分享內容真實且客觀，並且不要進行人身攻擊。",
+        "anonymous": "此為匿名分享，但為防止有心人士濫用，我們會在後台記錄分享者的學號；若違反規則，將禁止該學號留言。",
+        "access": "只有成功透過代理登入校務資訊系統的同學，才能留言並檢視其他同學的留言。",
+        "accept": "我已閱讀並同意",
+        "decline": "不同意"
+      },
       "related_courses": "相同課號資料",
+      "details_updated": "詳細資料更新：",
+      "syllabus_updated": "課程大綱更新：",
+      "review_suffix": "的心得",
       "compulsory": "必修",
       "elective": "選修",
       "cross_discipline": "跨領域",
       "first_specialization": "一專",
       "second_specialization": "二專",
-      "ptt_title": "PTT Reviews",
-      "ptt_disclaimer": "PTT 評論來自於 NTHU_Course 版，並非由 NTHUMods 審核。評論並不代表 NTHUMods 的立場。若您發現任何不當內容，請向PTT版檢舉。",
+      "ptt_title": "PTT 心得",
+      "ptt_disclaimer": "PTT 心得來自 NTHU_Course 版，並非由 NTHUMods 審核。心得不代表 NTHUMods 的立場。若您發現任何不當內容，請向 PTT 版檢舉。",
       "important_dates": "重要日期",
       "view_ccxp_syllabus": "瀏覽校務系統大綱網頁"
     }
   },
   "navigation": {
-    "today": "行事曆",
+    "today": "今日",
     "courses": "課表",
     "timetable": "時間表",
     "settings": "設定",
     "venues": "地點",
-    "bus": "校車"
+    "bus": "校車",
+    "apps": "應用程式"
+  },
+  "sports": {
+    "title": "體育場館",
+    "updated_at": "更新於",
+    "refresh_cache": "重新整理場館時刻表",
+    "current": "（目前）",
+    "open_until": "開放至 {time}",
+    "opens_at": "開放時間 {time}",
+    "closed_today": "今日閉館",
+    "closed": "閉館",
+    "schedule_unavailable": "尚未提供開放時間。",
+    "view_original_pdf": "檢視原始 PDF",
+    "occupancy_people": "人",
+    "utilization": "使用率",
+    "entries_today": "今日進場",
+    "data_source": "資料來源：",
+    "source_name": "國立清華大學體育中心",
+    "source_aria": "國立清華大學體育中心（在新分頁開啟）"
   },
   "bus": {
     "north_gate": "北校門口",
@@ -148,13 +246,22 @@
     "validity": "有效期限",
     "route": "路線",
     "departure_time": "出發時間",
-    "notes": "備注",
+    "notes": "備註",
     "weekdays": "平日",
     "weekends": "假日",
     "to": "往",
-    "schedule": "發車時刻表"
+    "schedule": "發車時刻表",
+    "load_error": "無法載入校車資料，請稍後再試。",
+    "invalid_line": "無效路線",
+    "large_bus": "大型校車",
+    "friday_closed": "週五停駛"
   },
   "settings": {
+    "navigation_aria": "設定導覽",
+    "quick_navigation": "快速導覽",
+    "open_navigation": "開啟導覽選單",
+    "close_navigation": "關閉導覽選單",
+    "drag_hint": "拖曳以重新排序，切換以顯示或隱藏導覽項目",
     "appearance": {
       "title": "外觀",
       "description": "主題、顏色、字體、版面",
@@ -164,11 +271,20 @@
       },
       "radius": {
         "title": "圓角",
-        "description": "邊框圓角大小"
+        "description": "邊框圓角大小",
+        "options": {
+          "none": "無",
+          "sm": "小",
+          "md": "中",
+          "lg": "大",
+          "xl": "特大"
+        }
       },
       "font_scale": {
         "title": "字體大小",
-        "description": "調整文字大小"
+        "description": "調整文字大小",
+        "small": "小",
+        "large": "大"
       },
       "density": {
         "title": "密度",
@@ -180,18 +296,21 @@
       "background": {
         "title": "背景",
         "description": "頁面背景樣式",
+        "from": "起始顏色",
+        "to": "結束顏色",
         "solid": "純色",
         "gradient": "漸層",
         "dots": "點狀",
         "lines": "線條",
-        "noise": "噪點"
+       "noise": "雜訊"
       },
       "font": {
         "title": "字體"
       },
       "accent": {
         "title": "強調色",
-        "description": "覆蓋預設主題的主要顏色"
+        "description": "覆蓋預設主題的主要顏色",
+        "pick": "選擇強調色"
       },
       "share_theme": "分享主題",
       "copied": "已複製！",
@@ -200,15 +319,15 @@
     "account": {
       "signin": "登入",
       "signout": "登出",
-      "title": "賬號",
+      "title": "帳號",
       "description": "校務資訊系統代理登入",
       "ccxp": {
         "title": "代理登入校務資訊系統",
         "description": "系統會用代理登入方式，讓學生們可以在NTHUMods 上輕鬆連結校務系統功能。"
       },
-      "logoutDescription": "是否确定要退出登录？",
+      "logoutDescription": "是否確定要登出？",
       "logoutConfimation": "確認登出",
-      "keepLocalData": "在這個設備保留数据",
+      "keepLocalData": "在此裝置保留資料",
       "logout": "登出"
     },
     "display": {
@@ -218,39 +337,48 @@
         "title": "黑暗模式"
       },
       "language": {
-        "title": "語言 Language"
+        "title": "語言"
       },
       "compact_header": {
         "title": "精簡標頭",
         "description": "降低頂部標頭列的高度"
       },
       "bottom_nav": {
-        "title": "底部導航"
+        "title": "底部導覽"
       },
       "sidebar_nav": {
-        "title": "側邊導航"
+        "title": "側邊導覽"
       }
     },
     "timetable": {
       "title": "時間表",
-      "description": "顔色, 客制化",
+      "description": "顏色、客製化",
       "vertical_preview": "垂直式顯示",
       "default_view": {
-        "title": "預設視圖",
-        "description": "開啟時間表頁面時使用垂直視圖"
+         "title": "預設檢視",
+         "description": "開啟課表頁面時使用垂直檢視"
       },
       "language": "時間表語言",
+      "language_options": {
+        "app": "依照應用程式語言",
+        "zh": "繁體中文",
+        "en": "英文"
+      },
       "align": {
         "title": "對齊",
         "left": "左",
         "center": "中",
-        "right": "右"
+        "right": "右",
+        "top": "上",
+        "bottom": "下"
       },
       "display": "顯示設定",
       "slot_title": "課程名稱",
-      "slot_code": "課程代碼",
+    "slot_code": "課號",
       "slot_time": "時間",
       "slot_venue": "地點",
+      "slot_teacher": "授課教師",
+      "slot_credits": "學分",
       "alignment": "對齊",
       "fields_order": "欄位與順序"
     },
@@ -259,30 +387,30 @@
       "description": "使用量分析",
       "analytics": {
         "title": "分享至 Google Analytics",
-        "description": "傳送匿名使用量統計數據至 Google Analytics，幫助我們了解使用者行為，以改進服務。"
+      "description": "傳送匿名使用量統計資料至 Google Analytics，幫助我們了解使用者行為，以改進服務。"
       }
     },
     "calendar": {
       "title": "行事曆頁面",
-      "description": "想先看到什麼内容",
+      "description": "想先看到什麼內容",
       "academic_calendar": {
         "title": "清大校曆",
         "description": "在行事曆頁面顯示學校行事曆。"
       },
       "experimental_calendar": {
-        "title": "日曆",
+         "title": "行事曆",
         "badge": "實驗",
-        "description": "在行事曆頁面使用新的日曆功能。"
+         "description": "在行事曆頁面使用新的行事曆功能。"
       },
       "widget_dashboard": {
         "title": "小工具儀表板",
-        "description": "用可自訂小工具格替換今日頁面",
+         "description": "用可自訂的小工具格取代今日頁面",
         "customize": "自訂小工具："
       }
     },
     "ai": {
       "title": "AI 課程助手",
-      "description": "個性化設定與 API Key 管理",
+      "description": "個人化設定與 API Key 管理",
       "profile": {
         "title": "個人資料",
         "description": "設定您的系所和入學年度，讓 AI 提供更準確的課程建議",
@@ -301,10 +429,10 @@
         "label": "Gemini API Key",
         "placeholder": "AIzaSy...",
         "get_key": "從 Google AI Studio 取得免費 API Key",
-        "test": "測試連接",
+      "test": "測試連線",
         "testing": "測試中...",
         "valid": "✓ API Key 有效",
-        "invalid": "✗ API Key 無效或連接失敗"
+      "invalid": "✗ API Key 無效或連線失敗"
       },
       "save": "儲存設定"
     },
@@ -318,7 +446,12 @@
     }
   },
   "pages": {
-    "ais_loading": "正在幫你登入校務資訊系統，請稍等..."
+    "ais_loading": "正在幫你登入校務資訊系統，請稍等…",
+    "ais_not_logged_in": "沒有代理登入帳號資料",
+    "ais_error": "載入資料時發生問題！請檢查登入資訊，或稍後再試。",
+    "offline": "NTHUMods 目前離線，請稍後再試。",
+    "waitlist_title": "即將推出新功能？搶先得知最新消息！",
+    "waitlist_message": "敬請期待 NTHUMods 的新功能。"
   },
   "venues": {
     "placeholder": "從選項中選一個地點"
@@ -338,33 +471,43 @@
     "coursewebCode": "CourseWeb 館舍代碼",
     "closeDetails": "關閉建築資訊",
     "instructions": "拖曳旋轉 · 滾輪縮放 · 右鍵拖曳平移",
-    "viewVenueOnMap": "在 3D 地圖查看"
+    "viewVenueOnMap": "在 3D 地圖檢視"
   },
   "alerts": {
     "TimetableCourseList": {
       "action": "前往設定",
-      "text": "時間表可以在設定頁面客制化哦！"
+    "text": "課表可以在設定頁面客製化喔！"
     }
   },
   "applist": {
-    "title": "功能列表",
-    "to_ccxp": "校務系統鏈接",
-    "empty_pinned_apps_reminder": "可以到右上角加快捷功能哦~",
-    "pinned_apps_title": "快捷功能",
-    "edit_pinned_apps_title": "修改快捷功能"
+      "title": "功能清單",
+     "to_ccxp": "校務系統連結",
+     "empty_pinned_apps_reminder": "可以到右上角新增常用功能喔～",
+     "pinned_apps_title": "常用功能",
+     "edit_pinned_apps_title": "編輯常用功能"
   },
   "dialogs": {
     "DownloadTimetableDialog": {
       "title": "下載你的課表",
-      "description": "把課表下載成圖片或是 .ics 導入到行事曆吧！",
+    "description": "把課表下載成圖片，或將 .ics 匯入行事曆吧！",
       "buttons": {
         "image": "圖片",
         "ICS": "行事曆 .ics"
       },
-      "success_title": "生成成功",
-      "success_description": "課表圖片已下載到您的裝置。請檢查瀏覽器的下載資料夾或點擊圖片複製到剪貼板。",
+      "success_title": "產生成功",
+    "success_description": "課表圖片已下載到您的裝置。請檢查瀏覽器的下載資料夾，或點選圖片複製到剪貼簿。",
+      "success_toast_title": "下載成功",
+      "success_toast_description": "課表圖片已下載為 {filename}",
+      "image_alt": "課表預覽",
+      "copy_image_title": "點選以複製圖片到剪貼簿",
+      "copy_image": "複製到剪貼簿",
+      "copy_image_success": "複製成功",
+      "copy_image_failed": "複製失敗",
+      "copy_image_failed_description": "無法複製到剪貼簿，請手動儲存圖片。",
+      "copy_image_unsupported": "不支援複製功能",
+      "copy_image_unsupported_description": "你的瀏覽器不支援複製到剪貼簿。",
       "download_error": "下載失敗",
-      "download_error_description": "日曆檔案下載失敗，請重試或聯繫支援。",
+    "download_error_description": "行事曆檔案下載失敗，請重試或聯絡支援。",
       "close": "關閉"
     },
     "ShareSyncTimetableDialog": {
@@ -373,12 +516,12 @@
       "category:qr": "QR 碼",
       "category:links": "連結",
       "links": {
-        "email": "發送郵件"
+        "email": "寄送電子郵件"
       }
     },
     "DateContributeForm": {
       "title": "貢獻行事曆",
-      "description": "把課堂上重要的日期共享給其他同學",
+      "description": "把課堂上重要的日期分享給其他同學",
       "dont_abuse": "請勿濫用此系統",
       "disclaimer": "你的貢獻將有學號作證，但不會公開顯示。",
       "types": {
@@ -388,11 +531,22 @@
         "other": "其他"
       },
       "date_placeholder": "選一個日期",
-      "add_date": "加日期",
+       "add_date": "新增日期",
       "reset": "還原",
       "submit": "送出",
+      "submit_failed": "送出失敗",
+      "submitted_title": "已成功送出",
+      "submitted_description": "你的貢獻已成功送出",
+      "type": "類型",
+      "title_placeholder": "標題",
       "accurate_relavent": "請輸入準確並跟此課程有關的日期",
       "sign_in_required": "請登入以貢獻課程日期"
+    },
+    "ShareCourseButton": {
+      "share_prefix": "分享：",
+      "share_text_prefix": "看看這門課程：",
+      "link_copied": "連結已複製到剪貼簿",
+      "button": "分享"
     }
   },
   "shops": {
@@ -402,78 +556,95 @@
     "closed": "休息中",
     "closed_today": "今日休息",
     "area_placeholder": "選擇地區",
-    "area_all": "全部"
+    "area_all": "全部",
+    "load_error": "無法載入店家資料。"
   },
   "help": {
+    "button": "說明",
     "intro": {
       "title": "歡迎來到NTHUMODS",
       "description": "這可能是能讓你在清大取得好成績的終極工具！以下是一份快速指南，讓你能夠輕鬆入門。"
     },
     "courses": {
       "title": "課程探索",
-      "description": "在你的學習之路上不斷發現和探索，從核心必修到選修，包在NTHUMODS身上。深入挖掘，找到最適合你時間表的課程！"
+      "description": "在你的學習之路上不斷發現和探索，從核心必修到選修，NTHUMods 都能協助你。深入探索，找到最適合你課表的課程！"
     },
     "dashboard": {
       "title": "個人化儀表板",
       "description": "你的個人化儀表板已經準備就緒！在這裡，你可以追蹤你的課程、作業（即將推出）和考試（即將推出）。保持積極，繼續努力!"
     },
     "bus": {
-      "title": "公車路線",
-      "description": "有了對校園公車路線、時間和站點的掌握，輕鬆規劃在學校的日常通勤。"
+      "title": "校車路線",
+      "description": "掌握校園校車路線、班次與站點，輕鬆規劃日常通勤。"
     },
     "tools": {
       "title": "需要更多功能嗎？",
-      "description": "將你的清大帳戶與NTHUMODS連結，打開一扇通往豐富附加工具的大門。輕鬆整合各種功能，豐富你的大學生活。",
-      "connect": "現在連結"
+       "description": "將你的清大帳戶與 NTHUMods 連結，開啟通往豐富附加工具的大門。輕鬆整合各種功能，豐富你的大學生活。",
+      "connect": "現在連線",
+      "image_alt": "工具箱",
+      "calendar": "行事曆",
+      "bus_schedule": "校車時刻表",
+      "courses": "課程",
+      "settings": "設定"
     },
     "dev": {
       "title": "共同成長",
-      "description": "我們致力於不斷改進，為提供最好的體驗。目前應用程式仍在開發中，過程中可能會面對一些困難。但我們重視你的意見，請分享你的想法、回饋，以及你希望看到的功能。",
+      "description": "我們致力於持續改進，提供最佳體驗。目前應用程式仍在開發中，過程可能會遇到一些困難。但我們重視你的意見，請分享你的想法、回饋，以及你希望看到的功能。",
       "feedback": "給回饋"
     },
     "prev": "上一頁",
     "next": "下一頁",
     "skip": "跳過",
-    "jump": "啓動！",
+    "jump": "開始！",
     "continue": "繼續",
     "login": "登入"
   },
   "ccxp": {
-    "connected": "已連接",
-    "failed": "連接著/登入異常",
-    "connect": "連接",
+    "connected": "已連線",
+      "failed": "尚未連線或登入異常",
+      "connect": "連線",
     "incorrect_credentials": "學號或密碼錯誤",
     "studentid": "學號",
     "password": "密碼",
     "fill_in_ccxp_credentials": "請輸入校務資訊系統密碼",
     "login": {
       "title": "登入校務資訊系統",
-      "disclaimer": "注意：你的學號和密碼僅會儲存在你的設備中，不會儲存在伺服器上。",
-      "description": "每次有接觸到需要登入的功能，網站會重新登入校務資訊系統，並把學號和密碼傳到該伺服器進行身份驗證，傳輸過程會使用HTTPS加密連線，並且在驗證完畢后立即刪除。",
+      "disclaimer": "注意：你的學號和密碼僅會儲存在你的裝置中，不會儲存在伺服器上。",
+      "description": "每次使用需要登入的功能時，網站會將學號和密碼傳送至該伺服器進行身分驗證。傳輸過程會使用 HTTPS 加密連線，並在驗證完畢後立即刪除。",
       "agree": "我同意本網站的隱私權政策及理解代理登入的方法"
     },
     "errors": {
       "IncorrectCredentials": "學號或密碼錯誤",
-      "CaptchaError": "驗證碼解讀失敗,  請在15分鐘后重試。",
-      "UnknownError": "發生了問題，但不知道爲什麽 :( 請到校務系統登入試試看。"
+      "CaptchaError": "驗證碼解讀失敗，請在 15 分鐘後重試。",
+      "UnknownError": "發生了問題，但不知道為什麼 :( 請到校務系統登入試試看。"
     },
     "logging_in_please_wait": "正在幫你登入校務資訊系統，請稍等...",
-    "not_logged_in_error": "還未連接校務資訊系統"
+    "not_logged_in_error": "尚未連線至校務資訊系統",
+    "suspended_title": "代理登入暫停",
+    "suspended_description": "由於人力有限，代理登入目前暫停使用。最新消息請見 Instagram @nthumods。"
   },
   "grade": {
+    "gpa": "GPA",
+    "overview": "總覽",
+    "as_of": "截至",
+    "credit": "學分",
+    "ranking": "排名",
+    "course_name": "課程名稱",
+    "grade": "成績",
+    "semesters": "學期",
     "class_rank": "班排名",
     "dept_rank": "系排名",
     "passed_credits": "及格學分",
-    "pending_credits": "成績未到學分",
+     "pending_credits": "待公布成績的學分",
     "semester": "學期",
     "relative_avg": "修課相對成績平均",
     "num_of_courses": "修課數",
     "summer_credits": "暑修學分",
     "transfer_credits": "抵免學分",
-    "t_score_class_rank": "T分數班排名",
-    "t_score_dept_rank": "T分數系排名",
-    "latest_first": "由遠到近",
-    "oldest_first": "由近到遠",
+     "t_score_class_rank": "T 分數班排名",
+     "t_score_dept_rank": "T 分數系排名",
+      "latest_first": "最新在前",
+      "oldest_first": "最舊在前",
     "score_curve": "成績曲線圖",
     "taken_actual_credits": "修習/實得學分",
     "all_courses": "全部課程",
@@ -485,6 +656,84 @@
     "no_events": "無行程",
     "no_events_sub": "今天沒有任何行程",
     "add_event": "新增行程",
+    "updating": "資料更新中",
+    "sync": {
+      "title": "發現課表更新！",
+      "new_reason": "新增",
+      "modified_reason": "修改的",
+      "description": "在第 {semester} 學期課表中找到{reason}課程。要同步變更嗎？",
+      "cancel": "取消",
+      "cancelled_title": "{semester} 學期同步已取消",
+      "cancelled_description": "課表變更後可以再次同步",
+      "sync": "同步"
+    },
+    "tabs": {
+      "upcoming": "即將到來",
+      "others": "其他",
+      "others_timetables": "其他人的課表"
+    },
+    "others": {
+      "shared_timetable": "分享的課表",
+      "new_label": "新增",
+      "live": "即時同步",
+      "snapshot": "固定版本",
+      "owner_removed": "擁有者已移除此分享",
+      "hide_overlay": "隱藏覆蓋課表",
+      "show_overlay": "顯示覆蓋課表",
+      "view_full_page": "檢視完整頁面",
+      "remove": "移除",
+      "shown_in_calendar": "顯示於行事曆",
+      "sign_in": "登入以儲存並檢視其他人的課表",
+      "title": "其他人的課表",
+      "new_count": "{count} 個新項目",
+      "browse": "瀏覽",
+      "no_saved": "尚未儲存任何課表。",
+      "open_save_follow": "開啟分享連結，然後點選「儲存並追蹤」。"
+    },
+    "event": {
+      "confirm_delete_title": "確認刪除",
+      "confirm_delete_description": "確定要刪除這個行程嗎？",
+      "cancel": "取消",
+      "delete": "刪除",
+      "update_repeat_title": "更新重複行程",
+      "update_repeat_description": "要更新所有重複行程，還是只更新這個行程？",
+      "update_this": "只更新這個行程",
+      "all": "所有行程",
+      "update_following": "這個及之後的行程",
+      "delete_repeat_title": "刪除重複行程",
+      "delete_repeat_description": "要刪除所有重複行程，還是只刪除這個行程？",
+      "delete_this": "只刪除這個行程"
+    },
+    "form": {
+      "start": "開始",
+      "end": "結束",
+      "pick_date": "選擇日期",
+      "start_date": "開始日期",
+      "end_date": "結束日期",
+      "interval": "間隔",
+      "end_repeat": "重複結束",
+      "after": "之後",
+      "number_occurrences": "重複次數",
+      "on_date": "指定日期",
+      "pick_end_date": "選擇結束日期",
+      "title": "標題",
+      "event_title": "行程標題",
+      "location": "地點",
+      "all_day": "全天",
+      "repeat": "重複",
+      "select_repeat": "選擇重複頻率",
+      "no_repeat": "不重複",
+      "daily": "每日",
+      "weekly": "每週",
+      "monthly": "每月",
+      "yearly": "每年",
+      "color": "顏色",
+      "label": "標籤",
+      "details": "詳細資訊",
+      "add_details": "新增詳細資訊",
+      "no_label": "找不到標籤。",
+      "save_event": "儲存行程"
+    },
     "minified": {
       "no_events": "沒有即將到來的行程"
     }
@@ -492,11 +741,63 @@
   "cancel": "取消",
   "privacy_policy": "隱私權政策",
   "common": {
-    "cancel": "取消"
+    "cancel": "取消",
+    "back": "返回",
+    "close": "關閉",
+    "loading": "載入中…",
+    "search": "搜尋…",
+    "selecting": "選取中…",
+    "all": "全部",
+    "no_results": "找不到結果。",
+    "try_again": "再試一次",
+    "submit": "送出",
+    "save": "儲存",
+    "error": "錯誤",
+    "coming_soon": "即將推出",
+    "share": "分享"
+  },
+  "auth": {
+    "timeout_title": "驗證逾時",
+    "timeout_description": "登入程序耗時過久，請再試一次。",
+    "logging_in": "正在登入 NTHUMods",
+    "please_wait": "請稍候，我們正在完成驗證程序……"
+  },
+  "error": {
+    "message_1": "完蛋了，工程師今晚要加班了。",
+    "message_2": "糟糕，這裡出了點問題。",
+    "message_3": "哎呀，出了點錯誤。",
+    "message_4": "糟糕，發生了一點問題。",
+    "message_5": "這次出錯了。",
+    "message_6": "發生錯誤。",
+    "message_7": "錯誤 500：使用者端錯誤",
+    "message_8": "無法載入頁面。",
+    "message_9": "這個問題需要團隊處理。",
+    "client_description": "使用者端發生錯誤，請稍後再試。",
+    "tips_title": "你可以試試：",
+    "check_connection": "檢查你的網路連線",
+    "clear_cache": "清除瀏覽器快取並重新整理頁面",
+    "dcard": "到 Dcard 抱怨",
+    "report_here": "在這裡回報錯誤",
+    "stack_trace": "錯誤堆疊",
+    "report_issue": "回報問題",
+    "try_again": "再試一次",
+    "reload_app": "重新載入應用程式",
+    "something_wong": "發生了一點問題"
+  },
+  "footer": {
+    "tagline": "由學生製作，為學生服務 ❤️",
+    "contribute": "貢獻",
+    "report_issue": "回報問題",
+    "team": "團隊",
+    "privacy_policy": "隱私權政策",
+    "proxy_login": "代理登入",
+    "design_system": "設計系統",
+    "copyright": "版權所有。",
+    "disclaimer": "NTHUMods 與國立清華大學沒有隸屬關係。不過我的畢業仰賴他們，所以不用擔心。"
   },
   "sponsorship": {
     "title": "贊助 NTHUMods",
-    "description": "僅需 $1 即可支持我們的開發",
+    "description": "僅需 $1 即可支援我們的開發",
     "cerana": "東蜂科技",
     "opencollective": {
       "title": "請我們喝咖啡",
@@ -508,24 +809,24 @@
     "subtitle": "幫助我們為清華大學社群建立更好的學術工具。每一個貢獻都很重要。",
     "sponsors": {
       "title": "我們的贊助商",
-      "description": "我們感謝這些贊助商的大力支持，讓 NTHUMods 得以實現！",
+      "description": "我們感謝這些贊助者的大力支援，讓 NTHUMods 得以實現！",
       "algolia": "搜尋引擎",
       "cerana": "基礎設施贊助商"
     },
     "stats": {
-      "active_users": "活躍用戶",
+      "active_users": "活躍使用者",
       "open_source": "開放原始碼",
-      "years_running": "運行年數",
+     "years_running": "運作年數",
       "community": "社群"
     },
     "how_to_contribute": {
       "title": "如何貢獻",
-      "description": "NTHUMods 是一個 100% 由學生主導的開源專案。我們依靠貢獻者和清華大學社群的支持來維持這個平台的生命力和蓬勃發展。每一個貢獻，無論多小，都能為數以千計的學生生活帶來真正的改變！"
+       "description": "NTHUMods 是一個 100% 由學生主導的開放原始碼專案。我們依靠貢獻者和清華大學社群的支援，讓這個平台持續發展。每一個貢獻，無論多小，都能為數以千計的學生生活帶來真正的改變！"
     },
     "financial_support": {
-      "title": "💰 財務支持",
-      "description": "幫助我們支付開發成本和其他費用。每一分錢都有助於我們維護和改善平台，為所有學生提供更好的服務。",
-      "opencollective": "在 OpenCollective 上支持"
+      "title": "💰 財務支援",
+       "description": "協助我們支付開發成本和其他費用。每一分錢都有助於我們維護和改善平台，為所有學生提供更好的服務。",
+      "opencollective": "在 OpenCollective 上支援"
     },
     "for_everyone": {
       "title": "給所有人",
@@ -541,7 +842,7 @@
       "title": "給開發者",
       "bug_reports": {
         "title": "提交錯誤報告和功能請求",
-        "description": "發現了錯誤？想要看到新功能？在我們的 GitHub 存儲庫中提交問題！",
+      "description": "發現了錯誤？想要看到新功能？在我們的 GitHub 儲存庫中提交問題！",
         "bug": "錯誤",
         "bug_description": "在 Github 上報告錯誤",
         "feature": "功能",
@@ -549,16 +850,16 @@
       },
       "code_design": {
         "title": "貢獻程式碼和設計",
-        "description": "準備好開始了嗎？我們歡迎各種技能水平的貢獻者！無論你是經驗豐富的開發者還是剛剛起步，這裡都有適合每個人的東西。查看我們的適合新手的問題來開始，並加入我們的社群討論！",
-        "github_repo": "GitHub 存儲庫",
-        "good_first_issues": "適合新手的問題"
+      "description": "準備好開始了嗎？我們歡迎各種技能程度的貢獻者！無論你是經驗豐富的開發者還是剛剛起步，這裡都有適合每個人的內容。檢視適合新手的問題，並加入我們的社群討論！",
+      "github_repo": "GitHub 儲存庫",
+      "good_first_issues": "新手入門問題"
       }
     },
     "call_to_action": {
       "title": "準備好做出改變了嗎？",
       "description": "加入我們充滿活力的學生、開發者和夢想家社群，一起為清華大學建立未來的學術工具！",
       "start_contributing": "開始貢獻",
-      "support_us": "支持我們"
+      "support_us": "支援我們"
     }
   },
   "chat": {
@@ -566,18 +867,66 @@
     "title": "AI 課程助手",
     "welcome": "歡迎使用 AI 課程助手",
     "welcome_description": "我可以幫你搜尋課程、規劃課表、查詢畢業學分。試試下面的建議或直接輸入你的問題！",
-    "quota_exceeded_title": "API 配額已超出",
-    "quota_exceeded_description": "我們的 API 配額已達上限。您可以使用自己的 Gemini API Key 來繼續使用 AI 課程助手。",
+    "capabilities": "搜尋課程 · 規劃課表 · 查詢畢業學分",
+    "quota_exceeded_title": "API 使用額度已超出",
+    "quota_exceeded_description": "我們的 API 使用額度已達上限。您可以使用自己的 Gemini API Key 來繼續使用 AI 課程助手。",
     "retry_after": "預計",
     "seconds": "秒後可重試",
-    "open_settings": "開啟設定"
+    "open_settings": "開啟設定",
+    "context_title": "目前資訊",
+    "department": "系所",
+    "entrance_year": "入學年度",
+    "semester_label": "學期",
+    "current_year": "目前年度",
+    "course_history": "修課紀錄",
+    "not_set": "未設定",
+    "not_available": "無",
+    "courses_suffix": "門課，涵蓋",
+    "semesters_suffix": "個學期",
+    "view_history": "檢視修課紀錄",
+    "ask_placeholder": "詢問課程、畢業要求或課表…",
+    "clear": "清除",
+    "you": "你",
+    "assistant": "AI 助手",
+    "sending": "傳送中…",
+    "send": "傳送",
+    "input_placeholder": "詢問任何課程相關問題…",
+    "keyboard_hint": "Shift + Enter 換行，Enter 傳送",
+    "thinking": "思考中…",
+    "suggestions": {
+      "machine_learning": "搜尋機器學習相關課程",
+      "next_timetable": "規劃下學期課表",
+      "graduation_credits": "查詢畢業學分",
+      "elective_courses": "推薦選修課程",
+      "machine_learning_prompt": "幫我搜尋機器學習相關的課程",
+      "next_timetable_prompt": "根據我目前的課表，幫我規劃下學期可以選什麼課",
+      "graduation_credits_prompt": "幫我查詢我的系所畢業學分要求",
+      "elective_courses_prompt": "推薦一些適合我的選修課程"
+    },
+    "course_renderer": {
+      "load_failed": "課程載入失敗",
+      "no_courses": "找不到課程"
+    },
+    "timetable_renderer": {
+      "load_failed": "課表載入失敗",
+      "no_courses": "找不到課程",
+      "title": "建議課表",
+      "add": "加入我的課表",
+      "adding": "加入中…",
+      "contains": "包含",
+      "courses_suffix": "門課：",
+      "credits_suffix": "學分",
+      "tip": "💡 提示：點選「加入我的課表」可將所有課程直接加入你的選課清單",
+      "add_success": "已將 {count} 門課加入課表",
+      "add_failed": "加入課表失敗"
+    }
   },
   "planner": {
     "status": {
       "completed": "已完成",
       "inProgress": "進行中",
       "failed": "未通過",
-      "planned": "計劃中"
+      "planned": "規劃中"
     },
     "common": {
       "confirm": "確認",
@@ -608,7 +957,7 @@
       "expandFolder": "展開資料夾"
     },
     "courseList": {
-      "viewModeList": "列表",
+      "viewModeList": "清單",
       "viewModeGrid": "網格",
       "statusFilterLabel": "課程狀態",
       "statusFilterAll": "全部課程",
@@ -619,44 +968,44 @@
       "noFolder": "無",
       "completedIn": "已修於",
       "inProgressIn": "修習中",
-      "plannedFor": "計劃於",
+      "plannedFor": "規劃於",
       "noSemester": "無學期",
       "selectCourse": "選取課程",
-      "viewDetails": "查看詳情",
+      "viewDetails": "檢視詳情",
       "moreActions": "更多選項",
       "editCourse": "編輯課程",
       "markAsCompleted": "標記為已完成",
       "markAsInProgress": "標記為進行中",
-      "markAsPlanned": "標記為計劃中",
+      "markAsPlanned": "標記為規劃中",
       "changeSemester": "更改學期",
       "deleteCourse": "移除課程",
       "deleteConfirmTitle": "移除課程？",
       "deleteConfirmDescription": "此操作無法復原。",
       "empty": {
         "selectFolderTitle": "選擇資料夾",
-        "selectFolderDescription": "請從左側選擇一個資料夾來查看及管理課程",
+        "selectFolderDescription": "請從左側選擇一個資料夾來檢視及管理課程",
         "getStartedTitle": "開始使用學分規劃",
-        "step1Title": "創建並選擇資料夾",
-        "step1Description": "在左側面板建立您的畢業要求資料夾，或使用模板",
+        "step1Title": "建立並選擇資料夾",
+        "step1Description": "在左側面板建立您的畢業要求資料夾，或使用範本",
         "manageFolders": "管理資料夾",
         "step2Title": "新增課程",
-        "step2Description": "選擇資料夾後，點擊上方的「新增課程」按鈕",
+        "step2Description": "選擇資料夾後，點選上方的「新增課程」按鈕",
         "step2Hint": "提示：您可以設定課程狀態以追蹤進度",
-        "step3Title": "分配學期",
-        "step3Description": "將課程分配到學期，以規劃您的學習路徑",
+        "step3Title": "安排學期",
+        "step3Description": "將課程安排至學期，以規劃您的學習路徑",
         "manageSemesters": "管理學期",
         "selectSubfolderTitle": "選擇子資料夾",
-        "selectSubfolderDescription": "請選擇左側面板的子資料夾來管理課程。只有末端資料夾可以直接添加課程。",
+        "selectSubfolderDescription": "請選擇左側面板的子資料夾來管理課程。只有末端資料夾可以直接新增課程。",
         "availableSubfolders": "可用子資料夾：",
         "noCoursesTitle": "新增課程",
-        "noCoursesDescription": "這個資料夾還沒有課程。點擊以下按鈕來添加課程。"
+        "noCoursesDescription": "這個資料夾還沒有課程。點選以下按鈕來新增課程。"
       }
     },
     "dialogs": {
       "create": {
         "title": "建立新課程",
-        "description": "手動創建一個自定義課程",
-        "courseId": "課程代碼",
+      "description": "手動建立一個自訂課程",
+      "courseId": "課號",
         "courseIdPlaceholder": "例如: CSIE1212",
         "courseTitle": "課程名稱",
         "courseTitlePlaceholder": "例如: 程式設計",
@@ -665,7 +1014,7 @@
         "statusPlaceholder": "選擇狀態",
         "submitting": "建立中...",
         "submit": "建立課程",
-        "idRequired": "請輸入課程代碼",
+        "idRequired": "請輸入課號",
         "titleRequired": "請輸入課程名稱",
         "creditsInvalid": "請輸入有效的學分數"
       },
@@ -673,10 +1022,10 @@
         "editCourse": "編輯課程",
         "category": "類別",
         "semester": "學期",
-        "unassigned": "未分配",
+        "unassigned": "未指定",
         "status": "狀態",
-        "courseId": "課程ID",
-        "viewFullCourse": "查看完整課程資訊",
+      "courseId": "課號",
+      "viewFullCourse": "檢視完整課程資訊",
         "additionalInfo": "其他資訊",
         "instructor": "授課教師",
         "description": "課程簡介",
@@ -685,8 +1034,8 @@
       "edit": {
         "title": "編輯課程",
         "description": "修改課程資訊",
-        "courseId": "課程代碼",
-        "courseIdReadonlyHint": "課程代碼無法變更",
+      "courseId": "課號",
+      "courseIdReadonlyHint": "課號無法變更",
         "courseTitle": "課程名稱",
         "credits": "學分數",
         "category": "課程類別",
@@ -703,7 +1052,7 @@
       "search": {
         "addToFolderPrefix": "加入",
         "title": "搜尋課程",
-        "description": "將課程新增到當前資料夾"
+        "description": "將課程新增到目前資料夾"
       }
     },
     "semester": {
@@ -717,9 +1066,9 @@
       "deleteCourseConfirmTitle": "確定要移除這堂課程嗎？",
       "deleteCourseConfirmDescription": "此操作無法復原，課程資料將被永久刪除。",
       "emptyTitle": "尚未設定任何學期",
-      "emptyDescription": "請點擊右上角的按鈕來創建您的第一個學期",
+      "emptyDescription": "請點選右上角的按鈕來建立您的第一個學期",
       "coursesSuffix": "課程",
-      "dropHint": "拖曳課程到此處或點擊新增課程",
+      "dropHint": "拖曳課程到此處或點選新增課程",
       "statsTitle": "學期統計",
       "totalCredits": "總學分",
       "selectSemesterTitle": "選擇學期",
@@ -731,7 +1080,7 @@
     },
     "folderManagement": {
       "title": "類別管理",
-      "description": "管理畢業要求類別和結構",
+      "description": "管理畢業門檻類別與結構",
       "structureTitle": "類別結構",
       "addCategory": "新增類別",
       "addRootCategory": "新增根類別",
@@ -744,7 +1093,7 @@
       "nameLabel": "類別名稱",
       "requirementLabel": "要求",
       "noLimit": "無上限",
-      "parentLabel": "父類別",
+      "parentLabel": "上層類別",
       "noneRoot": "無 (根類別)",
       "none": "無",
       "orderLabel": "排序",
@@ -761,10 +1110,10 @@
       "metricLabel": "計算單位",
       "metricPlaceholder": "選擇計算單位",
       "parentPlaceholder": "選擇父類別",
-      "rootTitle": "根目錄",
+      "rootTitle": "根類別",
       "rootDescription": "所有類別的最上層",
-      "rootInfoDescription": "這是最頂層類別。您可以在此添加新的根類別，根類別將直接顯示在主畫面上。",
-      "selectPrompt": "選擇一個類別以查看詳情",
+      "rootInfoDescription": "這是最頂層類別。您可以在此新增根類別，根類別將直接顯示在主畫面上。",
+      "selectPrompt": "選擇一個類別以檢視詳情",
       "deleteConfirmTitle": "刪除類別？",
       "deleteConfirmDescription": "此操作無法復原。將刪除此類別及其 {folderCount} 個子類別，其中 {itemCount} 門課程將被移至「未分類」。",
       "deleteSuccessTitle": "類別已刪除",
@@ -781,7 +1130,7 @@
       "importFailTitle": "匯入失敗",
       "importParseFailDescription": "無法解析範本檔案，請確保它是有效的 JSON 格式。",
       "importSuccessTitle": "範本匯入成功",
-      "importSuccessDescription": "資料夾結構已更新，未匹配的項目已移至「未分類」。",
+      "importSuccessDescription": "資料夾結構已更新，未符合的項目已移至「未分類」。",
       "importGenericFailDescription": "無法匯入範本，請再試一次。",
       "importPreviewTitle": "匯入預覽",
       "importWarning": "確認匯入將會覆蓋所有現有類別。請仔細檢查下方預覽的資料夾結構。",
@@ -789,12 +1138,12 @@
       "totalFoldersToImport": "總共 {count} 個資料夾將被匯入",
       "confirmImport": "確認匯入",
       "confirmImportDialogTitle": "確認匯入範本",
-      "confirmImportDialogDescription": "此操作將刪除所有現有類別並替換為新的範本結構。此操作無法復原。"
+      "confirmImportDialogDescription": "此操作將刪除所有現有類別並取代為新的範本結構。此操作無法復原。"
     },
     "semesterManagement": {
       "title": "學期管理",
       "description": "管理學期和學年",
-      "listTitle": "學期列表",
+      "listTitle": "學期清單",
       "addSemester": "新增學期",
       "active": "啟用",
       "inactive": "停用",
@@ -813,10 +1162,10 @@
       "idHelp": "學期代碼會依學年與學期自動產生",
       "yearPlaceholder": "例如: 113",
       "termSelectPlaceholder": "選擇學期",
-      "nameAutoHint": "學期名稱會自動生成，但您可以自行修改",
+      "nameAutoHint": "學期名稱會自動產生，但您可以自行修改",
       "statusSelectPlaceholder": "選擇狀態",
       "activeSwitchLabel": "啟用此學期",
-      "selectPrompt": "選擇一個學期以查看詳情",
+      "selectPrompt": "選擇一個學期以檢視詳情",
       "idRequired": "學期ID為必填欄位",
       "nameRequired": "學期名稱為必填欄位",
       "yearRequired": "學年為必填欄位",
@@ -840,7 +1189,7 @@
       "graduationYearLabel": "預計畢業學年",
       "requiredCreditsLabel": "畢業學分要求",
       "descriptionLabel": "規劃描述",
-      "descriptionPlaceholder": "不必填",
+      "descriptionPlaceholder": "選填",
       "titleRequired": "規劃名稱為必填欄位",
       "departmentRequired": "學系/學院為必填欄位",
       "enrollmentYearRequired": "入學學年為必填欄位",
@@ -888,7 +1237,7 @@
       "showMore": "顯示更多",
       "selectSemester": "選擇學期",
       "removeFilter": "移除篩選",
-      "clickToSelect": "點擊以選擇...",
+      "clickToSelect": "點選以選擇…",
       "search": "搜尋...",
       "noResultsFound": "找不到結果",
       "all": "全部",
@@ -898,7 +1247,8 @@
       "searchToDisplayMore": "搜尋（顯示更多）...",
       "errorOccurred": "發生錯誤",
       "noMoreResults": "沒有更多結果",
-      "noVenues": "無場地"
+      "noVenues": "無場地",
+      "similarCourse": "已新增相似課程"
     },
     "bulkActions": {
       "deleteConfirmTitle": "刪除課程？",
@@ -906,7 +1256,7 @@
       "selectedCount": "{count} 已選擇",
       "markAsCompleted": "標記為已完成",
       "markAsInProgress": "標記為進行中",
-      "markAsPlanned": "標記為計劃中",
+      "markAsPlanned": "標記為規劃中",
       "changeSemester": "變更學期",
       "delete": "刪除",
       "clearSelection": "清除選取"

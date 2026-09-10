@@ -26,6 +26,7 @@ const SEOHead = ({
   noindex = false,
   lang = "zh",
 }: SEOHeadProps) => {
+  const htmlLang = lang === "en" ? "en" : "zh-TW";
   const fullTitle = `${title} | NTHUMods`;
   const canonicalUrl = canonical ?? BASE_URL;
   const zhUrl = canonicalUrl.replace(/\/en\//, "/zh/");
@@ -33,7 +34,7 @@ const SEOHead = ({
 
   return (
     <Helmet>
-      <html lang={lang} />
+      <html lang={htmlLang} />
       <title>{fullTitle}</title>
       <meta name="description" content={description} />
       <meta
@@ -51,7 +52,7 @@ const SEOHead = ({
       <meta property="og:url" content={canonicalUrl} />
       <meta property="og:image" content={ogImage} />
       <meta property="og:site_name" content="NTHUMods" />
-      <meta property="og:locale" content={lang === "zh" ? "zh_TW" : "en_US"} />
+      <meta property="og:locale" content={htmlLang === "zh-TW" ? "zh_TW" : "en_US"} />
 
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={fullTitle} />

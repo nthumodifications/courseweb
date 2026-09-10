@@ -65,15 +65,6 @@ const AlignDot = ({
   );
 };
 
-const FIELD_LABELS: Record<TimetableFieldKey, { en: string; zh: string }> = {
-  code: { en: "Code", zh: "課號" },
-  title: { en: "Title", zh: "課名" },
-  time: { en: "Time", zh: "時間" },
-  teacher: { en: "Teacher", zh: "教師" },
-  venue: { en: "Venue", zh: "教室" },
-  credits: { en: "Credits", zh: "學分" },
-};
-
 const TimetablePreferences: React.FC<SettingsControlProps> = ({
   settings,
   onSettingsChange,
@@ -131,9 +122,15 @@ const TimetablePreferences: React.FC<SettingsControlProps> = ({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="app">App</SelectItem>
-            <SelectItem value="zh">繁體中文</SelectItem>
-            <SelectItem value="en">English</SelectItem>
+            <SelectItem value="app">
+              {dict.settings.timetable.language_options.app}
+            </SelectItem>
+            <SelectItem value="zh">
+              {dict.settings.timetable.language_options.zh}
+            </SelectItem>
+            <SelectItem value="en">
+              {dict.settings.timetable.language_options.en}
+            </SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -154,7 +151,7 @@ const TimetablePreferences: React.FC<SettingsControlProps> = ({
                   ? "border-primary bg-primary/10 text-primary"
                   : "border-border hover:border-muted-foreground text-muted-foreground",
               )}
-              title={`${v} ${h}`}
+              title={`${dict.settings.timetable.align[v]} ${dict.settings.timetable.align[h]}`}
             >
               <AlignDot h={h} v={v} />
             </button>
@@ -169,7 +166,14 @@ const TimetablePreferences: React.FC<SettingsControlProps> = ({
         </label>
         <div className="flex flex-col gap-1">
           {fieldOrder.map((field, idx) => {
-            const label = FIELD_LABELS[field];
+            const label = {
+              code: dict.settings.timetable.slot_code,
+              title: dict.settings.timetable.slot_title,
+              time: dict.settings.timetable.slot_time,
+              teacher: dict.settings.timetable.slot_teacher,
+              venue: dict.settings.timetable.slot_venue,
+              credits: dict.settings.timetable.slot_credits,
+            }[field];
             const isOn =
               settings.display[field as keyof typeof settings.display] ?? false;
             return (
@@ -199,10 +203,7 @@ const TimetablePreferences: React.FC<SettingsControlProps> = ({
                 </div>
                 {/* Field name */}
                 <div className="flex-1 text-sm">
-                  <span>{label.en}</span>
-                  <span className="text-muted-foreground ml-1 text-xs">
-                    {label.zh}
-                  </span>
+                  <span>{label}</span>
                 </div>
                 {/* Toggle */}
                 <Switch

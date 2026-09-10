@@ -1,23 +1,23 @@
 import { FC } from "react";
+import { addDays, format } from "date-fns";
 import { CourseTimeslotData } from "@/types/timetable";
 import { scheduleTimeSlots } from "@courseweb/shared";
 import { useSettings } from "@/hooks/contexts/settings";
 import { cn } from "@/lib/utils";
+import { getLocale } from "@/helpers/dateLocale";
+import useDictionary from "@/dictionaries/useDictionary";
 
 interface TimetableDayCardsProps {
   timetableData: CourseTimeslotData[];
   className?: string;
 }
 
-const DAY_LABELS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-const DAY_LABELS_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri"];
-const DAY_LABELS_ZH = ["週一", "週二", "週三", "週四", "週五"];
-
 const TimetableDayCards: FC<TimetableDayCardsProps> = ({
   timetableData,
   className,
 }) => {
   const { language } = useSettings();
+  const dict = useDictionary();
 
   const byDay: Record<number, CourseTimeslotData[]> = {};
   for (const slot of timetableData) {
@@ -35,9 +35,7 @@ const TimetableDayCards: FC<TimetableDayCardsProps> = ({
     <div className={cn("flex flex-col gap-2", className)}>
       {hasWeekend && (
         <p className="text-xs text-muted-foreground px-3">
-          {language === "zh"
-            ? "週六、日課程不顯示於此檢視"
-            : "Sat/Sun courses not shown in this view"}
+          {dict.timetable.saturday_hidden}
         </p>
       )}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 p-3">
@@ -45,8 +43,11 @@ const TimetableDayCards: FC<TimetableDayCardsProps> = ({
           const slots = (byDay[day] ?? []).sort(
             (a, b) => a.startTime - b.startTime,
           );
-          const dayLabel =
-            language === "zh" ? DAY_LABELS_ZH[day] : DAY_LABELS_SHORT[day];
+          const dayLabel = format(
+            addDays(new Date(2024, 0, 1), day),
+            "EEE",
+            { locale: getLocale(language) },
+          );
 
           return (
             <div

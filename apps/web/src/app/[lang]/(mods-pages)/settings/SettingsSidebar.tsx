@@ -1,5 +1,6 @@
 import { type ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import useDictionary from "@/dictionaries/useDictionary";
 
 interface Section {
   id: string;
@@ -20,11 +21,13 @@ export const SettingsSidebar = ({
   onSectionClick,
   className,
 }: SettingsSidebarProps) => {
+  const dict = useDictionary();
+
   return (
     <nav
       className={cn("space-y-1", className)}
       role="navigation"
-      aria-label="Settings navigation"
+      aria-label={dict.settings.navigation_aria}
     >
       {sections.map((section) => (
         <button

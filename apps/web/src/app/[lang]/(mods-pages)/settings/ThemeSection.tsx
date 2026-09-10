@@ -213,7 +213,9 @@ export const ThemeSection = () => {
                             : "999px",
                 }}
               />
-              <span className="capitalize">{opt.value}</span>
+              <span className="capitalize">
+                {dict.settings.appearance.radius.options[opt.value]}
+              </span>
             </button>
           ))}
         </div>
@@ -225,7 +227,9 @@ export const ThemeSection = () => {
           {dict.settings.appearance.font_scale.title}
         </h3>
         <div className="flex items-center gap-3">
-          <span className="text-xs text-muted-foreground">小</span>
+          <span className="text-xs text-muted-foreground">
+            {dict.settings.appearance.font_scale.small}
+          </span>
           <input
             type="range"
             min={0.875}
@@ -235,7 +239,9 @@ export const ThemeSection = () => {
             onChange={(e) => setFontScale(parseFloat(e.target.value))}
             className="flex-1 accent-primary"
           />
-          <span className="text-xs text-muted-foreground">大</span>
+          <span className="text-xs text-muted-foreground">
+            {dict.settings.appearance.font_scale.large}
+          </span>
           <span className="text-xs font-mono text-muted-foreground w-10 text-right">
             {Math.round(config.fontScale * 100)}%
           </span>
@@ -259,8 +265,7 @@ export const ThemeSection = () => {
                   : "border-border hover:border-muted-foreground",
               )}
             >
-              <div>{opt.label}</div>
-              <div className="text-muted-foreground">{opt.labelZh}</div>
+              <div>{dict.settings.appearance.density[opt.value]}</div>
             </button>
           ))}
         </div>
@@ -284,13 +289,15 @@ export const ThemeSection = () => {
               )}
             >
               <span className="font-mono">{opt.icon}</span>
-              {opt.label}
+              {dict.settings.appearance.background[opt.value]}
             </button>
           ))}
         </div>
         {config.background === "gradient" && (
           <div className="mt-3 flex gap-3 items-center flex-wrap">
-            <label className="text-xs text-muted-foreground">From</label>
+            <label className="text-xs text-muted-foreground">
+              {dict.settings.appearance.background.from}
+            </label>
             <input
               type="color"
               defaultValue="#7c5cbf"
@@ -299,7 +306,9 @@ export const ThemeSection = () => {
               }
               className="w-10 h-8 rounded cursor-pointer"
             />
-            <label className="text-xs text-muted-foreground">To</label>
+            <label className="text-xs text-muted-foreground">
+              {dict.settings.appearance.background.to}
+            </label>
             <input
               type="color"
               defaultValue="#5e81ac"
@@ -323,7 +332,7 @@ export const ThemeSection = () => {
             defaultValue="#7c5cbf"
             onChange={(e) => setAccentOverride(hexToHslTriple(e.target.value))}
             className="w-10 h-9 rounded cursor-pointer border border-border"
-            title="Pick accent color"
+            title={dict.settings.appearance.accent.pick}
           />
           <span className="text-xs text-muted-foreground flex-1">
             {dict.settings.appearance.accent.description}
@@ -333,7 +342,7 @@ export const ThemeSection = () => {
               onClick={() => setAccentOverride(undefined)}
               className="text-xs text-muted-foreground hover:text-foreground underline"
             >
-              Reset
+              {dict.settings.appearance.reset}
             </button>
           )}
         </div>

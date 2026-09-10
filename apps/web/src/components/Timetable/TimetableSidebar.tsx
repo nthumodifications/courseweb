@@ -106,7 +106,9 @@ const TimetableSidebar = ({
     <div className="flex flex-col gap-3">
       {/* Primary action — add courses */}
       <Dialog>
-        <DialogTitle className="hidden">AddToSem</DialogTitle>
+        <DialogTitle className="hidden">
+          {dict.course.item.add_to_semester}
+        </DialogTitle>
         <DialogTrigger asChild>
           <Button variant="outline" className="w-full">
             <Plus className="w-4 h-4 mr-2" />
@@ -126,14 +128,14 @@ const TimetableSidebar = ({
         <div className="flex flex-col gap-1">
           <div className="flex items-center justify-between px-1">
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Groups
+              {dict.timetable.sidebar.groups}
             </span>
             <ShareTimetableDialogDynamic initialTab="groups">
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-6 w-6"
-                title="Create a group"
+                title={dict.timetable.sidebar.create_group}
               >
                 <Plus className="h-3.5 w-3.5" />
               </Button>
@@ -145,7 +147,7 @@ const TimetableSidebar = ({
                 type="button"
                 className="text-xs text-muted-foreground hover:text-foreground px-1 py-1 text-left transition-colors"
               >
-                + Create or join a group
+                + {dict.timetable.sidebar.create_or_join_group}
               </button>
             </ShareTimetableDialogDynamic>
           ) : (
@@ -163,7 +165,9 @@ const TimetableSidebar = ({
                   <span className="text-sm truncate block">{group.name}</span>
                   <span className="text-xs text-muted-foreground">
                     {toPrettySemester(group.semester)} · {group.members.length}{" "}
-                    member{group.members.length !== 1 ? "s" : ""}
+                    {group.members.length !== 1
+                      ? dict.timetable.sidebar.members
+                      : dict.timetable.sidebar.member}
                   </span>
                 </span>
                 <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
@@ -194,7 +198,7 @@ const TimetableSidebar = ({
             variant="ghost"
             size="icon"
             className="h-8 w-8"
-            title="Download / export"
+            title={dict.timetable.sidebar.download_export}
           >
             <Download className="w-4 h-4" />
           </Button>
@@ -205,7 +209,7 @@ const TimetableSidebar = ({
             variant="ghost"
             size="icon"
             className="h-8 w-8"
-            title="Share timetable"
+            title={dict.timetable.sidebar.share_timetable}
           >
             <Share2 className="w-4 h-4" />
           </Button>
@@ -218,7 +222,9 @@ const TimetableSidebar = ({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
-            <DropdownMenuLabel>Customizations</DropdownMenuLabel>
+            <DropdownMenuLabel>
+              {dict.timetable.sidebar.customizations}
+            </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => handleGroupByDepartment(semester)}>
               {dict.timetable.actions.group_dept}
@@ -235,7 +241,7 @@ const TimetableSidebar = ({
           className="ml-auto flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
         >
           <Globe className="w-3 h-3" />
-          Community
+          {dict.timetable.sidebar.community}
         </button>
       </div>
 

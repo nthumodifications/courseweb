@@ -1,18 +1,11 @@
 import { FC } from "react";
+import { addDays, format } from "date-fns";
 import { CourseTimeslotData } from "@/types/timetable";
 import { scheduleTimeSlots } from "@courseweb/shared";
 import { useSettings } from "@/hooks/contexts/settings";
 import { cn } from "@/lib/utils";
-
-const DAY_LABELS: Record<string, { zh: string; en: string }> = {
-  0: { zh: "週一", en: "Mon" },
-  1: { zh: "週二", en: "Tue" },
-  2: { zh: "週三", en: "Wed" },
-  3: { zh: "週四", en: "Thu" },
-  4: { zh: "週五", en: "Fri" },
-  5: { zh: "週六", en: "Sat" },
-  6: { zh: "週日", en: "Sun" },
-};
+import { getLocale } from "@/helpers/dateLocale";
+import useDictionary from "@/dictionaries/useDictionary";
 
 interface TimetableAgendaProps {
   timetableData: CourseTimeslotData[];
@@ -24,6 +17,7 @@ const TimetableAgenda: FC<TimetableAgendaProps> = ({
   className,
 }) => {
   const { language } = useSettings();
+  const dict = useDictionary();
 
   // Group by day of week
   const byDay = timetableData.reduce(
@@ -49,7 +43,7 @@ const TimetableAgenda: FC<TimetableAgendaProps> = ({
           className,
         )}
       >
-        {language === "zh" ? "尚未加入課程" : "No courses added yet"}
+        {dict.timetable.no_courses}
       </div>
     );
   }
@@ -58,7 +52,9 @@ const TimetableAgenda: FC<TimetableAgendaProps> = ({
     <div className={cn("flex flex-col gap-4 p-4", className)}>
       {sortedDays.map((day) => {
         const daySlots = byDay[day].sort((a, b) => a.startTime - b.startTime);
-        const dayLabel = DAY_LABELS[day];
+        const dayLabel = format(addDays(new Date(2024, 0, 1), day), "EEE", {
+          locale: getLocale(language),
+        });
 
         return (
           <div key={day} className="flex flex-col gap-2">
@@ -66,7 +62,7 @@ const TimetableAgenda: FC<TimetableAgendaProps> = ({
             <div className="flex items-center gap-3">
               <div className="w-12 text-center">
                 <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  {language === "zh" ? dayLabel.zh : dayLabel.en}
+                  {dayLabel}
                 </div>
               </div>
               <div className="flex-1 h-px bg-border" />

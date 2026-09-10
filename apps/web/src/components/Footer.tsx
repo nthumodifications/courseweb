@@ -5,9 +5,12 @@ import FullLogo from "./Branding/FullLogo";
 import NTHUModsLogo from "./Branding/NTHUModsLogo";
 import { Link, useParams } from "react-router-dom";
 import { getYear } from "date-fns";
+import useDictionary from "@/dictionaries/useDictionary";
 
 const Footer = () => {
   const { lang } = useParams<{ lang: string }>();
+  const dict = useDictionary();
+  const routeLang = lang === "en" ? "en" : "zh";
   return (
     <div className="py-16 flex flex-col gap-4">
       <div className="flex flex-col md:flex-row justify-between">
@@ -18,7 +21,7 @@ const Footer = () => {
           <div className="flex flex-col gap-1">
             <FullLogo />
             <p className="text-muted-foreground text-xs">
-              Made with ❤️ by students for students
+              {dict.footer.tagline}
             </p>
           </div>
         </div>
@@ -50,21 +53,20 @@ const Footer = () => {
       </div>
 
       <div className="flex flex-row text-muted-foreground text-sm [&>a]:mr-4 [&>a]:w-max flex-wrap">
-        <Link to={`/${lang}/contribute`}>Contribute</Link>
-        <Link to={`/${lang}/issues`}>Report an Issue</Link>
-        <Link to={`/${lang}/team`}>Team</Link>
-        <Link to={`/${lang}/privacy-policy`}>Privacy Policy</Link>
-        <Link to={`/${lang}/proxy-login`}>Proxy Login</Link>
-        <Link to={`/${lang}/design-system`}>Design System</Link>
+        <Link to={`/${routeLang}/contribute`}>{dict.footer.contribute}</Link>
+        <Link to={`/${routeLang}/issues`}>{dict.footer.report_issue}</Link>
+        <Link to={`/${routeLang}/team`}>{dict.footer.team}</Link>
+        <Link to={`/${routeLang}/privacy-policy`}>{dict.footer.privacy_policy}</Link>
+        <Link to={`/${routeLang}/proxy-login`}>{dict.footer.proxy_login}</Link>
+        <Link to={`/${routeLang}/design-system`}>{dict.footer.design_system}</Link>
       </div>
 
       <div className="flex flex-col gap-1">
         <p className="text-muted-foreground text-xs">
-          © {getYear(Date.now())} NTHUMods. All rights reserved.
+          © {getYear(Date.now())} NTHUMods. {dict.footer.copyright}
         </p>
         <p className="text-muted-foreground text-xs">
-          {`NTHUMods is not affiliated with National Tsing Hua University. But my
-          graduation depends on them so don't worry.`}
+          {dict.footer.disclaimer}
         </p>
       </div>
     </div>

@@ -23,6 +23,7 @@ import { useSettings } from "@/hooks/contexts/settings";
 import client from "@/config/api";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import useCourseDates from "@/hooks/useCourseDates";
+import { getLocale } from "@/helpers/dateLocale";
 
 export const CalendarMonthContainer = ({
   displayMonth,
@@ -32,7 +33,7 @@ export const CalendarMonthContainer = ({
   onChangeView: (view: "week", date: Date) => void;
 }) => {
   const { events } = useCalendar();
-  const { showAcademicCalendar } = useSettings();
+  const { language, showAcademicCalendar } = useSettings();
   const { courses } = useUserTimetable();
   const enrolledCourseIds = useMemo(
     () => Object.values(courses).flat(),
@@ -160,7 +161,9 @@ export const CalendarMonthContainer = ({
               >
                 {!event.isNoClass && (
                   <div className="hidden md:inline text-[10px] font-normal leading-none">
-                    {format(event.displayStart, "HH:mm")}
+                    {format(event.displayStart, "HH:mm", {
+                      locale: getLocale(language),
+                    })}
                   </div>
                 )}
                 <div className="text-xs leading-none whitespace-nowrap overflow-hidden">
@@ -172,7 +175,7 @@ export const CalendarMonthContainer = ({
         </div>
       );
     },
-    [events, isScreenMD, getCourseDateForDay],
+    [events, isScreenMD, getCourseDateForDay, language],
   );
 
   const renderAllDayEvents = useCallback(
@@ -265,30 +268,35 @@ export const CalendarMonthContainer = ({
               )}
               onClick={() => onChangeView("week", day)}
             >
-              {format(day, "d")}
+              {format(day, "d", { locale: getLocale(language) })}
             </div>
             {renderEventsInDay(day, allDayEvents.length)}
           </div>
         </Fragment>
       );
     },
-    [events, displayMonth, renderAllDayEvents, renderEventsInDay, onChangeView],
+    [
+      events,
+      displayMonth,
+      renderAllDayEvents,
+      renderEventsInDay,
+      onChangeView,
+      language,
+    ],
   );
 
   return (
     <div className="overflow-x-auto flex-1">
       <div className="flex flex-col md:min-w-0 h-full">
         <div className="grid grid-cols-7 gap-4">
-          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
-            (day, index) => (
-              <div
-                key={index}
-                className="text-muted-foreground text-sm font-semibold text-center"
-              >
-                {day}
-              </div>
-            ),
-          )}
+          {displayMonth.slice(0, 7).map((day, index) => (
+            <div
+              key={index}
+              className="text-muted-foreground text-sm font-semibold text-center"
+            >
+              {format(day, "EEE", { locale: getLocale(language) })}
+            </div>
+          ))}
         </div>
         <div
           className="grid flex-1"

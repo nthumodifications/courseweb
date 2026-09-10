@@ -211,7 +211,7 @@ export const router = createBrowserRouter([
                 element: <CalendarPage />,
                 handle: {
                   title: "Calendar",
-                  titleZh: "日曆",
+                  titleZh: "今日",
                   description:
                     "NTHU academic calendar with semester dates, holidays, and important deadlines. Keep track of National Tsing Hua University's academic schedule.",
                   descriptionZh:
@@ -298,7 +298,7 @@ export const router = createBrowserRouter([
                 element: <AppsPage />,
                 handle: {
                   title: "All Features",
-                  titleZh: "功能列表",
+                  titleZh: "功能清單",
                   description:
                     "Explore all NTHUMods features for NTHU students — courses, bus, calendar, venues, and more.",
                   descriptionZh:
@@ -430,7 +430,11 @@ export const router = createBrowserRouter([
               {
                 path: "timetable/share/:shareId",
                 element: <TimetableShareViewPage />,
-                handle: { title: "Shared Timetable", noindex: true },
+                handle: {
+                  title: "Shared Timetable",
+                  titleZh: "分享的課表",
+                  noindex: true,
+                },
               },
               {
                 path: "timetable/community",
@@ -447,7 +451,11 @@ export const router = createBrowserRouter([
               {
                 path: "timetable/group/:code",
                 element: <GroupViewPage />,
-                handle: { title: "Timetable Group", noindex: true },
+                handle: {
+                  title: "Timetable Group",
+                  titleZh: "課表群組",
+                  noindex: true,
+                },
               },
               {
                 path: "*",

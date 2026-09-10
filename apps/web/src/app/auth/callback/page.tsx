@@ -4,10 +4,12 @@ import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { useAuth } from "react-oidc-context";
+import useDictionary from "@/dictionaries/useDictionary";
 
 export default function AuthCallback() {
   const auth = useAuth();
   const navigate = useNavigate();
+  const dict = useDictionary();
 
   useEffect(() => {
     if (auth.error) {
@@ -22,8 +24,8 @@ export default function AuthCallback() {
       // If we're still on this page after 10 seconds, force logout
       console.log("Authentication timeout reached, redirecting...");
       toast({
-        title: "Authentication timeout",
-        description: "The login process took too long. Please try again.",
+        title: dict.auth.timeout_title,
+        description: dict.auth.timeout_description,
         variant: "destructive",
       });
 
@@ -44,10 +46,10 @@ export default function AuthCallback() {
         <div className="flex flex-col items-center justify-center p-6 space-y-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <h2 className="text-xl font-semibold tracking-tight">
-            Logging you into NTHUMods
+            {dict.auth.logging_in}
           </h2>
           <p className="text-sm text-muted-foreground">
-            Please wait while we complete the authentication process...
+            {dict.auth.please_wait}
           </p>
         </div>
       </DialogContent>
