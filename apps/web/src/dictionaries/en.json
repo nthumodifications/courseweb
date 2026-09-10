@@ -362,7 +362,9 @@
         "noise": "Noise"
       },
       "font": {
-        "title": "Font Family"
+        "title": "Font Family",
+        "chinese": "Chinese",
+        "latin": "Latin"
       },
       "accent": {
         "title": "Accent Color",
@@ -448,6 +450,8 @@
       "font_family": "Slot font family",
       "font_family_options": {
         "system": "System",
+        "tc-sans": "Chinese Sans",
+        "tc-serif": "Chinese Serif",
         "sans": "Sans serif",
         "serif": "Serif",
         "mono": "Monospace",

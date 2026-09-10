@@ -43,7 +43,11 @@ export const DEFAULT_FIELD_ORDER: TimetableFieldKey[] = [
 
 export type TimetableFontSize = "xs" | "sm" | "base" | "lg";
 export type TimetableFontFamily =
+  // Chinese-capable options first — slot text is mostly Chinese course names.
   | "system"
+  | "tc-sans"
+  | "tc-serif"
+  // Latin-led options, each still falling back to a Traditional Chinese face.
   | "sans"
   | "serif"
   | "mono"
@@ -56,12 +60,21 @@ export const TIMETABLE_FONT_SIZE_CLASSES: Record<TimetableFontSize, string> = {
   lg: "text-base",
 };
 
+// Traditional Chinese (Taiwan) system faces. No download: PingFang TC on Apple
+// platforms, Microsoft JhengHei on Windows, Noto Sans CJK TC elsewhere.
+const TC_SANS =
+  '"PingFang TC", "Microsoft JhengHei", "Noto Sans CJK TC", "Noto Sans TC", sans-serif';
+const TC_SERIF =
+  '"Songti TC", "PMingLiU", "Noto Serif CJK TC", "Noto Serif TC", serif';
+
 export const TIMETABLE_FONT_FAMILIES: Record<TimetableFontFamily, string> = {
-  system: "system-ui, sans-serif",
-  sans: "ui-sans-serif, system-ui, sans-serif",
-  serif: "ui-serif, Georgia, serif",
-  mono: "ui-monospace, SFMono-Regular, Menlo, monospace",
-  rounded: 'ui-rounded, "Arial Rounded MT Bold", system-ui, sans-serif',
+  system: `system-ui, ${TC_SANS}`,
+  "tc-sans": TC_SANS,
+  "tc-serif": TC_SERIF,
+  sans: `ui-sans-serif, system-ui, ${TC_SANS}`,
+  serif: `ui-serif, Georgia, ${TC_SERIF}`,
+  mono: `ui-monospace, SFMono-Regular, Menlo, ${TC_SANS}`,
+  rounded: `ui-rounded, "Arial Rounded MT Bold", system-ui, ${TC_SANS}`,
 };
 
 export interface TimetableDisplayPreferences {

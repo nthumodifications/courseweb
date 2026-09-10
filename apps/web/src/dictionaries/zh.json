@@ -362,7 +362,9 @@
         "noise": "雜訊"
       },
       "font": {
-        "title": "字體"
+        "title": "字體",
+        "chinese": "中文字型",
+        "latin": "英文字型"
       },
       "accent": {
         "title": "強調色",
@@ -448,6 +450,8 @@
       "font_family": "時段字型",
       "font_family_options": {
         "system": "系統字型",
+        "tc-sans": "中文黑體",
+        "tc-serif": "中文宋體",
         "sans": "無襯線",
         "serif": "襯線",
         "mono": "等寬",

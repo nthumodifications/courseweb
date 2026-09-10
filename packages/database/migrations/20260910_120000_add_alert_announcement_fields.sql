@@ -8,15 +8,18 @@ ALTER TABLE public.alerts
   ADD COLUMN IF NOT EXISTS active boolean NOT NULL DEFAULT true,
   ADD COLUMN IF NOT EXISTS priority integer NOT NULL DEFAULT 0;
 
--- The repository does not declare RLS for its other public tables. This table
--- is intentionally protected because it is read with the public anon client.
+-- RLS is already enabled on public.alerts in the live database, and the table
+-- already carries a PERMISSIVE policy "Enable read access for all users" with
+-- USING (true). Permissive policies are OR-ed, so ADDING a second policy that
+-- says "only active rows" would grant nothing and forbid nothing: every row,
+-- including an unpublished draft, would stay world-readable.
+--
+-- Narrow the existing policy in place instead of adding a redundant one. Every
+-- current row gets active = true from the column default, so this changes no
+-- visible behaviour today; it only keeps a future draft (active = false) out of
+-- the public API until a maintainer publishes it.
 ALTER TABLE public.alerts ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "Allow anonymous users to read active alerts"
-  ON public.alerts;
-
-CREATE POLICY "Allow anonymous users to read active alerts"
+ALTER POLICY "Enable read access for all users"
   ON public.alerts
-  FOR SELECT
-  TO anon
   USING (active IS TRUE);

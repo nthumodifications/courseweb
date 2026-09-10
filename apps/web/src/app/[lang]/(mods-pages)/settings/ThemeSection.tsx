@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useTheme } from "@/hooks/contexts/theme";
 import { THEME_PRESETS } from "@/config/themePresets";
 import { ThemeBackground, ThemeDensity, ThemeRadius } from "@/types/theme";
-import { FONT_DEFINITIONS, ThemeFont } from "@/types/theme";
+import { FONT_DEFINITIONS, FONT_ORDER, ThemeFont } from "@/types/theme";
 import { cn } from "@/lib/utils";
 import { Button } from "@courseweb/ui";
 import { RotateCcw, Link2, Check } from "lucide-react";
@@ -162,23 +162,32 @@ export const ThemeSection = () => {
         <h3 className="text-sm font-medium mb-3">
           {dict.settings.appearance.font.title}
         </h3>
-        <div className="flex gap-2 flex-wrap">
-          {(Object.keys(FONT_DEFINITIONS) as ThemeFont[]).map((f) => (
-            <button
-              key={f}
-              onClick={() => setFont(f)}
-              className={cn(
-                "px-3 py-1.5 text-xs border rounded transition-all",
-                (config.font ?? "inter") === f
-                  ? "border-primary bg-primary/10 text-primary font-medium"
-                  : "border-border hover:border-muted-foreground",
-              )}
-              style={{ fontFamily: FONT_DEFINITIONS[f].cssFamily }}
-            >
-              {FONT_DEFINITIONS[f].label}
-            </button>
-          ))}
-        </div>
+        {(["chinese", "latin"] as const).map((script) => (
+          <div key={script} className="mb-3 last:mb-0">
+            <p className="text-xs text-muted-foreground mb-2">
+              {script === "chinese"
+                ? dict.settings.appearance.font.chinese
+                : dict.settings.appearance.font.latin}
+            </p>
+            <div className="flex gap-2 flex-wrap">
+              {FONT_ORDER[script].map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setFont(f)}
+                  className={cn(
+                    "px-3 py-1.5 text-xs border rounded transition-all",
+                    (config.font ?? "inter") === f
+                      ? "border-primary bg-primary/10 text-primary font-medium"
+                      : "border-border hover:border-muted-foreground",
+                  )}
+                  style={{ fontFamily: FONT_DEFINITIONS[f].cssFamily }}
+                >
+                  {FONT_DEFINITIONS[f].label}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Border Radius */}
