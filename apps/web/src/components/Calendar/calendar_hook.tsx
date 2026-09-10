@@ -94,11 +94,13 @@ export const calendarContext = createContext<
 >({
   events: [],
   addEvent: async () => {},
+  removeEvents: async () => {},
   removeEvent: async () => {},
   updateEvent: async () => {},
   displayContainer: { current: null },
   HOUR_HEIGHT: 48,
   labels: [],
+  eventSyncReady: false,
   timetableSyncReady: false,
   replicationStatus: "idle",
   replicationError: null,
@@ -119,6 +121,7 @@ export const useCalendarProvider = () => {
     "Birthday",
     "Anniversary",
   ]);
+  const [eventSyncReady, setEventSyncReady] = useState(false);
   const [timetableSyncReady, setTimetableSyncReady] = useState(false);
   const eventsCol = useRxCollection("events");
   const auth = useAuth();
@@ -144,13 +147,18 @@ export const useCalendarProvider = () => {
   const replicationIsLocalOnly = !auth.isAuthenticated || !subject;
 
   useEffect(() => {
-    if (!eventsCol) return;
+    if (!eventsCol) {
+      setEventSyncReady(false);
+      return;
+    }
     if (!auth.isAuthenticated || !subject) {
+      setEventSyncReady(true);
       setEventReplicationStatus("idle");
       setEventReplicationError(null);
       return;
     }
     if (!hasScope || !accessToken) {
+      setEventSyncReady(true);
       setEventReplicationStatus(hasScope ? "idle" : "not-authorised");
       setEventReplicationError(null);
       return;
@@ -160,6 +168,7 @@ export const useCalendarProvider = () => {
     let isActive = false;
     let hasError = false;
     let isNotAuthorised = false;
+    setEventSyncReady(false);
     const setStatus = (status: CalendarReplicationStatus) => {
       if (active) setEventReplicationStatus(status);
     };
@@ -260,9 +269,16 @@ export const useCalendarProvider = () => {
     ];
     setStatus("syncing");
     void replicationState.start().catch(handleError);
+    void replicationState
+      .awaitInitialReplication()
+      .then(() => {
+        if (active) setEventSyncReady(true);
+      })
+      .catch(handleError);
 
     return () => {
       active = false;
+      setEventSyncReady(false);
       subscriptions.forEach((subscription) => subscription.unsubscribe());
       void replicationState.cancel();
     };
@@ -434,6 +450,21 @@ export const useCalendarProvider = () => {
       repeat: event.repeat,
       actualEnd: getActualEndDate(event),
     });
+  };
+
+  /**
+   * Timetable reconciliation has already obtained explicit approval for the
+   * exact generated document ids. The interactive removeEvent API cannot be
+   * used here because it intentionally asks how to remove a recurring series.
+   */
+  const removeEvents = async (eventIds: string[]) => {
+    if (!eventsCol) return;
+    await Promise.all(
+      eventIds.map(async (eventId) => {
+        const event = await eventsCol.findOne(eventId).exec();
+        if (event) await event.remove();
+      }),
+    );
   };
 
   const removeEvent = async (
@@ -610,6 +641,8 @@ export const useCalendarProvider = () => {
   return {
     events,
     addEvent,
+    eventSyncReady,
+    removeEvents,
     removeEvent,
     updateEvent,
     displayContainer,

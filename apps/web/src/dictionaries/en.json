@@ -754,9 +754,11 @@
       "new_reason": "New",
       "modified_reason": "Modified",
       "description": "{reason} courses found in Semester {semester}'s timetable. Do you want to sync the changes?",
+      "deletion_warning": "Syncing will remove {count} timetable-generated calendar event(s).",
       "cancel": "Cancel",
       "cancelled_title": "Semester {semester} sync cancelled",
-      "cancelled_description": "You can sync again if the timetable changes",
+      "cancelled_description": "Calendar events were not changed; you can sync again later",
+      "failed_description": "The calendar was not marked as synced. Please try again.",
       "sync": "Sync"
     },
     "tabs": {
