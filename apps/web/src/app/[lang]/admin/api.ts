@@ -737,10 +737,7 @@ export const useRecruitmentResumeUrl = () => {
     mutationFn: async (id: string) => {
       const response = await authClient.api.admin.recruitment[":id"][
         "resume"
-      ].$post(
-        { param: { id } },
-        { headers: authHeaders(requireToken(token)) },
-      );
+      ].$post({ param: { id } }, { headers: authHeaders(requireToken(token)) });
       return unwrap<{ url: string; expiresInSeconds: number }>(
         response as unknown as Response,
       );
