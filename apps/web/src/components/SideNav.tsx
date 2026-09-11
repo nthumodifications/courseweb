@@ -3,13 +3,14 @@ import { FC, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSettings } from "@/hooks/contexts/settings";
 import useDictionary from "@/dictionaries/useDictionary";
-import { useSidebar } from "@courseweb/ui";
+import { cn, useSidebar } from "@courseweb/ui";
 import { useLocalStorage } from "usehooks-ts";
 import {
   DEFAULT_SIDEBAR_NAV_ITEMS,
   SidebarNavItemConfig,
   SidebarNavItemId,
 } from "@/app/[lang]/(mods-pages)/settings/SidebarNavSection";
+import { useAdminIdentity } from "@/app/[lang]/admin/api";
 
 const SideNav: FC = () => {
   const location = useLocation();
@@ -22,6 +23,10 @@ const SideNav: FC = () => {
     "sidebar_nav_items",
     DEFAULT_SIDEBAR_NAV_ITEMS,
   );
+  // Staff-only, and deliberately outside the configurable list above: the admin
+  // center is not something a student can turn on, so it has no business being
+  // a row in the sidebar settings everyone sees.
+  const { data: adminIdentity } = useAdminIdentity();
 
   const allLinks: Record<
     SidebarNavItemId,
@@ -65,6 +70,9 @@ const SideNav: FC = () => {
     [navItems, allLinks],
   );
 
+  const adminHref = `/${language}/admin`;
+  const isAdminRoute = pathname.startsWith(adminHref);
+
   const handleLinkClick = (href: string) => () => {
     if (isMobile) setOpenMobile(false);
     navigate(href);
@@ -82,6 +90,26 @@ const SideNav: FC = () => {
           <span className="flex-1 font-semibold">{link.title}</span>
         </div>
       ))}
+
+      {adminIdentity?.isAdmin && (
+        // A real button rather than the clickable div the rows above use: this
+        // one is new, and a div with an onClick is unreachable by keyboard.
+        <button
+          type="button"
+          className={cn(
+            "w-full flex flex-row items-center justify-start gap-2 rounded-md cursor-pointer transition font-semibold px-3 py-1.5",
+            isAdminRoute
+              ? "bg-primary text-primary-foreground"
+              : "text-sidebar-foreground hover:bg-accent hover:text-accent-foreground",
+          )}
+          onClick={handleLinkClick(adminHref)}
+        >
+          <span className="w-6 h-6">
+            <I.ShieldCheck strokeWidth="2" />
+          </span>
+          <span className="flex-1 text-left font-semibold">Admin Center</span>
+        </button>
+      )}
     </nav>
   );
 };
