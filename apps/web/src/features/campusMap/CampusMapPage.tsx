@@ -190,7 +190,7 @@ export default function CampusMapPage() {
       </ErrorBoundary>
 
       <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start justify-between gap-2 p-3 md:p-4">
-        <div className="w-full max-w-sm">
+        <div className="flex max-w-sm min-w-0 flex-col items-start">
           <MapSearch
             availableIdentityIds={availableIdentityIds}
             language={language}
