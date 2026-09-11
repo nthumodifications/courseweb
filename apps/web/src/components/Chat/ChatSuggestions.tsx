@@ -1,36 +1,37 @@
 import { useChatContext } from "./ChatProvider";
 import { Button } from "@courseweb/ui";
 import { Search, Calendar, GraduationCap, BookOpen } from "lucide-react";
-
-const SUGGESTIONS = [
-  {
-    icon: Search,
-    text: "搜尋機器學習相關課程",
-    prompt: "幫我搜尋機器學習相關的課程",
-  },
-  {
-    icon: Calendar,
-    text: "規劃下學期課表",
-    prompt: "根據我目前的課表，幫我規劃下學期可以選什麼課",
-  },
-  {
-    icon: GraduationCap,
-    text: "查詢畢業學分",
-    prompt: "幫我查詢我的系的畢業學分要求",
-  },
-  {
-    icon: BookOpen,
-    text: "推薦選修課程",
-    prompt: "推薦一些適合我的選修課程",
-  },
-];
+import useDictionary from "@/dictionaries/useDictionary";
 
 export function ChatSuggestions() {
   const { sendMessage } = useChatContext();
+  const dict = useDictionary();
+  const suggestions = [
+    {
+      icon: Search,
+      text: dict.chat.suggestions.machine_learning,
+      prompt: dict.chat.suggestions.machine_learning_prompt,
+    },
+    {
+      icon: Calendar,
+      text: dict.chat.suggestions.next_timetable,
+      prompt: dict.chat.suggestions.next_timetable_prompt,
+    },
+    {
+      icon: GraduationCap,
+      text: dict.chat.suggestions.graduation_credits,
+      prompt: dict.chat.suggestions.graduation_credits_prompt,
+    },
+    {
+      icon: BookOpen,
+      text: dict.chat.suggestions.elective_courses,
+      prompt: dict.chat.suggestions.elective_courses_prompt,
+    },
+  ];
 
   return (
     <div className="flex flex-wrap gap-2 justify-center">
-      {SUGGESTIONS.map((suggestion, index) => (
+      {suggestions.map((suggestion, index) => (
         <Button
           key={index}
           variant="outline"

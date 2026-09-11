@@ -9,6 +9,7 @@ import { useSavedTimetables } from "@/hooks/useSavedTimetables";
 import { Badge } from "@courseweb/ui";
 import { Button } from "@courseweb/ui";
 import { Users } from "lucide-react";
+import useDictionary from "@/dictionaries/useDictionary";
 import {
   Sheet,
   SheetContent,
@@ -20,6 +21,7 @@ import {
 const CalendarPage = () => {
   const [activeOverlays, setActiveOverlays] = useState<OverlayEntry[]>([]);
   const { totalUnread } = useSavedTimetables();
+  const dict = useDictionary();
 
   return (
     <div className="md:pr-8 w-full">
@@ -29,10 +31,10 @@ const CalendarPage = () => {
           <Tabs defaultValue="upcoming" className="flex flex-col h-full">
             <TabsList className="w-full mb-4">
               <TabsTrigger value="upcoming" className="flex-1">
-                Upcoming
+                {dict.calendar.tabs.upcoming}
               </TabsTrigger>
               <TabsTrigger value="others" className="flex-1">
-                Others
+                {dict.calendar.tabs.others}
                 {totalUnread > 0 && (
                   <Badge
                     variant="destructive"
@@ -59,7 +61,7 @@ const CalendarPage = () => {
             <SheetTrigger asChild>
               <Button size="sm" variant="outline" className="shadow-md gap-1.5">
                 <Users className="h-4 w-4" />
-                Others
+                {dict.calendar.tabs.others}
                 {totalUnread > 0 && (
                   <Badge variant="destructive" className="h-4 text-xs px-1">
                     {totalUnread}
@@ -69,7 +71,7 @@ const CalendarPage = () => {
             </SheetTrigger>
             <SheetContent side="right" className="w-80 p-0 flex flex-col">
               <SheetHeader className="p-4 pb-0">
-                <SheetTitle>Others&apos; Timetables</SheetTitle>
+                <SheetTitle>{dict.calendar.tabs.others_timetables}</SheetTitle>
               </SheetHeader>
               <div className="flex-1 overflow-auto p-4 pt-2">
                 <OthersTimetablePanel

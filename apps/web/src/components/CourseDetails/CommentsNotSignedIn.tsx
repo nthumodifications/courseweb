@@ -11,10 +11,10 @@ const CommentsNotSignedIn = () => {
       <AlertTriangle />
       <div className="flex-1 space-y-1">
         <p className="text-sm font-medium leading-none">
-          登入后即可查看和發表評價。
+          {dict.course.details.comments_signin_title}
         </p>
         <p className="text-sm text-muted-foreground">
-          分享你的修課經驗，幫助其他同學做決定。
+          {dict.course.details.comments_signin_description}
         </p>
       </div>
       <Button asChild>

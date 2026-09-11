@@ -159,6 +159,7 @@ const TimetableCourseListItem = ({
   displaySettings: DisplaySettings;
 }) => {
   const { language } = useSettings();
+  const dict = useDictionary();
 
   const handleCopyClipboard = (id: RawCourseID) => {
     navigator.clipboard.writeText(id);
@@ -244,18 +245,20 @@ const TimetableCourseListItem = ({
                     className="px-2 py-0.5 bg-foreground/10 mr-1 rounded-md text-xs whitespace-nowrap"
                   >
                     {venue}{" "}
-                    {hasTimes(course as MinimalCourse) ? time : "缺時間"}
+                    {hasTimes(course as MinimalCourse)
+                      ? time
+                      : dict.course.details.missing_time}
                   </div>
                 );
               })}
             {displaySettings.showCredits && (
               <div className="px-2 py-0.5 bg-foreground/10 mr-1 rounded-md text-xs whitespace-nowrap">
-                {course.credits} 學分
+                {course.credits} {dict.course.credits}
               </div>
             )}
             {displaySettings.showPriority && priority != 0 && (
               <span className="px-2 py-0.5 bg-foreground text-muted mr-1 rounded-md text-xs whitespace-nowrap">
-                {priority} 志願
+                {priority} {dict.timetable.priority}
               </span>
             )}
           </div>
@@ -268,7 +271,7 @@ const TimetableCourseListItem = ({
               <AlertTriangle className="w-6 h-6 text-red-500" />
             </HoverCardTrigger>
             <HoverCardContent>
-              <span>衝堂</span>
+              <span>{dict.timetable.conflict}</span>
             </HoverCardContent>
           </HoverCard>
         )}
@@ -278,7 +281,7 @@ const TimetableCourseListItem = ({
               <Copy className="w-6 h-6 text-yellow-500" />
             </HoverCardTrigger>
             <HoverCardContent>
-              <span>重複</span>
+              <span>{dict.timetable.duplicate}</span>
             </HoverCardContent>
           </HoverCard>
         )}
@@ -469,7 +472,7 @@ export const TimetableCourseList = ({
                   }
                 >
                   <SelectTrigger className="w-[120px]">
-                    <SelectValue placeholder="Select" />
+                  <SelectValue placeholder={dict.timetable.select_display} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="add">

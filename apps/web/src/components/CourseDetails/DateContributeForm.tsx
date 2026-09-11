@@ -39,6 +39,8 @@ import useDictionary from "@/dictionaries/useDictionary";
 import client from "@/config/api";
 import authClient from "@/config/auth";
 import { useAuth } from "react-oidc-context";
+import { useSettings } from "@/hooks/contexts/settings";
+import { getLocale } from "@/helpers/dateLocale";
 
 const schema = z.object({
   dates: z.array(
@@ -62,6 +64,7 @@ const DateContributeForm = ({
   const [open, setOpen] = useState(false);
   const dict = useDictionary();
   const auth = useAuth();
+  const { language } = useSettings();
   const {
     data: existingDates,
     error,
@@ -125,14 +128,14 @@ const DateContributeForm = ({
     );
     if (!res.ok) {
       toast({
-        title: "Failed to submit",
+        title: dict.dialogs.DateContributeForm.submit_failed,
         variant: "destructive",
       });
       return;
     }
     toast({
-      title: "Submitted successfully",
-      description: "Your contribution has been submitted successfully",
+      title: dict.dialogs.DateContributeForm.submitted_title,
+      description: dict.dialogs.DateContributeForm.submitted_description,
     });
     setOpen(false);
     const newData = await refetch();
@@ -151,7 +154,9 @@ const DateContributeForm = ({
             <p className="text-sm text-muted-foreground text-center">
               {dict.dialogs.DateContributeForm.sign_in_required}
             </p>
-            <Button onClick={() => auth.signinRedirect()}>Sign in</Button>
+            <Button onClick={() => auth.signinRedirect()}>
+              {dict.settings.account.signin}
+            </Button>
           </div>
         ) : (
           <div className="flex flex-col gap-4">
@@ -191,7 +196,11 @@ const DateContributeForm = ({
                                 disabled={disabled}
                               >
                                 <SelectTrigger className="w-[90px]">
-                                  <SelectValue placeholder="Type" />
+                                  <SelectValue
+                                    placeholder={
+                                      dict.dialogs.DateContributeForm.type
+                                    }
+                                  />
                                 </SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value="exam">
@@ -227,7 +236,9 @@ const DateContributeForm = ({
                             <FormControl>
                               <Input
                                 autoComplete="off"
-                                placeholder="Title"
+                                placeholder={
+                                  dict.dialogs.DateContributeForm.title_placeholder
+                                }
                                 disabled={disabled}
                                 {...field}
                               />
@@ -253,7 +264,9 @@ const DateContributeForm = ({
                                   >
                                     <CalendarIcon className="mr-2 h-4 w-4" />
                                     {field.value ? (
-                                      format(field.value, "PPP")
+                                      format(field.value, "PPP", {
+                                        locale: getLocale(language),
+                                      })
                                     ) : (
                                       <span>
                                         {

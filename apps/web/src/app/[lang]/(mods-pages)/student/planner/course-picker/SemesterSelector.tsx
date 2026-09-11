@@ -48,7 +48,7 @@ const SemesterSelector = () => {
       >
         <SelectValue placeholder={dict.planner.coursePicker.selectSemester}>
           {selected
-            ? toPrettySemester(selected) + " 學期"
+            ? toPrettySemester(selected) + " " + dict.course.refine.semester
             : dict.planner.coursePicker.selectSemester}
         </SelectValue>
       </SelectTrigger>
@@ -57,7 +57,7 @@ const SemesterSelector = () => {
           .sort((a, b) => parseInt(b.id) - parseInt(a.id))
           .map((item) => (
             <SelectItem value={item.id} key={item.id}>
-              {toPrettySemester(item.id)} 學期
+              {toPrettySemester(item.id)} {dict.course.refine.semester}
             </SelectItem>
           ))}
       </SelectContent>

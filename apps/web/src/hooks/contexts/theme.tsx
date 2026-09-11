@@ -137,7 +137,9 @@ const applyThemeConfig = (config: ThemeConfig, isDark: boolean) => {
     }
     root.style.setProperty("--font-family", fontDef.cssFamily);
   } else {
-    root.style.setProperty("--font-family", '"Inter", sans-serif');
+    // Use the shared definition so the default keeps its Traditional Chinese
+    // fallback instead of dropping to a generic sans-serif for CJK glyphs.
+    root.style.setProperty("--font-family", FONT_DEFINITIONS.inter.cssFamily);
   }
 };
 

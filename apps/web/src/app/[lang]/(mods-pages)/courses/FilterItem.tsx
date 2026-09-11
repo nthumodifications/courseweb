@@ -13,6 +13,7 @@ import { Button } from "@courseweb/ui";
 import { useEffect, useState, useCallback, useMemo, memo, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import useCustomRefinementList from "./useCustomRefinementList";
+import useDictionary from "@/dictionaries/useDictionary";
 
 const FilterItem = memo(
   ({
@@ -21,7 +22,7 @@ const FilterItem = memo(
     searchable = false,
     clientSearch = false,
     synonms = {},
-    placeholder = "Search ...",
+     placeholder,
     defaultSearch = "",
   }: {
     attribute: string;
@@ -32,6 +33,8 @@ const FilterItem = memo(
     placeholder?: string;
     defaultSearch?: string;
   }) => {
+    const dict = useDictionary();
+    const resolvedPlaceholder = placeholder ?? dict.planner.coursePicker.search;
     const {
       items,
       refine,
@@ -118,9 +121,9 @@ const FilterItem = memo(
           <PopoverTrigger asChild>
             <div className="flex-1 text-left px-4 py-2">
               {searching ? (
-                "Selecting..."
+                dict.common.selecting
               ) : selected.length == 0 ? (
-                "All"
+                dict.common.all
               ) : (
                 <div className="flex flex-col gap-1">
                   {selected.map((i) => (
@@ -150,7 +153,7 @@ const FilterItem = memo(
                 maxLength={512}
                 value={searchValue}
                 onValueChange={(value) => search(value)}
-                placeholder={placeholder}
+                 placeholder={resolvedPlaceholder}
               />
             )}
             <ScrollArea
@@ -158,7 +161,7 @@ const FilterItem = memo(
               className="h-[300px]"
             >
               <CommandList className="max-h-none">
-                <CommandEmpty>No results found.</CommandEmpty>
+                 <CommandEmpty>{dict.common.no_results}</CommandEmpty>
                 {items
                   .sort((a, b) => {
                     if (a.isRefined) return -1;

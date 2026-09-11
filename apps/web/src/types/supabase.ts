@@ -11,31 +11,55 @@ export type Database = {
     Tables: {
       alerts: {
         Row: {
+          active: boolean;
           created_at: string;
           description: string | null;
+          description_en: string | null;
+          dismissible: boolean;
           end_date: string;
           id: number;
+          link_label: string | null;
+          link_label_en: string | null;
+          link_url: string | null;
+          priority: number;
           severity: string;
           start_date: string;
           title: string;
+          title_en: string | null;
         };
         Insert: {
+          active?: boolean;
           created_at?: string;
           description?: string | null;
+          description_en?: string | null;
+          dismissible?: boolean;
           end_date: string;
           id?: number;
+          link_label?: string | null;
+          link_label_en?: string | null;
+          link_url?: string | null;
+          priority?: number;
           severity: string;
           start_date: string;
           title: string;
+          title_en?: string | null;
         };
         Update: {
+          active?: boolean;
           created_at?: string;
           description?: string | null;
+          description_en?: string | null;
+          dismissible?: boolean;
           end_date?: string;
           id?: number;
+          link_label?: string | null;
+          link_label_en?: string | null;
+          link_url?: string | null;
+          priority?: number;
           severity?: string;
           start_date?: string;
           title?: string;
+          title_en?: string | null;
         };
         Relationships: [];
       };

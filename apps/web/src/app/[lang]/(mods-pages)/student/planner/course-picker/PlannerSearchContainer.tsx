@@ -5,7 +5,6 @@ import {
 } from "react-instantsearch";
 import useDictionary from "@/dictionaries/useDictionary";
 import { createInfiniteHitsSessionStorageCache } from "instantsearch.js/es/lib/infiniteHitsCache";
-import algoliasearch from "algoliasearch/lite";
 import { ScrollArea } from "@courseweb/ui";
 import ResetFiltersButton from "@/app/[lang]/(mods-pages)/courses/ResetFiltersButton";
 import { useEffect, useRef } from "react";
@@ -17,8 +16,10 @@ import PlannerCourseListItem from "./PlannerCourseListItem";
 import PlannerFilters from "./PlannerFilters";
 import { CourseSyllabusView } from "@/config/supabase";
 import { useSettings } from "@/hooks/contexts/settings";
+import SearchDegradationBanner from "@/components/Search/SearchDegradationBanner";
+import type { ResilientSearchClient } from "@/lib/search-client";
 
-type SearchClient = ReturnType<typeof algoliasearch>;
+type SearchClient = ResilientSearchClient;
 type InfiniteHitsCache = ReturnType<
   typeof createInfiniteHitsSessionStorageCache
 >;
@@ -105,6 +106,7 @@ type SearchContainerProps = {
 };
 
 const SearchContainer = ({
+  searchClient,
   sessionStorageCache,
   onAdd,
   onRemove,
@@ -127,6 +129,7 @@ const SearchContainer = ({
       </div>
 
       <div className="flex flex-col gap-4 flex-1">
+        <SearchDegradationBanner searchClient={searchClient} />
         <div className="flex items-end ml-4">
           <span className="text-2xl">{dict.course.refine.search_results}</span>
           <span className="text-sm mr-auto ml-2">

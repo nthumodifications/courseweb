@@ -2,6 +2,11 @@ export type ThemeRadius = "none" | "sm" | "md" | "lg" | "xl";
 export type ThemeDensity = "compact" | "comfortable" | "spacious";
 export type ThemeBackground = "solid" | "gradient" | "dots" | "lines" | "noise";
 export type ThemeFont =
+  // Chinese-capable faces come first: this is a Traditional Chinese product.
+  | "system-tc"
+  | "noto-sans-tc"
+  | "noto-serif-tc"
+  // Latin faces. Each one still falls back to a CJK stack for Chinese glyphs.
   | "inter"
   | "jakarta"
   | "nunito"
@@ -9,6 +14,8 @@ export type ThemeFont =
   | "montserrat"
   | "mono"
   | "lora";
+
+export type ThemeFontScript = "chinese" | "latin";
 
 export type ThemeCSSVar =
   | "background"
@@ -94,43 +101,98 @@ export const DENSITY_VALUES: Record<ThemeDensity, number> = {
   spacious: 1.25,
 };
 
+/**
+ * Traditional Chinese (Taiwan) system stack. PingFang TC on Apple platforms,
+ * Microsoft JhengHei on Windows, Noto Sans CJK TC on Linux and Android. Costs
+ * no download, so it is the safe fallback for every face below.
+ */
+const CJK_TC_STACK =
+  '"PingFang TC", "Microsoft JhengHei", "Noto Sans CJK TC", "Noto Sans TC", "Heiti TC", sans-serif';
+
+const CJK_TC_SERIF_STACK =
+  '"Songti TC", "PMingLiU", "Noto Serif CJK TC", "Noto Serif TC", serif';
+
 export const FONT_DEFINITIONS: Record<
   ThemeFont,
-  { label: string; googleFamily: string | null; cssFamily: string }
+  {
+    label: string;
+    script: ThemeFontScript;
+    googleFamily: string | null;
+    cssFamily: string;
+  }
 > = {
+  // --- Chinese ---
+  "system-tc": {
+    label: "系統中文",
+    script: "chinese",
+    googleFamily: null,
+    cssFamily: CJK_TC_STACK,
+  },
+  "noto-sans-tc": {
+    label: "思源黑體",
+    script: "chinese",
+    googleFamily: "Noto+Sans+TC:wght@400;500;600;700",
+    cssFamily: `"Noto Sans TC", ${CJK_TC_STACK}`,
+  },
+  "noto-serif-tc": {
+    label: "思源宋體",
+    script: "chinese",
+    googleFamily: "Noto+Serif+TC:wght@400;500;600;700",
+    cssFamily: `"Noto Serif TC", ${CJK_TC_SERIF_STACK}`,
+  },
+  // --- Latin ---
+  // Every Latin face appends the CJK stack so Chinese text keeps a real
+  // Traditional Chinese face instead of falling through to generic sans-serif.
   inter: {
     label: "Inter",
+    script: "latin",
     googleFamily: null,
-    cssFamily: '"Inter", sans-serif',
+    cssFamily: `"Inter", ${CJK_TC_STACK}`,
   },
   jakarta: {
     label: "Jakarta",
+    script: "latin",
     googleFamily: "Plus+Jakarta+Sans:wght@400;500;600;700",
-    cssFamily: '"Plus Jakarta Sans", sans-serif',
+    cssFamily: `"Plus Jakarta Sans", ${CJK_TC_STACK}`,
   },
   nunito: {
     label: "Nunito",
+    script: "latin",
     googleFamily: "Nunito:wght@400;500;600;700",
-    cssFamily: '"Nunito", sans-serif',
+    cssFamily: `"Nunito", ${CJK_TC_STACK}`,
   },
   "dm-sans": {
     label: "DM Sans",
+    script: "latin",
     googleFamily: "DM+Sans:wght@400;500;600;700",
-    cssFamily: '"DM Sans", sans-serif',
+    cssFamily: `"DM Sans", ${CJK_TC_STACK}`,
   },
   montserrat: {
     label: "Montserrat",
+    script: "latin",
     googleFamily: "Montserrat:wght@400;500;600;700",
-    cssFamily: '"Montserrat", sans-serif',
+    cssFamily: `"Montserrat", ${CJK_TC_STACK}`,
   },
   mono: {
     label: "Mono",
+    script: "latin",
     googleFamily: "JetBrains+Mono:wght@400;500;600;700",
-    cssFamily: '"JetBrains Mono", monospace',
+    cssFamily: `"JetBrains Mono", ui-monospace, ${CJK_TC_STACK}`,
   },
   lora: {
     label: "Lora",
+    script: "latin",
     googleFamily: "Lora:wght@400;500;600;700",
-    cssFamily: '"Lora", serif',
+    cssFamily: `"Lora", ${CJK_TC_SERIF_STACK}`,
   },
 };
+
+export const FONT_ORDER: Record<ThemeFontScript, ThemeFont[]> = {
+  chinese: (Object.keys(FONT_DEFINITIONS) as ThemeFont[]).filter(
+    (f) => FONT_DEFINITIONS[f].script === "chinese",
+  ),
+  latin: (Object.keys(FONT_DEFINITIONS) as ThemeFont[]).filter(
+    (f) => FONT_DEFINITIONS[f].script === "latin",
+  ),
+};
+

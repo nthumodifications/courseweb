@@ -22,11 +22,18 @@ import ai from "./ai";
 import graduation from "./graduation";
 import shortlinkRedirect from "./shortlink-redirect";
 import sports from "./sports";
+import recruit from "./recruit";
 import { syncPeoOpeningTimes } from "./scheduled/peo-opening-times";
 import { D1Database } from "@cloudflare/workers-types";
 
 export type Bindings = {
   DB: D1Database;
+  SUPABASE_URL: string;
+  SUPABASE_SERVICE_ROLE_KEY: string;
+  ALGOLIA_APP_ID: string;
+  ALGOLIA_API_KEY: string;
+  ALGOLIA_BACKUP_APP_ID?: string;
+  ALGOLIA_BACKUP_API_KEY?: string;
   GOOGLE_AI_API_KEY?: string;
   VENUE_RATE_LIMITER: RateLimit;
 };
@@ -61,7 +68,8 @@ export const app = new Hono<{ Bindings: Bindings }>()
   .route("/ai", ai)
   .route("/graduation", graduation)
   .route("/l", shortlinkRedirect)
-  .route("/sports", sports);
+  .route("/sports", sports)
+  .route("/recruit", recruit);
 
 export default {
   fetch: app.fetch.bind(app),

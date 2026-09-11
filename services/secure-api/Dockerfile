@@ -22,6 +22,7 @@ COPY apps/web/package.json ./apps/web/package.json
 COPY tools/build-scripts/package.json ./tools/build-scripts/package.json
 COPY tools/data-sync/package.json ./tools/data-sync/package.json
 COPY tools/dict-manager/package.json ./tools/dict-manager/package.json
+COPY tools/map-data/package.json ./tools/map-data/package.json
 
 # Install dependencies
 RUN bun install --frozen-lockfile
@@ -53,6 +54,8 @@ COPY --from=builder /usr/src/app/services/secure-api/src ./src
 COPY --from=builder /usr/src/app/services/secure-api/package.json .
 COPY --from=builder /usr/src/app/services/secure-api/tsconfig.json .
 COPY --from=builder /usr/src/app/services/secure-api/prisma ./prisma
+# `start` applies pending migrations before serving
+COPY --from=builder /usr/src/app/services/secure-api/scripts ./scripts
 
 # Copy necessary workspace packages
 COPY --from=builder /usr/src/app/packages ./packages

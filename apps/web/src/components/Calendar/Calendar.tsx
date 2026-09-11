@@ -7,8 +7,7 @@ import {
   Plus,
   Rows2,
 } from "lucide-react";
-import { addMonths, addWeeks, subMonths, subWeeks } from "date-fns";
-import { KeyboardEvent, useCallback, useEffect, useState } from "react";
+import { KeyboardEvent, useCallback, useEffect, useRef, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -21,8 +20,12 @@ import { Button } from "@courseweb/ui";
 import { CalendarEvent, TimetableSyncRequest } from "./calendar.types";
 import { useCalendar } from "./calendar_hook";
 import { AddEventButton } from "./AddEventButton";
-import { getWeek } from "./calendar_utils";
-import { getMonthForDisplay } from "@/components/Calendar/calendar_utils";
+import {
+  addTaipeiDays,
+  addTaipeiMonths,
+  getTaipeiMonthForDisplay,
+  getTaipeiWeek,
+} from "@/helpers/dates";
 import { CalendarDateSelector } from "@/components/Calendar/CalendarDateSelector";
 import { CalendarWeekContainer } from "./CalendarWeekContainer";
 import { CalendarMonthContainer } from "./CalendarMonthContainer";
@@ -45,6 +48,14 @@ import { useIsMobile } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
 import type { OverlayEntry } from "./OthersTimetablePanel";
 import { CalendarEventInternal } from "./calendar.types";
+import {
+  getTimetableSyncSemesters,
+  reconcileTimetableEvents,
+} from "./timetableReconcile";
+
+type TimetableSyncPrompt = TimetableSyncRequest & {
+  deletionCount: number;
+};
 
 const CalendarError = ({
   error,
@@ -53,23 +64,38 @@ const CalendarError = ({
   error: Error;
   resetErrorBoundary: () => void;
 }) => {
+  const dict = useDictionary();
+
   return (
-    <div className="text-destructive">An error occurred: {error.message}</div>
+    <div className="text-destructive">
+      {dict.common.error}: {error.message}
+    </div>
   );
 };
 
 const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
-  const [displayDates, setDisplayDates] = useState<Date[]>(getWeek(new Date()));
+  const [displayDates, setDisplayDates] = useState<Date[]>(
+    getTaipeiWeek(new Date()),
+  );
   const [displayMode, setDisplayMode] = useState<"week" | "month" | "upcoming">(
     "week",
   );
-  const { addEvent, displayContainer, HOUR_HEIGHT, timetableSyncReady } =
-    useCalendar();
+  const {
+    addEvent,
+    displayContainer,
+    events,
+    eventSyncReady,
+    HOUR_HEIGHT,
+    removeEvents,
+    timetableSyncReady,
+  } = useCalendar();
   const {
     courses,
     colorMap,
     getSemesterCourses,
+    error: coursesError,
     isLoading: coursesLoading,
+    timetableDataReady,
   } = useUserTimetable();
   const { language } = useSettings();
   const isMobile = useIsMobile();
@@ -82,10 +108,10 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
     (date: Date) => {
       switch (displayMode) {
         case "week":
-          setDisplayDates(getWeek(date));
+          setDisplayDates(getTaipeiWeek(date));
           break;
         case "month":
-          setDisplayDates(getMonthForDisplay(date));
+          setDisplayDates(getTaipeiMonthForDisplay(date));
           break;
       }
     },
@@ -105,8 +131,9 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
             onClick={moveBackward}
             size="icon"
             className="hidden md:inline-flex"
+            aria-label={dict.calendar.accessibility.previous_period}
           >
-            <ChevronLeft />
+            <ChevronLeft aria-hidden="true" />
           </Button>
           <CalendarDateSelector date={centerDate} setDate={setDate} />
           <Button
@@ -114,8 +141,9 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
             onClick={moveForward}
             size="icon"
             className="hidden md:inline-flex"
+            aria-label={dict.calendar.accessibility.next_period}
           >
-            <ChevronRight />
+            <ChevronRight aria-hidden="true" />
           </Button>
         </div>
 
@@ -129,14 +157,26 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
             className="mr-2"
           >
             <TabsList className="h-8">
-              <TabsTrigger value="upcoming" className="md:hidden h-7 px-2">
-                <Rows2 className="h-4 w-4" />
+              <TabsTrigger
+                value="upcoming"
+                className="md:hidden h-7 px-2"
+                aria-label={dict.calendar.accessibility.view_upcoming}
+              >
+                <Rows2 className="h-4 w-4" aria-hidden="true" />
               </TabsTrigger>
-              <TabsTrigger value="week" className="h-7 px-2">
-                <Columns4 className="h-4 w-4" />
+              <TabsTrigger
+                value="week"
+                className="h-7 px-2"
+                aria-label={dict.calendar.accessibility.view_week}
+              >
+                <Columns4 className="h-4 w-4" aria-hidden="true" />
               </TabsTrigger>
-              <TabsTrigger value="month" className="h-7 px-2">
-                <Grid3x3 className="h-4 w-4" />
+              <TabsTrigger
+                value="month"
+                className="h-7 px-2"
+                aria-label={dict.calendar.accessibility.view_month}
+              >
+                <Grid3x3 className="h-4 w-4" aria-hidden="true" />
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -146,8 +186,9 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
             size="icon"
             onClick={backToToday}
             className="h-8 hidden md:inline-flex"
+            aria-label={dict.calendar.accessibility.today}
           >
-            <CalendarIcon className="size-4" />
+            <CalendarIcon className="size-4" aria-hidden="true" />
           </Button>
         </div>
       </div>
@@ -160,19 +201,26 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
     return () => {
       clearPortalContent();
     };
-  }, [displayDates, setDate, displayMode]); // Added displayMode as dependency
+  }, [displayDates, setDate, displayMode, language]); // Added displayMode as dependency
 
   //week movers
   const moveBackward = () => {
     switch (displayMode) {
       case "week":
-        setDisplayDates(displayDates.map((d) => subWeeks(d, 1)));
+        setDisplayDates(
+          getTaipeiWeek(
+            addTaipeiDays(
+              displayDates[Math.floor(displayDates.length / 2)],
+              -7,
+            ),
+          ),
+        );
         break;
       case "month":
         // get month of current center date
         const month = displayDates[Math.floor(displayDates.length / 2)];
         // subtract 1 month from the month
-        setDisplayDates(getMonthForDisplay(subMonths(month, 1)));
+        setDisplayDates(getTaipeiMonthForDisplay(addTaipeiMonths(month, -1)));
         break;
     }
   };
@@ -180,13 +228,17 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
   const moveForward = () => {
     switch (displayMode) {
       case "week":
-        setDisplayDates(displayDates.map((d) => addWeeks(d, 1)));
+        setDisplayDates(
+          getTaipeiWeek(
+            addTaipeiDays(displayDates[Math.floor(displayDates.length / 2)], 7),
+          ),
+        );
         break;
       case "month":
         // get month of current center date
         const month = displayDates[Math.floor(displayDates.length / 2)];
         // add 1 month from the month
-        setDisplayDates(getMonthForDisplay(addMonths(month, 1)));
+        setDisplayDates(getTaipeiMonthForDisplay(addTaipeiMonths(month, 1)));
         break;
     }
   };
@@ -194,10 +246,10 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
   const backToToday = () => {
     switch (displayMode) {
       case "week":
-        setDisplayDates(getWeek(new Date()));
+        setDisplayDates(getTaipeiWeek(new Date()));
         break;
       case "month":
-        setDisplayDates(getMonthForDisplay(new Date()));
+        setDisplayDates(getTaipeiMonthForDisplay(new Date()));
         break;
     }
   };
@@ -206,10 +258,10 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
     setDisplayMode(mode);
     switch (mode) {
       case "week":
-        setDisplayDates(getWeek(displayDates[0]));
+        setDisplayDates(getTaipeiWeek(displayDates[0]));
         break;
       case "month":
-        setDisplayDates(getMonthForDisplay(displayDates[0]));
+        setDisplayDates(getTaipeiMonthForDisplay(displayDates[0]));
         break;
       case "upcoming":
         break;
@@ -227,19 +279,37 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
 
   //listen to keypress events
   const handleKeyPress = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.defaultPrevented) return;
+    const target = e.target as HTMLElement;
+    if (
+      target.matches(
+        "input, textarea, select, button, a, [contenteditable='true']",
+      )
+    ) {
+      return;
+    }
+
+    const key = e.key.toLowerCase();
     if (e.key === "ArrowUp") {
+      e.preventDefault();
       displayContainer.current?.scrollBy(0, -HOUR_HEIGHT);
     } else if (e.key === "ArrowDown") {
+      e.preventDefault();
       displayContainer.current?.scrollBy(0, HOUR_HEIGHT);
     } else if (e.key === "ArrowLeft") {
+      e.preventDefault();
       moveBackward();
     } else if (e.key === "ArrowRight") {
+      e.preventDefault();
       moveForward();
-    } else if (e.key === "t") {
+    } else if (key === "t") {
+      e.preventDefault();
       backToToday();
-    } else if (e.key === "w") {
+    } else if (key === "w") {
+      e.preventDefault();
       handleSwitchMode("week");
-    } else if (e.key === "m") {
+    } else if (key === "m") {
+      e.preventDefault();
       handleSwitchMode("month");
     }
   };
@@ -255,104 +325,182 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
 
   const timetableSync = useRxCollection<TimetableSyncDocType>("timetablesync");
 
-  const [availableSync, setAvailableSync] = useState<TimetableSyncRequest[]>(
-    [],
-  );
+  const [availableSync, setAvailableSync] = useState<TimetableSyncPrompt[]>([]);
+  const applyingSyncRef = useRef(false);
+
+  const getCurrentTimetable = (semester: string) =>
+    createTimetableFromCourses(
+      getSemesterCourses(semester) as MinimalCourse[],
+      colorMap,
+    );
+
+  /**
+   * useUserTimetable retains cached course data while its current-user query
+   * settles. Do not treat a partially materialized semester as an empty one:
+   * that would make reconciliation delete another user's generated events.
+   */
+  const isTimetableDataSettled = () => {
+    if (coursesError || !timetableDataReady) return false;
+    return Object.entries(courses).every(([semester, courseIds]) => {
+      if (!Array.isArray(courseIds)) return false;
+      const loadedCourseIds = getSemesterCourses(semester).map(
+        (course) => course.raw_id,
+      );
+      return (
+        loadedCourseIds.length === courseIds.length &&
+        courseIds.every((courseId) => loadedCourseIds.includes(courseId))
+      );
+    });
+  };
+
+  const persistedEventsForSemester = (semester: string) =>
+    events.filter(
+      (event) =>
+        event.courseId != null && event.courseId.slice(0, 5) === semester,
+    );
 
   const syncTimetable = async () => {
     if (
       !timetableSync ||
       !timetableSyncReady ||
+      !eventSyncReady ||
       coursesLoading ||
-      Object.keys(courses).length === 0
+      !isTimetableDataSettled()
     )
       return;
 
-    // for each semester, check if its already synced
-    const timetableCourses: TimetableSyncRequest[] = [];
-    for (const sem in courses) {
-      const coursesData = getSemesterCourses(sem);
-      // get current synced from db
-      const syncData = await timetableSync
-        .findOne({ selector: { semester: { $eq: sem } } })
-        .exec();
-      if (!syncData) {
-        timetableCourses.push({
-          semester: sem,
-          courses: createTimetableFromCourses(
-            coursesData as MinimalCourse[],
-            colorMap,
-          ),
-          reason: "new",
-        });
-        continue;
-      }
-      // check if courses are modified
-      const syncedCourses = syncData.courses as string[];
-      // compare courses after converting to timetable format, because some courses might not be displayable.
-      const newCourses = createTimetableFromCourses(
-        coursesData as MinimalCourse[],
-        colorMap,
-      );
-      const newCoursesId = newCourses.map((c) => c.course.raw_id);
-      const coursesModified =
-        syncedCourses.filter((c) => !newCoursesId.includes(c)).length > 0 ||
-        newCoursesId.filter((c) => !syncedCourses.includes(c)).length > 0;
-      if (coursesModified) {
-        timetableCourses.push({
-          semester: sem,
-          courses: newCourses,
-          reason: "modified",
-        });
-      }
+    const syncDocuments = await timetableSync.find().exec();
+    const syncBySemester = new Map(
+      syncDocuments.map((document) => [document.semester, document]),
+    );
+    const timetableCourses: TimetableSyncPrompt[] = [];
+    const semesters = getTimetableSyncSemesters(
+      Object.keys(courses),
+      syncDocuments,
+    );
+
+    for (const semester of semesters) {
+      const currentCourses = getCurrentTimetable(semester);
+      const diff = reconcileTimetableEvents({
+        generated: timetableToCalendarEvent(currentCourses, language),
+        persisted: persistedEventsForSemester(semester),
+        semester,
+      });
+      const syncData = syncBySemester.get(semester);
+      const hasChanges = diff.toUpsert.length > 0 || diff.toDelete.length > 0;
+
+      if (!syncData && currentCourses.length === 0 && !hasChanges) continue;
+      if (syncData && !hasChanges) continue;
+
+      timetableCourses.push({
+        semester,
+        courses: currentCourses,
+        reason: syncData ? "modified" : "new",
+        deletionCount: diff.toDelete.length,
+      });
     }
-    // prompt update if required
-    if (timetableCourses.length == 0) return;
+
     setAvailableSync(timetableCourses);
   };
 
   useEffect(() => {
-    if (timetableSyncReady && !coursesLoading) {
+    if (
+      timetableSyncReady &&
+      eventSyncReady &&
+      !coursesLoading &&
+      !coursesError &&
+      !applyingSyncRef.current
+    ) {
       syncTimetable();
     }
-  }, [courses, timetableSync, timetableSyncReady, coursesLoading]);
+  }, [
+    courses,
+    coursesError,
+    coursesLoading,
+    events,
+    eventSyncReady,
+    timetableSync,
+    timetableSyncReady,
+  ]);
 
   const handleSyncAccept = async (
     request: TimetableSyncRequest,
     accept: boolean,
   ) => {
+    if (
+      !timetableSync ||
+      !timetableSyncReady ||
+      !eventSyncReady ||
+      coursesLoading ||
+      !isTimetableDataSettled()
+    ) {
+      return;
+    }
+
+    const currentCourses = getCurrentTimetable(request.semester);
+    const currentEvents = timetableToCalendarEvent(currentCourses, language);
+    const diff = reconcileTimetableEvents({
+      generated: currentEvents,
+      persisted: persistedEventsForSemester(request.semester),
+      semester: request.semester,
+    });
+
     if (accept) {
-      const calendarEvents = timetableToCalendarEvent(
-        request.courses,
-        language,
-      );
-      calendarEvents.forEach((c) => addEvent(c));
+      applyingSyncRef.current = true;
+      try {
+        await removeEvents(diff.toDelete);
+        await Promise.all(diff.toUpsert.map((event) => addEvent(event)));
+      } catch {
+        toast({
+          title: dict.common.error,
+          description: dict.calendar.sync.failed_description,
+        });
+        applyingSyncRef.current = false;
+        return;
+      }
+      applyingSyncRef.current = false;
     } else {
       toast({
-        title: `Semester ${toPrettySemester(request.semester)} sync cancelled`,
-        description: "You can sync again if the timetable changes",
+        title: dict.calendar.sync.cancelled_title.replace(
+          "{semester}",
+          toPrettySemester(request.semester),
+        ),
+        description: dict.calendar.sync.cancelled_description,
       });
     }
 
-    // Always record the known course set (accepted or dismissed) so the dialog
-    // is not re-shown for the same courses on subsequent mounts/course-changes.
-    await timetableSync!.upsert({
-      semester: request.semester,
-      courses: request.courses.map((c) => c.course.raw_id),
-      lastSync: new Date().toISOString(),
-    });
+    // Record the current generated course set only after accepted event writes
+    // have completed. The next pass still compares event content, so a
+    // dismissed diff remains eligible for a later reconciliation prompt.
+    try {
+      await timetableSync.upsert({
+        semester: request.semester,
+        courses: currentCourses.map((c) => c.course.raw_id),
+        lastSync: new Date().toISOString(),
+      });
+    } catch {
+      toast({
+        title: dict.common.error,
+        description: dict.calendar.sync.failed_description,
+      });
+      return;
+    }
 
     setAvailableSync((s) => s.filter((r) => r.semester != request.semester));
   };
 
   return (
     <ErrorBoundary FallbackComponent={CalendarError}>
-      {availableSync.length > 0 && timetableSyncReady && (
-        <CalendarTimetableSyncDialog
-          request={availableSync[0]}
-          onSyncAccept={handleSyncAccept}
-        />
-      )}
+      {availableSync.length > 0 &&
+        timetableSyncReady &&
+        eventSyncReady &&
+        !coursesLoading && (
+          <CalendarTimetableSyncDialog
+            request={availableSync[0]}
+            deletionCount={availableSync[0].deletionCount}
+            onSyncAccept={handleSyncAccept}
+          />
+        )}
       <div className="flex flex-col gap-2 md:gap-6 flex-1 w-full">
         <div className="flex flex-col md:flex-row gap-2 justify-end">
           <div className="md:flex flex-row items-center gap-2 hidden ">
@@ -363,7 +511,29 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
             </AddEventButton>
           </div>
         </div>
-        <div className="w-full h-[80dvh]" {...handlers}>
+        <AddEventButton onEventAdded={handleAddEvent}>
+          <Button
+            className="md:hidden fixed bottom-24 right-8 z-50 rounded-lg shadow-lg"
+            size="icon"
+            aria-label={dict.calendar.add_event}
+          >
+            <Plus aria-hidden="true" />
+          </Button>
+        </AddEventButton>
+        <div
+          className="w-full h-[80dvh]"
+          {...handlers}
+          data-calendar-root
+          role="region"
+          tabIndex={0}
+          aria-label={dict.calendar.accessibility.calendar}
+          aria-describedby="calendar-keyboard-shortcuts"
+          aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight T W M"
+          onKeyDown={handleKeyPress}
+        >
+          <span id="calendar-keyboard-shortcuts" className="sr-only">
+            {dict.calendar.accessibility.shortcuts}
+          </span>
           {displayMode === "week" && (
             <CalendarWeekContainer
               displayWeek={displayDates}
@@ -391,14 +561,6 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
             </div>
           )}
         </div>
-        <AddEventButton onEventAdded={handleAddEvent}>
-          <Button
-            className="md:hidden fixed bottom-24 right-8 z-50 rounded-lg shadow-lg"
-            size="icon"
-          >
-            <Plus />
-          </Button>
-        </AddEventButton>
       </div>
     </ErrorBoundary>
   );

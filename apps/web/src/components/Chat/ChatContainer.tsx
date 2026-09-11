@@ -26,9 +26,9 @@ function LoginPrompt() {
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-4">
       <Sparkles className="w-12 h-12 text-muted-foreground mb-4" />
-      <p className="text-lg font-medium mb-2">AI 課程助手</p>
+      <p className="text-lg font-medium mb-2">{dict.chat.title}</p>
       <p className="text-sm text-muted-foreground text-center mb-6">
-        {dict.chat?.login_required ?? "請先登入以使用 AI 課程助手功能"}
+        {dict.chat.login_required}
       </p>
       <Button onClick={handleLogin} className="gap-2">
         <LogIn className="w-4 h-4" />
@@ -42,6 +42,7 @@ export function ChatContainer() {
   const { isOpen, setIsOpen, messages, quotaError, clearQuotaError } =
     useChatContext();
   const { isAuthenticated, isLoading } = useAuth();
+  const dict = useDictionary();
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const [width, setWidth] = useState(400);
   const [isResizing, setIsResizing] = useState(false);
@@ -85,7 +86,7 @@ export function ChatContainer() {
     <div className="flex-1 flex items-center justify-center">
       <div className="animate-pulse flex flex-col items-center gap-4">
         <Sparkles className="w-10 h-10 text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">Loading...</p>
+        <p className="text-sm text-muted-foreground">{dict.common.loading}</p>
       </div>
     </div>
   );
@@ -114,9 +115,9 @@ export function ChatContainer() {
           {messages.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center p-4">
               <Sparkles className="w-12 h-12 text-muted-foreground mb-4" />
-              <p className="text-lg font-medium mb-2">歡迎使用 AI 課程助手</p>
+              <p className="text-lg font-medium mb-2">{dict.chat.welcome}</p>
               <p className="text-sm text-muted-foreground text-center mb-6">
-                我可以幫你搜尋課程、規劃課表、查詢畢業學分
+                {dict.chat.welcome_description}
               </p>
               <ChatSuggestions />
             </div>
@@ -156,7 +157,7 @@ export function ChatContainer() {
             <div className="flex items-center justify-between p-4 border-b">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-primary" />
-                <h2 className="font-semibold">AI 課程助手</h2>
+                <h2 className="font-semibold">{dict.chat.title}</h2>
               </div>
               <div className="flex items-center gap-1">
                 {isAuthenticated && <AISettingsDialog />}
@@ -189,7 +190,7 @@ export function ChatContainer() {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-primary" />
-                <h2 className="font-semibold">AI 課程助手</h2>
+                <h2 className="font-semibold">{dict.chat.title}</h2>
               </div>
               {isAuthenticated && <AISettingsDialog />}
             </div>

@@ -9,8 +9,10 @@ import {
 } from "@courseweb/ui";
 import { toPrettySemester } from "@/helpers/semester";
 import { lastSemester, semesterInfo } from "@courseweb/shared";
+import useDictionary from "@/dictionaries/useDictionary";
 
 const SemesterSelector = () => {
+  const dict = useDictionary();
   // refine semester for semester selector
   const { items, refine, canRefine } = useCustomMenu({
     attribute: "semester",
@@ -35,14 +37,14 @@ const SemesterSelector = () => {
   return (
     <Select value={selected} onValueChange={handleSelect}>
       <SelectTrigger className="w-[200px] ">
-        <SelectValue placeholder="Semester" />
+        <SelectValue placeholder={dict.course.refine.semester} />
       </SelectTrigger>
       <SelectContent>
         {[...semesterInfo]
           .sort((a, b) => parseInt(b.id) - parseInt(a.id))
           .map((item) => (
             <SelectItem value={item.id} key={item.id}>
-              {toPrettySemester(item.id)} 學期
+              {toPrettySemester(item.id)} {dict.course.refine.semester}
             </SelectItem>
           ))}
       </SelectContent>

@@ -1,46 +1,66 @@
 import { FC } from "react";
+import { addDays, format } from "date-fns";
 import { CourseTimeslotData } from "@/types/timetable";
-import { scheduleTimeSlots } from "@courseweb/shared";
 import { useSettings } from "@/hooks/contexts/settings";
 import { cn } from "@/lib/utils";
+import { CalendarClock } from "lucide-react";
+import useUserTimetable, {
+  TIMETABLE_FONT_FAMILIES,
+  TIMETABLE_FONT_SIZE_CLASSES,
+} from "@/hooks/contexts/useUserTimetable";
+import { getLocale } from "@/helpers/dateLocale";
+import {
+  addTimetableFractions,
+  getTimetableDataTimeRange,
+} from "@/helpers/timetable";
 
 interface TimetableTimelineProps {
   timetableData: CourseTimeslotData[];
   className?: string;
 }
 
-const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-const DAY_LABELS_ZH = ["週一", "週二", "週三", "週四", "週五", "週六", "週日"];
-
-// Timeline spans 7:00 to 22:00 (15 hours). Each hour = 56px.
+// The timeline starts at least at 7:00 and expands to contain all activities.
+// Each hour = 56px.
 const HOUR_HEIGHT = 56;
-const START_HOUR = 7;
-const END_HOUR = 22;
-const TOTAL_HOURS = END_HOUR - START_HOUR;
+const DEFAULT_START_HOUR = 7;
+const DEFAULT_END_HOUR = 22;
 
-function timeToMinutes(t: string): number {
-  const [h, m] = t.split(":").map(Number);
-  return h * 60 + m;
-}
-
-function minutesToTop(minutes: number): number {
-  const offsetMin = minutes - START_HOUR * 60;
+function minutesToTop(minutes: number, startHour: number): number {
+  const offsetMin = minutes - startHour * 60;
   return (offsetMin / 60) * HOUR_HEIGHT;
 }
-
-const HOURS = Array.from({ length: TOTAL_HOURS + 1 }, (_, i) => START_HOUR + i);
 
 const TimetableTimeline: FC<TimetableTimelineProps> = ({
   timetableData,
   className,
 }) => {
   const { language } = useSettings();
+  const { preferences } = useUserTimetable();
+  const fontSizeClass =
+    TIMETABLE_FONT_SIZE_CLASSES[preferences.fontSize ?? "sm"];
+  const fontFamily =
+    TIMETABLE_FONT_FAMILIES[preferences.fontFamily ?? "system"];
+  const timeRanges = timetableData.map(getTimetableDataTimeRange);
+  const startHour = Math.min(
+    DEFAULT_START_HOUR,
+    ...timeRanges.map((range) => Math.floor(range.start / 60)),
+  );
+  const endHour = Math.max(
+    DEFAULT_END_HOUR,
+    ...timeRanges.map((range) => Math.ceil(range.end / 60)),
+  );
+  const totalHours = endHour - startHour;
+  const hours = Array.from(
+    { length: totalHours + 1 },
+    (_, index) => startHour + index,
+  );
 
   // Determine which days have courses
   const daysPresent = [
     ...new Set(timetableData.map((s) => s.dayOfWeek)),
   ].sort();
   const days = daysPresent.length > 0 ? daysPresent : [0, 1, 2, 3, 4];
+  const layoutData = addTimetableFractions(timetableData);
 
   const TIME_COL_W = 44;
   const DAY_COL_W = 120;
@@ -61,7 +81,9 @@ const TimetableTimeline: FC<TimetableTimelineProps> = ({
             style={{ width: DAY_COL_W, minWidth: DAY_COL_W }}
             className="text-center text-xs font-semibold py-2 text-muted-foreground uppercase border-l border-border"
           >
-            {language === "zh" ? DAY_LABELS_ZH[day] : DAY_LABELS[day]}
+            {format(addDays(new Date(2024, 0, 1), day), "EEE", {
+              locale: getLocale(language),
+            })}
           </div>
         ))}
       </div>
@@ -69,18 +91,18 @@ const TimetableTimeline: FC<TimetableTimelineProps> = ({
       {/* Timeline body */}
       <div
         className="flex relative"
-        style={{ height: TOTAL_HOURS * HOUR_HEIGHT }}
+        style={{ height: totalHours * HOUR_HEIGHT }}
       >
         {/* Time axis */}
         <div
           style={{ width: TIME_COL_W, minWidth: TIME_COL_W }}
           className="relative"
         >
-          {HOURS.map((hour) => (
+          {hours.map((hour) => (
             <div
               key={hour}
               className="absolute right-2 text-[10px] text-muted-foreground/70 -translate-y-2"
-              style={{ top: (hour - START_HOUR) * HOUR_HEIGHT }}
+              style={{ top: (hour - startHour) * HOUR_HEIGHT }}
             >
               {hour}:00
             </div>
@@ -89,7 +111,13 @@ const TimetableTimeline: FC<TimetableTimelineProps> = ({
 
         {/* Day columns */}
         {days.map((day) => {
-          const daySlots = timetableData.filter((s) => s.dayOfWeek === day);
+          const daySlots = layoutData
+            .filter((s) => s.dayOfWeek === day)
+            .sort(
+              (a, b) =>
+                getTimetableDataTimeRange(a).start -
+                getTimetableDataTimeRange(b).start,
+            );
           return (
             <div
               key={day}
@@ -97,45 +125,76 @@ const TimetableTimeline: FC<TimetableTimelineProps> = ({
               className="relative border-l border-border"
             >
               {/* Hour grid lines */}
-              {HOURS.map((hour) => (
+              {hours.map((hour) => (
                 <div
                   key={hour}
                   className="absolute inset-x-0 border-t border-border/40"
-                  style={{ top: (hour - START_HOUR) * HOUR_HEIGHT }}
+                  style={{ top: (hour - startHour) * HOUR_HEIGHT }}
                 />
               ))}
 
               {/* Course blocks */}
               {daySlots.map((slot, i) => {
-                const startSlot = scheduleTimeSlots[slot.startTime];
-                const endSlot = scheduleTimeSlots[slot.endTime];
-                if (!startSlot || !endSlot) return null;
-
-                const top = minutesToTop(timeToMinutes(startSlot.start));
-                const bottom = minutesToTop(timeToMinutes(endSlot.end));
+                const range = getTimetableDataTimeRange(slot);
+                const top = minutesToTop(range.start, startHour);
+                const bottom = minutesToTop(range.end, startHour);
                 const height = Math.max(bottom - top, 20);
                 const name =
-                  language === "zh"
+                  slot.customItem?.title ??
+                  (language === "zh"
                     ? slot.course.name_zh
-                    : slot.course.name_en || slot.course.name_zh;
+                    : slot.course.name_en || slot.course.name_zh);
 
                 return (
                   <div
                     key={i}
-                    className="absolute inset-x-1 rounded overflow-hidden flex flex-col px-1.5 py-0.5"
+                    className={cn(
+                      "absolute rounded overflow-hidden flex flex-col px-1.5 py-0.5",
+                      slot.customItem && "border border-dashed",
+                    )}
                     style={{
                       top,
                       height,
+                      left:
+                        (slot.fractionIndex - 1) * (DAY_COL_W / slot.fraction) +
+                        4,
+                      width: DAY_COL_W / slot.fraction - 8,
                       backgroundColor: slot.color,
                       color: slot.textColor,
+                      borderColor: slot.customItem ? slot.textColor : undefined,
+                      fontFamily,
                     }}
                   >
-                    <span className="text-[10px] font-semibold leading-tight truncate">
+                    <span
+                      className={cn(
+                        fontSizeClass,
+                        "font-semibold leading-tight truncate",
+                      )}
+                    >
+                      {slot.customItem && (
+                        <CalendarClock className="inline-block h-3 w-3 mr-0.5" />
+                      )}
                       {name}
                     </span>
+                    {slot.customSlot && (
+                      <span
+                        className={cn(fontSizeClass, "opacity-80 truncate")}
+                      >
+                        {slot.customSlot.start}–{slot.customSlot.end}
+                      </span>
+                    )}
                     {height > 32 && slot.venue && (
-                      <span className="text-[10px] opacity-80 truncate">
+                      <span
+                        className={cn(fontSizeClass, "opacity-80 truncate")}
+                      >
                         {slot.venue}
+                      </span>
+                    )}
+                    {height > 44 && slot.customItem?.note && (
+                      <span
+                        className={cn(fontSizeClass, "opacity-80 truncate")}
+                      >
+                        {slot.customItem.note}
                       </span>
                     )}
                   </div>

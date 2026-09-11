@@ -6,6 +6,8 @@ interface ImportMetaEnv {
   readonly VITE_COURSEWEB_API_URL: string;
   readonly VITE_ALGOLIA_APP_ID: string;
   readonly VITE_ALGOLIA_SEARCH_KEY: string;
+  readonly VITE_ALGOLIA_BACKUP_APP_ID?: string;
+  readonly VITE_ALGOLIA_BACKUP_SEARCH_KEY?: string;
   readonly VITE_NTHUMODS_AUTH_URL: string;
   readonly VITE_AUTH_CLIENT_ID: string;
   readonly VITE_NTHUMODS_AUTH_REDIRECT: string;

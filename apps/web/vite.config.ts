@@ -3,6 +3,38 @@ import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 import { sentryVitePlugin } from "@sentry/vite-plugin";
 import path from "path";
+import fs from "node:fs";
+
+/**
+ * Search backend configuration is read from this package's own .env file and
+ * compiled in, overriding whatever the deploy environment supplies.
+ *
+ * The Cloudflare Workers build sets VITE_ALGOLIA_APP_ID and
+ * VITE_ALGOLIA_SEARCH_KEY as build variables, and Vite gives process
+ * variables precedence over .env files. That split silently defeated a change
+ * to the tier order in #857: the committed file said one thing and the
+ * deployed bundle another, with nothing in the diff to show it. Keeping these
+ * four values in one reviewable place is worth the override.
+ *
+ * These are search-only keys that ship in the browser bundle either way.
+ */
+const searchBackendEnv = (): Record<string, string> => {
+  const values: Record<string, string> = {};
+  try {
+    const file = fs.readFileSync(path.resolve(__dirname, ".env"), "utf8");
+    for (const rawLine of file.split("\n")) {
+      const line = rawLine.trim();
+      const separator = line.indexOf("=");
+      if (separator < 1 || !line.startsWith("VITE_ALGOLIA_")) continue;
+      const key = line.slice(0, separator).trim();
+      const value = line.slice(separator + 1).trim();
+      values[key] = value.replace(/^["']|["']$/g, "");
+    }
+  } catch {
+    // No .env in this checkout: fall back to whatever the environment provides.
+  }
+  return values;
+};
 
 export default defineConfig(({ mode }) => ({
   plugins: [
@@ -12,6 +44,9 @@ export default defineConfig(({ mode }) => ({
       workbox: {
         disableDevLogs: true,
         navigateFallback: "/index.html",
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
         // Keep the optional Three.js experience out of the PWA install path.
         // The route remains available online and is cached by the browser after use.
         globIgnores: ["**/campus-map-*.js"],
@@ -128,6 +163,12 @@ export default defineConfig(({ mode }) => ({
     },
   },
   define: {
+    ...Object.fromEntries(
+      Object.entries(searchBackendEnv()).map(([key, value]) => [
+        `import.meta.env.${key}`,
+        JSON.stringify(value),
+      ]),
+    ),
     __SENTRY_DEBUG__: false,
     __SENTRY_TRACING__: false,
     __RRWEB_EXCLUDE_IFRAME__: true,

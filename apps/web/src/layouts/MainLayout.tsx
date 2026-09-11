@@ -1,5 +1,5 @@
 import { Outlet, useParams } from "react-router-dom";
-import { Suspense } from "react";
+import { lazy, Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import ModsError from "@/app/[lang]/(mods-pages)/error";
 import { SidebarProvider, SidebarInset } from "@courseweb/ui";
@@ -11,14 +11,20 @@ import BottomNav from "@/components/BottomNav";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import ConsoleLogger from "@/components/ConsoleLogger";
 import AppSidebar from "@/components/AppSidebar";
-import { Language } from "@/types/settings";
 import { useCookies } from "react-cookie";
 import { CourseDialogProvider } from "@/components/Courses/CourseDialog";
 import CommandPalette from "@/components/CommandPalette/CommandPalette";
 import CustomCSSInjector from "@/components/CustomCSS/CustomCSSInjector";
+import AnnouncementBar from "@/components/Alerts/AnnouncementBar";
+import useDictionary from "@/dictionaries/useDictionary";
+
+const WhatsNewDialogDynamic = lazy(
+  () => import("@/components/Changelog/WhatsNewDialog"),
+);
 
 const MainLayout = () => {
   const { lang } = useParams<{ lang: string }>();
+  const dict = useDictionary();
   const [cookies] = useCookies(["sidebar:state"]);
   const defaultOpen = (cookies["sidebar:state"] ?? "true") === "true";
 
@@ -30,17 +36,18 @@ const MainLayout = () => {
             <CourseDialogProvider>
               <GoogleAnalytics />
               <ConsoleLogger />
-              <AppSidebar lang={(lang as Language) ?? "zh"} />
+              <AppSidebar lang={lang === "en" ? "en" : "zh"} />
               <SidebarInset className="min-w-0 overflow-x-hidden">
                 <Header />
-                <div className="pt-4 pb-[5rem] md:pb-0 md:pl-2">
+                <AnnouncementBar />
+                <div className="pt-4 pb-[calc(var(--bottom-nav-height)+env(safe-area-inset-bottom))] md:pb-0 md:pl-2">
                   <ErrorBoundary FallbackComponent={ModsError}>
                     <Suspense
                       fallback={
                         <div className="grid place-items-center w-full h-screen">
                           <div className="flex flex-col items-center">
                             <span className="mt-2 text-gray-300 dark:text-neutral-700 font-bold text-xl">
-                              Loading 載入中...
+                              {dict.common.loading}
                             </span>
                             <div className="h-2 w-36 bg-gray-300 dark:bg-neutral-700 rounded-full mt-4 animate-pulse"></div>
                           </div>
@@ -57,6 +64,9 @@ const MainLayout = () => {
               <ChatFAB />
               <CommandPalette />
               <CustomCSSInjector />
+              <Suspense fallback={null}>
+                <WhatsNewDialogDynamic />
+              </Suspense>
             </CourseDialogProvider>
           </SidebarProvider>
         </CalendarProvider>
