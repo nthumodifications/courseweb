@@ -513,6 +513,75 @@ export const useAdminOAuthClients = () => {
   });
 };
 
+export type AdminOAuthClientInput = {
+  clientId: string;
+  name: string | null;
+  clientUri: string | null;
+  firstParty: boolean;
+  redirectUris: string[];
+  logoutUris: string[];
+  scopes: string[];
+  confidential: boolean;
+};
+
+export type AdminOAuthClientSecret = AdminClient & {
+  clientSecret: string | null;
+};
+
+export const useCreateOAuthClient = () => {
+  const token = useAdminToken();
+  const invalidate = useInvalidateAdmin();
+
+  return useMutation({
+    mutationFn: async (values: AdminOAuthClientInput) => {
+      const response = await authClient.api.admin.clients.$post(
+        { json: values },
+        { headers: authHeaders(requireToken(token)) },
+      );
+      return unwrap<AdminOAuthClientSecret>(response as unknown as Response);
+    },
+    onSuccess: invalidate,
+  });
+};
+
+export const useUpdateOAuthClient = () => {
+  const token = useAdminToken();
+  const invalidate = useInvalidateAdmin();
+
+  return useMutation({
+    mutationFn: async ({
+      clientId,
+      values,
+    }: {
+      clientId: string;
+      values: Omit<AdminOAuthClientInput, "clientId">;
+    }) => {
+      const response = await authClient.api.admin.clients[":clientId"].$patch(
+        { param: { clientId }, json: values },
+        { headers: authHeaders(requireToken(token)) },
+      );
+      return unwrap<AdminClient>(response as unknown as Response);
+    },
+    onSuccess: invalidate,
+  });
+};
+
+export const useDeleteOAuthClient = () => {
+  const token = useAdminToken();
+  const invalidate = useInvalidateAdmin();
+
+  return useMutation({
+    mutationFn: async (clientId: string) => {
+      const response = await authClient.api.admin.clients[":clientId"].$delete(
+        { param: { clientId } },
+        { headers: authHeaders(requireToken(token)) },
+      );
+      return unwrap<{ deleted: boolean }>(response as unknown as Response);
+    },
+    onSuccess: invalidate,
+  });
+};
+
 export const useRotateClientSecret = () => {
   const token = useAdminToken();
   const invalidate = useInvalidateAdmin();
