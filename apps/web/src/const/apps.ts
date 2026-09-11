@@ -12,6 +12,7 @@ import {
   Users,
   MapPinned as CampusMapIcon,
 } from "lucide-react";
+import ChumeiIcon from "@/components/Apps/ChumeiIcon";
 
 export const categories: {
   [id: string]: { title_zh: string; title_en: string };
@@ -126,6 +127,14 @@ export const apps: {
     title_en: "Clubs Information",
     href: "https://outrageous-savory-d52.notion.site/d33567eea7814fc6b91744351eb2ba6a",
     Icon: Gamepad,
+  },
+  {
+    id: "chumei",
+    category: "campuslife",
+    title_zh: "竹梅活動觀測站",
+    title_en: "Chumei Campus Events",
+    href: "https://chumei.observe.tw",
+    Icon: ChumeiIcon,
   },
   {
     id: "scholarship",
