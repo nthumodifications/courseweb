@@ -17,9 +17,8 @@ export const SIGNING_KID = "1";
  * restored here.
  */
 export async function loadSigningJwk(publicKeyPem: string): Promise<JWK> {
-  const key = await importSPKI(publicKeyPem.replace(/\\n/g, "\n"), "RS256", {
-    extractable: true,
-  });
+  const pem = publicKeyPem.replaceAll(String.raw`\n`, "\n");
+  const key = await importSPKI(pem, "RS256", { extractable: true });
 
   const jwk = await exportJWK(key);
   jwk.kid = SIGNING_KID;

@@ -47,7 +47,7 @@ describe("loadSigningJwk", () => {
   });
 
   it("rejects a malformed key rather than returning a partial JWK", async () => {
-    expect(
+    await expect(
       loadSigningJwk("-----BEGIN PUBLIC KEY-----\nnope\n"),
     ).rejects.toThrow();
   });
