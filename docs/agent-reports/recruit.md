@@ -4,7 +4,7 @@
 
 - `services/api/src/recruit.ts`: Added public roles, authenticated application status, rate-limited application submission, and authenticated direct multipart resume upload.
 - `services/api/src/index.ts`: Registered the Worker route at `/recruit`.
-- `services/api/migrations/20260910_120000_create_recruitment.sql`: Added the private applications table, RLS/grants, private `resumes` bucket, and service-role-only storage policy.
+- `packages/database/migrations/20260910_120000_create_recruitment.sql`: Added the private applications table, RLS/grants, private `resumes` bucket, and service-role-only storage policy.
 - `services/api/src/types/supabase.ts`: Hand-edited generated Supabase types for `recruitment_applications`.
 - `apps/web/src/app/[lang]/(mods-pages)/(side-pages)/recruit/page.tsx`: Added the localized public recruitment page and authenticated application form.
 - `apps/web/src/router.tsx`: Added the lazy `/recruit` route and SEO metadata.
@@ -67,7 +67,7 @@ create policy "Recruitment resumes are service role only"
 
 ## Maintainer steps
 
-1. Apply `services/api/migrations/20260910_120000_create_recruitment.sql` to the production Supabase project. It creates/verifies the private `resumes` bucket and its policy. If bucket creation is managed separately, create a bucket named exactly `resumes` with Public bucket disabled and apply the same service-role-only policy before enabling the page.
+1. Apply `packages/database/migrations/20260910_120000_create_recruitment.sql` to the production Supabase project. It creates/verifies the private `resumes` bucket and its policy. If bucket creation is managed separately, create a bucket named exactly `resumes` with Public bucket disabled and apply the same service-role-only policy before enabling the page.
 2. Confirm the existing API Worker secrets `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are configured. No new environment variable is required.
 3. No new rate-limit namespace is required: the route reuses the existing `VENUE_RATE_LIMITER` binding. If that binding is absent in an environment, the existing helper logs and allows the request, so production must retain the current binding rather than adding an unverified namespace ID.
 4. Rebuild the generated Hono client types with `bun run build:api-types` before consuming the new route through `@courseweb/api-types`. The source route is included in the API app type only after that rebuild. The aggregate command was attempted here but exited on existing `TS2742` declaration-portability errors in `services/api/src/config/algolia.ts`; it also ran the existing Prisma-generation dependency as part of the attempt. No lockfile or tracked generated source file was intentionally edited. The page uses authenticated API `fetch` calls so multipart upload does not depend on client-side form encoding support.
@@ -92,7 +92,6 @@ The Supabase type files were not regenerated with `gentype` because that command
 - No resume download endpoint was added. Resumes remain service-role-only; a future reviewer workflow must mint a short-lived signed URL or proxy the file after authorization.
 - No deletion endpoint was added. The form gives the deletion contact address, and the privacy-policy update/retention workflow needs maintainer policy decisions.
 - No new dependencies, lockfile changes, protected component changes, commits, pushes, or generated Supabase type runs were made.
-
 
 ## Manager review note (2026-09-10)
 
