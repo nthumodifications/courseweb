@@ -1,6 +1,8 @@
 import React, { useCallback } from "react";
 import {
   TimetableDisplayPreferences,
+  TimetableFontFamily,
+  TimetableFontSize,
   TimetableFieldKey,
   DEFAULT_FIELD_ORDER,
 } from "@/hooks/contexts/useUserTimetable";
@@ -65,15 +67,6 @@ const AlignDot = ({
   );
 };
 
-const FIELD_LABELS: Record<TimetableFieldKey, { en: string; zh: string }> = {
-  code: { en: "Code", zh: "課號" },
-  title: { en: "Title", zh: "課名" },
-  time: { en: "Time", zh: "時間" },
-  teacher: { en: "Teacher", zh: "教師" },
-  venue: { en: "Venue", zh: "教室" },
-  credits: { en: "Credits", zh: "學分" },
-};
-
 const TimetablePreferences: React.FC<SettingsControlProps> = ({
   settings,
   onSettingsChange,
@@ -119,6 +112,20 @@ const TimetablePreferences: React.FC<SettingsControlProps> = ({
     v: "top" | "center" | "bottom",
   ) => settings.align === h && (settings.verticalAlign ?? "top") === v;
 
+  const handleFontSizeChange = (value: string) => {
+    onSettingsChange({
+      ...settings,
+      fontSize: value as TimetableFontSize,
+    });
+  };
+
+  const handleFontFamilyChange = (value: string) => {
+    onSettingsChange({
+      ...settings,
+      fontFamily: value as TimetableFontFamily,
+    });
+  };
+
   return (
     <div className="flex flex-col gap-4">
       {/* Language */}
@@ -131,9 +138,74 @@ const TimetablePreferences: React.FC<SettingsControlProps> = ({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="app">App</SelectItem>
-            <SelectItem value="zh">繁體中文</SelectItem>
-            <SelectItem value="en">English</SelectItem>
+            <SelectItem value="app">
+              {dict.settings.timetable.language_options.app}
+            </SelectItem>
+            <SelectItem value="zh">
+              {dict.settings.timetable.language_options.zh}
+            </SelectItem>
+            <SelectItem value="en">
+              {dict.settings.timetable.language_options.en}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="flex flex-row items-center">
+        <label className="font-bold flex-1 text-sm">
+          {dict.settings.timetable.font_size}
+        </label>
+        <Select
+          value={settings.fontSize ?? "sm"}
+          onValueChange={handleFontSizeChange}
+        >
+          <SelectTrigger className="w-[160px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="xs">
+              {dict.settings.timetable.font_size_options.xs}
+            </SelectItem>
+            <SelectItem value="sm">
+              {dict.settings.timetable.font_size_options.sm}
+            </SelectItem>
+            <SelectItem value="base">
+              {dict.settings.timetable.font_size_options.base}
+            </SelectItem>
+            <SelectItem value="lg">
+              {dict.settings.timetable.font_size_options.lg}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="flex flex-row items-center">
+        <label className="font-bold flex-1 text-sm">
+          {dict.settings.timetable.font_family}
+        </label>
+        <Select
+          value={settings.fontFamily ?? "system"}
+          onValueChange={handleFontFamilyChange}
+        >
+          <SelectTrigger className="w-[160px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="system">
+              {dict.settings.timetable.font_family_options.system}
+            </SelectItem>
+            <SelectItem value="sans">
+              {dict.settings.timetable.font_family_options.sans}
+            </SelectItem>
+            <SelectItem value="serif">
+              {dict.settings.timetable.font_family_options.serif}
+            </SelectItem>
+            <SelectItem value="mono">
+              {dict.settings.timetable.font_family_options.mono}
+            </SelectItem>
+            <SelectItem value="rounded">
+              {dict.settings.timetable.font_family_options.rounded}
+            </SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -154,7 +226,7 @@ const TimetablePreferences: React.FC<SettingsControlProps> = ({
                   ? "border-primary bg-primary/10 text-primary"
                   : "border-border hover:border-muted-foreground text-muted-foreground",
               )}
-              title={`${v} ${h}`}
+              title={`${dict.settings.timetable.align[v]} ${dict.settings.timetable.align[h]}`}
             >
               <AlignDot h={h} v={v} />
             </button>
@@ -169,7 +241,14 @@ const TimetablePreferences: React.FC<SettingsControlProps> = ({
         </label>
         <div className="flex flex-col gap-1">
           {fieldOrder.map((field, idx) => {
-            const label = FIELD_LABELS[field];
+            const label = {
+              code: dict.settings.timetable.slot_code,
+              title: dict.settings.timetable.slot_title,
+              time: dict.settings.timetable.slot_time,
+              teacher: dict.settings.timetable.slot_teacher,
+              venue: dict.settings.timetable.slot_venue,
+              credits: dict.settings.timetable.slot_credits,
+            }[field];
             const isOn =
               settings.display[field as keyof typeof settings.display] ?? false;
             return (
@@ -199,10 +278,7 @@ const TimetablePreferences: React.FC<SettingsControlProps> = ({
                 </div>
                 {/* Field name */}
                 <div className="flex-1 text-sm">
-                  <span>{label.en}</span>
-                  <span className="text-muted-foreground ml-1 text-xs">
-                    {label.zh}
-                  </span>
+                  <span>{label}</span>
                 </div>
                 {/* Toggle */}
                 <Switch

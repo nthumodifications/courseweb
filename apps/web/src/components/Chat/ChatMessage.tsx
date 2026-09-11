@@ -9,6 +9,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { RichMessageContent } from "./RichMessageContent";
+import useDictionary from "@/dictionaries/useDictionary";
 
 interface ChatMessageProps {
   message: ChatMessageType;
@@ -16,6 +17,7 @@ interface ChatMessageProps {
 
 export function ChatMessage({ message }: ChatMessageProps) {
   const isUser = message.role === "user";
+  const dict = useDictionary();
 
   return (
     <div className={cn("flex gap-3", isUser && "flex-row-reverse")}>
@@ -63,7 +65,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
           (!message.toolCalls || message.toolCalls.length === 0) ? (
             <div className="flex items-center gap-2">
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span className="text-sm">思考中...</span>
+              <span className="text-sm">{dict.chat.thinking}</span>
             </div>
           ) : (
             <RichMessageContent content={message.content} />

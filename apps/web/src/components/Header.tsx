@@ -29,6 +29,7 @@ import { useRxCollection } from "rxdb-hooks";
 import { HeaderPortalOutlet } from "./Portal/HeaderPortal";
 import { useIsMobile } from "@courseweb/ui";
 import { Badge } from "@courseweb/ui";
+import { getSyncedStorageKey } from "@/hooks/syncedStorage";
 
 const Header = () => {
   const {
@@ -64,17 +65,31 @@ const Header = () => {
         "use_new_calendar",
         "timetable_vertical",
         "courses",
+        "timetable_custom_items",
         "course_favourites",
         "course_color_map",
         "timetable_theme",
         "user_defined_colors",
         "timetable_display_preferences",
+        "timetable-display-settings",
       ];
-      localStorageKeys.forEach((key) => localStorage.removeItem(key));
+      localStorageKeys.forEach((key) => {
+        // Clear the current account and anonymous namespaces, plus the old
+        // unscoped copy. Other account namespaces remain recoverable.
+        localStorage.removeItem(getSyncedStorageKey(key, user?.profile.sub));
+        localStorage.removeItem(getSyncedStorageKey(key));
+        localStorage.removeItem(key);
+      });
 
-      // Clear any other local data (IndexedDB, etc) if needed
-      await eventsCol?.remove();
-      await timetableSyncCol?.remove();
+      // Remove the whole identity-scoped database so its event data,
+      // timetable checkpoints, and replication metadata are all cleared.
+      const calendarDb = eventsCol?.database ?? timetableSyncCol?.database;
+      if (calendarDb) {
+        await calendarDb.remove();
+      } else {
+        await eventsCol?.remove();
+        await timetableSyncCol?.remove();
+      }
       console.log("Local data cleared");
     }
     await handleLogout();
@@ -129,7 +144,7 @@ const Header = () => {
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleOpenConfirmLogout}>
               <LogOut className="w-4 h-4 mr-2" />
-              <span>Log out</span>
+              <span>{dict.settings.account.signout}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

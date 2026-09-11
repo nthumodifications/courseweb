@@ -2,10 +2,11 @@ import Timetable from "@/components/Timetable/Timetable";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { useLocalStorage } from "usehooks-ts";
 import SemesterSwitcher from "@/components/Timetable/SemesterSwitcher";
-import { createTimetableFromCourses } from "@/helpers/timetable";
+import { createTimetableFromCoursesAndCustomItems } from "@/helpers/timetable";
 import { MinimalCourse } from "@/types/courses";
 import { renderTimetableSlot } from "@/helpers/timetable_course";
 import TimetableSidebar from "@/components/Timetable/TimetableSidebar";
+import TimetableOffGridSchedule from "@/components/Timetable/TimetableOffGridSchedule";
 import { useSwipeable } from "react-swipeable";
 import { semesterInfo } from "@courseweb/shared";
 import { useHeaderPortal } from "@/components/Portal/HeaderPortal";
@@ -15,15 +16,21 @@ import { useSettings } from "@/hooks/contexts/settings";
 import { timetableEvents } from "@/lib/trackingEvents";
 
 const TimetablePage = () => {
-  const { getSemesterCourses, semester, setSemester, colorMap } =
-    useUserTimetable();
+  const {
+    getSemesterCourses,
+    getSemesterCustomItems,
+    semester,
+    setSemester,
+    colorMap,
+  } = useUserTimetable();
   const [vertical, setVertical] = useLocalStorage("timetable_vertical", true);
   const { language } = useSettings();
   const { setPortalContent, clearPortalContent } = useHeaderPortal();
   const previousSemesterRef = useRef(semester);
 
-  const timetableData = createTimetableFromCourses(
+  const timetableData = createTimetableFromCoursesAndCustomItems(
     getSemesterCourses(semester) as MinimalCourse[],
+    getSemesterCustomItems(semester),
     colorMap,
   );
 
@@ -112,12 +119,13 @@ const TimetablePage = () => {
         <div
           className={`grid grid-cols-1 md:grid-rows-1 ${!vertical ? "" : "md:grid-cols-[3fr_2fr]"} px-1 py-4 md:p-4 gap-4 md:gap-2`}
         >
-          <div className="w-full h-full" {...handlers}>
+          <div className="flex h-full w-full flex-col gap-4" {...handlers}>
             <Timetable
               timetableData={timetableData}
               vertical={vertical}
               renderTimetableSlot={renderTimetableSlot}
             />
+            <TimetableOffGridSchedule timetableData={timetableData} />
           </div>
           <TimetableSidebar vertical={vertical} setVertical={setVertical} />
         </div>

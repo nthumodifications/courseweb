@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 html {
-  font-family: var(--font-family, "Inter", "Noto Sans TC", sans-serif);
+  font-family: var(--font-family, "Inter", "PingFang TC", "Microsoft JhengHei", "Noto Sans CJK TC", "Noto Sans TC", sans-serif);
   font-size: calc(1rem * var(--font-scale, 1));
 }
 
@@ -65,7 +65,8 @@ body {
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 273 43% 54%;
-    --font-family: "Inter", "Noto Sans TC", sans-serif;
+    /* Inter for Latin, then a Traditional Chinese system stack for CJK. */
+    --font-family: "Inter", "PingFang TC", "Microsoft JhengHei", "Noto Sans CJK TC", "Noto Sans TC", sans-serif;
     --font-scale: 1;
     --density-factor: 1;
     --bg-pattern: none;

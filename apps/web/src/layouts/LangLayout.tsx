@@ -24,11 +24,12 @@ const LangLayout = () => {
   const location = useLocation();
 
   if (!lang || !locales.includes(lang)) {
-    // Preserve the full path: e.g. /courses/ABC -> /zh/courses/ABC
+    // Replace the invalid language segment while preserving the nested path.
     const preferredLang = getLocale();
+    const nestedPath = location.pathname.replace(/^\/[^/]+/, "") || "/today";
     return (
       <Navigate
-        to={`/${preferredLang}${location.pathname}${location.search}${location.hash}`}
+        to={`/${preferredLang}${nestedPath === "/" ? "/today" : nestedPath}${location.search}${location.hash}`}
         replace
       />
     );

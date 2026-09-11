@@ -1,4 +1,4 @@
-import algoliasearch from "algoliasearch";
+import algoliasearch, { type SearchIndex } from "algoliasearch";
 import type { Context } from "hono";
 import { env } from "hono/adapter";
 import { createFetchRequester } from "@algolia/requester-fetch";
@@ -132,7 +132,14 @@ export const getAlgoliaClients = (c: Context) => {
   );
 };
 
-export const algoliaWithEnv = (appId: string, apiKey: string) => {
+// The return type is annotated explicitly: without it TypeScript infers a type
+// that can only be named through a deep path into @algolia/transporter, which
+// is not portable and fails with TS2742 whenever node_modules is reached
+// through a link (worktrees, hoisted installs, some CI layouts).
+export const algoliaWithEnv = (
+  appId: string,
+  apiKey: string,
+): SearchIndex => {
   const client = algoliasearch(appId, apiKey, {
     requester: createFetchRequester(),
   });

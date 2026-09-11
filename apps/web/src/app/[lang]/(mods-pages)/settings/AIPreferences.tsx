@@ -188,7 +188,7 @@ export function AIPreferencesPanel() {
             <SelectContent>
               {isLoadingDepts ? (
                 <SelectItem value="loading" disabled>
-                  Loading departments...
+                  {dict.common.loading}
                 </SelectItem>
               ) : (
                 departments.map((dept) => (

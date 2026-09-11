@@ -12,7 +12,7 @@ export const getLocale = (lang: Language) => {
   };
 
   const zhLocale: { [x: string]: string } = {
-    lastWeek: "'last' eeee 'at' p",
+    lastWeek: "'上週' eeee ' ' p",
     yesterday: "'昨天'",
     today: "'今天'",
     tomorrow: "'明天'",

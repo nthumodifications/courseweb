@@ -17,6 +17,7 @@ import { Route1LineIcon } from "@/components/BusIcons/Route1LineIcon";
 import { Route2LineIcon } from "@/components/BusIcons/Route2LineIcon";
 import { exportNotes, getTimeOnDate } from "@/helpers/bus";
 import useDictionary from "@/dictionaries/useDictionary";
+import { getLocale } from "@/helpers/dateLocale";
 import { Language } from "@/types/settings";
 import { cn } from "@courseweb/ui";
 import {
@@ -113,7 +114,7 @@ const BusDetailsContainer = ({
                           </div>
                           {bus.up.description.includes("巴士") && (
                             <div className="w-max text-xs text-black bg-orange-200 px-1 rounded">
-                              大巴
+                              {dict.bus.large_bus}
                             </div>
                           )}
                         </div>
@@ -141,7 +142,7 @@ const BusDetailsContainer = ({
                           )}
                           {bus.up.description.includes("五") && (
                             <div className="text-xs text-white bg-violet-600 px-1 rounded">
-                              週五停駛
+                              {dict.bus.friday_closed}
                             </div>
                           )}
                         </div>
@@ -174,7 +175,7 @@ const BusDetailsContainer = ({
                           </div>
                           {bus.down.description.includes("巴士") && (
                             <div className="text-xs text-black bg-orange-200 px-1 rounded">
-                              大巴
+                              {dict.bus.large_bus}
                             </div>
                           )}
                         </div>
@@ -371,7 +372,7 @@ const BusDetailsContainer = ({
                   >
                     <div className="text-foreground text-sm font-medium leading-normal w-max">
                       {/* 7 am */}
-                      {format(hd, "h a")}
+                      {format(hd, "h a", { locale: getLocale(lang) })}
                     </div>
                   </div>
                 ))}

@@ -4,10 +4,13 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "react-oidc-context";
 import authClient from "@/config/auth";
 import {
+  getSyncedStorageKey,
   hasSyncedMetadata,
+  migrateLegacySyncedData,
   nextUpdatedAt,
   normalizeSyncedData,
-  valuesEqual,
+  reconcileSyncedData,
+  type MergeData,
   type SyncedData,
 } from "./syncedStorage";
 
@@ -33,16 +36,18 @@ const getDeviceId = () => {
   return deviceId;
 };
 
-type MergeData<T> = (local: T, remote: T) => T;
-
 const useSyncedStorage = <T = unknown,>(
   key: string,
   defaultValue: T,
   mergeData?: MergeData<T>,
-): [T, (newData: T | ((prevData: T) => T)) => void] => {
+): [T, (newData: T | ((prevData: T) => T)) => void, boolean] => {
   const { user, isAuthenticated } = useAuth();
   const [deviceId] = useState(getDeviceId);
-  const [localData, setLocalData] = useLocalStorage<SyncedData<T>>(key, {
+  const userId = user?.profile.sub;
+  const storageKey = getSyncedStorageKey(key, userId);
+  const storageKeyRef = useRef(storageKey);
+  const storageKeyChanged = storageKeyRef.current !== storageKey;
+  const [localData, setLocalData] = useLocalStorage<SyncedData<T>>(storageKey, {
     value: defaultValue,
     lastModified: -1,
     updatedAt: -1,
@@ -51,7 +56,6 @@ const useSyncedStorage = <T = unknown,>(
   const [data, setDataState] = useState<SyncedData<T>>(() =>
     normalizeSyncedData<T>(localData, deviceId),
   );
-  const userId = user?.profile.sub;
   const authSessionKey = user?.expires_at ?? 0;
   const reconciledUserRef = useRef<string>();
   const uploadedVersionRef = useRef<string>();
@@ -135,8 +139,38 @@ const useSyncedStorage = <T = unknown,>(
     [postData],
   );
 
+  useEffect(() => {
+    if (storageKeyRef.current === storageKey) return;
+
+    // useLocalStorage reloads the new key in its own effect. Until that
+    // happens, do not let the previous identity's snapshot participate in
+    // reconciliation or uploads.
+    storageKeyRef.current = storageKey;
+    reconciledUserRef.current = undefined;
+    uploadedVersionRef.current = undefined;
+  }, [storageKey]);
+
+  useEffect(() => {
+    if (userId || storageKeyChanged || typeof window === "undefined") {
+      return;
+    }
+
+    const migrated = migrateLegacySyncedData<T>(
+      window.localStorage.getItem(key),
+      window.localStorage.getItem(storageKey),
+      deviceId,
+    );
+    if (!migrated) return;
+
+    // Keep the old unscoped record as a recoverable legacy copy. The new
+    // anonymous namespace is the only record read by this hook going forward.
+    setLocalData(migrated);
+  }, [deviceId, key, setLocalData, storageKey, storageKeyChanged, userId]);
+
   // Upgrade old local records without ever treating this as proof that the remote read succeeded.
   useEffect(() => {
+    if (storageKeyChanged) return;
+
     const normalizedLocalData = normalizeSyncedData<T>(localData, deviceId);
     setDataState(normalizedLocalData);
     if (!hasSyncedMetadata(localData)) {
@@ -145,8 +179,11 @@ const useSyncedStorage = <T = unknown,>(
   }, [deviceId, localData, setLocalData]);
 
   useEffect(() => {
+    if (storageKeyChanged) return;
+
     if (!isAuthenticated || !userId) {
-      // A logout starts a fresh reconciliation on the next login. Local data remains intact.
+      // A logout starts a fresh reconciliation on the next login. Each
+      // identity's local data remains in its own namespace.
       reconciledUserRef.current = undefined;
       uploadedVersionRef.current = undefined;
       setDataState(normalizeSyncedData<T>(localData, deviceId));
@@ -169,62 +206,20 @@ const useSyncedStorage = <T = unknown,>(
       ? normalizeSyncedData<T>(remoteData, deviceId)
       : null;
 
-    if (reconciledUserRef.current !== userId) {
-      reconciledUserRef.current = userId;
-
-      if (!remote) {
-        setDataState(local);
-        if (local.updatedAt >= 0) upload(local, Boolean(mergeData));
-        return;
-      }
-
-      if (mergeData) {
-        const mergedValue = mergeData(local.value, remote.value);
-        const localAndRemoteAreEqual = valuesEqual(local.value, remote.value);
-
-        if (localAndRemoteAreEqual) {
-          const winner = local.updatedAt >= remote.updatedAt ? local : remote;
-          setDataState(winner);
-          setLocalData(winner);
-        } else if (valuesEqual(mergedValue, remote.value)) {
-          // The remote snapshot already contains all local values.
-          setDataState(remote);
-          setLocalData(remote);
-        } else {
-          const merged: SyncedData<T> = {
-            value: mergedValue,
-            updatedAt: nextUpdatedAt(
-              Math.max(local.updatedAt, remote.updatedAt),
-            ),
-            lastModified: 0,
-            deviceId,
-          };
-          merged.lastModified = merged.updatedAt;
-          setDataState(merged);
-          setLocalData(merged);
-          upload(merged, true);
-        }
-        return;
-      }
-
-      const winner = local.updatedAt >= remote.updatedAt ? local : remote;
-      setDataState(winner);
-      setLocalData(winner);
-      if (winner === local) upload(local, false);
-      return;
+    const reconciliation = reconcileSyncedData({
+      local,
+      remote,
+      mergeData,
+      initial: reconciledUserRef.current !== userId,
+      deviceId,
+    });
+    reconciledUserRef.current = userId;
+    setDataState(reconciliation.data);
+    if (reconciliation.persistLocal) {
+      setLocalData(reconciliation.data);
     }
-
-    if (!remote) {
-      setDataState(local);
-      if (local.updatedAt >= 0) upload(local, false);
-    } else if (local.updatedAt > remote.updatedAt) {
-      setDataState(local);
-      upload(local, false);
-    } else if (local.updatedAt < remote.updatedAt) {
-      setLocalData(remote);
-      setDataState(remote);
-    } else {
-      setDataState(local);
+    if (reconciliation.upload) {
+      upload(reconciliation.data, reconciliation.upload.merge);
     }
   }, [
     authSessionKey,
@@ -237,12 +232,15 @@ const useSyncedStorage = <T = unknown,>(
     mergeData,
     remoteData,
     setLocalData,
+    storageKeyChanged,
     upload,
     userId,
   ]);
 
   const updateData = useCallback(
     (newData: T | ((prevData: T) => T)) => {
+      if (storageKeyChanged) return;
+
       setDataState((prevData) => {
         const value =
           typeof newData === "function"
@@ -259,10 +257,24 @@ const useSyncedStorage = <T = unknown,>(
         return updatedData;
       });
     },
-    [deviceId, setLocalData],
+    [deviceId, setLocalData, storageKeyChanged],
   );
 
-  return [data.value ?? defaultValue, updateData] as const;
+  const isSettled =
+    !storageKeyChanged &&
+    (!isAuthenticated ||
+      !userId ||
+      (isRemoteReadSuccessful &&
+        !isRemoteFetching &&
+        !isRemotePaused &&
+        hasSyncedMetadata(localData) &&
+        reconciledUserRef.current === userId));
+
+  return [
+    storageKeyChanged ? defaultValue : (data.value ?? defaultValue),
+    updateData,
+    isSettled,
+  ] as const;
 };
 
 export default useSyncedStorage;

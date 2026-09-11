@@ -2,6 +2,7 @@ import { CourseTimeslotData } from "@/types/timetable";
 export interface RepeatDefinition {
   type: "daily" | "weekly" | "monthly" | "yearly";
   interval: number;
+  /** Total occurrence slots when mode is count; inclusive local date cutoff when mode is date. */
   value: number;
   mode: "count" | "date";
 }
@@ -17,14 +18,15 @@ export interface CalendarEvent {
   repeat: null | RepeatDefinition;
   color: string;
   tag: string | "none";
-  courseId?: string;
+  courseId?: string | null;
   excludedDates?: Date[];
   parentId?: string;
   readonly?: boolean;
 }
 
 export interface CalendarEventInternal extends CalendarEvent {
-  actualEnd: Date | null; // actual end of the event, used to determine repeating events
+  /** Materialized recurrence bound written by getActualEndDate for storage/query compatibility. */
+  actualEnd: Date | null;
 }
 
 export interface DisplayCalendarEvent extends CalendarEventInternal {

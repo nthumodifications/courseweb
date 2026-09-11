@@ -27,7 +27,7 @@ const TimeslotFilterItem = ({
   searchable = false,
   clientSearch = false,
   synonms = {},
-  placeholder = "Search ...",
+  placeholder,
 }: TimeslotFilterItemProps) => {
   const { getSemesterCourses, semester, setSemester } = useUserTimetable();
   const dict = useDictionary();
@@ -143,9 +143,9 @@ const TimeslotFilterItem = ({
           >
             <span className="truncate">
               {searching ? (
-                "Selecting..."
+                dict.common.selecting
               ) : timeslotValue.length == 0 ? (
-                "All"
+                dict.common.all
               ) : (
                 <div className="flex flex-col gap-1">
                   {[...timeslotValue].sort(customSort).slice(0, 8).join("")}
@@ -167,11 +167,11 @@ const TimeslotFilterItem = ({
 
         <Select value={mode} onValueChange={setMode}>
           <SelectTrigger>
-            <SelectValue placeholder="Mode" />
+            <SelectValue placeholder={dict.course.refine.mode} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="includes">Includes</SelectItem>
-            <SelectItem value="exact">Exact</SelectItem>
+            <SelectItem value="includes">{dict.course.refine.includes}</SelectItem>
+            <SelectItem value="exact">{dict.course.refine.exact}</SelectItem>
           </SelectContent>
         </Select>
 

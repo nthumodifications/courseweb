@@ -19,7 +19,7 @@ const LoginDialog = ({ children }: { children?: ReactNode }) => {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px] h-screen lg:h-auto w-full ">
         <ScrollArea className="h-full">
-          <h1>Coming Soon</h1>
+          <h1>{dict.common.coming_soon}</h1>
         </ScrollArea>
       </DialogContent>
     </Dialog>

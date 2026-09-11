@@ -69,7 +69,7 @@ const SemesterGradeCard = ({
           <Table className="w-full">
             <TableBody>
               <TableRow>
-                <TableCell>GPA</TableCell>
+                <TableCell>{dict.grade.gpa}</TableCell>
                 <TableCell className="text-right">{semester.gpa}</TableCell>
               </TableRow>
               <TableRow>
@@ -88,7 +88,7 @@ const SemesterGradeCard = ({
           </Table>
           <Table className="w-full">
             <TableHeader className="text-slate-900 text-base font-bold leading-normal">
-              Credit
+              {dict.grade.credit}
             </TableHeader>
             <TableBody>
               <TableRow>
@@ -119,7 +119,7 @@ const SemesterGradeCard = ({
           </Table>
           <Table className="w-full">
             <TableHeader className="text-slate-900 text-base font-bold leading-normal">
-              Ranking
+              {dict.grade.ranking}
             </TableHeader>
             <TableBody>
               <TableRow>
@@ -170,7 +170,10 @@ const GradeOverview = ({ grades }: { grades: GradeObject }) => {
   return (
     <div className="w-full rounded-lg shadow border border-slate-200 dark:border-slate-800 dark:divide-slate-800 justify-start items-start inline-flex flex-col md:flex-row flex-wrap divide-y md:divide-y-0 divide-x-0 md:divide-x divide-slate-200 overflow-hidden">
       <div className="w-full md:w-auto flex-[3] justify-start items-start inline-flex divide-x divide-slate-200 dark:divide-slate-800">
-        <GradeCard title="GPA" data={grades.ranking.cumulative.letter.gpa} />
+        <GradeCard
+          title={dict.grade.gpa}
+          data={grades.ranking.cumulative.letter.gpa}
+        />
         <GradeCard
           title={dict.grade.passed_credits}
           data={grades.credits.passed_credits.toString()}
@@ -242,10 +245,10 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
       <div className="w-full pt-8 flex-col justify-start items-start gap-4 inline-flex">
         <div className="w-full self-stretch flex-col justify-center items-center gap-2 flex">
           <div className="self-stretch text-zinc-900 dark:text-zinc-100 text-3xl font-semibold leading-9">
-            Overview
+            {dict.grade.overview}
           </div>
           <div className="self-stretch text-zinc-900 dark:text-zinc-100 text-sm font-normal leading-tight">
-            至{grades.ranking.cumulative.letter.gpa_cum_year_tw}
+            {dict.grade.as_of} {grades.ranking.cumulative.letter.gpa_cum_year_tw}
           </div>
         </div>
         <GradeOverview grades={grades} />
@@ -269,7 +272,7 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
               onValueChange={(e: string) => setSelectedSemester(e)}
             >
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Semesters" />
+                <SelectValue placeholder={dict.grade.semesters} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={"All"}>{dict.grade.all_courses}</SelectItem>
@@ -289,7 +292,7 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
               }
             >
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Semesters" />
+                <SelectValue placeholder={dict.grade.semesters} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={"asc"}>{dict.grade.oldest_first}</SelectItem>
@@ -304,11 +307,15 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
           <Table className="w-full">
             <TableHeader>
               <TableRow className="[&>th]:font-bold [&>th]:text-slate-900 dark:[&>th]:text-slate-100">
-                <TableHead>Course Name</TableHead>
-                <TableHead className="hidden md:table-cell">Credits</TableHead>
-                <TableHead>Grade</TableHead>
-                <TableHead>Ranking</TableHead>
-                <TableHead className="hidden md:table-cell">T-score</TableHead>
+                <TableHead>{dict.grade.course_name}</TableHead>
+                <TableHead className="hidden md:table-cell">
+                  {dict.course.credits}
+                </TableHead>
+                <TableHead>{dict.grade.grade}</TableHead>
+                <TableHead>{dict.grade.ranking}</TableHead>
+                <TableHead className="hidden md:table-cell">
+                  {dict.grade.t_score}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -348,7 +355,8 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
                                     className="text-xs min-w-0 rounded-lg"
                                     variant="default"
                                   >
-                                    通識：{grade.ge_type} -{" "}
+                                    {dict.course.tags.general_education}：
+                                    {grade.ge_type} -{" "}
                                     {grade.ge_description}
                                   </Badge>
                                 </div>
@@ -378,8 +386,10 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
                 <TableHead className="min-w-[72px] break-all">
                   {dict.grade.semester}
                 </TableHead>
-                <TableHead>GPA</TableHead>
-                <TableHead className="hidden md:table-cell">T-Score</TableHead>
+                <TableHead>{dict.grade.gpa}</TableHead>
+                <TableHead className="hidden md:table-cell">
+                  {dict.grade.t_score}
+                </TableHead>
                 <TableHead className="hidden md:table-cell">
                   {dict.grade.relative_avg}
                 </TableHead>
@@ -459,7 +469,7 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
           <div className="flex flex-row flex-wrap gap-6">
             <Card className=" min-w-[300px] flex-1">
               <CardHeader>
-                <CardTitle>GPA</CardTitle>
+              <CardTitle>{dict.grade.gpa}</CardTitle>
               </CardHeader>
               <CardContent>
                 <Suspense fallback={null}>
@@ -494,7 +504,7 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
         <Tabs defaultValue="gpa" className="w-full md:hidden">
           <div className="flex flex-row justify-between">
             <TabsList>
-              <TabsTrigger value="gpa">GPA</TabsTrigger>
+              <TabsTrigger value="gpa">{dict.grade.gpa}</TabsTrigger>
               <TabsTrigger value="class_rank">
                 {dict.grade.class_rank}
               </TabsTrigger>

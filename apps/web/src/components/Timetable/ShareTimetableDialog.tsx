@@ -60,7 +60,7 @@ import { useNavigate, useParams } from "react-router-dom";
 
 function useLang() {
   const { lang } = useParams<{ lang: string }>();
-  return lang ?? "en";
+  return lang === "en" ? "en" : "zh";
 }
 
 type Visibility = "link_only" | "public";
@@ -215,7 +215,7 @@ function GroupsTab({ semester: activeSemester }: { semester: string }) {
   } | null>(null);
   const [copiedInvite, setCopiedInvite] = useState(false);
 
-  const { courses } = useUserTimetable();
+  const { courses, customItems } = useUserTimetable();
   const { createShare, createGroup } = useTimetableShare();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -230,6 +230,7 @@ function GroupsTab({ semester: activeSemester }: { semester: string }) {
         displayName: groupName.trim(),
         semesters: [groupSemester],
         courses: { [groupSemester]: courses[groupSemester] ?? [] },
+        customItems: { [groupSemester]: customItems[groupSemester] ?? [] },
         isLive: true,
         visibility: "link_only",
       });
@@ -390,7 +391,7 @@ const ShareTimetableDialog = ({
     Record<string, { grade?: string; difficulty?: number; attendance?: string }>
   >({});
 
-  const { courses, semester, colorMap } = useUserTimetable();
+  const { courses, customItems, semester, colorMap } = useUserTimetable();
   const { isAuthenticated } = useAuth();
   const { createShare, deleteShare, listOwnShares } = useTimetableShare();
   const queryClient = useQueryClient();
@@ -399,8 +400,10 @@ const ShareTimetableDialog = ({
   const [selectedSemesters, setSelectedSemesters] = useState<string[]>([
     semester,
   ]);
-  const allSemestersWithCourses = Object.keys(courses).filter(
-    (s) => (courses[s] ?? []).length > 0,
+  const allSemestersWithItems = [
+    ...new Set([...Object.keys(courses), ...Object.keys(customItems)]),
+  ].filter(
+    (s) => (courses[s] ?? []).length > 0 || (customItems[s] ?? []).length > 0,
   );
   const toggleSemester = (sem: string) => {
     setSelectedSemesters((prev) =>
@@ -409,6 +412,9 @@ const ShareTimetableDialog = ({
   };
   const allSelectedCourseIds = selectedSemesters.flatMap(
     (s) => courses[s] ?? [],
+  );
+  const allSelectedCustomItems = selectedSemesters.flatMap(
+    (s) => customItems[s] ?? [],
   );
 
   const { data: ownShares = [], isLoading: sharesLoading } = useQuery({
@@ -436,6 +442,9 @@ const ShareTimetableDialog = ({
         semesters: selectedSemesters,
         courses: Object.fromEntries(
           selectedSemesters.map((s) => [s, courses[s] ?? []]),
+        ),
+        customItems: Object.fromEntries(
+          selectedSemesters.map((s) => [s, customItems[s] ?? []]),
         ),
         courseNotes,
         visibility,
@@ -537,11 +546,11 @@ const ShareTimetableDialog = ({
                   />
                 </div>
 
-                {allSemestersWithCourses.length > 0 && (
+                {allSemestersWithItems.length > 0 && (
                   <div className="flex flex-col gap-2">
                     <Label>Semesters</Label>
                     <div className="flex flex-wrap gap-1.5">
-                      {allSemestersWithCourses.map((sem) => (
+                      {allSemestersWithItems.map((sem) => (
                         <button
                           key={sem}
                           type="button"
@@ -720,7 +729,8 @@ const ShareTimetableDialog = ({
                   disabled={
                     createMutation.isPending ||
                     selectedSemesters.length === 0 ||
-                    allSelectedCourseIds.length === 0
+                    (allSelectedCourseIds.length === 0 &&
+                      allSelectedCustomItems.length === 0)
                   }
                   className="w-full"
                 >
@@ -741,7 +751,8 @@ const ShareTimetableDialog = ({
                   </p>
                 )}
                 {selectedSemesters.length > 0 &&
-                  allSelectedCourseIds.length === 0 && (
+                  allSelectedCourseIds.length === 0 &&
+                  allSelectedCustomItems.length === 0 && (
                     <p className="text-xs text-center text-muted-foreground">
                       Add courses first
                     </p>

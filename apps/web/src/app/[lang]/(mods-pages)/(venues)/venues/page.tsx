@@ -41,7 +41,7 @@ const VenuesPage = () => {
       >
         {venuesLoading ? (
           <div className="grid place-items-center h-64">
-            <span className="text-gray-400">Loading...</span>
+            <span className="text-gray-400">{dict.common.loading}</span>
           </div>
         ) : (
           <VenueList venues={venues as string[]} />
@@ -83,7 +83,7 @@ function VenueDetail({ venueId }: { venueId: string }) {
   if (isLoading) {
     return (
       <div className="grid place-items-center h-64">
-        <span className="text-gray-400">Loading...</span>
+        <span className="text-gray-400">{dict.common.loading}</span>
       </div>
     );
   }
@@ -93,13 +93,13 @@ function VenueDetail({ venueId }: { venueId: string }) {
       <div className="pl-4 pt-2 md:hidden">
         <Link to={`/${lang}/venues`}>
           <Button variant="ghost">
-            <ArrowLeft className="w-4 h-4 mr-2" /> Back
+            <ArrowLeft className="w-4 h-4 mr-2" /> {dict.common.back}
           </Button>
         </Link>
       </div>
       <div className="py-4 flex flex-col items-center space-y-2 px-2 md:px-6">
         <h2 className="font-semibold text-xl">
-          {venueId} - {toPrettySemester(lastSemester.id)}學期
+          {venueId} - {toPrettySemester(lastSemester.id)} {dict.course.details.semester}
         </h2>
         <Button asChild variant="outline" size="sm">
           <Link to={`/${lang}/map?venue=${encodeURIComponent(venueId)}`}>

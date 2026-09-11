@@ -190,11 +190,15 @@ const SettingsPage = () => {
                     onValueChange={(v) => setLanguage(v as Language)}
                   >
                     <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Select Language" />
+                      <SelectValue placeholder={dict.settings.display.language.title} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="zh">繁體中文</SelectItem>
-                      <SelectItem value="en">English</SelectItem>
+                      <SelectItem value="zh">
+                        {dict.settings.timetable.language_options.zh}
+                      </SelectItem>
+                      <SelectItem value="en">
+                        {dict.settings.timetable.language_options.en}
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 }

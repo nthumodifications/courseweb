@@ -19,6 +19,49 @@ function generateInviteCode(): string {
 }
 
 const CourseNotesSchema = z.record(z.string());
+const CustomTimetableSlotSchema = z.object({
+  day: z.number().int().min(0).max(6),
+  start: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+  end: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+});
+const CustomTimetableItemFields = {
+  id: z.string().min(1).max(100),
+  title: z.string().min(1).max(80),
+  shortCode: z.string().max(20).optional(),
+  venue: z.string().max(80).optional(),
+  note: z.string().max(200).optional(),
+  color: z.string().max(32),
+};
+const ClockCustomTimetableItemSchema = z.object({
+  ...CustomTimetableItemFields,
+  slots: z
+    .array(CustomTimetableSlotSchema)
+    .min(1)
+    .max(42)
+    .refine(
+      (slots) =>
+        slots.every(({ start, end }) => {
+          const toMinutes = (time: string) => {
+            const [hours, minutes] = time.split(":").map(Number);
+            return hours * 60 + minutes;
+          };
+          return toMinutes(end) > toMinutes(start);
+        }),
+      "Each custom timetable slot must end after it starts",
+    ),
+});
+const LegacyCustomTimetableItemSchema = z.object({
+  ...CustomTimetableItemFields,
+  schedule: z
+    .array(z.string().regex(/^(?:[MTWRFS][1-9nabcdn])+$/))
+    .min(1)
+    .max(42),
+});
+const CustomTimetableItemSchema = z.union([
+  ClockCustomTimetableItemSchema,
+  LegacyCustomTimetableItemSchema,
+]);
+const CustomItemsSchema = z.record(z.array(CustomTimetableItemSchema));
 const GradeContextSchema = z.record(
   z.object({
     grade: z.string().optional(),
@@ -31,6 +74,7 @@ const CreateShareSchema = z.object({
   displayName: z.string().max(100).optional(),
   semesters: z.array(z.string().length(5)).min(1),
   courses: z.record(z.array(z.string())),
+  customItems: CustomItemsSchema.optional().default({}),
   courseNotes: CourseNotesSchema.optional().default({}),
   visibility: z.enum(["link_only", "public"]).default("link_only"),
   isLive: z.boolean().default(false),
@@ -41,12 +85,68 @@ const CreateShareSchema = z.object({
 const UpdateShareSchema = z.object({
   displayName: z.string().max(100).optional(),
   courses: z.record(z.array(z.string())).optional(),
+  customItems: CustomItemsSchema.optional(),
   courseNotes: CourseNotesSchema.optional(),
   visibility: z.enum(["link_only", "public"]).optional(),
   isLive: z.boolean().optional(),
   isAnonymous: z.boolean().optional(),
   gradeContext: GradeContextSchema.optional(),
 });
+
+type StoredShare = {
+  semesters: string;
+  courses: string;
+  courseNotes: string;
+};
+
+const parseShareMetadata = (value: string) => {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(value);
+  } catch {
+    parsed = {};
+  }
+
+  if (
+    typeof parsed === "object" &&
+    parsed !== null &&
+    "courseNotes" in parsed &&
+    typeof parsed.courseNotes === "object" &&
+    parsed.courseNotes !== null
+  ) {
+    return {
+      courseNotes: parsed.courseNotes as Record<string, string>,
+      customItems:
+        "customItems" in parsed && typeof parsed.customItems === "object"
+          ? (parsed.customItems as z.infer<typeof CustomItemsSchema>)
+          : {},
+    };
+  }
+
+  return {
+    courseNotes:
+      typeof parsed === "object" && parsed !== null
+        ? (parsed as Record<string, string>)
+        : {},
+    customItems: {},
+  };
+};
+
+const serializeShareMetadata = (
+  courseNotes: Record<string, string>,
+  customItems: z.infer<typeof CustomItemsSchema>,
+) => JSON.stringify({ courseNotes, customItems });
+
+const withParsedShare = <T extends StoredShare>(share: T) => {
+  const metadata = parseShareMetadata(share.courseNotes);
+  return {
+    ...share,
+    semesters: JSON.parse(share.semesters) as string[],
+    courses: JSON.parse(share.courses) as Record<string, string[]>,
+    courseNotes: metadata.courseNotes,
+    customItems: metadata.customItems,
+  };
+};
 
 const app = new Hono<{ Bindings: Bindings }>()
 
@@ -59,10 +159,7 @@ const app = new Hono<{ Bindings: Bindings }>()
     });
     if (!share) throw new HTTPException(404, { message: "Not found" });
     return c.json({
-      ...share,
-      semesters: JSON.parse(share.semesters),
-      courses: JSON.parse(share.courses),
-      courseNotes: JSON.parse(share.courseNotes),
+      ...withParsedShare(share),
       gradeContext: share.gradeContext ? JSON.parse(share.gradeContext) : null,
     });
   })
@@ -98,10 +195,7 @@ const app = new Hono<{ Bindings: Bindings }>()
 
       const hasMore = filtered.length > limit;
       const items = filtered.slice(0, limit).map((s) => ({
-        ...s,
-        semesters: JSON.parse(s.semesters),
-        courses: JSON.parse(s.courses),
-        courseNotes: JSON.parse(s.courseNotes),
+        ...withParsedShare(s),
         gradeContext: s.gradeContext ? JSON.parse(s.gradeContext) : null,
       }));
 
@@ -133,10 +227,7 @@ const app = new Hono<{ Bindings: Bindings }>()
           .then((s) =>
             s
               ? {
-                  ...s,
-                  semesters: JSON.parse(s.semesters),
-                  courses: JSON.parse(s.courses),
-                  courseNotes: JSON.parse(s.courseNotes),
+                  ...withParsedShare(s),
                   gradeContext: s.gradeContext
                     ? JSON.parse(s.gradeContext)
                     : null,
@@ -162,10 +253,7 @@ const app = new Hono<{ Bindings: Bindings }>()
     });
     return c.json(
       shares.map((s) => ({
-        ...s,
-        semesters: JSON.parse(s.semesters),
-        courses: JSON.parse(s.courses),
-        courseNotes: JSON.parse(s.courseNotes),
+        ...withParsedShare(s),
         gradeContext: s.gradeContext ? JSON.parse(s.gradeContext) : null,
       })),
     );
@@ -199,7 +287,12 @@ const app = new Hono<{ Bindings: Bindings }>()
           displayName: body.displayName,
           semesters: JSON.stringify(body.semesters),
           courses: JSON.stringify(body.courses),
-          courseNotes: JSON.stringify(body.courseNotes ?? {}),
+          // Keep the existing column and wrap its old object shape so this
+          // feature needs no Prisma schema or database migration.
+          courseNotes: serializeShareMetadata(
+            body.courseNotes ?? {},
+            body.customItems ?? {},
+          ),
           visibility: body.visibility,
           isLive: body.isLive,
           isAnonymous: body.isAnonymous,
@@ -211,10 +304,7 @@ const app = new Hono<{ Bindings: Bindings }>()
 
       return c.json(
         {
-          ...share,
-          semesters: JSON.parse(share.semesters),
-          courses: JSON.parse(share.courses),
-          courseNotes: JSON.parse(share.courseNotes),
+          ...withParsedShare(share),
           gradeContext: share.gradeContext
             ? JSON.parse(share.gradeContext)
             : null,
@@ -241,6 +331,8 @@ const app = new Hono<{ Bindings: Bindings }>()
       });
       if (!existing) throw new HTTPException(404, { message: "Not found" });
 
+      const existingMetadata = parseShareMetadata(existing.courseNotes);
+
       const updated = await prisma.sharedTimetable.update({
         where: { id },
         data: {
@@ -250,8 +342,12 @@ const app = new Hono<{ Bindings: Bindings }>()
           ...(body.courses !== undefined && {
             courses: JSON.stringify(body.courses),
           }),
-          ...(body.courseNotes !== undefined && {
-            courseNotes: JSON.stringify(body.courseNotes),
+          ...((body.courseNotes !== undefined ||
+            body.customItems !== undefined) && {
+            courseNotes: serializeShareMetadata(
+              body.courseNotes ?? existingMetadata.courseNotes,
+              body.customItems ?? existingMetadata.customItems,
+            ),
           }),
           ...(body.visibility !== undefined && { visibility: body.visibility }),
           ...(body.isLive !== undefined && { isLive: body.isLive }),
@@ -265,10 +361,7 @@ const app = new Hono<{ Bindings: Bindings }>()
       });
 
       return c.json({
-        ...updated,
-        semesters: JSON.parse(updated.semesters),
-        courses: JSON.parse(updated.courses),
-        courseNotes: JSON.parse(updated.courseNotes),
+        ...withParsedShare(updated),
         gradeContext: updated.gradeContext
           ? JSON.parse(updated.gradeContext)
           : null,
@@ -315,10 +408,7 @@ const app = new Hono<{ Bindings: Bindings }>()
           savedCourses: s.savedCourses ? JSON.parse(s.savedCourses) : null,
           share: share
             ? {
-                ...share,
-                semesters: JSON.parse(share.semesters),
-                courses: JSON.parse(share.courses),
-                courseNotes: JSON.parse(share.courseNotes),
+                ...withParsedShare(share),
                 gradeContext: share.gradeContext
                   ? JSON.parse(share.gradeContext)
                   : null,

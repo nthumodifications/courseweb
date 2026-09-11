@@ -1,16 +1,19 @@
 import {
-  differenceInDays,
-  endOfDay,
-  endOfWeek,
-  format,
-  getDay,
-  isSameMonth,
-  isSameWeek,
-  isToday,
-  startOfDay,
-  startOfWeek,
-} from "date-fns";
+  differenceInTaipeiCalendarDays,
+  endOfTaipeiDay,
+  formatTaipei,
+  fromTaipeiDateKey,
+  getTaipeiAcademicCalendarQuery,
+  getTaipeiDateKey,
+  getTaipeiDay,
+  getTaipeiWeek,
+  isSameTaipeiMonth,
+  isSameTaipeiWeek,
+  isTaipeiDateKey,
+  startOfTaipeiDay,
+} from "@/helpers/dates";
 import { cn } from "@courseweb/ui";
+import { isTaipeiToday } from "@/helpers/dates";
 import { useCalendar } from "./calendar_hook";
 import { eventsToDisplay } from "@/components/Calendar/calendar_utils";
 import { getContrastColor, getBrightness } from "@/helpers/colors";
@@ -23,6 +26,8 @@ import { useSettings } from "@/hooks/contexts/settings";
 import client from "@/config/api";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import useCourseDates from "@/hooks/useCourseDates";
+import { getLocale } from "@/helpers/dateLocale";
+import useDictionary from "@/dictionaries/useDictionary";
 
 export const CalendarMonthContainer = ({
   displayMonth,
@@ -32,7 +37,8 @@ export const CalendarMonthContainer = ({
   onChangeView: (view: "week", date: Date) => void;
 }) => {
   const { events } = useCalendar();
-  const { showAcademicCalendar } = useSettings();
+  const { language, showAcademicCalendar } = useSettings();
+  const dict = useDictionary();
   const { courses } = useUserTimetable();
   const enrolledCourseIds = useMemo(
     () => Object.values(courses).flat(),
@@ -60,27 +66,33 @@ export const CalendarMonthContainer = ({
   } = useQuery<CalendarEventInternal[]>({
     queryKey: [
       "event",
-      format(displayMonth[0], "yyyy-MM-dd"),
-      format(displayMonth[displayMonth.length - 1], "yyyy-MM-dd"),
+      getTaipeiDateKey(displayMonth[0]),
+      getTaipeiDateKey(displayMonth[displayMonth.length - 1]),
     ],
     queryFn: async () => {
+      const query = getTaipeiAcademicCalendarQuery(
+        getTaipeiDateKey(displayMonth[0]),
+        getTaipeiDateKey(displayMonth[displayMonth.length - 1]),
+      );
+      if (!query) return [];
+
       const res = await client.acacalendar.$get({
-        query: {
-          start: displayMonth[0].toISOString(),
-          end: displayMonth[displayMonth.length - 1].toISOString(),
-        },
+        query,
       });
       const nthuEvents = await res.json();
-      return nthuEvents.map((event, index) => {
+      return nthuEvents.flatMap((event) => {
+        if (!isTaipeiDateKey(event.date)) return [];
+        const start = fromTaipeiDateKey(event.date);
+        const end = endOfTaipeiDay(start);
         return {
           id: "nthu-" + event.id,
           title: event.summary,
-          start: startOfDay(new Date(event.date)),
-          end: endOfDay(new Date(event.date)),
+          start,
+          end,
           allDay: true,
           color: nthuEventColor,
           tag: "NTHU",
-          actualEnd: endOfDay(new Date(event.date)),
+          actualEnd: end,
           repeat: null,
           readonly: true,
         } as CalendarEventInternal;
@@ -92,8 +104,8 @@ export const CalendarMonthContainer = ({
     (day: Date, padding: number) => {
       const dayEvents = eventsToDisplay(
         events,
-        startOfDay(day),
-        endOfDay(day),
+        startOfTaipeiDay(day),
+        endOfTaipeiDay(day),
       ).map((event) => {
         const courseDate = event.courseId
           ? getCourseDateForDay(event.courseId, day)
@@ -147,8 +159,9 @@ export const CalendarMonthContainer = ({
             ))}
           {allSortedEvents.map((event, index) => (
             <EventPopover key={index} event={event}>
-              <div
-                className="rounded-md p-0.5 md:p-1 flex flex-row gap-1 items-center hover:shadow-md cursor-pointer transition-shadow select-none"
+              <button
+                type="button"
+                className="rounded-md border-0 bg-transparent p-0.5 md:p-1 flex flex-row gap-1 items-center text-left hover:shadow-md cursor-pointer transition-shadow select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 style={{
                   background: event.isNoClass
                     ? "repeating-linear-gradient(-45deg, #9ca3af, #9ca3af 4px, #6b7280 4px, #6b7280 8px)"
@@ -160,47 +173,49 @@ export const CalendarMonthContainer = ({
               >
                 {!event.isNoClass && (
                   <div className="hidden md:inline text-[10px] font-normal leading-none">
-                    {format(event.displayStart, "HH:mm")}
+                    {formatTaipei(event.displayStart, "HH:mm", {
+                      locale: getLocale(language),
+                    })}
                   </div>
                 )}
                 <div className="text-xs leading-none whitespace-nowrap overflow-hidden">
                   {event.title}
                 </div>
-              </div>
+              </button>
             </EventPopover>
           ))}
         </div>
       );
     },
-    [events, isScreenMD, getCourseDateForDay],
+    [events, isScreenMD, getCourseDateForDay, language],
   );
 
   const renderAllDayEvents = useCallback(
     (start: Date, end: Date) => {
       const filteredEvents = eventsToDisplay(
         showAcademicCalendar ? [...nthuCalendarEvents, ...events] : events,
-        startOfDay(start),
-        endOfDay(end),
+        startOfTaipeiDay(start),
+        endOfTaipeiDay(end),
       ).filter((e) => e.allDay);
 
       const allDayEvents = filteredEvents.map((event) => {
         // Snap the event to the start if it starts before the start of the week
-        const snippetStart = isSameWeek(start, event.start)
+        const snippetStart = isSameTaipeiWeek(start, event.start)
           ? event.start
-          : startOfDay(start);
+          : startOfTaipeiDay(start);
         // Snap the event to the end if it ends after the end of the week
-        const snippetEnd = isSameWeek(end, event.end)
+        const snippetEnd = isSameTaipeiWeek(end, event.end)
           ? event.end
-          : endOfDay(end);
+          : endOfTaipeiDay(end);
         // Determine the text color
         const brightness = getBrightness(event.color);
         // From the brightness, using the getContrastColor function, create a complementary color that is legible
         const textColor = getContrastColor(event.color);
         const span = Math.min(
-          differenceInDays(endOfDay(snippetEnd), startOfDay(snippetStart)) + 1,
-          7 - getDay(snippetStart) + 1,
+          differenceInTaipeiCalendarDays(snippetEnd, snippetStart) + 1,
+          7 - getTaipeiDay(snippetStart) + 1,
         );
-        const left = (100 / 7) * getDay(snippetStart);
+        const left = (100 / 7) * getTaipeiDay(snippetStart);
         const width = (100 / 7) * span;
         // calculate the index in that day, to determine the top position
         const events = filteredEvents.filter(
@@ -214,7 +229,9 @@ export const CalendarMonthContainer = ({
 
       return allDayEvents.map((event, index) => (
         <EventPopover key={index} event={event}>
-          <div
+          <button
+            type="button"
+            className="border-0 bg-transparent p-0 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             style={{
               position: "absolute",
               top: `${event.top}px`,
@@ -230,7 +247,7 @@ export const CalendarMonthContainer = ({
                 {event.title}
               </div>
             </div>
-          </div>
+          </button>
         </EventPopover>
       ));
     },
@@ -242,53 +259,63 @@ export const CalendarMonthContainer = ({
       //check for any allday events that exists in the day
       const allDayEvents = eventsToDisplay(
         showAcademicCalendar ? [...nthuCalendarEvents, ...events] : events,
-        startOfDay(day),
-        endOfDay(day),
+        startOfTaipeiDay(day),
+        endOfTaipeiDay(day),
       ).filter((e) => e.allDay);
 
       return (
         <Fragment key={day.getTime()}>
-          {getDay(day) == 0 &&
-            renderAllDayEvents(startOfWeek(day), endOfWeek(day))}
+          {getTaipeiDay(day) === 0 &&
+            renderAllDayEvents(getTaipeiWeek(day)[0], getTaipeiWeek(day)[6])}
           <div
             className={cn(
               "flex flex-col gap-1 min-h-[120px] border-t border-l border-border last:border-b last:border-r",
-              isSameMonth(day, displayMonth[15]) ? "" : "bg-foreground/5",
+              isSameTaipeiMonth(day, displayMonth[15]) ? "" : "bg-foreground/5",
             )}
           >
-            <div
+            <button
+              type="button"
               className={cn(
-                "text-sm font-semibold cursor-pointer p-0.5",
-                isToday(day)
+                "border-0 bg-transparent text-sm font-semibold cursor-pointer p-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                isTaipeiToday(day)
                   ? "w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center"
                   : "",
               )}
+              aria-label={dict.calendar.accessibility.open_day.replace(
+                "{date}",
+                formatTaipei(day, "PPP", { locale: getLocale(language) }),
+              )}
               onClick={() => onChangeView("week", day)}
             >
-              {format(day, "d")}
-            </div>
+              {formatTaipei(day, "d", { locale: getLocale(language) })}
+            </button>
             {renderEventsInDay(day, allDayEvents.length)}
           </div>
         </Fragment>
       );
     },
-    [events, displayMonth, renderAllDayEvents, renderEventsInDay, onChangeView],
+    [
+      events,
+      displayMonth,
+      renderAllDayEvents,
+      renderEventsInDay,
+      onChangeView,
+      language,
+    ],
   );
 
   return (
     <div className="overflow-x-auto flex-1">
       <div className="flex flex-col md:min-w-0 h-full">
         <div className="grid grid-cols-7 gap-4">
-          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
-            (day, index) => (
-              <div
-                key={index}
-                className="text-muted-foreground text-sm font-semibold text-center"
-              >
-                {day}
-              </div>
-            ),
-          )}
+          {displayMonth.slice(0, 7).map((day, index) => (
+            <div
+              key={index}
+              className="text-muted-foreground text-sm font-semibold text-center"
+            >
+              {formatTaipei(day, "EEE", { locale: getLocale(language) })}
+            </div>
+          ))}
         </div>
         <div
           className="grid flex-1"

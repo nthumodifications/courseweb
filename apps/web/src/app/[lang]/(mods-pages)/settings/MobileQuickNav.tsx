@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, type ReactNode } from "react";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import useDictionary from "@/dictionaries/useDictionary";
 
 interface Section {
   id: string;
@@ -22,6 +23,7 @@ export const MobileQuickNav = ({
   onSectionClick,
 }: MobileQuickNavProps) => {
   const [showNav, setShowNav] = useState(false);
+  const dict = useDictionary();
   const triggerRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLDivElement>(null);
 
@@ -63,7 +65,7 @@ export const MobileQuickNav = ({
         ref={triggerRef}
         onClick={() => setShowNav(true)}
         className="fixed bottom-20 right-4 z-50 lg:hidden bg-primary text-primary-foreground p-3 rounded-full shadow-lg hover:bg-primary/90 transition-colors"
-        aria-label="Open navigation menu"
+        aria-label={dict.settings.open_navigation}
       >
         <Menu className="h-5 w-5" />
       </button>
@@ -81,13 +83,15 @@ export const MobileQuickNav = ({
             <button
               onClick={() => setShowNav(false)}
               className="absolute top-4 right-4 p-2 hover:bg-accent rounded-md"
-              aria-label="Close navigation menu"
+              aria-label={dict.settings.close_navigation}
             >
               <X className="h-5 w-5" />
             </button>
 
             <div className="mb-6 mt-2">
-              <h2 className="text-lg font-semibold">Quick Navigation</h2>
+              <h2 className="text-lg font-semibold">
+                {dict.settings.quick_navigation}
+              </h2>
             </div>
 
             <nav className="space-y-1">

@@ -2,6 +2,8 @@ import { Button } from "@courseweb/ui";
 import { Github, Link2, LinkedinIcon } from "lucide-react";
 import team from "@/const/team.json";
 import Footer from "@/components/Footer";
+import useDictionary from "@/dictionaries/useDictionary";
+import { Link, useParams } from "react-router-dom";
 
 /**
  * Woah woah did you stumble here? Is this because you wanna join us!
@@ -10,6 +12,9 @@ import Footer from "@/components/Footer";
  */
 
 const Team = () => {
+  const dict = useDictionary();
+  const { lang } = useParams<{ lang: string }>();
+
   return (
     <div className="flex flex-col px-3">
       <article className="prose prose-neutral dark:prose-invert">
@@ -26,6 +31,10 @@ const Team = () => {
           <a href="mailto:nthumods@gmail.com">nthumods@gmail.com</a> or our
           Github repository{" "}
           <a href="https://github.com/nthumodifications/courseweb">here</a>.
+        </p>
+        <p>
+          {dict.team.recruitment_intro}{" "}
+          <Link to={`/${lang}/recruit`}>{dict.team.recruitment_link}</Link>.
         </p>
         <h1>Core Team</h1>
         <div className="grid grid-cols-1 md:grid-cols-2 mb-8">

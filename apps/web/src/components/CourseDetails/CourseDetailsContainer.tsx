@@ -237,11 +237,11 @@ const CourseDetailContainer = ({
         <div className="py-6 px-4">
           <div className="flex flex-col gap-2 border-l border-neutral-500 pl-4 pr-6">
             <h1 className="text-2xl font-bold">404</h1>
-            <p className="text-xl">找不到課程</p>
+            <p className="text-xl">{dict.course.details.not_found}</p>
 
             <Link to="../">
               <Button size="sm" variant="outline">
-                <ChevronLeft /> Back
+                <ChevronLeft /> {dict.common.back}
               </Button>
             </Link>
           </div>
@@ -334,7 +334,7 @@ const CourseDetailContainer = ({
             <div className="space-y-4 flex-1 w-full">
               <div className="space-y-2">
                 <div className="font-semibold text-base ">
-                  {toPrettySemester(course.semester)} 學期
+                  {toPrettySemester(course.semester)} {dict.course.details.semester}
                 </div>
                 <div className="font-bold text-xl mb-4 text-nthu-600">{`${course?.department} ${course?.course}-${course?.class}`}</div>
                 <h1 className="font-semibold text-3xl flex flex-row flex-wrap gap-1">
@@ -360,7 +360,7 @@ const CourseDetailContainer = ({
                   </p>
                 ))
               ) : (
-                <p>No Venues</p>
+                <p>{dict.course.details.no_venues}</p>
               )}
               <CrossDisciplineTagList course={course} />
             </div>
@@ -461,7 +461,7 @@ const CourseDetailContainer = ({
                                 <CardTitle className="text-lg">
                                   {index + 1}.{" "}
                                   {format(new Date(m.date ?? 0), "yyyy-MM-dd")}{" "}
-                                  的心得
+                                  {dict.course.details.review_suffix}
                                 </CardTitle>
                               </CardHeader>
                               <CardContent>
@@ -520,7 +520,7 @@ const CourseDetailContainer = ({
                     <Link
                       to={`/${lang}/courses?nthu_courses%5BrefinementList%5D%5Bdepartment%5D%5B0%5D=${course.department}&nthu_courses%5Bquery%5D=${course.name_zh} ${course.teacher_zh.join(" ")}`}
                     >
-                      查看更多 <ArrowRight className="ml-2 w-4 h-4" />
+                      {dict.course.details.view_more} <ArrowRight className="ml-2 w-4 h-4" />
                     </Link>
                   </Button>
                 </div>
@@ -528,10 +528,14 @@ const CourseDetailContainer = ({
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-[110px] px-2">
-                        學期/時間地點
+                        {dict.course.details.semester_time_venue}
                       </TableHead>
-                      <TableHead className="w-[80px] px-2">開課教授</TableHead>
-                      <TableHead className="w-28 px-2">歷年平均成績</TableHead>
+                      <TableHead className="w-[80px] px-2">
+                        {dict.course.details.instructor}
+                      </TableHead>
+                      <TableHead className="w-28 px-2">
+                        {dict.course.details.historical_average}
+                      </TableHead>
                       <TableHead className="w-14 p-0"></TableHead>
                     </TableRow>
                   </TableHeader>
@@ -560,7 +564,10 @@ const CourseDetailContainer = ({
                                 {getScoreType(m.course_scores.type)}{" "}
                                 {m.course_scores.average}
                               </p>
-                              <p>標準差 {m.course_scores.std_dev}</p>
+                                <p>
+                                  {dict.course.details.standard_deviation}{" "}
+                                  {m.course_scores.std_dev}
+                                </p>
                             </div>
                           )}
                         </TableCell>
@@ -710,11 +717,11 @@ const CourseDetailContainer = ({
               <div className="flex flex-col gap-1">
                 <div className="flex flex-row gap-2 flex-wrap">
                   <p className="text-xs text-gray-500">
-                    Details Updated:{" "}
+                    {dict.course.details.details_updated}{" "}
                     {format(new Date(course.updated_at), "yyyy-MM-dd HH:mm")}
                   </p>
                   <p className="text-xs text-gray-500">
-                    Syllabus Updated:{" "}
+                    {dict.course.details.syllabus_updated}{" "}
                     {format(
                       new Date(course.course_syllabus?.updated_at ?? 0),
                       "yyyy-MM-dd HH:mm",

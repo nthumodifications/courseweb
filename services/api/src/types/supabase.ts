@@ -752,6 +752,45 @@ export type Database = {
         };
         Relationships: [];
       };
+      recruitment_applications: {
+        Row: {
+          applicant_sub: string;
+          contact_preference: string;
+          created_at: string;
+          id: string;
+          links: Json;
+          resume_object_path: string;
+          role: string;
+          statement: string;
+          status: string;
+          updated_at: string;
+        };
+        Insert: {
+          applicant_sub: string;
+          contact_preference: string;
+          created_at?: string;
+          id?: string;
+          links?: Json;
+          resume_object_path: string;
+          role: string;
+          statement: string;
+          status?: string;
+          updated_at?: string;
+        };
+        Update: {
+          applicant_sub?: string;
+          contact_preference?: string;
+          created_at?: string;
+          id?: string;
+          links?: Json;
+          resume_object_path?: string;
+          role?: string;
+          statement?: string;
+          status?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       users: {
         Row: {
           banned: boolean;

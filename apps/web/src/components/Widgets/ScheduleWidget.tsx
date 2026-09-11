@@ -1,12 +1,14 @@
 import { FC, useMemo } from "react";
 import { WidgetShell } from "./WidgetShell";
-import useUserTimetable from "@/hooks/contexts/useUserTimetable";
-import { useSettings } from "@/hooks/contexts/settings";
-import { scheduleTimeSlots, getSemester } from "@courseweb/shared";
-import { createTimetableFromCourses } from "@/helpers/timetable";
-import { MinimalCourse } from "@/types/courses";
 import useTime from "@/hooks/useTime";
 import { Calendar } from "lucide-react";
+import { formatInTimeZone } from "date-fns-tz";
+import useDictionary from "@/dictionaries/useDictionary";
+import UpcomingEventList from "@/components/Calendar/UpcomingEventList";
+import useUpcomingEvents, {
+  getTaipeiDateKey,
+  UPCOMING_TIME_ZONE,
+} from "@/hooks/useUpcomingEvents";
 
 interface ScheduleWidgetProps {
   onRemove?: () => void;
@@ -19,33 +21,25 @@ const ScheduleWidget: FC<ScheduleWidgetProps> = ({
   dragHandleProps,
   isDragging,
 }) => {
-  const { getSemesterCourses, colorMap } = useUserTimetable();
-  const { language } = useSettings();
   const date = useTime();
-
-  const curr_sem = useMemo(() => getSemester(date), [date]);
-  const timetableData = useMemo(
-    () =>
-      createTimetableFromCourses(
-        getSemesterCourses(curr_sem?.id) as MinimalCourse[],
-        colorMap,
-      ),
-    [getSemesterCourses, curr_sem, colorMap],
-  );
-
-  const todayOfWeek = date.getDay(); // 0=Sun, 1=Mon...6=Sat
-  // convert to 0=Mon...6=Sun format used by timetableData
-  const normalizedDay = todayOfWeek === 0 ? 6 : todayOfWeek - 1;
+  const dict = useDictionary();
+  const { events } = useUpcomingEvents({ includePast: true });
 
   const todayCourses = useMemo(
     () =>
-      timetableData
-        .filter((slot) => slot.dayOfWeek === normalizedDay)
-        .sort((a, b) => a.startTime - b.startTime),
-    [timetableData, normalizedDay],
+      events.filter(
+        (event) =>
+          event.source === "class" &&
+          getTaipeiDateKey(event.start) === getTaipeiDateKey(date),
+      ),
+    [date, events],
+  );
+  const upcomingEvents = useMemo(
+    () => events.filter((event) => event.state !== "past"),
+    [events],
   );
 
-  const title = language === "zh" ? "今日課程" : "Today's Schedule";
+  const title = dict.today.schedule_title;
 
   return (
     <WidgetShell
@@ -59,31 +53,31 @@ const ScheduleWidget: FC<ScheduleWidgetProps> = ({
           <div className="flex flex-col items-center justify-center py-6 text-center">
             <Calendar className="h-8 w-8 text-muted-foreground/40 mb-2" />
             <p className="text-sm text-muted-foreground">
-              {language === "zh" ? "今天沒有課程" : "No classes today"}
+              {dict.today.noclass}
             </p>
           </div>
         ) : (
           <div className="flex flex-col gap-2">
             {todayCourses.map((slot, i) => {
-              const start = scheduleTimeSlots[slot.startTime]?.start ?? "";
-              const end = scheduleTimeSlots[slot.endTime]?.end ?? "";
-              const name =
-                language === "zh"
-                  ? slot.course.name_zh
-                  : slot.course.name_en || slot.course.name_zh;
+              const name = slot.title;
               return (
                 <div
-                  key={i}
+                  key={slot.id || i}
                   className="flex items-stretch gap-2 rounded-lg overflow-hidden border border-border"
                 >
                   <div
                     className="w-1 shrink-0"
-                    style={{ backgroundColor: slot.color }}
+                    style={{ backgroundColor: slot.color ?? "#555555" }}
                   />
                   <div className="py-2 flex-1 min-w-0">
                     <div className="text-sm font-medium truncate">{name}</div>
                     <div className="text-xs text-muted-foreground">
-                      {start}–{end}
+                      {formatInTimeZone(
+                        slot.start,
+                        UPCOMING_TIME_ZONE,
+                        "HH:mm",
+                      )}
+                      –{formatInTimeZone(slot.end, UPCOMING_TIME_ZONE, "HH:mm")}
                     </div>
                   </div>
                 </div>
@@ -91,6 +85,12 @@ const ScheduleWidget: FC<ScheduleWidgetProps> = ({
             })}
           </div>
         )}
+        <div className="mt-4 border-t border-border pt-3">
+          <div className="mb-2 text-sm font-semibold">
+            {dict.calendar.upcoming_events}
+          </div>
+          <UpcomingEventList events={upcomingEvents} compact maxEvents={6} />
+        </div>
       </div>
     </WidgetShell>
   );

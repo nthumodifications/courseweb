@@ -3,58 +3,10 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { requireAuth } from "../middleware/requireAuth";
 import { getFirebaseAdmin } from "../config/firebase_admin";
-
-const validKeys = [
-  "courses",
-  "course_favourites",
-  "course_color_map",
-  "timetable_display_preferences",
-  "timetable_theme",
-  "user_defined_colors",
-];
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null;
+import { mergeSyncedValue, validKeys } from "./kv_storage_contract";
 
 const asNumber = (value: unknown, fallback: number) =>
   typeof value === "number" && Number.isFinite(value) ? value : fallback;
-
-const mergeStringArrays = (current: unknown, incoming: unknown) => [
-  ...new Set([
-    ...(Array.isArray(current)
-      ? current.filter((value): value is string => typeof value === "string")
-      : []),
-    ...(Array.isArray(incoming)
-      ? incoming.filter((value): value is string => typeof value === "string")
-      : []),
-  ]),
-];
-
-const mergeCourseStorage = (current: unknown, incoming: unknown) => {
-  const currentStorage = isRecord(current) ? current : {};
-  const incomingStorage = isRecord(incoming) ? incoming : {};
-  const merged: Record<string, string[]> = {};
-
-  for (const semester of new Set([
-    ...Object.keys(currentStorage),
-    ...Object.keys(incomingStorage),
-  ])) {
-    merged[semester] = mergeStringArrays(
-      currentStorage[semester],
-      incomingStorage[semester],
-    );
-  }
-
-  return merged;
-};
-
-const mergeSyncedValue = (key: string, current: unknown, incoming: unknown) => {
-  if (key === "courses") return mergeCourseStorage(current, incoming);
-  if (key === "course_favourites") {
-    return mergeStringArrays(current, incoming);
-  }
-  return incoming;
-};
 
 const app = new Hono()
   .get(

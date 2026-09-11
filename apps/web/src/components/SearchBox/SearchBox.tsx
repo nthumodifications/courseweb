@@ -2,6 +2,7 @@ import { useSearchBox, UseSearchBoxProps } from "react-instantsearch";
 import { Input, Button } from "@courseweb/ui";
 import { useRef, useState } from "react";
 import { Search } from "lucide-react";
+import useDictionary from "@/dictionaries/useDictionary";
 
 interface SearchBoxProps extends UseSearchBoxProps {
   placeholder?: string;
@@ -10,6 +11,7 @@ interface SearchBoxProps extends UseSearchBoxProps {
 
 const SearchBox = ({ placeholder, autoFocus, ...props }: SearchBoxProps) => {
   const { query, refine, clear } = useSearchBox(props);
+  const dict = useDictionary();
   const [inputValue, setInputValue] = useState(query);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -52,7 +54,7 @@ const SearchBox = ({ placeholder, autoFocus, ...props }: SearchBoxProps) => {
         spellCheck={false}
         className="flex-1"
       />
-      <Button type="submit" variant="ghost" size="icon" title="Search">
+      <Button type="submit" variant="ghost" size="icon" title={dict.common.search}>
         <Search size="16" />
       </Button>
     </form>

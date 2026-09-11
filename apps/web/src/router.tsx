@@ -71,8 +71,14 @@ const ContributePage = lazy(
 const TeamPage = lazy(
   () => import("@/app/[lang]/(mods-pages)/(side-pages)/team/page"),
 );
+const RecruitmentPage = lazy(
+  () => import("@/app/[lang]/(mods-pages)/(side-pages)/recruit/page"),
+);
 const PrivacyPage = lazy(
   () => import("@/app/[lang]/(mods-pages)/(side-pages)/privacy-policy/page"),
+);
+const ChangelogPage = lazy(
+  () => import("@/app/[lang]/(mods-pages)/(side-pages)/changelog/page"),
 );
 const ProxyLoginPage = lazy(
   () => import("@/app/[lang]/(mods-pages)/(side-pages)/proxy-login/page"),
@@ -211,7 +217,7 @@ export const router = createBrowserRouter([
                 element: <CalendarPage />,
                 handle: {
                   title: "Calendar",
-                  titleZh: "日曆",
+                  titleZh: "今日",
                   description:
                     "NTHU academic calendar with semester dates, holidays, and important deadlines. Keep track of National Tsing Hua University's academic schedule.",
                   descriptionZh:
@@ -298,7 +304,7 @@ export const router = createBrowserRouter([
                 element: <AppsPage />,
                 handle: {
                   title: "All Features",
-                  titleZh: "功能列表",
+                  titleZh: "功能清單",
                   description:
                     "Explore all NTHUMods features for NTHU students — courses, bus, calendar, venues, and more.",
                   descriptionZh:
@@ -393,6 +399,18 @@ export const router = createBrowserRouter([
                 },
               },
               {
+                path: "recruit",
+                element: <RecruitmentPage />,
+                handle: {
+                  title: "Join NTHUMods",
+                  titleZh: "加入 NTHUMods",
+                  description:
+                    "Apply to help maintain and improve NTHUMods for NTHU students.",
+                  descriptionZh:
+                    "申請加入 NTHUMods，一起維護並改善清大學生使用的服務。",
+                },
+              },
+              {
                 path: "privacy-policy",
                 element: <PrivacyPage />,
                 handle: {
@@ -401,6 +419,16 @@ export const router = createBrowserRouter([
                   description:
                     "NTHUMods privacy policy and data handling practices.",
                   descriptionZh: "NTHUMods 隱私權政策與個人資料處理方式說明。",
+                },
+              },
+              {
+                path: "changelog",
+                element: <ChangelogPage />,
+                handle: {
+                  title: "Changelog",
+                  titleZh: "更新日誌",
+                  description: "Read the latest NTHUMods releases and changes.",
+                  descriptionZh: "查看 NTHUMods 最新版本與更新內容。",
                 },
               },
               {
@@ -430,7 +458,11 @@ export const router = createBrowserRouter([
               {
                 path: "timetable/share/:shareId",
                 element: <TimetableShareViewPage />,
-                handle: { title: "Shared Timetable", noindex: true },
+                handle: {
+                  title: "Shared Timetable",
+                  titleZh: "分享的課表",
+                  noindex: true,
+                },
               },
               {
                 path: "timetable/community",
@@ -447,7 +479,11 @@ export const router = createBrowserRouter([
               {
                 path: "timetable/group/:code",
                 element: <GroupViewPage />,
-                handle: { title: "Timetable Group", noindex: true },
+                handle: {
+                  title: "Timetable Group",
+                  titleZh: "課表群組",
+                  noindex: true,
+                },
               },
               {
                 path: "*",

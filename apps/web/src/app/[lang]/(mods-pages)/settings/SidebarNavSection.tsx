@@ -26,6 +26,7 @@ import {
   Settings,
 } from "lucide-react";
 import { Switch } from "@courseweb/ui";
+import useDictionary from "@/dictionaries/useDictionary";
 
 export type SidebarNavItemId =
   | "today"
@@ -89,7 +90,15 @@ const SortableSidebarRow = ({
     useSortable({ id: item.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
   const { language } = useSettings();
+  const dict = useDictionary();
   const def = SIDEBAR_ITEM_DEFINITIONS[item.id];
+  const label = {
+    today: dict.navigation.today,
+    timetable: dict.navigation.timetable,
+    bus: dict.navigation.bus,
+    apps: dict.navigation.apps,
+    settings: dict.navigation.settings,
+  }[item.id];
 
   return (
     <div
@@ -106,7 +115,7 @@ const SortableSidebarRow = ({
       </button>
       <def.Icon className="h-4 w-4 text-muted-foreground" />
       <div className="flex-1 text-sm font-medium">
-        {language === "zh" ? def.labelZh : def.label}
+        {label}
       </div>
       <Switch
         checked={item.enabled}
@@ -117,6 +126,7 @@ const SortableSidebarRow = ({
 };
 
 export const SidebarNavSection = () => {
+  const dict = useDictionary();
   const [items, setItems] = useLocalStorage<SidebarNavItemConfig[]>(
     "sidebar_nav_items",
     DEFAULT_SIDEBAR_NAV_ITEMS,
@@ -154,7 +164,7 @@ export const SidebarNavSection = () => {
   return (
     <div className="flex flex-col gap-3">
       <p className="text-xs text-muted-foreground">
-        Drag to reorder • Toggle to show/hide items in the desktop sidebar
+        {dict.settings.drag_hint}
       </p>
       <DndContext
         sensors={sensors}

@@ -1,10 +1,11 @@
 import useDictionary from "@/dictionaries/useDictionary";
 import { Download, Image, Loader2 } from "lucide-react";
 import Timetable from "./Timetable";
+import TimetableOffGridSchedule from "./TimetableOffGridSchedule";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { toPng } from "html-to-image";
 import { useCallback, useRef, useState, type ReactNode } from "react";
-import { createTimetableFromCourses } from "@/helpers/timetable";
+import { createTimetableFromCoursesAndCustomItems } from "@/helpers/timetable";
 import { MinimalCourse } from "@/types/courses";
 import {
   Dialog,
@@ -17,17 +18,25 @@ import { DialogTrigger } from "@radix-ui/react-dialog";
 import { Button } from "@courseweb/ui";
 import { ScrollArea } from "@courseweb/ui";
 import { toast } from "@courseweb/ui";
+import { useSettings } from "@/hooks/contexts/settings";
 
 const DownloadTimetableComponent = () => {
   const dict = useDictionary();
-  const { getSemesterCourses, semester, colorMap, currentColors } =
-    useUserTimetable();
+  const { language } = useSettings();
+  const {
+    getSemesterCourses,
+    getSemesterCustomItems,
+    semester,
+    colorMap,
+    currentColors,
+  } = useUserTimetable();
   const ref = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(false);
   const [generatedImg, setGeneratedImg] = useState<string | null>(null);
 
-  const timetableData = createTimetableFromCourses(
+  const timetableData = createTimetableFromCoursesAndCustomItems(
     getSemesterCourses(semester) as MinimalCourse[],
+    getSemesterCustomItems(semester),
     colorMap,
   );
 
@@ -45,14 +54,14 @@ const DownloadTimetableComponent = () => {
         // Create a more user-friendly filename with current date
         const now = new Date();
         const dateStr = now
-          .toLocaleDateString("zh-TW", {
+          .toLocaleDateString(language === "en" ? "en-US" : "zh-TW", {
             year: "numeric",
             month: "2-digit",
             day: "2-digit",
           })
           .replace(/\//g, "-");
         const timeStr = now
-          .toLocaleTimeString("zh-TW", {
+          .toLocaleTimeString(language === "en" ? "en-US" : "zh-TW", {
             hour: "2-digit",
             minute: "2-digit",
             hour12: false,
@@ -70,8 +79,12 @@ const DownloadTimetableComponent = () => {
           link.click();
           // Show success toast
           toast({
-            title: "下載成功",
-            description: `課表圖片已下載為 ${filename}`,
+            title: dict.dialogs.DownloadTimetableDialog.success_toast_title,
+            description:
+              dict.dialogs.DownloadTimetableDialog.success_toast_description.replace(
+                "{filename}",
+                filename,
+              ),
           });
         } catch (downloadError) {
           console.error("Download failed:", downloadError);
@@ -121,22 +134,27 @@ const DownloadTimetableComponent = () => {
         ])
         .then(() => {
           toast({
-            title: "複製成功",
-            description: "已將課表圖片複製到剪貼板",
+            title: dict.dialogs.DownloadTimetableDialog.copy_image_success,
+            description:
+              dict.dialogs.DownloadTimetableDialog.copy_image_success,
           });
         })
         .catch((err) => {
           console.error("Copy failed:", err);
           toast({
-            title: "複製失敗",
-            description: "無法複製到剪貼板，請手動儲存圖片",
+            title: dict.dialogs.DownloadTimetableDialog.copy_image_failed,
+            description:
+              dict.dialogs.DownloadTimetableDialog
+                .copy_image_failed_description,
             variant: "destructive",
           });
         });
     } else {
       toast({
-        title: "不支援複製功能",
-        description: "您的瀏覽器不支援複製到剪貼板",
+        title: dict.dialogs.DownloadTimetableDialog.copy_image_unsupported,
+        description:
+          dict.dialogs.DownloadTimetableDialog
+            .copy_image_unsupported_description,
         variant: "destructive",
       });
     }
@@ -157,11 +175,16 @@ const DownloadTimetableComponent = () => {
       </Button>
       <div className="relative overflow-hidden">
         <div
-          className="absolute h-[915px] w-[539px] px-2 pt-4 pb-8 grid place-items-center bg-background"
+          className="absolute min-h-[915px] w-[539px] px-2 pt-4 pb-8 grid place-items-center bg-background"
           ref={ref}
         >
-          <div className="h-[915px] w-[414px]">
+          <div className="w-[414px]">
             <Timetable timetableData={timetableData} vertical />
+            <TimetableOffGridSchedule
+              timetableData={timetableData}
+              editable={false}
+              className="mt-4"
+            />
           </div>
         </div>
       </div>
@@ -179,17 +202,17 @@ const DownloadTimetableComponent = () => {
             {generatedImg && (
               <img
                 src={generatedImg}
-                alt="timetable"
+                alt={dict.dialogs.DownloadTimetableDialog.image_alt}
                 onClick={handleCopy}
                 className="cursor-pointer hover:opacity-80 transition-opacity"
-                title="點擊複製到剪貼板"
+                title={dict.dialogs.DownloadTimetableDialog.copy_image_title}
               />
             )}
           </ScrollArea>
           <div className="flex gap-2">
             <Button onClick={handleCopy} variant="outline" className="flex-1">
               <Image className="w-4 h-4 mr-2" />
-              複製到剪貼板
+              {dict.dialogs.DownloadTimetableDialog.copy_image}
             </Button>
             <Button
               onClick={() => handleClose(false)}
