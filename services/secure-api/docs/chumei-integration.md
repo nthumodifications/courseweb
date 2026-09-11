@@ -236,11 +236,10 @@ export const userManager = new UserManager({
 
 PKCE is on by default in that library. Do not configure a `client_secret`.
 
-## Known issue
+## Status
 
-`https://auth.nthumods.com/.well-known/jwks.json` currently returns
-`500 Internal Server Error`, which breaks discovery-driven `id_token`
-verification. The cause is the deployed environment, not the protocol flow — the
-`JWT_PUBLIC_KEY` environment variable is missing or malformed on the production
-host. Until it is fixed, either validate tokens through `/introspect`, or pin the
-public key locally.
+All endpoints on this page are live and verified against
+`https://auth.nthumods.com`, including `/.well-known/jwks.json`, which returns
+the RS256 key with `kid` `"1"`. Verify `id_token`s against it through the
+discovery document; reach for `/introspect` only when you need to know an access
+token has not been revoked since issue.
