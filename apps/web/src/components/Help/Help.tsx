@@ -275,7 +275,7 @@ const DashboardAnimation = () => (
   </motion.div>
 );
 
-const BusAnimation = () => (
+const BusAnimation = ({ title }: { title: string }) => (
   <motion.div
     className="w-full h-full flex flex-col gap-4 p-4"
     initial={{ opacity: 0 }}
@@ -288,7 +288,7 @@ const BusAnimation = () => (
       transition={{ duration: 0.5 }}
     >
       <Bus size={16} className="mr-2 text-nthu-600" />
-      <span className="text-sm font-medium">Campus Bus Schedule</span>
+      <span className="text-sm font-medium">{title}</span>
     </motion.div>
 
     <motion.div className="relative flex-1 bg-muted rounded-md overflow-hidden">
@@ -332,17 +332,17 @@ const BusAnimation = () => (
   </motion.div>
 );
 
-const ToolsAnimation = () => (
+const ToolsAnimation = ({ labels }: { labels: string[] }) => (
   <motion.div
     className="w-full h-full grid grid-cols-2 gap-3 p-4"
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
   >
     {[
-      { icon: <Calendar size={24} />, label: "Calendar" },
-      { icon: <Bus size={24} />, label: "Bus Schedule" },
-      { icon: <BookOpen size={24} />, label: "Courses" },
-      { icon: <Wrench size={24} />, label: "Settings" },
+      { icon: <Calendar size={24} />, label: labels[0] },
+      { icon: <Bus size={24} />, label: labels[1] },
+      { icon: <BookOpen size={24} />, label: labels[2] },
+      { icon: <Wrench size={24} />, label: labels[3] },
     ].map((tool, i) => (
       <motion.div
         key={i}
@@ -383,12 +383,21 @@ const Help = ({ children }: { children?: ReactNode }) => {
       description: dict.help.dashboard.description,
     },
     {
-      component: <BusAnimation />,
+      component: <BusAnimation title={dict.help.bus.title} />,
       title: dict.help.bus.title,
       description: dict.help.bus.description,
     },
     {
-      component: <ToolsAnimation />,
+      component: (
+        <ToolsAnimation
+          labels={[
+            dict.help.tools.calendar,
+            dict.help.tools.bus_schedule,
+            dict.help.tools.courses,
+            dict.help.tools.settings,
+          ]}
+        />
+      ),
       title: dict.help.tools.title,
       description: dict.help.tools.description,
     },
@@ -437,7 +446,7 @@ const Help = ({ children }: { children?: ReactNode }) => {
             onClick={() => setOpen(true)}
           >
             <HelpCircle size="16" />
-            <span className="hidden md:inline-block">Help</span>
+            <span className="hidden md:inline-block">{dict.help.button}</span>
           </Button>
         )}
       </DialogTrigger>

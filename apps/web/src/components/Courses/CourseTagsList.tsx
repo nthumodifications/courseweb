@@ -35,12 +35,17 @@ const CourseTagList = ({ course }: { course: CourseDefinition }) => {
       <HighlightItem className="bg-purple-50 text-purple-900 dark:bg-purple-950 dark:text-purple-100">
         <span className="">
           {course.capacity ?? "-"}
-          {(course.reserve ?? 0) > 0 && <>{` 保 ${course.reserve}`}</>}人
+          {(course.reserve ?? 0) > 0 && (
+            <>{` ${dict.course.tags.reserve_prefix} ${course.reserve}`}</>
+          )}{" "}
+          {dict.course.tags.people}
         </span>
       </HighlightItem>
       {course.enrolled != undefined && (
         <HighlightItem className="bg-violet-50 text-violet-900 dark:bg-violet-950 dark:text-violet-100">
-          <span className="">{`${course.enrolled} 選上 `}</span>
+          <span className="">
+            {course.enrolled} {dict.course.tags.enrolled_suffix}{" "}
+          </span>
         </HighlightItem>
       )}
       <HighlightItem>
@@ -50,37 +55,37 @@ const CourseTagList = ({ course }: { course: CourseDefinition }) => {
       </HighlightItem>
       {course.tags.includes("16周") && (
         <HighlightItem className="bg-green-50 text-green-900 dark:bg-green-950 dark:text-green-100">
-          <span className="">16 週</span>
+          <span className="">{dict.course.tags.sixteen_weeks}</span>
         </HighlightItem>
       )}
       {course.tags.includes("18周") && (
         <HighlightItem className="bg-red-50 text-red-900 dark:bg-red-950 dark:text-red-100">
-          <span className="">18 週</span>
+          <span className="">{dict.course.tags.eighteen_weeks}</span>
         </HighlightItem>
       )}
       {course.language == "英" ? (
         <HighlightItem className="bg-cyan-50 text-cyan-900 dark:bg-cyan-950 dark:text-cyan-100">
-          English
+          {dict.course.tags.english}
         </HighlightItem>
       ) : (
         <HighlightItem className="bg-amber-50 text-amber-900 dark:bg-amber-950 dark:text-amber-100">
-          國語
+          {dict.course.tags.chinese}
         </HighlightItem>
       )}
       {/* bg-indigo-50 text-indigo-900 dark:bg-indigo-950 dark:text-indigo-100 */}
       {course.tags.includes("X-Class") && (
         <HighlightItem className="bg-red-50 text-red-900 dark:bg-red-950 dark:text-red-100">
-          X-Class
+          {dict.course.tags.x_class}
         </HighlightItem>
       )}
       {(course.ge_target?.trim() || "").length > 0 && (
         <HighlightItem className="bg-pink-50 text-pink-900 dark:bg-pink-950 dark:text-pink-100">
-          {course.ge_target} 通識
+          {course.ge_target} {dict.course.tags.general_education}
         </HighlightItem>
       )}
       {getGECType(course.ge_type || "") && (
         <HighlightItem className="bg-green-50 text-green-900 dark:bg-green-950 dark:text-green-100">
-          核通 {getGECType(course.ge_type!)}
+          {dict.course.tags.general_education_core} {getGECType(course.ge_type!)}
         </HighlightItem>
       )}
     </div>

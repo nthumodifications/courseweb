@@ -1,5 +1,4 @@
 import { createInfiniteHitsSessionStorageCache } from "instantsearch.js/es/lib/infiniteHitsCache";
-import algoliasearch from "algoliasearch/lite";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -11,10 +10,6 @@ import { Badge } from "@courseweb/ui";
 import { InstantSearch, useCurrentRefinements } from "react-instantsearch";
 import { Calendar, FilterIcon } from "lucide-react";
 
-const searchClient = algoliasearch(
-  import.meta.env.VITE_ALGOLIA_APP_ID!,
-  import.meta.env.VITE_ALGOLIA_SEARCH_KEY!,
-);
 const sessionStorageCache = createInfiniteHitsSessionStorageCache();
 
 import { Separator } from "@courseweb/ui";
@@ -30,6 +25,9 @@ import { ItemDocType } from "@/app/[lang]/(mods-pages)/student/planner/rxdb";
 import { useSettings } from "@/hooks/contexts/settings";
 import ResetFiltersButton from "../../../courses/ResetFiltersButton";
 import SearchBox from "@/components/SearchBox/SearchBox";
+import { createResilientSearchClient } from "@/lib/search-client";
+
+const searchClient = createResilientSearchClient();
 
 type CourseSearchContainerProps = {
   onAdd: (course: MinimalCourse, keepSemester?: boolean) => void;
@@ -94,12 +92,12 @@ const TakenCoursesPanel = ({
                           <span className="mr-2">{course.raw_id.slice(5)}</span>
                           {course.credits && (
                             <span className="bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded text-xs">
-                              {course.credits} 學分
+                              {course.credits} {dict.course.credits}
                             </span>
                           )}
                           {course.isSimilar && (
                             <span className="bg-yellow-100 dark:bg-yellow-800 px-2 py-0.5 rounded text-xs ml-2">
-                              已有加入相似課程
+                              {dict.planner.coursePicker.similarCourse}
                             </span>
                           )}
                         </div>

@@ -8,6 +8,10 @@ routes = [
 ]
 minify = true
 
+# Set these as Worker secrets. The backup pair is optional and must belong to
+# a different Algolia application.
+# ALGOLIA_APP_ID, ALGOLIA_API_KEY, ALGOLIA_BACKUP_APP_ID, ALGOLIA_BACKUP_API_KEY
+
 [dev]
 port = 5001
 local_protocol = "http"

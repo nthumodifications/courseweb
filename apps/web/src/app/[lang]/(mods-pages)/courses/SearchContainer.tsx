@@ -2,9 +2,9 @@ import {
   useStats,
   useInfiniteHits,
   useInstantSearch,
+  useSearchBox,
 } from "react-instantsearch";
 import { createInfiniteHitsSessionStorageCache } from "instantsearch.js/es/lib/infiniteHitsCache";
-import algoliasearch from "algoliasearch/lite";
 import useDictionary from "@/dictionaries/useDictionary";
 import CourseListItem from "@/components/Courses/CourseListItem";
 import Filter from "./Filters";
@@ -28,8 +28,10 @@ import { lastSemester } from "@courseweb/shared";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { MinimalCourse } from "@/types/courses";
 import { courseEvents } from "@/lib/trackingEvents";
+import SearchDegradationBanner from "@/components/Search/SearchDegradationBanner";
+import type { ResilientSearchClient } from "@/lib/search-client";
 
-type SearchClient = ReturnType<typeof algoliasearch>;
+type SearchClient = ResilientSearchClient;
 type InfiniteHitsCache = ReturnType<
   typeof createInfiniteHitsSessionStorageCache
 >;
@@ -41,6 +43,7 @@ const Hit = memo(({ hit }: { hit: any }) => {
 Hit.displayName = "Hit";
 
 export function InfiniteHits(props: Parameters<typeof useInfiniteHits>[0]) {
+  const dict = useDictionary();
   const { hits, isLastPage, showMore } = useInfiniteHits({
     showPrevious: false,
     ...props,
@@ -101,12 +104,14 @@ export function InfiniteHits(props: Parameters<typeof useInfiniteHits>[0]) {
         {/* Status messages */}
         {status === "error" && (
           <div className="text-center text-gray-500 mt-4">
-            An Error Occurred
+            {dict.common.error}
           </div>
         )}
 
         {isLastPage && hits.length > 0 && status === "idle" && (
-          <div className="text-center text-gray-500 mt-4">No more results</div>
+          <div className="text-center text-gray-500 mt-4">
+            {dict.course.search.no_more_results}
+          </div>
         )}
       </div>
     </div>
@@ -116,6 +121,7 @@ export function InfiniteHits(props: Parameters<typeof useInfiniteHits>[0]) {
 // Memoize the entire SearchContainer component
 const SearchContainer = memo(
   ({
+    searchClient,
     sessionStorageCache,
   }: {
     searchClient: SearchClient;
@@ -124,7 +130,7 @@ const SearchContainer = memo(
     const dict = useDictionary();
     const { lang } = useParams<{ lang: string }>();
     const { nbHits, processingTimeMS } = useStats();
-    const { query } = useInstantSearch();
+    const { query } = useSearchBox();
     const previousNbHitsRef = useRef<number>(0);
 
     const { items } = useCustomMenu({
@@ -161,6 +167,7 @@ const SearchContainer = memo(
         </div>
 
         <div className="flex flex-col gap-4 flex-1 px-2">
+          <SearchDegradationBanner searchClient={searchClient} />
           <div className="">
             <div className="flex items-center gap-1">
               <SemesterSelector />
@@ -171,7 +178,7 @@ const SearchContainer = memo(
               />
               <Separator orientation="vertical" className="h-full" />
               <Link to={`/${lang}/chat`}>
-                <Button variant="ghost" size="icon" title="AI 課程助手">
+                <Button variant="ghost" size="icon" title={dict.chat.title}>
                   <Sparkles size="16" />
                 </Button>
               </Link>

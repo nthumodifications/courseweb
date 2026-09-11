@@ -1,10 +1,13 @@
-import { format } from "date-fns";
 import useTime from "@/hooks/useTime";
+import { formatTaipei, toTaipeiWallClock } from "@/helpers/dates";
 import { useEffect } from "react";
 import { useCalendar } from "./calendar_hook";
 
 export const CurrentTimePointer = () => {
-  const date = useTime();
+  // The grid is a Taipei-time calendar, so the pointer must read Taipei
+  // wall-clock values rather than the browser's local ones.
+  const now = useTime();
+  const date = toTaipeiWallClock(now);
   const { HOUR_HEIGHT, displayContainer } = useCalendar();
 
   useEffect(() => {
@@ -30,7 +33,7 @@ export const CurrentTimePointer = () => {
       }}
     >
       <span className="-left-11 absolute text-nthu-600 font-semibold shadow-sm text-sm">
-        {format(date, "HH:mm")}
+        {formatTaipei(now, "HH:mm")}
       </span>
       <div className="w-2 h-2 bg-nthu-600 rounded-full shadow-md"></div>
       <div className="flex-1 h-0 outline outline-1 outline-nthu-600 shadow-md"></div>

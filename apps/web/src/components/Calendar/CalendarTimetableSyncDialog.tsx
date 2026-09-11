@@ -11,13 +11,16 @@ import {
 } from "@courseweb/ui";
 import { toPrettySemester } from "@/helpers/semester";
 import { TimetableSyncRequest } from "./calendar.types";
+import useDictionary from "@/dictionaries/useDictionary";
 
 const CalendarTimetableSyncDialog: FC<{
   request: TimetableSyncRequest;
+  deletionCount: number;
   onSyncAccept: (request: TimetableSyncRequest, accept: boolean) => void;
-}> = ({ request, onSyncAccept }) => {
+}> = ({ request, deletionCount, onSyncAccept }) => {
   const [open, setOpen] = useState(true);
   const handledRef = useRef(false);
+  const dict = useDictionary();
 
   useEffect(() => {
     setOpen(true);
@@ -40,19 +43,32 @@ const CalendarTimetableSyncDialog: FC<{
     >
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Timetable Update Found!</AlertDialogTitle>
+          <AlertDialogTitle>{dict.calendar.sync.title}</AlertDialogTitle>
           <AlertDialogDescription>
-            {request.reason == "new" ? "New" : "Modified"} courses found in
-            Semester {toPrettySemester(request.semester)}&apos;s Timetable. Do
-            you want to sync the changes?
+            {dict.calendar.sync.description
+              .replace(
+                "{reason}",
+                request.reason == "new"
+                  ? dict.calendar.sync.new_reason
+                  : dict.calendar.sync.modified_reason,
+              )
+              .replace("{semester}", toPrettySemester(request.semester))}
           </AlertDialogDescription>
+          {deletionCount > 0 && (
+            <AlertDialogDescription>
+              {dict.calendar.sync.deletion_warning.replace(
+                "{count}",
+                String(deletionCount),
+              )}
+            </AlertDialogDescription>
+          )}
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel onClick={() => handleClose(false)}>
-            Cancel
+            {dict.calendar.sync.cancel}
           </AlertDialogCancel>
           <AlertDialogAction onClick={() => handleClose(true)}>
-            Sync
+            {dict.calendar.sync.sync}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { getTaipeiDateKey } from "@/helpers/dates";
 const schemaDates = z
   .object({
     start: z.date(),
@@ -48,4 +49,19 @@ const schemaDetails = z.object({
   tag: z.string().min(2),
 });
 
-export const eventFormSchema = z.intersection(schemaDates, schemaDetails);
+export const eventFormSchema = z
+  .intersection(schemaDates, schemaDetails)
+  .superRefine((data, context) => {
+    if (
+      data.repeat.type !== null &&
+      data.repeat.mode === "date" &&
+      getTaipeiDateKey(new Date(data.repeat.value)) <
+        getTaipeiDateKey(data.start)
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Repeat end date cannot be earlier than event start date.",
+        path: ["repeat", "value"],
+      });
+    }
+  });

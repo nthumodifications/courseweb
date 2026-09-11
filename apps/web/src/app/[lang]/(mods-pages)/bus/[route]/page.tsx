@@ -149,7 +149,7 @@ const BusRouteDetailsPage = () => {
         {seoHelmet}
         <div className="flex justify-center items-center min-h-[200px]">
           <div className="text-red-500">
-            Failed to load bus data. Please try again later.
+            {dict.bus.load_error}
           </div>
         </div>
       </>

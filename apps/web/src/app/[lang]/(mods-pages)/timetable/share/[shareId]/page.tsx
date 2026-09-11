@@ -6,7 +6,7 @@ import {
 } from "@/hooks/useTimetableShare";
 import { useAuth } from "react-oidc-context";
 import Timetable from "@/components/Timetable/Timetable";
-import { createTimetableFromCourses } from "@/helpers/timetable";
+import { createTimetableFromCoursesAndCustomItems } from "@/helpers/timetable";
 import { MinimalCourse } from "@/types/courses";
 import { renderTimetableSlot } from "@/helpers/timetable_course";
 import client from "@/config/api";
@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import SemesterSwitcher from "@/components/Timetable/SemesterSwitcher";
+import { normalizeCustomTimetableStorage } from "@/hooks/syncedStorage";
 
 const ShareViewPage = () => {
   const { shareId } = useParams<{ shareId: string; lang: string }>();
@@ -49,6 +50,7 @@ const ShareViewPage = () => {
     addCourse,
     setCourses,
     setColorMap,
+    setCustomItems,
     currentColors,
   } = useUserTimetable();
   const queryClient = useQueryClient();
@@ -79,8 +81,9 @@ const ShareViewPage = () => {
     enabled: courseIds.length > 0,
   });
 
-  const timetableData = createTimetableFromCourses(
+  const timetableData = createTimetableFromCoursesAndCustomItems(
     courses as MinimalCourse[],
+    share?.customItems?.[activeSem] ?? [],
     {},
   );
   const totalCredits = (courses as MinimalCourse[]).reduce(
@@ -110,6 +113,24 @@ const ShareViewPage = () => {
     });
     addCourse(courseIds);
     setColorMap((prev) => ({ ...prev, ...partialColorMap }));
+    const importedCustomItems =
+      normalizeCustomTimetableStorage({
+        [activeSem]: share?.customItems?.[activeSem] ?? [],
+      })[activeSem] ?? [];
+    if (importedCustomItems.length > 0) {
+      setCustomItems((prev) => ({
+        ...prev,
+        [activeSem]: [
+          ...(prev[activeSem] ?? []),
+          ...importedCustomItems.filter(
+            (item) =>
+              !(prev[activeSem] ?? []).some(
+                (current) => current.id === item.id,
+              ),
+          ),
+        ],
+      }));
+    }
     setSemester(activeSem);
     navigate(-1);
     toast({
@@ -194,10 +215,14 @@ const ShareViewPage = () => {
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           ) : (
-            <Timetable
-              timetableData={timetableData}
-              renderTimetableSlot={renderTimetableSlot}
-            />
+            <div className="flex min-w-0 flex-col gap-4">
+              <Timetable
+                timetableData={timetableData}
+                renderTimetableSlot={(course, tableDim, vertical) =>
+                  renderTimetableSlot(course, tableDim, vertical, false)
+                }
+              />
+            </div>
           )}
         </div>
 

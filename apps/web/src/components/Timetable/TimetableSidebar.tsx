@@ -7,6 +7,8 @@ import {
   Users,
   ChevronRight,
   Download,
+  CalendarClock,
+  Trash2,
 } from "lucide-react";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { useNavigate, useParams } from "react-router-dom";
@@ -37,6 +39,21 @@ import { useAuth } from "react-oidc-context";
 import { useQuery } from "@tanstack/react-query";
 import { useTimetableShare } from "@/hooks/useTimetableShare";
 import { toPrettySemester } from "@/helpers/semester";
+import { Popover, PopoverContent, PopoverTrigger } from "@courseweb/ui";
+import Compact from "@uiw/react-color-compact";
+import { useMemo } from "react";
+import { TimetableCustomItemDrawer } from "./TimetableItemDrawer";
+import { CustomTimetableItem } from "@/types/timetable";
+
+const createEmptyCustomItem = (color: string): CustomTimetableItem => ({
+  // crypto.randomUUID rather than Math.random: the project already moved its
+  // other generated ids onto a cryptographic source, and this one is persisted
+  // and shared in timetable share payloads.
+  id: `custom-${crypto.randomUUID()}`,
+  title: "",
+  color,
+  slots: [{ day: 0, start: "08:00", end: "08:50" }],
+});
 
 const TimetableSidebar = ({
   vertical,
@@ -56,7 +73,21 @@ const TimetableSidebar = ({
     colorMap,
     setColorMap,
     currentColors,
+    semesterCustomItems,
+    addCustomItem,
+    updateCustomItem,
+    deleteCustomItem,
+    setCustomItemColor,
   } = useUserTimetable();
+
+  const emptyCustomItem = useMemo(
+    () =>
+      createEmptyCustomItem(
+        currentColors[semesterCustomItems.length % currentColors.length] ??
+          "#555555",
+      ),
+    [currentColors, semesterCustomItems.length],
+  );
 
   const navigate = useNavigate();
   const { lang } = useParams<{ lang: string }>();
@@ -104,19 +135,92 @@ const TimetableSidebar = ({
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Primary action — add courses */}
-      <Dialog>
-        <DialogTitle className="hidden">AddToSem</DialogTitle>
-        <DialogTrigger asChild>
-          <Button variant="outline" className="w-full">
-            <Plus className="w-4 h-4 mr-2" />
+      {/* Primary actions */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <Dialog>
+          <DialogTitle className="hidden">
             {dict.course.item.add_to_semester}
+          </DialogTitle>
+          <DialogTrigger asChild>
+            <Button variant="outline" className="w-full">
+              <Plus className="w-4 h-4 mr-2" />
+              {dict.course.item.add_to_semester}
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="p-0 h-[100dvh] max-w-screen w-screen gap-0 px-2 pt-6 md:p-8">
+            <CourseSearchContainerDynamic />
+          </DialogContent>
+        </Dialog>
+        <TimetableCustomItemDrawer
+          item={emptyCustomItem}
+          onSave={addCustomItem}
+        >
+          <Button variant="outline" className="w-full">
+            <CalendarClock className="w-4 h-4 mr-2" />
+            {dict.timetable.custom_items.add}
           </Button>
-        </DialogTrigger>
-        <DialogContent className="p-0 h-[100dvh] max-w-screen w-screen gap-0 px-2 pt-6 md:p-8">
-          <CourseSearchContainerDynamic />
-        </DialogContent>
-      </Dialog>
+        </TimetableCustomItemDrawer>
+      </div>
+
+      {semesterCustomItems.length > 0 && (
+        <div className="flex flex-col gap-1">
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide px-1">
+            {dict.timetable.custom_items.title}
+          </span>
+          {semesterCustomItems.map((item) => (
+            <div key={item.id} className="flex items-center gap-1">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    className="p-1 rounded-md hover:outline outline-1 outline-border"
+                    aria-label={dict.timetable.custom_items.color_label}
+                  >
+                    <span
+                      className="block h-4 w-4 rounded-full"
+                      style={{ backgroundColor: item.color }}
+                    />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="p-0 w-auto">
+                  <Compact
+                    color={item.color}
+                    onChange={(color) => setCustomItemColor(item.id, color.hex)}
+                    colors={currentColors}
+                  />
+                </PopoverContent>
+              </Popover>
+              <TimetableCustomItemDrawer
+                item={item}
+                onSave={updateCustomItem}
+                onDelete={() => deleteCustomItem(item.id)}
+              >
+                <button
+                  type="button"
+                  className="flex-1 min-w-0 text-left rounded-md px-2 py-1.5 hover:bg-accent transition-colors"
+                >
+                  <span className="block text-sm truncate">{item.title}</span>
+                  <span className="block text-xs text-muted-foreground truncate">
+                    {item.shortCode ||
+                      item.venue ||
+                      dict.timetable.custom_items.custom_label}
+                  </span>
+                </button>
+              </TimetableCustomItemDrawer>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 shrink-0"
+                onClick={() => deleteCustomItem(item.id)}
+                aria-label={dict.timetable.custom_items.delete}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Course list — the main content */}
       <TimetableCourseList semester={semester} vertical={vertical} />
@@ -126,14 +230,14 @@ const TimetableSidebar = ({
         <div className="flex flex-col gap-1">
           <div className="flex items-center justify-between px-1">
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Groups
+              {dict.timetable.sidebar.groups}
             </span>
             <ShareTimetableDialogDynamic initialTab="groups">
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-6 w-6"
-                title="Create a group"
+                title={dict.timetable.sidebar.create_group}
               >
                 <Plus className="h-3.5 w-3.5" />
               </Button>
@@ -145,7 +249,7 @@ const TimetableSidebar = ({
                 type="button"
                 className="text-xs text-muted-foreground hover:text-foreground px-1 py-1 text-left transition-colors"
               >
-                + Create or join a group
+                + {dict.timetable.sidebar.create_or_join_group}
               </button>
             </ShareTimetableDialogDynamic>
           ) : (
@@ -163,7 +267,9 @@ const TimetableSidebar = ({
                   <span className="text-sm truncate block">{group.name}</span>
                   <span className="text-xs text-muted-foreground">
                     {toPrettySemester(group.semester)} · {group.members.length}{" "}
-                    member{group.members.length !== 1 ? "s" : ""}
+                    {group.members.length !== 1
+                      ? dict.timetable.sidebar.members
+                      : dict.timetable.sidebar.member}
                   </span>
                 </span>
                 <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
@@ -194,7 +300,7 @@ const TimetableSidebar = ({
             variant="ghost"
             size="icon"
             className="h-8 w-8"
-            title="Download / export"
+            title={dict.timetable.sidebar.download_export}
           >
             <Download className="w-4 h-4" />
           </Button>
@@ -205,7 +311,7 @@ const TimetableSidebar = ({
             variant="ghost"
             size="icon"
             className="h-8 w-8"
-            title="Share timetable"
+            title={dict.timetable.sidebar.share_timetable}
           >
             <Share2 className="w-4 h-4" />
           </Button>
@@ -218,7 +324,9 @@ const TimetableSidebar = ({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
-            <DropdownMenuLabel>Customizations</DropdownMenuLabel>
+            <DropdownMenuLabel>
+              {dict.timetable.sidebar.customizations}
+            </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => handleGroupByDepartment(semester)}>
               {dict.timetable.actions.group_dept}
@@ -235,7 +343,7 @@ const TimetableSidebar = ({
           className="ml-auto flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
         >
           <Globe className="w-3 h-3" />
-          Community
+          {dict.timetable.sidebar.community}
         </button>
       </div>
 

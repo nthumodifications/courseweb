@@ -18,7 +18,7 @@
     "build": "bun run prisma:generate && tsc --outDir dist --skipLibCheck --noEmitOnError false --allowJs --noImplicitReturns false --noUnusedLocals false --noUnusedParameters false",
     "clean": "rm -rf dist",
     "lint": "echo 'API lint check'",
-    "test": "echo 'API tests'"
+    "test": "bun test src"
   },
   "dependencies": {
     "@algolia/requester-fetch": "^4.23.3",

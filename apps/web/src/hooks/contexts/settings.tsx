@@ -37,7 +37,7 @@ type HeadlessAISStorage =
       lastUpdated: number;
     };
 const useSettingsProvider = () => {
-  const language = useParams().lang as Language;
+  const language: Language = useParams().lang === "en" ? "en" : "zh";
   const navigate = useNavigate();
   const location = useLocation();
   const pathname = location.pathname;

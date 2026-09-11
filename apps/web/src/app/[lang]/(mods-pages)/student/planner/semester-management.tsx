@@ -32,6 +32,7 @@ import { cn } from "@/lib/utils";
 import useDictionary from "@/dictionaries/useDictionary";
 import { ResponsiveDialog } from "./components/responsive-dialog";
 import { useConfirm } from "./lib/use-confirm";
+import { useSettings } from "@/hooks/contexts/settings";
 
 // Static schema kept purely for `z.infer` typing purposes. The actual
 // resolver used by the form is built at runtime (see `useMemo` below) so
@@ -63,6 +64,7 @@ export function SemesterManagement({
   onSemestersUpdated,
 }: SemesterManagementProps) {
   const dict = useDictionary();
+  const { language } = useSettings();
   const sm = dict.planner.semesterManagement as Record<string, string>;
   const common = dict.planner.common;
   const status = dict.planner.status;
@@ -511,7 +513,9 @@ export function SemesterManagement({
                         <p className="mt-1">
                           {new Date(
                             selectedSemester.startDate,
-                          ).toLocaleDateString()}
+                          ).toLocaleDateString(
+                            language === "en" ? "en-US" : "zh-TW",
+                          )}
                         </p>
                       </div>
                     )}
@@ -524,7 +528,9 @@ export function SemesterManagement({
                         <p className="mt-1">
                           {new Date(
                             selectedSemester.endDate,
-                          ).toLocaleDateString()}
+                          ).toLocaleDateString(
+                            language === "en" ? "en-US" : "zh-TW",
+                          )}
                         </p>
                       </div>
                     )}

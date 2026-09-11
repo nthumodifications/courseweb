@@ -1,4 +1,5 @@
 import { toPrettySemester } from "@/helpers/semester";
+import useDictionary from "@/dictionaries/useDictionary";
 import {
   Line,
   LineChart,
@@ -9,6 +10,7 @@ import {
 } from "recharts";
 
 export const GPAChart = ({ lineData }: { lineData: any[] }) => {
+  const dict = useDictionary();
   return (
     <div className="h-[200px]">
       <ResponsiveContainer width="100%" height="100%">
@@ -29,7 +31,7 @@ export const GPAChart = ({ lineData }: { lineData: any[] }) => {
                     <div className="grid grid-cols-2 gap-2">
                       <div className="flex flex-col">
                         <span className="text-[0.70rem] uppercase text-muted-foreground">
-                          Semester
+                          {dict.grade.semester}
                         </span>
                         <span className="font-bold text-muted-foreground">
                           {toPrettySemester(payload[0].payload.semester)}
@@ -37,7 +39,7 @@ export const GPAChart = ({ lineData }: { lineData: any[] }) => {
                       </div>
                       <div className="flex flex-col">
                         <span className="text-[0.70rem] uppercase text-muted-foreground">
-                          GPA
+                          {dict.grade.gpa}
                         </span>
                         <span className="font-bold">{payload[0].value}</span>
                       </div>

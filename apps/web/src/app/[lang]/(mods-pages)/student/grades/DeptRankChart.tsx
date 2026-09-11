@@ -1,4 +1,5 @@
 import { toPrettySemester } from "@/helpers/semester";
+import useDictionary from "@/dictionaries/useDictionary";
 import {
   Line,
   LineChart,
@@ -9,6 +10,7 @@ import {
 } from "recharts";
 
 export const DeptRankChart = ({ lineData }: { lineData: any[] }) => {
+  const dict = useDictionary();
   const max_dept_rank = Math.max(
     ...lineData.map((semester) => semester.max_dept_rank),
   );
@@ -32,7 +34,7 @@ export const DeptRankChart = ({ lineData }: { lineData: any[] }) => {
                     <div className="grid grid-cols-2 gap-2">
                       <div className="flex flex-col">
                         <span className="text-[0.70rem] uppercase text-muted-foreground">
-                          Semester
+                          {dict.grade.semester}
                         </span>
                         <span className="font-bold text-muted-foreground">
                           {toPrettySemester(payload[0].payload.semester)}
@@ -40,7 +42,7 @@ export const DeptRankChart = ({ lineData }: { lineData: any[] }) => {
                       </div>
                       <div className="flex flex-col">
                         <span className="text-[0.70rem] uppercase text-muted-foreground">
-                          系排名
+                          {dict.grade.dept_rank}
                         </span>
                         <span className="font-bold">
                           {payload[0].payload.dept_rank}

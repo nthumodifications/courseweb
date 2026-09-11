@@ -12,6 +12,7 @@ import {
   CommandList,
 } from "@courseweb/ui";
 import { cn } from "@courseweb/ui";
+import useDictionary from "@/dictionaries/useDictionary";
 
 export const AutocompleteShadcn = ({
   control,
@@ -29,6 +30,7 @@ export const AutocompleteShadcn = ({
   loading: boolean;
 }) => {
   const [open, setOpen] = useState(false);
+  const dict = useDictionary();
   return (
     <FormField
       control={control}
@@ -69,9 +71,9 @@ export const AutocompleteShadcn = ({
               </div>
               <PopoverContent className="w-full p-0" side="bottom">
                 <Command className="max-h-60">
-                  <CommandInput placeholder="Search classes   ..." />
+                  <CommandInput placeholder={dict.common.search} />
                   <CommandList>
-                    <CommandEmpty>No classes found.</CommandEmpty>
+                    <CommandEmpty>{dict.common.no_results}</CommandEmpty>
                     <CommandGroup>
                       {options.map((dept) => (
                         <CommandItem

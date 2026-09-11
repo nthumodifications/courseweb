@@ -6,6 +6,7 @@ import { ChevronLeft } from "lucide-react";
 import { Language } from "@/types/settings";
 import { useEffect } from "react";
 import { courseEvents } from "@/lib/trackingEvents";
+import useDictionary from "@/dictionaries/useDictionary";
 
 const CourseDetailPage = () => {
   const { lang, courseId: rawCourseId } = useParams<{
@@ -13,6 +14,7 @@ const CourseDetailPage = () => {
     courseId: string;
   }>();
   const courseId = decodeURI(rawCourseId ?? "");
+  const dict = useDictionary();
 
   // Track course detail view
   useEffect(() => {
@@ -27,7 +29,7 @@ const CourseDetailPage = () => {
         <Button variant="ghost" asChild size="sm">
           <Link to={`/${lang}/courses`}>
             <ChevronLeft className="w-4 h-4 mr-2" />
-            回到課程列表
+            {dict.common.back}
           </Link>
         </Button>
       </div>

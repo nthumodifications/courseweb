@@ -1,5 +1,6 @@
 import { useAuth } from "react-oidc-context";
 import { useCallback, useMemo } from "react";
+import { CustomTimetableItemInput } from "@/types/timetable";
 
 const API_BASE = import.meta.env.VITE_COURSEWEB_API_URL as string;
 
@@ -9,6 +10,7 @@ export type SharedTimetable = {
   displayName?: string;
   semesters: string[];
   courses: Record<string, string[]>;
+  customItems?: Record<string, CustomTimetableItemInput[]>;
   courseNotes: Record<string, string>;
   visibility: "link_only" | "public";
   isLive: boolean;
@@ -111,6 +113,7 @@ export function useTimetableShare() {
       displayName?: string;
       semesters: string[];
       courses: Record<string, string[]>;
+      customItems?: Record<string, CustomTimetableItemInput[]>;
       courseNotes?: Record<string, string>;
       visibility?: "link_only" | "public";
       isLive?: boolean;
@@ -136,6 +139,7 @@ export function useTimetableShare() {
       data: Partial<{
         displayName: string;
         courses: Record<string, string[]>;
+        customItems: Record<string, CustomTimetableItemInput[]>;
         courseNotes: Record<string, string>;
         visibility: "link_only" | "public";
         isLive: boolean;

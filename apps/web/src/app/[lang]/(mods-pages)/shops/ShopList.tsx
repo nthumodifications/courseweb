@@ -23,9 +23,11 @@ import {
 // import shops from "./shops.json"
 import ShopItem from "./ShopItem";
 import areas from "./areas.json";
+import useDictionary from "@/dictionaries/useDictionary";
 
 const Shops = ({ data }: { data: Array<{ restaurants: Array<any> }> }) => {
   const shops = data.map((area) => area.restaurants).flat();
+  const dict = useDictionary();
 
   const [search, setSearch] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
@@ -38,7 +40,7 @@ const Shops = ({ data }: { data: Array<{ restaurants: Array<any> }> }) => {
           <Search />
           <Input
             type="text"
-            placeholder="Search for shops"
+            placeholder={dict.shops.search_placeholder}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -46,7 +48,7 @@ const Shops = ({ data }: { data: Array<{ restaurants: Array<any> }> }) => {
 
         {search && (
           <div className="mt-4">
-            <span>Search results for </span>
+            <span>{dict.shops.search_results_prefix} </span>
             <span className="font-bold">{`"${search}"`}</span>
           </div>
         )}
@@ -58,7 +60,7 @@ const Shops = ({ data }: { data: Array<{ restaurants: Array<any> }> }) => {
             onPressedChange={setFilterOpen}
           >
             <AlarmClockCheck size="16" />
-            Open now
+            {dict.shops.open_now}
           </Toggle>
           {/* <Toggle className="flex items-center gap-2 border bg-background">
             <MapPinned size="16" />
@@ -68,11 +70,11 @@ const Shops = ({ data }: { data: Array<{ restaurants: Array<any> }> }) => {
             <SelectTrigger className="w-[180px]">
               <div className="flex items-center gap-2">
                 <Store size="16" />
-                <SelectValue placeholder="Select area" />
+                <SelectValue placeholder={dict.shops.area_placeholder} />
               </div>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="anywhere">Anywhere</SelectItem>
+              <SelectItem value="anywhere">{dict.shops.area_all}</SelectItem>
               {areas.map((area) => (
                 <SelectItem key={area} value={area}>
                   {area}

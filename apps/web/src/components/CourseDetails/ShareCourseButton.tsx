@@ -1,18 +1,20 @@
 import { Share2 } from "lucide-react";
 import { Button } from "@courseweb/ui";
 import { toast } from "@courseweb/ui";
+import useDictionary from "@/dictionaries/useDictionary";
 
 type ShareCourseButtonProps = {
   displayName: string;
   link: string;
 };
 const ShareCourseButton = ({ displayName, link }: ShareCourseButtonProps) => {
+  const dict = useDictionary();
   const handleShare = () => {
     if (navigator.share) {
       navigator
         .share({
-          title: "分享:" + displayName,
-          text: `Check out this course: ${displayName}`,
+          title: dict.dialogs.ShareCourseButton.share_prefix + displayName,
+          text: dict.dialogs.ShareCourseButton.share_text_prefix + displayName,
           url: link,
         })
         .then(() => console.log("Successful share"))
@@ -23,7 +25,7 @@ const ShareCourseButton = ({ displayName, link }: ShareCourseButtonProps) => {
         .writeText(window.location.href)
         .then(() =>
           toast({
-            title: "Link copied to clipboard",
+            title: dict.dialogs.ShareCourseButton.link_copied,
           }),
         )
         .catch((error) => console.log("Error copying", error));
@@ -33,7 +35,7 @@ const ShareCourseButton = ({ displayName, link }: ShareCourseButtonProps) => {
   return (
     <Button variant="outline" onClick={handleShare}>
       <Share2 className="w-4 h-4 mr-2" />
-      分享
+      {dict.dialogs.ShareCourseButton.button}
     </Button>
   );
 };

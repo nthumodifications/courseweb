@@ -17,6 +17,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@courseweb/ui";
 import { useState } from "react";
 import useTime from "@/hooks/useTime";
 import { semesterInfo } from "@courseweb/shared";
+import useDictionary from "@/dictionaries/useDictionary";
+import { useSettings } from "@/hooks/contexts/settings";
 
 type OccupancyItem = {
   project_id: string;
@@ -191,24 +193,25 @@ function matchFacility(
 }
 
 const StatusBadge = ({ slots, now }: { slots: TimeSlot[]; now: Date }) => {
+  const dict = useDictionary();
   const status = getOpenStatus(slots, now);
   if (status.type === "open") {
     return (
       <span className="text-sm font-semibold text-green-600 dark:text-green-400 whitespace-nowrap">
-        OPEN TILL {status.until}
+        {dict.sports.open_until.replace("{time}", status.until)}
       </span>
     );
   }
   if (status.type === "opens") {
     return (
       <span className="text-sm font-semibold text-yellow-600 dark:text-yellow-400 whitespace-nowrap">
-        OPENS AT {status.at}
+        {dict.sports.opens_at.replace("{time}", status.at)}
       </span>
     );
   }
   return (
     <span className="text-sm font-semibold text-muted-foreground whitespace-nowrap">
-      CLOSED TODAY
+      {dict.sports.closed_today}
     </span>
   );
 };
@@ -222,6 +225,7 @@ const ScheduleSheet = ({
   open: boolean;
   onClose: () => void;
 }) => {
+  const dict = useDictionary();
   const currentSemesterLabel = getCurrentSemesterLabel();
   const bestAvailable = getBestAvailableSemester(
     facility.schedules.map((s) => s.semester),
@@ -285,13 +289,13 @@ const ScheduleSheet = ({
               )}
             >
               {s.semester}
-              {s.semester.includes(currentSemesterLabel) && " (current)"}
+              {s.semester.includes(currentSemesterLabel) && ` ${dict.sports.current}`}
             </button>
           ))}
           <button
             onClick={handleRefresh}
             disabled={refreshing}
-            title="Refresh cache"
+            title={dict.sports.refresh_cache}
             className="ml-auto p-1 text-muted-foreground hover:text-primary disabled:opacity-50 transition-colors"
           >
             {refreshing ? (
@@ -316,7 +320,7 @@ const ScheduleSheet = ({
                     <div className="flex flex-col gap-1">
                       {slots.length === 0 ? (
                         <span className="text-sm text-muted-foreground">
-                          Closed
+                          {dict.sports.closed}
                         </span>
                       ) : (
                         slots.map((slot, i) => (
@@ -343,14 +347,14 @@ const ScheduleSheet = ({
                 className="mt-3 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
               >
                 <ExternalLink className="w-3 h-3" />
-                原始 PDF
+                {dict.sports.view_original_pdf}
               </a>
             )}
           </>
         ) : (
           <div className="flex flex-col gap-2">
             <p className="text-sm text-muted-foreground">
-              Schedule not yet available.
+              {dict.sports.schedule_unavailable}
             </p>
             {schedule?.pdf_url && (
               <a
@@ -360,7 +364,7 @@ const ScheduleSheet = ({
                 className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
               >
                 <ExternalLink className="w-4 h-4" />
-                View original PDF
+                {dict.sports.view_original_pdf}
               </a>
             )}
           </div>
@@ -372,6 +376,8 @@ const ScheduleSheet = ({
 
 const SportsVenuesPage = () => {
   const now = useTime(60_000); // refresh every minute for status badges
+  const dict = useDictionary();
+  const { language } = useSettings();
   const [selectedFacility, setSelectedFacility] =
     useState<FacilitySchedule | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -444,22 +450,25 @@ const SportsVenuesPage = () => {
     <div className="flex flex-col px-4">
       {/* Header */}
       <div className="flex items-center justify-between py-3">
-        <h1 className="text-base font-semibold text-foreground">體育館場</h1>
+        <h1 className="text-base font-semibold text-foreground">{dict.sports.title}</h1>
         <div className="flex items-center gap-2">
           {dataUpdatedAt > 0 && (
             <span className="text-xs text-muted-foreground">
-              更新於{" "}
-              {new Date(dataUpdatedAt).toLocaleTimeString("zh-TW", {
+              {dict.sports.updated_at}{" "}
+              {new Date(dataUpdatedAt).toLocaleTimeString(
+                language === "en" ? "en-US" : "zh-TW",
+                {
                 hour: "2-digit",
                 minute: "2-digit",
                 second: "2-digit",
-              })}
+                },
+              )}
             </span>
           )}
           <button
             onClick={handleGlobalRefresh}
             disabled={refreshing}
-            title="Refresh schedule cache"
+            title={dict.sports.refresh_cache}
             className="p-1 text-muted-foreground hover:text-primary disabled:opacity-50 transition-colors"
           >
             {refreshing ? (
@@ -505,7 +514,7 @@ const SportsVenuesPage = () => {
                     badgeColor(ratio),
                   )}
                 >
-                  {item.entry_count_now} 人
+                  {item.entry_count_now} {dict.sports.occupancy_people}
                 </span>
                 {facility && (
                   <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
@@ -525,8 +534,8 @@ const SportsVenuesPage = () => {
 
               {/* Bottom row */}
               <div className="flex flex-row justify-between text-sm text-muted-foreground dark:text-neutral-400">
-                <span>使用率 {pct}%</span>
-                <span>今日進場 {item.entry_count_today} 人</span>
+                <span>{dict.sports.utilization} {pct}%</span>
+                <span>{dict.sports.entries_today} {item.entry_count_today} {dict.sports.occupancy_people}</span>
               </div>
             </div>
           );
@@ -578,15 +587,15 @@ const SportsVenuesPage = () => {
 
       {/* Data source */}
       <div className="mt-4 pb-4 text-xs text-muted-foreground">
-        資料來源：
+         {dict.sports.data_source}
         <a
           href="https://peo178.et.nthu.edu.tw"
           target="_blank"
           rel="noopener noreferrer"
           className="underline"
-          aria-label="國立清華大學體育中心 (opens in new tab)"
+          aria-label={dict.sports.source_aria}
         >
-          國立清華大學體育中心
+          {dict.sports.source_name}
         </a>
       </div>
 

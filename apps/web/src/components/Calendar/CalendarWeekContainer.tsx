@@ -1,16 +1,20 @@
-import {
-  differenceInDays,
-  eachHourOfInterval,
-  endOfDay,
-  format,
-  isSameMonth,
-  isToday,
-  startOfDay,
-  set,
-  addMinutes,
-} from "date-fns";
+import { eachHourOfInterval, format, addMinutes } from "date-fns";
 import { cn } from "@courseweb/ui";
 import { Separator } from "@courseweb/ui";
+import {
+  differenceInTaipeiCalendarDays,
+  endOfTaipeiDay,
+  formatTaipei,
+  fromTaipeiDateKey,
+  getTaipeiAcademicCalendarQuery,
+  getTaipeiDateKey,
+  isSameTaipeiMonth,
+  isTaipeiDateKey,
+  isTaipeiToday,
+  setTaipeiWallClock,
+  startOfTaipeiDay,
+  toTaipeiWallClock,
+} from "@/helpers/dates";
 import { useCalendar } from "./calendar_hook";
 import { CurrentTimePointer } from "./CurrentTimePointer";
 import { eventsToDisplay } from "@/components/Calendar/calendar_utils";
@@ -23,6 +27,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarEventInternal } from "./calendar.types";
@@ -32,6 +37,8 @@ import { AddEventButton } from "./AddEventButton";
 import { getNearestTime } from "@courseweb/ui";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import useCourseDates from "@/hooks/useCourseDates";
+import { getLocale } from "@/helpers/dateLocale";
+import useDictionary from "@/dictionaries/useDictionary";
 
 export const CalendarWeekContainer = ({
   displayWeek,
@@ -41,7 +48,8 @@ export const CalendarWeekContainer = ({
   overlayEvents?: CalendarEventInternal[];
 }) => {
   const { events, addEvent, displayContainer, HOUR_HEIGHT } = useCalendar();
-  const { showAcademicCalendar } = useSettings();
+  const { language, showAcademicCalendar } = useSettings();
+  const dict = useDictionary();
   const { courses } = useUserTimetable();
   const enrolledCourseIds = useMemo(
     () => Object.values(courses).flat(),
@@ -50,6 +58,7 @@ export const CalendarWeekContainer = ({
   const { getCourseDateForDay } = useCourseDates(enrolledCourseIds);
   const [eventFormOpen, setEventFormOpen] = useState(false);
   const [newEventTime, setNewEventTime] = useState<Date | null>(null);
+  const eventFormTriggerRef = useRef<HTMLElement | null>(null);
 
   // Function to handle clicks on empty time slots
   const handleEmptySlotClick = useCallback(
@@ -58,6 +67,8 @@ export const CalendarWeekContainer = ({
       if ((e.target as HTMLElement).closest(".event-item")) {
         return;
       }
+
+      eventFormTriggerRef.current = e.currentTarget as HTMLElement;
 
       // Calculate the time based on the click position
       const containerRect = displayContainer.current?.getBoundingClientRect();
@@ -72,7 +83,7 @@ export const CalendarWeekContainer = ({
       const minutes = Math.floor(totalMinutes % 60);
 
       // Create a new date with the day and calculated time
-      const clickedTime = set(day, {
+      const clickedTime = setTaipeiWallClock(day, {
         hours,
         minutes,
         seconds: 0,
@@ -80,16 +91,37 @@ export const CalendarWeekContainer = ({
       });
 
       // Round to nearest 10 minutes
-      const roundedTime = getNearestTime(clickedTime, 10);
-      const newTime = set(clickedTime, {
+      const roundedTime = getNearestTime(toTaipeiWallClock(clickedTime), 10);
+      const newTime = setTaipeiWallClock(day, {
         hours: roundedTime.hours,
         minutes: roundedTime.minutes,
+        seconds: 0,
+        milliseconds: 0,
       });
 
       setNewEventTime(newTime);
       setEventFormOpen(true);
     },
     [displayContainer, HOUR_HEIGHT],
+  );
+
+  const handleEmptySlotKeyDown = useCallback(
+    (day: Date, event: ReactKeyboardEvent<HTMLDivElement>) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+
+      event.preventDefault();
+      eventFormTriggerRef.current = event.currentTarget;
+      const nearestTime = getNearestTime(toTaipeiWallClock(new Date()), 10);
+      const keyboardTime = setTaipeiWallClock(day, {
+        hours: nearestTime.hours,
+        minutes: nearestTime.minutes,
+        seconds: 0,
+        milliseconds: 0,
+      });
+      setNewEventTime(keyboardTime);
+      setEventFormOpen(true);
+    },
+    [],
   );
 
   const {
@@ -99,27 +131,33 @@ export const CalendarWeekContainer = ({
   } = useQuery<CalendarEventInternal[]>({
     queryKey: [
       "event",
-      format(displayWeek[0], "yyyy-MM-dd"),
-      format(displayWeek[6], "yyyy-MM-dd"),
+      getTaipeiDateKey(displayWeek[0]),
+      getTaipeiDateKey(displayWeek[6]),
     ],
     queryFn: async () => {
+      const query = getTaipeiAcademicCalendarQuery(
+        getTaipeiDateKey(displayWeek[0]),
+        getTaipeiDateKey(displayWeek[6]),
+      );
+      if (!query) return [];
+
       const res = await client.acacalendar.$get({
-        query: {
-          start: displayWeek[0].toISOString(),
-          end: displayWeek[6].toISOString(),
-        },
+        query,
       });
       const nthuEvents = await res.json();
-      return nthuEvents.map((event, index) => {
+      return nthuEvents.flatMap((event) => {
+        if (!isTaipeiDateKey(event.date)) return [];
+        const start = fromTaipeiDateKey(event.date);
+        const end = endOfTaipeiDay(start);
         return {
           id: "nthu-" + event.id,
           title: event.summary,
-          start: startOfDay(new Date(event.date)),
-          end: endOfDay(new Date(event.date)),
+          start,
+          end,
           allDay: true,
           color: "#A973D9",
           tag: "NTHU",
-          actualEnd: endOfDay(new Date(event.date)),
+          actualEnd: end,
           repeat: null,
           readonly: true,
         } as CalendarEventInternal;
@@ -158,8 +196,8 @@ export const CalendarWeekContainer = ({
 
   const renderEventsInDay = useCallback(
     (day: Date) => {
-      const dayEnd = endOfDay(day);
-      const dayEvents = eventsToDisplay(events, startOfDay(day), dayEnd)
+      const dayEnd = endOfTaipeiDay(day);
+      const dayEvents = eventsToDisplay(events, startOfTaipeiDay(day), dayEnd)
         .filter((e) => !e.allDay)
         .map((event) => {
           const textColor = getContrastColor(event.color);
@@ -203,6 +241,7 @@ export const CalendarWeekContainer = ({
           HOUR_HEIGHT / 2,
           (heightMs / (1000 * 60 * 60)) * HOUR_HEIGHT,
         );
+        const displayStart = toTaipeiWallClock(event.displayStart);
 
         const courseDate = event.courseId
           ? getCourseDateForDay(event.courseId, day)
@@ -220,12 +259,13 @@ export const CalendarWeekContainer = ({
             key={`${event.id}-${event.displayStart.getTime()}`}
             event={event}
           >
-            <div
-              className="absolute pr-0.5 event-item"
+            <button
+              type="button"
+              className="absolute border-0 bg-transparent p-0 pr-0.5 text-left event-item focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               style={{
                 top:
-                  event.displayStart.getHours() * HOUR_HEIGHT +
-                  (event.displayStart.getMinutes() * HOUR_HEIGHT) / 60,
+                  displayStart.getHours() * HOUR_HEIGHT +
+                  (displayStart.getMinutes() * HOUR_HEIGHT) / 60,
                 height,
                 width: `calc(${100 / event.totalCols}% - 2px)`,
                 left: `calc(${(100 / event.totalCols) * event.colIndex}% + 1px)`,
@@ -237,8 +277,8 @@ export const CalendarWeekContainer = ({
               >
                 <div className="text-xs leading-none">{event.title}</div>
                 <div className="text-xs font-normal leading-none">
-                  {format(event.displayStart, "HH:mm")} -{" "}
-                  {format(cappedEnd, "HH:mm")}
+                  {formatTaipei(event.displayStart, "HH:mm")} -{" "}
+                  {formatTaipei(cappedEnd, "HH:mm")}
                 </div>
                 {event.location && (
                   <div className="text-xs leading-none">{event.location}</div>
@@ -249,7 +289,7 @@ export const CalendarWeekContainer = ({
                   </div>
                 )}
               </div>
-            </div>
+            </button>
           </EventPopover>
         );
       });
@@ -259,16 +299,17 @@ export const CalendarWeekContainer = ({
 
   const renderOverlayEventsInDay = useCallback(
     (day: Date) => {
-      const dayEnd = endOfDay(day);
+      const dayEnd = endOfTaipeiDay(day);
       const dayOverlayEvents = eventsToDisplay(
         overlayEvents,
-        startOfDay(day),
+        startOfTaipeiDay(day),
         dayEnd,
       )
         .filter((e) => !e.allDay)
         .sort((a, b) => a.displayStart.getTime() - b.displayStart.getTime());
 
       return dayOverlayEvents.map((event) => {
+        const textColor = getContrastColor(event.color);
         const cappedEnd = new Date(
           Math.min(event.displayEnd.getTime(), dayEnd.getTime()),
         );
@@ -277,14 +318,15 @@ export const CalendarWeekContainer = ({
           HOUR_HEIGHT / 2,
           (heightMs / (1000 * 60 * 60)) * HOUR_HEIGHT,
         );
+        const displayStart = toTaipeiWallClock(event.displayStart);
         return (
           <div
             key={`overlay-${event.id}-${event.displayStart.getTime()}`}
             className="absolute pr-0.5 pointer-events-none"
             style={{
               top:
-                event.displayStart.getHours() * HOUR_HEIGHT +
-                (event.displayStart.getMinutes() * HOUR_HEIGHT) / 60,
+                displayStart.getHours() * HOUR_HEIGHT +
+                (displayStart.getMinutes() * HOUR_HEIGHT) / 60,
               height,
               width: "calc(100% - 2px)",
               left: "1px",
@@ -301,7 +343,7 @@ export const CalendarWeekContainer = ({
             >
               <div
                 className="text-xs leading-none font-medium"
-                style={{ color: event.color }}
+                style={{ color: textColor }}
               >
                 {event.title}
               </div>
@@ -316,8 +358,8 @@ export const CalendarWeekContainer = ({
     // Step 1: Prepare events with display information
     const dayEvents = eventsToDisplay(
       showAcademicCalendar ? [...nthuCalendarEvents, ...events] : events,
-      startOfDay(displayWeek[0]),
-      endOfDay(displayWeek[6]),
+      startOfTaipeiDay(displayWeek[0]),
+      endOfTaipeiDay(displayWeek[6]),
     )
       .filter((e) => {
         return e.allDay;
@@ -325,23 +367,26 @@ export const CalendarWeekContainer = ({
       .map((event) => {
         const textColor = getContrastColor(event.color);
         let span =
-          differenceInDays(
-            endOfDay(event.displayEnd),
-            startOfDay(event.displayStart),
-          ) + 1;
+          differenceInTaipeiCalendarDays(event.displayEnd, event.displayStart) +
+          1;
         // get start date wrt to this week
         const dispStart =
-          differenceInDays(event.displayStart, displayWeek[0]) > 0
+          differenceInTaipeiCalendarDays(event.displayStart, displayWeek[0]) > 0
             ? event.displayStart
             : displayWeek[0];
         // Calculate which column this event starts at
         let gridColumnStart: number = 1; // Start with 1 as grid columns are 1-indexed
-        if (differenceInDays(event.displayStart, displayWeek[0]) > 0)
+        if (
+          differenceInTaipeiCalendarDays(event.displayStart, displayWeek[0]) > 0
+        )
           gridColumnStart =
-            differenceInDays(event.displayStart, displayWeek[0]) + 1;
+            differenceInTaipeiCalendarDays(event.displayStart, displayWeek[0]) +
+            1;
         else {
           gridColumnStart = 1; // Events starting before the week start at column 1
-          span = differenceInDays(event.displayEnd, displayWeek[0]) + 1;
+          span =
+            differenceInTaipeiCalendarDays(event.displayEnd, displayWeek[0]) +
+            1;
         }
         if (span > 7) {
           span = 7;
@@ -412,21 +457,23 @@ export const CalendarWeekContainer = ({
   const renderAllDayEvents = useCallback(() => {
     return dayEvents.map((event, index) => (
       <EventPopover key={event.id + event.dispStart.getDate()} event={event}>
-        <div
+        <button
+          type="button"
+          className="border-0 bg-transparent p-0 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           style={{
             gridColumn: `${event.gridColumnStart} / span ${event.span}`,
             gridRow: event.gridRowStart,
           }}
         >
           <div
-            className="overflow-hidden bg-nthu-500 rounded-md h-full p-1 sm:p-2 flex flex-col gap-1 hover:shadow-md cursor-pointer transition-shadow select-none"
+            className="overflow-hidden bg-nthu-500 rounded-md h-full p-1 sm:p-2 flex flex-col gap-1"
             style={{ background: event.color, color: event.textColor }}
           >
             <div className="text-sm leading-none line-clamp-1">
               {event.title}
             </div>
           </div>
-        </div>
+        </button>
       </EventPopover>
     ));
   }, [dayEvents]);
@@ -459,20 +506,24 @@ export const CalendarWeekContainer = ({
                 className="flex flex-col flex-1 items-center justify-center h-full select-none"
               >
                 <div className="md:hidden text-xs font-semibold">
-                  {format(day, "EEEEE")}
+                  {formatTaipei(day, "EEEEE", { locale: getLocale(language) })}
                 </div>
                 <div className="hidden md:inline text-xs font-semibold">
-                  {format(day, "E")}
+                  {formatTaipei(day, "E", { locale: getLocale(language) })}
                 </div>
                 <div
                   className={cn(
                     "text-slate-500 text-xs text-center align-baseline",
-                    isToday(day)
+                    isTaipeiToday(day)
                       ? "rounded-full bg-nthu-500 text-white aspect-square"
                       : "",
                   )}
                 >
-                  {format(day, isSameMonth(day, new Date()) ? "d" : "MMM d")}
+                  {formatTaipei(
+                    day,
+                    isSameTaipeiMonth(day, new Date()) ? "d" : "MMM d",
+                    { locale: getLocale(language) },
+                  )}
                 </div>
               </div>
             ))}
@@ -495,8 +546,17 @@ export const CalendarWeekContainer = ({
                 {displayWeek.map((day, index) => (
                   <div key={day.getTime()} className="relative flex-1">
                     <div
-                      className="flex flex-col border-r border-border flex-1"
+                      className="flex flex-col border-r border-border flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                      role="button"
+                      tabIndex={0}
+                      aria-label={dict.calendar.accessibility.create_event_on_date.replace(
+                        "{date}",
+                        formatTaipei(day, "PPP", {
+                          locale: getLocale(language),
+                        }),
+                      )}
                       onClick={(e) => handleEmptySlotClick(day, e.clientY, e)}
+                      onKeyDown={(event) => handleEmptySlotKeyDown(day, event)}
                     >
                       {hours.map((hour, index) => (
                         <div
@@ -526,6 +586,7 @@ export const CalendarWeekContainer = ({
               end: addMinutes(newEventTime, 30),
               allDay: false,
             }}
+            returnFocusRef={eventFormTriggerRef}
             onEventAdded={(event) => {
               addEvent(event);
               setNewEventTime(null);
