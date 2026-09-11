@@ -142,10 +142,14 @@ const Timetable: FC<{
   ) => {
     if (!band) return null;
     return (
-      <tr key={key} className="h-0.5" style={{ height: band.size }}>
+      // The height lives on the cell only. Putting an inline height on the <tr>
+      // as well — alongside the h-[inherit] day cells — made the browser
+      // renegotiate row heights indefinitely and hung the page whenever an
+      // end-of-day region appeared.
+      <tr key={key}>
         <td
           className="flex flex-col py-1 justify-between"
-          style={{ height: band.size }}
+          style={{ height: band.size, minHeight: band.size }}
         >
           <span className="text-[10px] text-muted-foreground">
             {formatTimetableClock(band.start)}

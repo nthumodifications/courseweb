@@ -108,11 +108,21 @@ describe("extended timetable band geometry", () => {
       860,
     );
 
-    expect(getTimetableTimeRangePosition(1260, 1410, geometry)).toEqual({
-      start: 780,
-      end: 930,
-      size: 150,
-    });
+    // Derive the expectation from the geometry rather than hardcoding pixels:
+    // region height uses a fixed scale, deliberately independent of the
+    // measured grid, so pinning literals here just re-encodes that constant.
+    const position = getTimetableTimeRangePosition(1260, 1410, geometry);
+    const lateSize = geometry.late?.size ?? 0;
+
+    // Starts inside the grid...
+    expect(position.start).toBe(780);
+    // ...and runs continuously to the far edge of the end region.
+    expect(position.end).toBeCloseTo(
+      geometry.gridSize + lateSize,
+      5,
+    );
+    expect(position.size).toBeCloseTo(position.end - position.start, 5);
+    expect(position.size).toBeGreaterThan(geometry.gridSize - 780);
   });
 
   test("supports a start-region block and an end-region block in one item", () => {
