@@ -112,6 +112,9 @@ const AdminAnnouncementsPage = lazy(
 );
 const AdminClientsPage = lazy(() => import("@/app/[lang]/admin/clients/page"));
 const AdminAuditPage = lazy(() => import("@/app/[lang]/admin/audit/page"));
+const AdminRecruitmentPage = lazy(
+  () => import("@/app/[lang]/admin/recruitment/page"),
+);
 
 // Separate layout page
 const WaitlistPage = lazy(() => import("@/app/[lang]/waitlist/page"));
@@ -519,6 +522,7 @@ export const router = createBrowserRouter([
               { path: "users", element: <AdminUsersPage /> },
               { path: "users/:userId", element: <AdminUserDetailPage /> },
               { path: "announcements", element: <AdminAnnouncementsPage /> },
+              { path: "recruitment", element: <AdminRecruitmentPage /> },
               { path: "clients", element: <AdminClientsPage /> },
               { path: "audit", element: <AdminAuditPage /> },
             ],

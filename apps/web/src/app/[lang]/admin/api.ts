@@ -129,6 +129,24 @@ export type AdminClient = {
   consents: number;
 };
 
+export type RecruitmentStatus =
+  | "submitted"
+  | "reviewing"
+  | "accepted"
+  | "rejected";
+
+export type RecruitmentApplication = {
+  id: string;
+  applicant_sub: string;
+  role: string;
+  statement: string;
+  contact_preference: string;
+  links: Record<string, string>;
+  status: RecruitmentStatus;
+  created_at: string;
+  updated_at: string;
+};
+
 export type AdminAuditEntry = {
   id: string;
   actorId: string;
@@ -187,6 +205,7 @@ export const adminKeys = {
   announcements: ["admin", "announcements"] as const,
   oauthClients: ["admin", "clients"] as const,
   audit: (params: unknown) => ["admin", "audit", params] as const,
+  recruitment: (params: unknown) => ["admin", "recruitment", params] as const,
 };
 
 /**
@@ -197,19 +216,22 @@ export const adminKeys = {
  */
 export const useAdminIdentity = () => {
   const token = useAdminToken();
-  const auth = useAuth();
 
   return useQuery<AdminIdentity | null>({
     queryKey: adminKeys.me,
     // The identity decides whether the rest of the console renders at all;
     // re-checking on focus means a revoked role takes effect on tab switch.
     staleTime: 60_000,
-    enabled: !auth.isLoading,
+    // Gated on the token existing, not merely on auth having finished loading.
+    // oidc-client-ts restores its session a tick after `isLoading` clears, so
+    // the looser condition let this run with no token, resolve `null`, and
+    // cache that for a minute — a staff member opening the console cold was
+    // told the page did not exist until the cache expired.
+    enabled: Boolean(token),
     queryFn: async () => {
-      if (!token) return null;
       const response = await authClient.api.admin.me.$get(
         {},
-        { headers: authHeaders(token) },
+        { headers: authHeaders(token!) },
       );
       if (response.status === 401 || response.status === 403) return null;
       return unwrap<AdminIdentity>(response as unknown as Response);
@@ -653,6 +675,72 @@ export const useAdminAudit = (params: {
         { headers: authHeaders(requireToken(token)) },
       );
       return unwrap(response as unknown as Response);
+    },
+  });
+};
+
+export const useRecruitmentApplications = (params: {
+  status?: RecruitmentStatus;
+  role?: string;
+}) => {
+  const token = useAdminToken();
+  return useQuery<RecruitmentApplication[]>({
+    queryKey: adminKeys.recruitment(params),
+    enabled: Boolean(token),
+    queryFn: async () => {
+      const response = await authClient.api.admin.recruitment.$get(
+        {
+          query: {
+            ...(params.status ? { status: params.status } : {}),
+            ...(params.role ? { role: params.role } : {}),
+          },
+        },
+        { headers: authHeaders(requireToken(token)) },
+      );
+      return unwrap<RecruitmentApplication[]>(response as unknown as Response);
+    },
+  });
+};
+
+export const useSetRecruitmentStatus = () => {
+  const token = useAdminToken();
+  const invalidate = useInvalidateAdmin();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      status,
+    }: {
+      id: string;
+      status: RecruitmentStatus;
+    }) => {
+      const response = await authClient.api.admin.recruitment[":id"].$patch(
+        { param: { id }, json: { status } },
+        { headers: authHeaders(requireToken(token)) },
+      );
+      return unwrap<RecruitmentApplication>(response as unknown as Response);
+    },
+    onSuccess: invalidate,
+  });
+};
+
+/**
+ * Mint a short-lived link to an applicant's CV.
+ *
+ * Not a query: fetching it is an audited act, so it happens when a reviewer
+ * asks for it rather than whenever a list happens to render.
+ */
+export const useRecruitmentResumeUrl = () => {
+  const token = useAdminToken();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await authClient.api.admin.recruitment[":id"][
+        "resume"
+      ].$post({ param: { id } }, { headers: authHeaders(requireToken(token)) });
+      return unwrap<{ url: string; expiresInSeconds: number }>(
+        response as unknown as Response,
+      );
     },
   });
 };

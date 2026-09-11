@@ -1,10 +1,16 @@
 import { useState } from "react";
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import {
+  Link,
+  useOutletContext,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 import { useDebounceValue } from "usehooks-ts";
 import {
   Badge,
   Button,
   Input,
+  useToast,
   Select,
   SelectContent,
   SelectItem,
@@ -27,9 +33,71 @@ import {
   RoleBadge,
   formatDateTime,
 } from "../components";
-import { useAdminUsers, type AdminRole } from "../api";
+import {
+  useAdminUsers,
+  useSetUserRole,
+  type AdminIdentity,
+  type AdminRole,
+  type AdminUser,
+} from "../api";
 
 const PAGE_SIZE = 25;
+
+/**
+ * Staff access, changed from the row rather than only from the detail page.
+ *
+ * Promoting somebody is the single most common reason to open this table, and
+ * making it a two-page trip was the main thing people could not find. Rendered
+ * only for a superuser, since that is who the server lets change a role at all.
+ */
+const RoleCell = ({
+  user,
+  identity,
+}: {
+  user: AdminUser;
+  identity: AdminIdentity;
+}) => {
+  const { toast } = useToast();
+  const setRole = useSetUserRole();
+
+  if (!identity.isSuperuser || user.userId === identity.userId) {
+    return <RoleBadge role={user.role} />;
+  }
+
+  const change = async (role: AdminRole) => {
+    if (role === user.role) return;
+    try {
+      await setRole.mutateAsync({ userId: user.userId, role });
+      toast({ title: `${user.userId} is now ${role.toLowerCase()}` });
+    } catch (error) {
+      toast({
+        title: "Could not change the role",
+        description: error instanceof Error ? error.message : undefined,
+        variant: "destructive",
+      });
+    }
+  };
+
+  return (
+    <Select
+      value={user.role}
+      onValueChange={(value) => change(value as AdminRole)}
+      disabled={setRole.isPending}
+    >
+      <SelectTrigger
+        className="h-8 w-[124px]"
+        aria-label={`Role for ${user.userId}`}
+      >
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="USER">User</SelectItem>
+        <SelectItem value="ADMIN">Admin</SelectItem>
+        <SelectItem value="SUPERUSER">Superuser</SelectItem>
+      </SelectContent>
+    </Select>
+  );
+};
 
 /**
  * The user directory.
@@ -39,6 +107,7 @@ const PAGE_SIZE = 25;
  */
 const AdminUsersPage = () => {
   const { lang } = useParams<{ lang: string }>();
+  const identity = useOutletContext<AdminIdentity>();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const page = Math.max(1, Number(searchParams.get("page") ?? "1") || 1);
@@ -134,7 +203,7 @@ const AdminUsersPage = () => {
               <TableHead className="w-[120px]">Student ID</TableHead>
               <TableHead>Name</TableHead>
               <TableHead className="hidden md:table-cell">Email</TableHead>
-              <TableHead className="w-[110px]">Role</TableHead>
+              <TableHead className="w-[140px]">Role</TableHead>
               <TableHead className="w-[110px]">Status</TableHead>
               <TableHead className="hidden lg:table-cell w-[150px]">
                 Joined
@@ -171,7 +240,7 @@ const AdminUsersPage = () => {
                   <Mono>{user.email}</Mono>
                 </TableCell>
                 <TableCell>
-                  <RoleBadge role={user.role} />
+                  <RoleCell user={user} identity={identity} />
                 </TableCell>
                 <TableCell>
                   {user.banned ? (

@@ -9,6 +9,7 @@ import {
   Megaphone,
   ScrollText,
   ShieldAlert,
+  UserPlus,
   Users,
 } from "lucide-react";
 import { useAdminIdentity } from "./api";
@@ -25,6 +26,7 @@ const NAV = [
   { to: "", label: "Overview", icon: Activity, end: true },
   { to: "users", label: "Users", icon: Users, end: false },
   { to: "announcements", label: "Announcements", icon: Megaphone, end: false },
+  { to: "recruitment", label: "Recruitment", icon: UserPlus, end: false },
   { to: "clients", label: "OAuth Clients", icon: KeyRound, superuser: true },
   { to: "audit", label: "Audit Log", icon: ScrollText, end: false },
 ] as const;
@@ -51,11 +53,16 @@ const CenteredNotice = ({
 const AdminLayout = () => {
   const { lang } = useParams<{ lang: string }>();
   const auth = useAuth();
-  const { data: identity, isLoading, isError } = useAdminIdentity();
+  const { data: identity, isError, status } = useAdminIdentity();
+
+  // While signed in, "no answer yet" is not "not staff". The identity query is
+  // disabled until a token exists, so a disabled-but-unanswered query has to
+  // read as still checking rather than falling through to the 404 below.
+  const identityPending = auth.isAuthenticated && status === "pending";
 
   const base = `/${lang === "en" ? "en" : "zh"}/admin`;
 
-  if (auth.isLoading || isLoading) {
+  if (auth.isLoading || identityPending) {
     return (
       <CenteredNotice
         title="Checking access"
