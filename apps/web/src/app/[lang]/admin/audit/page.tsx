@@ -30,7 +30,12 @@ import {
 import { useAdminAudit } from "../api";
 
 const PAGE_SIZE = 25;
-const ACTION_PREFIXES = ["user.", "announcement.", "client."] as const;
+const ACTION_PREFIXES = [
+  "user.",
+  "announcement.",
+  "client.",
+  "recruitment.",
+] as const;
 
 type JsonObject = Record<string, unknown>;
 
