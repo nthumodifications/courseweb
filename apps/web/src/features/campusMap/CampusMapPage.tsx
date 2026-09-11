@@ -190,7 +190,7 @@ export default function CampusMapPage() {
       </ErrorBoundary>
 
       <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start justify-between gap-2 p-3 md:p-4">
-        <div className="w-full max-w-sm">
+        <div className="flex max-w-sm min-w-0 flex-col items-start">
           <MapSearch
             availableIdentityIds={availableIdentityIds}
             language={language}
@@ -254,8 +254,9 @@ export default function CampusMapPage() {
         </div>
       )}
 
-      <p className="pointer-events-none absolute bottom-2 left-1/2 z-10 hidden -translate-x-1/2 rounded-full bg-background/80 px-3 py-1 text-xs text-muted-foreground backdrop-blur-sm md:block">
-        {dict.instructions}
+      <p className="pointer-events-none absolute bottom-2 left-2 z-10 max-w-[calc(100%-10rem)] rounded-lg bg-background/80 px-2 py-1 text-[10px] leading-tight text-muted-foreground backdrop-blur-sm md:left-1/2 md:max-w-none md:-translate-x-1/2 md:whitespace-nowrap md:rounded-full md:px-3 md:text-xs md:leading-normal">
+        <span className="md:hidden">{dict.mobileInstructions}</span>
+        <span className="hidden md:inline">{dict.instructions}</span>
       </p>
       <a
         href={data.attribution.url}
