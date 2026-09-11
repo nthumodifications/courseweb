@@ -18,6 +18,8 @@ import {
   isConsentRequired,
   isPendingConsentValid,
 } from "./utils/consent";
+import { isBootstrapSuperuser } from "./const/admin";
+import { VALID_SCOPES } from "./const/scopes";
 
 const prisma = new PrismaClient();
 const ISSUER = "https://auth.nthumods.com";
@@ -25,16 +27,6 @@ const accessTokenExpiry: number = 30 * 60; // 30 minutes
 const refreshTokenExpiry: number = 30 * 24 * 60 * 60; // 30 days
 const sessionExpiry: number = 180 * 24 * 60 * 60; // 180 days
 const ID_TOKEN_EXPIRY = "1h";
-
-const VALID_SCOPES = [
-  "openid", // sub
-  "profile", // name, name_en, inschool
-  "email", // email
-  "offline_access",
-  "kv",
-  "calendar",
-  "planner",
-];
 
 async function verifyPKCE(
   codeVerifier: string,
@@ -301,7 +293,8 @@ const app = new Hono()
             // Deduplicated, so a repeated scope cannot make two different
             // requests compare equal downstream.
             const scopes = [...new Set(scope.split(" ").filter(Boolean))];
-            if (!scopes.every((scope) => VALID_SCOPES.includes(scope))) {
+            const allowed: readonly string[] = VALID_SCOPES;
+            if (!scopes.every((scope) => allowed.includes(scope))) {
               throw new Error("Invalid scopes");
             }
             return scopes;
@@ -714,6 +707,13 @@ const app = new Hono()
       // Authentication Approved
 
       // Store or update user in Prisma
+      // A bootstrap superuser is re-asserted on every sign-in so the admin
+      // center always has someone who can grant access, even on a database
+      // that has never had an admin.
+      const bootstrapRole = isBootstrapSuperuser(user.userid)
+        ? ({ role: "SUPERUSER" } as const)
+        : {};
+
       const upsertedUser = await prisma.user.upsert({
         where: { userId: user.userid },
         update: {
@@ -723,6 +723,7 @@ const app = new Hono()
           inschool: user.inschool || false,
           cid: user.cid,
           lmsid: user.lmsid,
+          ...bootstrapRole,
         },
         create: {
           userId: user.userid,
@@ -732,8 +733,22 @@ const app = new Hono()
           inschool: user.inschool || false,
           cid: user.cid,
           lmsid: user.lmsid,
+          ...bootstrapRole,
         },
       });
+
+      // A banned account is refused here rather than after tokens exist, so a
+      // ban takes effect on the next sign-in without waiting for anything to
+      // expire. requireAuth turns away tokens that were already issued.
+      if (upsertedUser.banned) {
+        return c.redirect(
+          buildClientRedirect(redirectTarget, {
+            error: "access_denied",
+            error_description: "This account has been suspended.",
+            state: clientState ?? undefined,
+          }),
+        );
+      }
 
       // The user passed the consent screen before this round trip started, so
       // their identity can now be attached to that approval.

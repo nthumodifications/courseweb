@@ -37,6 +37,19 @@ export const requireAuth = (requiredScopes: string[] = []) =>
 
       if (!user) throw new Error("User not found");
 
+      // A ban has to bite immediately. Access tokens live 30 minutes and
+      // refresh tokens 30 days, so waiting for expiry would leave a suspended
+      // account with a working session for the rest of the month.
+      if (user.banned) {
+        return c.json(
+          {
+            error: "account_suspended",
+            error_description: "This account has been suspended",
+          },
+          403,
+        );
+      }
+
       c.set("user", user);
 
       if (requiredScopes.length > 0) {

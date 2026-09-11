@@ -8,6 +8,15 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// Staff access to the admin center. Deliberately separate from OAuth scopes:
+// scopes say what a *client application* may ask for on a user's behalf, this
+// says what the *person* is allowed to do inside NTHUMods itself.
+enum AdminRole {
+  USER
+  ADMIN
+  SUPERUSER
+}
+
 model User {
   id                  String               @id @default(uuid())
   userId              String               @unique
@@ -17,6 +26,9 @@ model User {
   inschool            Boolean
   cid                 String?
   lmsid               String?
+  role                AdminRole            @default(USER)
+  banned              Boolean              @default(false)
+  bannedReason        String?
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
   authSessions        AuthSessions[]
@@ -25,6 +37,24 @@ model User {
   apiKeys             ApiKey[]
   calendarShareTokens CalendarShareToken[]
   clientConsents      ClientConsent[]
+  adminActions        AdminAuditLog[]
+}
+
+// Every write an admin makes through the admin center lands here. Role changes
+// and bans are the kind of action that has to be attributable after the fact,
+// and the acting admin cannot edit or delete their own trail through the API.
+model AdminAuditLog {
+  id         String   @id @default(uuid())
+  actorId    String
+  action     String
+  targetType String?
+  targetId   String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  actor      User     @relation(fields: [actorId], references: [userId], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@index([actorId])
 }
 
 model AuthCode {
