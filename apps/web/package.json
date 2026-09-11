@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "test": "bun test src/features/campusMap",
+    "test": "bun test src",
     "preview": "vite preview",
     "lint": "eslint src --fix",
     "type-check": "tsc --noEmit",
