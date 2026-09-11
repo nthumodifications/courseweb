@@ -5,7 +5,7 @@ import type {
   LatLon,
 } from "@courseweb/shared";
 
-export const CAMPUS_MAP_DATA_CACHE_VERSION = 5;
+export const CAMPUS_MAP_DATA_CACHE_VERSION = 10;
 const CAMPUS_DATA_URL = `${import.meta.env.BASE_URL}data/nthu-main-campus.json?v=${CAMPUS_MAP_DATA_CACHE_VERSION}`;
 
 function hasCampusMapDataShape(value: unknown): boolean {

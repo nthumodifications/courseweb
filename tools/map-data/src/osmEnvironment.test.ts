@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
   classifyEnvironmentArea,
+  clipPolylineToPolygons,
   extractTreeLocations,
   relationPolygonRings,
   sampleTreeRow,
@@ -105,5 +106,109 @@ describe("OSM campus environment normalization", () => {
         tags: { amenity: "bench" },
       }),
     ).toEqual([]);
+  });
+
+  test("clips a road at the campus polygon instead of its bounding box", () => {
+    const polygons = [
+      {
+        outer: [
+          { lat: 0, lon: 0 },
+          { lat: 0, lon: 4 },
+          { lat: 4, lon: 4 },
+          { lat: 4, lon: 0 },
+          { lat: 0, lon: 0 },
+        ],
+        holes: [],
+      },
+    ];
+
+    expect(
+      clipPolylineToPolygons(
+        [
+          { lat: 2, lon: -1 },
+          { lat: 2, lon: 2 },
+          { lat: 2, lon: 5 },
+        ],
+        polygons,
+      ),
+    ).toEqual([
+      [
+        { lat: 2, lon: 0 },
+        { lat: 2, lon: 2 },
+        { lat: 2, lon: 4 },
+      ],
+    ]);
+  });
+
+  test("splits a road that crosses an excluded polygon hole", () => {
+    const polygons = [
+      {
+        outer: [
+          { lat: 0, lon: 0 },
+          { lat: 0, lon: 4 },
+          { lat: 4, lon: 4 },
+          { lat: 4, lon: 0 },
+          { lat: 0, lon: 0 },
+        ],
+        holes: [
+          [
+            { lat: 1, lon: 1 },
+            { lat: 1, lon: 3 },
+            { lat: 3, lon: 3 },
+            { lat: 3, lon: 1 },
+            { lat: 1, lon: 1 },
+          ],
+        ],
+      },
+    ];
+
+    expect(
+      clipPolylineToPolygons(
+        [
+          { lat: 2, lon: -1 },
+          { lat: 2, lon: 5 },
+        ],
+        polygons,
+      ),
+    ).toEqual([
+      [
+        { lat: 2, lon: 0 },
+        { lat: 2, lon: 1 },
+      ],
+      [
+        { lat: 2, lon: 3 },
+        { lat: 2, lon: 4 },
+      ],
+    ]);
+  });
+
+  test("clips a road that overlaps a campus boundary edge", () => {
+    const polygons = [
+      {
+        outer: [
+          { lat: 0, lon: 0 },
+          { lat: 0, lon: 4 },
+          { lat: 4, lon: 4 },
+          { lat: 4, lon: 0 },
+          { lat: 0, lon: 0 },
+        ],
+        holes: [],
+      },
+    ];
+
+    expect(
+      clipPolylineToPolygons(
+        [
+          { lat: 0, lon: -1 },
+          { lat: 0, lon: 5 },
+        ],
+        polygons,
+      ),
+    ).toEqual([
+      [
+        { lat: 0, lon: 0 },
+        { lat: 0, lon: 4 },
+      ],
+    ]);
   });
 });

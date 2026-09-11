@@ -2,1446 +2,1361 @@
   "_instructions": {
     "apply": "Run: bun run map:generate",
     "syncLabels": "Run: bun run map:sync-labels only when OpenStreetMap adds new locations.",
-    "labels": "Stable # number to OSM source ID reference. Do not renumber entries.",
-    "excluded": "Add # numbers that should not appear on the map.",
+    "labels": "Only visible map locations belong here. Numbers stay contiguous and are compacted automatically.",
+    "excludedSourceIds": "Permanent OSM source-ID denylist. Add way/123 or relation/123, then run bun run map:generate.",
     "renamed": "Map a # number to a bilingual display name.",
-    "groups": "Give multiple building # numbers one shared label and bilingual name."
+    "groups": "A merged multi-feature label. Its member OSM IDs live together in the matching labels entry.",
+    "illustrativeTreeClusters": "Sparse non-interactive tree markers. Edit lat/lon locations, then run bun run map:generate.",
+    "illustrativeVegetationAreas": "Flat 2D grass or wood polygons. Edit lat/lon vertices, then run bun run map:generate."
   },
   "labels": [
     {
       "number": 1,
-      "featureIds": ["osm-way-1230511808-0"],
-      "sourceIds": ["way/1230511808"],
-      "name": "科學樓"
-    },
-    {
-      "number": 2,
-      "featureIds": ["osm-way-1038720579-0"],
-      "sourceIds": ["way/1038720579"],
-      "name": "17館"
-    },
-    {
-      "number": 3,
-      "featureIds": ["osm-way-256091566-0"],
-      "sourceIds": ["way/256091566"],
-      "name": "校園建築"
-    },
-    {
-      "number": 4,
-      "featureIds": ["osm-way-316391999-0"],
-      "sourceIds": ["way/316391999"],
-      "name": "教學樓"
-    },
-    {
-      "number": 5,
-      "featureIds": ["osm-way-1071316695-0"],
-      "sourceIds": ["way/1071316695"],
-      "name": "32館"
-    },
-    {
-      "number": 6,
-      "featureIds": ["osm-way-1135444472-0"],
-      "sourceIds": ["way/1135444472"],
-      "name": "31館"
-    },
-    {
-      "number": 7,
-      "featureIds": ["osm-way-256091589-0"],
-      "sourceIds": ["way/256091589"],
-      "name": "校園建築"
-    },
-    {
-      "number": 8,
-      "featureIds": ["osm-way-1135444460-0"],
-      "sourceIds": ["way/1135444460"],
-      "name": "19館"
-    },
-    {
-      "number": 9,
       "featureIds": ["osm-way-246149140-0"],
       "sourceIds": ["way/246149140"],
       "name": "清華會館"
     },
     {
-      "number": 10,
-      "featureIds": ["osm-way-1135444458-0"],
-      "sourceIds": ["way/1135444458"],
-      "name": "16館(國家度量衡標準實驗室)"
+      "number": 2,
+      "featureIds": [
+        "osm-way-1071279811-0",
+        "osm-way-1071279812-0",
+        "osm-way-1071279813-0",
+        "osm-way-1071279814-0",
+        "osm-way-1071279815-0",
+        "osm-way-1071279816-0",
+        "osm-way-1071279817-0",
+        "osm-way-1071279821-0",
+        "osm-way-1071279832-0",
+        "osm-way-1071279833-0",
+        "osm-way-1071279835-0",
+        "osm-way-1071316693-0",
+        "osm-way-1071316694-0",
+        "osm-way-454598865-0",
+        "osm-way-454598866-0"
+      ],
+      "sourceIds": [
+        "way/1071279811",
+        "way/1071279812",
+        "way/1071279813",
+        "way/1071279814",
+        "way/1071279815",
+        "way/1071279816",
+        "way/1071279817",
+        "way/1071279821",
+        "way/1071279832",
+        "way/1071279833",
+        "way/1071279835",
+        "way/1071316693",
+        "way/1071316694",
+        "way/454598865",
+        "way/454598866"
+      ],
+      "name": "西院宿舍"
     },
     {
-      "number": 11,
-      "featureIds": ["osm-way-1230511809-0"],
-      "sourceIds": ["way/1230511809"],
-      "name": "四維樓"
-    },
-    {
-      "number": 12,
-      "featureIds": ["osm-way-256471808-0"],
-      "sourceIds": ["way/256471808"],
-      "name": "金摩登"
-    },
-    {
-      "number": 13,
-      "featureIds": ["osm-way-1230511810-0"],
-      "sourceIds": ["way/1230511810"],
-      "name": "慈樓"
-    },
-    {
-      "number": 14,
-      "featureIds": ["osm-way-1135444471-0"],
-      "sourceIds": ["way/1135444471"],
-      "name": "29館"
-    },
-    {
-      "number": 15,
-      "featureIds": ["osm-way-1071316693-0"],
-      "sourceIds": ["way/1071316693"],
-      "name": "校園建築"
-    },
-    {
-      "number": 16,
-      "featureIds": ["osm-way-1010525222-0"],
-      "sourceIds": ["way/1010525222"],
-      "name": "校園建築"
-    },
-    {
-      "number": 17,
-      "featureIds": ["osm-way-1182204382-0"],
-      "sourceIds": ["way/1182204382"],
-      "name": "慈愛齋"
-    },
-    {
-      "number": 18,
-      "featureIds": ["osm-way-1071279813-0"],
-      "sourceIds": ["way/1071279813"],
-      "name": "校園建築"
-    },
-    {
-      "number": 19,
-      "featureIds": ["osm-way-256091559-0"],
-      "sourceIds": ["way/256091559"],
-      "name": "校園建築"
-    },
-    {
-      "number": 20,
-      "featureIds": ["osm-way-1182204383-0"],
-      "sourceIds": ["way/1182204383"],
-      "name": "校園建築"
-    },
-    {
-      "number": 21,
-      "featureIds": ["osm-way-1182204381-0"],
-      "sourceIds": ["way/1182204381"],
-      "name": "培英館"
-    },
-    {
-      "number": 22,
-      "featureIds": ["osm-way-1071316694-0"],
-      "sourceIds": ["way/1071316694"],
-      "name": "校園建築"
-    },
-    {
-      "number": 23,
-      "featureIds": ["osm-way-821883956-0"],
-      "sourceIds": ["way/821883956"],
-      "name": "綜合大樓（光復文化廣場）"
-    },
-    {
-      "number": 24,
-      "featureIds": ["osm-way-1230511811-0"],
-      "sourceIds": ["way/1230511811"],
-      "name": "登雲樓"
-    },
-    {
-      "number": 25,
-      "featureIds": ["osm-way-1182204380-0"],
-      "sourceIds": ["way/1182204380"],
-      "name": "校園建築"
-    },
-    {
-      "number": 26,
-      "featureIds": ["osm-way-1060252977-0"],
-      "sourceIds": ["way/1060252977"],
-      "name": "思源樓"
-    },
-    {
-      "number": 27,
-      "featureIds": ["osm-way-256091600-0"],
-      "sourceIds": ["way/256091600"],
-      "name": "校園建築"
-    },
-    {
-      "number": 28,
-      "featureIds": ["osm-way-1135444456-0"],
-      "sourceIds": ["way/1135444456"],
-      "name": "13館"
-    },
-    {
-      "number": 29,
-      "featureIds": ["osm-way-1071279835-0"],
-      "sourceIds": ["way/1071279835"],
-      "name": "校園建築"
-    },
-    {
-      "number": 30,
-      "featureIds": ["osm-way-1135444457-0"],
-      "sourceIds": ["way/1135444457"],
-      "name": "14館"
-    },
-    {
-      "number": 31,
-      "featureIds": ["osm-way-1182204379-0"],
-      "sourceIds": ["way/1182204379"],
-      "name": "校園建築"
-    },
-    {
-      "number": 32,
-      "featureIds": ["osm-way-531660205-0"],
-      "sourceIds": ["way/531660205"],
-      "name": "集賢樓"
-    },
-    {
-      "number": 33,
-      "featureIds": ["osm-way-1071279821-0"],
-      "sourceIds": ["way/1071279821"],
-      "name": "校園建築"
-    },
-    {
-      "number": 34,
-      "featureIds": ["osm-way-1071279832-0"],
-      "sourceIds": ["way/1071279832"],
-      "name": "校園建築"
-    },
-    {
-      "number": 35,
-      "featureIds": ["osm-way-1071279833-0"],
-      "sourceIds": ["way/1071279833"],
-      "name": "校園建築"
-    },
-    {
-      "number": 36,
-      "featureIds": ["osm-way-1182204378-0"],
-      "sourceIds": ["way/1182204378"],
-      "name": "校園建築"
-    },
-    {
-      "number": 37,
-      "featureIds": ["osm-way-454598865-0"],
-      "sourceIds": ["way/454598865"],
-      "name": "校園建築"
-    },
-    {
-      "number": 38,
-      "featureIds": ["osm-way-1182204377-0"],
-      "sourceIds": ["way/1182204377"],
-      "name": "校園建築"
-    },
-    {
-      "number": 39,
-      "featureIds": ["osm-way-1182204385-0"],
-      "sourceIds": ["way/1182204385"],
-      "name": "校園建築"
-    },
-    {
-      "number": 40,
-      "featureIds": ["osm-way-1182204373-0"],
-      "sourceIds": ["way/1182204373"],
-      "name": "校園建築"
-    },
-    {
-      "number": 41,
-      "featureIds": ["osm-way-1071279817-0"],
-      "sourceIds": ["way/1071279817"],
-      "name": "校園建築"
-    },
-    {
-      "number": 42,
-      "featureIds": ["osm-way-1071279812-0"],
-      "sourceIds": ["way/1071279812"],
-      "name": "校園建築"
-    },
-    {
-      "number": 43,
-      "featureIds": ["osm-way-1071279816-0"],
-      "sourceIds": ["way/1071279816"],
-      "name": "校園建築"
-    },
-    {
-      "number": 44,
-      "featureIds": ["osm-way-1230511806-0"],
-      "sourceIds": ["way/1230511806"],
-      "name": "體育館"
-    },
-    {
-      "number": 45,
-      "featureIds": ["osm-way-1230511813-0"],
-      "sourceIds": ["way/1230511813"],
-      "name": "汽機大樓"
-    },
-    {
-      "number": 46,
-      "featureIds": ["osm-way-1071279814-0"],
-      "sourceIds": ["way/1071279814"],
-      "name": "校園建築"
-    },
-    {
-      "number": 47,
-      "featureIds": ["osm-way-1071279815-0"],
-      "sourceIds": ["way/1071279815"],
-      "name": "校園建築"
-    },
-    {
-      "number": 48,
-      "featureIds": ["osm-way-1182204386-0"],
-      "sourceIds": ["way/1182204386"],
-      "name": "校園建築"
-    },
-    {
-      "number": 49,
-      "featureIds": ["osm-way-256091604-0"],
-      "sourceIds": ["way/256091604"],
-      "name": "校園建築"
-    },
-    {
-      "number": 50,
-      "featureIds": ["osm-way-454598866-0"],
-      "sourceIds": ["way/454598866"],
-      "name": "校園建築"
-    },
-    {
-      "number": 51,
-      "featureIds": ["osm-way-1182204384-0"],
-      "sourceIds": ["way/1182204384"],
-      "name": "校園建築"
-    },
-    {
-      "number": 52,
-      "featureIds": ["osm-way-1182204387-0"],
-      "sourceIds": ["way/1182204387"],
-      "name": "群賢樓"
-    },
-    {
-      "number": 53,
+      "number": 3,
       "featureIds": ["osm-way-180522519-0"],
       "sourceIds": ["way/180522519"],
       "name": "立體機車停車場"
     },
     {
-      "number": 54,
+      "number": 4,
       "featureIds": ["osm-way-445899427-0"],
       "sourceIds": ["way/445899427"],
       "name": "莊敬樓"
     },
     {
-      "number": 55,
-      "featureIds": ["osm-way-1071279811-0"],
-      "sourceIds": ["way/1071279811"],
-      "name": "校園建築"
-    },
-    {
-      "number": 56,
-      "featureIds": ["osm-way-1120544557-0"],
-      "sourceIds": ["way/1120544557"],
-      "name": "校園建築"
-    },
-    {
-      "number": 57,
+      "number": 5,
       "featureIds": ["osm-way-180522508-0"],
       "sourceIds": ["way/180522508"],
       "name": "第二招待所"
     },
     {
-      "number": 58,
+      "number": 6,
       "featureIds": ["osm-way-1071279834-0"],
       "sourceIds": ["way/1071279834"],
       "name": "自強樓"
     },
     {
-      "number": 59,
-      "featureIds": ["osm-way-254990725-0"],
-      "sourceIds": ["way/254990725"],
-      "name": "陶藝教室"
-    },
-    {
-      "number": 60,
-      "featureIds": ["osm-way-1120544556-0"],
-      "sourceIds": ["way/1120544556"],
-      "name": "校園建築"
-    },
-    {
-      "number": 61,
-      "featureIds": ["osm-way-180522505-0"],
-      "sourceIds": ["way/180522505"],
-      "name": "北校區實驗室廢水處理廠"
-    },
-    {
-      "number": 62,
+      "number": 7,
       "featureIds": ["osm-way-180522506-0"],
       "sourceIds": ["way/180522506"],
       "name": "動機化學實驗館(化學二館)"
     },
     {
-      "number": 63,
-      "featureIds": ["osm-way-447990096-0"],
-      "sourceIds": ["way/447990096"],
-      "name": "學生宿舍"
-    },
-    {
-      "number": 64,
+      "number": 8,
       "featureIds": ["osm-way-180522521-0"],
       "sourceIds": ["way/180522521"],
       "name": "合金實驗館"
     },
     {
-      "number": 65,
-      "featureIds": ["osm-way-1120544555-0"],
-      "sourceIds": ["way/1120544555"],
-      "name": "校園建築"
-    },
-    {
-      "number": 66,
+      "number": 9,
       "featureIds": ["osm-way-180522516-0"],
       "sourceIds": ["way/180522516"],
       "name": "材料實驗館"
     },
     {
-      "number": 67,
+      "number": 10,
       "featureIds": ["osm-way-180522524-0"],
       "sourceIds": ["way/180522524"],
       "name": "材料科技館"
     },
     {
-      "number": 68,
-      "featureIds": ["osm-way-722953421-0"],
-      "sourceIds": ["way/722953421"],
-      "name": "藝術工坊"
-    },
-    {
-      "number": 69,
+      "number": 11,
       "featureIds": ["osm-way-747954380-0"],
       "sourceIds": ["way/747954380"],
       "name": "校園建築"
     },
     {
-      "number": 70,
+      "number": 12,
       "featureIds": ["osm-way-180522499-0"],
       "sourceIds": ["way/180522499"],
       "name": "工程三館"
     },
     {
-      "number": 71,
+      "number": 13,
       "featureIds": ["osm-way-180522509-0"],
       "sourceIds": ["way/180522509"],
       "name": "室內網球場"
     },
     {
-      "number": 72,
+      "number": 14,
       "featureIds": ["osm-way-180370149-0"],
       "sourceIds": ["way/180370149"],
       "name": "化工館"
     },
     {
-      "number": 73,
+      "number": 15,
       "featureIds": ["osm-way-180522526-0"],
       "sourceIds": ["way/180522526"],
       "name": "化學館"
     },
     {
-      "number": 74,
+      "number": 16,
       "featureIds": ["osm-way-180522507-0"],
       "sourceIds": ["way/180522507"],
       "name": "醫輔中心"
     },
     {
-      "number": 75,
-      "featureIds": ["osm-way-1060252979-0"],
-      "sourceIds": ["way/1060252979"],
-      "name": "游泳池"
-    },
-    {
-      "number": 76,
+      "number": 17,
       "featureIds": ["osm-way-1075310068-0"],
       "sourceIds": ["way/1075310068"],
       "name": "校園建築"
     },
     {
-      "number": 77,
+      "number": 18,
       "featureIds": ["osm-relation-3815072-0"],
       "sourceIds": ["relation/3815072"],
       "name": "台達館"
     },
     {
-      "number": 78,
+      "number": 19,
       "featureIds": ["osm-way-180522520-0"],
       "sourceIds": ["way/180522520"],
       "name": "教育館"
     },
     {
-      "number": 79,
+      "number": 20,
       "featureIds": ["osm-way-180522515-0"],
       "sourceIds": ["way/180522515"],
       "name": "校友體育館"
     },
     {
-      "number": 80,
+      "number": 21,
       "featureIds": ["osm-way-180365525-0"],
       "sourceIds": ["way/180365525"],
       "name": "第四綜合大樓"
     },
     {
-      "number": 81,
+      "number": 22,
       "featureIds": ["osm-way-220880239-0"],
       "sourceIds": ["way/220880239"],
       "name": "昆明湖"
     },
     {
-      "number": 82,
+      "number": 23,
       "featureIds": ["osm-way-180365523-0"],
       "sourceIds": ["way/180365523"],
       "name": "旺宏館(學習資源中心)"
     },
     {
-      "number": 83,
-      "featureIds": ["osm-way-297344562-0"],
-      "sourceIds": ["way/297344562"],
-      "name": "十八尖山博愛街停車場"
-    },
-    {
-      "number": 84,
+      "number": 24,
       "featureIds": ["osm-way-180365522-0"],
       "sourceIds": ["way/180365522"],
       "name": "創新育成中心"
     },
     {
-      "number": 85,
+      "number": 25,
       "featureIds": ["osm-way-180522511-0"],
       "sourceIds": ["way/180522511"],
       "name": "游泳池"
     },
     {
-      "number": 86,
+      "number": 26,
       "featureIds": ["osm-way-180522501-0"],
       "sourceIds": ["way/180522501"],
       "name": "資訊電機館"
     },
     {
-      "number": 87,
+      "number": 27,
       "featureIds": ["osm-way-180365526-0"],
       "sourceIds": ["way/180365526"],
       "name": "工程一館"
     },
     {
-      "number": 88,
+      "number": 28,
       "featureIds": ["osm-way-180522503-0"],
       "sourceIds": ["way/180522503"],
       "name": "第三綜合大樓"
     },
     {
-      "number": 89,
+      "number": 29,
       "featureIds": ["osm-way-180522504-0"],
       "sourceIds": ["way/180522504"],
       "name": "第一綜合大樓"
     },
     {
-      "number": 90,
-      "featureIds": ["osm-way-377273401-0"],
-      "sourceIds": ["way/377273401"],
-      "name": "校園建築"
-    },
-    {
-      "number": 91,
+      "number": 30,
       "featureIds": ["osm-way-180370150-0"],
       "sourceIds": ["way/180370150"],
       "name": "科儀中心"
     },
     {
-      "number": 92,
+      "number": 31,
       "featureIds": ["osm-way-254990717-0"],
       "sourceIds": ["way/254990717"],
       "name": "合勤演藝廳"
     },
     {
-      "number": 93,
+      "number": 32,
       "featureIds": ["osm-way-180522500-0"],
       "sourceIds": ["way/180522500"],
       "name": "第二綜合大樓"
     },
     {
-      "number": 94,
+      "number": 33,
       "featureIds": ["osm-way-180522512-0"],
       "sourceIds": ["way/180522512"],
       "name": "桌球館"
     },
     {
-      "number": 95,
+      "number": 34,
       "featureIds": ["osm-way-180522523-0"],
       "sourceIds": ["way/180522523"],
       "name": "物理館"
     },
     {
-      "number": 96,
-      "featureIds": ["osm-way-1060264592-0"],
-      "sourceIds": ["way/1060264592"],
-      "name": "校園建築"
-    },
-    {
-      "number": 97,
-      "featureIds": ["osm-way-729377566-0"],
-      "sourceIds": ["way/729377566"],
-      "name": "校園建築"
-    },
-    {
-      "number": 98,
+      "number": 35,
       "featureIds": ["osm-way-180522514-0"],
       "sourceIds": ["way/180522514"],
       "name": "百齡堂"
     },
     {
-      "number": 99,
+      "number": 36,
       "featureIds": ["osm-way-180522513-0"],
       "sourceIds": ["way/180522513"],
       "name": "新體育館"
     },
     {
-      "number": 100,
+      "number": 37,
       "featureIds": ["osm-way-180522527-0"],
       "sourceIds": ["way/180522527"],
       "name": "學生活動中心"
     },
     {
-      "number": 101,
+      "number": 38,
       "featureIds": ["osm-way-254990721-0"],
       "sourceIds": ["way/254990721"],
       "name": "大禮堂"
     },
     {
-      "number": 102,
+      "number": 39,
       "featureIds": ["osm-relation-3927538-0"],
       "sourceIds": ["relation/3927538"],
       "name": "成功湖"
     },
     {
-      "number": 103,
-      "featureIds": ["osm-way-729377557-0"],
-      "sourceIds": ["way/729377557"],
-      "name": "校園建築"
-    },
-    {
-      "number": 104,
+      "number": 40,
       "featureIds": ["osm-way-180607992-0"],
       "sourceIds": ["way/180607992"],
       "name": "社團辦公室"
     },
     {
-      "number": 105,
-      "featureIds": ["osm-way-158391363-0"],
-      "sourceIds": ["way/158391363"],
+      "number": 41,
+      "featureIds": ["osm-way-158391363-0", "osm-way-749979081-0"],
+      "sourceIds": ["way/158391363", "way/749979081"],
       "name": "小吃部"
     },
     {
-      "number": 106,
-      "featureIds": ["osm-way-729377556-0"],
-      "sourceIds": ["way/729377556"],
-      "name": "校園建築"
-    },
-    {
-      "number": 107,
-      "featureIds": ["osm-way-749979081-0"],
-      "sourceIds": ["way/749979081"],
-      "name": "小吃部"
-    },
-    {
-      "number": 108,
+      "number": 42,
       "featureIds": ["osm-way-180546709-0"],
       "sourceIds": ["way/180546709"],
       "name": "雅齋"
     },
     {
-      "number": 109,
+      "number": 43,
       "featureIds": ["osm-way-1060178846-0"],
       "sourceIds": ["way/1060178846"],
       "name": "電工房"
     },
     {
-      "number": 110,
-      "featureIds": ["osm-way-729377560-0"],
-      "sourceIds": ["way/729377560"],
-      "name": "校園建築"
-    },
-    {
-      "number": 111,
+      "number": 44,
       "featureIds": ["osm-way-180546705-0"],
       "sourceIds": ["way/180546705"],
       "name": "明齋"
     },
     {
-      "number": 112,
+      "number": 45,
       "featureIds": ["osm-way-180546707-0"],
       "sourceIds": ["way/180546707"],
       "name": "平齋"
     },
     {
-      "number": 113,
+      "number": 46,
       "featureIds": ["osm-way-180546697-0"],
       "sourceIds": ["way/180546697"],
       "name": "靜齋"
     },
     {
-      "number": 114,
-      "featureIds": ["osm-way-618056566-0"],
-      "sourceIds": ["way/618056566"],
-      "name": "獅子亭"
-    },
-    {
-      "number": 115,
+      "number": 47,
       "featureIds": ["osm-way-158364457-0"],
       "sourceIds": ["way/158364457"],
       "name": "水木生活中心"
     },
     {
-      "number": 116,
+      "number": 48,
       "featureIds": ["osm-way-138080029-0"],
       "sourceIds": ["way/138080029"],
       "name": "風雲樓"
     },
     {
-      "number": 117,
-      "featureIds": ["osm-way-729377559-0"],
-      "sourceIds": ["way/729377559"],
-      "name": "校園建築"
-    },
-    {
-      "number": 118,
-      "featureIds": ["osm-way-729377554-0"],
-      "sourceIds": ["way/729377554"],
-      "name": "校園建築"
-    },
-    {
-      "number": 119,
+      "number": 49,
       "featureIds": ["osm-way-180546702-0"],
       "sourceIds": ["way/180546702"],
       "name": "善齋"
     },
     {
-      "number": 120,
+      "number": 50,
       "featureIds": ["osm-way-180546710-0"],
       "sourceIds": ["way/180546710"],
       "name": "慧齋"
     },
     {
-      "number": 121,
+      "number": 51,
       "featureIds": ["osm-way-257102746-0"],
       "sourceIds": ["way/257102746"],
       "name": "未命名地點"
     },
     {
-      "number": 122,
-      "featureIds": ["osm-way-618056564-0"],
-      "sourceIds": ["way/618056564"],
-      "name": "未命名地點"
-    },
-    {
-      "number": 123,
+      "number": 52,
       "featureIds": ["osm-way-180546700-0"],
       "sourceIds": ["way/180546700"],
       "name": "文齋"
     },
     {
-      "number": 124,
+      "number": 53,
       "featureIds": ["osm-way-1075268912-0"],
       "sourceIds": ["way/1075268912"],
       "name": "校園建築"
     },
     {
-      "number": 125,
-      "featureIds": ["osm-way-1072287863-0"],
-      "sourceIds": ["way/1072287863"],
-      "name": "校園建築"
-    },
-    {
-      "number": 126,
-      "featureIds": ["osm-way-1314760814-0"],
-      "sourceIds": ["way/1314760814"],
-      "name": "校園建築"
-    },
-    {
-      "number": 127,
-      "featureIds": ["osm-way-1072287864-0"],
-      "sourceIds": ["way/1072287864"],
-      "name": "校園建築"
-    },
-    {
-      "number": 128,
-      "featureIds": ["osm-way-1073126720-0"],
-      "sourceIds": ["way/1073126720"],
-      "name": "校園建築"
-    },
-    {
-      "number": 129,
+      "number": 54,
       "featureIds": ["osm-way-180522510-0"],
       "sourceIds": ["way/180522510"],
       "name": "華齋"
     },
     {
-      "number": 130,
+      "number": 55,
       "featureIds": ["osm-way-180522528-0"],
       "sourceIds": ["way/180522528"],
       "name": "新齋"
     },
     {
-      "number": 131,
+      "number": 56,
       "featureIds": ["osm-way-452438943-0"],
       "sourceIds": ["way/452438943"],
       "name": "駐衛警察隊"
     },
     {
-      "number": 132,
-      "featureIds": ["osm-way-180546711-0"],
-      "sourceIds": ["way/180546711"],
-      "name": "實齋交誼廳"
-    },
-    {
-      "number": 133,
-      "featureIds": ["osm-way-774031999-0"],
-      "sourceIds": ["way/774031999"],
-      "name": "校園建築"
-    },
-    {
-      "number": 134,
-      "featureIds": ["osm-way-180546708-0"],
-      "sourceIds": ["way/180546708"],
+      "number": 57,
+      "featureIds": ["osm-way-180546708-0", "osm-way-180546711-0"],
+      "sourceIds": ["way/180546708", "way/180546711"],
       "name": "實齋"
     },
     {
-      "number": 135,
+      "number": 58,
       "featureIds": ["osm-way-180546703-0"],
       "sourceIds": ["way/180546703"],
       "name": "仁齋"
     },
     {
-      "number": 136,
+      "number": 59,
       "featureIds": ["osm-way-220354679-0"],
       "sourceIds": ["way/220354679"],
       "name": "相思湖"
     },
     {
-      "number": 137,
-      "featureIds": ["osm-way-180522517-0"],
-      "sourceIds": ["way/180522517"],
+      "number": 60,
+      "featureIds": ["osm-way-1060179860-0", "osm-way-180522517-0"],
+      "sourceIds": ["way/1060179860", "way/180522517"],
       "name": "誠齋"
     },
     {
-      "number": 138,
-      "featureIds": ["osm-way-1060179860-0"],
-      "sourceIds": ["way/1060179860"],
-      "name": "校園建築"
-    },
-    {
-      "number": 139,
+      "number": 61,
       "featureIds": ["osm-way-158364448-0"],
       "sourceIds": ["way/158364448"],
       "name": "碩齋"
     },
     {
-      "number": 140,
+      "number": 62,
       "featureIds": ["osm-way-180522502-0"],
       "sourceIds": ["way/180522502"],
       "name": "清齋"
     },
     {
-      "number": 141,
-      "featureIds": ["osm-way-585282247-0"],
-      "sourceIds": ["way/585282247"],
-      "name": "BTB+"
-    },
-    {
-      "number": 142,
+      "number": 63,
       "featureIds": ["osm-way-180546704-0"],
       "sourceIds": ["way/180546704"],
       "name": "信齋A"
     },
     {
-      "number": 143,
+      "number": 64,
       "featureIds": ["osm-way-180546698-0"],
       "sourceIds": ["way/180546698"],
       "name": "禮齋"
     },
     {
-      "number": 144,
-      "featureIds": ["osm-way-180522525-0"],
-      "sourceIds": ["way/180522525"],
+      "number": 65,
+      "featureIds": ["osm-way-1075281719-0", "osm-way-180522525-0"],
+      "sourceIds": ["way/1075281719", "way/180522525"],
       "name": "義齋"
     },
     {
-      "number": 145,
+      "number": 66,
       "featureIds": ["osm-way-180607990-0"],
       "sourceIds": ["way/180607990"],
       "name": "工科館"
     },
     {
-      "number": 146,
-      "featureIds": ["osm-way-585282248-0"],
-      "sourceIds": ["way/585282248"],
-      "name": "T-house"
-    },
-    {
-      "number": 147,
+      "number": 67,
       "featureIds": ["osm-way-180546701-0"],
       "sourceIds": ["way/180546701"],
       "name": "信齋B"
     },
     {
-      "number": 148,
-      "featureIds": ["osm-way-1075281719-0"],
-      "sourceIds": ["way/1075281719"],
-      "name": "校園建築"
-    },
-    {
-      "number": 149,
-      "featureIds": ["osm-way-1075281720-0"],
-      "sourceIds": ["way/1075281720"],
-      "name": "校園建築"
-    },
-    {
-      "number": 150,
+      "number": 68,
       "featureIds": ["osm-way-180546706-0"],
       "sourceIds": ["way/180546706"],
       "name": "信齋C"
     },
     {
-      "number": 151,
-      "featureIds": ["osm-way-158364450-0"],
-      "sourceIds": ["way/158364450"],
-      "name": "水質淨化廠"
-    },
-    {
-      "number": 152,
+      "number": 69,
       "featureIds": ["osm-way-180607985-0"],
       "sourceIds": ["way/180607985"],
       "name": "綠能大樓(李存敏館)"
     },
     {
-      "number": 153,
-      "featureIds": ["osm-relation-2409070-3"],
+      "number": 70,
+      "featureIds": [
+        "osm-relation-2409070-0",
+        "osm-relation-2409070-1",
+        "osm-relation-2409070-2",
+        "osm-relation-2409070-3",
+        "osm-relation-2409070-4",
+        "osm-relation-2409070-5",
+        "osm-relation-2409070-6",
+        "osm-relation-2409070-7",
+        "osm-relation-2409070-8"
+      ],
       "sourceIds": ["relation/2409070"],
       "name": "鴻齋"
     },
     {
-      "number": 154,
+      "number": 71,
       "featureIds": ["osm-way-225763564-0"],
       "sourceIds": ["way/225763564"],
       "name": "荷塘"
     },
     {
-      "number": 155,
+      "number": 72,
       "featureIds": ["osm-way-544134860-0"],
       "sourceIds": ["way/544134860"],
       "name": "儒齋"
     },
     {
-      "number": 156,
-      "featureIds": ["osm-relation-2409070-5"],
-      "sourceIds": ["relation/2409070"],
-      "name": "鴻齋"
-    },
-    {
-      "number": 157,
-      "featureIds": ["osm-relation-2409070-0"],
-      "sourceIds": ["relation/2409070"],
-      "name": "鴻齋"
-    },
-    {
-      "number": 158,
-      "featureIds": ["osm-relation-2409070-8"],
-      "sourceIds": ["relation/2409070"],
-      "name": "鴻齋"
-    },
-    {
-      "number": 159,
-      "featureIds": ["osm-relation-2409070-4"],
-      "sourceIds": ["relation/2409070"],
-      "name": "鴻齋"
-    },
-    {
-      "number": 160,
-      "featureIds": ["osm-relation-2409070-6"],
-      "sourceIds": ["relation/2409070"],
-      "name": "鴻齋"
-    },
-    {
-      "number": 161,
-      "featureIds": ["osm-relation-2409070-2"],
-      "sourceIds": ["relation/2409070"],
-      "name": "鴻齋"
-    },
-    {
-      "number": 162,
-      "featureIds": ["osm-relation-2409070-7"],
-      "sourceIds": ["relation/2409070"],
-      "name": "鴻齋"
-    },
-    {
-      "number": 163,
-      "featureIds": ["osm-way-138080039-0"],
-      "sourceIds": ["way/138080039"],
-      "name": "環境工程研究所"
-    },
-    {
-      "number": 164,
-      "featureIds": ["osm-relation-2409070-1"],
-      "sourceIds": ["relation/2409070"],
-      "name": "鴻齋"
-    },
-    {
-      "number": 165,
+      "number": 73,
       "featureIds": ["osm-way-454598246-0"],
       "sourceIds": ["way/454598246"],
       "name": "慈塘生態池"
     },
     {
-      "number": 166,
-      "featureIds": ["osm-way-158364470-0"],
-      "sourceIds": ["way/158364470"],
-      "name": "學生十一舍"
-    },
-    {
-      "number": 167,
-      "featureIds": ["osm-way-1056453011-0"],
-      "sourceIds": ["way/1056453011"],
-      "name": "校園建築"
-    },
-    {
-      "number": 168,
-      "featureIds": ["osm-way-158364466-0"],
-      "sourceIds": ["way/158364466"],
-      "name": "學生十舍"
-    },
-    {
-      "number": 169,
-      "featureIds": ["osm-way-180546699-0"],
-      "sourceIds": ["way/180546699"],
+      "number": 74,
+      "featureIds": ["osm-way-1056453011-0", "osm-way-180546699-0"],
+      "sourceIds": ["way/1056453011", "way/180546699"],
       "name": "學齋"
     },
     {
-      "number": 170,
-      "featureIds": ["osm-way-531658102-0"],
-      "sourceIds": ["way/531658102"],
-      "name": "校園建築"
-    },
-    {
-      "number": 171,
-      "featureIds": ["osm-way-158364453-0"],
-      "sourceIds": ["way/158364453"],
-      "name": "交誼廳與自習室"
-    },
-    {
-      "number": 172,
-      "featureIds": ["osm-way-1214771790-0"],
-      "sourceIds": ["way/1214771790"],
-      "name": "校園建築"
-    },
-    {
-      "number": 173,
-      "featureIds": ["osm-way-531657897-0"],
-      "sourceIds": ["way/531657897"],
-      "name": "校園建築"
-    },
-    {
-      "number": 174,
+      "number": 75,
       "featureIds": ["osm-way-180607983-0"],
       "sourceIds": ["way/180607983"],
       "name": "原子爐"
     },
     {
-      "number": 175,
-      "featureIds": ["osm-way-158364452-0"],
-      "sourceIds": ["way/158364452"],
-      "name": "學生九舍"
-    },
-    {
-      "number": 176,
+      "number": 76,
       "featureIds": ["osm-relation-3809408-0"],
       "sourceIds": ["relation/3809408"],
       "name": "人文社會學院"
     },
     {
-      "number": 177,
-      "featureIds": ["osm-way-158364463-0"],
-      "sourceIds": ["way/158364463"],
-      "name": "研一舍"
-    },
-    {
-      "number": 178,
-      "featureIds": ["osm-way-257646391-0"],
-      "sourceIds": ["way/257646391"],
-      "name": "游泳館"
-    },
-    {
-      "number": 179,
-      "featureIds": ["osm-way-134752167-0"],
-      "sourceIds": ["way/134752167"],
-      "name": "綜合球館"
-    },
-    {
-      "number": 180,
+      "number": 77,
       "featureIds": ["osm-way-180607989-0"],
       "sourceIds": ["way/180607989"],
       "name": "生物科技館"
     },
     {
-      "number": 181,
+      "number": 78,
       "featureIds": ["osm-way-180607993-0"],
       "sourceIds": ["way/180607993"],
       "name": "生命科學一館"
     },
     {
-      "number": 182,
+      "number": 79,
       "featureIds": ["osm-way-180607995-0"],
       "sourceIds": ["way/180607995"],
       "name": "同位素館"
     },
     {
-      "number": 183,
+      "number": 80,
       "featureIds": ["osm-way-180607994-0"],
       "sourceIds": ["way/180607994"],
       "name": "生醫工程及環境科學館"
     },
     {
-      "number": 184,
+      "number": 81,
       "featureIds": ["osm-way-180607984-0"],
       "sourceIds": ["way/180607984"],
       "name": "生命科學二館"
     },
     {
-      "number": 185,
-      "featureIds": ["osm-way-549687962-0"],
-      "sourceIds": ["way/549687962"],
-      "name": "第二餐廳"
-    },
-    {
-      "number": 186,
-      "featureIds": ["osm-way-588300045-0"],
-      "sourceIds": ["way/588300045"],
-      "name": "阿嬤の飯桶"
-    },
-    {
-      "number": 187,
-      "featureIds": ["osm-way-588277339-0"],
-      "sourceIds": ["way/588277339"],
-      "name": "茶曇"
-    },
-    {
-      "number": 188,
-      "featureIds": ["osm-way-588277343-0"],
-      "sourceIds": ["way/588277343"],
-      "name": "校園建築"
-    },
-    {
-      "number": 189,
-      "featureIds": ["osm-way-588277340-0"],
-      "sourceIds": ["way/588277340"],
-      "name": "拉亞漢堡"
-    },
-    {
-      "number": 190,
-      "featureIds": ["osm-way-588277342-0"],
-      "sourceIds": ["way/588277342"],
-      "name": "Morning House早餐"
-    },
-    {
-      "number": 191,
-      "featureIds": ["osm-way-588277341-0"],
-      "sourceIds": ["way/588277341"],
-      "name": "校園建築"
-    },
-    {
-      "number": 192,
-      "featureIds": ["osm-way-435076861-0"],
-      "sourceIds": ["way/435076861"],
-      "name": "清華大學配水池"
-    },
-    {
-      "number": 193,
-      "featureIds": ["osm-way-134752912-0"],
-      "sourceIds": ["way/134752912"],
-      "name": "科學二館"
-    },
-    {
-      "number": 194,
-      "featureIds": ["osm-way-257198657-0"],
-      "sourceIds": ["way/257198657"],
-      "name": "司令台"
-    },
-    {
-      "number": 195,
-      "featureIds": ["osm-way-441724030-0"],
-      "sourceIds": ["way/441724030"],
-      "name": "工程二館"
-    },
-    {
-      "number": 196,
+      "number": 82,
       "featureIds": ["osm-way-180607987-0"],
       "sourceIds": ["way/180607987"],
       "name": "加速器館"
     },
     {
-      "number": 197,
+      "number": 83,
       "featureIds": ["osm-way-180607991-0"],
       "sourceIds": ["way/180607991"],
       "name": "高能光電實驗室"
     },
     {
-      "number": 198,
-      "featureIds": ["osm-way-134752203-0"],
-      "sourceIds": ["way/134752203"],
-      "name": "體育館"
-    },
-    {
-      "number": 199,
-      "featureIds": ["osm-relation-13172246-0"],
-      "sourceIds": ["relation/13172246"],
-      "name": "科學三館"
-    },
-    {
-      "number": 200,
-      "featureIds": ["osm-way-134752398-0"],
-      "sourceIds": ["way/134752398"],
-      "name": "科學一館"
-    },
-    {
-      "number": 201,
-      "featureIds": ["osm-way-180607988-0"],
-      "sourceIds": ["way/180607988"],
-      "name": "南校區實驗室廢水處理廠"
-    },
-    {
-      "number": 202,
+      "number": 84,
       "featureIds": ["osm-way-1075272386-0"],
       "sourceIds": ["way/1075272386"],
       "name": "校園建築"
     },
     {
-      "number": 203,
-      "featureIds": ["osm-way-135632206-0"],
-      "sourceIds": ["way/135632206"],
-      "name": "資訊技術服務中心"
-    },
-    {
-      "number": 204,
-      "featureIds": ["osm-way-451850888-0"],
-      "sourceIds": ["way/451850888"],
-      "name": "未命名地點"
-    },
-    {
-      "number": 205,
-      "featureIds": ["osm-way-1103145980-0"],
-      "sourceIds": ["way/1103145980"],
-      "name": "小木屋鬆餅"
-    },
-    {
-      "number": 206,
-      "featureIds": ["osm-way-203126672-0"],
-      "sourceIds": ["way/203126672"],
-      "name": "西區滯洪池"
-    },
-    {
-      "number": 207,
-      "featureIds": ["osm-way-1348996053-0"],
-      "sourceIds": ["way/1348996053"],
-      "name": "研教五區"
-    },
-    {
-      "number": 208,
-      "featureIds": ["osm-way-135631955-0"],
-      "sourceIds": ["way/135631955"],
-      "name": "田家炳光電大樓"
-    },
-    {
-      "number": 209,
-      "featureIds": ["osm-way-1075271722-0"],
-      "sourceIds": ["way/1075271722"],
-      "name": "未命名地點"
-    },
-    {
-      "number": 210,
-      "featureIds": ["osm-way-134752750-0"],
-      "sourceIds": ["way/134752750"],
-      "name": "工程四館"
-    },
-    {
-      "number": 211,
-      "featureIds": ["osm-way-134752749-0"],
-      "sourceIds": ["way/134752749"],
-      "name": "工程三館"
-    },
-    {
-      "number": 212,
-      "featureIds": ["osm-way-1348996052-0"],
-      "sourceIds": ["way/1348996052"],
-      "name": "研教四區"
-    },
-    {
-      "number": 213,
-      "featureIds": ["osm-way-135631888-0"],
-      "sourceIds": ["way/135631888"],
-      "name": "交映樓"
-    },
-    {
-      "number": 214,
+      "number": 85,
       "featureIds": ["osm-way-432044412-0"],
       "sourceIds": ["way/432044412"],
       "name": "台積館"
     },
     {
-      "number": 215,
+      "number": 86,
       "featureIds": ["osm-way-1298767170-0"],
       "sourceIds": ["way/1298767170"],
       "name": "宏亮美術館"
     },
     {
-      "number": 216,
-      "featureIds": ["osm-way-458800542-0"],
-      "sourceIds": ["way/458800542"],
-      "name": "校園建築"
-    },
-    {
-      "number": 217,
-      "featureIds": ["osm-way-517054851-0"],
-      "sourceIds": ["way/517054851"],
-      "name": "女廁所"
-    },
-    {
-      "number": 218,
-      "featureIds": ["osm-way-428830533-0"],
-      "sourceIds": ["way/428830533"],
-      "name": "校園建築"
-    },
-    {
-      "number": 219,
+      "number": 87,
       "featureIds": ["osm-way-225001814-0"],
       "sourceIds": ["way/225001814"],
       "name": "國立清華大學創新育成中心"
     },
     {
-      "number": 220,
+      "number": 88,
       "featureIds": ["osm-way-180607981-0"],
       "sourceIds": ["way/180607981"],
       "name": "三合院"
     },
     {
-      "number": 221,
+      "number": 89,
       "featureIds": ["osm-way-1298767173-0"],
       "sourceIds": ["way/1298767173"],
       "name": "捷英文物館"
     },
     {
-      "number": 222,
-      "featureIds": ["osm-way-134794408-0"],
-      "sourceIds": ["way/134794408"],
-      "name": "工程六館"
-    },
-    {
-      "number": 223,
+      "number": 90,
       "featureIds": ["osm-relation-19774346-0"],
       "sourceIds": ["relation/19774346"],
       "name": "清華實驗室"
     },
     {
-      "number": 224,
-      "featureIds": ["osm-way-135404506-0"],
-      "sourceIds": ["way/135404506"],
-      "name": "工程五館"
-    },
-    {
-      "number": 225,
-      "featureIds": ["osm-way-1038718371-0"],
-      "sourceIds": ["way/1038718371"],
-      "name": "校園建築"
-    },
-    {
-      "number": 226,
-      "featureIds": ["osm-way-694638213-0"],
-      "sourceIds": ["way/694638213"],
-      "name": "校園建築"
-    },
-    {
-      "number": 227,
+      "number": 91,
       "featureIds": ["osm-relation-19774345-0"],
       "sourceIds": ["relation/19774345"],
       "name": "竹師教育學院大樓"
     },
     {
-      "number": 228,
-      "featureIds": ["osm-way-286595011-0"],
-      "sourceIds": ["way/286595011"],
-      "name": "碧雲寺"
+      "number": 92,
+      "featureIds": ["osm-way-246271641-0"],
+      "sourceIds": ["way/246271641"],
+      "name": "室外排球場"
     },
     {
-      "number": 229,
-      "featureIds": ["osm-way-1058253149-0"],
-      "sourceIds": ["way/1058253149"],
-      "name": "校園建築"
+      "number": 93,
+      "featureIds": ["osm-relation-3809891-0"],
+      "sourceIds": ["relation/3809891"],
+      "name": "田徑場"
     }
   ],
-  "excluded": [96, 201, 114, 122, 68, 8, 28, 63, 83, 75, 5, 20, 51, 48, 39, 32, 17, 21, 6, 25, 31, 52, 36, 38, 40, 30, 14, 2, 10, 206, 212, 207, 204, 209, 192, 149, 110, 106, 103, 90, 97, 187, 173, 195, 188, 191, 199, 194, 198, 179, 178, 193, 185, 190, 186, 177, 166, 171, 172, 170, 175, 168, 163, 151, 133, 126, 226, 222, 224, 213, 210, 211, 208, 200, 205, 203, 216, 217, 218, 225, 228, 229, 141, 146, 128, 117, 118, 125, 127, 1, 3, 4, 7, 16, 27, 19, 49, 11, 13, 26, 24, 23, 44, 59, 56, 60, 65, 12],
+  "excludedSourceIds": [
+    "way/1230511808",
+    "way/1038720579",
+    "way/256091566",
+    "way/316391999",
+    "way/1071316695",
+    "way/1135444472",
+    "way/256091589",
+    "way/1135444460",
+    "way/1135444458",
+    "way/1230511809",
+    "way/256471808",
+    "way/1230511810",
+    "way/1135444471",
+    "way/1010525222",
+    "way/1182204382",
+    "way/256091559",
+    "way/1182204383",
+    "way/1182204381",
+    "way/821883956",
+    "way/1230511811",
+    "way/1182204380",
+    "way/1060252977",
+    "way/256091600",
+    "way/1135444456",
+    "way/1135444457",
+    "way/1182204379",
+    "way/531660205",
+    "way/1182204378",
+    "way/1182204377",
+    "way/1182204385",
+    "way/1182204373",
+    "way/1230511806",
+    "way/1230511813",
+    "way/1182204386",
+    "way/256091604",
+    "way/1182204384",
+    "way/1182204387",
+    "way/1120544557",
+    "way/254990725",
+    "way/1120544556",
+    "way/180522505",
+    "way/447990096",
+    "way/1120544555",
+    "way/722953421",
+    "way/1060252979",
+    "way/297344562",
+    "way/377273401",
+    "way/1060264592",
+    "way/729377566",
+    "way/729377557",
+    "way/729377556",
+    "way/729377560",
+    "way/618056566",
+    "way/729377559",
+    "way/729377554",
+    "way/618056564",
+    "way/1072287863",
+    "way/1314760814",
+    "way/1072287864",
+    "way/1073126720",
+    "way/774031999",
+    "way/585282247",
+    "way/585282248",
+    "way/1075281720",
+    "way/158364450",
+    "way/138080039",
+    "way/158364470",
+    "way/158364466",
+    "way/531658102",
+    "way/158364453",
+    "way/1214771790",
+    "way/531657897",
+    "way/158364452",
+    "way/158364463",
+    "way/257646391",
+    "way/134752167",
+    "way/549687962",
+    "way/588300045",
+    "way/588277339",
+    "way/588277343",
+    "way/588277340",
+    "way/588277342",
+    "way/588277341",
+    "way/435076861",
+    "way/134752912",
+    "way/257198657",
+    "way/441724030",
+    "way/134752203",
+    "relation/13172246",
+    "way/134752398",
+    "way/180607988",
+    "way/135632206",
+    "way/451850888",
+    "way/1103145980",
+    "way/203126672",
+    "way/1348996053",
+    "way/135631955",
+    "way/1075271722",
+    "way/134752750",
+    "way/134752749",
+    "way/1348996052",
+    "way/135631888",
+    "way/458800542",
+    "way/517054851",
+    "way/428830533",
+    "way/134794408",
+    "way/135404506",
+    "way/1038718371",
+    "way/694638213",
+    "way/286595011",
+    "way/1058253149"
+  ],
   "renamed": {
-    "53": {
+    "3": {
       "zh": "機車塔",
       "en": "Parking lot for motorcycles"
     },
-    "104": {
-      "zh": "成功湖畔社辦",
-      "en": "Societies Office by the Cheng Kung Lake"
+    "11": {
+      "zh": "北校門",
+      "en": "North Gate of the Campus"
     },
-    "98": {
+    "17": {
+      "zh": "棒球場",
+      "en": "Baseball Field"
+    },
+    "35": {
       "zh": "校友中心",
       "en": "Alumni Service Center"
     },
-    "124": {
+    "37": {
+      "zh": "蒙民偉樓（學生活動中心）",
+      "en": "Mong Man Wei Building (Student Activity Center)"
+    },
+    "38": {
+      "zh": "大工地（原禮堂）",
+      "en": "NTHU Colosseum"
+    },
+    "40": {
+      "zh": "成功湖畔社辦",
+      "en": "Societies Office by the Cheng Kung Lake"
+    },
+    "53": {
       "zh": "梅園",
       "en": "Plum Garden"
     },
-    "202": {
+    "84": {
       "zh": "奕園",
       "en": "Yi Yuan"
+    },
+    "92": {
+      "zh": "室外排球場",
+      "en": "Outdoor Volleyball Courts"
+    },
+    "93": {
+      "zh": "田徑場",
+      "en": "Athletics Track"
     }
   },
   "groups": [
     {
       "id": "hung-dorm",
-      "labelNumbers": [153, 156, 157, 158, 159, 160, 161, 162, 164],
+      "labelNumber": 70,
       "zh": "鴻齋",
       "en": "Hung Dormitory"
     },
     {
       "id": "shiue-dorm",
-      "labelNumbers": [167, 169],
+      "labelNumber": 74,
       "zh": "學齋",
       "en": "Shiue Dormitory"
     },
     {
       "id": "yi-dorm",
-      "labelNumbers": [144, 148],
+      "labelNumber": 65,
       "zh": "義齋",
       "en": "Yi Dormitory"
     },
     {
       "id": "cheng-dorm",
-      "labelNumbers": [137, 138],
+      "labelNumber": 60,
       "zh": "誠齋",
       "en": "Cheng Dormitory"
     },
     {
       "id": "shyr-dorm",
-      "labelNumbers": [132, 134],
+      "labelNumber": 57,
       "zh": "實齋",
       "en": "Shyr Dormitory"
     },
     {
       "id": "West-Yuan-Faculty-Residences",
-      "labelNumbers": [18, 33, 42, 55, 29, 34, 35, 41, 43, 47, 50, 37, 45, 46, 15, 22],
+      "labelNumber": 2,
       "zh": "西院宿舍",
       "en": "West Yuan Faculty Residences"
+    },
+    {
+      "id": "Small-Eat-No",
+      "labelNumber": 41,
+      "zh": "小吃部",
+      "en": "Food Court"
+    }
+  ],
+  "illustrativeTreeClusters": [
+    {
+      "id": "mei-garden",
+      "locations": [
+        {
+          "lat": 24.79197,
+          "lon": 120.98991
+        },
+        {
+          "lat": 24.792045,
+          "lon": 120.98987
+        },
+        {
+          "lat": 24.792135,
+          "lon": 120.989915
+        },
+        {
+          "lat": 24.79219,
+          "lon": 120.99
+        },
+        {
+          "lat": 24.792175,
+          "lon": 120.990145
+        },
+        {
+          "lat": 24.792115,
+          "lon": 120.990235
+        },
+        {
+          "lat": 24.792025,
+          "lon": 120.99025
+        },
+        {
+          "lat": 24.791945,
+          "lon": 120.990185
+        },
+        {
+          "lat": 24.79244,
+          "lon": 120.98952
+        },
+        {
+          "lat": 24.79239,
+          "lon": 120.98972
+        },
+        {
+          "lat": 24.79236,
+          "lon": 120.98994
+        },
+        {
+          "lat": 24.79233,
+          "lon": 120.99018
+        },
+        {
+          "lat": 24.79229,
+          "lon": 120.99039
+        },
+        {
+          "lat": 24.79224,
+          "lon": 120.98966
+        },
+        {
+          "lat": 24.79212,
+          "lon": 120.98956
+        },
+        {
+          "lat": 24.79199,
+          "lon": 120.98954
+        },
+        {
+          "lat": 24.79184,
+          "lon": 120.98962
+        },
+        {
+          "lat": 24.79172,
+          "lon": 120.98977
+        },
+        {
+          "lat": 24.79168,
+          "lon": 120.98998
+        },
+        {
+          "lat": 24.7917,
+          "lon": 120.99022
+        },
+        {
+          "lat": 24.79178,
+          "lon": 120.99042
+        },
+        {
+          "lat": 24.7919,
+          "lon": 120.9905
+        },
+        {
+          "lat": 24.79207,
+          "lon": 120.99048
+        },
+        {
+          "lat": 24.79225,
+          "lon": 120.99052
+        }
+      ]
+    },
+    {
+      "id": "life-sciences",
+      "locations": [
+        {
+          "lat": 24.78992,
+          "lon": 120.99002
+        },
+        {
+          "lat": 24.78994,
+          "lon": 120.99024
+        },
+        {
+          "lat": 24.789925,
+          "lon": 120.9905
+        },
+        {
+          "lat": 24.78978,
+          "lon": 120.98985
+        },
+        {
+          "lat": 24.78957,
+          "lon": 120.98975
+        },
+        {
+          "lat": 24.78936,
+          "lon": 120.98942
+        },
+        {
+          "lat": 24.78912,
+          "lon": 120.98939
+        },
+        {
+          "lat": 24.78888,
+          "lon": 120.98943
+        },
+        {
+          "lat": 24.78868,
+          "lon": 120.98972
+        },
+        {
+          "lat": 24.78866,
+          "lon": 120.99002
+        },
+        {
+          "lat": 24.79065,
+          "lon": 120.98975
+        },
+        {
+          "lat": 24.79018,
+          "lon": 120.98988
+        },
+        {
+          "lat": 24.79015,
+          "lon": 120.99042
+        },
+        {
+          "lat": 24.79002,
+          "lon": 120.99068
+        },
+        {
+          "lat": 24.79015,
+          "lon": 120.991
+        },
+        {
+          "lat": 24.78962,
+          "lon": 120.99088
+        },
+        {
+          "lat": 24.78935,
+          "lon": 120.99066
+        },
+        {
+          "lat": 24.78905,
+          "lon": 120.99055
+        },
+        {
+          "lat": 24.78878,
+          "lon": 120.99035
+        },
+        {
+          "lat": 24.78855,
+          "lon": 120.99022
+        },
+        {
+          "lat": 24.78855,
+          "lon": 120.98955
+        },
+        {
+          "lat": 24.78882,
+          "lon": 120.98925
+        },
+        {
+          "lat": 24.78912,
+          "lon": 120.98923
+        },
+        {
+          "lat": 24.78885,
+          "lon": 120.98915
+        }
+      ]
+    },
+    {
+      "id": "student-dormitories",
+      "locations": [
+        {
+          "lat": 24.79287,
+          "lon": 120.99125
+        },
+        {
+          "lat": 24.79265,
+          "lon": 120.99085
+        },
+        {
+          "lat": 24.79235,
+          "lon": 120.99082
+        },
+        {
+          "lat": 24.7921,
+          "lon": 120.99162
+        },
+        {
+          "lat": 24.79325,
+          "lon": 120.9929
+        },
+        {
+          "lat": 24.79255,
+          "lon": 120.9941
+        },
+        {
+          "lat": 24.792,
+          "lon": 120.99465
+        },
+        {
+          "lat": 24.79182,
+          "lon": 120.99452
+        },
+        {
+          "lat": 24.79155,
+          "lon": 120.99435
+        },
+        {
+          "lat": 24.79115,
+          "lon": 120.9946
+        },
+        {
+          "lat": 24.79075,
+          "lon": 120.9933
+        },
+        {
+          "lat": 24.79055,
+          "lon": 120.99425
+        },
+        {
+          "lat": 24.79255,
+          "lon": 120.995
+        },
+        {
+          "lat": 24.79175,
+          "lon": 120.99555
+        },
+        {
+          "lat": 24.79135,
+          "lon": 120.9962
+        },
+        {
+          "lat": 24.79085,
+          "lon": 120.99595
+        },
+        {
+          "lat": 24.79055,
+          "lon": 120.99525
+        }
+      ]
+    },
+    {
+      "id": "humanities-social-sciences",
+      "locations": [
+        {
+          "lat": 24.79045,
+          "lon": 120.98865
+        },
+        {
+          "lat": 24.7903,
+          "lon": 120.98835
+        },
+        {
+          "lat": 24.79005,
+          "lon": 120.98822
+        },
+        {
+          "lat": 24.78975,
+          "lon": 120.98825
+        },
+        {
+          "lat": 24.78945,
+          "lon": 120.98835
+        },
+        {
+          "lat": 24.78918,
+          "lon": 120.9885
+        },
+        {
+          "lat": 24.78898,
+          "lon": 120.98875
+        },
+        {
+          "lat": 24.78892,
+          "lon": 120.98905
+        },
+        {
+          "lat": 24.78905,
+          "lon": 120.98935
+        },
+        {
+          "lat": 24.79055,
+          "lon": 120.98915
+        },
+        {
+          "lat": 24.79048,
+          "lon": 120.98965
+        },
+        {
+          "lat": 24.79025,
+          "lon": 120.98985
+        }
+      ]
+    },
+    {
+      "id": "yi-garden",
+      "locations": [
+        {
+          "lat": 24.78845,
+          "lon": 120.98975
+        },
+        {
+          "lat": 24.78845,
+          "lon": 120.99005
+        },
+        {
+          "lat": 24.78838,
+          "lon": 120.9904
+        },
+        {
+          "lat": 24.7883,
+          "lon": 120.99075
+        },
+        {
+          "lat": 24.78815,
+          "lon": 120.99105
+        },
+        {
+          "lat": 24.7879,
+          "lon": 120.99115
+        },
+        {
+          "lat": 24.78765,
+          "lon": 120.991
+        },
+        {
+          "lat": 24.78745,
+          "lon": 120.99075
+        },
+        {
+          "lat": 24.78742,
+          "lon": 120.9904
+        },
+        {
+          "lat": 24.78752,
+          "lon": 120.99005
+        },
+        {
+          "lat": 24.7877,
+          "lon": 120.98975
+        },
+        {
+          "lat": 24.788,
+          "lon": 120.9896
+        },
+        {
+          "lat": 24.78815,
+          "lon": 120.99015
+        },
+        {
+          "lat": 24.78775,
+          "lon": 120.99035
+        }
+      ]
+    }
+  ],
+  "illustrativeVegetationAreas": [
+    {
+      "id": "mei-garden-hillside",
+      "kind": "wood",
+      "polygon": [
+        {
+          "lat": 24.79252,
+          "lon": 120.98942
+        },
+        {
+          "lat": 24.79255,
+          "lon": 120.99008
+        },
+        {
+          "lat": 24.79242,
+          "lon": 120.99058
+        },
+        {
+          "lat": 24.79212,
+          "lon": 120.99068
+        },
+        {
+          "lat": 24.79176,
+          "lon": 120.99058
+        },
+        {
+          "lat": 24.79155,
+          "lon": 120.99025
+        },
+        {
+          "lat": 24.79158,
+          "lon": 120.9897
+        },
+        {
+          "lat": 24.79182,
+          "lon": 120.98936
+        }
+      ]
+    },
+    {
+      "id": "humanities-hillside",
+      "kind": "wood",
+      "polygon": [
+        {
+          "lat": 24.79055,
+          "lon": 120.98815
+        },
+        {
+          "lat": 24.7907,
+          "lon": 120.98875
+        },
+        {
+          "lat": 24.79058,
+          "lon": 120.98935
+        },
+        {
+          "lat": 24.7903,
+          "lon": 120.98985
+        },
+        {
+          "lat": 24.7899,
+          "lon": 120.98965
+        },
+        {
+          "lat": 24.78925,
+          "lon": 120.98935
+        },
+        {
+          "lat": 24.78895,
+          "lon": 120.98875
+        },
+        {
+          "lat": 24.7892,
+          "lon": 120.9882
+        }
+      ]
+    },
+    {
+      "id": "life-sciences-hillside",
+      "kind": "wood",
+      "polygon": [
+        {
+          "lat": 24.7903,
+          "lon": 120.98955
+        },
+        {
+          "lat": 24.7904,
+          "lon": 120.99035
+        },
+        {
+          "lat": 24.7901,
+          "lon": 120.9909
+        },
+        {
+          "lat": 24.78955,
+          "lon": 120.991
+        },
+        {
+          "lat": 24.78895,
+          "lon": 120.9907
+        },
+        {
+          "lat": 24.7885,
+          "lon": 120.9902
+        },
+        {
+          "lat": 24.7885,
+          "lon": 120.98955
+        },
+        {
+          "lat": 24.78895,
+          "lon": 120.9892
+        }
+      ]
+    },
+    {
+      "id": "yi-garden-hillside",
+      "kind": "wood",
+      "polygon": [
+        {
+          "lat": 24.7887,
+          "lon": 120.98955
+        },
+        {
+          "lat": 24.7887,
+          "lon": 120.99025
+        },
+        {
+          "lat": 24.78845,
+          "lon": 120.9909
+        },
+        {
+          "lat": 24.788,
+          "lon": 120.9913
+        },
+        {
+          "lat": 24.78755,
+          "lon": 120.9911
+        },
+        {
+          "lat": 24.78725,
+          "lon": 120.99055
+        },
+        {
+          "lat": 24.7873,
+          "lon": 120.9899
+        },
+        {
+          "lat": 24.7877,
+          "lon": 120.98945
+        }
+      ]
     }
   ]
 }

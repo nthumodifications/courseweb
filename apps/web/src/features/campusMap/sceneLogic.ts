@@ -7,6 +7,34 @@ import type {
 export const DEFAULT_BUILDING_HEIGHT = 12;
 export const CAMPUS_FLOOR_HEIGHT = 3.4;
 
+export type CampusBuildingColorCategory =
+  | "standard"
+  | "course"
+  | "food"
+  | "dormitory";
+
+export const CAMPUS_BUILDING_COLORS: Record<
+  CampusBuildingColorCategory,
+  string
+> = {
+  course: "#cdb9d1",
+  food: "#efc99f",
+  dormitory: "#b9d8e8",
+  standard: "#d5d5d2",
+};
+
+export const CAMPUS_ROAD_COLOR = "#555b61";
+
+const FOOD_BUILDING_NAMES = new Set(["小吃部", "風雲樓", "水木生活中心"]);
+
+export function getBuildingColorCategory(
+  building: CampusBuilding,
+): CampusBuildingColorCategory {
+  if (FOOD_BUILDING_NAMES.has(building.names.zh)) return "food";
+  if (building.names.zh.includes("齋")) return "dormitory";
+  return building.identityId ? "course" : "standard";
+}
+
 export function resolveBuildingHeight(
   height?: number,
   levels?: number,
@@ -40,7 +68,8 @@ export function getCampusFeatureLabelKey(feature: CampusMapFeature): string {
 }
 
 export function createCampusFeatureLabelNumbers(
-  data: Pick<CampusMapData, "buildings" | "water">,
+  data: Pick<CampusMapData, "buildings" | "water"> &
+    Partial<Pick<CampusMapData, "areas">>,
 ): ReadonlyMap<string, number> {
   const firstBuildingByLabel = new Map<string, CampusBuilding>();
   data.buildings.forEach((building) => {
@@ -50,7 +79,11 @@ export function createCampusFeatureLabelNumbers(
     }
   });
 
-  const features = [...firstBuildingByLabel.values(), ...data.water].sort(
+  const features = [
+    ...firstBuildingByLabel.values(),
+    ...data.water,
+    ...(data.areas ?? []).filter((area) => Boolean(area.names)),
+  ].sort(
     (left, right) =>
       right.location.lat - left.location.lat ||
       left.location.lon - right.location.lon ||

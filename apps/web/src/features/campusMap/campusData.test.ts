@@ -5,6 +5,10 @@ import {
   resolveVenueToCampusIdentity,
   type CampusMapData,
 } from "@courseweb/shared";
+import {
+  createCampusFeatureLabelNumbers,
+  getCampusFeatureLabelKey,
+} from "./sceneLogic";
 
 const data = (await Bun.file(
   new URL("../../../public/data/nthu-main-campus.json", import.meta.url),
@@ -122,11 +126,13 @@ describe("generated NTHU campus data", () => {
 
     expect(count("grass")).toBe(28);
     expect(count("park")).toBe(0);
-    expect(count("wood")).toBe(10);
+    expect(count("wood")).toBe(14);
     expect(count("sports-pitch")).toBe(6);
     expect(count("athletics-track")).toBe(1);
     expect(count("parking")).toBe(23);
-    expect(data.trees).toHaveLength(33);
+    expect(data.trees.filter(({ id }) => id.startsWith("osm-"))).toHaveLength(
+      33,
+    );
     expect(data.roads.every((road) => Boolean(road.roadClass))).toBe(true);
   });
 
@@ -144,5 +150,188 @@ describe("generated NTHU campus data", () => {
       kind: "sports-pitch",
       sport: "baseball",
     });
+  });
+
+  test.each([
+    ["osm-way-246271641-0", "室外排球場", "Outdoor Volleyball Courts", 92],
+    ["osm-relation-3809891-0", "田徑場", "Athletics Track", 93],
+  ])("adds a clickable label for %s", (id, zh, en, labelNumber) => {
+    const area = data.areas.find((candidate) => candidate.id === id);
+    const numbers = createCampusFeatureLabelNumbers(data);
+
+    expect(area).toMatchObject({ names: { zh, en }, labelNumber });
+    expect(numbers.get(getCampusFeatureLabelKey(area!))).toBe(labelNumber);
+  });
+
+  test("uses one contiguous number sequence for rendered labels", () => {
+    const numbers = [...createCampusFeatureLabelNumbers(data).values()].sort(
+      (left, right) => left - right,
+    );
+
+    expect(numbers).toEqual(
+      Array.from({ length: numbers.length }, (_, index) => index + 1),
+    );
+    expect(numbers).toHaveLength(93);
+    expect(
+      data.buildings.some(
+        ({ source }) => source.type === "way" && source.id === 1230511808,
+      ),
+    ).toBe(false);
+  });
+
+  test("clips all generated roads and paths to the display bounds", () => {
+    const inBounds = ([lon, lat]: [number, number]) =>
+      lon >= data.bounds.west &&
+      lon <= data.bounds.east &&
+      lat >= data.bounds.south &&
+      lat <= data.bounds.north;
+
+    expect(data.roads.flatMap(({ points }) => points).every(inBounds)).toBe(
+      true,
+    );
+    expect(data.paths.flatMap(({ points }) => points).every(inBounds)).toBe(
+      true,
+    );
+  });
+
+  test("clips every road and path to the visible main-campus boundary", () => {
+    const boundary = data.boundary;
+    expect(boundary).toBeDefined();
+
+    const pointOnRing = (
+      [lon, lat]: [number, number],
+      ring: [number, number][],
+    ) =>
+      ring.slice(0, -1).some(([startLon, startLat], index) => {
+        const [endLon, endLat] = ring[index + 1];
+        const segmentLon = endLon - startLon;
+        const segmentLat = endLat - startLat;
+        const pointLon = lon - startLon;
+        const pointLat = lat - startLat;
+        const cross = segmentLon * pointLat - segmentLat * pointLon;
+        const dot = pointLon * segmentLon + pointLat * segmentLat;
+        const squaredLength = segmentLon ** 2 + segmentLat ** 2;
+        return (
+          Math.abs(cross) <= 2e-9 && dot >= -2e-9 && dot <= squaredLength + 2e-9
+        );
+      });
+    const pointInRing = (
+      [lon, lat]: [number, number],
+      ring: [number, number][],
+    ) => {
+      let inside = false;
+      for (
+        let index = 0, previous = ring.length - 1;
+        index < ring.length;
+        previous = index++
+      ) {
+        const [currentLon, currentLat] = ring[index];
+        const [previousLon, previousLat] = ring[previous];
+        if (
+          currentLat > lat !== previousLat > lat &&
+          lon <
+            ((previousLon - currentLon) * (lat - currentLat)) /
+              (previousLat - currentLat) +
+              currentLon
+        ) {
+          inside = !inside;
+        }
+      }
+      return inside;
+    };
+    const insideVisibleBoundary = (point: [number, number]) =>
+      (pointInRing(point, boundary!.polygon) ||
+        pointOnRing(point, boundary!.polygon)) &&
+      !(boundary!.holes ?? []).some(
+        (hole) => pointInRing(point, hole) && !pointOnRing(point, hole),
+      );
+
+    expect(
+      [...data.roads, ...data.paths]
+        .flatMap(({ points }) => points)
+        .every(insideVisibleBoundary),
+    ).toBe(true);
+  });
+
+  test("includes sparse illustrative trees in the requested campus areas", () => {
+    const pointInRing = (
+      point: { lat: number; lon: number },
+      ring: [number, number][],
+    ) => {
+      let inside = false;
+      for (
+        let index = 0, previous = ring.length - 1;
+        index < ring.length;
+        previous = index++
+      ) {
+        const currentPoint = ring[index];
+        const previousPoint = ring[previous];
+        if (
+          currentPoint[1] > point.lat !== previousPoint[1] > point.lat &&
+          point.lon <
+            ((previousPoint[0] - currentPoint[0]) *
+              (point.lat - currentPoint[1])) /
+              (previousPoint[1] - currentPoint[1]) +
+              currentPoint[0]
+        ) {
+          inside = !inside;
+        }
+      }
+      return inside;
+    };
+    const curatedTrees = data.trees.filter(({ id }) =>
+      id.startsWith("curation-"),
+    );
+    const counts = Object.fromEntries(
+      [
+        "mei-garden",
+        "life-sciences",
+        "student-dormitories",
+        "humanities-social-sciences",
+        "yi-garden",
+      ].map((cluster) => [
+        cluster,
+        curatedTrees.filter(({ id }) => id.startsWith(`curation-${cluster}-`))
+          .length,
+      ]),
+    );
+
+    expect(counts).toEqual({
+      "mei-garden": 24,
+      "life-sciences": 24,
+      "student-dormitories": 17,
+      "humanities-social-sciences": 12,
+      "yi-garden": 14,
+    });
+    const buildingCollisions = curatedTrees.flatMap((tree) =>
+      data.buildings
+        .filter(
+          (building) =>
+            pointInRing(tree.location, building.geometry.footprint) &&
+            !(building.geometry.holes ?? []).some((hole) =>
+              pointInRing(tree.location, hole),
+            ),
+        )
+        .map((building) => `${tree.id} inside ${building.id}`),
+    );
+    expect(buildingCollisions).toEqual([]);
+  });
+
+  test("includes flat curated vegetation across the southern hillside", () => {
+    const vegetation = data.areas.filter(({ id }) =>
+      id.startsWith("curation-vegetation-"),
+    );
+
+    expect(vegetation.map(({ id }) => id)).toEqual([
+      "curation-vegetation-mei-garden-hillside",
+      "curation-vegetation-humanities-hillside",
+      "curation-vegetation-life-sciences-hillside",
+      "curation-vegetation-yi-garden-hillside",
+    ]);
+    expect(
+      vegetation.every(
+        ({ kind, polygon }) => kind === "wood" && polygon.length >= 4,
+      ),
+    ).toBe(true);
   });
 });

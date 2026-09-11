@@ -8,6 +8,13 @@ export type WorldPosition = {
   z: number;
 };
 
+export type CampusBounds = {
+  south: number;
+  west: number;
+  north: number;
+  east: number;
+};
+
 /** GeoJSON coordinate order: [longitude, latitude]. */
 export type GeoCoordinate = [longitude: number, latitude: number];
 
@@ -98,12 +105,7 @@ export type CampusMapData = {
   version: 1;
   generatedAt: string;
   origin: LatLon;
-  bounds: {
-    south: number;
-    west: number;
-    north: number;
-    east: number;
-  };
+  bounds: CampusBounds;
   attribution: {
     text: string;
     url: string;

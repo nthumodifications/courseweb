@@ -2,6 +2,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import type {
   CampusAreaFeature,
   CampusBuilding,
+  LatLon,
 } from "../../../packages/shared/src/campus";
 
 type CurationNames = {
@@ -16,13 +17,22 @@ export type CampusMapCuration = {
     sourceIds: string[];
     name: string;
   }>;
-  excluded: number[];
+  excludedSourceIds: string[];
   renamed: Record<string, CurationNames>;
   groups: Array<{
     id: string;
-    labelNumbers: number[];
+    labelNumber: number;
     zh: string;
     en?: string;
+  }>;
+  illustrativeTreeClusters: Array<{
+    id: string;
+    locations: LatLon[];
+  }>;
+  illustrativeVegetationAreas: Array<{
+    id: string;
+    kind: "grass" | "wood";
+    polygon: LatLon[];
   }>;
 };
 
@@ -33,11 +43,16 @@ const CURATION_INSTRUCTIONS = {
   syncLabels:
     "Run: bun run map:sync-labels only when OpenStreetMap adds new locations.",
   labels:
-    "Stable # number to OSM source ID reference. Do not renumber entries.",
-  excluded: "Add # numbers that should not appear on the map.",
+    "Only visible map locations belong here. Numbers stay contiguous and are compacted automatically.",
+  excludedSourceIds:
+    "Permanent OSM source-ID denylist. Add way/123 or relation/123, then run bun run map:generate.",
   renamed: "Map a # number to a bilingual display name.",
   groups:
-    "Give multiple building # numbers one shared label and bilingual name.",
+    "A merged multi-feature label. Its member OSM IDs live together in the matching labels entry.",
+  illustrativeTreeClusters:
+    "Sparse non-interactive tree markers. Edit lat/lon locations, then run bun run map:generate.",
+  illustrativeVegetationAreas:
+    "Flat 2D grass or wood polygons. Edit lat/lon vertices, then run bun run map:generate.",
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -78,8 +93,8 @@ export function parseCampusMapCuration(value: unknown): CampusMapCuration {
   if (!Array.isArray(value.labels)) {
     throw new Error("Campus map curation labels must be an array");
   }
-  if (!Array.isArray(value.excluded)) {
-    throw new Error("Campus map curation excluded must be an array");
+  if (!Array.isArray(value.excludedSourceIds)) {
+    throw new Error("Campus map curation excludedSourceIds must be an array");
   }
   if (!isRecord(value.renamed)) {
     throw new Error("Campus map curation renamed must be an object");
@@ -87,9 +102,22 @@ export function parseCampusMapCuration(value: unknown): CampusMapCuration {
   if (!Array.isArray(value.groups)) {
     throw new Error("Campus map curation groups must be an array");
   }
+  const treeClusterValues = value.illustrativeTreeClusters ?? [];
+  if (!Array.isArray(treeClusterValues)) {
+    throw new Error(
+      "Campus map curation illustrativeTreeClusters must be an array",
+    );
+  }
+  const vegetationAreaValues = value.illustrativeVegetationAreas ?? [];
+  if (!Array.isArray(vegetationAreaValues)) {
+    throw new Error(
+      "Campus map curation illustrativeVegetationAreas must be an array",
+    );
+  }
 
   const labelNumbers = new Set<number>();
   const labeledFeatures = new Set<string>();
+  const labeledSources = new Set<string>();
   const labels = value.labels.map((label, labelIndex) => {
     if (!isRecord(label))
       throw new Error(`labels[${labelIndex}] must be an object`);
@@ -124,8 +152,29 @@ export function parseCampusMapCuration(value: unknown): CampusMapCuration {
         sourceId,
         `labels[${labelIndex}].sourceIds[${sourceIndex}]`,
       );
+      if (labeledSources.has(sourceId)) {
+        throw new Error(`Duplicate campus map source ID: ${sourceId}`);
+      }
+      labeledSources.add(sourceId);
       return sourceId;
     });
+    const featureSourceIds = new Set(
+      featureIds.map((featureId) => generatedFeatureSourceId(featureId)),
+    );
+    for (const sourceId of sourceIds) {
+      if (!featureSourceIds.has(sourceId)) {
+        throw new Error(
+          `labels[${labelIndex}] source ID ${sourceId} has no matching feature ID`,
+        );
+      }
+    }
+    for (const sourceId of featureSourceIds) {
+      if (!sourceId || !sourceIds.includes(sourceId)) {
+        throw new Error(
+          `labels[${labelIndex}] feature IDs must have matching source IDs`,
+        );
+      }
+    }
     if (typeof label.name !== "string") {
       throw new Error(`labels[${labelIndex}].name must be a string`);
     }
@@ -137,14 +186,14 @@ export function parseCampusMapCuration(value: unknown): CampusMapCuration {
     };
   });
 
-  const excludedNumbers = new Set<number>();
-  const excluded = value.excluded.map((number, index) => {
-    assertPositiveInteger(number, `excluded[${index}]`);
-    if (excludedNumbers.has(number)) {
-      throw new Error(`Duplicate excluded label number: ${number}`);
+  const excludedSourceIdSet = new Set<string>();
+  const excludedSourceIds = value.excludedSourceIds.map((sourceId, index) => {
+    assertSourceId(sourceId, `excludedSourceIds[${index}]`);
+    if (excludedSourceIdSet.has(sourceId)) {
+      throw new Error(`Duplicate excluded OSM source ID: ${sourceId}`);
     }
-    excludedNumbers.add(number);
-    return number;
+    excludedSourceIdSet.add(sourceId);
+    return sourceId;
   });
   const renamed = Object.fromEntries(
     Object.entries(value.renamed).map(([numberText, names]) => {
@@ -163,30 +212,112 @@ export function parseCampusMapCuration(value: unknown): CampusMapCuration {
       throw new Error(`Duplicate campus map group id: ${group.id}`);
     }
     groupIds.add(group.id);
-    if (!Array.isArray(group.labelNumbers) || group.labelNumbers.length < 2) {
+    assertPositiveInteger(
+      group.labelNumber,
+      `groups[${groupIndex}].labelNumber`,
+    );
+    if (groupedNumbers.has(group.labelNumber)) {
       throw new Error(
-        `groups[${groupIndex}].labelNumbers needs at least two numbers`,
+        `Label number appears in multiple groups: ${group.labelNumber}`,
       );
     }
-    const numbers = group.labelNumbers.map((number, numberIndex) => {
-      assertPositiveInteger(
-        number,
-        `groups[${groupIndex}].labelNumbers[${numberIndex}]`,
-      );
-      if (groupedNumbers.has(number)) {
-        throw new Error(`Label number appears in multiple groups: ${number}`);
-      }
-      groupedNumbers.add(number);
-      return number;
-    });
+    groupedNumbers.add(group.labelNumber);
     const names = parseNames(group, `groups[${groupIndex}]`);
-    return { id: group.id, labelNumbers: numbers, ...names };
+    return { id: group.id, labelNumber: group.labelNumber, ...names };
   });
+  const treeClusterIds = new Set<string>();
+  const illustrativeTreeClusters = treeClusterValues.map(
+    (cluster, clusterIndex) => {
+      if (
+        !isRecord(cluster) ||
+        typeof cluster.id !== "string" ||
+        !cluster.id.trim()
+      ) {
+        throw new Error(
+          `illustrativeTreeClusters[${clusterIndex}].id must be a non-empty string`,
+        );
+      }
+      if (treeClusterIds.has(cluster.id)) {
+        throw new Error(
+          `Duplicate illustrative tree cluster id: ${cluster.id}`,
+        );
+      }
+      treeClusterIds.add(cluster.id);
+      if (!Array.isArray(cluster.locations) || cluster.locations.length === 0) {
+        throw new Error(
+          `illustrativeTreeClusters[${clusterIndex}].locations must not be empty`,
+        );
+      }
+      const locations = cluster.locations.map((location, locationIndex) => {
+        if (
+          !isRecord(location) ||
+          typeof location.lat !== "number" ||
+          !Number.isFinite(location.lat) ||
+          location.lat < -90 ||
+          location.lat > 90 ||
+          typeof location.lon !== "number" ||
+          !Number.isFinite(location.lon) ||
+          location.lon < -180 ||
+          location.lon > 180
+        ) {
+          throw new Error(
+            `illustrativeTreeClusters[${clusterIndex}].locations[${locationIndex}] must contain valid lat/lon coordinates`,
+          );
+        }
+        return { lat: location.lat, lon: location.lon };
+      });
+      return { id: cluster.id, locations };
+    },
+  );
+  const vegetationAreaIds = new Set<string>();
+  const illustrativeVegetationAreas = vegetationAreaValues.map(
+    (area, areaIndex) => {
+      if (!isRecord(area) || typeof area.id !== "string" || !area.id.trim()) {
+        throw new Error(
+          `illustrativeVegetationAreas[${areaIndex}].id must be a non-empty string`,
+        );
+      }
+      if (vegetationAreaIds.has(area.id)) {
+        throw new Error(
+          `Duplicate illustrative vegetation area id: ${area.id}`,
+        );
+      }
+      vegetationAreaIds.add(area.id);
+      if (area.kind !== "grass" && area.kind !== "wood") {
+        throw new Error(
+          `illustrativeVegetationAreas[${areaIndex}].kind must be grass or wood`,
+        );
+      }
+      if (!Array.isArray(area.polygon) || area.polygon.length < 3) {
+        throw new Error(
+          `illustrativeVegetationAreas[${areaIndex}].polygon needs at least three vertices`,
+        );
+      }
+      const polygon = area.polygon.map((location, locationIndex) => {
+        if (
+          !isRecord(location) ||
+          typeof location.lat !== "number" ||
+          !Number.isFinite(location.lat) ||
+          location.lat < -90 ||
+          location.lat > 90 ||
+          typeof location.lon !== "number" ||
+          !Number.isFinite(location.lon) ||
+          location.lon < -180 ||
+          location.lon > 180
+        ) {
+          throw new Error(
+            `illustrativeVegetationAreas[${areaIndex}].polygon[${locationIndex}] must contain valid lat/lon coordinates`,
+          );
+        }
+        return { lat: location.lat, lon: location.lon };
+      });
+      return { id: area.id, kind: area.kind, polygon };
+    },
+  );
 
   const referencedNumbers = new Set([
-    ...excluded,
     ...Object.keys(renamed).map(Number),
-    ...groups.flatMap((group) => group.labelNumbers),
+    ...groups.map((group) => group.labelNumber),
   ]);
   for (const number of referencedNumbers) {
     if (!labelNumbers.has(number)) {
@@ -194,15 +325,19 @@ export function parseCampusMapCuration(value: unknown): CampusMapCuration {
     }
   }
   for (const number of groupedNumbers) {
-    if (excludedNumbers.has(number)) {
-      throw new Error(`Label #${number} cannot be both excluded and grouped`);
-    }
     if (renamed[String(number)]) {
       throw new Error(`Label #${number} cannot be both renamed and grouped`);
     }
   }
 
-  return { labels, excluded, renamed, groups };
+  return {
+    labels,
+    excludedSourceIds,
+    renamed,
+    groups,
+    illustrativeTreeClusters,
+    illustrativeVegetationAreas,
+  };
 }
 
 export async function loadCampusMapCuration(
@@ -217,6 +352,54 @@ export async function writeCampusMapCuration(
 ): Promise<void> {
   const document = { _instructions: CURATION_INSTRUCTIONS, ...curation };
   await writeFile(path, `${JSON.stringify(document, null, 2)}\n`, "utf8");
+}
+
+function generatedFeatureSourceId(featureId: string): string | undefined {
+  const match = /^osm-(way|relation)-(\d+)-\d+$/.exec(featureId);
+  return match ? `${match[1]}/${match[2]}` : undefined;
+}
+
+export function compactCampusMapLabelCatalog(
+  curation: CampusMapCuration,
+): CampusMapCuration {
+  const excludedSourceIds = new Set(curation.excludedSourceIds);
+  const visibleLabels = [...curation.labels]
+    .sort((left, right) => left.number - right.number)
+    .map((label) => ({
+      ...label,
+      featureIds: label.featureIds.filter((featureId) => {
+        const sourceId = generatedFeatureSourceId(featureId);
+        return !sourceId || !excludedSourceIds.has(sourceId);
+      }),
+      sourceIds: label.sourceIds.filter(
+        (sourceId) => !excludedSourceIds.has(sourceId),
+      ),
+    }))
+    .filter(
+      (label) => label.featureIds.length > 0 && label.sourceIds.length > 0,
+    );
+  const compactNumberByOldNumber = new Map(
+    visibleLabels.map((label, index) => [label.number, index + 1] as const),
+  );
+  const labels = visibleLabels.map((label, index) => ({
+    ...label,
+    number: index + 1,
+    featureIds: [...label.featureIds],
+    sourceIds: [...label.sourceIds],
+  }));
+  const renamed: Record<string, CurationNames> = {};
+
+  for (const [oldNumberText, names] of Object.entries(curation.renamed)) {
+    const newNumber = compactNumberByOldNumber.get(Number(oldNumberText));
+    if (newNumber) renamed[String(newNumber)] = names;
+  }
+
+  const groups = curation.groups.flatMap((group) => {
+    const labelNumber = compactNumberByOldNumber.get(group.labelNumber);
+    return labelNumber ? [{ ...group, labelNumber }] : [];
+  });
+
+  return { ...curation, labels, renamed, groups };
 }
 
 function buildingSourceId(building: CampusBuilding): string {
@@ -238,7 +421,9 @@ export function syncCampusMapLabelCatalog(
   water: CampusAreaFeature[],
   curation: CampusMapCuration,
 ): CampusMapCuration {
-  const labels = curation.labels.map((label) => ({
+  const compactedCuration = compactCampusMapLabelCatalog(curation);
+  const excludedSourceIds = new Set(compactedCuration.excludedSourceIds);
+  const labels = compactedCuration.labels.map((label) => ({
     ...label,
     featureIds: [...label.featureIds],
     sourceIds: [...label.sourceIds],
@@ -246,6 +431,11 @@ export function syncCampusMapLabelCatalog(
   const labelByFeature = new Map(
     labels.flatMap((label) =>
       label.featureIds.map((featureId) => [featureId, label] as const),
+    ),
+  );
+  const labelBySource = new Map(
+    labels.flatMap((label) =>
+      label.sourceIds.map((sourceId) => [sourceId, label] as const),
     ),
   );
   const rawLabels = new Map<
@@ -263,6 +453,7 @@ export function syncCampusMapLabelCatalog(
       "geometry" in feature ? (feature.identityId ?? feature.id) : feature.id;
     const sourceId =
       "geometry" in feature ? buildingSourceId(feature) : areaSourceId(feature);
+    if (excludedSourceIds.has(sourceId)) continue;
     const label = rawLabels.get(key) ?? {
       featureIds: new Set<string>(),
       sourceIds: new Set<string>(),
@@ -283,11 +474,16 @@ export function syncCampusMapLabelCatalog(
   }> = [];
   for (const [key, rawLabel] of rawLabels) {
     const matched = new Set(
-      [...rawLabel.featureIds]
-        .map((featureId) => labelByFeature.get(featureId))
-        .filter((label): label is CampusMapCuration["labels"][number] =>
-          Boolean(label),
+      [
+        ...[...rawLabel.featureIds].map((featureId) =>
+          labelByFeature.get(featureId),
         ),
+        ...[...rawLabel.sourceIds].map((sourceId) =>
+          labelBySource.get(sourceId),
+        ),
+      ].filter((label): label is CampusMapCuration["labels"][number] =>
+        Boolean(label),
+      ),
     );
     if (matched.size > 1) {
       throw new Error(
@@ -302,8 +498,10 @@ export function syncCampusMapLabelCatalog(
         labelByFeature.set(featureId, existing);
       }
       for (const sourceId of rawLabel.sourceIds) {
-        if (!existing.sourceIds.includes(sourceId))
+        if (!existing.sourceIds.includes(sourceId)) {
           existing.sourceIds.push(sourceId);
+        }
+        labelBySource.set(sourceId, existing);
       }
     } else {
       newLabels.push({ ...rawLabel, key });
@@ -326,7 +524,10 @@ export function syncCampusMapLabelCatalog(
     });
   }
 
-  return { ...curation, labels: labels.sort((a, b) => a.number - b.number) };
+  return {
+    ...compactedCuration,
+    labels: labels.sort((a, b) => a.number - b.number),
+  };
 }
 
 export function applyCampusMapCuration(
@@ -334,32 +535,33 @@ export function applyCampusMapCuration(
   water: CampusAreaFeature[],
   curation: CampusMapCuration,
 ): { buildings: CampusBuilding[]; water: CampusAreaFeature[] } {
+  const compactedCuration = compactCampusMapLabelCatalog(curation);
   const numberByFeature = new Map(
-    curation.labels.flatMap((label) =>
+    compactedCuration.labels.flatMap((label) =>
       label.featureIds.map((featureId) => [featureId, label.number] as const),
     ),
   );
-  const excluded = new Set(curation.excluded);
+  const excludedSourceIds = new Set(compactedCuration.excludedSourceIds);
   const groupByNumber = new Map(
-    curation.groups.flatMap((group) =>
-      group.labelNumbers.map((number) => [number, group] as const),
+    compactedCuration.groups.map(
+      (group) => [group.labelNumber, group] as const,
     ),
   );
   const missingFeatures = new Set<string>();
 
   const curatedBuildings = buildings.flatMap((building) => {
+    if (excludedSourceIds.has(buildingSourceId(building))) return [];
     const number = numberByFeature.get(building.id);
     if (!number) {
       missingFeatures.add(building.id);
       return [];
     }
-    if (excluded.has(number)) return [];
     const group = groupByNumber.get(number);
-    const names = group ?? curation.renamed[String(number)];
+    const names = group ?? compactedCuration.renamed[String(number)];
     return [
       {
         ...building,
-        labelNumber: group ? Math.min(...group.labelNumbers) : number,
+        labelNumber: number,
         ...(group ? { labelGroupId: `curation:${group.id}` } : {}),
         ...(names
           ? {
@@ -374,18 +576,18 @@ export function applyCampusMapCuration(
   });
 
   const curatedWater = water.flatMap((area) => {
+    if (excludedSourceIds.has(areaSourceId(area))) return [];
     const number = numberByFeature.get(area.id);
     if (!number) {
       missingFeatures.add(area.id);
       return [];
     }
-    if (excluded.has(number)) return [];
     if (groupByNumber.has(number)) {
       throw new Error(
         `Water label #${number} cannot be used in a building group`,
       );
     }
-    const names = curation.renamed[String(number)];
+    const names = compactedCuration.renamed[String(number)];
     return [
       {
         ...area,
@@ -409,4 +611,50 @@ export function applyCampusMapCuration(
   }
 
   return { buildings: curatedBuildings, water: curatedWater };
+}
+
+export function applyCampusEnvironmentCuration(
+  areas: CampusAreaFeature[],
+  curation: CampusMapCuration,
+): CampusAreaFeature[] {
+  const compactedCuration = compactCampusMapLabelCatalog(curation);
+  const numberByFeature = new Map(
+    compactedCuration.labels.flatMap((label) =>
+      label.featureIds.map((featureId) => [featureId, label.number] as const),
+    ),
+  );
+  const excludedSourceIds = new Set(compactedCuration.excludedSourceIds);
+  const grouped = new Set(
+    compactedCuration.groups.map((group) => group.labelNumber),
+  );
+
+  return areas.flatMap((area) => {
+    const sourceIdMatch = /^osm-(way|relation)-(\d+)-\d+$/.exec(area.id);
+    const sourceId = sourceIdMatch
+      ? `${sourceIdMatch[1]}/${sourceIdMatch[2]}`
+      : undefined;
+    if (sourceId && excludedSourceIds.has(sourceId)) return [];
+    const number = numberByFeature.get(area.id);
+    if (!number) return [area];
+    if (grouped.has(number)) {
+      throw new Error(
+        `Environment area label #${number} cannot be used in a building group`,
+      );
+    }
+    const names = compactedCuration.renamed[String(number)];
+    return [
+      {
+        ...area,
+        labelNumber: number,
+        ...(names
+          ? {
+              names: {
+                zh: names.zh,
+                ...(names.en ? { en: names.en } : {}),
+              },
+            }
+          : {}),
+      },
+    ];
+  });
 }

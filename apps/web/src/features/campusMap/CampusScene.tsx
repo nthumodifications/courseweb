@@ -1,8 +1,15 @@
 import { useEffect, useMemo } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
-import { MeshStandardMaterial } from "three";
 import {
+  AlwaysStencilFunc,
+  EqualStencilFunc,
+  KeepStencilOp,
+  MeshStandardMaterial,
+  ReplaceStencilOp,
+} from "three";
+import {
+  clipGeoPolylineToBounds,
   geoToWorld,
   type CampusAreaFeature,
   type CampusBuilding,
@@ -16,6 +23,8 @@ import CampusCamera from "./CampusCamera";
 import CampusTrees from "./CampusTrees";
 import { createAreaGeometry, createRibbonGeometry } from "./sceneGeometry";
 import {
+  CAMPUS_BUILDING_COLORS,
+  CAMPUS_ROAD_COLOR,
   createCampusFeatureLabelNumbers,
   getBuildingHeight,
   getCampusFeatureLabelKey,
@@ -50,6 +59,7 @@ type LinearFeaturesProps = {
   color: string;
   y: number;
   widthOffset?: number;
+  clipToCampus?: boolean;
 };
 
 function LinearFeatures({
@@ -58,6 +68,7 @@ function LinearFeatures({
   color,
   y,
   widthOffset = 0,
+  clipToCampus = false,
 }: LinearFeaturesProps) {
   const geometry = useMemo(
     () => createRibbonGeometry(features, origin, widthOffset),
@@ -66,8 +77,47 @@ function LinearFeatures({
   useEffect(() => () => geometry.dispose(), [geometry]);
   if (features.length === 0) return null;
   return (
-    <mesh geometry={geometry} position-y={y}>
-      <meshBasicMaterial color={color} />
+    <mesh geometry={geometry} position-y={y} renderOrder={clipToCampus ? 1 : 0}>
+      <meshBasicMaterial
+        color={color}
+        stencilWrite={clipToCampus}
+        stencilRef={1}
+        stencilFunc={EqualStencilFunc}
+        stencilFail={KeepStencilOp}
+        stencilZFail={KeepStencilOp}
+        stencilZPass={KeepStencilOp}
+      />
+    </mesh>
+  );
+}
+
+function CampusClipMask({
+  boundary,
+  origin,
+}: {
+  boundary?: CampusAreaFeature;
+  origin: LatLon;
+}) {
+  const areas = useMemo(() => (boundary ? [boundary] : []), [boundary]);
+  const geometry = useMemo(
+    () => createAreaGeometry(areas, origin),
+    [areas, origin],
+  );
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  if (!boundary) return null;
+  return (
+    <mesh geometry={geometry} renderOrder={-1}>
+      <meshBasicMaterial
+        colorWrite={false}
+        depthTest={false}
+        depthWrite={false}
+        stencilWrite
+        stencilRef={1}
+        stencilFunc={AlwaysStencilFunc}
+        stencilFail={KeepStencilOp}
+        stencilZFail={KeepStencilOp}
+        stencilZPass={ReplaceStencilOp}
+      />
     </mesh>
   );
 }
@@ -89,10 +139,21 @@ function CampusWorld({
 }: CampusWorldProps) {
   const materials = useMemo(
     () => ({
-      standard: new MeshStandardMaterial({ color: "#d9d3c7", roughness: 0.9 }),
-      recognized: new MeshStandardMaterial({
-        color: "#cdb9d1",
+      standard: new MeshStandardMaterial({
+        color: CAMPUS_BUILDING_COLORS.standard,
+        roughness: 0.9,
+      }),
+      course: new MeshStandardMaterial({
+        color: CAMPUS_BUILDING_COLORS.course,
         roughness: 0.82,
+      }),
+      food: new MeshStandardMaterial({
+        color: CAMPUS_BUILDING_COLORS.food,
+        roughness: 0.86,
+      }),
+      dormitory: new MeshStandardMaterial({
+        color: CAMPUS_BUILDING_COLORS.dormitory,
+        roughness: 0.86,
       }),
       hovered: new MeshStandardMaterial({ color: "#a56caf", roughness: 0.75 }),
       selected: new MeshStandardMaterial({ color: "#7e1083", roughness: 0.68 }),
@@ -118,6 +179,10 @@ function CampusWorld({
   const labelNumbers = useMemo(
     () => createCampusFeatureLabelNumbers(data),
     [data],
+  );
+  const labelAreas = useMemo(
+    () => [...data.water, ...data.areas.filter((area) => Boolean(area.names))],
+    [data.areas, data.water],
   );
 
   const selectedBuilding =
@@ -145,30 +210,36 @@ function CampusWorld({
     }),
     [data.areas],
   );
-  const roads = useMemo(
-    () => ({
-      major: data.roads.filter((road) => road.roadClass === "major"),
-      local: data.roads.filter(
-        (road) => !road.roadClass || road.roadClass === "local",
-      ),
-      service: data.roads.filter((road) => road.roadClass === "service"),
-    }),
-    [data.roads],
-  );
+  const ground = useMemo(() => {
+    const southwest = geoToWorld(
+      { lat: data.bounds.south, lon: data.bounds.west },
+      data.origin,
+    );
+    const northeast = geoToWorld(
+      { lat: data.bounds.north, lon: data.bounds.east },
+      data.origin,
+    );
+    return {
+      x: (southwest.x + northeast.x) / 2,
+      z: (southwest.z + northeast.z) / 2,
+      width: Math.abs(northeast.x - southwest.x) + 100,
+      depth: Math.abs(northeast.z - southwest.z) + 100,
+    };
+  }, [data.bounds, data.origin]);
 
   const boundaryLines = useMemo<CampusLinearFeature[]>(
     () =>
       data.boundary
-        ? [
-            {
-              id: `${data.boundary.id}-line`,
+        ? clipGeoPolylineToBounds(data.boundary.polygon, data.bounds).map(
+            (points, index) => ({
+              id: `${data.boundary!.id}-line-${index}`,
               kind: "path",
-              points: data.boundary.polygon,
+              points,
               width: 0.9,
-            },
-          ]
+            }),
+          )
         : [],
-    [data.boundary],
+    [data.boundary, data.bounds],
   );
 
   return (
@@ -178,8 +249,8 @@ function CampusWorld({
       <ambientLight intensity={1.7} />
       <directionalLight position={[280, 520, 240]} intensity={2.1} />
 
-      <mesh rotation-x={-Math.PI / 2} position-y={-0.08}>
-        <planeGeometry args={[1_800, 1_800]} />
+      <mesh rotation-x={-Math.PI / 2} position={[ground.x, -0.08, ground.z]}>
+        <planeGeometry args={[ground.width, ground.depth]} />
         <meshStandardMaterial color="#dce6d4" roughness={1} />
       </mesh>
 
@@ -231,36 +302,21 @@ function CampusWorld({
         color="#88bfd1"
         y={0.04}
       />
+      <CampusClipMask boundary={data.boundary} origin={data.origin} />
       <LinearFeatures
         features={data.roads}
         origin={data.origin}
-        color="#a79f91"
-        y={0.05}
-        widthOffset={1.6}
-      />
-      <LinearFeatures
-        features={roads.major}
-        origin={data.origin}
-        color="#f3e8d3"
+        color={CAMPUS_ROAD_COLOR}
         y={0.055}
-      />
-      <LinearFeatures
-        features={roads.local}
-        origin={data.origin}
-        color="#eee9df"
-        y={0.056}
-      />
-      <LinearFeatures
-        features={roads.service}
-        origin={data.origin}
-        color="#ddd8cf"
-        y={0.057}
+        widthOffset={0.8}
+        clipToCampus
       />
       <LinearFeatures
         features={data.paths}
         origin={data.origin}
         color="#aa9e88"
         y={0.065}
+        clipToCampus
       />
       <LinearFeatures
         features={boundaryLines}
@@ -270,7 +326,7 @@ function CampusWorld({
       />
       <CampusTrees trees={data.trees} origin={data.origin} y={0.04} />
 
-      {data.water.map((area) => {
+      {labelAreas.map((area) => {
         const world = geoToWorld(area.location, data.origin);
         const names = getCampusFeatureNames(area);
         const label = language === "en" ? (names.en ?? names.zh) : names.zh;
@@ -282,7 +338,7 @@ function CampusWorld({
             key={`${area.id}-label`}
             position={[world.x, 1, world.z]}
             center
-            distanceFactor={220}
+            distanceFactor={area.kind === "water" ? 220 : 260}
             zIndexRange={[5, 0]}
             style={{ pointerEvents: "none" }}
           >
@@ -291,10 +347,12 @@ function CampusWorld({
               data-campus-feature-id={area.id}
               data-campus-label-number={labelNumber}
               aria-label={numberedLabel}
-              className={`pointer-events-auto block whitespace-nowrap rounded-full border px-2 py-1 text-center text-[10px] font-semibold shadow-sm backdrop-blur-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+              className={`pointer-events-auto block whitespace-nowrap rounded-full border px-2 py-1 text-center text-[10px] font-semibold leading-tight shadow-sm backdrop-blur-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                 selected
                   ? "border-primary bg-primary text-primary-foreground"
-                  : "border-sky-700/20 bg-background/90 text-sky-900 hover:bg-sky-100 dark:text-sky-200 dark:hover:bg-sky-950"
+                  : area.kind === "water"
+                    ? "border-sky-700/20 bg-background/90 text-sky-900 hover:bg-sky-100 dark:text-sky-200 dark:hover:bg-sky-950"
+                    : "border-primary/20 bg-background/90 text-foreground hover:bg-primary/10"
               }`}
               onPointerDown={(event) => event.stopPropagation()}
               onClick={(event) => {
@@ -373,6 +431,7 @@ function CampusWorld({
       <CampusCamera
         focusFeature={selectedFeature}
         origin={data.origin}
+        bounds={data.bounds}
         resetNonce={resetNonce}
       />
     </>
@@ -392,7 +451,11 @@ export default function CampusScene({
       frameloop="demand"
       dpr={[1, 1.5]}
       camera={{ position: [430, 430, 560], fov: 46, near: 1, far: 2_500 }}
-      gl={{ antialias: false, powerPreference: "high-performance" }}
+      gl={{
+        antialias: false,
+        powerPreference: "high-performance",
+        stencil: true,
+      }}
       fallback={webglFallback}
     >
       <CampusWorld {...props} />

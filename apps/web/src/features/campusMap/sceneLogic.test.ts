@@ -3,6 +3,7 @@ import {
   CAMPUS_FLOOR_HEIGHT,
   createCampusFeatureLabelNumbers,
   DEFAULT_BUILDING_HEIGHT,
+  getBuildingColorCategory,
   getCampusFeatureLabelKey,
   getCampusFeatureGoogleMapsUrl,
   getCampusFeatureNames,
@@ -47,6 +48,36 @@ describe("campus building height", () => {
 });
 
 describe("campus map features", () => {
+  test("colors only CourseWeb course buildings purple by default", () => {
+    expect(getBuildingColorCategory(building)).toBe("standard");
+    expect(
+      getBuildingColorCategory({ ...building, identityId: "test-building" }),
+    ).toBe("course");
+  });
+
+  test.each(["小吃部", "風雲樓", "水木生活中心"])(
+    "colors the %s facilities orange",
+    (name) => {
+      expect(
+        getBuildingColorCategory({
+          ...building,
+          identityId: "possible-course-venue",
+          names: { zh: name },
+        }),
+      ).toBe("food");
+    },
+  );
+
+  test("colors dormitories containing 齋 blue even when mapped as venues", () => {
+    expect(
+      getBuildingColorCategory({
+        ...building,
+        identityId: "dorm-ren",
+        names: { zh: "仁齋", en: "Dormitory Ren" },
+      }),
+    ).toBe("dormitory");
+  });
+
   test("identifies buildings and preserves their bilingual names", () => {
     expect(isCampusBuilding(building)).toBe(true);
     expect(getCampusFeatureNames(building)).toEqual(building.names);

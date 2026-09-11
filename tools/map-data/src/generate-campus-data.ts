@@ -1,6 +1,7 @@
 import { mkdir } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import {
+  clipGeoPolylineToBounds,
   findCampusIdentityForOsmFeature,
   NTHU_MAIN_CAMPUS_ORIGIN,
   type CampusAreaFeature,
@@ -11,13 +12,17 @@ import {
   type GeoCoordinate,
 } from "../../../packages/shared/src/campus";
 import {
+  applyCampusEnvironmentCuration,
   applyCampusMapCuration,
+  compactCampusMapLabelCatalog,
   loadCampusMapCuration,
   syncCampusMapLabelCatalog,
+  type CampusMapCuration,
   writeCampusMapCuration,
 } from "./curation";
 import {
   classifyEnvironmentArea,
+  clipPolylineToPolygons,
   closeRing,
   extractTreeLocations,
   pointInPolygons,
@@ -29,6 +34,7 @@ import {
 } from "./osmEnvironment";
 
 const OVERPASS_ENDPOINTS = [
+  "https://overpass.private.coffee/api/interpreter",
   "https://overpass.kumi.systems/api/interpreter",
   "https://overpass-api.de/api/interpreter",
 ];
@@ -183,22 +189,29 @@ function roadClass(
   return undefined;
 }
 
-function createLinearFeature(
+function createLinearFeatures(
   element: OsmElement,
-): CampusLinearFeature | undefined {
+  campusClipPolygons: OsmPolygonRings[],
+): CampusLinearFeature[] {
   const highway = element.tags?.highway;
-  if (!highway || !element.geometry || element.geometry.length < 2)
-    return undefined;
+  if (!highway || !element.geometry || element.geometry.length < 2) return [];
   const kind = ["footway", "path", "steps", "pedestrian"].includes(highway)
     ? "path"
     : "road";
-  return {
-    id: `osm-way-${element.id}`,
+  const sourceParts = clipPolylineToPolygons(
+    element.geometry,
+    campusClipPolygons,
+  );
+  const parts = sourceParts.flatMap((part) =>
+    clipGeoPolylineToBounds(part.map(toCoordinate), bounds),
+  );
+  return parts.map((points, index) => ({
+    id: `osm-way-${element.id}${parts.length > 1 ? `-${index}` : ""}`,
     kind,
     ...(kind === "road" ? { roadClass: roadClass(highway) } : {}),
-    points: element.geometry.map(toCoordinate),
+    points,
     width: roadWidth(highway),
-  };
+  }));
 }
 
 function createAreaParts(
@@ -286,6 +299,56 @@ function createTrees(
   );
 }
 
+function createIllustrativeTrees(
+  curation: CampusMapCuration,
+  campusPolygons: OsmPolygonRings[],
+): CampusTree[] {
+  return curation.illustrativeTreeClusters.flatMap((cluster) =>
+    cluster.locations.map((location, index) => {
+      if (!pointInsideCampus(location, campusPolygons)) {
+        throw new Error(
+          `Illustrative tree ${cluster.id}-${index + 1} is outside the NTHU campus boundary`,
+        );
+      }
+      return {
+        id: `curation-${cluster.id}-${index + 1}`,
+        location: {
+          lat: roundCoordinate(location.lat),
+          lon: roundCoordinate(location.lon),
+        },
+      };
+    }),
+  );
+}
+
+function createIllustrativeVegetationAreas(
+  curation: CampusMapCuration,
+  campusPolygons: OsmPolygonRings[],
+): CampusAreaFeature[] {
+  return curation.illustrativeVegetationAreas.map((area) => {
+    const outsidePoint = area.polygon.find(
+      (location) => !pointInsideCampus(location, campusPolygons),
+    );
+    if (outsidePoint) {
+      throw new Error(
+        `Illustrative vegetation area ${area.id} is outside the NTHU campus boundary at ${outsidePoint.lat}, ${outsidePoint.lon}`,
+      );
+    }
+    const polygon = area.polygon.map(({ lat, lon }) =>
+      toCoordinate({ lat, lon }),
+    );
+    const [firstLon, firstLat] = polygon[0];
+    const [lastLon, lastLat] = polygon.at(-1)!;
+    if (firstLon !== lastLon || firstLat !== lastLat) polygon.push(polygon[0]);
+    return {
+      id: `curation-vegetation-${area.id}`,
+      kind: area.kind,
+      location: polygonCenter(polygon),
+      polygon,
+    };
+  });
+}
+
 function countIncludedTreeRows(
   elements: OsmElement[],
   campusPolygons: OsmPolygonRings[],
@@ -304,6 +367,15 @@ function polygonArea(feature: CampusAreaFeature): number {
     feature.polygon.reduce((area, point, index, points) => {
       const next = points[(index + 1) % points.length];
       return area + point[0] * next[1] - next[0] * point[1];
+    }, 0) / 2,
+  );
+}
+
+function osmPolygonArea({ outer }: OsmPolygonRings): number {
+  return Math.abs(
+    outer.reduce((area, point, index, points) => {
+      const next = points[(index + 1) % points.length];
+      return area + point.lon * next.lat - next.lon * point.lat;
     }, 0) / 2,
   );
 }
@@ -346,12 +418,15 @@ async function main() {
   if (campusPolygons.length === 0) {
     throw new Error("The NTHU campus boundary was missing from Overpass data");
   }
+  const primaryCampusPolygon = [...campusPolygons].sort(
+    (left, right) => osmPolygonArea(right) - osmPolygonArea(left),
+  )[0]!;
   const sourceBuildings = osm.elements
     .filter((element) => Boolean(element.tags?.building))
     .flatMap(createBuildingParts);
-  const lines = osm.elements
-    .map(createLinearFeature)
-    .filter((feature): feature is CampusLinearFeature => Boolean(feature));
+  const lines = osm.elements.flatMap((element) =>
+    createLinearFeatures(element, [primaryCampusPolygon]),
+  );
   const sourceWater = osm.elements
     .filter(
       (element) =>
@@ -359,17 +434,11 @@ async function main() {
         element.tags?.waterway === "riverbank",
     )
     .flatMap((element) => createAreaParts(element, "water"));
-  const curationBeforeSync = process.argv.includes("--reset-labels")
-    ? { ...curation, labels: [] }
-    : curation;
+  const compactedCuration = compactCampusMapLabelCatalog(curation);
   const syncedCuration = process.argv.includes("--sync-labels")
-    ? syncCampusMapLabelCatalog(
-        sourceBuildings,
-        sourceWater,
-        curationBeforeSync,
-      )
-    : curation;
-  if (syncedCuration !== curation) {
+    ? syncCampusMapLabelCatalog(sourceBuildings, sourceWater, compactedCuration)
+    : compactedCuration;
+  if (JSON.stringify(syncedCuration) !== JSON.stringify(curation)) {
     await writeCampusMapCuration(CURATION_PATH, syncedCuration);
   }
   const { buildings, water } = applyCampusMapCuration(
@@ -380,8 +449,23 @@ async function main() {
   const boundaries = campusBoundaryElements
     .flatMap((element) => createAreaParts(element, "boundary"))
     .sort((a, b) => polygonArea(b) - polygonArea(a));
-  const areas = createEnvironmentAreas(osm.elements, campusPolygons);
-  const trees = createTrees(osm.elements, campusPolygons);
+  const illustrativeVegetationAreas = createIllustrativeVegetationAreas(
+    syncedCuration,
+    [primaryCampusPolygon],
+  );
+  const areas = applyCampusEnvironmentCuration(
+    [
+      ...createEnvironmentAreas(osm.elements, campusPolygons),
+      ...illustrativeVegetationAreas,
+    ],
+    syncedCuration,
+  );
+  const osmTrees = createTrees(osm.elements, campusPolygons);
+  const illustrativeTrees = createIllustrativeTrees(
+    syncedCuration,
+    campusPolygons,
+  );
+  const trees = [...osmTrees, ...illustrativeTrees];
   const includedIndividualTrees = osm.elements.filter(
     (element) =>
       element.type === "node" &&
@@ -424,7 +508,7 @@ async function main() {
       `${areas.filter((area) => area.kind === "sports-pitch").length} sports pitch, ` +
       `${areas.filter((area) => area.kind === "athletics-track").length} track, ` +
       `${areas.filter((area) => area.kind === "parking").length} parking areas.\n` +
-      `${trees.length} rendered trees from ${includedIndividualTrees} individual tree nodes and ${includedTreeRows} tree rows.\n` +
+      `${trees.length} rendered trees from ${includedIndividualTrees} individual tree nodes, ${includedTreeRows} tree rows, and ${illustrativeTrees.length} illustrative curation points.\n` +
       `Curation excluded ${sourceBuildings.length - buildings.length} building parts, ` +
       `with ${syncedCuration.groups.length} label groups and ${Object.keys(syncedCuration.renamed).length} name overrides.`,
   );

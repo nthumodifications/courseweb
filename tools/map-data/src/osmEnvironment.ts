@@ -154,6 +154,204 @@ export function pointInPolygons(
   );
 }
 
+const GEOMETRY_EPSILON = 1e-10;
+
+function crossProduct(
+  leftX: number,
+  leftY: number,
+  rightX: number,
+  rightY: number,
+): number {
+  return leftX * rightY - leftY * rightX;
+}
+
+function pointOnSegment(
+  point: OsmPoint,
+  start: OsmPoint,
+  end: OsmPoint,
+): boolean {
+  const segmentLon = end.lon - start.lon;
+  const segmentLat = end.lat - start.lat;
+  const pointLon = point.lon - start.lon;
+  const pointLat = point.lat - start.lat;
+  if (
+    Math.abs(crossProduct(segmentLon, segmentLat, pointLon, pointLat)) >
+    GEOMETRY_EPSILON
+  ) {
+    return false;
+  }
+  const dot = pointLon * segmentLon + pointLat * segmentLat;
+  const squaredLength = segmentLon ** 2 + segmentLat ** 2;
+  return dot >= -GEOMETRY_EPSILON && dot <= squaredLength + GEOMETRY_EPSILON;
+}
+
+function pointOnRing(point: OsmPoint, ring: OsmPoint[]): boolean {
+  return ring
+    .slice(0, -1)
+    .some((start, index) => pointOnSegment(point, start, ring[index + 1]));
+}
+
+function pointInsideOrOnPolygons(
+  point: OsmPoint,
+  polygons: OsmPolygonRings[],
+): boolean {
+  return polygons.some(
+    ({ outer, holes }) =>
+      (pointInRing(point, outer) || pointOnRing(point, outer)) &&
+      !holes.some(
+        (hole) => pointInRing(point, hole) && !pointOnRing(point, hole),
+      ),
+  );
+}
+
+function segmentIntersectionParameters(
+  start: OsmPoint,
+  end: OsmPoint,
+  edgeStart: OsmPoint,
+  edgeEnd: OsmPoint,
+): number[] {
+  const segmentLon = end.lon - start.lon;
+  const segmentLat = end.lat - start.lat;
+  const edgeLon = edgeEnd.lon - edgeStart.lon;
+  const edgeLat = edgeEnd.lat - edgeStart.lat;
+  const denominator = crossProduct(segmentLon, segmentLat, edgeLon, edgeLat);
+  const offsetLon = edgeStart.lon - start.lon;
+  const offsetLat = edgeStart.lat - start.lat;
+  if (Math.abs(denominator) <= GEOMETRY_EPSILON) {
+    if (
+      Math.abs(crossProduct(offsetLon, offsetLat, segmentLon, segmentLat)) >
+      GEOMETRY_EPSILON
+    ) {
+      return [];
+    }
+    const squaredLength = segmentLon ** 2 + segmentLat ** 2;
+    if (squaredLength <= GEOMETRY_EPSILON) return [];
+    return [edgeStart, edgeEnd]
+      .map(
+        (point) =>
+          ((point.lon - start.lon) * segmentLon +
+            (point.lat - start.lat) * segmentLat) /
+          squaredLength,
+      )
+      .filter(
+        (ratio) => ratio >= -GEOMETRY_EPSILON && ratio <= 1 + GEOMETRY_EPSILON,
+      )
+      .map((ratio) => Math.min(1, Math.max(0, ratio)));
+  }
+
+  const segmentRatio =
+    crossProduct(offsetLon, offsetLat, edgeLon, edgeLat) / denominator;
+  const edgeRatio =
+    crossProduct(offsetLon, offsetLat, segmentLon, segmentLat) / denominator;
+  if (
+    segmentRatio < -GEOMETRY_EPSILON ||
+    segmentRatio > 1 + GEOMETRY_EPSILON ||
+    edgeRatio < -GEOMETRY_EPSILON ||
+    edgeRatio > 1 + GEOMETRY_EPSILON
+  ) {
+    return [];
+  }
+  return [Math.min(1, Math.max(0, segmentRatio))];
+}
+
+function interpolatePoint(
+  start: OsmPoint,
+  end: OsmPoint,
+  ratio: number,
+): OsmPoint {
+  return {
+    lat: start.lat + (end.lat - start.lat) * ratio,
+    lon: start.lon + (end.lon - start.lon) * ratio,
+  };
+}
+
+function sameApproximatePoint(left: OsmPoint, right: OsmPoint): boolean {
+  return (
+    Math.abs(left.lat - right.lat) <= GEOMETRY_EPSILON &&
+    Math.abs(left.lon - right.lon) <= GEOMETRY_EPSILON
+  );
+}
+
+function clipSegmentToPolygons(
+  start: OsmPoint,
+  end: OsmPoint,
+  polygons: OsmPolygonRings[],
+): Array<[OsmPoint, OsmPoint]> {
+  const ratios = [0, 1];
+  for (const { outer, holes } of polygons) {
+    for (const ring of [outer, ...holes]) {
+      for (let index = 0; index < ring.length - 1; index += 1) {
+        ratios.push(
+          ...segmentIntersectionParameters(
+            start,
+            end,
+            ring[index],
+            ring[index + 1],
+          ),
+        );
+      }
+    }
+  }
+
+  const sortedRatios = ratios
+    .sort((left, right) => left - right)
+    .filter(
+      (ratio, index, values) =>
+        index === 0 || Math.abs(ratio - values[index - 1]) > GEOMETRY_EPSILON,
+    );
+  return sortedRatios.slice(0, -1).flatMap((startRatio, index) => {
+    const endRatio = sortedRatios[index + 1];
+    if (endRatio - startRatio <= GEOMETRY_EPSILON) return [];
+    const midpoint = interpolatePoint(start, end, (startRatio + endRatio) / 2);
+    return pointInsideOrOnPolygons(midpoint, polygons)
+      ? [
+          [
+            interpolatePoint(start, end, startRatio),
+            interpolatePoint(start, end, endRatio),
+          ] as [OsmPoint, OsmPoint],
+        ]
+      : [];
+  });
+}
+
+/** Clips a polyline to polygon boundaries, splitting it on exits and re-entry. */
+export function clipPolylineToPolygons(
+  points: OsmPoint[],
+  polygons: OsmPolygonRings[],
+): OsmPoint[][] {
+  const parts: OsmPoint[][] = [];
+  let current: OsmPoint[] | undefined;
+
+  for (let index = 0; index < points.length - 1; index += 1) {
+    const clippedSegments = clipSegmentToPolygons(
+      points[index],
+      points[index + 1],
+      polygons,
+    );
+    if (clippedSegments.length === 0) {
+      if (current && current.length >= 2) parts.push(current);
+      current = undefined;
+      continue;
+    }
+
+    for (const [start, end] of clippedSegments) {
+      if (!current || !sameApproximatePoint(current.at(-1)!, start)) {
+        if (current && current.length >= 2) parts.push(current);
+        current = [start, end];
+      } else if (!sameApproximatePoint(current.at(-1)!, end)) {
+        current.push(end);
+      }
+    }
+
+    if (!sameApproximatePoint(clippedSegments.at(-1)![1], points[index + 1])) {
+      if (current && current.length >= 2) parts.push(current);
+      current = undefined;
+    }
+  }
+  if (current && current.length >= 2) parts.push(current);
+  return parts;
+}
+
 function segmentLengthMeters(start: OsmPoint, end: OsmPoint): number {
   const latitudeRadians = ((start.lat + end.lat) / 2) * (Math.PI / 180);
   const north = (end.lat - start.lat) * 111_320;

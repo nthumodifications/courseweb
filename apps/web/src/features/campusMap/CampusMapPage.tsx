@@ -13,6 +13,7 @@ import {
 import useDictionary from "@/dictionaries/useDictionary";
 import BuildingInfoPanel from "./BuildingInfoPanel";
 import CampusScene from "./CampusScene";
+import MapLegend from "./MapLegend";
 import MapSearch from "./MapSearch";
 import { CAMPUS_MAP_DATA_CACHE_VERSION, loadCampusMapData } from "./data";
 import {
@@ -97,7 +98,9 @@ export default function CampusMapPage() {
       : requestedFeatureId
         ? (data.buildings.find(
             (building) => building.id === requestedFeatureId,
-          ) ?? data.water.find((area) => area.id === requestedFeatureId))
+          ) ??
+          data.water.find((area) => area.id === requestedFeatureId) ??
+          data.areas.find((area) => area.id === requestedFeatureId))
         : undefined
     : undefined;
   const selectedBuilding =
@@ -209,17 +212,30 @@ export default function CampusMapPage() {
             </p>
           )}
         </div>
-        <Button
-          type="button"
-          variant="secondary"
-          size="icon"
-          className="pointer-events-auto shrink-0 shadow-lg"
-          aria-label={dict.resetCamera}
-          title={dict.resetCamera}
-          onClick={resetCamera}
-        >
-          <RotateCcw className="h-4 w-4" />
-        </Button>
+        <div className="pointer-events-auto flex shrink-0 gap-2">
+          <MapLegend
+            labels={{
+              button: dict.showLegend,
+              title: dict.legendTitle,
+              course: dict.legendCourse,
+              dining: dict.legendDining,
+              dormitory: dict.legendDormitory,
+              other: dict.legendOther,
+              road: dict.legendRoad,
+            }}
+          />
+          <Button
+            type="button"
+            variant="secondary"
+            size="icon"
+            className="shadow-lg"
+            aria-label={dict.resetCamera}
+            title={dict.resetCamera}
+            onClick={resetCamera}
+          >
+            <RotateCcw className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       {selectedFeature && (
