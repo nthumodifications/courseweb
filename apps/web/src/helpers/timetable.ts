@@ -4,6 +4,8 @@ import {
   CustomTimetableItem,
   CustomTimetableItemInput,
   CustomTimetableSlot,
+  TimetableBandGeometry,
+  TimetableExtendedHoursGeometry,
 } from "@/types/timetable";
 import { MinimalCourse } from "@/types/courses";
 import { getContrastColor } from "./colors";
@@ -20,35 +22,177 @@ export const timetableGridEnd = timeToMinutes(
   scheduleTimeSlots[scheduleTimeSlots.length - 1]!.end,
 );
 
-export type CustomTimetableSlotClassification = "grid" | "off-grid";
+export type CustomTimetableSlotClassification = "grid" | "start" | "end";
 
 /**
- * A custom slot belongs to the grid only when its complete interval fits
- * inside the timetable's displayed clock range. Boundary-touching slots fit.
+ * Custom slots are placed according to their start time. A block that starts
+ * in school hours stays in the grid even when it continues into late hours.
  */
 export const classifyCustomTimetableSlot = (
   slot: CustomTimetableSlot,
   gridStart = timetableGridStart,
   gridEnd = timetableGridEnd,
 ): CustomTimetableSlotClassification => {
-  const { start, end } = getCustomSlotTimeRange(slot);
-  return start >= gridStart && end <= gridEnd ? "grid" : "off-grid";
+  const { start } = getCustomSlotTimeRange(slot);
+  if (start < gridStart) return "start";
+  if (start >= gridEnd) return "end";
+  return "grid";
 };
-
-export const isTimetableGridSlot = (slot: CourseTimeslotData) =>
-  !slot.customSlot || classifyCustomTimetableSlot(slot.customSlot) === "grid";
-
-export const getOffGridTimetableData = (data: CourseTimeslotData[]) =>
-  data.filter(
-    (slot) =>
-      slot.customSlot &&
-      classifyCustomTimetableSlot(slot.customSlot) === "off-grid",
-  );
 
 export const getCustomSlotTimeRange = (slot: CustomTimetableSlot) => ({
   start: timeToMinutes(slot.start),
   end: timeToMinutes(slot.end),
 });
+
+export const formatTimetableClock = (minutes: number) => {
+  const hours = Math.floor(minutes / 60);
+  const remainder = minutes % 60;
+  return `${String(hours).padStart(2, "0")}:${String(remainder).padStart(2, "0")}`;
+};
+
+export const TIMETABLE_BAND_MIN_HEIGHT = 48;
+export const TIMETABLE_BAND_MAX_HEIGHT = 240;
+
+export type TimetableOffGridBounds = {
+  preStart: number | null;
+  lateEnd: number | null;
+};
+
+/** Finds the clock extent needed by custom slots outside the school grid. */
+export const getTimetableOffGridBounds = (
+  data: CourseTimeslotData[],
+  gridStart = timetableGridStart,
+  gridEnd = timetableGridEnd,
+): TimetableOffGridBounds => {
+  let preStart: number | null = null;
+  let lateEnd: number | null = null;
+
+  data.forEach((slot) => {
+    if (!slot.customSlot) return;
+    const range = getCustomSlotTimeRange(slot.customSlot);
+    const classification = classifyCustomTimetableSlot(
+      slot.customSlot,
+      gridStart,
+      gridEnd,
+    );
+
+    if (classification === "start") {
+      preStart =
+        preStart === null ? range.start : Math.min(preStart, range.start);
+    }
+    if (classification === "end" || range.end > gridEnd) {
+      lateEnd = lateEnd === null ? range.end : Math.max(lateEnd, range.end);
+    }
+  });
+
+  return { preStart, lateEnd };
+};
+
+/**
+ * Pixels per minute for the extended regions. This is deliberately a constant
+ * and NOT derived from the measured grid: the region rows live inside the same
+ * table that is being measured, so sizing them from that measurement is a
+ * closed loop — the rows change the cell height that produced them, the
+ * ResizeObserver fires, and the renderer never settles. Three separate
+ * attempts at this feature hung the timetable page that way.
+ */
+const BAND_PIXELS_PER_MINUTE = 0.6;
+
+const createTimetableBandGeometry = (
+  start: number,
+  end: number,
+  _gridPixelsPerMinute: number,
+  minHeight: number,
+  maxHeight: number,
+): TimetableBandGeometry => {
+  const duration = Math.max(0, end - start);
+  const naturalSize = duration * BAND_PIXELS_PER_MINUTE;
+  const size = Math.min(maxHeight, Math.max(minHeight, naturalSize));
+  return {
+    start,
+    end,
+    size,
+    pixelsPerMinute: duration > 0 ? size / duration : 0,
+  };
+};
+
+export const getTimetableExtendedHoursGeometry = (
+  data: CourseTimeslotData[],
+  gridSize: number,
+  minHeight = TIMETABLE_BAND_MIN_HEIGHT,
+  maxHeight = TIMETABLE_BAND_MAX_HEIGHT,
+  gridStart = timetableGridStart,
+  gridEnd = timetableGridEnd,
+): TimetableExtendedHoursGeometry => {
+  const { preStart, lateEnd } = getTimetableOffGridBounds(
+    data,
+    gridStart,
+    gridEnd,
+  );
+  const gridDuration = gridEnd - gridStart;
+  const gridPixelsPerMinute = gridDuration > 0 ? gridSize / gridDuration : 0;
+
+  return {
+    gridStart,
+    gridEnd,
+    gridSize,
+    gridPixelsPerMinute,
+    pre:
+      preStart === null
+        ? null
+        : createTimetableBandGeometry(
+            preStart,
+            gridStart,
+            gridPixelsPerMinute,
+            minHeight,
+            maxHeight,
+          ),
+    late:
+      lateEnd === null
+        ? null
+        : createTimetableBandGeometry(
+            gridEnd,
+            lateEnd,
+            gridPixelsPerMinute,
+            minHeight,
+            maxHeight,
+          ),
+  };
+};
+
+export const getTimetableTimePosition = (
+  minutes: number,
+  geometry: TimetableExtendedHoursGeometry,
+) => {
+  const preSize = geometry.pre?.size ?? 0;
+  if (geometry.pre && minutes <= geometry.gridStart) {
+    return (minutes - geometry.pre.start) * geometry.pre.pixelsPerMinute;
+  }
+  if (minutes <= geometry.gridEnd) {
+    return (
+      preSize + (minutes - geometry.gridStart) * geometry.gridPixelsPerMinute
+    );
+  }
+  return (
+    preSize +
+    geometry.gridSize +
+    (minutes - geometry.gridEnd) * (geometry.late?.pixelsPerMinute ?? 0)
+  );
+};
+
+export const getTimetableTimeRangePosition = (
+  start: number,
+  end: number,
+  geometry: TimetableExtendedHoursGeometry,
+) => {
+  const startPosition = getTimetableTimePosition(start, geometry);
+  const endPosition = getTimetableTimePosition(end, geometry);
+  return {
+    start: startPosition,
+    end: endPosition,
+    size: Math.max(0, endPosition - startPosition),
+  };
+};
 
 export const getTimetableDataTimeRange = (slot: CourseTimeslotData) => {
   if (slot.customSlot) return getCustomSlotTimeRange(slot.customSlot);
