@@ -24,6 +24,7 @@ model User {
   authCodes           AuthCode[]
   apiKeys             ApiKey[]
   calendarShareTokens CalendarShareToken[]
+  clientConsents      ClientConsent[]
 }
 
 model AuthCode {
@@ -97,10 +98,30 @@ model AuthSessions {
 model Client {
   id           String   @id @default(uuid())
   clientId     String   @unique
+  name         String? // Display name shown on the consent screen
+  clientUri    String? // Homepage shown on the consent screen
+  firstParty   Boolean  @default(false) // NTHUMods' own clients
   redirectUris String[]
   logoutUris   String[]
   clientSecret String? // Optional, for confidential clients
   scopes       String[]
+
+  consents ClientConsent[]
+}
+
+// A user's standing grant of a scope set to a client. Recorded when the user
+// approves the consent screen; checked before any authorization code is issued.
+model ClientConsent {
+  id        String   @id @default(uuid())
+  userId    String
+  clientId  String
+  scopes    String[]
+  grantedAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  client    Client   @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+
+  @@unique([userId, clientId])
 }
 
 model ApiKey {

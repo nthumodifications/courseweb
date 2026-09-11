@@ -11,6 +11,7 @@ import { cors } from "hono/cors";
 import { AuthConfirmation } from "./pages/authorize";
 import { serveStatic } from "hono/bun";
 import { generateAtHash } from "./utils/athash";
+import { isConsentRequired, isPendingConsentValid } from "./utils/consent";
 
 const prisma = new PrismaClient();
 const ISSUER = "https://auth.nthumods.com";
@@ -85,6 +86,148 @@ async function verifyPKCE(
   return result === 0;
 }
 
+/** Has this user already agreed to give this client these scopes? */
+async function hasConsent(
+  userId: string,
+  client: { clientId: string; firstParty: boolean },
+  scope: string[],
+  prompt: string,
+) {
+  const consent = client.firstParty
+    ? null
+    : await prisma.clientConsent.findUnique({
+        where: { userId_clientId: { userId, clientId: client.clientId } },
+      });
+
+  return !isConsentRequired({
+    firstParty: client.firstParty,
+    prompt,
+    grantedScopes: consent?.scopes ?? null,
+    requestedScopes: scope,
+  });
+}
+
+/** Store the user's approval, widening an existing grant rather than replacing it. */
+async function recordConsent(
+  userId: string,
+  clientId: string,
+  scope: string[],
+) {
+  const existing = await prisma.clientConsent.findUnique({
+    where: { userId_clientId: { userId, clientId } },
+  });
+  const scopes = [...new Set([...(existing?.scopes ?? []), ...scope])];
+  await prisma.clientConsent.upsert({
+    where: { userId_clientId: { userId, clientId } },
+    update: { scopes },
+    create: { userId, clientId, scopes },
+  });
+}
+
+/**
+ * Look up the pending request the consent screen was rendered for.
+ *
+ * The approval token is a row this server created, bound to the browser's
+ * session and to the exact request being approved, so a client cannot skip the
+ * screen by inventing the parameter itself.
+ */
+async function consumePendingConsent(
+  consentId: string,
+  sessionId: string,
+  clientId: string,
+  redirectUri: string,
+  scope: string[],
+) {
+  const pending = await prisma.authRequest.findUnique({
+    where: { state: consentId },
+  });
+  const valid = isPendingConsentValid(pending, {
+    sessionId,
+    clientId,
+    redirectUri,
+    scope,
+  });
+  return valid ? pending : null;
+}
+
+/**
+ * Render the consent screen and open a pending request for it.
+ *
+ * Approving returns to /authorize with `consent=<pending state>`; declining
+ * goes straight back to the client with `error=access_denied`.
+ */
+async function renderConsent(
+  client: {
+    clientId: string;
+    name: string | null;
+    clientUri: string | null;
+    firstParty: boolean;
+  },
+  params: {
+    sessionId: string;
+    scope: string[];
+    redirect_uri: string;
+    state: string;
+    response_type: string;
+    nonce?: string;
+    code_challenge?: string;
+    code_challenge_method?: string;
+    ui_locales?: string;
+    prompt?: string;
+  },
+) {
+  const pendingState = crypto.randomUUID();
+  await prisma.authRequest.create({
+    data: {
+      sessionId: params.sessionId,
+      clientId: client.clientId,
+      redirectUri: params.redirect_uri,
+      scopes: params.scope,
+      state: pendingState,
+      clientState: params.state,
+      nonce: params.nonce,
+      codeChallenge: params.code_challenge,
+      codeChallengeMethod: params.code_challenge_method,
+    },
+  });
+
+  // Relative to this deployment, so the screen also works outside production.
+  const approveUrl = new URL("/authorize", "http://consent.invalid");
+  approveUrl.searchParams.set("client_id", client.clientId);
+  approveUrl.searchParams.set("redirect_uri", params.redirect_uri);
+  approveUrl.searchParams.set("scope", params.scope.join(" "));
+  approveUrl.searchParams.set("state", params.state);
+  approveUrl.searchParams.set("response_type", params.response_type);
+  approveUrl.searchParams.set("consent", pendingState);
+  if (params.nonce) approveUrl.searchParams.set("nonce", params.nonce);
+  if (params.code_challenge)
+    approveUrl.searchParams.set("code_challenge", params.code_challenge);
+  if (params.code_challenge_method)
+    approveUrl.searchParams.set(
+      "code_challenge_method",
+      params.code_challenge_method,
+    );
+
+  const lang = params.ui_locales?.toLowerCase().includes("zh") ? "zh" : "en";
+  approveUrl.searchParams.set("ui_locales", lang);
+
+  const denyUrl = new URL(params.redirect_uri);
+  denyUrl.searchParams.set("error", "access_denied");
+  denyUrl.searchParams.set("state", params.state);
+
+  return (
+    <AuthConfirmation
+      approveUrl={`${approveUrl.pathname}${approveUrl.search}`}
+      denyUrl={denyUrl.toString()}
+      lang={lang}
+      scopes={params.scope}
+      clientName={client.name ?? client.clientId}
+      clientUri={client.clientUri}
+      firstParty={client.firstParty}
+    />
+  );
+}
+
 const app = new Hono()
   .use(
     "*",
@@ -114,10 +257,23 @@ const app = new Hono()
     const { JWT_PUBLIC_KEY } = env<{
       JWT_PUBLIC_KEY: string;
     }>(c);
-    const publicKey = await importSPKI(
-      JWT_PUBLIC_KEY.replace(/\\n/g, "\n"),
-      "RS256",
-    );
+    if (!JWT_PUBLIC_KEY) {
+      console.error("/.well-known/jwks.json: JWT_PUBLIC_KEY is not configured");
+      return c.json({ error: "server_error" }, 500);
+    }
+    let publicKey;
+    try {
+      publicKey = await importSPKI(
+        JWT_PUBLIC_KEY.replace(/\\n/g, "\n"),
+        "RS256",
+      );
+    } catch (error) {
+      console.error(
+        "/.well-known/jwks.json: JWT_PUBLIC_KEY is malformed",
+        error,
+      );
+      return c.json({ error: "server_error" }, 500);
+    }
     const jwk = await exportJWK(publicKey);
     jwk.kid = "1";
     jwk.use = "sig";
@@ -150,7 +306,7 @@ const app = new Hono()
         ui_locales: z.string().optional(),
         code_challenge: z.string().optional(),
         code_challenge_method: z.string().optional(),
-        acceptTos: z.coerce.boolean().optional(),
+        consent: z.string().optional(),
       }),
     ),
     async (c) => {
@@ -164,7 +320,7 @@ const app = new Hono()
         nonce,
         code_challenge,
         code_challenge_method,
-        acceptTos,
+        consent: consentId,
       } = c.req.valid("query");
 
       // Basic validation
@@ -213,6 +369,12 @@ const app = new Hono()
         return c.json({ error: "invalid_request" }, 400);
       }
 
+      // Reject scopes the client was never granted here, rather than after the
+      // user has already authenticated with NTHU.
+      if (!scope.every((s) => client.scopes.includes(s))) {
+        return c.json({ error: "invalid_scope" }, 400);
+      }
+
       // check if __session exists
       let sessionId = getCookie(c, "__session");
       if (sessionId) {
@@ -235,24 +397,87 @@ const app = new Hono()
             session.userId &&
             session.expiresAt > new Date()
           ) {
-            // resume session, we mint a authcode and redirect back to client
-            const code = crypto.randomUUID();
-            await prisma.authCode.create({
-              data: {
-                code,
-                userId: session.userId,
-                clientId: client_id,
-                redirectUri: redirect_uri,
-                expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5-minute expiry
-                scopes: scope,
-                nonce: nonce,
-                codeChallenge: code_challenge,
-                codeChallengeMethod: code_challenge_method,
-              },
-            });
+            // A live session is not on its own permission to hand this client
+            // the user's identity: the user must have consented to this client
+            // for these scopes.
+            const consented = await hasConsent(
+              session.userId,
+              client,
+              scope,
+              prompt,
+            );
 
-            return c.redirect(
-              `${redirect_uri}?code=${code}&state=${clientState}`,
+            if (consented) {
+              // resume session, we mint a authcode and redirect back to client
+              const code = crypto.randomUUID();
+              await prisma.authCode.create({
+                data: {
+                  code,
+                  userId: session.userId,
+                  clientId: client_id,
+                  redirectUri: redirect_uri,
+                  expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5-minute expiry
+                  scopes: scope,
+                  nonce: nonce,
+                  codeChallenge: code_challenge,
+                  codeChallengeMethod: code_challenge_method,
+                },
+              });
+
+              return c.redirect(
+                `${redirect_uri}?code=${code}&state=${clientState}`,
+              );
+            }
+
+            // Consent is missing or does not cover the requested scopes. The
+            // user stays signed in; only the consent screen stands in the way.
+            if (prompt === "none") {
+              return c.redirect(
+                `${redirect_uri}?error=consent_required&state=${clientState}`,
+              );
+            }
+
+            if (consentId) {
+              const pending = await consumePendingConsent(
+                consentId,
+                sessionId,
+                client_id,
+                redirect_uri,
+                scope,
+              );
+              if (!pending) {
+                return c.json({ error: "invalid_request" }, 400);
+              }
+
+              await recordConsent(session.userId, client_id, scope);
+              await prisma.authRequest.delete({ where: { id: pending.id } });
+
+              const code = crypto.randomUUID();
+              await prisma.authCode.create({
+                data: {
+                  code,
+                  userId: session.userId,
+                  clientId: client_id,
+                  redirectUri: redirect_uri,
+                  expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+                  scopes: scope,
+                  nonce: nonce,
+                  codeChallenge: code_challenge,
+                  codeChallengeMethod: code_challenge_method,
+                },
+              });
+
+              return c.redirect(
+                `${redirect_uri}?code=${code}&state=${clientState}`,
+              );
+            }
+
+            return c.html(
+              await renderConsent(client, {
+                ...c.req.valid("query"),
+                sessionId,
+                scope,
+              }),
             );
           } else {
             // session invalid, delete it
@@ -280,17 +505,8 @@ const app = new Hono()
         );
       }
 
-      if (!sessionId && !acceptTos) {
-        return c.html(
-          <AuthConfirmation
-            {...c.req.valid("query")}
-            scope={scope.join(" ")}
-          />,
-        );
-      }
-
-      // User has accepted TOS, create session
-
+      // The user is not signed in. Establish a session so the consent screen
+      // has something to bind its pending request to.
       if (!sessionId) {
         sessionId = crypto.randomUUID();
         setCookie(c, "__session", sessionId, {
@@ -308,11 +524,38 @@ const app = new Hono()
         });
       }
 
+      // Show the consent screen unless the user is arriving back from it with a
+      // pending request this server issued. `consent` is not a flag the client
+      // can set for itself: it names a row created when the screen rendered.
+      let authRequest = consentId
+        ? await consumePendingConsent(
+            consentId,
+            sessionId,
+            client_id,
+            redirect_uri,
+            scope,
+          )
+        : null;
+
+      if (!authRequest) {
+        if (consentId) {
+          return c.json({ error: "invalid_request" }, 400);
+        }
+        return c.html(
+          await renderConsent(client, {
+            ...c.req.valid("query"),
+            sessionId,
+            scope,
+          }),
+        );
+      }
+
       // create own state
       const newState = crypto.randomUUID();
 
-      // Store Authentication Request to AuthRequest table
-      const authRequest = await prisma.authRequest.create({
+      // Promote the pending request to the live NTHU round trip.
+      authRequest = await prisma.authRequest.update({
+        where: { id: authRequest.id },
         data: {
           sessionId: sessionId,
           clientId: client_id,
@@ -462,6 +705,10 @@ const app = new Hono()
           lmsid: user.lmsid,
         },
       });
+
+      // The user passed the consent screen before this round trip started, so
+      // their identity can now be attached to that approval.
+      await recordConsent(upsertedUser.userId, client_id, scopes);
 
       // generate new sessionId to prevent session fixation
       const newSessionId = crypto.randomUUID();
