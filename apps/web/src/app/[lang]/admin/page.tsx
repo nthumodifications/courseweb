@@ -48,6 +48,16 @@ const RANGES = [
 
 const shortDay = (day: string) => day.slice(5).replace("-", "/");
 
+/**
+ * Recharts types its `content` render prop against its own internal payload
+ * shape, which changes between minor versions; this is the slice of it the
+ * tooltip below actually reads.
+ */
+type TooltipProps = {
+  active?: boolean;
+  payload?: { value?: number | string; payload?: Record<string, unknown> }[];
+};
+
 const ChartTooltip = ({
   active,
   payload,
@@ -205,9 +215,10 @@ const AdminOverviewPage = () => {
                     />
                     <Tooltip
                       cursor={{ stroke: "hsl(var(--border))" }}
-                      content={(props) => (
+                      content={(props: TooltipProps) => (
                         <ChartTooltip
-                          {...(props as never)}
+                          active={props.active}
+                          payload={props.payload}
                           valueLabel="new accounts"
                           labelFormatter={(row) =>
                             formatDateTime(
@@ -265,9 +276,10 @@ const AdminOverviewPage = () => {
                     />
                     <Tooltip
                       cursor={{ fill: "hsl(var(--muted))" }}
-                      content={(props) => (
+                      content={(props: TooltipProps) => (
                         <ChartTooltip
-                          {...(props as never)}
+                          active={props.active}
+                          payload={props.payload}
                           valueLabel="tokens"
                           labelFormatter={(row) =>
                             String(row.name ?? row.clientId ?? "")

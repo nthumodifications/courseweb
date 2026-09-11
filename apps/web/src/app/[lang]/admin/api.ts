@@ -68,6 +68,8 @@ export type AdminStats = {
   };
 };
 
+export type AnnouncementSeverity = "info" | "warning" | "error";
+
 export type AdminAnnouncement = {
   id: number;
   title: string;
@@ -77,7 +79,7 @@ export type AdminAnnouncement = {
   link_url: string | null;
   link_label: string | null;
   link_label_en: string | null;
-  severity: string;
+  severity: AnnouncementSeverity;
   start_date: string;
   end_date: string;
   active: boolean;
