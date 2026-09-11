@@ -52,7 +52,12 @@ const app = new Hono()
         // Google reports a revoked, deleted or API-disabled key as a 400
         // API_KEY_INVALID. Surface that as a distinct upstream failure so it is
         // not mistaken for a bug in this handler.
-        const detail = await res.text();
+        // The upstream error body echoes back the caller's own query
+        // parameters, so strip control characters and cap the length before
+        // logging it — otherwise a crafted `start`/`end` could forge log lines.
+        const detail = (await res.text())
+          .replace(/[\u0000-\u001F\u007F]+/g, " ")
+          .slice(0, 500);
         console.error(
           `Google Calendar request failed (${res.status}): ${detail}`,
         );
