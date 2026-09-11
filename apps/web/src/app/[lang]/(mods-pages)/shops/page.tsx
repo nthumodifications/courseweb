@@ -1,17 +1,19 @@
 import { useQuery } from "@tanstack/react-query";
 import ShopList from "./ShopList";
 import useDictionary from "@/dictionaries/useDictionary";
+import type { DiningArea } from "./types";
+import client from "@/config/api";
 
 export default function Page() {
   const dict = useDictionary();
   const { data, isLoading, error } = useQuery({
     queryKey: ["dining"],
     queryFn: async () => {
-      const res = await fetch("https://api.nthusa.tw/dining/");
+      const res = await client.dining.$get();
       if (!res.ok) {
-        throw new Error("Failed to fetch data from the NTHUSA API");
+        throw new Error("Failed to fetch dining data");
       }
-      return res.json();
+      return (await res.json()) as DiningArea[];
     },
   });
 
@@ -23,7 +25,7 @@ export default function Page() {
     );
   }
 
-  if (error) {
+  if (error || !data) {
     return <div>{dict.shops.load_error}</div>;
   }
 

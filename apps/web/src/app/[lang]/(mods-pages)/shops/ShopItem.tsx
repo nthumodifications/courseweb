@@ -2,16 +2,10 @@ import React from "react";
 import { Badge } from "@courseweb/ui";
 import { MapPin, Phone, Clock, Info } from "lucide-react";
 import { Separator } from "@courseweb/ui";
+import type { DiningShop } from "./types";
 
 interface ShopItemProps {
-  shop: {
-    image: string;
-    name: string;
-    area: string;
-    phone?: string;
-    schedule: { [key: string]: string };
-    note?: string;
-  };
+  shop: DiningShop;
   filter: {
     search: string;
     open: boolean;
