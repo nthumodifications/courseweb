@@ -141,187 +141,199 @@ interface CompleteBusData {
   };
 }
 
+/**
+ * Builds the complete bus dataset from the NTHU affairs pages.
+ *
+ * Kept as a plain function rather than an HTTP call so that `/schedules` can
+ * reuse it directly. Fetching this Worker's own public hostname made the
+ * subrequest loop back through the `api.nthumods.com` custom domain, which
+ * Cloudflare rejects with an immediate 522.
+ */
+async function fetchCompleteBusData(): Promise<CompleteBusData> {
+  // Fetch both campus and inter-campus data
+  const url1 =
+    "https://affairs.site.nthu.edu.tw/p/412-1165-20978.php?Lang=zh-tw"; // campus bus (red/green)
+  const url2 =
+    "https://affairs.site.nthu.edu.tw/p/412-1165-20979.php?Lang=zh-tw"; // inter-campus (route1/route2)
+
+  const [response1, response2] = await Promise.all([
+    fetch(url1),
+    fetch(url2),
+  ]);
+
+  let busData: ParsedBusData = {};
+
+  // Parse campus bus data
+  if (response1.ok) {
+    const html1 = await response1.text();
+    const { document: doc1 } = parseHTML(html1);
+    const scripts1 = doc1.querySelectorAll("script");
+
+    for (let i = 0; i < scripts1.length; i++) {
+      const script = scripts1[i];
+      const scriptContent = script.textContent || script.innerHTML;
+
+      if (
+        scriptContent.includes("towardTSMCBuildingInfo") ||
+        scriptContent.includes("weekdayBusScheduleTowardTSMCBuilding")
+      ) {
+        const campusData = extractBusDataFromScript(scriptContent);
+        busData = { ...busData, ...campusData };
+        break;
+      }
+    }
+  }
+
+  // Parse inter-campus bus data
+  if (response2.ok) {
+    const html2 = await response2.text();
+    const { document: doc2 } = parseHTML(html2);
+    const scripts2 = doc2.querySelectorAll("script");
+
+    for (let i = 0; i < scripts2.length; i++) {
+      const script = scripts2[i];
+      const scriptContent = script.textContent || script.innerHTML;
+
+      if (
+        scriptContent.includes("towardNandaInfo") ||
+        scriptContent.includes("weekdayBusScheduleTowardNanda")
+      ) {
+        const intercampusData = extractBusDataFromScript(scriptContent);
+        busData = { ...busData, ...intercampusData };
+        break;
+      }
+    }
+  }
+
+  if (Object.keys(busData).length === 0) {
+    throw new Error("Bus schedule data not found in either page");
+  }
+
+  // Transform the data into the organized structure
+  const transformIntercampusBuses = (
+    buses: Array<{ time: string; line: string; description: string }>,
+  ) => {
+    return buses.map((item) => {
+      // Determine type based on line or description
+      let type: "route1" | "route2" | undefined = undefined;
+      if (
+        item.line === "route1" ||
+        item.description.includes("路線一") ||
+        item.description.includes("Route I")
+      ) {
+        type = "route1";
+      } else if (
+        item.line === "route2" ||
+        item.description.includes("路線二") ||
+        item.description.includes("Route II")
+      ) {
+        type = "route2";
+      }
+
+      return {
+        time: item.time,
+        description: item.description,
+        route: "南大區間車" as const,
+        type,
+      };
+    });
+  };
+
+  const transformCampusBuses = (
+    buses: Array<{
+      time: string;
+      depStop: string;
+      line: string;
+      description: string;
+    }>,
+  ) => {
+    return buses.map((item) => ({
+      time: item.time,
+      description: item.description,
+      route: "校園公車" as const,
+      dep_stop: item.depStop,
+      line: item.line,
+    }));
+  };
+
+  const result: CompleteBusData = {
+    main: {
+      toward_TSMC_building_info: busData.towardTSMCBuildingInfo || {
+        direction: "往台積館",
+        duration: "約15分鐘",
+        route: "紅線、綠線",
+        routeEN: "Red Line, Green Line",
+      },
+      toward_main_gate_info: busData.towardMainGateInfo || {
+        direction: "往北校門口",
+        duration: "約15分鐘",
+        route: "紅線、綠線",
+        routeEN: "Red Line, Green Line",
+      },
+      weekday: {
+        toward_TSMC_building: transformCampusBuses(
+          busData.weekdayBusScheduleTowardTSMCBuilding || [],
+        ),
+        toward_main_gate: transformCampusBuses(
+          busData.weekdayBusScheduleTowardMainGate || [],
+        ),
+      },
+      weekend: {
+        toward_TSMC_building: transformCampusBuses(
+          busData.weekendBusScheduleTowardTSMCBuilding ||
+            busData.weekdayBusScheduleTowardTSMCBuilding ||
+            [],
+        ),
+        toward_main_gate: transformCampusBuses(
+          busData.weekendBusScheduleTowardMainGate ||
+            busData.weekdayBusScheduleTowardMainGate ||
+            [],
+        ),
+      },
+    },
+    nanda: {
+      toward_south_campus_info: busData.towardNandaInfo || {
+        direction: "往南大校區",
+        duration: "約20分鐘",
+        route: "南大區間車",
+        routeEN: "Nanda Shuttle",
+      },
+      toward_main_campus_info: busData.towardMainCampusInfo || {
+        direction: "往校本部",
+        duration: "約20分鐘",
+        route: "南大區間車",
+        routeEN: "Nanda Shuttle",
+      },
+      weekday: {
+        toward_south_campus: transformIntercampusBuses(
+          busData.weekdayBusScheduleTowardNanda || [],
+        ),
+        toward_main_campus: transformIntercampusBuses(
+          busData.weekdayBusScheduleTowardMainCampus || [],
+        ),
+      },
+      weekend: {
+        toward_south_campus: transformIntercampusBuses(
+          busData.weekendBusScheduleTowardNanda ||
+            busData.weekdayBusScheduleTowardNanda ||
+            [],
+        ),
+        toward_main_campus: transformIntercampusBuses(
+          busData.weekendBusScheduleTowardMainCampus ||
+            busData.weekdayBusScheduleTowardMainCampus ||
+            [],
+        ),
+      },
+    },
+  };
+
+  return result;
+}
+
 const app = new Hono()
   .get("/", async (c) => {
     try {
-      // Fetch both campus and inter-campus data
-      const url1 =
-        "https://affairs.site.nthu.edu.tw/p/412-1165-20978.php?Lang=zh-tw"; // campus bus (red/green)
-      const url2 =
-        "https://affairs.site.nthu.edu.tw/p/412-1165-20979.php?Lang=zh-tw"; // inter-campus (route1/route2)
-
-      const [response1, response2] = await Promise.all([
-        fetch(url1),
-        fetch(url2),
-      ]);
-
-      let busData: ParsedBusData = {};
-
-      // Parse campus bus data
-      if (response1.ok) {
-        const html1 = await response1.text();
-        const { document: doc1 } = parseHTML(html1);
-        const scripts1 = doc1.querySelectorAll("script");
-
-        for (let i = 0; i < scripts1.length; i++) {
-          const script = scripts1[i];
-          const scriptContent = script.textContent || script.innerHTML;
-
-          if (
-            scriptContent.includes("towardTSMCBuildingInfo") ||
-            scriptContent.includes("weekdayBusScheduleTowardTSMCBuilding")
-          ) {
-            const campusData = extractBusDataFromScript(scriptContent);
-            busData = { ...busData, ...campusData };
-            break;
-          }
-        }
-      }
-
-      // Parse inter-campus bus data
-      if (response2.ok) {
-        const html2 = await response2.text();
-        const { document: doc2 } = parseHTML(html2);
-        const scripts2 = doc2.querySelectorAll("script");
-
-        for (let i = 0; i < scripts2.length; i++) {
-          const script = scripts2[i];
-          const scriptContent = script.textContent || script.innerHTML;
-
-          if (
-            scriptContent.includes("towardNandaInfo") ||
-            scriptContent.includes("weekdayBusScheduleTowardNanda")
-          ) {
-            const intercampusData = extractBusDataFromScript(scriptContent);
-            busData = { ...busData, ...intercampusData };
-            break;
-          }
-        }
-      }
-
-      if (Object.keys(busData).length === 0) {
-        throw new Error("Bus schedule data not found in either page");
-      }
-
-      // Transform the data into the organized structure
-      const transformIntercampusBuses = (
-        buses: Array<{ time: string; line: string; description: string }>,
-      ) => {
-        return buses.map((item) => {
-          // Determine type based on line or description
-          let type: "route1" | "route2" | undefined = undefined;
-          if (
-            item.line === "route1" ||
-            item.description.includes("路線一") ||
-            item.description.includes("Route I")
-          ) {
-            type = "route1";
-          } else if (
-            item.line === "route2" ||
-            item.description.includes("路線二") ||
-            item.description.includes("Route II")
-          ) {
-            type = "route2";
-          }
-
-          return {
-            time: item.time,
-            description: item.description,
-            route: "南大區間車" as const,
-            type,
-          };
-        });
-      };
-
-      const transformCampusBuses = (
-        buses: Array<{
-          time: string;
-          depStop: string;
-          line: string;
-          description: string;
-        }>,
-      ) => {
-        return buses.map((item) => ({
-          time: item.time,
-          description: item.description,
-          route: "校園公車" as const,
-          dep_stop: item.depStop,
-          line: item.line,
-        }));
-      };
-
-      const result: CompleteBusData = {
-        main: {
-          toward_TSMC_building_info: busData.towardTSMCBuildingInfo || {
-            direction: "往台積館",
-            duration: "約15分鐘",
-            route: "紅線、綠線",
-            routeEN: "Red Line, Green Line",
-          },
-          toward_main_gate_info: busData.towardMainGateInfo || {
-            direction: "往北校門口",
-            duration: "約15分鐘",
-            route: "紅線、綠線",
-            routeEN: "Red Line, Green Line",
-          },
-          weekday: {
-            toward_TSMC_building: transformCampusBuses(
-              busData.weekdayBusScheduleTowardTSMCBuilding || [],
-            ),
-            toward_main_gate: transformCampusBuses(
-              busData.weekdayBusScheduleTowardMainGate || [],
-            ),
-          },
-          weekend: {
-            toward_TSMC_building: transformCampusBuses(
-              busData.weekendBusScheduleTowardTSMCBuilding ||
-                busData.weekdayBusScheduleTowardTSMCBuilding ||
-                [],
-            ),
-            toward_main_gate: transformCampusBuses(
-              busData.weekendBusScheduleTowardMainGate ||
-                busData.weekdayBusScheduleTowardMainGate ||
-                [],
-            ),
-          },
-        },
-        nanda: {
-          toward_south_campus_info: busData.towardNandaInfo || {
-            direction: "往南大校區",
-            duration: "約20分鐘",
-            route: "南大區間車",
-            routeEN: "Nanda Shuttle",
-          },
-          toward_main_campus_info: busData.towardMainCampusInfo || {
-            direction: "往校本部",
-            duration: "約20分鐘",
-            route: "南大區間車",
-            routeEN: "Nanda Shuttle",
-          },
-          weekday: {
-            toward_south_campus: transformIntercampusBuses(
-              busData.weekdayBusScheduleTowardNanda || [],
-            ),
-            toward_main_campus: transformIntercampusBuses(
-              busData.weekdayBusScheduleTowardMainCampus || [],
-            ),
-          },
-          weekend: {
-            toward_south_campus: transformIntercampusBuses(
-              busData.weekendBusScheduleTowardNanda ||
-                busData.weekdayBusScheduleTowardNanda ||
-                [],
-            ),
-            toward_main_campus: transformIntercampusBuses(
-              busData.weekendBusScheduleTowardMainCampus ||
-                busData.weekdayBusScheduleTowardMainCampus ||
-                [],
-            ),
-          },
-        },
-      };
-
-      return c.json(result);
+      return c.json(await fetchCompleteBusData());
     } catch (error) {
       console.error("Error fetching bus schedule:", error);
       return c.json({ error: "Failed to fetch bus schedule data" }, 500);
@@ -343,15 +355,7 @@ const app = new Hono()
       const { bus_type, day, direction } = c.req.valid("query");
 
       try {
-        // Get complete data from main endpoint
-        const completeDataResponse = await fetch(
-          `${c.req.url.replace("/schedules", "")}`,
-        );
-        const completeData: CompleteBusData = await completeDataResponse.json();
-
-        if (!completeDataResponse.ok) {
-          throw new Error("Failed to fetch complete bus data");
-        }
+        const completeData = await fetchCompleteBusData();
 
         // Determine which schedule to return based on parameters
         const currentDay =
@@ -399,10 +403,12 @@ const app = new Hono()
                 : completeData.nanda.weekday.toward_south_campus;
 
             for (const item of intercampusSchedule) {
+              // "nanda" means every inter-campus bus. Upstream now tags each
+              // entry route1 or route2, so filtering it to untyped entries
+              // matched nothing at all.
               if (
                 (bus_type === "route1" && item.type !== "route1") ||
-                (bus_type === "route2" && item.type !== "route2") ||
-                (bus_type === "nanda" && item.type !== undefined)
+                (bus_type === "route2" && item.type !== "route2")
               ) {
                 continue;
               }
@@ -448,10 +454,12 @@ const app = new Hono()
                 : completeData.nanda.weekday.toward_main_campus;
 
             for (const item of intercampusSchedule) {
+              // "nanda" means every inter-campus bus. Upstream now tags each
+              // entry route1 or route2, so filtering it to untyped entries
+              // matched nothing at all.
               if (
                 (bus_type === "route1" && item.type !== "route1") ||
-                (bus_type === "route2" && item.type !== "route2") ||
-                (bus_type === "nanda" && item.type !== undefined)
+                (bus_type === "route2" && item.type !== "route2")
               ) {
                 continue;
               }

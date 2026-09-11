@@ -35,6 +35,8 @@ export const auth = (requiredScopes?: string[]): MiddlewareHandler => {
 
     const token = authHeader.substring(7); // Remove "Bearer " prefix
 
+    let user: User;
+
     try {
       const {
         NTHUMODS_AUTH_INTROSPECTION_URL,
@@ -87,25 +89,30 @@ export const auth = (requiredScopes?: string[]): MiddlewareHandler => {
       }
 
       // Create user object
-      const userScopes = introspection.scope?.split(" ") || [];
-      const user: User = {
+      user = {
         sub: introspection.username,
-        scopes: userScopes,
+        scopes: introspection.scope?.split(" ") || [],
       };
-
-      // If no scopes are required, just set the user info and proceed
-      if (!requiredScopes || requiredScopes.length === 0) {
-        c.set("user", user);
-        await next();
-        return;
+    } catch (error) {
+      // An HTTPException here is a deliberate 401/403/500 raised above, and
+      // already carries the status the caller should see. Only an unexpected
+      // failure (the introspection request itself) becomes a 500.
+      if (error instanceof HTTPException) {
+        throw error;
       }
+      console.error("Authentication error:", error);
+      throw new HTTPException(500, {
+        message: "Internal Server Error",
+      });
+    }
 
-      // Check if the user has the required scopes
+    // Check if the user has the required scopes
+    if (requiredScopes && requiredScopes.length > 0) {
       const hasRequiredScope = requiredScopes.some((requiredScope) => {
         // Handle patterns like "user:read" where "user" scope is sufficient
         const [baseScope] = requiredScope.split(":");
         return (
-          userScopes.includes(requiredScope) || userScopes.includes(baseScope)
+          user.scopes.includes(requiredScope) || user.scopes.includes(baseScope)
         );
       });
 
@@ -114,17 +121,14 @@ export const auth = (requiredScopes?: string[]): MiddlewareHandler => {
           message: "Forbidden",
         });
       }
-
-      // Set user information in the context for downstream handlers
-      c.set("user", user);
-
-      await next();
-    } catch (error) {
-      console.error("Authentication error:", error);
-      throw new HTTPException(500, {
-        message: "Internal Server Error",
-      });
     }
+
+    // Set user information in the context for downstream handlers
+    c.set("user", user);
+
+    // Deliberately outside the try above: a route handler's own failure is not
+    // an authentication error and must not be rewritten as one.
+    await next();
   };
 };
 
