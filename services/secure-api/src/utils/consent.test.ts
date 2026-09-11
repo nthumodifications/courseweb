@@ -55,6 +55,16 @@ describe("sameScopes", () => {
   it("rejects a superset", () => {
     expect(sameScopes(["openid"], ["openid", "email"])).toBe(false);
   });
+
+  it("does not let a repeated scope stand in for a different one", () => {
+    // Length and membership alone would call these equal, which would let a
+    // replayed approval carry a scope the consent screen never showed.
+    expect(sameScopes(["openid", "openid"], ["openid", "email"])).toBe(false);
+  });
+
+  it("treats a repeated scope as the same set", () => {
+    expect(sameScopes(["openid", "openid"], ["openid"])).toBe(true);
+  });
 });
 
 describe("coversScopes", () => {

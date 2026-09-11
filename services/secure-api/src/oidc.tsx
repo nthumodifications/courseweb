@@ -13,6 +13,7 @@ import { serveStatic } from "hono/bun";
 import { generateAtHash } from "./utils/athash";
 import {
   buildClientRedirect,
+  CONSENT_REQUEST_EXPIRY,
   isConsentRequired,
   isPendingConsentValid,
 } from "./utils/consent";
@@ -180,6 +181,16 @@ async function renderConsent(
     prompt?: string;
   },
 ) {
+  // A consent screen that is cancelled or simply abandoned leaves its pending
+  // row behind, so clear this session's expired ones before opening another.
+  await prisma.authRequest.deleteMany({
+    where: {
+      sessionId: params.sessionId,
+      consentedAt: null,
+      createdAt: { lt: new Date(Date.now() - CONSENT_REQUEST_EXPIRY) },
+    },
+  });
+
   const pendingState = crypto.randomUUID();
   await prisma.authRequest.create({
     data: {
@@ -209,6 +220,9 @@ async function renderConsent(
     code_challenge: params.code_challenge,
     code_challenge_method: params.code_challenge_method,
     ui_locales: lang,
+    // Carried through, so approving a prompt=consent request still lands on the
+    // branch that consumes the pending row and records the grant.
+    prompt: params.prompt,
   });
 
   const denyUrl = buildClientRedirect(params.redirect_uri, {
@@ -293,7 +307,9 @@ const app = new Hono()
         scope: z
           .string()
           .transform((scope) => {
-            const scopes = scope.split(" ");
+            // Deduplicated, so a repeated scope cannot make two different
+            // requests compare equal downstream.
+            const scopes = [...new Set(scope.split(" ").filter(Boolean))];
             if (!scopes.every((scope) => VALID_SCOPES.includes(scope))) {
               throw new Error("Invalid scopes");
             }
@@ -585,6 +601,7 @@ const app = new Hono()
           nonce: nonce,
           codeChallenge: code_challenge,
           codeChallengeMethod: code_challenge_method,
+          consentedAt: new Date(),
         },
       });
 
@@ -622,11 +639,11 @@ const app = new Hono()
     ),
     async (c, next) => {
       const { state } = c.req.valid("query");
-      // check prisma if such state exists
+      // check prisma if such state exists, and that the user approved it
       const authRequest = await prisma.authRequest.findUnique({
         where: { state },
       });
-      if (!authRequest) {
+      if (!authRequest?.consentedAt) {
         return c.json({ error: "invalid_request" }, 400);
       }
       await next();
@@ -659,7 +676,7 @@ const app = new Hono()
       const authRequest = await prisma.authRequest.findUnique({
         where: { state },
       });
-      if (!authRequest) {
+      if (!authRequest?.consentedAt) {
         return c.json({ error: "invalid_request" }, 400);
       }
       // Delete auth request

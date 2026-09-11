@@ -57,6 +57,10 @@ model AuthRequest {
   codeChallengeMethod String?
   responseMode        String?
   responseType        String[]
+  // Set when the user approves the consent screen. A request that has not been
+  // approved is never exchanged for a code, so the existence of a row is not on
+  // its own taken as consent.
+  consentedAt         DateTime?
   createdAt           DateTime     @default(now())
   session             AuthSessions @relation(fields: [sessionId], references: [sessionId], onDelete: Cascade)
 }

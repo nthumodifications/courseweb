@@ -29,8 +29,20 @@ export function buildClientRedirect(
   return `${base}${separator}${query.toString()}`;
 }
 
-export const sameScopes = (a: string[], b: string[]) =>
-  a.length === b.length && a.every((scope) => b.includes(scope));
+/**
+ * Compare scope sets, not scope lists.
+ *
+ * Length-and-membership is not enough: a repeated scope makes
+ * ["openid", "openid"] look equal to ["openid", "email"], which would let a
+ * replayed approval carry a scope the consent screen never displayed.
+ */
+export const sameScopes = (a: string[], b: string[]) => {
+  const left = new Set(a);
+  const right = new Set(b);
+  return (
+    left.size === right.size && [...left].every((scope) => right.has(scope))
+  );
+};
 
 /** Does a stored grant already cover everything being asked for? */
 export const coversScopes = (granted: string[], requested: string[]) =>
