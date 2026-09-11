@@ -8,6 +8,13 @@ export type WorldPosition = {
   z: number;
 };
 
+export type CampusBounds = {
+  south: number;
+  west: number;
+  north: number;
+  east: number;
+};
+
 /** GeoJSON coordinate order: [longitude, latitude]. */
 export type GeoCoordinate = [longitude: number, latitude: number];
 
@@ -28,6 +35,8 @@ export type CampusBuildingIdentity = {
 export type CampusBuilding = {
   id: string;
   identityId?: string;
+  labelGroupId?: string;
+  labelNumber?: number;
   source: {
     type: "way" | "relation";
     id: number;
@@ -44,6 +53,7 @@ export type CampusBuilding = {
   location: LatLon;
   geometry: {
     footprint: GeoCoordinate[];
+    holes?: GeoCoordinate[][];
     height?: number;
     levels?: number;
   };
@@ -55,31 +65,47 @@ export type CampusBuilding = {
 export type CampusLinearFeature = {
   id: string;
   kind: "road" | "path";
+  roadClass?: "major" | "local" | "service";
   points: GeoCoordinate[];
   width: number;
 };
 
+export type CampusAreaKind =
+  | "water"
+  | "boundary"
+  | "grass"
+  | "park"
+  | "wood"
+  | "sports-pitch"
+  | "athletics-track"
+  | "parking";
+
 export type CampusAreaFeature = {
   id: string;
-  kind: "water" | "boundary";
+  kind: CampusAreaKind;
+  sport?: string;
+  labelNumber?: number;
   names?: {
     zh: string;
     en?: string;
   };
   location: LatLon;
   polygon: GeoCoordinate[];
+  holes?: GeoCoordinate[][];
 };
+
+export type CampusTree = {
+  id: string;
+  location: LatLon;
+};
+
+export type CampusMapFeature = CampusBuilding | CampusAreaFeature;
 
 export type CampusMapData = {
   version: 1;
   generatedAt: string;
   origin: LatLon;
-  bounds: {
-    south: number;
-    west: number;
-    north: number;
-    east: number;
-  };
+  bounds: CampusBounds;
   attribution: {
     text: string;
     url: string;
@@ -89,5 +115,7 @@ export type CampusMapData = {
   roads: CampusLinearFeature[];
   paths: CampusLinearFeature[];
   water: CampusAreaFeature[];
+  areas: CampusAreaFeature[];
+  trees: CampusTree[];
   boundary?: CampusAreaFeature;
 };

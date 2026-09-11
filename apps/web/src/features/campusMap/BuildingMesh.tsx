@@ -3,10 +3,13 @@ import type { ThreeEvent } from "@react-three/fiber";
 import type { Mesh, MeshStandardMaterial } from "three";
 import type { CampusBuilding, LatLon } from "@courseweb/shared";
 import { createBuildingGeometry } from "./sceneGeometry";
+import { getBuildingColorCategory } from "./sceneLogic";
 
 type BuildingMaterials = {
   standard: MeshStandardMaterial;
-  recognized: MeshStandardMaterial;
+  course: MeshStandardMaterial;
+  food: MeshStandardMaterial;
+  dormitory: MeshStandardMaterial;
   hovered: MeshStandardMaterial;
   selected: MeshStandardMaterial;
 };
@@ -31,9 +34,7 @@ export default function BuildingMesh({
     () => createBuildingGeometry(building, origin),
     [building, origin],
   );
-  const restingMaterial = building.identityId
-    ? materials.recognized
-    : materials.standard;
+  const restingMaterial = materials[getBuildingColorCategory(building)];
 
   useEffect(() => () => geometry.dispose(), [geometry]);
   useEffect(() => {

@@ -8,13 +8,19 @@ import {
   findCampusBuildingForIdentity,
   getCampusBuildingIdentity,
   resolveVenueToCampusIdentity,
-  type CampusBuilding,
+  type CampusMapFeature,
 } from "@courseweb/shared";
 import useDictionary from "@/dictionaries/useDictionary";
 import BuildingInfoPanel from "./BuildingInfoPanel";
 import CampusScene from "./CampusScene";
+import MapLegend from "./MapLegend";
 import MapSearch from "./MapSearch";
-import { loadCampusMapData } from "./data";
+import { CAMPUS_MAP_DATA_CACHE_VERSION, loadCampusMapData } from "./data";
+import {
+  createCampusFeatureLabelNumbers,
+  getCampusFeatureLabelKey,
+  isCampusBuilding,
+} from "./sceneLogic";
 
 function supportsWebGL(): boolean {
   try {
@@ -60,7 +66,7 @@ export default function CampusMapPage() {
   const [resetNonce, setResetNonce] = useState(0);
   const webglAvailable = useMemo(supportsWebGL, []);
   const { data, isLoading, error } = useQuery({
-    queryKey: ["nthu-campus-map", 1],
+    queryKey: ["nthu-campus-map", CAMPUS_MAP_DATA_CACHE_VERSION],
     queryFn: ({ signal }) => loadCampusMapData(signal),
     staleTime: Number.POSITIVE_INFINITY,
   });
@@ -84,12 +90,27 @@ export default function CampusMapPage() {
   const identity = requestedIdentityId
     ? getCampusBuildingIdentity(requestedIdentityId)
     : venueIdentity;
-  const selectedBuilding = data
+  const selectedFeature: CampusMapFeature | undefined = data
     ? identity
       ? findCampusBuildingForIdentity(data, identity.id)
       : requestedFeatureId
-        ? data.buildings.find((building) => building.id === requestedFeatureId)
+        ? (data.buildings.find(
+            (building) => building.id === requestedFeatureId,
+          ) ??
+          data.water.find((area) => area.id === requestedFeatureId) ??
+          data.areas.find((area) => area.id === requestedFeatureId))
         : undefined
+    : undefined;
+  const selectedBuilding =
+    selectedFeature && isCampusBuilding(selectedFeature)
+      ? selectedFeature
+      : undefined;
+  const featureLabelNumbers = useMemo(
+    () => (data ? createCampusFeatureLabelNumbers(data) : undefined),
+    [data],
+  );
+  const selectedFeatureLabelNumber = selectedFeature
+    ? featureLabelNumbers?.get(getCampusFeatureLabelKey(selectedFeature))
     : undefined;
 
   const requestWarning = data
@@ -108,10 +129,13 @@ export default function CampusMapPage() {
     setSearchParams(next);
   };
 
-  const selectBuilding = (building: CampusBuilding) => {
+  const selectFeature = (feature: CampusMapFeature) => {
     const next = new URLSearchParams();
-    if (building.identityId) next.set("building", building.identityId);
-    else next.set("feature", building.id);
+    if (isCampusBuilding(feature) && feature.identityId) {
+      next.set("building", feature.identityId);
+    } else {
+      next.set("feature", feature.id);
+    }
     setSearchParams(next);
   };
 
@@ -157,10 +181,10 @@ export default function CampusMapPage() {
       >
         <CampusScene
           data={data}
-          selectedBuilding={selectedBuilding}
+          selectedFeature={selectedFeature}
           resetNonce={resetNonce}
           language={language}
-          onSelectBuilding={selectBuilding}
+          onSelectFeature={selectFeature}
           webglFallback={sceneFallback}
         />
       </ErrorBoundary>
@@ -186,25 +210,41 @@ export default function CampusMapPage() {
             </p>
           )}
         </div>
-        <Button
-          type="button"
-          variant="secondary"
-          size="icon"
-          className="pointer-events-auto shrink-0 shadow-lg"
-          aria-label={dict.resetCamera}
-          title={dict.resetCamera}
-          onClick={resetCamera}
-        >
-          <RotateCcw className="h-4 w-4" />
-        </Button>
+        <div className="pointer-events-auto flex shrink-0 gap-2">
+          <MapLegend
+            labels={{
+              button: dict.showLegend,
+              title: dict.legendTitle,
+              course: dict.legendCourse,
+              dining: dict.legendDining,
+              dormitory: dict.legendDormitory,
+              other: dict.legendOther,
+              road: dict.legendRoad,
+            }}
+          />
+          <Button
+            type="button"
+            variant="secondary"
+            size="icon"
+            className="shadow-lg"
+            aria-label={dict.resetCamera}
+            title={dict.resetCamera}
+            onClick={resetCamera}
+          >
+            <RotateCcw className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
-      {selectedBuilding && (
+      {selectedFeature && (
         <div className="pointer-events-none absolute bottom-10 left-0 z-10 w-full max-w-sm p-3 md:bottom-8 md:p-4">
           <BuildingInfoPanel
-            building={selectedBuilding}
+            feature={selectedFeature}
+            labelNumber={selectedFeatureLabelNumber}
             language={language}
             labels={{
+              chineseName: dict.chineseName,
+              englishName: dict.englishName,
               coursewebCode: dict.coursewebCode,
               openGoogleMaps: dict.openGoogleMaps,
               closeDetails: dict.closeDetails,

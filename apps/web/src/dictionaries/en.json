@@ -50,6 +50,10 @@
       "group_dept": "Group dept. by colors",
       "sort_by_credits": "Sort by credits"
     },
+    "course_actions": {
+      "course_location": "Course Location",
+      "location_unavailable": "This course has no mapped venue"
+    },
     "credits": "credits",
     "course": "courses",
     "display_settings": "Display Settings",
@@ -542,9 +546,18 @@
     "webglError": "3D map unavailable",
     "webglErrorDetail": "This browser or device does not currently support WebGL.",
     "resetCamera": "Reset camera",
+    "showLegend": "Show map legend",
+    "legendTitle": "Map legend",
+    "legendCourse": "Course locations",
+    "legendDining": "Campus dining",
+    "legendDormitory": "Dormitories",
+    "legendOther": "Other campus buildings",
+    "legendRoad": "Roads",
     "openGoogleMaps": "Open in Google Maps",
+    "chineseName": "Chinese name",
+    "englishName": "English name",
     "coursewebCode": "CourseWeb building code",
-    "closeDetails": "Close building details",
+    "closeDetails": "Close location details",
     "instructions": "Drag to rotate · Scroll to zoom · Right-drag to pan",
     "viewVenueOnMap": "View on 3D map"
   },

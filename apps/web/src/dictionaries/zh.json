@@ -50,6 +50,10 @@
       "group_dept": "依系所分顏色",
       "sort_by_credits": "依學分排序"
     },
+    "course_actions": {
+      "course_location": "開課地點",
+      "location_unavailable": "這門課沒有可定位的開課地點"
+    },
     "credits": "總學分",
     "course": "課",
     "display_settings": "顯示設定",
@@ -542,11 +546,20 @@
     "webglError": "無法使用 3D 地圖",
     "webglErrorDetail": "目前的瀏覽器或裝置不支援 WebGL。",
     "resetCamera": "重設鏡頭",
+    "showLegend": "顯示地圖標示",
+    "legendTitle": "地圖標示",
+    "legendCourse": "開課地點",
+    "legendDining": "學餐",
+    "legendDormitory": "宿舍",
+    "legendOther": "校內其餘建築",
+    "legendRoad": "道路",
     "openGoogleMaps": "使用 Google 地圖開啟",
+    "chineseName": "中文名稱",
+    "englishName": "英文名稱",
     "coursewebCode": "CourseWeb 館舍代碼",
-    "closeDetails": "關閉建築資訊",
+    "closeDetails": "關閉地點資訊",
     "instructions": "拖曳旋轉 · 滾輪縮放 · 右鍵拖曳平移",
-    "viewVenueOnMap": "在 3D 地圖檢視"
+    "viewVenueOnMap": "在 3D 地圖查看"
   },
   "alerts": {
     "TimetableCourseList": {

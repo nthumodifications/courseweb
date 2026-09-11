@@ -1,13 +1,12 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { Vector3 } from "three";
-import type { CampusBuilding, LatLon } from "@courseweb/shared";
+import type { CampusBounds, CampusMapFeature, LatLon } from "@courseweb/shared";
 import { geoToWorld } from "@courseweb/shared";
-import { getBuildingHeight } from "./sceneLogic";
+import { getBuildingHeight, isCampusBuilding } from "./sceneLogic";
 
-const INITIAL_POSITION = new Vector3(430, 430, 560);
-const INITIAL_TARGET = new Vector3(0, 0, 0);
+const INITIAL_OFFSET = new Vector3(430, 430, 560);
 const ANIMATION_DURATION_MS = 750;
 
 type Tween = {
@@ -19,29 +18,43 @@ type Tween = {
 };
 
 type CampusCameraProps = {
-  focusBuilding?: CampusBuilding;
+  focusFeature?: CampusMapFeature;
   origin: LatLon;
+  bounds: CampusBounds;
   resetNonce: number;
 };
 
 export default function CampusCamera({
-  focusBuilding,
+  focusFeature,
   origin,
+  bounds,
   resetNonce,
 }: CampusCameraProps) {
   const controlsRef = useRef<React.ElementRef<typeof OrbitControls>>(null);
   const tweenRef = useRef<Tween>();
   const { camera, invalidate } = useThree();
+  const initialTarget = useMemo(() => {
+    const boundsCenter = geoToWorld(
+      {
+        lat: (bounds.south + bounds.north) / 2,
+        lon: (bounds.west + bounds.east) / 2,
+      },
+      origin,
+    );
+    return new Vector3(boundsCenter.x, 0, boundsCenter.z);
+  }, [bounds.east, bounds.north, bounds.south, bounds.west, origin]);
 
   useEffect(() => {
     const controls = controlsRef.current;
     if (!controls) return;
 
-    let target = INITIAL_TARGET.clone();
-    let position = INITIAL_POSITION.clone();
-    if (focusBuilding) {
-      const world = geoToWorld(focusBuilding.location, origin);
-      const height = getBuildingHeight(focusBuilding);
+    let target = initialTarget.clone();
+    let position = initialTarget.clone().add(INITIAL_OFFSET);
+    if (focusFeature) {
+      const world = geoToWorld(focusFeature.location, origin);
+      const height = isCampusBuilding(focusFeature)
+        ? getBuildingHeight(focusFeature)
+        : 0;
       target = new Vector3(world.x, Math.min(height * 0.35, 14), world.z);
       position = new Vector3(world.x + 105, 105, world.z + 135);
     }
@@ -54,7 +67,7 @@ export default function CampusCamera({
       toTarget: target,
     };
     invalidate();
-  }, [camera, focusBuilding, invalidate, origin, resetNonce]);
+  }, [camera, focusFeature, initialTarget, invalidate, origin, resetNonce]);
 
   useFrame(() => {
     const tween = tweenRef.current;
@@ -82,9 +95,9 @@ export default function CampusCamera({
       enableRotate
       enableZoom
       minDistance={45}
-      maxDistance={1_300}
+      maxDistance={1_000}
       maxPolarAngle={Math.PI / 2.04}
-      target={INITIAL_TARGET}
+      target={initialTarget}
       onChange={() => invalidate()}
     />
   );

@@ -8,7 +8,7 @@ import Compact from "@uiw/react-color-compact";
 import { Drawer, DrawerContent, DrawerTrigger } from "@courseweb/ui";
 import { Button } from "@courseweb/ui";
 import { Input } from "@courseweb/ui";
-import { ExternalLink, CalendarPlus } from "lucide-react";
+import { ExternalLink, CalendarPlus, MapPin } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@courseweb/ui";
 import DateContributeForm from "@/components/CourseDetails/DateContributeForm";
@@ -31,6 +31,8 @@ import {
   CustomTimetableDay,
   CustomTimetableItem,
 } from "@/types/timetable";
+import { useNavigate, useParams } from "react-router-dom";
+import { getCampusMapHref } from "@/features/campusMap/navigation";
 
 const ImportantDates = ({ raw_id }: { raw_id: RawCourseID }) => {
   const {
@@ -91,6 +93,9 @@ const TimetableCourseQuickAccess = ({ course }: { course: MinimalCourse }) => {
     useUserTimetable();
   const { openCourse } = useCourseLink();
   const dict = useDictionary();
+  const navigate = useNavigate();
+  const { lang } = useParams<{ lang: string }>();
+  const campusMapHref = getCampusMapHref(lang, course.venues);
 
   return (
     <>
@@ -153,10 +158,23 @@ const TimetableCourseQuickAccess = ({ course }: { course: MinimalCourse }) => {
       </div>
       <ImportantDates raw_id={course.raw_id} />
       <div className="p-4 flex flex-col gap-4">
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           <Button variant="outline" onClick={() => openCourse(course.raw_id)}>
             <ExternalLink className="w-4 h-4 mr-2" />
             {dict.course.details.dialog_title}
+          </Button>
+          <Button
+            variant="outline"
+            disabled={!campusMapHref}
+            title={
+              !campusMapHref
+                ? dict.timetable.course_actions.location_unavailable
+                : undefined
+            }
+            onClick={() => campusMapHref && navigate(campusMapHref)}
+          >
+            <MapPin className="w-4 h-4 mr-2" />
+            {dict.timetable.course_actions.course_location}
           </Button>
           <DateContributeForm courseId={course.raw_id}>
             <Button variant="outline">
