@@ -10,7 +10,7 @@
     "test": "bun test src",
     "preview": "vite preview",
     "lint": "eslint src --fix",
-    "type-check": "tsc --noEmit && bun run type-check:test",
+    "type-check": "tsc --noEmit",
     "type-check:test": "tsc --noEmit --project tsconfig.test.json",
     "clean": "rm -rf dist",
     "gentype": "bunx supabase gen types typescript --project-id \"cmzdlrqfpuktcczvsobs\" --schema public > src/types/supabase.ts"

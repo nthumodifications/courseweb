@@ -395,7 +395,14 @@ async function fetchOverpassData(): Promise<OverpassResponse> {
           },
         },
       );
-      if (response.ok) return (await response.json()) as OverpassResponse;
+      if (response.ok) {
+        const payload = (await response.json()) as Partial<OverpassResponse>;
+        if (Array.isArray(payload.elements)) {
+          return payload as OverpassResponse;
+        }
+        failures.push(`${endpoint}: response has no elements array`);
+        continue;
+      }
       failures.push(`${endpoint}: ${response.status} ${response.statusText}`);
     } catch (error) {
       failures.push(
