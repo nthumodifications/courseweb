@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { exportJWK, importPKCS8, importSPKI, jwtVerify, SignJWT } from "jose";
+import { importPKCS8, importSPKI, jwtVerify, SignJWT } from "jose";
 import { getCookie, setCookie } from "hono/cookie";
 import { nthuAuth } from "./nthuoauth";
 import { PrismaClient } from "@prisma/client";
@@ -11,6 +11,7 @@ import { cors } from "hono/cors";
 import { AuthConfirmation } from "./pages/authorize";
 import { serveStatic } from "hono/bun";
 import { generateAtHash } from "./utils/athash";
+import { loadSigningJwk } from "./utils/jwks";
 import {
   buildClientRedirect,
   CONSENT_REQUEST_EXPIRY,
@@ -276,25 +277,15 @@ const app = new Hono()
       console.error("/.well-known/jwks.json: JWT_PUBLIC_KEY is not configured");
       return c.json({ error: "server_error" }, 500);
     }
-    let publicKey;
     try {
-      publicKey = await importSPKI(
-        JWT_PUBLIC_KEY.replace(/\\n/g, "\n"),
-        "RS256",
-      );
+      return c.json({ keys: [await loadSigningJwk(JWT_PUBLIC_KEY)] });
     } catch (error) {
       console.error(
-        "/.well-known/jwks.json: JWT_PUBLIC_KEY is malformed",
+        "/.well-known/jwks.json: JWT_PUBLIC_KEY could not be exported",
         error,
       );
       return c.json({ error: "server_error" }, 500);
     }
-    const jwk = await exportJWK(publicKey);
-    jwk.kid = "1";
-    jwk.use = "sig";
-    jwk.alg = "RS256";
-    jwk.kty = "RSA";
-    return c.json({ keys: [jwk] });
   })
   .get("/output.css", serveStatic({ path: "./src/pages/public/output.css" }))
   .get(
