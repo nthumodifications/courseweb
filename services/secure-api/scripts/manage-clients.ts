@@ -29,7 +29,7 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-const VALID_SCOPES = [
+const VALID_SCOPES = new Set([
   "openid",
   "profile",
   "email",
@@ -37,7 +37,7 @@ const VALID_SCOPES = [
   "kv",
   "calendar",
   "planner",
-];
+]);
 
 type Flags = {
   redirectUris: string[];
@@ -105,10 +105,10 @@ function parseFlags(argv: string[]): Flags {
 
 function generateSecret() {
   const bytes = crypto.getRandomValues(new Uint8Array(32));
-  return btoa(String.fromCharCode(...bytes))
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=/g, "");
+  return btoa(String.fromCodePoint(...bytes))
+    .replaceAll("+", "-")
+    .replaceAll("/", "_")
+    .replaceAll("=", "");
 }
 
 function assertHttpsOrLocalhost(uris: string[]) {
@@ -167,8 +167,7 @@ if (command === "list") {
 
   assertHttpsOrLocalhost([...flags.redirectUris, ...flags.logoutUris]);
   const unknownScopes = flags.scopes.filter(
-    (scope) =>
-      !VALID_SCOPES.includes(scope) && !scope.startsWith("introspect:"),
+    (scope) => !VALID_SCOPES.has(scope) && !scope.startsWith("introspect:"),
   );
   if (unknownScopes.length) {
     throw new Error(`Unknown scopes: ${unknownScopes.join(", ")}`);

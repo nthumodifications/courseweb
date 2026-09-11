@@ -9,8 +9,28 @@
 /** How long a rendered consent screen stays actionable. */
 export const CONSENT_REQUEST_EXPIRY = 15 * 60 * 1000; // 15 minutes
 
+/**
+ * Build a redirect back to a client.
+ *
+ * `base` must come from the client's registered `redirectUris`, never straight
+ * from the query string, so the destination cannot be steered by the request.
+ * Parameters are encoded rather than interpolated, so a `state` containing `&`
+ * or `#` survives the round trip intact.
+ */
+export function buildClientRedirect(
+  base: string,
+  params: Record<string, string | undefined>,
+) {
+  const query = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined) query.set(key, value);
+  }
+  const separator = base.includes("?") ? "&" : "?";
+  return `${base}${separator}${query.toString()}`;
+}
+
 export const sameScopes = (a: string[], b: string[]) =>
-  a.length === b.length && [...a].sort().join(" ") === [...b].sort().join(" ");
+  a.length === b.length && a.every((scope) => b.includes(scope));
 
 /** Does a stored grant already cover everything being asked for? */
 export const coversScopes = (granted: string[], requested: string[]) =>

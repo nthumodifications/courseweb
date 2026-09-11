@@ -1,11 +1,51 @@
 import { describe, expect, it } from "bun:test";
 import {
+  buildClientRedirect,
   CONSENT_REQUEST_EXPIRY,
   coversScopes,
   isConsentRequired,
   isPendingConsentValid,
   sameScopes,
 } from "./consent";
+
+describe("buildClientRedirect", () => {
+  it("appends parameters to a bare URI", () => {
+    expect(
+      buildClientRedirect("https://chumei.observe.tw/auth/callback", {
+        code: "abc",
+        state: "xyz",
+      }),
+    ).toBe("https://chumei.observe.tw/auth/callback?code=abc&state=xyz");
+  });
+
+  it("encodes a state that would otherwise break the query string", () => {
+    const url = buildClientRedirect("https://chumei.observe.tw/cb", {
+      code: "abc",
+      state: "a&b=c#d",
+    });
+    expect(url).toBe(
+      "https://chumei.observe.tw/cb?code=abc&state=a%26b%3Dc%23d",
+    );
+    expect(new URL(url).searchParams.get("state")).toBe("a&b=c#d");
+  });
+
+  it("keeps a query already present on the registered URI", () => {
+    expect(
+      buildClientRedirect("https://chumei.observe.tw/cb?tenant=nthu", {
+        error: "access_denied",
+      }),
+    ).toBe("https://chumei.observe.tw/cb?tenant=nthu&error=access_denied");
+  });
+
+  it("omits parameters that were not supplied", () => {
+    expect(
+      buildClientRedirect("https://chumei.observe.tw/cb", {
+        code: "abc",
+        state: undefined,
+      }),
+    ).toBe("https://chumei.observe.tw/cb?code=abc");
+  });
+});
 
 describe("sameScopes", () => {
   it("ignores ordering", () => {

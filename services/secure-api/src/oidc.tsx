@@ -11,7 +11,11 @@ import { cors } from "hono/cors";
 import { AuthConfirmation } from "./pages/authorize";
 import { serveStatic } from "hono/bun";
 import { generateAtHash } from "./utils/athash";
-import { isConsentRequired, isPendingConsentValid } from "./utils/consent";
+import {
+  buildClientRedirect,
+  isConsentRequired,
+  isPendingConsentValid,
+} from "./utils/consent";
 
 const prisma = new PrismaClient();
 const ISSUER = "https://auth.nthumods.com";
@@ -191,34 +195,31 @@ async function renderConsent(
     },
   });
 
-  // Relative to this deployment, so the screen also works outside production.
-  const approveUrl = new URL("/authorize", "http://consent.invalid");
-  approveUrl.searchParams.set("client_id", client.clientId);
-  approveUrl.searchParams.set("redirect_uri", params.redirect_uri);
-  approveUrl.searchParams.set("scope", params.scope.join(" "));
-  approveUrl.searchParams.set("state", params.state);
-  approveUrl.searchParams.set("response_type", params.response_type);
-  approveUrl.searchParams.set("consent", pendingState);
-  if (params.nonce) approveUrl.searchParams.set("nonce", params.nonce);
-  if (params.code_challenge)
-    approveUrl.searchParams.set("code_challenge", params.code_challenge);
-  if (params.code_challenge_method)
-    approveUrl.searchParams.set(
-      "code_challenge_method",
-      params.code_challenge_method,
-    );
-
   const lang = params.ui_locales?.toLowerCase().includes("zh") ? "zh" : "en";
-  approveUrl.searchParams.set("ui_locales", lang);
 
-  const denyUrl = new URL(params.redirect_uri);
-  denyUrl.searchParams.set("error", "access_denied");
-  denyUrl.searchParams.set("state", params.state);
+  // Relative to this deployment, so the screen also works outside production.
+  const approveUrl = buildClientRedirect("/authorize", {
+    client_id: client.clientId,
+    redirect_uri: params.redirect_uri,
+    scope: params.scope.join(" "),
+    state: params.state,
+    response_type: params.response_type,
+    consent: pendingState,
+    nonce: params.nonce,
+    code_challenge: params.code_challenge,
+    code_challenge_method: params.code_challenge_method,
+    ui_locales: lang,
+  });
+
+  const denyUrl = buildClientRedirect(params.redirect_uri, {
+    error: "access_denied",
+    state: params.state,
+  });
 
   return (
     <AuthConfirmation
-      approveUrl={`${approveUrl.pathname}${approveUrl.search}`}
-      denyUrl={denyUrl.toString()}
+      approveUrl={approveUrl}
+      denyUrl={denyUrl}
       lang={lang}
       scopes={params.scope}
       clientName={client.name ?? client.clientId}
@@ -343,7 +344,8 @@ const app = new Hono()
       }
 
       // Check if redirect_uri is allowed for this client
-      if (!client.redirectUris.includes(redirect_uri)) {
+      const registeredIndex = client.redirectUris.indexOf(redirect_uri);
+      if (registeredIndex === -1) {
         return c.json(
           {
             error: "invalid_request",
@@ -352,6 +354,9 @@ const app = new Hono()
           400,
         );
       }
+      // Every redirect below is built from the registered entry rather than the
+      // query parameter, so the destination is the client's own, by construction.
+      const redirectTarget = client.redirectUris[registeredIndex]!;
 
       // require PCKE if client_secret is not provided
       if (!client.clientSecret && !code_challenge) {
@@ -425,7 +430,10 @@ const app = new Hono()
               });
 
               return c.redirect(
-                `${redirect_uri}?code=${code}&state=${clientState}`,
+                buildClientRedirect(redirectTarget, {
+                  code,
+                  state: clientState,
+                }),
               );
             }
 
@@ -433,7 +441,10 @@ const app = new Hono()
             // user stays signed in; only the consent screen stands in the way.
             if (prompt === "none") {
               return c.redirect(
-                `${redirect_uri}?error=consent_required&state=${clientState}`,
+                buildClientRedirect(redirectTarget, {
+                  error: "consent_required",
+                  state: clientState,
+                }),
               );
             }
 
@@ -468,13 +479,17 @@ const app = new Hono()
               });
 
               return c.redirect(
-                `${redirect_uri}?code=${code}&state=${clientState}`,
+                buildClientRedirect(redirectTarget, {
+                  code,
+                  state: clientState,
+                }),
               );
             }
 
             return c.html(
               await renderConsent(client, {
                 ...c.req.valid("query"),
+                redirect_uri: redirectTarget,
                 sessionId,
                 scope,
               }),
@@ -501,7 +516,10 @@ const app = new Hono()
       // if prompt=none, return error
       if (prompt === "none") {
         return c.redirect(
-          `${redirect_uri}?error=login_required&state=${clientState}`,
+          buildClientRedirect(redirectTarget, {
+            error: "login_required",
+            state: clientState,
+          }),
         );
       }
 
@@ -544,6 +562,7 @@ const app = new Hono()
         return c.html(
           await renderConsent(client, {
             ...c.req.valid("query"),
+            redirect_uri: redirectTarget,
             sessionId,
             scope,
           }),
@@ -664,7 +683,8 @@ const app = new Hono()
       }
 
       // Check if redirect_uri is allowed for this client
-      if (!client.redirectUris.includes(redirect_uri)) {
+      const registeredIndex = client.redirectUris.indexOf(redirect_uri);
+      if (registeredIndex === -1) {
         return c.json(
           {
             error: "invalid_request",
@@ -673,6 +693,7 @@ const app = new Hono()
           400,
         );
       }
+      const redirectTarget = client.redirectUris[registeredIndex]!;
 
       // check if the requested scopes is contained within the client scopes
       if (
@@ -746,7 +767,12 @@ const app = new Hono()
           codeChallengeMethod: authRequest.codeChallengeMethod,
         },
       });
-      return c.redirect(`${redirect_uri}?code=${code}&state=${clientState}`);
+      return c.redirect(
+        buildClientRedirect(redirectTarget, {
+          code,
+          state: clientState ?? undefined,
+        }),
+      );
     },
   )
 
