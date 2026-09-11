@@ -238,4 +238,38 @@ describe("admin users API", () => {
       }),
     );
   });
+
+  test("refuses to revoke the acting admin's own sessions", async () => {
+    const actor = makeUser({ userId: "admin-id", role: "ADMIN" });
+
+    const response = await requestAs(actor, "/admin-id/sessions", {
+      method: "DELETE",
+    });
+
+    expect(response.status).toBe(400);
+    // Nothing is deleted, so the admin is still signed in to act on whatever
+    // brought them here.
+    expect(tokenDeleteMany).not.toHaveBeenCalled();
+    expect(authSessionsDeleteMany).not.toHaveBeenCalled();
+  });
+
+  test("revokes another account's sessions and tokens", async () => {
+    const actor = makeUser({ userId: "admin-id", role: "ADMIN" });
+    userFindUnique.mockResolvedValueOnce(makeUser({ userId: "target-id" }));
+    tokenDeleteMany.mockResolvedValueOnce({ count: 4 });
+    authSessionsDeleteMany.mockResolvedValueOnce({ count: 2 });
+
+    const response = await requestAs(actor, "/target-id/sessions", {
+      method: "DELETE",
+    });
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ tokens: 4, sessions: 2 });
+    expect(tokenDeleteMany).toHaveBeenCalledWith({
+      where: { userId: "target-id" },
+    });
+    expect(authSessionsDeleteMany).toHaveBeenCalledWith({
+      where: { userId: "target-id" },
+    });
+  });
 });

@@ -17,6 +17,25 @@ import authClient from "@/config/auth";
 
 export type AdminRole = "USER" | "ADMIN" | "SUPERUSER";
 
+/**
+ * The consent scopes, mirroring `VALID_SCOPES` in
+ * `services/secure-api/src/const/scopes.ts`. These are the ones a user is asked
+ * to approve, and the ones the registration form offers as checkboxes.
+ *
+ * A client's stored `scopes` is deliberately wider than this: it can also hold
+ * a machine-to-machine `introspect:<clientId>` grant, which no consent screen
+ * ever shows. Those are carried through an edit untouched rather than being
+ * dropped by a form that cannot name them.
+ */
+export type AdminScope =
+  | "openid"
+  | "profile"
+  | "email"
+  | "offline_access"
+  | "kv"
+  | "calendar"
+  | "planner";
+
 export type AdminIdentity = {
   userId: string;
   name: string;
@@ -79,7 +98,11 @@ export type AdminAnnouncement = {
   link_url: string | null;
   link_label: string | null;
   link_label_en: string | null;
-  severity: AnnouncementSeverity;
+  // Reads are lenient and writes are strict, because they are not the same
+  // set: rows written before the API enforced an enum hold values like
+  // "danger", and claiming otherwise here would only move the surprise to
+  // wherever the value is finally used.
+  severity: string;
   start_date: string;
   end_date: string;
   active: boolean;
@@ -90,8 +113,8 @@ export type AdminAnnouncement = {
 
 export type AdminAnnouncementInput = Omit<
   AdminAnnouncement,
-  "id" | "created_at"
->;
+  "id" | "created_at" | "severity"
+> & { severity: AnnouncementSeverity };
 
 export type AdminClient = {
   id: string;

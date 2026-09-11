@@ -18,6 +18,26 @@ const prisma = new PrismaClient();
  * read back.
  */
 
+/**
+ * What a client may be registered for.
+ *
+ * Two things are called a scope here. The consent scopes in VALID_SCOPES are
+ * what a user is asked to approve; `introspect:<clientId>` is machine-to-machine
+ * and is checked at /introspect, never shown to anyone. Both live in
+ * Client.scopes, so a registration form that only accepted the first would make
+ * the existing `nthumods-api` client uneditable without silently dropping the
+ * only scope it has.
+ */
+const clientScope = z.union([
+  z.enum(VALID_SCOPES),
+  z
+    .string()
+    .regex(
+      /^introspect:[A-Za-z0-9._-]{3,64}$/,
+      "introspect scopes are written introspect:<clientId>",
+    ),
+]);
+
 const clientBody = z.object({
   clientId: z
     .string()
@@ -30,7 +50,7 @@ const clientBody = z.object({
   firstParty: z.boolean().default(false),
   redirectUris: z.array(z.string().trim().url()).min(1).max(20),
   logoutUris: z.array(z.string().trim().url()).max(20).default([]),
-  scopes: z.array(z.enum(VALID_SCOPES)).min(1),
+  scopes: z.array(clientScope).min(1),
   confidential: z.boolean().default(false),
 });
 

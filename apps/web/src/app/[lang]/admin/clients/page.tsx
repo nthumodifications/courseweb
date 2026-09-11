@@ -60,9 +60,10 @@ import {
   type AdminClient,
   type AdminIdentity,
   type AdminOAuthClientInput,
+  type AdminScope,
 } from "../api";
 
-const VALID_SCOPES = [
+const VALID_SCOPES: { value: AdminScope; description: string }[] = [
   { value: "openid", description: "Stable subject identifier" },
   { value: "profile", description: "Name, English name and school status" },
   { value: "email", description: "Email address" },
@@ -70,7 +71,7 @@ const VALID_SCOPES = [
   { value: "kv", description: "Key-value storage" },
   { value: "calendar", description: "Calendar data" },
   { value: "planner", description: "Planner data" },
-] as const;
+];
 
 type ClientFormValues = {
   clientId: string;
@@ -80,6 +81,9 @@ type ClientFormValues = {
   confidential: boolean;
   redirectUris: string[];
   logoutUris: string[];
+  // Wider than the checkbox list: an existing client may carry an
+  // `introspect:<clientId>` grant that this form has no checkbox for, and
+  // editing its name must not quietly revoke it.
   scopes: string[];
 };
 
@@ -316,7 +320,13 @@ const ClientFormDialog = ({
     }));
   };
 
-  const toggleScope = (scope: string, checked: boolean) => {
+  // Anything on the client that the checkbox list above cannot represent.
+  const consentScopes = VALID_SCOPES.map((scope) => scope.value) as string[];
+  const otherScopes = values.scopes.filter(
+    (scope) => !consentScopes.includes(scope),
+  );
+
+  const toggleScope = (scope: AdminScope, checked: boolean) => {
     setValues((current) => ({
       ...current,
       scopes: checked
@@ -492,6 +502,19 @@ const ClientFormDialog = ({
                 </label>
               ))}
             </div>
+            {/* Shown rather than hidden: these are real grants with no checkbox,
+                and an operator who cannot see them has no way to know an edit
+                is keeping them. */}
+            {otherScopes.length > 0 && (
+              <p className="text-xs text-muted-foreground">
+                Also granted, and kept on save:{" "}
+                {otherScopes.map((scope) => (
+                  <span key={scope} className="font-mono">
+                    {scope}{" "}
+                  </span>
+                ))}
+              </p>
+            )}
             <FieldError message={errors.scopes} />
           </div>
 

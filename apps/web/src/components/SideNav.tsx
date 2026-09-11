@@ -10,6 +10,7 @@ import {
   SidebarNavItemConfig,
   SidebarNavItemId,
 } from "@/app/[lang]/(mods-pages)/settings/SidebarNavSection";
+import { useAdminIdentity } from "@/app/[lang]/admin/api";
 
 const SideNav: FC = () => {
   const location = useLocation();
@@ -22,6 +23,10 @@ const SideNav: FC = () => {
     "sidebar_nav_items",
     DEFAULT_SIDEBAR_NAV_ITEMS,
   );
+  // Staff-only, and deliberately outside the configurable list above: the admin
+  // center is not something a student can turn on, so it has no business being
+  // a row in the sidebar settings everyone sees.
+  const { data: adminIdentity } = useAdminIdentity();
 
   const allLinks: Record<
     SidebarNavItemId,
@@ -82,6 +87,18 @@ const SideNav: FC = () => {
           <span className="flex-1 font-semibold">{link.title}</span>
         </div>
       ))}
+
+      {adminIdentity?.isAdmin && (
+        <div
+          className={`w-full flex flex-row items-center justify-start gap-2 rounded-md cursor-pointer transition font-semibold px-3 py-1.5 ${pathname.startsWith(`/${language}/admin`) ? "bg-primary text-primary-foreground" : "text-sidebar-foreground hover:bg-accent hover:text-accent-foreground"}`}
+          onClick={handleLinkClick(`/${language}/admin`)}
+        >
+          <span className="w-6 h-6">
+            <I.ShieldCheck strokeWidth="2" />
+          </span>
+          <span className="flex-1 font-semibold">Admin Center</span>
+        </div>
+      )}
     </nav>
   );
 };

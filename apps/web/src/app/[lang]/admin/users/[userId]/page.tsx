@@ -426,6 +426,14 @@ const UserActions = ({
     : isOwnAccount
       ? "You cannot change your own role."
       : undefined;
+  // The server already refuses a self-ban, but revoking your own sessions is a
+  // request it will happily carry out — signing the acting admin out of the
+  // page they are standing on. Both are closed here, where the reason can be
+  // shown before the click rather than as an error after it.
+  const selfActionReason = isOwnAccount
+    ? "This is your own account."
+    : undefined;
+
   const roleUnchanged = selectedRole === user.role;
   const roleActionDisabled =
     Boolean(roleDisabledReason) || roleUnchanged || roleMutation.isPending;
@@ -591,13 +599,18 @@ const UserActions = ({
           </div>
           <Button
             variant={user.banned ? "outline" : "destructive"}
-            disabled={banMutation.isPending}
+            disabled={banMutation.isPending || Boolean(selfActionReason)}
             onClick={() => setBanDialogOpen(true)}
           >
             {banMutation.isPending && <InlineSpinner />}
             {user.banned ? "Restore account" : "Suspend account"}
           </Button>
         </div>
+        {selfActionReason && (
+          <p className="-mt-2 text-xs text-muted-foreground">
+            {selfActionReason} You cannot suspend it or sign it out from here.
+          </p>
+        )}
 
         <AlertDialog
           open={banDialogOpen}
@@ -662,7 +675,7 @@ const UserActions = ({
           </div>
           <Button
             variant="outline"
-            disabled={revokeMutation.isPending}
+            disabled={revokeMutation.isPending || Boolean(selfActionReason)}
             onClick={() => setRevokeDialogOpen(true)}
           >
             {revokeMutation.isPending && <InlineSpinner />}

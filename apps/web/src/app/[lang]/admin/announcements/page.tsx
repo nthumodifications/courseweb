@@ -128,6 +128,22 @@ const emptyForm = (): AnnouncementForm => {
   };
 };
 
+/**
+ * Live rows predate the three-value severity the API now enforces — the 2023
+ * typhoon notice is stored as `danger`, which the server's schema rejects.
+ * Reading one has to keep working, so an unrecognised value is mapped to the
+ * closest supported one rather than seeding the form with something that only
+ * fails on save, or indexing the style maps below with a key they do not have.
+ */
+const KNOWN_SEVERITIES: AnnouncementSeverity[] = ["info", "warning", "error"];
+
+const normalizeSeverity = (severity: string): AnnouncementSeverity => {
+  if ((KNOWN_SEVERITIES as string[]).includes(severity)) {
+    return severity as AnnouncementSeverity;
+  }
+  return severity === "danger" ? "error" : "info";
+};
+
 const announcementToForm = (
   announcement: AdminAnnouncement,
 ): AnnouncementForm => ({
@@ -138,7 +154,7 @@ const announcementToForm = (
   link_url: announcement.link_url ?? "",
   link_label: announcement.link_label ?? "",
   link_label_en: announcement.link_label_en ?? "",
-  severity: announcement.severity,
+  severity: normalizeSeverity(announcement.severity),
   start_date: toTaipeiInput(announcement.start_date),
   end_date: toTaipeiInput(announcement.end_date),
   active: announcement.active,
@@ -266,7 +282,7 @@ const statusBadgeClasses: Record<AnnouncementStatus, string> = {
 };
 
 const PreviewBanner = ({ form }: { form: AnnouncementForm }) => {
-  const style = severityStyles[form.severity];
+  const style = severityStyles[normalizeSeverity(form.severity)];
   const Icon = style.Icon;
   const title = form.title.trim() || "Announcement title";
   const description = form.description.trim();
@@ -694,7 +710,9 @@ const AdminAnnouncementsPage = () => {
                         <Badge
                           variant="outline"
                           className={
-                            severityBadgeClasses[announcement.severity]
+                            severityBadgeClasses[
+                              normalizeSeverity(announcement.severity)
+                            ]
                           }
                         >
                           {announcement.severity}

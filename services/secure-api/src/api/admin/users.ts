@@ -282,6 +282,20 @@ const app = new Hono<AdminEnv>()
     const actor = c.get("user");
     const userId = c.req.param("userId");
 
+    // Revoking your own sessions from here would sign you out of the admin
+    // center mid-action. Signing yourself out is a thing you do from your own
+    // settings, where it is what you meant.
+    if (userId === actor.userId) {
+      return c.json(
+        {
+          error: "invalid_request",
+          error_description:
+            "Use your own account settings to sign yourself out",
+        },
+        400,
+      );
+    }
+
     const existing = await prisma.user.findUnique({ where: { userId } });
     if (!existing) return c.json({ error: "not_found" }, 404);
 
