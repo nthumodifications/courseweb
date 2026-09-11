@@ -13,6 +13,7 @@ import { cn } from "@courseweb/ui";
 import { CalendarClock } from "lucide-react";
 import {
   getCustomSlotTimeRange,
+  getTimetableTimeRangePosition,
   timetableGridEnd,
   timetableGridStart,
 } from "@/helpers/timetable";
@@ -61,6 +62,20 @@ const TimetableSlotVertical = forwardRef<HTMLDivElement, TimetableSlotProps>(
     const customItem = course.customItem;
     const customSlot = course.customSlot;
     const customRange = customSlot ? getCustomSlotTimeRange(customSlot) : null;
+    const extendedHours = tableDim.extendedHours;
+    const customPosition =
+      customRange && extendedHours
+        ? getTimetableTimeRangePosition(
+            customRange.start,
+            customRange.end,
+            extendedHours,
+          )
+        : null;
+    const preBandSize = extendedHours?.pre?.size ?? 0;
+    const showCustomTime =
+      customRange !== null &&
+      (customRange.start < timetableGridStart ||
+        customRange.end > timetableGridEnd);
     const gridHeight = tableDim.timetable.height * scheduleTimeSlots.length;
     const gridMinutes = timetableGridEnd - timetableGridStart;
 
@@ -155,13 +170,15 @@ const TimetableSlotVertical = forwardRef<HTMLDivElement, TimetableSlotProps>(
                   2,
                 top:
                   tableDim.header.height +
-                  ((customRange.start - timetableGridStart) / gridMinutes) *
-                    gridHeight,
+                  (customPosition?.start ??
+                    preBandSize +
+                      ((customRange.start - timetableGridStart) / gridMinutes) *
+                        gridHeight),
                 width: tableDim.timetable.width / fraction - 4,
                 height: Math.max(
-                  ((customRange.end - customRange.start) / gridMinutes) *
-                    gridHeight -
-                    4,
+                  (customPosition?.size ??
+                    ((customRange.end - customRange.start) / gridMinutes) *
+                      gridHeight) - 4,
                   24,
                 ),
               }
@@ -173,6 +190,7 @@ const TimetableSlotVertical = forwardRef<HTMLDivElement, TimetableSlotProps>(
                   2,
                 top:
                   tableDim.header.height +
+                  preBandSize +
                   course.startTime * tableDim.timetable.height,
                 width: tableDim.timetable.width / fraction - 4,
                 height:
@@ -212,7 +230,7 @@ const TimetableSlotVertical = forwardRef<HTMLDivElement, TimetableSlotProps>(
                   {customItem.shortCode}
                 </span>
               )}
-              {display.time && (
+              {(display.time || showCustomTime) && (
                 <span className={cn(fontSizeClass, textAlign)}>
                   {customSlot
                     ? `${customSlot.start}–${customSlot.end}`
