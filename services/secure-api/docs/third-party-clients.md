@@ -73,9 +73,8 @@ Grant only what the integration needs. `openid`, `profile`, `email` and
 `offline_access` cover identity. `kv`, `calendar` and `planner` expose NTHUMods
 user data under `/api/*` and should stay with first-party clients.
 
-A scope the client is not granted passes the `/authorize` validation but fails
-with `invalid_scope` after the user returns from NTHU — so clients must request
-only the scopes they were granted.
+A scope the client was not granted is refused at `/authorize` with
+`invalid_scope`, before the user is sent to NTHU.
 
 Note that `/api/*` also sets `Access-Control-Allow-Origin: https://nthumods.com`
 only. Third-party browser code cannot call those routes even if scoped for them;

@@ -6,14 +6,20 @@
  *   bun run scripts/manage-clients.ts list
  *   bun run scripts/manage-clients.ts show <client_id>
  *   bun run scripts/manage-clients.ts upsert <client_id> \
+ *       --name "Display Name" --client-uri https://example.com \
  *       --redirect-uri https://example.com/auth/callback \
  *       --logout-uri  https://example.com \
  *       --scope openid --scope profile --scope email --scope offline_access \
- *       [--confidential] [--rotate-secret] [--replace] [--dry-run]
+ *       [--first-party] [--confidential] [--rotate-secret] [--replace] [--dry-run]
+ *   bun run scripts/manage-clients.ts consents <client_id>
+ *   bun run scripts/manage-clients.ts revoke-consent <client_id> [user_id]
  *   bun run scripts/manage-clients.ts delete <client_id>
  *
  * Flags may be repeated. By default upsert merges the given URIs/scopes into
  * the existing record; --replace overwrites them instead.
+ *
+ * --name is what the consent screen shows the user, and is required for any
+ * third-party client that can reach /authorize.
  *
  * Public clients (the default) have no client_secret, which makes the
  * authorize endpoint require PKCE S256. Only pass --confidential for
