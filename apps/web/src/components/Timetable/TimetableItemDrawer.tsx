@@ -1,4 +1,4 @@
-import { Trash } from "lucide-react";
+import { CalendarPlus, ExternalLink, MapPin, Trash } from "lucide-react";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { PropsWithChildren } from "react";
 import { hasTimes } from "@/helpers/courses";
@@ -7,7 +7,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@courseweb/ui";
 import Compact from "@uiw/react-color-compact";
 import { Drawer, DrawerContent, DrawerTrigger } from "@courseweb/ui";
 import { Button } from "@courseweb/ui";
-import { ExternalLink, CalendarPlus } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@courseweb/ui";
 import DateContributeForm from "@/components/CourseDetails/DateContributeForm";
@@ -25,6 +24,8 @@ import client from "@/config/api";
 import CourseTagList from "@/components/Courses/CourseTagsList";
 import { CourseDefinition } from "@/config/supabase";
 import { useCourseLink } from "@/components/Courses/CourseDialog";
+import { useNavigate, useParams } from "react-router-dom";
+import { getCampusMapHref } from "@/features/campusMap/navigation";
 
 const ImportantDates = ({ raw_id }: { raw_id: RawCourseID }) => {
   const {
@@ -84,6 +85,10 @@ const TimetableCourseQuickAccess = ({ course }: { course: MinimalCourse }) => {
   const { deleteCourse, colorMap, setColor, currentColors } =
     useUserTimetable();
   const { openCourse } = useCourseLink();
+  const navigate = useNavigate();
+  const { lang } = useParams<{ lang: string }>();
+  const actions = useDictionary().timetable.course_actions;
+  const campusMapHref = getCampusMapHref(lang, course.venues);
 
   return (
     <>
@@ -142,23 +147,38 @@ const TimetableCourseQuickAccess = ({ course }: { course: MinimalCourse }) => {
       </div>
       <ImportantDates raw_id={course.raw_id} />
       <div className="p-4 flex flex-col gap-4">
-        <div className="grid grid-cols-3 gap-2">
-          <Button variant="outline" onClick={() => openCourse(course.raw_id)}>
-            <ExternalLink className="w-4 h-4 mr-2" />
-            課程詳情
+        <div className="grid grid-cols-2 gap-2">
+          <Button
+            className="w-full px-2"
+            variant="outline"
+            onClick={() => openCourse(course.raw_id)}
+          >
+            <ExternalLink className="mr-2 h-4 w-4 shrink-0" />
+            {actions.course_details}
+          </Button>
+          <Button
+            className="w-full px-2"
+            variant="outline"
+            disabled={!campusMapHref}
+            title={!campusMapHref ? actions.location_unavailable : undefined}
+            onClick={() => campusMapHref && navigate(campusMapHref)}
+          >
+            <MapPin className="mr-2 h-4 w-4 shrink-0" />
+            {actions.course_location}
           </Button>
           <DateContributeForm courseId={course.raw_id}>
-            <Button variant="outline">
-              <CalendarPlus className="w-4 h-4 mr-2" />
-              貢獻日期
+            <Button className="w-full px-2" variant="outline">
+              <CalendarPlus className="mr-2 h-4 w-4 shrink-0" />
+              {actions.add_date}
             </Button>
           </DateContributeForm>
           <Button
+            className="w-full px-2"
             variant="destructive"
             onClick={() => deleteCourse(course.raw_id)}
           >
-            <Trash className="w-4 h-4 mr-2" />
-            移除
+            <Trash className="mr-2 h-4 w-4 shrink-0" />
+            {actions.remove_course}
           </Button>
         </div>
       </div>
