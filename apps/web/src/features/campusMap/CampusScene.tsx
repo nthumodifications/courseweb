@@ -309,14 +309,14 @@ function CampusWorld({
         color={CAMPUS_ROAD_COLOR}
         y={0.055}
         widthOffset={0.8}
-        clipToCampus
+        clipToCampus={Boolean(data.boundary)}
       />
       <LinearFeatures
         features={data.paths}
         origin={data.origin}
         color="#aa9e88"
         y={0.065}
-        clipToCampus
+        clipToCampus={Boolean(data.boundary)}
       />
       <LinearFeatures
         features={boundaryLines}

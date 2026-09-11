@@ -4,9 +4,6 @@
     "incremental": false,
     "types": ["bun", "vite/client"]
   },
-  "include": [
-    "src/features/campusMap/**/*.test.ts",
-    "src/features/campusMap/**/*.test.tsx"
-  ],
+  "include": ["src/**/*.test.ts", "src/**/*.test.tsx"],
   "exclude": ["node_modules"]
 }

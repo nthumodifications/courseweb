@@ -51,10 +51,7 @@
       "sort_by_credits": "Sort by credits"
     },
     "course_actions": {
-      "course_details": "Course Details",
       "course_location": "Course Location",
-      "add_date": "Add Date",
-      "remove_course": "Remove",
       "location_unavailable": "This course has no mapped venue"
     },
     "credits": "credits",

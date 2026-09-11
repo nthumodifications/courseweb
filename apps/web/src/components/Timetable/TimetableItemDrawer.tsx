@@ -95,7 +95,6 @@ const TimetableCourseQuickAccess = ({ course }: { course: MinimalCourse }) => {
   const dict = useDictionary();
   const navigate = useNavigate();
   const { lang } = useParams<{ lang: string }>();
-  const actions = dict.timetable.course_actions;
   const campusMapHref = getCampusMapHref(lang, course.venues);
 
   return (
@@ -160,37 +159,35 @@ const TimetableCourseQuickAccess = ({ course }: { course: MinimalCourse }) => {
       <ImportantDates raw_id={course.raw_id} />
       <div className="p-4 flex flex-col gap-4">
         <div className="grid grid-cols-2 gap-2">
-          <Button
-            className="w-full px-2"
-            variant="outline"
-            onClick={() => openCourse(course.raw_id)}
-          >
-            <ExternalLink className="mr-2 h-4 w-4 shrink-0" />
-            {actions.course_details}
+          <Button variant="outline" onClick={() => openCourse(course.raw_id)}>
+            <ExternalLink className="w-4 h-4 mr-2" />
+            {dict.course.details.dialog_title}
           </Button>
           <Button
-            className="w-full px-2"
             variant="outline"
             disabled={!campusMapHref}
-            title={!campusMapHref ? actions.location_unavailable : undefined}
+            title={
+              !campusMapHref
+                ? dict.timetable.course_actions.location_unavailable
+                : undefined
+            }
             onClick={() => campusMapHref && navigate(campusMapHref)}
           >
-            <MapPin className="mr-2 h-4 w-4 shrink-0" />
-            {actions.course_location}
+            <MapPin className="w-4 h-4 mr-2" />
+            {dict.timetable.course_actions.course_location}
           </Button>
           <DateContributeForm courseId={course.raw_id}>
-            <Button className="w-full px-2" variant="outline">
-              <CalendarPlus className="mr-2 h-4 w-4 shrink-0" />
-              {actions.add_date}
+            <Button variant="outline">
+              <CalendarPlus className="w-4 h-4 mr-2" />
+              {dict.dialogs.DateContributeForm.add_date}
             </Button>
           </DateContributeForm>
           <Button
-            className="w-full px-2"
             variant="destructive"
             onClick={() => deleteCourse(course.raw_id)}
           >
-            <Trash className="mr-2 h-4 w-4 shrink-0" />
-            {actions.remove_course}
+            <Trash className="w-4 h-4 mr-2" />
+            {dict.course.item.remove_from_semester}
           </Button>
         </div>
       </div>

@@ -51,10 +51,7 @@
       "sort_by_credits": "依學分排序"
     },
     "course_actions": {
-      "course_details": "課程詳細資訊",
       "course_location": "開課地點",
-      "add_date": "新增日期",
-      "remove_course": "退掉",
       "location_unavailable": "這門課沒有可定位的開課地點"
     },
     "credits": "總學分",

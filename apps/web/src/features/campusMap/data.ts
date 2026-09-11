@@ -90,7 +90,7 @@ export function normalizeCampusMapData(value: unknown): CampusMapData {
 export async function loadCampusMapData(
   signal?: AbortSignal,
 ): Promise<CampusMapData> {
-  const response = await fetch(CAMPUS_DATA_URL, { signal, cache: "no-store" });
+  const response = await fetch(CAMPUS_DATA_URL, { signal });
   if (!response.ok) {
     throw new Error(`Campus map data request failed (${response.status})`);
   }
