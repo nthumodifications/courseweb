@@ -31,7 +31,7 @@ export function getBuildingColorCategory(
   building: CampusBuilding,
 ): CampusBuildingColorCategory {
   if (FOOD_BUILDING_NAMES.has(building.names.zh)) return "food";
-  if (building.names.zh.match(/齋|宿舍/)) return "dormitory";
+  if (/齋|宿舍/.test(building.names.zh)) return "dormitory";
   return building.identityId ? "course" : "standard";
 }
 

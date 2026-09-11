@@ -518,8 +518,8 @@ export function syncCampusMapLabelCatalog(
   for (const label of newLabels) {
     labels.push({
       number: nextNumber++,
-      featureIds: [...label.featureIds].sort(),
-      sourceIds: [...label.sourceIds].sort(),
+      featureIds: [...label.featureIds].sort((a, b) => a.localeCompare(b)),
+      sourceIds: [...label.sourceIds].sort((a, b) => a.localeCompare(b)),
       name: label.name,
     });
   }
@@ -606,7 +606,7 @@ export function applyCampusMapCuration(
 
   if (missingFeatures.size > 0) {
     throw new Error(
-      `Missing hardcoded label numbers for: ${[...missingFeatures].sort().join(", ")}. Run bun run map:sync-labels.`,
+      `Missing hardcoded label numbers for: ${[...missingFeatures].sort((a, b) => a.localeCompare(b)).join(", ")}. Run bun run map:sync-labels.`,
     );
   }
 
