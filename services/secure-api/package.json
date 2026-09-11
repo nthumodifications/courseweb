@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "bun run --hot src/index.ts",
-    "start": "NODE_ENV=production bun run src/index.ts",
+    "start": "NODE_ENV=production bun run db:deploy && NODE_ENV=production bun run src/index.ts",
+    "db:deploy": "bun run scripts/migrate-deploy.ts",
     "db:generate": "prisma generate",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev --name init",
