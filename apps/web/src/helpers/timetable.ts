@@ -135,8 +135,11 @@ export const createTimetableFromCourses = (
           .match(/.{1,2}/g)
           ?.map((day) => ({ day: day[0], time: day[1] })) ?? [];
       const groupedTimeslots: { day: string; time: string }[][] = [];
-      timeslots.reduce((groups, current) => {
-        const previousGroup = groups[groups.length - 1];
+      // Group consecutive periods on the same day. This mutates
+      // groupedTimeslots, so it is a loop rather than a reduce whose return
+      // value would be discarded.
+      for (const current of timeslots) {
+        const previousGroup = groupedTimeslots[groupedTimeslots.length - 1];
         const previous = previousGroup?.[previousGroup.length - 1];
         const previousIndex = previous
           ? scheduleTimeSlots.findIndex(
@@ -153,10 +156,9 @@ export const createTimetableFromCourses = (
         ) {
           previousGroup.push(current);
         } else {
-          groups.push([current]);
+          groupedTimeslots.push([current]);
         }
-        return groups;
-      }, groupedTimeslots);
+      }
 
       groupedTimeslots.forEach((group) => {
         const day = group[0]!.day;

@@ -46,7 +46,10 @@ import { TimetableCustomItemDrawer } from "./TimetableItemDrawer";
 import { CustomTimetableItem } from "@/types/timetable";
 
 const createEmptyCustomItem = (color: string): CustomTimetableItem => ({
-  id: `custom-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+  // crypto.randomUUID rather than Math.random: the project already moved its
+  // other generated ids onto a cryptographic source, and this one is persisted
+  // and shared in timetable share payloads.
+  id: `custom-${crypto.randomUUID()}`,
   title: "",
   color,
   slots: [{ day: 0, start: "08:00", end: "08:50" }],
