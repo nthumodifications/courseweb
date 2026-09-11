@@ -11,11 +11,11 @@ import adminHandler from "./admin";
 /**
  * Origins allowed to call the authenticated API with credentials.
  */
-const ALLOWED_ORIGINS = [
+const ALLOWED_ORIGINS = new Set([
   "https://nthumods.com",
   "http://localhost:3000",
   "http://localhost:5173",
-];
+]);
 
 const app = new Hono()
   .use(
@@ -24,7 +24,7 @@ const app = new Hono()
       // makes a reflected origin a real cross-site risk. The localhost entries
       // are what let the admin center be developed against a live auth server.
       origin: (origin) =>
-        ALLOWED_ORIGINS.includes(origin) ? origin : "https://nthumods.com",
+        ALLOWED_ORIGINS.has(origin) ? origin : "https://nthumods.com",
       allowHeaders: ["Authorization", "Content-Type"],
       allowMethods: ["GET", "POST", "OPTIONS", "DELETE", "PUT", "PATCH"],
       credentials: true,

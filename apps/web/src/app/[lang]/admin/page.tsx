@@ -282,7 +282,11 @@ const AdminOverviewPage = () => {
                           payload={props.payload}
                           valueLabel="tokens"
                           labelFormatter={(row) =>
-                            String(row.name ?? row.clientId ?? "")
+                            typeof row.name === "string" && row.name
+                              ? row.name
+                              : typeof row.clientId === "string"
+                                ? row.clientId
+                                : ""
                           }
                         />
                       )}
