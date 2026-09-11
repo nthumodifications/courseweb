@@ -54,6 +54,8 @@ COPY --from=builder /usr/src/app/services/secure-api/src ./src
 COPY --from=builder /usr/src/app/services/secure-api/package.json .
 COPY --from=builder /usr/src/app/services/secure-api/tsconfig.json .
 COPY --from=builder /usr/src/app/services/secure-api/prisma ./prisma
+# `start` applies pending migrations before serving
+COPY --from=builder /usr/src/app/services/secure-api/scripts ./scripts
 
 # Copy necessary workspace packages
 COPY --from=builder /usr/src/app/packages ./packages
