@@ -82,12 +82,12 @@ const SideNav: FC = () => {
     <nav className="h-full w-full flex flex-col justify-start items-start gap-3">
       {visibleLinks.map((link) => (
         <div
-          className={`w-full flex flex-row items-center justify-start gap-2 rounded-md cursor-pointer transition font-semibold px-3 py-1.5 ${link.href === pathname ? "bg-primary text-primary-foreground" : "text-sidebar-foreground hover:bg-accent hover:text-accent-foreground"}`}
+          className={`w-full flex flex-row items-center justify-start gap-2 rounded-md cursor-pointer transition font-medium px-3 py-1.5 ${link.href === pathname ? "bg-primary text-primary-foreground" : "text-sidebar-foreground hover:bg-accent hover:text-accent-foreground"}`}
           key={link.id}
           onClick={handleLinkClick(link.href)}
         >
           <span className="w-6 h-6">{link.icon}</span>
-          <span className="flex-1 font-semibold">{link.title}</span>
+          <span className="flex-1 font-medium">{link.title}</span>
         </div>
       ))}
 
@@ -97,7 +97,7 @@ const SideNav: FC = () => {
         <button
           type="button"
           className={cn(
-            "w-full flex flex-row items-center justify-start gap-2 rounded-md cursor-pointer transition font-semibold px-3 py-1.5",
+            "w-full flex flex-row items-center justify-start gap-2 rounded-md cursor-pointer transition font-medium px-3 py-1.5",
             isAdminRoute
               ? "bg-primary text-primary-foreground"
               : "text-sidebar-foreground hover:bg-accent hover:text-accent-foreground",
@@ -107,7 +107,7 @@ const SideNav: FC = () => {
           <span className="w-6 h-6">
             <I.ShieldCheck strokeWidth="2" />
           </span>
-          <span className="flex-1 text-left font-semibold">Admin Center</span>
+          <span className="flex-1 text-left font-medium">{dict.navigation.admin}</span>
         </button>
       )}
     </nav>

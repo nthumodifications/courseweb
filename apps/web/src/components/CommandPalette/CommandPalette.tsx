@@ -18,12 +18,15 @@ import {
   Maximize2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import useDictionary from "@/dictionaries/useDictionary";
 
 const CommandPalette = () => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
   const { language, darkMode, setDarkMode } = useSettings();
+  const dict = useDictionary();
+  const labels = dict.command_palette;
   const { setPreset, zenMode, toggleZenMode } = useTheme();
 
   // Toggle with Ctrl+K / Cmd+K
@@ -53,27 +56,27 @@ const CommandPalette = () => {
 
   const navLinks = [
     {
-      label: language === "zh" ? "今天" : "Today",
+      label: dict.navigation.today,
       icon: <LayoutList className="h-4 w-4" />,
       href: `/${language}/today`,
     },
     {
-      label: language === "zh" ? "課表" : "Timetable",
+      label: dict.navigation.timetable,
       icon: <Calendar className="h-4 w-4" />,
       href: `/${language}/timetable`,
     },
     {
-      label: language === "zh" ? "公車" : "Bus",
+      label: dict.navigation.bus,
       icon: <Bus className="h-4 w-4" />,
       href: `/${language}/bus`,
     },
     {
-      label: language === "zh" ? "應用程式" : "Apps",
+      label: dict.navigation.apps,
       icon: <LayoutGrid className="h-4 w-4" />,
       href: `/${language}/apps`,
     },
     {
-      label: language === "zh" ? "設定" : "Settings",
+      label: dict.navigation.settings,
       icon: <Settings className="h-4 w-4" />,
       href: `/${language}/settings`,
     },
@@ -103,12 +106,12 @@ const CommandPalette = () => {
           }
         >
           {/* Search Input */}
-          <div className="flex items-center px-4 py-3 border-b border-border gap-3">
+          <div className="flex items-center gap-2 border-b border-border px-4 py-2">
             <Search className="h-4 w-4 text-muted-foreground shrink-0" />
             <Command.Input
               autoFocus
               placeholder={
-                language === "zh" ? "輸入指令..." : "Type a command..."
+                labels.placeholder
               }
               className="flex-1 bg-transparent outline-none text-sm placeholder:text-muted-foreground"
             />
@@ -121,15 +124,15 @@ const CommandPalette = () => {
           </div>
 
           <Command.List className="max-h-80 overflow-y-auto overscroll-contain p-2">
-            <Command.Empty className="py-6 text-center text-sm text-muted-foreground">
-              {language === "zh" ? "找不到指令" : "No commands found"}
+            <Command.Empty className="py-6 text-left text-sm text-muted-foreground">
+              {labels.no_results}
             </Command.Empty>
 
             {/* Navigation */}
             <Command.Group
               heading={
                 <span className="text-xs font-medium text-muted-foreground px-2 py-1 block">
-                  {language === "zh" ? "頁面導航" : "Navigation"}
+                  {labels.navigation}
                 </span>
               }
             >
@@ -139,7 +142,7 @@ const CommandPalette = () => {
                   value={`navigate ${link.label}`}
                   onSelect={() => runCommand(() => navigate(link.href))}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer text-sm",
+                    "flex items-center gap-2 rounded-lg px-2 py-2 cursor-pointer text-sm",
                     "hover:bg-accent hover:text-accent-foreground transition-colors",
                     "data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground",
                   )}
@@ -154,15 +157,15 @@ const CommandPalette = () => {
             <Command.Group
               heading={
                 <span className="text-xs font-medium text-muted-foreground px-2 py-1 block">
-                  {language === "zh" ? "顯示" : "Display"}
+                  {labels.display}
                 </span>
               }
             >
               <Command.Item
-                value={darkMode ? "light mode 亮色模式" : "dark mode 暗色模式"}
+                value={darkMode ? labels.light_mode : labels.dark_mode}
                 onSelect={() => runCommand(() => setDarkMode(!darkMode))}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer text-sm",
+                  "flex items-center gap-2 rounded-lg px-2 py-2 cursor-pointer text-sm",
                   "hover:bg-accent hover:text-accent-foreground transition-colors",
                   "data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground",
                 )}
@@ -174,19 +177,15 @@ const CommandPalette = () => {
                 )}
                 <span>
                   {darkMode
-                    ? language === "zh"
-                      ? "切換亮色模式"
-                      : "Switch to Light Mode"
-                    : language === "zh"
-                      ? "切換暗色模式"
-                      : "Switch to Dark Mode"}
+                    ? labels.light_mode
+                    : labels.dark_mode}
                 </span>
               </Command.Item>
               <Command.Item
-                value="zen mode focus mode 禪模式 専注模式"
+                value={`${labels.enter_zen} ${labels.exit_zen}`}
                 onSelect={() => runCommand(toggleZenMode)}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer text-sm",
+                  "flex items-center gap-2 rounded-lg px-2 py-2 cursor-pointer text-sm",
                   "hover:bg-accent hover:text-accent-foreground transition-colors",
                   "data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground",
                 )}
@@ -194,12 +193,8 @@ const CommandPalette = () => {
                 <Maximize2 className="h-4 w-4 text-muted-foreground" />
                 <span>
                   {zenMode
-                    ? language === "zh"
-                      ? "退出禪模式"
-                      : "Exit Zen Mode"
-                    : language === "zh"
-                      ? "進入禪模式"
-                      : "Enter Zen Mode"}
+                    ? labels.exit_zen
+                    : labels.enter_zen}
                 </span>
               </Command.Item>
             </Command.Group>
@@ -208,7 +203,7 @@ const CommandPalette = () => {
             <Command.Group
               heading={
                 <span className="text-xs font-medium text-muted-foreground px-2 py-1 block">
-                  {language === "zh" ? "主題" : "Themes"}
+                  {labels.themes}
                 </span>
               }
             >
@@ -218,7 +213,7 @@ const CommandPalette = () => {
                   value={`theme ${preset.label} ${preset.labelZh}`}
                   onSelect={() => runCommand(() => setPreset(preset.id))}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer text-sm",
+                    "flex items-center gap-2 rounded-lg px-2 py-2 cursor-pointer text-sm",
                     "hover:bg-accent hover:text-accent-foreground transition-colors",
                     "data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground",
                   )}
@@ -241,13 +236,13 @@ const CommandPalette = () => {
           {/* Footer hint */}
           <div className="border-t border-border px-4 py-2 flex items-center gap-4 text-xs text-muted-foreground">
             <span>
-              <kbd className="font-mono bg-muted px-1 rounded">↑↓</kbd> navigate
+              <kbd className="font-mono bg-muted px-1 rounded">↑↓</kbd> {labels.navigate}
             </span>
             <span>
-              <kbd className="font-mono bg-muted px-1 rounded">↵</kbd> select
+              <kbd className="font-mono bg-muted px-1 rounded">↵</kbd> {labels.select}
             </span>
             <span>
-              <kbd className="font-mono bg-muted px-1 rounded">Esc</kbd> close
+              <kbd className="font-mono bg-muted px-1 rounded">Esc</kbd> {labels.close}
             </span>
           </div>
         </Command>

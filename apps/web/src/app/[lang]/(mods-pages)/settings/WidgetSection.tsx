@@ -2,7 +2,6 @@ import { useLocalStorage } from "usehooks-ts";
 import {
   DashboardConfig,
   DEFAULT_DASHBOARD_CONFIG,
-  WIDGET_DEFINITIONS,
   WidgetConfig,
 } from "@/types/widget";
 import { Switch } from "@courseweb/ui";
@@ -24,7 +23,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
 import { useCallback } from "react";
-import { useSettings } from "@/hooks/contexts/settings";
+import useDictionary from "@/dictionaries/useDictionary";
 
 const SortableWidgetRow = ({
   widget,
@@ -36,27 +35,27 @@ const SortableWidgetRow = ({
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: widget.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
-  const def = WIDGET_DEFINITIONS.find((d) => d.type === widget.type);
-  const { language } = useSettings();
+  const dict = useDictionary();
+  const label =
+    dict.settings.calendar.widget_dashboard.widget_options[widget.type].title;
 
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card"
+      className="flex flex-row items-center gap-4 py-4"
     >
       <button
         {...attributes}
         {...listeners}
-        className="cursor-grab active:cursor-grabbing text-muted-foreground touch-none"
+        type="button"
+        className="flex min-h-10 min-w-10 cursor-grab items-center justify-center rounded-md text-muted-foreground touch-none active:cursor-grabbing"
+        aria-label={dict.settings.move_item}
       >
         <GripVertical className="h-4 w-4" />
       </button>
       <div className="flex-1">
-        <div className="text-sm font-medium">
-          {language === "zh" ? def?.labelZh : def?.label}
-        </div>
-        <div className="text-xs text-muted-foreground">{def?.description}</div>
+        <div className="text-sm font-medium">{label}</div>
       </div>
       <Switch
         checked={widget.enabled}
@@ -67,6 +66,7 @@ const SortableWidgetRow = ({
 };
 
 export const WidgetSection = () => {
+  const dict = useDictionary();
   const [config, setConfig] = useLocalStorage<DashboardConfig>(
     "widget_config_v1",
     DEFAULT_DASHBOARD_CONFIG,
@@ -113,16 +113,19 @@ export const WidgetSection = () => {
   const sorted = [...config.widgets].sort((a, b) => a.order - b.order);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col divide-y divide-border">
       {/* Column layout */}
-      <div>
-        <p className="text-sm font-medium mb-2">Columns / 欄數</p>
-        <div className="flex gap-2">
+      <div className="flex flex-col gap-2 py-4">
+        <h3 className="text-sm font-bold">
+          {dict.settings.calendar.widget_dashboard.columns}
+        </h3>
+        <div className="flex flex-row gap-2">
           {([1, 2, 3] as const).map((col) => (
             <button
               key={col}
               onClick={() => handleColumnChange(col)}
-              className={`px-4 py-2 text-sm border rounded-lg transition-colors ${config.columns === col ? "border-primary bg-primary/10 text-primary font-medium" : "border-border hover:border-muted-foreground"}`}
+              type="button"
+              className={`rounded-md border px-4 py-2 text-sm transition-colors ${config.columns === col ? "border-primary bg-primary/10 font-medium text-primary" : "border-border hover:border-muted-foreground"}`}
             >
               {col}
             </button>
@@ -131,8 +134,10 @@ export const WidgetSection = () => {
       </div>
 
       {/* Widget list */}
-      <div>
-        <p className="text-sm font-medium mb-2">Widgets / 小工具</p>
+      <div className="py-4">
+        <h3 className="mb-2 text-sm font-bold">
+          {dict.settings.calendar.widget_dashboard.widgets}
+        </h3>
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
@@ -142,7 +147,7 @@ export const WidgetSection = () => {
             items={sorted.map((w) => w.id)}
             strategy={verticalListSortingStrategy}
           >
-            <div className="flex flex-col gap-2">
+            <div className="divide-y divide-border">
               {sorted.map((widget) => (
                 <SortableWidgetRow
                   key={widget.id}

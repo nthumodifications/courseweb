@@ -1,8 +1,9 @@
 {
   "today": {
     "schedule_title": "今日課程",
-    "noclass": "今天沒有課喔！",
-    "noclass_sub": "放假吧~",
+    "noclass": "今天沒有課",
+    "noclass_plain": "沒有課",
+    "noclass_range": "{start}–{end}（{count}天）",
     "noclass_sem": "放假囉！",
     "noclass_reminder": {
       "reminder": "還沒選到課嗎？",
@@ -150,7 +151,8 @@
       "error": "課程搜尋發生錯誤。此請求未改用其他搜尋層級重試。",
       "limited_mode": "搜尋目前處於有限模式，部分篩選和排序功能可能無法使用。",
       "dismiss_limited_mode": "關閉有限搜尋模式提示",
-      "no_more_results": "沒有更多結果"
+      "no_more_results": "沒有更多結果",
+      "no_results": "找不到符合的課程"
     },
     "item": {
       "add_to_semester": "加入",
@@ -260,7 +262,15 @@
       "ptt_title": "PTT 心得",
       "ptt_disclaimer": "PTT 心得來自 NTHU_Course 版，並非由 NTHUMods 審核。心得不代表 NTHUMods 的立場。若您發現任何不當內容，請向 PTT 版檢舉。",
       "important_dates": "重要日期",
-      "view_ccxp_syllabus": "瀏覽校務系統大綱網頁"
+      "view_ccxp_syllabus": "瀏覽校務系統大綱網頁",
+      "ai_summary": {
+        "generate": "產生 AI 摘要",
+        "title": "AI 課程摘要",
+        "loading": "正在分析課程內容…",
+        "error": "無法產生摘要。",
+        "workload": "負擔",
+        "difficulty": "難度"
+      }
     }
   },
   "navigation": {
@@ -270,7 +280,22 @@
     "settings": "設定",
     "venues": "地點",
     "bus": "校車",
-    "apps": "應用程式"
+    "apps": "應用程式",
+    "admin": "管理中心"
+  },
+  "command_palette": {
+    "placeholder": "輸入指令…",
+    "no_results": "找不到指令",
+    "navigation": "頁面導覽",
+    "display": "顯示",
+    "themes": "主題",
+    "light_mode": "切換亮色模式",
+    "dark_mode": "切換暗色模式",
+    "enter_zen": "進入禪模式",
+    "exit_zen": "退出禪模式",
+    "navigate": "移動",
+    "select": "選取",
+    "close": "關閉"
   },
   "sports": {
     "title": "體育場館",
@@ -288,7 +313,21 @@
     "entries_today": "今日進場",
     "data_source": "資料來源：",
     "source_name": "國立清華大學體育中心",
-    "source_aria": "國立清華大學體育中心（在新分頁開啟）"
+    "source_aria": "國立清華大學體育中心（在新分頁開啟）",
+    "days": {
+      "sunday": "週日",
+      "monday": "週一",
+      "tuesday": "週二",
+      "wednesday": "週三",
+      "thursday": "週四",
+      "friday": "週五",
+      "saturday": "週六",
+      "holiday": "假日"
+    },
+    "semester_first": "上學期",
+    "semester_second": "下學期",
+    "semester_break": "暑假",
+    "semester_winter_break": "寒假"
   },
   "bus": {
     "north_gate": "北校門口",
@@ -321,17 +360,31 @@
     "quick_navigation": "快速導覽",
     "open_navigation": "開啟導覽選單",
     "close_navigation": "關閉導覽選單",
-    "drag_hint": "拖曳以重新排序，切換以顯示或隱藏導覽項目",
+    "move_item": "移動項目",
     "appearance": {
       "title": "外觀",
-      "description": "主題、顏色、字體、版面",
       "preset": {
         "title": "主題預設",
-        "description": "選擇配色主題"
+        "themes": {
+          "nthumods": "NTHUMods",
+          "nord": "Nord 北極",
+          "catppuccin-latte": "Catppuccin 拿鐵",
+          "catppuccin-mocha": "Catppuccin 摩卡",
+          "dracula": "Dracula 吸血鬼",
+          "github-light": "GitHub 白",
+          "github-dark": "GitHub 黑",
+          "solarized-light": "Solarized 亮",
+          "solarized-dark": "Solarized 暗",
+          "one-dark": "One Dark",
+          "tokyo-night": "東京夜",
+          "gruvbox-dark": "Gruvbox 暗",
+          "rose-pine": "Rosé Pine 玫瑰松",
+          "everforest-light": "Everforest 常綠林亮",
+          "everforest-dark": "Everforest 常綠林暗"
+        }
       },
       "radius": {
         "title": "圓角",
-        "description": "邊框圓角大小",
         "options": {
           "none": "無",
           "sm": "小",
@@ -342,20 +395,17 @@
       },
       "font_scale": {
         "title": "字體大小",
-        "description": "調整文字大小",
         "small": "小",
         "large": "大"
       },
       "density": {
         "title": "密度",
-        "description": "介面間距",
         "compact": "緊湊",
         "comfortable": "適中",
         "spacious": "寬鬆"
       },
       "background": {
         "title": "背景",
-        "description": "頁面背景樣式",
         "from": "起始顏色",
         "to": "結束顏色",
         "solid": "純色",
@@ -367,7 +417,19 @@
       "font": {
         "title": "字體",
         "chinese": "中文字型",
-        "latin": "英文字型"
+        "latin": "英文字型",
+        "options": {
+          "system-tc": "系統中文",
+          "noto-sans-tc": "思源黑體",
+          "noto-serif-tc": "思源宋體",
+          "inter": "Inter",
+          "jakarta": "Jakarta",
+          "nunito": "Nunito",
+          "dm-sans": "DM Sans",
+          "montserrat": "Montserrat",
+          "mono": "等寬字體",
+          "lora": "Lora"
+        }
       },
       "accent": {
         "title": "強調色",
@@ -375,7 +437,7 @@
         "pick": "選擇強調色"
       },
       "share_theme": "分享主題",
-      "copied": "已複製！",
+      "copied": "已複製",
       "reset": "重設為預設值"
     },
     "account": {
@@ -385,7 +447,7 @@
       "description": "校務資訊系統代理登入",
       "ccxp": {
         "title": "代理登入校務資訊系統",
-        "description": "系統會用代理登入方式，讓學生們可以在NTHUMods 上輕鬆連結校務系統功能。"
+        "description": "系統會用代理登入方式，讓學生們可以在 NTHUMods 上輕鬆連結校務系統功能。"
       },
       "logoutDescription": "是否確定要登出？",
       "logoutConfimation": "確認登出",
@@ -394,7 +456,6 @@
     },
     "display": {
       "title": "顯示",
-      "description": "外觀，語言",
       "dark_mode": {
         "title": "黑暗模式"
       },
@@ -402,8 +463,7 @@
         "title": "語言"
       },
       "compact_header": {
-        "title": "精簡標頭",
-        "description": "降低頂部標頭列的高度"
+        "title": "精簡標頭"
       },
       "bottom_nav": {
         "title": "底部導覽"
@@ -414,7 +474,6 @@
     },
     "timetable": {
       "title": "時間表",
-      "description": "顏色、客製化",
       "vertical_preview": "垂直式顯示",
       "default_view": {
         "title": "預設檢視",
@@ -459,11 +518,29 @@
         "serif": "襯線",
         "mono": "等寬",
         "rounded": "圓體"
+      },
+      "move_up": "向上移動",
+      "move_down": "向下移動",
+      "theme": {
+        "title": "課表配色",
+        "options": {
+          "ashes": "灰燼",
+          "chalk": "粉筆",
+          "eighties": "八〇年代",
+          "google": "Google",
+          "mocha": "摩卡",
+          "monokai": "Monokai",
+          "ocean": "海洋",
+          "oceanic-next": "Oceanic Next",
+          "paraiso": "Paraiso",
+          "railscasts": "Railscasts",
+          "tomorrow": "Tomorrow",
+          "twilight": "Twilight"
+        }
       }
     },
     "privacy": {
       "title": "隱私",
-      "description": "使用量分析",
       "analytics": {
         "title": "分享至 Google Analytics",
         "description": "傳送匿名使用量統計資料至 Google Analytics，幫助我們了解使用者行為，以改進服務。"
@@ -471,20 +548,26 @@
     },
     "calendar": {
       "title": "行事曆頁面",
-      "description": "想先看到什麼內容",
       "academic_calendar": {
-        "title": "清大校曆",
-        "description": "在行事曆頁面顯示學校行事曆。"
+        "title": "清大校曆"
       },
       "experimental_calendar": {
         "title": "行事曆",
-        "badge": "實驗",
-        "description": "在行事曆頁面使用新的行事曆功能。"
+        "badge": "實驗"
       },
       "widget_dashboard": {
         "title": "小工具儀表板",
         "description": "用可自訂的小工具格取代今日頁面",
-        "customize": "自訂小工具："
+        "columns": "欄數",
+        "widgets": "小工具",
+        "widget_options": {
+          "schedule": { "title": "課程表" },
+          "weather": { "title": "天氣" },
+          "pinned-apps": { "title": "快速連結" },
+          "notepad": { "title": "便條紙" },
+          "countdown": { "title": "學期倒數" },
+          "bus": { "title": "公車時刻" }
+        }
       }
     },
     "ai": {
@@ -517,10 +600,10 @@
     },
     "advanced": {
       "title": "進階",
-      "description": "自訂 CSS、開發者選項",
       "custom_css": {
         "title": "自訂 CSS",
-        "description": "在頁面中注入自訂 CSS，會在所有樣式之後全域套用。"
+        "description": "在頁面中注入自訂 CSS，會在所有樣式之後全域套用。",
+        "placeholder": "/* 在這裡輸入自訂 CSS */\n.example { ... }"
       }
     }
   },
@@ -532,13 +615,50 @@
     "waitlist_title": "即將推出新功能？搶先得知最新消息！",
     "waitlist_message": "敬請期待 NTHUMods 的新功能。"
   },
+  "pwa": {
+    "install": "安裝",
+    "title": "安裝 NTHUMods",
+    "description": "將 NTHUMods 加到主畫面，方便快速開啟。",
+    "ios": {
+      "share": "點選 Safari 底部的分享按鈕",
+      "home_screen": "向下捲動並點選「加入主畫面」",
+      "confirm": "點選「加入」確認"
+    },
+    "android": {
+      "intro": "在裝置上安裝此應用程式：",
+      "address_bar": "點選瀏覽器網址列中的安裝圖示",
+      "menu": "或從瀏覽器選單選擇「安裝應用程式」"
+    }
+  },
+  "static": {
+    "team_title": "團隊",
+    "core_title": "NTHUMods Core",
+    "team_description": "NTHUMods 是由一群熱愛 NTHU 的學生組成的團隊。我們希望透過這個平台，讓學生更方便取得資訊並分享經驗。歡迎加入團隊，一起貢獻。"
+  },
+  "forms": {
+    "issue": {
+      "title": "問題回報",
+      "description": "匿名提交。",
+      "label_title": "標題",
+      "placeholder_title": "請輸入問題或功能名稱",
+      "known_issues": "已知問題",
+      "label_description": "詳情",
+      "detail_hint": "請盡量提供詳細資訊與聯絡方式。",
+      "markdown_hint": "支援 Markdown。",
+      "feedback": "回饋",
+      "retrying": "重試中…",
+      "submitting": "送出中…",
+      "submit": "送出"
+    }
+  },
   "venues": {
-    "placeholder": "從選項中選一個地點"
+    "placeholder": "從選項中選一個地點",
+    "view_courses": "查看課程"
   },
   "campus_map": {
     "title": "3D 校園地圖",
     "searchLabel": "搜尋校園建築",
-    "searchPlaceholder": "搜尋台達、DELTA 或 DELTA台達629",
+    "searchPlaceholder": "搜尋台達、DELTA 或 DELTA 台達 629",
     "noResults": "找不到已建立地圖位置的校園建築。",
     "venueNotMapped": "這個地點尚未建立地圖位置",
     "loading": "正在載入清大校園地圖…",
@@ -564,16 +684,38 @@
   "alerts": {
     "TimetableCourseList": {
       "action": "前往設定",
-      "text": "課表可以在設定頁面客製化喔！"
+      "text": "你可以在設定頁面客製化課表。"
     },
     "dismiss": "關閉公告"
   },
   "applist": {
     "title": "功能清單",
     "to_ccxp": "校務系統連結",
-    "empty_pinned_apps_reminder": "可以到右上角新增常用功能喔～",
+    "empty_pinned_apps_reminder": "可以到右上角新增常用功能。",
     "pinned_apps_title": "常用功能",
-    "edit_pinned_apps_title": "編輯常用功能"
+    "edit_pinned_apps_title": "編輯常用功能",
+    "beta": "測試",
+    "categories": {
+      "campuslife": "校園生活",
+      "course": "課程資訊",
+      "club": "社團",
+      "other": "其他"
+    },
+    "apps": {
+      "courses": "課程查詢",
+      "chat": "AI 課程助手",
+      "venues": "地點相關課程",
+      "campus-map": "互動式校園地圖",
+      "bus": "公車",
+      "sports-venues": "體育場館使用人數",
+      "shops": "餐廳及服務",
+      "calendar": "日曆",
+      "timetable-community": "社群課表",
+      "clubs_info": "社團資訊",
+      "chumei": "竹梅活動觀測站",
+      "scholarship": "清華助學系統",
+      "planner": "畢業規劃"
+    }
   },
   "dialogs": {
     "DownloadTimetableDialog": {
@@ -631,6 +773,16 @@
       "accurate_relavent": "請輸入準確並跟此課程有關的日期",
       "sign_in_required": "請登入以貢獻課程日期"
     },
+    "ShortNameContributeForm": {
+      "title": "提供課程簡稱",
+      "description": "提供課程簡稱，讓大家更容易辨識課程。",
+      "dont_abuse": "請勿濫用系統。",
+      "accurate_relevant": "請只填寫準確且相關的資訊。",
+      "privacy": "送出的內容會包含學號，並公開顯示。",
+      "placeholder": "課程簡稱",
+      "cancel": "取消",
+      "submit": "送出"
+    },
     "ShareCourseButton": {
       "share_prefix": "分享：",
       "share_text_prefix": "看看這門課程：",
@@ -644,6 +796,13 @@
     "open_now": "營業中",
     "closed": "休息中",
     "closed_today": "今日休息",
+    "opening_soon": "即將開始",
+    "closing_soon": "即將休息",
+    "no_info": "無資訊",
+    "open_24h": "24 小時營業",
+    "opens_at": "開始營業",
+    "closes_at": "後休息",
+    "no_phone": "無",
     "area_placeholder": "選擇地區",
     "area_all": "全部",
     "load_error": "無法載入店家資料。"
@@ -651,24 +810,24 @@
   "help": {
     "button": "說明",
     "intro": {
-      "title": "歡迎來到NTHUMODS",
-      "description": "這可能是能讓你在清大取得好成績的終極工具！以下是一份快速指南，讓你能夠輕鬆入門。"
+      "title": "歡迎來到 NTHUMods",
+      "description": "這是一份 NTHUMods 功能簡介。"
     },
     "courses": {
       "title": "課程探索",
-      "description": "在你的學習之路上不斷發現和探索，從核心必修到選修，NTHUMods 都能協助你。深入探索，找到最適合你課表的課程！"
+      "description": "搜尋課程並加入你的課表。"
     },
     "dashboard": {
       "title": "個人化儀表板",
-      "description": "你的個人化儀表板已經準備就緒！在這裡，你可以追蹤你的課程、作業（即將推出）和考試（即將推出）。保持積極，繼續努力!"
+      "description": "查看你的課程、作業與考試。"
     },
     "bus": {
       "title": "校車路線",
-      "description": "掌握校園校車路線、班次與站點，輕鬆規劃日常通勤。"
+      "description": "查看校車路線、班次與站點。"
     },
     "tools": {
-      "title": "需要更多功能嗎？",
-      "description": "將你的清大帳戶與 NTHUMods 連結，開啟通往豐富附加工具的大門。輕鬆整合各種功能，豐富你的大學生活。",
+      "title": "其他工具",
+      "description": "連結清大帳戶以使用需要登入的功能。",
       "connect": "現在連線",
       "image_alt": "工具箱",
       "calendar": "行事曆",
@@ -677,14 +836,14 @@
       "settings": "設定"
     },
     "dev": {
-      "title": "共同成長",
-      "description": "我們致力於持續改進，提供最佳體驗。目前應用程式仍在開發中，過程可能會遇到一些困難。但我們重視你的意見，請分享你的想法、回饋，以及你希望看到的功能。",
-      "feedback": "給回饋"
+      "title": "提供回饋",
+      "description": "如果你發現問題或有功能建議，請告訴我們。",
+      "feedback": "回報問題"
     },
     "prev": "上一頁",
     "next": "下一頁",
     "skip": "跳過",
-    "jump": "開始！",
+    "jump": "開始",
     "continue": "繼續",
     "login": "登入"
   },
@@ -879,11 +1038,14 @@
     "all": "全部",
     "no_results": "找不到結果。",
     "try_again": "再試一次",
+    "load_error": "資料載入失敗。",
     "submit": "送出",
     "save": "儲存",
     "error": "錯誤",
     "coming_soon": "即將推出",
-    "share": "分享"
+    "share": "分享",
+    "testing": "測試中",
+    "redirecting": "正在重新導向…"
   },
   "auth": {
     "timeout_title": "驗證逾時",
@@ -914,7 +1076,7 @@
     "something_wong": "發生了一點問題"
   },
   "footer": {
-    "tagline": "由學生製作，為學生服務 ❤️",
+    "tagline": "由學生製作，服務學生",
     "contribute": "貢獻",
     "report_issue": "回報問題",
     "team": "團隊",
@@ -930,7 +1092,7 @@
     "cerana": "東蜂科技",
     "opencollective": {
       "title": "請我們喝咖啡",
-      "subtitle": "每一塊錢都有幫助！"
+      "subtitle": "每一塊錢都有幫助。"
     }
   },
   "contribute": {
@@ -938,30 +1100,36 @@
     "subtitle": "幫助我們為清華大學社群建立更好的學術工具。每一個貢獻都很重要。",
     "sponsors": {
       "title": "我們的贊助商",
-      "description": "我們感謝這些贊助者的大力支援，讓 NTHUMods 得以實現！",
+      "description": "我們感謝這些贊助者的支援，讓 NTHUMods 得以運作。",
       "algolia": "搜尋引擎",
-      "cerana": "基礎設施贊助商"
+      "algolia_name": "Algolia",
+      "cerana": "基礎設施贊助商",
+      "cerana_name": "東蜂科技"
     },
     "stats": {
       "active_users": "活躍使用者",
+      "active_users_value": "19k+",
       "open_source": "開放原始碼",
+      "open_source_value": "100%",
       "years_running": "運作年數",
-      "community": "社群"
+      "years_running_value": "2+",
+      "community": "社群",
+      "community_value": "24/7"
     },
     "how_to_contribute": {
       "title": "如何貢獻",
       "description": "NTHUMods 是一個 100% 由學生主導的開放原始碼專案。我們依靠貢獻者和清華大學社群的支援，讓這個平台持續發展。每一個貢獻，無論多小，都能為數以千計的學生生活帶來真正的改變！"
     },
     "financial_support": {
-      "title": "💰 財務支援",
-      "description": "協助我們支付開發成本和其他費用。每一分錢都有助於我們維護和改善平台，為所有學生提供更好的服務。",
+      "title": "財務支援",
+      "description": "協助我們支付開發成本和其他費用。每一分錢都有助於維護平台。",
       "opencollective": "在 OpenCollective 上支援"
     },
     "for_everyone": {
       "title": "給所有人",
       "feedback": {
         "title": "分享你的回饋",
-        "description": "我們隨時歡迎回饋！如果你有任何建議、想法或回饋，或者你覺得這個紫色調很醜！請使用以下連結告訴我們。",
+        "description": "歡迎提供建議、想法或回饋，請使用以下連結告訴我們。",
         "form": "表單",
         "email": "電子郵件",
         "instagram": "Instagram"
@@ -971,7 +1139,7 @@
       "title": "給開發者",
       "bug_reports": {
         "title": "提交錯誤報告和功能請求",
-        "description": "發現了錯誤？想要看到新功能？在我們的 GitHub 儲存庫中提交問題！",
+        "description": "發現錯誤或想提出新功能，請在 GitHub 儲存庫提交問題。",
         "bug": "錯誤",
         "bug_description": "在 Github 上報告錯誤",
         "feature": "功能",
@@ -979,14 +1147,14 @@
       },
       "code_design": {
         "title": "貢獻程式碼和設計",
-        "description": "準備好開始了嗎？我們歡迎各種技能程度的貢獻者！無論你是經驗豐富的開發者還是剛剛起步，這裡都有適合每個人的內容。檢視適合新手的問題，並加入我們的社群討論！",
+        "description": "歡迎各種技能程度的貢獻者，檢視適合新手的問題並加入社群討論。",
         "github_repo": "GitHub 儲存庫",
         "good_first_issues": "新手入門問題"
       }
     },
     "call_to_action": {
-      "title": "準備好做出改變了嗎？",
-      "description": "加入我們充滿活力的學生、開發者和夢想家社群，一起為清華大學建立未來的學術工具！",
+      "title": "一起改善校園工具",
+      "description": "加入學生與開發者社群，一起為清華大學建立學術工具。",
       "start_contributing": "開始貢獻",
       "support_us": "支援我們"
     }
@@ -995,8 +1163,8 @@
     "login_required": "請先登入以使用 AI 課程助手功能",
     "title": "AI 課程助手",
     "welcome": "歡迎使用 AI 課程助手",
-    "welcome_description": "我可以幫你搜尋課程、規劃課表、查詢畢業學分。試試下面的建議或直接輸入你的問題！",
-    "capabilities": "搜尋課程 · 規劃課表 · 查詢畢業學分",
+    "welcome_description": "我可以幫你搜尋課程、規劃課表、查詢畢業學分。你也可以直接輸入問題。",
+    "capabilities": "搜尋課程・規劃課表・查詢畢業學分",
     "quota_exceeded_title": "API 使用額度已超出",
     "quota_exceeded_description": "我們的 API 使用額度已達上限。您可以使用自己的 Gemini API Key 來繼續使用 AI 課程助手。",
     "retry_after": "預計",
@@ -1045,10 +1213,32 @@
       "contains": "包含",
       "courses_suffix": "門課：",
       "credits_suffix": "學分",
-      "tip": "💡 提示：點選「加入我的課表」可將所有課程直接加入你的選課清單",
+      "tip": "提示：點選「加入我的課表」可將所有課程直接加入選課清單。",
       "add_success": "已將 {count} 門課加入課表",
       "add_failed": "加入課表失敗"
     }
+  },
+  "group": {
+    "not_found": "找不到群組。",
+    "go_back": "返回",
+    "copy_invite_link": "複製邀請連結",
+    "leave": "離開",
+    "delete_group": "刪除群組",
+    "delete_confirm": "確定要刪除這個群組嗎？此操作無法復原。",
+    "members": "成員",
+    "member_count": "{count} 位成員",
+    "member_courses": "{count} 門課",
+    "toggle_members": "在右側切換成員以顯示課表",
+    "join_group": "加入群組",
+    "join_description": "輸入名稱，讓成員辨識你。系統會自動連結你的課表。",
+    "name_placeholder": "你的姓名或暱稱",
+    "join": "加入群組",
+    "joined": "已加入群組",
+    "left": "已離開群組",
+    "deleted": "已刪除群組",
+    "error": "錯誤",
+    "name_required": "請輸入你的姓名。",
+    "not_loaded": "群組尚未載入。"
   },
   "planner": {
     "status": {
@@ -1078,7 +1268,7 @@
       "graduationRequirements": "畢業要求",
       "manageFoldersAriaLabel": "管理資料夾",
       "noSearchResults": "查無符合的資料夾",
-      "creditsPdfLink": "畢業學分PDF",
+      "creditsPdfLink": "畢業學分 PDF",
       "coursesUnit": "門課",
       "creditsUnit": "學分",
       "noRequirement": "無要求",
@@ -1295,7 +1485,7 @@
       "statusSelectPlaceholder": "選擇狀態",
       "activeSwitchLabel": "啟用此學期",
       "selectPrompt": "選擇一個學期以檢視詳情",
-      "idRequired": "學期ID為必填欄位",
+      "idRequired": "學期 ID 為必填欄位",
       "nameRequired": "學期名稱為必填欄位",
       "yearRequired": "學年為必填欄位",
       "termRequired": "學期為必填欄位",
@@ -1391,10 +1581,235 @@
       "clearSelection": "清除選取"
     }
   },
+  "issues": {
+    "data_sources": "資料來源",
+    "introduction": "我們彙整多個資料來源，建立完整的課程資訊。",
+    "sources": {
+      "course_data": "最新課程資料《JSON 格式》",
+      "course_list": "校務資訊系統課程總表",
+      "course_stats": "課程平均值及標準差查詢"
+    },
+    "update_notice": "資料每天上午 8 點更新。若 NTHUMods 的課程資訊有問題，請先比對上方來源，再回報問題。",
+    "form": {
+      "title": "標題",
+      "description": "問題說明",
+      "submit": "送出",
+      "title_required": "請填寫標題。",
+      "description_required": "請填寫問題說明。",
+      "submit_error": "送出問題失敗，請稍後再試。",
+      "success": "問題已送出。"
+    }
+  },
+  "community": {
+    "title": "社群課表",
+    "courses": "門課",
+    "live": "即時",
+    "snapshot": "快照",
+    "more": "更多",
+    "grade": "成績",
+    "view_full_page": "查看完整頁面",
+    "all_semesters": "全部學期",
+    "empty": "目前沒有公開課表。",
+    "empty_description": "開啟「公開社群」後分享你的課表，就會顯示在這裡。",
+    "previous": "上一頁",
+    "load_more": "載入更多",
+    "separator": "・"
+  },
+  "next_steps": {
+    "title": "終止 NTHUMods 代理登入校務系統服務",
+    "salutation": "",
+    "sections": [
+      {
+        "title": "發生了什麼",
+        "paragraphs": [
+          "我們接獲來自校方的通知，其中提到代理登入服務會有觸犯個人資料保護法的疑慮。雖然目前並未發生任何資料洩露事件，但團隊在經過討論後決定終止代理登入服務。根據校方的定義，NTHUMods 屬於第三方外部平台，故使用者的帳號與密碼不能由我們的伺服器做代理登入。代理登入的技術實作正好需要使用者的帳號與密碼，因此儘管使用者需要勾選同意才能由平台代理登入校務系統取得資料，但該技術仍然被校方提出有觸犯個人資料保護法的疑慮。"
+        ]
+      },
+      {
+        "title": "我們的應對措施",
+        "paragraphs": [
+          "由於清大並無提供公開提取資料的 API 服務於第三方平台，故目前團隊只好與校方做進一步的討論，希望早日商討出解法，爭取在合規合法的前提下為使用者提供更便利的服務。"
+        ]
+      },
+      {
+        "title": "我們的願景",
+        "paragraphs": [
+          "團隊一直致力於打造一個讓學生能夠輕鬆獲得資訊、並擁有直觀易用的使用者介面。我們堅信平台始終走在正確的發展路徑上。展望未來，我們將繼續秉持這樣的理念，不斷為使用者提供更好的服務。"
+        ]
+      }
+    ],
+    "opening": "NTHUMods 團隊非常感謝大家對平台的支持，基於避免觸犯個人資料保護法的原則，團隊宣佈從 2025 年 5 月 3 日開始終止用於代理登入清大校務系統的服務。屆時涉及需要登入校務系統才能使用的功能會被暫停使用，不過其他無需登入校務系統的功能皆可正常使用。",
+    "closing": [
+      "感謝大家對 NTHUMods 的支持與愛護，期待未來與大家一起共同成長。",
+      "若有興趣加入都可以透過 IG（@nthumods）或 Email（nthumods@gmail.com）聯繫我們，還請大家繼續支持 NTHUMods。"
+    ],
+    "signature": "NTHUMods 團隊"
+  },
+  "privacy_page": {
+    "title": "隱私權政策",
+    "updated_at": "更新時間：2025/02/20",
+    "intro": "非常歡迎您光臨 NTHUMods（以下簡稱本網站），為了讓您能夠安心使用本網站的各項服務與資訊，特此向您說明本網站的隱私權保護政策，以保障您的權益，請您詳閱下列內容：",
+    "sections": [
+      {
+        "title": "一、隱私權保護政策的適用範圍",
+        "paragraphs": [],
+        "items": [
+          "隱私權保護政策內容，包括本網站如何處理在您使用網站服務時收集到的個人識別資料。",
+          "隱私權保護政策不適用於本網站以外的相關連結網站，也不適用於非本網站所委託或參與管理的人員。"
+        ]
+      },
+      {
+        "title": "二、資料的蒐集與使用方式",
+        "paragraphs": [
+          "為了在本網站上提供您最佳的互動性服務，可能會請您提供相關個人的資料，其範圍如下："
+        ],
+        "items": [
+          "本網站在您使用服務信箱、問卷調查等互動性功能時，會保留您所提供的姓名、電子郵件地址、連絡方式及使用時間等。",
+          "於一般瀏覽時，伺服器會自行記錄相關行徑，包括您使用連線設備的 IP 位址、使用時間、使用的瀏覽器、瀏覽及點選資料記錄等，做為我們增進網站服務的參考依據，此記錄為內部應用，決不對外公佈。",
+          "為提供精確的服務，我們會將收集的問卷調查內容進行統計與分析，分析結果將之統計後的數據或說明文字呈現，除供 NTHUMods Core Team，我們會視需要公佈該數據及說明文字，但不涉及特定個人之資料。",
+          "在你登錄後，伺服器上不會儲存你的密碼和 session。密碼會保存在你的設備中，用來驗證你的身份。除了特別注明之外，本網站不會擅自存儲你其他的個人資料。",
+          "除非取得您的同意或其他法令之特別規定，本網站絕不會將您的個人資料揭露於第三人或使用於蒐集目的以外之其他用途。"
+        ]
+      },
+      {
+        "title": "三、資料之保護",
+        "paragraphs": [],
+        "items": [
+          "本網站主機均設有防火牆、防毒系統等相關的各項資訊安全設備及必要的安全防護措施，加以保護網站及您的個人資料採用嚴格的保護措施，只由經過授權的人員才能接觸您的個人資料。",
+          "如因業務需要有必要委託本部相關單位提供服務時，本網站亦會嚴格要求其遵守保密義務，並且採取必要檢查程序以確定其將確實遵守。"
+        ]
+      },
+      {
+        "title": "四、網站對外的相關連結",
+        "paragraphs": [
+          "本網站的網頁提供其他網站的網路連結，您也可經由本網站所提供的連結，點選進入其他網站。但該連結網站中不適用於本網站的隱私權保護政策，您必須參考該連結網站中的隱私權保護政策。"
+        ],
+        "items": []
+      },
+      {
+        "title": "五、Cookie 的使用",
+        "paragraphs": [
+          "為了提供您最佳的服務，本網站會在您的電腦中放置並取用我們的 Cookie，若您不願接受 Cookie 的寫入，您可在您使用的瀏覽器功能項中設定隱私權等級為高，即可拒絕 Cookie 的寫入，但可能會導至網站某些功能無法正常執行。"
+        ],
+        "items": []
+      },
+      {
+        "title": "六、隱私權保護政策之修正",
+        "paragraphs": [
+          "本網站隱私權保護政策將因應需求隨時進行修正，修正後的條款將刊登於網站上。"
+        ],
+        "items": []
+      }
+    ],
+    "translation_note": ""
+  },
+  "proxy_login": {
+    "title": "NTHUMods 代理登入說明",
+    "updated_at": "更新時間：2025/03/04",
+    "what_is": {
+      "title": "什麼是 NTHUMods 代理登入",
+      "before_link": "NTHUMods 代理登入是一個幫助用戶在 NTHUMods 平台上安全登入清華大學校務資訊系統（CCXP）的工具。它使用加密技術來保護用戶的帳戶和密碼，確保用戶的資訊安全。這是使用",
+      "link": "身分驗證系統",
+      "after_link": "的重要組成部分。",
+      "note_title": "注意",
+      "note_before": "如需完整的技術詳情，請參閱",
+      "note_link": "身分驗證與工作階段管理",
+      "note_after": "頁面。本頁面提供簡化的概述。",
+      "separator": "："
+    },
+    "connections": {
+      "title": "代理登入與其他功能的關係",
+      "intro": "代理登入功能是 NTHUMods 眾多功能的基礎，它使您能夠安全地訪問：",
+      "items": [
+        {
+          "path": "/web-for-beginners/course",
+          "label": "課程資訊和選課功能",
+          "description": "瀏覽、搜尋和管理您的課程"
+        },
+        {
+          "path": "/web-for-beginners/grades",
+          "label": "成績查詢系統",
+          "description": "安全查看您的學業成績"
+        },
+        {
+          "path": "/web-for-beginners/comment-dates",
+          "label": "重要日期與評論系統",
+          "description": "了解關鍵學術日期和課程評論"
+        },
+        {
+          "path": "/web-for-beginners/misc",
+          "label": "其他實用工具",
+          "description": "探索更多 NTHUMods 提供的功能"
+        }
+      ],
+      "separator": "・"
+    },
+    "account": {
+      "title": "如何使用帳戶資訊",
+      "intro": "在使用 NTHUMods 代理登入時，我們需要您的學號和密碼來進行首次登入驗證。登入過程簡述如下：",
+      "steps": [
+        "發送請求到校務資訊系統登入頁面，獲取驗證碼圖片。",
+        "使用 OCR 技術自動解碼驗證碼。",
+        "提交學號、密碼和驗證碼進行登入。",
+        "驗證登入狀態並獲取會話令牌。"
+      ],
+      "assurance": "您的資訊僅存儲在用戶設備上。我們不會儲存任何帳戶資料（我們沒錢幫您們儲存）。"
+    },
+    "protection": {
+      "title": "如何保護資訊",
+      "intro": "我們採取以下基本步驟來保護您的資訊：",
+      "items": [
+        {
+          "title": "您的資訊僅存儲在用戶設備上",
+          "description": "所有敏感信息都不會存儲在我們的服務器上。"
+        },
+        {
+          "title": "在您的設備上儲存的密碼",
+          "description": "會使用 AES-256-CBC 加密技術來加密。"
+        },
+        { "title": "基本密碼處理流程", "description": "" }
+      ],
+      "separator": "：",
+      "detail_before": "更詳細的加密過程請參閱",
+      "detail_link": "身份驗證頁面"
+    },
+    "process": {
+      "title": "代理登入基本流程",
+      "intro": "以下是代理登入的簡化流程，提供基本了解：",
+      "detail_before": "如需詳細的流程圖和完整說明，請參閱",
+      "detail_link": "身份驗證頁面"
+    },
+    "reauth": {
+      "title": "什麼時候會自動重新驗證",
+      "before_course": "在 JWT 過期或有開啟連結校務資訊系統的功能時（如",
+      "course": "課程資訊",
+      "between": "或",
+      "grades": "成績查詢",
+      "after": "），系統將自動更新您的會話。"
+    },
+    "references": {
+      "title": "參考連結",
+      "before": "詳細程式碼請參考我們的",
+      "link": "NTHUMods Github",
+      "after": "。"
+    },
+    "diagrams": {
+      "password": "graph TD; A[使用者輸入密碼] -->|加密| B[加密密碼]; B --> C[儲存在使用者裝置]; C -->|需要時解密| D[使用密碼登入];",
+      "login": "graph TD; subgraph 使用者裝置; A1[使用者輸入學號和密碼] --> B1[發送登入請求]; end; subgraph 伺服器; B1 --> C1[取得並處理驗證碼]; C1 --> F1[驗證登入並建立工作階段]; F1 -->|成功| G1[返回工作階段權杖]; F1 -->|失敗| H1[返回錯誤]; end; G1 --> I1[使用者裝置]; subgraph 自動更新; J1[需要 CCXP 功能時] --> K1[使用加密密碼自動更新工作階段]; end;"
+    }
+  },
   "test": {},
   "team": {
+    "about_title": "關於團隊",
+    "about_description": "NTHUMods 是由學生經營的專案，致力於提供更好的學習體驗，協助學生規劃學業。",
+    "contact_before": "團隊歡迎新的想法與建議。你可以透過",
+    "or_our": "或我們的",
+    "github_repository": "GitHub 儲存庫",
+    "github_link": "這裡",
     "recruitment_intro": "想一起讓 NTHUMods 變得更好嗎？",
-    "recruitment_link": "查看目前招募職缺"
+    "recruitment_link": "查看目前招募職缺",
+    "core_team": "核心團隊",
+    "dedicated_members": "貢獻成員"
   },
   "recruit": {
     "title": "加入 NTHUMods",

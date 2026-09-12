@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Download, Smartphone } from "lucide-react";
 import { Button } from "@courseweb/ui";
+import useDictionary from "@/dictionaries/useDictionary";
 import {
   Dialog,
   DialogContent,
@@ -26,6 +27,7 @@ declare global {
 }
 
 const PWAInstallPrompt = () => {
+  const dict = useDictionary();
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
   const [isInstallable, setIsInstallable] = useState(false);
@@ -115,49 +117,44 @@ const PWAInstallPrompt = () => {
   }
 
   const InstallInstructionsContent = () => (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-4">
       {isIOS ? (
-        <div className="space-y-3">
+        <div className="flex flex-col gap-4">
           <div className="flex items-center gap-2 text-sm">
-            <span className="bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded text-blue-800 dark:text-blue-200">
+            <span className="bg-muted px-2 py-1 rounded text-muted-foreground">
               1
             </span>
-            <span>Tap the Share button at the bottom of Safari</span>
+            <span>{dict.pwa.ios.share}</span>
           </div>
           <div className="flex items-center gap-2 text-sm">
-            <span className="bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded text-blue-800 dark:text-blue-200">
+            <span className="bg-muted px-2 py-1 rounded text-muted-foreground">
               2
             </span>
-            <span>Scroll down and tap &quot;Add to Home Screen&quot;</span>
+            <span>{dict.pwa.ios.home_screen}</span>
           </div>
           <div className="flex items-center gap-2 text-sm">
-            <span className="bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded text-blue-800 dark:text-blue-200">
+            <span className="bg-muted px-2 py-1 rounded text-muted-foreground">
               3
             </span>
-            <span>Tap &quot;Add&quot; to confirm</span>
+            <span>{dict.pwa.ios.confirm}</span>
           </div>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="flex flex-col gap-4">
           <p className="text-sm text-muted-foreground">
-            To install this app on your device:
+            {dict.pwa.android.intro}
           </p>
           <div className="flex items-center gap-2 text-sm">
-            <span className="bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded text-blue-800 dark:text-blue-200">
+            <span className="bg-muted px-2 py-1 rounded text-muted-foreground">
               1
             </span>
-            <span>
-              Look for the install icon in your browser&apos;s address bar
-            </span>
+            <span>{dict.pwa.android.address_bar}</span>
           </div>
           <div className="flex items-center gap-2 text-sm">
-            <span className="bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded text-blue-800 dark:text-blue-200">
+            <span className="bg-muted px-2 py-1 rounded text-muted-foreground">
               2
             </span>
-            <span>
-              Or check your browser&apos;s menu for &quot;Install app&quot;
-              option
-            </span>
+            <span>{dict.pwa.android.menu}</span>
           </div>
         </div>
       )}
@@ -173,7 +170,7 @@ const PWAInstallPrompt = () => {
         className="w-full justify-start gap-2 text-sm font-medium"
       >
         <Download className="h-4 w-4" />
-        Install
+        {dict.pwa.install}
       </Button>
 
       <Dialog open={showInstructions} onOpenChange={setShowInstructions}>
@@ -181,11 +178,10 @@ const PWAInstallPrompt = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Smartphone className="h-5 w-5" />
-              Install NTHUMods
+              {dict.pwa.title}
             </DialogTitle>
-            <DialogDescription>
-              Add NTHUMods to your home screen for quick access and a native app
-              experience.
+            <DialogDescription className="leading-relaxed">
+              {dict.pwa.description}
             </DialogDescription>
           </DialogHeader>
           <InstallInstructionsContent />

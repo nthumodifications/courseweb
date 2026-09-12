@@ -242,22 +242,14 @@ const RecruitmentPage = () => {
     : null;
 
   return (
-    <div className="flex flex-col gap-6 px-4 py-6 sm:gap-10 sm:py-8">
-      <article className="mx-auto w-full max-w-4xl">
-        <div className="mb-8 text-left sm:mb-10 sm:text-center">
-          <h1 className="mb-3 text-3xl font-bold sm:mb-4 sm:text-4xl md:text-5xl">
-            {dict.recruit.title}
-          </h1>
-          <p className="mb-2 text-lg text-muted-foreground sm:mb-3 sm:text-xl">
-            {dict.recruit.subtitle}
-          </p>
-          <p className="mx-auto max-w-2xl text-sm text-muted-foreground sm:text-base">
-            {dict.recruit.intro}
-          </p>
+    <div className="flex flex-col gap-4 px-4 py-4">
+      <article className="w-full">
+        <div className="flex flex-col gap-1 mb-4">
+          <h1 className="text-xl font-bold">{dict.recruit.title}</h1>
         </div>
 
-        <section className="mb-8 sm:mb-10">
-          <h2 className="mb-3 text-xl font-semibold sm:mb-4 sm:text-2xl">
+        <section className="mb-4">
+          <h2 className="mb-2 text-base font-bold">
             {dict.recruit.open_roles}
           </h2>
           {rolesLoading ? (
@@ -267,7 +259,7 @@ const RecruitmentPage = () => {
           ) : roles.length === 0 ? (
             <p className="text-muted-foreground">{dict.recruit.no_roles}</p>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="flex flex-col divide-y divide-border">
               {roles.map((role) => {
                 const roleCopy =
                   dict.recruit.roles[
@@ -275,16 +267,12 @@ const RecruitmentPage = () => {
                   ];
                 if (!roleCopy) return null;
                 return (
-                  <Card key={role.id}>
-                    <CardHeader>
-                      <CardTitle className="text-lg sm:text-xl">
-                        {roleCopy.title}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <CardDescription>{roleCopy.description}</CardDescription>
-                    </CardContent>
-                  </Card>
+                  <div key={role.id} className="flex flex-col gap-1 py-4">
+                    <h3 className="font-bold">{roleCopy.title}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {roleCopy.description}
+                    </p>
+                  </div>
                 );
               })}
             </div>
@@ -293,11 +281,8 @@ const RecruitmentPage = () => {
 
         {/* Stacked and full width on a phone so the primary action is a real
             tap target instead of a cramped inline pair. */}
-        <div className="mb-8 flex flex-col-reverse items-stretch gap-3 sm:mb-10 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
-          <Link
-            className="text-center text-primary underline sm:text-left"
-            to={`/${lang}/team`}
-          >
+        <div className="mb-4 flex flex-col-reverse items-stretch gap-2 sm:flex-row sm:flex-wrap">
+          <Link className="text-primary underline" to={`/${lang}/team`}>
             {dict.recruit.meet_team}
           </Link>
           {!auth.isAuthenticated && !auth.isLoading && (
@@ -314,7 +299,7 @@ const RecruitmentPage = () => {
           <p className="text-muted-foreground">{dict.recruit.loading}</p>
         ) : !auth.isAuthenticated ? (
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4">
               <p className="text-muted-foreground">
                 {dict.recruit.sign_in_prompt}
               </p>
@@ -353,7 +338,7 @@ const RecruitmentPage = () => {
             <CardContent>
               <Form {...form}>
                 <form
-                  className="flex flex-col gap-6"
+                  className="flex flex-col gap-4"
                   onSubmit={form.handleSubmit(handleSubmit)}
                 >
                   <FormField
@@ -515,7 +500,7 @@ const RecruitmentPage = () => {
                       }
                     />
                     {selectedFile && (
-                      <div className="flex items-center justify-between rounded-md border p-3 text-sm">
+                      <div className="flex items-center justify-between rounded-md border p-4 text-sm">
                         <span className="min-w-0 truncate">
                           {dict.recruit.form.selected_file}: {selectedFile.name}
                         </span>

@@ -1,4 +1,9 @@
 @import "tailwindcss";
 @theme {
-  --font-display: "Inter", "sans-serif";
+  /* The consent page asks for `font-inter`, and in Tailwind v4 that utility only
+     exists if the theme declares `--font-inter`. Without it the page silently
+     fell back to the default sans stack. */
+  --font-inter: "Inter", "PingFang TC", "Microsoft JhengHei", "Noto Sans TC",
+    sans-serif;
+  --font-display: var(--font-inter);
 }

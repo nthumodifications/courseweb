@@ -2,7 +2,8 @@ import { Link } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { useSettings } from "@/hooks/contexts/settings";
 import { Input } from "@courseweb/ui";
-import { Button } from "@courseweb/ui";
+import { ChevronRight } from "lucide-react";
+import { EmptyState } from "@courseweb/ui";
 import type Fuse from "fuse.js";
 import useDictionary from "@/dictionaries/useDictionary";
 
@@ -35,23 +36,34 @@ const VenueList = ({ venues }: { venues: string[] }) => {
   );
 
   return (
-    <div className="px-8 py-4 space-y-4">
+    <div className="flex flex-col px-4 py-4">
       <Input
         className="sticky top-0"
         placeholder={dict.common.search}
         value={textSearch}
         onChange={(e) => setTextSearch(e.target.value)}
       />
-      {Object.keys(grouped).map((ven, i) => {
+      {Object.keys(grouped).length === 0 ? (
+        <EmptyState title={dict.common.no_results} />
+      ) : Object.keys(grouped).map((ven) => {
         return (
-          <div key={ven} className="flex flex-col gap-2">
-            <h2 className="text-lg font-semibold">{ven}</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3">
+          <div key={ven} className="flex flex-col">
+            <h2 className="py-4 font-bold text-base">{ven}</h2>
+            <div className="flex flex-col divide-y divide-border">
               {grouped[ven].map((venue, i) => (
-                <Link key={i} to={`/${language}/venues/${venue}`}>
-                  <Button className="text-gray-400" variant="ghost">
+                <Link
+                  key={i}
+                  className="flex min-w-0 flex-row items-center gap-4 py-4"
+                  to={`/${language}/venues/${venue}`}
+                >
+                  <span className="h-4 w-4 shrink-0 rounded-sm bg-muted" aria-hidden="true" />
+                  <span className="min-w-0 flex-1 font-bold text-foreground">
                     {venue}
-                  </Button>
+                  </span>
+                  <span className="text-right text-sm text-muted-foreground whitespace-nowrap">
+                    {dict.venues.view_courses}
+                  </span>
+                  <ChevronRight className="h-4 w-4 shrink-0" aria-hidden="true" />
                 </Link>
               ))}
             </div>

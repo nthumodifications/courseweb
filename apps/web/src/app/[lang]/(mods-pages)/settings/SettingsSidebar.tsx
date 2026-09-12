@@ -25,7 +25,7 @@ export const SettingsSidebar = ({
 
   return (
     <nav
-      className={cn("space-y-1", className)}
+      className={cn("flex flex-col gap-2", className)}
       role="navigation"
       aria-label={dict.settings.navigation_aria}
     >
@@ -35,7 +35,7 @@ export const SettingsSidebar = ({
           type="button"
           onClick={() => onSectionClick?.(section.id)}
           className={cn(
-            "w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+            "flex w-full flex-row items-center gap-2 rounded-md px-2 py-2 text-left text-sm font-medium transition-colors",
             activeSection === section.id
               ? "bg-primary text-primary-foreground"
               : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
@@ -43,7 +43,7 @@ export const SettingsSidebar = ({
           aria-current={activeSection === section.id ? "true" : undefined}
         >
           <span className="shrink-0">{section.icon}</span>
-          <span className="text-left truncate">{section.title}</span>
+          <span className="min-w-0">{section.title}</span>
         </button>
       ))}
     </nav>

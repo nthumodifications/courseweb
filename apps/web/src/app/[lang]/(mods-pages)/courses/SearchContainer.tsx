@@ -13,7 +13,7 @@ import ResetFiltersButton from "@/app/[lang]/(mods-pages)/courses/ResetFiltersBu
 import { useEffect, useRef, memo, useMemo } from "react";
 import CourseListItemSkeleton from "../../../../components/Courses/CourseListItemSkeleton";
 import { cn } from "@courseweb/ui";
-import { Separator } from "@courseweb/ui";
+import { EmptyState, ErrorState, Separator } from "@courseweb/ui";
 import { Drawer, DrawerContent, DrawerTrigger } from "@courseweb/ui";
 import { Button } from "@courseweb/ui";
 import { Calendar, FilterIcon, Sparkles, Search } from "lucide-react";
@@ -48,7 +48,7 @@ export function InfiniteHits(props: Parameters<typeof useInfiniteHits>[0]) {
     showPrevious: false,
     ...props,
   });
-  const { status } = useInstantSearch();
+  const { status, refresh } = useInstantSearch();
   const sentinelRef = useRef(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -75,17 +75,16 @@ export function InfiniteHits(props: Parameters<typeof useInfiniteHits>[0]) {
     <div
       ref={scrollRef}
       className={cn(
-        "overflow-auto relative",
+        "relative min-w-0 overflow-y-auto",
         status !== "idle" ? "opacity-80" : "",
       )}
       style={{ height: "calc(100vh - 200px)" }}
     >
-      <div className="space-y-1 pb-20">
+      <div className="divide-y divide-border pb-20">
         {/* Regular items */}
         {hits.map((hit) => (
-          <div key={hit.objectID} className="py-0.5">
+          <div key={hit.objectID} className="min-w-0">
             <Hit hit={hit} />
-            <Separator className="mt-1" />
           </div>
         ))}
 
@@ -103,13 +102,22 @@ export function InfiniteHits(props: Parameters<typeof useInfiniteHits>[0]) {
 
         {/* Status messages */}
         {status === "error" && (
-          <div className="text-center text-gray-500 mt-4">
-            {dict.common.error}
-          </div>
+          <ErrorState
+            title={dict.course.search.error}
+            action={
+              <Button variant="outline" size="sm" onClick={() => refresh()}>
+                {dict.common.try_again}
+              </Button>
+            }
+          />
+        )}
+
+        {status === "idle" && hits.length === 0 && (
+          <EmptyState title={dict.course.search.no_results} />
         )}
 
         {isLastPage && hits.length > 0 && status === "idle" && (
-          <div className="text-center text-gray-500 mt-4">
+          <div className="py-4 text-sm text-muted-foreground">
             {dict.course.search.no_more_results}
           </div>
         )}
@@ -153,10 +161,10 @@ const SearchContainer = memo(
     }, [nbHits, query]);
 
     return (
-      <div className="flex w-full gap-4">
+      <div className="flex min-w-0 w-full gap-4">
         <div className="hidden md:flex flex-col gap-4 w-72 px-4">
           <div className="flex justify-between items-baseline">
-            <span className="text-2xl font-medium">
+              <span className="font-bold">
               {dict.course.refine.title}
             </span>
             <ResetFiltersButton />

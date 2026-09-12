@@ -33,7 +33,7 @@ import { ScrollArea } from "@radix-ui/react-scroll-area";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
-import { toast } from "@courseweb/ui";
+import { ErrorState, toast } from "@courseweb/ui";
 import { Dialog, DialogContent, DialogTrigger } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
 import client from "@/config/api";
@@ -78,6 +78,7 @@ const DateContributeForm = ({
           courseId,
         },
       });
+      if (!res.ok) throw new Error("Failed to load course dates");
       const dates = await res.json();
       console.log("fetched dates", dates);
       if (dates == null) throw new Error("Failed to fetch dates");
@@ -149,7 +150,7 @@ const DateContributeForm = ({
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
         {!auth.isAuthenticated ? (
-          <div className="flex flex-col gap-4 items-center py-8">
+          <div className="flex flex-col gap-4 items-center py-6">
             <CalendarPlus className="w-10 h-10 text-muted-foreground" />
             <p className="text-sm text-muted-foreground text-center">
               {dict.dialogs.DateContributeForm.sign_in_required}
@@ -161,7 +162,7 @@ const DateContributeForm = ({
         ) : (
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-1">
-              <h1 className="text-2xl font-bold">
+              <h1 className="font-bold text-xl">
                 {dict.dialogs.DateContributeForm.title}
               </h1>
               <p className="text-sm text-muted-foreground">
@@ -178,6 +179,16 @@ const DateContributeForm = ({
                 <p>{dict.dialogs.DateContributeForm.disclaimer}</p>
               </AlertDescription>
             </Alert>
+            {error ? (
+              <ErrorState
+                title={dict.common.load_error}
+                action={
+                  <Button variant="outline" size="sm" onClick={() => void refetch()}>
+                    {dict.common.try_again}
+                  </Button>
+                }
+              />
+            ) : (
             <ScrollArea>
               <Form {...form}>
                 <div className="flex flex-col gap-2">
@@ -330,6 +341,7 @@ const DateContributeForm = ({
                 </div>
               </Form>
             </ScrollArea>
+            )}
           </div>
         )}
       </DialogContent>

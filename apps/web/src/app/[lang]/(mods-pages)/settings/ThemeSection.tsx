@@ -2,41 +2,34 @@ import { useState, useEffect } from "react";
 import { useTheme } from "@/hooks/contexts/theme";
 import { THEME_PRESETS } from "@/config/themePresets";
 import { ThemeBackground, ThemeDensity, ThemeRadius } from "@/types/theme";
-import { FONT_DEFINITIONS, FONT_ORDER, ThemeFont } from "@/types/theme";
+import { FONT_DEFINITIONS, FONT_ORDER } from "@/types/theme";
 import { cn } from "@/lib/utils";
 import { Button } from "@courseweb/ui";
 import { RotateCcw, Link2, Check } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import useDictionary from "@/dictionaries/useDictionary";
 
-const RADIUS_OPTIONS: { value: ThemeRadius; label: string }[] = [
-  { value: "none", label: "□" },
-  { value: "sm", label: "▢" },
-  { value: "md", label: "▣" },
-  { value: "lg", label: "⬜" },
-  { value: "xl", label: "●" },
+const RADIUS_OPTIONS: { value: ThemeRadius }[] = [
+  { value: "none" },
+  { value: "sm" },
+  { value: "md" },
+  { value: "lg" },
+  { value: "xl" },
 ];
 
 const DENSITY_OPTIONS: {
   value: ThemeDensity;
-  label: string;
-  labelZh: string;
-}[] = [
-  { value: "compact", label: "Compact", labelZh: "緊湊" },
-  { value: "comfortable", label: "Default", labelZh: "適中" },
-  { value: "spacious", label: "Spacious", labelZh: "寬鬆" },
-];
+}[] = [{ value: "compact" }, { value: "comfortable" }, { value: "spacious" }];
 
 const BACKGROUND_OPTIONS: {
   value: ThemeBackground;
-  label: string;
   icon: string;
 }[] = [
-  { value: "solid", label: "Solid", icon: "■" },
-  { value: "gradient", label: "Gradient", icon: "⬛" },
-  { value: "dots", label: "Dots", icon: "⋮⋮" },
-  { value: "lines", label: "Lines", icon: "≡" },
-  { value: "noise", label: "Noise", icon: "▒" },
+  { value: "solid", icon: "■" },
+  { value: "gradient", icon: "⬛" },
+  { value: "dots", icon: "⋮⋮" },
+  { value: "lines", icon: "≡" },
+  { value: "noise", icon: "▒" },
 ];
 
 export const ThemeSection = () => {
@@ -115,24 +108,28 @@ export const ThemeSection = () => {
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col divide-y divide-border">
       {/* Preset Grid */}
-      <div>
-        <h3 className="text-sm font-medium mb-3">
+      <div className="py-4">
+        <h3 className="mb-2 text-sm font-bold">
           {dict.settings.appearance.preset.title}
         </h3>
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
           {THEME_PRESETS.map((preset) => (
             <button
               key={preset.id}
               onClick={() => setPreset(preset.id)}
               className={cn(
-                "group flex flex-col items-center gap-1.5 p-2 rounded-lg border-2 transition-colors",
+                "group flex h-full min-w-0 flex-col gap-2 rounded-md border border-border p-2 text-left transition-colors",
                 config.preset === preset.id
-                  ? "border-primary shadow-md"
-                  : "border-transparent hover:border-muted-foreground/30",
+                  ? "bg-primary/10 text-primary ring-2 ring-inset ring-primary"
+                  : "hover:border-muted-foreground/30",
               )}
-              title={preset.label}
+              title={
+                dict.settings.appearance.preset.themes[
+                  preset.id as keyof typeof dict.settings.appearance.preset.themes
+                ]
+              }
             >
               <div
                 className="w-full h-10 rounded-md flex items-center justify-center overflow-hidden"
@@ -149,8 +146,12 @@ export const ThemeSection = () => {
                   />
                 </div>
               </div>
-              <span className="text-[10px] text-muted-foreground text-center leading-tight">
-                {preset.label}
+              <span className="text-[10px] leading-tight text-muted-foreground">
+                {
+                  dict.settings.appearance.preset.themes[
+                    preset.id as keyof typeof dict.settings.appearance.preset.themes
+                  ]
+                }
               </span>
             </button>
           ))}
@@ -158,50 +159,56 @@ export const ThemeSection = () => {
       </div>
 
       {/* Font */}
-      <div>
-        <h3 className="text-sm font-medium mb-3">
+      <div className="py-4">
+        <h3 className="mb-2 text-sm font-bold">
           {dict.settings.appearance.font.title}
         </h3>
-        {(["chinese", "latin"] as const).map((script) => (
-          <div key={script} className="mb-3 last:mb-0">
-            <p className="text-xs text-muted-foreground mb-2">
-              {script === "chinese"
-                ? dict.settings.appearance.font.chinese
-                : dict.settings.appearance.font.latin}
-            </p>
-            <div className="flex gap-2 flex-wrap">
-              {FONT_ORDER[script].map((f) => (
-                <button
-                  key={f}
-                  onClick={() => setFont(f)}
-                  className={cn(
-                    "px-3 py-1.5 text-xs border rounded transition-all",
-                    (config.font ?? "inter") === f
-                      ? "border-primary bg-primary/10 text-primary font-medium"
-                      : "border-border hover:border-muted-foreground",
-                  )}
-                  style={{ fontFamily: FONT_DEFINITIONS[f].cssFamily }}
-                >
-                  {FONT_DEFINITIONS[f].label}
-                </button>
-              ))}
+        <div className="flex flex-col gap-4">
+          {(["chinese", "latin"] as const).map((script) => (
+            <div key={script} className="flex flex-col gap-2">
+              <p className="text-xs text-muted-foreground">
+                {script === "chinese"
+                  ? dict.settings.appearance.font.chinese
+                  : dict.settings.appearance.font.latin}
+              </p>
+              <div className="flex flex-row flex-wrap gap-2">
+                {FONT_ORDER[script].map((f) => (
+                  <button
+                    key={f}
+                    onClick={() => setFont(f)}
+                    className={cn(
+                      "rounded border px-2 py-2 text-xs transition-all",
+                      (config.font ?? "inter") === f
+                        ? "border-primary bg-primary/10 font-medium text-primary"
+                        : "border-border hover:border-muted-foreground",
+                    )}
+                    style={{ fontFamily: FONT_DEFINITIONS[f].cssFamily }}
+                  >
+                    {
+                      dict.settings.appearance.font.options[
+                        f as keyof typeof dict.settings.appearance.font.options
+                      ]
+                    }
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
       {/* Border Radius */}
-      <div>
-        <h3 className="text-sm font-medium mb-3">
+      <div className="py-4">
+        <h3 className="mb-2 text-sm font-bold">
           {dict.settings.appearance.radius.title}
         </h3>
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex flex-row flex-wrap gap-2">
           {RADIUS_OPTIONS.map((opt) => (
             <button
               key={opt.value}
               onClick={() => setRadius(opt.value)}
               className={cn(
-                "flex flex-col items-center gap-1 px-4 py-2 border rounded transition-all text-xs",
+                "flex flex-col gap-2 rounded border px-4 py-2 text-xs transition-all",
                 config.radius === opt.value
                   ? "border-primary bg-primary/10 text-primary font-medium"
                   : "border-border hover:border-muted-foreground",
@@ -222,20 +229,18 @@ export const ThemeSection = () => {
                             : "999px",
                 }}
               />
-              <span className="capitalize">
-                {dict.settings.appearance.radius.options[opt.value]}
-              </span>
+              <span>{dict.settings.appearance.radius.options[opt.value]}</span>
             </button>
           ))}
         </div>
       </div>
 
       {/* Font Scale */}
-      <div>
-        <h3 className="text-sm font-medium mb-1">
+      <div className="py-4">
+        <h3 className="mb-2 text-sm font-bold">
           {dict.settings.appearance.font_scale.title}
         </h3>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-row items-center gap-4">
           <span className="text-xs text-muted-foreground">
             {dict.settings.appearance.font_scale.small}
           </span>
@@ -258,17 +263,17 @@ export const ThemeSection = () => {
       </div>
 
       {/* Density */}
-      <div>
-        <h3 className="text-sm font-medium mb-3">
+      <div className="py-4">
+        <h3 className="mb-2 text-sm font-bold">
           {dict.settings.appearance.density.title}
         </h3>
-        <div className="flex gap-2">
+        <div className="flex flex-row gap-2">
           {DENSITY_OPTIONS.map((opt) => (
             <button
               key={opt.value}
               onClick={() => setDensity(opt.value)}
               className={cn(
-                "flex-1 py-2 px-3 text-xs border rounded transition-all",
+                "flex-1 rounded border px-2 py-2 text-xs transition-all",
                 config.density === opt.value
                   ? "border-primary bg-primary/10 text-primary font-medium"
                   : "border-border hover:border-muted-foreground",
@@ -281,29 +286,29 @@ export const ThemeSection = () => {
       </div>
 
       {/* Background */}
-      <div>
-        <h3 className="text-sm font-medium mb-3">
+      <div className="py-4">
+        <h3 className="mb-2 text-sm font-bold">
           {dict.settings.appearance.background.title}
         </h3>
-        <div className="flex gap-2 flex-wrap">
+        <div className="grid grid-cols-5 gap-2">
           {BACKGROUND_OPTIONS.map((opt) => (
             <button
               key={opt.value}
               onClick={() => setBackground(opt.value)}
               className={cn(
-                "flex items-center gap-2 py-2 px-3 text-xs border rounded transition-all",
+                "flex h-16 w-full min-w-0 flex-col items-center justify-center gap-1 rounded border px-1 py-2 text-center text-xs leading-tight transition-all",
                 config.background === opt.value
                   ? "border-primary bg-primary/10 text-primary font-medium"
                   : "border-border hover:border-muted-foreground",
               )}
             >
-              <span className="font-mono">{opt.icon}</span>
-              {dict.settings.appearance.background[opt.value]}
+              <span className="font-mono text-sm leading-none">{opt.icon}</span>
+              <span className="min-w-0">{dict.settings.appearance.background[opt.value]}</span>
             </button>
           ))}
         </div>
         {config.background === "gradient" && (
-          <div className="mt-3 flex gap-3 items-center flex-wrap">
+          <div className="mt-4 flex flex-row flex-wrap items-center gap-4">
             <label className="text-xs text-muted-foreground">
               {dict.settings.appearance.background.from}
             </label>
@@ -331,19 +336,29 @@ export const ThemeSection = () => {
       </div>
 
       {/* Accent Color Override */}
-      <div>
-        <h3 className="text-sm font-medium mb-3">
+      <div className="py-4">
+        <h3 className="mb-2 text-sm font-bold">
           {dict.settings.appearance.accent.title}
         </h3>
-        <div className="flex items-center gap-3">
-          <input
-            type="color"
-            defaultValue="#7c5cbf"
-            onChange={(e) => setAccentOverride(hexToHslTriple(e.target.value))}
-            className="w-10 h-9 rounded cursor-pointer border border-border"
-            title={dict.settings.appearance.accent.pick}
-          />
-          <span className="text-xs text-muted-foreground flex-1">
+        <div className="flex flex-row flex-wrap items-center gap-4">
+          <label
+            htmlFor="accent-color-picker"
+            className="flex cursor-pointer items-center gap-2 rounded-md border border-border px-2 py-1.5 text-sm transition-colors hover:bg-accent"
+          >
+            <input
+              id="accent-color-picker"
+              type="color"
+              defaultValue="#7c5cbf"
+              onChange={(e) => setAccentOverride(hexToHslTriple(e.target.value))}
+              className="h-6 w-6 cursor-pointer rounded border-0 p-0"
+              title={dict.settings.appearance.accent.pick}
+              aria-label={dict.settings.appearance.accent.pick}
+            />
+            <span className="whitespace-nowrap">
+              {dict.settings.appearance.accent.pick}
+            </span>
+          </label>
+          <span className="min-w-0 flex-1 text-xs text-muted-foreground">
             {dict.settings.appearance.accent.description}
           </span>
           {config.accentOverride && (
@@ -358,7 +373,7 @@ export const ThemeSection = () => {
       </div>
 
       {/* Reset */}
-      <div className="flex justify-end gap-2">
+      <div className="flex flex-row flex-wrap justify-end gap-2 py-4">
         <Button
           variant="outline"
           size="sm"

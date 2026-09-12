@@ -3,13 +3,13 @@ import { Skeleton } from "@courseweb/ui";
 
 const CourseDetailsSkeleton = () => {
   return (
-    <div className="flex flex-col pb-6 relative max-w-6xl">
+    <div className="flex min-w-0 flex-col pb-6 relative">
       <div className="flex flex-col gap-4">
         <div className="flex flex-col md:flex-row md:items-end gap-4">
           <div className="space-y-4 flex-1 w-full">
             <div className="space-y-2">
               <Skeleton className="h-6 w-24" />
-              <Skeleton className="h-10 w-48 mb-4" />
+              <Skeleton className="h-5 w-48 mb-4" />
               <div className="flex flex-row flex-wrap gap-1">
                 <Skeleton className="h-8 w-32" />
                 <Skeleton className="h-8 w-24" />
@@ -29,8 +29,8 @@ const CourseDetailsSkeleton = () => {
           </div>
         </div>
         <Separator />
-        <div className="flex flex-col-reverse lg:flex-row gap-6 w-full">
-          <div className="flex flex-col gap-4 min-w-0 lg:max-w-[calc(100%-284px)]">
+        <div className="flex min-w-0 flex-col-reverse lg:flex-row gap-4 w-full">
+          <div className="flex min-w-0 flex-1 flex-col gap-4">
             <div className="flex flex-col gap-2">
               <Skeleton className="h-6 w-24" />
               <Skeleton className="h-4 w-full" />

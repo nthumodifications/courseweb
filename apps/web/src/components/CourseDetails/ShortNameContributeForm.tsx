@@ -2,32 +2,30 @@ import { Edit2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@courseweb/ui";
 import { Input } from "@courseweb/ui";
 import { Button } from "@courseweb/ui";
+import useDictionary from "@/dictionaries/useDictionary";
 
 const ShortNameContributeForm = () => {
+  const dict = useDictionary();
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold">Contribute Short Name</h1>
+        <h1 className="text-xl font-bold">{dict.dialogs.ShortNameContributeForm.title}</h1>
         <p className="text-sm text-muted-foreground">
-          {`Make everyone's life easier by contributing a short name for this
-          course`}
+          {dict.dialogs.ShortNameContributeForm.description}
         </p>
       </div>
       <Alert>
         <Edit2 className="h-4 w-4" />
-        <AlertTitle>{`Don't abuse the system!`}</AlertTitle>
+        <AlertTitle>{dict.dialogs.ShortNameContributeForm.dont_abuse}</AlertTitle>
         <AlertDescription>
-          <p>Enter only accurate and relevant information!</p>
-          <p>
-            Your submission will contain your Student ID, and will be publicly
-            visible.
-          </p>
+          <p>{dict.dialogs.ShortNameContributeForm.accurate_relevant}</p>
+          <p>{dict.dialogs.ShortNameContributeForm.privacy}</p>
         </AlertDescription>
       </Alert>
-      <Input placeholder="Short Name" />
+      <Input placeholder={dict.dialogs.ShortNameContributeForm.placeholder} />
       <div className="flex flex-row gap-2 justify-end">
-        <Button variant="outline">Cancel</Button>
-        <Button>Submit</Button>
+        <Button variant="outline">{dict.dialogs.ShortNameContributeForm.cancel}</Button>
+        <Button>{dict.dialogs.ShortNameContributeForm.submit}</Button>
       </div>
     </div>
   );

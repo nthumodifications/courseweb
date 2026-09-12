@@ -63,8 +63,9 @@ export const MobileQuickNav = ({
     <>
       <button
         ref={triggerRef}
+        type="button"
         onClick={() => setShowNav(true)}
-        className="fixed bottom-20 right-4 z-50 lg:hidden bg-primary text-primary-foreground p-3 rounded-full shadow-lg hover:bg-primary/90 transition-colors"
+        className="fixed bottom-20 right-4 z-50 flex min-h-10 min-w-10 items-center justify-center rounded-full bg-primary p-2 text-primary-foreground shadow-lg transition-colors hover:bg-primary/90 lg:hidden"
         aria-label={dict.settings.open_navigation}
       >
         <Menu className="h-5 w-5" />
@@ -72,7 +73,7 @@ export const MobileQuickNav = ({
 
       {showNav && (
         <div
-          className="fixed inset-0 bg-black/50 z-50 lg:hidden"
+          className="fixed inset-0 z-50 bg-background/80 lg:hidden"
           onClick={() => setShowNav(false)}
         >
           <div
@@ -81,27 +82,28 @@ export const MobileQuickNav = ({
             onClick={(e) => e.stopPropagation()}
           >
             <button
+              type="button"
               onClick={() => setShowNav(false)}
-              className="absolute top-4 right-4 p-2 hover:bg-accent rounded-md"
+              className="absolute right-4 top-4 flex min-h-10 min-w-10 items-center justify-center rounded-md p-2 hover:bg-accent"
               aria-label={dict.settings.close_navigation}
             >
               <X className="h-5 w-5" />
             </button>
 
-            <div className="mb-6 mt-2">
-              <h2 className="text-lg font-semibold">
+            <div className="mb-4 mt-2">
+              <h2 className="text-base font-bold">
                 {dict.settings.quick_navigation}
               </h2>
             </div>
 
-            <nav className="space-y-1">
+            <nav className="flex flex-col gap-2">
               {sections.map((section) => (
                 <button
                   key={section.id}
                   type="button"
                   onClick={() => handleSectionClick(section.id)}
                   className={cn(
-                    "w-full flex items-center gap-3 px-4 py-3 rounded-md transition-colors",
+                    "flex w-full flex-row items-center gap-4 rounded-md px-4 py-4 text-left transition-colors",
                     activeSection === section.id
                       ? "bg-primary/10 text-primary"
                       : "hover:bg-accent",

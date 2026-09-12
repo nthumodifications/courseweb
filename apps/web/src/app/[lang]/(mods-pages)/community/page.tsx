@@ -14,7 +14,6 @@ import Timetable from "@/components/Timetable/Timetable";
 import { renderTimetableSlot } from "@/helpers/timetable_course";
 import { Button } from "@courseweb/ui";
 import { Badge } from "@courseweb/ui";
-import { Input } from "@courseweb/ui";
 import {
   Select,
   SelectContent,
@@ -23,6 +22,7 @@ import {
   SelectValue,
 } from "@courseweb/ui";
 import { Loader2, Globe, RefreshCw, Camera, Star } from "lucide-react";
+import useDictionary from "@/dictionaries/useDictionary";
 import {
   Dialog,
   DialogContent,
@@ -37,16 +37,13 @@ function TimetableCard({
   share: SharedTimetable;
   onClick: () => void;
 }) {
+  const dict = useDictionary();
   const semesters = share.semesters;
   const firstSem = semesters[0] ?? "";
   const courseIds = share.courses[firstSem] ?? [];
   const courseNoteCount = Object.values(share.courseNotes).filter(
     Boolean,
   ).length;
-  const totalWithGrades = share.gradeContext
-    ? Object.keys(share.gradeContext).length
-    : 0;
-
   const avgDifficulty = share.gradeContext
     ? (() => {
         const diffs = Object.values(share.gradeContext)
@@ -60,33 +57,32 @@ function TimetableCard({
     : null;
 
   return (
-    <button
-      onClick={onClick}
-      className="flex flex-col gap-1.5 p-3 rounded-lg border hover:border-primary hover:shadow-sm transition-all text-left"
-    >
+    <button onClick={onClick} className="flex flex-col gap-2 py-4 text-left">
       <div className="flex items-start justify-between gap-2">
         <div className="flex flex-col gap-1">
           <span className="font-medium text-sm">
             {share.displayName || toPrettySemester(firstSem)}
           </span>
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span>{toPrettySemester(firstSem)}</span>
-            <span>·</span>
-            <span>{courseIds.length} courses</span>
+            <span>{dict.community.separator}</span>
+            <span>
+              {courseIds.length} {dict.community.courses}
+            </span>
           </div>
         </div>
         <div className="flex flex-col items-end gap-1">
           {share.isLive ? (
             <Badge variant="secondary" className="text-xs h-4 px-1">
-              <RefreshCw className="h-2 w-2 mr-0.5" /> Live
+              <RefreshCw className="h-2 w-2 mr-1" /> {dict.community.live}
             </Badge>
           ) : (
             <Badge variant="outline" className="text-xs h-4 px-1">
-              <Camera className="h-2 w-2 mr-0.5" /> Snapshot
+              <Camera className="h-2 w-2 mr-1" /> {dict.community.snapshot}
             </Badge>
           )}
           {avgDifficulty !== null && (
-            <div className="flex items-center gap-0.5 text-xs text-amber-500">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <Star className="h-2.5 w-2.5 fill-current" />
               <span>{avgDifficulty}</span>
             </div>
@@ -100,17 +96,13 @@ function TimetableCard({
             .filter(([, note]) => note)
             .slice(0, 2)
             .map(([id, note]) => (
-              <Badge
-                key={id}
-                variant="secondary"
-                className="text-xs truncate max-w-[120px]"
-              >
+              <Badge key={id} variant="secondary" className="text-xs">
                 {note}
               </Badge>
             ))}
           {courseNoteCount > 2 && (
             <Badge variant="secondary" className="text-xs">
-              +{courseNoteCount - 2} more
+              +{courseNoteCount - 2} {dict.community.more}
             </Badge>
           )}
         </div>
@@ -128,6 +120,7 @@ function TimetableDetailDialog({
 }) {
   const navigate = useNavigate();
   const { lang } = useParams<{ lang: string }>();
+  const dict = useDictionary();
   const [activeSem, setActiveSem] = useState(share.semesters[0] ?? "");
   const courseIds = share.courses[activeSem] ?? [];
 
@@ -175,16 +168,13 @@ function TimetableDetailDialog({
             timetableData={timetableData}
             renderTimetableSlot={renderTimetableSlot}
           />
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-4">
             {courses.map((course) => {
               const c = course as MinimalCourse;
               const note = share.courseNotes[c.raw_id];
               const grade = share.gradeContext?.[c.raw_id];
               return (
-                <div
-                  key={c.raw_id}
-                  className="flex flex-col gap-1 py-2 border-b last:border-0"
-                >
+                <div key={c.raw_id} className="flex flex-col gap-1 py-4">
                   <span className="text-sm font-medium">{c.name_zh}</span>
                   <span className="text-xs text-muted-foreground">
                     {c.name_en}
@@ -198,7 +188,7 @@ function TimetableDetailDialog({
                     <div className="flex gap-1 flex-wrap">
                       {grade.grade && (
                         <Badge variant="outline" className="text-xs">
-                          Grade: {grade.grade}
+                          {dict.community.grade}: {grade.grade}
                         </Badge>
                       )}
                       {grade.difficulty && (
@@ -221,7 +211,7 @@ function TimetableDetailDialog({
               onClick={() => navigate(`/${lang}/timetable/share/${share.id}`)}
               className="mt-2"
             >
-              View Full Page
+              {dict.community.view_full_page}
             </Button>
           </div>
         </div>
@@ -231,6 +221,7 @@ function TimetableDetailDialog({
 }
 
 const CommunityPage = () => {
+  const dict = useDictionary();
   const [selectedSemester, setSelectedSemester] = useState<string>("all");
   const [offset, setOffset] = useState(0);
   const [selectedShare, setSelectedShare] = useState<SharedTimetable | null>(
@@ -251,18 +242,15 @@ const CommunityPage = () => {
   const semesters = [...semesterInfo].reverse().slice(0, 10);
 
   return (
-    <div className="flex flex-col gap-4 px-4 py-4 max-w-5xl mx-auto w-full">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col gap-4 px-4 py-4 w-full">
+      <div className="flex items-center gap-2">
         <div className="flex items-center gap-2">
           <Globe className="h-4 w-4" />
-          <h1 className="text-base font-semibold">Community Timetables</h1>
+          <h1 className="text-base font-bold">{dict.community.title}</h1>
         </div>
-        <p className="text-xs text-muted-foreground hidden sm:block">
-          Public timetables from NTHU students
-        </p>
       </div>
 
-      <div className="flex gap-3 flex-wrap">
+      <div className="flex gap-2 flex-wrap">
         <Select
           value={selectedSemester}
           onValueChange={(v) => {
@@ -271,10 +259,10 @@ const CommunityPage = () => {
           }}
         >
           <SelectTrigger className="w-44">
-            <SelectValue placeholder="All semesters" />
+            <SelectValue placeholder={dict.community.all_semesters} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All semesters</SelectItem>
+            <SelectItem value="all">{dict.community.all_semesters}</SelectItem>
             {semesters.map((s) => (
               <SelectItem key={s.id} value={s.id}>
                 {toPrettySemester(s.id)}
@@ -285,20 +273,20 @@ const CommunityPage = () => {
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center py-8">
+        <div className="flex items-center py-4">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
       ) : data?.items.length === 0 ? (
-        <div className="flex flex-col items-center py-8 gap-2 text-muted-foreground">
-          <Globe className="h-8 w-8 opacity-30" />
-          <p className="text-sm">No public timetables yet for this filter.</p>
-          <p className="text-xs">
-            Share yours with "Public gallery" enabled to appear here.
-          </p>
+        <div className="flex flex-col gap-2 py-4 text-muted-foreground">
+          <div className="flex flex-row items-center gap-2">
+            <Globe className="h-4 w-4 opacity-30" />
+            <p className="text-sm">{dict.community.empty}</p>
+          </div>
+          <p className="text-xs">{dict.community.empty_description}</p>
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="flex flex-col divide-y divide-border">
             {data?.items.map((share) => (
               <TimetableCard
                 key={share.id}
@@ -308,13 +296,13 @@ const CommunityPage = () => {
             ))}
           </div>
 
-          <div className="flex items-center justify-center gap-4">
+          <div className="flex items-center gap-4">
             {offset > 0 && (
               <Button
                 variant="outline"
                 onClick={() => setOffset((o) => Math.max(0, o - 24))}
               >
-                Previous
+                {dict.community.previous}
               </Button>
             )}
             {data?.hasMore && (
@@ -325,7 +313,7 @@ const CommunityPage = () => {
                 {isFetching ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  "Load more"
+                  dict.community.load_more
                 )}
               </Button>
             )}

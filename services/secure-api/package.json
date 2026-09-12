@@ -9,8 +9,8 @@
     "db:generate": "prisma generate",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev --name init",
-    "tailwind:watch": "tailwindcss -i ./src/pages/input.css -o ./src/pages/output.css --watch",
-    "build": "tsc --outDir dist",
+    "tailwind:watch": "tailwindcss -i ./src/pages/input.css -o ./src/pages/public/output.css --watch",
+    "build": "bun run tailwind:build && tsc --outDir dist",
     "clean": "rm -rf dist",
     "lint": "echo 'Secure API lint check'",
     "test": "bun test",
@@ -20,7 +20,8 @@
     "audit:vulnerabilities": "bun audit --audit-level moderate",
     "security:scan": "bun run audit:deps && bun run audit:vulnerabilities",
     "security:check": "bun run test:security && bun run security:scan",
-    "preproduction": "bun run security:check && bun run test && bun run build"
+    "preproduction": "bun run security:check && bun run test && bun run build",
+    "tailwind:build": "tailwindcss -i ./src/pages/input.css -o ./src/pages/public/output.css"
   },
   "dependencies": {
     "@courseweb/shared": "*",

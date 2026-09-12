@@ -16,7 +16,7 @@ const HighlightItem: FC<
 > = ({ children, className, ...props }) => {
   return (
     <div
-      className={`flex flex-row items-center justify-center min-w-[52px] space-x-2 px-0.5 py-1 select-none rounded-md text-xs ${className ?? "bg-indigo-50 text-indigo-900 dark:bg-indigo-950 dark:text-indigo-100"}`}
+      className={`flex min-w-[52px] flex-row items-center justify-center space-x-2 rounded-md bg-muted px-1 py-1 text-xs text-foreground select-none ${className ?? ""}`}
       {...props}
     >
       {children}
@@ -28,11 +28,11 @@ const CourseTagList = ({ course }: { course: CourseDefinition }) => {
   return (
     <div className="flex flex-row flex-wrap gap-1 text-sm">
       {course.closed_mark && (
-        <HighlightItem className="bg-red-200 text-red-900 dark:bg-red-800 dark:text-red-100">
+        <HighlightItem className="bg-destructive text-destructive-foreground">
           {course.closed_mark}
         </HighlightItem>
       )}
-      <HighlightItem className="bg-purple-50 text-purple-900 dark:bg-purple-950 dark:text-purple-100">
+      <HighlightItem>
         <span className="">
           {course.capacity ?? "-"}
           {(course.reserve ?? 0) > 0 && (
@@ -42,7 +42,7 @@ const CourseTagList = ({ course }: { course: CourseDefinition }) => {
         </span>
       </HighlightItem>
       {course.enrolled != undefined && (
-        <HighlightItem className="bg-violet-50 text-violet-900 dark:bg-violet-950 dark:text-violet-100">
+        <HighlightItem>
           <span className="">
             {course.enrolled} {dict.course.tags.enrolled_suffix}{" "}
           </span>
@@ -54,37 +54,36 @@ const CourseTagList = ({ course }: { course: CourseDefinition }) => {
         </span>
       </HighlightItem>
       {course.tags.includes("16周") && (
-        <HighlightItem className="bg-green-50 text-green-900 dark:bg-green-950 dark:text-green-100">
+        <HighlightItem>
           <span className="">{dict.course.tags.sixteen_weeks}</span>
         </HighlightItem>
       )}
       {course.tags.includes("18周") && (
-        <HighlightItem className="bg-red-50 text-red-900 dark:bg-red-950 dark:text-red-100">
+        <HighlightItem>
           <span className="">{dict.course.tags.eighteen_weeks}</span>
         </HighlightItem>
       )}
       {course.language == "英" ? (
-        <HighlightItem className="bg-cyan-50 text-cyan-900 dark:bg-cyan-950 dark:text-cyan-100">
+        <HighlightItem className="bg-primary/10 text-primary">
           {dict.course.tags.english}
         </HighlightItem>
       ) : (
-        <HighlightItem className="bg-amber-50 text-amber-900 dark:bg-amber-950 dark:text-amber-100">
+        <HighlightItem className="bg-primary/10 text-primary">
           {dict.course.tags.chinese}
         </HighlightItem>
       )}
-      {/* bg-indigo-50 text-indigo-900 dark:bg-indigo-950 dark:text-indigo-100 */}
       {course.tags.includes("X-Class") && (
-        <HighlightItem className="bg-red-50 text-red-900 dark:bg-red-950 dark:text-red-100">
+        <HighlightItem className="bg-destructive text-destructive-foreground">
           {dict.course.tags.x_class}
         </HighlightItem>
       )}
       {(course.ge_target?.trim() || "").length > 0 && (
-        <HighlightItem className="bg-pink-50 text-pink-900 dark:bg-pink-950 dark:text-pink-100">
+        <HighlightItem>
           {course.ge_target} {dict.course.tags.general_education}
         </HighlightItem>
       )}
       {getGECType(course.ge_type || "") && (
-        <HighlightItem className="bg-green-50 text-green-900 dark:bg-green-950 dark:text-green-100">
+        <HighlightItem>
           {dict.course.tags.general_education_core} {getGECType(course.ge_type!)}
         </HighlightItem>
       )}

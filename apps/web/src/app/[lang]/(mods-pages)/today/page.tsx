@@ -15,11 +15,13 @@ const MobileCalendarUpcoming = () => {
   const dict = useDictionary();
   const { events, nextEvent } = useUpcomingEvents();
 
+  if (events.length === 0) return null;
+
   return (
-    <div className="space-y-3 px-3 pb-4 xl:hidden">
+    <div className="space-y-4 px-4 pb-4 xl:hidden">
       <NextUpLine event={nextEvent} />
-      <section className="rounded-lg border border-border p-3">
-        <h2 className="mb-2 text-base font-semibold">
+      <section className="rounded-lg border border-border p-4">
+        <h2 className="mb-2 text-base font-medium">
           {dict.calendar.upcoming_events}
         </h2>
         <UpcomingEventList events={events} compact maxEvents={6} />
@@ -50,7 +52,7 @@ const TodayPage = () => {
   }
 
   return (
-    <div className="h-full grid grid-cols-1 md:grid-cols-[380px_auto] md:grid-rows-1">
+    <div className="grid h-full w-full min-w-0 grid-cols-1">
       <TodaySchedule />
     </div>
   );

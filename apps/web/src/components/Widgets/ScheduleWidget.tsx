@@ -85,12 +85,14 @@ const ScheduleWidget: FC<ScheduleWidgetProps> = ({
             })}
           </div>
         )}
-        <div className="mt-4 border-t border-border pt-3">
-          <div className="mb-2 text-sm font-semibold">
-            {dict.calendar.upcoming_events}
+        {upcomingEvents.length > 0 && (
+          <div className="mt-4 border-t border-border pt-4">
+            <div className="mb-2 text-sm font-medium">
+              {dict.calendar.upcoming_events}
+            </div>
+            <UpcomingEventList events={upcomingEvents} compact maxEvents={6} />
           </div>
-          <UpcomingEventList events={upcomingEvents} compact maxEvents={6} />
-        </div>
+        )}
       </div>
     </WidgetShell>
   );

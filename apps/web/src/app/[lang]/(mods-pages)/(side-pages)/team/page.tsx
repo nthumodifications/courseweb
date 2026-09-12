@@ -16,45 +16,42 @@ const Team = () => {
   const { lang } = useParams<{ lang: string }>();
 
   return (
-    <div className="flex flex-col px-3">
-      <article className="prose prose-neutral dark:prose-invert">
-        <h1>Who are we?</h1>
+    <div className="flex flex-col gap-4 px-4">
+      <article className="flex flex-col gap-4 leading-relaxed">
+        <h1 className="text-base font-bold">{dict.team.about_title}</h1>
+        <p>{dict.team.about_description}</p>
         <p>
-          NTHUMods is a student-run project that aims to provide a better
-          academic experience for students. We are dedicated to developing and
-          maintaining a platform that helps students to plan their academic
-          journey.
-        </p>
-        <p>
-          Our team is always open to new ideas and suggestions. If you have any
-          feedback or ideas, feel free to contact us at{" "}
-          <a href="mailto:nthumods@gmail.com">nthumods@gmail.com</a> or our
-          Github repository{" "}
-          <a href="https://github.com/nthumodifications/courseweb">here</a>.
+          {dict.team.contact_before}{" "}
+          <a href="mailto:nthumods@gmail.com">nthumods@gmail.com</a>{" "}
+          {dict.team.or_our} {dict.team.github_repository}{" "}
+          <a href="https://github.com/nthumodifications/courseweb">
+            {dict.team.github_link}
+          </a>
+          .
         </p>
         <p>
           {dict.team.recruitment_intro}{" "}
-          <Link to={`/${lang}/recruit`}>{dict.team.recruitment_link}</Link>.
+          <Link to={`/${lang}/recruit`}>{dict.team.recruitment_link}</Link>
         </p>
-        <h1>Core Team</h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 mb-8">
+        <h1 className="text-base font-bold">{dict.team.core_team}</h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           {team
             .filter((t) => t.active)
             .map((member, index) => (
-              <div key={index} className="flex flex-row w-full items-center">
-                <div className="relative inline-block">
+              <div
+                key={index}
+                className="flex flex-row w-full items-center gap-4 py-4"
+              >
+                <div className="shrink-0">
                   <img
                     src={member.photo}
                     alt={member.name_en}
-                    className="w-20 h-20 rounded-full m-0"
+                    className="w-20 h-20 rounded-full"
                   />
-                  <div className="absolute -top-2 -right-2 text-xs p-1 rounded-lg shadow-lg bg-card text-card-foreground">
-                    {member.description}
-                  </div>
                 </div>
-                <div className="pl-4 flex-1 flex flex-col gap-1">
+                <div className="flex-1 flex flex-col gap-1">
                   <div className="">
-                    <div className="font-bold text-xl">{member.name_zh}</div>
+                    <div className="font-bold">{member.name_zh}</div>
                     {member.name_en && (
                       <div className="text-sm">{member.name_en}</div>
                     )}
@@ -92,19 +89,19 @@ const Team = () => {
               </div>
             ))}
         </div>
-        <h1>Dedicated Members</h1>
-        <div className="flex flex-row w-full">
+        <h1 className="text-base font-bold">{dict.team.dedicated_members}</h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           {team
             .filter((t) => !t.active)
             .map((member, index) => (
-              <div key={index} className="flex flex-row w-full">
+              <div key={index} className="flex flex-row w-full gap-4 py-4">
                 <img
                   src={member.photo}
                   alt={member.name_en}
-                  className="w-20 h-20 rounded-full"
+                  className="w-20 h-20 rounded-full shrink-0"
                 />
-                <div className="pl-4 flex-1">
-                  <div className="font-bold text-xl my-1">
+                <div className="flex-1">
+                  <div className="font-bold">
                     {member.name_zh} ({member.name_en})
                   </div>
                   <div>{member.description}</div>
