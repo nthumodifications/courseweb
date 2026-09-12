@@ -321,17 +321,31 @@
     "quick_navigation": "快速導覽",
     "open_navigation": "開啟導覽選單",
     "close_navigation": "關閉導覽選單",
-    "drag_hint": "拖曳以重新排序，切換以顯示或隱藏導覽項目",
+    "move_item": "移動項目",
     "appearance": {
       "title": "外觀",
-      "description": "主題、顏色、字體、版面",
       "preset": {
         "title": "主題預設",
-        "description": "選擇配色主題"
+        "themes": {
+          "nthumods": "NTHUMods",
+          "nord": "Nord 北極",
+          "catppuccin-latte": "Catppuccin 拿鐵",
+          "catppuccin-mocha": "Catppuccin 摩卡",
+          "dracula": "Dracula 吸血鬼",
+          "github-light": "GitHub 白",
+          "github-dark": "GitHub 黑",
+          "solarized-light": "Solarized 亮",
+          "solarized-dark": "Solarized 暗",
+          "one-dark": "One Dark",
+          "tokyo-night": "東京夜",
+          "gruvbox-dark": "Gruvbox 暗",
+          "rose-pine": "Rosé Pine 玫瑰松",
+          "everforest-light": "Everforest 常綠林亮",
+          "everforest-dark": "Everforest 常綠林暗"
+        }
       },
       "radius": {
         "title": "圓角",
-        "description": "邊框圓角大小",
         "options": {
           "none": "無",
           "sm": "小",
@@ -342,20 +356,17 @@
       },
       "font_scale": {
         "title": "字體大小",
-        "description": "調整文字大小",
         "small": "小",
         "large": "大"
       },
       "density": {
         "title": "密度",
-        "description": "介面間距",
         "compact": "緊湊",
         "comfortable": "適中",
         "spacious": "寬鬆"
       },
       "background": {
         "title": "背景",
-        "description": "頁面背景樣式",
         "from": "起始顏色",
         "to": "結束顏色",
         "solid": "純色",
@@ -367,7 +378,19 @@
       "font": {
         "title": "字體",
         "chinese": "中文字型",
-        "latin": "英文字型"
+        "latin": "英文字型",
+        "options": {
+          "system-tc": "系統中文",
+          "noto-sans-tc": "思源黑體",
+          "noto-serif-tc": "思源宋體",
+          "inter": "Inter",
+          "jakarta": "Jakarta",
+          "nunito": "Nunito",
+          "dm-sans": "DM Sans",
+          "montserrat": "Montserrat",
+          "mono": "等寬字體",
+          "lora": "Lora"
+        }
       },
       "accent": {
         "title": "強調色",
@@ -375,7 +398,7 @@
         "pick": "選擇強調色"
       },
       "share_theme": "分享主題",
-      "copied": "已複製！",
+      "copied": "已複製",
       "reset": "重設為預設值"
     },
     "account": {
@@ -394,7 +417,6 @@
     },
     "display": {
       "title": "顯示",
-      "description": "外觀，語言",
       "dark_mode": {
         "title": "黑暗模式"
       },
@@ -402,8 +424,7 @@
         "title": "語言"
       },
       "compact_header": {
-        "title": "精簡標頭",
-        "description": "降低頂部標頭列的高度"
+        "title": "精簡標頭"
       },
       "bottom_nav": {
         "title": "底部導覽"
@@ -414,7 +435,6 @@
     },
     "timetable": {
       "title": "時間表",
-      "description": "顏色、客製化",
       "vertical_preview": "垂直式顯示",
       "default_view": {
         "title": "預設檢視",
@@ -459,11 +479,29 @@
         "serif": "襯線",
         "mono": "等寬",
         "rounded": "圓體"
+      },
+      "move_up": "向上移動",
+      "move_down": "向下移動",
+      "theme": {
+        "title": "課表配色",
+        "options": {
+          "ashes": "灰燼",
+          "chalk": "粉筆",
+          "eighties": "八〇年代",
+          "google": "Google",
+          "mocha": "摩卡",
+          "monokai": "Monokai",
+          "ocean": "海洋",
+          "oceanic-next": "Oceanic Next",
+          "paraiso": "Paraiso",
+          "railscasts": "Railscasts",
+          "tomorrow": "Tomorrow",
+          "twilight": "Twilight"
+        }
       }
     },
     "privacy": {
       "title": "隱私",
-      "description": "使用量分析",
       "analytics": {
         "title": "分享至 Google Analytics",
         "description": "傳送匿名使用量統計資料至 Google Analytics，幫助我們了解使用者行為，以改進服務。"
@@ -471,20 +509,26 @@
     },
     "calendar": {
       "title": "行事曆頁面",
-      "description": "想先看到什麼內容",
       "academic_calendar": {
-        "title": "清大校曆",
-        "description": "在行事曆頁面顯示學校行事曆。"
+        "title": "清大校曆"
       },
       "experimental_calendar": {
         "title": "行事曆",
-        "badge": "實驗",
-        "description": "在行事曆頁面使用新的行事曆功能。"
+        "badge": "實驗"
       },
       "widget_dashboard": {
         "title": "小工具儀表板",
         "description": "用可自訂的小工具格取代今日頁面",
-        "customize": "自訂小工具："
+        "columns": "欄數",
+        "widgets": "小工具",
+        "widget_options": {
+          "schedule": { "title": "課程表" },
+          "weather": { "title": "天氣" },
+          "pinned-apps": { "title": "快速連結" },
+          "notepad": { "title": "便條紙" },
+          "countdown": { "title": "學期倒數" },
+          "bus": { "title": "公車時刻" }
+        }
       }
     },
     "ai": {
@@ -517,10 +561,10 @@
     },
     "advanced": {
       "title": "進階",
-      "description": "自訂 CSS、開發者選項",
       "custom_css": {
         "title": "自訂 CSS",
-        "description": "在頁面中注入自訂 CSS，會在所有樣式之後全域套用。"
+        "description": "在頁面中注入自訂 CSS，會在所有樣式之後全域套用。",
+        "placeholder": "/* 在這裡輸入自訂 CSS */\n.example { ... }"
       }
     }
   },
