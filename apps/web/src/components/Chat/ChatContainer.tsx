@@ -182,7 +182,7 @@ export function ChatContainer() {
   return (
     <Drawer.Root open={isOpen} onOpenChange={setIsOpen}>
       <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 bg-black/40 z-40" />
+        <Drawer.Overlay className="fixed inset-0 bg-background/40 z-40" />
         <Drawer.Content className="bg-background flex flex-col rounded-t-[10px] h-[85vh] mt-24 fixed bottom-0 left-0 right-0 z-50">
           <div className="p-4 bg-background rounded-t-[10px] flex-1 flex flex-col">
             <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-muted mb-4" />

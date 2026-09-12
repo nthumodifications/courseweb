@@ -362,7 +362,7 @@ const CourseDetailContainer = ({
                 course.venues.map((vn, i) => (
                   <p key={vn} className="text-sm text-muted-foreground">
                     {vn}{" "}
-                    <span className="text-foreground">{course.times![i]}</span>
+                    <span className="text-foreground tabular-nums">{course.times![i]}</span>
                   </p>
                 ))
               ) : (
@@ -507,13 +507,13 @@ const CourseDetailContainer = ({
                       }
                       :
                     </span>{" "}
-                    {course.course_scores.average}
+                    <span className="tabular-nums">{course.course_scores.average}</span>
                   </p>
                   <p className="text-sm">
                     <span className="font-bold">
                       {dict.course.details.standard_deviation}:
                     </span>{" "}
-                    {course.course_scores.std_dev}
+                    <span className="tabular-nums">{course.course_scores.std_dev}</span>
                   </p>
                 </div>
               )}
@@ -557,7 +557,7 @@ const CourseDetailContainer = ({
                                 {m.times.map((t, i) => (
                                   <p
                                     key={i}
-                                    className="text-xs text-muted-foreground"
+                                    className="text-xs tabular-nums text-muted-foreground"
                                   >
                                     {m.venues[i]} {t}
                                   </p>
@@ -573,11 +573,11 @@ const CourseDetailContainer = ({
                               <div className="flex flex-col gap-1 text-xs">
                                 <p>
                                   {getScoreType(m.course_scores.type)}{" "}
-                                  {m.course_scores.average}
+                                  <span className="tabular-nums">{m.course_scores.average}</span>
                                 </p>
                                 <p>
                                   {dict.course.details.standard_deviation}{" "}
-                                  {m.course_scores.std_dev}
+                                  <span className="tabular-nums">{m.course_scores.std_dev}</span>
                                 </p>
                               </div>
                             )}

@@ -147,7 +147,7 @@ export const CalendarMonthContainer = ({
         .sort((a, b) => a.displayStart.getTime() - b.displayStart.getTime());
 
       return (
-        <div className="flex flex-col gap-0.5 mt-1" key={day.getTime()}>
+        <div className="flex flex-col gap-1 mt-1" key={day.getTime()}>
           {Array(padding)
             .fill(0)
             .map((_, index) => (
@@ -161,7 +161,7 @@ export const CalendarMonthContainer = ({
             <EventPopover key={index} event={event}>
               <button
                 type="button"
-                className="rounded-md border-0 bg-transparent p-0.5 md:p-1 flex flex-row gap-1 items-center text-left hover:shadow-md cursor-pointer transition-shadow select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="rounded-md border-0 bg-transparent p-1 md:p-1 flex flex-row gap-1 items-center text-left cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 style={{
                   background: event.isNoClass
                     ? "repeating-linear-gradient(-45deg, #9ca3af, #9ca3af 4px, #6b7280 4px, #6b7280 8px)"
@@ -172,7 +172,7 @@ export const CalendarMonthContainer = ({
                 }}
               >
                 {!event.isNoClass && (
-                  <div className="hidden md:inline text-[10px] font-normal leading-none">
+                  <div className="hidden md:inline text-[10px] font-normal leading-none tabular-nums">
                     {formatTaipei(event.displayStart, "HH:mm", {
                       locale: getLocale(language),
                     })}
@@ -240,7 +240,7 @@ export const CalendarMonthContainer = ({
             }}
           >
             <div
-              className="bg-primary rounded-md p-0.5 md:p-1 flex flex-row gap-1 items-center hover:shadow-md cursor-pointer transition-shadow select-none"
+              className="bg-primary rounded-md p-1 md:p-1 flex flex-row gap-1 items-center cursor-pointer select-none"
               style={{ background: event.color, color: event.textColor }}
             >
               <div className="text-xs leading-none whitespace-nowrap overflow-hidden">
@@ -276,7 +276,7 @@ export const CalendarMonthContainer = ({
             <button
               type="button"
               className={cn(
-                "border-0 bg-transparent text-sm font-semibold cursor-pointer p-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                "border-0 bg-transparent text-sm font-semibold cursor-pointer p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                 isTaipeiToday(day)
                   ? "w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center"
                   : "",

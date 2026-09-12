@@ -149,7 +149,7 @@ const TimetableTimeline: FC<TimetableTimelineProps> = ({
                   <div
                     key={i}
                     className={cn(
-                      "absolute rounded overflow-hidden flex flex-col px-1.5 py-0.5",
+                      "absolute rounded-sm overflow-hidden flex flex-col px-2 py-1",
                       slot.customItem && "border border-dashed",
                     )}
                     style={{
@@ -172,7 +172,7 @@ const TimetableTimeline: FC<TimetableTimelineProps> = ({
                       )}
                     >
                       {slot.customItem && (
-                        <CalendarClock className="inline-block h-3 w-3 mr-0.5" />
+                        <CalendarClock className="inline-block h-3 w-3 mr-1" />
                       )}
                       {name}
                     </span>

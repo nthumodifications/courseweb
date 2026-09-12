@@ -173,7 +173,7 @@ const ViewTimetablePage = () => {
                             className="flex flex-row items-center space-x-2 font-mono text-muted-foreground"
                           >
                             <span className="text-xs">{venue}</span>
-                            <span className="text-xs">{time}</span>
+                            <span className="text-xs tabular-nums">{time}</span>
                           </div>
                         );
                       }) || (
@@ -188,13 +188,13 @@ const ViewTimetablePage = () => {
             <Separator />
             <div className="flex flex-row gap-4 justify-end">
               <div className="space-x-2">
-                <span className="font-bold">{courses.length}</span>
+                <span className="font-bold tabular-nums">{courses.length}</span>
                 <span className="text-muted-foreground">
                   {dict.timetable.view.courses_unit}
                 </span>
               </div>
               <div className="space-x-2">
-                <span className="font-bold">{totalCredits}</span>
+                <span className="font-bold tabular-nums">{totalCredits}</span>
                 <span className="text-muted-foreground">
                   {dict.timetable.view.total_credits}
                 </span>

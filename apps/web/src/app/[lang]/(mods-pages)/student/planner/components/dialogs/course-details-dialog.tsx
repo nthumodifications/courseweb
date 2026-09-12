@@ -63,15 +63,15 @@ export function CourseDetailsDialog({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <div className="bg-neutral-50 dark:bg-neutral-800 p-2 rounded-md">
-              <p className="text-xs text-neutral-400">{t.category}</p>
+            <div className="bg-muted  p-2 rounded-md">
+              <p className="text-xs text-muted-foreground">{t.category}</p>
               <p className="font-medium">
                 {folderData.find((f) => f.id === selectedCourse.parent)
                   ?.title || selectedCourse.parent}
               </p>
             </div>
-            <div className="bg-neutral-50 dark:bg-neutral-800 p-2 rounded-md">
-              <p className="text-xs text-neutral-400">{t.semester}</p>
+            <div className="bg-muted  p-2 rounded-md">
+              <p className="text-xs text-muted-foreground">{t.semester}</p>
               <p className="font-medium">
                 {selectedCourse.semester
                   ? semesterData.find((s) => s.id === selectedCourse.semester)
@@ -79,8 +79,8 @@ export function CourseDetailsDialog({
                   : t.unassigned}
               </p>
             </div>
-            <div className="bg-neutral-50 dark:bg-neutral-800 p-2 rounded-md">
-              <p className="text-xs text-neutral-400">{t.status}</p>
+            <div className="bg-muted  p-2 rounded-md">
+              <p className="text-xs text-muted-foreground">{t.status}</p>
               <Badge
                 className={`${getStatusBadgeClass(status)} mt-1 flex items-center gap-1 w-fit`}
               >
@@ -89,8 +89,8 @@ export function CourseDetailsDialog({
               </Badge>
             </div>
             {selectedCourse.raw_id && (
-              <div className="bg-neutral-50 dark:bg-neutral-800 p-2 rounded-md">
-                <p className="text-xs text-neutral-400">{t.courseId}</p>
+              <div className="bg-muted  p-2 rounded-md">
+                <p className="text-xs text-muted-foreground">{t.courseId}</p>
                 <p className="font-medium">{selectedCourse.raw_id}</p>
               </div>
             )}
@@ -112,14 +112,14 @@ export function CourseDetailsDialog({
           <div>
             <h3 className="font-medium mb-2">{t.additionalInfo}</h3>
             <div className="space-y-2">
-              <div className="bg-neutral-50 dark:bg-neutral-800 p-2 rounded-md">
-                <p className="text-xs text-neutral-400">{t.instructor}</p>
+              <div className="bg-muted  p-2 rounded-md">
+                <p className="text-xs text-muted-foreground">{t.instructor}</p>
                 <p className="font-medium">
                   {selectedCourse.instructor || t.unassigned}
                 </p>
               </div>
-              <div className="bg-neutral-50 dark:bg-neutral-800 p-2 rounded-md">
-                <p className="text-xs text-neutral-400">{t.description}</p>
+              <div className="bg-muted  p-2 rounded-md">
+                <p className="text-xs text-muted-foreground">{t.description}</p>
                 <p className="text-sm whitespace-pre-wrap">
                   {selectedCourse.description || t.noDescription}
                 </p>

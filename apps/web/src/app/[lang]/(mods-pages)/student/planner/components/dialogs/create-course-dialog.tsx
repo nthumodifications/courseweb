@@ -144,7 +144,7 @@ export function CreateCourseDialog({
             value={formData.id}
             onChange={(e) => handleChange("id", e.target.value)}
           />
-          {errors.id && <p className="text-xs text-red-500">{errors.id}</p>}
+          {errors.id && <p className="text-xs text-destructive">{errors.id}</p>}
         </div>
         <div className="space-y-2">
           <Label htmlFor="new-course-title">{t.courseTitle}</Label>
@@ -156,7 +156,7 @@ export function CreateCourseDialog({
             onChange={(e) => handleChange("title", e.target.value)}
           />
           {errors.title && (
-            <p className="text-xs text-red-500">{errors.title}</p>
+            <p className="text-xs text-destructive">{errors.title}</p>
           )}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -177,7 +177,7 @@ export function CreateCourseDialog({
               }}
             />
             {errors.credits && (
-              <p className="text-xs text-red-500">{errors.credits}</p>
+              <p className="text-xs text-destructive">{errors.credits}</p>
             )}
           </div>
           <div className="space-y-2">

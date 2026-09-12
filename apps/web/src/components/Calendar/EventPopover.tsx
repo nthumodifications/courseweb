@@ -364,7 +364,7 @@ export const EventPopover: FC<
             <div className="flex flex-col gap-1 flex-1">
               <h1 className="text-xl font-semibold">{event.title}</h1>
               {event.allDay ? (
-                <p className="text-sm text-slate-500">
+                <p className="text-sm tabular-nums text-muted-foreground">
                   {format(event.displayStart, "yyyy-M-d", {
                     locale: getLocale(language),
                   })}{" "}-{" "}
@@ -373,7 +373,7 @@ export const EventPopover: FC<
                   })}
                 </p>
               ) : isSameDay(event.start, event.end) ? (
-                <p className="text-sm text-slate-500">
+                <p className="text-sm tabular-nums text-muted-foreground">
                   {format(event.displayStart, "yyyy-M-d", {
                     locale: getLocale(language),
                   })}{" "}⋅{" "}
@@ -381,7 +381,7 @@ export const EventPopover: FC<
                   {format(event.displayEnd, "HH:mm")}
                 </p>
               ) : (
-                <p className="text-sm text-slate-500">
+                <p className="text-sm tabular-nums text-muted-foreground">
                   {format(event.displayStart, "yyyy-M-d HH:mm", {
                     locale: getLocale(language),
                   })}{" "}-{" "}
@@ -391,13 +391,13 @@ export const EventPopover: FC<
                 </p>
               )}
               {event.location && (
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-muted-foreground">
                   <MapPin className="w-4 h-4 inline mr-1" />
                   {event.location}
                 </p>
               )}
               {event.details && (
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-muted-foreground">
                   <Text className="w-4 h-4 inline mr-1" />
                   {event.details}
                 </p>

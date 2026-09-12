@@ -62,7 +62,7 @@ export function InfiniteHits(props: InfiniteHitsProps) {
       className={cn("scroll-smooth", status != "idle" ? "opacity-70" : "")}
     >
       <div className="ais-InfiniteHits">
-        <ul className="ais-InfiniteHits-list flex flex-col w-full h-full space-y-5">
+        <ul className="ais-InfiniteHits-list flex flex-col w-full h-full space-y-6">
           {hits.map((hit) => (
             <PlannerCourseListItem
               key={hit.objectID}
@@ -81,12 +81,12 @@ export function InfiniteHits(props: InfiniteHitsProps) {
             </>
           )}
           {status == "error" && (
-            <li className="text-center text-gray-500">
+            <li className="text-center text-muted-foreground">
               {dict.planner.coursePicker.errorOccurred}
             </li>
           )}
           {isLastPage && (
-            <li className="text-center text-gray-500">
+            <li className="text-center text-muted-foreground">
               {dict.planner.coursePicker.noMoreResults}
             </li>
           )}
@@ -120,7 +120,7 @@ const SearchContainer = ({
     <div className="flex w-full gap-4">
       <div className="hidden md:flex flex-col gap-4 w-72">
         <div className="flex justify-between items-end">
-          <span className="text-2xl">{dict.course.refine.title}</span>
+          <span className="text-xl font-semibold">{dict.course.refine.title}</span>
           <ResetFiltersButton />
         </div>
         <ScrollArea>
@@ -131,7 +131,7 @@ const SearchContainer = ({
       <div className="flex flex-col gap-4 flex-1">
         <SearchDegradationBanner searchClient={searchClient} />
         <div className="flex items-end ml-4">
-          <span className="text-2xl">{dict.course.refine.search_results}</span>
+          <span className="text-xl font-semibold">{dict.course.refine.search_results}</span>
           <span className="text-sm mr-auto ml-2">
             ({nbHits}, {processingTimeMS}ms)
           </span>

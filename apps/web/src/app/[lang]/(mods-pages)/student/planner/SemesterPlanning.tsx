@@ -107,7 +107,7 @@ function SemesterCourseRow({
       style={style}
       {...listeners}
       {...attributes}
-      className={`p-2 rounded-md border border-border bg-neutral-50 dark:bg-neutral-800 flex justify-between items-center touch-none cursor-grab active:cursor-grabbing ${
+      className={`p-2 rounded-md border border-border bg-muted  flex justify-between items-center touch-none cursor-grab active:cursor-grabbing ${
         isDragging ? "opacity-50" : ""
       }`}
     >
@@ -116,7 +116,7 @@ function SemesterCourseRow({
           <Badge variant="outline" className="text-xs">
             {course.id}
           </Badge>
-          <Badge variant="secondary" className="text-xs">
+          <Badge variant="secondary" className="text-xs tabular-nums">
             {course.credits} {dict.planner.semester.creditsUnit}
           </Badge>
           <Badge
@@ -162,34 +162,34 @@ function SemesterCourseRow({
             <DropdownMenuItem
               onClick={() => onStatusChange(course.uuid, "completed")}
             >
-              <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" />
+              <CheckCircle2 className="h-4 w-4 mr-2 text-success" />
               {dict.planner.semester.markAs}{" "}
               {getStatusLabel("completed", dict.planner.status)}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => onStatusChange(course.uuid, "in-progress")}
             >
-              <CircleDot className="h-4 w-4 mr-2 text-yellow-500" />
+              <CircleDot className="h-4 w-4 mr-2 text-warning" />
               {dict.planner.semester.markAs}{" "}
               {getStatusLabel("in-progress", dict.planner.status)}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => onStatusChange(course.uuid, "planned")}
             >
-              <CircleDashed className="h-4 w-4 mr-2 text-neutral-400" />
+              <CircleDashed className="h-4 w-4 mr-2 text-muted-foreground" />
               {dict.planner.semester.markAs}{" "}
               {getStatusLabel("planned", dict.planner.status)}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              className="text-red-400 cursor-pointer"
+              className="text-destructive cursor-pointer"
               onClick={() => onSemesterChange(course.uuid, undefined)}
             >
               <MinusCircle className="h-4 w-4 mr-2" />
               {dict.planner.semester.removeFromSemester}
             </DropdownMenuItem>
             <DropdownMenuItem
-              className="text-red-400 cursor-pointer"
+              className="text-destructive cursor-pointer"
               onClick={() => onDeleteRequest(course)}
             >
               <Trash2 className="h-4 w-4 mr-2" />
@@ -249,7 +249,8 @@ function SemesterSummaryCard({
               dict.planner.status,
             )}
           </Badge>
-          {totalCredits} {dict.planner.semester.creditsUnit}
+          <span className="tabular-nums">{totalCredits}</span>{" "}
+          {dict.planner.semester.creditsUnit}
         </CardDescription>
       </CardHeader>
     </Card>
@@ -374,8 +375,8 @@ export function SemesterPlanning({
 
   const currentSemesterStatusClass = (() => {
     const status = semesters.find((s) => s.id === currentSemester)?.status;
-    if (status === "completed") return "border-green-500/30";
-    if (status === "in-progress") return "border-yellow-500/30";
+    if (status === "completed") return "border-success";
+    if (status === "in-progress") return "border-warning";
     return "border-border";
   })();
 
@@ -389,7 +390,7 @@ export function SemesterPlanning({
                 <h3 className="font-medium text-lg">
                   {dict.planner.semester.emptyTitle}
                 </h3>
-                <p className="text-neutral-400">
+                <p className="text-muted-foreground">
                   {dict.planner.semester.emptyDescription}
                 </p>
               </div>
@@ -450,7 +451,7 @@ export function SemesterPlanning({
                     ))}
 
                     {getCoursesBySemester(currentSemester).length === 0 && (
-                      <div className="flex items-center justify-center h-24 text-neutral-400 text-center px-4">
+                      <div className="flex items-center justify-center h-24 text-muted-foreground text-center px-4">
                         <p>{dict.planner.semester.dropHint}</p>
                       </div>
                     )}
@@ -471,7 +472,7 @@ export function SemesterPlanning({
                     <div>
                       <div className="flex justify-between items-center mb-1 text-sm">
                         <span>{dict.planner.semester.totalCredits}</span>
-                        <span>
+                        <span className="tabular-nums">
                           {getTotalCreditsBySemester(currentSemester)}
                         </span>
                       </div>
@@ -489,13 +490,13 @@ export function SemesterPlanning({
                       {creditsInEachTopFolder.map((folder) => (
                         <div
                           key={folder.folder.id}
-                          className="bg-neutral-100 dark:bg-neutral-800 p-2 rounded-md"
+                          className="bg-muted  p-2 rounded-md"
                         >
-                          <p className="text-xs text-neutral-400">
+                          <p className="text-xs text-muted-foreground">
                             {folder.folder.title}
                           </p>
                           <p className="font-medium">
-                            {folder.totalCredits}{" "}
+                            <span className="tabular-nums">{folder.totalCredits}</span>{" "}
                             {dict.planner.semester.creditsUnit}
                           </p>
                         </div>

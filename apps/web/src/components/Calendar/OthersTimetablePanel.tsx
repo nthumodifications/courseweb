@@ -102,10 +102,10 @@ function SavedTimetableItem({
 
   return (
     <div
-      className={`flex flex-col gap-2 p-3 rounded-lg border ${isOverlaid ? "border-blue-300 bg-blue-50 dark:bg-blue-950/20" : ""}`}
+      className={`flex flex-col gap-2 p-3 rounded-lg border ${isOverlaid ? "border-info/30 bg-info/10 " : ""}`}
     >
       <div className="flex items-start justify-between gap-2">
-        <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+        <div className="flex flex-col gap-1 flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium truncate">
               {saved.label || dict.calendar.others.shared_timetable}
@@ -116,7 +116,7 @@ function SavedTimetableItem({
               </Badge>
             )}
           </div>
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
             {saved.syncMode === "live" ? (
               <>
                 <RefreshCw className="h-2.5 w-2.5" /> {dict.calendar.others.live}
@@ -178,7 +178,7 @@ function SavedTimetableItem({
       </div>
 
       {isOverlaid && (
-        <div className="flex items-center gap-1.5 text-xs">
+        <div className="flex items-center gap-1 text-xs">
           <div
             className="w-3 h-3 rounded-full"
             style={{ backgroundColor: overlayColor }}

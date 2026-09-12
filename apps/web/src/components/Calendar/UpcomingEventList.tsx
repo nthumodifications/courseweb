@@ -51,7 +51,7 @@ const EventRow: FC<{ event: UpcomingEvent; compact: boolean }> = ({
         ) : (
           <Clock className="size-3" />
         )}
-        <span className="whitespace-nowrap">{time}</span>
+        <span className="whitespace-nowrap tabular-nums">{time}</span>
       </div>
       <span className="min-w-0 flex-1 truncate text-sm font-medium">
         {event.title}

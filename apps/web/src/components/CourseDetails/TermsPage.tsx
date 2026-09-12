@@ -13,19 +13,19 @@ const TermsPage = ({
       <p>{dict.course.details.review_terms.intro}</p>
       <div className="space-y-4">
         <div className="flex flex-row gap-2">
-          <CheckCircle2 className="text-green-500 w-6 h-6" />
+          <CheckCircle2 className="text-success w-6 h-6" />
           <div className="flex-1">
             {dict.course.details.review_terms.accuracy}
           </div>
         </div>
         <div className="flex flex-row gap-2">
-          <CheckCircle2 className="text-green-500 w-6 h-6" />
+          <CheckCircle2 className="text-success w-6 h-6" />
           <div className="flex-1">
             {dict.course.details.review_terms.anonymous}
           </div>
         </div>
         <div className="flex flex-row gap-2">
-          <CheckCircle2 className="text-green-500 w-6 h-6" />
+          <CheckCircle2 className="text-success w-6 h-6" />
           <div className="flex-1">
             {dict.course.details.review_terms.access}
           </div>

@@ -17,11 +17,11 @@ const PDFViewer = ({ file }: { file: string }) => {
     return (
       <div className="flex items-center justify-center p-8 text-center">
         <div>
-          <p className="text-red-600 mb-2">{dict.course.details.pdf_load_failed}</p>
-          <p className="text-sm text-gray-600">{error}</p>
+          <p className="text-destructive mb-2">{dict.course.details.pdf_load_failed}</p>
+          <p className="text-sm text-muted-foreground">{error}</p>
           <button
             onClick={() => setError(null)}
-            className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            className="mt-2 px-4 py-2 bg-info text-info-foreground rounded-md hover:bg-info/90"
           >
             {dict.common.try_again}
           </button>

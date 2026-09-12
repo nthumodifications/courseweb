@@ -71,7 +71,7 @@ export default function TimetableRenderer({ rawIds }: TimetableRendererProps) {
 
   if (error) {
     return (
-      <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 rounded p-3">
+      <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 rounded-md p-3">
         <AlertCircle className="h-4 w-4" />
         <span>{dict.chat.timetable_renderer.load_failed}</span>
       </div>
@@ -80,7 +80,7 @@ export default function TimetableRenderer({ rawIds }: TimetableRendererProps) {
 
   if (!courses || courses.length === 0) {
     return (
-      <div className="text-sm text-muted-foreground bg-muted rounded p-3">
+      <div className="text-sm text-muted-foreground bg-muted rounded-md p-3">
         {dict.chat.timetable_renderer.no_courses}
       </div>
     );
@@ -114,7 +114,7 @@ export default function TimetableRenderer({ rawIds }: TimetableRendererProps) {
         {courses.map((course) => (
           <div
             key={course.raw_id}
-            className="flex justify-between items-start p-3 bg-muted/50 rounded border"
+            className="flex justify-between items-start p-3 bg-muted/50 rounded-md border"
           >
             <div className="space-y-1">
               <p className="font-medium">{course.name_zh}</p>
@@ -123,21 +123,21 @@ export default function TimetableRenderer({ rawIds }: TimetableRendererProps) {
               </p>
               <div className="flex gap-4 text-xs text-muted-foreground">
                 {course.times && course.times.length > 0 && (
-                  <span>⏰ {course.times[0]}</span>
+                <span className="tabular-nums">⏰ {course.times[0]}</span>
                 )}
                 {course.venues && course.venues.length > 0 && (
                   <span>📍 {course.venues[0]}</span>
                 )}
               </div>
             </div>
-            <span className="text-sm font-medium text-primary">
+            <span className="text-sm font-medium tabular-nums text-primary">
               {course.credits} {dict.chat.timetable_renderer.credits_suffix}
             </span>
           </div>
         ))}
       </div>
 
-      <div className="text-xs text-muted-foreground bg-blue-50 dark:bg-blue-950/20 rounded p-2">
+      <div className="text-xs text-muted-foreground bg-info/10 rounded-md p-2">
         {dict.chat.timetable_renderer.tip}
       </div>
     </div>

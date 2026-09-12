@@ -67,13 +67,13 @@ export default function Error({
                     {dict.error.report_here}{" "}
                     <a
                       href="https://github.com/nthumodifications/courseweb/issues/new/choose"
-                      className="underline text-purple-500"
+                      className="text-primary underline underline-offset-4 hover:underline"
                     >
                       Github
                     </a>{" "}
                     <a
                       href="https://instagram.com/nthumods"
-                      className="underline text-purple-500"
+                      className="text-primary underline underline-offset-4 hover:underline"
                     >
                       IG
                     </a>
@@ -93,13 +93,13 @@ export default function Error({
                     {dict.error.report_here}{" "}
                     <a
                       href="https://github.com/nthumodifications/courseweb/issues/new/choose"
-                      className="underline text-purple-500"
+                      className="text-primary underline underline-offset-4 hover:underline"
                     >
                       Github
                     </a>{" "}
                     <a
                       href="https://instagram.com/nthumods"
-                      className="underline text-purple-500"
+                      className="text-primary underline underline-offset-4 hover:underline"
                     >
                       IG
                     </a>
@@ -117,7 +117,7 @@ export default function Error({
             </Button>
           </CollapsibleTrigger>
           <CollapsibleContent>
-            <pre className="text-xs rounded-md p-4 bg-black text-white overflow-x-auto">
+            <pre className="text-xs rounded-md p-4 bg-muted text-foreground overflow-x-auto">
               {error.stack}
             </pre>
           </CollapsibleContent>

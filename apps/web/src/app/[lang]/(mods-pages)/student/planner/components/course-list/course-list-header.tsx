@@ -34,7 +34,7 @@ export function CourseListHeader({
     <div className="p-4 border-b border-border flex justify-between items-center">
       <div>
         <h2 className="text-lg font-bold">{folderTitle}</h2>
-        <p className="text-sm text-neutral-400">
+        <p className="text-sm text-muted-foreground">
           {selectedFolder != undefined
             ? dict.planner.courseList.courseCount.replace(
                 "{count}",

@@ -33,26 +33,26 @@ const PlannerCourseListItem: FC<PlannerCourseListItemProps> = memo(
         : `${course.name_en} - ${course.teacher_en?.join(",")}`;
 
     return (
-      <div className="px-4 border-b border-gray-200 dark:border-neutral-800 pb-4 relative @container">
+      <div className="px-4 border-b border-border  pb-4 relative @container">
         <div className="flex flex-row gap-4">
           <div className="flex-1">
             <div className="mb-2 space-y-1 pt-3 @md:pt-0">
               <div className="flex flex-row gap-2 items-center">
                 {course.closed_mark && (
                   <div
-                    className={`flex flex-row items-center justify-center min-w-[65px] py-1 px-2 text-sm select-none rounded-md bg-red-400 dark:bg-red-600`}
+                    className={`flex flex-row items-center justify-center min-w-[65px] py-1 px-2 text-sm select-none rounded-md bg-destructive/10 `}
                   >
                     {course.closed_mark}
                   </div>
                 )}
                 {hasTaken && (
                   <div
-                    className={`flex flex-row items-center justify-center min-w-[65px] py-1 px-2 text-sm select-none rounded-md bg-nthu-400 dark:bg-nthu-600`}
+                    className={`flex flex-row items-center justify-center min-w-[65px] py-1 px-2 text-sm select-none rounded-md bg-primary `}
                   >
                     {dict.course.details.taken}
                   </div>
                 )}
-                <p className="text-nthu-500 text-sm font-semibold">
+                <p className="text-primary text-sm font-semibold">
                   {course.department} {course.course}-
                   {course.class.padStart(2, "0")}
                 </p>
@@ -101,12 +101,12 @@ const PlannerCourseListItem: FC<PlannerCourseListItemProps> = memo(
                       className="p-0 h-5 text-xs text-muted-foreground hover:text-foreground"
                     >
                       {dict.course.details.prerequisites_available}{" "}
-                      <ChevronDown className="h-3 w-3 ml-0.5" />
+                      <ChevronDown className="h-3 w-3 ml-1" />
                     </Button>
                   </CollapsibleTrigger>
                   <CollapsibleContent>
                     <p
-                      className="whitespace-pre-line text-sm text-neutral-500"
+                      className="whitespace-pre-line text-sm text-muted-foreground"
                       dangerouslySetInnerHTML={{
                         __html: sanitizeCourseHtml(course.prerequisites),
                       }}

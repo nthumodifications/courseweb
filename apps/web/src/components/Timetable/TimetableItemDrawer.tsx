@@ -67,7 +67,7 @@ const ImportantDates = ({ raw_id }: { raw_id: RawCourseID }) => {
         <div className="flex flex-col gap-1">
           {dates.map((m, index) => (
             <div key={index} className="flex flex-row gap-2">
-              <p className="text-sm min-w-20">
+              <p className="text-sm min-w-20 tabular-nums">
                 {format(new Date(m.date), "yyyy-MM-dd")}
               </p>
               <p className="text-sm font-semibold">
@@ -142,7 +142,7 @@ const TimetableCourseQuickAccess = ({ course }: { course: MinimalCourse }) => {
                 {course.venues?.map((venue, index) => {
                   const time = course.times![index];
                   return (
-                    <div key={index} className="text-muted-foreground text-xs">
+                    <div key={index} className="text-muted-foreground text-xs tabular-nums">
                       {venue} /{" "}
                       {hasTimes(course as MinimalCourse)
                         ? time

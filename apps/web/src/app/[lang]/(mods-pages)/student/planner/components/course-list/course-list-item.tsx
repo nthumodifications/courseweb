@@ -152,7 +152,7 @@ export function CourseListItem({
       {...listeners}
       {...attributes}
       className={`flex items-center p-2 rounded-md border ${isSelected ? "border-primary" : isMultiSelected ? "border-primary bg-primary/10" : "border-border"}
-        bg-neutral-50 dark:bg-neutral-800 cursor-pointer hover:border-primary transition-colors duration-200 group relative touch-none`}
+        bg-muted  cursor-pointer hover:border-primary transition-colors duration-200 group relative touch-none`}
       onClick={onClick}
     >
       {/* Selection checkbox - always rendered, at reduced opacity until hover/focus/selected */}
@@ -160,7 +160,7 @@ export function CourseListItem({
         type="button"
         aria-label={dict.planner.courseList.selectCourse}
         title={dict.planner.courseList.selectCourse}
-        className={`absolute left-1 top-1 p-3.5 flex items-center justify-center rounded ${
+        className={`absolute left-1 top-1 p-4 flex items-center justify-center rounded-md ${
           isMultiSelected
             ? "opacity-100"
             : "opacity-60 group-hover:opacity-100 focus-visible:opacity-100"
@@ -172,8 +172,8 @@ export function CourseListItem({
         }}
       >
         <div
-          className={`w-4 h-4 rounded border flex items-center justify-center
-          ${isMultiSelected ? "bg-primary border-primary" : "border-neutral-500 bg-neutral-50 dark:bg-neutral-800"}`}
+          className={`w-4 h-4 rounded-sm border flex items-center justify-center
+          ${isMultiSelected ? "bg-primary border-primary" : "border-border bg-muted "}`}
         >
           {isMultiSelected && <Check className="h-3 w-3" />}
         </div>
@@ -183,7 +183,7 @@ export function CourseListItem({
           <Badge variant="outline" className="text-xs">
             {course.id}
           </Badge>
-          <Badge variant="secondary" className="text-xs">
+          <Badge variant="secondary" className="text-xs tabular-nums">
             {course.credits} {dict.course.credits}
           </Badge>
           <Badge
@@ -194,7 +194,7 @@ export function CourseListItem({
           </Badge>
         </div>
         <div className="font-medium truncate">{course.title}</div>
-        <div className="flex items-center mt-1 text-xs text-neutral-400">
+        <div className="flex items-center mt-1 text-xs text-muted-foreground">
           <span>{parentName}</span>
           <span className="mx-1">•</span>
           <span>{semesterStatusText}</span>
@@ -237,15 +237,15 @@ export function CourseListItem({
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => handleStatusChange("completed")}>
-              <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" />
+              <CheckCircle2 className="h-4 w-4 mr-2 text-success" />
               {dict.planner.courseList.markAsCompleted}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => handleStatusChange("in-progress")}>
-              <CircleDot className="h-4 w-4 mr-2 text-yellow-500" />
+              <CircleDot className="h-4 w-4 mr-2 text-warning" />
               {dict.planner.courseList.markAsInProgress}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => handleStatusChange("planned")}>
-              <CircleDashed className="h-4 w-4 mr-2 text-neutral-400" />
+              <CircleDashed className="h-4 w-4 mr-2 text-muted-foreground" />
               {dict.planner.courseList.markAsPlanned}
             </DropdownMenuItem>
             <DropdownMenuSeparator />

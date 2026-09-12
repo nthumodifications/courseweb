@@ -38,13 +38,13 @@ const CourseTagList = ({ course }: { course: CourseDefinition }) => {
       </CourseBadge>
       {course.enrolled != undefined && (
         <CourseBadge variant="secondary">
-          <span>
+          <span className="tabular-nums">
             {course.enrolled} {dict.course.tags.enrolled_suffix}{" "}
           </span>
         </CourseBadge>
       )}
       <CourseBadge variant="secondary">
-        <span>
+        <span className="tabular-nums">
           {course.credits} {dict.course.credits}
         </span>
       </CourseBadge>

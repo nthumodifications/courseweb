@@ -87,11 +87,11 @@ const CommandPalette = () => {
       onClick={() => setOpen(false)}
     >
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-background/40 backdrop-blur-sm" />
 
       {/* Palette panel */}
       <div
-        className="relative w-full max-w-lg bg-background border border-border rounded-xl shadow-2xl overflow-hidden"
+        className="relative w-full max-w-lg bg-background border border-border rounded-lg shadow-2xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <Command
@@ -241,13 +241,13 @@ const CommandPalette = () => {
           {/* Footer hint */}
           <div className="border-t border-border px-4 py-2 flex items-center gap-4 text-xs text-muted-foreground">
             <span>
-              <kbd className="font-mono bg-muted px-1 rounded">↑↓</kbd> navigate
+              <kbd className="font-mono bg-muted px-1 rounded-sm">↑↓</kbd> navigate
             </span>
             <span>
-              <kbd className="font-mono bg-muted px-1 rounded">↵</kbd> select
+              <kbd className="font-mono bg-muted px-1 rounded-sm">↵</kbd> select
             </span>
             <span>
-              <kbd className="font-mono bg-muted px-1 rounded">Esc</kbd> close
+              <kbd className="font-mono bg-muted px-1 rounded-sm">Esc</kbd> close
             </span>
           </div>
         </Command>
