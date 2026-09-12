@@ -11,6 +11,7 @@ import TitleUpdater from "@/layouts/TitleUpdater";
 import RootErrorFallback from "@/app/error";
 import { ThemeProvider } from "@/hooks/contexts/theme";
 import { useSettings } from "@/hooks/contexts/settings";
+import LiveTimetableSync from "@/components/Timetable/LiveTimetableSync";
 
 const ThemeWrapper = ({ children }: { children: React.ReactNode }) => {
   const { darkMode } = useSettings();
@@ -26,6 +27,7 @@ const AppProviders = () => {
             <SettingsProvider>
               <ThemeWrapper>
                 <UserTimetableProvider>
+                  <LiveTimetableSync />
                   <TitleUpdater />
                   <Outlet />
                   <Toaster />

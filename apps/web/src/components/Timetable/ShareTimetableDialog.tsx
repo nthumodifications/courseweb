@@ -392,9 +392,11 @@ const ShareTimetableDialog = ({
   >({});
 
   const { courses, customItems, semester, colorMap } = useUserTimetable();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { createShare, deleteShare, listOwnShares } = useTimetableShare();
   const queryClient = useQueryClient();
+  const userId = user?.profile.sub;
+  const authSessionKey = user?.expires_at ?? 0;
 
   // Multi-semester selection
   const [selectedSemesters, setSelectedSemesters] = useState<string[]>([
@@ -418,9 +420,9 @@ const ShareTimetableDialog = ({
   );
 
   const { data: ownShares = [], isLoading: sharesLoading } = useQuery({
-    queryKey: ["own-shares"],
+    queryKey: ["own-shares", userId ?? "anonymous", authSessionKey],
     queryFn: listOwnShares,
-    enabled: open && isAuthenticated,
+    enabled: open && isAuthenticated && Boolean(userId && user?.access_token),
   });
 
   const { data: semesterCourses = [] } = useQuery({
