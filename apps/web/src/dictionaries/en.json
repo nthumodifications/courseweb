@@ -150,7 +150,8 @@
       "error": "Course search encountered an error. The request was not retried against another tier.",
       "limited_mode": "Search is running in limited mode — some filters and ranking may be unavailable.",
       "dismiss_limited_mode": "Dismiss limited search mode",
-      "no_more_results": "No more results"
+      "no_more_results": "No more results",
+      "no_results": "No matching courses"
     },
     "item": {
       "add_to_semester": "Add",
@@ -260,7 +261,15 @@
       "ptt_title": "PTT Reviews",
       "ptt_disclaimer": "PTT reviews are from the NTHU_Course board and are not moderated by NTHUMods. The reviews do not represent the views of NTHUMods. If you find any inappropriate content, please report to the board itself.",
       "important_dates": "Important Dates",
-      "view_ccxp_syllabus": "View Original Webpage"
+      "view_ccxp_syllabus": "View Original Webpage",
+      "ai_summary": {
+        "generate": "Generate AI summary",
+        "title": "AI course summary",
+        "loading": "Analyzing course content…",
+        "error": "Could not generate the summary.",
+        "workload": "Workload",
+        "difficulty": "Difficulty"
+      }
     }
   },
   "navigation": {
@@ -271,6 +280,20 @@
     "venues": "Venues",
     "bus": "Bus",
     "apps": "Apps"
+  },
+  "command_palette": {
+    "placeholder": "Type a command…",
+    "no_results": "No commands found",
+    "navigation": "Navigation",
+    "display": "Display",
+    "themes": "Themes",
+    "light_mode": "Switch to light mode",
+    "dark_mode": "Switch to dark mode",
+    "enter_zen": "Enter zen mode",
+    "exit_zen": "Exit zen mode",
+    "navigate": "Navigate",
+    "select": "Select",
+    "close": "Close"
   },
   "sports": {
     "title": "Sports Facilities",
@@ -288,7 +311,21 @@
     "entries_today": "Entries today",
     "data_source": "Data source:",
     "source_name": "NTHU Sports Center",
-    "source_aria": "National Tsing Hua University Sports Center (opens in new tab)"
+    "source_aria": "National Tsing Hua University Sports Center (opens in new tab)",
+    "days": {
+      "sunday": "Sun",
+      "monday": "Mon",
+      "tuesday": "Tue",
+      "wednesday": "Wed",
+      "thursday": "Thu",
+      "friday": "Fri",
+      "saturday": "Sat",
+      "holiday": "Holiday"
+    },
+    "semester_first": "First semester",
+    "semester_second": "Second semester",
+    "semester_break": "Summer break",
+    "semester_winter_break": "Winter break"
   },
   "bus": {
     "north_gate": "North Gate",
@@ -577,7 +614,8 @@
     "waitlist_message": "Stay tuned for new features from NTHUMods."
   },
   "venues": {
-    "placeholder": "Select a Venue from the list"
+    "placeholder": "Select a venue from the list",
+    "view_courses": "View courses"
   },
   "campus_map": {
     "title": "3D Campus Map",
@@ -697,6 +735,16 @@
       "accurate_relavent": "Enter only accurate and relavent information!",
       "sign_in_required": "Sign in to contribute dates for this course"
     },
+    "ShortNameContributeForm": {
+      "title": "Contribute a short course name",
+      "description": "Add a short name to make this course easier to identify.",
+      "dont_abuse": "Please do not abuse the system.",
+      "accurate_relevant": "Enter only accurate and relevant information.",
+      "privacy": "Your submission will contain your student ID and be publicly visible.",
+      "placeholder": "Short course name",
+      "cancel": "Cancel",
+      "submit": "Submit"
+    },
     "ShareCourseButton": {
       "share_prefix": "Share: ",
       "share_text_prefix": "Check out this course: ",
@@ -710,6 +758,13 @@
     "open_now": "Open Now",
     "closed": "Closed",
     "closed_today": "Closed Today",
+    "opening_soon": "Opening soon",
+    "closing_soon": "Closing soon",
+    "no_info": "No information",
+    "open_24h": "Open 24 hours",
+    "opens_at": " opens",
+    "closes_at": " closes",
+    "no_phone": "None",
     "area_placeholder": "Select area",
     "area_all": "Anywhere",
     "load_error": "Unable to load shop data."
@@ -945,6 +1000,7 @@
     "all": "All",
     "no_results": "No results found.",
     "try_again": "Try Again",
+    "load_error": "The data could not be loaded.",
     "submit": "Submit",
     "save": "Save",
     "error": "Error",

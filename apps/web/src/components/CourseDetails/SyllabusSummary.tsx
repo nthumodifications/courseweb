@@ -3,6 +3,7 @@ import { Button } from "@courseweb/ui";
 import { Sparkles, Loader2, AlertCircle, RotateCcw } from "lucide-react";
 import type { RawCourseID } from "@/types/courses";
 import client from "@/config/api";
+import useDictionary from "@/dictionaries/useDictionary";
 
 interface SyllabusSummary {
   bullets: string[];
@@ -10,16 +11,6 @@ interface SyllabusSummary {
   audience: string;
   difficultyRating: number;
 }
-
-const workloadColors: Record<string, string> = {
-  輕鬆: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
-  適中: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
-  繁重: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
-  Light: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
-  Moderate:
-    "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
-  Heavy: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
-};
 
 function DifficultyDots({ rating }: { rating: number }) {
   return (
@@ -29,12 +20,12 @@ function DifficultyDots({ rating }: { rating: number }) {
           key={i}
           className={`w-2.5 h-2.5 rounded-full transition-colors ${
             i < rating
-              ? "bg-blue-500 dark:bg-blue-400"
-              : "bg-gray-200 dark:bg-gray-700"
+            ? "bg-primary"
+              : "bg-muted"
           }`}
-        />
+      />
       ))}
-      <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">
+      <span className="ml-1 text-xs text-muted-foreground">
         {rating}/5
       </span>
     </div>
@@ -46,6 +37,7 @@ export default function SyllabusSummary({
 }: {
   courseId: RawCourseID;
 }) {
+  const dict = useDictionary();
   const [summary, setSummary] = useState<SyllabusSummary | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -59,12 +51,14 @@ export default function SyllabusSummary({
       });
       if (!res.ok) {
         const err = (await res.json()) as { error?: string };
-        throw new Error(err.error ?? `Error ${res.status}`);
+        throw new Error(err.error ?? dict.course.details.ai_summary.error);
       }
       const data = (await res.json()) as SyllabusSummary;
       setSummary(data);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to generate summary");
+      setError(
+        e instanceof Error ? e.message : dict.course.details.ai_summary.error,
+      );
     } finally {
       setIsLoading(false);
     }
@@ -79,62 +73,60 @@ export default function SyllabusSummary({
         className="gap-2"
       >
         <Sparkles className="h-4 w-4" />
-        AI 摘要
+        {dict.course.details.ai_summary.generate}
       </Button>
     );
   }
 
   if (isLoading) {
     return (
-      <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 py-1">
+      <div className="flex items-center gap-2 py-1 text-sm text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" />
-        分析課程內容中…
+        {dict.course.details.ai_summary.loading}
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center gap-2 text-sm text-red-600 dark:text-red-400 py-1">
+      <div className="flex items-center gap-2 py-1 text-sm text-destructive">
         <AlertCircle className="h-4 w-4 shrink-0" />
         <span>{error}</span>
         <button
           onClick={fetchSummary}
           className="ml-1 underline hover:no-underline flex items-center gap-1"
         >
-          <RotateCcw className="h-3 w-3" /> 重試
+          <RotateCcw className="h-3 w-3" /> {dict.common.try_again}
         </button>
       </div>
     );
   }
 
-  const workloadClass =
-    workloadColors[summary!.workload] ??
-    "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300";
+  const workloadClass = "bg-muted text-foreground";
 
   return (
-    <div className="rounded-lg border border-blue-100 dark:border-blue-900/40 bg-blue-50/50 dark:bg-blue-950/20 p-4 space-y-3">
-      <div className="flex items-center gap-2 text-sm font-medium text-blue-700 dark:text-blue-300">
+    <div className="flex flex-col gap-4 rounded-lg border border-border bg-card p-4">
+      <div className="flex items-center gap-2 text-sm font-medium text-foreground">
         <Sparkles className="h-4 w-4" />
-        AI 課程摘要
+        {dict.course.details.ai_summary.title}
       </div>
 
-      <ul className="space-y-1.5">
+      <ul className="flex flex-col gap-1">
         {summary!.bullets.map((bullet, i) => (
           <li
             key={i}
-            className="flex gap-2 text-sm text-gray-700 dark:text-gray-300"
+            className="flex gap-2 text-sm text-foreground"
           >
-            <span className="mt-0.5 shrink-0 text-blue-400">▸</span>
+            <span className="mt-0.5 shrink-0 text-primary">▸</span>
             {bullet}
           </li>
         ))}
       </ul>
 
-      <div className="flex flex-wrap items-center gap-3 pt-1 border-t border-blue-100 dark:border-blue-900/30">
-        <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-          <span className="font-medium text-gray-600 dark:text-gray-400">
-            負擔
+      <div className="flex flex-wrap items-center gap-2 border-t border-border pt-1">
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <span className="font-medium text-foreground">
+            {dict.course.details.ai_summary.workload}
           </span>
           <span
             className={`px-2 py-0.5 rounded-full text-xs font-medium ${workloadClass}`}
@@ -142,15 +134,15 @@ export default function SyllabusSummary({
             {summary!.workload}
           </span>
         </div>
-        <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-          <span className="font-medium text-gray-600 dark:text-gray-400">
-            難度
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <span className="font-medium text-foreground">
+            {dict.course.details.ai_summary.difficulty}
           </span>
           <DifficultyDots rating={Math.round(summary!.difficultyRating)} />
         </div>
       </div>
 
-      <p className="text-xs italic text-gray-500 dark:text-gray-400">
+      <p className="text-xs text-muted-foreground">
         {summary!.audience}
       </p>
     </div>

@@ -54,12 +54,24 @@ const SelectCourseButton = ({ courseId }: { courseId: RawCourseID }) => {
         </Button>
       )}
       {isCourseSelected(courseId) ? (
-        <Button variant={"destructive"} onClick={handleRemoveCourse} size="sm">
-          <Minus className="w-4 h-4" /> {dict.course.item.remove_from_semester}
+        <Button
+          variant={"destructive"}
+          onClick={handleRemoveCourse}
+          size="sm"
+          aria-label={dict.course.item.remove_from_semester}
+        >
+          <Minus className="w-4 h-4" />
+          <span className="hidden sm:inline">{dict.course.item.remove_from_semester}</span>
         </Button>
       ) : (
-        <Button variant="outline" onClick={handleAddCourse} size="sm">
-          <Plus className="w-4 h-4" /> {dict.course.item.add_to_semester}
+        <Button
+          variant="outline"
+          onClick={handleAddCourse}
+          size="sm"
+          aria-label={dict.course.item.add_to_semester}
+        >
+          <Plus className="w-4 h-4" />
+          <span className="hidden sm:inline">{dict.course.item.add_to_semester}</span>
         </Button>
       )}
     </div>

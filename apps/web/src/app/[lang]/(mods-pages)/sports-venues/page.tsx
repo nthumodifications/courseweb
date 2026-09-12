@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import client from "@/config/api";
-import { cn } from "@courseweb/ui";
+import { Button, cn, ErrorState, Skeleton } from "@courseweb/ui";
 import {
   Dumbbell,
   Droplets,
@@ -87,15 +87,11 @@ function venueInfo(name: string): { capacity: number; Icon: typeof Circle } {
 }
 
 function barColor(ratio: number) {
-  if (ratio < 0.5) return "bg-green-500";
-  if (ratio < 0.8) return "bg-yellow-500";
-  return "bg-red-500";
+  return ratio > 0 ? "bg-primary" : "bg-muted";
 }
 
 function badgeColor(ratio: number) {
-  if (ratio < 0.5) return "text-green-600 dark:text-green-400";
-  if (ratio < 0.8) return "text-yellow-600 dark:text-yellow-400";
-  return "text-red-600 dark:text-red-400";
+  return ratio > 0 ? "text-foreground" : "text-muted-foreground";
 }
 
 const DAY_KEYS: (keyof Omit<DaySchedule, "notes">)[] = [
@@ -107,17 +103,6 @@ const DAY_KEYS: (keyof Omit<DaySchedule, "notes">)[] = [
   "friday",
   "saturday",
 ];
-
-const DAY_LABELS: Record<string, string> = {
-  sunday: "Sun",
-  monday: "Mon",
-  tuesday: "Tue",
-  wednesday: "Wed",
-  thursday: "Thu",
-  friday: "Fri",
-  saturday: "Sat",
-  holiday: "Holiday",
-};
 
 function toMinutes(hhmm: string): number {
   const [h, m] = hhmm.split(":").map(Number);
@@ -155,25 +140,33 @@ function getOpenStatus(slots: TimeSlot[], now: Date): OpenStatus {
 }
 
 /** Returns the semester name that corresponds to today's date using actual semester dates. */
-function getCurrentSemesterLabel(): string {
+function getCurrentSemesterLabel(labels: {
+  first: string;
+  second: string;
+  summer: string;
+  winter: string;
+}): string {
   const now = new Date();
   const active = semesterInfo.find((s) => now >= s.begins && now <= s.ends);
-  if (active) return active.semester === 1 ? "上學期" : "下學期";
+  if (active) return active.semester === 1 ? labels.first : labels.second;
 
   const past = semesterInfo.filter((s) => now > s.ends);
-  if (past.length === 0) return "上學期";
+  if (past.length === 0) return labels.first;
   const lastEnded = past[past.length - 1];
   const next = semesterInfo.find((s) => s.begins > now);
-  if (!next) return "暑假";
-  return lastEnded.semester === 1 ? "寒假" : "暑假";
+  if (!next) return labels.summer;
+  return lastEnded.semester === 1 ? labels.winter : labels.summer;
 }
 
 /**
  * Returns the best available semester from the list.
  * Prefers the actual current semester; falls back to the first entry if unavailable.
  */
-function getBestAvailableSemester(semesters: string[]): string {
-  const preferred = getCurrentSemesterLabel();
+function getBestAvailableSemester(
+  semesters: string[],
+  labels: Parameters<typeof getCurrentSemesterLabel>[0],
+): string {
+  const preferred = getCurrentSemesterLabel(labels);
   return semesters.find((s) => s.includes(preferred)) ?? semesters[0];
 }
 
@@ -197,20 +190,20 @@ const StatusBadge = ({ slots, now }: { slots: TimeSlot[]; now: Date }) => {
   const status = getOpenStatus(slots, now);
   if (status.type === "open") {
     return (
-      <span className="text-sm font-semibold text-green-600 dark:text-green-400 whitespace-nowrap">
+      <span className="text-sm font-medium text-primary whitespace-nowrap">
         {dict.sports.open_until.replace("{time}", status.until)}
       </span>
     );
   }
   if (status.type === "opens") {
     return (
-      <span className="text-sm font-semibold text-yellow-600 dark:text-yellow-400 whitespace-nowrap">
+      <span className="text-sm font-medium text-foreground whitespace-nowrap">
         {dict.sports.opens_at.replace("{time}", status.at)}
       </span>
     );
   }
   return (
-    <span className="text-sm font-semibold text-muted-foreground whitespace-nowrap">
+    <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
       {dict.sports.closed_today}
     </span>
   );
@@ -226,9 +219,20 @@ const ScheduleSheet = ({
   onClose: () => void;
 }) => {
   const dict = useDictionary();
-  const currentSemesterLabel = getCurrentSemesterLabel();
+  const currentSemesterLabel = getCurrentSemesterLabel({
+    first: dict.sports.semester_first,
+    second: dict.sports.semester_second,
+    summer: dict.sports.semester_break,
+    winter: dict.sports.semester_winter_break,
+  });
   const bestAvailable = getBestAvailableSemester(
     facility.schedules.map((s) => s.semester),
+    {
+      first: dict.sports.semester_first,
+      second: dict.sports.semester_second,
+      summer: dict.sports.semester_break,
+      winter: dict.sports.semester_winter_break,
+    },
   );
   const [selectedSemester, setSelectedSemester] = useState(bestAvailable);
   const [refreshing, setRefreshing] = useState(false);
@@ -282,7 +286,7 @@ const ScheduleSheet = ({
               key={s.semester}
               onClick={() => setSelectedSemester(s.semester)}
               className={cn(
-                "px-3 py-1 rounded-full text-sm border transition-colors",
+                "px-2 py-1 rounded-full text-sm border transition-colors",
                 s.semester === selectedSemester
                   ? "bg-primary text-primary-foreground border-primary"
                   : "border-border text-muted-foreground",
@@ -313,9 +317,9 @@ const ScheduleSheet = ({
               {[...DAY_KEYS, "holiday" as const].map((day) => {
                 const slots = ensureTimeSlotArray(schedule.hours![day]);
                 return (
-                  <div key={day} className="flex items-start py-3 gap-4">
-                    <span className="w-16 text-sm font-medium text-muted-foreground dark:text-neutral-400 shrink-0">
-                      {DAY_LABELS[day]}
+                  <div key={day} className="flex items-start gap-4 py-4">
+                    <span className="w-16 text-sm font-medium text-muted-foreground shrink-0">
+                      {dict.sports.days[day as keyof typeof dict.sports.days]}
                     </span>
                     <div className="flex flex-col gap-1">
                       {slots.length === 0 ? (
@@ -335,7 +339,7 @@ const ScheduleSheet = ({
               })}
             </div>
             {schedule.hours.notes && (
-              <p className="mt-3 text-xs text-muted-foreground">
+              <p className="mt-2 text-xs text-muted-foreground">
                 {schedule.hours.notes}
               </p>
             )}
@@ -344,7 +348,7 @@ const ScheduleSheet = ({
                 href={schedule.pdf_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-3 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
+                className="mt-2 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
               >
                 <ExternalLink className="w-3 h-3" />
                 {dict.sports.view_original_pdf}
@@ -401,7 +405,13 @@ const SportsVenuesPage = () => {
     }
   };
 
-  const { data: occupancy, dataUpdatedAt } = useQuery<OccupancyItem[]>({
+  const {
+    data: occupancy,
+    dataUpdatedAt,
+    isLoading: occupancyLoading,
+    error: occupancyError,
+    refetch: refetchOccupancy,
+  } = useQuery<OccupancyItem[]>({
     queryKey: ["venue-occupancy"],
     queryFn: async () => {
       const res = await client.venue.occupancy.$get();
@@ -412,17 +422,64 @@ const SportsVenuesPage = () => {
     refetchInterval: 30_000,
   });
 
-  const { data: openingTimes } = useQuery<OpeningTimesData | null>({
+  const {
+    data: openingTimes,
+    isLoading: openingTimesLoading,
+    error: openingTimesError,
+    refetch: refetchOpeningTimes,
+  } = useQuery<OpeningTimesData | null>({
     queryKey: ["sports-opening-times"],
     queryFn: async () => {
       const res = await (client as any).sports["opening-times"].$get();
       if (res.status === 202) return null; // sync in progress, retry shortly
+      if (!res.ok) throw new Error("Failed to fetch opening times");
       return res.json() as Promise<OpeningTimesData>;
     },
     staleTime: 60 * 60 * 1000, // 1 hour — data barely changes
     // Keep retrying every 10s until data is ready (first load triggers background sync)
     refetchInterval: (query) => (query.state.data == null ? 10_000 : false),
   });
+
+  const retryQueries = async () => {
+    await Promise.all([refetchOccupancy(), refetchOpeningTimes()]);
+  };
+
+  if (occupancyError || openingTimesError) {
+    return (
+      <div className="flex flex-col px-4">
+        <ErrorState
+          title={dict.common.load_error}
+          action={
+            <Button variant="outline" size="sm" onClick={() => void retryQueries()}>
+              {dict.common.try_again}
+            </Button>
+          }
+        />
+      </div>
+    );
+  }
+
+  if (occupancyLoading || openingTimesLoading) {
+    return (
+      <div className="flex flex-col divide-y divide-border px-4">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <div className="flex flex-col gap-4 py-4" key={index}>
+            <div className="flex min-w-0 flex-row items-center gap-4">
+              <Skeleton className="h-7 w-7 shrink-0 rounded-sm" />
+              <Skeleton className="h-4 w-32" />
+              <div className="flex-1" />
+              <Skeleton className="h-4 w-16" />
+            </div>
+            <Skeleton className="h-2 w-full" />
+            <div className="flex flex-row justify-between">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-4 w-28" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   // Build merged list: occupancy items enriched with opening times
   const items = (occupancy ?? []).map((item) => {
@@ -431,7 +488,12 @@ const SportsVenuesPage = () => {
       : undefined;
 
     const currentSemester = facility
-      ? getBestAvailableSemester(facility.schedules.map((s) => s.semester))
+      ? getBestAvailableSemester(facility.schedules.map((s) => s.semester), {
+          first: dict.sports.semester_first,
+          second: dict.sports.semester_second,
+          summer: dict.sports.semester_break,
+          winter: dict.sports.semester_winter_break,
+        })
       : null;
     const todaySlots = (() => {
       if (!facility || !currentSemester) return null;
@@ -449,8 +511,8 @@ const SportsVenuesPage = () => {
   return (
     <div className="flex flex-col px-4">
       {/* Header */}
-      <div className="flex items-center justify-between py-3">
-        <h1 className="text-base font-semibold text-foreground">{dict.sports.title}</h1>
+      <div className="flex items-center justify-between py-4">
+        <h1 className="text-base font-bold text-foreground">{dict.sports.title}</h1>
         <div className="flex items-center gap-2">
           {dataUpdatedAt > 0 && (
             <span className="text-xs text-muted-foreground">
@@ -490,7 +552,7 @@ const SportsVenuesPage = () => {
           const pct = Math.round(ratio * 100);
 
           return (
-            <div key={item.project_id} className="flex flex-col gap-3 py-4">
+            <div key={item.project_id} className="flex flex-col gap-4 py-4">
               {/* Top row */}
               <div
                 className={cn(
@@ -501,7 +563,7 @@ const SportsVenuesPage = () => {
               >
                 <Icon className="h-7 w-7 text-primary shrink-0" />
                 <div className="flex flex-col flex-1 min-w-0">
-                  <h3 className="text-foreground font-bold truncate">
+                  <h3 className="min-w-0 whitespace-normal text-foreground font-bold">
                     {displayName}
                   </h3>
                   {todaySlots !== null && (
@@ -533,7 +595,7 @@ const SportsVenuesPage = () => {
               </div>
 
               {/* Bottom row */}
-              <div className="flex flex-row justify-between text-sm text-muted-foreground dark:text-neutral-400">
+              <div className="flex flex-row justify-between text-sm text-muted-foreground">
                 <span>{dict.sports.utilization} {pct}%</span>
                 <span>{dict.sports.entries_today} {item.entry_count_today} {dict.sports.occupancy_people}</span>
               </div>
@@ -552,6 +614,12 @@ const SportsVenuesPage = () => {
           .map((facility) => {
             const currentSemester = getBestAvailableSemester(
               facility.schedules.map((s) => s.semester),
+              {
+                first: dict.sports.semester_first,
+                second: dict.sports.semester_second,
+                summer: dict.sports.semester_break,
+                winter: dict.sports.semester_winter_break,
+              },
             );
             const schedule = facility.schedules.find(
               (s) => s.semester === currentSemester,
@@ -569,7 +637,7 @@ const SportsVenuesPage = () => {
               >
                 <Users className="h-7 w-7 text-primary shrink-0" />
                 <div className="flex flex-col flex-1 min-w-0">
-                  <h3 className="text-foreground font-bold truncate">
+                  <h3 className="min-w-0 whitespace-normal text-foreground font-bold">
                     {facility.name_zh}
                   </h3>
                   {todaySlots !== null && (

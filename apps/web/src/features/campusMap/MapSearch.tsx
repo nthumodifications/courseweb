@@ -86,22 +86,22 @@ export default function MapSearch({
                 <li key={identity.id}>
                   <button
                     type="button"
-                    className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left hover:bg-muted focus-visible:bg-muted focus-visible:outline-none"
+                    className="flex w-full items-center justify-between gap-2 px-2 py-2 text-left hover:bg-muted focus-visible:bg-muted focus-visible:outline-none"
                     onClick={() => selectIdentity(identity)}
                   >
                     <span className="min-w-0">
-                      <span className="block truncate text-sm font-medium text-foreground">
+                      <span className="block min-w-0 whitespace-normal text-sm font-medium text-foreground">
                         {language === "en"
                           ? (identity.names.en ?? identity.names.zh)
                           : identity.names.zh}
                       </span>
                       {language === "zh" && identity.names.en && (
-                        <span className="block truncate text-xs text-muted-foreground">
+                        <span className="block min-w-0 whitespace-normal text-xs text-muted-foreground">
                           {identity.names.en}
                         </span>
                       )}
                     </span>
-                    <span className="shrink-0 rounded bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+                    <span className="shrink-0 rounded bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
                       {identity.venue.code}
                     </span>
                   </button>
@@ -109,7 +109,7 @@ export default function MapSearch({
               ))}
             </ul>
           ) : (
-            <p className="px-3 py-2 text-sm text-muted-foreground">
+            <p className="px-2 py-2 text-sm text-muted-foreground">
               {labels.noResults}
             </p>
           )}
