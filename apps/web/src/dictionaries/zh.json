@@ -1,8 +1,14 @@
 {
   "today": {
+    "page_title": "今日",
     "schedule_title": "今日課程",
     "noclass": "今天沒有課喔！",
     "noclass_sub": "放假吧~",
+    "noclass_day": "{date} {weekday} · 沒有課",
+    "noclass_range": "{start}–{end} · 沒有課",
+    "noclass_range_sub": "放假吧~",
+    "noclass_expand": "顯示每天",
+    "noclass_collapse": "收合每天",
     "noclass_sem": "放假囉！",
     "noclass_reminder": {
       "reminder": "還沒選到課嗎？",
@@ -271,6 +277,24 @@
     "venues": "地點",
     "bus": "校車",
     "apps": "應用程式"
+  },
+  "widgets": {
+    "drag_to_reorder": "拖曳以重新排序",
+    "remove": "移除小工具",
+    "weather_title": "新竹天氣",
+    "weather_unavailable": "無法取得天氣資料",
+    "weather_unavailable_description": "目前沒有可用的天氣資料。",
+    "no_data_description": "目前沒有可顯示的資料。",
+    "rain_probability": "降雨機率",
+    "pinned_title": "快速連結",
+    "pinned_empty": "前往應用程式頁面釘選捷徑",
+    "notepad_title": "便條紙",
+    "notepad_placeholder": "寫下你的筆記...",
+    "bus_title": "校園公車",
+    "no_departures": "今日無班次",
+    "no_departures_description": "今天沒有可搭乘的校車班次。",
+    "nanda_one": "南大1路",
+    "nanda_two": "南大2路"
   },
   "sports": {
     "title": "體育場館",
@@ -749,9 +773,15 @@
     "t_score": "T 分數成績"
   },
   "calendar": {
+    "page_title": "行事曆",
     "upcoming_events": "即將到來的行程",
     "no_events": "無行程",
     "no_events_sub": "今天沒有任何行程",
+    "empty_title": "無行程",
+    "empty_description": "你的行事曆、課表與校務日期會顯示在這裡。",
+    "no_events_range": "{start}–{end} · 無行程",
+    "no_events_expand": "顯示每天",
+    "no_events_collapse": "收合每天",
     "add_event": "新增行程",
     "accessibility": {
       "calendar": "行事曆",

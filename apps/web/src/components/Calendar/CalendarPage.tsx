@@ -4,19 +4,48 @@ import UpcomingEvents from "./UpcomingEvents";
 import OthersTimetablePanel, {
   type OverlayEntry,
 } from "./OthersTimetablePanel";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@courseweb/ui";
-import { useSavedTimetables } from "@/hooks/useSavedTimetables";
-import { Badge } from "@courseweb/ui";
-import { Button } from "@courseweb/ui";
-import { Users } from "lucide-react";
-import useDictionary from "@/dictionaries/useDictionary";
 import {
+  PageHeader,
+  PageShell,
+  Section,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  Badge,
+  Button,
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
 } from "@courseweb/ui";
+import { useSavedTimetables } from "@/hooks/useSavedTimetables";
+import { Users } from "lucide-react";
+import useDictionary from "@/dictionaries/useDictionary";
+import useUpcomingEvents from "@/hooks/useUpcomingEvents";
+import { NextUpLine } from "@/components/Widgets/CountdownWidget";
+import UpcomingEventList from "@/components/Calendar/UpcomingEventList";
+
+const MobileCalendarUpcoming = () => {
+  const dict = useDictionary();
+  const { events, nextEvent } = useUpcomingEvents();
+
+  return (
+    <div className="space-y-6 xl:hidden">
+      <Section title={dict.today.upcoming.next_up} variant="card">
+        <NextUpLine
+          event={nextEvent}
+          showLabel={false}
+          className="border-0 bg-transparent p-0"
+        />
+      </Section>
+      <Section title={dict.calendar.upcoming_events} variant="card">
+        <UpcomingEventList events={events} compact maxEvents={6} />
+      </Section>
+    </div>
+  );
+};
 
 const CalendarPage = () => {
   const [activeOverlays, setActiveOverlays] = useState<OverlayEntry[]>([]);
@@ -24,10 +53,11 @@ const CalendarPage = () => {
   const dict = useDictionary();
 
   return (
-    <div className="md:pr-8 w-full">
-      <div className="flex flex-row-reverse gap-6 h-full">
+    <PageShell width="full">
+      <PageHeader title={dict.calendar.page_title} />
+      <div className="flex min-w-0 flex-row-reverse gap-6 h-full">
         <Calendar overlays={activeOverlays} />
-        <div className="hidden xl:flex xl:flex-col xl:w-72 xl:shrink-0">
+        <div className="hidden xl:flex xl:w-72 xl:shrink-0 xl:flex-col">
           <Tabs defaultValue="upcoming" className="flex flex-col h-full">
             <TabsList className="w-full mb-4">
               <TabsTrigger value="upcoming" className="flex-1">
@@ -56,10 +86,10 @@ const CalendarPage = () => {
             </TabsContent>
           </Tabs>
         </div>
-        <div className="fixed bottom-4 right-4 xl:hidden z-10">
+        <div className="fixed bottom-20 right-4 z-10 xl:hidden">
           <Sheet>
             <SheetTrigger asChild>
-              <Button size="sm" variant="outline" className="shadow-md gap-1.5">
+              <Button size="sm" variant="outline" className="gap-2">
                 <Users className="h-4 w-4" />
                 {dict.calendar.tabs.others}
                 {totalUnread > 0 && (
@@ -83,7 +113,8 @@ const CalendarPage = () => {
           </Sheet>
         </div>
       </div>
-    </div>
+      <MobileCalendarUpcoming />
+    </PageShell>
   );
 };
 

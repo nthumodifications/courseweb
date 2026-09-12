@@ -4,6 +4,8 @@ import { useSettings } from "@/hooks/contexts/settings";
 import { apps } from "@/const/apps";
 import { useNavigate } from "react-router-dom";
 import { LayoutGrid } from "lucide-react";
+import { EmptyState } from "@courseweb/ui";
+import useDictionary from "@/dictionaries/useDictionary";
 
 interface PinnedAppsWidgetProps {
   onRemove?: () => void;
@@ -17,9 +19,10 @@ const PinnedAppsWidget: FC<PinnedAppsWidgetProps> = ({
   isDragging,
 }) => {
   const { language, pinnedApps } = useSettings();
+  const dict = useDictionary();
   const navigate = useNavigate();
 
-  const title = language === "zh" ? "快速連結" : "Quick Links";
+  const title = dict.widgets.pinned_title;
 
   const pinnedAppDefs = apps.filter((app) => pinnedApps.includes(app.id));
 
@@ -30,28 +33,27 @@ const PinnedAppsWidget: FC<PinnedAppsWidgetProps> = ({
       dragHandleProps={dragHandleProps}
       isDragging={isDragging}
     >
-      <div className="p-3">
+      <div>
         {pinnedAppDefs.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-6 text-center">
-            <LayoutGrid className="h-8 w-8 text-muted-foreground/40 mb-2" />
-            <p className="text-xs text-muted-foreground">
-              {language === "zh"
-                ? "前往應用程式頁面釘選捷徑"
-                : "Pin shortcuts from the Apps page"}
-            </p>
-          </div>
+          <EmptyState
+            icon={LayoutGrid}
+            title={dict.widgets.pinned_title}
+            description={dict.widgets.pinned_empty}
+            size="sm"
+          />
         ) : (
-          <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
             {pinnedAppDefs.map((app) => (
               <button
                 key={app.id}
                 onClick={() => navigate(`/${language}${app.href}`)}
-                className="flex flex-col items-center gap-1.5 p-2 rounded-lg hover:bg-accent transition-colors"
+                type="button"
+                className="flex min-h-10 flex-col items-center gap-2 rounded-md p-2 transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
-                <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center">
+                <div className="flex h-10 w-10 items-center justify-center rounded-md bg-muted">
                   <app.Icon className="w-5 h-5 text-foreground" />
                 </div>
-                <span className="text-xs text-center text-muted-foreground leading-tight">
+                <span className="text-center text-xs leading-tight text-muted-foreground">
                   {language === "zh" ? app.title_zh : app.title_en}
                 </span>
               </button>

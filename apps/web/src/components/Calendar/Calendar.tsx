@@ -25,6 +25,7 @@ import {
   addTaipeiMonths,
   getTaipeiMonthForDisplay,
   getTaipeiWeek,
+  toTaipeiWallClock,
 } from "@/helpers/dates";
 import { CalendarDateSelector } from "@/components/Calendar/CalendarDateSelector";
 import { CalendarWeekContainer } from "./CalendarWeekContainer";
@@ -202,6 +203,21 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
       clearPortalContent();
     };
   }, [displayDates, setDate, displayMode, language]); // Added displayMode as dependency
+
+  useEffect(() => {
+    if (displayMode !== "week") return;
+
+    const container = displayContainer.current;
+    if (!container) return;
+
+    // Start near the daytime part of the schedule. The complete 00:00–23:00
+    // grid remains available through the same scroll container.
+    const firstVisibleHour = Math.max(
+      6,
+      Math.min(18, toTaipeiWallClock(new Date()).getHours() - 2),
+    );
+    container.scrollTop = firstVisibleHour * HOUR_HEIGHT;
+  }, [HOUR_HEIGHT, displayContainer, displayDates, displayMode]);
 
   //week movers
   const moveBackward = () => {
@@ -513,7 +529,7 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
         </div>
         <AddEventButton onEventAdded={handleAddEvent}>
           <Button
-            className="md:hidden fixed bottom-24 right-8 z-50 rounded-lg shadow-lg"
+            className="md:hidden fixed bottom-24 right-8 z-50 rounded-lg"
             size="icon"
             aria-label={dict.calendar.add_event}
           >

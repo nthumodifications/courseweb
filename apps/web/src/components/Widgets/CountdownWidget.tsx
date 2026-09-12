@@ -2,10 +2,10 @@ import { FC, useMemo } from "react";
 import { WidgetShell } from "./WidgetShell";
 import { semesterInfo } from "@courseweb/shared";
 import useTime from "@/hooks/useTime";
-import { Timer } from "lucide-react";
+import { Calendar as CalendarIcon, Timer } from "lucide-react";
 import { format } from "date-fns";
 import { formatInTimeZone } from "date-fns-tz";
-import { Badge, cn } from "@courseweb/ui";
+import { Badge, cn, EmptyState } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
 import useUpcomingEvents, {
   getTaipeiDateRange,
@@ -30,19 +30,19 @@ interface CountdownWidgetProps {
 export const NextUpLine: FC<{
   event: UpcomingEvent | null;
   className?: string;
-}> = ({ event, className }) => {
+  showLabel?: boolean;
+}> = ({ event, className, showLabel = true }) => {
   const dict = useDictionary();
 
   if (!event) {
     return (
-      <div
-        className={cn(
-          "rounded-lg border border-dashed border-border px-3 py-2 text-sm text-muted-foreground",
-          className,
-        )}
-      >
-        {dict.today.upcoming.nothing_scheduled}
-      </div>
+      <EmptyState
+        className={className}
+        icon={CalendarIcon}
+        title={dict.today.upcoming.nothing_scheduled}
+        description={dict.calendar.empty_description}
+        size="sm"
+      />
     );
   }
 
@@ -62,20 +62,22 @@ export const NextUpLine: FC<{
   return (
     <div
       className={cn(
-        "flex min-w-0 items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2",
+        "flex min-w-0 flex-wrap items-center gap-2 rounded-md bg-primary/5 px-3 py-2",
         className,
       )}
     >
-      <span className="shrink-0 text-xs font-semibold text-primary">
-        {dict.today.upcoming.next_up}
-      </span>
+      {showLabel && (
+        <span className="shrink-0 text-xs font-semibold text-primary">
+          {dict.today.upcoming.next_up}
+        </span>
+      )}
       <span className="min-w-0 flex-1 truncate text-sm font-medium">
         {event.title}
       </span>
       <span className="shrink-0 text-xs text-muted-foreground">
         {when} · {status}
       </span>
-      <Badge variant="outline" className="shrink-0 px-1.5 py-0 text-[10px]">
+      <Badge variant="outline" className="shrink-0 px-2 py-0 text-xs">
         {dict.today.upcoming.source[event.source]}
       </Badge>
     </div>
@@ -147,19 +149,21 @@ const CountdownWidget: FC<CountdownWidgetProps> = ({
       dragHandleProps={dragHandleProps}
       isDragging={isDragging}
     >
-      <div className="flex flex-col gap-3 p-4">
+      <div className="flex flex-col gap-3">
         <NextUpLine event={nextEvent} />
         {!countdownInfo ? (
-          <div className="flex min-h-[100px] flex-col items-center justify-center text-muted-foreground">
-            <Timer className="h-8 w-8 mb-2 text-muted-foreground/40" />
-            <span className="text-sm">{dict.today.countdown.no_data}</span>
-          </div>
+          <EmptyState
+            icon={Timer}
+            title={dict.today.countdown.no_data}
+            description={dict.widgets.no_data_description}
+            size="sm"
+          />
         ) : (
           <div className="flex flex-col items-center gap-2 text-center">
-            <span className="text-4xl">{countdownInfo.emoji}</span>
+            <span className="text-xl">{countdownInfo.emoji}</span>
             {countdownInfo.type === "active" ? (
               <>
-                <div className="text-4xl font-bold tabular-nums text-primary">
+                <div className="text-xl font-bold tabular-nums text-primary">
                   {countdownInfo.days}
                 </div>
                 <div className="text-sm text-muted-foreground">

@@ -1,8 +1,14 @@
 {
   "today": {
+    "page_title": "Today",
     "schedule_title": "Today's Schedule",
     "noclass": "No Classes Today",
     "noclass_sub": "Enjoy your day off!",
+    "noclass_day": "{date} {weekday} · No classes",
+    "noclass_range": "{start}–{end} · No classes",
+    "noclass_range_sub": "Enjoy your days off!",
+    "noclass_expand": "Show each day",
+    "noclass_collapse": "Hide each day",
     "noclass_sem": "Enjoy your holiday!",
     "noclass_reminder": {
       "reminder": "Haven't chosen your courses yet?",
@@ -271,6 +277,24 @@
     "venues": "Venues",
     "bus": "Bus",
     "apps": "Apps"
+  },
+  "widgets": {
+    "drag_to_reorder": "Drag to reorder",
+    "remove": "Remove widget",
+    "weather_title": "Hsinchu Weather",
+    "weather_unavailable": "Weather unavailable",
+    "weather_unavailable_description": "There is no weather data available right now.",
+    "no_data_description": "There is no data to show right now.",
+    "rain_probability": "Rain probability",
+    "pinned_title": "Quick links",
+    "pinned_empty": "Pin shortcuts from the Apps page",
+    "notepad_title": "Notepad",
+    "notepad_placeholder": "Write your notes...",
+    "bus_title": "Campus Bus",
+    "no_departures": "No departures today",
+    "no_departures_description": "There are no campus bus departures to take today.",
+    "nanda_one": "Nanda 1",
+    "nanda_two": "Nanda 2"
   },
   "sports": {
     "title": "Sports Facilities",
@@ -749,9 +773,15 @@
     "t_score": "T-Score"
   },
   "calendar": {
+    "page_title": "Calendar",
     "upcoming_events": "Upcoming Events",
     "no_events": "No Upcoming Events",
     "no_events_sub": "There are no scheduled events",
+    "empty_title": "No upcoming events",
+    "empty_description": "Your calendar, classes, and NTHU dates will appear here.",
+    "no_events_range": "{start}–{end} · No upcoming events",
+    "no_events_expand": "Show each day",
+    "no_events_collapse": "Hide each day",
     "add_event": "Add Event",
     "accessibility": {
       "calendar": "Calendar",
