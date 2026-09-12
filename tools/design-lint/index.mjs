@@ -324,7 +324,12 @@ function readingColumnMatches(filePath, source) {
 }
 
 function spacingVocabMatches(source) {
-  const allowedSteps = new Set(["1", "2", "4", "6"]);
+  // 1.5 and 3 are the density steps dense chrome legitimately needs — sidebar
+  // nav items, toolbars, reorder rows. They were missing, so a previous pass
+  // "fixed" the sidebar from gap-3/py-1.5 up to gap-4/py-2 and made the nav
+  // looser than anyone asked for. See LANGUAGE.md §3: this rule may only push
+  // spacing down, never up.
+  const allowedSteps = new Set(["1", "1.5", "2", "3", "4", "6"]);
   return classNameMatches(source, (token) => {
     const utility = utilityName(token);
     const spacing = utility.match(
