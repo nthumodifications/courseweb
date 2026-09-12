@@ -12,7 +12,7 @@ import { MinimalCourse } from "@/types/courses";
 import { createTimetableFromCourses } from "@/helpers/timetable";
 import Timetable from "@/components/Timetable/Timetable";
 import { renderTimetableSlot } from "@/helpers/timetable_course";
-import ErrorState from "@/components/Pages/ErrorState";
+import { ErrorState } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
 import {
   Badge,

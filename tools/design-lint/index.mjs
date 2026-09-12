@@ -4,8 +4,6 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(fileURLToPath(new URL("../..", import.meta.url)));
-const baselinePath = path.join(root, "tools", "design-lint", "baseline.json");
-
 const RULES = {
   "hardcoded-color": {
     description: "hardcoded gray/slate/zinc/neutral color utility",
@@ -27,6 +25,82 @@ const RULES = {
     pattern: /(?:^|[\s"'`])(?:[\w-]+:)*shadow-(?:sm|md)(?=$|[\s"'`])/g,
   },
 };
+
+// These are narrowly scoped data/overlay exceptions plus one admin-owned line
+// outside this migration. Keep every entry tied to a file, line, and utility so
+// a new violation still fails.
+const ALLOWED_FINDINGS = [
+  {
+    ruleName: "hardcoded-color",
+    file: "apps/web/src/app/[lang]/(mods-pages)/student/planner/lib/folder-colors.ts",
+    line: 2,
+    value: "bg-neutral-500",
+    reason: "user-selected course-folder palette",
+  },
+  {
+    ruleName: "hardcoded-color",
+    file: "apps/web/src/components/Today/WeatherIcon.tsx",
+    line: 25,
+    value: "text-gray-400",
+    reason: "weather icon data palette",
+  },
+  {
+    ruleName: "hardcoded-color",
+    file: "apps/web/src/components/Today/WeatherIcon.tsx",
+    line: 29,
+    value: "text-gray-300",
+    reason: "weather icon data palette",
+  },
+  {
+    ruleName: "dark-color",
+    file: "apps/web/src/app/[lang]/admin/announcements/page.tsx",
+    line: 266,
+    value: "dark:border-destructive",
+    reason: "admin route owned outside this migration",
+  },
+  {
+    ruleName: "overlay-shadow",
+    file: "apps/web/src/app/[lang]/admin/page.tsx",
+    line: 75,
+    value: "shadow-sm",
+    reason: "floating chart tooltip",
+  },
+  {
+    ruleName: "overlay-shadow",
+    file: "apps/web/src/components/Calendar/calendar_hook.tsx",
+    line: 700,
+    value: "shadow-sm",
+    reason: "fixed replication status toast",
+  },
+  {
+    ruleName: "overlay-shadow",
+    file: "packages/ui/src/components/ui/custom_timeselect.tsx",
+    line: 162,
+    value: "shadow-md",
+    reason: "absolute time-picker dropdown",
+  },
+  {
+    ruleName: "overlay-shadow",
+    file: "packages/ui/src/components/ui/hover-card.tsx",
+    line: 21,
+    value: "shadow-md",
+    reason: "floating hover card",
+  },
+  {
+    ruleName: "overlay-shadow",
+    file: "packages/ui/src/components/ui/select.tsx",
+    line: 78,
+    value: "shadow-md",
+    reason: "floating select dropdown",
+  },
+  {
+    ruleName: "overlay-shadow",
+    file: "packages/ui/src/components/ui/tooltip.tsx",
+    line: 22,
+    value: "shadow-md",
+    reason: "floating tooltip",
+  },
+];
 
 const sourceRoots = [
   path.join(root, "apps", "web", "src"),
@@ -76,7 +150,7 @@ function matchesFor(ruleName, filePath, source) {
   return [...source.matchAll(new RegExp(pattern.source, pattern.flags))].map(
     (match) => ({
       line: lineNumber(source, match.index ?? 0),
-      value: match[0].trim(),
+      value: match[0].trim().replace(/^["'`]+/, ""),
     }),
   );
 }
@@ -87,7 +161,6 @@ function emptyCounts() {
   );
 }
 
-const violations = emptyCounts();
 const findings = [];
 
 for (const sourceRoot of sourceRoots) {
@@ -96,8 +169,6 @@ for (const sourceRoot of sourceRoots) {
     const relativePath = normalize(filePath);
     for (const ruleName of Object.keys(RULES)) {
       const matches = matchesFor(ruleName, filePath, source);
-      if (matches.length === 0) continue;
-      violations[ruleName][relativePath] = matches.length;
       findings.push(
         ...matches.map((match) => ({
           ruleName,
@@ -109,42 +180,21 @@ for (const sourceRoot of sourceRoots) {
   }
 }
 
-if (process.argv.includes("--write-baseline")) {
-  const generatedBaseline = {
-    version: 1,
-    rules: Object.fromEntries(
-      Object.keys(RULES).map((ruleName) => [
-        ruleName,
-        { files: violations[ruleName], cleaned: [] },
-      ]),
-    ),
-  };
-  fs.writeFileSync(
-    baselinePath,
-    `${JSON.stringify(generatedBaseline, null, 2)}\n`,
+const isAllowedFinding = (finding) =>
+  ALLOWED_FINDINGS.some(
+    (allowed) =>
+      allowed.ruleName === finding.ruleName &&
+      allowed.file === finding.file &&
+      allowed.line === finding.line &&
+      allowed.value === finding.value,
   );
-  console.log(`Wrote ${normalize(baselinePath)}`);
-  process.exit(0);
-}
 
-let baseline;
-try {
-  baseline = JSON.parse(fs.readFileSync(baselinePath, "utf8"));
-} catch (error) {
-  console.error(`Unable to read ${normalize(baselinePath)}: ${error.message}`);
-  process.exit(1);
+const newFindings = findings.filter((finding) => !isAllowedFinding(finding));
+const violations = emptyCounts();
+for (const finding of newFindings) {
+  violations[finding.ruleName][finding.file] =
+    (violations[finding.ruleName][finding.file] ?? 0) + 1;
 }
-
-const newFindings = findings.filter(({ ruleName, file }) => {
-  const ruleBaseline = baseline.rules?.[ruleName] ?? {};
-  const allowed = ruleBaseline.files?.[file];
-  const cleaned = ruleBaseline.cleaned?.includes(file);
-  return (
-    cleaned ||
-    typeof allowed !== "number" ||
-    violations[ruleName][file] > allowed
-  );
-});
 
 console.log("Design lint summary");
 for (const [ruleName, rule] of Object.entries(RULES)) {
@@ -155,23 +205,8 @@ for (const [ruleName, rule] of Object.entries(RULES)) {
   console.log(`  ${ruleName}: ${total} (${rule.description})`);
 }
 
-const cleanedFiles = [];
-for (const [ruleName, ruleBaseline] of Object.entries(baseline.rules ?? {})) {
-  for (const file of Object.keys(ruleBaseline.files ?? {})) {
-    if (
-      !violations[ruleName]?.[file] &&
-      !ruleBaseline.cleaned?.includes(file)
-    ) {
-      cleanedFiles.push(`${ruleName}: ${file}`);
-    }
-  }
-}
-if (cleanedFiles.length > 0) {
-  console.log(`Cleaned baseline entries: ${cleanedFiles.length}`);
-}
-
 if (newFindings.length > 0) {
-  console.error("New design-lint violations:");
+  console.error("Unallowlisted design-lint violations:");
   for (const finding of newFindings) {
     console.error(
       `  ${finding.file}:${finding.line} ${finding.ruleName} ${finding.value}`,
@@ -180,4 +215,4 @@ if (newFindings.length > 0) {
   process.exit(1);
 }
 
-console.log("No new design-lint violations.");
+console.log("No unallowlisted design-lint violations.");

@@ -24,7 +24,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
 import useDictionary from "@/dictionaries/useDictionary";
-import { SegmentedControl } from "@/components/SegmentedControl";
+import { SegmentedControl } from "@courseweb/ui";
 import { SettingItem } from "./SettingItem";
 
 const SortableWidgetRow = ({

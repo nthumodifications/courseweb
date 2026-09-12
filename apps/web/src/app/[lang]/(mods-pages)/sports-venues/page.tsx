@@ -19,7 +19,7 @@ import useTime from "@/hooks/useTime";
 import { semesterInfo } from "@courseweb/shared";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useSettings } from "@/hooks/contexts/settings";
-import ErrorState from "@/components/Pages/ErrorState";
+import { ErrorState } from "@courseweb/ui";
 
 type OccupancyItem = {
   project_id: string;

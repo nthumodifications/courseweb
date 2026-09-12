@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import { cn } from "@/lib/utils";
+
+import { cn } from "../../lib/utils";
 
 export interface SegmentedControlOption<Value extends string> {
   value: Value;
@@ -7,7 +8,7 @@ export interface SegmentedControlOption<Value extends string> {
   ariaLabel?: string;
 }
 
-interface SegmentedControlProps<Value extends string> {
+export interface SegmentedControlProps<Value extends string> {
   value: Value;
   options: readonly SegmentedControlOption<Value>[];
   onValueChange: (value: Value) => void;

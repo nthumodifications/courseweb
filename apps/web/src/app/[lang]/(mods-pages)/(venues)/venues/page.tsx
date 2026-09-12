@@ -17,7 +17,7 @@ import VenueList from "@/components/Venue/VenueList";
 import client from "@/config/api";
 import useDictionary from "@/dictionaries/useDictionary";
 import { MinimalCourse } from "@/types/courses";
-import ErrorState from "@/components/Pages/ErrorState";
+import { ErrorState } from "@courseweb/ui";
 import { MapPin } from "lucide-react";
 
 const VenueTimetableDynamic = lazy(
