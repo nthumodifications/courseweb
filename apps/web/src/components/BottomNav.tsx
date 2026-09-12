@@ -66,23 +66,26 @@ const BottomNav: FC = () => {
   const colCount = visibleLinks.length || 4;
 
   return (
-    <div className="fixed w-full bottom-0 md:hidden flex-col h-[5rem] bg-background z-50 flex">
+    <div className="fixed bottom-0 z-50 flex h-[var(--bottom-nav-height)] w-full flex-col bg-background md:hidden">
       <Separator />
       <nav
-        className={`grid items-center py-2.5`}
+        className="grid items-center py-2"
+        aria-label={dict.navigation.bottom_aria}
         style={{ gridTemplateColumns: `repeat(${colCount}, 1fr)` }}
       >
         {visibleLinks.map((link) => (
-          <div
-            className={`flex flex-col items-center gap-1 ${link.href === pathname ? "text-primary" : "text-muted-foreground"}`}
+          <button
+            type="button"
+            className={`flex min-h-10 flex-col items-center justify-center gap-1 rounded-md px-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${link.href === pathname ? "text-primary" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"}`}
             key={link.id}
             onClick={() => navigate(link.href)}
+            aria-current={link.href === pathname ? "page" : undefined}
           >
             <span className="w-6 h-6">{link.icon}</span>
             <span className="text-xs font-semibold select-none">
               {link.title}
             </span>
-          </div>
+          </button>
         ))}
       </nav>
       <Separator />

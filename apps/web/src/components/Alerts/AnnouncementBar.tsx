@@ -13,16 +13,16 @@ const severityStyles: Record<
   { className: string; Icon: typeof Info }
 > = {
   info: {
-    className: "border-border bg-muted text-foreground",
+    className: "border-info/40 bg-info text-info-foreground",
     Icon: Info,
   },
   warning: {
-    className: "border-border bg-accent text-accent-foreground",
+    className: "border-warning/40 bg-warning text-warning-foreground",
     Icon: AlertTriangle,
   },
   error: {
     className:
-      "border-destructive/50 bg-destructive/10 text-destructive dark:border-destructive",
+      "border-destructive/50 bg-destructive text-destructive-foreground",
     Icon: AlertTriangle,
   },
 };
@@ -127,7 +127,7 @@ const AnnouncementBar = () => {
         (isInternalLink ? (
           <Link
             to={internalHref!}
-            className="shrink-0 underline underline-offset-2"
+            className="shrink-0 rounded-sm underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
             {linkLabel}
           </Link>
@@ -136,7 +136,7 @@ const AnnouncementBar = () => {
             href={rawLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="shrink-0 underline underline-offset-2"
+            className="shrink-0 rounded-sm underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
             {linkLabel}
           </a>

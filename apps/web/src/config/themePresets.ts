@@ -1,6 +1,17 @@
-import type { ThemePreset, ThemePresetColors } from "@/types/theme";
+import type { ThemeCSSVar, ThemePreset } from "@/types/theme";
 
-const SEMANTIC_STATUS_COLORS: Pick<ThemePresetColors, "light" | "dark"> = {
+type SemanticStatusToken =
+  | "success"
+  | "success-foreground"
+  | "warning"
+  | "warning-foreground"
+  | "info"
+  | "info-foreground";
+
+const SEMANTIC_STATUS_COLORS: {
+  light: Record<SemanticStatusToken, string>;
+  dark: Record<SemanticStatusToken, string>;
+} = {
   light: {
     success: "142 72% 29%",
     "success-foreground": "0 0% 100%",
@@ -19,7 +30,14 @@ const SEMANTIC_STATUS_COLORS: Pick<ThemePresetColors, "light" | "dark"> = {
   },
 };
 
-const THEME_PRESETS_BASE: ThemePreset[] = [
+type ThemePresetInput = Omit<ThemePreset, "colors"> & {
+  colors: {
+    light: Partial<Record<ThemeCSSVar, string>>;
+    dark: Partial<Record<ThemeCSSVar, string>>;
+  };
+};
+
+const THEME_PRESETS_BASE: ThemePresetInput[] = [
   {
     id: "nthumods",
     label: "NTHUMods",
@@ -892,12 +910,34 @@ const THEME_PRESETS_BASE: ThemePreset[] = [
   },
 ];
 
+const completeColorMode = (
+  colors: Partial<Record<ThemeCSSVar, string>>,
+  statusColors: Record<SemanticStatusToken, string>,
+): Record<ThemeCSSVar, string> => {
+  const background = colors.background ?? "0 0% 100%";
+  const foreground = colors.foreground ?? "240 10% 3.9%";
+
+  return {
+    background,
+    foreground,
+    card: colors.card ?? background,
+    "card-foreground": colors["card-foreground"] ?? foreground,
+    popover: colors.popover ?? background,
+    "popover-foreground": colors["popover-foreground"] ?? foreground,
+    ...colors,
+    ...statusColors,
+  } as Record<ThemeCSSVar, string>;
+};
+
 export const THEME_PRESETS: ThemePreset[] = THEME_PRESETS_BASE.map(
   (preset) => ({
     ...preset,
     colors: {
-      light: { ...preset.colors.light, ...SEMANTIC_STATUS_COLORS.light },
-      dark: { ...preset.colors.dark, ...SEMANTIC_STATUS_COLORS.dark },
+      light: completeColorMode(
+        preset.colors.light,
+        SEMANTIC_STATUS_COLORS.light,
+      ),
+      dark: completeColorMode(preset.colors.dark, SEMANTIC_STATUS_COLORS.dark),
     },
   }),
 );

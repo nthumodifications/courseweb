@@ -1,43 +1,118 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
+import { Check, Link2, RotateCcw } from "lucide-react";
+import { Button } from "@courseweb/ui";
+import {
+  SegmentedControl,
+  type SegmentedControlOption,
+} from "@/components/SegmentedControl";
+import useDictionary from "@/dictionaries/useDictionary";
 import { useTheme } from "@/hooks/contexts/theme";
 import { THEME_PRESETS } from "@/config/themePresets";
-import { ThemeBackground, ThemeDensity, ThemeRadius } from "@/types/theme";
-import { FONT_DEFINITIONS, FONT_ORDER, ThemeFont } from "@/types/theme";
-import { cn } from "@/lib/utils";
-import { Button } from "@courseweb/ui";
-import { RotateCcw, Link2, Check } from "lucide-react";
-import { useLocation } from "react-router-dom";
-import useDictionary from "@/dictionaries/useDictionary";
+import {
+  FONT_DEFINITIONS,
+  FONT_ORDER,
+  RADIUS_VALUES,
+  type ThemeBackground,
+  type ThemeDensity,
+  type ThemeFont,
+  type ThemeRadius,
+} from "@/types/theme";
+import { SettingItem } from "./SettingItem";
 
-const RADIUS_OPTIONS: { value: ThemeRadius; label: string }[] = [
-  { value: "none", label: "□" },
-  { value: "sm", label: "▢" },
-  { value: "md", label: "▣" },
-  { value: "lg", label: "⬜" },
-  { value: "xl", label: "●" },
+const RADIUS_OPTIONS: ThemeRadius[] = ["none", "sm", "md", "lg", "xl"];
+const DENSITY_OPTIONS: ThemeDensity[] = ["compact", "comfortable", "spacious"];
+const BACKGROUND_OPTIONS: ThemeBackground[] = [
+  "solid",
+  "gradient",
+  "dots",
+  "lines",
+  "noise",
 ];
 
-const DENSITY_OPTIONS: {
-  value: ThemeDensity;
-  label: string;
-  labelZh: string;
-}[] = [
-  { value: "compact", label: "Compact", labelZh: "緊湊" },
-  { value: "comfortable", label: "Default", labelZh: "適中" },
-  { value: "spacious", label: "Spacious", labelZh: "寬鬆" },
-];
+const getThemeLabel = (dict: ReturnType<typeof useDictionary>, id: string) =>
+  dict.settings.appearance.preset.themes[
+    id as keyof typeof dict.settings.appearance.preset.themes
+  ];
 
-const BACKGROUND_OPTIONS: {
-  value: ThemeBackground;
-  label: string;
-  icon: string;
-}[] = [
-  { value: "solid", label: "Solid", icon: "■" },
-  { value: "gradient", label: "Gradient", icon: "⬛" },
-  { value: "dots", label: "Dots", icon: "⋮⋮" },
-  { value: "lines", label: "Lines", icon: "≡" },
-  { value: "noise", label: "Noise", icon: "▒" },
-];
+const getFontLabel = (
+  dict: ReturnType<typeof useDictionary>,
+  font: ThemeFont,
+) => dict.settings.appearance.font.options[font];
+
+const RadiusSample = ({ value }: { value: ThemeRadius }) => (
+  <span
+    className="h-6 w-8 border-2 border-current"
+    style={{ borderRadius: RADIUS_VALUES[value] }}
+    aria-hidden="true"
+  />
+);
+
+const BackgroundSample = ({ value }: { value: ThemeBackground }) => {
+  if (value === "gradient") {
+    return (
+      <span
+        className="h-6 w-10 rounded-sm border border-border bg-gradient-to-br from-background to-primary"
+        aria-hidden="true"
+      />
+    );
+  }
+  if (value === "dots") {
+    return (
+      <span
+        className="h-6 w-10 rounded-sm border border-border bg-[radial-gradient(hsl(var(--border))_1px,transparent_1px)] bg-[size:6px_6px]"
+        aria-hidden="true"
+      />
+    );
+  }
+  if (value === "lines") {
+    return (
+      <span
+        className="h-6 w-10 rounded-sm border border-border bg-[repeating-linear-gradient(0deg,transparent,transparent_5px,hsl(var(--border))_5px,hsl(var(--border))_6px)]"
+        aria-hidden="true"
+      />
+    );
+  }
+  if (value === "noise") {
+    return (
+      <span
+        className="h-6 w-10 rounded-sm border border-border bg-muted"
+        aria-hidden="true"
+      />
+    );
+  }
+  return (
+    <span
+      className="h-6 w-10 rounded-sm border border-border bg-background"
+      aria-hidden="true"
+    />
+  );
+};
+
+const ThemePreview = ({
+  bg,
+  fg,
+  accent,
+}: {
+  bg: string;
+  fg: string;
+  accent: string;
+}) => (
+  <span
+    className="flex h-8 w-full items-center justify-center gap-1 rounded-sm"
+    style={{ backgroundColor: bg }}
+    aria-hidden="true"
+  >
+    <span
+      className="h-3 w-3 rounded-full"
+      style={{ backgroundColor: accent }}
+    />
+    <span
+      className="h-3 w-3 rounded-full opacity-60"
+      style={{ backgroundColor: fg }}
+    />
+  </span>
+);
 
 export const ThemeSection = () => {
   const {
@@ -55,24 +130,20 @@ export const ThemeSection = () => {
   const location = useLocation();
   const dict = useDictionary();
 
-  // Import theme from URL ?theme= param on mount
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const encoded = params.get("theme");
-    if (encoded) {
-      try {
-        const decoded = JSON.parse(atob(encoded));
-        if (decoded.version === 1 && decoded.preset) {
-          if (decoded.preset) setPreset(decoded.preset);
-          if (decoded.radius) setRadius(decoded.radius);
-          if (decoded.fontScale) setFontScale(decoded.fontScale);
-          if (decoded.density) setDensity(decoded.density);
-        }
-      } catch {
-        // ignore malformed theme param
-      }
+    const encoded = new URLSearchParams(location.search).get("theme");
+    if (!encoded) return;
+    try {
+      const decoded = JSON.parse(atob(encoded));
+      if (decoded.version !== 1 || !decoded.preset) return;
+      if (decoded.preset) setPreset(decoded.preset);
+      if (decoded.radius) setRadius(decoded.radius);
+      if (decoded.fontScale) setFontScale(decoded.fontScale);
+      if (decoded.density) setDensity(decoded.density);
+    } catch {
+      // Ignore malformed shared themes.
     }
-  }, []);
+  }, [location.search, setDensity, setFontScale, setPreset, setRadius]);
 
   const handleShare = () => {
     try {
@@ -83,7 +154,7 @@ export const ThemeSection = () => {
         setTimeout(() => setCopied(false), 2000);
       });
     } catch {
-      // ignore clipboard errors
+      // Ignore clipboard errors.
     }
   };
 
@@ -91,10 +162,10 @@ export const ThemeSection = () => {
     const r = parseInt(hex.slice(1, 3), 16) / 255;
     const g = parseInt(hex.slice(3, 5), 16) / 255;
     const b = parseInt(hex.slice(5, 7), 16) / 255;
-    const max = Math.max(r, g, b),
-      min = Math.min(r, g, b);
-    let h = 0,
-      s = 0;
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    let h = 0;
+    let s = 0;
     const l = (max + min) / 2;
     if (max !== min) {
       const d = max - min;
@@ -114,257 +185,248 @@ export const ThemeSection = () => {
     return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
   };
 
+  const brandPreset = THEME_PRESETS.find((preset) => preset.id === "nthumods");
+  const extraPresets = THEME_PRESETS.filter(
+    (preset) => preset.id !== "nthumods",
+  );
+  const fontOptions = useMemo(
+    () => [...FONT_ORDER.chinese, ...FONT_ORDER.latin],
+    [],
+  );
+
+  const presetOption = (preset: (typeof THEME_PRESETS)[number]) => ({
+    value: preset.id,
+    label: (
+      <span className="flex min-w-0 flex-col items-center gap-1">
+        <ThemePreview {...preset.preview} />
+        <span className="max-w-full truncate">
+          {getThemeLabel(dict, preset.id)}
+        </span>
+      </span>
+    ),
+    ariaLabel: getThemeLabel(dict, preset.id),
+  });
+
+  const fontSegmentOptions: readonly SegmentedControlOption<ThemeFont>[] =
+    fontOptions.map((font) => ({
+      value: font,
+      label: getFontLabel(dict, font),
+      ariaLabel: getFontLabel(dict, font),
+    }));
+
+  const radiusSegmentOptions: readonly SegmentedControlOption<ThemeRadius>[] =
+    RADIUS_OPTIONS.map((value) => ({
+      value,
+      label: (
+        <span className="flex flex-col items-center gap-1">
+          <RadiusSample value={value} />
+          <span>{dict.settings.appearance.radius.options[value]}</span>
+        </span>
+      ),
+      ariaLabel: dict.settings.appearance.radius.options[value],
+    }));
+
+  const densitySegmentOptions: readonly SegmentedControlOption<ThemeDensity>[] =
+    DENSITY_OPTIONS.map((value) => ({
+      value,
+      label: dict.settings.appearance.density[value],
+    }));
+
+  const backgroundSegmentOptions: readonly SegmentedControlOption<ThemeBackground>[] =
+    BACKGROUND_OPTIONS.map((value) => ({
+      value,
+      label: (
+        <span className="flex flex-col items-center gap-1">
+          <BackgroundSample value={value} />
+          <span>{dict.settings.appearance.background[value]}</span>
+        </span>
+      ),
+      ariaLabel: dict.settings.appearance.background[value],
+    }));
+
   return (
     <div className="flex flex-col gap-6">
-      {/* Preset Grid */}
-      <div>
-        <h3 className="text-sm font-medium mb-3">
-          {dict.settings.appearance.preset.title}
-        </h3>
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
-          {THEME_PRESETS.map((preset) => (
-            <button
-              key={preset.id}
-              onClick={() => setPreset(preset.id)}
-              className={cn(
-                "group flex flex-col items-center gap-1.5 p-2 rounded-lg border-2 transition-colors",
-                config.preset === preset.id
-                  ? "border-primary shadow-md"
-                  : "border-transparent hover:border-muted-foreground/30",
-              )}
-              title={preset.label}
-            >
-              <div
-                className="w-full h-10 rounded-md flex items-center justify-center overflow-hidden"
-                style={{ backgroundColor: preset.preview.bg }}
-              >
-                <div className="flex gap-1">
-                  <div
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: preset.preview.accent }}
-                  />
-                  <div
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: preset.preview.fg, opacity: 0.6 }}
-                  />
-                </div>
-              </div>
-              <span className="text-[10px] text-muted-foreground text-center leading-tight">
-                {preset.label}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
+      {brandPreset && (
+        <SettingItem
+          title={dict.settings.appearance.preset.brand_title}
+          description={dict.settings.appearance.preset.brand_description}
+          control={
+            <SegmentedControl
+              value={config.preset}
+              options={[presetOption(brandPreset)]}
+              onValueChange={setPreset}
+              aria-label={dict.settings.appearance.preset.title}
+              className="sm:w-56"
+              optionClassName="py-2"
+            />
+          }
+        />
+      )}
 
-      {/* Font */}
-      <div>
-        <h3 className="text-sm font-medium mb-3">
-          {dict.settings.appearance.font.title}
-        </h3>
-        {(["chinese", "latin"] as const).map((script) => (
-          <div key={script} className="mb-3 last:mb-0">
-            <p className="text-xs text-muted-foreground mb-2">
-              {script === "chinese"
-                ? dict.settings.appearance.font.chinese
-                : dict.settings.appearance.font.latin}
-            </p>
-            <div className="flex gap-2 flex-wrap">
-              {FONT_ORDER[script].map((f) => (
-                <button
-                  key={f}
-                  onClick={() => setFont(f)}
-                  className={cn(
-                    "px-3 py-1.5 text-xs border rounded transition-all",
-                    (config.font ?? "inter") === f
-                      ? "border-primary bg-primary/10 text-primary font-medium"
-                      : "border-border hover:border-muted-foreground",
-                  )}
-                  style={{ fontFamily: FONT_DEFINITIONS[f].cssFamily }}
-                >
-                  {FONT_DEFINITIONS[f].label}
-                </button>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Border Radius */}
-      <div>
-        <h3 className="text-sm font-medium mb-3">
-          {dict.settings.appearance.radius.title}
-        </h3>
-        <div className="flex gap-2 flex-wrap">
-          {RADIUS_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() => setRadius(opt.value)}
-              className={cn(
-                "flex flex-col items-center gap-1 px-4 py-2 border rounded transition-all text-xs",
-                config.radius === opt.value
-                  ? "border-primary bg-primary/10 text-primary font-medium"
-                  : "border-border hover:border-muted-foreground",
-              )}
-            >
-              <div
-                className="w-8 h-8 border-2 border-current"
-                style={{
-                  borderRadius:
-                    opt.value === "none"
-                      ? "0"
-                      : opt.value === "sm"
-                        ? "3px"
-                        : opt.value === "md"
-                          ? "6px"
-                          : opt.value === "lg"
-                            ? "10px"
-                            : "999px",
-                }}
-              />
-              <span className="capitalize">
-                {dict.settings.appearance.radius.options[opt.value]}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Font Scale */}
-      <div>
-        <h3 className="text-sm font-medium mb-1">
-          {dict.settings.appearance.font_scale.title}
-        </h3>
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-muted-foreground">
-            {dict.settings.appearance.font_scale.small}
-          </span>
-          <input
-            type="range"
-            min={0.875}
-            max={1.25}
-            step={0.125}
-            value={config.fontScale}
-            onChange={(e) => setFontScale(parseFloat(e.target.value))}
-            className="flex-1 accent-primary"
+      <SettingItem
+        title={dict.settings.appearance.preset.extra_title}
+        description={dict.settings.appearance.preset.extra_description}
+        control={
+          <SegmentedControl
+            value={config.preset}
+            options={extraPresets.map(presetOption)}
+            onValueChange={setPreset}
+            aria-label={dict.settings.appearance.preset.extra_title}
+            layout="grid"
+            className="grid-cols-2 sm:grid-cols-3 md:grid-cols-5"
+            optionClassName="py-2"
           />
-          <span className="text-xs text-muted-foreground">
-            {dict.settings.appearance.font_scale.large}
-          </span>
-          <span className="text-xs font-mono text-muted-foreground w-10 text-right">
-            {Math.round(config.fontScale * 100)}%
-          </span>
-        </div>
-      </div>
+        }
+      />
 
-      {/* Density */}
-      <div>
-        <h3 className="text-sm font-medium mb-3">
-          {dict.settings.appearance.density.title}
-        </h3>
-        <div className="flex gap-2">
-          {DENSITY_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() => setDensity(opt.value)}
-              className={cn(
-                "flex-1 py-2 px-3 text-xs border rounded transition-all",
-                config.density === opt.value
-                  ? "border-primary bg-primary/10 text-primary font-medium"
-                  : "border-border hover:border-muted-foreground",
-              )}
-            >
-              <div>{dict.settings.appearance.density[opt.value]}</div>
-            </button>
-          ))}
-        </div>
-      </div>
+      <SettingItem
+        title={dict.settings.appearance.font.title}
+        description={dict.settings.appearance.font.description}
+        control={
+          <SegmentedControl
+            value={config.font ?? "inter"}
+            options={fontSegmentOptions}
+            onValueChange={setFont}
+            aria-label={dict.settings.appearance.font.title}
+            layout="grid"
+            className="grid-cols-2 sm:grid-cols-3 md:grid-cols-5"
+          />
+        }
+      />
 
-      {/* Background */}
-      <div>
-        <h3 className="text-sm font-medium mb-3">
-          {dict.settings.appearance.background.title}
-        </h3>
-        <div className="flex gap-2 flex-wrap">
-          {BACKGROUND_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() => setBackground(opt.value)}
-              className={cn(
-                "flex items-center gap-2 py-2 px-3 text-xs border rounded transition-all",
-                config.background === opt.value
-                  ? "border-primary bg-primary/10 text-primary font-medium"
-                  : "border-border hover:border-muted-foreground",
-              )}
-            >
-              <span className="font-mono">{opt.icon}</span>
-              {dict.settings.appearance.background[opt.value]}
-            </button>
-          ))}
-        </div>
-        {config.background === "gradient" && (
-          <div className="mt-3 flex gap-3 items-center flex-wrap">
-            <label className="text-xs text-muted-foreground">
-              {dict.settings.appearance.background.from}
-            </label>
+      <SettingItem
+        title={dict.settings.appearance.radius.title}
+        description={dict.settings.appearance.radius.description}
+        control={
+          <SegmentedControl
+            value={config.radius}
+            options={radiusSegmentOptions}
+            onValueChange={setRadius}
+            aria-label={dict.settings.appearance.radius.title}
+            layout="grid"
+            className="grid-cols-3 sm:grid-cols-5"
+            optionClassName="py-2"
+          />
+        }
+      />
+
+      <SettingItem
+        title={dict.settings.appearance.font_scale.title}
+        description={dict.settings.appearance.font_scale.description}
+        control={
+          <div className="flex w-full items-center gap-3 sm:w-72">
+            <span className="text-xs text-muted-foreground">
+              {dict.settings.appearance.font_scale.small}
+            </span>
+            <input
+              type="range"
+              min={0.875}
+              max={1.25}
+              step={0.125}
+              value={config.fontScale}
+              onChange={(event) => setFontScale(parseFloat(event.target.value))}
+              aria-label={dict.settings.appearance.font_scale.title}
+              className="min-w-0 flex-1 accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            />
+            <span className="text-xs text-muted-foreground">
+              {dict.settings.appearance.font_scale.large}
+            </span>
+            <span className="w-10 text-right font-mono text-xs text-muted-foreground">
+              {Math.round(config.fontScale * 100)}%
+            </span>
+          </div>
+        }
+      />
+
+      <SettingItem
+        title={dict.settings.appearance.density.title}
+        description={dict.settings.appearance.density.description}
+        control={
+          <SegmentedControl
+            value={config.density}
+            options={densitySegmentOptions}
+            onValueChange={setDensity}
+            aria-label={dict.settings.appearance.density.title}
+            className="sm:w-72"
+          />
+        }
+      />
+
+      <SettingItem
+        title={dict.settings.appearance.background.title}
+        description={dict.settings.appearance.background.description}
+        control={
+          <div className="flex w-full flex-col gap-3 sm:w-auto">
+            <SegmentedControl
+              value={config.background}
+              options={backgroundSegmentOptions}
+              onValueChange={setBackground}
+              aria-label={dict.settings.appearance.background.title}
+              layout="grid"
+              className="grid-cols-3 sm:grid-cols-5"
+              optionClassName="py-2"
+            />
+            {config.background === "gradient" && (
+              <div className="flex flex-wrap items-center gap-3">
+                <label className="text-xs text-muted-foreground">
+                  {dict.settings.appearance.background.from}
+                  <input
+                    type="color"
+                    defaultValue="#7c5cbf"
+                    aria-label={dict.settings.appearance.background.from}
+                    onChange={(event) =>
+                      setBackground("gradient", { from: event.target.value })
+                    }
+                    className="ml-2 h-8 w-10 rounded-md border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  />
+                </label>
+                <label className="text-xs text-muted-foreground">
+                  {dict.settings.appearance.background.to}
+                  <input
+                    type="color"
+                    defaultValue="#5e81ac"
+                    aria-label={dict.settings.appearance.background.to}
+                    onChange={(event) =>
+                      setBackground("gradient", { to: event.target.value })
+                    }
+                    className="ml-2 h-8 w-10 rounded-md border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  />
+                </label>
+              </div>
+            )}
+          </div>
+        }
+      />
+
+      <SettingItem
+        title={dict.settings.appearance.accent.title}
+        description={dict.settings.appearance.accent.description}
+        control={
+          <div className="flex w-full items-center gap-3 sm:w-auto">
             <input
               type="color"
               defaultValue="#7c5cbf"
-              onChange={(e) =>
-                setBackground("gradient", { from: e.target.value })
+              onChange={(event) =>
+                setAccentOverride(hexToHslTriple(event.target.value))
               }
-              className="w-10 h-8 rounded cursor-pointer"
+              aria-label={dict.settings.appearance.accent.pick}
+              className="h-9 w-10 rounded-md border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             />
-            <label className="text-xs text-muted-foreground">
-              {dict.settings.appearance.background.to}
-            </label>
-            <input
-              type="color"
-              defaultValue="#5e81ac"
-              onChange={(e) =>
-                setBackground("gradient", { to: e.target.value })
-              }
-              className="w-10 h-8 rounded cursor-pointer"
-            />
+            {config.accentOverride && (
+              <button
+                type="button"
+                onClick={() => setAccentOverride(undefined)}
+                className="min-h-10 rounded-md px-3 text-xs text-muted-foreground underline underline-offset-4 hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                {dict.settings.appearance.reset}
+              </button>
+            )}
           </div>
-        )}
-      </div>
+        }
+      />
 
-      {/* Accent Color Override */}
-      <div>
-        <h3 className="text-sm font-medium mb-3">
-          {dict.settings.appearance.accent.title}
-        </h3>
-        <div className="flex items-center gap-3">
-          <input
-            type="color"
-            defaultValue="#7c5cbf"
-            onChange={(e) => setAccentOverride(hexToHslTriple(e.target.value))}
-            className="w-10 h-9 rounded cursor-pointer border border-border"
-            title={dict.settings.appearance.accent.pick}
-          />
-          <span className="text-xs text-muted-foreground flex-1">
-            {dict.settings.appearance.accent.description}
-          </span>
-          {config.accentOverride && (
-            <button
-              onClick={() => setAccentOverride(undefined)}
-              className="text-xs text-muted-foreground hover:text-foreground underline"
-            >
-              {dict.settings.appearance.reset}
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Reset */}
-      <div className="flex justify-end gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleShare}
-          className="gap-2"
-        >
+      <div className="flex flex-wrap justify-end gap-2">
+        <Button variant="outline" size="sm" onClick={handleShare}>
           {copied ? (
             <Check className="h-3.5 w-3.5 text-primary" />
           ) : (
@@ -374,12 +436,7 @@ export const ThemeSection = () => {
             ? dict.settings.appearance.copied
             : dict.settings.appearance.share_theme}
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={resetTheme}
-          className="gap-2"
-        >
+        <Button variant="outline" size="sm" onClick={resetTheme}>
           <RotateCcw className="h-3.5 w-3.5" />
           {dict.settings.appearance.reset}
         </Button>
