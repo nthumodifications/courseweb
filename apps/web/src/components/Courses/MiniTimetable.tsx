@@ -32,7 +32,7 @@ const MiniTimetable = ({ semester }: { semester: Semester }) => {
 
   return (
     <div className="p-4 flex flex-col overflow-auto">
-      <span className="text-xs font-bold uppercase">
+      <span className="text-xs font-bold">
         {dict.course.timetable.title}
       </span>
       <div className="grid grid-cols-7 gap-1 mt-4">

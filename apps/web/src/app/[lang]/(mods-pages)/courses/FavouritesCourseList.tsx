@@ -6,7 +6,7 @@ import useDictionary from "@/dictionaries/useDictionary";
 import { useMemo } from "react";
 import { hasTimes } from "@/helpers/courses";
 import { MinimalCourse } from "@/types/courses";
-import { Button } from "@courseweb/ui";
+import { Button, EmptyState, ErrorState } from "@courseweb/ui";
 import { useCourseLink } from "@/components/Courses/CourseDialog";
 import {
   DndContext,
@@ -61,17 +61,17 @@ const TimetableCourseListItem = ({ course }: { course: MinimalCourse }) => {
 
   return (
     <div
-      className="flex flex-row gap-2 items-center max-w-3xl"
+      className="flex min-w-0 flex-row items-center gap-2 py-4"
       ref={setNodeRef}
       style={style}
     >
       <GripVertical
-        className="w-4 h-4 text-gray-400"
+        className="h-4 w-4 shrink-0 text-muted-foreground"
         {...attributes}
         {...listeners}
       />
       <div
-        className="flex flex-col flex-1 cursor-pointer"
+        className="flex min-w-0 flex-1 cursor-pointer"
         onClick={() => openCourse(course.raw_id)}
       >
         <span className="text-sm">
@@ -85,20 +85,20 @@ const TimetableCourseListItem = ({ course }: { course: MinimalCourse }) => {
             return (
               <div
                 key={index}
-                className="flex flex-row items-center space-x-2 text-gray-400"
+                className="flex flex-row items-center gap-2 text-muted-foreground"
               >
                 <span className="text-xs">{venue}</span>
                 {hasTimes(course as MinimalCourse) ? (
                   <span className="text-xs">{time}</span>
                 ) : (
-                  <span className="text-xs text-red-500">
+                  <span className="text-xs text-destructive">
                     {dict.course.details.missing_time}
                   </span>
                 )}
               </div>
             );
           }) || (
-            <span className="text-gray-400 text-xs">
+            <span className="text-muted-foreground text-xs">
               {dict.course.details.no_venues}
             </span>
           )}
@@ -107,7 +107,7 @@ const TimetableCourseListItem = ({ course }: { course: MinimalCourse }) => {
       <div className="flex flex-col gap-1 items-start">
         <div className="flex flex-row items-center space-x-1">
           <span className="text-base">{course.credits}</span>
-          <span className="text-xs text-gray-400">{dict.course.credits}</span>
+          <span className="text-xs text-muted-foreground">{dict.course.credits}</span>
         </div>
         <div className="flex flex-row">
           <Button
@@ -148,13 +148,14 @@ export const FavouritesCourseList = ({}: {}) => {
   const dict = useDictionary();
   const { favourites, setFavourites } = useUserTimetable();
 
-  const { data: courses = [], error } = useQuery({
+  const { data: courses = [], error, refetch } = useQuery({
     queryKey: ["courses", [...favourites].sort()],
     queryFn: async () => {
       if (favourites.length == 0) return [] as CourseDefinition[];
       const res = await client.course.$get({
         query: { courses: [...favourites].sort() },
       });
+      if (!res.ok) throw new Error("Failed to load favourite courses");
 
       const data = await res.json();
       if (!data) throw new Error("No data");
@@ -197,9 +198,22 @@ export const FavouritesCourseList = ({}: {}) => {
     }
   }
 
+  if (error) {
+    return (
+      <ErrorState
+        title={dict.common.load_error}
+        action={
+          <Button variant="outline" size="sm" onClick={() => void refetch()}>
+            {dict.common.try_again}
+          </Button>
+        }
+      />
+    );
+  }
+
   return (
-    <div className="flex flex-col gap-2">
-      <div className={`flex flex-col gap-4 px-4 flex-wrap`}>
+    <div className="flex flex-col">
+      <div className="flex flex-col divide-y divide-border px-4">
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
@@ -219,11 +233,7 @@ export const FavouritesCourseList = ({}: {}) => {
           </SortableContext>
         </DndContext>
         {displayCourseData.length == 0 && (
-          <div className="flex flex-col items-center space-y-4">
-            <span className="text-lg font-semibold text-gray-400">
-              {dict.course.details.no_favourites}
-            </span>
-          </div>
+          <EmptyState title={dict.course.details.no_favourites} />
         )}
       </div>
     </div>

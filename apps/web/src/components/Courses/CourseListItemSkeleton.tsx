@@ -1,46 +1,33 @@
-import { Button } from "@courseweb/ui";
 import { Skeleton } from "@courseweb/ui";
-import { ChevronDown } from "lucide-react";
 
 const CourseListItemSkeleton = () => {
   return (
-    <div className="relative @container">
-      <div className="flex flex-row gap-4">
-        <div className="flex-1">
-          <div className="mb-2 space-y-1 @md:pt-0">
-            <div className="flex flex-row gap-2 items-center">
-              <Skeleton className="min-w-[65px] py-1 px-2 text-sm select-none rounded-md w-[65px] h-[24px]" />
-              <Skeleton className="text-nthu-500 w-[150px] h-[20px]" />
-            </div>
-            <Skeleton className="font-semibold text-lg w-[300px] h-[28px]" />
-            <div className="space-y-1 self-start w-auto max-w-fit">
-              <Skeleton className="text-muted-foreground text-xs w-[120px] h-[16px]" />
-              <Skeleton className="text-muted-foreground text-xs w-[120px] h-[16px]" />
-            </div>
-            <div className="flex flex-wrap gap-1">
-              <Skeleton className="h-[20px] w-[60px] rounded-md" />
-              <Skeleton className="h-[20px] w-[60px] rounded-md" />
-              <Skeleton className="h-[20px] w-[60px] rounded-md" />
-            </div>
+    <div className="flex min-w-0 flex-row gap-4 py-4 @container">
+      <Skeleton className="mt-1 h-4 w-4 shrink-0 rounded-sm" />
+      <div className="min-w-0 flex-1">
+        <div className="mb-2 space-y-1 @md:pt-0">
+          <div className="flex flex-row items-center gap-2">
+            <Skeleton className="h-6 w-16 rounded-md" />
+            <Skeleton className="h-5 w-36" />
           </div>
-          <div className="space-y-2">
-            <Skeleton className="text-xs line-clamp-2 w-[500px] h-[32px]" />
-            <Skeleton className="text-xs whitespace-pre-line w-[500px] h-[20px]" />
-            <Skeleton className="text-xs whitespace-pre-line w-[500px] h-[20px]" />
-            <Button
-              variant="ghost"
-              size="sm"
-              className="p-0 h-5 text-xs"
-              disabled
-            >
-              <Skeleton className="w-[60px] h-[16px]" />
-              <ChevronDown className="h-3 w-3 ml-0.5 text-muted-foreground" />
-            </Button>
+          <Skeleton className="h-5 w-3/4" />
+          <div className="flex min-w-0 flex-col gap-1">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-4 w-32" />
+          </div>
+          <div className="flex flex-wrap gap-1">
+            <Skeleton className="h-5 w-16 rounded-md" />
+            <Skeleton className="h-5 w-16 rounded-md" />
           </div>
         </div>
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-5 w-full" />
+        </div>
       </div>
-      <div className="absolute top-0 right-2">
-        <Skeleton className="w-[40px] h-[40px] rounded-full" />
+      <div className="flex shrink-0 flex-col items-end gap-2">
+        <Skeleton className="h-4 w-12" />
+        <Skeleton className="h-10 w-10 rounded-full" />
       </div>
     </div>
   );

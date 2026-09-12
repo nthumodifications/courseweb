@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ErrorBoundary } from "react-error-boundary";
 import { AlertCircle, Loader2, RotateCcw } from "lucide-react";
-import { Button } from "@courseweb/ui";
+import { Button, ErrorState } from "@courseweb/ui";
 import { useParams, useSearchParams } from "react-router-dom";
 import {
   findCampusBuildingForIdentity,
@@ -44,14 +44,14 @@ function MapMessage({
   loading?: boolean;
 }) {
   return (
-    <div className="grid h-full min-h-[32rem] place-items-center bg-muted/30 px-6 text-center">
-      <div className="flex max-w-md flex-col items-center gap-3">
+    <div className="flex h-full min-h-[32rem] flex-col gap-2 bg-muted/30 p-4">
+      <div className="flex flex-col gap-2">
         {loading ? (
           <Loader2 className="h-7 w-7 animate-spin text-primary" />
         ) : (
           <AlertCircle className="h-7 w-7 text-muted-foreground" />
         )}
-        <h1 className="text-lg font-semibold text-foreground">{title}</h1>
+        <h1 className="font-bold text-foreground">{title}</h1>
         {detail && <p className="text-sm text-muted-foreground">{detail}</p>}
       </div>
     </div>
@@ -59,13 +59,14 @@ function MapMessage({
 }
 
 export default function CampusMapPage() {
-  const dict = useDictionary().campus_map;
+  const dictionary = useDictionary();
+  const dict = dictionary.campus_map;
   const { lang } = useParams<{ lang: string }>();
   const language = lang === "en" ? "en" : "zh";
   const [searchParams, setSearchParams] = useSearchParams();
   const [resetNonce, setResetNonce] = useState(0);
   const webglAvailable = useMemo(supportsWebGL, []);
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["nthu-campus-map", CAMPUS_MAP_DATA_CACHE_VERSION],
     queryFn: ({ signal }) => loadCampusMapData(signal),
     staleTime: Number.POSITIVE_INFINITY,
@@ -150,10 +151,16 @@ export default function CampusMapPage() {
   }
   if (error || !data) {
     return (
-      <MapMessage
-        title={dict.loadError}
-        detail={error instanceof Error ? error.message : undefined}
-      />
+      <div className="p-4">
+        <ErrorState
+          title={dict.loadError}
+          action={
+            <Button variant="outline" size="sm" onClick={() => void refetch()}>
+              {dictionary.common.try_again}
+            </Button>
+          }
+        />
+      </div>
     );
   }
   if (!webglAvailable) {
@@ -189,7 +196,7 @@ export default function CampusMapPage() {
         />
       </ErrorBoundary>
 
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start justify-between gap-2 p-3 md:p-4">
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start justify-between gap-2 p-4">
         <div className="w-full max-w-sm">
           <MapSearch
             availableIdentityIds={availableIdentityIds}
@@ -203,7 +210,7 @@ export default function CampusMapPage() {
           />
           {requestWarning && (
             <p
-              className="pointer-events-auto mt-2 rounded-lg border border-amber-500/40 bg-background/95 px-3 py-2 text-sm text-amber-700 shadow dark:text-amber-300"
+              className="pointer-events-auto mt-2 rounded-lg border border-destructive/40 bg-background/95 px-2 py-2 text-sm text-destructive"
               role="status"
             >
               {requestWarning}
@@ -226,7 +233,6 @@ export default function CampusMapPage() {
             type="button"
             variant="secondary"
             size="icon"
-            className="shadow-lg"
             aria-label={dict.resetCamera}
             title={dict.resetCamera}
             onClick={resetCamera}
@@ -237,7 +243,7 @@ export default function CampusMapPage() {
       </div>
 
       {selectedFeature && (
-        <div className="pointer-events-none absolute bottom-10 left-0 z-10 w-full max-w-sm p-3 md:bottom-8 md:p-4">
+        <div className="pointer-events-none absolute bottom-6 left-0 z-10 w-full max-w-sm p-4">
           <BuildingInfoPanel
             feature={selectedFeature}
             labelNumber={selectedFeatureLabelNumber}
@@ -254,14 +260,14 @@ export default function CampusMapPage() {
         </div>
       )}
 
-      <p className="pointer-events-none absolute bottom-2 left-1/2 z-10 hidden -translate-x-1/2 rounded-full bg-background/80 px-3 py-1 text-xs text-muted-foreground backdrop-blur-sm md:block">
+      <p className="pointer-events-none absolute bottom-2 left-1/2 z-10 hidden -translate-x-1/2 rounded-full bg-background/80 px-2 py-1 text-xs text-muted-foreground backdrop-blur-sm md:block">
         {dict.instructions}
       </p>
       <a
         href={data.attribution.url}
         target="_blank"
         rel="noopener noreferrer"
-        className="absolute bottom-2 right-2 z-10 rounded bg-background/90 px-2 py-1 text-[10px] text-muted-foreground underline shadow-sm"
+        className="absolute bottom-2 right-2 z-10 rounded bg-background/90 px-2 py-1 text-[10px] text-muted-foreground underline"
       >
         {data.attribution.text}
       </a>

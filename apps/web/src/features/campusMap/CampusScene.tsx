@@ -347,7 +347,7 @@ function CampusWorld({
               data-campus-feature-id={area.id}
               data-campus-label-number={labelNumber}
               aria-label={numberedLabel}
-              className={`pointer-events-auto block whitespace-nowrap rounded-full border px-2 py-1 text-center text-[10px] font-semibold leading-tight shadow-sm backdrop-blur-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+              className={`pointer-events-auto block whitespace-nowrap rounded-full border px-2 py-1 text-center text-[10px] font-bold leading-tight backdrop-blur-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                 selected
                   ? "border-primary bg-primary text-primary-foreground"
                   : area.kind === "water"
@@ -411,7 +411,7 @@ function CampusWorld({
               data-campus-feature-id={building.id}
               data-campus-label-number={labelNumber}
               aria-label={numberedLabel}
-              className={`pointer-events-auto block whitespace-nowrap rounded-full border px-2 py-1 text-center text-[10px] font-semibold leading-tight shadow-sm backdrop-blur-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+              className={`pointer-events-auto block whitespace-nowrap rounded-full border px-2 py-1 text-center text-[10px] font-bold leading-tight backdrop-blur-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                 selected
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-primary/20 bg-background/90 text-foreground hover:bg-primary/10"

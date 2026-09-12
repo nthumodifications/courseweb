@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Viewer } from "@react-pdf-viewer/core";
 import { Worker } from "@react-pdf-viewer/core";
 import { ScrollArea } from "@radix-ui/react-scroll-area";
+import { Button, ErrorState } from "@courseweb/ui";
 
 import "@react-pdf-viewer/core/lib/styles/index.css";
 import packageJson from "../../../package.json";
@@ -15,18 +16,15 @@ const PDFViewer = ({ file }: { file: string }) => {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center p-8 text-center">
-        <div>
-          <p className="text-red-600 mb-2">{dict.course.details.pdf_load_failed}</p>
-          <p className="text-sm text-gray-600">{error}</p>
-          <button
-            onClick={() => setError(null)}
-            className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
+      <ErrorState
+        title={dict.course.details.pdf_load_failed}
+        description={error}
+        action={
+          <Button variant="outline" size="sm" onClick={() => setError(null)}>
             {dict.common.try_again}
-          </button>
-        </div>
-      </div>
+          </Button>
+        }
+      />
     );
   }
 

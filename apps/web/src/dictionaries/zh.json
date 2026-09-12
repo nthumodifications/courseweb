@@ -151,7 +151,8 @@
       "error": "課程搜尋發生錯誤。此請求未改用其他搜尋層級重試。",
       "limited_mode": "搜尋目前處於有限模式，部分篩選和排序功能可能無法使用。",
       "dismiss_limited_mode": "關閉有限搜尋模式提示",
-      "no_more_results": "沒有更多結果"
+      "no_more_results": "沒有更多結果",
+      "no_results": "找不到符合的課程"
     },
     "item": {
       "add_to_semester": "加入",
@@ -261,7 +262,15 @@
       "ptt_title": "PTT 心得",
       "ptt_disclaimer": "PTT 心得來自 NTHU_Course 版，並非由 NTHUMods 審核。心得不代表 NTHUMods 的立場。若您發現任何不當內容，請向 PTT 版檢舉。",
       "important_dates": "重要日期",
-      "view_ccxp_syllabus": "瀏覽校務系統大綱網頁"
+      "view_ccxp_syllabus": "瀏覽校務系統大綱網頁",
+      "ai_summary": {
+        "generate": "產生 AI 摘要",
+        "title": "AI 課程摘要",
+        "loading": "正在分析課程內容…",
+        "error": "無法產生摘要。",
+        "workload": "負擔",
+        "difficulty": "難度"
+      }
     }
   },
   "navigation": {
@@ -272,6 +281,20 @@
     "venues": "地點",
     "bus": "校車",
     "apps": "應用程式"
+  },
+  "command_palette": {
+    "placeholder": "輸入指令…",
+    "no_results": "找不到指令",
+    "navigation": "頁面導覽",
+    "display": "顯示",
+    "themes": "主題",
+    "light_mode": "切換亮色模式",
+    "dark_mode": "切換暗色模式",
+    "enter_zen": "進入禪模式",
+    "exit_zen": "退出禪模式",
+    "navigate": "移動",
+    "select": "選取",
+    "close": "關閉"
   },
   "sports": {
     "title": "體育場館",
@@ -289,7 +312,21 @@
     "entries_today": "今日進場",
     "data_source": "資料來源：",
     "source_name": "國立清華大學體育中心",
-    "source_aria": "國立清華大學體育中心（在新分頁開啟）"
+    "source_aria": "國立清華大學體育中心（在新分頁開啟）",
+    "days": {
+      "sunday": "週日",
+      "monday": "週一",
+      "tuesday": "週二",
+      "wednesday": "週三",
+      "thursday": "週四",
+      "friday": "週五",
+      "saturday": "週六",
+      "holiday": "假日"
+    },
+    "semester_first": "上學期",
+    "semester_second": "下學期",
+    "semester_break": "暑假",
+    "semester_winter_break": "寒假"
   },
   "bus": {
     "north_gate": "北校門口",
@@ -578,7 +615,8 @@
     "waitlist_message": "敬請期待 NTHUMods 的新功能。"
   },
   "venues": {
-    "placeholder": "從選項中選一個地點"
+    "placeholder": "從選項中選一個地點",
+    "view_courses": "查看課程"
   },
   "campus_map": {
     "title": "3D 校園地圖",
@@ -698,6 +736,16 @@
       "accurate_relavent": "請輸入準確並跟此課程有關的日期",
       "sign_in_required": "請登入以貢獻課程日期"
     },
+    "ShortNameContributeForm": {
+      "title": "提供課程簡稱",
+      "description": "提供課程簡稱，讓大家更容易辨識課程。",
+      "dont_abuse": "請勿濫用系統。",
+      "accurate_relevant": "請只填寫準確且相關的資訊。",
+      "privacy": "送出的內容會包含學號，並公開顯示。",
+      "placeholder": "課程簡稱",
+      "cancel": "取消",
+      "submit": "送出"
+    },
     "ShareCourseButton": {
       "share_prefix": "分享：",
       "share_text_prefix": "看看這門課程：",
@@ -711,6 +759,13 @@
     "open_now": "營業中",
     "closed": "休息中",
     "closed_today": "今日休息",
+    "opening_soon": "即將開始",
+    "closing_soon": "即將休息",
+    "no_info": "無資訊",
+    "open_24h": "24 小時營業",
+    "opens_at": "開始營業",
+    "closes_at": "後休息",
+    "no_phone": "無",
     "area_placeholder": "選擇地區",
     "area_all": "全部",
     "load_error": "無法載入店家資料。"
@@ -946,6 +1001,7 @@
     "all": "全部",
     "no_results": "找不到結果。",
     "try_again": "再試一次",
+    "load_error": "資料載入失敗。",
     "submit": "送出",
     "save": "儲存",
     "error": "錯誤",
