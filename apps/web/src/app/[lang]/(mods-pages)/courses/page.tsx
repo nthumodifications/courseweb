@@ -1,10 +1,11 @@
 import CourseSearchContainer from "./CourseSearchContainer";
+import { PageShell } from "@courseweb/ui";
 
 const CourseDialog = () => {
   return (
-    <div className="max-h-[calc(var(--content-height)-36px)]">
+    <PageShell width="full" gap={false} className="min-h-0">
       <CourseSearchContainer />
-    </div>
+    </PageShell>
   );
 };
 

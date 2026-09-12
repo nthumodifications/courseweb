@@ -3,14 +3,13 @@ import useDictionary from "@/dictionaries/useDictionary";
 import { FC, memo } from "react";
 import CourseTagList from "./CourseTagsList";
 import SelectCourseButton from "./SelectCourseButton";
-import { Button } from "@courseweb/ui";
+import { Badge, Button } from "@courseweb/ui";
 import { useSettings } from "@/hooks/contexts/settings";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@courseweb/ui";
-import { useSearchParams } from "react-router-dom";
 import { ChevronDown } from "lucide-react";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { useCourseLink } from "@/components/Courses/CourseDialog";
@@ -23,10 +22,9 @@ const CourseListItem: FC<{
 }> = memo(({ course, hasTaken = false }) => {
   const dict = useDictionary();
   const { language } = useSettings();
-  const [searchParams] = useSearchParams();
   const { openCourse } = useCourseLink();
 
-  const { currentColors, setHoverCourse } = useUserTimetable();
+  const { setHoverCourse } = useUserTimetable();
 
   const handleHover = (hovering: boolean) => {
     setHoverCourse(hovering ? course : null);
@@ -38,25 +36,23 @@ const CourseListItem: FC<{
       : `${course.name_en} - ${course.teacher_en?.join(",")}`;
 
   return (
-    <div className="relative @container">
-      <div className="flex flex-row gap-4">
-        <div className="flex-1">
+    <div className="relative min-w-0">
+      <div className="flex min-w-0 flex-row items-start gap-3">
+        <div className="min-w-0 flex-1">
           <div className="mb-2 space-y-1 @md:pt-0">
             <div className="flex flex-row gap-2 items-center">
               {hasTaken && (
-                <div
-                  className={`flex flex-row items-center justify-center min-w-[65px] py-1 px-2 text-sm select-none rounded-md bg-nthu-400 dark:bg-nthu-600`}
-                >
+                <Badge variant="secondary" className="shrink-0">
                   {dict.course.details.taken}
-                </div>
+                </Badge>
               )}
-              <p className="text-nthu-500 text-sm font-semibold">
+              <p className="min-w-0 break-words text-sm font-medium tabular-nums text-muted-foreground">
                 {course.department} {course.course}
                 {course.class.padStart(2, "0")}
               </p>
             </div>
             <button
-              className="font-semibold text-left hover:underline cursor-pointer"
+              className="block max-w-full break-words text-left font-semibold hover:underline cursor-pointer"
               onClick={() => openCourse(course.raw_id as string)}
               onMouseEnter={() => handleHover(true)}
               onMouseLeave={() => handleHover(false)}
@@ -69,7 +65,7 @@ const CourseListItem: FC<{
                 {(course.teacher_en ?? []).join(",")}
               </span>
             </h3> */}
-            <div className="space-y-1 self-start w-auto max-w-fit">
+            <div className="max-w-full space-y-1 self-start break-words">
               {course.venues.map((vn, i) => (
                 <div key={i} className="text-muted-foreground text-xs">
                   {`${vn} / ${course.times![i]}`}
@@ -84,12 +80,14 @@ const CourseListItem: FC<{
             </p>
             {course.restrictions && course.restrictions.length > 0 && (
               <p className="text-xs whitespace-pre-line text-muted-foreground">
-                {dict.course.details.restriction_prefix}{course.restrictions}
+                {dict.course.details.restriction_prefix}
+                {course.restrictions}
               </p>
             )}
             {course.note && course.note.length > 0 && (
               <p className="text-xs whitespace-pre-line text-muted-foreground">
-                {dict.course.details.note_prefix}{course.note}
+                {dict.course.details.note_prefix}
+                {course.note}
               </p>
             )}
             {course.prerequisites && (
@@ -106,7 +104,7 @@ const CourseListItem: FC<{
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <p
-                    className="whitespace-pre-line text-sm text-neutral-500"
+                    className="whitespace-pre-line text-sm text-muted-foreground"
                     dangerouslySetInnerHTML={{
                       __html: sanitizeCourseHtml(course.prerequisites),
                     }}
@@ -116,9 +114,9 @@ const CourseListItem: FC<{
             )}
           </div>
         </div>
-      </div>
-      <div className="absolute top-0 right-2">
-        <SelectCourseButton courseId={course.raw_id as string} />
+        <div className="shrink-0">
+          <SelectCourseButton courseId={course.raw_id as string} compact />
+        </div>
       </div>
     </div>
   );

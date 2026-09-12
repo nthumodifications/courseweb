@@ -21,7 +21,9 @@ const MiniTimetable = ({ semester }: { semester: Semester }) => {
     colorMap,
   );
   const timeslots = useMemo(() => {
-    const timeslots = new Array(scheduleTimeSlots.length).fill([]).map(() => new Array(6).fill(null));
+    const timeslots = new Array(scheduleTimeSlots.length)
+      .fill([])
+      .map(() => new Array(6).fill(null));
     for (const course of timetableData) {
       for (let i = course.startTime; i <= course.endTime; i++) {
         timeslots[i][course.dayOfWeek] = course;
@@ -57,7 +59,7 @@ const MiniTimetable = ({ semester }: { semester: Semester }) => {
                   </div>
                   <div
                     key={`${i}-${j}`}
-                    className="rounded w-full aspect-square bg-muted"
+                    className="rounded-sm w-full aspect-square bg-muted"
                     style={{ backgroundColor: course ? course.color : "" }}
                   ></div>
                 </>
@@ -65,7 +67,7 @@ const MiniTimetable = ({ semester }: { semester: Semester }) => {
             return (
               <div
                 key={`${i}-${j}`}
-                className="rounded w-full aspect-square bg-muted"
+                className="rounded-sm w-full aspect-square bg-muted"
                 style={{ backgroundColor: course ? course.color : "" }}
               ></div>
             );

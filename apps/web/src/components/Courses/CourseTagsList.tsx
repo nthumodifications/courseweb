@@ -1,92 +1,81 @@
 import { CourseDefinition } from "@/config/supabase";
 import useDictionary from "@/dictionaries/useDictionary";
 import { getGECType } from "@/helpers/courses";
-import {
-  DetailedHTMLProps,
-  FC,
-  HTMLAttributes,
-  PropsWithChildren,
-} from "react";
-import { Users } from "lucide-react";
+import { Badge } from "@courseweb/ui";
 
-const HighlightItem: FC<
-  PropsWithChildren<
-    DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>
+type CourseBadgeVariant = "secondary" | "outline" | "destructive";
+
+const CourseBadge = ({
+  children,
+  variant,
+}: {
+  children: React.ReactNode;
+  variant: CourseBadgeVariant;
+}) => (
+  <Badge
+    variant={variant}
+    className="max-w-full whitespace-normal break-words tabular-nums"
   >
-> = ({ children, className, ...props }) => {
-  return (
-    <div
-      className={`flex flex-row items-center justify-center min-w-[52px] space-x-2 px-0.5 py-1 select-none rounded-md text-xs ${className ?? "bg-indigo-50 text-indigo-900 dark:bg-indigo-950 dark:text-indigo-100"}`}
-      {...props}
-    >
-      {children}
-    </div>
-  );
-};
+    {children}
+  </Badge>
+);
+
 const CourseTagList = ({ course }: { course: CourseDefinition }) => {
   const dict = useDictionary();
   return (
-    <div className="flex flex-row flex-wrap gap-1 text-sm">
+    <div className="flex max-w-full flex-row flex-wrap gap-1 text-sm">
       {course.closed_mark && (
-        <HighlightItem className="bg-red-200 text-red-900 dark:bg-red-800 dark:text-red-100">
-          {course.closed_mark}
-        </HighlightItem>
+        <CourseBadge variant="destructive">{course.closed_mark}</CourseBadge>
       )}
-      <HighlightItem className="bg-purple-50 text-purple-900 dark:bg-purple-950 dark:text-purple-100">
-        <span className="">
+      <CourseBadge variant="secondary">
+        <span>
           {course.capacity ?? "-"}
           {(course.reserve ?? 0) > 0 && (
             <>{` ${dict.course.tags.reserve_prefix} ${course.reserve}`}</>
           )}{" "}
           {dict.course.tags.people}
         </span>
-      </HighlightItem>
+      </CourseBadge>
       {course.enrolled != undefined && (
-        <HighlightItem className="bg-violet-50 text-violet-900 dark:bg-violet-950 dark:text-violet-100">
-          <span className="">
+        <CourseBadge variant="secondary">
+          <span>
             {course.enrolled} {dict.course.tags.enrolled_suffix}{" "}
           </span>
-        </HighlightItem>
+        </CourseBadge>
       )}
-      <HighlightItem>
-        <span className="">
+      <CourseBadge variant="secondary">
+        <span>
           {course.credits} {dict.course.credits}
         </span>
-      </HighlightItem>
+      </CourseBadge>
       {course.tags.includes("16周") && (
-        <HighlightItem className="bg-green-50 text-green-900 dark:bg-green-950 dark:text-green-100">
-          <span className="">{dict.course.tags.sixteen_weeks}</span>
-        </HighlightItem>
+        <CourseBadge variant="outline">
+          <span>{dict.course.tags.sixteen_weeks}</span>
+        </CourseBadge>
       )}
       {course.tags.includes("18周") && (
-        <HighlightItem className="bg-red-50 text-red-900 dark:bg-red-950 dark:text-red-100">
-          <span className="">{dict.course.tags.eighteen_weeks}</span>
-        </HighlightItem>
+        <CourseBadge variant="outline">
+          <span>{dict.course.tags.eighteen_weeks}</span>
+        </CourseBadge>
       )}
       {course.language == "英" ? (
-        <HighlightItem className="bg-cyan-50 text-cyan-900 dark:bg-cyan-950 dark:text-cyan-100">
-          {dict.course.tags.english}
-        </HighlightItem>
+        <CourseBadge variant="outline">{dict.course.tags.english}</CourseBadge>
       ) : (
-        <HighlightItem className="bg-amber-50 text-amber-900 dark:bg-amber-950 dark:text-amber-100">
-          {dict.course.tags.chinese}
-        </HighlightItem>
+        <CourseBadge variant="outline">{dict.course.tags.chinese}</CourseBadge>
       )}
-      {/* bg-indigo-50 text-indigo-900 dark:bg-indigo-950 dark:text-indigo-100 */}
       {course.tags.includes("X-Class") && (
-        <HighlightItem className="bg-red-50 text-red-900 dark:bg-red-950 dark:text-red-100">
-          {dict.course.tags.x_class}
-        </HighlightItem>
+        <CourseBadge variant="outline">{dict.course.tags.x_class}</CourseBadge>
       )}
       {(course.ge_target?.trim() || "").length > 0 && (
-        <HighlightItem className="bg-pink-50 text-pink-900 dark:bg-pink-950 dark:text-pink-100">
+        <CourseBadge variant="outline">
           {course.ge_target} {dict.course.tags.general_education}
-        </HighlightItem>
+        </CourseBadge>
       )}
       {getGECType(course.ge_type || "") && (
-        <HighlightItem className="bg-green-50 text-green-900 dark:bg-green-950 dark:text-green-100">
-          {dict.course.tags.general_education_core} {getGECType(course.ge_type!)}
-        </HighlightItem>
+        <CourseBadge variant="outline">
+          {dict.course.tags.general_education_core}{" "}
+          {getGECType(course.ge_type!)}
+        </CourseBadge>
       )}
     </div>
   );

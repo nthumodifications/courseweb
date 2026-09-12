@@ -102,13 +102,17 @@ const TimetableCourseQuickAccess = ({ course }: { course: MinimalCourse }) => {
       <div className="relative @container">
         <div className="flex flex-row gap-4 p-4">
           <Popover>
-            <PopoverTrigger>
-              <div className="p-1 rounded-md hover:outline outline-1 outline-border">
-                <div
-                  className="w-4 h-4 rounded-full"
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                className="flex h-10 w-10 items-center justify-center rounded-md hover:outline outline-1 outline-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                aria-label={dict.timetable.course_actions.color_label}
+              >
+                <span
+                  className="h-4 w-4 rounded-sm"
                   style={{ backgroundColor: colorMap[course.raw_id] }}
-                ></div>
-              </div>
+                />
+              </button>
             </PopoverTrigger>
             <PopoverContent className="p-0">
               <Compact
@@ -123,7 +127,7 @@ const TimetableCourseQuickAccess = ({ course }: { course: MinimalCourse }) => {
           <div className="flex-1">
             <div className="mb-2 space-y-1">
               <div className="flex flex-row gap-2 items-center">
-                <p className="text-nthu-500 text-sm font-semibold">
+                <p className="text-sm font-medium tabular-nums text-muted-foreground">
                   {course.department} {course.course}-
                   {course.class.padStart(2, "0")}
                 </p>
@@ -435,7 +439,7 @@ const CustomTimetableItemEditor = ({
           <PopoverTrigger asChild>
             <button
               type="button"
-              className="h-8 w-8 rounded-full border border-border"
+              className="h-10 w-10 rounded-sm border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               style={{ backgroundColor: color }}
               aria-label={dict.timetable.custom_items.color_label}
             />

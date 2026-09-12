@@ -22,7 +22,7 @@ const CourseSidePanel = () => {
   );
 
   return (
-    <Tabs defaultValue="timetable">
+    <Tabs defaultValue="timetable" className="min-w-0">
       <TabsList className="w-full justify-around">
         <TabsTrigger value="timetable" className="flex-1">
           {dict.course.details.timetable}
@@ -34,24 +34,24 @@ const CourseSidePanel = () => {
           {dict.course.details.favourites}
         </TabsTrigger>
       </TabsList>
-      <TabsContent value="timetable" className="h-full">
-        <ScrollArea className="w-full h-[calc(100vh-12.5rem)] overflow-auto">
-          <div className="h-full">
+      <TabsContent value="timetable" className="h-full min-w-0">
+        <ScrollArea className="h-[calc(100vh-12.5rem)] w-full overflow-auto">
+          <div className="min-w-0 p-4">
             <TimetableWithSemester semester={semester} />
             <TimetableBottomBar />
           </div>
         </ScrollArea>
       </TabsContent>
-      <TabsContent value="list">
-        <ScrollArea className="w-full h-[calc(100vh-12.5rem)] overflow-auto">
-          <div className="py-4 h-full">
+      <TabsContent value="list" className="min-w-0">
+        <ScrollArea className="h-[calc(100vh-12.5rem)] w-full overflow-auto">
+          <div className="min-w-0 p-4">
             <TimetableCourseListWithSemester />
           </div>
         </ScrollArea>
       </TabsContent>
-      <TabsContent value="favourites">
-        <ScrollArea className="w-full h-[calc(100vh-12.5rem)] overflow-auto">
-          <div className="p-4 h-full">
+      <TabsContent value="favourites" className="min-w-0">
+        <ScrollArea className="h-[calc(100vh-12.5rem)] w-full overflow-auto">
+          <div className="min-w-0 p-4">
             <FavouritesCourseList />
           </div>
         </ScrollArea>

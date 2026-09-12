@@ -13,6 +13,7 @@ import { useEffect, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 import { useSettings } from "@/hooks/contexts/settings";
 import { timetableEvents } from "@/lib/trackingEvents";
+import { PageShell } from "@courseweb/ui";
 
 const TimetablePage = () => {
   const {
@@ -108,27 +109,34 @@ const TimetablePage = () => {
   ];
 
   return (
-    <>
+    <PageShell width="full" gap={false} className="min-h-0">
       <Helmet>
         <script type="application/ld+json">
           {JSON.stringify(timetableJsonLd)}
         </script>
       </Helmet>
-      <div className="flex flex-col w-full h-full">
+      <div className="flex min-h-0 h-full w-full flex-col">
         <div
-          className={`grid grid-cols-1 md:grid-rows-1 ${!vertical ? "" : "md:grid-cols-[3fr_2fr]"} px-1 py-4 md:p-4 gap-4 md:gap-2`}
+          className={`grid min-w-0 grid-cols-1 gap-4 md:grid-rows-1 md:gap-2 ${!vertical ? "" : "md:grid-cols-[3fr_2fr]"}`}
         >
-          <div className="flex h-full w-full flex-col gap-4" {...handlers}>
-            <Timetable
-              timetableData={timetableData}
-              vertical={vertical}
-              renderTimetableSlot={renderTimetableSlot}
-            />
+          <div
+            className="flex min-w-0 h-full w-full flex-col gap-4"
+            {...handlers}
+          >
+            <div className="min-w-0 max-w-full overflow-x-auto overflow-y-hidden">
+              <Timetable
+                timetableData={timetableData}
+                vertical={vertical}
+                renderTimetableSlot={renderTimetableSlot}
+              />
+            </div>
           </div>
-          <TimetableSidebar vertical={vertical} setVertical={setVertical} />
+          <div className="min-w-0">
+            <TimetableSidebar vertical={vertical} setVertical={setVertical} />
+          </div>
         </div>
       </div>
-    </>
+    </PageShell>
   );
 };
 

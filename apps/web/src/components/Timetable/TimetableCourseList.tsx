@@ -6,6 +6,7 @@ import {
   GripVertical,
   Loader2,
   Settings,
+  CalendarDays,
 } from "lucide-react";
 import { useSettings } from "@/hooks/contexts/settings";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
@@ -47,6 +48,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@courseweb/ui";
 import Compact from "@uiw/react-color-compact";
 import { Separator } from "@courseweb/ui";
+import { EmptyState, Section } from "@courseweb/ui";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@courseweb/ui";
 import { TimetableItemDrawer } from "./TimetableItemDrawer";
 import { Switch } from "@courseweb/ui";
@@ -177,7 +179,7 @@ const TimetableCourseListItem = ({
 
   return (
     <div
-      className="flex flex-row gap-2 items-center max-w-3xl"
+      className="flex min-w-0 w-full flex-row items-center gap-2"
       ref={setNodeRef}
       style={style}
     >
@@ -190,12 +192,16 @@ const TimetableCourseListItem = ({
       )}
       <Popover>
         <PopoverTrigger asChild>
-          <div className="p-1 rounded-md hover:outline outline-1 outline-border mr-2">
-            <div
-              className="w-4 h-4 rounded-full"
+          <button
+            type="button"
+            className="mr-2 flex h-10 w-10 items-center justify-center rounded-md hover:outline outline-1 outline-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            aria-label={dict.timetable.course_actions.color_label}
+          >
+            <span
+              className="h-4 w-4 rounded-sm"
               style={{ backgroundColor: colorMap[course.raw_id] }}
-            ></div>
-          </div>
+            />
+          </button>
         </PopoverTrigger>
         <PopoverContent className="p-0">
           <Compact
@@ -393,197 +399,206 @@ export const TimetableCourseList = ({
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <div
-        className={`${
-          !vertical
-            ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 "
-            : "flex flex-col"
-        } gap-4 flex-wrap`}
-      >
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-          modifiers={[
-            vertical ? restrictToVerticalAxis : restrictToWindowEdges,
-          ]}
+    <Section title={dict.timetable.sections.this_semester} className="min-w-0">
+      <div className="flex min-w-0 flex-col gap-2">
+        <div
+          className={`${
+            !vertical
+              ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 "
+              : "flex flex-col"
+          } min-w-0 flex-wrap gap-4`}
         >
-          <SortableContext
-            items={displayCourseData.map((course) => course.raw_id)}
-            strategy={
-              vertical ? verticalListSortingStrategy : rectSwappingStrategy
-            }
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+            modifiers={[
+              vertical ? restrictToVerticalAxis : restrictToWindowEdges,
+            ]}
           >
-            {displayCourseData.map((course) => (
-              <TimetableCourseListItem
-                key={course.raw_id}
-                course={course as MinimalCourse}
-                hasConflict={
-                  !!timeConflicts.find(
-                    (ts) => ts.course.raw_id == course.raw_id,
-                  )
-                }
-                isDuplicate={duplicates.includes(course.raw_id)}
-                priority={peAndGeAllocation.indexOf(course.raw_id) + 1}
-                displaySettings={displaySettings}
-              />
-            ))}
-          </SortableContext>
-        </DndContext>
-        {displayCourseData.length == 0 && (
-          <div className="flex flex-col items-center space-y-4">
-            <span className="text-lg font-semibold text-muted-foreground">
-              {dict.timetable.no_courses}
-            </span>
-            <div className="flex flex-row gap-2">
-              <Button
-                variant="outline"
-                onClick={() => navigate(`/${language}/courses`)}
-              >
-                <Search className="w-4 h-4" /> {dict.timetable.all_courses}
-              </Button>
-            </div>
-          </div>
-        )}
-      </div>
-      <Separator orientation="horizontal" />
-      <div className="flex flex-row justify-between items-center">
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="ghost" size="sm" className="flex gap-1">
-              <Settings className="h-4 w-4" />
-              {dict.timetable.display_settings}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-80">
-            <div className="flex flex-col gap-4 p-2">
-              <div className="flex items-center justify-between space-x-2">
-                <Label htmlFor="english-names">
-                  {dict.timetable.english_names}
-                </Label>
-                <Select
-                  value={displaySettings.englishNames}
-                  onValueChange={(value) =>
-                    setDisplaySettings({
-                      ...displaySettings,
-                      englishNames: value as "add" | "replace" | "none",
-                    })
+            <SortableContext
+              items={displayCourseData.map((course) => course.raw_id)}
+              strategy={
+                vertical ? verticalListSortingStrategy : rectSwappingStrategy
+              }
+            >
+              {displayCourseData.map((course) => (
+                <TimetableCourseListItem
+                  key={course.raw_id}
+                  course={course as MinimalCourse}
+                  hasConflict={
+                    !!timeConflicts.find(
+                      (ts) => ts.course.raw_id == course.raw_id,
+                    )
                   }
+                  isDuplicate={duplicates.includes(course.raw_id)}
+                  priority={peAndGeAllocation.indexOf(course.raw_id) + 1}
+                  displaySettings={displaySettings}
+                />
+              ))}
+            </SortableContext>
+          </DndContext>
+          {displayCourseData.length == 0 && (
+            <EmptyState
+              size="sm"
+              icon={CalendarDays}
+              title={dict.timetable.no_courses}
+              description={dict.timetable.no_courses_description}
+              action={
+                <Button
+                  variant="outline"
+                  onClick={() => navigate(`/${language}/courses`)}
                 >
-                  <SelectTrigger className="w-[120px]">
-                  <SelectValue placeholder={dict.timetable.select_display} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="add">
-                      {dict.timetable.english_names_options.add}
-                    </SelectItem>
-                    <SelectItem value="replace">
-                      {dict.timetable.english_names_options.replace}
-                    </SelectItem>
-                    <SelectItem value="none">
-                      {dict.timetable.english_names_options.hide}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-center justify-between space-x-2">
-                <Label htmlFor="show-course-code">
-                  {dict.timetable.show_course_code}
-                </Label>
-                <Switch
-                  id="show-course-code"
-                  checked={displaySettings.showCourseCode}
-                  onCheckedChange={(checked) =>
-                    setDisplaySettings({
-                      ...displaySettings,
-                      showCourseCode: checked,
-                    })
-                  }
-                />
-              </div>
-              <div className="flex items-center justify-between space-x-2">
-                <Label htmlFor="show-venue">{dict.timetable.show_venue}</Label>
-                <Switch
-                  id="show-venue"
-                  checked={displaySettings.showVenue}
-                  onCheckedChange={(checked) =>
-                    setDisplaySettings({
-                      ...displaySettings,
-                      showVenue: checked,
-                    })
-                  }
-                />
-              </div>
-              <div className="flex items-center justify-between space-x-2">
-                <Label htmlFor="show-credits">
-                  {dict.timetable.show_credits}
-                </Label>
-                <Switch
-                  id="show-credits"
-                  checked={displaySettings.showCredits}
-                  onCheckedChange={(checked) =>
-                    setDisplaySettings({
-                      ...displaySettings,
-                      showCredits: checked,
-                    })
-                  }
-                />
-              </div>
-              <div className="flex items-center justify-between space-x-2">
-                <Label htmlFor="show-priority">
-                  {dict.timetable.show_priority}
-                </Label>
-                <Switch
-                  id="show-priority"
-                  checked={displaySettings.showPriority}
-                  onCheckedChange={(checked) =>
-                    setDisplaySettings({
-                      ...displaySettings,
-                      showPriority: checked,
-                    })
-                  }
-                />
-              </div>
-              <div className="flex items-center justify-between space-x-2">
-                <Label htmlFor="lock-order">{dict.timetable.lock_order}</Label>
-                <Switch
-                  id="lock-order"
-                  checked={displaySettings.lockOrder}
-                  onCheckedChange={(checked) =>
-                    setDisplaySettings({
-                      ...displaySettings,
-                      lockOrder: checked,
-                    })
-                  }
-                />
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setDisplaySettings(defaultSettings)}
-              >
-                {dict.timetable.reset_default}
+                  <Search className="w-4 h-4" /> {dict.timetable.all_courses}
+                </Button>
+              }
+            />
+          )}
+        </div>
+        <Separator orientation="horizontal" />
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="sm" className="flex gap-1">
+                <Settings className="h-4 w-4" />
+                {dict.timetable.display_settings}
               </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 max-w-[calc(100vw-2rem)]">
+              <div className="flex flex-col gap-4 p-2">
+                <div className="flex items-center justify-between space-x-2">
+                  <Label htmlFor="english-names">
+                    {dict.timetable.english_names}
+                  </Label>
+                  <Select
+                    value={displaySettings.englishNames}
+                    onValueChange={(value) =>
+                      setDisplaySettings({
+                        ...displaySettings,
+                        englishNames: value as "add" | "replace" | "none",
+                      })
+                    }
+                  >
+                    <SelectTrigger className="w-[120px]">
+                      <SelectValue
+                        placeholder={dict.timetable.select_display}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="add">
+                        {dict.timetable.english_names_options.add}
+                      </SelectItem>
+                      <SelectItem value="replace">
+                        {dict.timetable.english_names_options.replace}
+                      </SelectItem>
+                      <SelectItem value="none">
+                        {dict.timetable.english_names_options.hide}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center justify-between space-x-2">
+                  <Label htmlFor="show-course-code">
+                    {dict.timetable.show_course_code}
+                  </Label>
+                  <Switch
+                    id="show-course-code"
+                    checked={displaySettings.showCourseCode}
+                    onCheckedChange={(checked) =>
+                      setDisplaySettings({
+                        ...displaySettings,
+                        showCourseCode: checked,
+                      })
+                    }
+                  />
+                </div>
+                <div className="flex items-center justify-between space-x-2">
+                  <Label htmlFor="show-venue">
+                    {dict.timetable.show_venue}
+                  </Label>
+                  <Switch
+                    id="show-venue"
+                    checked={displaySettings.showVenue}
+                    onCheckedChange={(checked) =>
+                      setDisplaySettings({
+                        ...displaySettings,
+                        showVenue: checked,
+                      })
+                    }
+                  />
+                </div>
+                <div className="flex items-center justify-between space-x-2">
+                  <Label htmlFor="show-credits">
+                    {dict.timetable.show_credits}
+                  </Label>
+                  <Switch
+                    id="show-credits"
+                    checked={displaySettings.showCredits}
+                    onCheckedChange={(checked) =>
+                      setDisplaySettings({
+                        ...displaySettings,
+                        showCredits: checked,
+                      })
+                    }
+                  />
+                </div>
+                <div className="flex items-center justify-between space-x-2">
+                  <Label htmlFor="show-priority">
+                    {dict.timetable.show_priority}
+                  </Label>
+                  <Switch
+                    id="show-priority"
+                    checked={displaySettings.showPriority}
+                    onCheckedChange={(checked) =>
+                      setDisplaySettings({
+                        ...displaySettings,
+                        showPriority: checked,
+                      })
+                    }
+                  />
+                </div>
+                <div className="flex items-center justify-between space-x-2">
+                  <Label htmlFor="lock-order">
+                    {dict.timetable.lock_order}
+                  </Label>
+                  <Switch
+                    id="lock-order"
+                    checked={displaySettings.lockOrder}
+                    onCheckedChange={(checked) =>
+                      setDisplaySettings({
+                        ...displaySettings,
+                        lockOrder: checked,
+                      })
+                    }
+                  />
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setDisplaySettings(defaultSettings)}
+                >
+                  {dict.timetable.reset_default}
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+          <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+            <div className="space-x-2">
+              <span className="font-medium tabular-nums text-foreground">
+                {displayCourseData.length}
+              </span>
+              <span>{dict.timetable.course}</span>
             </div>
-          </PopoverContent>
-        </Popover>
-        <div className="flex flex-row gap-4">
-          <div className="space-x-2">
-            <span className="font-bold">{displayCourseData.length}</span>
-            <span className="text-muted-foreground">
-              {dict.timetable.course}
-            </span>
-          </div>
-          <div className="space-x-2">
-            <span className="font-bold">{totalCredits}</span>
-            <span className="text-muted-foreground">
-              {dict.timetable.credits}
-            </span>
+            <div className="space-x-2">
+              <span className="font-medium tabular-nums text-foreground">
+                {totalCredits}
+              </span>
+              <span>{dict.timetable.credits}</span>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </Section>
   );
 };
 export default TimetableCourseList;

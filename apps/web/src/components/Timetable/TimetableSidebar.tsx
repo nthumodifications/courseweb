@@ -26,6 +26,7 @@ import {
   CourseSearchContainerDynamic,
   TimetableCourseList,
 } from "./TimetableCourseList";
+import { Section } from "@courseweb/ui";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,7 +35,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@courseweb/ui";
-import OpenCollectiveSponsorBanner from "../Sponsorship/OpenCollectiveSponsorBanner";
 import { useAuth } from "react-oidc-context";
 import { useQuery } from "@tanstack/react-query";
 import { useTimetableShare } from "@/hooks/useTimetableShare";
@@ -134,92 +134,94 @@ const TimetableSidebar = ({
   };
 
   return (
-    <div className="flex flex-col gap-3">
-      {/* Primary actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        <Dialog>
-          <DialogTitle className="hidden">
-            {dict.course.item.add_to_semester}
-          </DialogTitle>
-          <DialogTrigger asChild>
-            <Button variant="outline" className="w-full">
-              <Plus className="w-4 h-4 mr-2" />
+    <div className="flex min-w-0 flex-col gap-6">
+      <Section title={dict.timetable.sections.actions}>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <Dialog>
+            <DialogTitle className="hidden">
               {dict.course.item.add_to_semester}
+            </DialogTitle>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="w-full">
+                <Plus className="w-4 h-4 mr-2" />
+                {dict.course.item.add_to_semester}
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="p-0 h-[100dvh] max-w-screen w-screen gap-0 px-2 pt-6 md:p-8">
+              <CourseSearchContainerDynamic />
+            </DialogContent>
+          </Dialog>
+          <TimetableCustomItemDrawer
+            item={emptyCustomItem}
+            onSave={addCustomItem}
+          >
+            <Button variant="outline" className="w-full">
+              <CalendarClock className="w-4 h-4 mr-2" />
+              {dict.timetable.custom_items.add}
             </Button>
-          </DialogTrigger>
-          <DialogContent className="p-0 h-[100dvh] max-w-screen w-screen gap-0 px-2 pt-6 md:p-8">
-            <CourseSearchContainerDynamic />
-          </DialogContent>
-        </Dialog>
-        <TimetableCustomItemDrawer
-          item={emptyCustomItem}
-          onSave={addCustomItem}
-        >
-          <Button variant="outline" className="w-full">
-            <CalendarClock className="w-4 h-4 mr-2" />
-            {dict.timetable.custom_items.add}
-          </Button>
-        </TimetableCustomItemDrawer>
-      </div>
+          </TimetableCustomItemDrawer>
+        </div>
+      </Section>
 
       {semesterCustomItems.length > 0 && (
-        <div className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide px-1">
-            {dict.timetable.custom_items.title}
-          </span>
-          {semesterCustomItems.map((item) => (
-            <div key={item.id} className="flex items-center gap-1">
-              <Popover>
-                <PopoverTrigger asChild>
+        <Section title={dict.timetable.custom_items.title}>
+          <div className="flex flex-col gap-1">
+            {semesterCustomItems.map((item) => (
+              <div key={item.id} className="flex items-center gap-1">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button
+                      type="button"
+                      className="flex h-10 w-10 items-center justify-center rounded-md hover:outline outline-1 outline-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      aria-label={dict.timetable.custom_items.color_label}
+                    >
+                      <span
+                        className="block h-4 w-4 rounded-sm"
+                        style={{ backgroundColor: item.color }}
+                      />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="p-0 w-auto">
+                    <Compact
+                      color={item.color}
+                      onChange={(color) =>
+                        setCustomItemColor(item.id, color.hex)
+                      }
+                      colors={currentColors}
+                    />
+                  </PopoverContent>
+                </Popover>
+                <TimetableCustomItemDrawer
+                  item={item}
+                  onSave={updateCustomItem}
+                  onDelete={() => deleteCustomItem(item.id)}
+                >
                   <button
                     type="button"
-                    className="p-1 rounded-md hover:outline outline-1 outline-border"
-                    aria-label={dict.timetable.custom_items.color_label}
+                    className="flex-1 min-w-0 text-left rounded-md px-2 py-1.5 hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   >
-                    <span
-                      className="block h-4 w-4 rounded-full"
-                      style={{ backgroundColor: item.color }}
-                    />
+                    <span className="block text-sm truncate">{item.title}</span>
+                    <span className="block text-xs text-muted-foreground truncate">
+                      {item.shortCode ||
+                        item.venue ||
+                        dict.timetable.custom_items.custom_label}
+                    </span>
                   </button>
-                </PopoverTrigger>
-                <PopoverContent className="p-0 w-auto">
-                  <Compact
-                    color={item.color}
-                    onChange={(color) => setCustomItemColor(item.id, color.hex)}
-                    colors={currentColors}
-                  />
-                </PopoverContent>
-              </Popover>
-              <TimetableCustomItemDrawer
-                item={item}
-                onSave={updateCustomItem}
-                onDelete={() => deleteCustomItem(item.id)}
-              >
-                <button
+                </TimetableCustomItemDrawer>
+                <Button
                   type="button"
-                  className="flex-1 min-w-0 text-left rounded-md px-2 py-1.5 hover:bg-accent transition-colors"
+                  variant="ghost"
+                  size="icon"
+                  className="h-10 w-10 shrink-0"
+                  onClick={() => deleteCustomItem(item.id)}
+                  aria-label={dict.timetable.custom_items.delete}
                 >
-                  <span className="block text-sm truncate">{item.title}</span>
-                  <span className="block text-xs text-muted-foreground truncate">
-                    {item.shortCode ||
-                      item.venue ||
-                      dict.timetable.custom_items.custom_label}
-                  </span>
-                </button>
-              </TimetableCustomItemDrawer>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 shrink-0"
-                onClick={() => deleteCustomItem(item.id)}
-                aria-label={dict.timetable.custom_items.delete}
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
-            </div>
-          ))}
-        </div>
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        </Section>
       )}
 
       {/* Course list — the main content */}
@@ -227,22 +229,22 @@ const TimetableSidebar = ({
 
       {/* Groups section — only when signed in */}
       {isAuthenticated && (
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center justify-between px-1">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              {dict.timetable.sidebar.groups}
-            </span>
+        <Section
+          title={dict.timetable.sidebar.groups}
+          actions={
             <ShareTimetableDialogDynamic initialTab="groups">
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-6 w-6"
+                className="h-10 w-10"
                 title={dict.timetable.sidebar.create_group}
+                aria-label={dict.timetable.sidebar.create_group}
               >
-                <Plus className="h-3.5 w-3.5" />
+                <Plus className="h-4 w-4" />
               </Button>
             </ShareTimetableDialogDynamic>
-          </div>
+          }
+        >
           {myGroups.length === 0 ? (
             <ShareTimetableDialogDynamic initialTab="groups">
               <button
@@ -276,78 +278,92 @@ const TimetableSidebar = ({
               </button>
             ))
           )}
-        </div>
+        </Section>
       )}
 
-      {/* Utility action row + community link */}
-      <div className="flex items-center gap-1 pt-1 border-t">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          title={
-            vertical
-              ? dict.timetable.actions.horizontal_view
-              : dict.timetable.actions.vertical_view
-          }
-          onClick={() => setVertical(!vertical)}
-        >
-          <Repeat className="w-4 h-4" />
-        </Button>
-
-        <DownloadTimetableDialogDynamic icsfileLink={icsfileLink}>
+      <Section title={dict.timetable.sections.share_export}>
+        <div className="flex min-w-0 flex-wrap items-center gap-1">
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8"
-            title={dict.timetable.sidebar.download_export}
+            className="h-10 w-10 shrink-0"
+            title={
+              vertical
+                ? dict.timetable.actions.horizontal_view
+                : dict.timetable.actions.vertical_view
+            }
+            aria-label={
+              vertical
+                ? dict.timetable.actions.horizontal_view
+                : dict.timetable.actions.vertical_view
+            }
+            onClick={() => setVertical(!vertical)}
           >
-            <Download className="w-4 h-4" />
+            <Repeat className="w-4 h-4" />
           </Button>
-        </DownloadTimetableDialogDynamic>
 
-        <ShareTimetableDialogDynamic>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            title={dict.timetable.sidebar.share_timetable}
-          >
-            <Share2 className="w-4 h-4" />
-          </Button>
-        </ShareTimetableDialogDynamic>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <EllipsisVertical className="w-4 h-4" />
+          <DownloadTimetableDialogDynamic icsfileLink={icsfileLink}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-10 w-10 shrink-0"
+              title={dict.timetable.sidebar.download_export}
+              aria-label={dict.timetable.sidebar.download_export}
+            >
+              <Download className="w-4 h-4" />
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            <DropdownMenuLabel>
-              {dict.timetable.sidebar.customizations}
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => handleGroupByDepartment(semester)}>
-              {dict.timetable.actions.group_dept}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => sortByCredits(semester)}>
-              {dict.timetable.actions.sort_by_credits}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+          </DownloadTimetableDialogDynamic>
 
-        <button
-          type="button"
-          onClick={() => navigate(`/${lang}/timetable/community`)}
-          className="ml-auto flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <Globe className="w-3 h-3" />
-          {dict.timetable.sidebar.community}
-        </button>
-      </div>
+          <ShareTimetableDialogDynamic>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-10 w-10 shrink-0"
+              title={dict.timetable.sidebar.share_timetable}
+              aria-label={dict.timetable.sidebar.share_timetable}
+            >
+              <Share2 className="w-4 h-4" />
+            </Button>
+          </ShareTimetableDialogDynamic>
 
-      <OpenCollectiveSponsorBanner />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-10 w-10 shrink-0"
+                title={dict.timetable.actions.more_options}
+                aria-label={dict.timetable.actions.more_options}
+              >
+                <EllipsisVertical className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuLabel>
+                {dict.timetable.sidebar.customizations}
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => handleGroupByDepartment(semester)}
+              >
+                {dict.timetable.actions.group_dept}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => sortByCredits(semester)}>
+                {dict.timetable.actions.sort_by_credits}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <button
+            type="button"
+            onClick={() => navigate(`/${lang}/timetable/community`)}
+            className="ml-auto flex min-w-0 items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Globe className="w-3 h-3" />
+            {dict.timetable.sidebar.community}
+          </button>
+        </div>
+      </Section>
     </div>
   );
 };

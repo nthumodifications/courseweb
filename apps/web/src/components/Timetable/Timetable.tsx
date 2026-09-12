@@ -275,7 +275,7 @@ const Timetable: FC<{
 
   return (
     <div
-      className="text-center lg:mb-0 w-full overflow-hidden"
+      className="text-center lg:mb-0 w-full overflow-x-auto overflow-y-hidden"
       ref={containerRef}
     >
       {/* Timetable, Relative overlay */}
