@@ -9,8 +9,8 @@ const CourseDetailsSkeleton = () => {
           <div className="space-y-4 flex-1 w-full">
             <div className="space-y-2">
               <Skeleton className="h-6 w-24" />
-              <Skeleton className="h-5 w-48 mb-4" />
-              <div className="flex flex-row flex-wrap gap-1">
+              <Skeleton className="h-5 w-48" />
+              <div className="mt-2 flex flex-row flex-wrap gap-1">
                 <Skeleton className="h-8 w-32" />
                 <Skeleton className="h-8 w-24" />
               </div>

@@ -92,7 +92,7 @@ const SortableSidebarRow = ({
     <div
       ref={setNodeRef}
       style={style}
-      className="flex flex-row items-center gap-4 py-4"
+      className="flex flex-row items-center gap-2 py-2"
     >
       <button
         {...attributes}

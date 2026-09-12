@@ -30,6 +30,7 @@ type DaySchedule = {
   day: Date;
   classes: UpcomingEvent[];
   otherEvents: UpcomingEvent[];
+  hasWeather: boolean;
 };
 
 const TodaySchedule: FC = () => {
@@ -57,6 +58,7 @@ const TodaySchedule: FC = () => {
       dashboardEvents.filter(
         (event) =>
           event.state !== "past" &&
+          event.source !== "class" &&
           !days.some(
             (day) => getTaipeiDateKey(event.start) === getTaipeiDateKey(day),
           ),
@@ -89,8 +91,16 @@ const TodaySchedule: FC = () => {
             (event.source !== "academic" || showAcademicCalendar) &&
             getTaipeiDateKey(event.start) === getTaipeiDateKey(day),
         ),
+        hasWeather:
+          isClient &&
+          Boolean(
+            weather?.find(
+              (item: { date: string }) =>
+                item.date === getTaipeiDateKey(day),
+            ),
+          ),
       })),
-    [dashboardEvents, days, showAcademicCalendar],
+    [dashboardEvents, days, isClient, showAcademicCalendar, weather],
   );
 
   const dayGroups = useMemo(
@@ -103,8 +113,9 @@ const TodaySchedule: FC = () => {
           );
           return Boolean(
             schedule &&
-              schedule.classes.length === 0 &&
-              schedule.otherEvents.length === 0,
+            schedule.classes.length === 0 &&
+            schedule.otherEvents.length === 0 &&
+            !schedule.hasWeather,
           );
         },
       ),
@@ -313,7 +324,11 @@ const TodaySchedule: FC = () => {
       (item) => getTaipeiDateKey(item.day) === getTaipeiDateKey(group.days[0]),
     );
     if (!schedule) return null;
-    if (schedule.classes.length === 0 && schedule.otherEvents.length === 0) {
+    if (
+      schedule.classes.length === 0 &&
+      schedule.otherEvents.length === 0 &&
+      !schedule.hasWeather
+    ) {
       return renderEmptyDayGroup(group);
     }
     return renderDay(schedule);

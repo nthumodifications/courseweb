@@ -35,7 +35,10 @@ const ScheduleWidget: FC<ScheduleWidgetProps> = ({
     [date, events],
   );
   const upcomingEvents = useMemo(
-    () => events.filter((event) => event.state !== "past"),
+    () =>
+      events.filter(
+        (event) => event.state !== "past" && event.source !== "class",
+      ),
     [events],
   );
 

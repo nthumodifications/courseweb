@@ -14,18 +14,21 @@ const WidgetGridDynamic = lazy(() => import("@/components/Widgets/WidgetGrid"));
 const MobileCalendarUpcoming = () => {
   const dict = useDictionary();
   const { events, nextEvent } = useUpcomingEvents();
+  const nonCourseEvents = events.filter((event) => event.source !== "class");
 
   if (events.length === 0) return null;
 
   return (
     <div className="space-y-4 px-4 pb-4 xl:hidden">
       <NextUpLine event={nextEvent} />
-      <section className="rounded-lg border border-border p-4">
-        <h2 className="mb-2 text-base font-medium">
-          {dict.calendar.upcoming_events}
-        </h2>
-        <UpcomingEventList events={events} compact maxEvents={6} />
-      </section>
+      {nonCourseEvents.length > 0 && (
+        <section className="rounded-lg border border-border p-4">
+          <h2 className="mb-2 text-base font-medium">
+            {dict.calendar.upcoming_events}
+          </h2>
+          <UpcomingEventList events={nonCourseEvents} compact maxEvents={6} />
+        </section>
+      )}
     </div>
   );
 };

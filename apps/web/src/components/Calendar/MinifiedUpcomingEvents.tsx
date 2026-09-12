@@ -5,8 +5,9 @@ import useUpcomingEvents from "@/hooks/useUpcomingEvents";
 const MinifiedUpcomingEvents = () => {
   const dict = useDictionary();
   const { events } = useUpcomingEvents();
+  const nonCourseEvents = events.filter((event) => event.source !== "class");
 
-  if (events.length === 0) return null;
+  if (nonCourseEvents.length === 0) return null;
 
   return (
     <div className="p-2">
@@ -14,7 +15,7 @@ const MinifiedUpcomingEvents = () => {
         {dict.calendar.upcoming_events}
       </div>
       <UpcomingEventList
-        events={events}
+        events={nonCourseEvents}
         compact
         maxEvents={3}
         showDayGroups={false}

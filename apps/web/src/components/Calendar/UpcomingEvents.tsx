@@ -16,7 +16,7 @@ import useUpcomingEvents, {
 } from "@/hooks/useUpcomingEvents";
 
 const UpcomingEvents = () => {
-  const { language } = useSettings();
+  const { language, showAcademicCalendar } = useSettings();
   const today = useTime();
   const dict = useDictionary();
   const { events, windowStart } = useUpcomingEvents();
@@ -74,40 +74,45 @@ const UpcomingEvents = () => {
       <div className="self-stretch font-bold leading-7">
         {dict.calendar.upcoming_events}
       </div>
-      <div className="self-stretch flex-col justify-start items-start gap-6 flex overflow-x-hidden overflow-y-auto max-h-[calc(100vh-12rem)]">
-        {days.map((day) => (
-          <div
-            className="flex w-full flex-col gap-2 pb-4"
-            key={getTaipeiDateKey(day)}
-          >
-            <div className="flex flex-row justify-between">
-              <div className="flex flex-row flex-1 items-baseline gap-2">
-                <div className="whitespace-nowrap font-bold">
-                  {getTaipeiDateKey(day) === getTaipeiDateKey(today)
-                    ? dict.today.upcoming.today
-                    : getTaipeiDateKey(day) ===
-                        getTaipeiDateKey(addTaipeiDays(today, 1))
-                      ? dict.today.upcoming.tomorrow
-                      : formatInTimeZone(day, UPCOMING_TIME_ZONE, "EEEE", {
-                          locale: getLocale(language),
-                        })}
+      <div className="self-stretch flex-col justify-start items-start gap-4 flex overflow-x-hidden overflow-y-auto max-h-[calc(100vh-12rem)]">
+        {days.map((day) => {
+          const dayEvents = events.filter(
+            (event) =>
+              event.source !== "class" &&
+              (event.source !== "academic" || showAcademicCalendar) &&
+              getTaipeiDateKey(event.start) === getTaipeiDateKey(day),
+          );
+          if (dayEvents.length === 0) return null;
+
+          return (
+            <div
+              className="flex w-full flex-col gap-2 pb-4"
+              key={getTaipeiDateKey(day)}
+            >
+              <div className="flex flex-row justify-between">
+                <div className="flex flex-row flex-1 items-baseline gap-2">
+                  <div className="whitespace-nowrap font-bold">
+                    {getTaipeiDateKey(day) === getTaipeiDateKey(today)
+                      ? dict.today.upcoming.today
+                      : getTaipeiDateKey(day) ===
+                          getTaipeiDateKey(addTaipeiDays(today, 1))
+                        ? dict.today.upcoming.tomorrow
+                        : formatInTimeZone(day, UPCOMING_TIME_ZONE, "EEEE", {
+                            locale: getLocale(language),
+                          })}
+                  </div>
+                  <div className="text-sm text-muted-foreground whitespace-nowrap">
+                    {formatInTimeZone(day, UPCOMING_TIME_ZONE, "MMM do", {
+                      locale: getLocale(language),
+                    })}
+                  </div>
                 </div>
-                <div className="text-sm text-muted-foreground whitespace-nowrap">
-                  {formatInTimeZone(day, UPCOMING_TIME_ZONE, "MMM do", {
-                    locale: getLocale(language),
-                  })}
-                </div>
+                {!weatherLoading && weatherData && renderWeather(day)}
               </div>
-              {!weatherLoading && weatherData && renderWeather(day)}
+              <UpcomingEventList events={dayEvents} />
             </div>
-            <UpcomingEventList
-              events={events.filter(
-                (event) =>
-                  getTaipeiDateKey(event.start) === getTaipeiDateKey(day),
-              )}
-            />
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

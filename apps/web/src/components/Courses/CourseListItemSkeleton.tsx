@@ -3,7 +3,6 @@ import { Skeleton } from "@courseweb/ui";
 const CourseListItemSkeleton = () => {
   return (
     <div className="flex min-w-0 flex-row gap-4 py-4 @container">
-      <Skeleton className="mt-1 h-4 w-4 shrink-0 rounded-sm" />
       <div className="min-w-0 flex-1">
         <div className="mb-2 space-y-1 @md:pt-0">
           <div className="flex flex-row items-center gap-2">
@@ -25,8 +24,7 @@ const CourseListItemSkeleton = () => {
           <Skeleton className="h-5 w-full" />
         </div>
       </div>
-      <div className="flex shrink-0 flex-col items-end gap-2">
-        <Skeleton className="h-4 w-12" />
+      <div className="flex shrink-0 items-start">
         <Skeleton className="h-10 w-10 rounded-full" />
       </div>
     </div>

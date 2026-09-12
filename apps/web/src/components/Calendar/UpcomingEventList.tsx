@@ -49,6 +49,11 @@ const EventRow: FC<{ event: UpcomingEvent; compact: boolean }> = ({
         compact ? "px-1 py-1" : "border border-border px-2 py-2",
       )}
     >
+      <span
+        className="h-4 w-1 shrink-0 rounded-sm"
+        style={event.color ? { backgroundColor: event.color } : undefined}
+        aria-hidden="true"
+      />
       <div className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
         {event.allDay ? (
           <Calendar className="size-3" />
@@ -100,6 +105,7 @@ const UpcomingEventList: FC<UpcomingEventListProps> = ({
         .filter(
           (event) =>
             event.state !== "past" &&
+            event.source !== "class" &&
             (event.source !== "academic" || showAcademicCalendar),
         )
         .slice(0, maxEvents),

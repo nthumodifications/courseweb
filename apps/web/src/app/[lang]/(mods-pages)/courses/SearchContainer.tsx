@@ -103,7 +103,7 @@ export function InfiniteHits(props: Parameters<typeof useInfiniteHits>[0]) {
         {/* Status messages */}
         {status === "error" && (
           <ErrorState
-            title={dict.course.search.error}
+            title={dict.common.load_error}
             action={
               <Button variant="outline" size="sm" onClick={() => refresh()}>
                 {dict.common.try_again}

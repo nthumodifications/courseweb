@@ -15,23 +15,13 @@ const SearchDegradationBanner = ({
     searchClient.getStatus,
     () => "primary" as const,
   );
-  const hasError = useSyncExternalStore(
-    searchClient.subscribe,
-    searchClient.hasError,
-    () => false,
-  );
-
-  if ((!hasError && backend !== "fallback") || dismissed) return null;
+  if (backend !== "fallback" || dismissed) return null;
 
   return (
     <Alert className="flex items-center gap-2 p-2 text-sm">
       <Info className="h-4 w-4" />
       <AlertDescription className="flex flex-1 items-center justify-between gap-2">
-        <span>
-          {hasError
-            ? dict.course.search.error
-            : dict.course.search.limited_mode}
-        </span>
+        <span>{dict.course.search.limited_mode}</span>
         <Button
           type="button"
           variant="ghost"
