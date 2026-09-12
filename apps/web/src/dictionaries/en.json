@@ -321,17 +321,31 @@
     "quick_navigation": "Quick Navigation",
     "open_navigation": "Open navigation menu",
     "close_navigation": "Close navigation menu",
-    "drag_hint": "Drag to reorder · Toggle to show or hide navigation items",
+    "move_item": "Move item",
     "appearance": {
       "title": "Appearance",
-      "description": "Theme, Colors, Fonts, Layout",
       "preset": {
         "title": "Theme Preset",
-        "description": "Choose a color theme"
+        "themes": {
+          "nthumods": "NTHUMods",
+          "nord": "Nord",
+          "catppuccin-latte": "Catppuccin Latte",
+          "catppuccin-mocha": "Catppuccin Mocha",
+          "dracula": "Dracula",
+          "github-light": "GitHub Light",
+          "github-dark": "GitHub Dark",
+          "solarized-light": "Solarized Light",
+          "solarized-dark": "Solarized Dark",
+          "one-dark": "One Dark",
+          "tokyo-night": "Tokyo Night",
+          "gruvbox-dark": "Gruvbox Dark",
+          "rose-pine": "Rosé Pine",
+          "everforest-light": "Everforest Light",
+          "everforest-dark": "Everforest Dark"
+        }
       },
       "radius": {
         "title": "Border Radius",
-        "description": "Corner roundness",
         "options": {
           "none": "None",
           "sm": "Small",
@@ -342,20 +356,17 @@
       },
       "font_scale": {
         "title": "Font Size",
-        "description": "Adjust text size",
         "small": "Small",
         "large": "Large"
       },
       "density": {
         "title": "Density",
-        "description": "UI spacing",
         "compact": "Compact",
         "comfortable": "Default",
         "spacious": "Spacious"
       },
       "background": {
         "title": "Background",
-        "description": "Page background style",
         "from": "From",
         "to": "To",
         "solid": "Solid",
@@ -367,7 +378,19 @@
       "font": {
         "title": "Font Family",
         "chinese": "Chinese",
-        "latin": "Latin"
+        "latin": "Latin",
+        "options": {
+          "system-tc": "System Chinese",
+          "noto-sans-tc": "Noto Sans TC",
+          "noto-serif-tc": "Noto Serif TC",
+          "inter": "Inter",
+          "jakarta": "Jakarta",
+          "nunito": "Nunito",
+          "dm-sans": "DM Sans",
+          "montserrat": "Montserrat",
+          "mono": "Monospace",
+          "lora": "Lora"
+        }
       },
       "accent": {
         "title": "Accent Color",
@@ -375,7 +398,7 @@
         "pick": "Pick accent color"
       },
       "share_theme": "Share Theme",
-      "copied": "Copied!",
+      "copied": "Copied",
       "reset": "Reset to Default"
     },
     "account": {
@@ -394,7 +417,6 @@
     },
     "display": {
       "title": "Display",
-      "description": "Appearance, Language",
       "dark_mode": {
         "title": "Dark Mode"
       },
@@ -402,8 +424,7 @@
         "title": "Language"
       },
       "compact_header": {
-        "title": "Compact Header",
-        "description": "Reduce the height of the top header bar"
+        "title": "Compact Header"
       },
       "bottom_nav": {
         "title": "Bottom Navigation"
@@ -414,7 +435,6 @@
     },
     "timetable": {
       "title": "Timetable",
-      "description": "Theme, Preview",
       "vertical_preview": "Vertical Preview",
       "default_view": {
         "title": "Default View",
@@ -459,11 +479,29 @@
         "serif": "Serif",
         "mono": "Monospace",
         "rounded": "Rounded"
+      },
+      "move_up": "Move up",
+      "move_down": "Move down",
+      "theme": {
+        "title": "Timetable Colors",
+        "options": {
+          "ashes": "Ashes",
+          "chalk": "Chalk",
+          "eighties": "Eighties",
+          "google": "Google",
+          "mocha": "Mocha",
+          "monokai": "Monokai",
+          "ocean": "Ocean",
+          "oceanic-next": "Oceanic Next",
+          "paraiso": "Paraiso",
+          "railscasts": "Railscasts",
+          "tomorrow": "Tomorrow",
+          "twilight": "Twilight"
+        }
       }
     },
     "privacy": {
       "title": "Privacy",
-      "description": "Analytics",
       "analytics": {
         "title": "Analytics",
         "description": "Send anonymous usage info to Google Analytics"
@@ -471,20 +509,26 @@
     },
     "calendar": {
       "title": "Today Page",
-      "description": "What do you wanna see first",
       "academic_calendar": {
-        "title": "NTHU Academic Calendar",
-        "description": "Show Academic Calendar on the Today Page."
+        "title": "NTHU Academic Calendar"
       },
       "experimental_calendar": {
         "title": "Calendar",
-        "badge": "Experimental",
-        "description": "Use the new Calendar on the Today Page."
+        "badge": "Experimental"
       },
       "widget_dashboard": {
         "title": "Widget Dashboard",
         "description": "Replace Today page with a customizable widget grid",
-        "customize": "Customize widgets:"
+        "columns": "Columns",
+        "widgets": "Widgets",
+        "widget_options": {
+          "schedule": { "title": "Schedule" },
+          "weather": { "title": "Weather" },
+          "pinned-apps": { "title": "Quick links" },
+          "notepad": { "title": "Notepad" },
+          "countdown": { "title": "Countdown" },
+          "bus": { "title": "Bus schedule" }
+        }
       }
     },
     "ai": {
@@ -517,10 +561,10 @@
     },
     "advanced": {
       "title": "Advanced",
-      "description": "Custom CSS, Developer Options",
       "custom_css": {
         "title": "Custom CSS",
-        "description": "Inject custom CSS into the page. Applied globally after all other styles."
+        "description": "Inject custom CSS into the page. Applied globally after all other styles.",
+        "placeholder": "/* Enter custom CSS here */\n.example { ... }"
       }
     }
   },

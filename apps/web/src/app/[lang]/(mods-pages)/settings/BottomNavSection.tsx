@@ -1,6 +1,5 @@
 import { useCallback } from "react";
 import { useLocalStorage } from "usehooks-ts";
-import { useSettings } from "@/hooks/contexts/settings";
 import {
   DndContext,
   DragEndEvent,
@@ -37,31 +36,21 @@ export interface NavItemConfig {
 
 const NAV_ITEM_DEFINITIONS: Record<
   NavItemId,
-  { label: string; labelZh: string; Icon: React.FC<{ className?: string }> }
+  { Icon: React.FC<{ className?: string }> }
 > = {
   today: {
-    label: "Today",
-    labelZh: "今天",
     Icon: ({ className }) => <LayoutList className={className} />,
   },
   timetable: {
-    label: "Timetable",
-    labelZh: "課表",
     Icon: ({ className }) => <Calendar className={className} />,
   },
   bus: {
-    label: "Bus",
-    labelZh: "公車",
     Icon: ({ className }) => <Bus className={className} />,
   },
   apps: {
-    label: "Apps",
-    labelZh: "應用程式",
     Icon: ({ className }) => <LayoutGrid className={className} />,
   },
   settings: {
-    label: "Settings",
-    labelZh: "設定",
     Icon: ({ className }) => <Settings className={className} />,
   },
 };
@@ -83,7 +72,6 @@ const SortableNavRow = ({
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: item.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
-  const { language } = useSettings();
   const dict = useDictionary();
   const def = NAV_ITEM_DEFINITIONS[item.id];
   const label = {
@@ -98,19 +86,19 @@ const SortableNavRow = ({
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card"
+      className="flex flex-row items-center gap-4 py-4"
     >
       <button
         {...attributes}
         {...listeners}
-        className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground transition-colors touch-none"
+        type="button"
+        className="flex min-h-10 min-w-10 cursor-grab items-center justify-center rounded-md text-muted-foreground transition-colors touch-none hover:text-foreground active:cursor-grabbing"
+        aria-label={dict.settings.move_item}
       >
         <GripVertical className="h-4 w-4" />
       </button>
       <def.Icon className="h-4 w-4 text-muted-foreground" />
-      <div className="flex-1 text-sm font-medium text-foreground">
-        {label}
-      </div>
+      <div className="flex-1 text-sm font-medium text-foreground">{label}</div>
       <Switch
         checked={item.enabled}
         onCheckedChange={(val) => onToggle(item.id, val)}
@@ -120,7 +108,6 @@ const SortableNavRow = ({
 };
 
 export const BottomNavSection = () => {
-  const dict = useDictionary();
   const [items, setItems] = useLocalStorage<NavItemConfig[]>(
     "bottom_nav_items",
     DEFAULT_NAV_ITEMS,
@@ -156,30 +143,21 @@ export const BottomNavSection = () => {
   );
 
   return (
-    <div className="flex flex-col gap-3">
-      <p className="text-xs text-muted-foreground">
-        {dict.settings.drag_hint}
-      </p>
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragEnd={handleDragEnd}
+    >
+      <SortableContext
+        items={items.map((i) => i.id)}
+        strategy={verticalListSortingStrategy}
       >
-        <SortableContext
-          items={items.map((i) => i.id)}
-          strategy={verticalListSortingStrategy}
-        >
-          <div className="flex flex-col gap-2">
-            {items.map((item) => (
-              <SortableNavRow
-                key={item.id}
-                item={item}
-                onToggle={handleToggle}
-              />
-            ))}
-          </div>
-        </SortableContext>
-      </DndContext>
-    </div>
+        <div className="divide-y divide-border">
+          {items.map((item) => (
+            <SortableNavRow key={item.id} item={item} onToggle={handleToggle} />
+          ))}
+        </div>
+      </SortableContext>
+    </DndContext>
   );
 };

@@ -59,7 +59,7 @@ const AlignDot = ({
         ? "row-start-2"
         : "row-start-3";
   return (
-    <div className="grid grid-cols-3 grid-rows-3 w-full h-full gap-px p-0.5">
+    <div className="grid h-full w-full grid-cols-3 grid-rows-3 gap-1 p-1">
       <div
         className={cn("rounded-sm bg-current opacity-80 w-1 h-1", row, col)}
       />
@@ -127,9 +127,9 @@ const TimetablePreferences: React.FC<SettingsControlProps> = ({
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="divide-y divide-border">
       {/* Language */}
-      <div className="flex flex-row items-center">
+      <div className="flex flex-row items-center gap-4 py-4">
         <label className="font-bold flex-1 text-sm">
           {dict.settings.timetable.language}
         </label>
@@ -151,7 +151,7 @@ const TimetablePreferences: React.FC<SettingsControlProps> = ({
         </Select>
       </div>
 
-      <div className="flex flex-row items-center">
+      <div className="flex flex-row items-center gap-4 py-4">
         <label className="font-bold flex-1 text-sm">
           {dict.settings.timetable.font_size}
         </label>
@@ -179,7 +179,7 @@ const TimetablePreferences: React.FC<SettingsControlProps> = ({
         </Select>
       </div>
 
-      <div className="flex flex-row items-center">
+      <div className="flex flex-row items-center gap-4 py-4">
         <label className="font-bold flex-1 text-sm">
           {dict.settings.timetable.font_family}
         </label>
@@ -211,17 +211,17 @@ const TimetablePreferences: React.FC<SettingsControlProps> = ({
       </div>
 
       {/* 2D Alignment picker */}
-      <div className="flex flex-row items-start gap-4">
+      <div className="flex flex-row items-start gap-4 py-4">
         <label className="font-bold text-sm pt-1 flex-1">
           {dict.settings.timetable.alignment}
         </label>
-        <div className="grid grid-cols-3 gap-1 w-28">
+        <div className="grid grid-cols-3 gap-1">
           {ALIGN_GRID.map(([h, v]) => (
             <button
               key={`${h}-${v}`}
               onClick={() => handleAlignChange(h, v)}
               className={cn(
-                "w-8 h-8 rounded border transition-colors flex items-center justify-center",
+                "flex h-10 w-10 items-center justify-center rounded border transition-colors",
                 isActive(h, v)
                   ? "border-primary bg-primary/10 text-primary"
                   : "border-border hover:border-muted-foreground text-muted-foreground",
@@ -235,11 +235,11 @@ const TimetablePreferences: React.FC<SettingsControlProps> = ({
       </div>
 
       {/* Field display & order */}
-      <div>
-        <label className="font-bold text-sm mb-2 block">
+      <div className="py-4">
+        <label className="mb-2 block text-sm font-bold">
           {dict.settings.timetable.fields_order}
         </label>
-        <div className="flex flex-col gap-1">
+        <div className="divide-y divide-border">
           {fieldOrder.map((field, idx) => {
             const label = {
               code: dict.settings.timetable.slot_code,
@@ -254,26 +254,27 @@ const TimetablePreferences: React.FC<SettingsControlProps> = ({
             return (
               <div
                 key={field}
-                className={cn(
-                  "flex items-center gap-2 rounded-md px-2 py-1.5 border transition-colors",
-                  isOn ? "border-border bg-muted/30" : "border-transparent",
-                )}
+                className="flex flex-row items-center gap-2 py-4"
               >
                 {/* Up/down order buttons */}
                 <div className="flex flex-col">
                   <button
                     onClick={() => moveField(idx, -1)}
                     disabled={idx === 0}
-                    className="text-muted-foreground hover:text-foreground disabled:opacity-20 h-3 flex items-center"
+                    type="button"
+                    className="flex h-10 w-10 items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-20"
+                    aria-label={dict.settings.timetable.move_up}
                   >
-                    <ChevronUp className="w-3 h-3" />
+                    <ChevronUp className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => moveField(idx, 1)}
                     disabled={idx === fieldOrder.length - 1}
-                    className="text-muted-foreground hover:text-foreground disabled:opacity-20 h-3 flex items-center"
+                    type="button"
+                    className="flex h-10 w-10 items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-20"
+                    aria-label={dict.settings.timetable.move_down}
                   >
-                    <ChevronDown className="w-3 h-3" />
+                    <ChevronDown className="h-4 w-4" />
                   </button>
                 </div>
                 {/* Field name */}
