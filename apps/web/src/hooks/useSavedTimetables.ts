@@ -6,11 +6,13 @@ export function useSavedTimetables() {
   const auth = useAuth();
   const { listSaved, unsaveShare, updateSaved } = useTimetableShare();
   const queryClient = useQueryClient();
+  const userId = auth.user?.profile.sub;
+  const authSessionKey = auth.user?.expires_at ?? 0;
 
   const { data: savedTimetables = [], isLoading } = useQuery({
-    queryKey: ["saved-timetables"],
+    queryKey: ["saved-timetables", userId ?? "anonymous", authSessionKey],
     queryFn: listSaved,
-    enabled: auth.isAuthenticated,
+    enabled: auth.isAuthenticated && Boolean(userId && auth.user?.access_token),
     refetchInterval: 5 * 60 * 1000, // poll every 5 min
     staleTime: 4 * 60 * 1000,
   });
