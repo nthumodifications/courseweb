@@ -31,7 +31,9 @@ const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
       className={cn(
         "flex min-w-0 flex-col",
         fullPane
-          ? "items-center justify-center py-6 text-center min-h-screen"
+          ? // Not min-h-screen: this always renders inside SidebarInset, below a
+            // header, so a full viewport height overflows and adds a scrollbar.
+            "items-center justify-center py-6 text-center h-full min-h-[60vh]"
           : "items-start py-4 text-left",
         className,
       )}

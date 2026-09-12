@@ -225,13 +225,17 @@ function centeredLayoutMatches(filePath, source) {
   const matches = [];
   for (const attribute of classNameAttributes(source)) {
     const tokens = classTokens(attribute.value);
+    // A height class is what separates "this element centres the page" from
+    // "this element centres an icon inside itself". But a small fixed height is
+    // still the second kind — a 40px drag handle written `min-h-10 items-center
+    // justify-center` is control alignment, which LANGUAGE.md §1 allows. Only a
+    // height big enough to be a layout region counts.
     const hasHeightClass = tokens.some((token) => {
       const utility = utilityName(token.value);
-      return (
-        utility.startsWith("min-h-") ||
-        utility === "h-full" ||
-        utility === "h-screen"
-      );
+      if (utility === "h-full" || utility === "h-screen") return true;
+      const step = /^min-h-(\d+)$/.exec(utility);
+      if (step) return Number(step[1]) > 24; // > 6rem
+      return utility.startsWith("min-h-") && !/^min-h-\d/.test(utility);
     });
 
     for (const token of tokens) {
