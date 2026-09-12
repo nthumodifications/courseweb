@@ -120,10 +120,10 @@ export const ThemeSection = () => {
               key={preset.id}
               onClick={() => setPreset(preset.id)}
               className={cn(
-                "group flex min-w-0 flex-col gap-2 rounded-md border-2 p-2 text-left transition-colors",
+                "group flex h-full min-w-0 flex-col gap-2 rounded-md border border-border p-2 text-left transition-colors",
                 config.preset === preset.id
-                  ? "border-primary bg-primary/10"
-                  : "border-transparent hover:border-muted-foreground/30",
+                  ? "bg-primary/10 text-primary ring-2 ring-inset ring-primary"
+                  : "hover:border-muted-foreground/30",
               )}
               title={
                 dict.settings.appearance.preset.themes[
@@ -290,20 +290,20 @@ export const ThemeSection = () => {
         <h3 className="mb-2 text-sm font-bold">
           {dict.settings.appearance.background.title}
         </h3>
-        <div className="flex flex-row flex-wrap gap-2">
+        <div className="grid grid-cols-5 gap-2">
           {BACKGROUND_OPTIONS.map((opt) => (
             <button
               key={opt.value}
               onClick={() => setBackground(opt.value)}
               className={cn(
-                "flex flex-row items-center gap-2 rounded border px-2 py-2 text-xs transition-all",
+                "flex h-16 w-full min-w-0 flex-col items-center justify-center gap-1 rounded border px-1 py-2 text-center text-xs leading-tight transition-all",
                 config.background === opt.value
                   ? "border-primary bg-primary/10 text-primary font-medium"
                   : "border-border hover:border-muted-foreground",
               )}
             >
-              <span className="font-mono">{opt.icon}</span>
-              {dict.settings.appearance.background[opt.value]}
+              <span className="font-mono text-sm leading-none">{opt.icon}</span>
+              <span className="min-w-0">{dict.settings.appearance.background[opt.value]}</span>
             </button>
           ))}
         </div>
@@ -340,15 +340,25 @@ export const ThemeSection = () => {
         <h3 className="mb-2 text-sm font-bold">
           {dict.settings.appearance.accent.title}
         </h3>
-        <div className="flex flex-row items-center gap-4">
-          <input
-            type="color"
-            defaultValue="#7c5cbf"
-            onChange={(e) => setAccentOverride(hexToHslTriple(e.target.value))}
-            className="w-10 h-9 rounded cursor-pointer border border-border"
-            title={dict.settings.appearance.accent.pick}
-          />
-          <span className="text-xs text-muted-foreground flex-1">
+        <div className="flex flex-row flex-wrap items-center gap-4">
+          <label
+            htmlFor="accent-color-picker"
+            className="flex cursor-pointer items-center gap-2 rounded-md border border-border px-2 py-1.5 text-sm transition-colors hover:bg-accent"
+          >
+            <input
+              id="accent-color-picker"
+              type="color"
+              defaultValue="#7c5cbf"
+              onChange={(e) => setAccentOverride(hexToHslTriple(e.target.value))}
+              className="h-6 w-6 cursor-pointer rounded border-0 p-0"
+              title={dict.settings.appearance.accent.pick}
+              aria-label={dict.settings.appearance.accent.pick}
+            />
+            <span className="whitespace-nowrap">
+              {dict.settings.appearance.accent.pick}
+            </span>
+          </label>
+          <span className="min-w-0 flex-1 text-xs text-muted-foreground">
             {dict.settings.appearance.accent.description}
           </span>
           {config.accentOverride && (

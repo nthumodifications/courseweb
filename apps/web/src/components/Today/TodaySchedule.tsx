@@ -296,11 +296,11 @@ const TodaySchedule: FC = () => {
 
     return (
       <div
-        className="flex min-w-0 items-baseline justify-between gap-4 py-4 opacity-30"
+        className="flex min-w-0 items-baseline justify-between gap-4 py-4"
         key={getTaipeiDateKey(firstDay)}
       >
-        <span className="min-w-0 font-medium">{identity}</span>
-        <span className="shrink-0 whitespace-nowrap font-bold">
+        <span className="min-w-0 font-medium text-foreground">{identity}</span>
+        <span className="shrink-0 whitespace-nowrap text-right font-bold">
           {dict.today.noclass_plain}
         </span>
       </div>

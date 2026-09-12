@@ -79,10 +79,10 @@ const SideNav: FC = () => {
   };
 
   return (
-    <nav className="h-full w-full flex flex-col justify-start items-start gap-4">
+    <nav className="h-full w-full flex flex-col justify-start items-start gap-3">
       {visibleLinks.map((link) => (
         <div
-          className={`w-full flex flex-row items-center justify-start gap-2 rounded-md cursor-pointer transition font-medium px-3 py-2 ${link.href === pathname ? "bg-primary text-primary-foreground" : "text-sidebar-foreground hover:bg-accent hover:text-accent-foreground"}`}
+          className={`w-full flex flex-row items-center justify-start gap-2 rounded-md cursor-pointer transition font-medium px-3 py-1.5 ${link.href === pathname ? "bg-primary text-primary-foreground" : "text-sidebar-foreground hover:bg-accent hover:text-accent-foreground"}`}
           key={link.id}
           onClick={handleLinkClick(link.href)}
         >
@@ -97,7 +97,7 @@ const SideNav: FC = () => {
         <button
           type="button"
           className={cn(
-            "w-full flex flex-row items-center justify-start gap-2 rounded-md cursor-pointer transition font-medium px-3 py-2",
+            "w-full flex flex-row items-center justify-start gap-2 rounded-md cursor-pointer transition font-medium px-3 py-1.5",
             isAdminRoute
               ? "bg-primary text-primary-foreground"
               : "text-sidebar-foreground hover:bg-accent hover:text-accent-foreground",

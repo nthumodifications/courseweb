@@ -60,9 +60,7 @@ const AlignDot = ({
         : "row-start-3";
   return (
     <div className="grid h-full w-full grid-cols-3 grid-rows-3 gap-1 p-1">
-      <div
-        className={cn("rounded-sm bg-current opacity-80 w-1 h-1", row, col)}
-      />
+      <div className={cn("h-2 w-2 rounded-sm bg-current opacity-80", row, col)} />
     </div>
   );
 };
@@ -211,20 +209,22 @@ const TimetablePreferences: React.FC<SettingsControlProps> = ({
       </div>
 
       {/* 2D Alignment picker */}
-      <div className="flex flex-row items-start gap-4 py-4">
-        <label className="font-bold text-sm pt-1 flex-1">
+      <div className="flex flex-row items-center gap-4 py-4">
+        <label className="flex-1 text-sm font-bold">
           {dict.settings.timetable.alignment}
         </label>
-        <div className="grid grid-cols-3 gap-1">
+        <div className="grid h-32 w-32 shrink-0 grid-cols-3 grid-rows-3 gap-1">
           {ALIGN_GRID.map(([h, v]) => (
             <button
               key={`${h}-${v}`}
               onClick={() => handleAlignChange(h, v)}
+              type="button"
+              aria-label={`${dict.settings.timetable.align[v]} ${dict.settings.timetable.align[h]}`}
               className={cn(
-                "flex h-10 w-10 items-center justify-center rounded border transition-colors",
+                "flex min-h-0 min-w-0 items-center justify-center rounded border transition-colors",
                 isActive(h, v)
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "border-border hover:border-muted-foreground text-muted-foreground",
+                  ? "border-primary bg-primary/10 text-primary ring-2 ring-inset ring-primary"
+                  : "border-border bg-muted/30 text-muted-foreground hover:border-muted-foreground",
               )}
               title={`${dict.settings.timetable.align[v]} ${dict.settings.timetable.align[h]}`}
             >
@@ -254,15 +254,15 @@ const TimetablePreferences: React.FC<SettingsControlProps> = ({
             return (
               <div
                 key={field}
-                className="flex flex-row items-center gap-2 py-4"
+                className="flex flex-row items-center gap-2 py-2"
               >
                 {/* Up/down order buttons */}
-                <div className="flex flex-col">
+                <div className="flex shrink-0 items-center gap-1">
                   <button
                     onClick={() => moveField(idx, -1)}
                     disabled={idx === 0}
                     type="button"
-                    className="flex h-10 w-10 items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-20"
+                    className="flex h-10 w-10 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-20"
                     aria-label={dict.settings.timetable.move_up}
                   >
                     <ChevronUp className="h-4 w-4" />
@@ -271,14 +271,14 @@ const TimetablePreferences: React.FC<SettingsControlProps> = ({
                     onClick={() => moveField(idx, 1)}
                     disabled={idx === fieldOrder.length - 1}
                     type="button"
-                    className="flex h-10 w-10 items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-20"
+                    className="flex h-10 w-10 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-20"
                     aria-label={dict.settings.timetable.move_down}
                   >
                     <ChevronDown className="h-4 w-4" />
                   </button>
                 </div>
                 {/* Field name */}
-                <div className="flex-1 text-sm">
+                <div className="min-w-0 flex-1 text-sm">
                   <span>{label}</span>
                 </div>
                 {/* Toggle */}
