@@ -15,7 +15,7 @@ const CurrentSemesterLabel = ({ language }: { language: "en" | "zh" }) => {
   );
 
   return (
-    <p className="text-xs text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
+    <p className="whitespace-pre-wrap text-xs text-muted-foreground">
       {language == "en" &&
         (currentSemester
           ? `AC${currentSemester.year} Sem ${currentSemester.semester}, Week ${currentWeek}`

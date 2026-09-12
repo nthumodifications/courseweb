@@ -1,8 +1,9 @@
 {
   "today": {
     "schedule_title": "今日課程",
-    "noclass": "今天沒有課喔！",
-    "noclass_sub": "放假吧~",
+    "noclass": "今天沒有課",
+    "noclass_plain": "沒有課",
+    "noclass_range": "{start}–{end}（{count}天）",
     "noclass_sem": "放假囉！",
     "noclass_reminder": {
       "reminder": "還沒選到課嗎？",

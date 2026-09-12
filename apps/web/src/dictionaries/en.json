@@ -2,7 +2,8 @@
   "today": {
     "schedule_title": "Today's Schedule",
     "noclass": "No Classes Today",
-    "noclass_sub": "Enjoy your day off!",
+    "noclass_plain": "No class",
+    "noclass_range": "{start}–{end} ({count} days)",
     "noclass_sem": "Enjoy your holiday!",
     "noclass_reminder": {
       "reminder": "Haven't chosen your courses yet?",
