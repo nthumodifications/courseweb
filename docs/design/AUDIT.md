@@ -131,3 +131,32 @@ breaks in `LANGUAGE.md`.
   that the app does not actually use. (§5, §6)
 - DS2 Documents components but no composition rules — no page shell, no header, no empty
   state, no copy rules. This is why it did not prevent any of the above.
+
+## Second pass
+
+### 地點 / venues
+
+- V1 Two-pane layout with no header on either pane. Left pane shows `載入中...` text at
+  an arbitrary offset; right pane shows a bare grey `從選項中選一個地點` with no icon,
+  title or structure. (§2, §7, §8)
+
+### 校車 / bus
+
+- B2 When the request fails the page spins forever — there is no error state at all.
+  Every data view needs the same three states: skeleton, content, error-with-retry. (§8)
+
+### 3D 校園地圖 / map
+
+- M1 The map itself is the best thing in the product and the only screen with a real
+  point of view: a muted campus palette of sage, lilac, sand and water blue. **That
+  palette is the reference for the neutral discipline in §5** — quiet ground, colour
+  only where it means something.
+- M2 The floating search card uses a heavy shadow and a radius that exist nowhere else;
+  the two icon buttons float unanchored; the map panel is inset with a gap on the left
+  only, so the frame is asymmetric. (§4, §12)
+- M3 The chat FAB sits on top of the OpenStreetMap attribution. (§12)
+
+### Cross-cutting
+
+- X1 Every data view needs exactly three states — **skeleton → content → error with a
+  retry** — and today almost none of them have the third. (§8)
