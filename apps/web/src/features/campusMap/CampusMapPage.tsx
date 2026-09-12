@@ -26,7 +26,7 @@ import {
   getCampusFeatureLabelKey,
   isCampusBuilding,
 } from "./sceneLogic";
-import ErrorState from "@/components/Pages/ErrorState";
+import { ErrorState } from "@courseweb/ui";
 
 function supportsWebGL(): boolean {
   try {

@@ -22,7 +22,7 @@ import { Route2LineIcon } from "@/components/BusIcons/Route2LineIcon";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { getTimeOnDate } from "@/helpers/bus";
 import useDictionary from "@/dictionaries/useDictionary";
-import ErrorState from "@/components/Pages/ErrorState";
+import { ErrorState } from "@courseweb/ui";
 import { PageHeader, PageShell } from "@courseweb/ui";
 
 type BusListingItemProps = {

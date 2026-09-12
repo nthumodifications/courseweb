@@ -34,7 +34,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useMemo } from "react";
 import { getAllBusData } from "@/libs/bus";
 import { useQuery } from "@tanstack/react-query";
-import ErrorState from "@/components/Pages/ErrorState";
+import { ErrorState } from "@courseweb/ui";
 
 enum BusStationState {
   UNAVAILABLE,

@@ -28,7 +28,7 @@ import useDictionary from "@/dictionaries/useDictionary";
 import {
   SegmentedControl,
   type SegmentedControlOption,
-} from "@/components/SegmentedControl";
+} from "@courseweb/ui";
 
 export type NavItemId = "today" | "timetable" | "bus" | "apps" | "settings";
 

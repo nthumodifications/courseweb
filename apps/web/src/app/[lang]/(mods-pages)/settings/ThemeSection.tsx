@@ -5,7 +5,7 @@ import { Button } from "@courseweb/ui";
 import {
   SegmentedControl,
   type SegmentedControlOption,
-} from "@/components/SegmentedControl";
+} from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useTheme } from "@/hooks/contexts/theme";
 import { THEME_PRESETS } from "@/config/themePresets";

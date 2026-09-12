@@ -3,10 +3,12 @@ import {
   Badge,
   Button,
   EmptyState,
+  ErrorState,
   Input,
   PageHeader,
   PageShell,
   PageSkeleton,
+  SegmentedControl,
   Section,
   Tabs,
   TabsContent,
@@ -29,6 +31,7 @@ import useDictionary from "@/dictionaries/useDictionary";
 const DesignSystem = () => {
   const dict = useDictionary();
   const [activeSection, setActiveSection] = useState("philosophy");
+  const [segmentValue, setSegmentValue] = useState("one");
 
   const sectionIds = useMemo(
     () => ["philosophy", "composition", "primitives", "tokens", "gallery"],
@@ -387,6 +390,45 @@ const DesignSystem = () => {
                         {dict.design_system.primitives.empty_action}
                       </Button>
                     }
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-3">
+                  <h3 className="text-base font-semibold">
+                    {dict.design_system.primitives.error_label}
+                  </h3>
+                  <ErrorState
+                    size="sm"
+                    title={dict.design_system.primitives.error_title}
+                    description={
+                      dict.design_system.primitives.error_description
+                    }
+                    retryLabel={dict.design_system.primitives.error_action}
+                    onRetry={() => undefined}
+                  />
+                </div>
+                <div className="space-y-3">
+                  <h3 className="text-base font-semibold">
+                    {dict.design_system.primitives.segmented_label}
+                  </h3>
+                  <SegmentedControl
+                    value={segmentValue}
+                    options={[
+                      {
+                        value: "one",
+                        label:
+                          dict.design_system.primitives.segmented_option_one,
+                      },
+                      {
+                        value: "two",
+                        label:
+                          dict.design_system.primitives.segmented_option_two,
+                      },
+                    ]}
+                    onValueChange={setSegmentValue}
+                    aria-label={dict.design_system.primitives.segmented_aria}
                   />
                 </div>
               </div>

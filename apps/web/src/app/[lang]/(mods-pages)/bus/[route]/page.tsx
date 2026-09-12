@@ -21,7 +21,7 @@ import {
   PageShell,
   PageSkeleton,
 } from "@courseweb/ui";
-import ErrorState from "@/components/Pages/ErrorState";
+import { ErrorState } from "@courseweb/ui";
 import { ChevronLeft } from "lucide-react";
 
 type BusRouteDetailsPageProps = {

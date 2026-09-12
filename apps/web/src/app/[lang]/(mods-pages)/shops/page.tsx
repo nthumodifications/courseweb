@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import ShopList from "./ShopList";
 import { PageHeader, PageShell, PageSkeleton } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
-import ErrorState from "@/components/Pages/ErrorState";
+import { ErrorState } from "@courseweb/ui";
 
 export default function Page() {
   const dict = useDictionary();

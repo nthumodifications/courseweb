@@ -1,37 +1,4 @@
 {
   "version": 1,
-  "rules": {
-    "hardcoded-color": {
-      "files": {
-        "apps/web/src/app/[lang]/(mods-pages)/student/planner/lib/folder-colors.ts": 1,
-        "apps/web/src/components/Today/WeatherIcon.tsx": 2
-      },
-      "cleaned": []
-    },
-    "dark-color": {
-      "files": {
-        "apps/web/src/app/[lang]/admin/announcements/page.tsx": 1,
-        "apps/web/src/features/campusMap/CampusScene.tsx": 2,
-        "packages/ui/src/components/ui/alert.tsx": 1
-      },
-      "cleaned": []
-    },
-    "large-type": {
-      "files": {},
-      "cleaned": []
-    },
-    "overlay-shadow": {
-      "files": {
-        "apps/web/src/app/[lang]/admin/page.tsx": 1,
-        "apps/web/src/components/Calendar/calendar_hook.tsx": 1,
-        "apps/web/src/features/campusMap/CampusScene.tsx": 2,
-        "packages/ui/src/components/ui/card.tsx": 1,
-        "packages/ui/src/components/ui/custom_timeselect.tsx": 1,
-        "packages/ui/src/components/ui/hover-card.tsx": 1,
-        "packages/ui/src/components/ui/select.tsx": 1,
-        "packages/ui/src/components/ui/tooltip.tsx": 1
-      },
-      "cleaned": []
-    }
-  }
+  "rules": {}
 }
