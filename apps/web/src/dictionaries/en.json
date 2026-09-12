@@ -929,6 +929,7 @@
     "privacy_policy": "Privacy Policy",
     "proxy_login": "Proxy Login",
     "design_system": "Design System",
+    "navigation": "Footer navigation",
     "copyright": "All rights reserved.",
     "disclaimer": "NTHUMods is not affiliated with National Tsing Hua University. But my graduation depends on them so don't worry."
   },
@@ -947,10 +948,12 @@
     "sponsors": {
       "title": "Our Amazing Sponsors",
       "description": "We're grateful for the incredible support from our sponsors who make NTHUMods possible!",
+      "algolia_name": "Algolia",
       "algolia": "Search Engine",
       "cerana": "Infrastructure Sponsor"
     },
     "stats": {
+      "title": "Community snapshot",
       "active_users": "Active Users",
       "open_source": "Open Source",
       "years_running": "Years Running",
@@ -961,7 +964,7 @@
       "description": "NTHUMods is a 100% student-led, open source project. We rely on the support of our contributors and the NTHU community to keep this platform alive and thriving. Every contribution, no matter how small, makes a real difference in the lives of thousands of students!"
     },
     "financial_support": {
-      "title": "💰 Financial Support",
+      "title": "Financial support",
       "description": "Help us cover development costs, and other expenses. Every dollar helps us maintain and improve the platform for all students.",
       "opencollective": "Support on OpenCollective"
     },
@@ -1401,8 +1404,57 @@
   },
   "test": {},
   "team": {
+    "title": "Team",
+    "about_title": "Who are we?",
+    "about_description": "NTHUMods is a student-run project that helps NTHU students find campus information and share practical experience.",
+    "contact_intro": "Have feedback or an idea? Send us an email or explore the GitHub repository.",
+    "email_link": "Email NTHUMods",
+    "github_link": "GitHub repository",
+    "core_title": "Core team",
+    "dedicated_title": "Dedicated members",
+    "profile_link": "Personal website",
+    "github_profile": "GitHub profile",
+    "linkedin_profile": "LinkedIn profile",
     "recruitment_intro": "Want to help NTHUMods grow?",
     "recruitment_link": "See our open roles"
+  },
+  "issues": {
+    "title": "Report an issue",
+    "data_sources": {
+      "title": "Data sources",
+      "intro": "We combine several sources to provide useful course information. They include:",
+      "sources": [
+        {
+          "title": "Latest course data (JSON)",
+          "link_label": "View the latest course data",
+          "url": "https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/OPENDATA/open_course_data.json"
+        },
+        {
+          "title": "University course catalog",
+          "link_label": "View the university course catalog",
+          "url": "https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/6/6.2/6.2.9/JH629001.php"
+        },
+        {
+          "title": "Course averages and standard deviations",
+          "link_label": "View course averages and standard deviations",
+          "url": "https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/8/8.4/8.4.2/JH84201.php"
+        }
+      ],
+      "update_note": "We fetch and update the data at 8 AM every day. If course details look wrong on NTHUMods, check the sources above before reporting the problem to us."
+    },
+    "form": {
+      "title": "Submit a report",
+      "description": "Provide a clear title and detailed description so we can reproduce and investigate the problem.",
+      "title_label": "Title",
+      "description_label": "Issue description",
+      "submit": "Submit report",
+      "title_required": "Please enter a title.",
+      "description_required": "Please enter an issue description.",
+      "success_title": "Issue submitted",
+      "success_description": "Thanks for the report. We will take a look soon.",
+      "failure_title": "Could not submit issue",
+      "failure_description": "The report could not be submitted. Please try again later."
+    }
   },
   "recruit": {
     "title": "Join NTHUMods",
@@ -1436,7 +1488,9 @@
     "meet_team": "Learn more about the team",
     "loading": "Loading recruitment information...",
     "roles_error": "We could not load the open roles. Please try again later.",
+    "roles_error_description": "Check your connection, or reload the recruitment information in a moment.",
     "application_error": "We could not load your application status. Please refresh and try again.",
+    "application_error_description": "Your application was not changed; reload the status to try again.",
     "form": {
       "title": "Application",
       "description": "Tell us how you would like to help. A resume PDF is required.",
@@ -1480,7 +1534,180 @@
     "submitted_description": "Thank you for volunteering your time. We will review your application and contact you using your preferred method.",
     "existing_description": "Your application is already on file. You can return here to check its status.",
     "footer_link": "Recruitment",
-    "no_roles": "There are no open roles right now. Please check back later."
+    "no_roles": "There are no open roles right now",
+    "no_roles_description": "Please check back later for new opportunities."
+  },
+  "privacy_policy_page": {
+    "title": "Privacy policy",
+    "updated": "Last updated: 2025/02/20",
+    "intro": "Welcome to NTHUMods. To help you use this website's services and information with confidence, this policy explains how we protect your privacy. Please read it carefully.",
+    "sections": [
+      {
+        "title": "1. Scope of the privacy policy",
+        "paragraphs": [],
+        "items": [
+          "This policy explains how the website handles personal identification data collected when you use its services.",
+          "This policy does not apply to linked websites outside this website or to people who are not entrusted with or involved in managing this website."
+        ]
+      },
+      {
+        "title": "2. Collection and use of data",
+        "paragraphs": [
+          "To provide the best interactive services, we may ask you for relevant personal data. The scope is as follows:"
+        ],
+        "items": [
+          "When you use interactive features such as service mailboxes or surveys, the website keeps the name, email address, contact information, and usage time you provide.",
+          "During general browsing, the server automatically records your IP address, usage time, browser, browsing activity, and click data as references for improving the website. These records are for internal use and are never published externally.",
+          "To provide accurate services, we statistically analyze survey content. We may publish the resulting statistics or explanations when necessary, but they will not identify specific people.",
+          "After login, the server does not store your password or session. Your password is saved on your device for authentication; unless otherwise stated, the website does not store other personal data without your consent.",
+          "Unless you consent or the law provides otherwise, the website does not disclose personal data to third parties or use it for purposes outside the reason it was collected."
+        ]
+      },
+      {
+        "title": "3. Protection of data",
+        "paragraphs": [],
+        "items": [
+          "The website host uses firewalls, antivirus systems, and other security measures to protect the website and your personal data. Strict safeguards are used, and only authorized personnel may access your data.",
+          "When business needs require us to entrust a related organization with a service, we require it to keep information confidential and use necessary procedures to verify compliance."
+        ]
+      },
+      {
+        "title": "4. External links",
+        "paragraphs": [
+          "This website links to other websites. The privacy policy of this website does not apply to those linked websites, so please refer to their own policies."
+        ],
+        "items": []
+      },
+      {
+        "title": "5. Cookies",
+        "paragraphs": [
+          "To provide the best service, this website places and accesses cookies on your computer. If you do not want to accept cookies, set your browser's privacy level to high; some website features may then stop working properly."
+        ],
+        "items": []
+      },
+      {
+        "title": "6. Changes to this policy",
+        "paragraphs": [
+          "This privacy policy may be revised as needed. Revised terms will be published on the website."
+        ],
+        "items": []
+      }
+    ],
+    "closing": "This article is translated from the Chinese version. If there is any discrepancy, please refer to the Chinese version."
+  },
+  "next_steps_page": {
+    "title": "Termination of NTHUMods proxy login for the CCXP system",
+    "updated": "Announcement date: 2025/03/05",
+    "intro": "The NTHUMods team is grateful for your support. To avoid concerns under personal data protection law, we will end the proxy login service for the NTHU CCXP system on May 3, 2025. Features that require a CCXP login will be suspended; features that do not require a login will continue to work.",
+    "sections": [
+      {
+        "title": "What happened",
+        "paragraphs": [
+          "We received guidance from NTHU that the proxy login service may raise concerns under personal data protection law. Although no data breach has occurred, the team decided to end the service. NTHUMods is considered an external third-party platform, so our servers cannot use a user's account and password to log in to the university system on their behalf."
+        ]
+      },
+      {
+        "title": "What we are doing",
+        "paragraphs": [
+          "NTHU does not currently provide a public API for third-party platforms to retrieve this data. We will continue discussing alternatives with the university and hope to provide a convenient service that remains compliant with the law."
+        ]
+      },
+      {
+        "title": "Looking ahead",
+        "paragraphs": [
+          "We remain committed to making campus information easy to access through a clear, intuitive interface. We will continue following that principle and improving NTHUMods for students."
+        ]
+      }
+    ],
+    "closing": [
+      "Thank you for supporting and caring for NTHUMods. We look forward to growing with you.",
+      "If you would like to join us, contact the team through Instagram (@nthumods) or email (nthumods@gmail.com)."
+    ],
+    "signoff": "The NTHUMods team"
+  },
+  "proxy_login_page": {
+    "title": "NTHUMods proxy login explained",
+    "updated": "Last updated: 2025/03/04",
+    "what": {
+      "title": "What is NTHUMods proxy login?",
+      "body_before": "NTHUMods proxy login helps users securely sign in to the NTHU Academic Information System (CCXP) through NTHUMods. It uses encryption to protect accounts and passwords and is an important part of our",
+      "link": "authentication system",
+      "body_after": "."
+    },
+    "note": {
+      "label": "Note:",
+      "body_before": "For complete technical details, please see",
+      "link": "authentication and session management",
+      "body_after": ". This page provides a simplified overview."
+    },
+    "features": {
+      "title": "How proxy login connects to other features",
+      "intro": "Proxy login supports several NTHUMods features and lets you securely access:",
+      "links": [
+        {
+          "label": "Course information and registration",
+          "description": "Browse, search, and manage courses",
+          "path": "course"
+        },
+        {
+          "label": "Grade query system",
+          "description": "Securely view your academic records",
+          "path": "grades"
+        },
+        {
+          "label": "Important dates and course reviews",
+          "description": "Keep up with key academic dates and course feedback",
+          "path": "comment-dates"
+        },
+        {
+          "label": "Other useful tools",
+          "description": "Explore more features offered by NTHUMods",
+          "path": "misc"
+        }
+      ]
+    },
+    "account": {
+      "title": "How we use your account information",
+      "intro": "When you use NTHUMods proxy login, we need your student ID and password for initial verification. The process is:",
+      "steps": [
+        "Send a request to the university login page to obtain a CAPTCHA image.",
+        "Use OCR technology to solve the CAPTCHA.",
+        "Submit your student ID, password, and CAPTCHA solution.",
+        "Verify the login and obtain a session token."
+      ],
+      "emphasis": "Your information is stored only on your device. We do not store account data."
+    },
+    "protection": {
+      "title": "How we protect your information",
+      "intro": "We take these basic steps to protect your information:",
+      "items": [
+        "Your information is stored only on your device; sensitive information is not stored on our servers.",
+        "Passwords stored on your device are encrypted with AES-256-CBC."
+      ],
+      "flow_title": "Basic password handling process",
+      "flow": "graph TD; A[User enters password] -->|Encryption| B[Encrypted password]; B --> C[Stored on user device]; C -->|Decryption when needed| D[Use password to log in];",
+      "reference": "For more detail about encryption, see the authentication page."
+    },
+    "process": {
+      "title": "Basic proxy login process",
+      "intro": "Here is a simplified view of the proxy login process:",
+      "flow": "graph TD; subgraph User device; A1[User enters ID and password] --> B1[Send login request]; end; subgraph Server; B1 --> C1[Get and process CAPTCHA]; C1 --> F1[Verify login and establish session]; F1 -->|Success| G1[Return session token]; F1 -->|Failure| H1[Return error]; end; G1 --> I1[User device]; subgraph Automatic updates; J1[When CCXP features are needed] --> K1[Automatically update the session with the encrypted password]; end;",
+      "reference": "For detailed flowcharts and a complete explanation, see the authentication page."
+    },
+    "reauth": {
+      "title": "When automatic re-authentication occurs",
+      "body_before": "When your JWT expires or you use a feature linked to the university information system, such as",
+      "course": "course information",
+      "middle": "or",
+      "grades": "grade queries",
+      "body_after": ", the system automatically updates your session."
+    },
+    "references": {
+      "title": "References",
+      "body_before": "For the detailed code, see the",
+      "link": "NTHUMods GitHub source",
+      "url": "https://github.com/nthumodifications/courseweb/blob/main/src/lib/headless_ais/headless_ais.ts"
+    }
   },
   "design_system": {
     "title": "NTHUMods design language",

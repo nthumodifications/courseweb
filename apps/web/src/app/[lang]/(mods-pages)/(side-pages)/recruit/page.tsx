@@ -6,6 +6,11 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  EmptyState,
+  PageHeader,
+  PageSkeleton,
+  PageShell,
+  Section,
   Input,
   Label,
   Select,
@@ -17,6 +22,7 @@ import {
   X,
 } from "@courseweb/ui";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { AlertCircle, BriefcaseBusiness, RefreshCw } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useAuth } from "react-oidc-context";
 import { Link, useParams } from "react-router-dom";
@@ -54,6 +60,7 @@ const RecruitmentPage = () => {
   const [roles, setRoles] = useState<Role[]>([]);
   const [rolesLoading, setRolesLoading] = useState(true);
   const [rolesError, setRolesError] = useState(false);
+  const [rolesRetry, setRolesRetry] = useState(0);
   const [application, setApplication] = useState<Application | null>(null);
   const [applicationLoading, setApplicationLoading] = useState(false);
   const [applicationError, setApplicationError] = useState(false);
@@ -77,6 +84,8 @@ const RecruitmentPage = () => {
 
   useEffect(() => {
     let cancelled = false;
+    setRolesLoading(true);
+    setRolesError(false);
     void fetch(`${API_BASE}/recruit/roles`)
       .then(async (response) => {
         if (!response.ok) {
@@ -96,7 +105,7 @@ const RecruitmentPage = () => {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [rolesRetry]);
 
   const loadApplication = useCallback(async (accessToken: string) => {
     setApplicationLoading(true);
@@ -242,328 +251,359 @@ const RecruitmentPage = () => {
     : null;
 
   return (
-    <div className="flex flex-col gap-6 px-4 py-6 sm:gap-10 sm:py-8">
-      <article className="mx-auto w-full max-w-4xl">
-        <div className="mb-8 text-left sm:mb-10 sm:text-center">
-          <h1 className="mb-3 text-3xl font-bold sm:mb-4 sm:text-4xl md:text-5xl">
+    <PageShell width="content">
+      <PageHeader
+        className="text-center [&>div:first-child]:justify-center [&_h1]:overflow-visible [&_h1]:text-clip [&_h1]:whitespace-normal"
+        title={
+          <span className="text-4xl font-bold tracking-tight">
             {dict.recruit.title}
-          </h1>
-          <p className="mb-2 text-lg text-muted-foreground sm:mb-3 sm:text-xl">
-            {dict.recruit.subtitle}
-          </p>
-          <p className="mx-auto max-w-2xl text-sm text-muted-foreground sm:text-base">
-            {dict.recruit.intro}
-          </p>
-        </div>
+          </span>
+        }
+        description={dict.recruit.subtitle}
+      />
 
-        <section className="mb-8 sm:mb-10">
-          <h2 className="mb-3 text-xl font-semibold sm:mb-4 sm:text-2xl">
-            {dict.recruit.open_roles}
-          </h2>
-          {rolesLoading ? (
-            <p className="text-muted-foreground">{dict.recruit.loading}</p>
-          ) : rolesError ? (
-            <p className="text-destructive">{dict.recruit.roles_error}</p>
-          ) : roles.length === 0 ? (
-            <p className="text-muted-foreground">{dict.recruit.no_roles}</p>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2">
-              {roles.map((role) => {
-                const roleCopy =
-                  dict.recruit.roles[
-                    role.id as keyof typeof dict.recruit.roles
-                  ];
-                if (!roleCopy) return null;
-                return (
-                  <Card key={role.id}>
-                    <CardHeader>
-                      <CardTitle className="text-lg sm:text-xl">
-                        {roleCopy.title}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <CardDescription>{roleCopy.description}</CardDescription>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          )}
-        </section>
-
-        {/* Stacked and full width on a phone so the primary action is a real
-            tap target instead of a cramped inline pair. */}
-        <div className="mb-8 flex flex-col-reverse items-stretch gap-3 sm:mb-10 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
-          <Link
-            className="text-center text-primary underline sm:text-left"
-            to={`/${lang}/team`}
-          >
-            {dict.recruit.meet_team}
-          </Link>
-          {!auth.isAuthenticated && !auth.isLoading && (
-            <Button
-              className="w-full sm:w-auto"
-              onClick={() => void auth.signinRedirect()}
-            >
-              {dict.recruit.sign_in}
-            </Button>
-          )}
-        </div>
-
-        {auth.isLoading || applicationLoading ? (
-          <p className="text-muted-foreground">{dict.recruit.loading}</p>
-        ) : !auth.isAuthenticated ? (
-          <Card>
-            <CardContent className="p-6">
-              <p className="text-muted-foreground">
-                {dict.recruit.sign_in_prompt}
-              </p>
-            </CardContent>
-          </Card>
-        ) : applicationError ? (
-          <p className="text-destructive">{dict.recruit.application_error}</p>
-        ) : application ? (
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                {submittedNow
-                  ? dict.recruit.submitted_title
-                  : dict.recruit.application_status}
-              </CardTitle>
-              <CardDescription>
-                {submittedNow
-                  ? dict.recruit.submitted_description
-                  : dict.recruit.existing_description}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="font-medium">
-                {dict.recruit.application_status}: {statusLabel}
-              </p>
-            </CardContent>
-          </Card>
+      <Section title={dict.recruit.open_roles} description={dict.recruit.intro}>
+        {rolesLoading ? (
+          <PageSkeleton rows={2} />
+        ) : rolesError ? (
+          <EmptyState
+            size="sm"
+            icon={AlertCircle}
+            title={dict.recruit.roles_error}
+            description={dict.recruit.roles_error_description}
+            action={
+              <Button
+                variant="outline"
+                onClick={() => setRolesRetry((value) => value + 1)}
+              >
+                <RefreshCw aria-hidden="true" />
+                {dict.common.try_again}
+              </Button>
+            }
+          />
         ) : roles.length === 0 ? (
-          <p className="text-muted-foreground">{dict.recruit.no_roles}</p>
+          <EmptyState
+            size="sm"
+            icon={BriefcaseBusiness}
+            title={dict.recruit.no_roles}
+            description={dict.recruit.no_roles_description}
+          />
         ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle>{dict.recruit.form.title}</CardTitle>
-              <CardDescription>{dict.recruit.form.description}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Form {...form}>
-                <form
-                  className="flex flex-col gap-6"
-                  onSubmit={form.handleSubmit(handleSubmit)}
-                >
-                  <FormField
-                    control={form.control}
-                    name="role"
-                    render={({ field }) => (
-                      <FormItem>
-                        <Label htmlFor="recruit-role">
-                          {dict.recruit.form.role}
-                        </Label>
-                        <Select
-                          value={field.value}
-                          onValueChange={field.onChange}
-                        >
-                          <FormControl>
-                            <SelectTrigger id="recruit-role">
-                              <SelectValue
-                                placeholder={dict.recruit.form.role_placeholder}
-                              />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {roles.map((role) => {
-                              const roleCopy =
-                                dict.recruit.roles[
-                                  role.id as keyof typeof dict.recruit.roles
-                                ];
-                              return roleCopy ? (
-                                <SelectItem key={role.id} value={role.id}>
-                                  {roleCopy.title}
-                                </SelectItem>
-                              ) : null;
-                            })}
-                          </SelectContent>
-                        </Select>
-                      </FormItem>
-                    )}
-                  />
+          <div className="grid gap-4 sm:grid-cols-2">
+            {roles.map((role) => {
+              const roleCopy =
+                dict.recruit.roles[role.id as keyof typeof dict.recruit.roles];
+              if (!roleCopy) return null;
+              return (
+                <Card key={role.id}>
+                  <CardHeader>
+                    <CardTitle className="text-base">
+                      {roleCopy.title}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <CardDescription className="max-w-prose">
+                      {roleCopy.description}
+                    </CardDescription>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+      </Section>
 
+      {/* Stacked and full width on a phone so the primary action is a real
+            tap target instead of a cramped inline pair. */}
+      <div className="flex flex-col-reverse items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+        <Button variant="ghost" asChild>
+          <Link to={`/${lang}/team`}>{dict.recruit.meet_team}</Link>
+        </Button>
+        {!auth.isAuthenticated && !auth.isLoading && (
+          <Button
+            className="w-full sm:w-auto"
+            onClick={() => void auth.signinRedirect()}
+          >
+            {dict.recruit.sign_in}
+          </Button>
+        )}
+      </div>
+
+      {auth.isLoading || applicationLoading ? (
+        <PageSkeleton rows={1} />
+      ) : !auth.isAuthenticated ? (
+        <Card>
+          <CardContent className="p-6">
+            <p className="text-muted-foreground">
+              {dict.recruit.sign_in_prompt}
+            </p>
+          </CardContent>
+        </Card>
+      ) : applicationError ? (
+        <EmptyState
+          size="sm"
+          icon={AlertCircle}
+          title={dict.recruit.application_error}
+          description={dict.recruit.application_error_description}
+          action={
+            <Button
+              variant="outline"
+              onClick={() => {
+                const accessToken = auth.user?.access_token;
+                if (accessToken) void loadApplication(accessToken);
+              }}
+            >
+              <RefreshCw aria-hidden="true" />
+              {dict.common.try_again}
+            </Button>
+          }
+        />
+      ) : application ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">
+              {submittedNow
+                ? dict.recruit.submitted_title
+                : dict.recruit.application_status}
+            </CardTitle>
+            <CardDescription>
+              {submittedNow
+                ? dict.recruit.submitted_description
+                : dict.recruit.existing_description}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="font-medium">
+              {dict.recruit.application_status}: {statusLabel}
+            </p>
+          </CardContent>
+        </Card>
+      ) : roles.length === 0 ? (
+        <EmptyState
+          size="sm"
+          icon={BriefcaseBusiness}
+          title={dict.recruit.no_roles}
+          description={dict.recruit.no_roles_description}
+        />
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">
+              {dict.recruit.form.title}
+            </CardTitle>
+            <CardDescription>{dict.recruit.form.description}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form
+                className="flex max-w-xl flex-col gap-6"
+                onSubmit={form.handleSubmit(handleSubmit)}
+              >
+                <FormField
+                  control={form.control}
+                  name="role"
+                  render={({ field }) => (
+                    <FormItem>
+                      <Label htmlFor="recruit-role">
+                        {dict.recruit.form.role}
+                      </Label>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <FormControl>
+                          <SelectTrigger id="recruit-role">
+                            <SelectValue
+                              placeholder={dict.recruit.form.role_placeholder}
+                            />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {roles.map((role) => {
+                            const roleCopy =
+                              dict.recruit.roles[
+                                role.id as keyof typeof dict.recruit.roles
+                              ];
+                            return roleCopy ? (
+                              <SelectItem key={role.id} value={role.id}>
+                                {roleCopy.title}
+                              </SelectItem>
+                            ) : null;
+                          })}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="statement"
+                  render={({ field }) => (
+                    <FormItem>
+                      <Label htmlFor="recruit-statement">
+                        {dict.recruit.form.statement}
+                      </Label>
+                      <FormControl>
+                        <Textarea
+                          id="recruit-statement"
+                          placeholder={dict.recruit.form.statement_placeholder}
+                          rows={6}
+                          {...field}
+                        />
+                      </FormControl>
+                      {form.formState.errors.statement && (
+                        <p className="text-sm text-destructive">
+                          {dict.recruit.form.statement_error}
+                        </p>
+                      )}
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="contactPreference"
+                  render={({ field }) => (
+                    <FormItem>
+                      <Label htmlFor="recruit-contact">
+                        {dict.recruit.form.contact}
+                      </Label>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <FormControl>
+                          <SelectTrigger id="recruit-contact">
+                            <SelectValue
+                              placeholder={
+                                dict.recruit.form.contact_placeholder
+                              }
+                            />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="email">
+                            {dict.recruit.form.contact_email}
+                          </SelectItem>
+                          <SelectItem value="discord">
+                            {dict.recruit.form.contact_discord}
+                          </SelectItem>
+                          <SelectItem value="either">
+                            {dict.recruit.form.contact_either}
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid gap-4 md:grid-cols-2">
                   <FormField
                     control={form.control}
-                    name="statement"
+                    name="github"
                     render={({ field }) => (
                       <FormItem>
-                        <Label htmlFor="recruit-statement">
-                          {dict.recruit.form.statement}
+                        <Label htmlFor="recruit-github">
+                          {dict.recruit.form.github}
                         </Label>
                         <FormControl>
-                          <Textarea
-                            id="recruit-statement"
-                            placeholder={
-                              dict.recruit.form.statement_placeholder
-                            }
-                            rows={6}
-                            {...field}
-                          />
+                          <Input id="recruit-github" {...field} />
                         </FormControl>
-                        {form.formState.errors.statement && (
+                        {form.formState.errors.github && (
                           <p className="text-sm text-destructive">
-                            {dict.recruit.form.statement_error}
+                            {dict.recruit.form.link_error}
                           </p>
                         )}
                       </FormItem>
                     )}
                   />
-
                   <FormField
                     control={form.control}
-                    name="contactPreference"
+                    name="portfolio"
                     render={({ field }) => (
                       <FormItem>
-                        <Label htmlFor="recruit-contact">
-                          {dict.recruit.form.contact}
+                        <Label htmlFor="recruit-portfolio">
+                          {dict.recruit.form.portfolio}
                         </Label>
-                        <Select
-                          value={field.value}
-                          onValueChange={field.onChange}
-                        >
-                          <FormControl>
-                            <SelectTrigger id="recruit-contact">
-                              <SelectValue
-                                placeholder={
-                                  dict.recruit.form.contact_placeholder
-                                }
-                              />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="email">
-                              {dict.recruit.form.contact_email}
-                            </SelectItem>
-                            <SelectItem value="discord">
-                              {dict.recruit.form.contact_discord}
-                            </SelectItem>
-                            <SelectItem value="either">
-                              {dict.recruit.form.contact_either}
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <FormControl>
+                          <Input id="recruit-portfolio" {...field} />
+                        </FormControl>
+                        {form.formState.errors.portfolio && (
+                          <p className="text-sm text-destructive">
+                            {dict.recruit.form.link_error}
+                          </p>
+                        )}
                       </FormItem>
                     )}
                   />
+                </div>
 
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <FormField
-                      control={form.control}
-                      name="github"
-                      render={({ field }) => (
-                        <FormItem>
-                          <Label htmlFor="recruit-github">
-                            {dict.recruit.form.github}
-                          </Label>
-                          <FormControl>
-                            <Input id="recruit-github" {...field} />
-                          </FormControl>
-                          {form.formState.errors.github && (
-                            <p className="text-sm text-destructive">
-                              {dict.recruit.form.link_error}
-                            </p>
-                          )}
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="portfolio"
-                      render={({ field }) => (
-                        <FormItem>
-                          <Label htmlFor="recruit-portfolio">
-                            {dict.recruit.form.portfolio}
-                          </Label>
-                          <FormControl>
-                            <Input id="recruit-portfolio" {...field} />
-                          </FormControl>
-                          {form.formState.errors.portfolio && (
-                            <p className="text-sm text-destructive">
-                              {dict.recruit.form.link_error}
-                            </p>
-                          )}
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-2">
-                    <Label htmlFor="recruit-resume">
-                      {dict.recruit.form.resume}
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      {dict.recruit.form.resume_help}
-                    </p>
-                    <Input
-                      ref={fileInputRef}
-                      id="recruit-resume"
-                      type="file"
-                      accept="application/pdf,.pdf"
-                      onChange={(event) =>
-                        handleFileChange(event.target.files?.[0])
-                      }
-                    />
-                    {selectedFile && (
-                      <div className="flex items-center justify-between rounded-md border p-3 text-sm">
-                        <span className="min-w-0 truncate">
-                          {dict.recruit.form.selected_file}: {selectedFile.name}
-                        </span>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          aria-label={dict.recruit.form.remove_file}
-                          onClick={removeFile}
-                        >
-                          <X />
-                        </Button>
-                      </div>
-                    )}
-                    {fileError && (
-                      <p className="text-sm text-destructive">{fileError}</p>
-                    )}
-                  </div>
-
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="recruit-resume">
+                    {dict.recruit.form.resume}
+                  </Label>
                   <p className="text-sm text-muted-foreground">
-                    {dict.recruit.form.privacy}{" "}
-                    <Link className="underline" to={`/${lang}/privacy-policy`}>
-                      {dict.recruit.form.privacy_link}
-                    </Link>
-                    .
+                    {dict.recruit.form.resume_help}
                   </p>
-
-                  {submitError && (
-                    <p className="text-sm text-destructive">{submitError}</p>
+                  <Input
+                    ref={fileInputRef}
+                    id="recruit-resume"
+                    type="file"
+                    accept="application/pdf,.pdf"
+                    onChange={(event) =>
+                      handleFileChange(event.target.files?.[0])
+                    }
+                  />
+                  {selectedFile && (
+                    <div className="flex items-center justify-between rounded-md border p-3 text-sm">
+                      <span className="min-w-0 truncate">
+                        {dict.recruit.form.selected_file}: {selectedFile.name}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label={dict.recruit.form.remove_file}
+                        onClick={removeFile}
+                      >
+                        <X />
+                      </Button>
+                    </div>
                   )}
-                  <Button
-                    type="submit"
-                    disabled={form.formState.isSubmitting || isUploading}
-                  >
-                    {isUploading
-                      ? dict.recruit.form.uploading
-                      : form.formState.isSubmitting
-                        ? dict.recruit.form.submitting
-                        : dict.recruit.form.submit}
-                  </Button>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
-        )}
-      </article>
+                  {fileError && (
+                    <p className="text-sm text-destructive">{fileError}</p>
+                  )}
+                </div>
+
+                <p className="text-sm text-muted-foreground">
+                  {dict.recruit.form.privacy}{" "}
+                  <Link className="underline" to={`/${lang}/privacy-policy`}>
+                    {dict.recruit.form.privacy_link}
+                  </Link>
+                  .
+                </p>
+
+                {submitError && (
+                  <p className="text-sm text-destructive">{submitError}</p>
+                )}
+                <Button
+                  type="submit"
+                  disabled={form.formState.isSubmitting || isUploading}
+                >
+                  {isUploading
+                    ? dict.recruit.form.uploading
+                    : form.formState.isSubmitting
+                      ? dict.recruit.form.submitting
+                      : dict.recruit.form.submit}
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+      )}
       <Footer />
-    </div>
+    </PageShell>
   );
 };
 

@@ -1,16 +1,18 @@
-import { Badge, Card, CardContent } from "@courseweb/ui";
+import { Badge, PageHeader, PageShell, Section } from "@courseweb/ui";
 import { CalendarDays } from "lucide-react";
 import { useParams } from "react-router-dom";
+
+import { CHANGELOG, type ChangelogEntryType } from "@/const/changelog";
 import Footer from "@/components/Footer";
 import useDictionary from "@/dictionaries/useDictionary";
-import { CHANGELOG, ChangelogEntryType } from "@/const/changelog";
 
-const typeStyles: Record<ChangelogEntryType, string> = {
-  feature:
-    "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-200",
-  improvement:
-    "border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-900 dark:bg-purple-950 dark:text-purple-200",
-  fix: "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200",
+const typeVariants: Record<
+  ChangelogEntryType,
+  "default" | "secondary" | "outline"
+> = {
+  feature: "default",
+  improvement: "secondary",
+  fix: "outline",
 };
 
 const formatReleaseDate = (date: string, locale: string) =>
@@ -27,70 +29,67 @@ const ChangelogPage = () => {
   const locale = language === "en" ? "en-US" : "zh-TW";
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
-      <header className="mb-10 flex flex-col gap-2">
-        <h1 className="text-3xl font-bold md:text-4xl">
-          {dict.changelog.title}
-        </h1>
-        <p className="text-muted-foreground">{dict.changelog.description}</p>
-      </header>
+    <PageShell width="content">
+      <PageHeader
+        className="[&_h1]:overflow-visible [&_h1]:text-clip [&_h1]:whitespace-normal"
+        title={
+          <span className="text-4xl font-bold tracking-tight">
+            {dict.changelog.title}
+          </span>
+        }
+        description={dict.changelog.description}
+      />
 
-      <main className="space-y-8">
-        {CHANGELOG.map((release) => (
-          <article key={release.version} className="space-y-3">
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
-              <span className="font-semibold text-foreground">
-                {dict.changelog.release} {release.version}
-              </span>
-              <span className="inline-flex items-center gap-1">
-                <CalendarDays className="h-4 w-4" aria-hidden="true" />
-                <time dateTime={release.date}>
-                  {formatReleaseDate(release.date, locale)}
-                </time>
-              </span>
-            </div>
+      {CHANGELOG.map((release) => (
+        <Section
+          key={release.version}
+          title={`${dict.changelog.release} ${release.version}`}
+        >
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <CalendarDays className="h-4 w-4" aria-hidden="true" />
+            <time dateTime={release.date}>
+              {formatReleaseDate(release.date, locale)}
+            </time>
+          </div>
 
-            {release.title && (
-              <h2 className="text-2xl font-semibold">
-                {release.title[language]}
-              </h2>
-            )}
+          {release.title && (
+            <h3 className="text-base font-semibold">
+              {release.title[language]}
+            </h3>
+          )}
 
-            <Card>
-              <CardContent className="p-4 sm:p-6">
-                <ul className="space-y-5">
-                  {release.items.map((item, index) => (
-                    <li
-                      key={`${release.version}-${index}`}
-                      className="flex items-start gap-3"
-                    >
-                      <Badge
-                        variant="outline"
-                        className={`mt-0.5 shrink-0 ${typeStyles[item.type]}`}
-                      >
-                        {dict.changelog.types[item.type]}
-                      </Badge>
-                      <div className="min-w-0 space-y-1">
-                        <h3 className="font-semibold leading-snug">
-                          {item.title[language]}
-                        </h3>
-                        {item.description && (
-                          <p className="text-sm leading-relaxed text-muted-foreground">
-                            {item.description[language]}
-                          </p>
-                        )}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          </article>
-        ))}
-      </main>
+          <div className="rounded-lg border border-border bg-card p-4">
+            <ul className="space-y-3">
+              {release.items.map((item, index) => (
+                <li
+                  key={`${release.version}-${index}`}
+                  className="flex min-w-0 items-start gap-3"
+                >
+                  <Badge
+                    variant={typeVariants[item.type]}
+                    className="mt-0.5 shrink-0"
+                  >
+                    {dict.changelog.types[item.type]}
+                  </Badge>
+                  <div className="min-w-0 space-y-1">
+                    <h4 className="text-sm font-semibold leading-snug">
+                      {item.title[language]}
+                    </h4>
+                    {item.description && (
+                      <p className="max-w-prose text-sm text-muted-foreground">
+                        {item.description[language]}
+                      </p>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </Section>
+      ))}
 
       <Footer />
-    </div>
+    </PageShell>
   );
 };
 

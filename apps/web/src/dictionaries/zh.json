@@ -929,6 +929,7 @@
     "privacy_policy": "隱私權政策",
     "proxy_login": "代理登入",
     "design_system": "設計系統",
+    "navigation": "頁尾導覽",
     "copyright": "版權所有。",
     "disclaimer": "NTHUMods 與國立清華大學沒有隸屬關係。不過我的畢業仰賴他們，所以不用擔心。"
   },
@@ -947,10 +948,12 @@
     "sponsors": {
       "title": "我們的贊助商",
       "description": "我們感謝這些贊助者的大力支援，讓 NTHUMods 得以實現！",
+      "algolia_name": "Algolia",
       "algolia": "搜尋引擎",
       "cerana": "基礎設施贊助商"
     },
     "stats": {
+      "title": "社群概況",
       "active_users": "活躍使用者",
       "open_source": "開放原始碼",
       "years_running": "運作年數",
@@ -961,7 +964,7 @@
       "description": "NTHUMods 是一個 100% 由學生主導的開放原始碼專案。我們依靠貢獻者和清華大學社群的支援，讓這個平台持續發展。每一個貢獻，無論多小，都能為數以千計的學生生活帶來真正的改變！"
     },
     "financial_support": {
-      "title": "💰 財務支援",
+      "title": "財務支援",
       "description": "協助我們支付開發成本和其他費用。每一分錢都有助於我們維護和改善平台，為所有學生提供更好的服務。",
       "opencollective": "在 OpenCollective 上支援"
     },
@@ -1401,8 +1404,57 @@
   },
   "test": {},
   "team": {
+    "title": "團隊",
+    "about_title": "我們是誰？",
+    "about_description": "NTHUMods 是由學生經營的專案，希望讓清大學生更容易取得校園資訊，也能一起分享經驗、改善校園生活。",
+    "contact_intro": "如果你有回饋或想法，歡迎寄信給我們，或到 GitHub 儲存庫看看。",
+    "email_link": "寄信給 NTHUMods",
+    "github_link": "GitHub 儲存庫",
+    "core_title": "核心團隊",
+    "dedicated_title": "長期貢獻者",
+    "profile_link": "個人網站",
+    "github_profile": "GitHub 個人頁面",
+    "linkedin_profile": "LinkedIn 個人頁面",
     "recruitment_intro": "想一起讓 NTHUMods 變得更好嗎？",
     "recruitment_link": "查看目前招募職缺"
+  },
+  "issues": {
+    "title": "回報問題",
+    "data_sources": {
+      "title": "資料來源",
+      "intro": "我們會整理多個資料來源，提供較完整的課程資訊。包括：",
+      "sources": [
+        {
+          "title": "最新課程資料《JSON 格式》",
+          "link_label": "查看最新課程資料",
+          "url": "https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/OPENDATA/open_course_data.json"
+        },
+        {
+          "title": "校務資訊系統課程總表",
+          "link_label": "查看校務資訊系統課程總表",
+          "url": "https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/6/6.2/6.2.9/JH629001.php"
+        },
+        {
+          "title": "課程平均值及標準差查詢",
+          "link_label": "查看課程平均值及標準差",
+          "url": "https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/8/8.4/8.4.2/JH84201.php"
+        }
+      ],
+      "update_note": "我們每天早上 8 點擷取並更新資料。如果 NTHUMods 上的課程內容有問題，請先從上方來源確認，再回報給我們。"
+    },
+    "form": {
+      "title": "提交問題",
+      "description": "請提供清楚的標題和詳細描述，幫助我們重現並處理問題。",
+      "title_label": "標題",
+      "description_label": "問題描述",
+      "submit": "送出回報",
+      "title_required": "請填寫標題。",
+      "description_required": "請填寫問題描述。",
+      "success_title": "問題已送出",
+      "success_description": "謝謝你的回報，我們會盡快查看。",
+      "failure_title": "問題送出失敗",
+      "failure_description": "目前無法送出回報，請稍後再試。"
+    }
   },
   "recruit": {
     "title": "加入 NTHUMods",
@@ -1436,7 +1488,9 @@
     "meet_team": "進一步認識團隊",
     "loading": "正在載入招募資訊⋯",
     "roles_error": "目前無法載入招募職缺，請稍後再試。",
+    "roles_error_description": "請檢查網路連線，或稍後重新載入招募資訊。",
     "application_error": "目前無法載入你的申請狀態，請重新整理頁面再試。",
+    "application_error_description": "你的申請資料沒有變更；重新載入後可以再查看一次。",
     "form": {
       "title": "申請表",
       "description": "告訴我們你想如何協助專案。申請時需要提供 PDF 履歷。",
@@ -1480,7 +1534,180 @@
     "submitted_description": "謝謝你願意投入時間！我們會審核你的申請，並使用你偏好的方式與你聯絡。",
     "existing_description": "我們已經保存你的申請資料，可以回到這裡查看目前狀態。",
     "footer_link": "加入我們",
-    "no_roles": "目前沒有開放職缺，歡迎稍後再回來看看。"
+    "no_roles": "目前沒有開放職缺",
+    "no_roles_description": "歡迎稍後再回來看看新的招募機會。"
+  },
+  "privacy_policy_page": {
+    "title": "隱私權政策",
+    "updated": "更新時間：2025/02/20",
+    "intro": "歡迎使用 NTHUMods。為了讓你安心使用本網站的服務與資訊，我們說明隱私權保護政策以保障你的權益，請詳閱下列內容。",
+    "sections": [
+      {
+        "title": "一、隱私權保護政策的適用範圍",
+        "paragraphs": [],
+        "items": [
+          "本政策說明本網站如何處理你使用網站服務時所收集的個人識別資料。",
+          "本政策不適用於本網站以外的相關連結網站，也不適用於非本網站所委託或參與管理的人員。"
+        ]
+      },
+      {
+        "title": "二、資料的蒐集與使用方式",
+        "paragraphs": [
+          "為了提供最佳的互動服務，我們可能會請你提供相關個人資料，範圍如下："
+        ],
+        "items": [
+          "使用服務信箱、問卷調查等互動功能時，本網站會保留你提供的姓名、電子郵件地址、聯絡方式及使用時間。",
+          "一般瀏覽時，伺服器會自動記錄 IP 位址、使用時間、瀏覽器、瀏覽及點選資料等，作為改善網站服務的參考。這些紀錄僅供內部使用，不會對外公布。",
+          "為提供精確服務，我們會統計分析問卷內容；必要時公布統計資料或說明文字，但不涉及特定個人資料。",
+          "登入後，伺服器不會儲存你的密碼和工作階段。密碼會保存在你的裝置中以供驗證；除非另有說明，本網站不會未經同意儲存其他個人資料。",
+          "除非取得你的同意或法律另有規定，本網站不會將個人資料揭露給第三人，也不會用於蒐集目的以外的用途。"
+        ]
+      },
+      {
+        "title": "三、資料之保護",
+        "paragraphs": [],
+        "items": [
+          "本網站主機設有防火牆、防毒系統等資訊安全設備及必要防護措施，並採取嚴格的保護程序，只有經授權的人員才能接觸你的個人資料。",
+          "如因業務需要委託相關單位提供服務，本網站也會要求其遵守保密義務，並採取必要程序確認其確實遵守。"
+        ]
+      },
+      {
+        "title": "四、網站對外的相關連結",
+        "paragraphs": [
+          "本網站提供其他網站的連結，你也可以透過這些連結前往其他網站。但連結網站不適用本網站的隱私權保護政策，請參考該網站自己的政策。"
+        ],
+        "items": []
+      },
+      {
+        "title": "五、Cookie 的使用",
+        "paragraphs": [
+          "為提供最佳服務，本網站會在你的電腦中放置並取用 Cookie。若不願接受 Cookie，可以在瀏覽器中將隱私權等級設為高，以拒絕 Cookie；但部分網站功能可能因此無法正常運作。"
+        ],
+        "items": []
+      },
+      {
+        "title": "六、隱私權保護政策之修正",
+        "paragraphs": [
+          "本網站會因應需求隨時修正隱私權保護政策，修正後的條款將刊登於網站上。"
+        ],
+        "items": []
+      }
+    ],
+    "closing": ""
+  },
+  "next_steps_page": {
+    "title": "終止 NTHUMods 代理登入校務系統服務",
+    "updated": "公告日期：2025/03/05",
+    "intro": "NTHUMods 團隊非常感謝大家對平台的支持。基於避免觸犯個人資料保護法的原則，我們宣布自 2025 年 5 月 3 日起終止代理登入清大校務系統的服務。屆時，需要登入校務系統的功能會暫停使用；其他不需要登入的功能則可正常使用。",
+    "sections": [
+      {
+        "title": "發生了什麼",
+        "paragraphs": [
+          "我們接獲校方通知，代理登入服務可能涉及個人資料保護法疑慮。雖然目前沒有發生資料外洩事件，團隊討論後仍決定終止代理登入服務。根據校方定義，NTHUMods 屬於第三方外部平台，使用者的帳號與密碼不能由我們的伺服器代理登入校務系統。"
+        ]
+      },
+      {
+        "title": "我們的應對措施",
+        "paragraphs": [
+          "清大目前沒有提供第三方平台公開擷取資料的 API，因此團隊會繼續與校方討論，希望在合規合法的前提下，盡快找到更便利的服務方式。"
+        ]
+      },
+      {
+        "title": "我們的願景",
+        "paragraphs": [
+          "團隊一直致力於打造讓學生輕鬆取得資訊、直觀易用的使用者介面。未來我們會繼續秉持這個理念，為使用者提供更好的服務。"
+        ]
+      }
+    ],
+    "closing": [
+      "感謝大家對 NTHUMods 的支持與愛護，期待未來繼續和大家一起成長！",
+      "如果你有興趣加入我們，歡迎透過 Instagram（@nthumods）或電子郵件（nthumods@gmail.com）聯絡團隊。"
+    ],
+    "signoff": "NTHUMods 團隊"
+  },
+  "proxy_login_page": {
+    "title": "NTHUMods 代理登入說明",
+    "updated": "更新時間：2025/03/04",
+    "what": {
+      "title": "什麼是 NTHUMods 代理登入？",
+      "body_before": "NTHUMods 代理登入是協助使用者透過 NTHUMods 平台安全登入清華大學校務資訊系統（CCXP）的工具。它使用加密技術保護帳戶和密碼，確保資訊安全，也是我們",
+      "link": "身份驗證系統",
+      "body_after": "的重要組成部分。"
+    },
+    "note": {
+      "label": "注意：",
+      "body_before": "如需完整技術詳情，請參閱",
+      "link": "身份驗證與工作階段管理",
+      "body_after": "頁面。本頁面提供簡化的概述。"
+    },
+    "features": {
+      "title": "代理登入與其他功能的關係",
+      "intro": "代理登入功能是 NTHUMods 多項功能的基礎，讓你可以安全使用：",
+      "links": [
+        {
+          "label": "課程資訊和選課功能",
+          "description": "瀏覽、搜尋和管理課程",
+          "path": "course"
+        },
+        {
+          "label": "成績查詢系統",
+          "description": "安全查看學業成績",
+          "path": "grades"
+        },
+        {
+          "label": "重要日期與評論系統",
+          "description": "掌握重要學術日期和課程評論",
+          "path": "comment-dates"
+        },
+        {
+          "label": "其他實用工具",
+          "description": "探索 NTHUMods 提供的更多功能",
+          "path": "misc"
+        }
+      ]
+    },
+    "account": {
+      "title": "如何使用你的帳戶資訊？",
+      "intro": "使用 NTHUMods 代理登入時，我們需要你的學號和密碼進行首次登入驗證。登入過程如下：",
+      "steps": [
+        "向校務資訊系統登入頁面發送請求，取得驗證碼圖片。",
+        "使用 OCR 技術自動解碼驗證碼。",
+        "提交學號、密碼和驗證碼進行登入。",
+        "驗證登入狀態並取得工作階段令牌。"
+      ],
+      "emphasis": "你的資訊只會儲存在裝置上！我們不會儲存任何帳戶資料。"
+    },
+    "protection": {
+      "title": "如何保護你的資訊？",
+      "intro": "我們採取以下基本措施保護你的資訊：",
+      "items": [
+        "你的資訊只會儲存在裝置上，敏感資訊不會儲存在我們的伺服器。",
+        "儲存在裝置上的密碼會使用 AES-256-CBC 加密。"
+      ],
+      "flow_title": "基本密碼處理流程",
+      "flow": "graph TD; A[使用者輸入密碼] -->|加密| B[加密密碼]; B --> C[儲存在使用者裝置]; C -->|需要時解密| D[使用密碼登入];",
+      "reference": "如需更詳細的加密流程，請參閱身份驗證頁面。"
+    },
+    "process": {
+      "title": "代理登入基本流程",
+      "intro": "以下是代理登入的簡化流程：",
+      "flow": "graph TD; subgraph 使用者裝置; A1[使用者輸入學號和密碼] --> B1[發送登入請求]; end; subgraph 伺服器; B1 --> C1[取得並處理驗證碼]; C1 --> F1[驗證登入並建立工作階段]; F1 -->|成功| G1[返回工作階段令牌]; F1 -->|失敗| H1[返回錯誤]; end; G1 --> I1[使用者裝置]; subgraph 自動更新; J1[需要使用 CCXP 功能時] --> K1[使用加密密碼自動更新工作階段]; end;",
+      "reference": "如需詳細流程圖和完整說明，請參閱身份驗證頁面。"
+    },
+    "reauth": {
+      "title": "什麼時候會自動重新驗證？",
+      "body_before": "JWT 過期，或你使用連結校務資訊系統的功能（例如",
+      "course": "課程資訊",
+      "middle": "或",
+      "grades": "成績查詢",
+      "body_after": "）時，系統會自動更新工作階段。"
+    },
+    "references": {
+      "title": "參考連結",
+      "body_before": "詳細程式碼請參考我們的",
+      "link": "NTHUMods GitHub 原始碼",
+      "url": "https://github.com/nthumodifications/courseweb/blob/main/src/lib/headless_ais/headless_ais.ts"
+    }
   },
   "design_system": {
     "title": "NTHUMods 設計語言",
