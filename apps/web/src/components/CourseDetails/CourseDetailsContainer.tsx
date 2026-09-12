@@ -360,7 +360,7 @@ const CourseDetailContainer = ({
                 <div className="font-medium text-base">
                   {toPrettySemester(course.semester)} {dict.course.details.semester}
                 </div>
-                <div className="mb-4 font-bold text-xl text-nthu-600">{`${course.department} ${course.course}-${course.class}`}</div>
+                <div className="font-bold text-xl text-nthu-600">{`${course.department} ${course.course}-${course.class}`}</div>
                 <h1 className="flex min-w-0 flex-row flex-wrap gap-1 font-bold text-xl">
                   <span className="min-w-0 whitespace-normal">{course.name_zh}</span>
                   <span>{course?.teacher_zh?.join(",") ?? ""}</span>
@@ -370,7 +370,9 @@ const CourseDetailContainer = ({
                   <span>{course?.teacher_en?.join(",") ?? ""}</span>
                 </h2>
               </div>
-              <CourseTagList course={course} />
+              <div className="mt-2">
+                <CourseTagList course={course} />
+              </div>
               {course.venues ? (
                 course.venues.map((vn, i) => (
                   <p

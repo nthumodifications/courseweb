@@ -39,7 +39,6 @@ const CourseListItem: FC<{
 
   return (
     <div className="flex min-w-0 flex-row gap-4 py-4 @container">
-      <span className="mt-1 h-4 w-4 shrink-0 rounded-sm bg-muted" aria-hidden="true" />
       <div className="min-w-0 flex-1">
           <div className="mb-2 space-y-1 @md:pt-0">
             <div className="flex flex-row gap-2 items-center">
@@ -112,9 +111,6 @@ const CourseListItem: FC<{
           </div>
         </div>
       <div className="flex min-w-0 shrink-0 flex-col items-end gap-2">
-        <div className="text-right font-bold whitespace-nowrap">
-          {course.credits} {dict.course.credits}
-        </div>
         <SelectCourseButton courseId={course.raw_id as string} />
       </div>
     </div>
