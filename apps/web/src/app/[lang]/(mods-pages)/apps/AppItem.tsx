@@ -19,7 +19,7 @@ const AppItem = ({
     <div
       className={cn(
         !mini
-          ? "flex flex-row items-center gap-2 flex-1 py-4"
+          ? "flex flex-row items-center gap-2 flex-1"
           : "flex flex-col items-start gap-1 py-4",
         "cursor-pointer",
       )}

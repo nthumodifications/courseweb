@@ -15,8 +15,8 @@ const AppList = () => {
 
   return (
     <div className="flex flex-col gap-4 px-4">
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-2">
+        <div className="flex flex-col p-4 rounded-md border border-border gap-4">
           <div className="flex flex-row items-center gap-2">
             <h1 className="font-bold text-muted-foreground flex-1">
               {dict.applist.pinned_apps_title}
@@ -82,7 +82,7 @@ const AppList = () => {
               </DialogContent>
             </Dialog>
           </div>
-          <div className="flex flex-col divide-y divide-border">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {apps
               .filter((app) => pinnedApps.includes(app.id))
               .map((app) => (
@@ -97,7 +97,10 @@ const AppList = () => {
         </div>
 
         {Object.keys(categories).map((category) => (
-          <div className="flex flex-col gap-4" key={category}>
+          <div
+            className="flex flex-col p-4 rounded-md border border-border gap-4"
+            key={category}
+          >
             <h1 className="font-bold text-muted-foreground">
               {
                 dict.applist.categories[
@@ -105,7 +108,7 @@ const AppList = () => {
                 ]
               }
             </h1>
-            <div className="flex flex-col divide-y divide-border">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               {apps
                 .filter((a) => !a.hidden)
                 .filter((m) => m.category === category)

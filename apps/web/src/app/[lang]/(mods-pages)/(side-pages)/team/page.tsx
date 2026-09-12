@@ -34,7 +34,7 @@ const Team = () => {
           <Link to={`/${lang}/recruit`}>{dict.team.recruitment_link}</Link>
         </p>
         <h1 className="text-base font-bold">{dict.team.core_team}</h1>
-        <div className="flex flex-col divide-y divide-border">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           {team
             .filter((t) => t.active)
             .map((member, index) => (
@@ -90,7 +90,7 @@ const Team = () => {
             ))}
         </div>
         <h1 className="text-base font-bold">{dict.team.dedicated_members}</h1>
-        <div className="flex flex-col divide-y divide-border">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           {team
             .filter((t) => !t.active)
             .map((member, index) => (

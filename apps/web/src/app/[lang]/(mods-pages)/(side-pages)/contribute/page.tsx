@@ -30,7 +30,7 @@ const ContributePage = () => {
           <p className="text-muted-foreground leading-relaxed">
             {dict.contribute.sponsors.description}
           </p>
-          <div className="flex flex-col divide-y divide-border">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {/* Algolia */}
             <div className="flex flex-row items-center gap-4 py-4">
               <div className="shrink-0">
@@ -75,7 +75,7 @@ const ContributePage = () => {
         </section>
 
         {/* Community Stats */}
-        <div className="flex flex-col divide-y divide-border">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
           <div className="flex flex-row items-center gap-4 py-4">
             <Users className="w-4 h-4" />
             <div className="flex-1">
@@ -153,7 +153,7 @@ const ContributePage = () => {
         <p className="text-muted-foreground leading-relaxed">
           {dict.contribute.for_everyone.feedback.description}
         </p>
-        <div className="flex flex-col divide-y divide-border">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
           <IssueFormDialog>
             <div className="flex flex-row items-center gap-2 py-4 cursor-pointer">
               <Paperclip className="w-4 h-4" />
@@ -191,7 +191,7 @@ const ContributePage = () => {
         <p className="text-muted-foreground leading-relaxed">
           {dict.contribute.for_developers.bug_reports.description}
         </p>
-        <div className="flex flex-col divide-y divide-border">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           <a href="https://github.com/nthumodifications/courseweb/issues/new?assignees=&labels=&projects=&template=bug_report.md&title=">
             <div className="cursor-pointer flex flex-row items-center gap-4 py-4">
               <BugIcon className="w-4 h-4" />
