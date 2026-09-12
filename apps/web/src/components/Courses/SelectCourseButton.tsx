@@ -9,7 +9,13 @@ import { toast } from "@courseweb/ui";
 import { lastSemester } from "@courseweb/shared";
 import { courseEvents } from "@/lib/trackingEvents";
 
-const SelectCourseButton = ({ courseId }: { courseId: RawCourseID }) => {
+const SelectCourseButton = ({
+  courseId,
+  compact = false,
+}: {
+  courseId: RawCourseID;
+  compact?: boolean;
+}) => {
   const {
     isCourseSelected,
     addCourse,
@@ -45,21 +51,48 @@ const SelectCourseButton = ({ courseId }: { courseId: RawCourseID }) => {
   return (
     <div className="flex flex-row gap-1">
       {isFavouritable && (
-        <Button variant="ghost" onClick={handleToggleFavourite} size="sm">
+        <Button
+          variant="ghost"
+          onClick={handleToggleFavourite}
+          size={compact ? "default" : "sm"}
+          className={compact ? "w-10 px-0 sm:w-auto sm:px-4" : undefined}
+          aria-label={dict.course.details.favourites}
+          title={dict.course.details.favourites}
+        >
           {isInFavourites ? (
-            <Heart className="text-red-500 fill-red-500 w-4 h-4" />
+            <Heart className="text-destructive fill-destructive w-4 h-4" />
           ) : (
             <Heart className="w-4 h-4" />
           )}
         </Button>
       )}
       {isCourseSelected(courseId) ? (
-        <Button variant={"destructive"} onClick={handleRemoveCourse} size="sm">
-          <Minus className="w-4 h-4" /> {dict.course.item.remove_from_semester}
+        <Button
+          variant="destructive"
+          onClick={handleRemoveCourse}
+          size={compact ? "default" : "sm"}
+          className={compact ? "w-10 px-0 sm:w-auto sm:px-4" : undefined}
+          aria-label={dict.course.item.remove_from_semester}
+          title={dict.course.item.remove_from_semester}
+        >
+          <Minus className="w-4 h-4" />
+          <span className={compact ? "sr-only sm:not-sr-only" : undefined}>
+            {dict.course.item.remove_from_semester}
+          </span>
         </Button>
       ) : (
-        <Button variant="outline" onClick={handleAddCourse} size="sm">
-          <Plus className="w-4 h-4" /> {dict.course.item.add_to_semester}
+        <Button
+          variant="outline"
+          onClick={handleAddCourse}
+          size={compact ? "default" : "sm"}
+          className={compact ? "w-10 px-0 sm:w-auto sm:px-4" : undefined}
+          aria-label={dict.course.item.add_to_semester}
+          title={dict.course.item.add_to_semester}
+        >
+          <Plus className="w-4 h-4" />
+          <span className={compact ? "sr-only sm:not-sr-only" : undefined}>
+            {dict.course.item.add_to_semester}
+          </span>
         </Button>
       )}
     </div>

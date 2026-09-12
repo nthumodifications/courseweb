@@ -50,9 +50,15 @@
       "group_dept": "Group dept. by colors",
       "sort_by_credits": "Sort by credits"
     },
+    "sections": {
+      "actions": "Actions",
+      "this_semester": "This semester",
+      "share_export": "Share and export"
+    },
     "course_actions": {
       "course_location": "Course Location",
-      "location_unavailable": "This course has no mapped venue"
+      "location_unavailable": "This course has no mapped venue",
+      "color_label": "Course colour"
     },
     "credits": "credits",
     "course": "courses",
@@ -75,6 +81,7 @@
     "lock_order": "Lock Course Order",
     "reset_default": "Reset to Default",
     "no_courses": "No Courses Added (yet)",
+    "no_courses_description": "Search for a course and add it to this semester.",
     "all_courses": "All Courses",
     "view": {
       "import_title": "Import courses to this device?",
@@ -150,7 +157,8 @@
       "error": "Course search encountered an error. The request was not retried against another tier.",
       "limited_mode": "Search is running in limited mode — some filters and ranking may be unavailable.",
       "dismiss_limited_mode": "Dismiss limited search mode",
-      "no_more_results": "No more results"
+      "no_more_results": "No more results",
+      "by_algolia": "Search by Algolia"
     },
     "item": {
       "add_to_semester": "Add",
@@ -161,6 +169,7 @@
     },
     "refine": {
       "title": "Refine",
+      "core_filters": "Core filters",
       "semester": "Semester",
       "level": "Level",
       "language": "Instruction Language",
@@ -215,6 +224,7 @@
       "course_list": "Course List",
       "no_venues": "No Venues",
       "not_found": "Course not found",
+      "not_found_description": "This course may have been removed or the link may be invalid.",
       "view_more": "View more",
       "dialog_title": "Course Details",
       "open_new_tab": "Open in new tab",

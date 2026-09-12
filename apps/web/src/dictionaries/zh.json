@@ -50,9 +50,15 @@
       "group_dept": "依系所分顏色",
       "sort_by_credits": "依學分排序"
     },
+    "sections": {
+      "actions": "操作",
+      "this_semester": "本學期",
+      "share_export": "分享與匯出"
+    },
     "course_actions": {
       "course_location": "開課地點",
-      "location_unavailable": "這門課沒有可定位的開課地點"
+      "location_unavailable": "這門課沒有可定位的開課地點",
+      "color_label": "課程顏色"
     },
     "credits": "總學分",
     "course": "課",
@@ -75,6 +81,7 @@
     "lock_order": "鎖定課程順序",
     "reset_default": "恢復預設值",
     "no_courses": "尚未新增課程",
+    "no_courses_description": "先搜尋課程並加入本學期。",
     "all_courses": "所有課程",
     "view": {
       "import_title": "要將課程匯入此裝置嗎？",
@@ -150,7 +157,8 @@
       "error": "課程搜尋發生錯誤。此請求未改用其他搜尋層級重試。",
       "limited_mode": "搜尋目前處於有限模式，部分篩選和排序功能可能無法使用。",
       "dismiss_limited_mode": "關閉有限搜尋模式提示",
-      "no_more_results": "沒有更多結果"
+      "no_more_results": "沒有更多結果",
+      "by_algolia": "由 Algolia 提供搜尋"
     },
     "item": {
       "add_to_semester": "加入",
@@ -161,6 +169,7 @@
     },
     "refine": {
       "title": "篩選",
+      "core_filters": "基本篩選",
       "semester": "學期",
       "level": "課程對象",
       "language": "授課語言",
@@ -215,6 +224,7 @@
       "course_list": "課程清單",
       "no_venues": "無上課地點",
       "not_found": "找不到課程",
+      "not_found_description": "此課程可能已下架，或連結已失效。",
       "view_more": "檢視更多",
       "dialog_title": "課程詳細資訊",
       "open_new_tab": "在新分頁開啟",

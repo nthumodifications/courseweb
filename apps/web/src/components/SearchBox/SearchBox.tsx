@@ -39,7 +39,7 @@ const SearchBox = ({ placeholder, autoFocus, ...props }: SearchBoxProps) => {
   return (
     <form
       onSubmit={onSubmit}
-      className="relative w-full flex items-center gap-1"
+      className="relative min-w-0 w-full flex items-center gap-1"
     >
       <Input
         ref={inputRef}
@@ -52,9 +52,14 @@ const SearchBox = ({ placeholder, autoFocus, ...props }: SearchBoxProps) => {
         autoCorrect="off"
         autoCapitalize="off"
         spellCheck={false}
-        className="flex-1"
+        className="min-w-0 flex-1"
       />
-      <Button type="submit" variant="ghost" size="icon" title={dict.common.search}>
+      <Button
+        type="submit"
+        variant="ghost"
+        size="icon"
+        title={dict.common.search}
+      >
         <Search size="16" />
       </Button>
     </form>

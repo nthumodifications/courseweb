@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import DownloadSyllabus from "./DownloadSyllabus";
 import SyllabusSummary from "./SyllabusSummary";
-import { Fade } from "@courseweb/ui";
+import { EmptyState, Fade, PageHeader } from "@courseweb/ui";
 import { toPrettySemester } from "@/helpers/semester";
 import CourseTagList from "@/components/Courses/CourseTagsList";
 import {
@@ -81,12 +81,9 @@ const CrossDisciplineTagList = ({ course }: { course: CourseDefinition }) => {
   return (
     <div className="flex flex-row gap-2 flex-wrap">
       {course.cross_discipline?.map((m, index) => (
-        <div
-          key={index}
-          className="flex flex-row items-center justify-center min-w-[65px] space-x-2 px-2 py-2 select-none rounded-md text-sm bg-neutral-200 dark:bg-neutral-800"
-        >
+        <Badge key={index} variant="outline" className="text-sm">
           {m}
-        </div>
+        </Badge>
       ))}
     </div>
   );
@@ -234,18 +231,18 @@ const CourseDetailContainer = ({
           <meta name="robots" content="noindex, nofollow" />
           <meta name="googlebot" content="noindex, nofollow" />
         </Helmet>
-        <div className="py-6 px-4">
-          <div className="flex flex-col gap-2 border-l border-neutral-500 pl-4 pr-6">
-            <h1 className="text-2xl font-bold">404</h1>
-            <p className="text-xl">{dict.course.details.not_found}</p>
-
-            <Link to="../">
-              <Button size="sm" variant="outline">
+        <EmptyState
+          icon={AlertTriangle}
+          title={dict.common.error}
+          description={dict.course.details.not_found_description}
+          action={
+            <Button variant="outline" asChild>
+              <Link to={`/${lang}/courses`}>
                 <ChevronLeft /> {dict.common.back}
-              </Button>
-            </Link>
-          </div>
-        </div>
+              </Link>
+            </Button>
+          }
+        />
       </>
     );
   }
@@ -262,9 +259,10 @@ const CourseDetailContainer = ({
   const timetableData = showTimetable
     ? createTimetableFromCourses([course as MinimalCourse], colorMap)
     : [];
+  const courseCode = `${course.department} ${course.course}-${course.class}`;
 
   return (
-    <Fade>
+    <Fade className="space-y-6">
       {!modal && course && (
         <Helmet>
           <title>{`${course.name_zh} ${course.teacher_zh?.join("、")} - ${toPrettySemester(course.semester)} 清大${course.department}課程 | NTHUMods`}</title>
@@ -321,42 +319,50 @@ const CourseDetailContainer = ({
           )}
         </Helmet>
       )}
-      <div
-        className={cn(
-          "flex flex-col pb-6 relative",
-          modal
-            ? "max-w-[min(72rem,calc(100vw-52px))]"
-            : "max-w-[min(72rem,calc(100vw-16px))]",
-        )}
-      >
+      {!modal && (
+        <PageHeader
+          title={`${course.name_zh} · ${courseCode}`}
+          description={`${toPrettySemester(course.semester)} ${dict.course.details.semester} · ${course.teacher_zh?.join(",") ?? ""}`}
+          actions={
+            <Button variant="ghost" asChild>
+              <Link to={`/${lang}/courses`}>
+                <ChevronLeft /> {dict.common.back}
+              </Link>
+            </Button>
+          }
+        />
+      )}
+      <div className="relative flex min-w-0 flex-col pb-6">
         <div className={cn("flex flex-col gap-4 pb-20 md:pb-0")}>
           <div className="flex flex-col md:flex-row md:items-end gap-4">
-            <div className="space-y-4 flex-1 w-full">
+            <div className="min-w-0 flex-1 space-y-4 w-full">
               <div className="space-y-2">
-                <div className="font-semibold text-base ">
-                  {toPrettySemester(course.semester)} {dict.course.details.semester}
-                </div>
-                <div className="font-bold text-xl mb-4 text-nthu-600">{`${course?.department} ${course?.course}-${course?.class}`}</div>
-                <h1 className="font-semibold text-3xl flex flex-row flex-wrap gap-1">
-                  <span>{course!.name_zh}</span>
-                  <span>{course?.teacher_zh?.join(",") ?? ""}</span>
-                </h1>
-                <h2 className="font-semibold text-xl flex flex-row flex-wrap gap-1">
-                  <span>{course!.name_en}</span>
-                  <span>{course?.teacher_en?.join(",") ?? ""}</span>
+                {modal && (
+                  <>
+                    <div className="font-semibold text-base">
+                      {toPrettySemester(course.semester)}{" "}
+                      {dict.course.details.semester}
+                    </div>
+                    <div className="font-medium text-base tabular-nums text-muted-foreground">
+                      {courseCode}
+                    </div>
+                    <h1 className="flex flex-row flex-wrap gap-1 text-xl font-semibold">
+                      <span>{course.name_zh}</span>
+                      <span>{course.teacher_zh?.join(",") ?? ""}</span>
+                    </h1>
+                  </>
+                )}
+                <h2 className="flex flex-row flex-wrap gap-1 text-base font-medium text-muted-foreground">
+                  <span>{course.name_en}</span>
+                  <span>{course.teacher_en?.join(",") ?? ""}</span>
                 </h2>
               </div>
               <CourseTagList course={course} />
               {course.venues ? (
                 course.venues.map((vn, i) => (
-                  <p
-                    key={vn}
-                    className="text-blue-600 dark:text-blue-400 text-sm"
-                  >
+                  <p key={vn} className="text-sm text-muted-foreground">
                     {vn}{" "}
-                    <span className="text-black dark:text-white">
-                      {course.times![i]}
-                    </span>
+                    <span className="text-foreground">{course.times![i]}</span>
                   </p>
                 ))
               ) : (
@@ -375,7 +381,7 @@ const CourseDetailContainer = ({
             </div>
             <div
               className={cn(
-                "md:hidden fixed left-0 pt-2 px-4 shadow-md w-full h-16 flex flex-row gap-2 bg-background z-50",
+                "md:hidden fixed left-0 pt-2 px-4 border-t border-border w-full h-16 flex flex-row gap-2 bg-background z-50",
                 bottomAware ? "bottom-20" : "bottom-0",
               )}
             >
@@ -396,7 +402,7 @@ const CourseDetailContainer = ({
               {!missingSyllabus && <SyllabusSummary courseId={course.raw_id} />}
               {!missingSyllabus && (
                 <div className="flex flex-col gap-2">
-                  <h3 className="font-semibold text-xl" id="brief">
+                  <h3 className="text-base font-semibold" id="brief">
                     {dict.course.details.brief}
                   </h3>
                   <p className="whitespace-pre-line text-sm">
@@ -406,7 +412,7 @@ const CourseDetailContainer = ({
               )}
               {!missingSyllabus && (
                 <div className="flex flex-col gap-2">
-                  <h3 className="font-semibold text-xl" id="description">
+                  <h3 className="text-base font-semibold" id="description">
                     {dict.course.details.description}
                   </h3>
                   <p className="whitespace-pre-line text-sm">
@@ -425,7 +431,7 @@ const CourseDetailContainer = ({
               )}
               {course?.prerequisites && (
                 <div className="flex flex-col gap-2">
-                  <h3 className="font-semibold text-xl" id="prerequesites">
+                  <h3 className="text-base font-semibold" id="prerequesites">
                     {dict.course.details.prerequesites}
                   </h3>
                   <div
@@ -442,7 +448,7 @@ const CourseDetailContainer = ({
                         </div>} */}
               {reviews.length > 0 && (
                 <div className="flex flex-col gap-2">
-                  <h3 className="font-semibold text-xl" id="ptt">
+                  <h3 className="text-base font-semibold" id="ptt">
                     {dict.course.details.ptt_title}
                   </h3>
                   <Alert>
@@ -487,7 +493,7 @@ const CourseDetailContainer = ({
               )}
               {course.course_scores && (
                 <div className="flex flex-col gap-2">
-                  <h3 className="font-semibold text-xl" id="scores">
+                  <h3 className="text-base font-semibold" id="scores">
                     {dict.course.details.scores}
                   </h3>
                   {/* TODO: make scores prettier with a graph */}
@@ -513,77 +519,83 @@ const CourseDetailContainer = ({
               )}
               <div className="flex flex-col gap-2">
                 <div className="flex flex-row">
-                  <h3 className="font-semibold text-xl flex-1" id="other">
+                  <h3 className="text-base font-semibold flex-1" id="other">
                     {dict.course.details.related_courses}
                   </h3>
                   <Button variant="ghost" asChild>
                     <Link
                       to={`/${lang}/courses?nthu_courses%5BrefinementList%5D%5Bdepartment%5D%5B0%5D=${course.department}&nthu_courses%5Bquery%5D=${course.name_zh} ${course.teacher_zh.join(" ")}`}
                     >
-                      {dict.course.details.view_more} <ArrowRight className="ml-2 w-4 h-4" />
+                      {dict.course.details.view_more}{" "}
+                      <ArrowRight className="ml-2 w-4 h-4" />
                     </Link>
                   </Button>
                 </div>
-                <Table className="table-fixed">
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[110px] px-2">
-                        {dict.course.details.semester_time_venue}
-                      </TableHead>
-                      <TableHead className="w-[80px] px-2">
-                        {dict.course.details.instructor}
-                      </TableHead>
-                      <TableHead className="w-28 px-2">
-                        {dict.course.details.historical_average}
-                      </TableHead>
-                      <TableHead className="w-14 p-0"></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {otherClasses.map((m, index) => (
-                      <TableRow key={index}>
-                        <TableCell className="px-2">
-                          <div className="flex flex-col gap-1">
-                            <p>{toPrettySemester(m.semester)}</p>
-                            <div className="flex flex-col">
-                              {m.times.map((t, i) => (
-                                <p key={i} className="text-xs text-gray-500">
-                                  {m.venues[i]} {t}
-                                </p>
-                              ))}
+                <div className="max-w-full overflow-x-auto">
+                  <Table className="table-fixed">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[110px] px-2">
+                          {dict.course.details.semester_time_venue}
+                        </TableHead>
+                        <TableHead className="w-[80px] px-2">
+                          {dict.course.details.instructor}
+                        </TableHead>
+                        <TableHead className="w-28 px-2">
+                          {dict.course.details.historical_average}
+                        </TableHead>
+                        <TableHead className="w-14 p-0"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {otherClasses.map((m, index) => (
+                        <TableRow key={index}>
+                          <TableCell className="px-2">
+                            <div className="flex flex-col gap-1">
+                              <p>{toPrettySemester(m.semester)}</p>
+                              <div className="flex flex-col">
+                                {m.times.map((t, i) => (
+                                  <p
+                                    key={i}
+                                    className="text-xs text-muted-foreground"
+                                  >
+                                    {m.venues[i]} {t}
+                                  </p>
+                                ))}
+                              </div>
                             </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="px-2">
-                          {m.teacher_zh?.join(",")}
-                        </TableCell>
-                        <TableCell>
-                          {m.course_scores && (
-                            <div className="flex flex-col gap-1 text-xs">
-                              <p>
-                                {getScoreType(m.course_scores.type)}{" "}
-                                {m.course_scores.average}
-                              </p>
+                          </TableCell>
+                          <TableCell className="px-2">
+                            {m.teacher_zh?.join(",")}
+                          </TableCell>
+                          <TableCell>
+                            {m.course_scores && (
+                              <div className="flex flex-col gap-1 text-xs">
+                                <p>
+                                  {getScoreType(m.course_scores.type)}{" "}
+                                  {m.course_scores.average}
+                                </p>
                                 <p>
                                   {dict.course.details.standard_deviation}{" "}
                                   {m.course_scores.std_dev}
                                 </p>
-                            </div>
-                          )}
-                        </TableCell>
-                        <TableCell className="p-0">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => openCourse(m.raw_id)}
-                          >
-                            <ArrowRight size={16} />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                              </div>
+                            )}
+                          </TableCell>
+                          <TableCell className="p-0">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => openCourse(m.raw_id)}
+                            >
+                              <ArrowRight size={16} />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
             </div>
             <div className="w-full lg:w-[284px] flex flex-col gap-4">
@@ -716,11 +728,11 @@ const CourseDetailContainer = ({
 
               <div className="flex flex-col gap-1">
                 <div className="flex flex-row gap-2 flex-wrap">
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted-foreground">
                     {dict.course.details.details_updated}{" "}
                     {format(new Date(course.updated_at), "yyyy-MM-dd HH:mm")}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted-foreground">
                     {dict.course.details.syllabus_updated}{" "}
                     {format(
                       new Date(course.course_syllabus?.updated_at ?? 0),
