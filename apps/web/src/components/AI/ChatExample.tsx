@@ -30,9 +30,9 @@ export function ChatExample() {
   const context = getUserContext();
 
   return (
-    <div className="flex flex-col h-full max-w-3xl mx-auto p-4">
+    <div className="flex flex-col h-full w-full p-4">
       <div className="mb-4 p-4 bg-muted rounded-lg">
-        <h3 className="font-semibold mb-2">{dict.chat.context_title}</h3>
+        <h3 className="font-medium mb-2">{dict.chat.context_title}</h3>
         <div className="text-sm space-y-1">
           <p>
             <strong>{dict.chat.department}:</strong>{" "}
@@ -87,13 +87,13 @@ export function ChatExample() {
         {messages.map((message) => (
           <div
             key={message.id}
-            className={`p-3 rounded-lg ${
+            className={`p-4 rounded-lg ${
               message.role === "user"
                 ? "bg-primary text-primary-foreground ml-12"
                 : "bg-muted mr-12"
             }`}
           >
-            <div className="text-sm font-semibold mb-1">
+            <div className="text-sm font-medium mb-1">
               {message.role === "user" ? dict.chat.you : dict.chat.assistant}
             </div>
             <div className="whitespace-pre-wrap">

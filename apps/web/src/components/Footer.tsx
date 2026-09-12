@@ -12,15 +12,15 @@ const Footer = () => {
   const dict = useDictionary();
   const routeLang = lang === "en" ? "en" : "zh";
   return (
-    <div className="py-16 flex flex-col gap-4">
+    <div className="py-4 flex flex-col gap-4">
       <div className="flex flex-col md:flex-row justify-between">
-        <div className="flex gap-3">
+        <div className="flex gap-4">
           <div className="-translate-y-1">
             <NTHUModsLogo />
           </div>
           <div className="flex flex-col gap-1">
             <FullLogo />
-            <p className="text-muted-foreground text-xs">
+            <p className="text-muted-foreground text-xs leading-relaxed">
               {dict.footer.tagline}
             </p>
           </div>
@@ -68,7 +68,7 @@ const Footer = () => {
       </div>
 
       <div className="flex flex-col gap-1">
-        <p className="text-muted-foreground text-xs">
+        <p className="text-muted-foreground text-xs leading-relaxed">
           © {getYear(Date.now())} NTHUMods. {dict.footer.copyright}
         </p>
         <p className="text-muted-foreground text-xs">

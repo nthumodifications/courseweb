@@ -1,6 +1,8 @@
 import { useEffect } from "react";
+import useDictionary from "@/dictionaries/useDictionary";
 
 const OAuthCallbackRedirect = () => {
+  const dict = useDictionary();
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const redirectUrl = new URL(
@@ -18,8 +20,8 @@ const OAuthCallbackRedirect = () => {
   }, []);
 
   return (
-    <div className="grid place-items-center h-screen">
-      <p>Redirecting...</p>
+    <div className="p-4">
+      <p className="text-muted-foreground leading-relaxed">{dict.common.redirecting}</p>
     </div>
   );
 };

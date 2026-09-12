@@ -8,8 +8,8 @@ const Intro = () => {
       <div className="flex justify-center mb-4">
         <img src="/images/friendship.gif" className="w-48 h-48" />
       </div>
-      <span className="font-bold text-2xl">{dict.help.intro.title}</span>
-      <span className="">{dict.help.intro.description}</span>
+      <span className="font-bold text-xl">{dict.help.intro.title}</span>
+      <p className="leading-relaxed">{dict.help.intro.description}</p>
     </div>
   );
 };

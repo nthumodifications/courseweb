@@ -20,7 +20,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
   const dict = useDictionary();
 
   return (
-    <div className={cn("flex gap-3", isUser && "flex-row-reverse")}>
+    <div className={cn("flex gap-4", isUser && "flex-row-reverse")}>
       <div
         className={cn(
           "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
@@ -42,9 +42,9 @@ export function ChatMessage({ message }: ChatMessageProps) {
                 <Wrench className="w-3 h-3" />
                 <span className="font-medium">{tool.name}</span>
                 {tool.result !== undefined && (
-                  <CheckCircle2 className="w-3 h-3 text-green-600" />
+                  <CheckCircle2 className="w-3 h-3 text-primary" />
                 )}
-                {tool.error && <XCircle className="w-3 h-3 text-red-600" />}
+                {tool.error && <XCircle className="w-3 h-3 text-destructive" />}
                 {tool.result === undefined && !tool.error && (
                   <Loader2 className="w-3 h-3 animate-spin" />
                 )}

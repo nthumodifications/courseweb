@@ -30,7 +30,7 @@ export function ChatSuggestions() {
   ];
 
   return (
-    <div className="flex flex-wrap gap-2 justify-center">
+    <div className="flex flex-wrap gap-2 justify-start">
       {suggestions.map((suggestion, index) => (
         <Button
           key={index}

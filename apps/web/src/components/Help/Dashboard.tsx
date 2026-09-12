@@ -8,8 +8,8 @@ const Dashboard = () => {
       <div className="flex justify-center mb-4">
         <img src="/images/upcoming.gif" className="w-48 h-48" />
       </div>
-      <span className="font-bold text-2xl">{dict.help.dashboard.title}</span>
-      <span className="">{dict.help.dashboard.description}</span>
+      <span className="font-bold text-xl">{dict.help.dashboard.title}</span>
+      <p className="leading-relaxed">{dict.help.dashboard.description}</p>
     </div>
   );
 };

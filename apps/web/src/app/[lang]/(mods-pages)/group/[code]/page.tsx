@@ -17,6 +17,7 @@ import { Button } from "@courseweb/ui";
 import { Input } from "@courseweb/ui";
 import { toast } from "@courseweb/ui";
 import { Separator } from "@courseweb/ui";
+import useDictionary from "@/dictionaries/useDictionary";
 import {
   Copy,
   Check,
@@ -29,13 +30,13 @@ import {
 } from "lucide-react";
 
 const MEMBER_COLORS = [
-  "#3b82f6",
-  "#a855f7",
-  "#f97316",
-  "#10b981",
-  "#ec4899",
-  "#0ea5e9",
-  "#84cc16",
+  "hsl(var(--primary))",
+  "hsl(var(--accent-foreground))",
+  "hsl(var(--destructive))",
+  "hsl(var(--foreground))",
+  "hsl(var(--muted-foreground))",
+  "hsl(var(--secondary-foreground))",
+  "hsl(var(--ring))",
 ];
 
 function useGroupCourses(group: TimetableGroup | undefined) {
@@ -63,6 +64,7 @@ const GroupViewPage = () => {
   const { code } = useParams<{ code: string; lang: string }>();
   const { lang } = useParams<{ lang: string }>();
   const navigate = useNavigate();
+  const dict = useDictionary();
   const { isAuthenticated, user: authUser } = useAuth();
   const { courses: userCourses } = useUserTimetable();
   const {
@@ -95,10 +97,10 @@ const GroupViewPage = () => {
   const joinMutation = useMutation({
     mutationFn: async () => {
       const name = displayName.trim();
-      if (!name) throw new Error("Please enter your name");
+      if (!name) throw new Error(dict.group.name_required);
 
       const sem = group?.semester;
-      if (!sem) throw new Error("Group not loaded");
+      if (!sem) throw new Error(dict.group.not_loaded);
 
       // Reuse existing share for this semester, or auto-create one
       const existingShare = ownShares.find((s) => s.semesters.includes(sem));
@@ -121,10 +123,10 @@ const GroupViewPage = () => {
       queryClient.invalidateQueries({ queryKey: ["group", code] });
       queryClient.invalidateQueries({ queryKey: ["own-shares"] });
       queryClient.invalidateQueries({ queryKey: ["my-groups"] });
-      toast({ title: "Joined group!" });
+      toast({ title: dict.group.joined });
     },
     onError: (e: Error) =>
-      toast({ title: "Error", description: e.message, variant: "destructive" }),
+      toast({ title: dict.group.error, description: e.message, variant: "destructive" }),
   });
 
   const leaveMutation = useMutation({
@@ -133,7 +135,7 @@ const GroupViewPage = () => {
       queryClient.invalidateQueries({ queryKey: ["group", code] });
       queryClient.invalidateQueries({ queryKey: ["my-groups"] });
       navigate(-1);
-      toast({ title: "Left group" });
+      toast({ title: dict.group.left });
     },
   });
 
@@ -142,10 +144,10 @@ const GroupViewPage = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["my-groups"] });
       navigate(-1);
-      toast({ title: "Group deleted" });
+      toast({ title: dict.group.deleted });
     },
     onError: (e: Error) =>
-      toast({ title: "Error", description: e.message, variant: "destructive" }),
+      toast({ title: dict.group.error, description: e.message, variant: "destructive" }),
   });
 
   const toggleMember = (userId: string) => {
@@ -171,7 +173,7 @@ const GroupViewPage = () => {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="flex flex-col gap-4 p-4 h-64">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
@@ -179,10 +181,10 @@ const GroupViewPage = () => {
 
   if (!group) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <p className="text-muted-foreground">Group not found.</p>
+      <div className="flex flex-col gap-4 p-4 h-64">
+        <p className="text-muted-foreground leading-relaxed">{dict.group.not_found}</p>
         <Button variant="outline" onClick={() => navigate(-1)}>
-          Go back
+          {dict.group.go_back}
         </Button>
       </div>
     );
@@ -218,14 +220,14 @@ const GroupViewPage = () => {
 
   return (
     <div className="flex flex-col w-full h-full">
-      <div className="flex items-center justify-between px-4 py-3 border-b">
+      <div className="flex items-center justify-between px-4 py-4 border-b">
         <div>
           <div className="flex items-center gap-2">
             <Users className="h-5 w-5" />
-            <h1 className="text-lg font-semibold">{group.name}</h1>
+            <h1 className="text-lg font-medium">{group.name}</h1>
           </div>
           <p className="text-sm text-muted-foreground">
-            {toPrettySemester(semester)} · {group.members.length} members
+            {toPrettySemester(semester)} ・ {dict.group.member_count.replace("{count}", String(group.members.length))}
           </p>
         </div>
         <div className="flex gap-2">
@@ -235,7 +237,7 @@ const GroupViewPage = () => {
             ) : (
               <Copy className="h-4 w-4 mr-1" />
             )}
-            Copy invite link
+            {dict.group.copy_invite_link}
           </Button>
           {isAuthenticated && isAlreadyMember && (
             <Button
@@ -244,7 +246,7 @@ const GroupViewPage = () => {
               onClick={() => leaveMutation.mutate()}
               disabled={leaveMutation.isPending}
             >
-              <LogOut className="h-4 w-4 mr-1" /> Leave
+              <LogOut className="h-4 w-4 mr-1" /> {dict.group.leave}
             </Button>
           )}
           {isAuthenticated &&
@@ -255,14 +257,14 @@ const GroupViewPage = () => {
                 size="sm"
                 onClick={() => {
                   if (
-                    window.confirm("Delete this group? This cannot be undone.")
+                    window.confirm(dict.group.delete_confirm)
                   ) {
                     deleteMutation.mutate();
                   }
                 }}
                 disabled={deleteMutation.isPending}
               >
-                <Trash2 className="h-4 w-4 mr-1" /> Delete group
+                <Trash2 className="h-4 w-4 mr-1" /> {dict.group.delete_group}
               </Button>
             )}
         </div>
@@ -272,15 +274,15 @@ const GroupViewPage = () => {
         <div className="w-full">
           <Timetable timetableData={overlaidTimetableData} />
           {visibleMembers.size === 0 && (
-            <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
-              Toggle members on the right to overlay their timetables
+            <div className="flex items-start h-full p-4 text-sm text-muted-foreground leading-relaxed">
+              {dict.group.toggle_members}
             </div>
           )}
         </div>
 
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
-            <h3 className="text-sm font-medium">Members</h3>
+            <h3 className="text-sm font-medium">{dict.group.members}</h3>
             {group.members.map((member, i) => {
               const memberColor = MEMBER_COLORS[i % MEMBER_COLORS.length];
               const isVisible = visibleMembers.has(member.userId);
@@ -288,7 +290,7 @@ const GroupViewPage = () => {
               return (
                 <div
                   key={member.userId}
-                  className={`flex items-center gap-3 p-2 rounded-lg border cursor-pointer transition-all ${
+                  className={`flex items-center gap-4 p-2 rounded-lg border cursor-pointer transition-all ${
                     isVisible ? "border-primary" : ""
                   }`}
                   onClick={() => toggleMember(member.userId)}
@@ -298,11 +300,11 @@ const GroupViewPage = () => {
                     style={{ backgroundColor: memberColor }}
                   />
                   <div className="flex flex-col flex-1 min-w-0">
-                    <span className="text-sm font-medium truncate">
+                    <span className="text-sm font-medium whitespace-normal">
                       {member.label}
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      {courseIds.length} courses
+                      {dict.group.member_courses.replace("{count}", String(courseIds.length))}
                     </span>
                   </div>
                   <Button
@@ -329,13 +331,12 @@ const GroupViewPage = () => {
             <>
               <Separator />
               <div className="flex flex-col gap-2">
-                <h3 className="text-sm font-medium">Join this group</h3>
-                <p className="text-xs text-muted-foreground">
-                  Enter your name so members can identify you. We'll link your
-                  timetable automatically.
+                <h3 className="text-sm font-medium">{dict.group.join_group}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {dict.group.join_description}
                 </p>
                 <Input
-                  placeholder="Your name or nickname"
+                  placeholder={dict.group.name_placeholder}
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                   maxLength={60}
@@ -349,7 +350,7 @@ const GroupViewPage = () => {
                   {joinMutation.isPending ? (
                     <Loader2 className="h-4 w-4 animate-spin mr-1" />
                   ) : null}
-                  Join Group
+                  {dict.group.join}
                 </Button>
               </div>
             </>

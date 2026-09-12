@@ -27,13 +27,13 @@ import { NandaLineIcon } from "../BusIcons/NandaLineIcon";
 type ProgressDisplayProps = { max: number; current: number };
 const ProgressDisplay = ({ current, max }: ProgressDisplayProps) => {
   return (
-    <div className="w-44 h-1.5 justify-center items-center gap-1.5 inline-flex">
+    <div className="w-44 h-1.5 justify-center items-center gap-2 inline-flex">
       {Array.from({ length: max }, (_, i) => i).map((i) => (
         <div
           key={i}
           className={cn(
             "flex-1 h-1.5 relative rounded-md",
-            current >= i + 1 ? "bg-nthu-600" : "bg-zinc-100",
+            current >= i + 1 ? "bg-nthu-600" : "bg-muted",
           )}
         />
       ))}
@@ -59,12 +59,12 @@ const IntroAnimation = () => (
       {[0, 1, 2].map((i) => (
         <motion.div
           key={i}
-          className="w-16 h-16 rounded-full bg-nthu-500 flex items-center justify-center shadow-md"
+          className="w-16 h-16 rounded-full bg-nthu-500 flex items-center justify-center"
           initial={{ y: 50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.5 + i * 0.2 }}
         >
-          <Users size={24} className="text-white" />
+          <Users size={24} className="text-primary-foreground" />
         </motion.div>
       ))}
     </motion.div>
@@ -121,7 +121,7 @@ const CoursesAnimation = () => (
         title: "程式設計",
         code: "CS1011",
         color: "bg-nthu-500",
-        textColor: "text-white",
+        textColor: "text-primary-foreground",
         top: "15%",
         left: "11%",
         width: "21%",
@@ -130,8 +130,8 @@ const CoursesAnimation = () => (
       {
         title: "線性代數",
         code: "MATH2011",
-        color: "bg-blue-500",
-        textColor: "text-white",
+        color: "bg-primary",
+        textColor: "text-primary-foreground",
         top: "29%",
         left: "31%",
         width: "21%",
@@ -140,8 +140,8 @@ const CoursesAnimation = () => (
       {
         title: "資料結構",
         code: "CS2041",
-        color: "bg-green-500",
-        textColor: "text-white",
+        color: "bg-accent",
+        textColor: "text-accent-foreground",
         top: "43%",
         left: "53%",
         width: "21%",
@@ -150,7 +150,7 @@ const CoursesAnimation = () => (
       {
         title: "電腦網路",
         code: "CS3051",
-        color: "bg-yellow-500",
+        color: "bg-secondary",
         textColor: "text-foreground",
         top: "57%",
         left: "74%",
@@ -160,7 +160,7 @@ const CoursesAnimation = () => (
     ].map((course, i) => (
       <motion.div
         key={i}
-        className={`absolute rounded-md ${course.color} ${course.textColor} shadow-sm`}
+        className={`absolute rounded-md ${course.color} ${course.textColor}`}
         style={{
           top: course.top,
           left: course.left,
@@ -171,7 +171,7 @@ const CoursesAnimation = () => (
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.4, delay: 0.2 * i }}
       >
-        <div className="flex flex-col h-full p-1.5 select-none items-start justify-between">
+        <div className="flex flex-col h-full p-2 select-none items-start justify-between">
           <div className="flex-1 flex flex-col overflow-hidden">
             <span className="text-xs font-medium">{course.code}</span>
             <span className="text-xs md:text-sm font-medium">
@@ -191,7 +191,7 @@ const CoursesAnimation = () => (
 
 const DashboardAnimation = () => (
   <motion.div
-    className="w-full h-full flex flex-col gap-3 p-4 overflow-y-auto"
+    className="w-full h-full flex flex-col gap-4 p-4 overflow-y-auto"
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
   >
@@ -199,13 +199,13 @@ const DashboardAnimation = () => (
     <div className="flex flex-col gap-2 pb-4">
       <div className="flex flex-row justify-between">
         <div className="flex flex-row flex-1 items-baseline gap-2">
-          <div className="whitespace-nowrap font-semibold text-lg">今天</div>
+          <div className="whitespace-nowrap font-medium text-lg">今天</div>
           <div className="text-sm text-muted-foreground whitespace-nowrap">
-            5月7日 星期三
+            5 月 7 日 星期三
           </div>
         </div>
         <div className="flex items-center gap-1 rounded-full bg-muted px-2 py-1 text-sm">
-          <Cloud size={14} className="text-blue-500" />
+          <Cloud size={14} className="text-muted-foreground" />
           <span className="font-medium">26°</span>
           <span className="text-muted-foreground text-xs">18°</span>
           <div className="ml-1 text-xs bg-muted px-1 rounded-full">10%</div>
@@ -216,7 +216,7 @@ const DashboardAnimation = () => (
       <div className="flex flex-row gap-2 items-start">
         <div className="size-4 rounded-sm mt-1 bg-nthu-500"></div>
         <div className="flex flex-col gap-1">
-          <div className="font-semibold">程式設計</div>
+          <div className="font-medium">程式設計</div>
           <div className="text-xs text-muted-foreground align-baseline">
             <Clock className="size-3 inline mr-1" />
             9:00 - 10:00
@@ -230,9 +230,9 @@ const DashboardAnimation = () => (
 
       {/* Class 2 */}
       <div className="flex flex-row gap-2 items-start">
-        <div className="size-4 rounded-sm mt-1 bg-blue-500"></div>
+        <div className="size-4 rounded-sm mt-1 bg-primary"></div>
         <div className="flex flex-col gap-1">
-          <div className="font-semibold">線性代數</div>
+          <div className="font-medium">線性代數</div>
           <div className="text-xs text-muted-foreground align-baseline">
             <Clock className="size-3 inline mr-1" />
             11:00 - 12:00
@@ -248,19 +248,19 @@ const DashboardAnimation = () => (
     {/* Tomorrow's Schedule */}
     <div className="flex flex-col gap-2">
       <div className="flex flex-row flex-1 items-baseline gap-2">
-        <div className="whitespace-nowrap font-semibold text-lg text-muted-foreground">
+        <div className="whitespace-nowrap font-medium text-lg text-muted-foreground">
           明天
         </div>
         <div className="text-sm text-muted-foreground whitespace-nowrap">
-          5月8日
+          5 月 8 日
         </div>
       </div>
 
       {/* Class for tomorrow */}
       <div className="flex flex-row gap-2 items-start">
-        <div className="size-4 rounded-sm mt-1 bg-green-500"></div>
+        <div className="size-4 rounded-sm mt-1 bg-accent"></div>
         <div className="flex flex-col gap-1">
-          <div className="font-semibold">資料結構</div>
+          <div className="font-medium">資料結構</div>
           <div className="text-xs text-muted-foreground align-baseline">
             <Clock className="size-3 inline mr-1" />
             14:00 - 15:00
@@ -305,7 +305,7 @@ const BusAnimation = ({ title }: { title: string }) => (
         { icon: <GreenLineIcon />, position: "20%" },
         { icon: <RedLineIcon />, position: "40%" },
         { icon: <NandaLineIcon />, position: "60%" },
-        { icon: <Bus size={16} className="text-white" />, position: "80%" },
+        { icon: <Bus size={16} className="text-primary-foreground" />, position: "80%" },
       ].map((stop, i) => (
         <motion.div
           key={i}
@@ -326,7 +326,7 @@ const BusAnimation = ({ title }: { title: string }) => (
         animate={{ left: "80%" }}
         transition={{ duration: 2, repeat: 1, repeatType: "reverse" }}
       >
-        <Bus size={16} className="text-white" />
+        <Bus size={16} className="text-primary-foreground" />
       </motion.div>
     </motion.div>
   </motion.div>
@@ -334,7 +334,7 @@ const BusAnimation = ({ title }: { title: string }) => (
 
 const ToolsAnimation = ({ labels }: { labels: string[] }) => (
   <motion.div
-    className="w-full h-full grid grid-cols-2 gap-3 p-4"
+    className="w-full h-full grid grid-cols-2 gap-4 p-4"
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
   >
@@ -346,16 +346,16 @@ const ToolsAnimation = ({ labels }: { labels: string[] }) => (
     ].map((tool, i) => (
       <motion.div
         key={i}
-        className="flex flex-col items-center justify-center bg-card p-4 rounded-md shadow-sm border"
+        className="flex flex-col items-center justify-center bg-card p-4 rounded-md border border-border"
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.4, delay: i * 0.1 }}
       >
         <motion.div
-          className="w-12 h-12 rounded-full bg-nthu-100 flex items-center justify-center mb-2"
+          className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-2"
           whileHover={{ scale: 1.1 }}
         >
-          <motion.div className="text-nthu-600">{tool.icon}</motion.div>
+          <motion.div className="text-primary">{tool.icon}</motion.div>
         </motion.div>
         <span className="text-sm font-medium">{tool.label}</span>
       </motion.div>
@@ -451,9 +451,9 @@ const Help = ({ children }: { children?: ReactNode }) => {
         )}
       </DialogTrigger>
       <DialogContent className="h-[calc(100dvh-env(safe-area-inset-bottom))] p-0 w-full lg:h-[calc(100vh-48px)] pb-[env(safe-area-inset-bottom)]">
-        <div className="flex flex-col items-center gap-8 px-4 py-8 max-h-[calc(100dvh-env(safe-area-inset-bottom))] overflow-y-auto">
+        <div className="flex flex-col items-center gap-4 px-4 py-4 max-h-[calc(100dvh-env(safe-area-inset-bottom))] overflow-y-auto">
           <div className="flex-1 grid place-items-center">
-            <div className="w-[254px] h-[254px] max-h-full border rounded-lg shadow-sm overflow-hidden">
+            <div className="w-[254px] h-[254px] max-h-full border border-border rounded-lg overflow-hidden">
               {content[page].component}
             </div>
           </div>
@@ -461,8 +461,8 @@ const Help = ({ children }: { children?: ReactNode }) => {
             <ProgressDisplay current={page + 1} max={content.length} />
           </div>
           <div className="flex flex-col gap-2 h-max">
-            <h1 className="font-bold text-3xl">{content[page].title}</h1>
-            <p>{content[page].description}</p>
+            <h1 className="font-bold text-xl">{content[page].title}</h1>
+            <p className="leading-relaxed">{content[page].description}</p>
           </div>
           {page < content.length - 1 ? (
             <Button

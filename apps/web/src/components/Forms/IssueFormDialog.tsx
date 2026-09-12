@@ -16,6 +16,7 @@ import { toast } from "@courseweb/ui";
 import { useQuery } from "@tanstack/react-query";
 import { ScrollArea } from "@courseweb/ui";
 import client from "@/config/api";
+import useDictionary from "@/dictionaries/useDictionary";
 
 interface ApiError {
   message: string;
@@ -117,6 +118,7 @@ A clear and concise description of what you expected to happen.
 `;
 
 const IssueFormDialog = ({ children }: PropsWithChildren) => {
+  const dict = useDictionary();
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [title, setTitle] = useState("");
@@ -341,29 +343,29 @@ const IssueFormDialog = ({ children }: PropsWithChildren) => {
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{`問題回報 Bug Reporting`}</DialogTitle>
-          <DialogDescription>{`匿名的哦~ It's Anonymous!`}</DialogDescription>
+          <DialogTitle>{dict.forms.issue.title}</DialogTitle>
+          <DialogDescription>{dict.forms.issue.description}</DialogDescription>
         </DialogHeader>
         <ScrollArea className="max-h-[90vh]">
           <form
             onSubmit={handleSubmit}
-            className="flex flex-col max-w-2xl gap-4"
+            className="flex flex-col gap-4"
           >
             <div className="flex flex-col gap-2">
-              <Label htmlFor="title">{"標題 Title"}</Label>
+              <Label htmlFor="title">{dict.forms.issue.label_title}</Label>
               <Input
                 id="title"
                 name="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Whats the feature/bug you're facing"
+                placeholder={dict.forms.issue.placeholder_title}
                 disabled={isSubmitting}
               />
             </div>
             {issues && issues.length > 0 && (
               <div className="flex flex-col gap-2 max-h-[30vh]">
                 <h3 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  {"在解決的問題 Known Issues"}
+                  {dict.forms.issue.known_issues}
                 </h3>
                 <ScrollArea>
                   <ul className="list-disc list-inside text-sm">
@@ -375,7 +377,9 @@ const IssueFormDialog = ({ children }: PropsWithChildren) => {
               </div>
             )}
             <div className="flex flex-col gap-2">
-              <Label htmlFor="description">{"詳情 Describe your issue"}</Label>
+              <Label htmlFor="description">
+                {dict.forms.issue.label_description}
+              </Label>
               <Textarea
                 id="description"
                 name="description"
@@ -386,18 +390,18 @@ const IssueFormDialog = ({ children }: PropsWithChildren) => {
               />
               <p className="text-xs">
                 {
-                  "盡量寫越詳細越好，盡可能留下可聯絡的方式。 Be as detailed as you can, and leave a contact if you'd like a follow up"
+                  dict.forms.issue.detail_hint
                 }
               </p>
-              <p className="text-xs">{"Markdown GFM enabled!"}</p>
+              <p className="text-xs">{dict.forms.issue.markdown_hint}</p>
             </div>
             <div className="flex flex-row gap-2 justify-end">
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting
                   ? retryCount > 0
-                    ? `Retrying... (${retryCount}/${MAX_RETRIES})`
-                    : "Submitting..."
-                  : "Submit"}
+                    ? `${dict.forms.issue.retrying} (${retryCount}/${MAX_RETRIES})`
+                    : dict.forms.issue.submitting
+                  : dict.forms.issue.submit}
               </Button>
             </div>
           </form>
