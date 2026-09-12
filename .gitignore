@@ -57,6 +57,7 @@ android/private_key.pepk
 # Tools
 .tsimp
 **/.tsimp
+/bench/data/courses-all.json
 
 # IDEs
 .vscode/settings.json

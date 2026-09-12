@@ -3,6 +3,7 @@ import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import supabase_server from "./config/supabase_server";
 import type { Database } from "./types/supabase";
+import { deriveSearchFields, SUPPORTED_FACETS } from "./search-projection";
 
 type CourseRow = Database["public"]["Tables"]["courses"]["Row"];
 type CourseHit = CourseRow & {
@@ -16,24 +17,6 @@ const MAX_SCAN_ROWS = 10_000;
 const MAX_HITS_PER_PAGE = 100;
 const CACHE_CONTROL =
   "public, max-age=30, s-maxage=300, stale-while-revalidate=60";
-const SUPPORTED_FACETS = [
-  "semester",
-  "department",
-  "language",
-  "ge_target",
-  "ge_type",
-  "tags",
-  "times",
-  "venues",
-  "first_specialization",
-  "second_specialization",
-  "cross_discipline",
-  "courseLevel",
-  "separate_times",
-  "for_class",
-  "credits",
-] as const;
-
 type FilterCondition = {
   attribute: string;
   operator: ":" | "=" | "!=" | ">" | ">=" | "<" | "<=";
@@ -131,12 +114,9 @@ const parseConditions = (value?: string): FilterCondition[] => {
   return conditions;
 };
 
-const getCourseHit = (course: CourseRow): CourseHit => ({
+export const getCourseHit = (course: CourseRow): CourseHit => ({
   ...course,
-  objectID: course.raw_id,
-  courseLevel: `${course.course[0] ?? ""}000`,
-  separate_times: course.times.flatMap((time) => time.match(/.{1,2}/g) ?? []),
-  for_class: [...(course.elective_for ?? []), ...(course.compulsory_for ?? [])],
+  ...deriveSearchFields(course),
 });
 
 const getFacetValues = (course: CourseHit, attribute: string): string[] => {
@@ -368,8 +348,8 @@ const fallbackQuerySchema = z.object({
   q: z.string().optional(),
   query: z.string().optional(),
   page: z.coerce.number().int().min(0).optional().default(0),
-  hitsPerPage: z.coerce.number().int().min(1).max(MAX_HITS_PER_PAGE).optional(),
-  limit: z.coerce.number().int().min(1).max(MAX_HITS_PER_PAGE).optional(),
+  hitsPerPage: z.coerce.number().int().min(0).max(MAX_HITS_PER_PAGE).optional(),
+  limit: z.coerce.number().int().min(0).max(MAX_HITS_PER_PAGE).optional(),
   filters: z.string().optional(),
   numericFilters: z.string().optional(),
   facetFilters: z.string().optional(),
@@ -381,10 +361,10 @@ const fallbackQuerySchema = z.object({
   maxFacetHits: z.coerce.number().int().min(1).max(1000).optional(),
 });
 
-const app = new Hono().get(
-  "/",
-  zValidator("query", fallbackQuerySchema),
-  async (c) => {
+export const createSearchFallbackApp = (
+  loadCoursesFn: typeof loadCourses = loadCourses,
+) =>
+  new Hono().get("/", zValidator("query", fallbackQuerySchema), async (c) => {
     const values = c.req.valid("query");
     const query = values.facetName
       ? (values.facetQuery ?? "")
@@ -407,7 +387,7 @@ const app = new Hono().get(
       : undefined;
 
     try {
-      const courses = await loadCourses(c, values.facetName ? "" : query);
+      const courses = await loadCoursesFn(c, values.facetName ? "" : query);
       const filteredCourses = courses.filter(
         (course) =>
           matchesFacetGroups(course, facetGroups) &&
@@ -457,7 +437,10 @@ const app = new Hono().get(
           hits,
           nbHits: sortedCourses.length,
           page,
-          nbPages: Math.ceil(sortedCourses.length / hitsPerPage),
+          nbPages:
+            hitsPerPage === 0
+              ? 0
+              : Math.ceil(sortedCourses.length / hitsPerPage),
           hitsPerPage,
           processingTimeMS,
           query,
@@ -484,7 +467,6 @@ const app = new Hono().get(
         500,
       );
     }
-  },
-);
+  });
 
-export default app;
+export default createSearchFallbackApp();

@@ -4,6 +4,6 @@
     "incremental": false,
     "types": ["bun", "vite/client"]
   },
-  "include": ["src/**/*.test.ts", "src/**/*.test.tsx"],
+  "include": ["src/**/*.test.ts", "src/**/*.test.tsx", "src/types/**/*.d.ts"],
   "exclude": ["node_modules"]
 }
