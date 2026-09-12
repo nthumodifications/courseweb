@@ -37,9 +37,21 @@ there is now one.
 - Title: `text-xl font-semibold`, always the localised page name.
 - Optional description: `text-sm text-muted-foreground`, one line, truncates.
 - Actions: right-aligned, at most one primary + two icon buttons.
-- No icons beside the title. No hero. No centred titles inside the app shell.
-- Marketing/side pages may use one `text-4xl font-bold` display title — once, at the
-  top — and nothing larger anywhere in the product.
+- No icons beside the title. No hero. No centred titles.
+
+**There is no display-title exception.** 團隊, 貢獻, 加入我們 and 隱私權政策 open
+exactly the way 今日 and 課程查詢 open: the same `PageHeader`, the same size, the same
+left edge. A page that announces itself with a 36px centred hero is telling the
+student they have left the product — which is precisely the complaint these rules
+exist to answer. Side pages differ from app pages in **measure and density**
+(`width="content"`, more air between sections, longer copy), never in chrome.
+
+Centred text appears in exactly one place: inside `EmptyState` and `ErrorState`.
+Nowhere else — not headings, not sections, not button rows, not cards.
+
+A page may never reach into `PageHeader` with arbitrary variants
+(`[&>div:first-child]:justify-center`) to get a different shape. If a page needs a
+shape the header does not have, the answer is no.
 
 ## 3. Vertical rhythm and spacing (P3, P5)
 
@@ -102,17 +114,17 @@ Rules:
 Chinese-first: prefer **weight contrast over size contrast**. CJK at large sizes
 reads as shouting.
 
-| role                                  | classes                             |
-| ------------------------------------- | ----------------------------------- |
-| display (side pages only, once)       | `text-4xl font-bold tracking-tight` |
-| page title                            | `text-xl font-semibold`             |
-| section title                         | `text-base font-semibold`           |
-| body                                  | `text-sm`                           |
-| meta / secondary                      | `text-xs text-muted-foreground`     |
-| numbers, times, course codes, credits | `tabular-nums font-medium`          |
+| role                                  | classes                         |
+| ------------------------------------- | ------------------------------- |
+| page title                            | `text-xl font-semibold`         |
+| section title                         | `text-base font-semibold`       |
+| body                                  | `text-sm`                       |
+| meta / secondary                      | `text-xs text-muted-foreground` |
+| numbers, times, course codes, credits | `tabular-nums font-medium`      |
 
-- Inside the app shell nothing is larger than `text-xl`. The current `text-5xl`
-  (8 uses), `text-4xl` (4) and `text-3xl` (2) headings inside app pages go away.
+- **`text-xl` is the largest type in the product.** Not the largest in the app shell
+  — the largest anywhere, side pages and marketing copy included. There is no
+  display size, because there is no page that gets to look like a different product.
 - Line length in `content` pages caps at ~70 characters (`max-w-prose`).
 - Inline links: `text-primary underline-offset-4 hover:underline`. Never a raw
   browser-blue underlined `<a>`.
