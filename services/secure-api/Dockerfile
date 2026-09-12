@@ -34,15 +34,13 @@ COPY --from=deps /usr/src/app/node_modules ./node_modules
 COPY . .
 
 # Build shared packages first
-RUN cd packages/shared && bun run build || true
-RUN cd packages/database && bun run build || true
-RUN cd packages/eslint-config && bun run build || true
+RUN cd packages/shared && bun run build
 
 # Generate Prisma client for secure-api
 RUN cd services/secure-api && bun run prisma:generate
 
 # Build secure-api
-RUN cd services/secure-api && bun run build || true
+RUN cd services/secure-api && bun run build
 
 # Production image
 FROM base AS release
