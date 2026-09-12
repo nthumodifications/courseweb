@@ -331,11 +331,12 @@ export const router = createBrowserRouter([
                 path: "student/grades",
                 element: <GradesPage />,
                 handle: {
-                  title: "Grades",
-                  titleZh: "成績",
+                  title: "Grades & GPA",
+                  titleZh: "成績與 GPA 試算",
                   description:
-                    "View your NTHU course grades and academic record.",
-                  descriptionZh: "查看清大個人成績與學業記錄。",
+                    "Track self-reported course scores and estimate your GPA without connecting to CCXP.",
+                  descriptionZh:
+                    "記錄自填課程成績並預估 GPA，不需連線至校務系統。",
                   noindex: true,
                 },
               },

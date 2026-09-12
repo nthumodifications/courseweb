@@ -6,6 +6,7 @@ export const validKeys = [
   "timetable_theme",
   "user_defined_colors",
   "timetable_custom_items",
+  "grades",
 ];
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>

@@ -11,6 +11,7 @@ import {
   Dumbbell,
   Users,
   MapPinned as CampusMapIcon,
+  GraduationCap,
 } from "lucide-react";
 import ChumeiIcon from "@/components/Apps/ChumeiIcon";
 
@@ -153,5 +154,13 @@ export const apps: {
     href: "/student/planner",
     Icon: SquareGanttChart,
     beta: true,
+  },
+  {
+    id: "grades",
+    category: "course",
+    title_zh: "成績與 GPA 試算",
+    title_en: "Grades & GPA",
+    href: "/student/grades",
+    Icon: GraduationCap,
   },
 ];
