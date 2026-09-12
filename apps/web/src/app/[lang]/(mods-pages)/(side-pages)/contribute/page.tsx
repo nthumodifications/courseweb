@@ -4,7 +4,6 @@ import {
   Code,
   DollarSign,
   Github,
-  Heart,
   Instagram,
   Lightbulb,
   Mail,
@@ -24,30 +23,17 @@ const ContributePage = () => {
   return (
     <PageShell width="content">
       <PageHeader
-        className="text-center [&>div:first-child]:justify-center [&_h1]:overflow-visible [&_h1]:text-clip [&_h1]:whitespace-normal"
-        title={
-          <span className="text-4xl font-bold tracking-tight">
-            {dict.contribute.title}
-          </span>
-        }
+        title={dict.contribute.title}
         description={dict.contribute.subtitle}
       />
 
       <Section
-        title={
-          <span className="inline-flex items-center gap-2">
-            <Heart
-              className="h-5 w-5 text-muted-foreground"
-              aria-hidden="true"
-            />
-            {dict.contribute.sponsors.title}
-          </span>
-        }
+        title={dict.contribute.sponsors.title}
         description={dict.contribute.sponsors.description}
         variant="card"
       >
-        <div className="flex flex-wrap items-start justify-center gap-8">
-          <div className="flex min-w-32 flex-col items-center gap-2 text-center">
+        <div className="flex flex-wrap items-start gap-8">
+          <div className="flex min-w-32 flex-col items-start gap-2">
             <div className="rounded-lg border border-border bg-background p-4">
               <img
                 src="/images/Algolia-mark-blue.png"
@@ -64,7 +50,7 @@ const ContributePage = () => {
             </p>
           </div>
 
-          <div className="flex min-w-32 flex-col items-center gap-2 text-center">
+          <div className="flex min-w-32 flex-col items-start gap-2">
             <div className="rounded-lg border border-border bg-background p-4">
               <img
                 src="/images/cerana_dc.png"
@@ -86,9 +72,9 @@ const ContributePage = () => {
 
       <Section title={dict.contribute.stats.title}>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <div className="rounded-lg border border-border bg-card p-4 text-center">
+          <div className="rounded-lg border border-border bg-card p-4">
             <Users
-              className="mx-auto h-5 w-5 text-muted-foreground"
+              className="h-5 w-5 text-muted-foreground"
               aria-hidden="true"
             />
             <div className="mt-2 text-xl font-medium tabular-nums text-primary">
@@ -98,9 +84,9 @@ const ContributePage = () => {
               {dict.contribute.stats.active_users}
             </div>
           </div>
-          <div className="rounded-lg border border-border bg-card p-4 text-center">
+          <div className="rounded-lg border border-border bg-card p-4">
             <Code
-              className="mx-auto h-5 w-5 text-muted-foreground"
+              className="h-5 w-5 text-muted-foreground"
               aria-hidden="true"
             />
             <div className="mt-2 text-xl font-medium tabular-nums text-primary">
@@ -110,9 +96,9 @@ const ContributePage = () => {
               {dict.contribute.stats.open_source}
             </div>
           </div>
-          <div className="rounded-lg border border-border bg-card p-4 text-center">
+          <div className="rounded-lg border border-border bg-card p-4">
             <Sparkles
-              className="mx-auto h-5 w-5 text-muted-foreground"
+              className="h-5 w-5 text-muted-foreground"
               aria-hidden="true"
             />
             <div className="mt-2 text-xl font-medium tabular-nums text-primary">
@@ -122,9 +108,9 @@ const ContributePage = () => {
               {dict.contribute.stats.years_running}
             </div>
           </div>
-          <div className="rounded-lg border border-border bg-card p-4 text-center">
+          <div className="rounded-lg border border-border bg-card p-4">
             <MessageSquare
-              className="mx-auto h-5 w-5 text-muted-foreground"
+              className="h-5 w-5 text-muted-foreground"
               aria-hidden="true"
             />
             <div className="mt-2 text-xl font-medium tabular-nums text-primary">
@@ -250,31 +236,29 @@ const ContributePage = () => {
         </Section>
       </Section>
 
-      <Section title={dict.contribute.call_to_action.title} variant="card">
-        <div className="text-center">
-          <p className="text-sm text-muted-foreground">
-            {dict.contribute.call_to_action.description}
-          </p>
-          <div className="mt-4 flex flex-wrap justify-center gap-3">
-            <Button asChild>
-              <a
-                href="https://github.com/nthumodifications/courseweb"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {dict.contribute.call_to_action.start_contributing}
-              </a>
-            </Button>
-            <Button asChild variant="outline">
-              <a
-                href="https://opencollective.com/nthumods"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {dict.contribute.call_to_action.support_us}
-              </a>
-            </Button>
-          </div>
+      <Section
+        title={dict.contribute.call_to_action.title}
+        description={dict.contribute.call_to_action.description}
+      >
+        <div className="flex flex-wrap gap-3">
+          <Button asChild>
+            <a
+              href="https://github.com/nthumodifications/courseweb"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {dict.contribute.call_to_action.start_contributing}
+            </a>
+          </Button>
+          <Button asChild variant="outline">
+            <a
+              href="https://opencollective.com/nthumods"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {dict.contribute.call_to_action.support_us}
+            </a>
+          </Button>
         </div>
       </Section>
 

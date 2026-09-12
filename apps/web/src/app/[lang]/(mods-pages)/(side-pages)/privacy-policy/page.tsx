@@ -9,19 +9,17 @@ const PrivacyPolicyPage = () => {
   return (
     <PageShell width="content">
       <PageHeader
-        className="[&_h1]:overflow-visible [&_h1]:text-clip [&_h1]:whitespace-normal"
-        title={
-          <span className="text-4xl font-bold tracking-tight">
-            {dict.privacy_policy_page.title}
-          </span>
-        }
+        title={dict.privacy_policy_page.title}
         description={dict.privacy_policy_page.updated}
       />
 
-      <p className="max-w-prose text-sm">{dict.privacy_policy_page.intro}</p>
-
-      {dict.privacy_policy_page.sections.map((section) => (
+      {dict.privacy_policy_page.sections.map((section, index) => (
         <Section key={section.title} title={section.title}>
+          {index === 0 && (
+            <p className="max-w-prose text-sm">
+              {dict.privacy_policy_page.intro}
+            </p>
+          )}
           {section.paragraphs.map((paragraph) => (
             <p key={paragraph} className="max-w-prose text-sm">
               {paragraph}
@@ -34,14 +32,14 @@ const PrivacyPolicyPage = () => {
               ))}
             </ul>
           )}
+          {index === dict.privacy_policy_page.sections.length - 1 &&
+            dict.privacy_policy_page.closing && (
+              <p className="max-w-prose text-sm text-muted-foreground">
+                {dict.privacy_policy_page.closing}
+              </p>
+            )}
         </Section>
       ))}
-
-      {dict.privacy_policy_page.closing && (
-        <p className="max-w-prose text-sm text-muted-foreground">
-          {dict.privacy_policy_page.closing}
-        </p>
-      )}
 
       <Footer />
     </PageShell>

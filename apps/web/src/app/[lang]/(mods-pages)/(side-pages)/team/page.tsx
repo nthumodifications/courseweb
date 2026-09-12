@@ -14,14 +14,7 @@ const Team = () => {
 
   return (
     <PageShell width="content">
-      <PageHeader
-        className="[&_h1]:overflow-visible [&_h1]:text-clip [&_h1]:whitespace-normal"
-        title={
-          <span className="text-4xl font-bold tracking-tight">
-            {dict.team.title}
-          </span>
-        }
-      />
+      <PageHeader title={dict.team.title} />
 
       <Section title={dict.team.about_title}>
         <div className="max-w-prose space-y-3 text-sm">
@@ -52,7 +45,7 @@ const Team = () => {
               key={member.name_en}
               className="flex h-full min-w-0 items-start gap-4 rounded-lg border border-border bg-card p-4"
             >
-              <div className="flex shrink-0 flex-col items-center gap-2">
+              <div className="flex shrink-0 flex-col items-start gap-2">
                 <img
                   src={member.photo}
                   alt={member.name_en}

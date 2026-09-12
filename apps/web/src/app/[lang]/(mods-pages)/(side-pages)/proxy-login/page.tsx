@@ -33,15 +33,7 @@ const ProxyLoginExplainerPage = () => {
 
   return (
     <PageShell width="content">
-      <PageHeader
-        className="[&_h1]:overflow-visible [&_h1]:text-clip [&_h1]:whitespace-normal"
-        title={
-          <span className="text-4xl font-bold tracking-tight">
-            {copy.title}
-          </span>
-        }
-        description={copy.updated}
-      />
+      <PageHeader title={copy.title} description={copy.updated} />
 
       <Section title={copy.what.title}>
         <p className="max-w-prose text-sm">
@@ -51,17 +43,14 @@ const ProxyLoginExplainerPage = () => {
           </Link>
           {copy.what.body_after}
         </p>
-      </Section>
-
-      <div className="max-w-prose rounded-md bg-muted p-4 text-sm">
-        <p>
+        <p className="max-w-prose text-sm text-muted-foreground">
           <strong>{copy.note.label}</strong> {copy.note.body_before}{" "}
           <Link className={linkClass} to={`${guidePath}/auth`}>
             {copy.note.link}
           </Link>
           {copy.note.body_after}
         </p>
-      </div>
+      </Section>
 
       <Section title={copy.features.title}>
         <p className="max-w-prose text-sm">{copy.features.intro}</p>

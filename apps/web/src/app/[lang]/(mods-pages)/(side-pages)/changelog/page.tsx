@@ -31,12 +31,7 @@ const ChangelogPage = () => {
   return (
     <PageShell width="content">
       <PageHeader
-        className="[&_h1]:overflow-visible [&_h1]:text-clip [&_h1]:whitespace-normal"
-        title={
-          <span className="text-4xl font-bold tracking-tight">
-            {dict.changelog.title}
-          </span>
-        }
+        title={dict.changelog.title}
         description={dict.changelog.description}
       />
 
