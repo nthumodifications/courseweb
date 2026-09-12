@@ -20,7 +20,7 @@ export const SettingItem = ({
     <div
       id={id}
       className={cn(
-        "flex flex-row xs:items-center xs:justify-between gap-3",
+        "flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between",
         className,
       )}
     >
@@ -36,7 +36,9 @@ export const SettingItem = ({
           <p className="text-xs text-muted-foreground">{description}</p>
         )}
       </div>
-      <div className="flex items-center shrink-0">{control}</div>
+      <div className="flex w-full min-w-0 items-center sm:w-auto sm:shrink-0">
+        {control}
+      </div>
     </div>
   );
 };

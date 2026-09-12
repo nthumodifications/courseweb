@@ -53,8 +53,9 @@ export type ThemeCSSVar =
   | "sidebar-ring";
 
 export interface ThemePresetColors {
-  light: Partial<Record<ThemeCSSVar, string>>;
-  dark: Partial<Record<ThemeCSSVar, string>>;
+  /** Every preset resolves every semantic variable before it reaches the UI. */
+  light: Record<ThemeCSSVar, string>;
+  dark: Record<ThemeCSSVar, string>;
 }
 
 export interface ThemePreset {

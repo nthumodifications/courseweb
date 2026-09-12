@@ -13,6 +13,9 @@ import {
   SelectTrigger,
   SelectValue,
   Badge,
+  PageHeader,
+  PageShell,
+  Section,
 } from "@courseweb/ui";
 import { Language } from "@/types/settings";
 import Footer from "@/components/Footer";
@@ -23,10 +26,8 @@ import { event } from "@/lib/gtag";
 import { AIPreferencesPanel } from "./AIPreferences";
 import { ThemeSection } from "./ThemeSection";
 import { WidgetSection } from "./WidgetSection";
-import { BottomNavSection } from "./BottomNavSection";
-import { SidebarNavSection } from "./SidebarNavSection";
+import { NavigationSection } from "./NavigationSection";
 import { SettingsSidebar } from "./SettingsSidebar";
-import { SettingsSection } from "./SettingsSection";
 import { SettingItem } from "./SettingItem";
 import { MobileQuickNav } from "./MobileQuickNav";
 import { useScrollTracking } from "./useScrollTracking";
@@ -133,8 +134,12 @@ const SettingsPage = () => {
   );
 
   return (
-    <div className="w-full">
-      <div className="flex flex-col lg:flex-row gap-6 px-4 sm:px-6">
+    <PageShell width="app">
+      <PageHeader
+        title={dict.navigation.settings}
+        description={dict.settings.page_description}
+      />
+      <div className="flex flex-col gap-6 lg:flex-row">
         {/* Sidebar - Desktop only */}
         <aside className="hidden lg:block w-[180px] shrink-0">
           <div className="sticky top-[--header-height] pt-8">
@@ -156,26 +161,28 @@ const SettingsPage = () => {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 min-w-0 pb-8">
-          <div className="flex flex-col gap-6 min-w-0">
+        <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 flex-col gap-6">
             {/* Appearance Settings */}
-            <SettingsSection
+            <Section
               id="appearance"
               title={dict.settings.appearance.title}
               description={dict.settings.appearance.description}
+              variant="card"
             >
               <ThemeSection />
-            </SettingsSection>
+            </Section>
 
             {/* Display Settings */}
-            <SettingsSection
+            <Section
               id="display"
               title={dict.settings.display.title}
               description={dict.settings.display.description}
+              variant="card"
             >
               <SettingItem
                 title={dict.settings.display.dark_mode.title}
-                description=""
+                description={dict.settings.display.dark_mode.description}
                 control={
                   <Switch checked={darkMode} onCheckedChange={setDarkMode} />
                 }
@@ -183,14 +190,16 @@ const SettingsPage = () => {
 
               <SettingItem
                 title={dict.settings.display.language.title}
-                description=""
+                description={dict.settings.display.language.description}
                 control={
                   <Select
                     value={language}
                     onValueChange={(v) => setLanguage(v as Language)}
                   >
                     <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder={dict.settings.display.language.title} />
+                      <SelectValue
+                        placeholder={dict.settings.display.language.title}
+                      />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="zh">
@@ -215,26 +224,20 @@ const SettingsPage = () => {
                 }
               />
 
-              <div>
-                <label className="text-sm font-medium block mb-2">
-                  {dict.settings.display.bottom_nav.title}
-                </label>
-                <BottomNavSection />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium block mb-2">
-                  {dict.settings.display.sidebar_nav.title}
-                </label>
-                <SidebarNavSection />
-              </div>
-            </SettingsSection>
+              <Section
+                title={dict.settings.navigation.title}
+                description={dict.settings.navigation.description}
+              >
+                <NavigationSection />
+              </Section>
+            </Section>
 
             {/* Calendar Settings */}
-            <SettingsSection
+            <Section
               id="calendar"
               title={dict.settings.calendar.title}
               description={dict.settings.calendar.description}
+              variant="card"
             >
               <SettingItem
                 title={dict.settings.calendar.academic_calendar.title}
@@ -287,19 +290,25 @@ const SettingsPage = () => {
 
               {useWidgetDashboard && (
                 <div>
-                  <p className="text-sm font-medium mb-3 mt-2 text-muted-foreground">
-                    {dict.settings.calendar.widget_dashboard.customize}
-                  </p>
-                  <WidgetSection />
+                  <Section
+                    title={dict.settings.calendar.widget_dashboard.customize}
+                    description={
+                      dict.settings.calendar.widget_dashboard
+                        .customize_description
+                    }
+                  >
+                    <WidgetSection />
+                  </Section>
                 </div>
               )}
-            </SettingsSection>
+            </Section>
 
             {/* Timetable Settings */}
-            <SettingsSection
+            <Section
               id="timetable"
               title={dict.settings.timetable.title}
               description={dict.settings.timetable.description}
+              variant="card"
             >
               <div className="flex flex-col gap-6">
                 <div className="overflow-x-auto">
@@ -315,28 +324,34 @@ const SettingsPage = () => {
                     />
                   }
                 />
-                <TimetableThemeList />
+                <SettingItem
+                  title={dict.settings.timetable.theme.title}
+                  description={dict.settings.timetable.theme.description}
+                  control={<TimetableThemeList />}
+                />
                 <TimetablePreferences
                   settings={preferences}
                   onSettingsChange={setPreferences}
                 />
               </div>
-            </SettingsSection>
+            </Section>
 
             {/* AI Settings */}
-            <SettingsSection
+            <Section
               id="ai"
               title={dict.settings.ai.title}
               description={dict.settings.ai.description}
+              variant="card"
             >
               <AIPreferencesPanel />
-            </SettingsSection>
+            </Section>
 
             {/* Privacy Settings */}
-            <SettingsSection
+            <Section
               id="privacy"
               title={dict.settings.privacy.title}
               description={dict.settings.privacy.description}
+              variant="card"
             >
               <SettingItem
                 title={dict.settings.privacy.analytics.title}
@@ -345,38 +360,35 @@ const SettingsPage = () => {
                   <Switch checked={analytics} onCheckedChange={setAnalytics} />
                 }
               />
-            </SettingsSection>
+            </Section>
 
             {/* Advanced Settings */}
-            <SettingsSection
+            <Section
               id="advanced"
               title={dict.settings.advanced.title}
               description={dict.settings.advanced.description}
+              variant="card"
             >
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium">
-                  {dict.settings.advanced.custom_css.title}
-                </label>
-                <p className="text-xs text-muted-foreground">
-                  {dict.settings.advanced.custom_css.description}
-                </p>
-                <textarea
-                  value={customCSS}
-                  onChange={(e) => setCustomCSS(e.target.value)}
-                  placeholder={
-                    "/* Your custom CSS here */\n.example { color: red; }"
-                  }
-                  className="w-full h-40 p-3 text-xs font-mono bg-muted rounded-lg border border-border outline-none resize-y focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground/50"
-                  spellCheck={false}
-                />
-              </div>
-            </SettingsSection>
+              <SettingItem
+                title={dict.settings.advanced.custom_css.title}
+                description={dict.settings.advanced.custom_css.description}
+                control={
+                  <textarea
+                    value={customCSS}
+                    onChange={(event) => setCustomCSS(event.target.value)}
+                    placeholder={dict.settings.advanced.custom_css.placeholder}
+                    className="h-40 w-full resize-y rounded-md border border-border bg-muted p-3 font-mono text-xs outline-none placeholder:text-muted-foreground/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    spellCheck={false}
+                  />
+                }
+              />
+            </Section>
 
             <Footer />
           </div>
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 };
 

@@ -3,18 +3,19 @@ import useDictionary from "@/dictionaries/useDictionary";
 import {
   Button,
   Input,
-  Label,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
   Switch,
-  Separator,
+  Section,
 } from "@courseweb/ui";
 import { event } from "@/lib/gtag";
 import { useQuery } from "@tanstack/react-query";
 import client from "@/config/api";
+import { SettingItem } from "./SettingItem";
+import { Check } from "lucide-react";
 
 const ENTRANCE_YEARS = ["114", "113", "112", "111", "110", "109", "108", "107"];
 
@@ -161,114 +162,116 @@ export function AIPreferencesPanel() {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-base font-semibold">
-          {dict.settings.ai.profile.title}
-        </h3>
-        <p className="text-sm text-muted-foreground">
-          {dict.settings.ai.profile.description}
-        </p>
-      </div>
-
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="department">
-            {dict.settings.ai.profile.department.label}
-          </Label>
-          <Select
-            value={settings.department}
-            onValueChange={(v) => setSettings((s) => ({ ...s, department: v }))}
-          >
-            <SelectTrigger>
-              <SelectValue
-                placeholder={dict.settings.ai.profile.department.placeholder}
-              />
-            </SelectTrigger>
-            <SelectContent>
-              {isLoadingDepts ? (
-                <SelectItem value="loading" disabled>
-                  {dict.common.loading}
-                </SelectItem>
-              ) : (
-                departments.map((dept) => (
-                  <SelectItem key={dept.department} value={dept.department}>
-                    {dept.department} ({dept.college})
+    <div className="flex flex-col gap-6">
+      <Section
+        title={dict.settings.ai.profile.title}
+        description={dict.settings.ai.profile.description}
+      >
+        <SettingItem
+          title={dict.settings.ai.profile.department.label}
+          description={dict.settings.ai.profile.department.description}
+          control={
+            <Select
+              value={settings.department}
+              onValueChange={(v) =>
+                setSettings((s) => ({ ...s, department: v }))
+              }
+            >
+              <SelectTrigger className="w-full sm:w-72">
+                <SelectValue
+                  placeholder={dict.settings.ai.profile.department.placeholder}
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {isLoadingDepts ? (
+                  <SelectItem value="loading" disabled>
+                    {dict.common.loading}
                   </SelectItem>
-                ))
-              )}
-            </SelectContent>
-          </Select>
-        </div>
+                ) : (
+                  departments.map((dept) => (
+                    <SelectItem key={dept.department} value={dept.department}>
+                      {dept.department} ({dept.college})
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+          }
+        />
+        <SettingItem
+          title={dict.settings.ai.profile.entrance_year.label}
+          description={dict.settings.ai.profile.entrance_year.description}
+          control={
+            <Select
+              value={settings.entranceYear}
+              onValueChange={(v) =>
+                setSettings((s) => ({ ...s, entranceYear: v }))
+              }
+            >
+              <SelectTrigger className="w-full sm:w-72">
+                <SelectValue
+                  placeholder={
+                    dict.settings.ai.profile.entrance_year.placeholder
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {ENTRANCE_YEARS.map((year) => (
+                  <SelectItem key={year} value={year}>
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          }
+        />
+      </Section>
 
-        <div className="space-y-2">
-          <Label htmlFor="entranceYear">
-            {dict.settings.ai.profile.entrance_year.label}
-          </Label>
-          <Select
-            value={settings.entranceYear}
-            onValueChange={(v) =>
-              setSettings((s) => ({ ...s, entranceYear: v }))
-            }
-          >
-            <SelectTrigger>
-              <SelectValue
-                placeholder={dict.settings.ai.profile.entrance_year.placeholder}
-              />
-            </SelectTrigger>
-            <SelectContent>
-              {ENTRANCE_YEARS.map((year) => (
-                <SelectItem key={year} value={year}>
-                  {year}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <Separator orientation="horizontal" />
-
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="space-y-0.5">
-            <Label>{dict.settings.ai.api_key.title}</Label>
-            <p className="text-sm text-muted-foreground">
-              {dict.settings.ai.api_key.description}
-            </p>
-          </div>
-          <Switch
-            checked={settings.useCustomKey}
-            onCheckedChange={(v) =>
-              setSettings((s) => ({ ...s, useCustomKey: v }))
-            }
-          />
-        </div>
+      <Section
+        title={dict.settings.ai.api_key.title}
+        description={dict.settings.ai.api_key.description}
+      >
+        <SettingItem
+          title={dict.settings.ai.api_key.toggle_title}
+          description={dict.settings.ai.api_key.toggle_description}
+          control={
+            <Switch
+              checked={settings.useCustomKey}
+              onCheckedChange={(v) =>
+                setSettings((s) => ({ ...s, useCustomKey: v }))
+              }
+            />
+          }
+        />
 
         {settings.useCustomKey && (
           <>
-            <div className="space-y-2">
-              <Label htmlFor="apiKey">{dict.settings.ai.api_key.label}</Label>
-              <Input
-                id="apiKey"
-                type="password"
-                value={settings.apiKey || ""}
-                onChange={(e) =>
-                  setSettings((s) => ({ ...s, apiKey: e.target.value }))
-                }
-                placeholder={dict.settings.ai.api_key.placeholder}
-              />
-              <p className="text-xs text-muted-foreground">
-                <a
-                  href="https://aistudio.google.com/apikey"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline"
-                >
-                  {dict.settings.ai.api_key.get_key}
-                </a>
-              </p>
-            </div>
+            <SettingItem
+              title={dict.settings.ai.api_key.label}
+              description={dict.settings.ai.api_key.key_description}
+              control={
+                <Input
+                  id="apiKey"
+                  type="password"
+                  value={settings.apiKey || ""}
+                  onChange={(e) =>
+                    setSettings((s) => ({ ...s, apiKey: e.target.value }))
+                  }
+                  placeholder={dict.settings.ai.api_key.placeholder}
+                  className="w-full sm:w-72"
+                />
+              }
+            />
+            <p className="text-xs text-muted-foreground">
+              <a
+                href="https://aistudio.google.com/apikey"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-sm text-primary underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                {dict.settings.ai.api_key.get_key}
+              </a>
+            </p>
 
             <Button
               variant="outline"
@@ -281,22 +284,22 @@ export function AIPreferencesPanel() {
             </Button>
 
             {testResult === "success" && (
-              <p className="text-sm text-green-600">
+              <p className="text-sm text-success">
                 {dict.settings.ai.api_key.valid}
               </p>
             )}
             {testResult === "error" && (
-              <p className="text-sm text-red-600">
+              <p className="text-sm text-destructive">
                 {dict.settings.ai.api_key.invalid}
               </p>
             )}
           </>
         )}
-      </div>
+      </Section>
 
       <Button onClick={saveSettings}>
-        {isSaved ? "✓ " : ""}
-        {dict.settings.ai.save}
+        {isSaved && <Check className="h-4 w-4" />}
+        {isSaved ? dict.settings.ai.saved : dict.settings.ai.save}
       </Button>
     </div>
   );

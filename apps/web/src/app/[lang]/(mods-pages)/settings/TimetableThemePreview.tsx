@@ -2,17 +2,22 @@ import { timetableColors } from "@courseweb/shared";
 
 export const TimetableThemePreview = ({
   theme,
+  label,
   onClick = () => {},
   selected = false,
 }: {
   theme: string;
+  label: string;
   selected?: boolean;
   onClick?: () => void;
 }) => {
   return (
-    <div
+    <button
+      type="button"
       onClick={onClick}
-      className={`flex flex-col rounded-sm p-2 hover:dark:bg-neutral-800 hover:bg-gray-50 transition cursor-pointer space-y-2 ${selected ? "border-border border" : ""}`}
+      aria-pressed={selected}
+      aria-label={label}
+      className={`flex min-h-10 flex-col gap-2 rounded-md border p-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${selected ? "border-primary bg-primary/10 text-primary" : "border-border bg-background hover:bg-accent hover:text-accent-foreground"}`}
     >
       <div className="flex flex-row">
         {timetableColors[theme].map((color, index) => (
@@ -23,7 +28,7 @@ export const TimetableThemePreview = ({
           />
         ))}
       </div>
-      <span className="text-sm capitalize">{theme}</span>
-    </div>
+      <span className="text-sm">{label}</span>
+    </button>
   );
 };

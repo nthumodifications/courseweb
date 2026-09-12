@@ -1,4 +1,3 @@
-import CurrentSemesterLabel from "./Today/CurrentSemesterLabel";
 import { SidebarTrigger } from "@courseweb/ui";
 import {
   DropdownMenu,
@@ -28,7 +27,6 @@ import {
 import { useRxCollection } from "rxdb-hooks";
 import { HeaderPortalOutlet } from "./Portal/HeaderPortal";
 import { useIsMobile } from "@courseweb/ui";
-import { Badge } from "@courseweb/ui";
 import { getSyncedStorageKey } from "@/hooks/syncedStorage";
 
 const Header = () => {
@@ -115,13 +113,12 @@ const Header = () => {
   };
 
   return (
-    <header className="h-[--header-height] w-full bg-background border-border border-b px-2 md:px-4 py-4 md:col-span-2 flex flex-row items-center z-50 gap-4 sticky top-0">
+    <header className="sticky top-0 z-50 box-border flex h-[--header-height] w-full flex-row items-center gap-4 border-b border-border bg-background px-2 md:col-span-2 md:px-4">
       <SidebarTrigger />
-      <div className="flex flex-1 items-center">
-        <div
-          id="header-portal-container"
-          className="flex-1 flex justify-center"
-        />
+      <div
+        id="header-portal-container"
+        className="flex min-w-0 flex-1 items-center justify-center overflow-hidden"
+      >
         <HeaderPortalOutlet />
       </div>
       {isAuthenticated && user ? (

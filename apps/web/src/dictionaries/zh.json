@@ -270,7 +270,8 @@
     "settings": "設定",
     "venues": "地點",
     "bus": "校車",
-    "apps": "應用程式"
+    "apps": "應用程式",
+    "bottom_aria": "底部導覽"
   },
   "sports": {
     "title": "體育場館",
@@ -319,17 +320,51 @@
     "friday_closed": "週五停駛"
   },
   "settings": {
+    "page_description": "調整 NTHUMods 的外觀與使用方式",
     "navigation_aria": "設定導覽",
     "quick_navigation": "快速導覽",
     "open_navigation": "開啟導覽選單",
     "close_navigation": "關閉導覽選單",
     "drag_hint": "拖曳以重新排序，切換以顯示或隱藏導覽項目",
+    "navigation": {
+      "title": "導覽位置",
+      "description": "每個項目只設定一次，選擇它要出現的位置。",
+      "location": "導覽位置",
+      "reorder": "拖曳調整順序",
+      "locations": {
+        "none": "不顯示",
+        "bottom": "底部導覽",
+        "side": "側邊導覽",
+        "both": "底部與側邊"
+      }
+    },
     "appearance": {
       "title": "外觀",
       "description": "主題、顏色、字體、版面",
       "preset": {
         "title": "主題預設",
-        "description": "選擇配色主題"
+        "description": "選擇配色主題",
+        "brand_title": "NTHUMods 標準外觀",
+        "brand_description": "這是 NTHUMods 的預設樣式，其他主題是額外選擇。",
+        "extra_title": "其他主題",
+        "extra_description": "把開發者喜歡的配色留在這裡，隨時可以換回 NTHUMods。",
+        "themes": {
+          "nthumods": "NTHUMods",
+          "nord": "Nord 北極",
+          "catppuccin-latte": "Catppuccin 拿鐵",
+          "catppuccin-mocha": "Catppuccin 摩卡",
+          "dracula": "Dracula 吸血鬼",
+          "github-light": "GitHub 白",
+          "github-dark": "GitHub 黑",
+          "solarized-light": "Solarized 亮",
+          "solarized-dark": "Solarized 暗",
+          "one-dark": "One Dark",
+          "tokyo-night": "東京夜",
+          "gruvbox-dark": "Gruvbox 暗",
+          "rose-pine": "Rosé Pine 玫瑰松",
+          "everforest-light": "Everforest 常綠林亮",
+          "everforest-dark": "Everforest 常綠林暗"
+        }
       },
       "radius": {
         "title": "圓角",
@@ -368,8 +403,21 @@
       },
       "font": {
         "title": "字體",
+        "description": "選擇介面使用的字型",
         "chinese": "中文字型",
-        "latin": "英文字型"
+        "latin": "英文字型",
+        "options": {
+          "system-tc": "系統中文",
+          "noto-sans-tc": "思源黑體",
+          "noto-serif-tc": "思源宋體",
+          "inter": "Inter",
+          "jakarta": "Jakarta",
+          "nunito": "Nunito",
+          "dm-sans": "DM Sans",
+          "montserrat": "Montserrat",
+          "mono": "等寬字體",
+          "lora": "Lora"
+        }
       },
       "accent": {
         "title": "強調色",
@@ -398,10 +446,12 @@
       "title": "顯示",
       "description": "外觀，語言",
       "dark_mode": {
-        "title": "黑暗模式"
+        "title": "黑暗模式",
+        "description": "切換亮色或暗色介面"
       },
       "language": {
-        "title": "語言"
+        "title": "語言",
+        "description": "選擇介面顯示語言"
       },
       "compact_header": {
         "title": "精簡標頭",
@@ -418,11 +468,13 @@
       "title": "時間表",
       "description": "顏色、客製化",
       "vertical_preview": "垂直式顯示",
+      "vertical_preview_description": "在課表預覽中使用垂直時段排列。",
       "default_view": {
         "title": "預設檢視",
         "description": "開啟課表頁面時使用垂直檢視"
       },
       "language": "時間表語言",
+      "language_description": "選擇課表內容使用的語言。",
       "language_options": {
         "app": "依照應用程式語言",
         "zh": "繁體中文",
@@ -444,8 +496,13 @@
       "slot_teacher": "授課教師",
       "slot_credits": "學分",
       "alignment": "對齊",
+      "alignment_description": "選擇課程資訊在時段中的位置。",
       "fields_order": "欄位與順序",
+      "fields_order_description": "選擇要顯示的欄位並調整順序。",
+      "move_up": "向上移動",
+      "move_down": "向下移動",
       "font_size": "時段文字大小",
+      "font_size_description": "調整課表時段內文字的大小。",
       "font_size_options": {
         "xs": "特小",
         "sm": "小",
@@ -453,6 +510,7 @@
         "lg": "大"
       },
       "font_family": "時段字型",
+      "font_family_description": "選擇課表時段使用的字型。",
       "font_family_options": {
         "system": "系統字型",
         "tc-sans": "中文黑體",
@@ -461,6 +519,24 @@
         "serif": "襯線",
         "mono": "等寬",
         "rounded": "圓體"
+      },
+      "theme": {
+        "title": "課表配色",
+        "description": "選擇課表課程使用的配色。",
+        "options": {
+          "ashes": "灰燼",
+          "chalk": "粉筆",
+          "eighties": "八〇年代",
+          "google": "Google",
+          "mocha": "摩卡",
+          "monokai": "Monokai",
+          "ocean": "海洋",
+          "oceanic-next": "Oceanic Next",
+          "paraiso": "Paraiso",
+          "railscasts": "Railscasts",
+          "tomorrow": "Tomorrow",
+          "twilight": "Twilight"
+        }
       }
     },
     "privacy": {
@@ -486,7 +562,39 @@
       "widget_dashboard": {
         "title": "小工具儀表板",
         "description": "用可自訂的小工具格取代今日頁面",
-        "customize": "自訂小工具："
+        "customize": "自訂小工具",
+        "customize_description": "選擇要顯示的小工具並調整順序。",
+        "columns": "欄數",
+        "columns_description": "選擇小工具儀表板的欄數。",
+        "widgets": "小工具",
+        "widgets_description": "拖曳調整順序，切換要顯示的小工具。",
+        "drag": "拖曳調整順序",
+        "widget_options": {
+          "schedule": {
+            "title": "課程表",
+            "description": "今天的課程安排"
+          },
+          "weather": {
+            "title": "天氣",
+            "description": "新竹目前的天氣"
+          },
+          "pinned-apps": {
+            "title": "快速連結",
+            "description": "你釘選的應用程式"
+          },
+          "notepad": {
+            "title": "便條紙",
+            "description": "快速記下幾句話"
+          },
+          "countdown": {
+            "title": "學期倒數",
+            "description": "距離學期結束的天數"
+          },
+          "bus": {
+            "title": "公車時刻",
+            "description": "下一班清大校車"
+          }
+        }
       }
     },
     "ai": {
@@ -497,17 +605,22 @@
         "description": "設定您的系所和入學年度，讓 AI 提供更準確的課程建議",
         "department": {
           "label": "系所",
+          "description": "讓 AI 根據你的系所提供課程建議。",
           "placeholder": "選擇您的系所"
         },
         "entrance_year": {
           "label": "入學年度",
+          "description": "讓 AI 參考你的入學年度提供建議。",
           "placeholder": "選擇入學年度"
         }
       },
       "api_key": {
         "title": "使用自己的 API Key",
         "description": "提供您自己的 Gemini API Key 以獲得更高的使用額度",
+        "toggle_title": "啟用自訂 API Key",
+        "toggle_description": "API Key 只會儲存在此裝置的本機資料中。",
         "label": "Gemini API Key",
+        "key_description": "輸入你在 Google AI Studio 取得的 API Key。",
         "placeholder": "AIzaSy...",
         "get_key": "從 Google AI Studio 取得免費 API Key",
         "test": "測試連線",
@@ -515,14 +628,16 @@
         "valid": "✓ API Key 有效",
         "invalid": "✗ API Key 無效或連線失敗"
       },
-      "save": "儲存設定"
+      "save": "儲存設定",
+      "saved": "已儲存"
     },
     "advanced": {
       "title": "進階",
       "description": "自訂 CSS、開發者選項",
       "custom_css": {
         "title": "自訂 CSS",
-        "description": "在頁面中注入自訂 CSS，會在所有樣式之後全域套用。"
+        "description": "在頁面中注入自訂 CSS，會在所有樣式之後全域套用。",
+        "placeholder": "/* 在這裡輸入自訂 CSS */\n.example { ... }"
       }
     }
   },

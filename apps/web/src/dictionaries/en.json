@@ -270,7 +270,8 @@
     "settings": "Settings",
     "venues": "Venues",
     "bus": "Bus",
-    "apps": "Apps"
+    "apps": "Apps",
+    "bottom_aria": "Bottom navigation"
   },
   "sports": {
     "title": "Sports Facilities",
@@ -319,17 +320,51 @@
     "friday_closed": "No service Friday"
   },
   "settings": {
+    "page_description": "Shape how NTHUMods looks and works",
     "navigation_aria": "Settings navigation",
     "quick_navigation": "Quick Navigation",
     "open_navigation": "Open navigation menu",
     "close_navigation": "Close navigation menu",
     "drag_hint": "Drag to reorder · Toggle to show or hide navigation items",
+    "navigation": {
+      "title": "Navigation placement",
+      "description": "Choose once where each item appears: bottom, side, or both.",
+      "location": "Navigation placement",
+      "reorder": "Drag to reorder",
+      "locations": {
+        "none": "Hidden",
+        "bottom": "Bottom",
+        "side": "Side",
+        "both": "Both"
+      }
+    },
     "appearance": {
       "title": "Appearance",
       "description": "Theme, Colors, Fonts, Layout",
       "preset": {
         "title": "Theme Preset",
-        "description": "Choose a color theme"
+        "description": "Choose a color theme",
+        "brand_title": "NTHUMods default",
+        "brand_description": "This is the NTHUMods look. The other themes are optional extras.",
+        "extra_title": "Other themes",
+        "extra_description": "Developer-inspired palettes live here, ready when you want a change.",
+        "themes": {
+          "nthumods": "NTHUMods",
+          "nord": "Nord",
+          "catppuccin-latte": "Catppuccin Latte",
+          "catppuccin-mocha": "Catppuccin Mocha",
+          "dracula": "Dracula",
+          "github-light": "GitHub Light",
+          "github-dark": "GitHub Dark",
+          "solarized-light": "Solarized Light",
+          "solarized-dark": "Solarized Dark",
+          "one-dark": "One Dark",
+          "tokyo-night": "Tokyo Night",
+          "gruvbox-dark": "Gruvbox Dark",
+          "rose-pine": "Rosé Pine",
+          "everforest-light": "Everforest Light",
+          "everforest-dark": "Everforest Dark"
+        }
       },
       "radius": {
         "title": "Border Radius",
@@ -368,8 +403,21 @@
       },
       "font": {
         "title": "Font Family",
+        "description": "Choose the typeface used by the interface",
         "chinese": "Chinese",
-        "latin": "Latin"
+        "latin": "Latin",
+        "options": {
+          "system-tc": "System Chinese",
+          "noto-sans-tc": "Noto Sans TC",
+          "noto-serif-tc": "Noto Serif TC",
+          "inter": "Inter",
+          "jakarta": "Jakarta",
+          "nunito": "Nunito",
+          "dm-sans": "DM Sans",
+          "montserrat": "Montserrat",
+          "mono": "Monospace",
+          "lora": "Lora"
+        }
       },
       "accent": {
         "title": "Accent Color",
@@ -398,10 +446,12 @@
       "title": "Display",
       "description": "Appearance, Language",
       "dark_mode": {
-        "title": "Dark Mode"
+        "title": "Dark Mode",
+        "description": "Switch between a light or dark interface"
       },
       "language": {
-        "title": "Language"
+        "title": "Language",
+        "description": "Choose the language used by the interface"
       },
       "compact_header": {
         "title": "Compact Header",
@@ -418,11 +468,13 @@
       "title": "Timetable",
       "description": "Theme, Preview",
       "vertical_preview": "Vertical Preview",
+      "vertical_preview_description": "Use vertical time slots in the timetable preview.",
       "default_view": {
         "title": "Default View",
         "description": "Use vertical view when opening timetable page"
       },
       "language": "Language",
+      "language_description": "Choose the language used for timetable content.",
       "language_options": {
         "app": "App language",
         "zh": "Traditional Chinese",
@@ -444,8 +496,13 @@
       "slot_teacher": "Teacher",
       "slot_credits": "Credits",
       "alignment": "Alignment",
+      "alignment_description": "Choose where course details sit inside a slot.",
       "fields_order": "Fields & Order",
+      "fields_order_description": "Choose which fields appear and adjust their order.",
+      "move_up": "Move up",
+      "move_down": "Move down",
       "font_size": "Slot font size",
+      "font_size_description": "Adjust the text size inside timetable slots.",
       "font_size_options": {
         "xs": "Extra small",
         "sm": "Small",
@@ -453,6 +510,7 @@
         "lg": "Large"
       },
       "font_family": "Slot font family",
+      "font_family_description": "Choose the typeface used inside timetable slots.",
       "font_family_options": {
         "system": "System",
         "tc-sans": "Chinese Sans",
@@ -461,6 +519,24 @@
         "serif": "Serif",
         "mono": "Monospace",
         "rounded": "Rounded"
+      },
+      "theme": {
+        "title": "Timetable colors",
+        "description": "Choose the colors used by timetable courses.",
+        "options": {
+          "ashes": "Ashes",
+          "chalk": "Chalk",
+          "eighties": "Eighties",
+          "google": "Google",
+          "mocha": "Mocha",
+          "monokai": "Monokai",
+          "ocean": "Ocean",
+          "oceanic-next": "Oceanic Next",
+          "paraiso": "Paraiso",
+          "railscasts": "Railscasts",
+          "tomorrow": "Tomorrow",
+          "twilight": "Twilight"
+        }
       }
     },
     "privacy": {
@@ -486,7 +562,39 @@
       "widget_dashboard": {
         "title": "Widget Dashboard",
         "description": "Replace Today page with a customizable widget grid",
-        "customize": "Customize widgets:"
+        "customize": "Customize widgets",
+        "customize_description": "Choose which widgets appear and adjust their order.",
+        "columns": "Columns",
+        "columns_description": "Choose how many columns the widget dashboard uses.",
+        "widgets": "Widgets",
+        "widgets_description": "Drag to reorder and toggle the widgets you want to see.",
+        "drag": "Drag to reorder",
+        "widget_options": {
+          "schedule": {
+            "title": "Schedule",
+            "description": "Today's class schedule"
+          },
+          "weather": {
+            "title": "Weather",
+            "description": "Current weather in Hsinchu"
+          },
+          "pinned-apps": {
+            "title": "Quick links",
+            "description": "Your pinned apps"
+          },
+          "notepad": {
+            "title": "Notepad",
+            "description": "Quick notes"
+          },
+          "countdown": {
+            "title": "Countdown",
+            "description": "Days left in the semester"
+          },
+          "bus": {
+            "title": "Bus schedule",
+            "description": "Next NTHU bus departures"
+          }
+        }
       }
     },
     "ai": {
@@ -497,17 +605,22 @@
         "description": "Set your department and entrance year for more accurate course recommendations",
         "department": {
           "label": "Department",
+          "description": "Use your department for more relevant course recommendations.",
           "placeholder": "Select your department"
         },
         "entrance_year": {
           "label": "Entrance Year",
+          "description": "Use your entry year to improve recommendations.",
           "placeholder": "Select entrance year"
         }
       },
       "api_key": {
         "title": "Use Your Own API Key",
         "description": "Provide your own Gemini API Key for higher usage limits",
+        "toggle_title": "Enable a custom API key",
+        "toggle_description": "The API key is stored only in this device's local data.",
         "label": "Gemini API Key",
+        "key_description": "Enter the API key you got from Google AI Studio.",
         "placeholder": "AIzaSy...",
         "get_key": "Get free API Key from Google AI Studio",
         "test": "Test Connection",
@@ -515,14 +628,16 @@
         "valid": "✓ API Key is valid",
         "invalid": "✗ Invalid API Key or connection failed"
       },
-      "save": "Save Settings"
+      "save": "Save settings",
+      "saved": "Saved"
     },
     "advanced": {
       "title": "Advanced",
       "description": "Custom CSS, Developer Options",
       "custom_css": {
         "title": "Custom CSS",
-        "description": "Inject custom CSS into the page. Applied globally after all other styles."
+        "description": "Inject custom CSS into the page. Applied globally after all other styles.",
+        "placeholder": "/* Enter custom CSS here */\n.example { ... }"
       }
     }
   },

@@ -13,21 +13,26 @@ const ThemeChangableAlert = () => {
 
   if (!open) return <></>;
   return (
-    <Alert>
+    <Alert className="border-info/40 bg-info/10 text-info [&>svg]:text-info">
       <Info className="h-4 w-4" />
       <AlertTitle>{dict.alerts.TimetableCourseList.text}</AlertTitle>
       <AlertDescription>
-        <Link to={`/${lang}/settings`}>
-          <Button
-            variant="ghost"
-            color="success"
-            onClick={() => setOpen(false)}
-          >
+        <Button
+          asChild
+          variant="ghost"
+          className="text-info hover:bg-info/10 hover:text-info"
+        >
+          <Link to={`/${lang}/settings`} onClick={() => setOpen(false)}>
             {dict.alerts.TimetableCourseList.action}
-          </Button>
-        </Link>
-        <Button variant="ghost" color="success" onClick={() => setOpen(false)}>
-          <X />
+          </Link>
+        </Button>
+        <Button
+          variant="ghost"
+          className="text-info hover:bg-info/10 hover:text-info"
+          onClick={() => setOpen(false)}
+          aria-label={dict.alerts.dismiss}
+        >
+          <X aria-hidden="true" />
         </Button>
       </AlertDescription>
     </Alert>
