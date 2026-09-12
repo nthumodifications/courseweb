@@ -4,7 +4,7 @@ import { cn } from "../../lib/utils";
 
 export type PageShellWidth = "content" | "app" | "full";
 
-export interface PageShellProps extends React.HTMLAttributes<HTMLElement> {
+export interface PageShellProps extends React.HTMLAttributes<HTMLDivElement> {
   width?: PageShellWidth;
   gap?: boolean;
 }
@@ -15,9 +15,11 @@ const widthClasses: Record<PageShellWidth, string> = {
   full: "",
 };
 
-const PageShell = React.forwardRef<HTMLElement, PageShellProps>(
+// A div, not a <main>: SidebarInset already renders the page's <main> landmark,
+// and nesting a second one gives every route two.
+const PageShell = React.forwardRef<HTMLDivElement, PageShellProps>(
   ({ className, width = "app", gap = true, ...props }, ref) => (
-    <main
+    <div
       ref={ref}
       className={cn(
         className,
