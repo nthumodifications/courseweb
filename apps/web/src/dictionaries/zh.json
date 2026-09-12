@@ -691,7 +691,7 @@
   "applist": {
     "title": "功能清單",
     "to_ccxp": "校務系統連結",
-    "empty_pinned_apps_reminder": "可以到右上角新增常用功能喔～",
+    "empty_pinned_apps_reminder": "可以到右上角新增常用功能。",
     "pinned_apps_title": "常用功能",
     "edit_pinned_apps_title": "編輯常用功能",
     "beta": "測試",
