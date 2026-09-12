@@ -69,7 +69,7 @@ const BottomNav: FC = () => {
     <div className="fixed w-full bottom-0 md:hidden flex-col h-[5rem] bg-background z-50 flex">
       <Separator />
       <nav
-        className={`grid items-center py-2.5`}
+        className="grid items-center py-2"
         style={{ gridTemplateColumns: `repeat(${colCount}, 1fr)` }}
       >
         {visibleLinks.map((link) => (
@@ -79,7 +79,7 @@ const BottomNav: FC = () => {
             onClick={() => navigate(link.href)}
           >
             <span className="w-6 h-6">{link.icon}</span>
-            <span className="text-xs font-semibold select-none">
+            <span className="text-xs font-medium select-none">
               {link.title}
             </span>
           </div>

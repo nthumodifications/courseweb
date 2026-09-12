@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import client from "@/config/api";
 import { Button, Skeleton } from "@courseweb/ui";
-import { AlertCircle, Plus, Calendar } from "lucide-react";
+import { AlertCircle, Plus, Calendar, Clock, MapPin } from "lucide-react";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import useDictionary from "@/dictionaries/useDictionary";
 
@@ -71,7 +71,7 @@ export default function TimetableRenderer({ rawIds }: TimetableRendererProps) {
 
   if (error) {
     return (
-      <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 rounded p-3">
+      <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 rounded p-4">
         <AlertCircle className="h-4 w-4" />
         <span>{dict.chat.timetable_renderer.load_failed}</span>
       </div>
@@ -80,18 +80,18 @@ export default function TimetableRenderer({ rawIds }: TimetableRendererProps) {
 
   if (!courses || courses.length === 0) {
     return (
-      <div className="text-sm text-muted-foreground bg-muted rounded p-3">
+      <div className="text-sm text-muted-foreground bg-muted rounded p-4">
         {dict.chat.timetable_renderer.no_courses}
       </div>
     );
   }
 
   return (
-    <div className="border rounded-lg p-4 bg-muted/30 space-y-4">
+    <div className="border rounded-lg p-4 bg-muted/30 flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Calendar className="h-5 w-5 text-primary" />
-          <h3 className="font-semibold">{dict.chat.timetable_renderer.title}</h3>
+          <h3 className="font-medium">{dict.chat.timetable_renderer.title}</h3>
         </div>
         <Button
           onClick={handleAddToTimetable}
@@ -106,7 +106,7 @@ export default function TimetableRenderer({ rawIds }: TimetableRendererProps) {
         </Button>
       </div>
 
-      <div className="bg-background rounded-lg p-4 space-y-3">
+      <div className="bg-background rounded-lg p-4 flex flex-col gap-4">
         <p className="text-sm text-muted-foreground">
           {dict.chat.timetable_renderer.contains} {courses.length}{" "}
           {dict.chat.timetable_renderer.courses_suffix}
@@ -114,19 +114,25 @@ export default function TimetableRenderer({ rawIds }: TimetableRendererProps) {
         {courses.map((course) => (
           <div
             key={course.raw_id}
-            className="flex justify-between items-start p-3 bg-muted/50 rounded border"
+            className="flex justify-between items-start p-4 bg-muted/50 rounded border"
           >
-            <div className="space-y-1">
+            <div className="flex flex-col gap-1">
               <p className="font-medium">{course.name_zh}</p>
               <p className="text-sm text-muted-foreground">
                 {course.teacher_zh?.join(", ")}
               </p>
               <div className="flex gap-4 text-xs text-muted-foreground">
                 {course.times && course.times.length > 0 && (
-                  <span>⏰ {course.times[0]}</span>
+                  <span className="flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    {course.times[0]}
+                  </span>
                 )}
                 {course.venues && course.venues.length > 0 && (
-                  <span>📍 {course.venues[0]}</span>
+                  <span className="flex items-center gap-1">
+                    <MapPin className="h-3 w-3" />
+                    {course.venues[0]}
+                  </span>
                 )}
               </div>
             </div>
@@ -137,7 +143,7 @@ export default function TimetableRenderer({ rawIds }: TimetableRendererProps) {
         ))}
       </div>
 
-      <div className="text-xs text-muted-foreground bg-blue-50 dark:bg-blue-950/20 rounded p-2">
+      <div className="text-xs text-muted-foreground bg-muted rounded p-2">
         {dict.chat.timetable_renderer.tip}
       </div>
     </div>

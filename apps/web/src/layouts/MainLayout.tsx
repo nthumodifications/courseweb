@@ -44,12 +44,12 @@ const MainLayout = () => {
                   <ErrorBoundary FallbackComponent={ModsError}>
                     <Suspense
                       fallback={
-                        <div className="grid place-items-center w-full h-screen">
-                          <div className="flex flex-col items-center">
-                            <span className="mt-2 text-gray-300 dark:text-neutral-700 font-bold text-xl">
+                        <div className="flex flex-col gap-4 px-4">
+                          <div className="flex flex-col gap-4">
+                            <span className="text-muted-foreground font-medium">
                               {dict.common.loading}
                             </span>
-                            <div className="h-2 w-36 bg-gray-300 dark:bg-neutral-700 rounded-full mt-4 animate-pulse"></div>
+                            <div className="h-2 w-36 bg-muted rounded-full animate-pulse"></div>
                           </div>
                         </div>
                       }

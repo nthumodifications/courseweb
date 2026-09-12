@@ -12,6 +12,7 @@ import CurrentSemesterLabel from "./Today/CurrentSemesterLabel";
 import { Language } from "@/types/settings";
 import SponsorshipBanner from "./Sponsorship/SponsorshipBanner";
 import { Badge } from "@courseweb/ui";
+import useDictionary from "@/dictionaries/useDictionary";
 
 const HelpDynamic = lazy(() => import("@/components/Help/Help"));
 
@@ -29,13 +30,16 @@ const PWAInstallPromptDynamic = lazy(
 
 const AppSidebar = ({ lang }: { lang: Language }) => {
   const isDevServer = import.meta.env.DEV;
+  const dict = useDictionary();
   return (
     <Sidebar collapsible="offcanvas">
       <SidebarHeader className="p-4">
         <div className="flex flex-row gap-4">
           <NTHUModsLogo />
 
-          {isDevServer && <Badge variant={"destructive"}>Testing</Badge>}
+          {isDevServer && (
+            <Badge variant={"destructive"}>{dict.common.testing}</Badge>
+          )}
         </div>
       </SidebarHeader>
       <SidebarContent className="p-2">

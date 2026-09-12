@@ -270,7 +270,8 @@
     "settings": "設定",
     "venues": "地點",
     "bus": "校車",
-    "apps": "應用程式"
+    "apps": "應用程式",
+    "admin": "管理中心"
   },
   "sports": {
     "title": "體育場館",
@@ -408,7 +409,7 @@
       "description": "校務資訊系統代理登入",
       "ccxp": {
         "title": "代理登入校務資訊系統",
-        "description": "系統會用代理登入方式，讓學生們可以在NTHUMods 上輕鬆連結校務系統功能。"
+        "description": "系統會用代理登入方式，讓學生們可以在 NTHUMods 上輕鬆連結校務系統功能。"
       },
       "logoutDescription": "是否確定要登出？",
       "logoutConfimation": "確認登出",
@@ -576,13 +577,49 @@
     "waitlist_title": "即將推出新功能？搶先得知最新消息！",
     "waitlist_message": "敬請期待 NTHUMods 的新功能。"
   },
+  "pwa": {
+    "install": "安裝",
+    "title": "安裝 NTHUMods",
+    "description": "將 NTHUMods 加到主畫面，方便快速開啟。",
+    "ios": {
+      "share": "點選 Safari 底部的分享按鈕",
+      "home_screen": "向下捲動並點選「加入主畫面」",
+      "confirm": "點選「加入」確認"
+    },
+    "android": {
+      "intro": "在裝置上安裝此應用程式：",
+      "address_bar": "點選瀏覽器網址列中的安裝圖示",
+      "menu": "或從瀏覽器選單選擇「安裝應用程式」"
+    }
+  },
+  "static": {
+    "team_title": "團隊",
+    "core_title": "NTHUMods Core",
+    "team_description": "NTHUMods 是由一群熱愛 NTHU 的學生組成的團隊。我們希望透過這個平台，讓學生更方便取得資訊並分享經驗。歡迎加入團隊，一起貢獻。"
+  },
+  "forms": {
+    "issue": {
+      "title": "問題回報",
+      "description": "匿名提交。",
+      "label_title": "標題",
+      "placeholder_title": "請輸入問題或功能名稱",
+      "known_issues": "已知問題",
+      "label_description": "詳情",
+      "detail_hint": "請盡量提供詳細資訊與聯絡方式。",
+      "markdown_hint": "支援 Markdown。",
+      "feedback": "回饋",
+      "retrying": "重試中…",
+      "submitting": "送出中…",
+      "submit": "送出"
+    }
+  },
   "venues": {
     "placeholder": "從選項中選一個地點"
   },
   "campus_map": {
     "title": "3D 校園地圖",
     "searchLabel": "搜尋校園建築",
-    "searchPlaceholder": "搜尋台達、DELTA 或 DELTA台達629",
+    "searchPlaceholder": "搜尋台達、DELTA 或 DELTA 台達 629",
     "noResults": "找不到已建立地圖位置的校園建築。",
     "venueNotMapped": "這個地點尚未建立地圖位置",
     "loading": "正在載入清大校園地圖…",
@@ -608,7 +645,7 @@
   "alerts": {
     "TimetableCourseList": {
       "action": "前往設定",
-      "text": "課表可以在設定頁面客製化喔！"
+      "text": "你可以在設定頁面客製化課表。"
     },
     "dismiss": "關閉公告"
   },
@@ -717,24 +754,24 @@
   "help": {
     "button": "說明",
     "intro": {
-      "title": "歡迎來到NTHUMODS",
-      "description": "這可能是能讓你在清大取得好成績的終極工具！以下是一份快速指南，讓你能夠輕鬆入門。"
+      "title": "歡迎來到 NTHUMods",
+      "description": "這是一份 NTHUMods 功能簡介。"
     },
     "courses": {
       "title": "課程探索",
-      "description": "在你的學習之路上不斷發現和探索，從核心必修到選修，NTHUMods 都能協助你。深入探索，找到最適合你課表的課程！"
+      "description": "搜尋課程並加入你的課表。"
     },
     "dashboard": {
       "title": "個人化儀表板",
-      "description": "你的個人化儀表板已經準備就緒！在這裡，你可以追蹤你的課程、作業（即將推出）和考試（即將推出）。保持積極，繼續努力!"
+      "description": "查看你的課程、作業與考試。"
     },
     "bus": {
       "title": "校車路線",
-      "description": "掌握校園校車路線、班次與站點，輕鬆規劃日常通勤。"
+      "description": "查看校車路線、班次與站點。"
     },
     "tools": {
-      "title": "需要更多功能嗎？",
-      "description": "將你的清大帳戶與 NTHUMods 連結，開啟通往豐富附加工具的大門。輕鬆整合各種功能，豐富你的大學生活。",
+      "title": "其他工具",
+      "description": "連結清大帳戶以使用需要登入的功能。",
       "connect": "現在連線",
       "image_alt": "工具箱",
       "calendar": "行事曆",
@@ -743,14 +780,14 @@
       "settings": "設定"
     },
     "dev": {
-      "title": "共同成長",
-      "description": "我們致力於持續改進，提供最佳體驗。目前應用程式仍在開發中，過程可能會遇到一些困難。但我們重視你的意見，請分享你的想法、回饋，以及你希望看到的功能。",
-      "feedback": "給回饋"
+      "title": "提供回饋",
+      "description": "如果你發現問題或有功能建議，請告訴我們。",
+      "feedback": "回報問題"
     },
     "prev": "上一頁",
     "next": "下一頁",
     "skip": "跳過",
-    "jump": "開始！",
+    "jump": "開始",
     "continue": "繼續",
     "login": "登入"
   },
@@ -949,7 +986,9 @@
     "save": "儲存",
     "error": "錯誤",
     "coming_soon": "即將推出",
-    "share": "分享"
+    "share": "分享",
+    "testing": "測試中",
+    "redirecting": "正在重新導向…"
   },
   "auth": {
     "timeout_title": "驗證逾時",
@@ -980,7 +1019,7 @@
     "something_wong": "發生了一點問題"
   },
   "footer": {
-    "tagline": "由學生製作，為學生服務 ❤️",
+    "tagline": "由學生製作，服務學生",
     "contribute": "貢獻",
     "report_issue": "回報問題",
     "team": "團隊",
@@ -996,7 +1035,7 @@
     "cerana": "東蜂科技",
     "opencollective": {
       "title": "請我們喝咖啡",
-      "subtitle": "每一塊錢都有幫助！"
+      "subtitle": "每一塊錢都有幫助。"
     }
   },
   "contribute": {
@@ -1067,8 +1106,8 @@
     "login_required": "請先登入以使用 AI 課程助手功能",
     "title": "AI 課程助手",
     "welcome": "歡迎使用 AI 課程助手",
-    "welcome_description": "我可以幫你搜尋課程、規劃課表、查詢畢業學分。試試下面的建議或直接輸入你的問題！",
-    "capabilities": "搜尋課程 · 規劃課表 · 查詢畢業學分",
+    "welcome_description": "我可以幫你搜尋課程、規劃課表、查詢畢業學分。你也可以直接輸入問題。",
+    "capabilities": "搜尋課程・規劃課表・查詢畢業學分",
     "quota_exceeded_title": "API 使用額度已超出",
     "quota_exceeded_description": "我們的 API 使用額度已達上限。您可以使用自己的 Gemini API Key 來繼續使用 AI 課程助手。",
     "retry_after": "預計",
@@ -1117,10 +1156,32 @@
       "contains": "包含",
       "courses_suffix": "門課：",
       "credits_suffix": "學分",
-      "tip": "💡 提示：點選「加入我的課表」可將所有課程直接加入你的選課清單",
+      "tip": "提示：點選「加入我的課表」可將所有課程直接加入選課清單。",
       "add_success": "已將 {count} 門課加入課表",
       "add_failed": "加入課表失敗"
     }
+  },
+  "group": {
+    "not_found": "找不到群組。",
+    "go_back": "返回",
+    "copy_invite_link": "複製邀請連結",
+    "leave": "離開",
+    "delete_group": "刪除群組",
+    "delete_confirm": "確定要刪除這個群組嗎？此操作無法復原。",
+    "members": "成員",
+    "member_count": "{count} 位成員",
+    "member_courses": "{count} 門課",
+    "toggle_members": "在右側切換成員以顯示課表",
+    "join_group": "加入群組",
+    "join_description": "輸入名稱，讓成員辨識你。系統會自動連結你的課表。",
+    "name_placeholder": "你的姓名或暱稱",
+    "join": "加入群組",
+    "joined": "已加入群組",
+    "left": "已離開群組",
+    "deleted": "已刪除群組",
+    "error": "錯誤",
+    "name_required": "請輸入你的姓名。",
+    "not_loaded": "群組尚未載入。"
   },
   "planner": {
     "status": {
@@ -1150,7 +1211,7 @@
       "graduationRequirements": "畢業要求",
       "manageFoldersAriaLabel": "管理資料夾",
       "noSearchResults": "查無符合的資料夾",
-      "creditsPdfLink": "畢業學分PDF",
+      "creditsPdfLink": "畢業學分 PDF",
       "coursesUnit": "門課",
       "creditsUnit": "學分",
       "noRequirement": "無要求",
@@ -1367,7 +1428,7 @@
       "statusSelectPlaceholder": "選擇狀態",
       "activeSwitchLabel": "啟用此學期",
       "selectPrompt": "選擇一個學期以檢視詳情",
-      "idRequired": "學期ID為必填欄位",
+      "idRequired": "學期 ID 為必填欄位",
       "nameRequired": "學期名稱為必填欄位",
       "yearRequired": "學年為必填欄位",
       "termRequired": "學期為必填欄位",

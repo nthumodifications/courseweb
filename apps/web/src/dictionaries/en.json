@@ -270,7 +270,8 @@
     "settings": "Settings",
     "venues": "Venues",
     "bus": "Bus",
-    "apps": "Apps"
+    "apps": "Apps",
+    "admin": "Admin Center"
   },
   "sports": {
     "title": "Sports Facilities",
@@ -576,13 +577,49 @@
     "waitlist_title": "Upcoming features? Be the first to know!",
     "waitlist_message": "Stay tuned for new features from NTHUMods."
   },
+  "pwa": {
+    "install": "Install",
+    "title": "Install NTHUMods",
+    "description": "Add NTHUMods to your home screen for quick access.",
+    "ios": {
+      "share": "Tap the Share button at the bottom of Safari",
+      "home_screen": "Scroll down and tap \"Add to Home Screen\"",
+      "confirm": "Tap \"Add\" to confirm"
+    },
+    "android": {
+      "intro": "To install this app on your device:",
+      "address_bar": "Look for the install icon in your browser's address bar",
+      "menu": "Or choose \"Install app\" from your browser's menu"
+    }
+  },
+  "static": {
+    "team_title": "Team",
+    "core_title": "NTHUMods Core",
+    "team_description": "NTHUMods is a student team that builds tools for the NTHU community. We make campus information easier to find and share. Join us if you would like to contribute."
+  },
+  "forms": {
+    "issue": {
+      "title": "Report a problem",
+      "description": "Submitted anonymously.",
+      "label_title": "Title",
+      "placeholder_title": "What feature or bug are you reporting?",
+      "known_issues": "Known issues",
+      "label_description": "Details",
+      "detail_hint": "Include as much detail as possible. Add a contact method if you want a reply.",
+      "markdown_hint": "Markdown is supported.",
+      "feedback": "Feedback",
+      "retrying": "Retrying…",
+      "submitting": "Submitting…",
+      "submit": "Submit"
+    }
+  },
   "venues": {
     "placeholder": "Select a Venue from the list"
   },
   "campus_map": {
     "title": "3D Campus Map",
     "searchLabel": "Search campus buildings",
-    "searchPlaceholder": "Search 台達, DELTA, or DELTA台達629",
+    "searchPlaceholder": "Search 台達, DELTA, or DELTA 台達 629",
     "noResults": "No mapped campus building found.",
     "venueNotMapped": "This venue is not mapped yet",
     "loading": "Loading the NTHU campus map…",
@@ -608,7 +645,7 @@
   "alerts": {
     "TimetableCourseList": {
       "action": "Go Settings",
-      "text": "You can change your theme in the settings page!"
+      "text": "You can change your theme in the settings page."
     },
     "dismiss": "Dismiss"
   },
@@ -717,24 +754,24 @@
   "help": {
     "button": "Help",
     "intro": {
-      "title": "Welcome to NTHUMODS",
-      "description": "NTHUMODS might just be your ultimate companion for academic success at National Tsing Hua University! Here's a quick guide to get you started."
+      "title": "Welcome to NTHUMods",
+      "description": "A short guide to NTHUMods."
     },
     "courses": {
       "title": "Explore Courses",
-      "description": "Discover a wide range of courses tailored to your academic journey. From core subjects to electives, NTHUMODS has you covered. Dive in and find the perfect fit for your schedule."
+      "description": "Search for courses and add them to your timetable."
     },
     "dashboard": {
       "title": "Personalized Dashboard",
-      "description": "Your personalized dashboard awaits! Track your courses, assignments (coming soon), and exams (coming soon) all in one place. Stay organized, stay on top."
+      "description": "View your courses, assignments, and exams."
     },
     "bus": {
       "title": "Bus Schedules",
-      "description": "Navigating NTHU's campus is a breeze with access to bus routes, timings, and stops to plan your daily commute efficiently. No more waiting in uncertainty."
+      "description": "View bus routes, schedules, and stops."
     },
     "tools": {
-      "title": "Need more features?",
-      "description": "Link your NTHU account to NTHUMODS and open the door to a treasure trove of additional tools. Seamlessly integrate your academic life by accessing exclusive features tailored to NTHU students.",
+      "title": "More tools",
+      "description": "Connect your NTHU account to use features that require sign-in.",
       "connect": "Connect now",
       "image_alt": "Toolbox",
       "calendar": "Calendar",
@@ -743,14 +780,14 @@
       "settings": "Settings"
     },
     "dev": {
-      "title": "Growing together",
-      "description": "We're committed to continuous improvement to offer you the best possible experience. Please note that the app is still in development, and while we strive for perfection, there may be occasional hiccups along the way. We value your input extremely, share your ideas, feedback, and features you'd love to see.",
-      "feedback": "Give feedback"
+      "title": "Send feedback",
+      "description": "Tell us about problems or features you would like to see.",
+      "feedback": "Report a problem"
     },
     "prev": "Prev",
     "next": "Next",
     "skip": "Skip",
-    "jump": "Jump in",
+    "jump": "Get started",
     "continue": "Continue",
     "login": "Log in"
   },
@@ -949,7 +986,9 @@
     "save": "Save",
     "error": "Error",
     "coming_soon": "Coming Soon",
-    "share": "Share"
+    "share": "Share",
+    "testing": "Testing",
+    "redirecting": "Redirecting…"
   },
   "auth": {
     "timeout_title": "Authentication timeout",
@@ -980,7 +1019,7 @@
     "something_wong": "Something went wrong"
   },
   "footer": {
-    "tagline": "Made with ❤️ by students for students",
+    "tagline": "Made by students for students",
     "contribute": "Contribute",
     "report_issue": "Report an Issue",
     "team": "Team",
@@ -996,7 +1035,7 @@
     "cerana": "Cerana Technology",
     "opencollective": {
       "title": "Buy us a coffee",
-      "subtitle": "Every $1 helps!"
+      "subtitle": "Every $1 helps."
     }
   },
   "contribute": {
@@ -1067,7 +1106,7 @@
     "login_required": "Please sign in to use the AI Course Assistant",
     "title": "AI Course Assistant",
     "welcome": "Welcome to AI Course Assistant",
-    "welcome_description": "I can help you search for courses, plan your timetable, and check graduation requirements. Try the suggestions below or type your question!",
+    "welcome_description": "I can help you search for courses, plan your timetable, and check graduation requirements. You can also type your question.",
     "capabilities": "Search courses · Plan timetables · Check graduation credits",
     "quota_exceeded_title": "API Quota Exceeded",
     "quota_exceeded_description": "Our API quota has been reached. You can use your own Gemini API Key to continue using the AI Course Assistant.",
@@ -1121,6 +1160,28 @@
       "add_success": "Added {count} courses to your timetable",
       "add_failed": "Failed to add courses to timetable"
     }
+  },
+  "group": {
+    "not_found": "Group not found.",
+    "go_back": "Go back",
+    "copy_invite_link": "Copy invite link",
+    "leave": "Leave",
+    "delete_group": "Delete group",
+    "delete_confirm": "Delete this group? This cannot be undone.",
+    "members": "Members",
+    "member_count": "{count} members",
+    "member_courses": "{count} courses",
+    "toggle_members": "Toggle members on the right to overlay their timetables",
+    "join_group": "Join this group",
+    "join_description": "Enter your name so members can identify you. We'll link your timetable automatically.",
+    "name_placeholder": "Your name or nickname",
+    "join": "Join Group",
+    "joined": "Joined group",
+    "left": "Left group",
+    "deleted": "Group deleted",
+    "error": "Error",
+    "name_required": "Please enter your name.",
+    "not_loaded": "Group not loaded."
   },
   "planner": {
     "status": {
@@ -1557,7 +1618,8 @@
         "title": "3. Protection of Data",
         "paragraphs": [],
         "items": [
-          "This website's host is equipped with various information security devices such as firewalls and anti-virus systems, and necessary security protection measures to protect the website and your personal data. Strict protection measures are adopted, and only authorized personnel can access your personal data. All related processing personnel have signed confidentiality agreements and will face legal penalties if they violate confidentiality obligations."
+          "This website's host is equipped with various information security devices such as firewalls and anti-virus systems, and necessary security protection measures to protect the website and your personal data. Strict protection measures are adopted, and only authorized personnel can access your personal data. All related processing personnel have signed confidentiality agreements and will face legal penalties if they violate confidentiality obligations.",
+          "When necessary, this website may entrust relevant units to provide services. We require them to keep information confidential and take necessary measures to verify compliance."
         ]
       },
       {

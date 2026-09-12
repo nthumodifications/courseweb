@@ -19,10 +19,10 @@ function LoginPrompt() {
   };
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-4">
-      <Sparkles className="w-16 h-16 text-muted-foreground mb-6" />
-      <h2 className="text-2xl font-semibold mb-2">{dict.chat.title}</h2>
-      <p className="text-muted-foreground text-center mb-8 max-w-md">
+    <div className="flex-1 flex flex-col p-4 gap-4">
+      <Sparkles className="w-16 h-16 text-muted-foreground" />
+      <h2 className="text-xl font-medium">{dict.chat.title}</h2>
+      <p className="text-muted-foreground leading-relaxed">
         {dict.chat.login_required}
       </p>
       <Button onClick={handleLogin} size="lg" className="gap-2">
@@ -42,8 +42,8 @@ export function ChatPageContent() {
   if (isLoading) {
     return (
       <div className="flex flex-col h-[calc(var(--content-height)-1rem)]">
-        <div className="flex-1 flex items-center justify-center">
-          <div className="animate-pulse flex flex-col items-center gap-4">
+          <div className="flex-1 flex flex-col p-4 gap-4">
+          <div className="animate-pulse flex flex-col gap-4">
             <Sparkles className="w-12 h-12 text-muted-foreground" />
             <p className="text-muted-foreground">{dict.common.loading}</p>
           </div>
@@ -56,9 +56,9 @@ export function ChatPageContent() {
     <div className="flex flex-col h-[calc(var(--content-height)-1rem)]">
       {/* Header */}
       <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
+        <div className="px-4 py-4">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
               <Sparkles className="w-6 h-6 text-primary" />
               <div>
                 <h1 className="text-xl font-bold">{dict.chat.title}</h1>
@@ -79,7 +79,7 @@ export function ChatPageContent() {
         <>
           {/* Quota Exceeded Alert */}
           {quotaError && (
-            <div className="container mx-auto max-w-4xl px-4 pt-4">
+            <div className="px-4 pt-4">
               <QuotaExceededAlert
                 retryAfter={quotaError.retryAfter}
                 onDismiss={clearQuotaError}
@@ -88,14 +88,14 @@ export function ChatPageContent() {
           )}
 
           {/* Chat Area */}
-          <div className="flex-1 overflow-hidden flex flex-col mx-auto max-w-4xl">
+          <div className="flex-1 overflow-hidden flex flex-col">
             {messages.length === 0 ? (
-              <div className="flex-1 flex flex-col items-center justify-center p-4">
-                <Sparkles className="w-16 h-16 text-muted-foreground mb-6" />
-                <h2 className="text-2xl font-semibold mb-2">
+              <div className="flex-1 flex flex-col p-4 gap-4">
+                <Sparkles className="w-16 h-16 text-muted-foreground" />
+                <h2 className="text-xl font-medium">
                   {dict.chat.welcome}
                 </h2>
-                <p className="text-muted-foreground text-center mb-8 max-w-md">
+                <p className="text-muted-foreground leading-relaxed">
                   {dict.chat.welcome_description}
                 </p>
                 <ChatSuggestions />
@@ -107,9 +107,7 @@ export function ChatPageContent() {
 
           {/* Input Area */}
           <div className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="container mx-auto max-w-4xl">
-              <ChatInput />
-            </div>
+            <ChatInput />
           </div>
         </>
       )}

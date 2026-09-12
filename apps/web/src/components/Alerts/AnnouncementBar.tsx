@@ -21,8 +21,7 @@ const severityStyles: Record<
     Icon: AlertTriangle,
   },
   error: {
-    className:
-      "border-destructive/50 bg-destructive/10 text-destructive dark:border-destructive",
+    className: "border-destructive/50 bg-destructive/10 text-destructive",
     Icon: AlertTriangle,
   },
 };
@@ -101,23 +100,17 @@ const AnnouncementBar = () => {
     <div
       role="status"
       className={cn(
-        // One tidy line once there is room; on a phone the title is allowed a
-        // second line rather than being truncated into "NTHUM…".
-        "flex min-h-9 w-full items-center gap-2 border-b px-3 py-1 text-sm sm:whitespace-nowrap",
+        "flex w-full items-center gap-2 border-b px-4 py-1 text-sm",
         style.className,
       )}
     >
       <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-      <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
-        {/* The title stays readable at 400px: two lines rather than an
-            ellipsis after five characters. The description is supplementary,
-            so it is dropped entirely on a phone instead of competing for the
-            same line. */}
-        <span className="min-w-0 font-medium line-clamp-2 sm:truncate sm:line-clamp-none">
+      <div className="flex min-w-0 flex-1 items-center gap-2">
+        <span className="font-medium">
           {title}
         </span>
         {description && (
-          <span className="hidden min-w-0 truncate text-current/80 sm:inline">
+          <span className="hidden text-current/80 sm:inline">
             — {description}
           </span>
         )}

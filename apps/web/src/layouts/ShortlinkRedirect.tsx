@@ -1,8 +1,10 @@
 import { useEffect } from "react";
 import { useParams } from "react-router-dom";
+import useDictionary from "@/dictionaries/useDictionary";
 
 const ShortlinkRedirect = () => {
   const { slug } = useParams<{ slug: string }>();
+  const dict = useDictionary();
 
   useEffect(() => {
     if (slug) {
@@ -11,8 +13,8 @@ const ShortlinkRedirect = () => {
   }, [slug]);
 
   return (
-    <div className="grid place-items-center h-screen">
-      <p>Redirecting...</p>
+    <div className="p-4">
+      <p className="text-muted-foreground leading-relaxed">{dict.common.redirecting}</p>
     </div>
   );
 };
