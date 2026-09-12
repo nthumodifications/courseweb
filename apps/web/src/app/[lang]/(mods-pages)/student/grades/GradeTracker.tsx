@@ -2,8 +2,6 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useAuth } from "react-oidc-context";
 import { useLocalStorage } from "usehooks-ts";
 import {
-  Alert,
-  AlertDescription,
   Badge,
   Button,
   Card,
@@ -15,15 +13,13 @@ import {
   Label,
 } from "@courseweb/ui";
 import {
+  AlertCircle,
   Check,
-  Cloud,
-  GraduationCap,
   Info,
   Loader2,
   LogIn,
   Plus,
   RotateCcw,
-  ShieldCheck,
   Trash2,
 } from "lucide-react";
 import useDictionary from "@/dictionaries/useDictionary";
@@ -75,11 +71,12 @@ const createEntryId = () =>
 const GradeTracker = () => {
   const dict = useDictionary();
   const { isAuthenticated, signinRedirect, user } = useAuth();
-  const [gradebook, setGradebook, syncReady] = useSyncedStorage<Gradebook>(
-    STORAGE_KEY,
-    DEFAULT_GRADEBOOK,
-    mergeGradebooks,
-  );
+  const [gradebook, setGradebook, syncReady, syncError] =
+    useSyncedStorage<Gradebook>(
+      STORAGE_KEY,
+      DEFAULT_GRADEBOOK,
+      mergeGradebooks,
+    );
   const [anonymousStoredGradebook] = useLocalStorage<unknown>(
     getSyncedStorageKey(STORAGE_KEY),
     DEFAULT_GRADEBOOK,
@@ -97,6 +94,7 @@ const GradeTracker = () => {
   const entries = normalizedGradebook.entries;
   const baseline = normalizedGradebook.baseline;
   const isReady = !isAuthenticated || syncReady;
+  const syncUnavailable = isAuthenticated && syncError;
   const userId = user?.profile.sub;
 
   const termGpa = calculateGpa(entries);
@@ -200,65 +198,50 @@ const GradeTracker = () => {
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto px-4 pb-12">
-      <div className="pt-6 pb-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex items-start gap-3">
-          <div className="rounded-xl bg-primary/10 p-3 text-primary">
-            <GraduationCap className="h-7 w-7" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-semibold tracking-tight">
-              {dict.grade.tracker_title}
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-              {dict.grade.tracker_description}
-            </p>
-          </div>
-        </div>
+    <div className="flex flex-col gap-4 px-4 pb-8">
+      <div className="flex flex-wrap items-center justify-between gap-3 py-4">
+        <h1 className="text-xl font-bold">{dict.grade.tracker_title}</h1>
         <div className="flex flex-wrap items-center gap-2 sm:justify-end">
           <Badge variant="outline" className="gap-1.5 py-1.5">
-            {isAuthenticated ? (
+            {syncUnavailable ? (
+              <AlertCircle className="h-3.5 w-3.5 text-destructive" />
+            ) : isAuthenticated ? (
               syncReady ? (
                 <Check className="h-3.5 w-3.5 text-emerald-600" />
               ) : (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
               )
             ) : (
-              <ShieldCheck className="h-3.5 w-3.5" />
+              <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />
             )}
-            {isAuthenticated
-              ? syncReady
-                ? dict.grade.synced
-                : dict.grade.syncing
-              : dict.grade.local_only}
+            {syncUnavailable
+              ? dict.grade.sync_unavailable
+              : isAuthenticated
+                ? syncReady
+                  ? dict.grade.synced
+                  : dict.grade.syncing
+                : dict.grade.local_only}
           </Badge>
           {!isAuthenticated && (
             <Button variant="outline" size="sm" onClick={handleSignIn}>
               <LogIn className="h-4 w-4" />
-              {dict.grade.sign_in_to_sync}
+              {dict.grade.sign_in}
             </Button>
           )}
         </div>
       </div>
 
-      {!isAuthenticated && (
-        <Alert className="mb-6">
-          <Cloud className="h-4 w-4" />
-          <AlertDescription>{dict.grade.sync_across_devices}</AlertDescription>
-        </Alert>
-      )}
-
       {isAuthenticated && !syncReady ? (
-        <Card className="mb-6">
-          <CardContent className="flex items-center gap-3 py-8 text-sm text-muted-foreground">
+        <Card>
+          <CardContent className="flex items-center gap-3 py-6 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
             {dict.grade.syncing}
           </CardContent>
         </Card>
       ) : (
         <>
-          <Card className="mb-6 overflow-hidden">
-            <CardHeader className="border-b bg-primary/[0.04]">
+          <Card>
+            <CardHeader>
               <CardTitle className="text-lg">{dict.grade.overview}</CardTitle>
               <CardDescription>
                 {termCredits > 0
@@ -266,38 +249,36 @@ const GradeTracker = () => {
                   : dict.grade.no_courses}
               </CardDescription>
             </CardHeader>
-            <CardContent className="grid gap-4 p-4 sm:grid-cols-3 sm:p-6">
-              <div className="rounded-lg bg-primary p-4 text-primary-foreground">
-                <p className="text-sm opacity-80">
+            <CardContent className="grid gap-4 p-4 sm:grid-cols-3">
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">
                   {dict.grade.predicted_term_gpa}
                 </p>
-                <p className="mt-2 text-4xl font-semibold">
-                  {formatGpa(termGpa)}
-                </p>
-                <p className="mt-1 text-xs opacity-75">
+                <p className="text-3xl font-semibold">{formatGpa(termGpa)}</p>
+                <p className="text-xs text-muted-foreground">
                   {formatCredits(termCredits)}{" "}
                   {dict.grade.credits_counted.toLowerCase()}
                 </p>
               </div>
-              <div className="rounded-lg border p-4">
+              <div className="space-y-1 sm:border-l sm:pl-4">
                 <p className="text-sm text-muted-foreground">
                   {dict.grade.projected_cumulative_gpa}
                 </p>
-                <p className="mt-2 text-4xl font-semibold">
+                <p className="text-3xl font-semibold">
                   {formatGpa(projectedCumulativeGpa)}
                 </p>
-                <p className="mt-1 text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   {baseline.currentGpa && baseline.completedCredits
                     ? `${dict.grade.current_gpa}: ${baseline.currentGpa}`
                     : dict.grade.current_gpa_hint}
                 </p>
               </div>
-              <div className="rounded-lg border p-4">
+              <div className="space-y-1 sm:border-l sm:pl-4">
                 <p className="text-sm text-muted-foreground">
                   {dict.grade.your_courses}
                 </p>
-                <p className="mt-2 text-4xl font-semibold">{entries.length}</p>
-                <p className="mt-1 text-xs text-muted-foreground">
+                <p className="text-3xl font-semibold">{entries.length}</p>
+                <p className="text-xs text-muted-foreground">
                   {dict.grade.courses_count.replace(
                     "{count}",
                     entries.length.toString(),
@@ -307,8 +288,8 @@ const GradeTracker = () => {
             </CardContent>
           </Card>
 
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-            <div className="space-y-6">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
+            <div className="space-y-4">
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg">
@@ -512,7 +493,7 @@ const GradeTracker = () => {
               </Card>
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-4">
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg">
