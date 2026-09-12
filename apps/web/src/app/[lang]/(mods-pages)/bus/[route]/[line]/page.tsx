@@ -565,18 +565,18 @@ const LineDisplayPage = () => {
                   <div className="h-auto relative w-5">
                     <div className="absolute top-0 left-[calc(50%-2px)] w-1 h-1/2 bg-border z-10" />
                     {m.state == BusStationState.ARRIVING && (
-                      <div className="absolute top-[calc(-10px)] w-5 h-5 bg-nthu-500 rounded-full z-20 grid place-items-center">
-                        <Bus className="w-3.5 h-3.5 text-white" />
+                      <div className="absolute top-[calc(-10px)] w-5 h-5 bg-primary rounded-full z-20 grid place-items-center">
+                        <Bus className="w-3.5 h-3.5 text-primary-foreground" />
                       </div>
                     )}
                     {m.state == BusStationState.AT_STATION && (
-                      <div className="absolute top-[calc(50%-10px)] w-5 h-5 bg-nthu-500 rounded-full z-20 grid place-items-center">
-                        <Bus className="w-3.5 h-3.5 text-white" />
+                      <div className="absolute top-[calc(50%-10px)] w-5 h-5 bg-primary rounded-full z-20 grid place-items-center">
+                        <Bus className="w-3.5 h-3.5 text-primary-foreground" />
                       </div>
                     )}
                     {m.state == BusStationState.LEFT && (
-                      <div className="absolute top-[calc(100%+10px)] w-5 h-5 bg-nthu-500 rounded-full z-20 grid place-items-center">
-                        <Bus className="w-3.5 h-3.5 text-white" />
+                      <div className="absolute top-[calc(100%+10px)] w-5 h-5 bg-primary rounded-full z-20 grid place-items-center">
+                        <Bus className="w-3.5 h-3.5 text-primary-foreground" />
                       </div>
                     )}
                     <div className="absolute left-[calc(50%-6px)] top-[calc(50%-6px)] w-3 h-3 bg-border rounded-full z-10" />
@@ -605,9 +605,9 @@ const LineDisplayPage = () => {
                       )}
                       <div
                         className={cn(
-                          "text-base font-bold",
+                          "text-base font-bold tabular-nums",
                           m.state == BusStationState.AT_STATION
-                            ? "text-nthu-500"
+                            ? "text-primary"
                             : "text-muted-foreground",
                         )}
                       >
@@ -622,18 +622,18 @@ const LineDisplayPage = () => {
                   <div className="h-auto relative w-5">
                     <div className="absolute top-0 left-[calc(50%-2px)] w-1 h-1/2 bg-border z-10" />
                     {m.state == BusStationState.ARRIVING && (
-                      <div className="absolute top-[calc(-10px)] w-5 h-5 bg-nthu-500 rounded-full z-20 grid place-items-center">
-                        <Bus className="w-3.5 h-3.5 text-white" />
+                      <div className="absolute top-[calc(-10px)] w-5 h-5 bg-primary rounded-full z-20 grid place-items-center">
+                        <Bus className="w-3.5 h-3.5 text-primary-foreground" />
                       </div>
                     )}
                     {m.state == BusStationState.AT_STATION && (
-                      <div className="absolute top-[calc(50%-10px)] w-5 h-5 bg-nthu-500 rounded-full z-20 grid place-items-center">
-                        <Bus className="w-3.5 h-3.5 text-white" />
+                      <div className="absolute top-[calc(50%-10px)] w-5 h-5 bg-primary rounded-full z-20 grid place-items-center">
+                        <Bus className="w-3.5 h-3.5 text-primary-foreground" />
                       </div>
                     )}
                     {m.state == BusStationState.LEFT && (
-                      <div className="absolute top-[calc(100%+10px)] w-5 h-5 bg-nthu-500 rounded-full z-20 grid place-items-center">
-                        <Bus className="w-3.5 h-3.5 text-white" />
+                      <div className="absolute top-[calc(100%+10px)] w-5 h-5 bg-primary rounded-full z-20 grid place-items-center">
+                        <Bus className="w-3.5 h-3.5 text-primary-foreground" />
                       </div>
                     )}
                     <div className="absolute left-[calc(50%-6px)] top-[calc(50%-6px)] w-3 h-3 bg-border rounded-full z-10" />
@@ -652,9 +652,9 @@ const LineDisplayPage = () => {
                     </div>
                     <div
                       className={cn(
-                        "flex-1 text-right text-base font-bold",
+                        "flex-1 text-right text-base font-bold tabular-nums",
                         m.state == BusStationState.AT_STATION
-                          ? "text-nthu-500"
+                          ? "text-primary"
                           : "text-muted-foreground",
                       )}
                     >

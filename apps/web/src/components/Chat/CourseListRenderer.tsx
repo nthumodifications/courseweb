@@ -54,7 +54,7 @@ export default function CourseListRenderer({
 
   if (error) {
     return (
-      <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 rounded p-3">
+      <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 rounded-md p-3">
         <AlertCircle className="h-4 w-4" />
         <span>{dict.chat.course_renderer.load_failed}</span>
       </div>
@@ -63,7 +63,7 @@ export default function CourseListRenderer({
 
   if (!courses || courses.length === 0) {
     return (
-      <div className="text-sm text-muted-foreground bg-muted rounded p-3">
+      <div className="text-sm text-muted-foreground bg-muted rounded-md p-3">
         {dict.chat.course_renderer.no_courses}
       </div>
     );

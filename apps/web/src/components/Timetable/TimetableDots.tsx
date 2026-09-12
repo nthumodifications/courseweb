@@ -47,9 +47,9 @@ const TimetableDots: FC<TimetableDotsProps> = ({
 
   return (
     <div className={cn("overflow-auto p-3", className)}>
-      <div className="inline-flex flex-col gap-0.5">
+      <div className="inline-flex flex-col gap-1">
         {/* Header */}
-        <div className="flex gap-0.5">
+        <div className="flex gap-1">
           <div className="w-12" />
           {usedDays.map((d) => (
             <div
@@ -65,7 +65,7 @@ const TimetableDots: FC<TimetableDotsProps> = ({
         {usedTimeSlots.map((t) => {
           const slotInfo = scheduleTimeSlots[t];
           return (
-            <div key={t} className="flex gap-0.5 items-center">
+            <div key={t} className="flex gap-1 items-center">
               {/* Time label */}
               <div className="w-12 text-right pr-2 text-[10px] font-mono text-muted-foreground/70 shrink-0">
                 {slotInfo?.start ?? String(t)}
@@ -77,7 +77,7 @@ const TimetableDots: FC<TimetableDotsProps> = ({
                 return (
                   <div
                     key={d}
-                    className="w-16 h-8 rounded flex items-center justify-center"
+                    className="w-16 h-8 rounded-md flex items-center justify-center"
                     style={
                       slot
                         ? {

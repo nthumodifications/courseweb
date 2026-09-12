@@ -37,14 +37,14 @@ export function ChatMessage({ message }: ChatMessageProps) {
             {message.toolCalls.map((tool, idx) => (
               <div
                 key={idx}
-                className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 rounded px-2 py-1"
+                className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 rounded-md px-2 py-1"
               >
                 <Wrench className="w-3 h-3" />
                 <span className="font-medium">{tool.name}</span>
                 {tool.result !== undefined && (
-                  <CheckCircle2 className="w-3 h-3 text-green-600" />
+                  <CheckCircle2 className="w-3 h-3 text-success" />
                 )}
-                {tool.error && <XCircle className="w-3 h-3 text-red-600" />}
+                {tool.error && <XCircle className="w-3 h-3 text-destructive" />}
                 {tool.result === undefined && !tool.error && (
                   <Loader2 className="w-3 h-3 animate-spin" />
                 )}

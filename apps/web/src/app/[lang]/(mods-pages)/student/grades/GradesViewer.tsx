@@ -65,84 +65,84 @@ const SemesterGradeCard = ({
             {toPrettySemester(semester.year + semester.semester)}
           </DialogTitle>
         </DialogHeader>
-        <div className="flex-col justify-start items-start gap-4 inline-flex [&_td]:px-0 [&_td]:py-2 [&_td]:gap-2.5">
+        <div className="flex-col justify-start items-start gap-4 inline-flex [&_td]:px-0 [&_td]:py-2 [&_td]:gap-2">
           <Table className="w-full">
             <TableBody>
               <TableRow>
                 <TableCell>{dict.grade.gpa}</TableCell>
-                <TableCell className="text-right">{semester.gpa}</TableCell>
+                <TableCell className="text-right tabular-nums">{semester.gpa}</TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>{dict.grade.t_score}</TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right tabular-nums">
                   {semester.t_score_avg}
                 </TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>{dict.grade.relative_avg}</TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right tabular-nums">
                   {semester.relative_avg}
                 </TableCell>
               </TableRow>
             </TableBody>
           </Table>
           <Table className="w-full">
-            <TableHeader className="text-slate-900 text-base font-bold leading-normal">
+            <TableHeader className="text-foreground text-base font-bold leading-normal">
               {dict.grade.credit}
             </TableHeader>
             <TableBody>
               <TableRow>
                 <TableCell>{dict.grade.taken_actual_credits}</TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right tabular-nums">
                   {semester.credits}/{semester.actual_credits}
                 </TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>{dict.grade.num_of_courses}</TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right tabular-nums">
                   {semester.num_of_courses}
                 </TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>{dict.grade.summer_credits}</TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right tabular-nums">
                   {semester.summer_credits}
                 </TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>{dict.grade.transfer_credits}</TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right tabular-nums">
                   {semester.transfer_credits}
                 </TableCell>
               </TableRow>
             </TableBody>
           </Table>
           <Table className="w-full">
-            <TableHeader className="text-slate-900 text-base font-bold leading-normal">
+            <TableHeader className="text-foreground text-base font-bold leading-normal">
               {dict.grade.ranking}
             </TableHeader>
             <TableBody>
               <TableRow>
                 <TableCell>{dict.grade.class_rank}</TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right tabular-nums">
                   {semester.letter_class_rank}
                 </TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>{dict.grade.dept_rank}</TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right tabular-nums">
                   {semester.letter_dept_rank}
                 </TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>{dict.grade.t_score_class_rank}</TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right tabular-nums">
                   {semester.t_score_class_rank}
                 </TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>{dict.grade.t_score_dept_rank}</TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right tabular-nums">
                   {semester.t_score_dept_rank}
                 </TableCell>
               </TableRow>
@@ -156,10 +156,10 @@ const SemesterGradeCard = ({
 
 const GradeCard = ({ title, data }: { title: string; data: string }) => (
   <div className=" p-2 flex-col justify-center items-center gap-2 inline-flex flex-1">
-    <div className="text-center text-zinc-500 dark:text-zinc-400 text-sm font-medium leading-none">
+    <div className="text-center text-muted-foreground  text-sm font-medium leading-none">
       {title}
     </div>
-    <div className="text-center text-zinc-900 dark:text-zinc-100 text-2xl font-semibold">
+    <div className="text-center text-foreground text-xl font-semibold tabular-nums">
       {data}
     </div>
   </div>
@@ -168,8 +168,8 @@ const GradeCard = ({ title, data }: { title: string; data: string }) => (
 const GradeOverview = ({ grades }: { grades: GradeObject }) => {
   const dict = useDictionary();
   return (
-    <div className="w-full rounded-lg shadow border border-slate-200 dark:border-slate-800 dark:divide-slate-800 justify-start items-start inline-flex flex-col md:flex-row flex-wrap divide-y md:divide-y-0 divide-x-0 md:divide-x divide-slate-200 overflow-hidden">
-      <div className="w-full md:w-auto flex-[3] justify-start items-start inline-flex divide-x divide-slate-200 dark:divide-slate-800">
+    <div className="w-full rounded-lg shadow border border-border   justify-start items-start inline-flex flex-col md:flex-row flex-wrap divide-y md:divide-y-0 divide-x-0 md:divide-x divide-border overflow-hidden">
+      <div className="w-full md:w-auto flex-[3] justify-start items-start inline-flex divide-x divide-border ">
         <GradeCard
           title={dict.grade.gpa}
           data={grades.ranking.cumulative.letter.gpa}
@@ -183,7 +183,7 @@ const GradeOverview = ({ grades }: { grades: GradeObject }) => {
           data={grades.credits.pending_credits.toString()}
         />
       </div>
-      <div className="w-full md:w-auto flex-[2] justify-start items-start inline-flex divide-x divide-slate-200 dark:divide-slate-800">
+      <div className="w-full md:w-auto flex-[2] justify-start items-start inline-flex divide-x divide-border ">
         <GradeCard
           title={dict.grade.class_rank}
           data={grades.ranking.cumulative.letter.letter_cum_class_rank}
@@ -244,10 +244,10 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
     <div className="px-6 pb-12 flex-col justify-start items-start gap-12 inline-flex w-full overflow-x-hidden">
       <div className="w-full pt-8 flex-col justify-start items-start gap-4 inline-flex">
         <div className="w-full self-stretch flex-col justify-center items-center gap-2 flex">
-          <div className="self-stretch text-zinc-900 dark:text-zinc-100 text-3xl font-semibold leading-9">
+          <div className="self-stretch text-foreground text-xl font-semibold leading-9">
             {dict.grade.overview}
           </div>
-          <div className="self-stretch text-zinc-900 dark:text-zinc-100 text-sm font-normal leading-tight">
+          <div className="self-stretch text-foreground  text-sm font-normal leading-tight">
             {dict.grade.as_of} {grades.ranking.cumulative.letter.gpa_cum_year_tw}
           </div>
         </div>
@@ -306,7 +306,7 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
         <TabsContent value="courses">
           <Table className="w-full">
             <TableHeader>
-              <TableRow className="[&>th]:font-bold [&>th]:text-slate-900 dark:[&>th]:text-slate-100">
+              <TableRow className="[&>th]:font-bold [&>th]:text-foreground ">
                 <TableHead>{dict.grade.course_name}</TableHead>
                 <TableHead className="hidden md:table-cell">
                   {dict.course.credits}
@@ -325,7 +325,7 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
                     <TableRow key={index}>
                       <TableCell
                         colSpan={3}
-                        className="text-zinc-950 dark:text-zinc-50 text-2xl font-semibold leading-loose"
+                        className="text-foreground text-xl font-semibold leading-loose"
                       >
                         {toPrettySemester(semester)}
                       </TableCell>
@@ -338,9 +338,9 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
                           className="[&>td]:py-2"
                         >
                           <TableCell>
-                            <div className="flex-col justify-center items-start gap-2.5 inline-flex">
+                            <div className="flex-col justify-center items-start gap-2 inline-flex">
                               <div className="inline-flex flex-col">
-                                <span className="text-slate-400 dark:text-slate-600 text-xs">
+                                <span className="text-muted-foreground  text-xs tabular-nums">
                                   {grade.course_id}
                                 </span>
                                 <span>
@@ -363,12 +363,12 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
                               )}
                             </div>
                           </TableCell>
-                          <TableCell className="hidden md:table-cell">
+                          <TableCell className="hidden md:table-cell tabular-nums">
                             {grade.credits}
                           </TableCell>
                           <TableCell>{grade.grade}</TableCell>
-                          <TableCell>{grade.ranking}</TableCell>
-                          <TableCell className="hidden md:table-cell">
+                          <TableCell className="tabular-nums">{grade.ranking}</TableCell>
+                          <TableCell className="hidden md:table-cell tabular-nums">
                             {grade.t_scores}
                           </TableCell>
                         </TableRow>
@@ -382,7 +382,7 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
         <TabsContent value="semester">
           <Table className="w-full">
             <TableHeader>
-              <TableRow className="[&>th]:font-bold [&>th]:text-slate-900 dark:[&>th]:text-slate-100">
+              <TableRow className="[&>th]:font-bold [&>th]:text-foreground ">
                 <TableHead className="min-w-[72px] break-all">
                   {dict.grade.semester}
                 </TableHead>
@@ -422,31 +422,31 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
                   <TableCell>
                     {toPrettySemester(semester.year + semester.semester)}
                   </TableCell>
-                  <TableCell>{semester.gpa}</TableCell>
-                  <TableCell className="hidden md:table-cell">
+                  <TableCell className="tabular-nums">{semester.gpa}</TableCell>
+                  <TableCell className="hidden md:table-cell tabular-nums">
                     {semester.t_score_avg}
                   </TableCell>
-                  <TableCell className="hidden md:table-cell">
+                  <TableCell className="hidden md:table-cell tabular-nums">
                     {semester.relative_avg}
                   </TableCell>
-                  <TableCell className="hidden md:table-cell">
+                  <TableCell className="hidden md:table-cell tabular-nums">
                     {semester.credits}/{semester.actual_credits}
                   </TableCell>
-                  <TableCell className="hidden md:table-cell">
+                  <TableCell className="hidden md:table-cell tabular-nums">
                     {semester.num_of_courses}
                   </TableCell>
-                  <TableCell className="hidden md:table-cell">
+                  <TableCell className="hidden md:table-cell tabular-nums">
                     {semester.summer_credits}
                   </TableCell>
-                  <TableCell className="hidden md:table-cell">
+                  <TableCell className="hidden md:table-cell tabular-nums">
                     {semester.transfer_credits}
                   </TableCell>
                   <TableCell>{semester.letter_class_rank}</TableCell>
                   <TableCell>{semester.letter_dept_rank}</TableCell>
-                  <TableCell className="hidden md:table-cell">
+                  <TableCell className="hidden md:table-cell tabular-nums">
                     {semester.t_score_class_rank}
                   </TableCell>
-                  <TableCell className="hidden md:table-cell">
+                  <TableCell className="hidden md:table-cell tabular-nums">
                     {semester.t_score_dept_rank}
                   </TableCell>
                   <TableCell className="md:hidden table-cell">
@@ -463,7 +463,7 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
       </Tabs>
       {!isMobile && (
         <div className="w-full flex-col justify-start items-start gap-4 md:inline-flex hidden">
-          <div className="text-zinc-900 dark:text-zinc-100 text-3xl font-semibold leading-9">
+          <div className="text-foreground text-xl font-semibold leading-9">
             {dict.grade.score_curve}
           </div>
           <div className="flex flex-row flex-wrap gap-6">

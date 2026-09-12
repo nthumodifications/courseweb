@@ -95,16 +95,16 @@ function ShareListItem({
           </span>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             {share.isLive ? (
-              <span className="flex items-center gap-0.5">
+              <span className="flex items-center gap-1">
                 <RefreshCw className="h-2.5 w-2.5" /> Live
               </span>
             ) : (
-              <span className="flex items-center gap-0.5">
+              <span className="flex items-center gap-1">
                 <Lock className="h-2.5 w-2.5" /> Snapshot
               </span>
             )}
             {share.visibility === "public" && (
-              <span className="flex items-center gap-0.5">
+              <span className="flex items-center gap-1">
                 <Globe className="h-2.5 w-2.5" /> Public
               </span>
             )}
@@ -157,7 +157,7 @@ function ShareListItem({
             </Button>
           </div>
           {showQr && (
-            <div className="flex justify-center p-3 bg-white rounded border">
+            <div className="flex justify-center p-3 bg-background rounded-lg border">
               <QRCodeSVG value={url} size={96} />
             </div>
           )}
@@ -267,7 +267,7 @@ function GroupsTab({ semester: activeSemester }: { semester: string }) {
       <div className="flex flex-col gap-4">
         <div className="text-center py-2">
           <p className="font-semibold">{created.name}</p>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <p className="text-xs text-muted-foreground mt-1">
             Group created — share the link below
           </p>
         </div>
@@ -549,13 +549,13 @@ const ShareTimetableDialog = ({
                 {allSemestersWithItems.length > 0 && (
                   <div className="flex flex-col gap-2">
                     <Label>Semesters</Label>
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className="flex flex-wrap gap-1">
                       {allSemestersWithItems.map((sem) => (
                         <button
                           key={sem}
                           type="button"
                           onClick={() => toggleSemester(sem)}
-                          className={`px-2.5 py-1 rounded-full text-xs border transition-colors ${
+                          className={`px-2 py-1 rounded-full text-xs border transition-colors ${
                             selectedSemesters.includes(sem)
                               ? "bg-primary text-primary-foreground border-primary"
                               : "bg-background border-border text-muted-foreground hover:border-foreground"

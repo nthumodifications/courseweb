@@ -54,7 +54,7 @@ const MiniTimetable = ({ semester }: { semester: Semester }) => {
             if (j === 0)
               return (
                 <>
-                  <div className="text-xs font-bold text-muted-foreground flex items-center justify-center">
+                  <div className="text-xs font-bold text-muted-foreground flex items-center justify-center tabular-nums">
                     {scheduleTimeSlots[i].time}
                   </div>
                   <div

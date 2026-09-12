@@ -348,9 +348,9 @@ export function SemesterManagement({
   const getStatusBadge = (value: string) => {
     switch (value) {
       case "completed":
-        return <Badge className="bg-green-600">{status.completed}</Badge>;
+        return <Badge className="bg-success">{status.completed}</Badge>;
       case "in-progress":
-        return <Badge className="bg-blue-600">{status.inProgress}</Badge>;
+        return <Badge className="bg-info">{status.inProgress}</Badge>;
       default:
         return <Badge variant="outline">{status.planned}</Badge>;
     }
@@ -392,7 +392,7 @@ export function SemesterManagement({
                 {semesters.map((semester) => (
                   <div
                     key={semester.id}
-                    className={`flex items-center justify-between p-2 rounded-md ${selectedSemester?.id === semester.id ? "bg-neutral-50 dark:bg-neutral-800" : "hover:bg-neutral-50/50 dark:hover:bg-neutral-800/50"} cursor-pointer`}
+                    className={`flex items-center justify-between p-2 rounded-md ${selectedSemester?.id === semester.id ? "bg-muted " : "hover:bg-accent "} cursor-pointer`}
                     onClick={() => handleSelectSemester(semester)}
                   >
                     <div className="flex-1 min-w-0">
@@ -406,7 +406,7 @@ export function SemesterManagement({
                         checked={semester.isActive}
                         onCheckedChange={() => handleToggleActive(semester)}
                       />
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-muted-foreground">
                         {semester.isActive
                           ? (sm.active ?? "啟用")
                           : (sm.inactive ?? "停用")}
@@ -463,21 +463,21 @@ export function SemesterManagement({
                 <ScrollArea className="flex-1 h-[45vh] md:h-auto">
                   <div className="p-4 space-y-4">
                     <div>
-                      <h4 className="text-sm font-medium text-gray-400">
+                      <h4 className="text-sm font-medium text-muted-foreground">
                         {sm.nameLabel ?? "學期名稱"}
                       </h4>
                       <p className="mt-1">{selectedSemester.name}</p>
                     </div>
 
                     <div>
-                      <h4 className="text-sm font-medium text-gray-400">
+                      <h4 className="text-sm font-medium text-muted-foreground">
                         {sm.yearLabel ?? "學年"}
                       </h4>
                       <p className="mt-1">{selectedSemester.year}</p>
                     </div>
 
                     <div>
-                      <h4 className="text-sm font-medium text-gray-400">
+                      <h4 className="text-sm font-medium text-muted-foreground">
                         {sm.termLabel ?? "學期"}
                       </h4>
                       <p className="mt-1">
@@ -486,7 +486,7 @@ export function SemesterManagement({
                     </div>
 
                     <div>
-                      <h4 className="text-sm font-medium text-gray-400">
+                      <h4 className="text-sm font-medium text-muted-foreground">
                         {sm.statusLabel ?? "狀態"}
                       </h4>
                       <div className="mt-1">
@@ -495,7 +495,7 @@ export function SemesterManagement({
                     </div>
 
                     <div>
-                      <h4 className="text-sm font-medium text-gray-400">
+                      <h4 className="text-sm font-medium text-muted-foreground">
                         {sm.activeStatusLabel ?? "啟用狀態"}
                       </h4>
                       <p className="mt-1">
@@ -507,7 +507,7 @@ export function SemesterManagement({
 
                     {selectedSemester.startDate && (
                       <div>
-                        <h4 className="text-sm font-medium text-gray-400">
+                        <h4 className="text-sm font-medium text-muted-foreground">
                           {sm.startDateLabel ?? "開始日期"}
                         </h4>
                         <p className="mt-1">
@@ -522,7 +522,7 @@ export function SemesterManagement({
 
                     {selectedSemester.endDate && (
                       <div>
-                        <h4 className="text-sm font-medium text-gray-400">
+                        <h4 className="text-sm font-medium text-muted-foreground">
                           {sm.endDateLabel ?? "結束日期"}
                         </h4>
                         <p className="mt-1">
@@ -592,22 +592,22 @@ export function SemesterManagement({
                       </Label>
                       <Input
                         id="semester-id"
-                        className="bg-neutral-50 border-border dark:bg-neutral-800"
+                        className="bg-muted border-border "
                         disabled
                         readOnly
                         value={watchId ?? ""}
                       />
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-muted-foreground">
                         {sm.idHelp ?? "學期代碼會依學年與學期自動產生"}
                       </p>
                       {semesterLookupMessage && (
-                        <p className="text-green-500 text-sm flex items-center gap-1">
+                        <p className="text-success text-sm flex items-center gap-1">
                           <Calendar className="h-4 w-4" />
                           {semesterLookupMessage}
                         </p>
                       )}
                       {errors.id && (
-                        <p className="text-red-500 text-sm">
+                        <p className="text-destructive text-sm">
                           {errors.id.message}
                         </p>
                       )}
@@ -620,12 +620,12 @@ export function SemesterManagement({
                         </Label>
                         <Input
                           id="semester-year"
-                          className="bg-neutral-50 border-border dark:bg-neutral-800"
+                          className="bg-muted border-border "
                           placeholder={sm.yearPlaceholder ?? "例如: 113"}
                           {...register("year")}
                         />
                         {errors.year && (
-                          <p className="text-red-500 text-sm">
+                          <p className="text-destructive text-sm">
                             {errors.year.message}
                           </p>
                         )}
@@ -641,7 +641,7 @@ export function SemesterManagement({
                         >
                           <SelectTrigger
                             id="semester-term"
-                            className="bg-neutral-50 border-border dark:bg-neutral-800"
+                            className="bg-muted border-border "
                           >
                             <SelectValue
                               placeholder={
@@ -649,7 +649,7 @@ export function SemesterManagement({
                               }
                             />
                           </SelectTrigger>
-                          <SelectContent className="bg-neutral-50 border-border dark:bg-neutral-800">
+                          <SelectContent className="bg-muted border-border ">
                             <SelectItem value="1">
                               {getSemesterTermLabel("1")} (1)
                             </SelectItem>
@@ -662,7 +662,7 @@ export function SemesterManagement({
                           </SelectContent>
                         </Select>
                         {errors.term && (
-                          <p className="text-red-500 text-sm">
+                          <p className="text-destructive text-sm">
                             {errors.term.message}
                           </p>
                         )}
@@ -675,15 +675,15 @@ export function SemesterManagement({
                       </Label>
                       <Input
                         id="semester-name"
-                        className="bg-neutral-50 border-border dark:bg-neutral-800"
+                        className="bg-muted border-border "
                         {...register("name")}
                       />
                       {errors.name && (
-                        <p className="text-red-500 text-sm">
+                        <p className="text-destructive text-sm">
                           {errors.name.message}
                         </p>
                       )}
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-muted-foreground">
                         {sm.nameAutoHint ??
                           "學期名稱會自動生成，但您可以自行修改"}
                       </p>
@@ -704,7 +704,7 @@ export function SemesterManagement({
                       >
                         <SelectTrigger
                           id="semester-status"
-                          className="bg-neutral-50 border-border dark:bg-neutral-800"
+                          className="bg-muted border-border "
                         >
                           <SelectValue
                             placeholder={
@@ -712,7 +712,7 @@ export function SemesterManagement({
                             }
                           />
                         </SelectTrigger>
-                        <SelectContent className="bg-neutral-50 border-border dark:bg-neutral-800">
+                        <SelectContent className="bg-muted border-border ">
                           <SelectItem value="completed">
                             {status.completed}
                           </SelectItem>
@@ -725,7 +725,7 @@ export function SemesterManagement({
                         </SelectContent>
                       </Select>
                       {errors.status && (
-                        <p className="text-red-500 text-sm">
+                        <p className="text-destructive text-sm">
                           {errors.status.message}
                         </p>
                       )}
@@ -739,11 +739,11 @@ export function SemesterManagement({
                         <Input
                           id="semester-start-date"
                           type="date"
-                          className="bg-neutral-50 border-border dark:bg-neutral-800"
+                          className="bg-muted border-border "
                           {...register("startDate")}
                         />
                         {errors.startDate && (
-                          <p className="text-red-500 text-sm">
+                          <p className="text-destructive text-sm">
                             {errors.startDate.message}
                           </p>
                         )}
@@ -756,11 +756,11 @@ export function SemesterManagement({
                         <Input
                           id="semester-end-date"
                           type="date"
-                          className="bg-neutral-50 border-border dark:bg-neutral-800"
+                          className="bg-muted border-border "
                           {...register("endDate")}
                         />
                         {errors.endDate && (
-                          <p className="text-red-500 text-sm">
+                          <p className="text-destructive text-sm">
                             {errors.endDate.message}
                           </p>
                         )}
@@ -779,7 +779,7 @@ export function SemesterManagement({
                         {sm.activeSwitchLabel ?? "啟用此學期"}
                       </Label>
                       {errors.isActive && (
-                        <p className="text-red-500 text-sm">
+                        <p className="text-destructive text-sm">
                           {errors.isActive.message}
                         </p>
                       )}
@@ -788,7 +788,7 @@ export function SemesterManagement({
                 </ScrollArea>
               </>
             ) : (
-              <div className="flex items-center justify-center h-full text-gray-400">
+              <div className="flex items-center justify-center h-full text-muted-foreground">
                 <p>{sm.selectPrompt ?? "選擇一個學期以查看詳情"}</p>
               </div>
             )}

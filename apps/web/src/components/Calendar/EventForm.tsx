@@ -129,7 +129,7 @@ const AccessibleColorPicker = ({
           aria-checked={swatchColor === color}
           aria-label={colorLabel(swatchColor)}
           tabIndex={index === activeIndex ? 0 : -1}
-          className="h-7 w-7 rounded-full border-2 border-white shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          className="h-7 w-7 rounded-full border-2 border-background outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           style={{ backgroundColor: swatchColor }}
           onClick={() => {
             setActiveIndex(index);

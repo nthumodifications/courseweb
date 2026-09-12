@@ -66,7 +66,7 @@ const TimetableCourseListItem = ({ course }: { course: MinimalCourse }) => {
       style={style}
     >
       <GripVertical
-        className="w-4 h-4 text-gray-400"
+        className="w-4 h-4 text-muted-foreground"
         {...attributes}
         {...listeners}
       />
@@ -85,20 +85,20 @@ const TimetableCourseListItem = ({ course }: { course: MinimalCourse }) => {
             return (
               <div
                 key={index}
-                className="flex flex-row items-center space-x-2 text-gray-400"
+                className="flex flex-row items-center space-x-2 text-muted-foreground"
               >
                 <span className="text-xs">{venue}</span>
                 {hasTimes(course as MinimalCourse) ? (
                   <span className="text-xs">{time}</span>
                 ) : (
-                  <span className="text-xs text-red-500">
+                  <span className="text-xs text-destructive">
                     {dict.course.details.missing_time}
                   </span>
                 )}
               </div>
             );
           }) || (
-            <span className="text-gray-400 text-xs">
+            <span className="text-muted-foreground text-xs">
               {dict.course.details.no_venues}
             </span>
           )}
@@ -106,21 +106,21 @@ const TimetableCourseListItem = ({ course }: { course: MinimalCourse }) => {
       </div>
       <div className="flex flex-col gap-1 items-start">
         <div className="flex flex-row items-center space-x-1">
-          <span className="text-base">{course.credits}</span>
-          <span className="text-xs text-gray-400">{dict.course.credits}</span>
+          <span className="text-base tabular-nums">{course.credits}</span>
+          <span className="text-xs text-muted-foreground">{dict.course.credits}</span>
         </div>
         <div className="flex flex-row">
           <Button
-            className="rounded-r-none"
+            className="rounded-md"
             variant="outline"
             size="icon"
             onClick={() => unfavourite()}
           >
-            <Heart className="w-4 h-4 fill-red-500 text-red-500" />
+            <Heart className="w-4 h-4 fill-destructive text-destructive" />
           </Button>
           {isCourseSelected(course.raw_id) ? (
             <Button
-              className="rounded-l-none"
+            className="rounded-md"
               variant="destructive"
               size="icon"
               onClick={() => deleteCourse(course.raw_id)}
@@ -129,7 +129,7 @@ const TimetableCourseListItem = ({ course }: { course: MinimalCourse }) => {
             </Button>
           ) : (
             <Button
-              className="rounded-l-none"
+            className="rounded-md"
               variant="outline"
               size="icon"
               onClick={() => addCourse(course.raw_id)}
@@ -220,7 +220,7 @@ export const FavouritesCourseList = ({}: {}) => {
         </DndContext>
         {displayCourseData.length == 0 && (
           <div className="flex flex-col items-center space-y-4">
-            <span className="text-lg font-semibold text-gray-400">
+            <span className="text-lg font-semibold text-muted-foreground">
               {dict.course.details.no_favourites}
             </span>
           </div>

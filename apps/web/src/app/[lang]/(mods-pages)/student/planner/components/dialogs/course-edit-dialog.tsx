@@ -103,16 +103,16 @@ export function CourseEditDialog({
               value={editCourseForm.id}
               readOnly
               disabled
-              className="bg-neutral-100 dark:bg-neutral-900 border-border cursor-not-allowed text-neutral-500"
+              className="bg-muted  border-border cursor-not-allowed text-muted-foreground"
             />
-            <p className="text-xs text-neutral-400">{t.courseIdReadonlyHint}</p>
+            <p className="text-xs text-muted-foreground">{t.courseIdReadonlyHint}</p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="course-title">{t.courseTitle}</Label>
             <Input
               id="course-title"
               value={editCourseForm.title}
-              className="bg-neutral-50 dark:bg-neutral-800 border-border"
+              className="bg-muted  border-border"
               onChange={(e) =>
                 setEditCourseForm({
                   ...editCourseForm,
@@ -121,7 +121,7 @@ export function CourseEditDialog({
               }
             />
             {errors.title && (
-              <p className="text-xs text-red-500">{errors.title}</p>
+              <p className="text-xs text-destructive">{errors.title}</p>
             )}
           </div>
           <div className="space-y-2">
@@ -131,7 +131,7 @@ export function CourseEditDialog({
               type="number"
               min={0}
               value={editCourseForm.credits}
-              className="bg-neutral-50 dark:bg-neutral-800 border-border"
+              className="bg-muted  border-border"
               onChange={(e) =>
                 setEditCourseForm({
                   ...editCourseForm,
@@ -140,7 +140,7 @@ export function CourseEditDialog({
               }
             />
             {errors.credits && (
-              <p className="text-xs text-red-500">{errors.credits}</p>
+              <p className="text-xs text-destructive">{errors.credits}</p>
             )}
           </div>
           <div className="space-y-2">
@@ -153,11 +153,11 @@ export function CourseEditDialog({
             >
               <SelectTrigger
                 id="course-category"
-                className="bg-neutral-50 dark:bg-neutral-800 border-border"
+                className="bg-muted  border-border"
               >
                 <SelectValue placeholder={t.categoryPlaceholder} />
               </SelectTrigger>
-              <SelectContent className="bg-neutral-50 dark:bg-neutral-800 border-border max-h-[300px]">
+              <SelectContent className="bg-muted  border-border max-h-[300px]">
                 {leafFolders.map((folder) => (
                   <SelectItem key={folder.id} value={folder.id}>
                     {folder.title}
@@ -181,11 +181,11 @@ export function CourseEditDialog({
           >
             <SelectTrigger
               id="course-status"
-              className="bg-neutral-50 dark:bg-neutral-800 border-border"
+              className="bg-muted  border-border"
             >
               <SelectValue placeholder={t.statusPlaceholder} />
             </SelectTrigger>
-            <SelectContent className="bg-neutral-50 dark:bg-neutral-800 border-border">
+            <SelectContent className="bg-muted  border-border">
               <SelectItem value="completed">
                 {dict.planner.status.completed}
               </SelectItem>
@@ -212,11 +212,11 @@ export function CourseEditDialog({
           >
             <SelectTrigger
               id="course-semester"
-              className="bg-neutral-50 dark:bg-neutral-800 border-border"
+              className="bg-muted  border-border"
             >
               <SelectValue placeholder={t.semesterPlaceholder} />
             </SelectTrigger>
-            <SelectContent className="bg-neutral-50 dark:bg-neutral-800 border-border">
+            <SelectContent className="bg-muted  border-border">
               {semesterData.map((semester) => (
                 <SelectItem key={semester.id} value={semester.id}>
                   {semester.name}
@@ -231,7 +231,7 @@ export function CourseEditDialog({
           <Input
             id="course-instructor"
             value={editCourseForm.instructor || ""}
-            className="bg-neutral-50 dark:bg-neutral-800 border-border"
+            className="bg-muted  border-border"
             onChange={(e) =>
               setEditCourseForm({
                 ...editCourseForm,
@@ -246,7 +246,7 @@ export function CourseEditDialog({
           <Textarea
             id="course-description"
             value={editCourseForm.description || ""}
-            className="bg-neutral-50 dark:bg-neutral-800 border-border min-h-[100px]"
+            className="bg-muted  border-border min-h-[100px]"
             onChange={(e) =>
               setEditCourseForm({
                 ...editCourseForm,

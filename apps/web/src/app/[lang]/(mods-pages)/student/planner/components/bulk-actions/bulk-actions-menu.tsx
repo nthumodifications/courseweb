@@ -58,7 +58,7 @@ export function BulkActionsMenu({
 
   return (
     <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 max-w-[calc(100vw-2rem)] overflow-x-auto bg-background border border-border rounded-lg shadow-lg p-2 z-50 transition-all duration-200 flex items-center gap-2">
-      <div className="flex items-center bg-neutral-100 dark:bg-neutral-900 px-3 py-1 rounded-md mr-2 shrink-0">
+      <div className="flex items-center bg-muted  px-3 py-1 rounded-md mr-2 shrink-0">
         <SquareCheckBig className="h-4 w-4 text-primary mr-1" />
         <span className="text-sm font-medium w-max">
           {dict.planner.bulkActions.selectedCount.replace(
@@ -77,7 +77,7 @@ export function BulkActionsMenu({
           aria-label={dict.planner.bulkActions.markAsCompleted}
           title={dict.planner.bulkActions.markAsCompleted}
         >
-          <CheckCircle2 className="h-4 w-4 text-green-500" />
+          <CheckCircle2 className="h-4 w-4 text-success" />
         </Button>
         <Button
           variant="ghost"
@@ -87,7 +87,7 @@ export function BulkActionsMenu({
           aria-label={dict.planner.bulkActions.markAsInProgress}
           title={dict.planner.bulkActions.markAsInProgress}
         >
-          <CircleDot className="h-4 w-4 text-yellow-500" />
+          <CircleDot className="h-4 w-4 text-warning" />
         </Button>
         <Button
           variant="ghost"
@@ -97,7 +97,7 @@ export function BulkActionsMenu({
           aria-label={dict.planner.bulkActions.markAsPlanned}
           title={dict.planner.bulkActions.markAsPlanned}
         >
-          <CircleDashed className="h-4 w-4 text-neutral-400" />
+          <CircleDashed className="h-4 w-4 text-muted-foreground" />
         </Button>
       </div>
 
@@ -126,7 +126,7 @@ export function BulkActionsMenu({
         <Button
           variant="ghost"
           size="sm"
-          className="h-11 text-red-500 hover:text-red-400 hover:bg-red-900/20"
+          className="h-11 text-destructive hover:text-destructive hover:bg-destructive/20"
           onClick={handleDelete}
           aria-label={dict.planner.bulkActions.delete}
           title={dict.planner.bulkActions.delete}

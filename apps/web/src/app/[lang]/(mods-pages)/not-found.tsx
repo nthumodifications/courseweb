@@ -21,10 +21,10 @@ const NotFound = () => {
         <link rel="canonical" href={canonical} />
       </Helmet>
 
-      <div className="grid place-items-center dark:bg-background w-screen h-screen">
+      <div className="grid place-items-center bg-background w-screen h-screen">
         <div className="flex flex-col items-center">
-          <h1 className="text-4xl font-bold">404</h1>
-          <p className="text-2xl">{isZh ? "找不到頁面" : "Page not found"}</p>
+          <h1 className="text-xl font-semibold tabular-nums">404</h1>
+          <p className="text-base">{isZh ? "找不到頁面" : "Page not found"}</p>
         </div>
       </div>
     </>

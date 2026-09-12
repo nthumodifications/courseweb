@@ -248,7 +248,7 @@ const TimetableCourseListItem = ({
                 return (
                   <div
                     key={index}
-                    className="px-2 py-0.5 bg-foreground/10 mr-1 rounded-md text-xs whitespace-nowrap"
+                    className="px-2 py-1 bg-foreground/10 mr-1 rounded-md text-xs whitespace-nowrap"
                   >
                     {venue}{" "}
                     {hasTimes(course as MinimalCourse)
@@ -258,12 +258,12 @@ const TimetableCourseListItem = ({
                 );
               })}
             {displaySettings.showCredits && (
-              <div className="px-2 py-0.5 bg-foreground/10 mr-1 rounded-md text-xs whitespace-nowrap">
+              <div className="px-2 py-1 bg-foreground/10 mr-1 rounded-md text-xs whitespace-nowrap tabular-nums">
                 {course.credits} {dict.course.credits}
               </div>
             )}
             {displaySettings.showPriority && priority != 0 && (
-              <span className="px-2 py-0.5 bg-foreground text-muted mr-1 rounded-md text-xs whitespace-nowrap">
+              <span className="px-2 py-1 bg-foreground text-background mr-1 rounded-md text-xs whitespace-nowrap tabular-nums">
                 {priority} {dict.timetable.priority}
               </span>
             )}
@@ -274,7 +274,7 @@ const TimetableCourseListItem = ({
         {hasConflict && (
           <HoverCard>
             <HoverCardTrigger asChild>
-              <AlertTriangle className="w-6 h-6 text-red-500" />
+              <AlertTriangle className="w-6 h-6 text-destructive" />
             </HoverCardTrigger>
             <HoverCardContent>
               <span>{dict.timetable.conflict}</span>
@@ -284,7 +284,7 @@ const TimetableCourseListItem = ({
         {isDuplicate && (
           <HoverCard>
             <HoverCardTrigger asChild>
-              <Copy className="w-6 h-6 text-yellow-500" />
+              <Copy className="w-6 h-6 text-warning" />
             </HoverCardTrigger>
             <HoverCardContent>
               <span>{dict.timetable.duplicate}</span>
@@ -293,7 +293,7 @@ const TimetableCourseListItem = ({
         )}
         <div className="flex flex-row">
           <Button
-            className="rounded-l-none"
+            className="rounded-md"
             variant="outline"
             size="icon"
             onClick={() => deleteCourse(course.raw_id)}

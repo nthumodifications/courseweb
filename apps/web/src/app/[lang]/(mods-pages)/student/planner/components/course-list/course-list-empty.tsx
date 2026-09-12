@@ -50,7 +50,7 @@ export function CourseListEmpty({
         {courseData.length > 0 ? (
           <div className="text-center">
             <h3 className="text-xl font-bold">{t.selectFolderTitle}</h3>
-            <p className="text-neutral-400 mt-2 mb-4">
+            <p className="text-muted-foreground mt-2 mb-4">
               {t.selectFolderDescription}
             </p>
           </div>
@@ -58,13 +58,13 @@ export function CourseListEmpty({
           <div className="max-w-lg text-center">
             <h3 className="text-xl font-bold mb-6">{t.getStartedTitle}</h3>
             <div className="space-y-6 text-left">
-              <div className="bg-neutral-50/50 dark:bg-neutral-800/50 p-4 rounded-lg flex items-start">
+              <div className="bg-muted  p-4 rounded-lg flex items-start">
                 <div className="bg-primary/20 text-primary rounded-full w-8 h-8 flex items-center justify-center mr-4 flex-shrink-0">
                   1
                 </div>
                 <div>
                   <h4 className="font-medium mb-1">{t.step1Title}</h4>
-                  <p className="text-neutral-400 mb-2 text-sm">
+                  <p className="text-muted-foreground mb-2 text-sm">
                     {t.step1Description}
                   </p>
                   <Button
@@ -78,26 +78,26 @@ export function CourseListEmpty({
                 </div>
               </div>
 
-              <div className="bg-neutral-50/50 dark:bg-neutral-800/50 p-4 rounded-lg flex items-start">
+              <div className="bg-muted  p-4 rounded-lg flex items-start">
                 <div className="bg-primary/20 text-primary rounded-full w-8 h-8 flex items-center justify-center mr-4 flex-shrink-0">
                   2
                 </div>
                 <div>
                   <h4 className="font-medium mb-1">{t.step2Title}</h4>
-                  <p className="text-neutral-400 mb-2 text-sm">
+                  <p className="text-muted-foreground mb-2 text-sm">
                     {t.step2Description}
                   </p>
-                  <p className="text-neutral-400 mb-2 text-xs">{t.step2Hint}</p>
+                  <p className="text-muted-foreground mb-2 text-xs">{t.step2Hint}</p>
                   <div className="flex space-x-2 mb-1">
-                    <Badge className="bg-green-500/10 dark:bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/30 flex items-center gap-1">
+                    <Badge className="bg-success/10  text-success  border-success flex items-center gap-1">
                       {getStatusIcon("completed", "h-3 w-3")}
                       {dict.planner.status.completed}
                     </Badge>
-                    <Badge className="bg-blue-500/10 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-500/30 flex items-center gap-1">
+                    <Badge className="bg-info/10  text-info  border-info flex items-center gap-1">
                       {getStatusIcon("in-progress", "h-3 w-3")}
                       {dict.planner.status.inProgress}
                     </Badge>
-                    <Badge className="bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 border-neutral-300 dark:border-neutral-600 flex items-center gap-1">
+                    <Badge className="bg-muted  text-foreground  border-border  flex items-center gap-1">
                       {getStatusIcon("planned", "h-3 w-3")}
                       {dict.planner.status.planned}
                     </Badge>
@@ -105,13 +105,13 @@ export function CourseListEmpty({
                 </div>
               </div>
 
-              <div className="bg-neutral-50/50 dark:bg-neutral-800/50 p-4 rounded-lg flex items-start">
+              <div className="bg-muted  p-4 rounded-lg flex items-start">
                 <div className="bg-primary/20 text-primary rounded-full w-8 h-8 flex items-center justify-center mr-4 flex-shrink-0">
                   3
                 </div>
                 <div>
                   <h4 className="font-medium mb-1">{t.step3Title}</h4>
-                  <p className="text-neutral-400 mb-2 text-sm">
+                  <p className="text-muted-foreground mb-2 text-sm">
                     {t.step3Description}
                   </p>
                   <Button
@@ -136,22 +136,22 @@ export function CourseListEmpty({
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-13rem)] p-8">
         <div className="max-w-md text-center">
-          <FolderTree className="h-12 w-12 mx-auto mb-2 text-neutral-400" />
+          <FolderTree className="h-12 w-12 mx-auto mb-2 text-muted-foreground" />
           <h3 className="text-xl font-bold mb-2">{t.selectSubfolderTitle}</h3>
-          <p className="text-neutral-400 mb-4">
+          <p className="text-muted-foreground mb-4">
             {t.selectSubfolderDescription}
           </p>
-          <div className="bg-neutral-50/50 dark:bg-neutral-800/50 p-3 rounded-lg text-left mb-4">
+          <div className="bg-muted  p-3 rounded-lg text-left mb-4">
             <p className="text-sm">{t.availableSubfolders}</p>
             <div className="mt-2 space-y-1">
               {childFolders.map((folder) => (
                 <div
                   key={folder.id}
-                  className="flex items-center p-2 rounded-md hover:bg-neutral-700 cursor-pointer"
+                  className="flex items-center p-2 rounded-md hover:bg-accent cursor-pointer"
                   onClick={() => onSelectFolder?.(folder.id)}
                 >
                   {childFolders.some((f) => f.parent === folder.id) ? (
-                    <ChevronRight className="h-4 w-4 text-neutral-400 mr-2" />
+                    <ChevronRight className="h-4 w-4 text-muted-foreground mr-2" />
                   ) : (
                     <div className="w-4 h-4 mr-2" />
                   )}
@@ -173,11 +173,11 @@ export function CourseListEmpty({
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-13rem)] p-8">
         <div className="max-w-md text-center">
-          <div className="h-12 w-12 mx-auto mb-2 text-neutral-400 flex items-center justify-center">
+          <div className="h-12 w-12 mx-auto mb-2 text-muted-foreground flex items-center justify-center">
             <ChevronRight className="h-12 w-12" />
           </div>
           <h3 className="text-xl font-bold mb-2">{t.noCoursesTitle}</h3>
-          <p className="text-neutral-400 mb-4">{t.noCoursesDescription}</p>
+          <p className="text-muted-foreground mb-4">{t.noCoursesDescription}</p>
           <div className="flex gap-2 justify-center flex-wrap">
             <Button size="default" onClick={() => setCreateCourseOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />

@@ -590,13 +590,13 @@ export function FolderManagement({
     return (
       <div key={folder.id} className="mb-1">
         <div
-          className={`flex items-center p-2 rounded-md ${selectedFolder?.id === folder.id ? "bg-neutral-50 dark:bg-neutral-800" : "hover:bg-neutral-50/50 dark:hover:bg-neutral-800/50"} cursor-pointer ${isUnsorted ? "opacity-70" : ""}`}
+          className={`flex items-center p-2 rounded-md ${selectedFolder?.id === folder.id ? "bg-muted " : "hover:bg-accent "} cursor-pointer ${isUnsorted ? "opacity-70" : ""}`}
           onClick={() => handleSelectFolder(folder)}
           style={{ paddingLeft: `${level * 16 + 8}px` }}
         >
           <div className="mr-2 flex-shrink-0">
             {hasChildren ? (
-              <ChevronRight className="h-4 w-4 text-gray-400" />
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
             ) : (
               <div className="w-4" />
             )}
@@ -606,7 +606,7 @@ export function FolderManagement({
               {folder.title}
               {isUnsorted && (fm.systemSuffix ?? " (系統)")}
             </div>
-            <div className="text-xs text-gray-400">
+            <div className="text-xs text-muted-foreground">
               {folder.min} - {folder.max === 0 ? "∞" : folder.max}{" "}
               {folder.metric === "credits"
                 ? (fm.creditsUnit ?? "學分")
@@ -634,19 +634,19 @@ export function FolderManagement({
     return (
       <div key={folder.id} className="mb-1">
         <div
-          className={`flex items-center p-2 rounded-md hover:bg-neutral-50/50 dark:hover:bg-neutral-800/50`}
+          className={`flex items-center p-2 rounded-md hover:bg-accent `}
           style={{ paddingLeft: `${level * 16 + 8}px` }}
         >
           <div className="mr-2 flex-shrink-0">
             {hasChildren ? (
-              <ChevronRight className="h-4 w-4 text-gray-400" />
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
             ) : (
               <div className="w-4" />
             )}
           </div>
           <div className="flex-1 min-w-0">
             <div className="font-medium truncate">{folder.title}</div>
-            <div className="text-xs text-gray-400">
+            <div className="text-xs text-muted-foreground">
               {folder.min} - {folder.max === 0 ? "∞" : folder.max}{" "}
               {folder.metric === "credits"
                 ? (fm.creditsUnit ?? "學分")
@@ -680,15 +680,15 @@ export function FolderManagement({
         {/* Root container folder */}
         <div className="mb-2">
           <div
-            className={`flex items-center p-2 rounded-md ${isRootSelected ? "bg-neutral-50 dark:bg-neutral-800" : "hover:bg-neutral-50/50 dark:hover:bg-neutral-800/50"} cursor-pointer`}
+            className={`flex items-center p-2 rounded-md ${isRootSelected ? "bg-muted " : "hover:bg-accent "} cursor-pointer`}
             onClick={handleSelectRoot}
           >
             <div className="mr-2 flex-shrink-0">
-              <ChevronRight className="h-4 w-4 text-gray-400" />
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="font-medium">{fm.rootTitle ?? "根目錄"}</div>
-              <div className="text-xs text-gray-400">
+              <div className="text-xs text-muted-foreground">
                 {fm.rootDescription ?? "所有類別的最上層"}
               </div>
             </div>
@@ -821,7 +821,7 @@ export function FolderManagement({
                         </>
                       )}
                       {selectedFolder.id === "_unsorted" && (
-                        <div className="text-xs text-gray-400 italic">
+                        <div className="text-xs text-muted-foreground italic">
                           {fm.systemCategoryNotice ?? "系統類別，不可編輯"}
                         </div>
                       )}
@@ -831,14 +831,14 @@ export function FolderManagement({
                   <ScrollArea className="flex-1 h-[45vh] md:h-auto">
                     <div className="p-4 space-y-4">
                       <div>
-                        <h4 className="text-sm font-medium text-gray-400">
+                        <h4 className="text-sm font-medium text-muted-foreground">
                           {fm.nameLabel ?? "類別名稱"}
                         </h4>
                         <p className="mt-1">{selectedFolder.title}</p>
                       </div>
 
                       <div>
-                        <h4 className="text-sm font-medium text-gray-400">
+                        <h4 className="text-sm font-medium text-muted-foreground">
                           {fm.requirementLabel ?? "要求"}
                         </h4>
                         <p className="mt-1">
@@ -853,7 +853,7 @@ export function FolderManagement({
                       </div>
 
                       <div>
-                        <h4 className="text-sm font-medium text-gray-400">
+                        <h4 className="text-sm font-medium text-muted-foreground">
                           {fm.parentLabel ?? "父類別"}
                         </h4>
                         <p className="mt-1">
@@ -867,7 +867,7 @@ export function FolderManagement({
                       </div>
 
                       <div>
-                        <h4 className="text-sm font-medium text-gray-400">
+                        <h4 className="text-sm font-medium text-muted-foreground">
                           {fm.orderLabel ?? "排序"}
                         </h4>
                         <div className="mt-1 flex items-center gap-2">
@@ -894,7 +894,7 @@ export function FolderManagement({
                       </div>
 
                       <div>
-                        <h4 className="text-sm font-medium text-gray-400">
+                        <h4 className="text-sm font-medium text-muted-foreground">
                           {fm.requireChildValidationLabel ?? "需要子類別驗證"}
                         </h4>
                         <p className="mt-1">
@@ -948,7 +948,7 @@ export function FolderManagement({
                         <Input
                           id="folder-title"
                           {...register("title", { required: true })}
-                          className="bg-neutral-50 dark:bg-neutral-800 border-border"
+                          className="bg-muted  border-border"
                         />
                       </div>
 
@@ -961,7 +961,7 @@ export function FolderManagement({
                             id="folder-min"
                             type="number"
                             {...register("min", { valueAsNumber: true })}
-                            className="bg-neutral-50 dark:bg-neutral-800 border-border"
+                            className="bg-muted  border-border"
                           />
                         </div>
 
@@ -974,7 +974,7 @@ export function FolderManagement({
                               id="folder-max"
                               type="number"
                               {...register("max", { valueAsNumber: true })}
-                              className="bg-neutral-50 dark:bg-neutral-800 border-border"
+                              className="bg-muted  border-border"
                             />
                             <div className="flex items-center gap-1">
                               <Controller
@@ -1015,7 +1015,7 @@ export function FolderManagement({
                             >
                               <SelectTrigger
                                 id="folder-metric"
-                                className="bg-neutral-50 dark:bg-neutral-800 border-border"
+                                className="bg-muted  border-border"
                               >
                                 <SelectValue
                                   placeholder={
@@ -1023,7 +1023,7 @@ export function FolderManagement({
                                   }
                                 />
                               </SelectTrigger>
-                              <SelectContent className="bg-neutral-50 dark:bg-neutral-800 border-border">
+                              <SelectContent className="bg-muted  border-border">
                                 <SelectItem value="credits">
                                   {fm.creditsUnit ?? "學分"}
                                 </SelectItem>
@@ -1050,7 +1050,7 @@ export function FolderManagement({
                             >
                               <SelectTrigger
                                 id="folder-parent"
-                                className="bg-neutral-50 dark:bg-neutral-800 border-border"
+                                className="bg-muted  border-border"
                               >
                                 <SelectValue
                                   placeholder={
@@ -1058,7 +1058,7 @@ export function FolderManagement({
                                   }
                                 />
                               </SelectTrigger>
-                              <SelectContent className="bg-neutral-50 dark:bg-neutral-800 border-border">
+                              <SelectContent className="bg-muted  border-border">
                                 <SelectItem value="planner-1">
                                   {fm.noneRoot ?? "無 (根類別)"}
                                 </SelectItem>
@@ -1117,7 +1117,7 @@ export function FolderManagement({
                     <h4 className="mb-2 font-medium">
                       {fm.rootTitle ?? "根類別"}
                     </h4>
-                    <p className="text-gray-400 mb-4">
+                    <p className="text-muted-foreground mb-4">
                       {fm.rootInfoDescription ??
                         "這是最頂層類別。您可以在此添加新的根類別，根類別將直接顯示在主畫面上。"}
                     </p>
@@ -1128,7 +1128,7 @@ export function FolderManagement({
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center justify-center h-full text-gray-400">
+                <div className="flex items-center justify-center h-full text-muted-foreground">
                   <p>{fm.selectPrompt ?? "選擇一個類別以查看詳情"}</p>
                 </div>
               )}
@@ -1158,7 +1158,7 @@ export function FolderManagement({
               </div>
 
               <div className="p-4">
-                <Alert className="mb-4 dark:bg-amber-900/20 dark:border-amber-700 bg-amber-100/20 border-amber-300">
+                <Alert className="mb-4   bg-warning/20 border-warning">
                   <AlertDescription>
                     {fm.importWarning ??
                       "確認匯入將會覆蓋所有現有類別。請仔細檢查下方預覽的資料夾結構。"}
@@ -1178,7 +1178,7 @@ export function FolderManagement({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 text-sm text-gray-400">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <p>
                     {(
                       fm.totalFoldersToImport ?? "總共 {count} 個資料夾將被匯入"
@@ -1205,7 +1205,7 @@ export function FolderManagement({
           <AlertDialogFooter>
             <AlertDialogCancel>{common.cancel}</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-red-200 hover:bg-red-400 dark:bg-red-900 dark:hover:bg-red-800"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={handleImportConfirm}
             >
               {fm.confirmImport ?? "確認匯入"}

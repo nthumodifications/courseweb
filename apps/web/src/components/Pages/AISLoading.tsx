@@ -6,9 +6,9 @@ export const AISLoading = () => {
   return (
     <div className="w-full grid place-items-center h-[--content-height]">
       <div className="flex flex-col space-y-4 items-center">
-        {/* <div className='animate-spin rounded-full h-16 w-16 border-2 border-gray-900'></div> */}
+        {/* <div className='animate-spin rounded-full h-16 w-16 border-2 border-border'></div> */}
         <svg
-          className="animate-spin h-14 w-14 text-gray-900 dark:text-gray-100"
+          className="animate-spin h-14 w-14 text-foreground "
           viewBox="0 0 24 24"
         >
           <circle
@@ -25,7 +25,7 @@ export const AISLoading = () => {
             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
           ></path>
         </svg>
-        <p className="text-gray-700 dark:text-gray-500">
+        <p className="text-foreground ">
           {dict.pages.ais_loading}
         </p>
       </div>

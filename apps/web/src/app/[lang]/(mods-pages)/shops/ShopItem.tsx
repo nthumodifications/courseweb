@@ -307,7 +307,7 @@ const ShopItem: React.FC<ShopItemProps> = ({ shop, filter }) => {
         <img
           src={shop.image}
           alt={shop.name}
-          className="w-24 h-24 sm:w-32 sm:h-32 rounded-3xl object-cover"
+          className="w-24 h-24 sm:w-32 sm:h-32 rounded-lg object-cover"
         />
       </div>
       <div className="flex-1">

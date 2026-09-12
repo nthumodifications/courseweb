@@ -139,7 +139,7 @@ const BusDetailsContainer = ({
                         </div>
                       </div>
                     )}
-                    <div className="text-foreground">{bus.up.time}</div>
+                    <div className="text-foreground tabular-nums">{bus.up.time}</div>
                   </div>
                 </TableCell>
               ) : (
@@ -194,7 +194,7 @@ const BusDetailsContainer = ({
                         </div>
                       </div>
                     )}
-                    <div className="text-foreground">{bus.down.time}</div>
+                    <div className="text-foreground tabular-nums">{bus.down.time}</div>
                   </div>
                 </TableCell>
               ) : (

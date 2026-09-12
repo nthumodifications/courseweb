@@ -211,7 +211,7 @@ const ShareViewPage = () => {
       <div className="grid grid-cols-1 md:grid-cols-[3fr_2fr] px-2 py-4 md:p-4 gap-4">
         <div className="w-full">
           {coursesLoading ? (
-            <div className="flex justify-center py-16">
+            <div className="flex justify-center py-12">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           ) : (
@@ -238,7 +238,7 @@ const ShareViewPage = () => {
               </CardHeader>
               <CardFooter className="flex flex-col gap-2">
                 {saved ? (
-                  <div className="flex items-center gap-2 text-green-600 text-sm">
+                  <div className="flex items-center gap-2 text-success text-sm">
                     <CheckCircle className="h-4 w-4" /> Saved to your Others tab
                   </div>
                 ) : (
@@ -296,8 +296,8 @@ const ShareViewPage = () => {
           {/* Course list with notes */}
           <div className="flex flex-col gap-2">
             <div className="flex justify-between text-sm text-muted-foreground">
-              <span>{(courses as MinimalCourse[]).length} courses</span>
-              <span>{totalCredits} credits</span>
+              <span className="tabular-nums">{(courses as MinimalCourse[]).length} courses</span>
+              <span className="tabular-nums">{totalCredits} credits</span>
             </div>
             <Separator />
             {(courses as MinimalCourse[]).map((course) => {
@@ -312,7 +312,7 @@ const ShareViewPage = () => {
                     <span className="text-sm font-medium">
                       {course.name_zh}
                     </span>
-                    <span className="text-xs text-muted-foreground shrink-0">
+                    <span className="text-xs tabular-nums text-muted-foreground shrink-0">
                       {course.credits}cr
                     </span>
                   </div>
@@ -320,12 +320,12 @@ const ShareViewPage = () => {
                     {course.name_en}
                   </span>
                   {note && (
-                    <Badge variant="secondary" className="text-xs w-fit mt-0.5">
+                    <Badge variant="secondary" className="text-xs w-fit mt-1">
                       {note}
                     </Badge>
                   )}
                   {grade && (
-                    <div className="flex gap-2 mt-0.5">
+                    <div className="flex gap-2 mt-1">
                       {grade.grade && (
                         <Badge variant="outline" className="text-xs">
                           Grade: {grade.grade}

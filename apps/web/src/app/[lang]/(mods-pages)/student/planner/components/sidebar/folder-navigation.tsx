@@ -138,15 +138,15 @@ export function FolderNavigation({
             <Cog className="h-4 w-4" />
           </Button>
         </div>
-        <p className="text-sm text-neutral-400">
+        <p className="text-sm text-muted-foreground">
           {plannerInfo?.department || ""} {plannerInfo?.enrollmentYear || ""}{" "}
           {dict.planner.sidebar.enrollmentSuffix}
         </p>
-        <div className="flex items-center mt-2">
-          <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
-          <span className="font-medium text-green-500">{completedCredits}</span>
-          <span className="text-yellow-500">+{inProgressCredits}</span>
-          <span className="text-neutral-400">+{plannedCredits}</span>
+        <div className="flex items-center mt-2 tabular-nums">
+          <div className="w-3 h-3 rounded-full bg-success mr-2"></div>
+          <span className="font-medium text-success">{completedCredits}</span>
+          <span className="text-warning">+{inProgressCredits}</span>
+          <span className="text-muted-foreground">+{plannedCredits}</span>
           <span className="mx-1">/</span>
           <span>{totalRequiredCredits}</span>
         </div>
@@ -154,31 +154,31 @@ export function FolderNavigation({
           <Progress
             value={completedPercentage}
             className="h-2 absolute bottom-0 w-full z-30 bg-transparent"
-            indicatorColor="bg-neutral-700 dark:bg-white"
+            indicatorColor="bg-foreground"
           />
           <Progress
             value={inProgressPercentage}
             className="h-2 absolute bottom-0 w-full z-20 bg-transparent"
-            indicatorColor="bg-yellow-500"
+            indicatorColor="bg-warning"
           />
           <Progress
             value={plannedPercentage}
             className="h-2 absolute bottom-0 w-full z-10"
-            indicatorColor="bg-neutral-500"
+            indicatorColor="bg-muted"
           />
         </div>
         {/* Text legend so the credit summary isn't color-only */}
-        <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-2 text-xs text-neutral-400">
+        <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-2 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-green-500" />
+            <span className="w-2 h-2 rounded-full bg-success" />
             {getStatusLabel("completed", dict.planner.status)}
           </span>
           <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-yellow-500" />
+            <span className="w-2 h-2 rounded-full bg-warning" />
             {getStatusLabel("in-progress", dict.planner.status)}
           </span>
           <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-neutral-500" />
+            <span className="w-2 h-2 rounded-full bg-muted" />
             {getStatusLabel("planned", dict.planner.status)}
           </span>
         </div>
@@ -187,10 +187,10 @@ export function FolderNavigation({
       {/* Search */}
       <div className="p-2 border-b border-border">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-neutral-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder={dict.planner.sidebar.searchPlaceholder}
-            className="pl-10 border-border text-white"
+            className="pl-8 border-border text-foreground"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -218,7 +218,7 @@ export function FolderNavigation({
       <ScrollArea className="flex-1">
         <div className="p-2 space-y-1">
           {rootFolders.length === 0 && normalizedQuery ? (
-            <p className="text-sm text-neutral-400 text-center py-6">
+            <p className="text-sm text-muted-foreground text-center py-6">
               {dict.planner.sidebar.noSearchResults}
             </p>
           ) : (

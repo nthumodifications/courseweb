@@ -119,19 +119,19 @@ const PWAInstallPrompt = () => {
       {isIOS ? (
         <div className="space-y-3">
           <div className="flex items-center gap-2 text-sm">
-            <span className="bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded text-blue-800 dark:text-blue-200">
+            <span className="bg-info/10 px-2 py-1 rounded-sm text-info">
               1
             </span>
             <span>Tap the Share button at the bottom of Safari</span>
           </div>
           <div className="flex items-center gap-2 text-sm">
-            <span className="bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded text-blue-800 dark:text-blue-200">
+            <span className="bg-info/10 px-2 py-1 rounded-sm text-info">
               2
             </span>
             <span>Scroll down and tap &quot;Add to Home Screen&quot;</span>
           </div>
           <div className="flex items-center gap-2 text-sm">
-            <span className="bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded text-blue-800 dark:text-blue-200">
+            <span className="bg-info/10 px-2 py-1 rounded-sm text-info">
               3
             </span>
             <span>Tap &quot;Add&quot; to confirm</span>
@@ -143,7 +143,7 @@ const PWAInstallPrompt = () => {
             To install this app on your device:
           </p>
           <div className="flex items-center gap-2 text-sm">
-            <span className="bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded text-blue-800 dark:text-blue-200">
+            <span className="bg-info/10 px-2 py-1 rounded-sm text-info">
               1
             </span>
             <span>
@@ -151,7 +151,7 @@ const PWAInstallPrompt = () => {
             </span>
           </div>
           <div className="flex items-center gap-2 text-sm">
-            <span className="bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded text-blue-800 dark:text-blue-200">
+            <span className="bg-info/10 px-2 py-1 rounded-sm text-info">
               2
             </span>
             <span>

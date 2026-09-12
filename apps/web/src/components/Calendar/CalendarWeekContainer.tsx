@@ -261,7 +261,7 @@ export const CalendarWeekContainer = ({
           >
             <button
               type="button"
-              className="absolute border-0 bg-transparent p-0 pr-0.5 text-left event-item focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="absolute border-0 bg-transparent p-0 pr-1 text-left event-item focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               style={{
                 top:
                   displayStart.getHours() * HOUR_HEIGHT +
@@ -272,11 +272,11 @@ export const CalendarWeekContainer = ({
               }}
             >
               <div
-                className="relative overflow-hidden rounded-md h-full p-1 flex flex-col gap-1 hover:shadow-md cursor-pointer transition-shadow select-none"
+                className="relative overflow-hidden rounded-md h-full p-1 flex flex-col gap-1 cursor-pointer select-none"
                 style={{ background: eventBackground, color: eventTextColor }}
               >
                 <div className="text-xs leading-none">{event.title}</div>
-                <div className="text-xs font-normal leading-none">
+                <div className="text-xs font-normal leading-none tabular-nums">
                   {formatTaipei(event.displayStart, "HH:mm")} -{" "}
                   {formatTaipei(cappedEnd, "HH:mm")}
                 </div>
@@ -284,7 +284,7 @@ export const CalendarWeekContainer = ({
                   <div className="text-xs leading-none">{event.location}</div>
                 )}
                 {isSpecialDate && (
-                  <div className="text-[9px] leading-none font-semibold uppercase opacity-90 bg-black/20 rounded px-1 py-0.5 self-start">
+                  <div className="text-[9px] leading-none font-semibold uppercase opacity-90 bg-black/20 rounded-sm px-1 py-1 self-start">
                     {courseDate.type}
                   </div>
                 )}
@@ -322,7 +322,7 @@ export const CalendarWeekContainer = ({
         return (
           <div
             key={`overlay-${event.id}-${event.displayStart.getTime()}`}
-            className="absolute pr-0.5 pointer-events-none"
+            className="absolute pr-1 pointer-events-none"
             style={{
               top:
                 displayStart.getHours() * HOUR_HEIGHT +
@@ -466,7 +466,7 @@ export const CalendarWeekContainer = ({
           }}
         >
           <div
-            className="overflow-hidden bg-nthu-500 rounded-md h-full p-1 sm:p-2 flex flex-col gap-1"
+            className="overflow-hidden bg-primary rounded-md h-full p-1 sm:p-2 flex flex-col gap-1"
             style={{ background: event.color, color: event.textColor }}
           >
             <div className="text-sm leading-none line-clamp-1">
@@ -481,7 +481,7 @@ export const CalendarWeekContainer = ({
   return (
     <div className="flex flex-row w-full overflow-x-scroll h-full pl-2 md:pl-0">
       <div
-        className="flex flex-col min-w-9 sticky left-0 shadow-md z-20 h-full overflow-y-hidden"
+        className="flex flex-col min-w-9 sticky left-0 z-20 h-full overflow-y-hidden"
         ref={timeLabelContainer}
         style={{
           paddingTop: headerHeight + 10,
@@ -489,7 +489,7 @@ export const CalendarWeekContainer = ({
       >
         {[...hours].splice(1).map((hour, index) => (
           <div key={hour.getTime()} style={{ paddingTop: HOUR_HEIGHT - 16 }}>
-            <div className="text-slate-500 text-xs select-none">
+            <div className="text-muted-foreground text-xs select-none tabular-nums">
               {format(hour, "HH:mm")}
             </div>
           </div>
@@ -513,9 +513,9 @@ export const CalendarWeekContainer = ({
                 </div>
                 <div
                   className={cn(
-                    "text-slate-500 text-xs text-center align-baseline",
+                    "text-muted-foreground text-xs text-center align-baseline",
                     isTaipeiToday(day)
-                      ? "rounded-full bg-nthu-500 text-white aspect-square"
+                      ? "rounded-full bg-primary text-primary-foreground aspect-square"
                       : "",
                   )}
                 >

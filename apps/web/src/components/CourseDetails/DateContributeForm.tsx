@@ -258,7 +258,7 @@ const DateContributeForm = ({
                                   <Button
                                     variant={"outline"}
                                     className={cn(
-                                      "w-[180px] justify-start text-left font-normal",
+                                      "w-[180px] justify-start text-left font-normal tabular-nums",
                                       !field.value && "text-muted-foreground",
                                     )}
                                   >

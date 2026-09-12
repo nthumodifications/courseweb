@@ -476,7 +476,7 @@ export function PlannerSettings({
                 ? (ps.createTitle ?? "建立新規劃")
                 : (ps.settingsTitle ?? "規劃設定")}
             </DialogTitle>
-            <DialogDescription className="text-gray-400 text-sm">
+            <DialogDescription className="text-muted-foreground text-sm">
               {isNewPlanner
                 ? (ps.createDescription ?? "建立新的畢業規劃")
                 : (ps.settingsDescription ?? "設定畢業規劃的基本資訊")}
@@ -488,7 +488,7 @@ export function PlannerSettings({
             onValueChange={setActiveTab}
             className="flex-1 flex flex-col overflow-hidden"
           >
-            <TabsList className="bg-neutral-50 dark:bg-neutral-800 mb-2">
+            <TabsList className="bg-muted  mb-2">
               <TabsTrigger value="basic">
                 {ps.basicTab ?? "基本設定"}
               </TabsTrigger>
@@ -525,14 +525,14 @@ export function PlannerSettings({
                       </Label>
                       <Input
                         id="planner-title"
-                        className="bg-neutral-50 border-border dark:bg-neutral-800 h-8 mt-1"
+                        className="bg-muted border-border  h-8 mt-1"
                         placeholder={
                           ps.titlePlaceholder ?? "例如：我的畢業規劃"
                         }
                         {...register("title")}
                       />
                       {errors.title && (
-                        <p className="text-red-500 text-xs">
+                        <p className="text-destructive text-xs">
                           {errors.title.message}
                         </p>
                       )}
@@ -544,14 +544,14 @@ export function PlannerSettings({
                       </Label>
                       <Input
                         id="planner-department"
-                        className="bg-neutral-50 border-border dark:bg-neutral-800 h-8 mt-1"
+                        className="bg-muted border-border  h-8 mt-1"
                         placeholder={
                           ps.departmentPlaceholder ?? "例如：資訊工程學系"
                         }
                         {...register("department")}
                       />
                       {errors.department && (
-                        <p className="text-red-500 text-xs">
+                        <p className="text-destructive text-xs">
                           {errors.department.message}
                         </p>
                       )}
@@ -567,12 +567,12 @@ export function PlannerSettings({
                         </Label>
                         <Input
                           id="planner-enrollment-year"
-                          className="bg-neutral-50 border-border dark:bg-neutral-800 h-8 mt-1"
+                          className="bg-muted border-border  h-8 mt-1"
                           placeholder="113"
                           {...register("enrollmentYear")}
                         />
                         {errors.enrollmentYear && (
-                          <p className="text-red-500 text-xs">
+                          <p className="text-destructive text-xs">
                             {errors.enrollmentYear.message}
                           </p>
                         )}
@@ -587,12 +587,12 @@ export function PlannerSettings({
                         </Label>
                         <Input
                           id="planner-graduation-year"
-                          className="bg-neutral-50 border-border dark:bg-neutral-800 h-8 mt-1"
+                          className="bg-muted border-border  h-8 mt-1"
                           placeholder="123"
                           {...register("graduationYear")}
                         />
                         {errors.graduationYear && (
-                          <p className="text-red-500 text-xs">
+                          <p className="text-destructive text-xs">
                             {errors.graduationYear.message}
                           </p>
                         )}
@@ -609,13 +609,13 @@ export function PlannerSettings({
                       <Input
                         id="planner-required-credits"
                         type="number"
-                        className="bg-neutral-50 border-border dark:bg-neutral-800 h-8 mt-1"
+                        className="bg-muted border-border  h-8 mt-1"
                         {...register("requiredCredits", {
                           valueAsNumber: true,
                         })}
                       />
                       {errors.requiredCredits && (
-                        <p className="text-red-500 text-xs">
+                        <p className="text-destructive text-xs">
                           {errors.requiredCredits.message}
                         </p>
                       )}
@@ -627,12 +627,12 @@ export function PlannerSettings({
                       </Label>
                       <Textarea
                         id="planner-description"
-                        className="bg-neutral-50 border-border dark:bg-neutral-800 min-h-[80px] mt-1"
+                        className="bg-muted border-border  min-h-[80px] mt-1"
                         placeholder={ps.descriptionPlaceholder ?? "不必填"}
                         {...register("description")}
                       />
                       {errors.description && (
-                        <p className="text-red-500 text-xs">
+                        <p className="text-destructive text-xs">
                           {errors.description.message}
                         </p>
                       )}
@@ -665,7 +665,7 @@ export function PlannerSettings({
                               <Trash2 className="h-4 w-4 mr-2" />
                               {ps.removeCoursesAction ?? "移除所有課程"}
                             </Button>
-                            <p className="text-gray-400 text-xs mt-1">
+                            <p className="text-muted-foreground text-xs mt-1">
                               {ps.removeCoursesDescription ??
                                 "從所有學期移除課程，但保留學期和規劃設定"}
                             </p>
@@ -681,7 +681,7 @@ export function PlannerSettings({
                               <RefreshCw className="h-4 w-4 mr-2" />
                               {ps.resetPlannerAction ?? "完全重設規劃"}
                             </Button>
-                            <p className="text-gray-400 text-xs mt-1">
+                            <p className="text-muted-foreground text-xs mt-1">
                               {ps.resetPlannerDescription ??
                                 "刪除所有規劃資料，包含學期和課程"}
                             </p>
@@ -709,7 +709,7 @@ export function PlannerSettings({
                               <Download className="h-4 w-4 mr-2" />
                               {ps.exportAction ?? "匯出規劃資料 (JSON)"}
                             </Button>
-                            <p className="text-gray-400 text-xs mt-1">
+                            <p className="text-muted-foreground text-xs mt-1">
                               {ps.exportDescription ??
                                 "匯出所有規劃資料，包含學期和課程"}
                             </p>
@@ -725,7 +725,7 @@ export function PlannerSettings({
                               <Upload className="h-4 w-4 mr-2" />
                               {ps.importAction ?? "匯入規劃資料 (JSON)"}
                             </Button>
-                            <p className="text-gray-400 text-xs mt-1">
+                            <p className="text-muted-foreground text-xs mt-1">
                               {ps.importDescription ??
                                 "從匯出的 JSON 檔案匯入完整規劃資料"}
                             </p>
@@ -776,7 +776,7 @@ export function PlannerSettings({
           <AlertDialogFooter>
             <AlertDialogCancel>{common.cancel}</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-red-200 hover:bg-red-400 dark:bg-red-900 dark:hover:bg-red-800"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={handleImportConfirm}
             >
               {ps.confirmImport ?? "確認匯入"}

@@ -60,7 +60,7 @@ const TimetableDayCards: FC<TimetableDayCardsProps> = ({
           return (
             <div
               key={day}
-              className="flex flex-col gap-2 rounded-xl border border-border p-3 min-h-[120px] bg-card"
+              className="flex flex-col gap-2 rounded-lg border border-border p-3 min-h-[120px] bg-card"
             >
               <div className="text-xs font-bold text-muted-foreground uppercase tracking-wide pb-1 border-b border-border">
                 {dayLabel}
@@ -71,7 +71,7 @@ const TimetableDayCards: FC<TimetableDayCardsProps> = ({
                   <span className="text-xs text-muted-foreground/50">—</span>
                 </div>
               ) : (
-                <div className="flex flex-col gap-1.5">
+                <div className="flex flex-col gap-1">
                   {slots.map((slot, i) => {
                     const startTime =
                       slot.customSlot?.start ??
@@ -90,7 +90,7 @@ const TimetableDayCards: FC<TimetableDayCardsProps> = ({
                       <div
                         key={i}
                         className={cn(
-                          "flex items-start gap-1.5 rounded px-1",
+                          "flex items-start gap-1 rounded-sm px-1",
                           slot.customItem && "border border-dashed",
                         )}
                         style={{
@@ -102,7 +102,7 @@ const TimetableDayCards: FC<TimetableDayCardsProps> = ({
                         }}
                       >
                         <div
-                          className="mt-0.5 w-1 h-full rounded-full shrink-0 self-stretch"
+                          className="mt-1 w-1 h-full rounded-full shrink-0 self-stretch"
                           style={{ backgroundColor: slot.color, minHeight: 14 }}
                         />
                         <div className="flex flex-col min-w-0">
@@ -113,7 +113,7 @@ const TimetableDayCards: FC<TimetableDayCardsProps> = ({
                             )}
                           >
                             {slot.customItem && (
-                              <CalendarClock className="inline-block h-3 w-3 mr-0.5" />
+                              <CalendarClock className="inline-block h-3 w-3 mr-1" />
                             )}
                             {name}
                           </span>

@@ -64,7 +64,7 @@ export default function MapSearch({
           id="campus-map-search"
           type="search"
           autoComplete="off"
-          className="pl-9"
+          className="pl-8"
           value={query}
           placeholder={labels.searchPlaceholder}
           onChange={(event) => {
@@ -101,7 +101,7 @@ export default function MapSearch({
                         </span>
                       )}
                     </span>
-                    <span className="shrink-0 rounded bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+                    <span className="shrink-0 rounded-full bg-primary/10 px-2 py-1 text-xs font-semibold text-primary">
                       {identity.venue.code}
                     </span>
                   </button>

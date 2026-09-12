@@ -423,13 +423,13 @@ const TimeSelectionFilter = ({
                         <div
                           key={`${day}${period}`}
                           className={cn(
-                            "flex items-center justify-center border p-0 transition-colors text-neutral-500",
+                            "flex items-center justify-center border p-0 transition-colors text-muted-foreground",
                             selected
                               ? "bg-primary/20"
                               : inDragSelection
                                 ? "bg-primary/10"
                                 : isOccupied
-                                  ? "bg-gray-200 dark:bg-neutral-800"
+                                  ? "bg-muted "
                                   : "hover:bg-muted",
                             isDragging ? "cursor-crosshair" : "cursor-pointer",
                           )}

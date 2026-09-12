@@ -27,13 +27,13 @@ import { NandaLineIcon } from "../BusIcons/NandaLineIcon";
 type ProgressDisplayProps = { max: number; current: number };
 const ProgressDisplay = ({ current, max }: ProgressDisplayProps) => {
   return (
-    <div className="w-44 h-1.5 justify-center items-center gap-1.5 inline-flex">
+    <div className="w-44 h-1.5 justify-center items-center gap-1 inline-flex">
       {Array.from({ length: max }, (_, i) => i).map((i) => (
         <div
           key={i}
           className={cn(
             "flex-1 h-1.5 relative rounded-md",
-            current >= i + 1 ? "bg-nthu-600" : "bg-zinc-100",
+            current >= i + 1 ? "bg-primary" : "bg-muted",
           )}
         />
       ))}
@@ -50,7 +50,7 @@ const IntroAnimation = () => (
     transition={{ duration: 0.5 }}
   >
     <motion.div
-      className="absolute w-48 h-48 rounded-full bg-nthu-100"
+      className="absolute w-48 h-48 rounded-full bg-primary/10"
       initial={{ scale: 0 }}
       animate={{ scale: 1 }}
       transition={{ duration: 0.7, delay: 0.2 }}
@@ -59,12 +59,12 @@ const IntroAnimation = () => (
       {[0, 1, 2].map((i) => (
         <motion.div
           key={i}
-          className="w-16 h-16 rounded-full bg-nthu-500 flex items-center justify-center shadow-md"
+          className="w-16 h-16 rounded-full bg-primary flex items-center justify-center"
           initial={{ y: 50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.5 + i * 0.2 }}
         >
-          <Users size={24} className="text-white" />
+          <Users size={24} className="text-primary-foreground" />
         </motion.div>
       ))}
     </motion.div>
@@ -120,7 +120,7 @@ const CoursesAnimation = () => (
       {
         title: "程式設計",
         code: "CS1011",
-        color: "bg-nthu-500",
+        color: "bg-primary",
         textColor: "text-white",
         top: "15%",
         left: "11%",
@@ -160,7 +160,7 @@ const CoursesAnimation = () => (
     ].map((course, i) => (
       <motion.div
         key={i}
-        className={`absolute rounded-md ${course.color} ${course.textColor} shadow-sm`}
+        className={`absolute rounded-md ${course.color} ${course.textColor}`}
         style={{
           top: course.top,
           left: course.left,
@@ -171,7 +171,7 @@ const CoursesAnimation = () => (
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.4, delay: 0.2 * i }}
       >
-        <div className="flex flex-col h-full p-1.5 select-none items-start justify-between">
+        <div className="flex flex-col h-full p-2 select-none items-start justify-between">
           <div className="flex-1 flex flex-col overflow-hidden">
             <span className="text-xs font-medium">{course.code}</span>
             <span className="text-xs md:text-sm font-medium">
@@ -282,12 +282,12 @@ const BusAnimation = ({ title }: { title: string }) => (
     animate={{ opacity: 1 }}
   >
     <motion.div
-      className="w-full h-8 bg-nthu-100 rounded-t-md flex items-center justify-center"
+      className="w-full h-8 bg-primary/10 rounded-md flex items-center justify-center"
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5 }}
     >
-      <Bus size={16} className="mr-2 text-nthu-600" />
+      <Bus size={16} className="mr-2 text-primary" />
       <span className="text-sm font-medium">{title}</span>
     </motion.div>
 
@@ -309,7 +309,7 @@ const BusAnimation = ({ title }: { title: string }) => (
       ].map((stop, i) => (
         <motion.div
           key={i}
-          className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-nthu-500 flex items-center justify-center"
+          className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-primary flex items-center justify-center"
           style={{ left: stop.position }}
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
@@ -321,12 +321,12 @@ const BusAnimation = ({ title }: { title: string }) => (
 
       {/* Moving bus */}
       <motion.div
-        className="absolute top-1/2 -translate-y-1/2 left-0 w-8 h-8 rounded-full bg-nthu-600 flex items-center justify-center"
+        className="absolute top-1/2 -translate-y-1/2 left-0 w-8 h-8 rounded-full bg-primary flex items-center justify-center"
         initial={{ left: "0%" }}
         animate={{ left: "80%" }}
         transition={{ duration: 2, repeat: 1, repeatType: "reverse" }}
       >
-        <Bus size={16} className="text-white" />
+        <Bus size={16} className="text-primary-foreground" />
       </motion.div>
     </motion.div>
   </motion.div>
@@ -346,16 +346,16 @@ const ToolsAnimation = ({ labels }: { labels: string[] }) => (
     ].map((tool, i) => (
       <motion.div
         key={i}
-        className="flex flex-col items-center justify-center bg-card p-4 rounded-md shadow-sm border"
+        className="flex flex-col items-center justify-center bg-card p-4 rounded-md border"
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.4, delay: i * 0.1 }}
       >
         <motion.div
-          className="w-12 h-12 rounded-full bg-nthu-100 flex items-center justify-center mb-2"
+          className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-2"
           whileHover={{ scale: 1.1 }}
         >
-          <motion.div className="text-nthu-600">{tool.icon}</motion.div>
+          <motion.div className="text-primary">{tool.icon}</motion.div>
         </motion.div>
         <span className="text-sm font-medium">{tool.label}</span>
       </motion.div>
@@ -453,7 +453,7 @@ const Help = ({ children }: { children?: ReactNode }) => {
       <DialogContent className="h-[calc(100dvh-env(safe-area-inset-bottom))] p-0 w-full lg:h-[calc(100vh-48px)] pb-[env(safe-area-inset-bottom)]">
         <div className="flex flex-col items-center gap-8 px-4 py-8 max-h-[calc(100dvh-env(safe-area-inset-bottom))] overflow-y-auto">
           <div className="flex-1 grid place-items-center">
-            <div className="w-[254px] h-[254px] max-h-full border rounded-lg shadow-sm overflow-hidden">
+            <div className="w-[254px] h-[254px] max-h-full border rounded-lg overflow-hidden">
               {content[page].component}
             </div>
           </div>
@@ -461,7 +461,7 @@ const Help = ({ children }: { children?: ReactNode }) => {
             <ProgressDisplay current={page + 1} max={content.length} />
           </div>
           <div className="flex flex-col gap-2 h-max">
-            <h1 className="font-bold text-3xl">{content[page].title}</h1>
+            <h1 className="font-bold text-xl">{content[page].title}</h1>
             <p>{content[page].description}</p>
           </div>
           {page < content.length - 1 ? (

@@ -84,7 +84,7 @@ const TimetableAgenda: FC<TimetableAgendaProps> = ({
             </div>
 
             {/* Courses for this day */}
-            <div className="flex flex-col gap-1.5 pl-2">
+            <div className="flex flex-col gap-1 pl-2">
               {daySlots.map((slot, idx) => {
                 const courseStart =
                   slot.customSlot?.start ??
@@ -166,7 +166,7 @@ const TimetableAgenda: FC<TimetableAgendaProps> = ({
                         )}
                         {name}
                       </span>
-                      <div className="flex gap-2 mt-0.5 flex-wrap">
+                      <div className="flex gap-2 mt-1 flex-wrap">
                         {teacher && (
                           <span
                             className={cn(
@@ -206,7 +206,7 @@ const TimetableAgenda: FC<TimetableAgendaProps> = ({
                         <span
                           className={cn(
                             fontSizeClass,
-                            "font-semibold px-1.5 py-0.5 rounded",
+                            "font-semibold px-2 py-1 rounded-sm tabular-nums",
                           )}
                           style={{
                             backgroundColor: slot.color + "30",

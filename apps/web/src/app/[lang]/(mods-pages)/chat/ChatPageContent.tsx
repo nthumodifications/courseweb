@@ -21,7 +21,7 @@ function LoginPrompt() {
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-4">
       <Sparkles className="w-16 h-16 text-muted-foreground mb-6" />
-      <h2 className="text-2xl font-semibold mb-2">{dict.chat.title}</h2>
+      <h2 className="text-xl font-semibold mb-2">{dict.chat.title}</h2>
       <p className="text-muted-foreground text-center mb-8 max-w-md">
         {dict.chat.login_required}
       </p>
@@ -92,7 +92,7 @@ export function ChatPageContent() {
             {messages.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center p-4">
                 <Sparkles className="w-16 h-16 text-muted-foreground mb-6" />
-                <h2 className="text-2xl font-semibold mb-2">
+                <h2 className="text-xl font-semibold mb-2">
                   {dict.chat.welcome}
                 </h2>
                 <p className="text-muted-foreground text-center mb-8 max-w-md">
