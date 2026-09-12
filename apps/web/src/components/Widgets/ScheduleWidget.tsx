@@ -4,7 +4,7 @@ import useTime from "@/hooks/useTime";
 import { Calendar } from "lucide-react";
 import { formatInTimeZone } from "date-fns-tz";
 import useDictionary from "@/dictionaries/useDictionary";
-import UpcomingEventList from "@/components/Calendar/UpcomingEventList";
+import { EmptyState } from "@courseweb/ui";
 import useUpcomingEvents, {
   getTaipeiDateKey,
   UPCOMING_TIME_ZONE,
@@ -34,11 +34,6 @@ const ScheduleWidget: FC<ScheduleWidgetProps> = ({
       ),
     [date, events],
   );
-  const upcomingEvents = useMemo(
-    () => events.filter((event) => event.state !== "past"),
-    [events],
-  );
-
   const title = dict.today.schedule_title;
 
   return (
@@ -48,28 +43,31 @@ const ScheduleWidget: FC<ScheduleWidgetProps> = ({
       dragHandleProps={dragHandleProps}
       isDragging={isDragging}
     >
-      <div className="p-4">
+      <div>
         {todayCourses.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-6 text-center">
-            <Calendar className="h-8 w-8 text-muted-foreground/40 mb-2" />
-            <p className="text-sm text-muted-foreground">
-              {dict.today.noclass}
-            </p>
-          </div>
+          <EmptyState
+            icon={Calendar}
+            title={dict.today.noclass}
+            description={dict.today.noclass_sub}
+            size="sm"
+          />
         ) : (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-3">
             {todayCourses.map((slot, i) => {
               const name = slot.title;
               return (
                 <div
                   key={slot.id || i}
-                  className="flex items-stretch gap-2 rounded-lg overflow-hidden border border-border"
+                  className="flex items-stretch gap-2 overflow-hidden rounded-md bg-muted"
                 >
                   <div
                     className="w-1 shrink-0"
-                    style={{ backgroundColor: slot.color ?? "#555555" }}
+                    style={{
+                      backgroundColor:
+                        slot.color ?? "hsl(var(--muted-foreground))",
+                    }}
                   />
-                  <div className="py-2 flex-1 min-w-0">
+                  <div className="min-w-0 flex-1 py-2">
                     <div className="text-sm font-medium truncate">{name}</div>
                     <div className="text-xs text-muted-foreground">
                       {formatInTimeZone(
@@ -85,12 +83,6 @@ const ScheduleWidget: FC<ScheduleWidgetProps> = ({
             })}
           </div>
         )}
-        <div className="mt-4 border-t border-border pt-3">
-          <div className="mb-2 text-sm font-semibold">
-            {dict.calendar.upcoming_events}
-          </div>
-          <UpcomingEventList events={upcomingEvents} compact maxEvents={6} />
-        </div>
       </div>
     </WidgetShell>
   );

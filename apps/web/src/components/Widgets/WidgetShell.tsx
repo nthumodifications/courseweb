@@ -1,6 +1,7 @@
-import { ReactNode, FC } from "react";
-import { cn } from "@/lib/utils";
+import { ReactNode, FC, type ButtonHTMLAttributes } from "react";
+import { cn, Section } from "@courseweb/ui";
 import { GripVertical, X } from "lucide-react";
+import useDictionary from "@/dictionaries/useDictionary";
 
 interface WidgetShellProps {
   title: string;
@@ -19,43 +20,45 @@ export const WidgetShell: FC<WidgetShellProps> = ({
   dragHandleProps,
   isDragging,
 }) => {
+  const dict = useDictionary();
+
   return (
-    <div
-      className={cn(
-        "flex flex-col rounded-xl border border-border bg-card shadow-sm overflow-hidden",
-        isDragging && "shadow-lg ring-2 ring-primary/30 opacity-80",
-        className,
-      )}
-    >
-      {/* Widget header */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-card text-card-foreground">
-        <div className="flex items-center gap-2">
+    <Section
+      title={
+        <span className="flex min-w-0 items-center gap-2">
           {dragHandleProps && (
             <button
-              {...(dragHandleProps as Record<string, unknown> &
-                React.HTMLAttributes<HTMLButtonElement>)}
-              className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground transition-colors touch-none"
-              aria-label="Drag to reorder"
+              type="button"
+              {...(dragHandleProps as ButtonHTMLAttributes<HTMLButtonElement>)}
+              className="inline-flex size-10 shrink-0 cursor-grab items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:cursor-grabbing touch-none"
+              aria-label={dict.widgets.drag_to_reorder}
             >
               <GripVertical className="h-4 w-4" />
             </button>
           )}
-          <h3 className="text-sm font-semibold text-card-foreground">
-            {title}
-          </h3>
-        </div>
-        {onRemove && (
+          <span className="truncate">{title}</span>
+        </span>
+      }
+      actions={
+        onRemove ? (
           <button
+            type="button"
             onClick={onRemove}
-            className="text-muted-foreground hover:text-destructive transition-colors"
-            aria-label="Remove widget"
+            className="inline-flex size-10 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            aria-label={dict.widgets.remove}
           >
             <X className="h-4 w-4" />
           </button>
-        )}
-      </div>
-      {/* Widget body */}
-      <div className="flex-1">{children}</div>
-    </div>
+        ) : undefined
+      }
+      variant="card"
+      className={cn(
+        "min-w-0",
+        isDragging && "ring-2 ring-primary/30 opacity-80",
+        className,
+      )}
+    >
+      {children}
+    </Section>
   );
 };

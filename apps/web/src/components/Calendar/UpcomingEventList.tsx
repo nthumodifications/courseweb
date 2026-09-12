@@ -1,7 +1,7 @@
-import { FC, ReactNode, useMemo } from "react";
+import { FC, useMemo } from "react";
 import { formatInTimeZone } from "date-fns-tz";
 import { Calendar, Clock } from "lucide-react";
-import { Badge } from "@courseweb/ui";
+import { Badge, EmptyState } from "@courseweb/ui";
 import { cn } from "@courseweb/ui";
 import { EventPopover } from "@/components/Calendar/EventPopover";
 import useDictionary from "@/dictionaries/useDictionary";
@@ -21,18 +21,13 @@ type UpcomingEventListProps = {
   showDayGroups?: boolean;
   maxEvents?: number;
   className?: string;
-  emptyContent?: ReactNode;
 };
 
 const sourceBadgeStyles: Record<UpcomingEvent["source"], string> = {
-  academic:
-    "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-800 dark:bg-sky-950 dark:text-sky-300",
-  "course-date":
-    "border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300",
-  class:
-    "border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-800 dark:bg-violet-950 dark:text-violet-300",
-  calendar:
-    "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
+  academic: "border-info bg-info text-info-foreground",
+  "course-date": "border-border bg-muted text-muted-foreground",
+  class: "border-primary bg-primary text-primary-foreground",
+  calendar: "border-success bg-success text-success-foreground",
 };
 
 const EventRow: FC<{ event: UpcomingEvent; compact: boolean }> = ({
@@ -62,14 +57,14 @@ const EventRow: FC<{ event: UpcomingEvent; compact: boolean }> = ({
         {event.title}
       </span>
       {event.state === "in-progress" && (
-        <span className="shrink-0 text-[10px] text-primary">
+        <span className="shrink-0 text-xs text-primary">
           {dict.today.upcoming.in_progress}
         </span>
       )}
       <Badge
         variant="outline"
         className={cn(
-          "shrink-0 px-1.5 py-0 text-[10px] leading-4",
+          "shrink-0 px-2 py-0 text-xs leading-4",
           sourceBadgeStyles[event.source],
         )}
       >
@@ -91,7 +86,6 @@ const UpcomingEventList: FC<UpcomingEventListProps> = ({
   showDayGroups = true,
   maxEvents,
   className,
-  emptyContent,
 }) => {
   const { language, showAcademicCalendar } = useSettings();
   const dict = useDictionary();
@@ -122,23 +116,13 @@ const UpcomingEventList: FC<UpcomingEventListProps> = ({
 
   if (visibleEvents.length === 0) {
     return (
-      <div
-        className={cn(
-          compact
-            ? "px-1 py-2 text-xs text-muted-foreground"
-            : "rounded-lg border border-dashed border-border px-3 py-5 text-center",
-          className,
-        )}
-      >
-        <p className={compact ? undefined : "text-sm font-medium"}>
-          {emptyContent ?? dict.today.upcoming.no_events}
-        </p>
-        {!compact && (
-          <p className="mt-1 text-xs text-muted-foreground">
-            {dict.today.upcoming.no_events_sub}
-          </p>
-        )}
-      </div>
+      <EmptyState
+        className={className}
+        icon={Calendar}
+        title={dict.calendar.empty_title}
+        description={dict.calendar.empty_description}
+        size="sm"
+      />
     );
   }
 
@@ -167,7 +151,7 @@ const UpcomingEventList: FC<UpcomingEventListProps> = ({
           <section key={dateKey} className="min-w-0">
             <div className="mb-1 flex items-baseline justify-between gap-2">
               <h3 className="text-xs font-semibold">{dayTitle}</h3>
-              <span className="text-[11px] text-muted-foreground">
+              <span className="text-xs text-muted-foreground">
                 {formatInTimeZone(group[0].start, UPCOMING_TIME_ZONE, "MM/dd")}
               </span>
             </div>

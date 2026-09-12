@@ -161,7 +161,7 @@ export const router = createBrowserRouter([
                 element: <TodayPage />,
                 handle: {
                   title: "Today",
-                  titleZh: "行事曆",
+                  titleZh: "今日",
                   description:
                     "NTHU academic calendar and today's schedule. Stay on top of important dates, events, and deadlines at National Tsing Hua University.",
                   descriptionZh:
@@ -233,7 +233,7 @@ export const router = createBrowserRouter([
                 element: <CalendarPage />,
                 handle: {
                   title: "Calendar",
-                  titleZh: "今日",
+                  titleZh: "行事曆",
                   description:
                     "NTHU academic calendar with semester dates, holidays, and important deadlines. Keep track of National Tsing Hua University's academic schedule.",
                   descriptionZh:

@@ -1,9 +1,9 @@
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import useDictionary from "@/dictionaries/useDictionary";
-import { CalendarPlus, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useSettings } from "@/hooks/contexts/settings";
-import { Button } from "@courseweb/ui";
+import { Button, Section } from "@courseweb/ui";
 
 export const NoClassPickedReminder = () => {
   const dict = useDictionary();
@@ -17,18 +17,17 @@ export const NoClassPickedReminder = () => {
   if (!isClient) return null;
 
   return (
-    <div className="mb-4 rounded-lg border border-border bg-muted/50 p-4">
-      <div className="flex flex-row flex-1 items-center gap-4 justify-between">
-        <h3 className="font-medium text-foreground">
-          {dict.today.noclass_reminder.reminder}
-        </h3>
+    <Section
+      title={dict.today.noclass_reminder.reminder}
+      variant="card"
+      actions={
         <Link to={`/${language}/courses`} className="inline-block">
-          <Button variant="outline" size="sm" className="h-7">
+          <Button variant="outline" size="sm">
             {dict.today.noclass_reminder.courses}
             <ArrowRight className="ml-1 h-3.5 w-3.5" />
           </Button>
         </Link>
-      </div>
-    </div>
+      }
+    />
   );
 };

@@ -2,7 +2,7 @@ import { FC, useMemo, useState, useEffect } from "react";
 import { useSettings } from "@/hooks/contexts/settings";
 import useDictionary from "@/dictionaries/useDictionary";
 import { getLocale } from "@/helpers/dateLocale";
-import { Cloud, MapPin, Clock } from "lucide-react";
+import { Cloud, MapPin, Clock, PartyPopper, ChevronDown } from "lucide-react";
 import { apps } from "@/const/apps";
 import useTime from "@/hooks/useTime";
 import { NoClassPickedReminder } from "./NoClassPickedReminder";
@@ -10,7 +10,7 @@ import { TimetableItemDrawer } from "@/components/Timetable/TimetableItemDrawer"
 import AppItem from "@/app/[lang]/(mods-pages)/apps/AppItem";
 import { useQuery } from "@tanstack/react-query";
 import client from "@/config/api";
-import { Badge } from "@courseweb/ui";
+import { Badge, Button, EmptyState, Section } from "@courseweb/ui";
 import WeatherIcon from "./WeatherIcon";
 import { cn } from "@courseweb/ui";
 import { formatInTimeZone } from "date-fns-tz";
@@ -19,9 +19,33 @@ import { NextUpLine } from "@/components/Widgets/CountdownWidget";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import useUpcomingEvents, {
   addTaipeiDays,
+  groupConsecutiveEmptyDays,
   getTaipeiDateKey,
   UPCOMING_TIME_ZONE,
+  UpcomingDayGroup,
+  UpcomingEvent,
 } from "@/hooks/useUpcomingEvents";
+
+type DaySchedule = {
+  day: Date;
+  classes: UpcomingEvent[];
+  calendarEvents: UpcomingEvent[];
+  hasCalendarEvent: boolean;
+  hasWeather: boolean;
+};
+
+const getAcademicEventsForDay = (
+  events: UpcomingEvent[],
+  day: Date,
+  showAcademicCalendar: boolean,
+) =>
+  events.filter(
+    (event) =>
+      event.state !== "past" &&
+      (event.source === "academic" || event.source === "course-date") &&
+      (event.source !== "academic" || showAcademicCalendar) &&
+      getTaipeiDateKey(event.start) === getTaipeiDateKey(day),
+  );
 
 const TodaySchedule: FC = () => {
   const { isCoursesEmpty } = useUserTimetable();
@@ -34,9 +58,8 @@ const TodaySchedule: FC = () => {
     nextEvent,
     windowStart,
   } = useUpcomingEvents({ includePast: true });
-  const upcomingEvents = useMemo(
-    () => dashboardEvents.filter((event) => event.state !== "past"),
-    [dashboardEvents],
+  const [expandedRanges, setExpandedRanges] = useState<Set<string>>(
+    () => new Set(),
   );
 
   useEffect(() => {
@@ -48,11 +71,7 @@ const TodaySchedule: FC = () => {
     [windowStart],
   );
 
-  const {
-    data: weather,
-    error: weatherError,
-    isLoading: weatherLoading,
-  } = useQuery({
+  const { data: weather, isLoading: weatherLoading } = useQuery({
     queryKey: ["weather"],
     queryFn: async () => {
       const res = await client.weather.$get();
@@ -61,27 +80,90 @@ const TodaySchedule: FC = () => {
     },
   });
 
-  const renderDayTimetable = (day: Date) => {
-    const classesThisDay = dashboardEvents.filter(
-      (event) =>
-        event.source === "class" &&
-        getTaipeiDateKey(event.start) === getTaipeiDateKey(day),
-    );
+  const daySchedules = useMemo<DaySchedule[]>(
+    () =>
+      days.map((day) => ({
+        day,
+        classes: dashboardEvents.filter(
+          (event) =>
+            event.source === "class" &&
+            getTaipeiDateKey(event.start) === getTaipeiDateKey(day),
+        ),
+        calendarEvents: getAcademicEventsForDay(
+          dashboardEvents,
+          day,
+          showAcademicCalendar,
+        ),
+        hasCalendarEvent: dashboardEvents.some(
+          (event) =>
+            event.state !== "past" &&
+            event.source === "calendar" &&
+            getTaipeiDateKey(event.start) === getTaipeiDateKey(day),
+        ),
+        hasWeather:
+          isClient &&
+          (weatherLoading ||
+            Boolean(
+              weather?.find((item) => item.date === getTaipeiDateKey(day)),
+            )),
+      })),
+    [
+      dashboardEvents,
+      days,
+      isClient,
+      showAcademicCalendar,
+      weather,
+      weatherLoading,
+    ],
+  );
 
-    if (classesThisDay.length == 0)
+  const dayGroups = useMemo(
+    () =>
+      groupConsecutiveEmptyDays(
+        daySchedules.map(({ day }) => day),
+        (day) => {
+          const schedule = daySchedules.find(
+            (item) => getTaipeiDateKey(item.day) === getTaipeiDateKey(day),
+          );
+          return Boolean(
+            schedule &&
+              schedule.classes.length === 0 &&
+              schedule.calendarEvents.length === 0 &&
+              !schedule.hasCalendarEvent &&
+              !schedule.hasWeather,
+          );
+        },
+      ),
+    [daySchedules],
+  );
+
+  const renderDayTimetable = (
+    day: Date,
+    classesThisDay: UpcomingEvent[],
+    insideCollapsedRange = false,
+  ) => {
+    if (classesThisDay.length === 0) {
+      const isToday =
+        getTaipeiDateKey(day) === getTaipeiDateKey(date) &&
+        !insideCollapsedRange;
+      const weekday = formatInTimeZone(day, UPCOMING_TIME_ZONE, "EEEE", {
+        locale: getLocale(language),
+      });
+      const title = isToday
+        ? dict.today.noclass
+        : dict.today.noclass_day
+            .replace("{date}", formatInTimeZone(day, UPCOMING_TIME_ZONE, "M/d"))
+            .replace("{weekday}", weekday);
+
       return (
-        <div className="flex flex-row gap-2 items-start">
-          <div className="size-4 rounded-sm mt-1 flex items-center justify-center">
-            🎉
-          </div>
-          <div className="flex flex-col gap-1">
-            <div className="font-semibold">{dict.today.noclass}</div>
-            <div className="text-xs text-muted-foreground">
-              {dict.today.noclass_sub}
-            </div>
-          </div>
-        </div>
+        <EmptyState
+          icon={PartyPopper}
+          title={title}
+          description={isToday ? dict.today.noclass_sub : null}
+          size="sm"
+        />
       );
+    }
 
     return classesThisDay.map((event) => {
       const course = event.course;
@@ -90,15 +172,11 @@ const TodaySchedule: FC = () => {
       const content = (
         <div className="flex flex-row gap-2 items-start">
           <div
-            className="size-4 rounded-sm mt-1 shrink-0"
-            style={
-              isNoClass
-                ? {
-                    background:
-                      "repeating-linear-gradient(-45deg, #9ca3af, #9ca3af 4px, #6b7280 4px, #6b7280 8px)",
-                  }
-                : { backgroundColor: event.color }
-            }
+            className={cn(
+              "mt-1 size-4 shrink-0 rounded-sm",
+              isNoClass && "bg-muted-foreground",
+            )}
+            style={!isNoClass ? { backgroundColor: event.color } : undefined}
           />
           <div className="flex flex-col gap-1">
             <div
@@ -112,7 +190,7 @@ const TodaySchedule: FC = () => {
             {isSpecialDate && (
               <Badge
                 variant="secondary"
-                className="self-start text-[10px] px-1 py-0"
+                className="self-start px-2 py-0 text-xs"
               >
                 {event.courseDate?.type} · {event.courseDate?.title}
               </Badge>
@@ -147,13 +225,7 @@ const TodaySchedule: FC = () => {
     });
   };
 
-  const renderCalendars = (day: Date) => {
-    const events = dashboardEvents.filter(
-      (event) =>
-        (event.source === "academic" || event.source === "course-date") &&
-        (event.source !== "academic" || showAcademicCalendar) &&
-        getTaipeiDateKey(event.start) === getTaipeiDateKey(day),
-    );
+  const renderCalendars = (events: UpcomingEvent[]) => {
     return (
       events.length > 0 && (
         <UpcomingEventList events={events} compact showDayGroups={false} />
@@ -175,7 +247,7 @@ const TodaySchedule: FC = () => {
     ) {
       return (
         <div className="flex items-center gap-1 rounded-full bg-muted px-2 py-1 text-sm">
-          <Cloud className="h-5 w-5 text-gray-400" />
+          <Cloud className="h-5 w-5 text-muted-foreground" />
           <span className="text-muted-foreground text-xs">
             {dict.calendar.updating}
           </span>
@@ -208,43 +280,129 @@ const TodaySchedule: FC = () => {
     );
   };
 
+  const renderDay = (schedule: DaySchedule, insideCollapsedRange = false) => {
+    const { day, classes, calendarEvents } = schedule;
+    return (
+      <div
+        className="flex min-w-0 flex-col gap-2 pb-4"
+        key={getTaipeiDateKey(day)}
+      >
+        <div className="flex min-w-0 flex-wrap items-start justify-between gap-2">
+          <div className="flex min-w-0 flex-1 items-baseline gap-2">
+            <div className="whitespace-nowrap font-semibold text-base">
+              {getTaipeiDateKey(day) === getTaipeiDateKey(date)
+                ? dict.today.upcoming.today
+                : getTaipeiDateKey(day) ===
+                    getTaipeiDateKey(addTaipeiDays(date, 1))
+                  ? dict.today.upcoming.tomorrow
+                  : formatInTimeZone(day, UPCOMING_TIME_ZONE, "EEEE", {
+                      locale: getLocale(language),
+                    })}
+            </div>
+            <div className="whitespace-nowrap text-sm text-muted-foreground">
+              {formatInTimeZone(day, UPCOMING_TIME_ZONE, "M/d", {
+                locale: getLocale(language),
+              })}
+            </div>
+          </div>
+          {isClient && !weatherLoading && weather && renderWeather(day)}
+        </div>
+        {calendarEvents.length > 0 && renderCalendars(calendarEvents)}
+        {renderDayTimetable(day, classes, insideCollapsedRange)}
+      </div>
+    );
+  };
+
+  const renderDayGroup = (group: UpcomingDayGroup) => {
+    if (group.kind !== "range") {
+      return renderDay(
+        daySchedules.find(
+          (schedule) =>
+            getTaipeiDateKey(schedule.day) === getTaipeiDateKey(group.days[0]),
+        )!,
+      );
+    }
+
+    const rangeKey = `${getTaipeiDateKey(group.days[0])}:${getTaipeiDateKey(group.days[group.days.length - 1])}`;
+    const expanded = expandedRanges.has(rangeKey);
+    const rangeTitle = dict.today.noclass_range
+      .replace(
+        "{start}",
+        formatInTimeZone(group.days[0], UPCOMING_TIME_ZONE, "M/d"),
+      )
+      .replace(
+        "{end}",
+        formatInTimeZone(
+          group.days[group.days.length - 1],
+          UPCOMING_TIME_ZONE,
+          "M/d",
+        ),
+      );
+
+    return (
+      <div className="min-w-0" key={rangeKey}>
+        <div className="flex min-w-0 items-start gap-2">
+          <EmptyState
+            className="min-w-0 flex-1"
+            icon={PartyPopper}
+            title={rangeTitle}
+            description={dict.today.noclass_range_sub}
+            size="sm"
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="min-h-10 shrink-0 gap-1 px-2 text-xs"
+            aria-expanded={expanded}
+            onClick={() =>
+              setExpandedRanges((current) => {
+                const next = new Set(current);
+                if (next.has(rangeKey)) next.delete(rangeKey);
+                else next.add(rangeKey);
+                return next;
+              })
+            }
+          >
+            <ChevronDown
+              className={cn(
+                "size-4 transition-transform",
+                expanded && "rotate-180",
+              )}
+              aria-hidden="true"
+            />
+            {expanded ? dict.today.noclass_collapse : dict.today.noclass_expand}
+          </Button>
+        </div>
+        {expanded && (
+          <div className="mt-3 space-y-6 border-l border-border pl-3">
+            {group.days.map((day) =>
+              renderDay(
+                daySchedules.find(
+                  (schedule) =>
+                    getTaipeiDateKey(schedule.day) === getTaipeiDateKey(day),
+                )!,
+                true,
+              ),
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
-    <div className="h-full w-full px-3 md:px-8 space-y-4">
+    <div className="w-full min-w-0 space-y-6">
       {isCoursesEmpty && <NoClassPickedReminder />}
       {renderPinnedApps()}
-      <NextUpLine event={nextEvent} />
-      <section className="rounded-lg border border-border p-3">
-        <h2 className="mb-2 text-base font-semibold">
-          {dict.calendar.upcoming_events}
-        </h2>
-        <UpcomingEventList events={upcomingEvents} compact maxEvents={8} />
-      </section>
-      {days.map((day) => (
-        <div className="flex flex-col gap-2 pb-4" key={getTaipeiDateKey(day)}>
-          <div className="flex flex-row justify-between">
-            <div className="flex flex-row flex-1 items-baseline gap-2">
-              <div className="whitespace-nowrap font-semibold text-lg">
-                {getTaipeiDateKey(day) === getTaipeiDateKey(date)
-                  ? dict.today.upcoming.today
-                  : getTaipeiDateKey(day) ===
-                      getTaipeiDateKey(addTaipeiDays(date, 1))
-                    ? dict.today.upcoming.tomorrow
-                    : formatInTimeZone(day, UPCOMING_TIME_ZONE, "EEEE", {
-                        locale: getLocale(language),
-                      })}
-              </div>
-              <div className="text-sm text-muted-foreground whitespace-nowrap">
-                {formatInTimeZone(day, UPCOMING_TIME_ZONE, "MMM do", {
-                  locale: getLocale(language),
-                })}
-              </div>
-            </div>
-            {isClient && !weatherLoading && weather && renderWeather(day)}
-          </div>
-          {renderCalendars(day)}
-          {renderDayTimetable(day)}
-        </div>
-      ))}
+      <Section title={dict.today.upcoming.next_up} variant="card">
+        <NextUpLine
+          event={nextEvent}
+          showLabel={false}
+          className="border-0 bg-transparent p-0"
+        />
+      </Section>
+      {dayGroups.map(renderDayGroup)}
     </div>
   );
 };

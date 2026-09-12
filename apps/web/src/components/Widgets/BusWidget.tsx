@@ -1,11 +1,12 @@
 import { FC, useMemo } from "react";
 import { WidgetShell } from "./WidgetShell";
 import { useQuery } from "@tanstack/react-query";
-import { useSettings } from "@/hooks/contexts/settings";
 import { Bus } from "lucide-react";
 import { getAllBusData } from "@/libs/bus";
 import { isWeekend } from "date-fns";
 import { getTimeOnDate } from "@/helpers/bus";
+import useDictionary from "@/dictionaries/useDictionary";
+import { EmptyState, Skeleton } from "@courseweb/ui";
 
 interface BusWidgetProps {
   onRemove?: () => void;
@@ -24,8 +25,8 @@ const BusWidget: FC<BusWidgetProps> = ({
   dragHandleProps,
   isDragging,
 }) => {
-  const { language } = useSettings();
-  const title = language === "zh" ? "校園公車" : "Campus Bus";
+  const dict = useDictionary();
+  const title = dict.widgets.bus_title;
 
   const { data, isLoading } = useQuery({
     queryKey: ["all_bus_data"],
@@ -46,13 +47,7 @@ const BusWidget: FC<BusWidgetProps> = ({
         results.push({
           time: dep.time,
           lineLabel:
-            dep.line === "red"
-              ? language === "zh"
-                ? "紅線"
-                : "Red"
-              : language === "zh"
-                ? "綠線"
-                : "Green",
+            dep.line === "red" ? dict.bus.red_line : dict.bus.green_line,
           directionIcon: "↑",
         });
       }
@@ -62,13 +57,7 @@ const BusWidget: FC<BusWidgetProps> = ({
         results.push({
           time: dep.time,
           lineLabel:
-            dep.line === "red"
-              ? language === "zh"
-                ? "紅線"
-                : "Red"
-              : language === "zh"
-                ? "綠線"
-                : "Green",
+            dep.line === "red" ? dict.bus.red_line : dict.bus.green_line,
           directionIcon: "↓",
         });
       }
@@ -81,12 +70,8 @@ const BusWidget: FC<BusWidgetProps> = ({
           time: dep.time,
           lineLabel:
             dep.type === "route2"
-              ? language === "zh"
-                ? "南大2路"
-                : "Nanda 2"
-              : language === "zh"
-                ? "南大1路"
-                : "Nanda 1",
+              ? dict.widgets.nanda_two
+              : dict.widgets.nanda_one,
           directionIcon: "↓",
         });
       }
@@ -97,12 +82,8 @@ const BusWidget: FC<BusWidgetProps> = ({
           time: dep.time,
           lineLabel:
             dep.type === "route2"
-              ? language === "zh"
-                ? "南大2路"
-                : "Nanda 2"
-              : language === "zh"
-                ? "南大1路"
-                : "Nanda 1",
+              ? dict.widgets.nanda_two
+              : dict.widgets.nanda_one,
           directionIcon: "↑",
         });
       }
@@ -110,7 +91,7 @@ const BusWidget: FC<BusWidgetProps> = ({
 
     results.sort((a, b) => a.time.localeCompare(b.time));
     return results.slice(0, 5);
-  }, [data, language]);
+  }, [data, dict.bus, dict.widgets]);
 
   return (
     <WidgetShell
@@ -119,18 +100,20 @@ const BusWidget: FC<BusWidgetProps> = ({
       dragHandleProps={dragHandleProps}
       isDragging={isDragging}
     >
-      <div className="p-4">
+      <div>
         {isLoading ? (
-          <div className="flex justify-center py-4">
-            <div className="h-8 w-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+          <div className="space-y-3">
+            {Array.from({ length: 3 }, (_, index) => (
+              <Skeleton key={index} className="h-4 w-full" />
+            ))}
           </div>
         ) : departures.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-4 text-muted-foreground">
-            <Bus className="h-8 w-8 mb-2 text-muted-foreground/40" />
-            <span className="text-sm">
-              {language === "zh" ? "今日無班次" : "No departures today"}
-            </span>
-          </div>
+          <EmptyState
+            icon={Bus}
+            title={dict.widgets.no_departures}
+            description={dict.widgets.no_departures_description}
+            size="sm"
+          />
         ) : (
           <div className="flex flex-col gap-2">
             {departures.map((dep, i) => (
@@ -146,7 +129,7 @@ const BusWidget: FC<BusWidgetProps> = ({
                   <span className="text-xs text-muted-foreground">
                     {dep.directionIcon}
                   </span>
-                  <span className="text-xs font-mono font-semibold text-primary">
+                  <span className="font-mono text-xs font-semibold tabular-nums text-primary">
                     {dep.time}
                   </span>
                 </div>

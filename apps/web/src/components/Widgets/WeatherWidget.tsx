@@ -2,9 +2,10 @@ import { FC } from "react";
 import { WidgetShell } from "./WidgetShell";
 import { useQuery } from "@tanstack/react-query";
 import client from "@/config/api";
-import { useSettings } from "@/hooks/contexts/settings";
 import WeatherIcon from "@/components/Today/WeatherIcon";
 import { Cloud } from "lucide-react";
+import { EmptyState, Skeleton } from "@courseweb/ui";
+import useDictionary from "@/dictionaries/useDictionary";
 
 interface WeatherWidgetProps {
   onRemove?: () => void;
@@ -17,7 +18,7 @@ const WeatherWidget: FC<WeatherWidgetProps> = ({
   dragHandleProps,
   isDragging,
 }) => {
-  const { language } = useSettings();
+  const dict = useDictionary();
   const { data: weather, isLoading } = useQuery({
     queryKey: ["weather"],
     queryFn: async () => {
@@ -27,7 +28,7 @@ const WeatherWidget: FC<WeatherWidgetProps> = ({
     staleTime: 1000 * 60 * 30,
   });
 
-  const title = language === "zh" ? "新竹天氣" : "Hsinchu Weather";
+  const title = dict.widgets.weather_title;
 
   // Get today's weather data (first entry)
   const todayWeather = Array.isArray(weather) ? weather[0]?.weatherData : null;
@@ -39,28 +40,29 @@ const WeatherWidget: FC<WeatherWidgetProps> = ({
       dragHandleProps={dragHandleProps}
       isDragging={isDragging}
     >
-      <div className="p-4">
+      <div className="space-y-3">
         {isLoading ? (
-          <div className="flex justify-center py-4">
-            <div className="h-8 w-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+          <div className="space-y-3">
+            <Skeleton className="h-6 w-2/3" />
+            <Skeleton className="h-4 w-1/3" />
           </div>
         ) : !todayWeather ? (
-          <div className="flex flex-col items-center justify-center py-4 text-muted-foreground">
-            <Cloud className="h-8 w-8 mb-2 opacity-40" />
-            <span className="text-xs">
-              {language === "zh" ? "無法取得天氣資料" : "Weather unavailable"}
-            </span>
-          </div>
+          <EmptyState
+            icon={Cloud}
+            title={dict.widgets.weather_unavailable}
+            description={dict.widgets.weather_unavailable_description}
+            size="sm"
+          />
         ) : (
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               {todayWeather.Wx && (
-                <div className="text-4xl">
+                <div className="text-xl">
                   <WeatherIcon wxCode={todayWeather.Wx} />
                 </div>
               )}
               <div>
-                <div className="text-2xl font-bold">
+                <div className="text-xl font-bold tabular-nums">
                   {todayWeather.MaxT}°
                   <span className="text-base font-normal text-muted-foreground ml-1">
                     / {todayWeather.MinT}°
@@ -75,11 +77,11 @@ const WeatherWidget: FC<WeatherWidgetProps> = ({
             </div>
             {todayWeather.PoP12h !== undefined && (
               <div className="text-center">
-                <div className="text-lg font-semibold text-blue-500">
+                <div className="text-base font-semibold text-info">
                   {todayWeather.PoP12h}%
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  {language === "zh" ? "降雨機率" : "Rain"}
+                  {dict.widgets.rain_probability}
                 </div>
               </div>
             )}

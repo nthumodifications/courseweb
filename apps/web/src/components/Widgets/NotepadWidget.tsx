@@ -1,7 +1,7 @@
 import { FC } from "react";
 import { WidgetShell } from "./WidgetShell";
 import { useLocalStorage } from "usehooks-ts";
-import { useSettings } from "@/hooks/contexts/settings";
+import useDictionary from "@/dictionaries/useDictionary";
 
 interface NotepadWidgetProps {
   onRemove?: () => void;
@@ -14,10 +14,10 @@ const NotepadWidget: FC<NotepadWidgetProps> = ({
   dragHandleProps,
   isDragging,
 }) => {
-  const { language } = useSettings();
+  const dict = useDictionary();
   const [notes, setNotes] = useLocalStorage("widget_notepad_content", "");
 
-  const title = language === "zh" ? "便條紙" : "Notepad";
+  const title = dict.widgets.notepad_title;
 
   return (
     <WidgetShell
@@ -29,10 +29,8 @@ const NotepadWidget: FC<NotepadWidgetProps> = ({
       <textarea
         value={notes}
         onChange={(e) => setNotes(e.target.value)}
-        placeholder={
-          language === "zh" ? "寫下你的筆記..." : "Write your notes..."
-        }
-        className="w-full h-36 p-3 text-sm bg-transparent resize-none outline-none placeholder:text-muted-foreground/50 font-mono"
+        placeholder={dict.widgets.notepad_placeholder}
+        className="h-36 w-full resize-none rounded-md bg-transparent p-3 font-mono text-sm outline-none placeholder:text-muted-foreground/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         spellCheck={false}
       />
     </WidgetShell>

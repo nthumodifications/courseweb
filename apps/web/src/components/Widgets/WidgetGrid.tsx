@@ -27,7 +27,8 @@ import PinnedAppsWidget from "./PinnedAppsWidget";
 import NotepadWidget from "./NotepadWidget";
 import CountdownWidget from "./CountdownWidget";
 import BusWidget from "./BusWidget";
-import { cn } from "@/lib/utils";
+import { cn, PageHeader, PageShell } from "@courseweb/ui";
+import useDictionary from "@/dictionaries/useDictionary";
 
 // Individual sortable widget wrapper
 const SortableWidget: FC<{
@@ -87,6 +88,7 @@ const SortableWidget: FC<{
 
 // Main widget grid component
 const WidgetGrid: FC = () => {
+  const dict = useDictionary();
   const [config, setConfig] = useLocalStorage<DashboardConfig>(
     "widget_config_v1",
     DEFAULT_DASHBOARD_CONFIG,
@@ -141,26 +143,29 @@ const WidgetGrid: FC = () => {
         : "grid-cols-1 md:grid-cols-2";
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragEnd={handleDragEnd}
-    >
-      <SortableContext
-        items={activeWidgets.map((w) => w.id)}
-        strategy={rectSortingStrategy}
+    <PageShell width="app">
+      <PageHeader title={dict.today.page_title} />
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
       >
-        <div className={cn("grid gap-4 p-4", colClass)}>
-          {activeWidgets.map((widget) => (
-            <SortableWidget
-              key={widget.id}
-              widget={widget}
-              onRemove={handleRemove}
-            />
-          ))}
-        </div>
-      </SortableContext>
-    </DndContext>
+        <SortableContext
+          items={activeWidgets.map((w) => w.id)}
+          strategy={rectSortingStrategy}
+        >
+          <div className={cn("grid min-w-0 gap-4", colClass)}>
+            {activeWidgets.map((widget) => (
+              <SortableWidget
+                key={widget.id}
+                widget={widget}
+                onRemove={handleRemove}
+              />
+            ))}
+          </div>
+        </SortableContext>
+      </DndContext>
+    </PageShell>
   );
 };
 
