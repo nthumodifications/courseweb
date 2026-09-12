@@ -17,8 +17,7 @@
     "upcoming": {
       "next_up": "Next up",
       "in_progress": "In progress",
-      "starts_in": "Starts in {minutes} min",
-      "starts_in_one": "Starts in 1 min",
+      "starts_in": "Starts in {duration}",
       "all_day": "All day",
       "nothing_scheduled": "Nothing else scheduled",
       "no_events": "No upcoming dates",
@@ -561,12 +560,24 @@
         "columns": "Columns",
         "widgets": "Widgets",
         "widget_options": {
-          "schedule": { "title": "Schedule" },
-          "weather": { "title": "Weather" },
-          "pinned-apps": { "title": "Quick links" },
-          "notepad": { "title": "Notepad" },
-          "countdown": { "title": "Countdown" },
-          "bus": { "title": "Bus schedule" }
+          "schedule": {
+            "title": "Schedule"
+          },
+          "weather": {
+            "title": "Weather"
+          },
+          "pinned-apps": {
+            "title": "Quick links"
+          },
+          "notepad": {
+            "title": "Notepad"
+          },
+          "countdown": {
+            "title": "Countdown"
+          },
+          "bus": {
+            "title": "Bus schedule"
+          }
         }
       }
     },
@@ -1767,7 +1778,10 @@
           "title": "Passwords stored on your device",
           "description": "are encrypted using AES-256-CBC encryption technology."
         },
-        { "title": "Basic password handling process", "description": "" }
+        {
+          "title": "Basic password handling process",
+          "description": ""
+        }
       ],
       "separator": ": ",
       "detail_before": "For more detailed encryption process, please refer to the",
