@@ -28,12 +28,16 @@ const AppItem = ({
       <div className="p-2 rounded-lg bg-primary/10 text-primary grid place-items-center shrink-0">
         <app.Icon size={24} />
       </div>
-      <div className="flex flex-col gap-1 min-w-0">
-        <div className="flex flex-row items-center gap-1">
-          <h2 className={cn(!mini ? "font-medium" : "text-xs")}>
+      <div className="flex flex-col gap-1 flex-1 min-w-0">
+        <div className="flex flex-row items-center gap-1 min-w-0">
+          <h2 className={cn("min-w-0 flex-1", !mini ? "font-medium" : "text-xs")}>
             {dict.applist.apps[app.id as keyof typeof dict.applist.apps]}
           </h2>
-          {app.beta && <Badge variant="secondary">{dict.applist.beta}</Badge>}
+          {app.beta && (
+            <Badge variant="secondary" className="shrink-0">
+              {dict.applist.beta}
+            </Badge>
+          )}
         </div>
       </div>
     </div>
