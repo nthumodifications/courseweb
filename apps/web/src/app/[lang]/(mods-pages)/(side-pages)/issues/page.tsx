@@ -10,14 +10,7 @@ const IssuesPage = () => {
 
   return (
     <PageShell width="content">
-      <PageHeader
-        className="[&_h1]:overflow-visible [&_h1]:text-clip [&_h1]:whitespace-normal"
-        title={
-          <span className="text-4xl font-bold tracking-tight">
-            {dict.issues.title}
-          </span>
-        }
-      />
+      <PageHeader title={dict.issues.title} />
 
       <Section
         title={dict.issues.data_sources.title}

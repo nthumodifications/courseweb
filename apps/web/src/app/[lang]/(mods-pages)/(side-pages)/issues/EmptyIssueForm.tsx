@@ -77,7 +77,7 @@ const EmptyIssueForm = () => {
         </Label>
         <Textarea id="issue-description" name="description" rows={6} />
       </div>
-      <div className="flex justify-end pt-1">
+      <div className="flex justify-start pt-1">
         <Button type="submit">{dict.issues.form.submit}</Button>
       </div>
     </form>
