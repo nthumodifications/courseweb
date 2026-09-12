@@ -236,15 +236,29 @@ async function renderConsent(
   );
 }
 
+/**
+ * CORS for the OIDC endpoints only.
+ *
+ * This app is mounted at "/" ahead of the /api router, and Hono's cors()
+ * answers an OPTIONS preflight itself without calling next(). A "*" match
+ * therefore replies to every preflight in the whole service, including
+ * /api/**, which has its own credentialed, origin-restricted policy with a
+ * wider method list. That is how PATCH /api/admin/users/:id/role came to be
+ * refused in the browser while the route itself was fine: the preflight was
+ * answered here, advertising only GET and POST.
+ *
+ * /api owns its own policy, so this one steps aside for it.
+ */
+const oidcCors = cors({
+  origin: "*",
+  allowHeaders: ["Authorization", "Content-Type"],
+  allowMethods: ["GET", "POST"],
+  credentials: true,
+});
+
 const app = new Hono()
-  .use(
-    "*",
-    cors({
-      origin: "*",
-      allowHeaders: ["Authorization", "Content-Type"],
-      allowMethods: ["GET", "POST"],
-      credentials: true,
-    }),
+  .use("*", (c, next) =>
+    c.req.path.startsWith("/api/") ? next() : oidcCors(c, next),
   )
   .get("/.well-known/openid-configuration", (c) => {
     return c.json({
