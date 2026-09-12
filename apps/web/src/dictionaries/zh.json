@@ -17,8 +17,7 @@
     "upcoming": {
       "next_up": "接下來",
       "in_progress": "進行中",
-      "starts_in": "還有 {minutes} 分鐘開始",
-      "starts_in_one": "還有 1 分鐘開始",
+      "starts_in": "還有 {duration} 開始",
       "all_day": "全天",
       "nothing_scheduled": "沒有其他安排",
       "no_events": "接下來沒有安排",
@@ -561,12 +560,24 @@
         "columns": "欄數",
         "widgets": "小工具",
         "widget_options": {
-          "schedule": { "title": "課程表" },
-          "weather": { "title": "天氣" },
-          "pinned-apps": { "title": "快速連結" },
-          "notepad": { "title": "便條紙" },
-          "countdown": { "title": "學期倒數" },
-          "bus": { "title": "公車時刻" }
+          "schedule": {
+            "title": "課程表"
+          },
+          "weather": {
+            "title": "天氣"
+          },
+          "pinned-apps": {
+            "title": "快速連結"
+          },
+          "notepad": {
+            "title": "便條紙"
+          },
+          "countdown": {
+            "title": "學期倒數"
+          },
+          "bus": {
+            "title": "公車時刻"
+          }
         }
       }
     },
@@ -1767,7 +1778,10 @@
           "title": "在您的設備上儲存的密碼",
           "description": "會使用 AES-256-CBC 加密技術來加密。"
         },
-        { "title": "基本密碼處理流程", "description": "" }
+        {
+          "title": "基本密碼處理流程",
+          "description": ""
+        }
       ],
       "separator": "：",
       "detail_before": "更詳細的加密過程請參閱",

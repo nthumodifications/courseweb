@@ -3,7 +3,7 @@ import { WidgetShell } from "./WidgetShell";
 import { semesterInfo } from "@courseweb/shared";
 import useTime from "@/hooks/useTime";
 import { Timer } from "lucide-react";
-import { format } from "date-fns";
+import { format, formatDistanceStrict } from "date-fns";
 import { formatInTimeZone } from "date-fns-tz";
 import { Badge, cn } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
@@ -12,6 +12,8 @@ import useUpcomingEvents, {
   UPCOMING_TIME_ZONE,
   UpcomingEvent,
 } from "@/hooks/useUpcomingEvents";
+import { getLocale } from "@/helpers/dateLocale";
+import { useSettings } from "@/hooks/contexts/settings";
 
 const DATE_KEY_FORMAT = "yyyy-MM-dd";
 
@@ -32,7 +34,8 @@ export const NextUpLine: FC<{
   className?: string;
 }> = ({ event, className }) => {
   const dict = useDictionary();
-
+  const { language } = useSettings();
+  const now = useTime(60_000);
   if (!event) {
     return null;
   }
@@ -43,12 +46,12 @@ export const NextUpLine: FC<{
   const status =
     event.state === "in-progress"
       ? dict.today.upcoming.in_progress
-      : event.startsInMinutes === 1
-        ? dict.today.upcoming.starts_in_one
-        : dict.today.upcoming.starts_in.replace(
-            "{minutes}",
-            String(event.startsInMinutes),
-          );
+      : dict.today.upcoming.starts_in.replace(
+          "{duration}",
+          formatDistanceStrict(event.start, now, {
+            locale: getLocale(language),
+          }),
+        );
 
   return (
     <div
