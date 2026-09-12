@@ -1,5 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import ShopList from "./ShopList";
+import { EmptyState, PageHeader, PageShell, PageSkeleton } from "@courseweb/ui";
+import { Store } from "lucide-react";
 import useDictionary from "@/dictionaries/useDictionary";
 
 export default function Page() {
@@ -17,15 +19,29 @@ export default function Page() {
 
   if (isLoading) {
     return (
-      <div className="grid place-items-center w-full h-64">
-        <span className="text-gray-400">{dict.common.loading}</span>
-      </div>
+      <PageShell width="app">
+        <PageSkeleton rows={5} />
+      </PageShell>
     );
   }
 
   if (error) {
-    return <div>{dict.shops.load_error}</div>;
+    return (
+      <PageShell width="app">
+        <PageHeader title={dict.shops.title} />
+        <EmptyState
+          icon={Store}
+          title={dict.shops.load_error}
+          description={dict.shops.load_error_description}
+        />
+      </PageShell>
+    );
   }
 
-  return <ShopList data={data} />;
+  return (
+    <PageShell width="app">
+      <PageHeader title={dict.shops.title} />
+      <ShopList data={data} />
+    </PageShell>
+  );
 }

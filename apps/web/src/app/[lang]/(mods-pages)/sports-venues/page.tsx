@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import client from "@/config/api";
-import { cn } from "@courseweb/ui";
+import { Button, EmptyState, PageHeader, PageShell, cn } from "@courseweb/ui";
 import {
   Dumbbell,
   Droplets,
@@ -87,15 +87,15 @@ function venueInfo(name: string): { capacity: number; Icon: typeof Circle } {
 }
 
 function barColor(ratio: number) {
-  if (ratio < 0.5) return "bg-green-500";
-  if (ratio < 0.8) return "bg-yellow-500";
-  return "bg-red-500";
+  if (ratio < 0.5) return "bg-success";
+  if (ratio < 0.8) return "bg-warning";
+  return "bg-destructive";
 }
 
 function badgeColor(ratio: number) {
-  if (ratio < 0.5) return "text-green-600 dark:text-green-400";
-  if (ratio < 0.8) return "text-yellow-600 dark:text-yellow-400";
-  return "text-red-600 dark:text-red-400";
+  if (ratio < 0.5) return "text-success";
+  if (ratio < 0.8) return "text-warning";
+  return "text-destructive";
 }
 
 const DAY_KEYS: (keyof Omit<DaySchedule, "notes">)[] = [
@@ -197,14 +197,14 @@ const StatusBadge = ({ slots, now }: { slots: TimeSlot[]; now: Date }) => {
   const status = getOpenStatus(slots, now);
   if (status.type === "open") {
     return (
-      <span className="text-sm font-semibold text-green-600 dark:text-green-400 whitespace-nowrap">
+      <span className="whitespace-nowrap text-sm font-semibold text-success">
         {dict.sports.open_until.replace("{time}", status.until)}
       </span>
     );
   }
   if (status.type === "opens") {
     return (
-      <span className="text-sm font-semibold text-yellow-600 dark:text-yellow-400 whitespace-nowrap">
+      <span className="whitespace-nowrap text-sm font-semibold text-warning">
         {dict.sports.opens_at.replace("{time}", status.at)}
       </span>
     );
@@ -289,7 +289,8 @@ const ScheduleSheet = ({
               )}
             >
               {s.semester}
-              {s.semester.includes(currentSemesterLabel) && ` ${dict.sports.current}`}
+              {s.semester.includes(currentSemesterLabel) &&
+                ` ${dict.sports.current}`}
             </button>
           ))}
           <button
@@ -314,7 +315,7 @@ const ScheduleSheet = ({
                 const slots = ensureTimeSlotArray(schedule.hours![day]);
                 return (
                   <div key={day} className="flex items-start py-3 gap-4">
-                    <span className="w-16 text-sm font-medium text-muted-foreground dark:text-neutral-400 shrink-0">
+                    <span className="w-16 shrink-0 text-sm font-medium text-muted-foreground">
                       {DAY_LABELS[day]}
                     </span>
                     <div className="flex flex-col gap-1">
@@ -401,7 +402,11 @@ const SportsVenuesPage = () => {
     }
   };
 
-  const { data: occupancy, dataUpdatedAt } = useQuery<OccupancyItem[]>({
+  const {
+    data: occupancy,
+    dataUpdatedAt,
+    isLoading: occupancyLoading,
+  } = useQuery<OccupancyItem[]>({
     queryKey: ["venue-occupancy"],
     queryFn: async () => {
       const res = await client.venue.occupancy.$get();
@@ -412,17 +417,18 @@ const SportsVenuesPage = () => {
     refetchInterval: 30_000,
   });
 
-  const { data: openingTimes } = useQuery<OpeningTimesData | null>({
-    queryKey: ["sports-opening-times"],
-    queryFn: async () => {
-      const res = await (client as any).sports["opening-times"].$get();
-      if (res.status === 202) return null; // sync in progress, retry shortly
-      return res.json() as Promise<OpeningTimesData>;
-    },
-    staleTime: 60 * 60 * 1000, // 1 hour — data barely changes
-    // Keep retrying every 10s until data is ready (first load triggers background sync)
-    refetchInterval: (query) => (query.state.data == null ? 10_000 : false),
-  });
+  const { data: openingTimes, isLoading: openingTimesLoading } =
+    useQuery<OpeningTimesData | null>({
+      queryKey: ["sports-opening-times"],
+      queryFn: async () => {
+        const res = await (client as any).sports["opening-times"].$get();
+        if (res.status === 202) return null; // sync in progress, retry shortly
+        return res.json() as Promise<OpeningTimesData>;
+      },
+      staleTime: 60 * 60 * 1000, // 1 hour — data barely changes
+      // Keep retrying every 10s until data is ready (first load triggers background sync)
+      refetchInterval: (query) => (query.state.data == null ? 10_000 : false),
+    });
 
   // Build merged list: occupancy items enriched with opening times
   const items = (occupancy ?? []).map((item) => {
@@ -446,42 +452,73 @@ const SportsVenuesPage = () => {
     return { item, facility, todaySlots };
   });
 
+  const noResults =
+    !occupancyLoading &&
+    !openingTimesLoading &&
+    openingTimes !== null &&
+    items.length === 0 &&
+    (openingTimes?.facilities.length ?? 0) === 0;
+
   return (
-    <div className="flex flex-col px-4">
-      {/* Header */}
-      <div className="flex items-center justify-between py-3">
-        <h1 className="text-base font-semibold text-foreground">{dict.sports.title}</h1>
-        <div className="flex items-center gap-2">
-          {dataUpdatedAt > 0 && (
-            <span className="text-xs text-muted-foreground">
-              {dict.sports.updated_at}{" "}
-              {new Date(dataUpdatedAt).toLocaleTimeString(
-                language === "en" ? "en-US" : "zh-TW",
-                {
-                hour: "2-digit",
-                minute: "2-digit",
-                second: "2-digit",
-                },
-              )}
-            </span>
-          )}
-          <button
-            onClick={handleGlobalRefresh}
-            disabled={refreshing}
-            title={dict.sports.refresh_cache}
-            className="p-1 text-muted-foreground hover:text-primary disabled:opacity-50 transition-colors"
-          >
-            {refreshing ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <RefreshCw className="w-4 h-4" />
+    <PageShell width="app">
+      <PageHeader
+        title={dict.sports.title}
+        description={
+          <>
+            {dict.sports.data_source}{" "}
+            <a
+              href="https://peo178.et.nthu.edu.tw"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary underline-offset-4 hover:underline"
+              aria-label={dict.sports.source_aria}
+            >
+              {dict.sports.source_name}
+            </a>
+          </>
+        }
+        actions={
+          <>
+            {dataUpdatedAt > 0 && (
+              <span className="text-xs text-muted-foreground">
+                {dict.sports.updated_at}{" "}
+                {new Date(dataUpdatedAt).toLocaleTimeString(
+                  language === "en" ? "en-US" : "zh-TW",
+                  {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit",
+                  },
+                )}
+              </span>
             )}
-          </button>
-        </div>
-      </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleGlobalRefresh}
+              disabled={refreshing}
+              title={dict.sports.refresh_cache}
+              aria-label={dict.sports.refresh_cache}
+            >
+              {refreshing ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
+            </Button>
+          </>
+        }
+      />
 
       {/* Venue list */}
       <div className="flex flex-col divide-y divide-border">
+        {noResults && (
+          <EmptyState
+            icon={Dumbbell}
+            title={dict.sports.empty_title}
+            description={dict.sports.empty_description}
+          />
+        )}
         {items.map(({ item, facility, todaySlots }) => {
           const displayName =
             OCCUPANCY_NAME_ALIASES[item.project_name] ?? item.project_name;
@@ -533,9 +570,14 @@ const SportsVenuesPage = () => {
               </div>
 
               {/* Bottom row */}
-              <div className="flex flex-row justify-between text-sm text-muted-foreground dark:text-neutral-400">
-                <span>{dict.sports.utilization} {pct}%</span>
-                <span>{dict.sports.entries_today} {item.entry_count_today} {dict.sports.occupancy_people}</span>
+              <div className="flex flex-row justify-between text-sm text-muted-foreground">
+                <span>
+                  {dict.sports.utilization} {pct}%
+                </span>
+                <span>
+                  {dict.sports.entries_today} {item.entry_count_today}{" "}
+                  {dict.sports.occupancy_people}
+                </span>
               </div>
             </div>
           );
@@ -585,20 +627,6 @@ const SportsVenuesPage = () => {
           })}
       </div>
 
-      {/* Data source */}
-      <div className="mt-4 pb-4 text-xs text-muted-foreground">
-         {dict.sports.data_source}
-        <a
-          href="https://peo178.et.nthu.edu.tw"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="underline"
-          aria-label={dict.sports.source_aria}
-        >
-          {dict.sports.source_name}
-        </a>
-      </div>
-
       {/* Schedule sheet */}
       {selectedFacility && (
         <ScheduleSheet
@@ -607,7 +635,7 @@ const SportsVenuesPage = () => {
           onClose={() => setSelectedFacility(null)}
         />
       )}
-    </div>
+    </PageShell>
   );
 };
 

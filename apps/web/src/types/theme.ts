@@ -34,6 +34,12 @@ export type ThemeCSSVar =
   | "accent-foreground"
   | "destructive"
   | "destructive-foreground"
+  | "success"
+  | "success-foreground"
+  | "warning"
+  | "warning-foreground"
+  | "info"
+  | "info-foreground"
   | "border"
   | "input"
   | "ring"
@@ -195,4 +201,3 @@ export const FONT_ORDER: Record<ThemeFontScript, ThemeFont[]> = {
     (f) => FONT_DEFINITIONS[f].script === "latin",
   ),
 };
-

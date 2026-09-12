@@ -40,7 +40,7 @@ const MainLayout = () => {
               <SidebarInset className="min-w-0 overflow-x-hidden">
                 <Header />
                 <AnnouncementBar />
-                <div className="pt-4 pb-[calc(var(--bottom-nav-height)+env(safe-area-inset-bottom))] md:pb-0 md:pl-2">
+                <div>
                   <ErrorBoundary FallbackComponent={ModsError}>
                     <Suspense
                       fallback={

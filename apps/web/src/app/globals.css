@@ -3,7 +3,15 @@
 @tailwind utilities;
 
 html {
-  font-family: var(--font-family, "Inter", "PingFang TC", "Microsoft JhengHei", "Noto Sans CJK TC", "Noto Sans TC", sans-serif);
+  font-family: var(
+    --font-family,
+    "Inter",
+    "PingFang TC",
+    "Microsoft JhengHei",
+    "Noto Sans CJK TC",
+    "Noto Sans TC",
+    sans-serif
+  );
   font-size: calc(1rem * var(--font-scale, 1));
 }
 
@@ -47,6 +55,12 @@ body {
     --accent-foreground: 240 5.9% 10%;
     --destructive: 0 72.22% 50.59%;
     --destructive-foreground: 0 0% 98%;
+    --success: 142 72% 29%;
+    --success-foreground: 0 0% 100%;
+    --warning: 32 95% 30%;
+    --warning-foreground: 0 0% 100%;
+    --info: 215 85% 38%;
+    --info-foreground: 0 0% 100%;
     --border: 240 5.9% 90%;
     --input: 240 5.9% 90%;
     --ring: 273 43% 54%;
@@ -66,7 +80,8 @@ body {
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 273 43% 54%;
     /* Inter for Latin, then a Traditional Chinese system stack for CJK. */
-    --font-family: "Inter", "PingFang TC", "Microsoft JhengHei", "Noto Sans CJK TC", "Noto Sans TC", sans-serif;
+    --font-family: "Inter", "PingFang TC", "Microsoft JhengHei",
+      "Noto Sans CJK TC", "Noto Sans TC", sans-serif;
     --font-scale: 1;
     --density-factor: 1;
     --bg-pattern: none;
@@ -95,6 +110,12 @@ body {
     --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 85.7% 97.3%;
+    --success: 142 55% 32%;
+    --success-foreground: 0 0% 100%;
+    --warning: 32 90% 35%;
+    --warning-foreground: 0 0% 100%;
+    --info: 215 80% 48%;
+    --info-foreground: 0 0% 100%;
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
     --ring: 273 43% 64%;

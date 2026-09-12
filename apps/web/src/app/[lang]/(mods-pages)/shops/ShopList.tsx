@@ -34,7 +34,7 @@ const Shops = ({ data }: { data: Array<{ restaurants: Array<any> }> }) => {
   const [filterArea, setFilterArea] = useState("");
 
   return (
-    <div className="p-8 mb-2">
+    <div className="space-y-6">
       <div className="sticky top-8">
         <div className="flex items-center gap-4 bg-muted px-4 py-2 rounded-lg">
           <Search />

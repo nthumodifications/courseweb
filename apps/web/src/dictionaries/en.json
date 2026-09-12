@@ -286,6 +286,8 @@
     "occupancy_people": "people",
     "utilization": "Utilization",
     "entries_today": "Entries today",
+    "empty_title": "No facility data available",
+    "empty_description": "There is no occupancy or opening-hours data to show right now.",
     "data_source": "Data source:",
     "source_name": "NTHU Sports Center",
     "source_aria": "National Tsing Hua University Sports Center (opens in new tab)"
@@ -639,6 +641,7 @@
     }
   },
   "shops": {
+    "title": "Shops",
     "search_placeholder": "Search for shops",
     "search_results_prefix": "Search results for",
     "open_now": "Open Now",
@@ -646,7 +649,8 @@
     "closed_today": "Closed Today",
     "area_placeholder": "Select area",
     "area_all": "Anywhere",
-    "load_error": "Unable to load shop data."
+    "load_error": "Unable to load shop data.",
+    "load_error_description": "Please try again later or check your connection."
   },
   "help": {
     "button": "Help",
@@ -713,6 +717,10 @@
     "suspended_description": "Proxy login is temporarily unavailable due to limited staffing. Check @nthumods on Instagram for updates."
   },
   "grade": {
+    "title": "Grades",
+    "proxy_login_required_title": "No proxy-login account yet",
+    "proxy_login_required_description": "Set up proxy login to view your semester grades here.",
+    "setup_proxy_login": "Set up proxy login",
     "gpa": "GPA",
     "overview": "Overview",
     "as_of": "As of",
@@ -1473,6 +1481,124 @@
     "existing_description": "Your application is already on file. You can return here to check its status.",
     "footer_link": "Recruitment",
     "no_roles": "There are no open roles right now. Please check back later."
+  },
+  "design_system": {
+    "title": "NTHUMods design language",
+    "description": "Answer campus questions quickly, clearly, and reliably.",
+    "nav": {
+      "philosophy": "Philosophy",
+      "composition": "Composition rules",
+      "primitives": "Primitives",
+      "tokens": "Design tokens",
+      "gallery": "Component gallery"
+    },
+    "philosophy": {
+      "title": "The campus, answered",
+      "intro": "NTHUMods is the tool a student opens while walking across campus, with one thumb and a few seconds to find what comes next. Courses, grades, venues, food, and maps are the same act: less ceremony, faster answers.",
+      "principles_title": "The five principles",
+      "answer_first": {
+        "title": "Answer first",
+        "description": "Show students what they came for; page furniture gets one line."
+      },
+      "say_once": {
+        "title": "Say it once",
+        "description": "State each fact once. Repetition only adds noise."
+      },
+      "one_cloth": {
+        "title": "One cloth",
+        "description": "Every page is made from the same shared parts; new shapes enter the system first."
+      },
+      "purple": {
+        "title": "Purple is a verb",
+        "description": "Purple means you are here or can act; every other color carries data meaning."
+      },
+      "quiet_craft": {
+        "title": "Quiet craft",
+        "description": "Personality lives in words and brief feedback, not in decorative chrome."
+      }
+    },
+    "composition": {
+      "title": "Composition rules",
+      "description": "Every page answers one question first, then uses the shared shell, header, sections, and states to arrange the answer.",
+      "widths_title": "Page widths",
+      "content": "content",
+      "content_description": "Prose and side pages use max-w-3xl.",
+      "app": "app",
+      "app_description": "Lists, forms, grids, and detail pages use max-w-6xl.",
+      "full": "full",
+      "full_description": "Viewport-owned tools such as timetable, map, and chat have no maximum width.",
+      "header_title": "Page header",
+      "header_description": "Use text-xl font-semibold for the title, right-align actions, and truncate the text-sm description on the next line.",
+      "surfaces_title": "Three surfaces",
+      "page_surface": "page · bg-background",
+      "card_surface": "card · bg-card border border-border rounded-lg",
+      "inset_surface": "inset · bg-muted rounded-md",
+      "spacing_title": "Vertical rhythm",
+      "spacing_steps": "4 · 8 · 12 · 16 · 24 · 32 · 48",
+      "spacing_sections": "Between page sections: 24",
+      "spacing_content": "Inside a section: 12",
+      "spacing_card": "Card padding: 16; dense rows use px-3 py-2.",
+      "type_title": "Type scale",
+      "type_display": "Side-page display: text-4xl font-bold, once only.",
+      "type_page": "Page title: text-xl font-semibold.",
+      "type_section": "Section title: text-base font-semibold.",
+      "type_body": "Body: text-sm.",
+      "type_meta": "Secondary: text-xs text-muted-foreground.",
+      "type_numbers": "Numbers, times, course codes, credits: tabular-nums font-medium.",
+      "states_title": "Empty and loading states",
+      "empty_title": "An empty state states the fact and offers a next step; never leave a lone gray sentence.",
+      "empty_description": "Use EmptyState: icon, title, one-line description, and at most one action.",
+      "loading_title": "A loading state preserves the answer's shape.",
+      "loading_description": "Use PageSkeleton for the header and rows; do not use a bare spinner or loading text."
+    },
+    "primitives": {
+      "title": "Primitive examples",
+      "description": "These components are the shared page skeleton. Each example below is a real composable primitive.",
+      "shell_label": "PageShell widths",
+      "shell_content": "Content width example",
+      "shell_app": "App width example",
+      "shell_full": "Full width example",
+      "header_label": "PageHeader",
+      "header_action": "Example action",
+      "empty_label": "EmptyState",
+      "empty_title": "There is no data here yet",
+      "empty_description": "When data arrives, it will appear in this quiet space.",
+      "empty_action": "Refresh",
+      "section_label": "Section",
+      "section_description": "Section title, description, and content keep the same rhythm.",
+      "section_content": "This is the card variant: no shadow, just one clear surface.",
+      "skeleton_label": "PageSkeleton",
+      "skeleton_description": "The shape of the header and rows arrives before the content."
+    },
+    "tokens": {
+      "title": "Tokens that actually exist",
+      "description": "Colors come from the HSL CSS variables in globals.css; components do not write colors directly. Fonts enter through --font-family.",
+      "semantic_title": "Semantic colors",
+      "primary": "--primary · you are here / you can act",
+      "destructive": "--destructive · danger, deletion, failure",
+      "success": "--success · confirmed, available, passing",
+      "warning": "--warning · attention, degraded, deadline near",
+      "info": "--info · neutral notice",
+      "muted": "--muted-foreground · all secondary text",
+      "font_title": "Fonts",
+      "font_description": "The font entry point is --font-family, which defaults to Inter with PingFang TC, Microsoft JhengHei, Noto Sans CJK TC, and other Traditional Chinese fallbacks. --font-scale adjusts the overall size."
+    },
+    "gallery": {
+      "title": "Component gallery",
+      "description": "The gallery shows available components; composition rules still come before any single component's appearance.",
+      "buttons": "Buttons",
+      "default": "Primary action",
+      "secondary": "Secondary",
+      "outline": "Outline",
+      "ghost": "Ghost",
+      "destructive": "Destructive",
+      "field": "Input",
+      "placeholder": "Enter what you are looking for",
+      "tabs": "Tabs",
+      "tab_one": "First",
+      "tab_two": "Second",
+      "tab_content": "Tab content goes here."
+    }
   },
   "changelog": {
     "title": "Changelog",

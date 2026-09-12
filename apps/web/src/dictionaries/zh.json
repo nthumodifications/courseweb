@@ -286,6 +286,8 @@
     "occupancy_people": "人",
     "utilization": "使用率",
     "entries_today": "今日進場",
+    "empty_title": "目前沒有場館資料",
+    "empty_description": "場館即時人數與開放時間暫時沒有可顯示的資料。",
     "data_source": "資料來源：",
     "source_name": "國立清華大學體育中心",
     "source_aria": "國立清華大學體育中心（在新分頁開啟）"
@@ -639,6 +641,7 @@
     }
   },
   "shops": {
+    "title": "餐廳",
     "search_placeholder": "你要的店家是？",
     "search_results_prefix": "找到",
     "open_now": "營業中",
@@ -646,7 +649,8 @@
     "closed_today": "今日休息",
     "area_placeholder": "選擇地區",
     "area_all": "全部",
-    "load_error": "無法載入店家資料。"
+    "load_error": "無法載入店家資料。",
+    "load_error_description": "請稍後再試，或確認網路連線正常。"
   },
   "help": {
     "button": "說明",
@@ -713,6 +717,10 @@
     "suspended_description": "由於人力有限，代理登入目前暫停使用。最新消息請見 Instagram @nthumods。"
   },
   "grade": {
+    "title": "成績",
+    "proxy_login_required_title": "還沒有代理登入帳號",
+    "proxy_login_required_description": "設定代理登入後，就能在這裡查看你的學期成績。",
+    "setup_proxy_login": "前往代理登入",
     "gpa": "GPA",
     "overview": "總覽",
     "as_of": "截至",
@@ -1473,6 +1481,124 @@
     "existing_description": "我們已經保存你的申請資料，可以回到這裡查看目前狀態。",
     "footer_link": "加入我們",
     "no_roles": "目前沒有開放職缺，歡迎稍後再回來看看。"
+  },
+  "design_system": {
+    "title": "NTHUMods 設計語言",
+    "description": "把校園問題回答得快、清楚、可信賴。",
+    "nav": {
+      "philosophy": "理念",
+      "composition": "組合規則",
+      "primitives": "基礎元件",
+      "tokens": "設計代碼",
+      "gallery": "元件畫廊"
+    },
+    "philosophy": {
+      "title": "校園，直接得到答案",
+      "intro": "NTHUMods 是學生走在校園裡，用一根拇指、幾秒鐘找到下一步的工具。課表、成績、場館、餐廳和地圖，本質上都是同一件事：少一點儀式，快一點回答。",
+      "principles_title": "五個原則",
+      "answer_first": {
+        "title": "答案先行",
+        "description": "先讓學生看到要找的內容，頁面家具只用一行。"
+      },
+      "say_once": {
+        "title": "一次就好",
+        "description": "同一個事實說一次就夠；重複只會增加噪音。"
+      },
+      "one_cloth": {
+        "title": "同一塊布",
+        "description": "所有頁面由同一組共享元件組成，需要新形狀時先把它放進系統。"
+      },
+      "purple": {
+        "title": "紫色是動詞",
+        "description": "紫色表示你在這裡或可以採取行動；其他顏色只承擔資料語意。"
+      },
+      "quiet_craft": {
+        "title": "安靜的手藝",
+        "description": "個性放在文字和短促的回應裡，不靠裝飾搶注意力。"
+      }
+    },
+    "composition": {
+      "title": "組合規則",
+      "description": "每個頁面先回答一個問題，再用固定的容器、標頭、區塊和狀態把答案排好。",
+      "widths_title": "頁面寬度",
+      "content": "content",
+      "content_description": "文章與側邊頁面，使用 max-w-3xl。",
+      "app": "app",
+      "app_description": "清單、表單、網格和詳情頁，使用 max-w-6xl。",
+      "full": "full",
+      "full_description": "時間表、地圖和聊天等自行管理視窗的工具，不設最大寬度。",
+      "header_title": "頁面標頭",
+      "header_description": "標題使用 text-xl font-semibold；動作靠右；說明在下一行，以 text-sm 截斷。",
+      "surfaces_title": "三種表面",
+      "page_surface": "page · bg-background",
+      "card_surface": "card · bg-card border border-border rounded-lg",
+      "inset_surface": "inset · bg-muted rounded-md",
+      "spacing_title": "垂直節奏",
+      "spacing_steps": "4 · 8 · 12 · 16 · 24 · 32 · 48",
+      "spacing_sections": "頁面區塊之間：24",
+      "spacing_content": "區塊內容之間：12",
+      "spacing_card": "卡片內距：16；密集列使用 px-3 py-2。",
+      "type_title": "字級",
+      "type_display": "側邊頁 display：text-4xl font-bold，只出現一次。",
+      "type_page": "頁面標題：text-xl font-semibold。",
+      "type_section": "區塊標題：text-base font-semibold。",
+      "type_body": "內文：text-sm。",
+      "type_meta": "次要資訊：text-xs text-muted-foreground。",
+      "type_numbers": "數字、時間、課號、學分：tabular-nums font-medium。",
+      "states_title": "空白與載入",
+      "empty_title": "空白狀態說明事實，也提供下一步；不留一行孤單的灰字。",
+      "empty_description": "使用 EmptyState：圖示、標題、單行說明，最多一個動作。",
+      "loading_title": "載入狀態保留答案的形狀。",
+      "loading_description": "使用 PageSkeleton 顯示頁面標頭和資料列，不使用裸 spinner 或「載入中」。"
+    },
+    "primitives": {
+      "title": "基礎元件實例",
+      "description": "這些元件是頁面的共同骨架；下面的示範就是可直接組合的實際元件。",
+      "shell_label": "PageShell 寬度",
+      "shell_content": "內容寬度示範",
+      "shell_app": "應用程式寬度示範",
+      "shell_full": "全寬示範",
+      "header_label": "PageHeader",
+      "header_action": "範例動作",
+      "empty_label": "EmptyState",
+      "empty_title": "這裡目前沒有資料",
+      "empty_description": "有資料後，它會出現在這個安靜的位置。",
+      "empty_action": "重新整理",
+      "section_label": "Section",
+      "section_description": "區塊標題、說明和內容維持同一個節奏。",
+      "section_content": "這是 card 變體；沒有陰影，只有一層清楚的表面。",
+      "skeleton_label": "PageSkeleton",
+      "skeleton_description": "標頭和資料列的形狀先到，內容稍後填入。"
+    },
+    "tokens": {
+      "title": "實際使用的代碼",
+      "description": "顏色由 globals.css 的 HSL CSS 變數提供；元件不直接寫顏色。字體也只透過現有的 --font-family。",
+      "semantic_title": "語意顏色",
+      "primary": "--primary · 你在這裡／可以採取行動",
+      "destructive": "--destructive · 危險、刪除、失敗",
+      "success": "--success · 確認、可用、通過",
+      "warning": "--warning · 需要注意、狀態降級、期限將近",
+      "info": "--info · 中性的提示",
+      "muted": "--muted-foreground · 所有次要文字",
+      "font_title": "字體",
+      "font_description": "目前的字體入口是 --font-family，預設為 Inter 搭配 PingFang TC、Microsoft JhengHei、Noto Sans CJK TC 等繁體中文字體備援。--font-scale 只調整整體大小。"
+    },
+    "gallery": {
+      "title": "元件畫廊",
+      "description": "畫廊展示可用元件；組合規則仍優先於單一元件的外觀。",
+      "buttons": "按鈕",
+      "default": "主要動作",
+      "secondary": "次要",
+      "outline": "外框",
+      "ghost": "幽靈",
+      "destructive": "破壞性",
+      "field": "輸入框",
+      "placeholder": "輸入你要找的內容",
+      "tabs": "分頁",
+      "tab_one": "第一項",
+      "tab_two": "第二項",
+      "tab_content": "分頁內容在這裡。"
+    }
   },
   "changelog": {
     "title": "更新日誌",

@@ -1,6 +1,25 @@
-import type { ThemePreset } from "@/types/theme";
+import type { ThemePreset, ThemePresetColors } from "@/types/theme";
 
-export const THEME_PRESETS: ThemePreset[] = [
+const SEMANTIC_STATUS_COLORS: Pick<ThemePresetColors, "light" | "dark"> = {
+  light: {
+    success: "142 72% 29%",
+    "success-foreground": "0 0% 100%",
+    warning: "32 95% 30%",
+    "warning-foreground": "0 0% 100%",
+    info: "215 85% 38%",
+    "info-foreground": "0 0% 100%",
+  },
+  dark: {
+    success: "142 55% 32%",
+    "success-foreground": "0 0% 100%",
+    warning: "32 90% 35%",
+    "warning-foreground": "0 0% 100%",
+    info: "215 80% 48%",
+    "info-foreground": "0 0% 100%",
+  },
+};
+
+const THEME_PRESETS_BASE: ThemePreset[] = [
   {
     id: "nthumods",
     label: "NTHUMods",
@@ -872,6 +891,16 @@ export const THEME_PRESETS: ThemePreset[] = [
     },
   },
 ];
+
+export const THEME_PRESETS: ThemePreset[] = THEME_PRESETS_BASE.map(
+  (preset) => ({
+    ...preset,
+    colors: {
+      light: { ...preset.colors.light, ...SEMANTIC_STATUS_COLORS.light },
+      dark: { ...preset.colors.dark, ...SEMANTIC_STATUS_COLORS.dark },
+    },
+  }),
+);
 
 export const THEME_PRESET_MAP: Record<string, ThemePreset> = Object.fromEntries(
   THEME_PRESETS.map((p) => [p.id, p]),
