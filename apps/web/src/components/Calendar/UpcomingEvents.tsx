@@ -126,7 +126,7 @@ const UpcomingEvents = () => {
           </div>
           {!weatherLoading && weatherData && renderWeather(day)}
         </div>
-        <UpcomingEventList events={dayEvents} />
+        <UpcomingEventList events={dayEvents} emptyStateSize="inline" />
       </div>
     );
   };
@@ -159,7 +159,7 @@ const UpcomingEvents = () => {
               icon={CalendarIcon}
               title={rangeTitle}
               description={dict.calendar.empty_description}
-              size="sm"
+              size="inline"
             />
             <Button
               type="button"

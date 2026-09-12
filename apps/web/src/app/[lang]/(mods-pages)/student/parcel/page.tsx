@@ -28,6 +28,7 @@ const ParcelPage = () => {
         />
       ) : (
         <EmptyState
+          size="default"
           icon={Package}
           title={dict.student.parcel.unavailable_title}
           description={dict.student.parcel.unavailable_description}

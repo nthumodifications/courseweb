@@ -22,6 +22,7 @@ export default function StudentAccessState({
 
   return (
     <EmptyState
+      size="default"
       icon={BadgeAlert}
       title={title}
       description={description}

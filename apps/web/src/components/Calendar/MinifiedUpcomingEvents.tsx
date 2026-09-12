@@ -14,6 +14,7 @@ const MinifiedUpcomingEvents = () => {
         compact
         maxEvents={3}
         showDayGroups={false}
+        emptyStateSize="sm"
       />
     </Section>
   );

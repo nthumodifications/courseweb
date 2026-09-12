@@ -57,6 +57,7 @@ const VenuesPage = () => {
             <PageSkeleton rows={8} className="p-4" />
           ) : venuesError ? (
             <ErrorState
+              size="inline"
               title={dict.venues.load_error_title}
               description={dict.venues.load_error_description}
               retryLabel={dict.common.try_again}
@@ -64,7 +65,7 @@ const VenuesPage = () => {
             />
           ) : venues.length === 0 ? (
             <EmptyState
-              size="sm"
+              size="inline"
               icon={MapPin}
               title={dict.venues.empty_title}
               description={dict.venues.empty_description}
@@ -80,6 +81,7 @@ const VenuesPage = () => {
             ) : (
               <div className="hidden min-h-[32rem] w-full place-content-center md:grid">
                 <EmptyState
+                  size="default"
                   icon={MapPin}
                   title={dict.venues.placeholder_title}
                   description={dict.venues.placeholder_description}

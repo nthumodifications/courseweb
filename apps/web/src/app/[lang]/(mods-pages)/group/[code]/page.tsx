@@ -212,6 +212,7 @@ const GroupViewPage = () => {
           />
         ) : (
           <EmptyState
+            size="default"
             icon={Users}
             title={dict.group.not_found_title}
             description={dict.group.not_found_description}

@@ -232,6 +232,7 @@ const CourseDetailContainer = ({
           <meta name="googlebot" content="noindex, nofollow" />
         </Helmet>
         <EmptyState
+          size={modal ? "sm" : "default"}
           icon={AlertTriangle}
           title={dict.common.error}
           description={dict.course.details.not_found_description}

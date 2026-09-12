@@ -28,6 +28,7 @@ const StudentIDPage = () => {
         />
       ) : (
         <EmptyState
+          size="default"
           icon={BadgeAlert}
           title={dict.student.id.unavailable_title}
           description={dict.student.id.unavailable_description}

@@ -537,6 +537,7 @@ const SportsVenuesPage = () => {
       <div className="flex flex-col divide-y divide-border">
         {noResults && (
           <EmptyState
+            size="default"
             icon={Dumbbell}
             title={dict.sports.empty_title}
             description={dict.sports.empty_description}
