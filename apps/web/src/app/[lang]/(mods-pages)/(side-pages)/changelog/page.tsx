@@ -1,17 +1,9 @@
-import { Badge, Card, CardContent } from "@courseweb/ui";
+import { Badge } from "@courseweb/ui";
 import { CalendarDays } from "lucide-react";
 import { useParams } from "react-router-dom";
 import Footer from "@/components/Footer";
 import useDictionary from "@/dictionaries/useDictionary";
-import { CHANGELOG, ChangelogEntryType } from "@/const/changelog";
-
-const typeStyles: Record<ChangelogEntryType, string> = {
-  feature:
-    "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-200",
-  improvement:
-    "border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-900 dark:bg-purple-950 dark:text-purple-200",
-  fix: "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200",
-};
+import { CHANGELOG } from "@/const/changelog";
 
 const formatReleaseDate = (date: string, locale: string) =>
   new Intl.DateTimeFormat(locale, {
@@ -27,19 +19,12 @@ const ChangelogPage = () => {
   const locale = language === "en" ? "en-US" : "zh-TW";
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
-      <header className="mb-10 flex flex-col gap-2">
-        <h1 className="text-3xl font-bold md:text-4xl">
-          {dict.changelog.title}
-        </h1>
-        <p className="text-muted-foreground">{dict.changelog.description}</p>
-      </header>
-
-      <main className="space-y-8">
+    <div className="flex flex-col gap-4 px-4">
+      <main className="flex flex-col gap-4">
         {CHANGELOG.map((release) => (
-          <article key={release.version} className="space-y-3">
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
-              <span className="font-semibold text-foreground">
+          <article key={release.version} className="flex flex-col gap-2">
+            <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+              <span className="font-bold text-foreground">
                 {dict.changelog.release} {release.version}
               </span>
               <span className="inline-flex items-center gap-1">
@@ -51,40 +36,31 @@ const ChangelogPage = () => {
             </div>
 
             {release.title && (
-              <h2 className="text-2xl font-semibold">
-                {release.title[language]}
-              </h2>
+              <h2 className="text-base font-bold">{release.title[language]}</h2>
             )}
 
-            <Card>
-              <CardContent className="p-4 sm:p-6">
-                <ul className="space-y-5">
-                  {release.items.map((item, index) => (
-                    <li
-                      key={`${release.version}-${index}`}
-                      className="flex items-start gap-3"
-                    >
-                      <Badge
-                        variant="outline"
-                        className={`mt-0.5 shrink-0 ${typeStyles[item.type]}`}
-                      >
-                        {dict.changelog.types[item.type]}
-                      </Badge>
-                      <div className="min-w-0 space-y-1">
-                        <h3 className="font-semibold leading-snug">
-                          {item.title[language]}
-                        </h3>
-                        {item.description && (
-                          <p className="text-sm leading-relaxed text-muted-foreground">
-                            {item.description[language]}
-                          </p>
-                        )}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
+            <ul className="flex flex-col divide-y divide-border">
+              {release.items.map((item, index) => (
+                <li
+                  key={`${release.version}-${index}`}
+                  className="flex items-start gap-2 py-4"
+                >
+                  <Badge variant="outline" className="mt-0.5 shrink-0">
+                    {dict.changelog.types[item.type]}
+                  </Badge>
+                  <div className="min-w-0 flex flex-col gap-1">
+                    <h3 className="font-bold leading-snug">
+                      {item.title[language]}
+                    </h3>
+                    {item.description && (
+                      <p className="text-sm leading-relaxed text-muted-foreground">
+                        {item.description[language]}
+                      </p>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
           </article>
         ))}
       </main>
