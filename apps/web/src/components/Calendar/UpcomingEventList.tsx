@@ -1,4 +1,4 @@
-import { FC, ReactNode, useMemo } from "react";
+import { FC, useMemo } from "react";
 import { formatInTimeZone } from "date-fns-tz";
 import { Calendar, Clock } from "lucide-react";
 import { Badge } from "@courseweb/ui";
@@ -21,7 +21,6 @@ type UpcomingEventListProps = {
   showDayGroups?: boolean;
   maxEvents?: number;
   className?: string;
-  emptyContent?: ReactNode;
 };
 
 const sourceBadgeStyles: Record<UpcomingEvent["source"], string> = {
@@ -69,7 +68,7 @@ const EventRow: FC<{ event: UpcomingEvent; compact: boolean }> = ({
       <Badge
         variant="outline"
         className={cn(
-          "shrink-0 px-1.5 py-0 text-[10px] leading-4",
+          "shrink-0 px-2 py-0 text-[10px] leading-4",
           sourceBadgeStyles[event.source],
         )}
       >
@@ -91,7 +90,6 @@ const UpcomingEventList: FC<UpcomingEventListProps> = ({
   showDayGroups = true,
   maxEvents,
   className,
-  emptyContent,
 }) => {
   const { language, showAcademicCalendar } = useSettings();
   const dict = useDictionary();
@@ -120,27 +118,7 @@ const UpcomingEventList: FC<UpcomingEventListProps> = ({
   const todayKey = getTaipeiDateKey(now);
   const tomorrowKey = getTaipeiDateKey(addTaipeiDays(now, 1));
 
-  if (visibleEvents.length === 0) {
-    return (
-      <div
-        className={cn(
-          compact
-            ? "px-1 py-2 text-xs text-muted-foreground"
-            : "rounded-lg border border-dashed border-border px-3 py-5 text-center",
-          className,
-        )}
-      >
-        <p className={compact ? undefined : "text-sm font-medium"}>
-          {emptyContent ?? dict.today.upcoming.no_events}
-        </p>
-        {!compact && (
-          <p className="mt-1 text-xs text-muted-foreground">
-            {dict.today.upcoming.no_events_sub}
-          </p>
-        )}
-      </div>
-    );
-  }
+  if (visibleEvents.length === 0) return null;
 
   if (!showDayGroups) {
     return (
@@ -153,7 +131,7 @@ const UpcomingEventList: FC<UpcomingEventListProps> = ({
   }
 
   return (
-    <div className={cn("flex flex-col gap-3", className)}>
+    <div className={cn("flex flex-col gap-4", className)}>
       {Array.from(groups.entries()).map(([dateKey, group]) => {
         const dayTitle =
           dateKey === todayKey
@@ -166,7 +144,7 @@ const UpcomingEventList: FC<UpcomingEventListProps> = ({
         return (
           <section key={dateKey} className="min-w-0">
             <div className="mb-1 flex items-baseline justify-between gap-2">
-              <h3 className="text-xs font-semibold">{dayTitle}</h3>
+              <h3 className="text-xs font-medium">{dayTitle}</h3>
               <span className="text-[11px] text-muted-foreground">
                 {formatInTimeZone(group[0].start, UPCOMING_TIME_ZONE, "MM/dd")}
               </span>
