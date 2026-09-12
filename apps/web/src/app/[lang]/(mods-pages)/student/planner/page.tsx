@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { ErrorBoundary } from "react-error-boundary";
+import { useAuth } from "react-oidc-context";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@courseweb/ui";
 import {
   Select,
@@ -21,6 +23,13 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import { FolderTree, BookOpen, CalendarDays } from "lucide-react";
+import {
+  PageHeader,
+  PageShell,
+  PageSkeleton,
+} from "@courseweb/ui";
+import ErrorState from "@/components/Pages/ErrorState";
+import StudentAccessState from "../StudentAccessState";
 
 // Import data functions
 import { ensureUnsortedFolder, getFolders } from "./data/folders";
@@ -581,7 +590,7 @@ function GraduationPlanner() {
 
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-      <div className="flex overflow-hidden -mt-4 md:-mb-0 md:-ml-2 h-[calc(100vh-var(--header-height))]">
+      <div className="flex min-h-0 flex-1 overflow-hidden">
         {/* Left Sidebar - Folder Navigation */}
         {showFolders && (
           <FolderNavigation
@@ -758,8 +767,10 @@ function GraduationPlanner() {
           <div className="fixed inset-x-0 bottom-[5rem] md:bottom-0 lg:hidden z-40 bg-background border-t border-border grid grid-cols-3">
             <button
               type="button"
-              className={`flex flex-col items-center justify-center gap-1 py-2 min-h-[44px] ${
-                mobileView === "folders" ? "text-primary" : "text-neutral-400"
+              className={`flex min-h-[44px] flex-col items-center justify-center gap-1 rounded-md py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
+                mobileView === "folders"
+                  ? "text-primary"
+                  : "text-muted-foreground"
               }`}
               onClick={() => setMobileView("folders")}
             >
@@ -770,8 +781,10 @@ function GraduationPlanner() {
             </button>
             <button
               type="button"
-              className={`flex flex-col items-center justify-center gap-1 py-2 min-h-[44px] ${
-                mobileView === "courses" ? "text-primary" : "text-neutral-400"
+              className={`flex min-h-[44px] flex-col items-center justify-center gap-1 rounded-md py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
+                mobileView === "courses"
+                  ? "text-primary"
+                  : "text-muted-foreground"
               }`}
               onClick={() => setMobileView("courses")}
             >
@@ -782,8 +795,10 @@ function GraduationPlanner() {
             </button>
             <button
               type="button"
-              className={`flex flex-col items-center justify-center gap-1 py-2 min-h-[44px] ${
-                mobileView === "semester" ? "text-primary" : "text-neutral-400"
+              className={`flex min-h-[44px] flex-col items-center justify-center gap-1 rounded-md py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
+                mobileView === "semester"
+                  ? "text-primary"
+                  : "text-muted-foreground"
               }`}
               onClick={() => setMobileView("semester")}
             >
@@ -867,4 +882,43 @@ function GraduationPlanner() {
   );
 }
 
-export default GraduationPlanner;
+function PlannerPage() {
+  const dict = useDictionary();
+  const { isAuthenticated, isLoading } = useAuth();
+
+  return (
+    <PageShell
+      width="full"
+      gap={false}
+      className="flex h-[calc(100dvh-var(--header-height)-4rem)] min-h-[36rem] flex-col overflow-hidden"
+    >
+      <PageHeader
+        title={dict.planner.title}
+        description={dict.planner.description}
+      />
+      {isLoading ? (
+        <PageSkeleton rows={6} className="flex-1" />
+      ) : !isAuthenticated ? (
+        <StudentAccessState
+          title={dict.planner.signed_out_title}
+          description={dict.planner.signed_out_description}
+        />
+      ) : (
+        <ErrorBoundary
+          fallbackRender={({ resetErrorBoundary }) => (
+            <ErrorState
+              title={dict.planner.load_error_title}
+              description={dict.planner.load_error_description}
+              retryLabel={dict.common.try_again}
+              onRetry={resetErrorBoundary}
+            />
+          )}
+        >
+          <GraduationPlanner />
+        </ErrorBoundary>
+      )}
+    </PageShell>
+  );
+}
+
+export default PlannerPage;

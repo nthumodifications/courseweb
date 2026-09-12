@@ -15,6 +15,14 @@ import useDictionary from "@/dictionaries/useDictionary";
 import { useEffect } from "react";
 import { Language } from "@/types/settings";
 import { Helmet } from "react-helmet-async";
+import {
+  Button,
+  PageHeader,
+  PageShell,
+  PageSkeleton,
+} from "@courseweb/ui";
+import ErrorState from "@/components/Pages/ErrorState";
+import { ChevronLeft } from "lucide-react";
 
 type BusRouteDetailsPageProps = {
   params: {
@@ -27,12 +35,13 @@ const BusRouteDetailsPage = () => {
   const dict = useDictionary();
   const navigate = useNavigate();
 
-  const routeNames: Record<string, { zh: string; en: string }> = {
-    main: { zh: "校園公車", en: "Main Campus Bus" },
-    nanda: { zh: "南大校區區間車", en: "Nanda Campus Shuttle" },
+  const routeNames: Record<string, string> = {
+    main: dict.bus.route_main,
+    nanda: dict.bus.route_nanda,
+    route1: dict.bus.route1_line,
+    route2: dict.bus.route2_line,
   };
-  const routeInfo = routeNames[route] ?? { zh: "校車", en: "Campus Bus" };
-  const routeName = lang === "zh" ? routeInfo.zh : routeInfo.en;
+  const routeName = routeNames[route] ?? dict.bus.route_default;
 
   const busRouteJsonLd = [
     {
@@ -42,13 +51,13 @@ const BusRouteDetailsPage = () => {
         {
           "@type": "ListItem",
           position: 1,
-          name: "首頁",
+          name: "NTHUMods",
           item: `https://nthumods.com/${lang}`,
         },
         {
           "@type": "ListItem",
           position: 2,
-          name: "校車",
+          name: dict.bus.title,
           item: `https://nthumods.com/${lang}/bus`,
         },
         {
@@ -62,8 +71,8 @@ const BusRouteDetailsPage = () => {
     {
       "@context": "https://schema.org",
       "@type": "WebPage",
-      name: `${routeName} - 校車時刻表 | NTHUMods`,
-      description: `查看清華大學校車${routeName}即時時刻表、路線圖與站點資訊`,
+      name: `${routeName} - ${dict.bus.title} | NTHUMods`,
+      description: dict.bus.description,
       url: `https://nthumods.com/${lang}/bus/${route}`,
       inLanguage: lang === "en" ? "en-US" : "zh-TW",
       isPartOf: { "@type": "WebSite", url: "https://nthumods.com" },
@@ -89,6 +98,7 @@ const BusRouteDetailsPage = () => {
     data: mainBusData,
     isLoading: isMainBusLoading,
     error: mainBusError,
+    refetch: refetchMain,
   } = useQuery({
     queryKey: ["mainBuses"],
     queryFn: getMainBuses,
@@ -99,6 +109,7 @@ const BusRouteDetailsPage = () => {
     data: nandaBusData,
     isLoading: isNandaBusLoading,
     error: nandaBusError,
+    refetch: refetchNanda,
   } = useQuery({
     queryKey: ["nandaBuses"],
     queryFn: getNandaBuses,
@@ -109,6 +120,7 @@ const BusRouteDetailsPage = () => {
     data: route1BusData,
     isLoading: isRoute1BusLoading,
     error: route1BusError,
+    refetch: refetchRoute1,
   } = useQuery({
     queryKey: ["route1Buses"],
     queryFn: getRoute1Buses,
@@ -119,6 +131,7 @@ const BusRouteDetailsPage = () => {
     data: route2BusData,
     isLoading: isRoute2BusLoading,
     error: route2BusError,
+    refetch: refetchRoute2,
   } = useQuery({
     queryKey: ["route2Buses"],
     queryFn: getRoute2Buses,
@@ -133,44 +146,57 @@ const BusRouteDetailsPage = () => {
     isRoute2BusLoading
   ) {
     return (
-      <>
+      <PageShell width="full" gap={false}>
         {seoHelmet}
-        <div className="flex justify-center items-center min-h-[200px]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-nthu-500"></div>
-        </div>
-      </>
+        <PageHeader title={routeName} />
+        <PageSkeleton rows={6} />
+      </PageShell>
     );
   }
 
   // Error state
   if (mainBusError || nandaBusError || route1BusError || route2BusError) {
     return (
-      <>
+      <PageShell width="full" gap={false}>
         {seoHelmet}
-        <div className="flex justify-center items-center min-h-[200px]">
-          <div className="text-red-500">
-            {dict.bus.load_error}
-          </div>
-        </div>
-      </>
+        <PageHeader title={routeName} />
+        <ErrorState
+          title={dict.bus.load_error_title}
+          description={dict.bus.load_error_description}
+          retryLabel={dict.common.try_again}
+          onRetry={() => {
+            void Promise.all([
+              refetchMain(),
+              refetchNanda(),
+              refetchRoute1(),
+              refetchRoute2(),
+            ]);
+          }}
+        />
+      </PageShell>
     );
   }
 
   if (route === "main" && mainBusData) {
     return (
-      <>
+      <PageShell width="full" gap={false}>
         {seoHelmet}
+        <PageHeader
+          title={routeName}
+          actions={
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              aria-label={dict.common.back}
+              title={dict.common.back}
+              onClick={() => navigate(`/${lang}/bus`)}
+            >
+              <ChevronLeft aria-hidden="true" />
+            </Button>
+          }
+        />
         <BusDetailsContainer
-          routes={[
-            {
-              Icon: RedLineIcon,
-              title: dict.bus.red_line,
-            },
-            {
-              Icon: GreenLineIcon,
-              title: dict.bus.green_line,
-            },
-          ]}
           up={{
             title: dict.bus.to + dict.bus.tsmc,
             info: mainBusData.toward_TSMC_building_info,
@@ -184,23 +210,28 @@ const BusRouteDetailsPage = () => {
             weekend: mainBusData.weekend_bus_schedule_toward_main_gate,
           }}
         />
-      </>
+      </PageShell>
     );
   } else if (route === "nanda" && nandaBusData) {
     return (
-      <>
+      <PageShell width="full" gap={false}>
         {seoHelmet}
+        <PageHeader
+          title={routeName}
+          actions={
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              aria-label={dict.common.back}
+              title={dict.common.back}
+              onClick={() => navigate(`/${lang}/bus`)}
+            >
+              <ChevronLeft aria-hidden="true" />
+            </Button>
+          }
+        />
         <BusDetailsContainer
-          routes={[
-            {
-              Icon: Route1LineIcon,
-              title: dict.bus.route1_line,
-            },
-            {
-              Icon: Route2LineIcon,
-              title: dict.bus.route2_line,
-            },
-          ]}
           up={{
             title: dict.bus.to + dict.bus.nanda,
             info: nandaBusData.toward_south_campus_info,
@@ -214,7 +245,77 @@ const BusRouteDetailsPage = () => {
             weekend: nandaBusData.weekend_bus_schedule_toward_main_campus,
           }}
         />
-      </>
+      </PageShell>
+    );
+  } else if (route === "route1" && route1BusData) {
+    return (
+      <PageShell width="full" gap={false}>
+        {seoHelmet}
+        <PageHeader
+          title={routeName}
+          actions={
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              aria-label={dict.common.back}
+              title={dict.common.back}
+              onClick={() => navigate(`/${lang}/bus`)}
+            >
+              <ChevronLeft aria-hidden="true" />
+            </Button>
+          }
+        />
+        <BusDetailsContainer
+          up={{
+            title: dict.bus.to + dict.bus.nanda,
+            info: route1BusData.toward_south_campus_info,
+            weekday: route1BusData.weekday_bus_schedule_toward_south_campus,
+            weekend: route1BusData.weekend_bus_schedule_toward_south_campus,
+          }}
+          down={{
+            title: dict.bus.to + dict.bus.main_campus,
+            info: route1BusData.toward_main_campus_info,
+            weekday: route1BusData.weekday_bus_schedule_toward_main_campus,
+            weekend: route1BusData.weekend_bus_schedule_toward_main_campus,
+          }}
+        />
+      </PageShell>
+    );
+  } else if (route === "route2" && route2BusData) {
+    return (
+      <PageShell width="full" gap={false}>
+        {seoHelmet}
+        <PageHeader
+          title={routeName}
+          actions={
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              aria-label={dict.common.back}
+              title={dict.common.back}
+              onClick={() => navigate(`/${lang}/bus`)}
+            >
+              <ChevronLeft aria-hidden="true" />
+            </Button>
+          }
+        />
+        <BusDetailsContainer
+          up={{
+            title: dict.bus.to + dict.bus.nanda,
+            info: route2BusData.toward_south_campus_info,
+            weekday: route2BusData.weekday_bus_schedule_toward_south_campus,
+            weekend: route2BusData.weekend_bus_schedule_toward_south_campus,
+          }}
+          down={{
+            title: dict.bus.to + dict.bus.main_campus,
+            info: route2BusData.toward_main_campus_info,
+            weekday: route2BusData.weekday_bus_schedule_toward_main_campus,
+            weekend: route2BusData.weekend_bus_schedule_toward_main_campus,
+          }}
+        />
+      </PageShell>
     );
   }
 

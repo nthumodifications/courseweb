@@ -26,7 +26,7 @@ const VenueList = ({ venues }: { venues: string[] }) => {
     textSearch == "" ? venues : filtered.map((mod) => mod.item)
   ).reduce(
     (acc, venue) => {
-      const key = venue.match(/^[a-zA-Z0-9]+/)?.[0] || "Other";
+      const key = venue.match(/^[a-zA-Z0-9]+/)?.[0] || dict.venues.other;
       if (!acc[key]) acc[key] = [];
       acc[key].push(venue);
       return acc;
@@ -35,21 +35,21 @@ const VenueList = ({ venues }: { venues: string[] }) => {
   );
 
   return (
-    <div className="px-8 py-4 space-y-4">
+    <div className="space-y-4 p-4">
       <Input
         className="sticky top-0"
         placeholder={dict.common.search}
         value={textSearch}
         onChange={(e) => setTextSearch(e.target.value)}
       />
-      {Object.keys(grouped).map((ven, i) => {
+      {Object.keys(grouped).map((ven) => {
         return (
           <div key={ven} className="flex flex-col gap-2">
-            <h2 className="text-lg font-semibold">{ven}</h2>
+            <h2 className="text-base font-semibold">{ven}</h2>
             <div className="grid grid-cols-2 md:grid-cols-3">
-              {grouped[ven].map((venue, i) => (
-                <Link key={i} to={`/${language}/venues/${venue}`}>
-                  <Button className="text-gray-400" variant="ghost">
+              {grouped[ven].map((venue) => (
+                <Link key={venue} to={`/${language}/venues/${venue}`}>
+                  <Button className="w-full text-muted-foreground" variant="ghost">
                     {venue}
                   </Button>
                 </Link>

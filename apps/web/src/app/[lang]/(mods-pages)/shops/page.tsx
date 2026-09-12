@@ -1,12 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import ShopList from "./ShopList";
-import { EmptyState, PageHeader, PageShell, PageSkeleton } from "@courseweb/ui";
-import { Store } from "lucide-react";
+import { PageHeader, PageShell, PageSkeleton } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
+import ErrorState from "@/components/Pages/ErrorState";
 
 export default function Page() {
   const dict = useDictionary();
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["dining"],
     queryFn: async () => {
       const res = await fetch("https://api.nthusa.tw/dining/");
@@ -29,10 +29,11 @@ export default function Page() {
     return (
       <PageShell width="app">
         <PageHeader title={dict.shops.title} />
-        <EmptyState
-          icon={Store}
+        <ErrorState
           title={dict.shops.load_error}
           description={dict.shops.load_error_description}
+          retryLabel={dict.common.try_again}
+          onRetry={() => void refetch()}
         />
       </PageShell>
     );

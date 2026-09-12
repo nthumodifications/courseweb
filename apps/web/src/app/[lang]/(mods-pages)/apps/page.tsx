@@ -1,117 +1,138 @@
 import { apps, categories } from "@/const/apps";
-import { Settings, Star, ArrowRight } from "lucide-react";
+import { Settings, Star } from "lucide-react";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useSettings } from "@/hooks/contexts/settings";
 import { cn } from "@courseweb/ui";
-import { Dialog, DialogContent, DialogTrigger } from "@courseweb/ui";
-import { ScrollArea } from "@courseweb/ui";
-import { Button } from "@courseweb/ui";
-import AppItem from "./AppItem";
-import { Link } from "react-router-dom";
-import SponsorshipBanner from "@/components/Sponsorship/SponsorshipBanner";
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  EmptyState,
+  PageHeader,
+  PageShell,
+  ScrollArea,
+} from "@courseweb/ui";
+import AppItem, { AppIcon } from "./AppItem";
 
 const AppList = () => {
   const dict = useDictionary();
-  const { language, pinnedApps, toggleApp } = useSettings();
+  const { pinnedApps, toggleApp } = useSettings();
+  const appTitles = dict.applist.apps as Record<string, string>;
+  const categoryTitles = dict.applist.categories as Record<string, string>;
 
   return (
-    <div className="h-full w-full px-2">
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-2">
-        <div className="flex flex-col p-4 rounded-md border border-border gap-4">
-          <div className="flex flex-row items-center">
-            <h1 className="font-bold text-muted-foreground flex-1">
-              {dict.applist.pinned_apps_title}
-            </h1>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Settings size={20} className="cursor-pointer" />
-              </DialogTrigger>
-              <DialogContent>
-                <div className="flex flex-col gap-4">
-                  <h1 className="font-bold text-muted-foreground">
-                    {dict.applist.edit_pinned_apps_title}
-                  </h1>
-                  <ScrollArea className="max-h-[80dvh]">
-                    <div className="flex flex-col gap-2">
-                      {apps
-                        .filter((a) => !a.hidden)
-                        .map((app) => (
-                          <div
-                            key={app.id}
-                            className="flex flex-row items-center space-x-2"
-                          >
-                            <div className="p-2 rounded-lg bg-primary/10 text-primary grid place-items-center relative">
-                              <app.Icon size={24} />
-                              {app.beta && (
-                                <div className="absolute -top-2 -right-2 bg-blue-500 text-white text-[8px] px-1 rounded-full font-semibold">
-                                  BETA
-                                </div>
-                              )}
-                            </div>
-                            <div className="flex flex-col flex-1">
-                              <h2 className=" font-medium">
-                                {language == "zh" ? app.title_zh : app.title_en}
-                              </h2>
-                            </div>
-                            <div className="flex flex-row items-center space-x-2 pr-4">
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                onClick={() => toggleApp(app.id)}
-                              >
-                                <Star
-                                  size={20}
-                                  className={cn(
-                                    !pinnedApps.includes(app.id)
-                                      ? ""
-                                      : "fill-yellow-500 stroke-yellow-500",
-                                  )}
-                                />
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
+    <PageShell width="app">
+      <PageHeader title={dict.applist.title} />
+      <div className="grid items-stretch gap-2 sm:grid-cols-2 xl:grid-cols-3">
+        <Dialog>
+          <div className="flex h-full flex-col gap-4 rounded-lg border border-border bg-card p-4">
+            <div className="flex flex-row items-center">
+              <h2 className="flex-1 text-base font-semibold">
+                {dict.applist.pinned_apps_title}
+              </h2>
+              {pinnedApps.length > 0 && (
+                <DialogTrigger asChild>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    aria-label={dict.applist.open_settings}
+                    title={dict.applist.open_settings}
+                  >
+                    <Settings aria-hidden="true" />
+                  </Button>
+                </DialogTrigger>
+              )}
+            </div>
+
+            <div className="grid flex-1 gap-2 md:grid-cols-2">
+              {apps
+                .filter((app) => pinnedApps.includes(app.id))
+                .map((app) => (
+                  <AppItem key={app.id} app={app} />
+                ))}
+            </div>
+
+            {pinnedApps.length === 0 && (
+              <EmptyState
+                size="sm"
+                icon={Star}
+                title={dict.applist.empty_pinned_apps_title}
+                description={dict.applist.empty_pinned_apps_description}
+                action={
+                  <DialogTrigger asChild>
+                    <Button type="button" variant="outline">
+                      <Settings aria-hidden="true" />
+                      {dict.applist.pin_apps}
+                    </Button>
+                  </DialogTrigger>
+                }
+              />
+            )}
+          </div>
+
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{dict.applist.edit_pinned_apps_title}</DialogTitle>
+            </DialogHeader>
+            <ScrollArea className="max-h-[80dvh]">
+              <div className="flex flex-col gap-2">
+                {apps
+                  .filter((app) => !app.hidden)
+                  .map((app) => (
+                    <div
+                      key={app.id}
+                      className="flex flex-row items-center gap-2"
+                    >
+                      <AppIcon app={app} />
+                      <div className="flex min-w-0 flex-1 flex-col">
+                        <h3 className="font-medium">{appTitles[app.id]}</h3>
+                      </div>
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        aria-label={appTitles[app.id]}
+                        onClick={() => toggleApp(app.id)}
+                      >
+                        <Star
+                          aria-hidden="true"
+                          className={cn(
+                            pinnedApps.includes(app.id) &&
+                              "fill-primary stroke-primary",
+                          )}
+                        />
+                      </Button>
                     </div>
-                  </ScrollArea>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-          <div className="grid md:grid-cols-2 gap-2">
-            {apps
-              .filter((app) => pinnedApps.includes(app.id))
-              .map((app) => (
-                <AppItem key={app.id} app={app} />
-              ))}
-          </div>
-          {pinnedApps.length == 0 && (
-            <p data-nosnippet className="text-muted-foreground text-center">
-              {dict.applist.empty_pinned_apps_reminder}
-            </p>
-          )}
-        </div>
+                  ))}
+              </div>
+            </ScrollArea>
+          </DialogContent>
+        </Dialog>
 
         {Object.keys(categories).map((category) => (
           <div
-            className="flex flex-col p-4 rounded-md border border-border gap-4"
+            className="flex h-full flex-col gap-4 rounded-lg border border-border bg-card p-4"
             key={category}
           >
-            <h1 className="font-bold text-muted-foreground">
-              {categories[category][`title_${language}`]}
-            </h1>
-            <div className="grid md:grid-cols-2 gap-2">
+            <h2 className="text-base font-semibold">
+              {categoryTitles[category]}
+            </h2>
+            <div className="grid flex-1 gap-2 md:grid-cols-2">
               {apps
-                .filter((a) => !a.hidden)
-                .filter((m) => m.category === category)
+                .filter((app) => !app.hidden)
+                .filter((app) => app.category === category)
                 .map((app) => (
                   <AppItem key={app.id} app={app} />
                 ))}
             </div>
           </div>
         ))}
-        <SponsorshipBanner />
       </div>
-    </div>
+    </PageShell>
   );
 };
 

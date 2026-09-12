@@ -325,9 +325,47 @@
     "empty_description": "場館即時人數與開放時間暫時沒有可顯示的資料。",
     "data_source": "資料來源：",
     "source_name": "國立清華大學體育中心",
-    "source_aria": "國立清華大學體育中心（在新分頁開啟）"
+    "source_aria": "國立清華大學體育中心（在新分頁開啟）",
+    "load_error_title": "無法載入場館資料",
+    "load_error_description": "場館資料暫時無法取得，請再試一次。"
   },
   "bus": {
+    "title": "校車",
+    "description": "掌握校園校車路線、班次與站點，輕鬆規劃日常通勤。",
+    "stations": {
+      "green": {
+        "zh": ["北校門口", "綜二", "楓林小徑", "奕園停車場", "南門停車場", "台積館", "人社院/生科院", "綜二", "北校門口"],
+        "en": ["North Main Gate", "General Building II", "Maple Path", "Yi Pavilion Parking Lot", "South Gate Parking Lot", "TSMC Building", "South Gate Parking Lot", "Yi Pavilion Parking Lot", "General Building II", "North Main Gate"]
+      },
+      "red": {
+        "zh": ["北校門口", "綜二", "楓林小徑", "人社院/生科院", "台積館", "南門停車場", "奕園停車場", "綜二", "北校門口"],
+        "en": ["North Main Gate", "General Building II", "Maple Path", "CHSS/CLS Building", "TSMC Building", "South Gate Parking Lot", "Yi Pavilion Parking Lot", "General Building II", "North Main Gate"]
+      },
+      "nanda_up": {
+        "zh": ["北校門口", "綜二", "人社院/生科院", "台積館", "南大校區"],
+        "en": ["Nanda Line", "General Building II", "CHSS/CLS Building", "TSMC Building", "Nanda Campus"]
+      },
+      "nanda_down": {
+        "zh": ["南大校區", "台積館", "人社院/生科院", "綜二", "北校門口"],
+        "en": ["Nanda Campus", "TSMC Building", "CHSS/CLS Building", "General Building II", "North Main Gate"]
+      },
+      "route1_up": {
+        "zh": ["北校門口", "綜二", "人社院/生科院", "台積館(經寶山路)", "南大校區"],
+        "en": ["North Main Gate", "General Building II", "CHSS/CLS Building", "TSMC Building(Baoshan Rd.)", "Nanda Campus"]
+      },
+      "route1_down": {
+        "zh": ["南大校區", "台積館(經寶山路)", "人社院/生科院", "綜二", "北校門口"],
+        "en": ["Nanda Campus", "TSMC Building(Baoshan Rd.)", "CHSS/CLS Building", "General Building II", "North Main Gate"]
+      },
+      "route2_up": {
+        "zh": ["北校門口", "綜二", "奕園停車場", "教育學院大樓/南門停車場(經寶山路)", "南大校區"],
+        "en": ["North Main Gate", "General Building II", "Yi Pavilion Parking Lot", "COE Building/South Gate Parking Lot(Baoshan Rd.)", "Nanda Campus"]
+      },
+      "route2_down": {
+        "zh": ["南大校區", "教育學院大樓/南門停車場(經寶山路)", "奕園停車場", "綜二", "北校門口"],
+        "en": ["Nanda Campus", "COE Building/South Gate Parking Lot(Baoshan Rd.)", "Yi Pavilion Parking Lot", "General Building II", "North Main Gate"]
+      }
+    },
     "north_gate": "北校門口",
     "tsmc": "台積館",
     "nanda": "南大校區",
@@ -349,6 +387,18 @@
     "to": "往",
     "schedule": "發車時刻表",
     "load_error": "無法載入校車資料，請稍後再試。",
+    "load_error_title": "無法載入校車資料",
+    "load_error_description": "校車資料暫時無法取得，請再試一次。",
+    "route_main": "校園公車",
+    "route_nanda": "南大校區區間車",
+    "route_default": "校車",
+    "nanda_combined": "南大校車 經台積館與經教育學院",
+    "departure_from_gen2": "綜二發車",
+    "bus83": "83號",
+    "to_nanda": "往南大校區",
+    "to_main": "往校本部",
+    "minutes": "{minutes} 分鐘",
+    "invalid_line_description": "這條校車路線不存在，請返回校車頁面。",
     "invalid_line": "無效路線",
     "large_bus": "大型校車",
     "friday_closed": "週五停駛"
@@ -684,16 +734,29 @@
     "waitlist_message": "敬請期待 NTHUMods 的新功能。"
   },
   "venues": {
-    "placeholder": "從選項中選一個地點"
+    "title": "地點",
+    "description": "搜尋清大校園教室、建築與設施位置。",
+    "placeholder": "從選項中選一個地點",
+    "placeholder_title": "選擇一個地點",
+    "placeholder_description": "從左側清單選擇地點，就能查看該地點的課程。",
+    "empty_title": "目前沒有地點資料",
+    "empty_description": "目前沒有可顯示的地點，請稍後再試。",
+    "load_error_title": "無法載入地點資料",
+    "load_error_description": "地點清單暫時無法取得，請再試一次。",
+    "other": "其他"
   },
   "campus_map": {
     "title": "3D 校園地圖",
+    "description": "以 3D 地圖探索清大校本部，搜尋教室與建築。",
     "searchLabel": "搜尋校園建築",
     "searchPlaceholder": "搜尋台達、DELTA 或 DELTA台達629",
     "noResults": "找不到已建立地圖位置的校園建築。",
     "venueNotMapped": "這個地點尚未建立地圖位置",
     "loading": "正在載入清大校園地圖…",
     "loadError": "無法載入校園地圖資料。",
+    "loadErrorTitle": "無法載入校園地圖",
+    "loadErrorDescription": "校園地圖資料暫時無法取得，請再試一次。",
+    "retry": "再試一次",
     "webglError": "無法使用 3D 地圖",
     "webglErrorDetail": "目前的瀏覽器或裝置不支援 WebGL。",
     "resetCamera": "重設鏡頭",
@@ -724,7 +787,52 @@
     "to_ccxp": "校務系統連結",
     "empty_pinned_apps_reminder": "可以到右上角新增常用功能喔～",
     "pinned_apps_title": "常用功能",
-    "edit_pinned_apps_title": "編輯常用功能"
+    "edit_pinned_apps_title": "編輯常用功能",
+    "open_settings": "編輯常用功能",
+    "pin_apps": "選擇常用功能",
+    "empty_pinned_apps_title": "還沒有常用功能",
+    "empty_pinned_apps_description": "選擇常用功能後，它們會顯示在這裡。",
+    "beta": "Beta",
+    "categories": {
+      "campuslife": "校園生活",
+      "course": "課程資訊",
+      "club": "社團",
+      "other": "其他"
+    },
+    "apps": {
+      "courses": "課程查詢",
+      "chat": "AI 課程助手",
+      "venues": "地點相關課程",
+      "campus-map": "互動式校園地圖",
+      "bus": "公車",
+      "sports-venues": "體育場館使用人數",
+      "shops": "餐廳及服務",
+      "calendar": "日曆",
+      "timetable-community": "社群課表",
+      "clubs_info": "社團資訊",
+      "chumei": "竹梅活動觀測站",
+      "scholarship": "清華助學系統",
+      "planner": "畢業規劃"
+    }
+  },
+  "community": {
+    "title": "社群課表",
+    "description": "看看清大學生分享的課表，找找選課靈感。",
+    "all_semesters": "所有學期",
+    "live": "即時",
+    "snapshot": "快照",
+    "courses_unit": "門課",
+    "more_notes": "還有 {count} 則備註",
+    "difficulty": "難度",
+    "grade": "成績",
+    "attendance": "出席",
+    "view_full_page": "檢視完整頁面",
+    "previous": "上一頁",
+    "load_more": "載入更多",
+    "empty_title": "目前沒有公開課表",
+    "empty_description": "這個篩選條件還沒有公開課表。分享課表並開啟「公開畫廊」後，就會顯示在這裡。",
+    "load_error_title": "無法載入社群課表",
+    "load_error_description": "社群課表暫時無法取得，請再試一次。"
   },
   "dialogs": {
     "DownloadTimetableDialog": {
@@ -896,6 +1004,24 @@
     "all_courses": "全部課程",
     "semester_grades": "學期成績",
     "t_score": "T 分數成績"
+  },
+  "student": {
+    "id": {
+      "title": "學生證",
+      "description": "查看數位學生證與校園身分資訊。",
+      "signed_out_title": "請先登入查看學生證",
+      "signed_out_description": "登入 NTHUMods 後，就能使用數位學生證功能。",
+      "unavailable_title": "學生證功能尚未開放",
+      "unavailable_description": "數位學生證功能目前還在準備中。"
+    },
+    "parcel": {
+      "title": "包裹",
+      "description": "查看寄送到清大的包裹收件狀況。",
+      "signed_out_title": "請先登入查看包裹",
+      "signed_out_description": "登入 NTHUMods 後，就能查看你的包裹資訊。",
+      "unavailable_title": "包裹功能尚未開放",
+      "unavailable_description": "包裹查詢功能目前還在準備中。"
+    }
   },
   "calendar": {
     "page_title": "行事曆",
@@ -1217,6 +1343,12 @@
     }
   },
   "planner": {
+    "title": "畢業規劃",
+    "description": "整理畢業要求、課程與學期安排。",
+    "signed_out_title": "請先登入使用畢業規劃",
+    "signed_out_description": "登入 NTHUMods 後，就能保存並管理你的畢業規劃。",
+    "load_error_title": "無法載入畢業規劃",
+    "load_error_description": "畢業規劃暫時無法開啟，請再試一次。",
     "status": {
       "completed": "已完成",
       "inProgress": "進行中",
@@ -1556,6 +1688,31 @@
       "delete": "刪除",
       "clearSelection": "清除選取"
     }
+  },
+  "group": {
+    "title": "課表群組",
+    "load_error_title": "無法載入課表群組",
+    "load_error_description": "課表群組暫時無法取得，請再試一次。",
+    "not_found_title": "找不到課表群組",
+    "not_found_description": "這個課表群組可能已經不存在。",
+    "copy_invite": "複製邀請連結",
+    "leave": "離開群組",
+    "delete": "刪除群組",
+    "delete_confirm": "確定要刪除這個群組嗎？此操作無法復原。",
+    "members": "成員",
+    "member_count": "{count} 位成員",
+    "courses_unit": "門課",
+    "no_member_selected_title": "尚未選擇成員",
+    "no_member_selected_description": "從右側開啟成員，就能在課表上查看他們的安排。",
+    "join_title": "加入這個群組",
+    "join_description": "輸入名稱，讓群組成員辨識你。系統會自動連結你的課表。",
+    "name_placeholder": "你的姓名或暱稱",
+    "join": "加入群組",
+    "name_required": "請輸入你的姓名或暱稱",
+    "group_not_loaded": "課表群組尚未載入",
+    "joined": "已加入群組",
+    "left": "已離開群組",
+    "deleted": "已刪除群組"
   },
   "test": {},
   "team": {

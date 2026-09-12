@@ -1,10 +1,10 @@
 import { useSettings } from "@/hooks/contexts/settings";
 import { Helmet } from "react-helmet-async";
-import { Tabs, TabsList, TabsTrigger } from "@courseweb/ui";
+import { Skeleton, Tabs, TabsList, TabsTrigger } from "@courseweb/ui";
 import { FC, SVGProps, useEffect, useMemo, useState } from "react";
 import useTime from "@/hooks/useTime";
 import { useQuery } from "@tanstack/react-query";
-import { getAllBusData, CompleteBusData } from "@/libs/bus";
+import { getAllBusData } from "@/libs/bus";
 import {
   addMinutes,
   differenceInMinutes,
@@ -22,7 +22,8 @@ import { Route2LineIcon } from "@/components/BusIcons/Route2LineIcon";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { getTimeOnDate } from "@/helpers/bus";
 import useDictionary from "@/dictionaries/useDictionary";
-import OpenCollectiveSponsorBanner from "@/components/Sponsorship/OpenCollectiveSponsorBanner";
+import ErrorState from "@/components/Pages/ErrorState";
+import { PageHeader, PageShell } from "@courseweb/ui";
 
 type BusListingItemProps = {
   tab: string;
@@ -66,7 +67,10 @@ const BusListingItem = ({
     }
     // within 5 minutes, display relative time
     else if (time_arr.getTime() - refTime.getTime() < 5 * 60 * 1000) {
-      return `${differenceInMinutes(time_arr, refTime)} min`;
+      return dict.bus.minutes.replace(
+        "{minutes}",
+        String(differenceInMinutes(time_arr, refTime)),
+      );
     }
     return arrival;
   }, [arrival, refTime, dict]);
@@ -77,9 +81,6 @@ const BusListingItem = ({
 
   // index should start at 0 if is green/up and red/up, but when is down , green/down should start at 5 and red/down at 4
   // if is nanda, both dir index should start at 0
-  const index =
-    direction == "up" ? 0 : line == "green" ? 5 : line == "red" ? 4 : 0;
-
   const handleItemClick = () => {
     navigate(
       `/${language}/bus/${route}/${line == "nanda" || line == "route1" || line == "route2" ? `${line}_${direction}` : line}?return_url=/${language}/bus?tab=${tab}`,
@@ -93,42 +94,44 @@ const BusListingItem = ({
         arrival == dict.bus.service_over ? "opacity-30" : "",
       )}
     >
-      <div
-        className={cn("flex flex-row items-center gap-4 cursor-pointer")}
+      <button
+        type="button"
+        className={cn(
+          "flex w-full flex-row items-center gap-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        )}
         onClick={handleItemClick}
       >
-        <Icon className="h-7 w-7" />
-        <div className="flex flex-row flex-wrap gap-2">
-          <h3 className="text-foreground font-bold">
+        <Icon className="h-7 w-7 shrink-0" />
+        <div className="flex min-w-0 flex-1 flex-row flex-wrap gap-2">
+          <h3 className="font-bold text-foreground">
             <span>{title}</span>
             {destination && <span>-{destination}</span>}
           </h3>
+          <span
+            className={cn(
+              "ml-auto whitespace-nowrap text-right font-bold text-foreground",
+              displayTime == dict.bus.departing ? "text-primary" : "",
+            )}
+          >
+            {displayTime}
+          </span>
         </div>
-        <div
-          className={cn(
-            "flex-1 text-right text-foreground font-bold whitespace-nowrap",
-            displayTime == dict.bus.departing ? "text-nthu-500" : "",
-          )}
-        >
-          {displayTime}
-        </div>
-        <div className="grid place-items-center">
+        <span className="grid place-items-center">
           <ChevronRight className="w-4 h-4" />
-        </div>
-      </div>
+        </span>
+      </button>
       <div className="flex flex-row gap-2">
-        <div
-          className="justify-center items-center gap-2 inline-flex cursor-pointer"
+        <button
+          type="button"
+          className="inline-flex items-center justify-center gap-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           onClick={() => navigate(`/${language}/bus/${route}`)}
         >
           <Timer className="w-4 h-4" />
-          <div className="text-center text-sm font-medium">
-            {dict.bus.schedule}
-          </div>
-        </div>
+          <span className="text-center text-sm font-medium">{dict.bus.schedule}</span>
+        </button>
         {notes.map((note) => (
           <div
-            className="justify-center items-center gap-2 inline-flex"
+            className="inline-flex items-center justify-center gap-2"
             key={note}
           >
             <div className="text-center text-sm font-medium">・{note}</div>
@@ -159,6 +162,7 @@ const BusPage = () => {
     data: busData,
     isLoading,
     error,
+    refetch,
   } = useQuery({
     queryKey: ["all_bus_data"],
     queryFn: getAllBusData,
@@ -190,7 +194,7 @@ const BusPage = () => {
           const notes = [];
           if (bus.description) notes.push(bus.description);
           if (bus.dep_stop === "綜二 ")
-            notes.push(language == "zh" ? "綜二發車" : "Dep. from GEN II");
+            notes.push(dict.bus.departure_from_gen2);
           if (bus.line === "red") {
             if (returnData.some((bus) => bus.line === "red")) continue;
             returnData.push({
@@ -232,7 +236,7 @@ const BusPage = () => {
         if (bus.description == "週五停駛" && time.getDay() === 5) continue;
         const notes = [];
         if (bus.description.includes("83號"))
-          notes.push(language == "zh" ? "83號" : "Bus 83");
+          notes.push(dict.bus.bus83);
         returnData.push({
           tab: "north_gate",
           Icon: Route1LineIcon,
@@ -240,7 +244,7 @@ const BusPage = () => {
           line: "route1",
           direction: "up",
           title: dict.bus.route1_line,
-          destination: language == "zh" ? "往南大校區" : "To Nanda",
+          destination: dict.bus.to_nanda,
           notes,
           arrival: bus.time,
         });
@@ -259,7 +263,7 @@ const BusPage = () => {
         if (bus.description == "週五停駛" && time.getDay() === 5) continue;
         const notes = [];
         if (bus.description.includes("83號"))
-          notes.push(language == "zh" ? "83號" : "Bus 83");
+          notes.push(dict.bus.bus83);
         returnData.push({
           tab: "north_gate",
           Icon: Route2LineIcon,
@@ -267,7 +271,7 @@ const BusPage = () => {
           line: "route2",
           direction: "up",
           title: dict.bus.route2_line,
-          destination: language == "zh" ? "往南大校區" : "To Nanda",
+          destination: dict.bus.to_nanda,
           notes,
           arrival: bus.time,
         });
@@ -281,7 +285,7 @@ const BusPage = () => {
           const notes = [];
           if (bus.description) notes.push(bus.description);
           if (bus.dep_stop === "綜二 ")
-            notes.push(language == "zh" ? "綜二發車" : "Dep. from GEN II");
+            notes.push(dict.bus.departure_from_gen2);
           if (bus.line === "red") {
             if (returnData.some((bus) => bus.line === "red")) continue;
             returnData.push({
@@ -320,7 +324,7 @@ const BusPage = () => {
           if (bus.description == "週五停駛" && time.getDay() === 5) continue;
           const notes = [];
           if (bus.description.includes("83號"))
-            notes.push(language == "zh" ? "83號" : "Bus 83");
+            notes.push(dict.bus.bus83);
           returnData.push({
             tab: "tsmc",
             Icon: Route1LineIcon,
@@ -328,7 +332,7 @@ const BusPage = () => {
             line: "route1",
             direction: "up",
             title: dict.bus.route1_line,
-            destination: language == "zh" ? "往南大校區" : "To Nanda",
+            destination: dict.bus.to_nanda,
             notes,
             arrival: format(
               addMinutes(getTimeOnDate(time, bus.time).getTime(), 7),
@@ -356,7 +360,7 @@ const BusPage = () => {
         if (bus.description == "週五停駛" && time.getDay() === 5) continue;
         const notes = [];
         if (bus.description.includes("83號"))
-          notes.push(language == "zh" ? "83號" : "Bus 83");
+          notes.push(dict.bus.bus83);
         returnData.push({
           tab: "nanda",
           Icon: Route1LineIcon,
@@ -364,7 +368,7 @@ const BusPage = () => {
           line: "route1",
           direction: "down",
           title: dict.bus.route1_line,
-          destination: language == "zh" ? "往校本部" : "To Main Campus",
+          destination: dict.bus.to_main,
           notes,
           arrival: bus.time,
         });
@@ -380,7 +384,7 @@ const BusPage = () => {
         if (bus.description == "週五停駛" && time.getDay() === 5) continue;
         const notes = [];
         if (bus.description.includes("83號"))
-          notes.push(language == "zh" ? "83號" : "Bus 83");
+          notes.push(dict.bus.bus83);
         returnData.push({
           tab: "nanda",
           Icon: Route2LineIcon,
@@ -388,7 +392,7 @@ const BusPage = () => {
           line: "route2",
           direction: "down",
           title: dict.bus.route2_line,
-          destination: language == "zh" ? "往校本部" : "To Main Campus",
+          destination: dict.bus.to_main,
           notes,
           arrival: bus.time,
         });
@@ -452,9 +456,8 @@ const BusPage = () => {
   const busPageJsonLd = {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    name: "校車時刻表 | NTHUMods",
-    description:
-      "查看清華大學校車即時時刻表，包含校園巴士、南大區間車等路線資訊",
+    name: `${dict.bus.title} | NTHUMods`,
+    description: dict.bus.description,
     url: `https://nthumods.com/${language}/bus`,
     inLanguage: language === "en" ? "en-US" : "zh-TW",
     isPartOf: { "@type": "WebSite", url: "https://nthumods.com" },
@@ -470,31 +473,47 @@ const BusPage = () => {
 
   if (isLoading) {
     return (
-      <>
+      <PageShell width="full">
         {seoHelmet}
-        <div className="flex justify-center items-center min-h-[200px]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-nthu-500"></div>
+        <PageHeader title={dict.bus.title} description={dict.bus.description} />
+        <div className="space-y-3" role="status" aria-busy="true">
+          {Array.from({ length: 5 }, (_, index) => (
+            <div
+              key={index}
+              className="flex items-center gap-4 border-b border-border py-4"
+            >
+              <Skeleton className="h-7 w-7 shrink-0 rounded-full" />
+              <div className="flex flex-1 flex-col gap-2">
+                <Skeleton className="h-5 w-2/5" />
+                <Skeleton className="h-4 w-1/4" />
+              </div>
+              <Skeleton className="h-5 w-16" />
+            </div>
+          ))}
         </div>
-      </>
+      </PageShell>
     );
   }
 
   if (error) {
     return (
-      <>
+      <PageShell width="full">
         {seoHelmet}
-        <div className="flex justify-center items-center min-h-[200px]">
-          <div className="text-red-500">
-            {dict.bus.load_error}
-          </div>
-        </div>
-      </>
+        <PageHeader title={dict.bus.title} description={dict.bus.description} />
+        <ErrorState
+          title={dict.bus.load_error_title}
+          description={dict.bus.load_error_description}
+          retryLabel={dict.common.try_again}
+          onRetry={() => void refetch()}
+        />
+      </PageShell>
     );
   }
 
   return (
-    <div className="flex flex-col px-4">
+    <PageShell width="full">
       {seoHelmet}
+      <PageHeader title={dict.bus.title} description={dict.bus.description} />
       <Tabs
         defaultValue="north_gate"
         value={tab}
@@ -511,15 +530,13 @@ const BusPage = () => {
             {dict.bus.nanda}
           </TabsTrigger>
         </TabsList>
-        <div className="flex flex-col px-2 divide-y divide-border">
+        <div className="flex flex-col divide-y divide-border">
           {displayBuses.map((bus, index) => (
             <BusListingItem key={index} {...bus} refTime={time} />
           ))}
         </div>
       </Tabs>
-      <div className="h-6"></div>
-      <OpenCollectiveSponsorBanner />
-    </div>
+    </PageShell>
   );
 };
 

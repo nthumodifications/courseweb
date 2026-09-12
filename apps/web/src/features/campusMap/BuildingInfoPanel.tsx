@@ -35,7 +35,7 @@ export default function BuildingInfoPanel({
 
   return (
     <section
-      className="pointer-events-auto w-full rounded-xl border border-border bg-background/95 p-4 shadow-xl backdrop-blur-md"
+      className="pointer-events-auto w-full rounded-lg border border-border bg-background/95 p-4 shadow-xl backdrop-blur-md"
       aria-labelledby="campus-feature-title"
     >
       <div className="flex items-start gap-3">

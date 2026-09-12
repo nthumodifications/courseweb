@@ -15,7 +15,7 @@ const ChumeiIcon = ({ size = 24 }: { size?: number }) => (
     height={size}
     loading="lazy"
     decoding="async"
-    className="rounded-[4px]"
+    className="rounded-md"
   />
 );
 

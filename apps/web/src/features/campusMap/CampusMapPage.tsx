@@ -2,7 +2,12 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ErrorBoundary } from "react-error-boundary";
 import { AlertCircle, Loader2, RotateCcw } from "lucide-react";
-import { Button } from "@courseweb/ui";
+import {
+  Button,
+  PageHeader,
+  PageShell,
+  PageSkeleton,
+} from "@courseweb/ui";
 import { useParams, useSearchParams } from "react-router-dom";
 import {
   findCampusBuildingForIdentity,
@@ -21,6 +26,7 @@ import {
   getCampusFeatureLabelKey,
   isCampusBuilding,
 } from "./sceneLogic";
+import ErrorState from "@/components/Pages/ErrorState";
 
 function supportsWebGL(): boolean {
   try {
@@ -65,7 +71,7 @@ export default function CampusMapPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [resetNonce, setResetNonce] = useState(0);
   const webglAvailable = useMemo(supportsWebGL, []);
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["nthu-campus-map", CAMPUS_MAP_DATA_CACHE_VERSION],
     queryFn: ({ signal }) => loadCampusMapData(signal),
     staleTime: Number.POSITIVE_INFINITY,
@@ -146,19 +152,32 @@ export default function CampusMapPage() {
   };
 
   if (isLoading) {
-    return <MapMessage title={dict.loading} loading />;
+    return (
+      <PageShell width="full" gap={false}>
+        <PageHeader title={dict.title} description={dict.loading} />
+        <PageSkeleton rows={0} className="flex-1" />
+      </PageShell>
+    );
   }
   if (error || !data) {
     return (
-      <MapMessage
-        title={dict.loadError}
-        detail={error instanceof Error ? error.message : undefined}
-      />
+      <PageShell width="full" gap={false}>
+        <PageHeader title={dict.title} />
+        <ErrorState
+          title={dict.loadErrorTitle}
+          description={dict.loadErrorDescription}
+          retryLabel={dict.retry}
+          onRetry={() => void refetch()}
+        />
+      </PageShell>
     );
   }
   if (!webglAvailable) {
     return (
-      <MapMessage title={dict.webglError} detail={dict.webglErrorDetail} />
+      <PageShell width="full" gap={false}>
+        <PageHeader title={dict.title} />
+        <MapMessage title={dict.webglError} detail={dict.webglErrorDetail} />
+      </PageShell>
     );
   }
 
@@ -167,7 +186,13 @@ export default function CampusMapPage() {
   );
 
   return (
-    <main className="relative h-[calc(100dvh-9rem)] min-h-[32rem] w-full overflow-hidden bg-muted/30 md:h-[calc(100dvh-5rem)] md:min-h-[38rem]">
+    <PageShell
+      width="full"
+      gap={false}
+      className="flex h-[calc(100dvh-var(--header-height)-4rem)] min-h-[36rem] flex-col overflow-hidden"
+    >
+      <PageHeader title={dict.title} description={dict.description} />
+      <div className="relative min-h-0 flex-1 overflow-hidden rounded-lg border border-border bg-muted/30">
       <ErrorBoundary
         fallbackRender={({ error: sceneError }) => (
           <MapMessage
@@ -203,14 +228,14 @@ export default function CampusMapPage() {
           />
           {requestWarning && (
             <p
-              className="pointer-events-auto mt-2 rounded-lg border border-amber-500/40 bg-background/95 px-3 py-2 text-sm text-amber-700 shadow dark:text-amber-300"
+              className="pointer-events-auto mt-2 rounded-lg border border-warning/40 bg-background/95 px-3 py-2 text-sm text-warning"
               role="status"
             >
               {requestWarning}
             </p>
           )}
         </div>
-        <div className="pointer-events-auto flex shrink-0 gap-2">
+        <div className="pointer-events-auto flex shrink-0 items-center gap-1 rounded-lg border border-border bg-background/95 p-1 shadow-lg backdrop-blur-md">
           <MapLegend
             labels={{
               button: dict.showLegend,
@@ -226,7 +251,6 @@ export default function CampusMapPage() {
             type="button"
             variant="secondary"
             size="icon"
-            className="shadow-lg"
             aria-label={dict.resetCamera}
             title={dict.resetCamera}
             onClick={resetCamera}
@@ -254,17 +278,18 @@ export default function CampusMapPage() {
         </div>
       )}
 
-      <p className="pointer-events-none absolute bottom-2 left-1/2 z-10 hidden -translate-x-1/2 rounded-full bg-background/80 px-3 py-1 text-xs text-muted-foreground backdrop-blur-sm md:block">
+      <p className="pointer-events-none absolute bottom-2 left-1/2 z-10 hidden -translate-x-1/2 rounded-md bg-background/80 px-3 py-1 text-xs text-muted-foreground backdrop-blur-sm md:block">
         {dict.instructions}
       </p>
       <a
         href={data.attribution.url}
         target="_blank"
         rel="noopener noreferrer"
-        className="absolute bottom-2 right-2 z-10 rounded bg-background/90 px-2 py-1 text-[10px] text-muted-foreground underline shadow-sm"
+        className="absolute bottom-2 left-2 z-10 rounded-md bg-background/90 px-2 py-1 text-[10px] text-muted-foreground underline"
       >
         {data.attribution.text}
       </a>
-    </main>
+      </div>
+    </PageShell>
   );
 }

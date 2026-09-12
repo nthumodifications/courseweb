@@ -3,14 +3,22 @@ import { useParams } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Map } from "lucide-react";
-import { Button } from "@courseweb/ui";
-import { Fade } from "@courseweb/ui";
+import {
+  Button,
+  EmptyState,
+  Fade,
+  PageHeader,
+  PageShell,
+  PageSkeleton,
+} from "@courseweb/ui";
 import { lastSemester } from "@courseweb/shared";
 import { toPrettySemester } from "@/helpers/semester";
 import VenueList from "@/components/Venue/VenueList";
 import client from "@/config/api";
 import useDictionary from "@/dictionaries/useDictionary";
 import { MinimalCourse } from "@/types/courses";
+import ErrorState from "@/components/Pages/ErrorState";
+import { MapPin } from "lucide-react";
 
 const VenueTimetableDynamic = lazy(
   () =>
@@ -23,7 +31,12 @@ const VenuesPage = () => {
   const { locationId } = useParams<{ locationId?: string }>();
   const dict = useDictionary();
 
-  const { data: venues = [], isLoading: venuesLoading } = useQuery({
+  const {
+    data: venues = [],
+    error: venuesError,
+    isLoading: venuesLoading,
+    refetch: refetchVenues,
+  } = useQuery({
     queryKey: ["venues"],
     queryFn: async () => {
       const res = await client.venue.$get();
@@ -34,34 +47,49 @@ const VenuesPage = () => {
   const venueId = locationId ? decodeURI(locationId) : null;
 
   return (
-    <div className="h-full grid grid-cols-1 md:grid-cols-[500px_auto] overflow-hidden">
-      {/* Sidebar */}
-      <div
-        className={`w-full h-full ${venueId ? "hidden md:block" : "block"} overflow-auto`}
-      >
-        {venuesLoading ? (
-          <div className="grid place-items-center h-64">
-            <span className="text-gray-400">{dict.common.loading}</span>
-          </div>
-        ) : (
-          <VenueList venues={venues as string[]} />
-        )}
-      </div>
-      {/* Content */}
-      <div className="h-full overflow-y-auto overflow-x-hidden">
-        <Fade>
-          {venueId ? (
-            <VenueDetail venueId={venueId} />
+    <PageShell width="app" gap={false} className="min-h-[calc(100dvh-var(--header-height))]">
+      <PageHeader title={dict.venues.title} description={dict.venues.description} />
+      <div className="grid min-h-[32rem] h-[calc(100dvh-var(--header-height)-8rem)] grid-cols-1 overflow-hidden rounded-lg border border-border md:grid-cols-[minmax(18rem,31.25rem)_minmax(0,1fr)]">
+        <div
+          className={`min-w-0 overflow-auto ${venueId ? "hidden md:block" : "block"}`}
+        >
+          {venuesLoading ? (
+            <PageSkeleton rows={8} className="p-4" />
+          ) : venuesError ? (
+            <ErrorState
+              title={dict.venues.load_error_title}
+              description={dict.venues.load_error_description}
+              retryLabel={dict.common.try_again}
+              onRetry={() => void refetchVenues()}
+            />
+          ) : venues.length === 0 ? (
+            <EmptyState
+              size="sm"
+              icon={MapPin}
+              title={dict.venues.empty_title}
+              description={dict.venues.empty_description}
+            />
           ) : (
-            <div className="hidden h-full max-h-screen min-h-[500px] w-full md:grid place-content-center">
-              <h1 className="text-xl font-semibold text-gray-400">
-                {dict.venues.placeholder}
-              </h1>
-            </div>
+            <VenueList venues={venues as string[]} />
           )}
-        </Fade>
+        </div>
+        <div className="min-w-0 overflow-x-hidden overflow-y-auto">
+          <Fade>
+            {venueId ? (
+              <VenueDetail venueId={venueId} />
+            ) : (
+              <div className="hidden min-h-[32rem] w-full place-content-center md:grid">
+                <EmptyState
+                  icon={MapPin}
+                  title={dict.venues.placeholder_title}
+                  description={dict.venues.placeholder_description}
+                />
+              </div>
+            )}
+          </Fade>
+        </div>
       </div>
-    </div>
+    </PageShell>
   );
 };
 
@@ -69,7 +97,12 @@ function VenueDetail({ venueId }: { venueId: string }) {
   const { lang } = useParams<{ lang: string }>();
   const dict = useDictionary();
 
-  const { data: courses, isLoading } = useQuery({
+  const {
+    data: courses,
+    error,
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: ["venue-courses", venueId],
     queryFn: async () => {
       const res = await client.venue[":venueId"].courses.$get({
@@ -82,23 +115,32 @@ function VenueDetail({ venueId }: { venueId: string }) {
 
   if (isLoading) {
     return (
-      <div className="grid place-items-center h-64">
-        <span className="text-gray-400">{dict.common.loading}</span>
-      </div>
+      <PageSkeleton rows={5} className="p-4" />
+    );
+  }
+
+  if (error) {
+    return (
+      <ErrorState
+        title={dict.venues.load_error_title}
+        description={dict.venues.load_error_description}
+        retryLabel={dict.common.try_again}
+        onRetry={() => void refetch()}
+      />
     );
   }
 
   return (
-    <div className="flex flex-col w-full h-full">
-      <div className="pl-4 pt-2 md:hidden">
+    <div className="flex h-full w-full flex-col">
+      <div className="p-4 md:hidden">
         <Link to={`/${lang}/venues`}>
           <Button variant="ghost">
-            <ArrowLeft className="w-4 h-4 mr-2" /> {dict.common.back}
+            <ArrowLeft className="mr-2 h-4 w-4" /> {dict.common.back}
           </Button>
         </Link>
       </div>
-      <div className="py-4 flex flex-col items-center space-y-2 px-2 md:px-6">
-        <h2 className="font-semibold text-xl">
+      <div className="flex flex-col items-center gap-2 p-4">
+        <h2 className="text-xl font-semibold">
           {venueId} - {toPrettySemester(lastSemester.id)} {dict.course.details.semester}
         </h2>
         <Button asChild variant="outline" size="sm">
@@ -107,7 +149,7 @@ function VenueDetail({ venueId }: { venueId: string }) {
             {dict.campus_map.viewVenueOnMap}
           </Link>
         </Button>
-        <Suspense fallback={null}>
+        <Suspense fallback={<PageSkeleton rows={5} className="w-full" />}>
           <VenueTimetableDynamic courses={(courses ?? []) as MinimalCourse[]} />
         </Suspense>
       </div>

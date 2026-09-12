@@ -45,7 +45,7 @@ export default function MapSearch({
 
   return (
     <form
-      className="pointer-events-auto w-full rounded-xl border border-border bg-background/95 p-2 shadow-lg backdrop-blur-md"
+      className="pointer-events-auto w-full rounded-lg border border-border bg-background/95 p-2 shadow-lg backdrop-blur-md"
       role="search"
       onSubmit={(event) => {
         event.preventDefault();
@@ -77,7 +77,7 @@ export default function MapSearch({
 
       {hasQuery && resultsOpen && (
         <div
-          className="mt-2 max-h-56 overflow-y-auto rounded-lg border border-border bg-background"
+          className="mt-2 max-h-56 overflow-y-auto rounded-md bg-muted"
           aria-live="polite"
         >
           {results.length > 0 ? (

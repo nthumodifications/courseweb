@@ -1,8 +1,25 @@
 import { apps } from "@/const/apps";
 import useDictionary from "@/dictionaries/useDictionary";
-import { useSettings } from "@/hooks/contexts/settings";
-import { cn } from "@courseweb/ui";
+import { Badge, cn } from "@courseweb/ui";
 import useLaunchApp from "@/hooks/useLaunchApp";
+
+export const AppIcon = ({ app }: { app: (typeof apps)[number] }) => {
+  const dict = useDictionary();
+
+  return (
+    <div className="relative isolate grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-border bg-muted text-foreground">
+      <app.Icon size={24} />
+      {app.beta && (
+        <Badge
+          variant="outline"
+          className="absolute -right-3 -top-3 px-1 py-0 text-[10px]"
+        >
+          {dict.applist.beta}
+        </Badge>
+      )}
+    </div>
+  );
+};
 
 const AppItem = ({
   app,
@@ -11,37 +28,34 @@ const AppItem = ({
   app: (typeof apps)[number];
   mini?: boolean;
 }) => {
-  const { language } = useSettings();
   const dict = useDictionary();
 
   const [onItemClicked] = useLaunchApp(app);
+  const appTitles = dict.applist.apps as Record<string, string>;
+  const title = appTitles[app.id] ?? "";
 
   return (
-    <div
+    <button
+      type="button"
       className={cn(
         !mini
-          ? "flex flex-row items-center space-x-2 flex-1"
-          : "flex flex-col items-center space-y-1",
-        "cursor-pointer",
+          ? "flex flex-1 flex-row items-center gap-2 text-left"
+          : "flex flex-col items-center gap-1 p-2",
+        "min-w-0 rounded-md transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
       )}
       onClick={onItemClicked}
     >
-      <div className="p-2 rounded-lg bg-primary/10 text-primary grid place-items-center relative">
-        <app.Icon size={24} />
-        {app.beta && (
-          <div className="absolute -top-2 -right-2 bg-blue-500 text-white text-[8px] px-1 rounded-full font-semibold">
-            BETA
-          </div>
-        )}
-      </div>
-      <div className="flex flex-col">
+      <AppIcon app={app} />
+      <div className="min-w-0 flex flex-col">
         <h2
-          className={cn(!mini ? "font-medium" : "text-xs max-w-20 text-center")}
+          className={cn(
+            !mini ? "font-medium" : "max-w-20 text-center text-xs",
+          )}
         >
-          {language == "zh" ? app.title_zh : app.title_en}
+          {title}
         </h2>
       </div>
-    </div>
+    </button>
   );
 };
 
