@@ -1,68 +1,150 @@
-import { Button } from "@courseweb/ui";
+import { Button, PageHeader, PageShell, Section } from "@courseweb/ui";
 import { Github, Link2, LinkedinIcon } from "lucide-react";
-import team from "@/const/team.json";
-import Footer from "@/components/Footer";
-import useDictionary from "@/dictionaries/useDictionary";
 import { Link, useParams } from "react-router-dom";
 
-/**
- * Woah woah did you stumble here? Is this because you wanna join us!
- *
- * Leave your name at ./const/team.json and let everyone remember who you are!
- */
+import team from "@/const/team.json";
+import useDictionary from "@/dictionaries/useDictionary";
+import Footer from "@/components/Footer";
 
 const Team = () => {
   const dict = useDictionary();
   const { lang } = useParams<{ lang: string }>();
+  const coreMembers = team.filter((member) => member.active);
+  const dedicatedMembers = team.filter((member) => !member.active);
 
   return (
-    <div className="flex flex-col px-3">
-      <article className="prose prose-neutral dark:prose-invert">
-        <h1>Who are we?</h1>
-        <p>
-          NTHUMods is a student-run project that aims to provide a better
-          academic experience for students. We are dedicated to developing and
-          maintaining a platform that helps students to plan their academic
-          journey.
-        </p>
-        <p>
-          Our team is always open to new ideas and suggestions. If you have any
-          feedback or ideas, feel free to contact us at{" "}
-          <a href="mailto:nthumods@gmail.com">nthumods@gmail.com</a> or our
-          Github repository{" "}
-          <a href="https://github.com/nthumodifications/courseweb">here</a>.
-        </p>
-        <p>
-          {dict.team.recruitment_intro}{" "}
-          <Link to={`/${lang}/recruit`}>{dict.team.recruitment_link}</Link>.
-        </p>
-        <h1>Core Team</h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 mb-8">
-          {team
-            .filter((t) => t.active)
-            .map((member, index) => (
-              <div key={index} className="flex flex-row w-full items-center">
-                <div className="relative inline-block">
-                  <img
-                    src={member.photo}
-                    alt={member.name_en}
-                    className="w-20 h-20 rounded-full m-0"
-                  />
-                  <div className="absolute -top-2 -right-2 text-xs p-1 rounded-lg shadow-lg bg-card text-card-foreground">
-                    {member.description}
-                  </div>
+    <PageShell width="content">
+      <PageHeader
+        className="[&_h1]:overflow-visible [&_h1]:text-clip [&_h1]:whitespace-normal"
+        title={
+          <span className="text-4xl font-bold tracking-tight">
+            {dict.team.title}
+          </span>
+        }
+      />
+
+      <Section title={dict.team.about_title}>
+        <div className="max-w-prose space-y-3 text-sm">
+          <p>{dict.team.about_description}</p>
+          <p>
+            {dict.team.contact_intro}{" "}
+            <a
+              className="text-primary underline-offset-4 hover:underline"
+              href="mailto:nthumods@gmail.com"
+            >
+              {dict.team.email_link}
+            </a>{" "}
+            {dict.team.recruitment_intro}{" "}
+            <Link
+              className="text-primary underline-offset-4 hover:underline"
+              to={`/${lang}/recruit`}
+            >
+              {dict.team.recruitment_link}
+            </Link>
+          </p>
+        </div>
+      </Section>
+
+      <Section title={dict.team.core_title}>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {coreMembers.map((member) => (
+            <div
+              key={member.name_en}
+              className="flex h-full min-w-0 items-start gap-4 rounded-lg border border-border bg-card p-4"
+            >
+              <div className="flex shrink-0 flex-col items-center gap-2">
+                <img
+                  src={member.photo}
+                  alt={member.name_en}
+                  className="h-16 w-16 rounded-full object-cover"
+                />
+                <span className="rounded-full bg-muted px-2 py-1 text-sm">
+                  {member.description}
+                </span>
+              </div>
+              <div className="flex min-h-24 min-w-0 flex-1 flex-col gap-3">
+                <div>
+                  <h3 className="text-base font-semibold">{member.name_zh}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {member.name_en}
+                  </p>
                 </div>
-                <div className="pl-4 flex-1 flex flex-col gap-1">
-                  <div className="">
-                    <div className="font-bold text-xl">{member.name_zh}</div>
-                    {member.name_en && (
-                      <div className="text-sm">{member.name_en}</div>
-                    )}
+                <div className="mt-auto flex flex-wrap gap-2">
+                  {member.link && (
+                    <Button asChild variant="ghost" size="icon">
+                      <a
+                        href={member.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`${dict.team.profile_link}: ${member.name_en}`}
+                      >
+                        <Link2 />
+                      </a>
+                    </Button>
+                  )}
+                  {member.github && (
+                    <Button asChild variant="ghost" size="icon">
+                      <a
+                        href={`https://github.com/${member.github}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`${dict.team.github_profile}: ${member.name_en}`}
+                      >
+                        <Github />
+                      </a>
+                    </Button>
+                  )}
+                  {member.linkedin && (
+                    <Button asChild variant="ghost" size="icon">
+                      <a
+                        href={`https://linkedin.com/in/${member.linkedin}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`${dict.team.linkedin_profile}: ${member.name_en}`}
+                      >
+                        <LinkedinIcon />
+                      </a>
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      {dedicatedMembers.length > 0 && (
+        <Section title={dict.team.dedicated_title}>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {dedicatedMembers.map((member) => (
+              <div
+                key={member.name_en}
+                className="flex h-full min-w-0 items-start gap-4 rounded-lg border border-border bg-card p-4"
+              >
+                <img
+                  src={member.photo}
+                  alt={member.name_en}
+                  className="h-16 w-16 shrink-0 rounded-full object-cover"
+                />
+                <div className="flex min-h-24 min-w-0 flex-1 flex-col gap-3">
+                  <div>
+                    <h3 className="text-base font-semibold">
+                      {member.name_zh}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {member.name_en}
+                    </p>
+                    <p className="mt-2 text-sm">{member.description}</p>
                   </div>
-                  <div className="flex flex-row gap-2">
+                  <div className="mt-auto flex flex-wrap gap-2">
                     {member.link && (
                       <Button asChild variant="ghost" size="icon">
-                        <a href={`${member.link}`} target="_blank">
+                        <a
+                          href={member.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`${dict.team.profile_link}: ${member.name_en}`}
+                        >
                           <Link2 />
                         </a>
                       </Button>
@@ -72,6 +154,8 @@ const Team = () => {
                         <a
                           href={`https://github.com/${member.github}`}
                           target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`${dict.team.github_profile}: ${member.name_en}`}
                         >
                           <Github />
                         </a>
@@ -82,6 +166,8 @@ const Team = () => {
                         <a
                           href={`https://linkedin.com/in/${member.linkedin}`}
                           target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`${dict.team.linkedin_profile}: ${member.name_en}`}
                         >
                           <LinkedinIcon />
                         </a>
@@ -91,53 +177,12 @@ const Team = () => {
                 </div>
               </div>
             ))}
-        </div>
-        <h1>Dedicated Members</h1>
-        <div className="flex flex-row w-full">
-          {team
-            .filter((t) => !t.active)
-            .map((member, index) => (
-              <div key={index} className="flex flex-row w-full">
-                <img
-                  src={member.photo}
-                  alt={member.name_en}
-                  className="w-20 h-20 rounded-full"
-                />
-                <div className="pl-4 flex-1">
-                  <div className="font-bold text-xl my-1">
-                    {member.name_zh} ({member.name_en})
-                  </div>
-                  <div>{member.description}</div>
-                  <div className="flex flex-row gap-2">
-                    {member.link && (
-                      <Button asChild variant="ghost" size="icon">
-                        <a href={`${member.link}`}>
-                          <Link2 />
-                        </a>
-                      </Button>
-                    )}
-                    {member.github && (
-                      <Button asChild variant="ghost" size="icon">
-                        <a href={`https://github.com/${member.github}`}>
-                          <Github />
-                        </a>
-                      </Button>
-                    )}
-                    {member.linkedin && (
-                      <Button asChild variant="ghost" size="icon">
-                        <a href={`https://linkedin.com/in/${member.linkedin}`}>
-                          <LinkedinIcon />
-                        </a>
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-        </div>
-      </article>
+          </div>
+        </Section>
+      )}
+
       <Footer />
-    </div>
+    </PageShell>
   );
 };
 

@@ -1,28 +1,38 @@
-import { Button } from "@courseweb/ui";
-import { Input } from "@courseweb/ui";
-import { Label } from "@courseweb/ui";
-import { Textarea } from "@courseweb/ui";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+  Button,
+  Input,
+  Label,
+  Textarea,
+} from "@courseweb/ui";
+import { type FormEvent, useState } from "react";
+
 import client from "@/config/api";
-import { FormEvent, useState } from "react";
+import useDictionary from "@/dictionaries/useDictionary";
 
 const EmptyIssueForm = () => {
+  const dict = useDictionary();
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     setError(null);
-    const form = new FormData(e.currentTarget);
+    const form = new FormData(event.currentTarget);
     const title = form.get("title");
     const description = form.get("description");
-    if (typeof title !== "string" || title.length === 0) {
-      setError("Title is required");
+
+    if (typeof title !== "string" || title.trim().length === 0) {
+      setError(dict.issues.form.title_required);
       return;
     }
-    if (typeof description !== "string" || description.length === 0) {
-      setError("Description is required");
+    if (typeof description !== "string" || description.trim().length === 0) {
+      setError(dict.issues.form.description_required);
       return;
     }
+
     try {
       await client.issue.$post({
         json: {
@@ -32,28 +42,43 @@ const EmptyIssueForm = () => {
         },
       });
       setSubmitted(true);
+      event.currentTarget.reset();
     } catch {
-      setError("Failed to submit issue. Please try again.");
+      setError(dict.issues.form.failure_description);
     }
   };
 
   if (submitted) {
-    return <p className="text-green-600">Issue submitted successfully!</p>;
+    return (
+      <Alert className="border-success text-success" aria-live="polite">
+        <AlertTitle>{dict.issues.form.success_title}</AlertTitle>
+        <AlertDescription>
+          {dict.issues.form.success_description}
+        </AlertDescription>
+      </Alert>
+    );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col max-w-2xl gap-4">
-      {error && <p className="text-red-500 text-sm">{error}</p>}
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="title">{"Title"}</Label>
-        <Input id="title" name="title" />
+    <form onSubmit={handleSubmit} className="w-full max-w-xl space-y-3">
+      {error && (
+        <Alert variant="destructive" aria-live="assertive">
+          <AlertTitle>{dict.issues.form.failure_title}</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      <div className="space-y-1">
+        <Label htmlFor="issue-title">{dict.issues.form.title_label}</Label>
+        <Input id="issue-title" name="title" />
       </div>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="description">{"Describe your issue"}</Label>
-        <Textarea id="description" name="description" />
+      <div className="space-y-1">
+        <Label htmlFor="issue-description">
+          {dict.issues.form.description_label}
+        </Label>
+        <Textarea id="issue-description" name="description" rows={6} />
       </div>
-      <div className="flex flex-row gap-2 justify-end">
-        <Button type="submit">Submit</Button>
+      <div className="flex justify-end pt-1">
+        <Button type="submit">{dict.issues.form.submit}</Button>
       </div>
     </form>
   );
