@@ -7,10 +7,8 @@ import {
   TableHeader,
   TableRow,
 } from "@courseweb/ui";
-import { useParams, useNavigate } from "react-router-dom";
-import { SVGProps, useEffect, useMemo, useRef, useState } from "react";
-import { Button } from "@courseweb/ui";
-import { ChevronLeft } from "lucide-react";
+import { useParams } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { GreenLineIcon } from "@/components/BusIcons/GreenLineIcon";
 import { RedLineIcon } from "@/components/BusIcons/RedLineIcon";
 import { Route1LineIcon } from "@/components/BusIcons/Route1LineIcon";
@@ -29,10 +27,6 @@ import {
 } from "date-fns";
 
 type BusDetailsContainerProps = {
-  routes: {
-    Icon: React.FC<SVGProps<SVGSVGElement>>;
-    title: string;
-  }[];
   up: {
     title: string;
     info: LineInfo;
@@ -47,7 +41,6 @@ type BusDetailsContainerProps = {
   };
 };
 const BusDetailsContainer = ({
-  routes,
   up,
   down,
 }: BusDetailsContainerProps) => {
@@ -113,7 +106,7 @@ const BusDetailsContainer = ({
                             {bus.up.dep_stop}
                           </div>
                           {bus.up.description.includes("巴士") && (
-                            <div className="w-max text-xs text-black bg-orange-200 px-1 rounded">
+                            <div className="w-max text-xs text-warning">
                               {dict.bus.large_bus}
                             </div>
                           )}
@@ -136,12 +129,10 @@ const BusDetailsContainer = ({
                               : dict.bus.route2_line}
                           </div>
                           {bus.up.description.includes("83") && (
-                            <div className="text-xs text-white bg-blue-500 px-1 rounded">
-                              83
-                            </div>
+                            <div className="text-xs text-info">{dict.bus.bus83}</div>
                           )}
                           {bus.up.description.includes("五") && (
-                            <div className="text-xs text-white bg-violet-600 px-1 rounded">
+                            <div className="text-xs text-destructive">
                               {dict.bus.friday_closed}
                             </div>
                           )}
@@ -174,7 +165,7 @@ const BusDetailsContainer = ({
                             {bus.down.dep_stop}
                           </div>
                           {bus.down.description.includes("巴士") && (
-                            <div className="text-xs text-black bg-orange-200 px-1 rounded">
+                            <div className="text-xs text-warning">
                               {dict.bus.large_bus}
                             </div>
                           )}
@@ -198,9 +189,7 @@ const BusDetailsContainer = ({
                               : dict.bus.route2_line}
                           </div>
                           {bus.down.description.includes("83") && (
-                            <div className="text-xs text-white bg-blue-500 px-1 rounded">
-                              83
-                            </div>
+                            <div className="text-xs text-info">{dict.bus.bus83}</div>
                           )}
                         </div>
                       </div>
@@ -217,8 +206,6 @@ const BusDetailsContainer = ({
       </Table>
     );
   };
-  const navigate = useNavigate();
-
   const scrollToClosestTime = (now: Date) => {
     console.log(now);
     // what day is today
@@ -325,29 +312,13 @@ const BusDetailsContainer = ({
   }, [weektab, down.weekday, down.weekend, up.weekday, up.weekend]);
 
   return (
-    <div className="flex flex-col px-4 h-full w-full max-w-xl">
+    <div className="flex h-full w-full flex-col">
       <Tabs
         defaultValue="weekday"
         value={weektab}
         onValueChange={(v) => setWeektab(v as "weekday" | "weekend")}
       >
-        <div className="w-full flex flex-col gap-4 sticky -top-8 pt-4 z-10 bg-background">
-          <div className="flex flex-row items-center px-2 gap-4">
-            <Button
-              onClick={() => navigate(`/${lang}/bus`)}
-              size="sm"
-              variant="ghost"
-              className="px-0"
-            >
-              <ChevronLeft />
-            </Button>
-            {routes.map(({ Icon, title }) => (
-              <div className="flex flex-row gap-4 items-center" key={title}>
-                <Icon />
-                <h3 className="text-foreground font-bold">{title}</h3>
-              </div>
-            ))}
-          </div>
+        <div className="sticky top-0 z-10 flex w-full flex-col gap-4 bg-background pt-4">
           <TabsList className="w-full">
             <TabsTrigger className="flex-1" value="weekday">
               {dict.bus.weekdays}
@@ -357,7 +328,7 @@ const BusDetailsContainer = ({
             </TabsTrigger>
           </TabsList>
           <div className="flex flex-col gap-4 py-2" ref={timeSelectorRef}>
-            <div className="justify-start items-start gap-1.5 flex overflow-x-auto min-w-0">
+            <div className="flex min-w-0 items-start justify-start gap-2 overflow-x-auto">
               {filteredHoursDate.length > 6 &&
                 filteredHoursDate.map((hd) => (
                   <div

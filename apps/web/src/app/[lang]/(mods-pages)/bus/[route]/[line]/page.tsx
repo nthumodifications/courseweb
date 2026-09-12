@@ -3,7 +3,13 @@ import { NandaLineIcon } from "@/components/BusIcons/NandaLineIcon";
 import { RedLineIcon } from "@/components/BusIcons/RedLineIcon";
 import { Route1LineIcon } from "@/components/BusIcons/Route1LineIcon";
 import { Route2LineIcon } from "@/components/BusIcons/Route2LineIcon";
-import { Button } from "@courseweb/ui";
+import {
+  Button,
+  EmptyState,
+  PageHeader,
+  PageShell,
+  PageSkeleton,
+} from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
 import { getTimeOnDate } from "@/helpers/bus";
 import { useSettings } from "@/hooks/contexts/settings";
@@ -24,11 +30,11 @@ import {
   getDay,
 } from "date-fns";
 import { Bus, ChevronLeft } from "lucide-react";
-import { Link } from "react-router-dom";
-import { useParams, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useMemo } from "react";
 import { getAllBusData } from "@/libs/bus";
 import { useQuery } from "@tanstack/react-query";
+import ErrorState from "@/components/Pages/ErrorState";
 
 enum BusStationState {
   UNAVAILABLE,
@@ -37,13 +43,14 @@ enum BusStationState {
   LEFT,
 }
 
+type BusStationList = {
+  zh: string[];
+  en: string[];
+};
+
 const linesDict: {
   [key: string]: {
     Icon: React.FC;
-    title_zh: string;
-    title_en: string;
-    stations_zh: string[];
-    stations_en: string[];
     timings: number[];
   };
 } = {
@@ -59,187 +66,62 @@ const linesDict: {
   // (Green Line) TSMC Building → CHSS/CLS Building → Maple Path → General Building II → North Main Gate"
   green: {
     Icon: GreenLineIcon,
-    title_zh: "綠線",
-    title_en: "Green Line",
-    stations_zh: [
-      "北校門口",
-      "綜二",
-      "楓林小徑",
-      "奕園停車場",
-      "南門停車場",
-      "台積館",
-      "人社院/生科院",
-      "綜二",
-      "北校門口",
-    ],
-    stations_en: [
-      "North Main Gate",
-      "General Building II",
-      "Maple Path",
-      "Yi Pavilion Parking Lot",
-      "South Gate Parking Lot",
-      "TSMC Building",
-      "South Gate Parking Lot",
-      "Yi Pavilion Parking Lot",
-      "General Building II",
-      "North Main Gate",
-    ],
     timings: [1, 2, 2, 1, 1, 2, 4, 1],
   },
   red: {
     Icon: RedLineIcon,
-    title_zh: "紅線",
-    title_en: "Red Line",
-    stations_zh: [
-      "北校門口",
-      "綜二",
-      "楓林小徑",
-      "人社院/生科院",
-      "台積館",
-      "南門停車場",
-      "奕園停車場",
-      "綜二",
-      "北校門口",
-    ],
-    stations_en: [
-      "North Main Gate",
-      "General Building II",
-      "Maple Path",
-      "CHSS/CLS Building",
-      "TSMC Building",
-      "South Gate Parking Lot",
-      "Yi Pavilion Parking Lot",
-      "General Building II",
-      "North Main Gate",
-    ],
     timings: [1, 2, 3, 2, 1, 1, 3, 1],
   },
   nanda_up: {
     Icon: NandaLineIcon,
-    title_zh: "南大校車 往南大校區",
-    title_en: "Nanda Line To Nanda",
-    stations_zh: ["北校門口", "綜二", "人社院/生科院", "台積館", "南大校區"],
-    stations_en: [
-      "Nanda Line",
-      "General Building II",
-      "CHSS/CLS Building",
-      "TSMC Building",
-      "Nanda Campus",
-    ],
     timings: [1, 3, 2, 10],
   },
   nanda_down: {
     Icon: NandaLineIcon,
-    title_zh: "南大校車 往校本部",
-    title_en: "Nanda Line to Main Campus",
-    stations_zh: ["南大校區", "台積館", "人社院/生科院", "綜二", "北校門口"],
-    stations_en: [
-      "Nanda Campus",
-      "TSMC Building",
-      "CHSS/CLS Building",
-      "General Building II",
-      "North Main Gate",
-    ],
     timings: [10, 2, 3, 1],
   },
   route1_up: {
     Icon: Route1LineIcon,
-    title_zh: "經台積館 往南大校區",
-    title_en: "Via TSMC Building To Nanda",
-    stations_zh: [
-      "北校門口",
-      "綜二",
-      "人社院/生科院",
-      "台積館(經寶山路)",
-      "南大校區",
-    ],
-    stations_en: [
-      "North Main Gate",
-      "General Building II",
-      "CHSS/CLS Building",
-      "TSMC Building(Baoshan Rd.)",
-      "Nanda Campus",
-    ],
     timings: [1, 3, 2, 10],
   },
   route1_down: {
     Icon: Route1LineIcon,
-    title_zh: "經台積館 往校本部",
-    title_en: "Via TSMC Building to Main Campus",
-    stations_zh: [
-      "南大校區",
-      "台積館(經寶山路)",
-      "人社院/生科院",
-      "綜二",
-      "北校門口",
-    ],
-    stations_en: [
-      "Nanda Campus",
-      "TSMC Building(Baoshan Rd.)",
-      "CHSS/CLS Building",
-      "General Building II",
-      "North Main Gate",
-    ],
     timings: [10, 2, 3, 1],
   },
   route2_up: {
     Icon: Route2LineIcon,
-    title_zh: "經教育學院 往南大校區",
-    title_en: "Via COE Building To Nanda",
-    stations_zh: [
-      "北校門口",
-      "綜二",
-      "奕園停車場",
-      "教育學院大樓/南門停車場(經寶山路)",
-      "南大校區",
-    ],
-    stations_en: [
-      "North Main Gate",
-      "General Building II",
-      "Yi Pavilion Parking Lot",
-      "COE Building/South Gate Parking Lot(Baoshan Rd.)",
-      "Nanda Campus",
-    ],
     timings: [1, 2, 1, 10],
   },
   route2_down: {
     Icon: Route2LineIcon,
-    title_zh: "經教育學院 往校本部",
-    title_en: "Via COE Building to Main Campus",
-    stations_zh: [
-      "南大校區",
-      "教育學院大樓/南門停車場(經寶山路)",
-      "奕園停車場",
-      "綜二",
-      "北校門口",
-    ],
-    stations_en: [
-      "Nanda Campus",
-      "COE Building/South Gate Parking Lot(Baoshan Rd.)",
-      "Yi Pavilion Parking Lot",
-      "General Building II",
-      "North Main Gate",
-    ],
     timings: [10, 1, 2, 1],
   },
 };
 
 const LineDisplayPage = () => {
-  const { line } = useParams() as { line: string };
+  const { lang, line } = useParams() as { lang: string; line: string };
   const [searchParams] = useSearchParams();
   const time = useTime();
-  const lineData = linesDict[line] as (typeof linesDict)["green_up"];
+  const lineData = linesDict[line] ?? linesDict.green;
 
   // If line is "nanda", we want to show both route1 and route2 combined
   const isNandaCombined = line === "nanda";
 
   const { language } = useSettings();
   const dict = useDictionary();
+  const stationLists = dict.bus.stations as Record<string, BusStationList>;
+  const stations = stationLists[line] ?? stationLists.green;
+  const navigate = useNavigate();
   const returnUrl = searchParams.get("return_url") ?? `/${language}/bus`;
 
   const weektype = isWeekend(time) ? "weekend" : "weekday";
 
-  const { data: busData, error } = useQuery({
+  const {
+    data: busData,
+    error,
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: ["all_bus_data"],
     queryFn: getAllBusData,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -304,7 +186,7 @@ const LineDisplayPage = () => {
           // if direction is up, startIndex = 0, else startIndex = 5, find the current station the bus is at with startTime,
           const startIndex = bus.direction == "up" ? 0 : 5;
           const startTime = getTimeOnDate(time, bus.time);
-          const stationIndex = lineData.stations_zh.findIndex(
+          const stationIndex = stations.zh.findIndex(
             (station, i) =>
               i >= startIndex &&
               addMinutes(
@@ -344,7 +226,7 @@ const LineDisplayPage = () => {
         .map((bus) => {
           const startIndex = bus.direction == "up" ? 0 : 5;
           const startTime = getTimeOnDate(time, bus.time);
-          const stationIndex = lineData.stations_zh.findIndex(
+          const stationIndex = stations.zh.findIndex(
             (station, i) =>
               i >= startIndex &&
               addMinutes(
@@ -375,7 +257,7 @@ const LineDisplayPage = () => {
         .map((bus) => {
           const startIndex = 0;
           const startTime = getTimeOnDate(time, bus.time);
-          const stationIndex = lineData.stations_zh.findIndex(
+          const stationIndex = stations.zh.findIndex(
             (station, i) =>
               i >= startIndex &&
               addMinutes(
@@ -406,7 +288,7 @@ const LineDisplayPage = () => {
         .map((bus) => {
           const startIndex = 0;
           const startTime = getTimeOnDate(time, bus.time);
-          const stationIndex = lineData.stations_zh.findIndex(
+          const stationIndex = stations.zh.findIndex(
             (station, i) =>
               i >= startIndex &&
               addMinutes(
@@ -437,7 +319,7 @@ const LineDisplayPage = () => {
         .map((bus) => {
           const startIndex = 0;
           const startTime = getTimeOnDate(time, bus.time);
-          const stationIndex = lineData.stations_zh.findIndex(
+          const stationIndex = stations.zh.findIndex(
             (station, i) =>
               i >= startIndex &&
               addMinutes(
@@ -468,7 +350,7 @@ const LineDisplayPage = () => {
         .map((bus) => {
           const startIndex = 0;
           const startTime = getTimeOnDate(time, bus.time);
-          const stationIndex = lineData.stations_zh.findIndex(
+          const stationIndex = stations.zh.findIndex(
             (station, i) =>
               i >= startIndex &&
               addMinutes(
@@ -500,7 +382,7 @@ const LineDisplayPage = () => {
           const startTime = getTimeOnDate(time, bus.time);
           // Use route1 timing for both routes as they follow similar paths
           const timings = linesDict.route1_up.timings;
-          const stationIndex = linesDict.route1_up.stations_zh.findIndex(
+          const stationIndex = stationLists.route1_up.zh.findIndex(
             (station, i) =>
               i >= startIndex &&
               addMinutes(
@@ -518,7 +400,7 @@ const LineDisplayPage = () => {
         })
         .filter((bus) => bus.stationIndex != -1);
     return [];
-  }, [time, busData, line, lineData, weektype]);
+  }, [time, busData, line, lineData, stationLists, stations, weektype]);
 
   const displayText = useMemo<
     {
@@ -528,7 +410,7 @@ const LineDisplayPage = () => {
       bus?: (typeof busOfInterest)[number];
     }[]
   >(() => {
-    return (language == "zh" ? lineData.stations_zh : lineData.stations_en).map(
+    return (language == "zh" ? stations.zh : stations.en).map(
       (station, i) => {
         // const stationDepTime = addMinutes(startDate, lineData.timings.slice(0, i).reduce((a, b) => a + b, 0));
         // if (time < stationDepTime) return { state: BusStationState.UNAVAILABLE, station, time: formatDate(stationDepTime, 'HH:mm') };
@@ -598,41 +480,84 @@ const LineDisplayPage = () => {
         };
       },
     );
-  }, [time, busOfInterest]);
+  }, [time, busOfInterest, language, lineData, stations]);
+
+  const lineTitle = isNandaCombined
+    ? dict.bus.nanda_combined
+    : line === "green"
+      ? dict.bus.green_line
+      : line === "red"
+        ? dict.bus.red_line
+        : line === "nanda_up"
+          ? `${dict.bus.nanda_line} ${dict.bus.to_nanda}`
+          : line === "nanda_down"
+            ? `${dict.bus.nanda_line} ${dict.bus.to_main}`
+            : line === "route1_up"
+              ? `${dict.bus.route1_line} ${dict.bus.to_nanda}`
+              : line === "route1_down"
+                ? `${dict.bus.route1_line} ${dict.bus.to_main}`
+                : line === "route2_up"
+                  ? `${dict.bus.route2_line} ${dict.bus.to_nanda}`
+                  : `${dict.bus.route2_line} ${dict.bus.to_main}`;
+
+  if (isLoading) {
+    return (
+      <PageShell width="full" gap={false}>
+        <PageHeader title={lineTitle} />
+        <PageSkeleton rows={6} />
+      </PageShell>
+    );
+  }
+
+  if (error) {
+    return (
+      <PageShell width="full" gap={false}>
+        <PageHeader title={lineTitle} />
+        <ErrorState
+          title={dict.bus.load_error_title}
+          description={dict.bus.load_error_description}
+          retryLabel={dict.common.try_again}
+          onRetry={() => void refetch()}
+        />
+      </PageShell>
+    );
+  }
 
   if (!(line in linesDict) && !isNandaCombined) {
-    return <div>{dict.bus.invalid_line}</div>;
+    return (
+      <PageShell width="full" gap={false}>
+        <PageHeader title={dict.bus.invalid_line} />
+        <EmptyState
+          icon={Bus}
+          title={dict.bus.invalid_line}
+          description={dict.bus.invalid_line_description}
+          action={
+            <Button type="button" variant="outline" onClick={() => navigate(returnUrl)}>
+              {dict.common.back}
+            </Button>
+          }
+        />
+      </PageShell>
+    );
   }
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex flex-row items-center px-2 gap-4">
-        <Button variant={"ghost"} asChild>
-          <Link to={returnUrl}>
-            <ChevronLeft className="w-4 h-4 mr-2" />
-          </Link>
-        </Button>
-        <div className="flex flex-row gap-4 items-center">
-          {isNandaCombined ? (
-            <>
-              <Route1LineIcon />
-              <Route2LineIcon />
-              <h3 className="text-foreground font-bold">
-                {language == "zh"
-                  ? "南大校車 經台積館 & 經教育學院"
-                  : "Nanda Via TSMC & COE"}
-              </h3>
-            </>
-          ) : (
-            <>
-              <lineData.Icon />
-              <h3 className="text-foreground font-bold">
-                {language == "zh" ? lineData.title_zh : lineData.title_en}
-              </h3>
-            </>
-          )}
-        </div>
-      </div>
-      <div className="w-full items-start inline-flex px-4">
+    <PageShell width="full" gap={false}>
+      <PageHeader
+        title={lineTitle}
+        actions={
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            aria-label={dict.common.back}
+            title={dict.common.back}
+            onClick={() => navigate(returnUrl)}
+          >
+            <ChevronLeft aria-hidden="true" />
+          </Button>
+        }
+      />
+      <div className="w-full items-start inline-flex">
         <div className="w-full p-2 flex-col justify-start inline-flex">
           {isNandaCombined
             ? displayText.map((m, i) => (
@@ -740,7 +665,7 @@ const LineDisplayPage = () => {
               ))}
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 };
 

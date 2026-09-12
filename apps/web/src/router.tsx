@@ -6,6 +6,8 @@ import MainLayout from "@/layouts/MainLayout";
 import OAuthCallbackRedirect from "@/layouts/OAuthCallbackRedirect";
 import ShortlinkRedirect from "@/layouts/ShortlinkRedirect";
 import AppProviders from "@/layouts/AppProviders";
+import enDictionary from "@/dictionaries/en.json";
+import zhDictionary from "@/dictionaries/zh.json";
 
 // Auth callback (outside lang layout)
 const AuthCallbackPage = lazy(() => import("@/app/auth/callback/page"));
@@ -484,12 +486,10 @@ export const router = createBrowserRouter([
                 path: "timetable/community",
                 element: <CommunityPage />,
                 handle: {
-                  title: "Community Timetables",
-                  titleZh: "社群課表",
-                  description:
-                    "Browse timetables shared by NTHU students. See what courses others are taking and get insights on difficulty and grades.",
-                  descriptionZh:
-                    "瀏覽清大學生分享的課表，了解他人選課情況及課程難易度。",
+                  title: enDictionary.community.title,
+                  titleZh: zhDictionary.community.title,
+                  description: enDictionary.community.description,
+                  descriptionZh: zhDictionary.community.description,
                 },
               },
               {

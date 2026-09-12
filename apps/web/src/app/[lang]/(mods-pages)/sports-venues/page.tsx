@@ -19,6 +19,7 @@ import useTime from "@/hooks/useTime";
 import { semesterInfo } from "@courseweb/shared";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useSettings } from "@/hooks/contexts/settings";
+import ErrorState from "@/components/Pages/ErrorState";
 
 type OccupancyItem = {
   project_id: string;
@@ -406,6 +407,8 @@ const SportsVenuesPage = () => {
     data: occupancy,
     dataUpdatedAt,
     isLoading: occupancyLoading,
+    error: occupancyError,
+    refetch: refetchOccupancy,
   } = useQuery<OccupancyItem[]>({
     queryKey: ["venue-occupancy"],
     queryFn: async () => {
@@ -417,8 +420,12 @@ const SportsVenuesPage = () => {
     refetchInterval: 30_000,
   });
 
-  const { data: openingTimes, isLoading: openingTimesLoading } =
-    useQuery<OpeningTimesData | null>({
+  const {
+    data: openingTimes,
+    isLoading: openingTimesLoading,
+    error: openingTimesError,
+    refetch: refetchOpeningTimes,
+  } = useQuery<OpeningTimesData | null>({
       queryKey: ["sports-opening-times"],
       queryFn: async () => {
         const res = await (client as any).sports["opening-times"].$get();
@@ -458,6 +465,22 @@ const SportsVenuesPage = () => {
     openingTimes !== null &&
     items.length === 0 &&
     (openingTimes?.facilities.length ?? 0) === 0;
+
+  if (occupancyError || openingTimesError) {
+    return (
+      <PageShell width="app">
+        <PageHeader title={dict.sports.title} />
+        <ErrorState
+          title={dict.sports.load_error_title}
+          description={dict.sports.load_error_description}
+          retryLabel={dict.common.try_again}
+          onRetry={() => {
+            void Promise.all([refetchOccupancy(), refetchOpeningTimes()]);
+          }}
+        />
+      </PageShell>
+    );
+  }
 
   return (
     <PageShell width="app">
