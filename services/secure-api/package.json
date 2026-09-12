@@ -10,7 +10,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev --name init",
     "tailwind:watch": "tailwindcss -i ./src/pages/input.css -o ./src/pages/public/output.css --watch",
-    "build": "bun run tailwind:build && tsc --outDir dist",
+    "build": "tsc --outDir dist",
     "clean": "rm -rf dist",
     "lint": "echo 'Secure API lint check'",
     "test": "bun test",
