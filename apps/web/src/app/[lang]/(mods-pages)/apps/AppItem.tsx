@@ -1,7 +1,7 @@
 import { apps } from "@/const/apps";
 import useDictionary from "@/dictionaries/useDictionary";
-import { useSettings } from "@/hooks/contexts/settings";
 import { cn } from "@courseweb/ui";
+import { Badge } from "@courseweb/ui";
 import useLaunchApp from "@/hooks/useLaunchApp";
 
 const AppItem = ({
@@ -11,7 +11,6 @@ const AppItem = ({
   app: (typeof apps)[number];
   mini?: boolean;
 }) => {
-  const { language } = useSettings();
   const dict = useDictionary();
 
   const [onItemClicked] = useLaunchApp(app);
@@ -20,26 +19,22 @@ const AppItem = ({
     <div
       className={cn(
         !mini
-          ? "flex flex-row items-center space-x-2 flex-1"
-          : "flex flex-col items-center space-y-1",
+          ? "flex flex-row items-center gap-2 flex-1 py-4"
+          : "flex flex-col items-start gap-1 py-4",
         "cursor-pointer",
       )}
       onClick={onItemClicked}
     >
-      <div className="p-2 rounded-lg bg-primary/10 text-primary grid place-items-center relative">
+      <div className="p-2 rounded-lg bg-primary/10 text-primary grid place-items-center shrink-0">
         <app.Icon size={24} />
-        {app.beta && (
-          <div className="absolute -top-2 -right-2 bg-blue-500 text-white text-[8px] px-1 rounded-full font-semibold">
-            BETA
-          </div>
-        )}
       </div>
-      <div className="flex flex-col">
-        <h2
-          className={cn(!mini ? "font-medium" : "text-xs max-w-20 text-center")}
-        >
-          {language == "zh" ? app.title_zh : app.title_en}
-        </h2>
+      <div className="flex flex-col gap-1 min-w-0">
+        <div className="flex flex-row items-center gap-1">
+          <h2 className={cn(!mini ? "font-medium" : "text-xs")}>
+            {dict.applist.apps[app.id as keyof typeof dict.applist.apps]}
+          </h2>
+          {app.beta && <Badge variant="secondary">{dict.applist.beta}</Badge>}
+        </div>
       </div>
     </div>
   );
