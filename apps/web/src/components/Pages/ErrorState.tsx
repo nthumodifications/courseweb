@@ -1,6 +1,6 @@
 import type { ComponentType, ReactNode, SVGProps } from "react";
 import { AlertCircle, RotateCcw } from "lucide-react";
-import { Button, EmptyState } from "@courseweb/ui";
+import { Button, EmptyState, type EmptyStateSize } from "@courseweb/ui";
 
 export type ErrorStateProps = {
   title: ReactNode;
@@ -8,6 +8,7 @@ export type ErrorStateProps = {
   retryLabel: ReactNode;
   onRetry: () => void;
   icon?: ComponentType<SVGProps<SVGSVGElement>>;
+  size?: EmptyStateSize;
 };
 
 /**
@@ -20,12 +21,14 @@ export default function ErrorState({
   retryLabel,
   onRetry,
   icon: Icon = AlertCircle,
+  size = "default",
 }: ErrorStateProps) {
   return (
     <EmptyState
       icon={Icon}
       title={title}
       description={description}
+      size={size}
       action={
         <Button type="button" variant="outline" onClick={onRetry}>
           <RotateCcw aria-hidden="true" />

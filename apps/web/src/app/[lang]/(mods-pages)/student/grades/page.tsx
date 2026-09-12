@@ -31,6 +31,7 @@ const StudentGradesPage = () => {
     <PageShell width="app">
       <PageHeader title={dict.grade.title} />
       <EmptyState
+        size="default"
         icon={BadgeAlert}
         title={dict.grade.proxy_login_required_title}
         description={dict.grade.proxy_login_required_description}

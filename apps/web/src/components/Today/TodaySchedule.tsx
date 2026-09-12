@@ -226,7 +226,12 @@ const TodaySchedule: FC = () => {
   const renderCalendars = (events: UpcomingEvent[]) => {
     return (
       events.length > 0 && (
-        <UpcomingEventList events={events} compact showDayGroups={false} />
+        <UpcomingEventList
+          events={events}
+          compact
+          showDayGroups={false}
+          emptyStateSize="sm"
+        />
       )
     );
   };

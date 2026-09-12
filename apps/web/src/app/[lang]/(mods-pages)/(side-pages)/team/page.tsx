@@ -45,15 +45,12 @@ const Team = () => {
               key={member.name_en}
               className="flex h-full min-w-0 items-start gap-4 rounded-lg border border-border bg-card p-4"
             >
-              <div className="flex shrink-0 flex-col items-start gap-2">
+              <div className="flex shrink-0 flex-col items-start">
                 <img
                   src={member.photo}
                   alt={member.name_en}
                   className="h-16 w-16 rounded-full object-cover"
                 />
-                <span className="rounded-full bg-muted px-2 py-1 text-sm">
-                  {member.description}
-                </span>
               </div>
               <div className="flex min-h-24 min-w-0 flex-1 flex-col gap-3">
                 <div>

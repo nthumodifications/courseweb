@@ -41,7 +41,12 @@ const MobileCalendarUpcoming = () => {
         />
       </Section>
       <Section title={dict.calendar.upcoming_events} variant="card">
-        <UpcomingEventList events={events} compact maxEvents={6} />
+        <UpcomingEventList
+          events={events}
+          compact
+          maxEvents={6}
+          emptyStateSize="sm"
+        />
       </Section>
     </div>
   );

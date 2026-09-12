@@ -357,7 +357,7 @@ const TimetableSidebar = ({
           <button
             type="button"
             onClick={() => navigate(`/${lang}/timetable/community`)}
-            className="ml-auto flex min-w-0 items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            className="flex min-h-10 min-w-0 shrink-0 items-center gap-1 rounded-md px-2 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
             <Globe className="w-3 h-3" />
             {dict.timetable.sidebar.community}

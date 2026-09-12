@@ -1,7 +1,7 @@
 import { FC, useMemo } from "react";
 import { formatInTimeZone } from "date-fns-tz";
 import { Calendar, Clock } from "lucide-react";
-import { Badge, EmptyState } from "@courseweb/ui";
+import { Badge, EmptyState, type EmptyStateSize } from "@courseweb/ui";
 import { cn } from "@courseweb/ui";
 import { EventPopover } from "@/components/Calendar/EventPopover";
 import useDictionary from "@/dictionaries/useDictionary";
@@ -21,6 +21,7 @@ type UpcomingEventListProps = {
   showDayGroups?: boolean;
   maxEvents?: number;
   className?: string;
+  emptyStateSize: EmptyStateSize;
 };
 
 const sourceBadgeStyles: Record<UpcomingEvent["source"], string> = {
@@ -86,6 +87,7 @@ const UpcomingEventList: FC<UpcomingEventListProps> = ({
   showDayGroups = true,
   maxEvents,
   className,
+  emptyStateSize,
 }) => {
   const { language, showAcademicCalendar } = useSettings();
   const dict = useDictionary();
@@ -121,7 +123,7 @@ const UpcomingEventList: FC<UpcomingEventListProps> = ({
         icon={Calendar}
         title={dict.calendar.empty_title}
         description={dict.calendar.empty_description}
-        size="sm"
+        size={emptyStateSize}
       />
     );
   }

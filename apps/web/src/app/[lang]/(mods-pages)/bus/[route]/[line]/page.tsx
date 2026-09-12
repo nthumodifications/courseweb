@@ -528,6 +528,7 @@ const LineDisplayPage = () => {
       <PageShell width="full" gap={false}>
         <PageHeader title={dict.bus.invalid_line} />
         <EmptyState
+          size="default"
           icon={Bus}
           title={dict.bus.invalid_line}
           description={dict.bus.invalid_line_description}

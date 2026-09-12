@@ -183,6 +183,7 @@ function TimetableDetailDialog({
           <PageSkeleton rows={5} />
         ) : error ? (
           <ErrorState
+            size="sm"
             title={dict.load_error_title}
             description={dict.load_error_description}
             retryLabel={dictionary.common.try_again}
@@ -305,6 +306,7 @@ const CommunityPage = () => {
           />
         ) : data.items.length === 0 ? (
           <EmptyState
+            size="default"
             icon={Globe}
             title={dict.empty_title}
             description={dict.empty_description}

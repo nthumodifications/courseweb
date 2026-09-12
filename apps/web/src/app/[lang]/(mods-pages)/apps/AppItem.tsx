@@ -7,12 +7,14 @@ export const AppIcon = ({ app }: { app: (typeof apps)[number] }) => {
   const dict = useDictionary();
 
   return (
-    <div className="relative isolate grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-border bg-muted text-foreground">
-      <app.Icon size={24} />
+    <div className="flex shrink-0 items-center gap-1">
+      <div className="grid h-10 w-10 place-items-center rounded-lg border border-border bg-muted text-foreground">
+        <app.Icon size={24} />
+      </div>
       {app.beta && (
         <Badge
           variant="outline"
-          className="absolute -right-3 -top-3 px-1 py-0 text-[10px]"
+          className="shrink-0 px-1 py-0 text-xs"
         >
           {dict.applist.beta}
         </Badge>
