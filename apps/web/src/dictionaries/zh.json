@@ -4,7 +4,6 @@
     "schedule_title": "今日課程",
     "noclass": "今天沒有課喔！",
     "noclass_sub": "放假吧~",
-    "noclass_day": "{date} {weekday} · 沒有課",
     "noclass_range": "{start}–{end} · 沒有課",
     "noclass_range_sub": "放假吧~",
     "noclass_expand": "顯示每天",
@@ -43,7 +42,8 @@
       "semester_ended": "學期已結束",
       "days_left": "距離學期結束還有",
       "no_data": "無法取得學期資訊"
-    }
+    },
+    "noclass_plain": "沒有課"
   },
   "timetable": {
     "actions": {
@@ -334,36 +334,137 @@
     "description": "掌握校園校車路線、班次與站點，輕鬆規劃日常通勤。",
     "stations": {
       "green": {
-        "zh": ["北校門口", "綜二", "楓林小徑", "奕園停車場", "南門停車場", "台積館", "人社院/生科院", "綜二", "北校門口"],
-        "en": ["North Main Gate", "General Building II", "Maple Path", "Yi Pavilion Parking Lot", "South Gate Parking Lot", "TSMC Building", "South Gate Parking Lot", "Yi Pavilion Parking Lot", "General Building II", "North Main Gate"]
+        "zh": [
+          "北校門口",
+          "綜二",
+          "楓林小徑",
+          "奕園停車場",
+          "南門停車場",
+          "台積館",
+          "人社院/生科院",
+          "綜二",
+          "北校門口"
+        ],
+        "en": [
+          "North Main Gate",
+          "General Building II",
+          "Maple Path",
+          "Yi Pavilion Parking Lot",
+          "South Gate Parking Lot",
+          "TSMC Building",
+          "South Gate Parking Lot",
+          "Yi Pavilion Parking Lot",
+          "General Building II",
+          "North Main Gate"
+        ]
       },
       "red": {
-        "zh": ["北校門口", "綜二", "楓林小徑", "人社院/生科院", "台積館", "南門停車場", "奕園停車場", "綜二", "北校門口"],
-        "en": ["North Main Gate", "General Building II", "Maple Path", "CHSS/CLS Building", "TSMC Building", "South Gate Parking Lot", "Yi Pavilion Parking Lot", "General Building II", "North Main Gate"]
+        "zh": [
+          "北校門口",
+          "綜二",
+          "楓林小徑",
+          "人社院/生科院",
+          "台積館",
+          "南門停車場",
+          "奕園停車場",
+          "綜二",
+          "北校門口"
+        ],
+        "en": [
+          "North Main Gate",
+          "General Building II",
+          "Maple Path",
+          "CHSS/CLS Building",
+          "TSMC Building",
+          "South Gate Parking Lot",
+          "Yi Pavilion Parking Lot",
+          "General Building II",
+          "North Main Gate"
+        ]
       },
       "nanda_up": {
         "zh": ["北校門口", "綜二", "人社院/生科院", "台積館", "南大校區"],
-        "en": ["Nanda Line", "General Building II", "CHSS/CLS Building", "TSMC Building", "Nanda Campus"]
+        "en": [
+          "Nanda Line",
+          "General Building II",
+          "CHSS/CLS Building",
+          "TSMC Building",
+          "Nanda Campus"
+        ]
       },
       "nanda_down": {
         "zh": ["南大校區", "台積館", "人社院/生科院", "綜二", "北校門口"],
-        "en": ["Nanda Campus", "TSMC Building", "CHSS/CLS Building", "General Building II", "North Main Gate"]
+        "en": [
+          "Nanda Campus",
+          "TSMC Building",
+          "CHSS/CLS Building",
+          "General Building II",
+          "North Main Gate"
+        ]
       },
       "route1_up": {
-        "zh": ["北校門口", "綜二", "人社院/生科院", "台積館(經寶山路)", "南大校區"],
-        "en": ["North Main Gate", "General Building II", "CHSS/CLS Building", "TSMC Building(Baoshan Rd.)", "Nanda Campus"]
+        "zh": [
+          "北校門口",
+          "綜二",
+          "人社院/生科院",
+          "台積館(經寶山路)",
+          "南大校區"
+        ],
+        "en": [
+          "North Main Gate",
+          "General Building II",
+          "CHSS/CLS Building",
+          "TSMC Building(Baoshan Rd.)",
+          "Nanda Campus"
+        ]
       },
       "route1_down": {
-        "zh": ["南大校區", "台積館(經寶山路)", "人社院/生科院", "綜二", "北校門口"],
-        "en": ["Nanda Campus", "TSMC Building(Baoshan Rd.)", "CHSS/CLS Building", "General Building II", "North Main Gate"]
+        "zh": [
+          "南大校區",
+          "台積館(經寶山路)",
+          "人社院/生科院",
+          "綜二",
+          "北校門口"
+        ],
+        "en": [
+          "Nanda Campus",
+          "TSMC Building(Baoshan Rd.)",
+          "CHSS/CLS Building",
+          "General Building II",
+          "North Main Gate"
+        ]
       },
       "route2_up": {
-        "zh": ["北校門口", "綜二", "奕園停車場", "教育學院大樓/南門停車場(經寶山路)", "南大校區"],
-        "en": ["North Main Gate", "General Building II", "Yi Pavilion Parking Lot", "COE Building/South Gate Parking Lot(Baoshan Rd.)", "Nanda Campus"]
+        "zh": [
+          "北校門口",
+          "綜二",
+          "奕園停車場",
+          "教育學院大樓/南門停車場(經寶山路)",
+          "南大校區"
+        ],
+        "en": [
+          "North Main Gate",
+          "General Building II",
+          "Yi Pavilion Parking Lot",
+          "COE Building/South Gate Parking Lot(Baoshan Rd.)",
+          "Nanda Campus"
+        ]
       },
       "route2_down": {
-        "zh": ["南大校區", "教育學院大樓/南門停車場(經寶山路)", "奕園停車場", "綜二", "北校門口"],
-        "en": ["Nanda Campus", "COE Building/South Gate Parking Lot(Baoshan Rd.)", "Yi Pavilion Parking Lot", "General Building II", "North Main Gate"]
+        "zh": [
+          "南大校區",
+          "教育學院大樓/南門停車場(經寶山路)",
+          "奕園停車場",
+          "綜二",
+          "北校門口"
+        ],
+        "en": [
+          "Nanda Campus",
+          "COE Building/South Gate Parking Lot(Baoshan Rd.)",
+          "Yi Pavilion Parking Lot",
+          "General Building II",
+          "North Main Gate"
+        ]
       }
     },
     "north_gate": "北校門口",

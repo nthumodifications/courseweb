@@ -125,12 +125,15 @@ const TodaySchedule: FC = () => {
           const schedule = daySchedules.find(
             (item) => getTaipeiDateKey(item.day) === getTaipeiDateKey(day),
           );
+          // Weather is ambient, not something on the student's schedule: a day
+          // with only a forecast is still a day with nothing on it, and letting
+          // the forecast block the collapse puts the five identical "no class"
+          // rows straight back.
           return Boolean(
             schedule &&
               schedule.classes.length === 0 &&
               schedule.calendarEvents.length === 0 &&
-              !schedule.hasCalendarEvent &&
-              !schedule.hasWeather,
+              !schedule.hasCalendarEvent,
           );
         },
       ),
@@ -146,14 +149,9 @@ const TodaySchedule: FC = () => {
       const isToday =
         getTaipeiDateKey(day) === getTaipeiDateKey(date) &&
         !insideCollapsedRange;
-      const weekday = formatInTimeZone(day, UPCOMING_TIME_ZONE, "EEEE", {
-        locale: getLocale(language),
-      });
-      const title = isToday
-        ? dict.today.noclass
-        : dict.today.noclass_day
-            .replace("{date}", formatInTimeZone(day, UPCOMING_TIME_ZONE, "M/d"))
-            .replace("{weekday}", weekday);
+      // The day heading directly above already carries the weekday and the
+      // date, so repeating them here just says the same thing twice.
+      const title = isToday ? dict.today.noclass : dict.today.noclass_plain;
 
       return (
         <EmptyState
@@ -341,9 +339,11 @@ const TodaySchedule: FC = () => {
 
     return (
       <div className="min-w-0" key={rangeKey}>
-        <div className="flex min-w-0 items-start gap-2">
+        {/* The disclosure belongs under the row it opens, not floated off to
+            the side of it. */}
+        <div className="flex min-w-0 flex-col items-center gap-1">
           <EmptyState
-            className="min-w-0 flex-1"
+            className="w-full min-w-0"
             icon={PartyPopper}
             title={rangeTitle}
             description={dict.today.noclass_range_sub}
@@ -353,7 +353,7 @@ const TodaySchedule: FC = () => {
             type="button"
             variant="ghost"
             size="sm"
-            className="min-h-10 shrink-0 gap-1 px-2 text-xs"
+            className="min-h-10 gap-1 px-2 text-xs text-muted-foreground"
             aria-expanded={expanded}
             onClick={() =>
               setExpandedRanges((current) => {
@@ -395,13 +395,18 @@ const TodaySchedule: FC = () => {
     <div className="w-full min-w-0 space-y-6">
       {isCoursesEmpty && <NoClassPickedReminder />}
       {renderPinnedApps()}
-      <Section title={dict.today.upcoming.next_up} variant="card">
-        <NextUpLine
-          event={nextEvent}
-          showLabel={false}
-          className="border-0 bg-transparent p-0"
-        />
-      </Section>
+      {/* With nothing coming up, this card and the day list below it would both
+          be saying "nothing" — the day list says it better, so only one of them
+          speaks. */}
+      {nextEvent && (
+        <Section title={dict.today.upcoming.next_up} variant="card">
+          <NextUpLine
+            event={nextEvent}
+            showLabel={false}
+            className="border-0 bg-transparent p-0"
+          />
+        </Section>
+      )}
       {dayGroups.map(renderDayGroup)}
     </div>
   );
