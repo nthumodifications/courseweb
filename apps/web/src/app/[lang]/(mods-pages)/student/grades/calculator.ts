@@ -1,31 +1,3 @@
-export type GradeEntry = {
-  id: string;
-  courseName: string;
-  credits: number;
-  score: number;
-};
-
-export type GradebookBaseline = {
-  currentGpa: string;
-  completedCredits: string;
-};
-
-export type Gradebook = {
-  entries: GradeEntry[];
-  baseline: GradebookBaseline;
-};
-
-export const DEFAULT_GRADEBOOK: Gradebook = {
-  entries: [],
-  baseline: {
-    currentGpa: "",
-    completedCredits: "",
-  },
-};
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null;
-
 export const GRADE_SCALE = [
   { minimum: 90, letter: "A+", points: 4.3 },
   { minimum: 85, letter: "A", points: 4.0 },
@@ -39,33 +11,134 @@ export const GRADE_SCALE = [
   { minimum: 0, letter: "F", points: 0 },
 ] as const;
 
+export type GradeLetter = (typeof GRADE_SCALE)[number]["letter"];
+export type GradeBand = (typeof GRADE_SCALE)[number];
+
+export type GradeEntry = {
+  id: string;
+  courseName: string;
+  credits: number;
+  score: number | null;
+  letterGrade: GradeLetter | null;
+};
+
+export type SemesterRecord = {
+  id: string;
+  name: string;
+  gpa: number;
+  credits: number;
+  cumulativeGpa: number | null;
+};
+
+export type GradebookBaseline = {
+  currentGpa: string;
+  completedCredits: string;
+};
+
+export type Gradebook = {
+  entries: GradeEntry[];
+  semesters: SemesterRecord[];
+  baseline: GradebookBaseline;
+};
+
+export const DEFAULT_GRADEBOOK: Gradebook = {
+  entries: [],
+  semesters: [],
+  baseline: {
+    currentGpa: "",
+    completedCredits: "",
+  },
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const isValidScore = (value: unknown): value is number =>
+  typeof value === "number" &&
+  Number.isFinite(value) &&
+  value >= 0 &&
+  value <= 100;
+
+const isValidGpa = (value: unknown): value is number =>
+  typeof value === "number" &&
+  Number.isFinite(value) &&
+  value >= 0 &&
+  value <= 4.3;
+
+const isValidCredits = (value: unknown): value is number =>
+  typeof value === "number" && Number.isFinite(value) && value > 0;
+
+const getGradeBandForLetter = (letter: unknown): GradeBand | null =>
+  GRADE_SCALE.find((band) => band.letter === letter) ?? null;
+
+export const getGradeBand = (score: number): GradeBand =>
+  GRADE_SCALE.find((band) => score >= band.minimum) ?? GRADE_SCALE.at(-1)!;
+
+export const getGradeBandForEntry = (
+  entry: Pick<GradeEntry, "score" | "letterGrade">,
+): GradeBand | null => {
+  if (isValidScore(entry.score)) return getGradeBand(entry.score);
+  return getGradeBandForLetter(entry.letterGrade);
+};
+
+const normalizeLetterGrade = (value: unknown): GradeLetter | null =>
+  getGradeBandForLetter(value)?.letter ?? null;
+
 export const normalizeGradebook = (value: unknown): Gradebook => {
   if (!isRecord(value)) return DEFAULT_GRADEBOOK;
 
   const entries = Array.isArray(value.entries)
     ? value.entries.flatMap((entry) => {
         if (!isRecord(entry)) return [];
-        const { id, courseName, credits, score } = entry;
+        const { id, courseName, credits } = entry;
+        const score = isValidScore(entry.score) ? entry.score : null;
+        const letterGrade = normalizeLetterGrade(entry.letterGrade);
         if (
           typeof id !== "string" ||
           typeof courseName !== "string" ||
-          typeof credits !== "number" ||
-          typeof score !== "number" ||
-          !Number.isFinite(credits) ||
-          !Number.isFinite(score) ||
-          credits <= 0 ||
-          score < 0 ||
-          score > 100
+          !isValidCredits(credits) ||
+          (score === null && letterGrade === null)
         ) {
           return [];
         }
-        return [{ id, courseName, credits, score }];
+
+        return [
+          {
+            id,
+            courseName,
+            credits,
+            score,
+            letterGrade:
+              score === null ? letterGrade : getGradeBand(score).letter,
+          },
+        ];
+      })
+    : [];
+
+  const semesters = Array.isArray(value.semesters)
+    ? value.semesters.flatMap((semester) => {
+        if (!isRecord(semester)) return [];
+        const { id, name, gpa, credits } = semester;
+        const cumulativeGpa = isValidGpa(semester.cumulativeGpa)
+          ? semester.cumulativeGpa
+          : null;
+        if (
+          typeof id !== "string" ||
+          typeof name !== "string" ||
+          !isValidGpa(gpa) ||
+          !isValidCredits(credits)
+        ) {
+          return [];
+        }
+
+        return [{ id, name, gpa, credits, cumulativeGpa }];
       })
     : [];
 
   const baseline = isRecord(value.baseline) ? value.baseline : {};
   return {
     entries,
+    semesters,
     baseline: {
       currentGpa:
         typeof baseline.currentGpa === "string" ? baseline.currentGpa : "",
@@ -81,32 +154,41 @@ export const mergeGradebooks = (
   local: Gradebook,
   remote: Gradebook,
 ): Gradebook => {
-  const entriesById = new Map(local.entries.map((entry) => [entry.id, entry]));
-  for (const entry of remote.entries) {
+  const normalizedLocal = normalizeGradebook(local);
+  const normalizedRemote = normalizeGradebook(remote);
+  const entriesById = new Map(
+    normalizedLocal.entries.map((entry) => [entry.id, entry]),
+  );
+  for (const entry of normalizedRemote.entries) {
     if (!entriesById.has(entry.id)) entriesById.set(entry.id, entry);
+  }
+
+  const semestersById = new Map(
+    normalizedLocal.semesters.map((semester) => [semester.id, semester]),
+  );
+  for (const semester of normalizedRemote.semesters) {
+    if (!semestersById.has(semester.id))
+      semestersById.set(semester.id, semester);
   }
 
   return {
     entries: [...entriesById.values()],
+    semesters: [...semestersById.values()],
     baseline: {
-      currentGpa: local.baseline.currentGpa || remote.baseline.currentGpa || "",
+      currentGpa:
+        normalizedLocal.baseline.currentGpa ||
+        normalizedRemote.baseline.currentGpa ||
+        "",
       completedCredits:
-        local.baseline.completedCredits ||
-        remote.baseline.completedCredits ||
+        normalizedLocal.baseline.completedCredits ||
+        normalizedRemote.baseline.completedCredits ||
         "",
     },
   };
 };
 
-export const getGradeBand = (score: number) =>
-  GRADE_SCALE.find((band) => score >= band.minimum) ?? GRADE_SCALE.at(-1)!;
-
 const isCountableEntry = (entry: GradeEntry) =>
-  Number.isFinite(entry.credits) &&
-  entry.credits > 0 &&
-  Number.isFinite(entry.score) &&
-  entry.score >= 0 &&
-  entry.score <= 100;
+  isValidCredits(entry.credits) && getGradeBandForEntry(entry) !== null;
 
 export const calculateGpa = (entries: readonly GradeEntry[]) => {
   const countableEntries = entries.filter(isCountableEntry);
@@ -118,7 +200,8 @@ export const calculateGpa = (entries: readonly GradeEntry[]) => {
   if (totalCredits === 0) return null;
 
   const weightedPoints = countableEntries.reduce(
-    (total, entry) => total + getGradeBand(entry.score).points * entry.credits,
+    (total, entry) =>
+      total + getGradeBandForEntry(entry)!.points * entry.credits,
     0,
   );
 
@@ -130,35 +213,89 @@ export const calculateCredits = (entries: readonly GradeEntry[]) =>
     .filter(isCountableEntry)
     .reduce((total, entry) => total + entry.credits, 0);
 
+type CumulativeSemester = SemesterRecord & {
+  totalCredits: number;
+  calculatedCumulativeGpa: number;
+};
+
+const isCountableSemester = (semester: SemesterRecord) =>
+  isValidGpa(semester.gpa) && isValidCredits(semester.credits);
+
+export const calculateSemesterCumulativeGpas = ({
+  semesters,
+  currentGpa,
+  completedCredits,
+}: {
+  semesters: readonly SemesterRecord[];
+  currentGpa: number | null;
+  completedCredits: number | null;
+}): CumulativeSemester[] => {
+  let totalCredits =
+    currentGpa !== null && completedCredits !== null && completedCredits > 0
+      ? completedCredits
+      : 0;
+  let weightedPoints =
+    currentGpa !== null && completedCredits !== null && completedCredits > 0
+      ? currentGpa * completedCredits
+      : 0;
+
+  return semesters.filter(isCountableSemester).map((semester) => {
+    totalCredits += semester.credits;
+    weightedPoints += semester.gpa * semester.credits;
+
+    if (semester.cumulativeGpa !== null) {
+      weightedPoints = semester.cumulativeGpa * totalCredits;
+    }
+
+    return {
+      ...semester,
+      totalCredits,
+      calculatedCumulativeGpa: roundGpa(weightedPoints / totalCredits),
+    };
+  });
+};
+
 export const calculateProjectedCumulativeGpa = ({
   entries,
+  semesters = [],
   currentGpa,
   completedCredits,
 }: {
   entries: readonly GradeEntry[];
+  semesters?: readonly SemesterRecord[];
   currentGpa: number | null;
   completedCredits: number | null;
 }) => {
   const termGpa = calculateGpa(entries);
   const termCredits = calculateCredits(entries);
+  const semesterHistory = calculateSemesterCumulativeGpas({
+    semesters,
+    currentGpa,
+    completedCredits,
+  });
+  const latestSemester = semesterHistory.at(-1);
+  const previousGpa = latestSemester?.calculatedCumulativeGpa ?? currentGpa;
+  const previousCredits = latestSemester?.totalCredits ?? completedCredits;
 
   if (termGpa === null || termCredits === 0) {
-    return currentGpa !== null && completedCredits !== null
-      ? roundGpa(currentGpa)
+    return previousGpa !== null &&
+      previousCredits !== null &&
+      previousCredits > 0
+      ? roundGpa(previousGpa)
       : null;
   }
 
   if (
-    currentGpa === null ||
-    completedCredits === null ||
-    completedCredits <= 0
+    previousGpa === null ||
+    previousCredits === null ||
+    previousCredits <= 0
   ) {
     return termGpa;
   }
 
   return roundGpa(
-    (currentGpa * completedCredits + termGpa * termCredits) /
-      (completedCredits + termCredits),
+    (previousGpa * previousCredits + termGpa * termCredits) /
+      (previousCredits + termCredits),
   );
 };
 

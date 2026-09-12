@@ -11,6 +11,11 @@ import {
   CardTitle,
   Input,
   Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@courseweb/ui";
 import {
   AlertCircle,
@@ -33,13 +38,16 @@ import {
   calculateCredits,
   calculateGpa,
   calculateProjectedCumulativeGpa,
+  calculateSemesterCumulativeGpas,
   DEFAULT_GRADEBOOK,
-  getGradeBand,
+  getGradeBandForEntry,
   GRADE_SCALE,
   mergeGradebooks,
   normalizeGradebook,
+  type GradeLetter,
   type Gradebook,
   type GradeEntry,
+  type SemesterRecord,
 } from "./calculator";
 
 const STORAGE_KEY = "grades";
@@ -85,24 +93,41 @@ const GradeTracker = () => {
   const [courseName, setCourseName] = useState("");
   const [credits, setCredits] = useState("3");
   const [score, setScore] = useState("");
+  const [letterGrade, setLetterGrade] = useState<GradeLetter | "">("");
   const [formError, setFormError] = useState<string | null>(null);
+  const [semesterName, setSemesterName] = useState("");
+  const [semesterGpa, setSemesterGpa] = useState("");
+  const [semesterCredits, setSemesterCredits] = useState("");
+  const [semesterCumulativeGpa, setSemesterCumulativeGpa] = useState("");
+  const [semesterFormError, setSemesterFormError] = useState<string | null>(
+    null,
+  );
 
   const normalizedGradebook = useMemo(
     () => normalizeGradebook(gradebook),
     [gradebook],
   );
   const entries = normalizedGradebook.entries;
+  const semesters = normalizedGradebook.semesters;
   const baseline = normalizedGradebook.baseline;
   const isReady = !isAuthenticated || syncReady;
   const syncUnavailable = isAuthenticated && syncError;
   const userId = user?.profile.sub;
+  const currentGpa = parseOptionalNumber(baseline.currentGpa, 0, 4.3);
+  const completedCredits = parseOptionalNumber(baseline.completedCredits, 0);
 
   const termGpa = calculateGpa(entries);
   const termCredits = calculateCredits(entries);
+  const semesterHistory = calculateSemesterCumulativeGpas({
+    semesters,
+    currentGpa,
+    completedCredits,
+  });
   const projectedCumulativeGpa = calculateProjectedCumulativeGpa({
     entries,
-    currentGpa: parseOptionalNumber(baseline.currentGpa, 0, 4.3),
-    completedCredits: parseOptionalNumber(baseline.completedCredits, 0),
+    semesters,
+    currentGpa,
+    completedCredits,
   });
 
   const updateGradebook = (update: (previous: Gradebook) => Gradebook) => {
@@ -147,7 +172,7 @@ const GradeTracker = () => {
   const handleAddCourse = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const parsedCredits = Number(credits);
-    const parsedScore = Number(score);
+    const parsedScore = parseOptionalNumber(score, 0, 100);
 
     if (!courseName.trim()) {
       setFormError(dict.grade.course_error);
@@ -157,13 +182,12 @@ const GradeTracker = () => {
       setFormError(dict.grade.credits_error);
       return;
     }
-    if (
-      score.trim() === "" ||
-      !Number.isFinite(parsedScore) ||
-      parsedScore < 0 ||
-      parsedScore > 100
-    ) {
+    if (score.trim() !== "" && parsedScore === null) {
       setFormError(dict.grade.score_error);
+      return;
+    }
+    if (score.trim() === "" && !letterGrade) {
+      setFormError(dict.grade.grade_required);
       return;
     }
 
@@ -172,6 +196,7 @@ const GradeTracker = () => {
       courseName: courseName.trim(),
       credits: parsedCredits,
       score: parsedScore,
+      letterGrade: parsedScore === null ? letterGrade || null : null,
     };
     updateGradebook((previous) => ({
       ...previous,
@@ -179,6 +204,7 @@ const GradeTracker = () => {
     }));
     setCourseName("");
     setScore("");
+    setLetterGrade("");
     setFormError(null);
   };
 
@@ -187,6 +213,60 @@ const GradeTracker = () => {
       ...previous,
       entries: previous.entries.map((entry) =>
         entry.id === id ? { ...entry, ...update } : entry,
+      ),
+    }));
+  };
+
+  const handleAddSemester = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const parsedGpa = parseOptionalNumber(semesterGpa, 0, 4.3);
+    const parsedCredits = Number(semesterCredits);
+    const parsedCumulativeGpa = parseOptionalNumber(
+      semesterCumulativeGpa,
+      0,
+      4.3,
+    );
+
+    if (!semesterName.trim()) {
+      setSemesterFormError(dict.grade.semester_name_error);
+      return;
+    }
+    if (semesterGpa.trim() === "" || parsedGpa === null) {
+      setSemesterFormError(dict.grade.semester_gpa_error);
+      return;
+    }
+    if (!Number.isFinite(parsedCredits) || parsedCredits <= 0) {
+      setSemesterFormError(dict.grade.semester_credits_error);
+      return;
+    }
+    if (semesterCumulativeGpa.trim() !== "" && parsedCumulativeGpa === null) {
+      setSemesterFormError(dict.grade.cumulative_gpa_error);
+      return;
+    }
+
+    const semester: SemesterRecord = {
+      id: createEntryId(),
+      name: semesterName.trim(),
+      gpa: parsedGpa,
+      credits: parsedCredits,
+      cumulativeGpa: parsedCumulativeGpa,
+    };
+    updateGradebook((previous) => ({
+      ...previous,
+      semesters: [...previous.semesters, semester],
+    }));
+    setSemesterName("");
+    setSemesterGpa("");
+    setSemesterCredits("");
+    setSemesterCumulativeGpa("");
+    setSemesterFormError(null);
+  };
+
+  const updateSemester = (id: string, update: Partial<SemesterRecord>) => {
+    updateGradebook((previous) => ({
+      ...previous,
+      semesters: previous.semesters.map((semester) =>
+        semester.id === id ? { ...semester, ...update } : semester,
       ),
     }));
   };
@@ -295,13 +375,10 @@ const GradeTracker = () => {
                   <CardTitle className="text-lg">
                     {dict.grade.add_course_title}
                   </CardTitle>
-                  <CardDescription>
-                    {dict.grade.add_course_description}
-                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleAddCourse} className="space-y-4">
-                    <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_120px_140px_auto] sm:items-end">
+                    <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_96px_120px_120px_auto] sm:items-end">
                       <div className="space-y-2">
                         <Label htmlFor="grade-course-name">
                           {dict.grade.course_name}
@@ -342,10 +419,39 @@ const GradeTracker = () => {
                           step="0.1"
                           inputMode="decimal"
                           value={score}
-                          onChange={(event) => setScore(event.target.value)}
+                          onChange={(event) => {
+                            setScore(event.target.value);
+                            if (event.target.value !== "") setLetterGrade("");
+                          }}
                           placeholder={dict.grade.score_placeholder}
                           disabled={!isReady}
                         />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="grade-course-letter">
+                          {dict.grade.letter_grade}
+                        </Label>
+                        <Select
+                          value={letterGrade}
+                          onValueChange={(value) => {
+                            setLetterGrade(value as GradeLetter);
+                            setScore("");
+                          }}
+                          disabled={!isReady}
+                        >
+                          <SelectTrigger id="grade-course-letter">
+                            <SelectValue
+                              placeholder={dict.grade.letter_grade_placeholder}
+                            />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {GRADE_SCALE.map((band) => (
+                              <SelectItem key={band.letter} value={band.letter}>
+                                {band.letter}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <Button
                         type="submit"
@@ -401,7 +507,7 @@ const GradeTracker = () => {
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      <div className="hidden grid-cols-[minmax(0,1fr)_88px_100px_72px_60px_40px] gap-2 px-2 text-xs font-medium text-muted-foreground sm:grid">
+                      <div className="hidden grid-cols-[minmax(0,1fr)_72px_100px_120px_60px_40px] gap-2 px-2 text-xs font-medium text-muted-foreground sm:grid">
                         <span>{dict.grade.course_name}</span>
                         <span>{dict.course.credits}</span>
                         <span>{dict.grade.score}</span>
@@ -410,11 +516,11 @@ const GradeTracker = () => {
                         <span />
                       </div>
                       {entries.map((entry) => {
-                        const band = getGradeBand(entry.score);
+                        const band = getGradeBandForEntry(entry)!;
                         return (
                           <div
                             key={entry.id}
-                            className="grid gap-2 rounded-lg border p-3 sm:grid-cols-[minmax(0,1fr)_88px_100px_72px_60px_40px] sm:items-center sm:border-0 sm:p-2 sm:hover:bg-muted/50"
+                            className="grid gap-2 rounded-lg border p-3 sm:grid-cols-[minmax(0,1fr)_72px_100px_120px_60px_40px] sm:items-center sm:border-0 sm:p-2 sm:hover:bg-muted/50"
                           >
                             <Input
                               aria-label={dict.grade.course_name}
@@ -447,23 +553,43 @@ const GradeTracker = () => {
                               min="0"
                               max="100"
                               step="0.1"
-                              value={entry.score}
+                              value={entry.score ?? ""}
                               onChange={(event) => {
                                 if (event.target.value !== "") {
                                   updateEntry(entry.id, {
                                     score: Number(event.target.value),
+                                    letterGrade: null,
                                   });
                                 }
                               }}
                               disabled={!isReady}
                             />
-                            <Badge
-                              variant={
-                                band.points === 0 ? "destructive" : "secondary"
+                            <Select
+                              value={entry.letterGrade ?? ""}
+                              onValueChange={(value) =>
+                                updateEntry(entry.id, {
+                                  score: null,
+                                  letterGrade: value as GradeLetter,
+                                })
                               }
+                              disabled={!isReady}
                             >
-                              {band.letter}
-                            </Badge>
+                              <SelectTrigger
+                                aria-label={dict.grade.letter_grade}
+                              >
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {GRADE_SCALE.map((gradeBand) => (
+                                  <SelectItem
+                                    key={gradeBand.letter}
+                                    value={gradeBand.letter}
+                                  >
+                                    {gradeBand.letter}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                             <span className="text-sm text-muted-foreground">
                               {band.points.toFixed(1)}
                             </span>
@@ -477,6 +603,236 @@ const GradeTracker = () => {
                                   ...previous,
                                   entries: previous.entries.filter(
                                     (item) => item.id !== entry.id,
+                                  ),
+                                }))
+                              }
+                              disabled={!isReady}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex-row items-center justify-between space-y-0">
+                  <CardTitle className="text-lg">
+                    {dict.grade.semester_history}
+                  </CardTitle>
+                  {semesters.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        updateGradebook((previous) => ({
+                          ...previous,
+                          semesters: [],
+                        }))
+                      }
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                      {dict.grade.clear_semesters}
+                    </Button>
+                  )}
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <form onSubmit={handleAddSemester} className="space-y-4">
+                    <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_100px_100px_120px_auto] sm:items-end">
+                      <div className="space-y-2">
+                        <Label htmlFor="grade-semester-name">
+                          {dict.grade.semester_name}
+                        </Label>
+                        <Input
+                          id="grade-semester-name"
+                          value={semesterName}
+                          onChange={(event) =>
+                            setSemesterName(event.target.value)
+                          }
+                          placeholder={dict.grade.semester_name_placeholder}
+                          disabled={!isReady}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="grade-semester-gpa">
+                          {dict.grade.semester_gpa}
+                        </Label>
+                        <Input
+                          id="grade-semester-gpa"
+                          type="number"
+                          min="0"
+                          max="4.3"
+                          step="0.01"
+                          value={semesterGpa}
+                          onChange={(event) =>
+                            setSemesterGpa(event.target.value)
+                          }
+                          placeholder="3.45"
+                          disabled={!isReady}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="grade-semester-credits">
+                          {dict.course.credits}
+                        </Label>
+                        <Input
+                          id="grade-semester-credits"
+                          type="number"
+                          min="0.5"
+                          step="0.5"
+                          value={semesterCredits}
+                          onChange={(event) =>
+                            setSemesterCredits(event.target.value)
+                          }
+                          placeholder="20"
+                          disabled={!isReady}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="grade-semester-cumulative-gpa">
+                          {dict.grade.cumulative_gpa}
+                        </Label>
+                        <Input
+                          id="grade-semester-cumulative-gpa"
+                          type="number"
+                          min="0"
+                          max="4.3"
+                          step="0.01"
+                          value={semesterCumulativeGpa}
+                          onChange={(event) =>
+                            setSemesterCumulativeGpa(event.target.value)
+                          }
+                          placeholder={dict.grade.optional}
+                          disabled={!isReady}
+                        />
+                      </div>
+                      <Button
+                        type="submit"
+                        className="w-full sm:w-auto"
+                        disabled={!isReady}
+                      >
+                        <Plus className="h-4 w-4" />
+                        {dict.grade.add_semester}
+                      </Button>
+                    </div>
+                    {semesterFormError && (
+                      <p className="text-sm text-destructive" role="alert">
+                        {semesterFormError}
+                      </p>
+                    )}
+                  </form>
+
+                  {semesters.length === 0 ? (
+                    <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+                      {dict.grade.no_semesters}
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="hidden grid-cols-[minmax(0,1fr)_100px_100px_120px_40px] gap-2 px-2 text-xs font-medium text-muted-foreground sm:grid">
+                        <span>{dict.grade.semester_name}</span>
+                        <span>{dict.grade.semester_gpa}</span>
+                        <span>{dict.course.credits}</span>
+                        <span>{dict.grade.cumulative_gpa}</span>
+                        <span />
+                      </div>
+                      {semesters.map((semester) => {
+                        const summary = semesterHistory.find(
+                          (item) => item.id === semester.id,
+                        );
+                        return (
+                          <div
+                            key={semester.id}
+                            className="grid gap-2 rounded-lg border p-3 sm:grid-cols-[minmax(0,1fr)_100px_100px_120px_40px] sm:items-center sm:border-0 sm:p-2 sm:hover:bg-muted/50"
+                          >
+                            <Input
+                              aria-label={dict.grade.semester_name}
+                              value={semester.name}
+                              onChange={(event) =>
+                                updateSemester(semester.id, {
+                                  name: event.target.value,
+                                })
+                              }
+                              disabled={!isReady}
+                            />
+                            <Input
+                              aria-label={dict.grade.semester_gpa}
+                              type="number"
+                              min="0"
+                              max="4.3"
+                              step="0.01"
+                              value={semester.gpa}
+                              onChange={(event) => {
+                                const value = Number(event.target.value);
+                                if (
+                                  Number.isFinite(value) &&
+                                  value >= 0 &&
+                                  value <= 4.3
+                                ) {
+                                  updateSemester(semester.id, { gpa: value });
+                                }
+                              }}
+                              disabled={!isReady}
+                            />
+                            <Input
+                              aria-label={dict.course.credits}
+                              type="number"
+                              min="0.5"
+                              step="0.5"
+                              value={semester.credits}
+                              onChange={(event) => {
+                                const value = Number(event.target.value);
+                                if (Number.isFinite(value) && value > 0) {
+                                  updateSemester(semester.id, {
+                                    credits: value,
+                                  });
+                                }
+                              }}
+                              disabled={!isReady}
+                            />
+                            <Input
+                              aria-label={dict.grade.cumulative_gpa}
+                              type="number"
+                              min="0"
+                              max="4.3"
+                              step="0.01"
+                              value={
+                                semester.cumulativeGpa ??
+                                summary?.calculatedCumulativeGpa ??
+                                ""
+                              }
+                              onChange={(event) => {
+                                if (event.target.value === "") {
+                                  updateSemester(semester.id, {
+                                    cumulativeGpa: null,
+                                  });
+                                  return;
+                                }
+                                const value = Number(event.target.value);
+                                if (
+                                  Number.isFinite(value) &&
+                                  value >= 0 &&
+                                  value <= 4.3
+                                ) {
+                                  updateSemester(semester.id, {
+                                    cumulativeGpa: value,
+                                  });
+                                }
+                              }}
+                              disabled={!isReady}
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              aria-label={dict.grade.remove_semester}
+                              onClick={() =>
+                                updateGradebook((previous) => ({
+                                  ...previous,
+                                  semesters: previous.semesters.filter(
+                                    (item) => item.id !== semester.id,
                                   ),
                                 }))
                               }
