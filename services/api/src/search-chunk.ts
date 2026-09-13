@@ -121,38 +121,6 @@ const ifNoneMatchMatches = (header: string | undefined, etag: string) =>
       (value) => value === "*" || value === etag || value === `W/${etag}`,
     ) ?? false;
 
-type CompressionEncoding = "br" | "gzip";
-
-const getEncodingQuality = (header: string, encoding: CompressionEncoding) => {
-  const parts = header.split(",").map((part) => part.trim());
-  const wildcard = parts.find((part) => part.startsWith("*"));
-  const matching = parts.find((part) => {
-    const name = part.split(";", 1)[0]!.trim().toLowerCase();
-    return name === encoding;
-  });
-  const value = matching ?? wildcard;
-  if (!value) return 0;
-  const quality = value.match(/(?:^|;)\s*q\s*=\s*([0-9.]+)/i)?.[1];
-  return quality === undefined ? 1 : Number(quality);
-};
-
-const getCompression = (acceptEncoding: string | undefined) => {
-  if (!acceptEncoding) return null;
-  const candidates: CompressionEncoding[] = ["br", "gzip"];
-  for (const encoding of candidates) {
-    if (getEncodingQuality(acceptEncoding, encoding) <= 0) continue;
-    try {
-      return {
-        encoding,
-        stream: new CompressionStream(encoding as "gzip"),
-      };
-    } catch {
-      // Brotli is not available in every Worker/runtime. Try gzip next.
-    }
-  }
-  return null;
-};
-
 const responseHeaders = (etag: string) =>
   new Headers({
     "Cache-Control": CHUNK_CACHE_CONTROL,
@@ -169,12 +137,10 @@ const jsonResponse = (c: Context, body: string, etag: string, status = 200) => {
     return new Response(null, { status: 304, headers });
   }
 
-  const compression = getCompression(c.req.header("Accept-Encoding"));
-  if (compression) {
-    headers.set("Content-Encoding", compression.encoding);
-    const stream = new Blob([body]).stream().pipeThrough(compression.stream);
-    return new Response(stream, { status, headers });
-  }
+  // Deliberately no manual Content-Encoding. Compressing here and declaring
+  // the encoding ourselves produced responses the browser handed to the client
+  // still gzipped, so JSON.parse saw the 0x1f8b gzip magic and threw. The edge
+  // already negotiates and applies compression for JSON responses.
   return new Response(body, { status, headers });
 };
 

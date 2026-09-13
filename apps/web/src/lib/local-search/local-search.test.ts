@@ -545,6 +545,38 @@ describe("local-first resilient client", () => {
     expect(result.handled).toBe(false);
   });
 
+  test("stops retrying and stays failed after the chunk load fails", async () => {
+    // Regression: a failed load used to be evicted from the chunk cache, so
+    // every later query retried it. The engine kept flipping back to
+    // "loading" and the UI showed "Preparing local course search…" forever
+    // while re-requesting the chunk on each keystroke.
+    let fetchCalls = 0;
+    const failingLocal = createLocalSearchClient({
+      baseUrl: "https://api.example.test",
+      cache: new MemorySearchChunkCache(),
+      fetch: async () => {
+        fetchCalls += 1;
+        return new Response("broken", { status: 503 });
+      },
+      workerFactory: () => new FakeWorker(),
+      defaultSemester: "11510",
+    });
+
+    await expect(
+      failingLocal.trySearch([request({ query: "CS" })]),
+    ).rejects.toThrow();
+    const callsAfterFirst = fetchCalls;
+
+    for (const query of ["C", "CS", "CS 1", "CS 10"]) {
+      await expect(
+        failingLocal.trySearch([request({ query })]),
+      ).rejects.toThrow();
+    }
+
+    expect(fetchCalls).toBe(callsAfterFirst);
+    expect(failingLocal.getStatus()).toBe("error");
+  });
+
   test("falls back after manifest errors and worker build errors", async () => {
     const failingLocal = createLocalSearchClient({
       baseUrl: "https://api.example.test",

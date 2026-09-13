@@ -294,12 +294,24 @@ describe("search chunk HTTP routes", () => {
     expect((await notModified.arrayBuffer()).byteLength).toBe(0);
   });
 
-  it("uses compression when requested and returns enveloped errors", async () => {
-    const compressed = await app.request("/11510", {
-      headers: { "Accept-Encoding": "gzip" },
-    });
-    expect(compressed.status).toBe(200);
-    expect(compressed.headers.get("content-encoding")).toBe("gzip");
+  it("returns a body the client can parse, whatever encoding is offered", async () => {
+    // Regression: the endpoint used to gzip the body itself and declare
+    // Content-Encoding. The browser then handed the client gzipped bytes, so
+    // JSON.parse threw on the 0x1f8b magic and local search never loaded.
+    // Compression belongs to the edge; the body we emit must always be JSON.
+    for (const acceptEncoding of ["gzip", "br", "gzip, deflate, br", "*"]) {
+      const response = await app.request("/11510", {
+        headers: { "Accept-Encoding": acceptEncoding },
+      });
+      expect(response.status).toBe(200);
+      expect(response.headers.get("content-encoding")).toBeNull();
+
+      const bytes = new Uint8Array(await response.clone().arrayBuffer());
+      expect([bytes[0], bytes[1]]).not.toEqual([0x1f, 0x8b]);
+
+      const body = (await response.json()) as { success: boolean };
+      expect(body.success).toBe(true);
+    }
 
     const invalid = await app.request("/not-a-semester", {
       headers: { "Accept-Encoding": "identity" },
