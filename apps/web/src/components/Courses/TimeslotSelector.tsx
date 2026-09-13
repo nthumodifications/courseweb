@@ -50,12 +50,12 @@ const TimeslotSelector: FC<{
   };
 
   return (
-    <div className="grid grid-cols-[repeat(7,24px)] grid-rows-[repeat(14,24px)] gap-1 text-center text-sm">
+    <div className="grid grid-cols-[repeat(7,24px)] grid-rows-[repeat(14,24px)] gap-1 text-sm">
       <div className="w-4 h-4"></div>
       {days.map((day) => (
         <div
           key={day}
-          className="rounded-md hover:bg-gray-100 dark:hover:bg-background cursor-pointer"
+          className="rounded-md hover:bg-accent cursor-pointer"
           onClick={handleSelectColumn(day)}
         >
           {day}
@@ -64,7 +64,7 @@ const TimeslotSelector: FC<{
       {scheduleTimeSlots.map((timeSlot) => [
         <div
           key={timeSlot.time}
-          className="rounded-md hover:bg-gray-100 dark:hover:bg-background cursor-pointer"
+          className="rounded-md hover:bg-accent cursor-pointer"
           onClick={handleSelectRow(timeSlot.time)}
         >
           {timeSlot.time}
@@ -73,7 +73,7 @@ const TimeslotSelector: FC<{
           .map((day) => (
             <div
               key={day + timeSlot.time}
-              className={`${!isSelected(day + timeSlot.time) ? "bg-gray-200 hover:bg-gray-100 dark:bg-neutral-800 dark:hover:bg-background" : "bg-gray-400 hover:bg-gray-300 dark:bg-neutral-600 dark:hover:bg-neutral-700"} transition-colors cursor-pointer`}
+              className={`${!isSelected(day + timeSlot.time) ? "bg-muted hover:bg-accent" : "bg-primary hover:bg-primary/80"} transition-colors cursor-pointer`}
               onClick={handleChange(day + timeSlot.time)}
             ></div>
           ))

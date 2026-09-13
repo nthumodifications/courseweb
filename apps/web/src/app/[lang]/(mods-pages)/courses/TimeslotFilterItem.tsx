@@ -139,9 +139,9 @@ const TimeslotFilterItem = ({
         <PopoverTrigger asChild>
           <Button
             variant="outline"
-            className={`w-full text-left justify-start h-max`}
+            className="min-w-0 w-full justify-start h-max text-left"
           >
-            <span className="truncate">
+            <span className="min-w-0 whitespace-normal">
               {searching ? (
                 dict.common.selecting
               ) : timeslotValue.length == 0 ? (
@@ -170,7 +170,9 @@ const TimeslotFilterItem = ({
             <SelectValue placeholder={dict.course.refine.mode} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="includes">{dict.course.refine.includes}</SelectItem>
+            <SelectItem value="includes">
+              {dict.course.refine.includes}
+            </SelectItem>
             <SelectItem value="exact">{dict.course.refine.exact}</SelectItem>
           </SelectContent>
         </Select>

@@ -2,6 +2,8 @@
 
 # 國立清華大學非公式的開源預排，選課，課表網站
 
+[![Build and Deploy](https://github.com/nthumodifications/courseweb/actions/workflows/build.yaml/badge.svg?branch=main)](https://github.com/nthumodifications/courseweb/actions/workflows/build.yaml)
+
 The unofficial open-source course preselection, timetable builder, and course catalog website!
 
 We are a passionate team of students dedicated to improving the technological standards of NTHU through students. We hope that with our efforts and yours, we'll make NTHU great again!

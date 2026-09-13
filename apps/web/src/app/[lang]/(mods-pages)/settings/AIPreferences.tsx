@@ -3,18 +3,18 @@ import useDictionary from "@/dictionaries/useDictionary";
 import {
   Button,
   Input,
-  Label,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
   Switch,
-  Separator,
 } from "@courseweb/ui";
 import { event } from "@/lib/gtag";
 import { useQuery } from "@tanstack/react-query";
 import client from "@/config/api";
+import { SettingItem } from "./SettingItem";
+import { Check } from "lucide-react";
 
 const ENTRANCE_YEARS = ["114", "113", "112", "111", "110", "109", "108", "107"];
 
@@ -43,9 +43,11 @@ export function AIPreferencesPanel() {
   const [isSaved, setIsSaved] = useState(false);
 
   // Load departments from API using React Query
-  const { data: departments = [], isLoading: isLoadingDepts } = useQuery<
-    DepartmentOption[]
-  >({
+  const {
+    data: departments = [],
+    isLoading: isLoadingDepts,
+    isError: isDepartmentsError,
+  } = useQuery<DepartmentOption[]>({
     queryKey: ["graduation-departments"],
     queryFn: async () => {
       const response = await client.graduation.colleges.$get();
@@ -161,26 +163,22 @@ export function AIPreferencesPanel() {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-base font-semibold">
-          {dict.settings.ai.profile.title}
-        </h3>
-        <p className="text-sm text-muted-foreground">
+    <div className="divide-y divide-border">
+      <div className="py-4">
+        <h3 className="text-sm font-bold">{dict.settings.ai.profile.title}</h3>
+        <p className="text-sm leading-relaxed text-muted-foreground">
           {dict.settings.ai.profile.description}
         </p>
       </div>
 
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="department">
-            {dict.settings.ai.profile.department.label}
-          </Label>
+      <SettingItem
+        title={dict.settings.ai.profile.department.label}
+        control={
           <Select
             value={settings.department}
             onValueChange={(v) => setSettings((s) => ({ ...s, department: v }))}
           >
-            <SelectTrigger>
+            <SelectTrigger className="w-[160px]">
               <SelectValue
                 placeholder={dict.settings.ai.profile.department.placeholder}
               />
@@ -189,6 +187,10 @@ export function AIPreferencesPanel() {
               {isLoadingDepts ? (
                 <SelectItem value="loading" disabled>
                   {dict.common.loading}
+                </SelectItem>
+              ) : isDepartmentsError ? (
+                <SelectItem value="error" disabled>
+                  {dict.common.error}
                 </SelectItem>
               ) : (
                 departments.map((dept) => (
@@ -199,19 +201,19 @@ export function AIPreferencesPanel() {
               )}
             </SelectContent>
           </Select>
-        </div>
+        }
+      />
 
-        <div className="space-y-2">
-          <Label htmlFor="entranceYear">
-            {dict.settings.ai.profile.entrance_year.label}
-          </Label>
+      <SettingItem
+        title={dict.settings.ai.profile.entrance_year.label}
+        control={
           <Select
             value={settings.entranceYear}
             onValueChange={(v) =>
               setSettings((s) => ({ ...s, entranceYear: v }))
             }
           >
-            <SelectTrigger>
+            <SelectTrigger className="w-[160px]">
               <SelectValue
                 placeholder={dict.settings.ai.profile.entrance_year.placeholder}
               />
@@ -224,52 +226,50 @@ export function AIPreferencesPanel() {
               ))}
             </SelectContent>
           </Select>
-        </div>
-      </div>
+        }
+      />
 
-      <Separator orientation="horizontal" />
-
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="space-y-0.5">
-            <Label>{dict.settings.ai.api_key.title}</Label>
-            <p className="text-sm text-muted-foreground">
-              {dict.settings.ai.api_key.description}
-            </p>
-          </div>
+      <SettingItem
+        title={dict.settings.ai.api_key.title}
+        description={dict.settings.ai.api_key.description}
+        control={
           <Switch
             checked={settings.useCustomKey}
             onCheckedChange={(v) =>
               setSettings((s) => ({ ...s, useCustomKey: v }))
             }
           />
-        </div>
+        }
+      />
 
-        {settings.useCustomKey && (
-          <>
-            <div className="space-y-2">
-              <Label htmlFor="apiKey">{dict.settings.ai.api_key.label}</Label>
-              <Input
-                id="apiKey"
-                type="password"
-                value={settings.apiKey || ""}
-                onChange={(e) =>
-                  setSettings((s) => ({ ...s, apiKey: e.target.value }))
-                }
-                placeholder={dict.settings.ai.api_key.placeholder}
-              />
-              <p className="text-xs text-muted-foreground">
+      {settings.useCustomKey && (
+        <>
+          <SettingItem
+            title={dict.settings.ai.api_key.label}
+            control={
+              <div className="flex w-[min(60vw,480px)] flex-col gap-2">
+                <Input
+                  id="apiKey"
+                  type="password"
+                  value={settings.apiKey || ""}
+                  onChange={(e) =>
+                    setSettings((s) => ({ ...s, apiKey: e.target.value }))
+                  }
+                  placeholder={dict.settings.ai.api_key.placeholder}
+                />
                 <a
                   href="https://aistudio.google.com/apikey"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="underline"
+                  className="text-sm text-primary underline underline-offset-4"
                 >
                   {dict.settings.ai.api_key.get_key}
                 </a>
-              </p>
-            </div>
+              </div>
+            }
+          />
 
+          <div className="flex flex-row flex-wrap items-center justify-end gap-4 py-4">
             <Button
               variant="outline"
               onClick={testApiKey}
@@ -281,23 +281,25 @@ export function AIPreferencesPanel() {
             </Button>
 
             {testResult === "success" && (
-              <p className="text-sm text-green-600">
+              <p className="text-sm text-primary">
                 {dict.settings.ai.api_key.valid}
               </p>
             )}
             {testResult === "error" && (
-              <p className="text-sm text-red-600">
+              <p className="text-sm text-destructive">
                 {dict.settings.ai.api_key.invalid}
               </p>
             )}
-          </>
-        )}
-      </div>
+          </div>
+        </>
+      )}
 
-      <Button onClick={saveSettings}>
-        {isSaved ? "✓ " : ""}
-        {dict.settings.ai.save}
-      </Button>
+      <div className="flex flex-row justify-end py-4">
+        <Button onClick={saveSettings}>
+          {isSaved && <Check className="h-4 w-4" />}
+          {dict.settings.ai.save}
+        </Button>
+      </div>
     </div>
   );
 }

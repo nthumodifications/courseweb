@@ -19,21 +19,20 @@ export const SettingItem = ({
   return (
     <div
       id={id}
-      className={cn(
-        "flex flex-row xs:items-center xs:justify-between gap-3",
-        className,
-      )}
+      className={cn("flex flex-row items-center gap-4 py-4", className)}
     >
-      <div className="flex-1 space-y-1">
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
         {typeof title === "string" ? (
-          <h3 className="text-sm font-medium">{title}</h3>
+          <h3 className="text-sm font-bold">{title}</h3>
         ) : (
-          <div className="text-sm font-medium" role="heading" aria-level={3}>
+          <div className="text-sm font-bold" role="heading" aria-level={3}>
             {title}
           </div>
         )}
         {description && (
-          <p className="text-xs text-muted-foreground">{description}</p>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            {description}
+          </p>
         )}
       </div>
       <div className="flex items-center shrink-0">{control}</div>

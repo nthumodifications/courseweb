@@ -7,6 +7,8 @@ import {
   CardTitle,
   Button,
   Badge,
+  EmptyState,
+  ErrorState,
   Input,
   Tabs,
   TabsList,
@@ -30,8 +32,10 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import useDictionary from "@/dictionaries/useDictionary";
 
 const DesignSystem = () => {
+  const dict = useDictionary();
   const [activeSection, setActiveSection] = useState("colors");
 
   // Scroll tracking similar to settings page
@@ -581,6 +585,46 @@ const DesignSystem = () => {
                         </Button>
                       </div>
                     </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Empty and Error States */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Empty and Error States</CardTitle>
+                  <CardDescription>
+                    Quiet, left-aligned states that stay in the page flow
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div>
+                    <h4 className="text-sm font-medium">EmptyState default</h4>
+                    <EmptyState icon={Search} title={dict.common.no_results} />
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-medium">
+                      EmptyState fullPane (exception)
+                    </h4>
+                    <EmptyState
+                      fullPane
+                      icon={Search}
+                      title={dict.common.no_results}
+                    />
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-medium">ErrorState</h4>
+                    <ErrorState
+                      title={dict.common.error}
+                      description={dict.error.client_description}
+                      action={
+                        <Button size="sm" variant="outline">
+                          {dict.common.try_again}
+                        </Button>
+                      }
+                    />
                   </div>
                 </CardContent>
               </Card>

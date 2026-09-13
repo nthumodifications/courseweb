@@ -13,8 +13,8 @@ const Tools = () => {
           alt={dict.help.tools.image_alt}
         />
       </div>
-      <span className="font-bold text-2xl">{dict.help.tools.title}</span>
-      <span className="">{dict.help.tools.description}</span>
+      <span className="font-bold text-xl">{dict.help.tools.title}</span>
+      <p className="leading-relaxed">{dict.help.tools.description}</p>
       <div>
         {/* <CCXPDownAlert/> */}
         <LoginDialog />

@@ -1,8 +1,8 @@
 import React from "react";
 import { Badge } from "@courseweb/ui";
 import { MapPin, Phone, Clock, Info } from "lucide-react";
-import { Separator } from "@courseweb/ui";
 import type { DiningShop } from "./types";
+import useDictionary from "@/dictionaries/useDictionary";
 
 interface ShopItemProps {
   shop: DiningShop;
@@ -13,7 +13,7 @@ interface ShopItemProps {
   };
 }
 
-const checkOpen = (schedule: string) => {
+const checkOpen = (schedule: string): [boolean, string, string?] => {
   if (schedule == "24小時") {
     return [true, "營業中", "24小時營業"];
   }
@@ -261,6 +261,7 @@ const checkOpen = (schedule: string) => {
 };
 
 const ShopItem: React.FC<ShopItemProps> = ({ shop, filter }) => {
+  const dict = useDictionary();
   const days = [
     "sunday",
     "weekday",
@@ -295,8 +296,22 @@ const ShopItem: React.FC<ShopItemProps> = ({ shop, filter }) => {
     return null;
   }
 
+  const statusLabel =
+    {
+      營業中: dict.shops.open_now,
+      休息中: dict.shops.closed,
+      今日休息: dict.shops.closed_today,
+      即將開始: dict.shops.opening_soon,
+      即將休息: dict.shops.closing_soon,
+      無資訊: dict.shops.no_info,
+    }[status] ?? status;
+  const messageLabel = message
+    ?.replace("24小時營業", dict.shops.open_24h)
+    .replace("開始營業", dict.shops.opens_at)
+    .replace("後休息", dict.shops.closes_at);
+
   return (
-    <div className="flex gap-6">
+    <div className="flex min-w-0 gap-4 py-4">
       <div className="flex flex-col">
         <img
           src={shop.image}
@@ -306,7 +321,7 @@ const ShopItem: React.FC<ShopItemProps> = ({ shop, filter }) => {
       </div>
       <div className="flex-1">
         <div className="flex flex-col">
-          <span className="font-bold text-xl">{shop.name}</span>
+          <span className="font-bold">{shop.name}</span>
           <div className="flex items-center gap-1">
             <MapPin size="14" />
             <span className="text-muted-foreground text-sm">{shop.area}</span>
@@ -317,13 +332,14 @@ const ShopItem: React.FC<ShopItemProps> = ({ shop, filter }) => {
                 className="w-max"
                 variant={isOpen ? "default" : "destructive"}
               >
-                {status}
+                {statusLabel}
               </Badge>
-              <span className="text-muted-foreground text-sm">{message}</span>
+              <span className="text-muted-foreground text-sm">
+                {messageLabel}
+              </span>
             </div>
           </div>
         </div>
-        <Separator className="my-4" />
         <div className="flex flex-col">
           <div className="grid grid-cols-[1.5rem_auto]">
             <Phone size="14" className="self-center" />
@@ -340,18 +356,20 @@ const ShopItem: React.FC<ShopItemProps> = ({ shop, filter }) => {
                 </span>
               ))
             ) : (
-              <span className="text-muted-foreground text-sm">無</span>
+              <span className="text-muted-foreground text-sm">
+                {dict.shops.no_phone}
+              </span>
             )}
           </div>
           <div className="grid grid-cols-[1.5rem_auto]">
             <Clock size="14" className="self-center" />
             <span className="text-muted-foreground text-sm">
-              {shop.schedule[today] || "今日休息"}
+              {shop.schedule[today] || dict.shops.closed_today}
             </span>
           </div>
           {shop.note && (
             <div className="grid grid-cols-[1.5rem_auto]">
-              <Info size="14" className="mt-[3px]" />
+              <Info size="14" className="mt-1" />
               <span className="text-muted-foreground text-sm">{shop.note}</span>
             </div>
           )}

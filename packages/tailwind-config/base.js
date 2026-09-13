@@ -86,7 +86,9 @@ module.exports = {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        sans: ["var(--font-inter)", "var(--font-noto)", ...fontFamily.sans],
+        sans: [
+          'var(--font-family, "Inter", "PingFang TC", "Microsoft JhengHei", "Noto Sans CJK TC", "Noto Sans TC", sans-serif)',
+        ],
       },
       keyframes: {
         "accordion-down": {

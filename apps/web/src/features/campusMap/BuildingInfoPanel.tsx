@@ -35,7 +35,7 @@ export default function BuildingInfoPanel({
 
   return (
     <section
-      className="pointer-events-auto w-full rounded-xl border border-border bg-background/95 p-4 shadow-xl backdrop-blur-md"
+      className="pointer-events-auto w-full rounded-xl border border-border bg-background/95 p-4 backdrop-blur-md"
       aria-labelledby="campus-feature-title"
     >
       <div className="flex items-start gap-3">
@@ -43,10 +43,7 @@ export default function BuildingInfoPanel({
           <MapPin className="h-5 w-5" aria-hidden="true" />
         </div>
         <div className="min-w-0 flex-1">
-          <h2
-            id="campus-feature-title"
-            className="font-semibold text-foreground"
-          >
+          <h2 id="campus-feature-title" className="font-bold text-foreground">
             {labelNumber ? `#${labelNumber} ${title}` : title}
           </h2>
           <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 text-sm">

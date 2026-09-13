@@ -44,7 +44,7 @@ export default function CourseListRenderer({
 
   if (isLoading) {
     return (
-      <div className="space-y-3">
+      <div className="flex flex-col gap-4">
         {rawIds.map((_, i) => (
           <Skeleton key={i} className="h-32 w-full" />
         ))}
@@ -54,7 +54,7 @@ export default function CourseListRenderer({
 
   if (error) {
     return (
-      <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 rounded p-3">
+      <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 rounded p-4">
         <AlertCircle className="h-4 w-4" />
         <span>{dict.chat.course_renderer.load_failed}</span>
       </div>
@@ -63,18 +63,18 @@ export default function CourseListRenderer({
 
   if (!courses || courses.length === 0) {
     return (
-      <div className="text-sm text-muted-foreground bg-muted rounded p-3">
+      <div className="text-sm text-muted-foreground bg-muted rounded p-4">
         {dict.chat.course_renderer.no_courses}
       </div>
     );
   }
 
   return (
-    <div className="space-y-3">
+    <div className="flex flex-col gap-4">
       {courses.map((course) => (
         <div
           key={course.raw_id}
-          className="border-b pb-3 last:border-b-0 last:pb-0"
+          className="border-b pb-4 last:border-b-0 last:pb-0"
         >
           <CourseListItem course={course} />
         </div>

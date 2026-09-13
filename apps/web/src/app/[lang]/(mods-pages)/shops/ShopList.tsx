@@ -35,8 +35,8 @@ const Shops = ({ data }: { data: DiningArea[] }) => {
   const [filterArea, setFilterArea] = useState("");
 
   return (
-    <div className="p-8 mb-2">
-      <div className="sticky top-8">
+    <div className="flex flex-col px-4">
+      <div className="sticky top-0">
         <div className="flex items-center gap-4 bg-muted px-4 py-2 rounded-lg">
           <Search />
           <Input
@@ -86,7 +86,7 @@ const Shops = ({ data }: { data: DiningArea[] }) => {
         </div>
       </div>
 
-      <div className="flex flex-col gap-12 py-4">
+      <div className="flex flex-col divide-y divide-border py-4">
         {shops.map((shop) => (
           <ShopItem
             key={shop.name}

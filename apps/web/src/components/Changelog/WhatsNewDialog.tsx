@@ -87,7 +87,7 @@ const WhatsNewDialog = () => {
       <DialogContent className="max-h-[85vh] w-[calc(100%-2rem)] overflow-y-auto sm:w-full">
         <DialogHeader>
           <DialogTitle>{dict.changelog.whats_new}</DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="leading-relaxed">
             {release.title?.[language] ?? release.version}
           </DialogDescription>
         </DialogHeader>
@@ -96,17 +96,17 @@ const WhatsNewDialog = () => {
           {release.items.map((item, index) => (
             <li
               key={`${release.version}-${index}`}
-              className="flex items-start gap-3"
+              className="flex items-start gap-4"
             >
-              <Badge variant="secondary" className="mt-0.5 shrink-0">
+              <Badge variant="secondary" className="mt-1 shrink-0">
                 {dict.changelog.types[item.type]}
               </Badge>
-              <div className="min-w-0 space-y-1">
-                <h3 className="font-semibold leading-snug">
+              <div className="min-w-0 flex flex-col gap-1">
+                <h3 className="font-medium leading-relaxed">
                   {item.title[language]}
                 </h3>
                 {item.description && (
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground leading-relaxed">
                     {item.description[language]}
                   </p>
                 )}

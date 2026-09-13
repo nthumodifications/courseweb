@@ -100,7 +100,7 @@ export function RichMessageContent({ content }: RichMessageContentProps) {
           return (
             <div
               key={index}
-              className="prose prose-sm dark:prose-invert max-w-none prose-table:text-sm"
+              className="prose prose-sm max-w-none prose-table:text-sm"
             >
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
@@ -126,12 +126,12 @@ export function RichMessageContent({ content }: RichMessageContentProps) {
                     <thead className="bg-muted">{children}</thead>
                   ),
                   th: ({ children }) => (
-                    <th className="border border-border px-3 py-2 text-left font-semibold">
+                    <th className="border border-border px-4 py-2 text-left font-medium">
                       {children}
                     </th>
                   ),
                   td: ({ children }) => (
-                    <td className="border border-border px-3 py-2">
+                    <td className="border border-border px-4 py-2">
                       {children}
                     </td>
                   ),

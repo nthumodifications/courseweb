@@ -51,7 +51,7 @@ export function ChatInput() {
         )}
       </div>
 
-      <p className="text-xs text-muted-foreground mt-2 text-center">
+      <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
         {dict.chat.keyboard_hint}
       </p>
     </div>

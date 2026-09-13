@@ -11,7 +11,7 @@ const FavouriteApp = ({ appId }: { appId: string }) => {
     <Button size="icon" variant="ghost" onClick={() => toggleApp(appId)}>
       <Star
         className={
-          isPinned ? "text-yellow-500" : "text-gray-700 dark:text-neutral-400"
+          isPinned ? "fill-primary stroke-primary" : "text-muted-foreground"
         }
       />
     </Button>

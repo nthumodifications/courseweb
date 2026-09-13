@@ -3,7 +3,7 @@ import { WidgetShell } from "./WidgetShell";
 import { semesterInfo } from "@courseweb/shared";
 import useTime from "@/hooks/useTime";
 import { Timer } from "lucide-react";
-import { format } from "date-fns";
+import { format, formatDistanceStrict } from "date-fns";
 import { formatInTimeZone } from "date-fns-tz";
 import { Badge, cn } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
@@ -12,6 +12,8 @@ import useUpcomingEvents, {
   UPCOMING_TIME_ZONE,
   UpcomingEvent,
 } from "@/hooks/useUpcomingEvents";
+import { getLocale } from "@/helpers/dateLocale";
+import { useSettings } from "@/hooks/contexts/settings";
 
 const DATE_KEY_FORMAT = "yyyy-MM-dd";
 
@@ -32,18 +34,10 @@ export const NextUpLine: FC<{
   className?: string;
 }> = ({ event, className }) => {
   const dict = useDictionary();
-
+  const { language } = useSettings();
+  const now = useTime(60_000);
   if (!event) {
-    return (
-      <div
-        className={cn(
-          "rounded-lg border border-dashed border-border px-3 py-2 text-sm text-muted-foreground",
-          className,
-        )}
-      >
-        {dict.today.upcoming.nothing_scheduled}
-      </div>
-    );
+    return null;
   }
 
   const when = event.allDay
@@ -52,21 +46,21 @@ export const NextUpLine: FC<{
   const status =
     event.state === "in-progress"
       ? dict.today.upcoming.in_progress
-      : event.startsInMinutes === 1
-        ? dict.today.upcoming.starts_in_one
-        : dict.today.upcoming.starts_in.replace(
-            "{minutes}",
-            String(event.startsInMinutes),
-          );
+      : dict.today.upcoming.starts_in.replace(
+          "{duration}",
+          formatDistanceStrict(event.start, now, {
+            locale: getLocale(language),
+          }),
+        );
 
   return (
     <div
       className={cn(
-        "flex min-w-0 items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2",
+        "flex min-w-0 items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-4 py-2",
         className,
       )}
     >
-      <span className="shrink-0 text-xs font-semibold text-primary">
+      <span className="shrink-0 text-xs font-medium text-primary">
         {dict.today.upcoming.next_up}
       </span>
       <span className="min-w-0 flex-1 truncate text-sm font-medium">
@@ -75,7 +69,7 @@ export const NextUpLine: FC<{
       <span className="shrink-0 text-xs text-muted-foreground">
         {when} · {status}
       </span>
-      <Badge variant="outline" className="shrink-0 px-1.5 py-0 text-[10px]">
+      <Badge variant="outline" className="shrink-0 px-2 py-0 text-[10px]">
         {dict.today.upcoming.source[event.source]}
       </Badge>
     </div>

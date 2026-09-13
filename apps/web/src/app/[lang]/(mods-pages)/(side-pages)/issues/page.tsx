@@ -1,45 +1,19 @@
-import { Codepen, Database, Globe } from "lucide-react";
-import { Link } from "react-router-dom";
 import EmptyIssueForm from "./EmptyIssueForm";
-import { Separator } from "@courseweb/ui";
 import Footer from "@/components/Footer";
-
-const IssueButton = ({
-  title,
-  description,
-  icon,
-  href,
-}: {
-  title: string;
-  description: string;
-  icon: any;
-  href: string;
-}) => {
-  return (
-    <Link to={href}>
-      <div className="flex flex-col flex-1 p-5 cursor-pointer hover:bg-muted">
-        <div className="flex-1 py-8 items-center">{icon}</div>
-        <h3 className="text-2xl">{title}</h3>
-        <p className="text-muted-foreground">{description}</p>
-      </div>
-    </Link>
-  );
-};
+import useDictionary from "@/dictionaries/useDictionary";
 
 const IssuesPage = () => {
+  const dict = useDictionary();
+
   return (
-    <div className="flex flex-col max-w-2xl px-4 prose prose-neutral dark:prose-invert">
-      <h1>Report an Issue</h1>
-      <div id="dataissue" className="flex flex-col">
+    <div className="flex flex-col gap-4 px-4">
+      <div id="dataissue" className="flex flex-col gap-4">
         {/* Explainer of the data sources */}
-        <h2>{"Data Sources"}</h2>
-        <p>
-          We collect a variety of data sources to compile the best course
-          information for you. These include:
-        </p>
-        <div className="flex flex-col gap-2">
-          <div className="flex flex-col">
-            <div className="text-lg font-bold">最新課程資料《 JSON格式》</div>
+        <h1 className="text-base font-bold">{dict.issues.data_sources}</h1>
+        <p className="leading-relaxed">{dict.issues.introduction}</p>
+        <div className="flex flex-col divide-y divide-border">
+          <div className="flex flex-col gap-1 py-4">
+            <div className="font-bold">{dict.issues.sources.course_data}</div>
             <a
               className="text-muted-foreground text-sm"
               href="https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/OPENDATA/open_course_data.json"
@@ -48,8 +22,8 @@ const IssuesPage = () => {
               https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/OPENDATA/open_course_data.json
             </a>
           </div>
-          <div className="flex flex-col">
-            <div className="text-lg font-bold">校務資訊系統課程總表</div>
+          <div className="flex flex-col gap-1 py-4">
+            <div className="font-bold">{dict.issues.sources.course_list}</div>
             <a
               className="text-muted-foreground text-sm"
               href="https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/6/6.2/6.2.9/JH629001.php"
@@ -58,8 +32,8 @@ const IssuesPage = () => {
               https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/6/6.2/6.2.9/JH629001.php
             </a>
           </div>
-          <div className="flex flex-col">
-            <div className="text-lg font-bold">課程平均值及標準差查詢</div>
+          <div className="flex flex-col gap-1 py-4">
+            <div className="font-bold">{dict.issues.sources.course_stats}</div>
             <a
               className="text-muted-foreground text-sm"
               href="https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/8/8.4/8.4.2/JH84201.php"
@@ -69,9 +43,7 @@ const IssuesPage = () => {
             </a>
           </div>
         </div>
-        <p>
-          {`We fetch and update the data daily at 8 AM. If there are issues with the course details on NTHUMods, please verify from the above links if the its an error on NTHUMods's side. Then feel free to report it below. `}
-        </p>
+        <p className="leading-relaxed">{dict.issues.update_notice}</p>
         {/* Data issue form */}
       </div>
       <EmptyIssueForm />

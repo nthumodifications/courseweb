@@ -8,8 +8,8 @@ const Dev = () => {
       <div className="flex justify-center mb-4">
         <img src="/images/crane.gif" className="w-48 h-48" />
       </div>
-      <span className="font-bold text-2xl">{dict.help.dev.title}</span>
-      <span className="">{dict.help.dev.description}</span>
+      <span className="font-bold text-xl">{dict.help.dev.title}</span>
+      <p className="leading-relaxed">{dict.help.dev.description}</p>
       <div>
         <a target="_blank" href="https://forms.gle/LKYiVhLVwRGL44pz6">
           <Button variant="outline">{dict.help.dev.feedback}</Button>

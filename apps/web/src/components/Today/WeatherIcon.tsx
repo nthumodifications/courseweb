@@ -22,7 +22,7 @@ const WeatherIcon = ({ wxCode }: { wxCode: string | undefined }) => {
 
   // Cloudy (04, 05, 06, 07)
   if (code >= 4 && code <= 7)
-    return <Cloud className="h-5 w-5 text-gray-400" />;
+    return <Cloud className="h-5 w-5 text-muted-foreground" />;
 
   // Fog related (08, 09)
   if (code >= 8 && code <= 9)

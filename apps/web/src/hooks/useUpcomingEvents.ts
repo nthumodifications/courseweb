@@ -68,6 +68,40 @@ export type UpcomingEvent = {
   calendarEvent?: DisplayCalendarEvent;
 };
 
+export type UpcomingDayGroup = {
+  kind: "day" | "range";
+  days: Date[];
+};
+
+export const groupConsecutiveEmptyDays = (
+  days: Date[],
+  isEmpty: (day: Date) => boolean,
+): UpcomingDayGroup[] => {
+  const groups: UpcomingDayGroup[] = [];
+  let emptyDays: Date[] = [];
+
+  const flushEmptyDays = () => {
+    if (emptyDays.length === 0) return;
+    groups.push({
+      kind: emptyDays.length === 1 ? "day" : "range",
+      days: emptyDays,
+    });
+    emptyDays = [];
+  };
+
+  for (const day of days) {
+    if (isEmpty(day)) {
+      emptyDays.push(day);
+    } else {
+      flushEmptyDays();
+      groups.push({ kind: "day", days: [day] });
+    }
+  }
+
+  flushEmptyDays();
+  return groups;
+};
+
 export type UseUpcomingEventsOptions = {
   windowDays?: number;
   start?: Date;

@@ -4,8 +4,10 @@ import { Label } from "@courseweb/ui";
 import { Textarea } from "@courseweb/ui";
 import client from "@/config/api";
 import { FormEvent, useState } from "react";
+import useDictionary from "@/dictionaries/useDictionary";
 
 const EmptyIssueForm = () => {
+  const dict = useDictionary();
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
 
@@ -16,11 +18,11 @@ const EmptyIssueForm = () => {
     const title = form.get("title");
     const description = form.get("description");
     if (typeof title !== "string" || title.length === 0) {
-      setError("Title is required");
+      setError(dict.issues.form.title_required);
       return;
     }
     if (typeof description !== "string" || description.length === 0) {
-      setError("Description is required");
+      setError(dict.issues.form.description_required);
       return;
     }
     try {
@@ -33,27 +35,27 @@ const EmptyIssueForm = () => {
       });
       setSubmitted(true);
     } catch {
-      setError("Failed to submit issue. Please try again.");
+      setError(dict.issues.form.submit_error);
     }
   };
 
   if (submitted) {
-    return <p className="text-green-600">Issue submitted successfully!</p>;
+    return <p className="text-primary">{dict.issues.form.success}</p>;
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col max-w-2xl gap-4">
-      {error && <p className="text-red-500 text-sm">{error}</p>}
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      {error && <p className="text-destructive text-sm">{error}</p>}
       <div className="flex flex-col gap-2">
-        <Label htmlFor="title">{"Title"}</Label>
+        <Label htmlFor="title">{dict.issues.form.title}</Label>
         <Input id="title" name="title" />
       </div>
       <div className="flex flex-col gap-2">
-        <Label htmlFor="description">{"Describe your issue"}</Label>
+        <Label htmlFor="description">{dict.issues.form.description}</Label>
         <Textarea id="description" name="description" />
       </div>
       <div className="flex flex-row gap-2 justify-end">
-        <Button type="submit">Submit</Button>
+        <Button type="submit">{dict.issues.form.submit}</Button>
       </div>
     </form>
   );

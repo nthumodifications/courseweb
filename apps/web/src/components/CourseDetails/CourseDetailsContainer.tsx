@@ -17,7 +17,7 @@ import {
   getScoreType,
   getFormattedClassCode,
 } from "@/helpers/courses";
-import { Button } from "@courseweb/ui";
+import { Button, ErrorState } from "@courseweb/ui";
 import { Separator } from "@courseweb/ui";
 import { Alert, AlertDescription } from "@courseweb/ui";
 import { Badge } from "@courseweb/ui";
@@ -83,7 +83,7 @@ const CrossDisciplineTagList = ({ course }: { course: CourseDefinition }) => {
       {course.cross_discipline?.map((m, index) => (
         <div
           key={index}
-          className="flex flex-row items-center justify-center min-w-[65px] space-x-2 px-2 py-2 select-none rounded-md text-sm bg-neutral-200 dark:bg-neutral-800"
+          className="flex min-w-[65px] flex-row items-center justify-center rounded-md bg-muted px-2 py-2 text-sm text-foreground select-none"
         >
           {m}
         </div>
@@ -111,35 +111,47 @@ const CourseDetailContainer = ({
     data: course,
     isLoading,
     error,
+    refetch: refetchCourse,
   } = useQuery({
     queryKey: ["course", courseId, "syllabus"],
     queryFn: async () => {
       const res = await client.course[":courseId"].syllabus.$get({
         param: { courseId },
       });
+      if (!res.ok) throw new Error("Failed to load course");
       return res.json();
     },
   });
 
   // Use React Query for reviews
-  const { data: reviews = [] } = useQuery({
+  const {
+    data: reviews = [],
+    error: reviewsError,
+    refetch: refetchReviews,
+  } = useQuery({
     queryKey: ["course", courseId, "ptt"],
     queryFn: async () => {
       const res = await client.course[":courseId"].ptt.$get({
         param: { courseId },
       });
+      if (!res.ok) throw new Error("Failed to load course reviews");
       return res.json();
     },
     enabled: !!course, // Only fetch if course data is available
   });
 
   // Use React Query for related courses
-  const { data: otherClasses = [] } = useQuery({
+  const {
+    data: otherClasses = [],
+    error: relatedError,
+    refetch: refetchRelated,
+  } = useQuery({
     queryKey: ["course", courseId, "related"],
     queryFn: async () => {
       const res = await client.course[":courseId"].related.$get({
         param: { courseId },
       });
+      if (!res.ok) throw new Error("Failed to load related courses");
       return res.json();
     },
     enabled: !!course, // Only fetch if course data is available
@@ -227,26 +239,45 @@ const CourseDetailContainer = ({
   }
 
   // Handle error state
-  if (error || !course) {
+  if (error) {
     return (
       <>
         <Helmet>
           <meta name="robots" content="noindex, nofollow" />
           <meta name="googlebot" content="noindex, nofollow" />
         </Helmet>
-        <div className="py-6 px-4">
-          <div className="flex flex-col gap-2 border-l border-neutral-500 pl-4 pr-6">
-            <h1 className="text-2xl font-bold">404</h1>
-            <p className="text-xl">{dict.course.details.not_found}</p>
+        <div className="px-4">
+          <ErrorState
+            title={dict.common.load_error}
+            action={
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void refetchCourse()}
+              >
+                {dict.common.try_again}
+              </Button>
+            }
+          />
+        </div>
+      </>
+    );
+  }
 
+  if (!course) {
+    return (
+      <div className="px-4">
+        <ErrorState
+          title={dict.course.details.not_found}
+          action={
             <Link to="../">
               <Button size="sm" variant="outline">
                 <ChevronLeft /> {dict.common.back}
               </Button>
             </Link>
-          </div>
-        </div>
-      </>
+          }
+        />
+      </div>
     );
   }
 
@@ -321,42 +352,37 @@ const CourseDetailContainer = ({
           )}
         </Helmet>
       )}
-      <div
-        className={cn(
-          "flex flex-col pb-6 relative",
-          modal
-            ? "max-w-[min(72rem,calc(100vw-52px))]"
-            : "max-w-[min(72rem,calc(100vw-16px))]",
-        )}
-      >
-        <div className={cn("flex flex-col gap-4 pb-20 md:pb-0")}>
+      <div className={cn("relative flex min-w-0 flex-col pb-6")}>
+        <div className={cn("flex min-w-0 flex-col gap-4 pb-20 md:pb-0")}>
           <div className="flex flex-col md:flex-row md:items-end gap-4">
-            <div className="space-y-4 flex-1 w-full">
-              <div className="space-y-2">
-                <div className="font-semibold text-base ">
-                  {toPrettySemester(course.semester)} {dict.course.details.semester}
+            <div className="min-w-0 flex-1 w-full">
+              <div className="flex flex-col gap-2">
+                <div className="font-medium text-base">
+                  {toPrettySemester(course.semester)}{" "}
+                  {dict.course.details.semester}
                 </div>
-                <div className="font-bold text-xl mb-4 text-nthu-600">{`${course?.department} ${course?.course}-${course?.class}`}</div>
-                <h1 className="font-semibold text-3xl flex flex-row flex-wrap gap-1">
-                  <span>{course!.name_zh}</span>
+                <div className="font-bold text-xl text-nthu-600">{`${course.department} ${course.course}-${course.class}`}</div>
+                <h1 className="flex min-w-0 flex-row flex-wrap gap-1 font-bold text-xl">
+                  <span className="min-w-0 whitespace-normal">
+                    {course.name_zh}
+                  </span>
                   <span>{course?.teacher_zh?.join(",") ?? ""}</span>
                 </h1>
-                <h2 className="font-semibold text-xl flex flex-row flex-wrap gap-1">
-                  <span>{course!.name_en}</span>
+                <h2 className="flex min-w-0 flex-row flex-wrap gap-1 font-medium">
+                  <span className="min-w-0 whitespace-normal">
+                    {course.name_en}
+                  </span>
                   <span>{course?.teacher_en?.join(",") ?? ""}</span>
                 </h2>
               </div>
-              <CourseTagList course={course} />
+              <div className="mt-2">
+                <CourseTagList course={course} />
+              </div>
               {course.venues ? (
                 course.venues.map((vn, i) => (
-                  <p
-                    key={vn}
-                    className="text-blue-600 dark:text-blue-400 text-sm"
-                  >
+                  <p key={vn} className="text-muted-foreground text-sm">
                     {vn}{" "}
-                    <span className="text-black dark:text-white">
-                      {course.times![i]}
-                    </span>
+                    <span className="text-foreground">{course.times![i]}</span>
                   </p>
                 ))
               ) : (
@@ -375,7 +401,7 @@ const CourseDetailContainer = ({
             </div>
             <div
               className={cn(
-                "md:hidden fixed left-0 pt-2 px-4 shadow-md w-full h-16 flex flex-row gap-2 bg-background z-50",
+                "md:hidden fixed left-0 pt-2 px-4 w-full h-16 flex flex-row gap-2 bg-background z-50",
                 bottomAware ? "bottom-20" : "bottom-0",
               )}
             >
@@ -391,12 +417,14 @@ const CourseDetailContainer = ({
             </div>
           </div>
           <Separator />
-          <div className={"flex flex-col-reverse lg:flex-row gap-6 w-full"}>
-            <div className="flex flex-col gap-4 min-w-0 lg:max-w-[calc(100%-284px)]">
+          <div
+            className={"flex min-w-0 flex-col-reverse gap-4 lg:flex-row w-full"}
+          >
+            <div className="flex min-w-0 flex-col gap-4 lg:flex-1">
               {!missingSyllabus && <SyllabusSummary courseId={course.raw_id} />}
               {!missingSyllabus && (
                 <div className="flex flex-col gap-2">
-                  <h3 className="font-semibold text-xl" id="brief">
+                  <h3 className="font-bold" id="brief">
                     {dict.course.details.brief}
                   </h3>
                   <p className="whitespace-pre-line text-sm">
@@ -406,7 +434,7 @@ const CourseDetailContainer = ({
               )}
               {!missingSyllabus && (
                 <div className="flex flex-col gap-2">
-                  <h3 className="font-semibold text-xl" id="description">
+                  <h3 className="font-bold" id="description">
                     {dict.course.details.description}
                   </h3>
                   <p className="whitespace-pre-line text-sm">
@@ -425,7 +453,7 @@ const CourseDetailContainer = ({
               )}
               {course?.prerequisites && (
                 <div className="flex flex-col gap-2">
-                  <h3 className="font-semibold text-xl" id="prerequesites">
+                  <h3 className="font-bold" id="prerequesites">
                     {dict.course.details.prerequesites}
                   </h3>
                   <div
@@ -437,57 +465,75 @@ const CourseDetailContainer = ({
                 </div>
               )}
               {/* {showTimetable && <div className="flex flex-col gap-2">
-                            <h3 className="font-semibold text-xl" id="timetable">{dict.course.details.timetable}</h3>
+                            <h3 className="font-bold" id="timetable">{dict.course.details.timetable}</h3>
                             <TimetableDynamic timetableData={timetableData} />
                         </div>} */}
-              {reviews.length > 0 && (
-                <div className="flex flex-col gap-2">
-                  <h3 className="font-semibold text-xl" id="ptt">
-                    {dict.course.details.ptt_title}
-                  </h3>
-                  <Alert>
-                    <AlertTriangle />
-                    <AlertDescription>
-                      {dict.course.details.ptt_disclaimer}
-                    </AlertDescription>
-                  </Alert>
-                  <ScrollArea className="w-full whitespace-nowrap">
-                    <div className="flex space-x-4 pr-4">
-                      {reviews.map((m, index) => (
-                        <Dialog key={index}>
-                          <DialogTrigger asChild>
-                            <Card className="max-w-lg shrink-0">
-                              <CardHeader>
-                                <CardTitle className="text-lg">
-                                  {index + 1}.{" "}
-                                  {format(new Date(m.date ?? 0), "yyyy-MM-dd")}{" "}
-                                  {dict.course.details.review_suffix}
-                                </CardTitle>
-                              </CardHeader>
-                              <CardContent>
-                                <article className="whitespace-pre-line line-clamp-4 text-sm">
+              {reviewsError ? (
+                <ErrorState
+                  title={dict.common.load_error}
+                  action={
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => void refetchReviews()}
+                    >
+                      {dict.common.try_again}
+                    </Button>
+                  }
+                />
+              ) : (
+                reviews.length > 0 && (
+                  <div className="flex flex-col gap-2">
+                    <h3 className="font-bold" id="ptt">
+                      {dict.course.details.ptt_title}
+                    </h3>
+                    <Alert>
+                      <AlertTriangle />
+                      <AlertDescription>
+                        {dict.course.details.ptt_disclaimer}
+                      </AlertDescription>
+                    </Alert>
+                    <ScrollArea className="w-full overflow-x-auto">
+                      <div className="flex gap-4 pr-4">
+                        {reviews.map((m, index) => (
+                          <Dialog key={index}>
+                            <DialogTrigger asChild>
+                              <Card className="max-w-lg shrink-0">
+                                <CardHeader>
+                                  <CardTitle className="text-lg">
+                                    {index + 1}.{" "}
+                                    {format(
+                                      new Date(m.date ?? 0),
+                                      "yyyy-MM-dd",
+                                    )}{" "}
+                                    {dict.course.details.review_suffix}
+                                  </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                  <article className="whitespace-pre-line text-sm">
+                                    {m.content}
+                                  </article>
+                                </CardContent>
+                              </Card>
+                            </DialogTrigger>
+                            <DialogContent className="">
+                              <ScrollArea className="max-h-[90vh]">
+                                <p className="whitespace-pre-line text-sm">
                                   {m.content}
-                                </article>
-                              </CardContent>
-                            </Card>
-                          </DialogTrigger>
-                          <DialogContent className="">
-                            <ScrollArea className="max-h-[90vh] whitespace-nowrap">
-                              <p className="whitespace-pre-line text-sm">
-                                {m.content}
-                              </p>
-                            </ScrollArea>
-                          </DialogContent>
-                        </Dialog>
-                      ))}
-                    </div>
-                    <ScrollBar orientation="horizontal" />
-                  </ScrollArea>
-                </div>
+                                </p>
+                              </ScrollArea>
+                            </DialogContent>
+                          </Dialog>
+                        ))}
+                      </div>
+                      <ScrollBar orientation="horizontal" />
+                    </ScrollArea>
+                  </div>
+                )
               )}
               {course.course_scores && (
                 <div className="flex flex-col gap-2">
-                  <h3 className="font-semibold text-xl" id="scores">
+                  <h3 className="font-bold" id="scores">
                     {dict.course.details.scores}
                   </h3>
                   {/* TODO: make scores prettier with a graph */}
@@ -513,14 +559,15 @@ const CourseDetailContainer = ({
               )}
               <div className="flex flex-col gap-2">
                 <div className="flex flex-row">
-                  <h3 className="font-semibold text-xl flex-1" id="other">
+                  <h3 className="flex-1 font-bold" id="other">
                     {dict.course.details.related_courses}
                   </h3>
                   <Button variant="ghost" asChild>
                     <Link
                       to={`/${lang}/courses?nthu_courses%5BrefinementList%5D%5Bdepartment%5D%5B0%5D=${course.department}&nthu_courses%5Bquery%5D=${course.name_zh} ${course.teacher_zh.join(" ")}`}
                     >
-                      {dict.course.details.view_more} <ArrowRight className="ml-2 w-4 h-4" />
+                      {dict.course.details.view_more}{" "}
+                      <ArrowRight className="ml-2 w-4 h-4" />
                     </Link>
                   </Button>
                 </div>
@@ -547,7 +594,10 @@ const CourseDetailContainer = ({
                             <p>{toPrettySemester(m.semester)}</p>
                             <div className="flex flex-col">
                               {m.times.map((t, i) => (
-                                <p key={i} className="text-xs text-gray-500">
+                                <p
+                                  key={i}
+                                  className="text-xs text-muted-foreground"
+                                >
                                   {m.venues[i]} {t}
                                 </p>
                               ))}
@@ -564,10 +614,10 @@ const CourseDetailContainer = ({
                                 {getScoreType(m.course_scores.type)}{" "}
                                 {m.course_scores.average}
                               </p>
-                                <p>
-                                  {dict.course.details.standard_deviation}{" "}
-                                  {m.course_scores.std_dev}
-                                </p>
+                              <p>
+                                {dict.course.details.standard_deviation}{" "}
+                                {m.course_scores.std_dev}
+                              </p>
                             </div>
                           )}
                         </TableCell>
@@ -625,110 +675,130 @@ const CourseDetailContainer = ({
                   </ul>
                 </div>
               </ScrollArea>
-              {(course.note ?? "").trim().length > 0 && (
-                <div className="flex flex-col gap-1">
-                  <h3 className="font-semibold text-base">
-                    {dict.course.details.remarks}
-                  </h3>
-                  <p className="text-sm">{course.note}</p>
-                </div>
-              )}
-              {(course.restrictions ?? "").trim().length > 0 && (
-                <div className="flex flex-col gap-1">
-                  <h3 className="font-semibold text-base">
-                    {dict.course.details.restrictions}
-                  </h3>
-                  <p className="text-sm">{course.restrictions}</p>
-                </div>
-              )}
-              {(course.compulsory_for ?? []).length > 0 && (
-                <div className="flex flex-col gap-1">
-                  <h3 className="font-semibold text-base">
-                    {dict.course.details.compulsory}
-                  </h3>
-                  <div className="flex flex-row gap-2 flex-wrap">
-                    {course.compulsory_for?.map((m, index) => (
-                      <Link
-                        key={index}
-                        to={`/${lang}/courses?nthu_courses%5BrefinementList%5D%5Bcompulsory_for%5D%5B0%5D=${course.compulsory_for}`}
-                      >
-                        <Badge variant="outline">
-                          {getFormattedClassCode(m, course.semester, lang)}
-                        </Badge>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {(course.elective_for ?? []).length > 0 && (
-                <div className="flex flex-col gap-1">
-                  <h3 className="font-semibold text-base">
-                    {dict.course.details.elective}
-                  </h3>
-                  <div className="flex flex-row gap-2 flex-wrap">
-                    {course.elective_for?.map((m, index) => (
-                      <Link
-                        key={index}
-                        to={`/${lang}/courses?nthu_courses%5BrefinementList%5D%5Belective_for%5D%5B0%5D=${course.elective_for}`}
-                      >
-                        <Badge variant="outline">
-                          {getFormattedClassCode(m, course.semester, lang)}
-                        </Badge>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {(course.first_specialization ?? []).length > 0 && (
-                <div className="flex flex-col gap-1">
-                  <h3 className="font-semibold text-base">
-                    {dict.course.details.first_specialization}
-                  </h3>
-                  <div className="flex flex-row gap-2 flex-wrap">
-                    {course.first_specialization?.map((m, index) => (
-                      <Link
-                        key={index}
-                        to={`/${lang}/courses?nthu_courses%5BrefinementList%5D%5Bfirst_specialization%5D%5B0%5D=${course.first_specialization}`}
-                      >
-                        <Badge variant="outline">{m}</Badge>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {(course.second_specialization ?? []).length > 0 && (
-                <div className="flex flex-col gap-1">
-                  <h3 className="font-semibold text-base">
-                    {dict.course.details.second_specialization}
-                  </h3>
-                  <div className="flex flex-row gap-2 flex-wrap">
-                    {course.second_specialization?.map((m, index) => (
-                      <Link
-                        key={index}
-                        to={`/${lang}/courses?nthu_courses%5BrefinementList%5D%5Bsecond_specialization%5D%5B0%5D=${course.second_specialization}`}
-                      >
-                        <Badge variant="outline">{m}</Badge>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
+              {relatedError ? (
+                <ErrorState
+                  title={dict.common.load_error}
+                  action={
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => void refetchRelated()}
+                    >
+                      {dict.common.try_again}
+                    </Button>
+                  }
+                />
+              ) : (
+                <>
+                  {(course.note ?? "").trim().length > 0 && (
+                    <div className="flex flex-col gap-1">
+                      <h3 className="font-bold text-base">
+                        {dict.course.details.remarks}
+                      </h3>
+                      <p className="text-sm">{course.note}</p>
+                    </div>
+                  )}
+                  {(course.restrictions ?? "").trim().length > 0 && (
+                    <div className="flex flex-col gap-1">
+                      <h3 className="font-bold text-base">
+                        {dict.course.details.restrictions}
+                      </h3>
+                      <p className="text-sm">{course.restrictions}</p>
+                    </div>
+                  )}
+                  {(course.compulsory_for ?? []).length > 0 && (
+                    <div className="flex flex-col gap-1">
+                      <h3 className="font-bold text-base">
+                        {dict.course.details.compulsory}
+                      </h3>
+                      <div className="flex flex-row gap-2 flex-wrap">
+                        {course.compulsory_for?.map((m, index) => (
+                          <Link
+                            key={index}
+                            to={`/${lang}/courses?nthu_courses%5BrefinementList%5D%5Bcompulsory_for%5D%5B0%5D=${course.compulsory_for}`}
+                          >
+                            <Badge variant="outline">
+                              {getFormattedClassCode(m, course.semester, lang)}
+                            </Badge>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {(course.elective_for ?? []).length > 0 && (
+                    <div className="flex flex-col gap-1">
+                      <h3 className="font-bold text-base">
+                        {dict.course.details.elective}
+                      </h3>
+                      <div className="flex flex-row gap-2 flex-wrap">
+                        {course.elective_for?.map((m, index) => (
+                          <Link
+                            key={index}
+                            to={`/${lang}/courses?nthu_courses%5BrefinementList%5D%5Belective_for%5D%5B0%5D=${course.elective_for}`}
+                          >
+                            <Badge variant="outline">
+                              {getFormattedClassCode(m, course.semester, lang)}
+                            </Badge>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {(course.first_specialization ?? []).length > 0 && (
+                    <div className="flex flex-col gap-1">
+                      <h3 className="font-bold text-base">
+                        {dict.course.details.first_specialization}
+                      </h3>
+                      <div className="flex flex-row gap-2 flex-wrap">
+                        {course.first_specialization?.map((m, index) => (
+                          <Link
+                            key={index}
+                            to={`/${lang}/courses?nthu_courses%5BrefinementList%5D%5Bfirst_specialization%5D%5B0%5D=${course.first_specialization}`}
+                          >
+                            <Badge variant="outline">{m}</Badge>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {(course.second_specialization ?? []).length > 0 && (
+                    <div className="flex flex-col gap-1">
+                      <h3 className="font-bold text-base">
+                        {dict.course.details.second_specialization}
+                      </h3>
+                      <div className="flex flex-row gap-2 flex-wrap">
+                        {course.second_specialization?.map((m, index) => (
+                          <Link
+                            key={index}
+                            to={`/${lang}/courses?nthu_courses%5BrefinementList%5D%5Bsecond_specialization%5D%5B0%5D=${course.second_specialization}`}
+                          >
+                            <Badge variant="outline">{m}</Badge>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
-              <div className="flex flex-col gap-1">
-                <div className="flex flex-row gap-2 flex-wrap">
-                  <p className="text-xs text-gray-500">
-                    {dict.course.details.details_updated}{" "}
-                    {format(new Date(course.updated_at), "yyyy-MM-dd HH:mm")}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {dict.course.details.syllabus_updated}{" "}
-                    {format(
-                      new Date(course.course_syllabus?.updated_at ?? 0),
-                      "yyyy-MM-dd HH:mm",
-                    )}
-                  </p>
-                </div>
-              </div>
+                  <div className="flex flex-col gap-1">
+                    <div className="flex flex-row gap-2 flex-wrap">
+                      <p className="text-xs text-muted-foreground">
+                        {dict.course.details.details_updated}{" "}
+                        {format(
+                          new Date(course.updated_at),
+                          "yyyy-MM-dd HH:mm",
+                        )}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {dict.course.details.syllabus_updated}{" "}
+                        {format(
+                          new Date(course.course_syllabus?.updated_at ?? 0),
+                          "yyyy-MM-dd HH:mm",
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

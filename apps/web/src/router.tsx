@@ -100,6 +100,22 @@ const GroupViewPage = lazy(
   () => import("@/app/[lang]/(mods-pages)/group/[code]/page"),
 );
 
+// Admin center (own layout, staff only)
+const AdminLayout = lazy(() => import("@/app/[lang]/admin/layout"));
+const AdminOverviewPage = lazy(() => import("@/app/[lang]/admin/page"));
+const AdminUsersPage = lazy(() => import("@/app/[lang]/admin/users/page"));
+const AdminUserDetailPage = lazy(
+  () => import("@/app/[lang]/admin/users/[userId]/page"),
+);
+const AdminAnnouncementsPage = lazy(
+  () => import("@/app/[lang]/admin/announcements/page"),
+);
+const AdminClientsPage = lazy(() => import("@/app/[lang]/admin/clients/page"));
+const AdminAuditPage = lazy(() => import("@/app/[lang]/admin/audit/page"));
+const AdminRecruitmentPage = lazy(
+  () => import("@/app/[lang]/admin/recruitment/page"),
+);
+
 // Separate layout page
 const WaitlistPage = lazy(() => import("@/app/[lang]/waitlist/page"));
 
@@ -315,11 +331,12 @@ export const router = createBrowserRouter([
                 path: "student/grades",
                 element: <GradesPage />,
                 handle: {
-                  title: "Grades",
-                  titleZh: "成績",
+                  title: "Grades & GPA",
+                  titleZh: "成績與 GPA 試算",
                   description:
-                    "View your NTHU course grades and academic record.",
-                  descriptionZh: "查看清大個人成績與學業記錄。",
+                    "Track self-reported course scores and estimate your GPA without connecting to CCXP.",
+                  descriptionZh:
+                    "記錄自填課程成績並預估 GPA，不需連線至校務系統。",
                   noindex: true,
                 },
               },
@@ -489,6 +506,26 @@ export const router = createBrowserRouter([
                 path: "*",
                 element: <NotFoundPage />,
               },
+            ],
+          },
+          {
+            path: "admin",
+            element: <AdminLayout />,
+            // The admin center is staff-only and gated at runtime; keeping it
+            // out of the index also keeps it out of search results.
+            handle: {
+              title: "Admin Center",
+              titleZh: "管理中心",
+              noindex: true,
+            },
+            children: [
+              { index: true, element: <AdminOverviewPage /> },
+              { path: "users", element: <AdminUsersPage /> },
+              { path: "users/:userId", element: <AdminUserDetailPage /> },
+              { path: "announcements", element: <AdminAnnouncementsPage /> },
+              { path: "recruitment", element: <AdminRecruitmentPage /> },
+              { path: "clients", element: <AdminClientsPage /> },
+              { path: "audit", element: <AdminAuditPage /> },
             ],
           },
           {

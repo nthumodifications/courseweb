@@ -1,5 +1,5 @@
 import useDictionary from "@/dictionaries/useDictionary";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Heart } from "lucide-react";
 const OpenCollectiveSponsorBanner = () => {
   const dict = useDictionary();
   return (
@@ -9,9 +9,9 @@ const OpenCollectiveSponsorBanner = () => {
       rel="noopener noreferrer"
       className="block w-full bg-card border border-border rounded-md p-2 hover:border-primary/30 transition-colors group"
     >
-      <div className="flex flex-row gap-3 items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="text-lg text-center w-7">❤️</div>
+      <div className="flex flex-row gap-4 items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Heart className="h-4 w-4 text-primary" aria-hidden="true" />
           <div className="flex flex-col">
             <div className="font-medium text-sm text-card-foreground">
               {dict.sponsorship.opencollective.title}

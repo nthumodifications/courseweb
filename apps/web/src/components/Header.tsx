@@ -72,6 +72,7 @@ const Header = () => {
         "user_defined_colors",
         "timetable_display_preferences",
         "timetable-display-settings",
+        "grades",
       ];
       localStorageKeys.forEach((key) => {
         // Clear the current account and anonymous namespaces, plus the old

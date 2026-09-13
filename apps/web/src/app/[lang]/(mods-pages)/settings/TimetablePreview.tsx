@@ -21,7 +21,6 @@ import {
   Language,
 } from "@/types/courses";
 import { useState } from "react";
-import { useMediaQuery } from "usehooks-ts";
 
 // raw_id: RawCourseID;
 // name_zh: string;
@@ -95,18 +94,21 @@ const TimetablePreview = () => {
     ),
   );
 
-  const isMobile = useMediaQuery("(max-width: 768px)");
   const [vertical, setVertical] = useState(true);
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="max-h-[320px] overflow-y-hidden">
+    <div className="flex flex-col gap-4 py-4">
+      <div className="relative max-h-[320px] overflow-hidden">
         <Timetable timetableData={sampleCourses} vertical={vertical} />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-background to-transparent"
+        />
       </div>
-      <div className="flex flex-row gap-2 w-full">
-        <div className="text-medium">
+      <div className="flex w-full flex-row items-center gap-4 py-2">
+        <span className="flex-1 text-sm font-bold">
           {dict.settings.timetable.vertical_preview}
-        </div>
+        </span>
         <Switch checked={vertical} onCheckedChange={setVertical} />
       </div>
     </div>

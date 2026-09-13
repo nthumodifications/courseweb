@@ -6,6 +6,14 @@ describe("KV timetable custom-item contract", () => {
     expect(validKeys).toContain("timetable_custom_items");
   });
 
+  test("allows the self-reported grades storage key", () => {
+    expect(validKeys).toContain("grades");
+  });
+
+  test("allows the timetable display settings storage key", () => {
+    expect(validKeys).toContain("timetable-display-settings");
+  });
+
   test("merges custom items by id and lets incoming edits win", () => {
     expect(
       mergeSyncedValue(

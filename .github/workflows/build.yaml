@@ -296,8 +296,13 @@ jobs:
           docker push ${{ env.IMAGE_NAME }}-secure-api:${{ github.sha }}
           docker push ${{ env.IMAGE_NAME }}-secure-api:latest
 
+      # This uuid is the Coolify app that actually serves auth.nthumods.com.
+      # It used to point at a second app registered against the same image but
+      # with no domain attached, so deploys succeeded against nothing and the
+      # live server only moved when someone redeployed it by hand. Check the
+      # target's fqdn before repointing this.
       - name: Trigger Coolify deployment
         if: success()
         run: |
-          curl --request GET "https://delta.nthumods.com/api/v1/deploy?uuid=ag4g0sg8cosoo0cgcccwg4w8&force=false" \
+          curl --fail --request GET "https://delta.nthumods.com/api/v1/deploy?uuid=nwwc8owkwo04c0owgc4kgkc8&force=false" \
             --header "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}"

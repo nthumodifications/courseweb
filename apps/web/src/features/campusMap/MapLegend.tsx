@@ -54,7 +54,6 @@ export default function MapLegend({ labels }: MapLegendProps) {
           type="button"
           variant="secondary"
           size="icon"
-          className="shadow-lg"
           aria-label={labels.button}
           title={labels.button}
         >
@@ -68,12 +67,12 @@ export default function MapLegend({ labels }: MapLegendProps) {
         role="dialog"
         aria-label={labels.title}
       >
-        <h2 className="text-sm font-semibold">{labels.title}</h2>
-        <ul className="mt-3 space-y-2.5">
+        <h2 className="text-sm font-bold">{labels.title}</h2>
+        <ul className="mt-2 flex flex-col gap-2">
           {entries.map(({ key, color, label }) => (
-            <li key={key} className="flex items-center gap-2.5 text-sm">
+            <li key={key} className="flex items-center gap-2 text-sm">
               <span
-                className="h-4 w-4 shrink-0 rounded border border-black/10 shadow-sm"
+                className="h-4 w-4 shrink-0 rounded border border-border"
                 style={{ backgroundColor: color }}
                 aria-hidden="true"
               />

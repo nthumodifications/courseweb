@@ -133,11 +133,11 @@ const SettingsPage = () => {
   );
 
   return (
-    <div className="w-full">
-      <div className="flex flex-col lg:flex-row gap-6 px-4 sm:px-6">
+    <div className="flex flex-col px-4 md:px-6">
+      <div className="flex flex-col gap-4 lg:flex-row">
         {/* Sidebar - Desktop only */}
         <aside className="hidden lg:block w-[180px] shrink-0">
-          <div className="sticky top-[--header-height] pt-8">
+          <div className="sticky top-[--header-height] pt-4">
             <SettingsSidebar
               sections={sections}
               activeSection={activeSection}
@@ -156,26 +156,20 @@ const SettingsPage = () => {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 min-w-0 pb-8">
-          <div className="flex flex-col gap-6 min-w-0">
+        <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 flex-col gap-4">
             {/* Appearance Settings */}
             <SettingsSection
               id="appearance"
               title={dict.settings.appearance.title}
-              description={dict.settings.appearance.description}
             >
               <ThemeSection />
             </SettingsSection>
 
             {/* Display Settings */}
-            <SettingsSection
-              id="display"
-              title={dict.settings.display.title}
-              description={dict.settings.display.description}
-            >
+            <SettingsSection id="display" title={dict.settings.display.title}>
               <SettingItem
                 title={dict.settings.display.dark_mode.title}
-                description=""
                 control={
                   <Switch checked={darkMode} onCheckedChange={setDarkMode} />
                 }
@@ -183,14 +177,15 @@ const SettingsPage = () => {
 
               <SettingItem
                 title={dict.settings.display.language.title}
-                description=""
                 control={
                   <Select
                     value={language}
                     onValueChange={(v) => setLanguage(v as Language)}
                   >
                     <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder={dict.settings.display.language.title} />
+                      <SelectValue
+                        placeholder={dict.settings.display.language.title}
+                      />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="zh">
@@ -206,7 +201,6 @@ const SettingsPage = () => {
 
               <SettingItem
                 title={dict.settings.display.compact_header.title}
-                description={dict.settings.display.compact_header.description}
                 control={
                   <Switch
                     checked={compactHeader}
@@ -215,32 +209,25 @@ const SettingsPage = () => {
                 }
               />
 
-              <div>
-                <label className="text-sm font-medium block mb-2">
+              <div className="py-4">
+                <h3 className="mb-2 text-sm font-bold">
                   {dict.settings.display.bottom_nav.title}
-                </label>
+                </h3>
                 <BottomNavSection />
               </div>
 
-              <div>
-                <label className="text-sm font-medium block mb-2">
+              <div className="py-4">
+                <h3 className="mb-2 text-sm font-bold">
                   {dict.settings.display.sidebar_nav.title}
-                </label>
+                </h3>
                 <SidebarNavSection />
               </div>
             </SettingsSection>
 
             {/* Calendar Settings */}
-            <SettingsSection
-              id="calendar"
-              title={dict.settings.calendar.title}
-              description={dict.settings.calendar.description}
-            >
+            <SettingsSection id="calendar" title={dict.settings.calendar.title}>
               <SettingItem
                 title={dict.settings.calendar.academic_calendar.title}
-                description={
-                  dict.settings.calendar.academic_calendar.description
-                }
                 control={
                   <Switch
                     checked={showAcademicCalendar}
@@ -260,9 +247,6 @@ const SettingsPage = () => {
                       {dict.settings.calendar.experimental_calendar.badge}
                     </Badge>
                   </div>
-                }
-                description={
-                  dict.settings.calendar.experimental_calendar.description
                 }
                 control={
                   <Switch
@@ -285,59 +269,39 @@ const SettingsPage = () => {
                 }
               />
 
-              {useWidgetDashboard && (
-                <div>
-                  <p className="text-sm font-medium mb-3 mt-2 text-muted-foreground">
-                    {dict.settings.calendar.widget_dashboard.customize}
-                  </p>
-                  <WidgetSection />
-                </div>
-              )}
+              {useWidgetDashboard && <WidgetSection />}
             </SettingsSection>
 
             {/* Timetable Settings */}
             <SettingsSection
               id="timetable"
               title={dict.settings.timetable.title}
-              description={dict.settings.timetable.description}
             >
-              <div className="flex flex-col gap-6">
-                <div className="overflow-x-auto">
-                  <TimetablePreview />
-                </div>
-                <SettingItem
-                  title={dict.settings.timetable.default_view.title}
-                  description={dict.settings.timetable.default_view.description}
-                  control={
-                    <Switch
-                      checked={timetableVertical}
-                      onCheckedChange={setTimetableVertical}
-                    />
-                  }
-                />
-                <TimetableThemeList />
-                <TimetablePreferences
-                  settings={preferences}
-                  onSettingsChange={setPreferences}
-                />
-              </div>
+              <TimetablePreview />
+              <SettingItem
+                title={dict.settings.timetable.default_view.title}
+                description={dict.settings.timetable.default_view.description}
+                control={
+                  <Switch
+                    checked={timetableVertical}
+                    onCheckedChange={setTimetableVertical}
+                  />
+                }
+              />
+              <TimetableThemeList />
+              <TimetablePreferences
+                settings={preferences}
+                onSettingsChange={setPreferences}
+              />
             </SettingsSection>
 
             {/* AI Settings */}
-            <SettingsSection
-              id="ai"
-              title={dict.settings.ai.title}
-              description={dict.settings.ai.description}
-            >
+            <SettingsSection id="ai" title={dict.settings.ai.title}>
               <AIPreferencesPanel />
             </SettingsSection>
 
             {/* Privacy Settings */}
-            <SettingsSection
-              id="privacy"
-              title={dict.settings.privacy.title}
-              description={dict.settings.privacy.description}
-            >
+            <SettingsSection id="privacy" title={dict.settings.privacy.title}>
               <SettingItem
                 title={dict.settings.privacy.analytics.title}
                 description={dict.settings.privacy.analytics.description}
@@ -348,30 +312,23 @@ const SettingsPage = () => {
             </SettingsSection>
 
             {/* Advanced Settings */}
-            <SettingsSection
-              id="advanced"
-              title={dict.settings.advanced.title}
-              description={dict.settings.advanced.description}
-            >
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium">
-                  {dict.settings.advanced.custom_css.title}
-                </label>
-                <p className="text-xs text-muted-foreground">
-                  {dict.settings.advanced.custom_css.description}
-                </p>
-                <textarea
-                  value={customCSS}
-                  onChange={(e) => setCustomCSS(e.target.value)}
-                  placeholder={
-                    "/* Your custom CSS here */\n.example { color: red; }"
-                  }
-                  className="w-full h-40 p-3 text-xs font-mono bg-muted rounded-lg border border-border outline-none resize-y focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground/50"
-                  spellCheck={false}
-                />
-              </div>
+            <SettingsSection id="advanced" title={dict.settings.advanced.title}>
+              <SettingItem
+                title={dict.settings.advanced.custom_css.title}
+                description={dict.settings.advanced.custom_css.description}
+                control={
+                  <textarea
+                    value={customCSS}
+                    onChange={(e) => setCustomCSS(e.target.value)}
+                    placeholder={dict.settings.advanced.custom_css.placeholder}
+                    className="h-40 w-[min(60vw,480px)] resize-y rounded-md border border-border bg-muted p-4 font-mono text-xs outline-none placeholder:text-muted-foreground/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    spellCheck={false}
+                  />
+                }
+              />
             </SettingsSection>
 
+            <div className="h-6" />
             <Footer />
           </div>
         </div>

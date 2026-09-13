@@ -368,8 +368,8 @@ const fallbackQuerySchema = z.object({
   q: z.string().optional(),
   query: z.string().optional(),
   page: z.coerce.number().int().min(0).optional().default(0),
-  hitsPerPage: z.coerce.number().int().min(1).max(MAX_HITS_PER_PAGE).optional(),
-  limit: z.coerce.number().int().min(1).max(MAX_HITS_PER_PAGE).optional(),
+  hitsPerPage: z.coerce.number().int().min(0).max(MAX_HITS_PER_PAGE).optional(),
+  limit: z.coerce.number().int().min(0).max(MAX_HITS_PER_PAGE).optional(),
   filters: z.string().optional(),
   numericFilters: z.string().optional(),
   facetFilters: z.string().optional(),
@@ -457,7 +457,10 @@ const app = new Hono().get(
           hits,
           nbHits: sortedCourses.length,
           page,
-          nbPages: Math.ceil(sortedCourses.length / hitsPerPage),
+          nbPages:
+            hitsPerPage === 0
+              ? 0
+              : Math.ceil(sortedCourses.length / hitsPerPage),
           hitsPerPage,
           processingTimeMS,
           query,

@@ -3,9 +3,11 @@ export const validKeys = [
   "course_favourites",
   "course_color_map",
   "timetable_display_preferences",
+  "timetable-display-settings",
   "timetable_theme",
   "user_defined_colors",
   "timetable_custom_items",
+  "grades",
 ];
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>

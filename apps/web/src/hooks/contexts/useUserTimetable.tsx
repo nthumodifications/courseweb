@@ -138,6 +138,7 @@ const userTimetableContext = createContext<
 >({
   getSemesterCourses: () => [],
   timetableDataReady: false,
+  customItemsDataReady: false,
   semesterCourses: [],
   timetableTheme: Object.keys(timetableColors)[0],
   currentColors: [],
@@ -240,7 +241,7 @@ const useUserTimetableProvider = (loadCourse = true) => {
     },
     [setStoredPreferences],
   );
-  const [storedCustomItems, setStoredCustomItems] =
+  const [storedCustomItems, setStoredCustomItems, customItemsDataReady] =
     useSyncedStorage<CustomTimetableStorage>(
       "timetable_custom_items",
       {},
@@ -597,6 +598,7 @@ const useUserTimetableProvider = (loadCourse = true) => {
     semesterCustomItems,
     getSemesterCustomItems,
     setCustomItems,
+    customItemsDataReady,
     hoverCourse,
     setHoverCourse,
     preferences,

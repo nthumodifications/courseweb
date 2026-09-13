@@ -44,6 +44,17 @@ const hasPlannerScope = (auth: ReturnType<typeof useAuth>): boolean => {
   return scopes.includes("planner");
 };
 
+const ensurePlannerResponseOk = async (
+  response: Response,
+  operation: string,
+) => {
+  if (response.ok) return;
+  const details = await response.text().catch(() => "");
+  throw new Error(
+    `${operation} failed with status ${response.status}${details ? `: ${details}` : ""}`,
+  );
+};
+
 // Provider component for setting up replication
 export const PlannerReplicationProvider: FC<PropsWithChildren> = ({
   children,
@@ -119,33 +130,29 @@ export const PlannerReplicationProvider: FC<PropsWithChildren> = ({
       live: true,
       push: {
         async handler(changeRows) {
-          try {
-            // Filter out the _unsorted folder before pushing to server
-            const filteredChangeRows = changeRows.filter(
-              (row) => row.newDocumentState.id !== "_unsorted",
-            );
+          // Filter out the _unsorted folder before pushing to server
+          const filteredChangeRows = changeRows.filter(
+            (row) => row.newDocumentState.id !== "_unsorted",
+          );
 
-            // Skip the API call if there are no changes to push after filtering
-            if (filteredChangeRows.length === 0) {
-              return [];
-            }
-
-            const response = await client.planner.folders.push.$post(
-              {
-                json: filteredChangeRows,
-              },
-              {
-                headers: {
-                  Authorization: `Bearer ${auth.user?.access_token}`,
-                },
-              },
-            );
-            const conflicts = await response.json();
-            return conflicts as WithDeleted<FolderDocType>[];
-          } catch (error) {
-            console.error("Error pushing folders:", error);
+          // Skip the API call if there are no changes to push after filtering
+          if (filteredChangeRows.length === 0) {
             return [];
           }
+
+          const response = await client.planner.folders.push.$post(
+            {
+              json: filteredChangeRows,
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${auth.user?.access_token}`,
+              },
+            },
+          );
+          await ensurePlannerResponseOk(response, "Planner folders push");
+          const conflicts = await response.json();
+          return conflicts as WithDeleted<FolderDocType>[];
         },
       },
       pull: {
@@ -170,6 +177,7 @@ export const PlannerReplicationProvider: FC<PropsWithChildren> = ({
             },
           );
 
+          await ensurePlannerResponseOk(response, "Planner folders pull");
           const data = await response.json();
           // Filter out _unsorted folder if it somehow exists in pulled data
           if (data.documents) {
@@ -190,10 +198,13 @@ export const PlannerReplicationProvider: FC<PropsWithChildren> = ({
       console.error("Folders replication error:", error),
     );
     replicationState.start();
-    replicationState.awaitInitialReplication().then(() => {
-      console.log("[folders] Initial replication done");
-      setFoldersInitialized(true);
-    });
+    replicationState.awaitInitialReplication().then(
+      () => {
+        console.log("[folders] Initial replication done");
+        setFoldersInitialized(true);
+      },
+      (error) => console.error("[folders] Initial replication failed:", error),
+    );
 
     return () => {
       replicationState.cancel();
@@ -215,23 +226,19 @@ export const PlannerReplicationProvider: FC<PropsWithChildren> = ({
       live: true,
       push: {
         async handler(changeRows) {
-          try {
-            const response = await client.planner.items.push.$post(
-              {
-                json: changeRows,
+          const response = await client.planner.items.push.$post(
+            {
+              json: changeRows,
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${auth.user?.access_token}`,
               },
-              {
-                headers: {
-                  Authorization: `Bearer ${auth.user?.access_token}`,
-                },
-              },
-            );
-            const conflicts = await response.json();
-            return conflicts as WithDeleted<ItemDocType>[];
-          } catch (error) {
-            console.error("Error pushing items:", error);
-            return [];
-          }
+            },
+          );
+          await ensurePlannerResponseOk(response, "Planner items push");
+          const conflicts = await response.json();
+          return conflicts as WithDeleted<ItemDocType>[];
         },
       },
       pull: {
@@ -256,6 +263,7 @@ export const PlannerReplicationProvider: FC<PropsWithChildren> = ({
             },
           );
 
+          await ensurePlannerResponseOk(response, "Planner items pull");
           const data = await response.json();
           return {
             documents: data.documents as WithDeleted<ItemDocType>[],
@@ -269,10 +277,13 @@ export const PlannerReplicationProvider: FC<PropsWithChildren> = ({
       console.error("Items replication error:", error),
     );
     replicationState.start();
-    replicationState.awaitInitialReplication().then(() => {
-      console.log("[items] Initial replication done");
-      setItemsInitialized(true);
-    });
+    replicationState.awaitInitialReplication().then(
+      () => {
+        console.log("[items] Initial replication done");
+        setItemsInitialized(true);
+      },
+      (error) => console.error("[items] Initial replication failed:", error),
+    );
 
     return () => {
       replicationState.cancel();
@@ -294,23 +305,19 @@ export const PlannerReplicationProvider: FC<PropsWithChildren> = ({
       live: true,
       push: {
         async handler(changeRows) {
-          try {
-            const response = await client.planner.plannerdata.push.$post(
-              {
-                json: changeRows,
+          const response = await client.planner.plannerdata.push.$post(
+            {
+              json: changeRows,
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${auth.user?.access_token}`,
               },
-              {
-                headers: {
-                  Authorization: `Bearer ${auth.user?.access_token}`,
-                },
-              },
-            );
-            const conflicts = await response.json();
-            return conflicts as WithDeleted<PlannerDataDocType>[];
-          } catch (error) {
-            console.error("Error pushing plannerdata:", error);
-            return [];
-          }
+            },
+          );
+          await ensurePlannerResponseOk(response, "Planner data push");
+          const conflicts = await response.json();
+          return conflicts as WithDeleted<PlannerDataDocType>[];
         },
       },
       pull: {
@@ -335,6 +342,7 @@ export const PlannerReplicationProvider: FC<PropsWithChildren> = ({
             },
           );
 
+          await ensurePlannerResponseOk(response, "Planner data pull");
           const data = await response.json();
 
           return {
@@ -350,10 +358,14 @@ export const PlannerReplicationProvider: FC<PropsWithChildren> = ({
       console.error("PlannerData replication error:", error),
     );
     replicationState.start();
-    replicationState.awaitInitialReplication().then(() => {
-      console.log("[plannerdata] Initial replication done");
-      setPlannerdataInitialized(true);
-    });
+    replicationState.awaitInitialReplication().then(
+      () => {
+        console.log("[plannerdata] Initial replication done");
+        setPlannerdataInitialized(true);
+      },
+      (error) =>
+        console.error("[plannerdata] Initial replication failed:", error),
+    );
 
     return () => {
       replicationState.cancel();
@@ -375,23 +387,19 @@ export const PlannerReplicationProvider: FC<PropsWithChildren> = ({
       live: true,
       push: {
         async handler(changeRows) {
-          try {
-            const response = await client.planner.semesters.push.$post(
-              {
-                json: changeRows,
+          const response = await client.planner.semesters.push.$post(
+            {
+              json: changeRows,
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${auth.user?.access_token}`,
               },
-              {
-                headers: {
-                  Authorization: `Bearer ${auth.user?.access_token}`,
-                },
-              },
-            );
-            const conflicts = await response.json();
-            return conflicts as WithDeleted<SemesterDocType>[];
-          } catch (error) {
-            console.error("Error pushing semesters:", error);
-            return [];
-          }
+            },
+          );
+          await ensurePlannerResponseOk(response, "Planner semesters push");
+          const conflicts = await response.json();
+          return conflicts as WithDeleted<SemesterDocType>[];
         },
       },
       pull: {
@@ -416,6 +424,7 @@ export const PlannerReplicationProvider: FC<PropsWithChildren> = ({
             },
           );
 
+          await ensurePlannerResponseOk(response, "Planner semesters pull");
           const data = await response.json();
           return {
             documents: data.documents as WithDeleted<SemesterDocType>[],
@@ -429,10 +438,14 @@ export const PlannerReplicationProvider: FC<PropsWithChildren> = ({
       console.error("Semesters replication error:", error),
     );
     replicationState.start();
-    replicationState.awaitInitialReplication().then(() => {
-      console.log("[semesters] Initial replication done");
-      setSemestersInitialized(true);
-    });
+    replicationState.awaitInitialReplication().then(
+      () => {
+        console.log("[semesters] Initial replication done");
+        setSemestersInitialized(true);
+      },
+      (error) =>
+        console.error("[semesters] Initial replication failed:", error),
+    );
 
     return () => {
       replicationState.cancel();

@@ -69,4 +69,35 @@ describe("requireAuth", () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ userId: "user-id" });
   });
+
+  test("returns 403 when a valid access token belongs to a banned user", async () => {
+    tokenFindFirst.mockResolvedValueOnce({
+      token: "access-token",
+      type: "ACCESS",
+      userId: "user-id",
+      scopes: [],
+      expiresAt: new Date(Date.now() + 60_000),
+    });
+    userFindUnique.mockResolvedValueOnce({
+      userId: "user-id",
+      name: "Test User",
+      banned: true,
+    });
+
+    const app = new Hono().get("/private", requireAuth(), (c) =>
+      c.json({ ok: true }),
+    );
+
+    const response = await app.request("/private", {
+      headers: {
+        Authorization: "Bearer access-token",
+      },
+    });
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toEqual({
+      error: "account_suspended",
+      error_description: "This account has been suspended",
+    });
+  });
 });

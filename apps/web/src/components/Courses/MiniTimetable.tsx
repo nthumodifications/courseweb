@@ -21,7 +21,9 @@ const MiniTimetable = ({ semester }: { semester: Semester }) => {
     colorMap,
   );
   const timeslots = useMemo(() => {
-    const timeslots = new Array(scheduleTimeSlots.length).fill([]).map(() => new Array(6).fill(null));
+    const timeslots = new Array(scheduleTimeSlots.length)
+      .fill([])
+      .map(() => new Array(6).fill(null));
     for (const course of timetableData) {
       for (let i = course.startTime; i <= course.endTime; i++) {
         timeslots[i][course.dayOfWeek] = course;
@@ -32,9 +34,7 @@ const MiniTimetable = ({ semester }: { semester: Semester }) => {
 
   return (
     <div className="p-4 flex flex-col overflow-auto">
-      <span className="text-xs font-bold uppercase">
-        {dict.course.timetable.title}
-      </span>
+      <span className="text-xs font-bold">{dict.course.timetable.title}</span>
       <div className="grid grid-cols-7 gap-1 mt-4">
         <div></div>
         {["M", "T", "W", "R", "F", "S"].map((d) => {
