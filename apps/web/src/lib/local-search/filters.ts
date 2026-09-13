@@ -1,4 +1,7 @@
-import { facetValues, type SearchProjectionRecord } from "./projection";
+import {
+  normalizedFacetValues,
+  type SearchProjectionRecord,
+} from "./projection";
 import {
   maskFromSeparateTimes,
   maskFromTimes,
@@ -149,6 +152,36 @@ export const parseFilterExpression = (value: unknown) =>
 const normalized = (value: unknown) =>
   String(value ?? "").toLocaleLowerCase("zh-TW");
 
+const normalizedFilterValues = new Map<string, string>();
+const normalizedFilterValue = (value: unknown) => {
+  const raw = String(value ?? "");
+  const cached = normalizedFilterValues.get(raw);
+  if (cached !== undefined) return cached;
+  const valueLower = normalized(raw);
+  normalizedFilterValues.set(raw, valueLower);
+  return valueLower;
+};
+
+const separateTimeMaskCache = new Map<string, TimeMask>();
+const recordSeparateTimeMaskCache = new WeakMap<
+  SearchProjectionRecord,
+  TimeMask
+>();
+const separateTimeMaskForValue = (value: string) => {
+  const cached = separateTimeMaskCache.get(value);
+  if (cached) return cached;
+  const mask = maskFromSeparateTimes([value]);
+  separateTimeMaskCache.set(value, mask);
+  return mask;
+};
+const separateTimeMaskForRecord = (record: SearchProjectionRecord) => {
+  const cached = recordSeparateTimeMaskCache.get(record);
+  if (cached) return cached;
+  const mask = maskFromSeparateTimes(record.separate_times);
+  recordSeparateTimeMaskCache.set(record, mask);
+  return mask;
+};
+
 const numericValue = (record: SearchProjectionRecord, attribute: string) => {
   const value = record[attribute];
   return value === null || value === undefined || value === ""
@@ -162,24 +195,27 @@ const exactValue = (
   record: SearchProjectionRecord,
   attribute: string,
   value: string,
+  expected = normalizedFilterValue(value),
+  wantedTimeMask = separateTimeMaskForValue(value),
 ) => {
   if (attribute === "separate_times") {
-    return usesAny(
-      maskFromSeparateTimes(record.separate_times),
-      maskFromSeparateTimes([value]),
-    );
+    return usesAny(separateTimeMaskForRecord(record), wantedTimeMask);
   }
   if (attribute === "times") {
-    return record.times.some((time) => normalized(time) === normalized(value));
+    return normalizedFacetValues(record, "times").some(
+      (candidate) => candidate === expected,
+    );
   }
-  return facetValues(record, attribute).some(
-    (candidate) => normalized(candidate) === normalized(value),
+  return normalizedFacetValues(record, attribute).some(
+    (candidate) => candidate === expected,
   );
 };
 
-export const matchesCondition = (
+const matchesConditionWithExpected = (
   record: SearchProjectionRecord,
   condition: FilterCondition,
+  expected = normalizedFilterValue(condition.value),
+  wantedTimeMask = separateTimeMaskForValue(condition.value),
 ) => {
   let matched = false;
   if (
@@ -189,17 +225,33 @@ export const matchesCondition = (
     matched =
       numericValue(record, condition.attribute) === Number(condition.value);
   } else if (condition.operator === ":" || condition.operator === "=") {
-    matched = exactValue(record, condition.attribute, condition.value);
+    matched = exactValue(
+      record,
+      condition.attribute,
+      condition.value,
+      expected,
+      wantedTimeMask,
+    );
   } else if (condition.attribute === "separate_times") {
-    const wanted = maskFromSeparateTimes([condition.value]);
-    const actual = maskFromSeparateTimes(record.separate_times);
-    matched = condition.operator === "!=" ? !usesAny(actual, wanted) : false;
+    const actual = separateTimeMaskForRecord(record);
+    matched =
+      condition.operator === "!="
+        ? !usesAny(actual, wantedTimeMask)
+        : false;
   } else if (condition.attribute === "times") {
-    const value = normalized(condition.value);
-    const actual = record.times.some((time) => normalized(time) === value);
+    const actual = normalizedFacetValues(record, "times").some(
+      (candidate) => candidate === expected,
+    );
     matched = condition.operator === "!=" ? !actual : false;
   } else if (condition.operator === "!=") {
-    matched = !exactValue(record, condition.attribute, condition.value);
+    matched =
+      !exactValue(
+        record,
+        condition.attribute,
+        condition.value,
+        expected,
+        wantedTimeMask,
+      );
   } else {
     const actual = numericValue(record, condition.attribute);
     const expected = Number(condition.value);
@@ -224,25 +276,36 @@ export const matchesCondition = (
   return condition.negated ? !matched : matched;
 };
 
-const evaluateExpression = (
+export const matchesCondition = (
   record: SearchProjectionRecord,
+  condition: FilterCondition,
+) => matchesConditionWithExpected(record, condition);
+
+type CompiledCondition = (record: SearchProjectionRecord) => boolean;
+
+const compileCondition = (condition: FilterCondition): CompiledCondition => {
+  const expected = normalizedFilterValue(condition.value);
+  const wantedTimeMask = separateTimeMaskForValue(condition.value);
+  return (record) =>
+    matchesConditionWithExpected(record, condition, expected, wantedTimeMask);
+};
+
+const compileExpression = (
   expression: FilterExpression | null,
   excludedAttribute?: string,
-): boolean => {
-  if (!expression) return true;
+): CompiledCondition => {
+  if (!expression) return () => true;
   if (expression.kind === "condition") {
     return expression.condition.attribute === excludedAttribute
-      ? true
-      : matchesCondition(record, expression.condition);
+      ? () => true
+      : compileCondition(expression.condition);
   }
-  if (expression.kind === "and") {
-    return expression.children.every((child) =>
-      evaluateExpression(record, child, excludedAttribute),
-    );
-  }
-  return expression.children.some((child) =>
-    evaluateExpression(record, child, excludedAttribute),
+  const children = expression.children.map((child) =>
+    compileExpression(child, excludedAttribute),
   );
+  return expression.kind === "and"
+    ? (record) => children.every((child) => child(record))
+    : (record) => children.some((child) => child(record));
 };
 
 type FilterInput =
@@ -278,48 +341,69 @@ export type RefinementSpec = {
 };
 
 /** Apply Algolia's AND-of-OR facet groups plus filters/numericFilters. */
-export const matchesRefinements = (
-  record: SearchProjectionRecord,
+export const compileRefinements = (
   spec: RefinementSpec,
   excludedFacet?: string,
 ) => {
   const groups = facetFilterGroups(spec.facetFilters);
-  const facetMatch = groups.every((group) => {
-    const conditions = group
-      .map(parseFilterCondition)
-      .filter((condition): condition is FilterCondition => condition !== null)
-      .filter((condition) => condition.attribute !== excludedFacet);
-    return (
-      conditions.length === 0 ||
-      conditions.some((condition) => matchesCondition(record, condition))
-    );
-  });
-  if (!facetMatch) return false;
-
   const numericConditions = toArray(
     parseMaybeJsonArray(spec.numericFilters),
   ).flatMap((value) => (Array.isArray(value) ? [...value] : [value]));
-  if (
-    !numericConditions.every((value) => {
-      const condition = parseFilterCondition(String(value));
-      return condition ? matchesCondition(record, condition) : false;
-    })
-  ) {
-    return false;
-  }
-
-  return evaluateExpression(
-    record,
-    parseFilterExpression(
-      typeof spec.filters === "string"
-        ? spec.filters
-        : typeof spec.filters === "undefined"
-          ? ""
-          : String(spec.filters),
-    ),
-    excludedFacet,
+  const facetConditions = groups.map((group) =>
+    group
+      .map(parseFilterCondition)
+      .filter((condition): condition is FilterCondition => condition !== null)
+      .filter((condition) => condition.attribute !== excludedFacet),
   );
+  const parsedNumericConditions = numericConditions.map((value) =>
+    parseFilterCondition(String(value)),
+  );
+  const expression = parseFilterExpression(
+    typeof spec.filters === "string"
+      ? spec.filters
+      : typeof spec.filters === "undefined"
+        ? ""
+        : String(spec.filters),
+  );
+
+  const compiledFacetConditions = facetConditions.map((group) =>
+    group.map(compileCondition),
+  );
+  const compiledNumericConditions = parsedNumericConditions.map((condition) =>
+    condition ? compileCondition(condition) : undefined,
+  );
+  const expressionMatcher = compileExpression(expression, excludedFacet);
+
+  const matcher = ((record: SearchProjectionRecord) => {
+    const facetMatch = compiledFacetConditions.every(
+      (conditions) =>
+        conditions.length === 0 ||
+        conditions.some((condition) => condition(record)),
+    );
+    if (!facetMatch) return false;
+
+    if (
+      !compiledNumericConditions.every(
+        (condition) => condition && condition(record),
+      )
+    ) {
+      return false;
+    }
+
+    return expressionMatcher(record);
+  }) as ((record: SearchProjectionRecord) => boolean) & { isNoop: boolean };
+  matcher.isNoop =
+    facetConditions.every((conditions) => conditions.length === 0) &&
+    parsedNumericConditions.length === 0 &&
+    expression === null;
+  return matcher;
 };
+
+export const matchesRefinements = (
+  record: SearchProjectionRecord,
+  spec: RefinementSpec,
+  excludedFacet?: string,
+) => compileRefinements(spec, excludedFacet)(record);
 
 export const timeMaskForFilterValue = (attribute: string, value: string) =>
   attribute === "times"

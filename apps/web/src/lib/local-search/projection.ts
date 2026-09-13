@@ -52,6 +52,10 @@ export type SearchProjectionRecord = UnknownRecord & {
 
 const asString = (value: unknown) => (value == null ? "" : String(value));
 
+/** Remove presentation markup from the indexed value without changing hits. */
+export const stripHtmlTags = (value: string) =>
+  value.replace(/<!--[\s\S]*?-->|<[^>]*>/g, " ");
+
 export const asStringArray = (value: unknown): string[] =>
   Array.isArray(value)
     ? value.filter((item) => item != null && item !== "").map(String)
@@ -112,40 +116,93 @@ export const prepareSearchRecord = (
   };
 };
 
-export const searchableFields = (record: SearchProjectionRecord) =>
-  SEARCHABLE_FIELDS.flatMap((field) => {
+const searchableFieldValuesCache = new WeakMap<
+  SearchProjectionRecord,
+  string[][]
+>();
+
+/** Normalized searchable values grouped by source field. */
+export const searchableFieldValues = (record: SearchProjectionRecord) => {
+  const cached = searchableFieldValuesCache.get(record);
+  if (cached) return cached;
+
+  const values = SEARCHABLE_FIELDS.map((field) => {
     const value = record[field];
-    return Array.isArray(value) ? value : [value];
-  })
-    .filter(Boolean)
-    .map((value) => String(value).toLocaleLowerCase("zh-TW"));
+    return (Array.isArray(value) ? value : [value])
+      .filter(Boolean)
+      .map((item) => stripHtmlTags(String(item)).toLocaleLowerCase("zh-TW"));
+  });
+  searchableFieldValuesCache.set(record, values);
+  return values;
+};
+
+export const searchableFields = (record: SearchProjectionRecord) =>
+  searchableFieldValues(record).flat();
 
 export const searchableText = (record: SearchProjectionRecord) =>
   searchableFields(record).join(" ");
 
 export const recordTimeMask = timeMaskForRecord;
 
+const facetValuesCache = new WeakMap<
+  SearchProjectionRecord,
+  Map<string, string[]>
+>();
+
+const normalizedFacetValuesCache = new WeakMap<
+  SearchProjectionRecord,
+  Map<string, string[]>
+>();
+
 export const facetValues = (
   record: SearchProjectionRecord,
   attribute: string,
 ): string[] => {
-  if (attribute === "courseLevel")
-    return record.courseLevel ? [record.courseLevel] : [];
-  if (attribute === "separate_times") return record.separate_times;
-  if (attribute === "for_class") return record.for_class;
-  if (attribute === "times") return record.times;
+  const cached = facetValuesCache.get(record)?.get(attribute);
+  if (cached) return cached;
 
-  const value = record[attribute];
-  if (
-    attribute === "ge_target" ||
-    attribute === "ge_type" ||
-    attribute === "language" ||
-    attribute === "semester" ||
-    attribute === "department"
-  ) {
-    // The remote index retains an explicit empty ge_type value. Preserve
-    // explicit empty scalars while still omitting absent/null fields.
-    return value == null ? [] : [String(value)];
+  let values: string[];
+  if (attribute === "courseLevel")
+    values = record.courseLevel ? [record.courseLevel] : [];
+  else if (attribute === "separate_times") values = record.separate_times;
+  else if (attribute === "for_class") values = record.for_class;
+  else if (attribute === "times") values = record.times;
+  else {
+    const value = record[attribute];
+    if (
+      attribute === "ge_target" ||
+      attribute === "ge_type" ||
+      attribute === "language" ||
+      attribute === "semester" ||
+      attribute === "department"
+    ) {
+      // The remote index retains an explicit empty ge_type value. Preserve
+      // explicit empty scalars while still omitting absent/null fields.
+      values = value == null ? [] : [String(value)];
+    } else values = asStringArray(value);
   }
-  return asStringArray(value);
+
+  const recordCache =
+    facetValuesCache.get(record) ?? new Map<string, string[]>();
+  recordCache.set(attribute, values);
+  facetValuesCache.set(record, recordCache);
+  return values;
+};
+
+/** Lowercased facet values for case-insensitive refinement checks. */
+export const normalizedFacetValues = (
+  record: SearchProjectionRecord,
+  attribute: string,
+) => {
+  const cached = normalizedFacetValuesCache.get(record)?.get(attribute);
+  if (cached) return cached;
+
+  const values = facetValues(record, attribute).map((value) =>
+    value.toLocaleLowerCase("zh-TW"),
+  );
+  const recordCache =
+    normalizedFacetValuesCache.get(record) ?? new Map<string, string[]>();
+  recordCache.set(attribute, values);
+  normalizedFacetValuesCache.set(record, recordCache);
+  return values;
 };

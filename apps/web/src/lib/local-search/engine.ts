@@ -6,18 +6,26 @@ import {
 } from "./cache";
 import {
   facetValues,
+  LOCAL_FACETS,
   prepareSearchRecord,
+  searchableFieldValues,
   searchableText,
   type SearchProjectionRecord,
   type UnknownRecord,
 } from "./projection";
 import {
-  matchesRefinements,
+  compileRefinements,
   parseFilterCondition,
   type RefinementSpec,
 } from "./filters";
 import { searchWithoutWorker } from "./fallback-index";
-import { matchesLocalQuery } from "./tokenizer";
+import { rankLocalIdsByTerms } from "./ranking";
+import {
+  isCjkCharacter,
+  matchesLocalQueryTerms,
+  queryTerms,
+  searchableLatinTokenGroups,
+} from "./tokenizer";
 import type {
   SearchWorker,
   WorkerDocument,
@@ -86,6 +94,10 @@ export type LocalSearchEngineOptions = {
 type LoadedChunk = {
   records: SearchProjectionRecord[];
   index: LocalIndex;
+  ids: number[];
+  facetValues: string[][][];
+  shortLatinPrefixes: Map<string, Set<number>>;
+  shortLatinRankScores: Map<string, Map<number, number>>;
   manifest: SearchManifestEntry;
 };
 
@@ -354,6 +366,74 @@ const workerIndexFor = (
   return worker ? new WorkerIndex(worker) : makeMainThreadIndex(records);
 };
 
+const buildShortLatinPrefixIndex = (
+  records: readonly SearchProjectionRecord[],
+) => {
+  const prefixes = new Map<string, Set<number>>();
+  const rankScores = new Map<string, Map<number, number>>();
+  const setRankScore = (prefix: string, id: number, score: number) => {
+    const scores = rankScores.get(prefix) ?? new Map<number, number>();
+    scores.set(id, Math.max(scores.get(id) ?? 0, score));
+    rankScores.set(prefix, scores);
+  };
+  const addRankPrefixes = (
+    value: string,
+    id: number,
+    score: (prefix: string) => number,
+  ) => {
+    for (let length = 1; length <= Math.min(2, value.length); length += 1) {
+      const prefix = value.slice(0, length);
+      setRankScore(prefix, id, score(prefix));
+    }
+  };
+  for (const [id, record] of records.entries()) {
+    const values = searchableFieldValues(record);
+    const latinGroups = searchableLatinTokenGroups(record);
+    for (const token of latinGroups.flat()) {
+      if ([...token].some(isCjkCharacter)) continue;
+      for (let length = 1; length <= Math.min(3, token.length); length += 1) {
+        const prefix = token.slice(0, length);
+        const ids = prefixes.get(prefix) ?? new Set<number>();
+        ids.add(id);
+        prefixes.set(prefix, ids);
+      }
+    }
+
+    for (const value of values[2] ?? []) {
+      addRankPrefixes(value, id, () => 95_000);
+    }
+    for (const value of values[3] ?? []) {
+      addRankPrefixes(value, id, () => 95_000);
+    }
+    for (const value of values[4] ?? []) {
+      addRankPrefixes(value, id, (prefix) =>
+        value === prefix ? 120_000 : 100_000,
+      );
+    }
+    for (const field of [0, 1, 5, 6]) {
+      const score = field === 0 || field === 1 ? [90_000, 88_000] : [80_000, 78_000];
+      for (const token of latinGroups[field] ?? []) {
+        addRankPrefixes(token, id, (prefix) =>
+          token === prefix ? score[0]! : score[1]!,
+        );
+      }
+    }
+  }
+  return { prefixes, rankScores };
+};
+
+const buildFacetValueRows = (records: readonly SearchProjectionRecord[]) =>
+  records.map((record) =>
+    LOCAL_FACETS.map((facet) => {
+      const values = facetValues(record, facet);
+      return values.length < 2 ? values : [...new Set(values)];
+    }),
+  );
+
+const localFacetIndex = new Map(
+  LOCAL_FACETS.map((facet, index) => [facet, index] as const),
+);
+
 export class LocalSearchEngine {
   private readonly baseUrl: string;
   private readonly fetchFn: FetchLike;
@@ -456,8 +536,20 @@ export class LocalSearchEngine {
         text: searchableText(record),
       })),
     );
+    // Pay the Latin matcher cache cost during chunk load, not the first
+    // broad query (where it would look like search latency).
+    const facetValueRows = buildFacetValueRows(records);
     this.setStatus("ready");
-    return { records, index, manifest };
+    const shortLatinIndex = buildShortLatinPrefixIndex(records);
+    return {
+      records,
+      index,
+      ids: records.map((_, id) => id),
+      facetValues: facetValueRows,
+      shortLatinPrefixes: shortLatinIndex.prefixes,
+      shortLatinRankScores: shortLatinIndex.rankScores,
+      manifest,
+    };
   }
 
   private getChunk(semester: string) {
@@ -476,29 +568,21 @@ export class LocalSearchEngine {
     records: readonly SearchProjectionRecord[],
     ids: readonly number[],
     params: LocalSearchParams,
+    facetValueRows: readonly (readonly string[][])[],
   ) {
     const requested = requestedFacetNames(params.facets);
-    const names = requested ?? [
-      "courseLevel",
-      "cross_discipline",
-      "department",
-      "first_specialization",
-      "for_class",
-      "ge_target",
-      "ge_type",
-      "language",
-      "second_specialization",
-      "semester",
-      "separate_times",
-      "tags",
-      "venues",
-    ];
+    const names = requested ?? LOCAL_FACETS;
     const result: Record<string, Record<string, number>> = {};
     const limit = maxFacetValues(params.maxValuesPerFacet, 100);
     for (const name of names) {
       const counts = new Map<string, number>();
+      const localIndex = localFacetIndex.get(name);
       for (const id of ids) {
-        for (const value of new Set(facetValues(records[id], name))) {
+        const values =
+          localIndex === undefined
+            ? new Set(facetValues(records[id], name))
+            : facetValueRows[id]?.[localIndex] ?? [];
+        for (const value of values) {
           counts.set(value, (counts.get(value) ?? 0) + 1);
         }
       }
@@ -533,31 +617,73 @@ export class LocalSearchEngine {
       Number.isFinite(params.hitsPerPage)
         ? Math.max(0, Math.floor(params.hitsPerPage))
         : 20;
-    const indexedIds = query.trim()
+    const terms = queryTerms(query);
+    const hasSearchTerms = terms.length > 0;
+    const refinementMatcher = compileRefinements(params);
+    const indexedIds: readonly (string | number)[] = hasSearchTerms
       ? await chunk.index.search(query, chunk.records.length)
-      : chunk.records.map((_, id) => String(id));
-    const ids = indexedIds
-      .map(Number)
-      .filter(
-        (id, index, all) =>
-          Number.isInteger(id) &&
-          id >= 0 &&
-          id < chunk.records.length &&
-          all.indexOf(id) === index &&
-          matchesLocalQuery(chunk.records[id], query) &&
-          matchesRefinements(chunk.records[id], params),
-      );
+      : chunk.ids;
+    const shortLatinPrefix =
+      terms.length === 1 &&
+      terms[0]!.length <= 3 &&
+      ![...terms[0]!].some(isCjkCharacter)
+        ? (chunk.shortLatinPrefixes.get(terms[0]!) ?? new Set<number>())
+        : undefined;
+    let ids: number[];
+    if (refinementMatcher.isNoop && !hasSearchTerms) {
+      ids = chunk.ids;
+    } else if (!hasSearchTerms) {
+      ids = [];
+      for (const id of chunk.ids) {
+        if (refinementMatcher(chunk.records[id])) ids.push(id);
+      }
+    } else {
+      const seenIds = new Set<number>();
+      ids = [];
+      for (const rawId of indexedIds) {
+        const id = typeof rawId === "number" ? rawId : Number(rawId);
+        if (
+          !Number.isInteger(id) ||
+          id < 0 ||
+          id >= chunk.records.length ||
+          seenIds.has(id)
+        ) {
+          continue;
+        }
+        seenIds.add(id);
+        if (
+          (shortLatinPrefix
+            ? shortLatinPrefix.has(id)
+            : matchesLocalQueryTerms(chunk.records[id], terms)) &&
+          refinementMatcher(chunk.records[id])
+        ) {
+          ids.push(id);
+        }
+      }
+    }
+    const rankedIds = rankLocalIdsByTerms(
+      chunk.records,
+      ids,
+      terms,
+      chunk.shortLatinRankScores,
+    );
     const start = page * hitsPerPage;
     const selected =
-      hitsPerPage === 0 ? [] : ids.slice(start, start + hitsPerPage);
-    const facets = this.facetMaps(chunk.records, ids, params);
+      hitsPerPage === 0 ? [] : rankedIds.slice(start, start + hitsPerPage);
+    const facets = this.facetMaps(
+      chunk.records,
+      rankedIds,
+      params,
+      chunk.facetValues,
+    );
     const result = {
       hits: selected.map((id) =>
         hitAttributes(chunk.records[id], params.attributesToRetrieve),
       ) as Array<T & { objectID: string }>,
-      nbHits: ids.length,
+      nbHits: rankedIds.length,
       page,
-      nbPages: hitsPerPage === 0 ? 0 : Math.ceil(ids.length / hitsPerPage),
+      nbPages:
+        hitsPerPage === 0 ? 0 : Math.ceil(rankedIds.length / hitsPerPage),
       hitsPerPage,
       processingTimeMS: Math.max(0, Math.round(performance.now() - started)),
       exhaustiveNbHits: true,
@@ -576,12 +702,18 @@ export class LocalSearchEngine {
     const params = request.params ?? {};
     const facetName = String(params.facetName ?? "");
     const query = String(params.facetQuery ?? "").toLocaleLowerCase("zh-TW");
+    const refinementMatcher = compileRefinements(params, facetName);
     const ids = chunk.records
       .map((_, id) => id)
-      .filter((id) => matchesRefinements(chunk.records[id], params, facetName));
+      .filter((id) => refinementMatcher(chunk.records[id]));
     const counts = new Map<string, number>();
     for (const id of ids) {
-      for (const value of new Set(facetValues(chunk.records[id], facetName))) {
+      const localIndex = localFacetIndex.get(facetName);
+      const values =
+        localIndex === undefined
+          ? new Set(facetValues(chunk.records[id], facetName))
+          : chunk.facetValues[id]?.[localIndex] ?? [];
+      for (const value of values) {
         if (value.toLocaleLowerCase("zh-TW").includes(query)) {
           counts.set(value, (counts.get(value) ?? 0) + 1);
         }

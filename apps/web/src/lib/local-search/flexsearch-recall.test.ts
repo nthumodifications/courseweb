@@ -7,6 +7,7 @@ import {
   searchableText,
   matchesLocalQuery,
   queryTerms,
+  rankLocalIds,
   type SearchWorker,
   type UnknownRecord,
 } from "./client";
@@ -233,4 +234,98 @@ test("the local engine preserves FlexSearch rank and stable insertion ties", asy
   expect(searchFlexSearchIndex(flexIndex, "!!!", records.length)).toEqual(
     allIds,
   );
+});
+
+test("strips HTML attributes from indexed text but preserves display markup", () => {
+  const record = records.find((item) => item.name_en.includes("<font"));
+  expect(record).toBeDefined();
+  if (!record) return;
+
+  expect(record.name_en).toContain('<font color="red">');
+  expect(searchableText(record)).not.toContain("color");
+  expect(matchesLocalQuery(record, "color")).toBe(false);
+  expect(matchesLocalQuery(record, "停開")).toBe(true);
+});
+
+test("recalls plural word forms from the real dump without fuzzy matching", () => {
+  const educationIds = records.flatMap((record) =>
+    matchesLocalQuery(record, "education") ? [record.objectID] : [],
+  );
+  const educationsIds = records.flatMap((record) =>
+    matchesLocalQuery(record, "educations") ? [record.objectID] : [],
+  );
+  const indexedIds = searchFlexSearchIndex(
+    flexIndex,
+    "educations",
+    records.length,
+  )
+    .filter((id) => matchesLocalQuery(records[Number(id)], "educations"))
+    .map((id) => records[Number(id)].objectID);
+
+  expect(educationsIds).toEqual(educationIds);
+  expect(new Set(indexedIds)).toEqual(new Set(educationIds));
+  expect(queryTerms("educations")).toEqual(["education"]);
+});
+
+test("recalls comma-formatted and multi-value teacher names from the real dump", () => {
+  const jiangIds = records
+    .filter((record) => matchesLocalQuery(record, "JIANG"))
+    .map((record) => record.objectID);
+  expect(new Set(jiangIds)).toEqual(
+    new Set([
+      "11510ASTR490000",
+      "11510CL  336300",
+      "11510GEC 170700",
+      "11510HSS 317200",
+      "11510MATH101001",
+      "11510PHYS317000",
+    ]),
+  );
+  expect(
+    records.filter((record) =>
+      record.teacher_en.some((teacher) => /^JIANG,/i.test(teacher)),
+    ),
+  ).toHaveLength(5);
+
+  const leeRecords = records.filter((record) =>
+    record.teacher_en.some((teacher) => /LEE, CHING-FU/i.test(teacher)),
+  );
+  expect(leeRecords).toHaveLength(2);
+  expect(
+    leeRecords.every((record) => matchesLocalQuery(record, "CHING-FU")),
+  ).toBe(true);
+  const indexedTeacherIds = new Set(
+    searchFlexSearchIndex(flexIndex, "CHING-FU", records.length)
+      .filter((id) => matchesLocalQuery(records[Number(id)], "CHING-FU"))
+      .map((id) => records[Number(id)].objectID),
+  );
+  expect(
+    leeRecords.every((record) => indexedTeacherIds.has(record.objectID)),
+  ).toBe(true);
+});
+
+test("ranks broad real-dump queries by intentional field matches", () => {
+  const broadIds = (query: string) =>
+    rankLocalIds(
+      records,
+      records.flatMap((record, id) =>
+        matchesLocalQuery(record, query) ? [id] : [],
+      ),
+      query,
+    ).map((id) => records[id].objectID);
+
+  expect(broadIds("c").slice(0, 5)).toEqual([
+    "11510CHE 116000",
+    "11510CHE 211001",
+    "11510CHE 211002",
+    "11510CHE 241000",
+    "11510CHE 301000",
+  ]);
+  expect(broadIds("education").slice(0, 5)).toEqual([
+    "11510ECON707700",
+    "11510GPTS523000",
+    "11510HSS 345500",
+    "11510IBP 100800",
+    "11510IMS 500100",
+  ]);
 });

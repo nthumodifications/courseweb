@@ -81,6 +81,7 @@ export { LocalSearchEngine } from "./engine";
 export * from "./projection";
 export * from "./time-mask";
 export * from "./tokenizer";
+export * from "./ranking";
 export * from "./filters";
 export * from "./cache";
 export type { SearchWorker } from "./worker-protocol";
