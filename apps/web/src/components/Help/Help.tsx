@@ -305,10 +305,7 @@ const BusAnimation = ({ title }: { title: string }) => (
         { icon: <GreenLineIcon />, position: "20%" },
         { icon: <RedLineIcon />, position: "40%" },
         { icon: <NandaLineIcon />, position: "60%" },
-        {
-          icon: <Bus size={16} className="text-primary-foreground" />,
-          position: "80%",
-        },
+        { icon: <Bus size={16} className="text-primary-foreground" />, position: "80%" },
       ].map((stop, i) => (
         <motion.div
           key={i}

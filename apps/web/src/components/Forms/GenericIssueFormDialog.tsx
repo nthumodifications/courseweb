@@ -387,7 +387,10 @@ const GenericIssueForm = ({ children }: { children?: ReactNode }) => {
           <DialogDescription>{dict.forms.issue.description}</DialogDescription>
         </DialogHeader>
         <ScrollArea className="max-h-[90vh]">
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <form
+            onSubmit={handleSubmit}
+            className="flex flex-col gap-4"
+          >
             <div className="flex flex-col gap-2">
               <Label htmlFor="title">{dict.forms.issue.label_title}</Label>
               <Input
@@ -425,7 +428,11 @@ const GenericIssueForm = ({ children }: { children?: ReactNode }) => {
                 placeholder={placeholderIssueDescription}
                 disabled={isSubmitting}
               />
-              <p className="text-xs">{dict.forms.issue.detail_hint}</p>
+              <p className="text-xs">
+                {
+                  dict.forms.issue.detail_hint
+                }
+              </p>
               <p className="text-xs">{dict.forms.issue.markdown_hint}</p>
             </div>
             <Turnstile

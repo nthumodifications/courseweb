@@ -21,9 +21,7 @@ const OAuthCallbackRedirect = () => {
 
   return (
     <div className="p-4">
-      <p className="text-muted-foreground leading-relaxed">
-        {dict.common.redirecting}
-      </p>
+      <p className="text-muted-foreground leading-relaxed">{dict.common.redirecting}</p>
     </div>
   );
 };

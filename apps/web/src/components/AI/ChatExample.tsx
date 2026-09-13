@@ -61,15 +61,12 @@ export function ChatExample() {
           </p>
           {context.courseHistory && context.courseHistory.length > 0 && (
             <details className="mt-2">
-              <summary className="cursor-pointer">
-                {dict.chat.view_history}
-              </summary>
+              <summary className="cursor-pointer">{dict.chat.view_history}</summary>
               <div className="mt-1 space-y-2">
                 {context.courseHistory.map((sem) => (
                   <div key={sem.semester} className="text-xs">
                     <strong>
-                      {sem.year} {dict.chat.semester_label} {sem.semesterNumber}
-                      :
+                      {sem.year} {dict.chat.semester_label} {sem.semesterNumber}:
                     </strong>
                     <ul className="list-disc list-inside ml-4">
                       {sem.courses.map((course) => (

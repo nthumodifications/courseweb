@@ -95,7 +95,8 @@ const TodaySchedule: FC = () => {
           isClient &&
           Boolean(
             weather?.find(
-              (item: { date: string }) => item.date === getTaipeiDateKey(day),
+              (item: { date: string }) =>
+                item.date === getTaipeiDateKey(day),
             ),
           ),
       })),
@@ -112,9 +113,9 @@ const TodaySchedule: FC = () => {
           );
           return Boolean(
             schedule &&
-              schedule.classes.length === 0 &&
-              schedule.otherEvents.length === 0 &&
-              !schedule.hasWeather,
+            schedule.classes.length === 0 &&
+            schedule.otherEvents.length === 0 &&
+            !schedule.hasWeather,
           );
         },
       ),

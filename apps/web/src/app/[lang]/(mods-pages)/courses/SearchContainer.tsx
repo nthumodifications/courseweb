@@ -164,7 +164,9 @@ const SearchContainer = memo(
       <div className="flex min-w-0 w-full gap-4">
         <div className="hidden md:flex flex-col gap-4 w-72 px-4">
           <div className="flex justify-between items-baseline">
-            <span className="font-bold">{dict.course.refine.title}</span>
+              <span className="font-bold">
+              {dict.course.refine.title}
+            </span>
             <ResetFiltersButton />
           </div>
           <ScrollArea className="">

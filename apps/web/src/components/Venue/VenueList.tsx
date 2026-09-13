@@ -45,39 +45,31 @@ const VenueList = ({ venues }: { venues: string[] }) => {
       />
       {Object.keys(grouped).length === 0 ? (
         <EmptyState title={dict.common.no_results} />
-      ) : (
-        Object.keys(grouped).map((ven) => {
-          return (
-            <div key={ven} className="flex flex-col">
-              <h2 className="py-4 font-bold text-base">{ven}</h2>
-              <div className="flex flex-col divide-y divide-border">
-                {grouped[ven].map((venue, i) => (
-                  <Link
-                    key={i}
-                    className="flex min-w-0 flex-row items-center gap-4 py-4"
-                    to={`/${language}/venues/${venue}`}
-                  >
-                    <span
-                      className="h-4 w-4 shrink-0 rounded-sm bg-muted"
-                      aria-hidden="true"
-                    />
-                    <span className="min-w-0 flex-1 font-bold text-foreground">
-                      {venue}
-                    </span>
-                    <span className="text-right text-sm text-muted-foreground whitespace-nowrap">
-                      {dict.venues.view_courses}
-                    </span>
-                    <ChevronRight
-                      className="h-4 w-4 shrink-0"
-                      aria-hidden="true"
-                    />
-                  </Link>
-                ))}
-              </div>
+      ) : Object.keys(grouped).map((ven) => {
+        return (
+          <div key={ven} className="flex flex-col">
+            <h2 className="py-4 font-bold text-base">{ven}</h2>
+            <div className="flex flex-col divide-y divide-border">
+              {grouped[ven].map((venue, i) => (
+                <Link
+                  key={i}
+                  className="flex min-w-0 flex-row items-center gap-4 py-4"
+                  to={`/${language}/venues/${venue}`}
+                >
+                  <span className="h-4 w-4 shrink-0 rounded-sm bg-muted" aria-hidden="true" />
+                  <span className="min-w-0 flex-1 font-bold text-foreground">
+                    {venue}
+                  </span>
+                  <span className="text-right text-sm text-muted-foreground whitespace-nowrap">
+                    {dict.venues.view_courses}
+                  </span>
+                  <ChevronRight className="h-4 w-4 shrink-0" aria-hidden="true" />
+                </Link>
+              ))}
             </div>
-          );
-        })
-      )}
+          </div>
+        );
+      })}
     </div>
   );
 };

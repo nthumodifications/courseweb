@@ -6,19 +6,19 @@ The table records the state before this change. “Partial” means the query ha
 some custom fallback, but not the required shared, compact, retryable
 `ErrorState`.
 
-| Query key              | File                                                                    | Before change                                                                          | After change            |
-| ---------------------- | ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | ----------------------- |
-| `venues`               | `apps/web/src/app/[lang]/(mods-pages)/(venues)/venues/page.tsx`         | No error branch; the sidebar fell through to the venue list                            | `ErrorState` with retry |
-| `venue-courses`        | `apps/web/src/app/[lang]/(mods-pages)/(venues)/venues/page.tsx`         | No error branch; detail loading ended without an error state                           | `ErrorState` with retry |
-| `venue-occupancy`      | `apps/web/src/app/[lang]/(mods-pages)/sports-venues/page.tsx`           | No error branch                                                                        | `ErrorState` with retry |
-| `sports-opening-times` | `apps/web/src/app/[lang]/(mods-pages)/sports-venues/page.tsx`           | No error branch                                                                        | `ErrorState` with retry |
-| `course / syllabus`    | `apps/web/src/components/CourseDetails/CourseDetailsContainer.tsx`      | Partial: custom 404-style markup, no retry, and API failures could look like not-found | `ErrorState` with retry |
-| `course / ptt`         | `apps/web/src/components/CourseDetails/CourseDetailsContainer.tsx`      | No error branch                                                                        | `ErrorState` with retry |
-| `course / related`     | `apps/web/src/components/CourseDetails/CourseDetailsContainer.tsx`      | No error branch                                                                        | `ErrorState` with retry |
-| `course / dates`       | `apps/web/src/components/CourseDetails/DateContributeForm.tsx`          | No rendered error branch; `error` was only destructured                                | `ErrorState` with retry |
-| `courses` favourites   | `apps/web/src/app/[lang]/(mods-pages)/courses/FavouritesCourseList.tsx` | No rendered error branch; `error` was unused                                           | `ErrorState` with retry |
-| `dining`               | `apps/web/src/app/[lang]/(mods-pages)/shops/page.tsx`                   | Partial: hardcoded one-line error, no retry                                            | `ErrorState` with retry |
-| `nthu-campus-map`      | `apps/web/src/features/campusMap/CampusMapPage.tsx`                     | Partial: centered custom message, no retry                                             | `ErrorState` with retry |
+| Query key | File | Before change | After change |
+| --- | --- | --- | --- |
+| `venues` | `apps/web/src/app/[lang]/(mods-pages)/(venues)/venues/page.tsx` | No error branch; the sidebar fell through to the venue list | `ErrorState` with retry |
+| `venue-courses` | `apps/web/src/app/[lang]/(mods-pages)/(venues)/venues/page.tsx` | No error branch; detail loading ended without an error state | `ErrorState` with retry |
+| `venue-occupancy` | `apps/web/src/app/[lang]/(mods-pages)/sports-venues/page.tsx` | No error branch | `ErrorState` with retry |
+| `sports-opening-times` | `apps/web/src/app/[lang]/(mods-pages)/sports-venues/page.tsx` | No error branch | `ErrorState` with retry |
+| `course / syllabus` | `apps/web/src/components/CourseDetails/CourseDetailsContainer.tsx` | Partial: custom 404-style markup, no retry, and API failures could look like not-found | `ErrorState` with retry |
+| `course / ptt` | `apps/web/src/components/CourseDetails/CourseDetailsContainer.tsx` | No error branch | `ErrorState` with retry |
+| `course / related` | `apps/web/src/components/CourseDetails/CourseDetailsContainer.tsx` | No error branch | `ErrorState` with retry |
+| `course / dates` | `apps/web/src/components/CourseDetails/DateContributeForm.tsx` | No rendered error branch; `error` was only destructured | `ErrorState` with retry |
+| `courses` favourites | `apps/web/src/app/[lang]/(mods-pages)/courses/FavouritesCourseList.tsx` | No rendered error branch; `error` was unused | `ErrorState` with retry |
+| `dining` | `apps/web/src/app/[lang]/(mods-pages)/shops/page.tsx` | Partial: hardcoded one-line error, no retry | `ErrorState` with retry |
+| `nthu-campus-map` | `apps/web/src/features/campusMap/CampusMapPage.tsx` | Partial: centered custom message, no retry | `ErrorState` with retry |
 
 The `useQuery` blocks in `student/id`, `student/parcel`, and `student/grades`
 are commented out and are not runtime queries.

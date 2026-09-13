@@ -106,7 +106,9 @@ const AnnouncementBar = () => {
     >
       <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
       <div className="flex min-w-0 flex-1 items-center gap-2">
-        <span className="font-medium">{title}</span>
+        <span className="font-medium">
+          {title}
+        </span>
         {description && (
           <span className="hidden text-current/80 sm:inline">
             — {description}

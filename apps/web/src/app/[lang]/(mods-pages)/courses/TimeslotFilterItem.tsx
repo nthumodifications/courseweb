@@ -170,9 +170,7 @@ const TimeslotFilterItem = ({
             <SelectValue placeholder={dict.course.refine.mode} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="includes">
-              {dict.course.refine.includes}
-            </SelectItem>
+            <SelectItem value="includes">{dict.course.refine.includes}</SelectItem>
             <SelectItem value="exact">{dict.course.refine.exact}</SelectItem>
           </SelectContent>
         </Select>

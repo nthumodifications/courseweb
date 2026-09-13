@@ -60,9 +60,7 @@ const AlignDot = ({
         : "row-start-3";
   return (
     <div className="grid h-full w-full grid-cols-3 grid-rows-3 gap-1 p-1">
-      <div
-        className={cn("h-2 w-2 rounded-sm bg-current opacity-80", row, col)}
-      />
+      <div className={cn("h-2 w-2 rounded-sm bg-current opacity-80", row, col)} />
     </div>
   );
 };

@@ -19,11 +19,15 @@ function DifficultyDots({ rating }: { rating: number }) {
         <div
           key={i}
           className={`w-2.5 h-2.5 rounded-full transition-colors ${
-            i < rating ? "bg-primary" : "bg-muted"
+            i < rating
+            ? "bg-primary"
+              : "bg-muted"
           }`}
-        />
+      />
       ))}
-      <span className="ml-1 text-xs text-muted-foreground">{rating}/5</span>
+      <span className="ml-1 text-xs text-muted-foreground">
+        {rating}/5
+      </span>
     </div>
   );
 }
@@ -109,7 +113,10 @@ export default function SyllabusSummary({
 
       <ul className="flex flex-col gap-1">
         {summary!.bullets.map((bullet, i) => (
-          <li key={i} className="flex gap-2 text-sm text-foreground">
+          <li
+            key={i}
+            className="flex gap-2 text-sm text-foreground"
+          >
             <span className="mt-0.5 shrink-0 text-primary">▸</span>
             {bullet}
           </li>
@@ -135,7 +142,9 @@ export default function SyllabusSummary({
         </div>
       </div>
 
-      <p className="text-xs text-muted-foreground">{summary!.audience}</p>
+      <p className="text-xs text-muted-foreground">
+        {summary!.audience}
+      </p>
     </div>
   );
 }

@@ -107,9 +107,7 @@ const SideNav: FC = () => {
           <span className="w-6 h-6">
             <I.ShieldCheck strokeWidth="2" />
           </span>
-          <span className="flex-1 text-left font-medium">
-            {dict.navigation.admin}
-          </span>
+          <span className="flex-1 text-left font-medium">{dict.navigation.admin}</span>
         </button>
       )}
     </nav>

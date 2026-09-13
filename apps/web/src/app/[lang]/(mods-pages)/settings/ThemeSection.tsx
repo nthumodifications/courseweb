@@ -303,9 +303,7 @@ export const ThemeSection = () => {
               )}
             >
               <span className="font-mono text-sm leading-none">{opt.icon}</span>
-              <span className="min-w-0">
-                {dict.settings.appearance.background[opt.value]}
-              </span>
+              <span className="min-w-0">{dict.settings.appearance.background[opt.value]}</span>
             </button>
           ))}
         </div>
@@ -351,9 +349,7 @@ export const ThemeSection = () => {
               id="accent-color-picker"
               type="color"
               defaultValue="#7c5cbf"
-              onChange={(e) =>
-                setAccentOverride(hexToHslTriple(e.target.value))
-              }
+              onChange={(e) => setAccentOverride(hexToHslTriple(e.target.value))}
               className="h-6 w-6 cursor-pointer rounded border-0 p-0"
               title={dict.settings.appearance.accent.pick}
               aria-label={dict.settings.appearance.accent.pick}

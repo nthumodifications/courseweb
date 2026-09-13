@@ -61,9 +61,7 @@ const SelectCourseButton = ({ courseId }: { courseId: RawCourseID }) => {
           aria-label={dict.course.item.remove_from_semester}
         >
           <Minus className="w-4 h-4" />
-          <span className="hidden sm:inline">
-            {dict.course.item.remove_from_semester}
-          </span>
+          <span className="hidden sm:inline">{dict.course.item.remove_from_semester}</span>
         </Button>
       ) : (
         <Button
@@ -73,9 +71,7 @@ const SelectCourseButton = ({ courseId }: { courseId: RawCourseID }) => {
           aria-label={dict.course.item.add_to_semester}
         >
           <Plus className="w-4 h-4" />
-          <span className="hidden sm:inline">
-            {dict.course.item.add_to_semester}
-          </span>
+          <span className="hidden sm:inline">{dict.course.item.add_to_semester}</span>
         </Button>
       )}
     </div>

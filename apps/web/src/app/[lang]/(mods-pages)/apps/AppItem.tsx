@@ -30,9 +30,7 @@ const AppItem = ({
       </div>
       <div className="flex flex-col gap-1 flex-1 min-w-0">
         <div className="flex flex-row items-center gap-1 min-w-0">
-          <h2
-            className={cn("min-w-0 flex-1", !mini ? "font-medium" : "text-xs")}
-          >
+          <h2 className={cn("min-w-0 flex-1", !mini ? "font-medium" : "text-xs")}>
             {dict.applist.apps[app.id as keyof typeof dict.applist.apps]}
           </h2>
           {app.beta && (

@@ -52,10 +52,7 @@ const AppList = () => {
                                   }
                                 </h2>
                                 {app.beta && (
-                                  <Badge
-                                    variant="secondary"
-                                    className="shrink-0"
-                                  >
+                                  <Badge variant="secondary" className="shrink-0">
                                     {dict.applist.beta}
                                   </Badge>
                                 )}

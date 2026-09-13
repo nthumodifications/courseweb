@@ -84,8 +84,7 @@ const CourseTagList = ({ course }: { course: CourseDefinition }) => {
       )}
       {getGECType(course.ge_type || "") && (
         <HighlightItem>
-          {dict.course.tags.general_education_core}{" "}
-          {getGECType(course.ge_type!)}
+          {dict.course.tags.general_education_core} {getGECType(course.ge_type!)}
         </HighlightItem>
       )}
     </div>

@@ -23,11 +23,11 @@ at each viewport; every label remained one rendered line (`height` and
 `scrollHeight` both 24px), and all three `測試` badges remained one line
 (`scrollHeight` equaled `clientHeight`).
 
-| viewport | `互動式校園地圖`     | `體育場館使用人數`   | `竹梅活動觀測站`     | badges     |
-| -------- | -------------------- | -------------------- | -------------------- | ---------- |
+| viewport | `互動式校園地圖` | `體育場館使用人數` | `竹梅活動觀測站` | badges |
+| --- | --- | --- | --- | --- |
 | 1440x900 | 330.1px wide, 1 line | 379.7px wide, 1 line | 379.7px wide, 1 line | 3, no wrap |
 | 1024x768 | 349.2px wide, 1 line | 398.8px wide, 1 line | 398.8px wide, 1 line | 3, no wrap |
-| 390x844  | 212px wide, 1 line   | 261.6px wide, 1 line | 261.6px wide, 1 line | 3, no wrap |
+| 390x844 | 212px wide, 1 line | 261.6px wide, 1 line | 261.6px wide, 1 line | 3, no wrap |
 
 At 1440x900, the `常用功能` card measured 113.6px high while the adjacent
 `校園生活` card measured 353.6px high, confirming that the row no longer

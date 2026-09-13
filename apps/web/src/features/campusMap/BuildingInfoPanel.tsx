@@ -43,7 +43,10 @@ export default function BuildingInfoPanel({
           <MapPin className="h-5 w-5" aria-hidden="true" />
         </div>
         <div className="min-w-0 flex-1">
-          <h2 id="campus-feature-title" className="font-bold text-foreground">
+          <h2
+            id="campus-feature-title"
+            className="font-bold text-foreground"
+          >
             {labelNumber ? `#${labelNumber} ${title}` : title}
           </h2>
           <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 text-sm">

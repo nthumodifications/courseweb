@@ -126,11 +126,7 @@ const GroupViewPage = () => {
       toast({ title: dict.group.joined });
     },
     onError: (e: Error) =>
-      toast({
-        title: dict.group.error,
-        description: e.message,
-        variant: "destructive",
-      }),
+      toast({ title: dict.group.error, description: e.message, variant: "destructive" }),
   });
 
   const leaveMutation = useMutation({
@@ -151,11 +147,7 @@ const GroupViewPage = () => {
       toast({ title: dict.group.deleted });
     },
     onError: (e: Error) =>
-      toast({
-        title: dict.group.error,
-        description: e.message,
-        variant: "destructive",
-      }),
+      toast({ title: dict.group.error, description: e.message, variant: "destructive" }),
   });
 
   const toggleMember = (userId: string) => {
@@ -190,9 +182,7 @@ const GroupViewPage = () => {
   if (!group) {
     return (
       <div className="flex flex-col gap-4 p-4 h-64">
-        <p className="text-muted-foreground leading-relaxed">
-          {dict.group.not_found}
-        </p>
+        <p className="text-muted-foreground leading-relaxed">{dict.group.not_found}</p>
         <Button variant="outline" onClick={() => navigate(-1)}>
           {dict.group.go_back}
         </Button>
@@ -237,11 +227,7 @@ const GroupViewPage = () => {
             <h1 className="text-lg font-medium">{group.name}</h1>
           </div>
           <p className="text-sm text-muted-foreground">
-            {toPrettySemester(semester)} ・{" "}
-            {dict.group.member_count.replace(
-              "{count}",
-              String(group.members.length),
-            )}
+            {toPrettySemester(semester)} ・ {dict.group.member_count.replace("{count}", String(group.members.length))}
           </p>
         </div>
         <div className="flex gap-2">
@@ -270,7 +256,9 @@ const GroupViewPage = () => {
                 variant="destructive"
                 size="sm"
                 onClick={() => {
-                  if (window.confirm(dict.group.delete_confirm)) {
+                  if (
+                    window.confirm(dict.group.delete_confirm)
+                  ) {
                     deleteMutation.mutate();
                   }
                 }}
@@ -316,10 +304,7 @@ const GroupViewPage = () => {
                       {member.label}
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      {dict.group.member_courses.replace(
-                        "{count}",
-                        String(courseIds.length),
-                      )}
+                      {dict.group.member_courses.replace("{count}", String(courseIds.length))}
                     </span>
                   </div>
                   <Button

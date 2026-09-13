@@ -293,8 +293,7 @@ const ScheduleSheet = ({
               )}
             >
               {s.semester}
-              {s.semester.includes(currentSemesterLabel) &&
-                ` ${dict.sports.current}`}
+              {s.semester.includes(currentSemesterLabel) && ` ${dict.sports.current}`}
             </button>
           ))}
           <button
@@ -451,11 +450,7 @@ const SportsVenuesPage = () => {
         <ErrorState
           title={dict.common.load_error}
           action={
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => void retryQueries()}
-            >
+            <Button variant="outline" size="sm" onClick={() => void retryQueries()}>
               {dict.common.try_again}
             </Button>
           }
@@ -493,15 +488,12 @@ const SportsVenuesPage = () => {
       : undefined;
 
     const currentSemester = facility
-      ? getBestAvailableSemester(
-          facility.schedules.map((s) => s.semester),
-          {
-            first: dict.sports.semester_first,
-            second: dict.sports.semester_second,
-            summer: dict.sports.semester_break,
-            winter: dict.sports.semester_winter_break,
-          },
-        )
+      ? getBestAvailableSemester(facility.schedules.map((s) => s.semester), {
+          first: dict.sports.semester_first,
+          second: dict.sports.semester_second,
+          summer: dict.sports.semester_break,
+          winter: dict.sports.semester_winter_break,
+        })
       : null;
     const todaySlots = (() => {
       if (!facility || !currentSemester) return null;
@@ -520,9 +512,7 @@ const SportsVenuesPage = () => {
     <div className="flex flex-col px-4">
       {/* Header */}
       <div className="flex items-center justify-between py-4">
-        <h1 className="text-base font-bold text-foreground">
-          {dict.sports.title}
-        </h1>
+        <h1 className="text-base font-bold text-foreground">{dict.sports.title}</h1>
         <div className="flex items-center gap-2">
           {dataUpdatedAt > 0 && (
             <span className="text-xs text-muted-foreground">
@@ -530,9 +520,9 @@ const SportsVenuesPage = () => {
               {new Date(dataUpdatedAt).toLocaleTimeString(
                 language === "en" ? "en-US" : "zh-TW",
                 {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  second: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
                 },
               )}
             </span>
@@ -606,13 +596,8 @@ const SportsVenuesPage = () => {
 
               {/* Bottom row */}
               <div className="flex flex-row justify-between text-sm text-muted-foreground">
-                <span>
-                  {dict.sports.utilization} {pct}%
-                </span>
-                <span>
-                  {dict.sports.entries_today} {item.entry_count_today}{" "}
-                  {dict.sports.occupancy_people}
-                </span>
+                <span>{dict.sports.utilization} {pct}%</span>
+                <span>{dict.sports.entries_today} {item.entry_count_today} {dict.sports.occupancy_people}</span>
               </div>
             </div>
           );
@@ -670,7 +655,7 @@ const SportsVenuesPage = () => {
 
       {/* Data source */}
       <div className="mt-4 pb-4 text-xs text-muted-foreground">
-        {dict.sports.data_source}
+         {dict.sports.data_source}
         <a
           href="https://peo178.et.nthu.edu.tw"
           target="_blank"

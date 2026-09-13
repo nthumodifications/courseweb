@@ -107,9 +107,7 @@ const TimetableCourseListItem = ({ course }: { course: MinimalCourse }) => {
       <div className="flex flex-col gap-1 items-start">
         <div className="flex flex-row items-center space-x-1">
           <span className="text-base">{course.credits}</span>
-          <span className="text-xs text-muted-foreground">
-            {dict.course.credits}
-          </span>
+          <span className="text-xs text-muted-foreground">{dict.course.credits}</span>
         </div>
         <div className="flex flex-row">
           <Button
@@ -150,11 +148,7 @@ export const FavouritesCourseList = ({}: {}) => {
   const dict = useDictionary();
   const { favourites, setFavourites } = useUserTimetable();
 
-  const {
-    data: courses = [],
-    error,
-    refetch,
-  } = useQuery({
+  const { data: courses = [], error, refetch } = useQuery({
     queryKey: ["courses", [...favourites].sort()],
     queryFn: async () => {
       if (favourites.length == 0) return [] as CourseDefinition[];

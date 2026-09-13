@@ -42,7 +42,7 @@ export function ChatPageContent() {
   if (isLoading) {
     return (
       <div className="flex flex-col h-[calc(var(--content-height)-1rem)]">
-        <div className="flex-1 flex flex-col p-4 gap-4">
+          <div className="flex-1 flex flex-col p-4 gap-4">
           <div className="animate-pulse flex flex-col gap-4">
             <Sparkles className="w-12 h-12 text-muted-foreground" />
             <p className="text-muted-foreground">{dict.common.loading}</p>
@@ -92,7 +92,9 @@ export function ChatPageContent() {
             {messages.length === 0 ? (
               <div className="flex-1 flex flex-col p-4 gap-4">
                 <Sparkles className="w-16 h-16 text-muted-foreground" />
-                <h2 className="text-xl font-medium">{dict.chat.welcome}</h2>
+                <h2 className="text-xl font-medium">
+                  {dict.chat.welcome}
+                </h2>
                 <p className="text-muted-foreground leading-relaxed">
                   {dict.chat.welcome_description}
                 </p>

@@ -30,10 +30,10 @@ restored layout uses `grid-cols-1 lg:grid-cols-2 xl:grid-cols-3` for categories
 and `grid-cols-1 md:grid-cols-2` within each category.
 
 | viewport | before: categories / apps per category | after: categories / apps per category |
-| -------- | -------------------------------------: | ------------------------------------: |
-| 390px    |                                  1 / 1 |                                 1 / 1 |
-| 1024px   |                                  1 / 1 |                                 2 / 2 |
-| 1440px   |                                  1 / 1 |                                 3 / 2 |
+| --- | ---: | ---: |
+| 390px | 1 / 1 | 1 / 1 |
+| 1024px | 1 / 1 | 2 / 2 |
+| 1440px | 1 / 1 | 3 / 2 |
 
 ## Verification
 

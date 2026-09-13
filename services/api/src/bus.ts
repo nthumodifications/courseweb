@@ -156,7 +156,10 @@ async function fetchCompleteBusData(): Promise<CompleteBusData> {
   const url2 =
     "https://affairs.site.nthu.edu.tw/p/412-1165-20979.php?Lang=zh-tw"; // inter-campus (route1/route2)
 
-  const [response1, response2] = await Promise.all([fetch(url1), fetch(url2)]);
+  const [response1, response2] = await Promise.all([
+    fetch(url1),
+    fetch(url2),
+  ]);
 
   let busData: ParsedBusData = {};
 
