@@ -1,18 +1,11 @@
 import React from "react";
 import { Badge } from "@courseweb/ui";
 import { MapPin, Phone, Clock, Info } from "lucide-react";
-import { Separator } from "@courseweb/ui";
+import type { DiningShop } from "./types";
 import useDictionary from "@/dictionaries/useDictionary";
 
 interface ShopItemProps {
-  shop: {
-    image: string;
-    name: string;
-    area: string;
-    phone?: string;
-    schedule: { [key: string]: string };
-    note?: string;
-  };
+  shop: DiningShop;
   filter: {
     search: string;
     open: boolean;
@@ -303,14 +296,15 @@ const ShopItem: React.FC<ShopItemProps> = ({ shop, filter }) => {
     return null;
   }
 
-  const statusLabel = {
-    "營業中": dict.shops.open_now,
-    "休息中": dict.shops.closed,
-    "今日休息": dict.shops.closed_today,
-    "即將開始": dict.shops.opening_soon,
-    "即將休息": dict.shops.closing_soon,
-    "無資訊": dict.shops.no_info,
-  }[status] ?? status;
+  const statusLabel =
+    {
+      營業中: dict.shops.open_now,
+      休息中: dict.shops.closed,
+      今日休息: dict.shops.closed_today,
+      即將開始: dict.shops.opening_soon,
+      即將休息: dict.shops.closing_soon,
+      無資訊: dict.shops.no_info,
+    }[status] ?? status;
   const messageLabel = message
     ?.replace("24小時營業", dict.shops.open_24h)
     .replace("開始營業", dict.shops.opens_at)
@@ -340,7 +334,9 @@ const ShopItem: React.FC<ShopItemProps> = ({ shop, filter }) => {
               >
                 {statusLabel}
               </Badge>
-              <span className="text-muted-foreground text-sm">{messageLabel}</span>
+              <span className="text-muted-foreground text-sm">
+                {messageLabel}
+              </span>
             </div>
           </div>
         </div>
@@ -360,7 +356,9 @@ const ShopItem: React.FC<ShopItemProps> = ({ shop, filter }) => {
                 </span>
               ))
             ) : (
-              <span className="text-muted-foreground text-sm">{dict.shops.no_phone}</span>
+              <span className="text-muted-foreground text-sm">
+                {dict.shops.no_phone}
+              </span>
             )}
           </div>
           <div className="grid grid-cols-[1.5rem_auto]">

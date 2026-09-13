@@ -24,8 +24,9 @@ import {
 import ShopItem from "./ShopItem";
 import areas from "./areas.json";
 import useDictionary from "@/dictionaries/useDictionary";
+import type { DiningArea } from "./types";
 
-const Shops = ({ data }: { data: Array<{ restaurants: Array<any> }> }) => {
+const Shops = ({ data }: { data: DiningArea[] }) => {
   const shops = data.map((area) => area.restaurants).flat();
   const dict = useDictionary();
 
