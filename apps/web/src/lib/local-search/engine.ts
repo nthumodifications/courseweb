@@ -440,6 +440,7 @@ export class LocalSearchEngine {
   private readonly cache: SearchChunkCache;
   private readonly workerFactory: () => SearchWorker | undefined;
   private readonly chunks = new Map<string, Promise<LoadedChunk>>();
+  private readonly failedSemesters = new Set<string>();
   private readonly listeners = new Set<() => void>();
   private status: LocalSearchStatus = "idle";
   private readonly defaultSemester?: string;
@@ -556,13 +557,24 @@ export class LocalSearchEngine {
     const existing = this.chunks.get(semester);
     if (existing) return existing;
     const promise = this.loadChunk(semester).catch((error) => {
-      this.chunks.delete(semester);
+      // Keep the rejected promise cached. Deleting it made every later
+      // keystroke retry the load, so the engine never settled on "error" and
+      // the UI sat on "Preparing local course search…" indefinitely while
+      // re-requesting the chunk. One failure disables the local tier for the
+      // session and the remote tiers serve the query.
+      this.failedSemesters.add(semester);
       this.setStatus("error");
       throw error;
     });
     this.chunks.set(semester, promise);
     return promise;
   }
+
+  /** True once a semester's chunk has failed; callers must use a remote tier. */
+  hasFailed = (semester?: string) =>
+    semester === undefined
+      ? this.failedSemesters.size > 0
+      : this.failedSemesters.has(semester);
 
   private facetMaps(
     records: readonly SearchProjectionRecord[],

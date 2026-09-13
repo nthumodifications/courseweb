@@ -18,8 +18,10 @@ const SearchDegradationBanner = ({
   if (backend === "local-loading") {
     return (
       <Alert className="flex items-center gap-2 p-2 text-sm">
-        <Info className="h-4 w-4" />
-        <AlertDescription>Preparing local course search…</AlertDescription>
+        <Info className="h-4 w-4 shrink-0" />
+        <AlertDescription className="flex flex-1 items-center">
+          {dict.course.search.preparing_local_mode}
+        </AlertDescription>
       </Alert>
     );
   }

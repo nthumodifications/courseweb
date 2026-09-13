@@ -147,6 +147,7 @@
       "search_placeholder": "尋找你要的課程..."
     },
     "search": {
+      "preparing_local_mode": "正在準備本地課程搜尋…",
       "limited_mode": "搜尋目前處於有限模式，部分篩選和排序功能可能無法使用。",
       "dismiss_limited_mode": "關閉有限搜尋模式提示",
       "no_more_results": "沒有更多結果",

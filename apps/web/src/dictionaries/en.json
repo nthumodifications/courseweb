@@ -147,6 +147,7 @@
       "search_placeholder": "Search for your course..."
     },
     "search": {
+      "preparing_local_mode": "Preparing local course search…",
       "limited_mode": "Search is running in limited mode — some filters and ranking may be unavailable.",
       "dismiss_limited_mode": "Dismiss limited search mode",
       "no_more_results": "No more results",
