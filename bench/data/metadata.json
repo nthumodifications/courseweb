@@ -1,0 +1,15 @@
+{
+  "fetchedAt": "2026-09-12T16:26:12.162Z",
+  "envFile": "C:\\Users\\chewt\\Repositories\\courseweb\\apps\\web\\.env",
+  "endpoint": "https://cmzdlrqfpuktcczvsobs.supabase.co/rest/v1/courses",
+  "pageSize": 1000,
+  "semester": {
+    "id": "11510",
+    "source": "supabase-rest",
+    "rowCount": 3165
+  },
+  "all": {
+    "source": "supabase-rest",
+    "rowCount": 57214
+  }
+}

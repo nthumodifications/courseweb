@@ -611,6 +611,66 @@ paths:
                 items:
                   $ref: "#/components/schemas/SyncDocument"
 
+  /search/chunk/manifest:
+    get:
+      tags:
+        - Search
+      summary: Get client-side course search chunk manifest
+      description: Returns one content hash and freshness summary for every semester chunk.
+      responses:
+        "200":
+          description: Search chunk manifest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchChunkManifestResponse"
+        "500":
+          description: Search chunk manifest failed
+
+  /search/chunk/{semester}:
+    get:
+      tags:
+        - Search
+      summary: Get one client-side course search chunk
+      description: Returns the versioned search-only projection for one semester. The body is cacheable and uses a strong ETag; clients must treat a 304 as a cache hit even though Fetch Response.ok is false.
+      parameters:
+        - name: semester
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^[0-9]{5}$"
+        - name: If-None-Match
+          in: header
+          required: false
+          schema:
+            type: string
+          description: Previously received strong ETag.
+      responses:
+        "200":
+          description: Course search chunk
+          headers:
+            ETag:
+              schema:
+                type: string
+            Cache-Control:
+              schema:
+                type: string
+            Content-Encoding:
+              schema:
+                type: string
+                enum: [br, gzip]
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchChunkResponse"
+        "304":
+          description: Chunk unchanged; response has an empty body.
+        "404":
+          description: Semester not found
+        "500":
+          description: Search chunk failed
+
 components:
   securitySchemes:
     BearerAuth:
@@ -619,6 +679,118 @@ components:
       bearerFormat: JWT
 
   schemas:
+    SearchChunkManifestResponse:
+      type: object
+      required: [success, data]
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          type: object
+          required: [schemaVersion, semesters]
+          properties:
+            schemaVersion:
+              type: integer
+              example: 1
+            semesters:
+              type: array
+              items:
+                type: object
+                required: [semester, rowCount, maxUpdatedAt, contentHash]
+                properties:
+                  semester:
+                    type: string
+                  rowCount:
+                    type: integer
+                  maxUpdatedAt:
+                    type: string
+                    nullable: true
+                  contentHash:
+                    type: string
+                    description: SHA-256 of the serialized successful chunk body.
+
+    SearchChunkResponse:
+      type: object
+      required: [success, data]
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          type: object
+          required: [schemaVersion, semester, courses]
+          properties:
+            schemaVersion:
+              type: integer
+            semester:
+              type: string
+            courses:
+              type: array
+              items:
+                $ref: "#/components/schemas/SearchChunkCourse"
+
+    SearchChunkCourse:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          objectID,
+          raw_id,
+          semester,
+          department,
+          course,
+          class,
+          name_en,
+          name_zh,
+          credits,
+          enrolled,
+          language,
+          teacher_zh,
+          times,
+          venues,
+          tags,
+          updated_at,
+          courseLevel,
+          separate_times,
+          for_class,
+        ]
+      properties:
+        objectID: { type: string }
+        raw_id: { type: string }
+        semester: { type: string }
+        department: { type: string }
+        course: { type: string }
+        class: { type: string }
+        name_en: { type: string }
+        name_zh: { type: string }
+        credits: { type: number }
+        capacity: { type: number, nullable: true }
+        reserve: { type: number, nullable: true }
+        enrolled: { type: number }
+        language: { type: string }
+        ge_target: { type: string, nullable: true }
+        ge_type: { type: string, nullable: true }
+        closed_mark: { type: string, nullable: true }
+        note: { type: string, nullable: true }
+        prerequisites: { type: string, nullable: true }
+        restrictions: { type: string, nullable: true }
+        cross_discipline:
+          { type: array, nullable: true, items: { type: string } }
+        teacher_en: { type: array, nullable: true, items: { type: string } }
+        teacher_zh: { type: array, items: { type: string } }
+        first_specialization:
+          { type: array, nullable: true, items: { type: string } }
+        second_specialization:
+          { type: array, nullable: true, items: { type: string } }
+        times: { type: array, items: { type: string } }
+        venues: { type: array, items: { type: string } }
+        tags: { type: array, items: { type: string } }
+        updated_at: { type: string }
+        courseLevel: { type: string }
+        separate_times: { type: array, items: { type: string } }
+        for_class: { type: array, items: { type: string } }
+
     CalendarEvent:
       type: object
       properties:

@@ -15,6 +15,15 @@ const SearchDegradationBanner = ({
     searchClient.getStatus,
     () => "primary" as const,
   );
+  if (backend === "local-loading") {
+    return (
+      <Alert className="flex items-center gap-2 p-2 text-sm">
+        <Info className="h-4 w-4" />
+        <AlertDescription>Preparing local course search…</AlertDescription>
+      </Alert>
+    );
+  }
+
   if (backend !== "fallback" || dismissed) return null;
 
   return (
