@@ -1,19 +1,7 @@
 import algoliasearch from "algoliasearch/lite";
 import type { SearchClient as AlgoliaSearchClient } from "algoliasearch/lite";
-import {
-  createLocalSearchClient,
-  type LocalSearchClient,
-  type LocalSearchClientOptions,
-} from "./local-search/client";
-import { lastSemester } from "@courseweb/shared";
 
-export type SearchBackend =
-  | "local"
-  | "local-loading"
-  | "primary"
-  | "backup"
-  | "fallback";
-type RemoteBackend = Exclude<SearchBackend, "local" | "local-loading">;
+export type SearchBackend = "primary" | "backup" | "fallback";
 
 export type ResilientSearchClient = Pick<
   AlgoliaSearchClient,
@@ -53,28 +41,17 @@ type FallbackPayload<T> = {
   error?: { message?: string; details?: string };
 };
 
-export type ResilientSearchClientOptions = {
-  /** Test/embedded override for the local chunk loader and cache. */
-  localSearch?: LocalSearchClientOptions | false;
-  /** Test/embedded override for the already-configured remote chain. */
-  remoteClient?: AlgoliaSearchClient;
-};
-
 const STORAGE_KEY = "nthumods-search-backend";
 const FALLBACK_RETRY_MS = 5 * 60 * 1000;
-const viteEnv =
-  (
-    import.meta as ImportMeta & {
-      env?: Record<string, string | undefined>;
-    }
-  ).env ?? {};
-
-const API_BASE = (viteEnv.VITE_COURSEWEB_API_URL ?? "").replace(/\/$/, "");
+const API_BASE = (import.meta.env.VITE_COURSEWEB_API_URL ?? "").replace(
+  /\/$/,
+  "",
+);
 
 type PersistedState = {
-  backend: RemoteBackend;
+  backend: SearchBackend;
   retryAt?: number;
-  failedBackend?: Exclude<RemoteBackend, "fallback">;
+  failedBackend?: Exclude<SearchBackend, "fallback">;
   consecutiveFailures?: number;
 };
 
@@ -107,9 +84,9 @@ const readPersistedState = () => {
 };
 
 const setPersistedState = (
-  backend: RemoteBackend,
+  backend: SearchBackend,
   retryAt?: number,
-  failedBackend?: Exclude<RemoteBackend, "fallback">,
+  failedBackend?: Exclude<SearchBackend, "fallback">,
   consecutiveFailures?: number,
 ) => {
   persistedState = {
@@ -202,19 +179,12 @@ const serializeParam = (
 const getSearchParams = (value: unknown): SearchParams =>
   value && typeof value === "object" ? (value as SearchParams) : {};
 
-const fallbackUrl = (
-  request: { params?: unknown },
-  hitsPerPageOverride?: number,
-) => {
+const fallbackUrl = (request: { params?: unknown }) => {
   const values = getSearchParams(request.params);
   const params = new URLSearchParams();
   serializeParam(params, "q", values.query ?? "");
   serializeParam(params, "page", values.page ?? 0);
-  serializeParam(
-    params,
-    "hitsPerPage",
-    hitsPerPageOverride ?? values.hitsPerPage,
-  );
+  serializeParam(params, "hitsPerPage", values.hitsPerPage);
   serializeParam(params, "filters", values.filters);
   serializeParam(params, "numericFilters", values.numericFilters);
   serializeParam(params, "facetFilters", values.facetFilters);
@@ -281,17 +251,17 @@ const emptyFacetResponse = (): FacetResult => ({
 
 const configuredClients = () => {
   const clients: Array<{
-    backend: Exclude<RemoteBackend, "fallback">;
+    backend: Exclude<SearchBackend, "fallback">;
     client: AlgoliaSearchClient;
   }> = [];
   // Bound every tier explicitly. The client defaults to a 2s connect and 5s
   // read timeout, so one unreachable application can hold up the first search
   // of a session for seconds before the next tier is even tried.
   const timeouts = { connect: 1, read: 2, write: 5 };
-  const primaryAppId = viteEnv.VITE_ALGOLIA_APP_ID;
-  const primaryKey = viteEnv.VITE_ALGOLIA_SEARCH_KEY;
-  const backupAppId = viteEnv.VITE_ALGOLIA_BACKUP_APP_ID;
-  const backupKey = viteEnv.VITE_ALGOLIA_BACKUP_SEARCH_KEY;
+  const primaryAppId = import.meta.env.VITE_ALGOLIA_APP_ID;
+  const primaryKey = import.meta.env.VITE_ALGOLIA_SEARCH_KEY;
+  const backupAppId = import.meta.env.VITE_ALGOLIA_BACKUP_APP_ID;
+  const backupKey = import.meta.env.VITE_ALGOLIA_BACKUP_SEARCH_KEY;
 
   if (primaryAppId?.trim() && primaryKey?.trim()) {
     clients.push({
@@ -316,43 +286,12 @@ const configuredClients = () => {
   return clients;
 };
 
-export const createResilientSearchClient = (
-  options: ResilientSearchClientOptions = {},
-): ResilientSearchClient => {
-  const clients = options.remoteClient
-    ? [{ backend: "primary" as const, client: options.remoteClient }]
-    : configuredClients();
-  const localClient: LocalSearchClient | undefined =
-    options.localSearch === false
-      ? undefined
-      : createLocalSearchClient({
-          defaultSemester: lastSemester.id,
-          ...(options.localSearch ?? {}),
-        });
-  const clientByBackend = options.remoteClient
-    ? new Map([["primary", options.remoteClient] as const])
-    : new Map(clients.map((entry) => [entry.backend, entry.client] as const));
+export const createResilientSearchClient = (): ResilientSearchClient => {
+  const clients = configuredClients();
+  const clientByBackend = new Map(
+    clients.map((entry) => [entry.backend, entry.client]),
+  );
   let lastError = false;
-  let localStatus:
-    | Extract<SearchBackend, "local" | "local-loading">
-    | undefined;
-
-  localClient?.subscribe(() => {
-    const status = localClient.getStatus();
-    localStatus =
-      status === "loading"
-        ? "local-loading"
-        : status === "ready"
-          ? "local"
-          : undefined;
-    listeners.forEach((listener) => listener());
-  });
-
-  const clearLocalStatus = () => {
-    if (localStatus === undefined) return;
-    localStatus = undefined;
-    listeners.forEach((listener) => listener());
-  };
 
   const setLastError = (value: boolean) => {
     if (lastError === value) return;
@@ -360,14 +299,14 @@ export const createResilientSearchClient = (
     listeners.forEach((listener) => listener());
   };
 
-  const setWorkingState = (backend: RemoteBackend) =>
+  const setWorkingState = (backend: SearchBackend) =>
     setPersistedState(
       backend,
       backend === "primary" ? undefined : Date.now() + FALLBACK_RETRY_MS,
     );
 
   const setFailureState = (
-    backend: Exclude<RemoteBackend, "fallback">,
+    backend: Exclude<SearchBackend, "fallback">,
     consecutiveFailures: number,
   ) =>
     setPersistedState(
@@ -381,7 +320,7 @@ export const createResilientSearchClient = (
     setPersistedState("fallback", Date.now() + FALLBACK_RETRY_MS);
 
   const getConsecutiveFailures = (
-    backend: Exclude<RemoteBackend, "fallback">,
+    backend: Exclude<SearchBackend, "fallback">,
   ) => {
     const state = getActiveState();
     return state?.failedBackend === backend
@@ -407,7 +346,7 @@ export const createResilientSearchClient = (
     };
 
     const attempt = async (
-      backend: Exclude<RemoteBackend, "fallback">,
+      backend: Exclude<SearchBackend, "fallback">,
     ): Promise<
       | { ok: true; result: T }
       | {
@@ -439,7 +378,7 @@ export const createResilientSearchClient = (
     };
 
     const runCurrentBackend = async (
-      backend: Exclude<RemoteBackend, "fallback">,
+      backend: Exclude<SearchBackend, "fallback">,
     ) => {
       const result = await attempt(backend);
       if (result.ok) return result.result;
@@ -548,58 +487,11 @@ export const createResilientSearchClient = (
     return runCurrentBackend(activeState.backend);
   };
 
-  const tryLocalSearch = async <TObject>(requests: SearchRequests) => {
-    if (!localClient) return undefined;
-    try {
-      const attempt = await localClient.trySearch(
-        requests as unknown as readonly { params?: Record<string, unknown> }[],
-      );
-      if (!attempt.handled) {
-        clearLocalStatus();
-        return undefined;
-      }
-      setLastError(false);
-      localStatus = "local";
-      listeners.forEach((listener) => listener());
-      return attempt.result as unknown as SearchResults<TObject>;
-    } catch (error) {
-      // Manifest, cache, HTTP, and worker errors all deliberately fall through
-      // to Algolia/Supabase. A build failure must not leave the UI frozen.
-      console.error("Local course search unavailable:", error);
-      clearLocalStatus();
-      return undefined;
-    }
-  };
-
-  const tryLocalFacetSearch = async (requests: FacetSearchRequests) => {
-    if (!localClient) return undefined;
-    try {
-      const attempt = await localClient.trySearchForFacetValues(
-        requests as unknown as readonly { params?: Record<string, unknown> }[],
-      );
-      if (!attempt.handled) {
-        clearLocalStatus();
-        return undefined;
-      }
-      setLastError(false);
-      localStatus = "local";
-      listeners.forEach((listener) => listener());
-      return attempt.result as unknown as readonly FacetResult[];
-    } catch (error) {
-      console.error("Local course facet search unavailable:", error);
-      clearLocalStatus();
-      return undefined;
-    }
-  };
-
   const search: AlgoliaSearchClient["search"] = async <TObject>(
     requests: SearchRequests,
     requestOptions?: Parameters<AlgoliaSearchClient["search"]>[1],
-  ) => {
-    const localResult = await tryLocalSearch<TObject>(requests);
-    if (localResult) return localResult;
-    clearLocalStatus();
-    return runWithFailover<SearchResults<TObject>>(
+  ) =>
+    runWithFailover<SearchResults<TObject>>(
       (client) =>
         Promise.resolve(
           client.search<TObject>(requests, requestOptions),
@@ -610,14 +502,9 @@ export const createResilientSearchClient = (
           const results = await Promise.all(
             requests.map(async (request) => {
               try {
-                const values = getSearchParams(request.params);
-                const zeroHitsPerPage = values.hitsPerPage === 0;
-                const response = await fetchFallback<SearchResult<TObject>>(
-                  fallbackUrl(request, zeroHitsPerPage ? 1 : undefined),
+                return await fetchFallback<SearchResult<TObject>>(
+                  fallbackUrl(request),
                 );
-                return zeroHitsPerPage
-                  ? { ...response, hits: [], hitsPerPage: 0, nbPages: 0 }
-                  : response;
               } catch (error) {
                 console.error("Supabase fallback search failed:", error);
                 fallbackHadError = true;
@@ -644,7 +531,6 @@ export const createResilientSearchClient = (
         ),
       }),
     );
-  };
 
   const searchForFacetValues: AlgoliaSearchClient["searchForFacetValues"] =
     async (
@@ -652,11 +538,8 @@ export const createResilientSearchClient = (
       requestOptions?: Parameters<
         AlgoliaSearchClient["searchForFacetValues"]
       >[1],
-    ) => {
-      const localResult = await tryLocalFacetSearch(requests);
-      if (localResult) return localResult;
-      clearLocalStatus();
-      return runWithFailover<readonly FacetResult[]>(
+    ) =>
+      runWithFailover<readonly FacetResult[]>(
         (client) =>
           Promise.resolve(
             client.searchForFacetValues(requests, requestOptions),
@@ -682,16 +565,12 @@ export const createResilientSearchClient = (
         },
         async () => requests.map(() => emptyFacetResponse()),
       );
-    };
 
   return {
     search,
     searchForFacetValues,
     getStatus: () =>
-      localStatus ??
-      getActiveState()?.backend ??
-      clients[0]?.backend ??
-      "fallback",
+      getActiveState()?.backend ?? clients[0]?.backend ?? "fallback",
     hasError: () => lastError,
     subscribe: (listener) => {
       listeners.add(listener);

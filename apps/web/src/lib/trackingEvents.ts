@@ -16,13 +16,11 @@ export const courseEvents = {
     query: string,
     resultsCount: number,
     filters?: Record<string, string>,
-    backend?: string,
   ) => {
     trackEvent("course_search", {
       search_query: query,
       results_count: resultsCount,
       filters: filters || {},
-      search_backend: backend || "unknown",
       timestamp: new Date().toISOString(),
     });
   },
