@@ -3,7 +3,6 @@ import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import supabase_server from "./config/supabase_server";
 import type { Database } from "./types/supabase";
-import { deriveSearchFields, SUPPORTED_FACETS } from "./search-projection";
 
 type CourseRow = Database["public"]["Tables"]["courses"]["Row"];
 type CourseHit = CourseRow & {
@@ -17,6 +16,24 @@ const MAX_SCAN_ROWS = 10_000;
 const MAX_HITS_PER_PAGE = 100;
 const CACHE_CONTROL =
   "public, max-age=30, s-maxage=300, stale-while-revalidate=60";
+const SUPPORTED_FACETS = [
+  "semester",
+  "department",
+  "language",
+  "ge_target",
+  "ge_type",
+  "tags",
+  "times",
+  "venues",
+  "first_specialization",
+  "second_specialization",
+  "cross_discipline",
+  "courseLevel",
+  "separate_times",
+  "for_class",
+  "credits",
+] as const;
+
 type FilterCondition = {
   attribute: string;
   operator: ":" | "=" | "!=" | ">" | ">=" | "<" | "<=";
@@ -114,9 +131,12 @@ const parseConditions = (value?: string): FilterCondition[] => {
   return conditions;
 };
 
-export const getCourseHit = (course: CourseRow): CourseHit => ({
+const getCourseHit = (course: CourseRow): CourseHit => ({
   ...course,
-  ...deriveSearchFields(course),
+  objectID: course.raw_id,
+  courseLevel: `${course.course[0] ?? ""}000`,
+  separate_times: course.times.flatMap((time) => time.match(/.{1,2}/g) ?? []),
+  for_class: [...(course.elective_for ?? []), ...(course.compulsory_for ?? [])],
 });
 
 const getFacetValues = (course: CourseHit, attribute: string): string[] => {
@@ -361,10 +381,10 @@ const fallbackQuerySchema = z.object({
   maxFacetHits: z.coerce.number().int().min(1).max(1000).optional(),
 });
 
-export const createSearchFallbackApp = (
-  loadCoursesFn: typeof loadCourses = loadCourses,
-) =>
-  new Hono().get("/", zValidator("query", fallbackQuerySchema), async (c) => {
+const app = new Hono().get(
+  "/",
+  zValidator("query", fallbackQuerySchema),
+  async (c) => {
     const values = c.req.valid("query");
     const query = values.facetName
       ? (values.facetQuery ?? "")
@@ -387,7 +407,7 @@ export const createSearchFallbackApp = (
       : undefined;
 
     try {
-      const courses = await loadCoursesFn(c, values.facetName ? "" : query);
+      const courses = await loadCourses(c, values.facetName ? "" : query);
       const filteredCourses = courses.filter(
         (course) =>
           matchesFacetGroups(course, facetGroups) &&
@@ -467,6 +487,7 @@ export const createSearchFallbackApp = (
         500,
       );
     }
-  });
+  },
+);
 
-export default createSearchFallbackApp();
+export default app;
