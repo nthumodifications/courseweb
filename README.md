@@ -143,6 +143,19 @@ bun run dev:api          # Main API on http://localhost:5001
 bun run dev:secure-api   # Authentication API on http://localhost:5002
 ```
 
+Each service reads its own secrets, separately from `apps/web/.env.local`:
+
+| Service               | File                       | Contents                                                                   |
+| --------------------- | -------------------------- | -------------------------------------------------------------------------- |
+| `services/api`        | `services/api/.dev.vars`   | See [services/api/README.md](services/api/README.md#environment-variables) |
+| `services/secure-api` | `services/secure-api/.env` | See `services/secure-api/.env.example`                                     |
+
+Neither file is in the repository and neither has a committed example, so ask a
+maintainer for the values. Without `services/api/.dev.vars`, `/course`,
+`/course/dates`, `/acacalendar`, `/weather` and `/search` return HTTP 500, and
+the pages that depend on them — course search, the timetable and `/today` —
+cannot be exercised locally. The bus page works without it.
+
 `bun run dev` starts development tasks across the entire monorepo. For frontend-only work, prefer `bun run dev:web`.
 
 ### Available Scripts
@@ -164,9 +177,9 @@ bun run build:api-types     # Build the shared API types
 
 # Tools
 bun run dict                # Manage the translation dictionary
-bun run dict:create         # Create a translation entry
-bun run dict:remove         # Remove a translation entry
-bun run dict:move           # Move or rename a translation entry
+bun run dict:create <key> <zh> <en>   # Create or overwrite a translation entry
+bun run dict:remove <key>             # Remove a translation entry
+bun run dict:move <from> <to>          # Move or rename a translation entry
 bun run sync:once           # Sync course data once
 bun run sync:scheduled      # Start the scheduled sync service
 

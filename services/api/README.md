@@ -57,6 +57,11 @@ bun install
 
 ### Environment Variables
 
+For local development these go in `services/api/.dev.vars`, which `wrangler dev`
+reads automatically. In production they are Worker secrets, set with
+`bunx wrangler secret put <NAME>`. The file is not in the repository; ask a
+maintainer for the values.
+
 Required environment variables:
 
 ```env
