@@ -671,6 +671,7 @@ const FALLBACK_STATIC_SITEMAP = `<?xml version="1.0" encoding="UTF-8"?>
   <url><loc>https://nthumods.com/zh/courses</loc><changefreq>daily</changefreq><priority>1.00</priority></url>
   <url><loc>https://nthumods.com/zh/timetable</loc><changefreq>weekly</changefreq><priority>0.90</priority></url>
   <url><loc>https://nthumods.com/zh/bus</loc><changefreq>daily</changefreq><priority>0.80</priority></url>
+  <url><loc>https://nthumods.com/zh/laundry</loc><changefreq>daily</changefreq><priority>0.75</priority></url>
 </urlset>`;
 
 function fallbackSitemap(): Response {
@@ -703,6 +704,8 @@ function buildSitemapXML(courses: any[]): string {
     { path: "/en/venues", priority: "0.70", changefreq: "weekly" },
     { path: "/zh/sports-venues", priority: "0.70", changefreq: "weekly" },
     { path: "/en/sports-venues", priority: "0.70", changefreq: "weekly" },
+    { path: "/zh/laundry", priority: "0.75", changefreq: "daily" },
+    { path: "/en/laundry", priority: "0.75", changefreq: "daily" },
     { path: "/zh/chat", priority: "0.65", changefreq: "monthly" },
     { path: "/en/chat", priority: "0.65", changefreq: "monthly" },
     { path: "/zh/shops", priority: "0.65", changefreq: "weekly" },

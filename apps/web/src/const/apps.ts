@@ -12,6 +12,7 @@ import {
   Users,
   MapPinned as CampusMapIcon,
   GraduationCap,
+  WashingMachine,
 } from "lucide-react";
 import ChumeiIcon from "@/components/Apps/ChumeiIcon";
 
@@ -96,6 +97,15 @@ export const apps: {
     title_en: "Sports Venue Occupancy",
     href: "/sports-venues",
     Icon: Dumbbell,
+  },
+  {
+    id: "laundry",
+    category: "campuslife",
+    title_zh: "宿舍洗衣機",
+    title_en: "Dorm Laundry",
+    href: "/laundry",
+    Icon: WashingMachine,
+    beta: true,
   },
   {
     id: "shops",
