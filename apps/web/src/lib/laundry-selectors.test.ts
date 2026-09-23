@@ -6,43 +6,21 @@ import {
   type LaundryMachineStatus,
 } from "./laundry-status";
 
+const machine = (
+  type: LaundryMachine["type"],
+  number: number,
+): LaundryMachine => ({
+  mac: `${type}-${number}`,
+  dorm: "義齋",
+  area: "義齋",
+  slug: "yi",
+  gender: "mixed",
+  type,
+  number,
+});
 const machines: LaundryMachine[] = [
-  {
-    mac: "washer-1",
-    dorm: "義齋",
-    area: "義齋",
-    slug: "yi",
-    gender: "mixed",
-    type: "washer",
-    number: 1,
-  },
-  {
-    mac: "washer-2",
-    dorm: "義齋",
-    area: "義齋",
-    slug: "yi",
-    gender: "mixed",
-    type: "washer",
-    number: 2,
-  },
-  {
-    mac: "washer-3",
-    dorm: "義齋",
-    area: "義齋",
-    slug: "yi",
-    gender: "mixed",
-    type: "washer",
-    number: 3,
-  },
-  {
-    mac: "dryer-1",
-    dorm: "義齋",
-    area: "義齋",
-    slug: "yi",
-    gender: "mixed",
-    type: "dryer",
-    number: 1,
-  },
+  ...[1, 2, 3].map((number) => machine("washer", number)),
+  machine("dryer", 1),
 ];
 const now = 1_790_184_228_160;
 const status = (

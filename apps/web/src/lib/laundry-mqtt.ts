@@ -208,11 +208,7 @@ export function decodeMqttPackets(input: Uint8Array): {
 
 function randomClientId(): string {
   const bytes = new Uint8Array(8);
-  if (globalThis.crypto?.getRandomValues)
-    globalThis.crypto.getRandomValues(bytes);
-  else
-    for (let i = 0; i < bytes.length; i += 1)
-      bytes[i] = Math.floor(Math.random() * 256);
+  globalThis.crypto.getRandomValues(bytes);
   return `nthumods-${Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("")}`;
 }
 
@@ -269,7 +265,7 @@ export class LaundryMqttClient {
   }
 
   private send(packet: Uint8Array): void {
-    if (!this.socket || this.socket.readyState !== 1) return;
+    if (this.socket?.readyState !== 1) return;
     this.socket.send(packet);
   }
 
@@ -313,7 +309,7 @@ export class LaundryMqttClient {
       return;
     }
     if (packet.kind !== "publish") return;
-    const match = packet.topic.match(/^machine\/([^/]+)\/status\/?$/);
+    const match = /^machine\/([^/]+)\/status\/?$/.exec(packet.topic);
     if (!match) return;
     try {
       this.options.onStatus(match[1], JSON.parse(packet.payload), Date.now());

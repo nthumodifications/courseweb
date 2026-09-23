@@ -27,13 +27,10 @@ import {
   type FastestReady,
   type LaundrySummary,
 } from "@/lib/laundry-selectors";
-
 type MachineFilter = "all" | LaundryMachineType;
 type GenderFilter = "all" | Exclude<LaundryGender, "mixed">;
-
 const filterValues: MachineFilter[] = ["all", "washer", "dryer"];
 const genderValues: GenderFilter[] = ["all", "male", "female"];
-
 function replaceTemplate(
   value: string,
   replacements: Record<string, string | number>,
@@ -44,7 +41,6 @@ function replaceTemplate(
     value,
   );
 }
-
 function formatCountdown(seconds: number): string {
   const total = Math.max(0, Math.ceil(seconds));
   const minutes = Math.floor(total / 60)
@@ -53,18 +49,15 @@ function formatCountdown(seconds: number): string {
   const remaining = (total % 60).toString().padStart(2, "0");
   return `${minutes}:${remaining}`;
 }
-
 function formatReadyTime(seconds: number): string {
   return `${Math.max(1, Math.ceil(seconds / 60))}m`;
 }
-
 function machineTypeLabel(
   type: LaundryMachineType,
   dict: ReturnType<typeof useDictionary>,
 ): string {
   return type === "washer" ? dict.laundry.washer : dict.laundry.dryer;
 }
-
 function stateLabel(
   state: LaundryState,
   dict: ReturnType<typeof useDictionary>,
@@ -80,7 +73,6 @@ function stateLabel(
   if (state === "unknown") return dict.laundry.unknown;
   return dict.laundry.offline;
 }
-
 function stateClass(state: LaundryState): string {
   if (state === "available") return "text-emerald-700";
   if (state === "running") return "text-primary";
@@ -97,7 +89,6 @@ function stateClass(state: LaundryState): string {
   }
   return "text-foreground";
 }
-
 function genderLabel(
   gender: LaundryGender,
   dict: ReturnType<typeof useDictionary>,
@@ -106,7 +97,6 @@ function genderLabel(
   if (gender === "female") return dict.laundry.gender_female;
   return null;
 }
-
 function areaGender(
   machines: readonly LaundryMachine[],
   area: LaundryArea,
@@ -119,7 +109,6 @@ function areaGender(
   if (genders.size === 1) return [...genders][0];
   return "mixed";
 }
-
 function fastestText(
   fastest: FastestReady,
   dict: ReturnType<typeof useDictionary>,
@@ -130,14 +119,35 @@ function fastestText(
     time: formatReadyTime(fastest.remainingSeconds),
   });
 }
-
 function isVisibleForGender(
   area: LaundryGender,
   filter: GenderFilter,
 ): boolean {
   return filter === "all" || area === "mixed" || area === filter;
 }
-
+type ConnectionState = ReturnType<typeof useLaundryStatus>["connectionState"];
+function connectionLabel(
+  state: ConnectionState,
+  dict: ReturnType<typeof useDictionary>,
+): string {
+  const labels: Record<ConnectionState, string> = {
+    live: dict.laundry.connection_live,
+    connecting: dict.laundry.connection_connecting,
+    reconnecting: dict.laundry.connection_reconnecting,
+    error: dict.laundry.connection_error,
+  };
+  return labels[state];
+}
+function connectionDotClass(state: ConnectionState): string {
+  const classes: Record<ConnectionState, string> = {
+    live: "bg-emerald-600",
+    connecting: "bg-muted-foreground",
+    reconnecting: "bg-muted-foreground",
+    error: "bg-destructive",
+  };
+  return classes[state];
+}
+const filterIcons = { all: null, washer: WashingMachine, dryer: Wind } as const;
 function defaultExpandedAreas(dorm: LaundryDorm | ""): Set<LaundryArea> {
   return new Set(
     dorm
@@ -147,7 +157,6 @@ function defaultExpandedAreas(dorm: LaundryDorm | ""): Set<LaundryArea> {
       : [],
   );
 }
-
 function hasNoLiveData(
   machines: readonly LaundryMachine[],
   statuses: Readonly<Record<string, LaundryMachineStatus | undefined>>,
@@ -167,7 +176,6 @@ function hasNoLiveData(
     })
   );
 }
-
 const ConnectionIndicator = ({
   state,
   dict,
@@ -175,31 +183,19 @@ const ConnectionIndicator = ({
   state: ReturnType<typeof useLaundryStatus>["connectionState"];
   dict: ReturnType<typeof useDictionary>;
 }) => {
-  const label =
-    state === "live"
-      ? dict.laundry.connection_live
-      : state === "connecting"
-        ? dict.laundry.connection_connecting
-        : state === "reconnecting"
-          ? dict.laundry.connection_reconnecting
-          : dict.laundry.connection_error;
-  const dotClass =
-    state === "live"
-      ? "bg-emerald-600"
-      : state === "error"
-        ? "bg-destructive"
-        : "bg-muted-foreground";
+  const label = connectionLabel(state, dict);
+  const dotClass = connectionDotClass(state);
   return (
-    <span
+    <output
       className="flex shrink-0 items-center gap-2 text-sm text-muted-foreground"
-      role="status"
+      aria-live="polite"
+      aria-atomic="true"
     >
       <span aria-hidden className={cn("h-2 w-2 rounded-full", dotClass)} />
       {label}
-    </span>
+    </output>
   );
 };
-
 const Summary = ({
   type,
   summary,
@@ -250,7 +246,6 @@ const Summary = ({
     </span>
   </div>
 );
-
 const MachineTile = ({
   machine,
   status,
@@ -286,7 +281,6 @@ const MachineTile = ({
           ),
         )
       : null;
-
   return (
     <a
       href={`https://wipepay.com.tw/v2/machine/${machine.mac}/`}
@@ -332,7 +326,6 @@ const MachineTile = ({
     </a>
   );
 };
-
 const LaundrySkeleton = () => (
   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
     {Array.from({ length: 4 }).map((_, index) => (
@@ -355,7 +348,6 @@ const LaundrySkeleton = () => (
     ))}
   </div>
 );
-
 const LaundryPage = () => {
   const dict = useDictionary();
   const { language } = useSettings();
@@ -376,7 +368,6 @@ const LaundryPage = () => {
   const [expandedAreas, setExpandedAreas] = useState<Set<LaundryArea>>(() =>
     defaultExpandedAreas(myDorm),
   );
-
   const updateMyDorm = (value: string) => {
     const next = value as LaundryDorm | "";
     setMyDorm(next);
@@ -394,7 +385,6 @@ const LaundryPage = () => {
       // Private browsing and blocked storage should not prevent live status updates.
     }
   };
-
   const toggleArea = (area: LaundryArea) => {
     setExpandedAreas((current) => {
       const updated = new Set(current);
@@ -403,7 +393,6 @@ const LaundryPage = () => {
       return updated;
     });
   };
-
   const visibleAreas = useMemo(() => {
     return (Object.keys(LAUNDRY_AREAS) as LaundryArea[])
       .filter((area) =>
@@ -425,7 +414,6 @@ const LaundryPage = () => {
         );
       });
   }, [genderFilter, machineFilter, myDorm]);
-
   const title = dict.laundry.title;
   const lastUpdated = lastMessageAt
     ? replaceTemplate(dict.laundry.last_updated, {
@@ -434,7 +422,6 @@ const LaundryPage = () => {
         ),
       })
     : null;
-
   const pageJsonLd = {
     "@context": "https://schema.org",
     "@type": "WebPage",
@@ -443,7 +430,6 @@ const LaundryPage = () => {
     inLanguage: language === "en" ? "en-US" : "zh-TW",
     isPartOf: { "@type": "WebSite", url: "https://nthumods.com" },
   };
-
   if (connectionState === "error" && Object.keys(statuses).length === 0) {
     return (
       <>
@@ -465,7 +451,6 @@ const LaundryPage = () => {
       </>
     );
   }
-
   return (
     <>
       <Helmet>
@@ -504,25 +489,20 @@ const LaundryPage = () => {
                 </option>
               ))}
             </select>
-            <div
-              className="flex shrink-0 gap-1"
-              role="group"
+            <fieldset
+              className="flex shrink-0 gap-1 border-0"
+              style={{ margin: 0, padding: 0 }}
               aria-label={dict.laundry.filter}
             >
+              <legend className="sr-only">{dict.laundry.filter}</legend>
               {filterValues.map((filter) => {
-                const label =
-                  filter === "all"
-                    ? dict.laundry.all
-                    : filter === "washer"
-                      ? dict.laundry.washers
-                      : dict.laundry.dryers;
+                const label = {
+                  all: dict.laundry.all,
+                  washer: dict.laundry.washers,
+                  dryer: dict.laundry.dryers,
+                }[filter];
                 // Icon-only on phones so the whole row fits on one line.
-                const Icon =
-                  filter === "washer"
-                    ? WashingMachine
-                    : filter === "dryer"
-                      ? Wind
-                      : null;
+                const Icon = filterIcons[filter];
                 return (
                   <button
                     type="button"
@@ -547,7 +527,7 @@ const LaundryPage = () => {
                   </button>
                 );
               })}
-            </div>
+            </fieldset>
             <select
               aria-label={dict.laundry.gender}
               id="laundry-gender"
@@ -567,7 +547,6 @@ const LaundryPage = () => {
             </select>
           </div>
         </div>
-
         {Object.keys(statuses).length === 0 && connectionState !== "live" ? (
           <div className="py-4">
             <LaundrySkeleton />
@@ -656,9 +635,8 @@ const LaundryPage = () => {
                     )}
                   </button>
                   {isExpanded && (
-                    <div
+                    <section
                       id={contentId}
-                      role="region"
                       aria-labelledby={headingId}
                       className="mt-3 flex flex-col gap-3 border-t border-border pt-3"
                     >
@@ -691,14 +669,13 @@ const LaundryPage = () => {
                           </div>
                         </div>
                       ))}
-                    </div>
+                    </section>
                   )}
                 </section>
               );
             })}
           </div>
         )}
-
         <div className="h-6" />
         <footer className="flex flex-col gap-1 pb-4 text-xs text-muted-foreground">
           <span>{dict.laundry.data_source}</span>
@@ -708,5 +685,4 @@ const LaundryPage = () => {
     </>
   );
 };
-
 export default LaundryPage;

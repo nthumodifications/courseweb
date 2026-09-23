@@ -87,6 +87,22 @@ function stateForMain(main: number): LaundryState {
   }
 }
 
+function mainStateFromRaw(raw: number, isInteger: boolean): number {
+  if (raw === -1) return -1;
+  if (!isInteger) return 0;
+  return (raw >> 8) & 0xff;
+}
+
+function stateFromRaw(
+  raw: number,
+  isInteger: boolean,
+  main: number,
+): LaundryState {
+  if (raw === -1) return "offline";
+  if (!isInteger) return "unknown";
+  return stateForMain(main);
+}
+
 export function decodeLaundryStatus(
   payload: unknown,
   receivedAtMs: number,
@@ -106,10 +122,9 @@ export function decodeLaundryStatus(
       : receivedAtMs / 1000;
   const raw = value.status;
   const isInteger = Number.isInteger(raw);
-  const main = raw === -1 ? -1 : isInteger ? (raw >> 8) & 0xff : 0;
+  const main = mainStateFromRaw(raw, isInteger);
   const sub = raw === -1 || !isInteger ? 0 : raw & 0xff;
-  const state =
-    raw === -1 ? "offline" : isInteger ? stateForMain(main) : "unknown";
+  const state = stateFromRaw(raw, isInteger, main);
   return {
     mac: value.mac,
     state,
