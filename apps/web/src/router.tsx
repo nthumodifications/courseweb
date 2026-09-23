@@ -28,6 +28,9 @@ const BusPage = lazy(() => import("@/app/[lang]/(mods-pages)/bus/page"));
 const SportsVenuesPage = lazy(
   () => import("@/app/[lang]/(mods-pages)/sports-venues/page"),
 );
+const LaundryPage = lazy(
+  () => import("@/app/[lang]/(mods-pages)/laundry/page"),
+);
 const BusRoutePage = lazy(
   () => import("@/app/[lang]/(mods-pages)/bus/[route]/page"),
 );
@@ -273,6 +276,18 @@ export const router = createBrowserRouter([
                     "Check availability and schedules for NTHU sports facilities. Find courts, pools, and gyms at National Tsing Hua University.",
                   descriptionZh:
                     "查詢清大體育場館使用時間表與空閒狀況。球場、游泳池、健身房，掌握國立清華大學各運動設施最新資訊。",
+                },
+              },
+              {
+                path: "laundry",
+                element: <LaundryPage />,
+                handle: {
+                  title: "Dorm Laundry",
+                  titleZh: "宿舍洗衣機",
+                  description:
+                    "Check live washer and dryer availability across NTHU dormitories before you walk to the laundry room.",
+                  descriptionZh:
+                    "出發前查看清大各宿舍洗衣機與烘衣機的即時狀態。",
                 },
               },
               {
