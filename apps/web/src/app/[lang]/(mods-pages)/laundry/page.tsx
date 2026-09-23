@@ -191,7 +191,7 @@ const ConnectionIndicator = ({
         : "bg-muted-foreground";
   return (
     <span
-      className="flex items-center gap-2 text-sm text-muted-foreground"
+      className="flex shrink-0 items-center gap-2 text-sm text-muted-foreground"
       role="status"
     >
       <span aria-hidden className={cn("h-2 w-2 rounded-full", dotClass)} />
@@ -472,11 +472,11 @@ const LaundryPage = () => {
         <script type="application/ld+json">{JSON.stringify(pageJsonLd)}</script>
       </Helmet>
       <div className="flex flex-col px-4">
-        <div className="flex flex-col gap-4 border-b border-border py-4">
-          <div className="flex flex-wrap items-center gap-4">
+        <div className="flex flex-col gap-2 border-b border-border py-2">
+          <div className="no-scrollbar flex min-w-0 max-w-full items-center gap-2 overflow-x-auto whitespace-nowrap">
             <ConnectionIndicator state={connectionState} dict={dict} />
             {lastUpdated && (
-              <span className="text-xs text-muted-foreground">
+              <span className="shrink-0 text-xs text-muted-foreground">
                 {lastUpdated}
               </span>
             )}
@@ -487,76 +487,75 @@ const LaundryPage = () => {
                 </Button>
               )}
           </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <label
-              className="flex flex-col gap-2 text-sm font-medium text-foreground"
-              htmlFor="laundry-dorm"
-            >
-              {dict.laundry.my_dorm}
-              <select
-                id="laundry-dorm"
-                value={myDorm}
-                onChange={(event) => updateMyDorm(event.target.value)}
-                className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
-              >
-                <option value="">{dict.laundry.all_dorms}</option>
-                {(Object.keys(LAUNDRY_DORMS) as LaundryDorm[]).map((dorm) => (
-                  <option value={dorm} key={dorm}>
-                    {language === "en"
-                      ? LAUNDRY_DORMS[dorm].en
-                      : LAUNDRY_DORMS[dorm].zh}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <div className="flex flex-col gap-2">
-              <span className="text-sm font-medium text-foreground">
-                {dict.laundry.filter}
-              </span>
-              <div
-                className="flex flex-wrap gap-2"
-                role="group"
-                aria-label={dict.laundry.filter}
-              >
-                {filterValues.map((filter) => {
-                  const label =
-                    filter === "all"
-                      ? dict.laundry.all
-                      : filter === "washer"
-                        ? dict.laundry.washers
-                        : dict.laundry.dryers;
-                  return (
-                    <button
-                      type="button"
-                      key={filter}
-                      aria-pressed={machineFilter === filter}
-                      onClick={() => setMachineFilter(filter)}
-                      className={cn(
-                        "rounded-md border px-3 py-2 text-sm font-medium transition-colors",
-                        machineFilter === filter
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-                      )}
-                    >
-                      {label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-          <label
-            className="flex items-center gap-2 text-sm text-muted-foreground"
-            htmlFor="laundry-gender"
-          >
-            {dict.laundry.gender}
+          <div className="no-scrollbar flex min-w-0 max-w-full items-center gap-2 overflow-x-auto whitespace-nowrap">
             <select
+              aria-label={dict.laundry.my_dorm}
+              id="laundry-dorm"
+              value={myDorm}
+              onChange={(event) => updateMyDorm(event.target.value)}
+              className="h-9 min-w-0 flex-1 rounded-md sm:flex-none border border-input bg-background px-2 py-1 text-sm text-foreground"
+            >
+              <option value="">{dict.laundry.all_dorms}</option>
+              {(Object.keys(LAUNDRY_DORMS) as LaundryDorm[]).map((dorm) => (
+                <option value={dorm} key={dorm}>
+                  {language === "en"
+                    ? LAUNDRY_DORMS[dorm].en
+                    : LAUNDRY_DORMS[dorm].zh}
+                </option>
+              ))}
+            </select>
+            <div
+              className="flex shrink-0 gap-1"
+              role="group"
+              aria-label={dict.laundry.filter}
+            >
+              {filterValues.map((filter) => {
+                const label =
+                  filter === "all"
+                    ? dict.laundry.all
+                    : filter === "washer"
+                      ? dict.laundry.washers
+                      : dict.laundry.dryers;
+                // Icon-only on phones so the whole row fits on one line.
+                const Icon =
+                  filter === "washer"
+                    ? WashingMachine
+                    : filter === "dryer"
+                      ? Wind
+                      : null;
+                return (
+                  <button
+                    type="button"
+                    key={filter}
+                    aria-pressed={machineFilter === filter}
+                    onClick={() => setMachineFilter(filter)}
+                    className={cn(
+                      "inline-flex h-9 items-center justify-center rounded-md border px-2 py-1 text-sm font-medium transition-colors",
+                      machineFilter === filter
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                    )}
+                  >
+                    {Icon ? (
+                      <>
+                        <Icon className="h-4 w-4 sm:hidden" aria-hidden />
+                        <span className="sr-only sm:not-sr-only">{label}</span>
+                      </>
+                    ) : (
+                      label
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            <select
+              aria-label={dict.laundry.gender}
               id="laundry-gender"
               value={genderFilter}
               onChange={(event) =>
                 setGenderFilter(event.target.value as GenderFilter)
               }
-              className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
+              className="h-9 shrink-0 rounded-md border border-input bg-background px-2 py-1 text-sm text-foreground"
             >
               {genderValues.map((gender) => (
                 <option value={gender} key={gender}>
@@ -566,7 +565,7 @@ const LaundryPage = () => {
                 </option>
               ))}
             </select>
-          </label>
+          </div>
         </div>
 
         {Object.keys(statuses).length === 0 && connectionState !== "live" ? (
