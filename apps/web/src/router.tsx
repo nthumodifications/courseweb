@@ -302,7 +302,7 @@ export const router = createBrowserRouter([
                   description:
                     "Check real-time available seats, study carrels, discussion rooms, and PC workstations across NTHU libraries.",
                   descriptionZh:
-                    "即時查詢清大總圖書館、夜讀區、人社分館與南大分館之座位與空間空位狀態。",
+                    "即時查詢清大總圖書館、夜讀區、人社分館與科管院之座位與空間空位狀態。",
                 },
               },
               {

@@ -684,6 +684,7 @@ const FALLBACK_STATIC_SITEMAP = `<?xml version="1.0" encoding="UTF-8"?>
   <url><loc>https://nthumods.com/zh/timetable</loc><changefreq>weekly</changefreq><priority>0.90</priority></url>
   <url><loc>https://nthumods.com/zh/bus</loc><changefreq>daily</changefreq><priority>0.80</priority></url>
   <url><loc>https://nthumods.com/zh/laundry</loc><changefreq>daily</changefreq><priority>0.75</priority></url>
+  <url><loc>https://nthumods.com/zh/library</loc><changefreq>daily</changefreq><priority>0.75</priority></url>
 </urlset>`;
 
 function fallbackSitemap(): Response {

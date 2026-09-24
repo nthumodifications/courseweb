@@ -24,6 +24,7 @@ import {
   getBranchFromItem,
   getBranchOpenStatus,
   getCategoryFromItem,
+  getLocalizedSpaceTypeName,
   getTaipeiDate,
   getZoneCapacity,
   LIBRARY_API_ENDPOINT,
@@ -146,12 +147,18 @@ const LibraryPage = () => {
         const rawName = item.zonename.toLowerCase();
         const matchName =
           formattedName.includes(query) || rawName.includes(query);
-        const matchType = item.spacetypename.toLowerCase().includes(query);
+        const localizedType = getLocalizedSpaceTypeName(
+          item,
+          dict,
+        ).toLowerCase();
+        const rawType = item.spacetypename.toLowerCase();
+        const matchType =
+          localizedType.includes(query) || rawType.includes(query);
         if (!matchName && !matchType) return false;
       }
       return true;
     });
-  }, [items, selectedBranch, selectedCategory, searchQuery, language]);
+  }, [items, selectedBranch, selectedCategory, searchQuery, language, dict]);
 
   const mainStatus = getBranchOpenStatus("main", now);
 
@@ -473,7 +480,8 @@ const LibraryPage = () => {
                         )}
                       </div>
                       <span className="text-xs text-muted-foreground">
-                        {branchShortName}・{item.spacetypename}
+                        {branchShortName}・
+                        {getLocalizedSpaceTypeName(item, dict)}
                       </span>
                     </div>
 

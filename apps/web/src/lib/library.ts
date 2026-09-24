@@ -346,3 +346,26 @@ export function formatZoneName(zonename: string, language: string): string {
   if (language !== "en") return zonename;
   return ZONE_NAME_EN_MAP[zonename] ?? zonename;
 }
+
+export function getLocalizedSpaceTypeName(
+  item: LibraryVacancyItem,
+  dict: Record<string, any>,
+): string {
+  const category = getCategoryFromItem(item);
+  switch (category) {
+    case "moonlight":
+      return dict.library?.filter_cat_moonlight ?? item.spacetypename;
+    case "discussion":
+      return dict.library?.filter_cat_discussion ?? item.spacetypename;
+    case "carrel":
+      return dict.library?.filter_cat_carrel ?? item.spacetypename;
+    case "workstation":
+      return dict.library?.filter_cat_workstation ?? item.spacetypename;
+    case "av":
+      return dict.library?.filter_cat_av ?? item.spacetypename;
+    case "group":
+      return dict.library?.filter_cat_group ?? item.spacetypename;
+    default:
+      return item.spacetypename;
+  }
+}

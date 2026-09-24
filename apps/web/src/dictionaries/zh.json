@@ -332,7 +332,7 @@
     "title": "圖書館即時座位與空間空位",
     "subtitle": "即時連線清大圖書館 API · 30 秒自動更新",
     "meta_title": "圖書館即時座位",
-    "meta_description": "即時查詢清大總圖書館、夜讀區、人社分館與南大分館之座位、討論室與資訊島空位狀態。",
+    "meta_description": "即時查詢清大總圖書館、夜讀區、人社分館與科管院之座位、討論室與資訊島空位狀態。",
     "updated_at": "更新於",
     "refresh": "重新整理",
     "booking_portal": "座位預約系統 (libsms)",

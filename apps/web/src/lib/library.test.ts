@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import {
   getBranchFromItem,
   getCategoryFromItem,
+  getLocalizedSpaceTypeName,
   getZoneCapacity,
   getBranchOpenStatus,
   getTaipeiTimeParts,
@@ -60,6 +61,23 @@ describe("library status helpers", () => {
     expect(getCategoryFromItem({ spacetype: 3 } as any)).toBe("av");
     expect(getCategoryFromItem({ spacetype: 5 } as any)).toBe("group");
     expect(getCategoryFromItem({ spacetype: 6 } as any)).toBe("group");
+  });
+
+  test("getLocalizedSpaceTypeName returns localized string from dictionary", () => {
+    const dictEn = {
+      library: {
+        filter_cat_discussion: "Discussion Rooms",
+        filter_cat_workstation: "PC Workstations",
+      },
+    };
+    const item: LibraryVacancyItem = {
+      spacetype: 2,
+      spacetypename: "討論室",
+      zoneid: "2_2A",
+      zonename: "2F-討論室",
+      count: 5,
+    };
+    expect(getLocalizedSpaceTypeName(item, dictEn)).toBe("Discussion Rooms");
   });
 
   test("getZoneCapacity provides reasonable capacities or null for unknown", () => {
