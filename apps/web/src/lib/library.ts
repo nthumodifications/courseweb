@@ -195,11 +195,14 @@ export function getTaipeiTimeParts(date = new Date()): TaipeiTimeParts {
 }
 
 /**
-  Checks if a given date in Taiwan is a recognized national holiday.
+  Checks if a given date in Taiwan is a recognized national holiday,
+  dynamically calculating Chinese Lunar holidays via Intl.DateTimeFormat.
  */
-export function isTaiwanNationalHoliday(parts: TaipeiTimeParts): boolean {
+export function isTaiwanNationalHoliday(
+  date = new Date(),
+  parts = getTaipeiTimeParts(date),
+): boolean {
   const mmdd = `${parts.month.toString().padStart(2, "0")}-${parts.day.toString().padStart(2, "0")}`;
-  const yyyymmdd = `${parts.year}-${mmdd}`;
 
   const fixedHolidays = [
     "01-01", // New Year's Day (元旦)
@@ -210,36 +213,38 @@ export function isTaiwanNationalHoliday(parts: TaipeiTimeParts): boolean {
     "10-10", // National Day (國慶日)
   ];
 
-  // Official Lunar New Year, Dragon Boat, and Mid-Autumn dates
-  const lunarHolidays = [
-    // 2025
-    "2025-01-27",
-    "2025-01-28",
-    "2025-01-29",
-    "2025-01-30",
-    "2025-01-31",
-    "2025-02-01",
-    "2025-05-31",
-    "2025-10-06",
-    // 2026
-    "2026-02-16",
-    "2026-02-17",
-    "2026-02-18",
-    "2026-02-19",
-    "2026-02-20",
-    "2026-06-19",
-    "2026-09-25",
-    // 2027
-    "2027-02-06",
-    "2027-02-07",
-    "2027-02-08",
-    "2027-02-09",
-    "2027-02-10",
-    "2027-06-09",
-    "2027-09-15",
-  ];
+  if (fixedHolidays.includes(mmdd)) return true;
 
-  return fixedHolidays.includes(mmdd) || lunarHolidays.includes(yyyymmdd);
+  // Dynamic Chinese Lunar Calendar lookup via Intl.DateTimeFormat
+  try {
+    const formatter = new Intl.DateTimeFormat("en-US-u-ca-chinese", {
+      timeZone: "Asia/Taipei",
+      month: "numeric",
+      day: "numeric",
+    });
+    const lunarParts = formatter.formatToParts(date);
+    let lunarMonth = 0;
+    let lunarDay = 0;
+
+    for (const p of lunarParts) {
+      if (p.type === "month") lunarMonth = parseInt(p.value, 10);
+      if (p.type === "day") lunarDay = parseInt(p.value, 10);
+    }
+
+    // Lunar New Year's Eve & Days 1-3 (除夕至初三)
+    if (lunarMonth === 12 && (lunarDay === 29 || lunarDay === 30)) return true;
+    if (lunarMonth === 1 && lunarDay >= 1 && lunarDay <= 3) return true;
+
+    // Dragon Boat Festival (端午節: 五月初五)
+    if (lunarMonth === 5 && lunarDay === 5) return true;
+
+    // Mid-Autumn Festival (中秋節: 八月十五)
+    if (lunarMonth === 8 && lunarDay === 15) return true;
+  } catch {
+    // Fallback if environment doesn't support chinese calendar
+  }
+
+  return false;
 }
 
 export type BranchOpenStatus =
@@ -263,7 +268,7 @@ export function getBranchOpenStatus(
     return { status: "open_24h", is24h: true };
   }
 
-  if (isTaiwanNationalHoliday(parts)) {
+  if (isTaiwanNationalHoliday(now, parts)) {
     return { status: "closed", isHoliday: true };
   }
 

@@ -115,8 +115,7 @@ describe("library status helpers", () => {
 
     // National Holiday: 2026-10-10 10:00 Taipei time (National Day)
     const nationalDay = new Date("2026-10-10T02:00:00Z");
-    const parts = getTaipeiTimeParts(nationalDay);
-    expect(isTaiwanNationalHoliday(parts)).toBe(true);
+    expect(isTaiwanNationalHoliday(nationalDay)).toBe(true);
 
     // Main library is closed on National Day
     expect(getBranchOpenStatus("main", nationalDay)).toEqual({
@@ -129,5 +128,18 @@ describe("library status helpers", () => {
       status: "open_24h",
       is24h: true,
     });
+
+    // Dynamic Lunar Holidays tests:
+    // Mid-Autumn 2026 (2026-09-25 UTC ~ Taipei 2026-09-25)
+    const midAutumn2026 = new Date("2026-09-25T02:00:00Z");
+    expect(isTaiwanNationalHoliday(midAutumn2026)).toBe(true);
+
+    // Dragon Boat 2026 (2026-06-19 UTC ~ Taipei 2026-06-19)
+    const dragonBoat2026 = new Date("2026-06-19T02:00:00Z");
+    expect(isTaiwanNationalHoliday(dragonBoat2026)).toBe(true);
+
+    // Lunar New Year Day 1 2026 (2026-02-17 UTC ~ Taipei 2026-02-17)
+    const lunarNewYear2026 = new Date("2026-02-17T02:00:00Z");
+    expect(isTaiwanNationalHoliday(lunarNewYear2026)).toBe(true);
   });
 });
