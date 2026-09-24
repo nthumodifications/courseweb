@@ -328,7 +328,7 @@ const LibraryPage = () => {
                 {dict.library.branch_main_short}{" "}
                 {dict.library.open_until.replace("{time}", mainStatus.openTill)}
               </span>
-            ) : mainStatus.isHoliday ? (
+            ) : mainStatus.status === "closed" && mainStatus.isHoliday ? (
               <span>
                 {dict.library.branch_main_short} {dict.library.closed_holiday}
               </span>
@@ -511,6 +511,7 @@ const LibraryPage = () => {
                         rel="noopener noreferrer"
                         className="text-muted-foreground hover:text-primary transition-colors"
                         title={dict.library.booking_portal_short}
+                        aria-label={`${dict.library.booking_portal_short} - ${displayName}`}
                       >
                         <ChevronRight className="w-4 h-4" />
                       </a>
@@ -525,7 +526,7 @@ const LibraryPage = () => {
                         getProgressColor(ratio),
                       )}
                       style={{
-                        width: `${Math.max(pct, !isClosed && effectiveCount > 0 ? 5 : 0)}%`,
+                        width: `${capacity !== null && !isClosed && effectiveCount > 0 ? Math.max(pct, 5) : pct}%`,
                       }}
                     />
                   </div>

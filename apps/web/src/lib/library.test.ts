@@ -5,7 +5,6 @@ import {
   getLocalizedSpaceTypeName,
   getZoneCapacity,
   getBranchOpenStatus,
-  getTaipeiTimeParts,
   isTaiwanNationalHoliday,
   type LibraryVacancyItem,
 } from "./library";
