@@ -539,7 +539,7 @@ const STATIC_PAGE_METADATA: Record<string, { zh: PageMeta; en: PageMeta }> = {
     zh: {
       title: "清大圖書館即時座位與空間空位 | NTHUMods",
       description:
-        "即時查詢清大總圖書館、夜讀區、人社分館與南大分館之座位、討論室與資訊島空位狀態。",
+        "即時查詢清大總圖書館、夜讀區、人社分館與科管院之座位、討論室與資訊島空位狀態。",
     },
     en: {
       title: "NTHU Library Space & Seat Vacancy Tracker | NTHUMods",

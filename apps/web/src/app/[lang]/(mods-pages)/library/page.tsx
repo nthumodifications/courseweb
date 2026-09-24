@@ -86,8 +86,10 @@ const LibraryPage = () => {
           throw new Error(`Failed to fetch library API (${res.status})`);
         }
         const json = (await res.json()) as LibraryVacancyResponse;
-        if (!json || !Array.isArray(json.rows)) {
-          throw new Error("Invalid API response format");
+        if (!json || json.rescode !== 1 || !Array.isArray(json.rows)) {
+          throw new Error(
+            json?.resmsg || "Invalid or failing API response format",
+          );
         }
         return json.rows;
       },
@@ -238,6 +240,7 @@ const LibraryPage = () => {
               onClick={() => void refetch()}
               disabled={isFetching}
               title={dict.library.refresh}
+              aria-label={dict.library.refresh}
               className="p-1 text-muted-foreground hover:text-primary disabled:opacity-50 transition-colors"
             >
               {isFetching ? (
