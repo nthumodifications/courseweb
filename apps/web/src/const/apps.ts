@@ -13,6 +13,7 @@ import {
   MapPinned as CampusMapIcon,
   GraduationCap,
   WashingMachine,
+  Library,
 } from "lucide-react";
 import ChumeiIcon from "@/components/Apps/ChumeiIcon";
 
@@ -97,6 +98,15 @@ export const apps: {
     title_en: "Sports Venue Occupancy",
     href: "/sports-venues",
     Icon: Dumbbell,
+  },
+  {
+    id: "library",
+    category: "campuslife",
+    title_zh: "圖書館即時座位",
+    title_en: "Library Space Vacancy",
+    href: "/library",
+    Icon: Library,
+    beta: true,
   },
   {
     id: "laundry",

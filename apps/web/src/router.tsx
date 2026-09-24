@@ -31,6 +31,9 @@ const SportsVenuesPage = lazy(
 const LaundryPage = lazy(
   () => import("@/app/[lang]/(mods-pages)/laundry/page"),
 );
+const LibraryPage = lazy(
+  () => import("@/app/[lang]/(mods-pages)/library/page"),
+);
 const BusRoutePage = lazy(
   () => import("@/app/[lang]/(mods-pages)/bus/[route]/page"),
 );
@@ -288,6 +291,18 @@ export const router = createBrowserRouter([
                     "Check live washer and dryer availability across NTHU dormitories before you walk to the laundry room.",
                   descriptionZh:
                     "出發前查看清大各宿舍洗衣機與烘衣機的即時狀態。",
+                },
+              },
+              {
+                path: "library",
+                element: <LibraryPage />,
+                handle: {
+                  title: "Library Space Vacancy",
+                  titleZh: "圖書館即時座位",
+                  description:
+                    "Check real-time available seats, study carrels, discussion rooms, and PC workstations across NTHU libraries.",
+                  descriptionZh:
+                    "即時查詢清大總圖書館、夜讀區、人社分館與南大分館之座位與空間空位狀態。",
                 },
               },
               {
