@@ -86,11 +86,10 @@ const LibraryPage = () => {
           throw new Error(`Failed to fetch library API (${res.status})`);
         }
         const json = (await res.json()) as LibraryVacancyResponse;
-        if (!json || json.rescode !== 1 || !Array.isArray(json.rows)) {
-          throw new Error(
-            json?.resmsg || "Invalid or failing API response format",
-          );
-        }
+if (!json || json.resmsg !== "成功" || !Array.isArray(json.rows)) {
+  throw new Error(
+    json?.resmsg || "Invalid or failing API response format",
+  );
         return json.rows;
       },
       refetchInterval: 30_000,
