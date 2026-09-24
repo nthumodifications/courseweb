@@ -19,17 +19,35 @@ function getLocale(): string {
   return "zh";
 }
 
+// Looks like a language tag (fr, zh-TW, en_us), as opposed to a page name.
+const languageTagPattern = /^[a-z]{2}([-_][a-z]{2,4})?$/i;
+
+/**
+ * Where to send a URL whose first segment is not a supported locale.
+ * `/fr/courses` swaps the unsupported language for the preferred one;
+ * `/laundry` has no language at all, so the whole path is kept.
+ */
+export function localizedRedirectPath(
+  pathname: string,
+  preferredLang: string,
+): string {
+  const firstSegment = pathname.split("/")[1] ?? "";
+  const nestedPath = languageTagPattern.test(firstSegment)
+    ? pathname.replace(/^\/[^/]+/, "")
+    : pathname;
+  const target =
+    nestedPath === "" || nestedPath === "/" ? "/today" : nestedPath;
+  return `/${preferredLang}${target}`;
+}
+
 const LangLayout = () => {
   const { lang } = useParams<{ lang: string }>();
   const location = useLocation();
 
   if (!lang || !locales.includes(lang)) {
-    // Replace the invalid language segment while preserving the nested path.
-    const preferredLang = getLocale();
-    const nestedPath = location.pathname.replace(/^\/[^/]+/, "") || "/today";
     return (
       <Navigate
-        to={`/${preferredLang}${nestedPath === "/" ? "/today" : nestedPath}${location.search}${location.hash}`}
+        to={`${localizedRedirectPath(location.pathname, getLocale())}${location.search}${location.hash}`}
         replace
       />
     );
