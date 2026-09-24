@@ -8,6 +8,7 @@ import {
   isAlgoliaUnusableError,
 } from "./config/algolia";
 import fallbackSearch from "./search-fallback";
+import searchChunk from "./search-chunk";
 
 const searchAlgolia = async (c: Context, query: string, searchParams: any) => {
   const clients = getAlgoliaClients(c);
@@ -159,6 +160,7 @@ const app = new Hono()
       }
     },
   )
+  .route("/chunk", searchChunk)
   .route("/fallback", fallbackSearch)
   .get("/info", (c) => {
     return c.json({
