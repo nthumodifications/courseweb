@@ -438,7 +438,7 @@ const LibraryPage = () => {
               const capacity = getZoneCapacity(item);
               const Icon = getCategoryIcon(category);
               const ratio =
-                capacity > 0 && !isClosed
+                capacity !== null && capacity > 0 && !isClosed
                   ? Math.min(effectiveCount / capacity, 1)
                   : 0;
               const pct = Math.round(ratio * 100);
