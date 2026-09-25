@@ -156,8 +156,14 @@ export interface TaipeiTimeParts {
   Returns Taiwan local time (Asia/Taipei) Date object.
  */
 export function getTaipeiDate(date = new Date()): Date {
-  const utc = date.getTime() + date.getTimezoneOffset() * 60000;
-  return new Date(utc + 3600000 * 8);
+  const parts = getTaipeiTimeParts(date);
+  return new Date(
+    parts.year,
+    parts.month - 1,
+    parts.day,
+    parts.hours,
+    parts.minutes,
+  );
 }
 
 /**

@@ -6,6 +6,7 @@ import {
   getZoneCapacity,
   getBranchOpenStatus,
   isTaiwanNationalHoliday,
+  getTaipeiDate,
   type LibraryVacancyItem,
 } from "./library";
 
@@ -158,5 +159,18 @@ describe("library status helpers", () => {
     // Lunar New Year Day 1 2026 (2026-02-17 UTC ~ Taipei 2026-02-17)
     const lunarNewYear2026 = new Date("2026-02-17T02:00:00Z");
     expect(isTaiwanNationalHoliday(lunarNewYear2026)).toBe(true);
+  });
+
+  test("getTaipeiDate extracts wall-clock components safely", () => {
+    // 2026-09-25T16:00:00Z corresponds to 2026-09-26 00:00:00 Taipei time (Saturday)
+    const utcMidnightSaturday = new Date("2026-09-25T16:00:00Z");
+    const taipeiDate = getTaipeiDate(utcMidnightSaturday);
+
+    expect(taipeiDate.getFullYear()).toBe(2026);
+    expect(taipeiDate.getMonth()).toBe(8); // September (0-indexed)
+    expect(taipeiDate.getDate()).toBe(26);
+    expect(taipeiDate.getHours()).toBe(0);
+    expect(taipeiDate.getMinutes()).toBe(0);
+    expect(taipeiDate.getDay()).toBe(6); // Saturday
   });
 });
