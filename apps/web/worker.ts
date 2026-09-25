@@ -535,6 +535,18 @@ const STATIC_PAGE_METADATA: Record<string, { zh: PageMeta; en: PageMeta }> = {
         "Check availability and schedules for NTHU sports facilities. Find courts, pools, and gyms at National Tsing Hua University.",
     },
   },
+  "/library": {
+    zh: {
+      title: "清大圖書館即時座位與空間空位 | NTHUMods",
+      description:
+        "即時查詢清大總圖書館、夜讀區、人社分館與科管院之座位、討論室與資訊島空位狀態。",
+    },
+    en: {
+      title: "NTHU Library Space & Seat Vacancy Tracker | NTHUMods",
+      description:
+        "Check real-time seat counts, study carrels, discussion rooms, and PC workstations across NTHU libraries.",
+    },
+  },
   "/chat": {
     zh: {
       title: "清大 AI 課程助手 | NTHUMods",
@@ -672,6 +684,7 @@ const FALLBACK_STATIC_SITEMAP = `<?xml version="1.0" encoding="UTF-8"?>
   <url><loc>https://nthumods.com/zh/timetable</loc><changefreq>weekly</changefreq><priority>0.90</priority></url>
   <url><loc>https://nthumods.com/zh/bus</loc><changefreq>daily</changefreq><priority>0.80</priority></url>
   <url><loc>https://nthumods.com/zh/laundry</loc><changefreq>daily</changefreq><priority>0.75</priority></url>
+  <url><loc>https://nthumods.com/zh/library</loc><changefreq>daily</changefreq><priority>0.75</priority></url>
 </urlset>`;
 
 function fallbackSitemap(): Response {
@@ -706,6 +719,8 @@ function buildSitemapXML(courses: any[]): string {
     { path: "/en/sports-venues", priority: "0.70", changefreq: "weekly" },
     { path: "/zh/laundry", priority: "0.75", changefreq: "daily" },
     { path: "/en/laundry", priority: "0.75", changefreq: "daily" },
+    { path: "/zh/library", priority: "0.75", changefreq: "daily" },
+    { path: "/en/library", priority: "0.75", changefreq: "daily" },
     { path: "/zh/chat", priority: "0.65", changefreq: "monthly" },
     { path: "/en/chat", priority: "0.65", changefreq: "monthly" },
     { path: "/zh/shops", priority: "0.65", changefreq: "weekly" },
