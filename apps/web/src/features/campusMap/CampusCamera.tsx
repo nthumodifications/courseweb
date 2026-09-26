@@ -91,6 +91,7 @@ export default function CampusCamera({
     <OrbitControls
       ref={controlsRef}
       makeDefault
+      regress
       enablePan
       enableRotate
       enableZoom
@@ -98,6 +99,9 @@ export default function CampusCamera({
       maxDistance={1_000}
       maxPolarAngle={Math.PI / 2.04}
       target={initialTarget}
+      onStart={() => {
+        tweenRef.current = undefined;
+      }}
       onChange={() => invalidate()}
     />
   );
