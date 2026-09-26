@@ -3,6 +3,7 @@ import type {
   CampusMapData,
   CampusMapFeature,
 } from "@courseweb/shared";
+import { getBuildingModelProfile } from "./buildingModels";
 
 export const DEFAULT_BUILDING_HEIGHT = 12;
 export const CAMPUS_FLOOR_HEIGHT = 3.4;
@@ -51,7 +52,7 @@ export function resolveBuildingHeight(
 export function getBuildingHeight(building: CampusBuilding): number {
   return resolveBuildingHeight(
     building.geometry.height,
-    building.geometry.levels,
+    building.geometry.levels ?? getBuildingModelProfile(building)?.levels,
   );
 }
 

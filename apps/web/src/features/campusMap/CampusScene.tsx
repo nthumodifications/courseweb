@@ -1,36 +1,28 @@
 import { useEffect, useMemo } from "react";
 import { Canvas } from "@react-three/fiber";
-import { Html } from "@react-three/drei";
+import { AdaptiveDpr } from "@react-three/drei";
 import {
   AlwaysStencilFunc,
   EqualStencilFunc,
   KeepStencilOp,
-  MeshStandardMaterial,
   ReplaceStencilOp,
 } from "three";
 import {
   clipGeoPolylineToBounds,
   geoToWorld,
   type CampusAreaFeature,
-  type CampusBuilding,
   type CampusLinearFeature,
   type CampusMapFeature,
   type CampusMapData,
   type LatLon,
 } from "@courseweb/shared";
-import BuildingMesh from "./BuildingMesh";
+import CampusBuildings from "./CampusBuildings";
 import CampusCamera from "./CampusCamera";
+import CampusLabels from "./CampusLabels";
 import CampusTrees from "./CampusTrees";
+import { getCampusRenderQuality, readCampusDeviceHints } from "./renderQuality";
 import { createAreaGeometry, createRibbonGeometry } from "./sceneGeometry";
-import {
-  CAMPUS_BUILDING_COLORS,
-  CAMPUS_ROAD_COLOR,
-  createCampusFeatureLabelNumbers,
-  getBuildingHeight,
-  getCampusFeatureLabelKey,
-  getCampusFeatureNames,
-  isCampusBuilding,
-} from "./sceneLogic";
+import { CAMPUS_ROAD_COLOR, isCampusBuilding } from "./sceneLogic";
 
 type SurfaceProps = {
   areas: CampusAreaFeature[];
@@ -128,6 +120,7 @@ type CampusWorldProps = {
   resetNonce: number;
   language: "en" | "zh";
   onSelectFeature: (feature: CampusMapFeature) => void;
+  maxLabels: number;
 };
 
 function CampusWorld({
@@ -136,55 +129,8 @@ function CampusWorld({
   resetNonce,
   language,
   onSelectFeature,
+  maxLabels,
 }: CampusWorldProps) {
-  const materials = useMemo(
-    () => ({
-      standard: new MeshStandardMaterial({
-        color: CAMPUS_BUILDING_COLORS.standard,
-        roughness: 0.9,
-      }),
-      course: new MeshStandardMaterial({
-        color: CAMPUS_BUILDING_COLORS.course,
-        roughness: 0.82,
-      }),
-      food: new MeshStandardMaterial({
-        color: CAMPUS_BUILDING_COLORS.food,
-        roughness: 0.86,
-      }),
-      dormitory: new MeshStandardMaterial({
-        color: CAMPUS_BUILDING_COLORS.dormitory,
-        roughness: 0.86,
-      }),
-      hovered: new MeshStandardMaterial({ color: "#a56caf", roughness: 0.75 }),
-      selected: new MeshStandardMaterial({ color: "#7e1083", roughness: 0.68 }),
-    }),
-    [],
-  );
-  useEffect(
-    () => () =>
-      Object.values(materials).forEach((material) => material.dispose()),
-    [materials],
-  );
-
-  const labelBuildings = useMemo(() => {
-    const firstByBuilding = new Map<string, CampusBuilding>();
-    data.buildings.forEach((building) => {
-      const key = getCampusFeatureLabelKey(building);
-      if (!firstByBuilding.has(key)) {
-        firstByBuilding.set(key, building);
-      }
-    });
-    return Array.from(firstByBuilding.values());
-  }, [data.buildings]);
-  const labelNumbers = useMemo(
-    () => createCampusFeatureLabelNumbers(data),
-    [data],
-  );
-  const labelAreas = useMemo(
-    () => [...data.water, ...data.areas.filter((area) => Boolean(area.names))],
-    [data.areas, data.water],
-  );
-
   const selectedBuilding =
     selectedFeature && isCampusBuilding(selectedFeature)
       ? selectedFeature
@@ -246,8 +192,8 @@ function CampusWorld({
     <>
       <color attach="background" args={["#e9efe6"]} />
       <fog attach="fog" args={["#e9efe6", 700, 1_650]} />
-      <ambientLight intensity={1.7} />
-      <directionalLight position={[280, 520, 240]} intensity={2.1} />
+      <hemisphereLight args={["#f4f6ed", "#a2ac94", 1.5]} />
+      <directionalLight position={[280, 520, 240]} intensity={1.8} />
 
       <mesh rotation-x={-Math.PI / 2} position={[ground.x, -0.08, ground.z]}>
         <planeGeometry args={[ground.width, ground.depth]} />
@@ -326,107 +272,19 @@ function CampusWorld({
       />
       <CampusTrees trees={data.trees} origin={data.origin} y={0.04} />
 
-      {labelAreas.map((area) => {
-        const world = geoToWorld(area.location, data.origin);
-        const names = getCampusFeatureNames(area);
-        const label = language === "en" ? (names.en ?? names.zh) : names.zh;
-        const labelNumber = labelNumbers.get(getCampusFeatureLabelKey(area));
-        const numberedLabel = `#${labelNumber} ${label}`;
-        const selected = area.id === selectedFeature?.id;
-        return (
-          <Html
-            key={`${area.id}-label`}
-            position={[world.x, 1, world.z]}
-            center
-            distanceFactor={area.kind === "water" ? 220 : 260}
-            zIndexRange={[5, 0]}
-            style={{ pointerEvents: "none" }}
-          >
-            <button
-              type="button"
-              data-campus-feature-id={area.id}
-              data-campus-label-number={labelNumber}
-              aria-label={numberedLabel}
-              className={`pointer-events-auto block whitespace-nowrap rounded-full border px-2 py-1 text-center text-[10px] font-bold leading-tight backdrop-blur-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                selected
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : area.kind === "water"
-                    ? "border-sky-700/20 bg-background/90 text-sky-900 hover:bg-sky-100 dark:text-sky-200 dark:hover:bg-sky-950"
-                    : "border-primary/20 bg-background/90 text-foreground hover:bg-primary/10"
-              }`}
-              onPointerDown={(event) => event.stopPropagation()}
-              onClick={(event) => {
-                event.stopPropagation();
-                onSelectFeature(area);
-              }}
-            >
-              {numberedLabel}
-            </button>
-          </Html>
-        );
-      })}
-
-      {data.buildings.map((building) => {
-        const selected = selectedBuilding
-          ? getCampusFeatureLabelKey(building) ===
-            getCampusFeatureLabelKey(selectedBuilding)
-          : false;
-        return (
-          <BuildingMesh
-            key={building.id}
-            building={building}
-            origin={data.origin}
-            materials={materials}
-            selected={selected}
-            onSelect={onSelectFeature}
-          />
-        );
-      })}
-
-      {labelBuildings.map((building) => {
-        const world = geoToWorld(building.location, data.origin);
-        const label =
-          language === "en"
-            ? (building.names.en ?? building.names.zh)
-            : building.names.zh;
-        const labelNumber = labelNumbers.get(
-          getCampusFeatureLabelKey(building),
-        );
-        const numberedLabel = `#${labelNumber} ${label}`;
-        const selected = selectedBuilding
-          ? getCampusFeatureLabelKey(building) ===
-            getCampusFeatureLabelKey(selectedBuilding)
-          : false;
-        return (
-          <Html
-            key={`${getCampusFeatureLabelKey(building)}-label`}
-            position={[world.x, getBuildingHeight(building) + 7, world.z]}
-            center
-            distanceFactor={260}
-            zIndexRange={[5, 0]}
-            style={{ pointerEvents: "none" }}
-          >
-            <button
-              type="button"
-              data-campus-feature-id={building.id}
-              data-campus-label-number={labelNumber}
-              aria-label={numberedLabel}
-              className={`pointer-events-auto block whitespace-nowrap rounded-full border px-2 py-1 text-center text-[10px] font-bold leading-tight backdrop-blur-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                selected
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-primary/20 bg-background/90 text-foreground hover:bg-primary/10"
-              }`}
-              onPointerDown={(event) => event.stopPropagation()}
-              onClick={(event) => {
-                event.stopPropagation();
-                onSelectFeature(building);
-              }}
-            >
-              {numberedLabel}
-            </button>
-          </Html>
-        );
-      })}
+      <CampusBuildings
+        buildings={data.buildings}
+        origin={data.origin}
+        selected={selectedBuilding}
+        onSelect={onSelectFeature}
+      />
+      <CampusLabels
+        data={data}
+        selected={selectedFeature}
+        language={language}
+        limit={maxLabels}
+        onSelect={onSelectFeature}
+      />
 
       <CampusCamera
         focusFeature={selectedFeature}
@@ -438,7 +296,7 @@ function CampusWorld({
   );
 }
 
-type CampusSceneProps = CampusWorldProps & {
+type CampusSceneProps = Omit<CampusWorldProps, "maxLabels"> & {
   webglFallback: React.ReactNode;
 };
 
@@ -446,19 +304,29 @@ export default function CampusScene({
   webglFallback,
   ...props
 }: CampusSceneProps) {
+  const quality = useMemo(
+    () => getCampusRenderQuality(readCampusDeviceHints()),
+    [],
+  );
+  const dpr = Math.min(
+    Math.max(window.devicePixelRatio || 1, 1),
+    quality.maxDpr,
+  );
   return (
     <Canvas
       frameloop="demand"
-      dpr={[1, 1.5]}
+      dpr={dpr}
+      performance={{ min: 1 / dpr, max: 1, debounce: 180 }}
       camera={{ position: [430, 430, 560], fov: 46, near: 1, far: 2_500 }}
       gl={{
         antialias: false,
-        powerPreference: "high-performance",
+        powerPreference: quality.powerPreference,
         stencil: true,
       }}
       fallback={webglFallback}
     >
-      <CampusWorld {...props} />
+      <CampusWorld {...props} maxLabels={quality.maxLabels} />
+      <AdaptiveDpr />
     </Canvas>
   );
 }
