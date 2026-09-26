@@ -24,6 +24,7 @@ export type LocalSearchClient = {
     requests: readonly LocalSearchRequest[],
   ) => Promise<LocalSearchAttempt<readonly LocalFacetResult[]>>;
   getStatus: () => ReturnType<LocalSearchEngine["getStatus"]>;
+  getText: LocalSearchEngine["getText"];
   subscribe: (listener: () => void) => () => void;
   clear: (semester?: string) => Promise<void>;
 };
@@ -72,6 +73,7 @@ export const createLocalSearchClient = (
       return { handled: true, result: results };
     },
     getStatus: engine.getStatus,
+    getText: engine.getText,
     subscribe: engine.subscribe,
     clear: engine.clear.bind(engine),
   };

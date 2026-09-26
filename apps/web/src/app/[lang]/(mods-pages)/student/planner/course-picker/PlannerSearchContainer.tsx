@@ -8,7 +8,6 @@ import { createInfiniteHitsSessionStorageCache } from "instantsearch.js/es/lib/i
 import { ScrollArea } from "@courseweb/ui";
 import ResetFiltersButton from "@/app/[lang]/(mods-pages)/courses/ResetFiltersButton";
 import { useEffect, useRef } from "react";
-import { useSyncExternalStore } from "react";
 import { cn } from "@courseweb/ui";
 import CourseListItemSkeleton from "@/components/Courses/CourseListItemSkeleton";
 import { MinimalCourse } from "@/types/courses";
@@ -19,6 +18,7 @@ import { CourseSyllabusView } from "@/config/supabase";
 import { useSettings } from "@/hooks/contexts/settings";
 import SearchDegradationBanner from "@/components/Search/SearchDegradationBanner";
 import type { ResilientSearchClient } from "@/lib/search-client";
+import { useCourseTextHits } from "@/hooks/useCourseTextHits";
 
 type SearchClient = ResilientSearchClient;
 type InfiniteHitsCache = ReturnType<
@@ -45,16 +45,11 @@ export function InfiniteHits({
   ...props
 }: InfiniteHitsProps) {
   const dict = useDictionary();
-  const { hits, isLastPage, showMore } = useInfiniteHits<CourseSyllabusView>({
+  const { hits, isLastPage, showMore } = useCourseTextHits(searchClient, {
     showPrevious: false,
     cache: cache as CourseInfiniteHitsCache | undefined,
     ...props,
   });
-  useSyncExternalStore(
-    searchClient.subscribe,
-    searchClient.getVersion,
-    () => 0,
-  );
   const { status } = useInstantSearch();
 
   const sentinelRef = useRef(null);

@@ -5,6 +5,7 @@ import {
   type LocalSearchClient,
   type LocalSearchClientOptions,
 } from "./local-search/client";
+import type { SearchTextRecord } from "./local-search/cache";
 import { lastSemester } from "@courseweb/shared";
 
 export type SearchBackend =
@@ -21,6 +22,11 @@ export type ResilientSearchClient = Pick<
 > & {
   getStatus: () => SearchBackend;
   getVersion: () => number;
+  /**
+   * Syllabus text (brief/keywords) that the local engine loads after the hits
+   * it already served. Undefined when served remotely or not yet loaded.
+   */
+  getCourseText: (rawId: string) => SearchTextRecord | undefined;
   hasError: () => boolean;
   subscribe: (listener: () => void) => () => void;
 };
@@ -706,10 +712,32 @@ export const createResilientSearchClient = (
       clients[0]?.backend ??
       "fallback",
     getVersion: () => version,
+    getCourseText: (rawId) => localClient?.getText(rawId),
     hasError: () => lastError,
     subscribe: (listener) => {
       listeners.add(listener);
       return () => listeners.delete(listener);
     },
   };
+};
+
+/**
+ * Fill a rendered hit with syllabus text the local engine loaded after serving
+ * it. Returns the hit itself when there is nothing newer, so memoized rows keep
+ * their identity.
+ */
+export const withCourseText = <
+  T extends {
+    raw_id: string;
+    brief?: string | null;
+    keywords?: string[] | null;
+  },
+>(
+  hit: T,
+  searchClient: Pick<ResilientSearchClient, "getCourseText">,
+): T => {
+  const text = searchClient.getCourseText(hit.raw_id);
+  if (!text || (hit.brief === text.brief && hit.keywords === text.keywords))
+    return hit;
+  return { ...hit, brief: text.brief, keywords: text.keywords };
 };
