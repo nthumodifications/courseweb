@@ -1,6 +1,5 @@
 import {
   BufferGeometry,
-  ExtrudeGeometry,
   Float32BufferAttribute,
   Path,
   Shape,
@@ -9,12 +8,10 @@ import {
 import {
   geoToWorld,
   type CampusAreaFeature,
-  type CampusBuilding,
   type CampusLinearFeature,
   type GeoCoordinate,
   type LatLon,
 } from "@courseweb/shared";
-import { getBuildingHeight } from "./sceneLogic";
 
 function coordinateToWorld(
   [lon, lat]: GeoCoordinate,
@@ -48,23 +45,6 @@ function createShape(
     return hole;
   });
   return shape;
-}
-
-export function createBuildingGeometry(
-  building: CampusBuilding,
-  origin: LatLon,
-): ExtrudeGeometry {
-  const geometry = new ExtrudeGeometry(
-    createShape(building.geometry.footprint, origin, building.geometry.holes),
-    {
-      depth: getBuildingHeight(building),
-      bevelEnabled: false,
-      curveSegments: 1,
-    },
-  );
-  geometry.rotateX(-Math.PI / 2);
-  geometry.computeBoundingSphere();
-  return geometry;
 }
 
 export function createAreaGeometry(

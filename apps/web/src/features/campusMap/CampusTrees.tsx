@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import {
-  ConeGeometry,
+  IcosahedronGeometry,
   CylinderGeometry,
   InstancedMesh,
   MeshStandardMaterial,
@@ -32,7 +32,7 @@ export default function CampusTrees({ trees, origin, y }: CampusTreesProps) {
   const resources = useMemo(
     () => ({
       trunkGeometry: new CylinderGeometry(0.65, 0.8, 4.8, 5),
-      crownGeometry: new ConeGeometry(3.5, 7.2, 7),
+      crownGeometry: new IcosahedronGeometry(4.2, 0),
       trunkMaterial: new MeshStandardMaterial({
         color: "#766451",
         roughness: 1,
@@ -61,9 +61,13 @@ export default function CampusTrees({ trees, origin, y }: CampusTreesProps) {
       transform.updateMatrix();
       trunk.setMatrixAt(index, transform.matrix);
 
-      transform.position.set(world.x, y + 7.1 * variant.scale, world.z);
+      transform.position.set(world.x, y + 6.8 * variant.scale, world.z);
       transform.rotation.set(0, variant.rotation, 0);
-      transform.scale.setScalar(variant.scale);
+      transform.scale.set(
+        variant.scale,
+        variant.scale * 0.85,
+        variant.scale * 0.92,
+      );
       transform.updateMatrix();
       crown.setMatrixAt(index, transform.matrix);
     });
