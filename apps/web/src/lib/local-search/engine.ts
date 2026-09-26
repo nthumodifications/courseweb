@@ -691,13 +691,13 @@ export class LocalSearchEngine {
     if (textChunk.semester !== semester) {
       throw new Error("Course-search text chunk semester mismatch");
     }
+    // Show the text even when it cannot be versioned for caching (e.g. a
+    // cross-origin response whose ETag is not exposed).
+    this.mergeTextRecords(chunk, textChunk.texts);
     const contentHash =
       unquoteEntityTag(response.headers.get("etag")) ||
-      manifest.textContentHash ||
-      cached?.contentHash;
-    if (!contentHash) {
-      throw new Error("Course-search text chunk has no version token");
-    }
+      manifest.textContentHash;
+    if (!contentHash) return;
     const key = searchTextCacheKey(semester, contentHash, formatVersion);
     await this.cache.setText(key, {
       semester,
@@ -706,7 +706,6 @@ export class LocalSearchEngine {
       texts: textChunk.texts,
     });
     await this.cache.deleteTextSemester(semester, key);
-    this.mergeTextRecords(chunk, textChunk.texts);
   }
 
   private startTextLoad(semester: string, chunk: LoadedChunk) {
