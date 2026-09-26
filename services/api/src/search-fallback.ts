@@ -210,7 +210,40 @@ const rankCourse = (course: CourseHit, query: string) => {
   return 0;
 };
 
-const toSearchHit = (course: CourseHit, attributes?: string[]) => {
+type SyllabusText = Pick<
+  Database["public"]["Tables"]["course_syllabus"]["Row"],
+  "brief" | "keywords"
+>;
+
+/**
+ * brief/keywords live in course_syllabus, not courses, so a plain courses
+ * select returns cards without them. Load them for the returned page only.
+ */
+const loadSyllabusText = async (
+  c: Parameters<typeof supabase_server>[0],
+  rawIds: string[],
+) => {
+  const texts = new Map<string, SyllabusText>();
+  if (rawIds.length === 0) return texts;
+  const { data, error } = await supabase_server(c)
+    .from("course_syllabus")
+    .select("raw_id,brief,keywords")
+    .in("raw_id", rawIds);
+  if (error) {
+    // Cards still render without syllabus text; don't fail the search.
+    console.error("Fallback syllabus text failed:", error.message);
+    return texts;
+  }
+  for (const row of data ?? []) {
+    texts.set(row.raw_id, { brief: row.brief, keywords: row.keywords });
+  }
+  return texts;
+};
+
+const toSearchHit = (
+  course: CourseHit & Partial<SyllabusText>,
+  attributes?: string[],
+) => {
   if (!attributes || attributes.length === 0 || attributes.includes("*")) {
     return course;
   }
@@ -218,7 +251,7 @@ const toSearchHit = (course: CourseHit, attributes?: string[]) => {
   const hit: Record<string, unknown> = { objectID: course.objectID };
   for (const attribute of attributes) {
     if (attribute in course)
-      hit[attribute] = course[attribute as keyof CourseHit];
+      hit[attribute] = course[attribute as keyof typeof course];
   }
   return hit;
 };
@@ -426,9 +459,20 @@ const app = new Hono().get(
           b.raw_id.localeCompare(a.raw_id),
       );
       const start = page * hitsPerPage;
-      const hits = sortedCourses
-        .slice(start, start + hitsPerPage)
-        .map((course) => toSearchHit(course, attributesToRetrieve));
+      const pageCourses = sortedCourses.slice(start, start + hitsPerPage);
+      const texts = await loadSyllabusText(
+        c,
+        pageCourses.map((course) => course.raw_id),
+      );
+      const hits = pageCourses.map((course) =>
+        toSearchHit(
+          {
+            ...course,
+            ...(texts.get(course.raw_id) ?? { brief: null, keywords: null }),
+          },
+          attributesToRetrieve,
+        ),
+      );
       const processingTimeMS = 0;
 
       c.header("Cache-Control", CACHE_CONTROL);
