@@ -29,8 +29,27 @@ const supabaseRpc = mock(() => ({
   }),
 }));
 
+const syllabusIn = mock(async (_column: string, rawIds: string[]) => ({
+  data: rawIds.includes(course.raw_id)
+    ? [
+        {
+          raw_id: course.raw_id,
+          brief: "Limits, derivatives and integrals.",
+          keywords: ["calculus", "analysis"],
+        },
+      ]
+    : [],
+  error: null,
+}));
+
 mock.module("./config/supabase_server", () => ({
-  default: () => ({ rpc: supabaseRpc }),
+  default: () => ({
+    rpc: supabaseRpc,
+    from: (table: string) => {
+      if (table !== "course_syllabus") throw new Error(`unexpected ${table}`);
+      return { select: () => ({ in: syllabusIn }) };
+    },
+  }),
 }));
 
 const { default: fallbackSearch } = await import("./search-fallback");
@@ -71,4 +90,26 @@ describe("search fallback zero-hit pagination", () => {
       expect(payload.data.facets.semester["11420"]).toBe(1);
     },
   );
+});
+
+describe("search fallback syllabus text", () => {
+  test("returns brief and keywords from course_syllabus on each hit", async () => {
+    const response = await fallbackSearch.fetch(
+      new Request("http://localhost/?q=calculus&hitsPerPage=20"),
+      {
+        SUPABASE_URL: "https://supabase.example",
+        SUPABASE_SERVICE_ROLE_KEY: "test",
+      },
+    );
+    const payload = (await response.json()) as {
+      data: { hits: Array<Record<string, unknown>> };
+    };
+
+    expect(response.status).toBe(200);
+    expect(payload.data.hits[0]).toMatchObject({
+      raw_id: course.raw_id,
+      brief: "Limits, derivatives and integrals.",
+      keywords: ["calculus", "analysis"],
+    });
+  });
 });
