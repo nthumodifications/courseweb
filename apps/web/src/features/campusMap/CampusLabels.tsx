@@ -29,7 +29,7 @@ const fixedOverlay = (
   _object: unknown,
   _camera: unknown,
   size: { width: number; height: number },
-) => [size.width / 2, size.height / 2];
+): [number, number] => [size.width / 2, size.height / 2];
 
 export default function CampusLabels({
   data,
