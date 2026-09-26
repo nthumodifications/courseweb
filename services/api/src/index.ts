@@ -44,6 +44,9 @@ export const app = new Hono<{ Bindings: Bindings }>()
     cors({
       origin:
         process.env.NODE_ENV === "production" ? "https://nthumods.com" : "*",
+      // The search text tier versions its IndexedDB cache by ETag, which a
+      // cross-origin fetch cannot read unless it is exposed.
+      exposeHeaders: ["ETag"],
     }),
   )
   // .use(csrf({ origin: process.env.NODE_ENV === "production" ? 'nthumods.com': 'localhost' }))

@@ -286,6 +286,27 @@ describe("local search against the real in-process search-chunk API", () => {
     }
   });
 
+  test("still shows syllabus text when the ETag is not exposed cross-origin", async () => {
+    // A cross-origin fetch cannot read ETag without Access-Control-Expose-Headers.
+    const hiddenEtagFetch = async (
+      input: RequestInfo | URL,
+      init?: RequestInit,
+    ) => {
+      const response = await appFetch(input, init);
+      const headers = new Headers(response.headers);
+      headers.delete("etag");
+      return new Response(response.body, { status: response.status, headers });
+    };
+    const engine = new LocalSearchEngine(engineOptions(hiddenEtagFetch));
+    await engine.search("11510", request());
+    await engine.waitForTextChunk("11510");
+
+    expect(engine.getText("11510AES 450100")).toEqual({
+      brief: "Environmental microorganisms and their applications.",
+      keywords: ["environment", "microbiology"],
+    });
+  });
+
   test("handles 304 revalidation for both separately cached tiers", async () => {
     const cache = new MemorySearchChunkCache();
     const engine = createEngine(cache);
