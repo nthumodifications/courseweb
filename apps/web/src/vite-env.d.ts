@@ -4,6 +4,7 @@ interface ImportMetaEnv {
   readonly VITE_SUPABASE_URL: string;
   readonly VITE_SUPABASE_ANON_KEY: string;
   readonly VITE_COURSEWEB_API_URL: string;
+  readonly VITE_ENABLE_LOCAL_SEARCH?: string;
   readonly VITE_ALGOLIA_APP_ID: string;
   readonly VITE_ALGOLIA_SEARCH_KEY: string;
   readonly VITE_ALGOLIA_BACKUP_APP_ID?: string;

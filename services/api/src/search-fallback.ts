@@ -3,6 +3,7 @@ import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import supabase_server from "./config/supabase_server";
 import type { Database } from "./types/supabase";
+import { deriveSearchFields, SUPPORTED_FACETS } from "./search-projection";
 
 type CourseRow = Database["public"]["Tables"]["courses"]["Row"];
 type CourseHit = CourseRow & {
@@ -16,23 +17,6 @@ const MAX_SCAN_ROWS = 10_000;
 const MAX_HITS_PER_PAGE = 100;
 const CACHE_CONTROL =
   "public, max-age=30, s-maxage=300, stale-while-revalidate=60";
-const SUPPORTED_FACETS = [
-  "semester",
-  "department",
-  "language",
-  "ge_target",
-  "ge_type",
-  "tags",
-  "times",
-  "venues",
-  "first_specialization",
-  "second_specialization",
-  "cross_discipline",
-  "courseLevel",
-  "separate_times",
-  "for_class",
-  "credits",
-] as const;
 
 type FilterCondition = {
   attribute: string;
@@ -131,12 +115,9 @@ const parseConditions = (value?: string): FilterCondition[] => {
   return conditions;
 };
 
-const getCourseHit = (course: CourseRow): CourseHit => ({
+export const getCourseHit = (course: CourseRow): CourseHit => ({
   ...course,
-  objectID: course.raw_id,
-  courseLevel: `${course.course[0] ?? ""}000`,
-  separate_times: course.times.flatMap((time) => time.match(/.{1,2}/g) ?? []),
-  for_class: [...(course.elective_for ?? []), ...(course.compulsory_for ?? [])],
+  ...deriveSearchFields(course),
 });
 
 const getFacetValues = (course: CourseHit, attribute: string): string[] => {

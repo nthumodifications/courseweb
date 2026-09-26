@@ -11,6 +11,7 @@ import Filter from "./Filters";
 import { ScrollArea } from "@courseweb/ui";
 import ResetFiltersButton from "@/app/[lang]/(mods-pages)/courses/ResetFiltersButton";
 import { useEffect, useRef, memo, useMemo } from "react";
+import { useSyncExternalStore } from "react";
 import CourseListItemSkeleton from "../../../../components/Courses/CourseListItemSkeleton";
 import { cn } from "@courseweb/ui";
 import { EmptyState, ErrorState, Separator } from "@courseweb/ui";
@@ -30,24 +31,44 @@ import { MinimalCourse } from "@/types/courses";
 import { courseEvents } from "@/lib/trackingEvents";
 import SearchDegradationBanner from "@/components/Search/SearchDegradationBanner";
 import type { ResilientSearchClient } from "@/lib/search-client";
+import type { CourseSyllabusView } from "@/config/supabase";
 
 type SearchClient = ResilientSearchClient;
 type InfiniteHitsCache = ReturnType<
   typeof createInfiniteHitsSessionStorageCache
 >;
+type CourseInfiniteHitsOptions = NonNullable<
+  Parameters<typeof useInfiniteHits<CourseSyllabusView>>[0]
+>;
+type CourseInfiniteHitsCache = NonNullable<CourseInfiniteHitsOptions["cache"]>;
 
 // Memoize the Hit component to prevent unnecessary re-renders
-const Hit = memo(({ hit }: { hit: any }) => {
+const Hit = memo(({ hit }: { hit: CourseSyllabusView }) => {
   return <CourseListItem course={hit} />;
 });
 Hit.displayName = "Hit";
 
-export function InfiniteHits(props: Parameters<typeof useInfiniteHits>[0]) {
+type InfiniteHitsProps = Omit<CourseInfiniteHitsOptions, "cache"> & {
+  cache?: InfiniteHitsCache;
+  searchClient: SearchClient;
+};
+
+export function InfiniteHits({
+  searchClient,
+  cache,
+  ...props
+}: InfiniteHitsProps) {
   const dict = useDictionary();
-  const { hits, isLastPage, showMore } = useInfiniteHits({
+  const { hits, isLastPage, showMore } = useInfiniteHits<CourseSyllabusView>({
     showPrevious: false,
+    cache: cache as CourseInfiniteHitsCache | undefined,
     ...props,
   });
+  useSyncExternalStore(
+    searchClient.subscribe,
+    searchClient.getVersion,
+    () => 0,
+  );
   const { status, refresh } = useInstantSearch();
   const sentinelRef = useRef(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -164,9 +185,7 @@ const SearchContainer = memo(
       <div className="flex min-w-0 w-full gap-4">
         <div className="hidden md:flex flex-col gap-4 w-72 px-4">
           <div className="flex justify-between items-baseline">
-              <span className="font-bold">
-              {dict.course.refine.title}
-            </span>
+            <span className="font-bold">{dict.course.refine.title}</span>
             <ResetFiltersButton />
           </div>
           <ScrollArea className="">
@@ -253,7 +272,11 @@ const SearchContainer = memo(
               </svg>
             </a>
           </div>
-          <InfiniteHits showPrevious={false} cache={sessionStorageCache} />
+          <InfiniteHits
+            showPrevious={false}
+            cache={sessionStorageCache}
+            searchClient={searchClient}
+          />
         </div>
       </div>
     );

@@ -8,6 +8,7 @@ import { createInfiniteHitsSessionStorageCache } from "instantsearch.js/es/lib/i
 import { ScrollArea } from "@courseweb/ui";
 import ResetFiltersButton from "@/app/[lang]/(mods-pages)/courses/ResetFiltersButton";
 import { useEffect, useRef } from "react";
+import { useSyncExternalStore } from "react";
 import { cn } from "@courseweb/ui";
 import CourseListItemSkeleton from "@/components/Courses/CourseListItemSkeleton";
 import { MinimalCourse } from "@/types/courses";
@@ -23,18 +24,37 @@ type SearchClient = ResilientSearchClient;
 type InfiniteHitsCache = ReturnType<
   typeof createInfiniteHitsSessionStorageCache
 >;
+type CourseInfiniteHitsOptions = NonNullable<
+  Parameters<typeof useInfiniteHits<CourseSyllabusView>>[0]
+>;
+type CourseInfiniteHitsCache = NonNullable<CourseInfiniteHitsOptions["cache"]>;
 
 type InfiniteHitsProps = {
   onAdd?: (course: MinimalCourse) => void;
   onRemove?: (course: MinimalCourse) => void;
   items: ItemDocType[];
-} & Parameters<typeof useInfiniteHits>[0];
-export function InfiniteHits(props: InfiniteHitsProps) {
+  searchClient: SearchClient;
+  cache?: InfiniteHitsCache;
+} & Omit<CourseInfiniteHitsOptions, "cache">;
+export function InfiniteHits({
+  searchClient,
+  onAdd,
+  onRemove,
+  items,
+  cache,
+  ...props
+}: InfiniteHitsProps) {
   const dict = useDictionary();
-  const { hits, isLastPage, showMore } = useInfiniteHits({
+  const { hits, isLastPage, showMore } = useInfiniteHits<CourseSyllabusView>({
     showPrevious: false,
+    cache: cache as CourseInfiniteHitsCache | undefined,
     ...props,
   });
+  useSyncExternalStore(
+    searchClient.subscribe,
+    searchClient.getVersion,
+    () => 0,
+  );
   const { status } = useInstantSearch();
 
   const sentinelRef = useRef(null);
@@ -66,10 +86,10 @@ export function InfiniteHits(props: InfiniteHitsProps) {
           {hits.map((hit) => (
             <PlannerCourseListItem
               key={hit.objectID}
-              course={hit as unknown as CourseSyllabusView}
-              onAdd={props.onAdd}
-              onRemove={props.onRemove}
-              hasTaken={props.items.some((item) => item.raw_id == hit.raw_id)}
+              course={hit}
+              onAdd={onAdd}
+              onRemove={onRemove}
+              hasTaken={items.some((item) => item.raw_id == hit.raw_id)}
             />
           ))}
           <li ref={sentinelRef} />
@@ -155,6 +175,7 @@ const SearchContainer = ({
         <InfiniteHits
           showPrevious={false}
           cache={sessionStorageCache}
+          searchClient={searchClient}
           onAdd={onAdd}
           onRemove={onRemove}
           items={items}
