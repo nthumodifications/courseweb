@@ -11,7 +11,6 @@ import Filter from "./Filters";
 import { ScrollArea } from "@courseweb/ui";
 import ResetFiltersButton from "@/app/[lang]/(mods-pages)/courses/ResetFiltersButton";
 import { useEffect, useRef, memo, useMemo } from "react";
-import { useSyncExternalStore } from "react";
 import CourseListItemSkeleton from "../../../../components/Courses/CourseListItemSkeleton";
 import { cn } from "@courseweb/ui";
 import { EmptyState, ErrorState, Separator } from "@courseweb/ui";
@@ -30,10 +29,8 @@ import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { MinimalCourse } from "@/types/courses";
 import { courseEvents } from "@/lib/trackingEvents";
 import SearchDegradationBanner from "@/components/Search/SearchDegradationBanner";
-import {
-  withCourseText,
-  type ResilientSearchClient,
-} from "@/lib/search-client";
+import type { ResilientSearchClient } from "@/lib/search-client";
+import { useCourseTextHits } from "@/hooks/useCourseTextHits";
 import type { CourseSyllabusView } from "@/config/supabase";
 
 type SearchClient = ResilientSearchClient;
@@ -62,27 +59,11 @@ export function InfiniteHits({
   ...props
 }: InfiniteHitsProps) {
   const dict = useDictionary();
-  const {
-    hits: rawHits,
-    isLastPage,
-    showMore,
-  } = useInfiniteHits<CourseSyllabusView>({
+  const { hits, isLastPage, showMore } = useCourseTextHits(searchClient, {
     showPrevious: false,
     cache: cache as CourseInfiniteHitsCache | undefined,
     ...props,
   });
-  const searchVersion = useSyncExternalStore(
-    searchClient.subscribe,
-    searchClient.getVersion,
-    () => 0,
-  );
-  // Brief/keywords arrive after the local hits are rendered and cached.
-  const hits = useMemo(
-    () => rawHits.map((hit) => withCourseText(hit, searchClient)),
-    // searchVersion changes when the local text tier lands.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [rawHits, searchClient, searchVersion],
-  );
   const { status, refresh } = useInstantSearch();
   const sentinelRef = useRef(null);
   const scrollRef = useRef<HTMLDivElement>(null);

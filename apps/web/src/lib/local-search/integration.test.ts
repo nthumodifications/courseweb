@@ -123,14 +123,19 @@ class InlineFlexSearchWorker implements SearchWorker {
   terminate() {}
 }
 
+const engineOptions = (
+  fetch: typeof appFetch | undefined,
+  cache = new MemorySearchChunkCache(),
+) => ({
+  baseUrl: "https://api.example.test",
+  cache,
+  fetch,
+  workerFactory: () => new InlineFlexSearchWorker(),
+  defaultSemester: "11510",
+});
+
 const createEngine = (cache = new MemorySearchChunkCache()) =>
-  new LocalSearchEngine({
-    baseUrl: "https://api.example.test",
-    cache,
-    fetch: appFetch,
-    workerFactory: () => new InlineFlexSearchWorker(),
-    defaultSemester: "11510",
-  });
+  new LocalSearchEngine(engineOptions(appFetch, cache));
 
 const courseRequests = () =>
   appRequests.filter((request) => request.url.endsWith("/search/chunk/11510"));
@@ -219,13 +224,7 @@ describe("local search against the real in-process search-chunk API", () => {
         },
         searchForFacetValues: async () => [],
       } as unknown as AlgoliaSearchClient,
-      localSearch: {
-        baseUrl: "https://api.example.test",
-        cache: new MemorySearchChunkCache(),
-        fetch: appFetch,
-        workerFactory: () => new InlineFlexSearchWorker(),
-        defaultSemester: "11510",
-      },
+      localSearch: engineOptions(appFetch),
     });
     let notified = 0;
     resilient.subscribe(() => {
@@ -278,12 +277,7 @@ describe("local search against the real in-process search-chunk API", () => {
       return appFetch(input, init);
     } as typeof fetch;
     try {
-      const engine = new LocalSearchEngine({
-        baseUrl: "https://api.example.test",
-        cache: new MemorySearchChunkCache(),
-        workerFactory: () => new InlineFlexSearchWorker(),
-        defaultSemester: "11510",
-      });
+      const engine = new LocalSearchEngine(engineOptions(undefined));
       const result = await engine.search("11510", request());
       expect(result.hits[0]?.objectID).toBe("11510AES 450100");
       await engine.waitForTextChunk("11510");
@@ -405,13 +399,7 @@ describe("local search against the real in-process search-chunk API", () => {
     );
     const failedFetch = async (input: RequestInfo | URL, init?: RequestInit) =>
       failingApp.request(String(input), init);
-    const local = createLocalSearchClient({
-      baseUrl: "https://api.example.test",
-      cache: new MemorySearchChunkCache(),
-      fetch: failedFetch,
-      workerFactory: () => new InlineFlexSearchWorker(),
-      defaultSemester: "11510",
-    });
+    const local = createLocalSearchClient(engineOptions(failedFetch));
 
     await expect(local.trySearch([request({ query: "E" })])).rejects.toThrow();
     for (const query of ["", "E", "Env"]) {
@@ -444,13 +432,7 @@ describe("local search against the real in-process search-chunk API", () => {
     } as unknown as AlgoliaSearchClient;
     const resilient = createResilientSearchClient({
       remoteClient,
-      localSearch: {
-        baseUrl: "https://api.example.test",
-        cache: new MemorySearchChunkCache(),
-        fetch: failedFetch,
-        workerFactory: () => new InlineFlexSearchWorker(),
-        defaultSemester: "11510",
-      },
+      localSearch: engineOptions(failedFetch),
     });
     const remoteResult = (await resilient.search([
       request({ query: "E" }),
