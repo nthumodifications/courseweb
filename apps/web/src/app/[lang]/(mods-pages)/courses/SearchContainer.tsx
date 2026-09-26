@@ -30,7 +30,10 @@ import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { MinimalCourse } from "@/types/courses";
 import { courseEvents } from "@/lib/trackingEvents";
 import SearchDegradationBanner from "@/components/Search/SearchDegradationBanner";
-import type { ResilientSearchClient } from "@/lib/search-client";
+import {
+  withCourseText,
+  type ResilientSearchClient,
+} from "@/lib/search-client";
 import type { CourseSyllabusView } from "@/config/supabase";
 
 type SearchClient = ResilientSearchClient;
@@ -59,15 +62,26 @@ export function InfiniteHits({
   ...props
 }: InfiniteHitsProps) {
   const dict = useDictionary();
-  const { hits, isLastPage, showMore } = useInfiniteHits<CourseSyllabusView>({
+  const {
+    hits: rawHits,
+    isLastPage,
+    showMore,
+  } = useInfiniteHits<CourseSyllabusView>({
     showPrevious: false,
     cache: cache as CourseInfiniteHitsCache | undefined,
     ...props,
   });
-  useSyncExternalStore(
+  const searchVersion = useSyncExternalStore(
     searchClient.subscribe,
     searchClient.getVersion,
     () => 0,
+  );
+  // Brief/keywords arrive after the local hits are rendered and cached.
+  const hits = useMemo(
+    () => rawHits.map((hit) => withCourseText(hit, searchClient)),
+    // searchVersion changes when the local text tier lands.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [rawHits, searchClient, searchVersion],
   );
   const { status, refresh } = useInstantSearch();
   const sentinelRef = useRef(null);

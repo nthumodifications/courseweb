@@ -5,6 +5,7 @@ import {
   type CachedSearchChunk,
   type CachedSearchTextChunk,
   type SearchChunkCache,
+  type SearchTextRecord,
 } from "./cache";
 import {
   facetValues,
@@ -504,6 +505,10 @@ export class LocalSearchEngine {
   private readonly chunks = new Map<string, Promise<LoadedChunk>>();
   private readonly failedChunks = new Map<string, Error>();
   private readonly textLoads = new Map<string, Promise<void>>();
+  // Rendered hits are copies (InstantSearch spreads each hit and caches the
+  // page), so merging into records alone never reaches hits already on
+  // screen. Views read deferred text back through getText instead.
+  private readonly texts = new Map<string, SearchTextRecord>();
   private readonly listeners = new Set<() => void>();
   private status: LocalSearchStatus = "idle";
   private readonly defaultSemester?: string;
@@ -515,13 +520,17 @@ export class LocalSearchEngine {
       env.VITE_COURSEWEB_API_URL ??
       ""
     ).replace(/\/$/, "");
-    this.fetchFn = options.fetch ?? fetch;
+    // Called as this.fetchFn(...), so a bare `fetch` would run with the engine
+    // as `this` and browsers throw "Illegal invocation".
+    this.fetchFn = options.fetch ?? ((input, init) => fetch(input, init));
     this.cache = options.cache ?? createIndexedDbSearchChunkCache();
     this.workerFactory = options.workerFactory ?? defaultWorkerFactory;
     this.defaultSemester = options.defaultSemester;
   }
 
   getStatus = () => this.status;
+
+  getText = (rawId: string) => this.texts.get(rawId);
 
   subscribe = (listener: () => void) => {
     this.listeners.add(listener);
@@ -635,6 +644,7 @@ export class LocalSearchEngine {
     for (const record of chunk.records) {
       const text = texts[record.raw_id];
       if (!text) continue;
+      this.texts.set(record.raw_id, text);
       if (record.brief !== text.brief || record.keywords !== text.keywords) {
         record.brief = text.brief;
         record.keywords = text.keywords;

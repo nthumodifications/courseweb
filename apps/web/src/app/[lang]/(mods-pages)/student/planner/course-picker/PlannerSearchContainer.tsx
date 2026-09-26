@@ -7,7 +7,7 @@ import useDictionary from "@/dictionaries/useDictionary";
 import { createInfiniteHitsSessionStorageCache } from "instantsearch.js/es/lib/infiniteHitsCache";
 import { ScrollArea } from "@courseweb/ui";
 import ResetFiltersButton from "@/app/[lang]/(mods-pages)/courses/ResetFiltersButton";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useSyncExternalStore } from "react";
 import { cn } from "@courseweb/ui";
 import CourseListItemSkeleton from "@/components/Courses/CourseListItemSkeleton";
@@ -18,7 +18,10 @@ import PlannerFilters from "./PlannerFilters";
 import { CourseSyllabusView } from "@/config/supabase";
 import { useSettings } from "@/hooks/contexts/settings";
 import SearchDegradationBanner from "@/components/Search/SearchDegradationBanner";
-import type { ResilientSearchClient } from "@/lib/search-client";
+import {
+  withCourseText,
+  type ResilientSearchClient,
+} from "@/lib/search-client";
 
 type SearchClient = ResilientSearchClient;
 type InfiniteHitsCache = ReturnType<
@@ -45,15 +48,26 @@ export function InfiniteHits({
   ...props
 }: InfiniteHitsProps) {
   const dict = useDictionary();
-  const { hits, isLastPage, showMore } = useInfiniteHits<CourseSyllabusView>({
+  const {
+    hits: rawHits,
+    isLastPage,
+    showMore,
+  } = useInfiniteHits<CourseSyllabusView>({
     showPrevious: false,
     cache: cache as CourseInfiniteHitsCache | undefined,
     ...props,
   });
-  useSyncExternalStore(
+  const searchVersion = useSyncExternalStore(
     searchClient.subscribe,
     searchClient.getVersion,
     () => 0,
+  );
+  // Brief/keywords arrive after the local hits are rendered and cached.
+  const hits = useMemo(
+    () => rawHits.map((hit) => withCourseText(hit, searchClient)),
+    // searchVersion changes when the local text tier lands.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [rawHits, searchClient, searchVersion],
   );
   const { status } = useInstantSearch();
 

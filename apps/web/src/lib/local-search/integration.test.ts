@@ -16,7 +16,7 @@ import {
   searchChunkCacheKey,
   searchTextCacheKey,
 } from "./client";
-import { createResilientSearchClient } from "../search-client";
+import { createResilientSearchClient, withCourseText } from "../search-client";
 import { buildFlexSearchIndex } from "./flexsearch-index";
 import type { SearchWorker, WorkerRequest } from "./worker-protocol";
 
@@ -209,6 +209,87 @@ describe("local search against the real in-process search-chunk API", () => {
     ]);
     expect(cache.entries()).toHaveLength(1);
     expect(cache.textEntries()).toHaveLength(1);
+  });
+
+  test("fills hits InstantSearch already copied when the text tier lands", async () => {
+    const resilient = createResilientSearchClient({
+      remoteClient: {
+        search: async () => {
+          throw new Error("remote must not be called");
+        },
+        searchForFacetValues: async () => [],
+      } as unknown as AlgoliaSearchClient,
+      localSearch: {
+        baseUrl: "https://api.example.test",
+        cache: new MemorySearchChunkCache(),
+        fetch: appFetch,
+        workerFactory: () => new InlineFlexSearchWorker(),
+        defaultSemester: "11510",
+      },
+    });
+    let notified = 0;
+    resilient.subscribe(() => {
+      notified += 1;
+    });
+    const { results } = (await resilient.search([request()] as never)) as {
+      results: Array<{
+        hits: Array<{
+          raw_id: string;
+          brief: string | null;
+          keywords: string[] | null;
+        }>;
+      }>;
+    };
+    // InstantSearch spreads each hit (addAbsolutePosition) and caches the
+    // page, so what is on screen is a snapshot taken before the text tier.
+    const rendered = results[0]!.hits.map((hit) => ({ ...hit }));
+    const versionBefore = resilient.getVersion();
+
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    for (
+      let i = 0;
+      i < 20 && !resilient.getCourseText(rendered[0]!.raw_id);
+      i++
+    )
+      await new Promise((resolve) => setTimeout(resolve, 5));
+
+    expect(rendered[0]!.brief).toBeNull();
+    expect(resilient.getVersion()).toBeGreaterThan(versionBefore);
+    expect(notified).toBeGreaterThan(0);
+    expect(withCourseText(rendered[0]!, resilient)).toMatchObject({
+      raw_id: "11510AES 450100",
+      brief: "Environmental microorganisms and their applications.",
+      keywords: ["environment", "microbiology"],
+    });
+  });
+
+  test("calls the global fetch with a valid receiver when none is injected", async () => {
+    const originalFetch = globalThis.fetch;
+    // Browsers throw "Illegal invocation" when fetch runs with a non-window
+    // `this`; Bun does not, so assert the receiver explicitly.
+    globalThis.fetch = function (
+      this: unknown,
+      input: RequestInfo | URL,
+      init?: RequestInit,
+    ) {
+      if (this !== undefined && this !== globalThis) {
+        return Promise.reject(new TypeError("Illegal invocation"));
+      }
+      return appFetch(input, init);
+    } as typeof fetch;
+    try {
+      const engine = new LocalSearchEngine({
+        baseUrl: "https://api.example.test",
+        cache: new MemorySearchChunkCache(),
+        workerFactory: () => new InlineFlexSearchWorker(),
+        defaultSemester: "11510",
+      });
+      const result = await engine.search("11510", request());
+      expect(result.hits[0]?.objectID).toBe("11510AES 450100");
+      await engine.waitForTextChunk("11510");
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
   });
 
   test("handles 304 revalidation for both separately cached tiers", async () => {
