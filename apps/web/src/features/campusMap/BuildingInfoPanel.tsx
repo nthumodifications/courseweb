@@ -1,5 +1,7 @@
 import { Button, ExternalLink, MapPin, X } from "@courseweb/ui";
 import type { CampusMapFeature } from "@courseweb/shared";
+import PlacesAtBuilding from "./PlacesAtBuilding";
+import { getCampusDiningLocation } from "./diningLocations";
 import {
   getCampusFeatureGoogleMapsUrl,
   getCampusFeatureNames,
@@ -32,21 +34,19 @@ export default function BuildingInfoPanel({
   const googleMapsUrl = getCampusFeatureGoogleMapsUrl(feature);
   const building = isCampusBuilding(feature) ? feature : undefined;
   const venue = building?.venue;
+  const diningLocation = getCampusDiningLocation(feature);
 
   return (
     <section
-      className="pointer-events-auto w-full rounded-xl border border-border bg-background/95 p-4 backdrop-blur-md"
+      className="pointer-events-auto flex max-h-[min(65dvh,36rem)] w-full flex-col overflow-hidden rounded-xl border border-border bg-background/95 p-4 backdrop-blur-md"
       aria-labelledby="campus-feature-title"
     >
-      <div className="flex items-start gap-3">
+      <div className="flex shrink-0 items-start gap-3">
         <div className="mt-0.5 rounded-lg bg-primary/10 p-2 text-primary">
           <MapPin className="h-5 w-5" aria-hidden="true" />
         </div>
         <div className="min-w-0 flex-1">
-          <h2
-            id="campus-feature-title"
-            className="font-bold text-foreground"
-          >
+          <h2 id="campus-feature-title" className="font-bold text-foreground">
             {labelNumber ? `#${labelNumber} ${title}` : title}
           </h2>
           <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 text-sm">
@@ -72,12 +72,15 @@ export default function BuildingInfoPanel({
         </Button>
       </div>
 
-      <Button asChild className="mt-4 w-full">
+      <Button asChild className="mt-4 w-full shrink-0">
         <a href={googleMapsUrl} target="_blank" rel="noopener noreferrer">
           {labels.openGoogleMaps}
           <ExternalLink className="ml-2 h-4 w-4" aria-hidden="true" />
         </a>
       </Button>
+      {diningLocation && (
+        <PlacesAtBuilding key={diningLocation} location={diningLocation} />
+      )}
     </section>
   );
 }

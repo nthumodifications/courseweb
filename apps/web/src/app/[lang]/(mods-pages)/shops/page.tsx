@@ -1,27 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
 import ShopList from "./ShopList";
 import useDictionary from "@/dictionaries/useDictionary";
-import type { DiningArea } from "./types";
-import client from "@/config/api";
+import useDining from "@/features/dining/useDining";
 import { Button, ErrorState } from "@courseweb/ui";
 
 export default function Page() {
   const dict = useDictionary();
-  const {
-    data = [],
-    isLoading,
-    error,
-    refetch,
-  } = useQuery<DiningArea[]>({
-    queryKey: ["dining"],
-    queryFn: async () => {
-      const res = await client.dining.$get();
-      if (!res.ok) {
-        throw new Error("Failed to fetch dining data");
-      }
-      return (await res.json()) as DiningArea[];
-    },
-  });
+  const { data = [], isLoading, error, refetch } = useDining();
 
   if (isLoading) {
     return (
