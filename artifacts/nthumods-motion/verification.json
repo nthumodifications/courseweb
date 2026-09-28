@@ -1,0 +1,18 @@
+{
+  "duration": "00:00:15.00",
+  "frames": 900,
+  "fps": 60,
+  "width": 1080,
+  "height": 1920,
+  "format": "H.264 / AAC stereo 48 kHz",
+  "bytes": 5155403,
+  "decode_errors": false,
+  "black_frames": false,
+  "unexpected_frozen_sections": false,
+  "intentional_closing_brand_hold": [
+    13.2
+  ],
+  "silent_gaps": false,
+  "soundtrack": "Original synthesized score at 128 BPM",
+  "storyboard": "Extracted from final encoded MP4"
+}
