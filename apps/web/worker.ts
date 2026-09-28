@@ -14,6 +14,14 @@ function isStaticAssetPath(pathname: string): boolean {
   );
 }
 
+// The assets binding's default html_handling answers /index.html with a 307
+// to /. Fetch the shell by its canonical path so neither this worker nor the
+// PWA service worker (whose navigation fallback requests /index.html and
+// cannot answer a navigation with a redirected response) ever sees that 307.
+function fetchAppShell(env: Env, origin: string, init?: Request) {
+  return env.ASSETS.fetch(new Request(`${origin}/`, init));
+}
+
 function missingAssetResponse(): Response {
   return new Response("Asset not found", {
     status: 404,
@@ -192,9 +200,7 @@ async function handleCourseDetailPage(
     }
 
     const meta = buildCourseMetaData(course, lang);
-    const shellRes = await env.ASSETS.fetch(
-      new Request(`${origin}/index.html`),
-    );
+    const shellRes = await fetchAppShell(env, origin);
 
     let rewriter = new HTMLRewriter()
       .on("title", {
@@ -255,7 +261,7 @@ async function handleMissingCourse(
   env: Env,
   origin: string,
 ): Promise<Response> {
-  const shellRes = await env.ASSETS.fetch(new Request(`${origin}/index.html`));
+  const shellRes = await fetchAppShell(env, origin);
   const coursesUrl = `https://nthumods.com/${lang}/courses`;
 
   const notFoundShell = new Response(shellRes.body, {
@@ -318,9 +324,7 @@ async function handleDepartmentPage(url: URL, env: Env): Promise<Response> {
     const zhUrl = `https://nthumods.com/zh/courses?department=${encodeURIComponent(dept)}`;
     const enUrl = `https://nthumods.com/en/courses?department=${encodeURIComponent(dept)}`;
 
-    const shellRes = await env.ASSETS.fetch(
-      new Request(`${url.origin}/index.html`),
-    );
+    const shellRes = await fetchAppShell(env, url.origin);
 
     let rewriter = new HTMLRewriter()
       .on("title", {
@@ -371,7 +375,7 @@ async function handleBusPage(
   env: Env,
   origin: string,
 ): Promise<Response> {
-  const fallback = () => env.ASSETS.fetch(new Request(`${origin}/index.html`));
+  const fallback = () => fetchAppShell(env, origin);
 
   try {
     const routeNames: Record<string, { zh: string; en: string }> = {
@@ -396,9 +400,7 @@ async function handleBusPage(
     const zhUrl = `https://nthumods.com/zh/bus/${route}`;
     const enUrl = `https://nthumods.com/en/bus/${route}`;
 
-    const shellRes = await env.ASSETS.fetch(
-      new Request(`${origin}/index.html`),
-    );
+    const shellRes = await fetchAppShell(env, origin);
 
     let rewriter = new HTMLRewriter()
       .on("title", {
@@ -611,9 +613,7 @@ async function handleGenericBotPage(url: URL, env: Env): Promise<Response> {
   const pagePath = pathname.replace(/^\/(zh|en)/, "") || "/";
   const meta = STATIC_PAGE_METADATA[pagePath]?.[lang];
 
-  const shellRes = await env.ASSETS.fetch(
-    new Request(`${url.origin}/index.html`),
-  );
+  const shellRes = await fetchAppShell(env, url.origin);
 
   let rewriter = new HTMLRewriter().on('link[rel="canonical"]', {
     element(el) {
@@ -882,6 +882,10 @@ async function generateSitemap(env: Env): Promise<Response> {
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+
+    if (url.pathname === "/index.html") {
+      return fetchAppShell(env, url.origin, request);
+    }
 
     if (isStaticAssetPath(url.pathname)) {
       return fetchStaticAsset(request, env);

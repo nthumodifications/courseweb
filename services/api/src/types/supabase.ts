@@ -849,6 +849,16 @@ export type Database = {
       };
     };
     Functions: {
+      search_manifest: {
+        Args: {
+          p_semester?: string | null;
+        };
+        Returns: {
+          semester: string;
+          row_count: number;
+          max_updated_at: string | null;
+        }[];
+      };
       cds_time_slots: {
         Args: {
           "": unknown;

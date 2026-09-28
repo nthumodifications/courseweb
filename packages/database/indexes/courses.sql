@@ -1,11 +1,12 @@
-create index courses_name_zh ON courses USING pgroonga(name_zh);
-create index courses_teacher_zh ON courses USING pgroonga(teacher_zh);
-create index courses_name_en ON courses USING pgroonga(name_en);
-create index courses_teacher_en ON courses USING pgroonga(teacher_en);
-create index courses_department ON courses USING pgroonga(department);
-create index courses_course ON courses USING pgroonga(course);
-create index courses_raw_id ON courses USING pgroonga(raw_id);
-create index courses_keywords ON course_syllabus USING pgroonga(keywords);
+create index if not exists courses_semester ON courses USING btree(semester);
+create index if not exists courses_name_zh ON courses USING pgroonga(name_zh);
+create index if not exists courses_teacher_zh ON courses USING pgroonga(teacher_zh);
+create index if not exists courses_name_en ON courses USING pgroonga(name_en);
+create index if not exists courses_teacher_en ON courses USING pgroonga(teacher_en);
+create index if not exists courses_department ON courses USING pgroonga(department);
+create index if not exists courses_course ON courses USING pgroonga(course);
+create index if not exists courses_raw_id ON courses USING pgroonga(raw_id);
+create index if not exists courses_keywords ON course_syllabus USING pgroonga(keywords);
 
 CREATE OR REPLACE FUNCTION search_courses(keyword text)
 RETURNS SETOF courses AS
@@ -27,7 +28,7 @@ END
 $func$
 LANGUAGE plpgsql;
 
-DROP FUNCTION search_courses_with_syllabus;
+DROP FUNCTION IF EXISTS search_courses_with_syllabus;
 
 CREATE OR REPLACE FUNCTION search_courses_with_syllabus(keyword text)
 RETURNS TABLE(

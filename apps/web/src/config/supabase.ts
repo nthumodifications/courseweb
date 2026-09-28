@@ -20,7 +20,7 @@ export type CourseJoinWithSyllabus = CourseDefinition & {
 };
 export type CourseSyllabusView = CourseDefinition & {
   brief: string | null;
-  keywords: string | null;
+  keywords: CourseSyllabusDefinition["keywords"];
 };
 export type AlertDefinition = Database["public"]["Tables"]["alerts"]["Row"];
 export type BusScheduleDefinition =
