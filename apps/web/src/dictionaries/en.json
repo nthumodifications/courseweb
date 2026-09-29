@@ -867,7 +867,9 @@
     "no_phone": "None",
     "area_placeholder": "Select area",
     "area_all": "Anywhere",
-    "load_error": "Unable to load shop data."
+    "load_error": "Unable to load shop data.",
+    "view_on_map": "View on map",
+    "map_unavailable": "This location is not yet covered by the campus map"
   },
   "help": {
     "button": "Help",

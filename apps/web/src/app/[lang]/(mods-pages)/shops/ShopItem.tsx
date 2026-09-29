@@ -1,6 +1,8 @@
 import React from "react";
-import { Badge } from "@courseweb/ui";
-import { MapPin, Phone, Clock, Info } from "lucide-react";
+import { Badge, Button } from "@courseweb/ui";
+import { MapPin, MapPinned, Phone, Clock, Info } from "lucide-react";
+import { Link, useParams } from "react-router-dom";
+import { getDiningMapHref } from "@/features/dining/locations";
 import type { DiningShop } from "./types";
 import useDictionary from "@/dictionaries/useDictionary";
 
@@ -262,6 +264,8 @@ const checkOpen = (schedule: string): [boolean, string, string?] => {
 
 const ShopItem: React.FC<ShopItemProps> = ({ shop, filter }) => {
   const dict = useDictionary();
+  const { lang } = useParams<{ lang: string }>();
+  const mapHref = getDiningMapHref(lang, shop.area);
   const days = [
     "sunday",
     "weekday",
@@ -319,7 +323,7 @@ const ShopItem: React.FC<ShopItemProps> = ({ shop, filter }) => {
           className="w-24 h-24 sm:w-32 sm:h-32 rounded-3xl object-cover"
         />
       </div>
-      <div className="flex-1">
+      <div className="min-w-0 flex-1">
         <div className="flex flex-col">
           <span className="font-bold">{shop.name}</span>
           <div className="flex items-center gap-1">
@@ -374,6 +378,21 @@ const ShopItem: React.FC<ShopItemProps> = ({ shop, filter }) => {
             </div>
           )}
         </div>
+        {mapHref ? (
+          <Button asChild variant="outline" size="sm" className="mt-3 min-h-11">
+            <Link
+              to={mapHref}
+              aria-label={`${dict.shops.view_on_map} · ${shop.name}`}
+            >
+              <MapPinned className="mr-2 h-4 w-4" aria-hidden="true" />
+              {dict.shops.view_on_map}
+            </Link>
+          </Button>
+        ) : (
+          <p className="mt-3 text-xs text-muted-foreground">
+            {dict.shops.map_unavailable}
+          </p>
+        )}
       </div>
     </div>
   );

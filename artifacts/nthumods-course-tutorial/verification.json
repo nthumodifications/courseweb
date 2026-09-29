@@ -1,0 +1,24 @@
+{
+  "duration": "00:00:26.00",
+  "frames": 1560,
+  "fps": 60,
+  "width": 1080,
+  "height": 1920,
+  "language": "zh-Hant",
+  "format": "H.264 / AAC stereo 48 kHz",
+  "bytes": 3234598,
+  "decode_errors": false,
+  "black_frames": false,
+  "silent_gaps": false,
+  "low_motion_reading_holds": [
+    3.05,
+    10.183333,
+    14.55,
+    19.516667,
+    23.933333
+  ],
+  "soundtrack": "Original cheerful C-major score, 120 BPM",
+  "example_course": "11510CS  235101",
+  "timetable_matches_source": "Tuesday periods 3 and 4, Thursday period 3",
+  "storyboard": "Extracted from the final encoded MP4"
+}

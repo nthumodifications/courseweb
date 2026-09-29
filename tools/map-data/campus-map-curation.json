@@ -488,7 +488,7 @@
       "number": 73,
       "featureIds": ["osm-way-454598246-0"],
       "sourceIds": ["way/454598246"],
-      "name": "慈塘生態池"
+      "name": "生態池"
     },
     {
       "number": 74,
@@ -753,9 +753,25 @@
       "zh": "成功湖畔社辦",
       "en": "Societies Office by the Cheng Kung Lake"
     },
+    "43": {
+      "zh": "電工房",
+      "en": "Electrical Workshop"
+    },
     "53": {
       "zh": "梅園",
       "en": "Plum Garden"
+    },
+    "59": {
+      "zh": "相思湖",
+      "en": "Hsiang Szi Lake"
+    },
+    "72": {
+      "zh": "儒齋",
+      "en": "Ru Dormitory"
+    },
+    "73": {
+      "zh": "生態池",
+      "en": "Ecological Pond"
     },
     "84": {
       "zh": "奕園",
