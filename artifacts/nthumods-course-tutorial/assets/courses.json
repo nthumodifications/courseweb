@@ -1,0 +1,53 @@
+[
+  {
+    "raw_id": "11510CS  235101",
+    "department": "CS",
+    "course": "2351",
+    "class": "1",
+    "name_zh": "資料結構",
+    "teacher_zh": [
+      "沈之涯"
+    ],
+    "times": [
+      "T3T4R3"
+    ],
+    "venues": [
+      "DELTA台達109"
+    ],
+    "credits": 3
+  },
+  {
+    "raw_id": "11510CS  235102",
+    "department": "CS",
+    "course": "2351",
+    "class": "2",
+    "name_zh": "資料結構",
+    "teacher_zh": [
+      "顏子斌"
+    ],
+    "times": [
+      "T3T4R3"
+    ],
+    "venues": [
+      "DELTA台達108"
+    ],
+    "credits": 3
+  },
+  {
+    "raw_id": "11510IEEM314000",
+    "department": "IEEM",
+    "course": "3140",
+    "class": "0",
+    "name_zh": "資料結構",
+    "teacher_zh": [
+      "許倍源"
+    ],
+    "times": [
+      "R6R7R8"
+    ],
+    "venues": [
+      "ENG I工一827"
+    ],
+    "credits": 3
+  }
+]
