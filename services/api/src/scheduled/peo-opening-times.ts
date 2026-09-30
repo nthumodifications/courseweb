@@ -112,7 +112,7 @@ export async function parsePdfWithProviders(
       pdfRequired: true,
       system:
         "You extract public opening hours from NTHU sports facility PDFs. Return only the requested JSON. Exclude reservations, cleaning, maintenance, and non-public sessions.",
-      text: `Facility: ${facilityNameZh}\nToday's date: ${today}\n\nChoose the date-range block containing today's date, or the nearest upcoming block. For each weekday, include only publicly open time slots. Use 24-hour HH:MM strings. Traditional Chinese notes are acceptable; use an empty string when there are no notes.`,
+      text: `Facility: ${facilityNameZh}\nToday's date: ${today}\n\nChoose the date-range block containing today's date, or the nearest upcoming block. For each weekday, include only publicly open time slots. Use 24-hour HH:MM strings. Traditional Chinese notes are acceptable; use an empty string when there are no notes. If the facility has no public open time at all (closed for construction, reservation-only, classes and team training only), return empty days and put that reason in notes.`,
       schema: PEO_SCHEMA,
     });
     const parsed = result.data;
@@ -123,8 +123,8 @@ export async function parsePdfWithProviders(
     const hours = {} as DaySchedule;
     for (const day of days) hours[day] = toSlots(parsed[day]);
     hours.notes = typeof parsed.notes === "string" ? parsed.notes : null;
-    if (isEmptyWeek(hours)) {
-      console.warn(`[peo] ${facilityNameZh}: no open slots extracted, treating as unparsed`);
+    if (isUnreadableWeek(hours)) {
+      console.warn(`[peo] ${facilityNameZh}: no open slots and no reason given, treating as unparsed`);
       return null;
     }
     return {
@@ -144,12 +144,18 @@ const WEEK_DAYS = [
   "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
 ] as const;
 
-/**
- * No facility is shut all week during term. An all-empty week means the
- * parser read nothing, so it must not be stored as "closed every day".
- */
 export function isEmptyWeek(hours: DaySchedule): boolean {
   return WEEK_DAYS.every((day) => hours[day].length === 0);
+}
+
+/**
+ * Some facilities really have no public hours (the track closed for
+ * construction, reservation-only studios); the parser says why in notes.
+ * An empty week with no reason means the PDF was not actually read, and it
+ * must not be stored as "closed every day".
+ */
+export function isUnreadableWeek(hours: DaySchedule): boolean {
+  return isEmptyWeek(hours) && !hours.notes?.trim();
 }
 
 export async function syncPeoOpeningTimes(
@@ -204,7 +210,7 @@ export async function syncPeoOpeningTimes(
         for (const schedule of facility.schedules) {
           // Entries parsed from unreadable PDFs were stored as all-empty weeks;
           // treat them as missing so they are parsed again.
-          if (schedule.hours !== null && isEmptyWeek(schedule.hours)) {
+          if (schedule.hours !== null && isUnreadableWeek(schedule.hours)) {
             schedule.hours = null;
             clearedEmptyWeeks = true;
           } else if (schedule.hours !== null) {
