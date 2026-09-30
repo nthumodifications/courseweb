@@ -150,7 +150,19 @@
       "limited_mode": "搜尋目前處於有限模式，部分篩選和排序功能可能無法使用。",
       "dismiss_limited_mode": "關閉有限搜尋模式提示",
       "no_more_results": "沒有更多結果",
-      "no_results": "找不到符合的課程"
+      "no_results": "找不到符合的課程",
+      "ai_search": {
+        "toggle": "啟用 AI 搜尋",
+        "toggle_off": "停用 AI 搜尋",
+        "placeholder": "描述你想找的課程…",
+        "submit": "使用 AI 搜尋",
+        "assistant": "完整 AI 助手",
+        "loading": "正在理解你的需求…",
+        "error": "AI 搜尋暫時無法使用，請稍後再試。",
+        "rate_limited": "AI 搜尋目前較忙，請稍後再試。",
+        "undo": "復原 AI 搜尋",
+        "dismiss": "清除 AI 搜尋"
+      }
     },
     "item": {
       "add_to_semester": "加入",

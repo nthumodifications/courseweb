@@ -150,7 +150,19 @@
       "limited_mode": "Search is running in limited mode — some filters and ranking may be unavailable.",
       "dismiss_limited_mode": "Dismiss limited search mode",
       "no_more_results": "No more results",
-      "no_results": "No matching courses"
+      "no_results": "No matching courses",
+      "ai_search": {
+        "toggle": "Enable AI search",
+        "toggle_off": "Disable AI search",
+        "placeholder": "Describe the courses you want...",
+        "submit": "Search with AI",
+        "assistant": "Full AI assistant",
+        "loading": "Understanding your request...",
+        "error": "AI search is temporarily unavailable. Try again.",
+        "rate_limited": "AI search is busy right now. Please try again shortly.",
+        "undo": "Undo AI search",
+        "dismiss": "Clear AI search"
+      }
     },
     "item": {
       "add_to_semester": "Add",
