@@ -870,8 +870,24 @@ export async function testGeminiKey(
       classification.code === "auth" || classification.code === "quota"
         ? classification.code
         : "unavailable";
-    return { ok: false, code, error: classification.message };
+    return { ok: false, code, error: readableProviderMessage(classification.message) };
   }
+}
+
+/** Google errors arrive as a JSON string; the user only needs its message. */
+export function readableProviderMessage(message: string): string {
+  const start = message.indexOf("{");
+  if (start >= 0) {
+    try {
+      const parsed = JSON.parse(message.slice(start)) as {
+        error?: { message?: unknown };
+      };
+      if (typeof parsed.error?.message === "string") return parsed.error.message.trim();
+    } catch {
+      // Not JSON after all; fall through to the raw text.
+    }
+  }
+  return message.slice(0, 300);
 }
 
 interface ToolCall {

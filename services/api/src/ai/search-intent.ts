@@ -1,4 +1,4 @@
-import { departments as sharedDepartments } from "@courseweb/shared/dist/index.js";
+import { departments as sharedDepartments } from "./departments";
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";

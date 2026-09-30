@@ -5,6 +5,7 @@ import {
   convertToolDeclarations,
   generateJSON,
   normalizeWorkersAiOutput,
+  readableProviderMessage,
   validateAgainstSchema,
 } from "./llm";
 
@@ -296,5 +297,16 @@ describe("normalizeWorkersAiOutput", () => {
     expect(out.toolCalls).toEqual([
       { id: "call_0", name: "search_courses", args: { query: "ml" } },
     ]);
+  });
+});
+
+describe("readableProviderMessage", () => {
+  it("pulls the message out of a Google error body", () => {
+    expect(
+      readableProviderMessage(
+        '{"error":{"code":400,"message":"API key not valid. Please pass a valid API key.","status":"INVALID_ARGUMENT"}}',
+      ),
+    ).toBe("API key not valid. Please pass a valid API key.");
+    expect(readableProviderMessage("groq 413: plain text")).toBe("groq 413: plain text");
   });
 });
