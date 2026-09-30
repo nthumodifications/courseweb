@@ -746,6 +746,9 @@ async function generateWorkersJson(
     response_format: { type: "json_object" },
     guided_json: options.schema,
     temperature: 0.1,
+    // Reasoning models (gpt-oss) spend tokens thinking first; the default cap
+    // cuts the JSON off mid-object.
+    max_tokens: 4096,
   });
   return parseJson(normalizeWorkersAiOutput(output).text);
 }
@@ -812,6 +815,9 @@ export async function generateJSON<T = unknown>(
               attempt.userSuppliedKey,
             );
       lastError = providerError;
+      console.warn(
+        `[ai] ${options.purpose ?? "summary"} ${attempt.provider}/${attempt.model} failed (${providerError.code}${providerError.status ? ` ${providerError.status}` : ""}): ${providerError.message.slice(0, 300)}`,
+      );
       if (providerError.userSuppliedKey && providerError.code === "auth") throw providerError;
       if (!providerError.userSuppliedKey) {
         rememberDead(attempt.provider, attempt.model, {
@@ -1211,6 +1217,7 @@ async function* runWorkersAiTurn(
     ],
     tools: convertToolDeclarations(),
     stream: false,
+    max_tokens: 4096,
   });
   const normalized = normalizeWorkersAiOutput(output);
   const text = normalized.text;

@@ -2,6 +2,7 @@ import { describe, expect, it } from "bun:test";
 import {
   normalizeSearchIntent,
   stripFilterWords,
+  detectDepartments,
   normalizeSearchQuery,
   resolveDepartment,
   searchIntentCacheKey,
@@ -58,7 +59,7 @@ describe("search intent normalization", () => {
   it("normalizes cache queries and supplies a language fallback", () => {
     expect(normalizeSearchQuery("  Data\t Structures ")).toBe("data structures");
     expect(searchIntentCacheKey(" Data ", "11510", "en")).toBe(
-      "ai_search_intent:11510:en:data",
+      "ai_search_intent:v2:11510:en:data",
     );
     expect(
       normalizeSearchIntent({ query: "", filters: {}, explanation: "" }, "en").explanation,
@@ -91,5 +92,30 @@ describe("stripFilterWords", () => {
     );
     expect(intent.query).toBe("");
     expect(intent.filters.department).toEqual(["CS"]);
+  });
+});
+
+describe("detectDepartments", () => {
+  it("finds departments named outright", () => {
+    expect(detectDepartments("週五早上的化學系實驗課")).toEqual(["CHEM"]);
+    expect(
+      detectDepartments("English-taught economics courses on Wednesday afternoon"),
+    ).toEqual(["ECON"]);
+    expect(detectDepartments("classes from the department of physics")).toEqual(["PHYS"]);
+  });
+
+  it("ignores topic words", () => {
+    expect(detectDepartments("intro to quantum physics")).toEqual([]);
+  });
+
+  it("backfills a department the model dropped", () => {
+    const intent = normalizeSearchIntent(
+      { query: "化學系實驗", filters: { separate_times: ["F1"] }, explanation: "x" },
+      "zh",
+      undefined,
+      "週五早上的化學系實驗課",
+    );
+    expect(intent.filters.department).toEqual(["CHEM"]);
+    expect(intent.query).toBe("實驗");
   });
 });

@@ -38,7 +38,9 @@ export const SEARCH_INTENT_GE_TARGETS = ["*1", "*3", "*6", "*7"] as const;
 export const SEARCH_INTENT_CREDITS = [0, 1, 2, 3, 4, 6, 9] as const;
 
 const SEARCH_INTENT_TIME_PATTERN = /^[MTWRFS](?:[1-9]|[abcn])$/;
-const CACHE_KEY_PREFIX = "ai_search_intent:";
+// Bump the version when the prompt or normalisation changes, so answers
+// produced under the old rules stop being served from the permanent cache.
+const CACHE_KEY_PREFIX = "ai_search_intent:v2:";
 
 export type SearchIntentFilters = {
   department?: string[];
@@ -186,6 +188,39 @@ export function resolveDepartment(
   return partial.length === 1 ? partial[0] : undefined;
 }
 
+const escapeRegExp = (value: string) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/**
+ * Departments the student named outright: a Chinese name with its 系/所
+ * suffix ("化學系"), or an English name used as a department ("economics
+ * courses", "department of physics"). A bare English topic word is not
+ * enough, since "quantum physics" is a topic, not a department filter.
+ */
+export function detectDepartments(
+  text: string,
+  options: readonly DepartmentOption[] = FALLBACK_DEPARTMENTS,
+): string[] {
+  const lower = text.toLocaleLowerCase("en");
+  return unique(
+    options
+      .filter((option) => {
+        if (option.name_zh && option.name_zh.length >= 3 && text.includes(option.name_zh)) {
+          return true;
+        }
+        const name = option.name_en
+          ?.replace(/^(department|institute|program) of /i, "")
+          .toLocaleLowerCase("en");
+        if (!name || name.length < 4) return false;
+        const n = escapeRegExp(name);
+        return new RegExp(
+          `\\b${n}\\s+(department|dept|courses?|classes|major)\\b|\\b(department|dept|school) of ${n}\\b`,
+        ).test(lower);
+      })
+      .map((option) => option.code),
+  ).slice(0, 3);
+}
+
 const normalizeArray = <T>(
   value: unknown,
   convert: (item: unknown) => T | undefined,
@@ -226,6 +261,7 @@ export function normalizeSearchIntent(
   value: unknown,
   lang: "zh" | "en" = "zh",
   departments: readonly DepartmentOption[] = FALLBACK_DEPARTMENTS,
+  request = "",
 ): SearchIntent {
   const record = asRecord(value);
   const rawFilters = asRecord(record.filters);
@@ -303,7 +339,18 @@ export function normalizeSearchIntent(
   );
   if (credits.length) filters.credits = credits;
 
+  if (!filters.department && request) {
+    // Small fallback models often drop a department the student named.
+    const known = new Set(departments.map((option) => option.code));
+    const named = detectDepartments(request).filter((code) => known.has(code));
+    if (named.length) filters.department = named;
+  }
+
   let query = stripFilterWords(cleanText(record.query, 120), filters);
+  for (const code of filters.department ?? []) {
+    const option = FALLBACK_DEPARTMENTS.find((item) => item.code === code);
+    if (option?.name_zh) query = query.split(option.name_zh).join(" ").trim();
+  }
   // "資工" alongside department CS is the filter restated, not a topic.
   const queryDepartment = query ? resolveDepartment(query, departments) : undefined;
   if (queryDepartment && filters.department?.includes(queryDepartment)) query = "";
@@ -433,23 +480,27 @@ const app = new Hono<{ Bindings: Bindings }>().post(
     try {
       const generated = await generateJSON<unknown>({
         env: c.env,
-        system: searchIntentSystemPrompt(lang, departmentOptions),
+        system: searchIntentSystemPrompt(lang, FALLBACK_DEPARTMENTS),
         text: `Student request: ${query}\nSemester: ${semester ?? "any semester"}`,
         schema: SEARCH_INTENT_SCHEMA,
         purpose: "bulk",
       });
-      const intent = normalizeSearchIntent(generated.data, lang, departmentOptions);
+      const intent = normalizeSearchIntent(generated.data, lang, departmentOptions, query);
       const response: SearchIntent = {
         ...intent,
         provider: generated.provider,
         model: generated.model,
       };
       try {
-        await prisma.cache.upsert({
-          where: { key: cacheKey },
-          update: { data: JSON.stringify(response) },
-          create: { key: cacheKey, data: JSON.stringify(response) },
-        });
+        // Workers AI is the last-resort floor and its small models are the
+        // least reliable; don't pin their answer in the permanent cache.
+        if (generated.provider !== "workers-ai") {
+          await prisma.cache.upsert({
+            where: { key: cacheKey },
+            update: { data: JSON.stringify(response) },
+            create: { key: cacheKey, data: JSON.stringify(response) },
+          });
+        }
       } catch (error) {
         console.error("Failed to write AI search intent cache:", error);
       }
