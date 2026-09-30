@@ -101,7 +101,9 @@ export function RichMessageContent({ content }: RichMessageContentProps) {
           return (
             <div
               key={index}
-              className="prose prose-sm max-w-none prose-table:text-sm"
+              // prose ships its own gray palette, which reads dark-on-dark in
+              // dark themes; bind it to the app's theme tokens instead.
+              className="prose prose-sm max-w-none prose-table:text-sm [--tw-prose-body:hsl(var(--foreground))] [--tw-prose-headings:hsl(var(--foreground))] [--tw-prose-bold:hsl(var(--foreground))] [--tw-prose-links:hsl(var(--primary))] [--tw-prose-code:hsl(var(--foreground))] [--tw-prose-quotes:hsl(var(--muted-foreground))] [--tw-prose-quote-borders:hsl(var(--border))] [--tw-prose-bullets:hsl(var(--muted-foreground))] [--tw-prose-counters:hsl(var(--muted-foreground))] [--tw-prose-hr:hsl(var(--border))] [--tw-prose-th-borders:hsl(var(--border))] [--tw-prose-td-borders:hsl(var(--border))]"
             >
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}

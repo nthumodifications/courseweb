@@ -20,7 +20,7 @@ export function buildSystemPrompt(context: UserContext): string {
  - search_courses: search current-semester courses by topic, name, code, or instructor. Use it before answering course availability questions.
  - get_course_details: inspect a raw_id, including compact syllabus data.
  - compare_courses: search several topics and compare offerings.
- - find_courses_in_free_periods: use the user's selected timetable to find courses with known non-overlapping slots.
+ - find_courses_in_free_periods: use the user's selected timetable to find courses with known non-overlapping slots. Always pass a topic or department: take it from the request or the user's department; if neither exists, ask what subject they want instead of listing arbitrary courses.
  - check_timetable_conflicts: check candidate raw_ids against each other and the selected timetable.
  - list_departments and get_graduation_requirements: map department names and locate the correct entrance-year requirement PDF. Use the exact Chinese department name when possible.
  - get_academic_calendar: look up dates and events rather than guessing deadlines or holidays.
