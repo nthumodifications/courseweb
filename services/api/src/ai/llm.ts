@@ -455,6 +455,8 @@ function encodeBase64(bytes: Uint8Array): string {
 interface LoadedPdf {
   bytes: Uint8Array;
   blob: Blob;
+  /** toMarkdown result, shared by every text-only provider in one call. */
+  markdownBody?: Promise<string>;
 }
 
 async function loadPdf(pdf: { url?: string; bytes?: ArrayBuffer | Uint8Array }): Promise<LoadedPdf> {
@@ -487,6 +489,40 @@ async function pdfMarkdown(env: LlmEnv, pdf: LoadedPdf): Promise<string> {
     throw new Error("Workers AI PDF conversion returned no text");
   }
   return data;
+}
+
+/**
+ * toMarkdown always emits a title, a metadata list and "### Page N" headings,
+ * even for PDFs whose text it cannot read (the PEO timetables are Excel
+ * exports and come back empty). Strip that scaffolding to see what is left.
+ */
+export function pdfMarkdownBody(markdown: string): string {
+  const contents = markdown.split(/^## Contents\s*$/m)[1] ?? markdown;
+  return contents.replace(/^#{1,6} .*$/gm, "").replace(/\s+/g, " ").trim();
+}
+
+const MIN_PDF_TEXT = 80;
+
+/**
+ * Text-only providers see a PDF only through toMarkdown. When that yields
+ * nothing usable, a PDF-only task must fail over rather than let the model
+ * answer from an empty document; otherwise the task goes ahead on the rest.
+ */
+async function withPdfText(
+  text: string,
+  options: GenerateJsonOptions,
+  pdf: LoadedPdf | undefined,
+): Promise<string> {
+  if (!pdf) return text;
+  pdf.markdownBody ??= pdfMarkdown(options.env, pdf)
+    .then(pdfMarkdownBody)
+    .catch(() => "");
+  const body = await pdf.markdownBody;
+  if (body.length >= MIN_PDF_TEXT) return `${text}\n\nPDF contents:\n${body}`;
+  if (options.pdfRequired) {
+    throw new Error("The PDF has no text this provider can read");
+  }
+  return text;
 }
 
 export interface WorkersAiOutput {
@@ -555,6 +591,8 @@ export interface GenerateJsonOptions {
   schema: JsonSchema;
   userGeminiKey?: string;
   purpose?: "chat" | "summary" | "bulk";
+  /** The PDF is the only source; skip providers that cannot read it. */
+  pdfRequired?: boolean;
 }
 
 export interface GenerateJsonResult<T = unknown> {
@@ -697,8 +735,7 @@ async function generateOpenAICompatibleJson(
   if (!provider) throw new Error(`${attempt.provider} is not OpenAI-compatible`);
   const apiKey = getProviderKey(options.env, provider);
   if (!apiKey) throw new Error(`${attempt.provider} API key is not configured`);
-  let text = options.text;
-  if (pdf) text += `\n\nPDF contents:\n${await pdfMarkdown(options.env, pdf)}`;
+  const text = await withPdfText(options.text, options, pdf);
   const response = await fetch(`${provider.baseUrl}/chat/completions`, {
     method: "POST",
     headers: {
@@ -736,8 +773,7 @@ async function generateWorkersJson(
 ): Promise<unknown> {
   const ai = options.env.AI as WorkerAI | undefined;
   if (!ai) throw new Error("Workers AI is not configured");
-  let text = options.text;
-  if (pdf) text += `\n\nPDF contents:\n${await pdfMarkdown(options.env, pdf)}`;
+  const text = await withPdfText(options.text, options, pdf);
   const output = await ai.run(attempt.model, {
     messages: [
       { role: "system", content: strictJsonInstruction(options.system, options.schema) },

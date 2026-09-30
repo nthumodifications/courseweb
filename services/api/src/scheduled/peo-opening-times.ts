@@ -107,6 +107,9 @@ export async function parsePdfWithProviders(
       env,
       purpose: "bulk",
       pdf: { url: pdfUrl },
+      // The PDF is the whole input. Text-only providers get nothing readable
+      // from these Excel exports and would report every day as closed.
+      pdfRequired: true,
       system:
         "You extract public opening hours from NTHU sports facility PDFs. Return only the requested JSON. Exclude reservations, cleaning, maintenance, and non-public sessions.",
       text: `Facility: ${facilityNameZh}\nToday's date: ${today}\n\nChoose the date-range block containing today's date, or the nearest upcoming block. For each weekday, include only publicly open time slots. Use 24-hour HH:MM strings. Traditional Chinese notes are acceptable; use an empty string when there are no notes.`,
@@ -120,6 +123,10 @@ export async function parsePdfWithProviders(
     const hours = {} as DaySchedule;
     for (const day of days) hours[day] = toSlots(parsed[day]);
     hours.notes = typeof parsed.notes === "string" ? parsed.notes : null;
+    if (isEmptyWeek(hours)) {
+      console.warn(`[peo] ${facilityNameZh}: no open slots extracted, treating as unparsed`);
+      return null;
+    }
     return {
       name_en:
         typeof parsed.name_en === "string" && parsed.name_en.trim()
@@ -133,9 +140,22 @@ export async function parsePdfWithProviders(
   }
 }
 
+const WEEK_DAYS = [
+  "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
+] as const;
+
+/**
+ * No facility is shut all week during term. An all-empty week means the
+ * parser read nothing, so it must not be stored as "closed every day".
+ */
+export function isEmptyWeek(hours: DaySchedule): boolean {
+  return WEEK_DAYS.every((day) => hours[day].length === 0);
+}
+
 export async function syncPeoOpeningTimes(
   env: LlmEnv & { DB: D1Database },
   forceSemester?: string,
+  { onlyMissing = false }: { onlyMissing?: boolean } = {},
 ): Promise<void> {
   const pageResponse = await fetch(PEO_PAGE_URL);
   if (!pageResponse.ok) {
@@ -176,18 +196,32 @@ export async function syncPeoOpeningTimes(
   if (existing) {
     try {
       const cached = JSON.parse(existing.data) as PeoOpeningTimesCache;
+      let clearedEmptyWeeks = false;
       for (const facility of cached.facilities) {
         if (facility.name_en && facility.name_en !== facility.name_zh) {
           cachedNameEn.set(facility.name_zh, facility.name_en);
         }
         for (const schedule of facility.schedules) {
-          if (schedule.hours !== null) {
+          // Entries parsed from unreadable PDFs were stored as all-empty weeks;
+          // treat them as missing so they are parsed again.
+          if (schedule.hours !== null && isEmptyWeek(schedule.hours)) {
+            schedule.hours = null;
+            clearedEmptyWeeks = true;
+          } else if (schedule.hours !== null) {
             existingParsed.set(schedule.pdf_url, {
               name_en: facility.name_en,
               hours: schedule.hours,
             });
           }
         }
+      }
+      if (clearedEmptyWeeks) {
+        // Save the reset first: a request-triggered run may be cut off before
+        // the end, and "closed all week" must not stay visible meanwhile.
+        await prisma.cache.update({
+          where: { key: SPORTS_CACHE_KEY },
+          data: { data: JSON.stringify(cached) },
+        });
       }
     } catch (error) {
       console.error("Failed to parse cached PEO opening times:", error);
@@ -201,7 +235,11 @@ export async function syncPeoOpeningTimes(
     let parsedAny = false;
     for (const schedule of facility.schedules) {
       const cached = existingParsed.get(schedule.pdf_url);
-      const shouldParse = forceSemester === schedule.semester || !cached;
+      // onlyMissing resumes a semester an earlier run left half-parsed: a
+      // request-triggered run only gets ~30s, enough for a few PDFs.
+      const shouldParse = forceSemester
+        ? schedule.semester === forceSemester && (!cached || !onlyMissing)
+        : !cached;
       if (cached) {
         // Seed with the last known good value. A failed forced refresh must
         // never replace it with null.

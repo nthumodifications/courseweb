@@ -5,6 +5,7 @@ import {
   convertToolDeclarations,
   generateJSON,
   normalizeWorkersAiOutput,
+  pdfMarkdownBody,
   readableProviderMessage,
   validateAgainstSchema,
 } from "./llm";
@@ -308,5 +309,20 @@ describe("readableProviderMessage", () => {
       ),
     ).toBe("API key not valid. Please pass a valid API key.");
     expect(readableProviderMessage("groq 413: plain text")).toBe("groq 413: plain text");
+  });
+});
+
+describe("pdfMarkdownBody", () => {
+  it("sees an unreadable PDF as empty", () => {
+    // Real toMarkdown output for a PEO opening-hours PDF (an Excel export).
+    const markdown =
+      "# pool.pdf\n## Metadata\n- PDFFormatVersion=1.5\n- Language=zh-TW\n- Producer=Microsoft® Excel® 2016\n\n\n\n## Contents\n### Page 1\n\n\n";
+    expect(pdfMarkdownBody(markdown)).toBe("");
+  });
+
+  it("keeps real page text", () => {
+    expect(
+      pdfMarkdownBody("# a.pdf\n## Metadata\n- x=y\n## Contents\n### Page 1\n課程目標 Learn things\n"),
+    ).toBe("課程目標 Learn things");
   });
 });

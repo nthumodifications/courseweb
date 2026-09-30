@@ -53,20 +53,22 @@ const app = new Hono<{ Bindings: Bindings }>()
     const existing = await prisma.cache.findUnique({
       where: { key: SPORTS_CACHE_KEY },
     });
+    let semesterIncomplete = false;
     if (existing) {
       try {
         const cached: PeoOpeningTimesCache = JSON.parse(existing.data);
+        semesterIncomplete = semester
+          ? cached.facilities.some((f) =>
+              f.schedules.some(
+                (s) => s.semester === semester && s.hours === null,
+              ),
+            )
+          : false;
         const ageMs = Date.now() - new Date(cached.lastUpdated).getTime();
         if (ageMs < 5 * 60 * 1000) {
-          // Bypass debounce if the target semester has never been parsed
-          const semesterHasData = semester
-            ? cached.facilities.some((f) =>
-                f.schedules.some(
-                  (s) => s.semester === semester && s.hours !== null,
-                ),
-              )
-            : true;
-          if (semesterHasData) {
+          // An incomplete semester may keep resuming; only missing PDFs are
+          // parsed then, so repeated calls cannot re-spend the AI quota.
+          if (!semesterIncomplete) {
             return c.json(
               {
                 ok: false,
@@ -82,7 +84,9 @@ const app = new Hono<{ Bindings: Bindings }>()
 
     // Background the sync so the Worker doesn't hit the 30-second wall-clock limit.
     // Cloudflare Workers with waitUntil() can run past the response but within CPU budget.
-    c.executionCtx.waitUntil(syncPeoOpeningTimes(c.env, semester));
+    c.executionCtx.waitUntil(
+      syncPeoOpeningTimes(c.env, semester, { onlyMissing: semesterIncomplete }),
+    );
     return c.json({ ok: true, semester: semester ?? "all" }, 202);
   });
 
