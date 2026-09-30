@@ -1,7 +1,7 @@
 import React, { Suspense } from "react";
 import ReactMarkdown from "react-markdown";
 import { Skeleton } from "@courseweb/ui";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import remarkGfm from "remark-gfm";
 
 // Lazy load heavy components
@@ -20,13 +20,13 @@ type ContentPart =
 /**
  * Automatically convert course IDs to clickable links
  * Pattern: 5-digit semester + 2-10 char course code + space + 6 digits
- * Example: 11420CS 535100 → [11420CS 535100](https://nthumods.com/courses/11420CS%20535100)
+ * Example: 11420CS 535100 → a localized /courses/11420CS%20535100 link
  */
-function linkifyCourseIds(content: string): string {
+function linkifyCourseIds(content: string, language: string): string {
   // Match course ID pattern: YYSSDDDD CCCCCC (where YY=year, SS=semester, D=dept, C=course)
   const courseIdRegex = /\b(\d{5}[A-Z]{2,10}\s+\d{6})\b/g;
 
-  return content.replace(courseIdRegex, (match, p1, offset) => {
+  return content.replace(courseIdRegex, (match, _group, offset) => {
     // Check if already inside a markdown link by looking backwards for unmatched [
     const beforeMatch = content.substring(0, offset);
     const lastOpenBracket = beforeMatch.lastIndexOf("[");
@@ -38,7 +38,7 @@ function linkifyCourseIds(content: string): string {
     }
 
     const encodedId = encodeURIComponent(match);
-    return `[${match}](https://nthumods.com/courses/${encodedId})`;
+    return `[${match}](/${language}/courses/${encodedId})`;
   });
 }
 
@@ -91,6 +91,7 @@ function parseMessageContent(content: string): ContentPart[] {
 }
 
 export function RichMessageContent({ content }: RichMessageContentProps) {
+  const { lang } = useParams<{ lang: string }>();
   const parts = parseMessageContent(content);
 
   return (
@@ -105,16 +106,24 @@ export function RichMessageContent({ content }: RichMessageContentProps) {
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={{
-                  a: ({ href, children }) => (
-                    <a
-                      href={href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary underline hover:text-primary/80"
-                    >
-                      {children}
-                    </a>
-                  ),
+                  a: ({ href, children }) =>
+                    href?.startsWith("/") ? (
+                      <Link
+                        to={href}
+                        className="text-primary underline hover:text-primary/80"
+                      >
+                        {children}
+                      </Link>
+                    ) : (
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary underline hover:text-primary/80"
+                      >
+                        {children}
+                      </a>
+                    ),
                   table: ({ children }) => (
                     <div className="overflow-x-auto my-4">
                       <table className="border-collapse border border-border w-full">
@@ -137,7 +146,7 @@ export function RichMessageContent({ content }: RichMessageContentProps) {
                   ),
                 }}
               >
-                {part.content}
+                {linkifyCourseIds(part.content, lang ?? "zh")}
               </ReactMarkdown>
             </div>
           );

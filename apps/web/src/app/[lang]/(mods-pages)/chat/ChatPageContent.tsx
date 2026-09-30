@@ -3,7 +3,7 @@ import { ChatMessages } from "@/components/Chat/ChatMessages";
 import { ChatInput } from "@/components/Chat/ChatInput";
 import { ChatSuggestions } from "@/components/Chat/ChatSuggestions";
 import { AISettingsDialog } from "@/components/Chat/AISettingsDialog";
-import { QuotaExceededAlert } from "@/components/Chat/QuotaExceededAlert";
+import { ChatErrorAlert } from "@/components/Chat/ChatErrorAlert";
 import { useChatContext } from "@/components/Chat/ChatProvider";
 import { useAuth } from "react-oidc-context";
 import { Button } from "@courseweb/ui";
@@ -34,7 +34,8 @@ function LoginPrompt() {
 }
 
 export function ChatPageContent() {
-  const { messages, quotaError, clearQuotaError } = useChatContext();
+  const { messages, chatError, clearError, retryLastMessage, requiresSignIn } =
+    useChatContext();
   const { isAuthenticated, isLoading } = useAuth();
   const dict = useDictionary();
 
@@ -42,7 +43,7 @@ export function ChatPageContent() {
   if (isLoading) {
     return (
       <div className="flex flex-col h-[calc(var(--content-height)-1rem)]">
-          <div className="flex-1 flex flex-col p-4 gap-4">
+        <div className="flex-1 flex flex-col p-4 gap-4">
           <div className="animate-pulse flex flex-col gap-4">
             <Sparkles className="w-12 h-12 text-muted-foreground" />
             <p className="text-muted-foreground">{dict.common.loading}</p>
@@ -73,16 +74,16 @@ export function ChatPageContent() {
       </div>
 
       {/* Show login prompt if not authenticated */}
-      {!isAuthenticated ? (
+      {!isAuthenticated || requiresSignIn ? (
         <LoginPrompt />
       ) : (
         <>
-          {/* Quota Exceeded Alert */}
-          {quotaError && (
+          {chatError && (
             <div className="px-4 pt-4">
-              <QuotaExceededAlert
-                retryAfter={quotaError.retryAfter}
-                onDismiss={clearQuotaError}
+              <ChatErrorAlert
+                error={chatError}
+                onRetry={retryLastMessage}
+                onDismiss={clearError}
               />
             </div>
           )}
@@ -92,9 +93,7 @@ export function ChatPageContent() {
             {messages.length === 0 ? (
               <div className="flex-1 flex flex-col p-4 gap-4">
                 <Sparkles className="w-16 h-16 text-muted-foreground" />
-                <h2 className="text-xl font-medium">
-                  {dict.chat.welcome}
-                </h2>
+                <h2 className="text-xl font-medium">{dict.chat.welcome}</h2>
                 <p className="text-muted-foreground leading-relaxed">
                   {dict.chat.welcome_description}
                 </p>

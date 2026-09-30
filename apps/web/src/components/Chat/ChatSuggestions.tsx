@@ -1,6 +1,13 @@
 import { useChatContext } from "./ChatProvider";
 import { Button } from "@courseweb/ui";
-import { Search, Calendar, GraduationCap, BookOpen } from "lucide-react";
+import {
+  Search,
+  Calendar,
+  GraduationCap,
+  Bus,
+  Clock,
+  AlertTriangle,
+} from "lucide-react";
 import useDictionary from "@/dictionaries/useDictionary";
 
 export function ChatSuggestions() {
@@ -13,9 +20,14 @@ export function ChatSuggestions() {
       prompt: dict.chat.suggestions.machine_learning_prompt,
     },
     {
-      icon: Calendar,
-      text: dict.chat.suggestions.next_timetable,
-      prompt: dict.chat.suggestions.next_timetable_prompt,
+      icon: Clock,
+      text: dict.chat.suggestions.free_periods,
+      prompt: dict.chat.suggestions.free_periods_prompt,
+    },
+    {
+      icon: AlertTriangle,
+      text: dict.chat.suggestions.timetable_conflicts,
+      prompt: dict.chat.suggestions.timetable_conflicts_prompt,
     },
     {
       icon: GraduationCap,
@@ -23,9 +35,14 @@ export function ChatSuggestions() {
       prompt: dict.chat.suggestions.graduation_credits_prompt,
     },
     {
-      icon: BookOpen,
-      text: dict.chat.suggestions.elective_courses,
-      prompt: dict.chat.suggestions.elective_courses_prompt,
+      icon: Bus,
+      text: dict.chat.suggestions.bus,
+      prompt: dict.chat.suggestions.bus_prompt,
+    },
+    {
+      icon: Calendar,
+      text: dict.chat.suggestions.academic_calendar,
+      prompt: dict.chat.suggestions.academic_calendar_prompt,
     },
   ];
 

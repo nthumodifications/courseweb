@@ -15,6 +15,21 @@ interface ChatMessageProps {
   message: ChatMessageType;
 }
 
+function humanizeToolName(name: string) {
+  return name
+    .replace(/[_-]+/g, " ")
+    .replace(/\b\w/g, (character) => character.toUpperCase());
+}
+
+function formatToolValue(value: unknown) {
+  if (typeof value === "string") return value;
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch {
+    return String(value);
+  }
+}
+
 export function ChatMessage({ message }: ChatMessageProps) {
   const isUser = message.role === "user";
   const dict = useDictionary();
@@ -31,24 +46,60 @@ export function ChatMessage({ message }: ChatMessageProps) {
       </div>
 
       <div className="flex flex-col gap-2 max-w-[80%]">
+        {!isUser && message.metadata?.provider && (
+          <span className="text-[10px] text-muted-foreground">
+            {message.metadata.provider}
+            {message.metadata.model ? ` · ${message.metadata.model}` : ""}
+          </span>
+        )}
+
         {/* Tool calls display */}
         {!isUser && message.toolCalls && message.toolCalls.length > 0 && (
           <div className="flex flex-col gap-1">
             {message.toolCalls.map((tool, idx) => (
-              <div
+              <details
                 key={idx}
-                className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 rounded px-2 py-1"
+                className="rounded bg-muted/50 px-2 py-1 text-xs text-muted-foreground"
               >
-                <Wrench className="w-3 h-3" />
-                <span className="font-medium">{tool.name}</span>
-                {tool.result !== undefined && (
-                  <CheckCircle2 className="w-3 h-3 text-primary" />
-                )}
-                {tool.error && <XCircle className="w-3 h-3 text-destructive" />}
-                {tool.result === undefined && !tool.error && (
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                )}
-              </div>
+                <summary className="flex cursor-pointer list-none items-center gap-2">
+                  <Wrench className="h-3 w-3" />
+                  <span className="font-medium">
+                    {humanizeToolName(tool.name)}
+                  </span>
+                  {tool.result !== undefined && (
+                    <CheckCircle2 className="h-3 w-3 text-primary" />
+                  )}
+                  {tool.error && (
+                    <XCircle className="h-3 w-3 text-destructive" />
+                  )}
+                  {tool.result === undefined && !tool.error && (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  )}
+                </summary>
+                <div className="mt-2 space-y-2 border-t border-border/60 pt-2">
+                  {tool.args && (
+                    <div>
+                      <p className="font-medium">{dict.chat.tool_args}</p>
+                      <pre className="mt-1 max-h-40 overflow-auto whitespace-pre-wrap break-words text-[10px]">
+                        {formatToolValue(tool.args)}
+                      </pre>
+                    </div>
+                  )}
+                  {tool.result !== undefined && (
+                    <div>
+                      <p className="font-medium">{dict.chat.tool_result}</p>
+                      <pre className="mt-1 max-h-40 overflow-auto whitespace-pre-wrap break-words text-[10px]">
+                        {formatToolValue(tool.result)}
+                      </pre>
+                    </div>
+                  )}
+                  {tool.error && (
+                    <p className="text-destructive">
+                      {dict.chat.tool_error}: {tool.error}
+                    </p>
+                  )}
+                </div>
+              </details>
             ))}
           </div>
         )}

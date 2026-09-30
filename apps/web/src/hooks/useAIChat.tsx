@@ -2,10 +2,23 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import useUserTimetable from "./contexts/useUserTimetable";
 import { useAuth } from "react-oidc-context";
 import { event as gtagEvent } from "@/lib/gtag";
+import { SSEParser, ParsedSSEEvent } from "./sseParser";
+
+export type ChatErrorCode =
+  | "quota"
+  | "auth"
+  | "unavailable"
+  | "bad_request"
+  | "unknown";
+
+export interface ChatError {
+  code: ChatErrorCode;
+  message: string;
+}
 
 export interface QuotaError {
   isQuotaExceeded: true;
-  retryAfter?: number; // seconds to wait before retry
+  retryAfter?: number;
   message: string;
 }
 
@@ -23,8 +36,11 @@ export interface ChatMessage {
   timestamp: Date;
   isStreaming?: boolean;
   toolCalls?: ToolCall[];
+  errorCode?: ChatErrorCode;
   metadata?: {
-    courses?: string[]; // raw_ids mentioned
+    courses?: string[];
+    provider?: "gemini" | "groq" | "workers-ai";
+    model?: string;
   };
 }
 
@@ -45,7 +61,7 @@ export interface SelectedCourseInfo {
   raw_id: string;
   name_zh?: string;
   name_en?: string;
-  times?: string[]; // 2-char pairs e.g. ["M3M4", "W3W4"]
+  times?: string[];
   credits?: number;
   semester?: string;
 }
@@ -68,6 +84,53 @@ interface UseAIChatOptions {
 const HISTORY_KEY = "nthumods_chat_history";
 const HISTORY_MAX = 100;
 
+class ChatFailure extends Error {
+  constructor(
+    public readonly code: ChatErrorCode,
+    message: string,
+  ) {
+    super(message);
+    this.name = "ChatFailure";
+  }
+}
+
+function isChatErrorCode(value: unknown): value is ChatErrorCode {
+  return (
+    value === "quota" ||
+    value === "auth" ||
+    value === "unavailable" ||
+    value === "bad_request" ||
+    value === "unknown"
+  );
+}
+
+function getErrorMessage(data: unknown, fallback: string) {
+  if (typeof data === "string" && data.trim()) return data;
+  if (data && typeof data === "object") {
+    const error = (data as { error?: unknown }).error;
+    if (typeof error === "string" && error.trim()) return error;
+    if (error && typeof error === "object") {
+      const message = (error as { message?: unknown }).message;
+      if (typeof message === "string" && message.trim()) return message;
+    }
+  }
+  return fallback;
+}
+
+function getStoredApiKey() {
+  try {
+    const settings = localStorage.getItem("ai_settings");
+    if (!settings) return undefined;
+    const parsed = JSON.parse(settings) as {
+      useCustomKey?: boolean;
+      apiKey?: string;
+    };
+    return parsed.useCustomKey && parsed.apiKey ? parsed.apiKey : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export function useAIChat(options: UseAIChatOptions = {}) {
   const apiEndpoint =
     options.apiEndpoint || `${import.meta.env.VITE_COURSEWEB_API_URL}/chat`;
@@ -87,10 +150,18 @@ export function useAIChat(options: UseAIChatOptions = {}) {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [chatError, setChatError] = useState<ChatError | null>(null);
   const [quotaError, setQuotaError] = useState<QuotaError | null>(null);
+  const [requiresSignIn, setRequiresSignIn] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const messagesRef = useRef(messages);
+  const lastPromptRef = useRef<string | null>(null);
+  const loadingRef = useRef(false);
 
-  // Persist chat history to localStorage
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+
   useEffect(() => {
     const toSave = messages.filter((m) => !m.isStreaming);
     if (messages.length === 0) {
@@ -105,11 +176,9 @@ export function useAIChat(options: UseAIChatOptions = {}) {
     }
   }, [messages]);
 
-  // Get user's current courses from timetable
   const { courses, semester, getSemesterCourses } = useUserTimetable();
   const { user } = useAuth();
 
-  // Build user context from timetable and stored preferences
   const getUserContext = useCallback((): UserContext => {
     let department: string | undefined;
     let entranceYear: string | undefined;
@@ -154,7 +223,6 @@ export function useAIChat(options: UseAIChatOptions = {}) {
       ? 1911 + parseInt(semester.substring(0, 3))
       : undefined;
 
-    // Build selected courses list with time/credit info for conflict detection
     const selectedCourses: SelectedCourseInfo[] = Object.keys(courses).flatMap(
       (sem) => {
         const semCourses = getSemesterCourses(sem);
@@ -180,7 +248,6 @@ export function useAIChat(options: UseAIChatOptions = {}) {
     };
   }, [courses, semester, getSemesterCourses]);
 
-  // Send message to AI
   const sendMessage = useCallback(
     async (content: string) => {
       const userMessage: ChatMessage = {
@@ -189,10 +256,23 @@ export function useAIChat(options: UseAIChatOptions = {}) {
         content,
         timestamp: new Date(),
       };
-
-      setMessages((prev) => [...prev, userMessage]);
+      const assistantMessage: ChatMessage = {
+        id: crypto.randomUUID(),
+        role: "assistant",
+        content: "",
+        timestamp: new Date(),
+        isStreaming: true,
+      };
+      const conversation = messagesRef.current;
+      messagesRef.current = [...conversation, userMessage, assistantMessage];
+      setMessages(messagesRef.current);
+      lastPromptRef.current = content;
       setIsLoading(true);
+      loadingRef.current = true;
       setError(null);
+      setChatError(null);
+      setQuotaError(null);
+      setRequiresSignIn(false);
 
       gtagEvent({
         action: "ai_chat_message_sent",
@@ -206,32 +286,107 @@ export function useAIChat(options: UseAIChatOptions = {}) {
         },
       });
 
-      const assistantMessage: ChatMessage = {
-        id: crypto.randomUUID(),
-        role: "assistant",
-        content: "",
-        timestamp: new Date(),
-        isStreaming: true,
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+      const toolCalls: ToolCall[] = [];
+      let fullContent = "";
+      let metadata: ChatMessage["metadata"];
+
+      const updateAssistant = (changes: Partial<ChatMessage>) => {
+        setMessages((prev) =>
+          prev.map((message) =>
+            message.id === assistantMessage.id
+              ? { ...message, ...changes }
+              : message,
+          ),
+        );
       };
 
-      setMessages((prev) => [...prev, assistantMessage]);
+      const handleEvent = (event: ParsedSSEEvent | "[DONE]") => {
+        if (event === "[DONE]") return;
 
-      abortControllerRef.current = new AbortController();
+        if (event.type === "meta") {
+          const data = event.data as {
+            provider?: NonNullable<ChatMessage["metadata"]>["provider"];
+            model?: string;
+          };
+          metadata = {
+            ...metadata,
+            ...(data?.provider ? { provider: data.provider } : {}),
+            ...(data?.model ? { model: data.model } : {}),
+          };
+          updateAssistant({ metadata });
+          return;
+        }
+
+        if (event.type === "error") {
+          const code = isChatErrorCode(event.code) ? event.code : "unknown";
+          throw new ChatFailure(
+            code,
+            getErrorMessage(
+              event.data,
+              "The AI service could not complete the request.",
+            ),
+          );
+        }
+
+        if (event.type === "text") {
+          if (typeof event.data !== "string") return;
+          fullContent += event.data;
+          updateAssistant({
+            content: fullContent,
+            toolCalls: [...toolCalls],
+            metadata,
+          });
+          return;
+        }
+
+        if (event.type === "tool_call") {
+          const data = event.data as {
+            name?: string;
+            args?: Record<string, unknown>;
+          };
+          if (!data?.name) return;
+          toolCalls.push({ name: data.name, args: data.args });
+          updateAssistant({ content: fullContent, toolCalls: [...toolCalls] });
+          return;
+        }
+
+        if (event.type === "tool_result") {
+          const data = event.data as {
+            name?: string;
+            result?: unknown;
+            error?: string;
+          };
+          if (!data?.name) return;
+          const toolIndex = [...toolCalls]
+            .map((tool, index) => ({ tool, index }))
+            .reverse()
+            .find(
+              ({ tool }) =>
+                tool.name === data.name &&
+                tool.result === undefined &&
+                !tool.error,
+            )?.index;
+          if (toolIndex === undefined) return;
+          toolCalls[toolIndex] = {
+            ...toolCalls[toolIndex],
+            ...(data.error ? { error: data.error } : { result: data.result }),
+          };
+          updateAssistant({ content: fullContent, toolCalls: [...toolCalls] });
+        }
+      };
+
+      const removeAssistant = () => {
+        messagesRef.current = messagesRef.current.filter(
+          (message) => message.id !== assistantMessage.id,
+        );
+        setMessages(messagesRef.current);
+      };
 
       try {
         const userContext = getUserContext();
-
-        let apiKey: string | undefined;
-        try {
-          const settings = localStorage.getItem("ai_settings");
-          if (settings) {
-            const parsed = JSON.parse(settings);
-            if (parsed.useCustomKey && parsed.apiKey) {
-              apiKey = parsed.apiKey;
-            }
-          }
-        } catch {}
-
+        const apiKey = options.userApiKey || getStoredApiKey();
         const response = await fetch(apiEndpoint, {
           method: "POST",
           headers: {
@@ -241,173 +396,85 @@ export function useAIChat(options: UseAIChatOptions = {}) {
             }),
           },
           body: JSON.stringify({
-            messages: messages.concat(userMessage).map((m) => ({
-              role: m.role,
-              content: m.content,
+            messages: conversation.concat(userMessage).map((message) => ({
+              role: message.role,
+              content: message.content,
             })),
             userContext,
             apiKey,
           }),
-          signal: abortControllerRef.current.signal,
+          signal: controller.signal,
         });
 
         if (!response.ok) {
+          const payload = (await response.json().catch(() => null)) as {
+            error?: unknown;
+          } | null;
           if (response.status === 401) {
-            throw new Error("請先登入以使用 AI 課程助手");
-          }
-          if (response.status === 403) {
-            throw new Error("您沒有權限使用此功能");
-          }
-          if (response.status === 429) {
-            const retryAfter = response.headers.get("Retry-After");
-            const retrySeconds = retryAfter
-              ? parseInt(retryAfter, 10)
-              : undefined;
-
-            setQuotaError({
-              isQuotaExceeded: true,
-              retryAfter: retrySeconds,
-              message: "API 配額已超出限制，請稍後再試或使用您自己的 API Key",
-            });
-
-            setMessages((prev) =>
-              prev.filter((m) => m.id !== assistantMessage.id),
-            );
-            setIsLoading(false);
+            setRequiresSignIn(true);
+            setError(null);
+            setChatError(null);
+            removeAssistant();
             return;
           }
-          throw new Error(`Chat request failed: ${response.status}`);
+
+          const code: ChatErrorCode =
+            response.status === 429
+              ? "quota"
+              : response.status === 400
+                ? "bad_request"
+                : response.status >= 500
+                  ? "unavailable"
+                  : "unknown";
+          const message = getErrorMessage(
+            payload?.error ?? payload,
+            `Chat request failed (${response.status}).`,
+          );
+          setChatError({ code, message });
+          setError(message);
+          if (code === "quota") {
+            const retryAfter = Number.parseInt(
+              response.headers.get("Retry-After") || "",
+              10,
+            );
+            setQuotaError({
+              isQuotaExceeded: true,
+              retryAfter: Number.isNaN(retryAfter) ? undefined : retryAfter,
+              message,
+            });
+          }
+          removeAssistant();
+          return;
         }
 
         const reader = response.body?.getReader();
-        if (!reader) throw new Error("No response body");
+        if (!reader) {
+          throw new ChatFailure(
+            "unavailable",
+            "No response stream was returned.",
+          );
+        }
 
+        const parser = new SSEParser();
         const decoder = new TextDecoder();
-        let fullContent = "";
-        let buffer = "";
-        const toolCalls: ToolCall[] = [];
-
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
-
-          const chunk = decoder.decode(value, { stream: true });
-          buffer += chunk;
-
-          const lines = buffer.split("\n");
-          buffer = lines.pop() || "";
-
-          for (const line of lines) {
-            if (line.startsWith("data: ")) {
-              const data = line.slice(6).trim();
-              if (data === "[DONE]") continue;
-              if (!data) continue;
-
-              try {
-                const parsed = JSON.parse(data);
-
-                if (parsed.type === "error" && parsed.data) {
-                  const errorData =
-                    typeof parsed.data === "string"
-                      ? parsed.data
-                      : JSON.stringify(parsed.data);
-                  if (
-                    errorData.includes("429") ||
-                    errorData.includes("RESOURCE_EXHAUSTED") ||
-                    errorData.includes("quota")
-                  ) {
-                    const retryMatch = errorData.match(/retry.*?(\d+)/i);
-                    const retrySeconds = retryMatch
-                      ? parseInt(retryMatch[1], 10)
-                      : undefined;
-
-                    setQuotaError({
-                      isQuotaExceeded: true,
-                      retryAfter: retrySeconds,
-                      message:
-                        "API 配額已超出限制，請稍後再試或使用您自己的 API Key",
-                    });
-
-                    setMessages((prev) =>
-                      prev.filter((m) => m.id !== assistantMessage.id),
-                    );
-                    setIsLoading(false);
-                    return;
-                  }
-                }
-
-                if (parsed.type === "text" && parsed.data) {
-                  fullContent += parsed.data;
-
-                  setMessages((prev) =>
-                    prev.map((m) =>
-                      m.id === assistantMessage.id
-                        ? {
-                            ...m,
-                            content: fullContent,
-                            toolCalls: [...toolCalls],
-                          }
-                        : m,
-                    ),
-                  );
-                }
-
-                if (parsed.type === "tool_call" && parsed.data) {
-                  const toolCall: ToolCall = {
-                    name: parsed.data.name,
-                    args: parsed.data.args,
-                  };
-                  toolCalls.push(toolCall);
-
-                  setMessages((prev) =>
-                    prev.map((m) =>
-                      m.id === assistantMessage.id
-                        ? {
-                            ...m,
-                            content: fullContent,
-                            toolCalls: [...toolCalls],
-                          }
-                        : m,
-                    ),
-                  );
-                }
-
-                if (parsed.type === "tool_result" && parsed.data) {
-                  const lastToolCall = toolCalls[toolCalls.length - 1];
-                  if (lastToolCall && lastToolCall.name === parsed.data.name) {
-                    if (parsed.data.error) {
-                      lastToolCall.error = parsed.data.error;
-                    } else {
-                      lastToolCall.result = parsed.data.result;
-                    }
-
-                    setMessages((prev) =>
-                      prev.map((m) =>
-                        m.id === assistantMessage.id
-                          ? {
-                              ...m,
-                              content: fullContent,
-                              toolCalls: [...toolCalls],
-                            }
-                          : m,
-                      ),
-                    );
-                  }
-                }
-              } catch (e) {
-                console.error("Failed to parse SSE line:", line, e);
-              }
-            }
+          for (const event of parser.push(
+            decoder.decode(value, { stream: true }),
+          )) {
+            handleEvent(event);
           }
         }
+        for (const event of parser.push(decoder.decode())) handleEvent(event);
+        for (const event of parser.finish()) handleEvent(event);
 
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === assistantMessage.id
-              ? { ...m, content: fullContent, isStreaming: false, toolCalls }
-              : m,
-          ),
-        );
+        updateAssistant({
+          content: fullContent,
+          isStreaming: false,
+          toolCalls: [...toolCalls],
+          metadata,
+        });
 
         gtagEvent({
           action: "ai_chat_response_received",
@@ -416,61 +483,105 @@ export function useAIChat(options: UseAIChatOptions = {}) {
           data: {
             response_length: fullContent.length,
             tools_used: toolCalls.length,
-            tool_names: toolCalls.map((t) => t.name).join(","),
+            tool_names: toolCalls.map((tool) => tool.name).join(","),
           },
         });
-      } catch (err) {
-        if ((err as Error).name === "AbortError") {
-          setMessages((prev) =>
-            prev.filter((m) => m.id !== assistantMessage.id),
-          );
+      } catch (caughtError) {
+        if ((caughtError as Error).name === "AbortError") {
+          removeAssistant();
           gtagEvent({
             action: "ai_chat_cancelled",
             category: "AI Chat",
             label: "User Cancelled",
           });
         } else {
-          setError((err as Error).message);
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.id === assistantMessage.id
-                ? {
-                    ...m,
-                    content: "抱歉，發生錯誤。請稍後再試。",
-                    isStreaming: false,
-                  }
-                : m,
-            ),
-          );
+          const failure =
+            caughtError instanceof ChatFailure
+              ? caughtError
+              : new ChatFailure(
+                  "unavailable",
+                  "The AI service is temporarily unavailable.",
+                );
+          setChatError({ code: failure.code, message: failure.message });
+          setError(failure.message);
+          if (failure.code === "quota") {
+            setQuotaError({
+              isQuotaExceeded: true,
+              message: failure.message,
+            });
+          }
+
+          if (fullContent || toolCalls.length > 0) {
+            updateAssistant({
+              content: fullContent,
+              isStreaming: false,
+              toolCalls: [...toolCalls],
+              metadata,
+              errorCode: failure.code,
+            });
+          } else {
+            removeAssistant();
+          }
+
           gtagEvent({
             action: "ai_chat_error",
             category: "AI Chat",
-            label: "Error",
-            data: {
-              error_message: (err as Error).message,
-            },
+            label: failure.code,
+            data: { error_message: failure.message },
           });
         }
       } finally {
         setIsLoading(false);
+        loadingRef.current = false;
         abortControllerRef.current = null;
       }
     },
-    [messages, getUserContext, apiEndpoint, user],
+    [getUserContext, apiEndpoint, options.userApiKey, user],
   );
+
+  const retryLastMessage = useCallback(async () => {
+    if (loadingRef.current || !lastPromptRef.current) return;
+    const prompt = lastPromptRef.current;
+    const currentMessages = messagesRef.current;
+    const lastUserIndex = currentMessages
+      .map((message, index) => ({ message, index }))
+      .reverse()
+      .find(
+        ({ message }) => message.role === "user" && message.content === prompt,
+      )?.index;
+    const baseMessages =
+      lastUserIndex === undefined
+        ? currentMessages
+        : currentMessages.slice(0, lastUserIndex);
+    messagesRef.current = baseMessages;
+    setMessages(baseMessages);
+    await sendMessage(prompt);
+  }, [sendMessage]);
 
   const cancel = useCallback(() => {
     abortControllerRef.current?.abort();
   }, []);
 
   const clear = useCallback(() => {
+    messagesRef.current = [];
     setMessages([]);
     setError(null);
+    setChatError(null);
     setQuotaError(null);
+    setRequiresSignIn(false);
+    lastPromptRef.current = null;
     localStorage.removeItem(HISTORY_KEY);
   }, []);
 
   const clearQuotaError = useCallback(() => {
+    setQuotaError(null);
+    setChatError((current) => (current?.code === "quota" ? null : current));
+    setError((current) => (chatError?.code === "quota" ? null : current));
+  }, [chatError]);
+
+  const clearError = useCallback(() => {
+    setError(null);
+    setChatError(null);
     setQuotaError(null);
   }, []);
 
@@ -478,11 +589,15 @@ export function useAIChat(options: UseAIChatOptions = {}) {
     messages,
     isLoading,
     error,
+    chatError,
     quotaError,
+    requiresSignIn,
     sendMessage,
+    retryLastMessage,
     cancel,
     clear,
     clearQuotaError,
+    clearError,
     getUserContext,
   };
 }

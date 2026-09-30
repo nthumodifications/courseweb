@@ -4,7 +4,7 @@ import { useChatContext } from "./ChatProvider";
 import { ChatMessages } from "./ChatMessages";
 import { ChatInput } from "./ChatInput";
 import { ChatSuggestions } from "./ChatSuggestions";
-import { QuotaExceededAlert } from "./QuotaExceededAlert";
+import { ChatErrorAlert } from "./ChatErrorAlert";
 import { X, Sparkles, GripVertical, LogIn } from "lucide-react";
 import { Button } from "@courseweb/ui";
 import { AISettingsDialog } from "./AISettingsDialog";
@@ -39,8 +39,15 @@ function LoginPrompt() {
 }
 
 export function ChatContainer() {
-  const { isOpen, setIsOpen, messages, quotaError, clearQuotaError } =
-    useChatContext();
+  const {
+    isOpen,
+    setIsOpen,
+    messages,
+    chatError,
+    clearError,
+    retryLastMessage,
+    requiresSignIn,
+  } = useChatContext();
   const { isAuthenticated, isLoading } = useAuth();
   const dict = useDictionary();
   const isDesktop = useMediaQuery("(min-width: 1024px)");
@@ -97,17 +104,18 @@ export function ChatContainer() {
       return renderLoadingContent();
     }
 
-    if (!isAuthenticated) {
+    if (!isAuthenticated || requiresSignIn) {
       return <LoginPrompt />;
     }
 
     return (
       <>
-        {quotaError && (
+        {chatError && (
           <div className="p-4 border-b">
-            <QuotaExceededAlert
-              retryAfter={quotaError.retryAfter}
-              onDismiss={clearQuotaError}
+            <ChatErrorAlert
+              error={chatError}
+              onRetry={retryLastMessage}
+              onDismiss={clearError}
             />
           </div>
         )}
@@ -197,10 +205,19 @@ export function ChatContainer() {
 
             {isLoading ? (
               renderLoadingContent()
-            ) : !isAuthenticated ? (
+            ) : !isAuthenticated || requiresSignIn ? (
               <LoginPrompt />
             ) : (
               <>
+                {chatError && (
+                  <div className="mb-3">
+                    <ChatErrorAlert
+                      error={chatError}
+                      onRetry={retryLastMessage}
+                      onDismiss={clearError}
+                    />
+                  </div>
+                )}
                 <div className="flex-1 overflow-hidden flex flex-col">
                   {messages.length === 0 ? (
                     <div className="flex-1 flex flex-col items-center justify-center">
