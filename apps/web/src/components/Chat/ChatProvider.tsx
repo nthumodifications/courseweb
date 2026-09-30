@@ -1,5 +1,10 @@
 import { createContext, useContext, useState, ReactNode } from "react";
-import { useAIChat, ChatMessage, QuotaError } from "@/hooks/useAIChat";
+import {
+  useAIChat,
+  ChatMessage,
+  ChatError,
+  QuotaError,
+} from "@/hooks/useAIChat";
 
 interface ChatContextValue {
   isOpen: boolean;
@@ -7,11 +12,15 @@ interface ChatContextValue {
   messages: ChatMessage[];
   isLoading: boolean;
   error: string | null;
+  chatError: ChatError | null;
   quotaError: QuotaError | null;
+  requiresSignIn: boolean;
   sendMessage: (content: string) => Promise<void>;
+  retryLastMessage: () => Promise<void>;
   cancel: () => void;
   clear: () => void;
   clearQuotaError: () => void;
+  clearError: () => void;
 }
 
 const ChatContext = createContext<ChatContextValue | null>(null);

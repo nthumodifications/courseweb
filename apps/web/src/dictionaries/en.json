@@ -266,6 +266,9 @@
         "title": "AI course summary",
         "loading": "Analyzing course content…",
         "error": "Could not generate the summary.",
+        "rate_limited": "The AI service is busy right now. Please try again shortly.",
+        "rate_limited_retry": "Retry",
+        "unavailable": "The AI summary service is temporarily unavailable.",
         "workload": "Workload",
         "difficulty": "Difficulty"
       }
@@ -691,14 +694,18 @@
       },
       "api_key": {
         "title": "Use Your Own API Key",
-        "description": "Provide your own Gemini API Key for higher usage limits",
+        "description": "Use your own Gemini API key for more AI requests.",
         "label": "Gemini API Key",
         "placeholder": "AIzaSy...",
         "get_key": "Get free API Key from Google AI Studio",
+        "free_tier": "Google's free tier is available without billing; adding a key does not move you off the free tier.",
         "test": "Test Connection",
         "testing": "Testing...",
         "valid": "✓ API Key is valid",
-        "invalid": "✗ Invalid API Key or connection failed"
+        "invalid": "✗ Your Gemini API key is invalid.",
+        "quota": "This Gemini key has no available quota right now.",
+        "unavailable": "Google AI Studio could not be reached. Try again later.",
+        "test_failed": "Could not test the key. Try again later."
       },
       "save": "Save Settings"
     },
@@ -1354,6 +1361,38 @@
     "input_placeholder": "Ask me anything about courses...",
     "keyboard_hint": "Shift + Enter for a new line, Enter to send",
     "thinking": "Thinking...",
+    "dismiss": "Dismiss",
+    "retry": "Retry",
+    "tool_args": "Arguments",
+    "tool_result": "Result",
+    "tool_error": "Tool error",
+    "errors": {
+      "auth": {
+        "title": "Your Gemini API key is invalid",
+        "description": "Fix or remove your Gemini key in AI settings, then try again.",
+        "settings": "Open AI settings"
+      },
+      "quota": {
+        "title": "AI usage is temporarily unavailable",
+        "description": "The available AI quota has been reached. Please try again shortly or add your own key.",
+        "settings": "Open AI settings"
+      },
+      "unavailable": {
+        "title": "AI service unavailable",
+        "description": "No AI provider could answer this request right now.",
+        "settings": "Open AI settings"
+      },
+      "bad_request": {
+        "title": "That request could not be sent",
+        "description": "Please check the message and try again.",
+        "settings": "Open AI settings"
+      },
+      "unknown": {
+        "title": "The AI request failed",
+        "description": "Something went wrong while contacting the AI service.",
+        "settings": "Open AI settings"
+      }
+    },
     "suggestions": {
       "machine_learning": "Search for machine learning courses",
       "next_timetable": "Plan next semester's timetable",
@@ -1362,7 +1401,15 @@
       "machine_learning_prompt": "Help me search for machine learning courses",
       "next_timetable_prompt": "Based on my current timetable, what courses can I take next semester?",
       "graduation_credits_prompt": "Help me check my department's graduation credit requirements",
-      "elective_courses_prompt": "Recommend some elective courses for me"
+      "elective_courses_prompt": "Recommend some elective courses for me",
+      "free_periods": "Fit courses into my free periods",
+      "free_periods_prompt": "Search for courses that fit my free periods next semester",
+      "timetable_conflicts": "Check timetable conflicts",
+      "timetable_conflicts_prompt": "Check my timetable for conflicts and suggest fixes",
+      "bus": "Find a campus bus",
+      "bus_prompt": "Help me find the right NTHU campus bus for my trip",
+      "academic_calendar": "Check the academic calendar",
+      "academic_calendar_prompt": "What important dates are on the NTHU academic calendar?"
     },
     "course_renderer": {
       "load_failed": "Failed to load courses",

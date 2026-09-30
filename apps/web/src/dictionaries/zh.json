@@ -266,6 +266,9 @@
         "title": "AI 課程摘要",
         "loading": "正在分析課程內容…",
         "error": "無法產生摘要。",
+        "rate_limited": "AI 服務目前較忙，請稍後再試。",
+        "rate_limited_retry": "再試一次",
+        "unavailable": "AI 摘要服務暫時無法使用。",
         "workload": "負擔",
         "difficulty": "難度"
       }
@@ -691,14 +694,18 @@
       },
       "api_key": {
         "title": "使用自己的 API Key",
-        "description": "提供您自己的 Gemini API Key 以獲得更高的使用額度",
+        "description": "使用自己的 Gemini API Key，以獲得更多 AI 使用次數。",
         "label": "Gemini API Key",
         "placeholder": "AIzaSy...",
         "get_key": "從 Google AI Studio 取得免費 API Key",
+        "free_tier": "Google 免費方案不需要綁定付款；加入 API Key 也不會離開免費方案。",
         "test": "測試連線",
         "testing": "測試中...",
         "valid": "✓ API Key 有效",
-        "invalid": "✗ API Key 無效或連線失敗"
+        "invalid": "✗ Gemini API Key 無效。",
+        "quota": "此 Gemini Key 目前沒有可用額度。",
+        "unavailable": "無法連線到 Google AI Studio，請稍後再試。",
+        "test_failed": "無法測試此 Key，請稍後再試。"
       },
       "save": "儲存設定"
     },
@@ -1354,6 +1361,38 @@
     "input_placeholder": "詢問任何課程相關問題…",
     "keyboard_hint": "Shift + Enter 換行，Enter 傳送",
     "thinking": "思考中…",
+    "dismiss": "關閉",
+    "retry": "再試一次",
+    "tool_args": "參數",
+    "tool_result": "結果",
+    "tool_error": "工具錯誤",
+    "errors": {
+      "auth": {
+        "title": "Gemini API Key 無效",
+        "description": "請到 AI 設定修正或移除 Gemini Key，再試一次。",
+        "settings": "開啟 AI 設定"
+      },
+      "quota": {
+        "title": "AI 暫時無法使用",
+        "description": "目前可用的 AI 額度已達上限，請稍後再試或加入自己的 Key。",
+        "settings": "開啟 AI 設定"
+      },
+      "unavailable": {
+        "title": "AI 服務無法使用",
+        "description": "目前沒有 AI 供應商能完成這個請求。",
+        "settings": "開啟 AI 設定"
+      },
+      "bad_request": {
+        "title": "無法送出這個請求",
+        "description": "請檢查訊息內容後再試一次。",
+        "settings": "開啟 AI 設定"
+      },
+      "unknown": {
+        "title": "AI 請求失敗",
+        "description": "連線到 AI 服務時發生問題。",
+        "settings": "開啟 AI 設定"
+      }
+    },
     "suggestions": {
       "machine_learning": "搜尋機器學習相關課程",
       "next_timetable": "規劃下學期課表",
@@ -1362,7 +1401,15 @@
       "machine_learning_prompt": "幫我搜尋機器學習相關的課程",
       "next_timetable_prompt": "根據我目前的課表，幫我規劃下學期可以選什麼課",
       "graduation_credits_prompt": "幫我查詢我的系所畢業學分要求",
-      "elective_courses_prompt": "推薦一些適合我的選修課程"
+      "elective_courses_prompt": "推薦一些適合我的選修課程",
+      "free_periods": "把課程排進空堂",
+      "free_periods_prompt": "搜尋能排進我下學期空堂的課程",
+      "timetable_conflicts": "檢查課表衝堂",
+      "timetable_conflicts_prompt": "檢查我的課表是否衝堂，並建議調整方式",
+      "bus": "查詢校車",
+      "bus_prompt": "幫我找適合這段行程的清大校車",
+      "academic_calendar": "查詢校務行事曆",
+      "academic_calendar_prompt": "清大校務行事曆有哪些重要日期？"
     },
     "course_renderer": {
       "load_failed": "課程載入失敗",

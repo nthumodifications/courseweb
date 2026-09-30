@@ -16,7 +16,10 @@ import client from "@/config/api";
 import { SettingItem } from "./SettingItem";
 import { Check } from "lucide-react";
 
-const ENTRANCE_YEARS = ["114", "113", "112", "111", "110", "109", "108", "107"];
+const CURRENT_ROC_YEAR = new Date().getFullYear() - 1911;
+const ENTRANCE_YEARS = Array.from({ length: 8 }, (_, index) =>
+  String(CURRENT_ROC_YEAR - index),
+);
 
 interface DepartmentOption {
   college: string;
@@ -37,9 +40,10 @@ export function AIPreferencesPanel() {
     useCustomKey: false,
   });
   const [isTesting, setIsTesting] = useState(false);
-  const [testResult, setTestResult] = useState<"success" | "error" | null>(
-    null,
-  );
+  const [testResult, setTestResult] = useState<
+    "success" | "auth" | "quota" | "unavailable" | "error" | null
+  >(null);
+  const [testedModel, setTestedModel] = useState<string | null>(null);
   const [isSaved, setIsSaved] = useState(false);
 
   // Load departments from API using React Query
@@ -129,26 +133,31 @@ export function AIPreferencesPanel() {
 
     setIsTesting(true);
     setTestResult(null);
+    setTestedModel(null);
 
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_COURSEWEB_API_URL}/chat`,
+        `${import.meta.env.VITE_COURSEWEB_API_URL}/ai/test-key`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            messages: [{ role: "user", content: "test" }],
-            apiKey: settings.apiKey,
-          }),
+          body: JSON.stringify({ apiKey: settings.apiKey }),
         },
       );
 
-      setTestResult(response.ok ? "success" : "error");
+      const result = (await response.json().catch(() => null)) as {
+        ok?: boolean;
+        model?: string;
+        code?: "auth" | "quota" | "unavailable";
+      } | null;
+      const status = response.ok && result?.ok ? "success" : result?.code;
+      setTestResult(status || "error");
+      setTestedModel(result?.model || null);
 
       event({
         action: "test_api_key",
         category: "settings",
-        label: response.ok ? "success" : "failed",
+        label: status || "error",
       });
     } catch {
       setTestResult("error");
@@ -265,6 +274,9 @@ export function AIPreferencesPanel() {
                 >
                   {dict.settings.ai.api_key.get_key}
                 </a>
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  {dict.settings.ai.api_key.free_tier}
+                </p>
               </div>
             }
           />
@@ -283,11 +295,27 @@ export function AIPreferencesPanel() {
             {testResult === "success" && (
               <p className="text-sm text-primary">
                 {dict.settings.ai.api_key.valid}
+                {testedModel ? ` (${testedModel})` : ""}
+              </p>
+            )}
+            {testResult === "auth" && (
+              <p className="text-sm text-destructive">
+                {dict.settings.ai.api_key.invalid}
+              </p>
+            )}
+            {testResult === "quota" && (
+              <p className="text-sm text-destructive">
+                {dict.settings.ai.api_key.quota}
+              </p>
+            )}
+            {testResult === "unavailable" && (
+              <p className="text-sm text-destructive">
+                {dict.settings.ai.api_key.unavailable}
               </p>
             )}
             {testResult === "error" && (
               <p className="text-sm text-destructive">
-                {dict.settings.ai.api_key.invalid}
+                {dict.settings.ai.api_key.test_failed}
               </p>
             )}
           </div>
