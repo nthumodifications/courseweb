@@ -1,32 +1,113 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
-import { env } from "hono/adapter";
-import { GoogleGenAI, Type } from "@google/genai";
 import supabase_server from "../config/supabase_server";
 import prismaClients from "../prisma/client";
+import type { Bindings } from "../index";
+import {
+  generateJSON,
+  type LLMProviderError,
+} from "./llm";
 
-type Bindings = {
-  DB: import("@cloudflare/workers-types").D1Database;
-  GOOGLE_AI_API_KEY?: string;
-};
+export type Workload =
+  | "輕鬆"
+  | "適中"
+  | "繁重"
+  | "Light"
+  | "Moderate"
+  | "Heavy";
 
 export interface SyllabusSummary {
   bullets: string[];
-  workload: "輕鬆" | "適中" | "繁重";
+  workload: Workload;
   audience: string;
   difficultyRating: number;
+  provider?: "gemini" | "groq" | "workers-ai";
+  model?: string;
 }
 
 const CACHE_KEY_PREFIX = "syllabus_summary:";
+const SUMMARY_SCHEMA = {
+  type: "object",
+  properties: {
+    bullets: {
+      type: "array",
+      items: { type: "string" },
+      description: "At most three concise bullet points",
+    },
+    workload: {
+      type: "string",
+      enum: ["輕鬆", "適中", "繁重", "Light", "Moderate", "Heavy"],
+    },
+    audience: { type: "string" },
+    difficultyRating: { type: "integer" },
+  },
+  required: ["bullets", "workload", "audience", "difficultyRating"],
+} as const;
 
-function arrayBufferToBase64(buffer: ArrayBuffer): string {
-  const bytes = new Uint8Array(buffer);
-  let binary = "";
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
+function workloadForLanguage(value: Workload, english: boolean): Workload {
+  const englishValue: Record<string, Workload> = {
+    輕鬆: "Light",
+    適中: "Moderate",
+    繁重: "Heavy",
+  };
+  const chineseValue: Record<string, Workload> = {
+    Light: "輕鬆",
+    Moderate: "適中",
+    Heavy: "繁重",
+  };
+  return english
+    ? englishValue[value] ?? value
+    : chineseValue[value] ?? value;
+}
+
+/** Validates and normalizes model output before it is cached permanently. */
+export function normalizeSyllabusSummary(
+  value: unknown,
+  english: boolean,
+): SyllabusSummary {
+  if (!value || typeof value !== "object") throw new Error("Invalid summary object");
+  const summary = value as Record<string, unknown>;
+  const bullets = Array.isArray(summary.bullets)
+    ? summary.bullets.filter((item): item is string => typeof item === "string").slice(0, 3)
+    : [];
+  const workload = summary.workload;
+  if (
+    workload !== "輕鬆" &&
+    workload !== "適中" &&
+    workload !== "繁重" &&
+    workload !== "Light" &&
+    workload !== "Moderate" &&
+    workload !== "Heavy"
+  ) {
+    throw new Error("Invalid workload in summary");
   }
-  return btoa(binary);
+  if (typeof summary.audience !== "string") {
+    throw new Error("Invalid audience in summary");
+  }
+  const difficulty = Number(summary.difficultyRating);
+  if (!Number.isFinite(difficulty)) throw new Error("Invalid difficulty in summary");
+  return {
+    bullets,
+    workload: workloadForLanguage(workload, english),
+    audience: summary.audience,
+    difficultyRating: Math.max(1, Math.min(5, Math.round(difficulty))),
+  };
+}
+
+function requestIp(c: { req: { header(name: string): string | undefined } }): string {
+  return (
+    c.req.header("cf-connecting-ip") ??
+    c.req.header("x-forwarded-for") ??
+    c.req.header("x-real-ip") ??
+    "unknown"
+  );
+}
+
+function providerFailure(error: unknown): { error: string; code: "unavailable" } {
+  const message =
+    error instanceof Error ? error.message : "All AI providers failed";
+  return { error: message, code: "unavailable" };
 }
 
 const app = new Hono<{ Bindings: Bindings }>().get(
@@ -34,20 +115,41 @@ const app = new Hono<{ Bindings: Bindings }>().get(
   zValidator("param", z.object({ courseId: z.string() })),
   async (c) => {
     const { courseId } = c.req.valid("param");
-    const { SUPABASE_URL, GOOGLE_AI_API_KEY } = env<{
-      SUPABASE_URL: string;
-      GOOGLE_AI_API_KEY?: string;
-    }>(c);
-
-    // 1. Check D1 cache — permanent, no TTL
     const prisma = await prismaClients.fetch(c.env.DB);
     const cacheKey = `${CACHE_KEY_PREFIX}${courseId}`;
-    const cached = await prisma.cache.findUnique({ where: { key: cacheKey } });
+    let cached;
+    try {
+      cached = await prisma.cache.findUnique({ where: { key: cacheKey } });
+    } catch (error) {
+      console.error("Failed to read AI summary cache:", error);
+      return c.json(
+        { error: "AI summary storage is unavailable", code: "unavailable" },
+        503,
+      );
+    }
     if (cached) {
-      return c.json(JSON.parse(cached.data) as SyllabusSummary);
+      try {
+        return c.json(JSON.parse(cached.data) as SyllabusSummary);
+      } catch {
+        // Treat a corrupt cache entry as a miss and regenerate it.
+      }
     }
 
-    // 2. Fetch course + syllabus from Supabase
+    const limiter = c.env.AI_RATE_LIMITER;
+    if (limiter) {
+      try {
+        const outcome = await limiter.limit({ key: requestIp(c) });
+        if (!outcome.success) {
+          return c.json(
+            { error: "Too many uncached AI summary requests", code: "rate_limited" },
+            429,
+          );
+        }
+      } catch (error) {
+        console.error("AI summary rate limiting failed:", error);
+      }
+    }
+
     const supabase = supabase_server(c);
     const { data: courseData, error: courseError } = await supabase
       .from("courses")
@@ -71,14 +173,6 @@ const app = new Hono<{ Bindings: Bindings }>().get(
       return c.json({ error: "No syllabus available for this course" }, 404);
     }
 
-    // 3. Validate API key
-    if (!GOOGLE_AI_API_KEY) {
-      return c.json({ error: "GOOGLE_AI_API_KEY not configured" }, 500);
-    }
-
-    const ai = new GoogleGenAI({ apiKey: GOOGLE_AI_API_KEY });
-
-    // 4. Build prompt content
     const courseName = courseData.name_zh || courseData.name_en || courseId;
     const teachers = [
       ...(courseData.teacher_zh ?? []),
@@ -86,8 +180,7 @@ const app = new Hono<{ Bindings: Bindings }>().get(
     ]
       .filter(Boolean)
       .join(", ");
-    const isEnglish = courseData.language === "英";
-
+    const english = courseData.language === "英";
     const metaText = [
       `課程名稱 / Course: ${courseName}`,
       `系所 / Department: ${courseData.department ?? ""}`,
@@ -100,96 +193,43 @@ const app = new Hono<{ Bindings: Bindings }>().get(
         ? `關鍵字 / Keywords: ${syllabusData.keywords.join(", ")}`
         : null,
       syllabusData.brief ? `課程簡介 / Brief: ${syllabusData.brief}` : null,
+      syllabusData.content
+        ? `\n\n課程大綱 / Syllabus:\n${syllabusData.content}`
+        : null,
     ]
       .filter(Boolean)
       .join("\n");
+    const supabaseUrl = c.env.SUPABASE_URL;
+    const pdf =
+      !syllabusData.content && syllabusData.has_file && supabaseUrl
+        ? {
+            url: `${supabaseUrl}/storage/v1/object/public/syllabus/${encodeURIComponent(courseId)}.pdf`,
+          }
+        : undefined;
 
-    const parts: object[] = [{ text: metaText }];
-
-    if (syllabusData.content) {
-      parts.push({ text: `\n\n課程大綱 / Syllabus:\n${syllabusData.content}` });
-    } else if (syllabusData.has_file) {
-      const pdfUrl = `${SUPABASE_URL}/storage/v1/object/public/syllabus/${encodeURIComponent(courseId)}.pdf`;
-      try {
-        const pdfRes = await fetch(pdfUrl);
-        if (pdfRes.ok) {
-          const buffer = await pdfRes.arrayBuffer();
-          parts.push({
-            inlineData: {
-              mimeType: "application/pdf",
-              data: arrayBufferToBase64(buffer),
-            },
-          });
-        }
-      } catch {
-        // PDF unavailable — proceed with metadata only
-      }
-    }
-
-    // 5. Call Gemini with responseSchema for structured output
-    const systemInstruction = isEnglish
-      ? "You are a course analyst. Summarize the provided course information concisely and accurately. Respond in English. Be direct and student-focused."
-      : "你是課程分析師。請根據提供的課程資訊，簡潔準確地摘要。用繁體中文回答。以學生視角撰寫，直接切入重點。";
-
-    const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: [{ role: "user", parts }],
-      config: {
-        systemInstruction,
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            bullets: {
-              type: Type.ARRAY,
-              description:
-                "Exactly 3 concise bullet points describing what students will learn or do",
-              items: { type: Type.STRING },
-            },
-            workload: {
-              type: Type.STRING,
-              description: isEnglish
-                ? "Estimated workload: 'Light', 'Moderate', or 'Heavy'"
-                : "預估學習負擔：'輕鬆'、'適中' 或 '繁重'",
-              enum: isEnglish
-                ? ["Light", "Moderate", "Heavy"]
-                : ["輕鬆", "適中", "繁重"],
-            },
-            audience: {
-              type: Type.STRING,
-              description:
-                "One sentence describing who this course is best suited for",
-            },
-            difficultyRating: {
-              type: Type.NUMBER,
-              description: "Difficulty from 1 (very easy) to 5 (very hard)",
-            },
-          },
-          required: ["bullets", "workload", "audience", "difficultyRating"],
-        },
-      },
-    });
-
-    const text = response.text;
-    if (!text) {
-      return c.json({ error: "Failed to generate summary" }, 500);
-    }
-
-    let summary: SyllabusSummary;
     try {
-      summary = JSON.parse(text) as SyllabusSummary;
-    } catch {
-      return c.json({ error: "Invalid summary format from AI" }, 500);
+      const generated = await generateJSON<unknown>({
+        env: c.env,
+        system: english
+          ? "You are a course analyst. Summarize the provided course information concisely and accurately in English. Be direct and student-focused."
+          : "你是課程分析師。請根據提供的課程資訊，簡潔準確地摘要。用繁體中文回答，從學生角度直接切入重點。",
+        text: metaText,
+        pdf,
+        schema: SUMMARY_SCHEMA,
+        userGeminiKey: c.req.header("X-Gemini-Api-Key"),
+        purpose: "summary",
+      });
+      const summary = normalizeSyllabusSummary(generated.data, english);
+      await prisma.cache.upsert({
+        where: { key: cacheKey },
+        update: { data: JSON.stringify(summary) },
+        create: { key: cacheKey, data: JSON.stringify(summary) },
+      });
+      return c.json({ ...summary, provider: generated.provider, model: generated.model });
+    } catch (error) {
+      const failure = providerFailure(error as LLMProviderError);
+      return c.json(failure, 503);
     }
-
-    // 6. Cache permanently (syllabi don't change mid-semester)
-    await prisma.cache.upsert({
-      where: { key: cacheKey },
-      update: { data: JSON.stringify(summary) },
-      create: { key: cacheKey, data: JSON.stringify(summary) },
-    });
-
-    return c.json(summary);
   },
 );
 

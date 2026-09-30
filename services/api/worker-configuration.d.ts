@@ -10,6 +10,7 @@ declare namespace Cloudflare {
     ALGOLIA_BACKUP_APP_ID?: string;
     ALGOLIA_BACKUP_API_KEY?: string;
     DB: D1Database;
+    AI: Ai;
   }
 }
 interface Env extends Cloudflare.Env {}

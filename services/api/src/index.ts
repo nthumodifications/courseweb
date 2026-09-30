@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
-import type { RateLimit } from "@cloudflare/workers-types";
+import type { Ai, RateLimit } from "@cloudflare/workers-types";
 
 import acaCalendar from "./aca-calendar";
 import calendarProxy from "./calendar-proxy";
@@ -36,7 +36,10 @@ export type Bindings = {
   ALGOLIA_BACKUP_APP_ID?: string;
   ALGOLIA_BACKUP_API_KEY?: string;
   GOOGLE_AI_API_KEY?: string;
+  GROQ_API_KEY?: string;
+  AI?: Ai;
   VENUE_RATE_LIMITER: RateLimit;
+  AI_RATE_LIMITER?: RateLimit;
 };
 
 export const app = new Hono<{ Bindings: Bindings }>()
@@ -47,6 +50,7 @@ export const app = new Hono<{ Bindings: Bindings }>()
       // The search text tier versions its IndexedDB cache by ETag, which a
       // cross-origin fetch cannot read unless it is exposed.
       exposeHeaders: ["ETag"],
+      allowHeaders: ["Content-Type", "Authorization", "X-Gemini-Api-Key"],
     }),
   )
   // .use(csrf({ origin: process.env.NODE_ENV === "production" ? 'nthumods.com': 'localhost' }))

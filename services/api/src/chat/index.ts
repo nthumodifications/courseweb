@@ -2,90 +2,77 @@ import { Hono } from "hono";
 import { streamChat } from "./gemini";
 import type { ChatRequest } from "./types";
 import { auth } from "../utils/auth";
+import type { LlmEnv } from "../ai/llm";
 
-// Extend Bindings type to include GOOGLE_AI_API_KEY
-type Bindings = {
-  GOOGLE_AI_API_KEY?: string;
-};
+type Bindings = LlmEnv & Record<string, unknown>;
 
 const chat = new Hono<{ Bindings: Bindings }>()
   // Apply auth middleware - requires user to be authenticated (no specific scope required)
   .use("/*", auth())
   .post("/", async (c) => {
-    const body = await c.req.json<ChatRequest>();
+    let body: ChatRequest;
+    try {
+      body = await c.req.json<ChatRequest>();
+    } catch {
+      return c.json({ error: "Invalid JSON body" }, 400);
+    }
     const { messages, userContext, apiKey } = body;
 
-    // Use user's API key or fall back to default
-    const effectiveApiKey = apiKey || c.env.GOOGLE_AI_API_KEY;
-
-    if (!effectiveApiKey) {
-      return c.json(
-        {
-          error:
-            "No API key configured. Please provide your own Gemini API key in settings.",
-        },
-        400,
-      );
-    }
-
-    if (!messages || messages.length === 0) {
+    if (
+      !Array.isArray(messages) ||
+      messages.length === 0 ||
+      messages.some(
+        (message) =>
+          !message ||
+          (message.role !== "user" && message.role !== "assistant") ||
+          typeof message.content !== "string",
+      )
+    ) {
       return c.json({ error: "No messages provided" }, 400);
     }
 
-    try {
-      // Create streaming response
-      const encoder = new TextEncoder();
-      const stream = new ReadableStream({
-        async start(controller) {
-          try {
-            const generator = streamChat(c, messages, userContext || {}, {
-              apiKey: effectiveApiKey,
-            });
-
-            for await (const event of generator) {
-              const data = `data: ${JSON.stringify(event)}\n\n`;
-              controller.enqueue(encoder.encode(data));
-            }
-
-            controller.enqueue(encoder.encode("data: [DONE]\n\n"));
-            controller.close();
-          } catch (error) {
-            const errorEvent = {
-              type: "error",
-              data: error instanceof Error ? error.message : "Unknown error",
-            };
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          const generator = streamChat(c, messages, userContext || {}, {
+            apiKey,
+          });
+          for await (const event of generator) {
             controller.enqueue(
-              encoder.encode(`data: ${JSON.stringify(errorEvent)}\n\n`),
+              encoder.encode(`data: ${JSON.stringify(event)}\n\n`),
             );
-            controller.close();
           }
-        },
-      });
+          controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+          controller.close();
+        } catch (error) {
+          const errorEvent = {
+            type: "error",
+            data: error instanceof Error ? error.message : "Unknown error",
+            code: "unknown",
+          };
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify(errorEvent)}\n\n`),
+          );
+          controller.close();
+        }
+      },
+    });
 
-      return new Response(stream, {
-        headers: {
-          "Content-Type": "text/event-stream",
-          "Cache-Control": "no-cache",
-          Connection: "keep-alive",
-          "Access-Control-Allow-Origin": "*",
-        },
-      });
-    } catch (error) {
-      console.error("Chat error:", error);
-      return c.json(
-        {
-          error: error instanceof Error ? error.message : "Chat request failed",
-        },
-        500,
-      );
-    }
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      },
+    });
   })
 
   .get("/", (c) => {
     return c.json({
       name: "NTHUMods AI Chat",
       version: "1.0.0",
-      model: "gemini-2.0-flash-exp",
+      model: "provider-chain",
       description: "AI course planning assistant",
       requiresAuth: true,
     });
