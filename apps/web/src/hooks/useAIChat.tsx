@@ -39,7 +39,7 @@ export interface ChatMessage {
   errorCode?: ChatErrorCode;
   metadata?: {
     courses?: string[];
-    provider?: "gemini" | "groq" | "workers-ai";
+    provider?: string;
     model?: string;
   };
 }

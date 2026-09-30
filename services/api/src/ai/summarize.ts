@@ -7,6 +7,7 @@ import type { Bindings } from "../index";
 import {
   generateJSON,
   type LLMProviderError,
+  type ProviderName,
 } from "./llm";
 
 export type Workload =
@@ -22,7 +23,7 @@ export interface SyllabusSummary {
   workload: Workload;
   audience: string;
   difficultyRating: number;
-  provider?: "gemini" | "groq" | "workers-ai";
+  provider?: ProviderName;
   model?: string;
 }
 

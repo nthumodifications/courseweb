@@ -5,7 +5,7 @@ import { z } from "zod";
 import prismaClients from "../prisma/client";
 import supabase_server from "../config/supabase_server";
 import type { Bindings } from "../index";
-import { generateJSON, type LLMProviderError } from "./llm";
+import { generateJSON, type LLMProviderError, type ProviderName } from "./llm";
 
 export const SEARCH_INTENT_COURSE_LEVELS = [
   "1000",
@@ -55,7 +55,7 @@ export type SearchIntent = {
   query: string;
   filters: SearchIntentFilters;
   explanation: string;
-  provider?: "gemini" | "groq" | "workers-ai";
+  provider?: ProviderName;
   model?: string;
 };
 
