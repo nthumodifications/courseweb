@@ -37,6 +37,10 @@ export type Bindings = {
   ALGOLIA_BACKUP_API_KEY?: string;
   GOOGLE_AI_API_KEY?: string;
   GROQ_API_KEY?: string;
+  CEREBRAS_API_KEY?: string;
+  OPENROUTER_API_KEY?: string;
+  MISTRAL_API_KEY?: string;
+  AI_PROVIDER_ORDER?: string;
   AI?: Ai;
   VENUE_RATE_LIMITER: RateLimit;
   AI_RATE_LIMITER?: RateLimit;

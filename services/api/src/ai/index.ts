@@ -22,6 +22,9 @@ const app = new Hono<{ Bindings: Bindings }>()
       providers: [
         { name: "gemini", configured: Boolean(c.env.GOOGLE_AI_API_KEY) },
         { name: "groq", configured: Boolean(c.env.GROQ_API_KEY) },
+        { name: "cerebras", configured: Boolean(c.env.CEREBRAS_API_KEY) },
+        { name: "openrouter", configured: Boolean(c.env.OPENROUTER_API_KEY) },
+        { name: "mistral", configured: Boolean(c.env.MISTRAL_API_KEY) },
         { name: "workers-ai", configured: Boolean(c.env.AI) },
       ],
       chat: true,

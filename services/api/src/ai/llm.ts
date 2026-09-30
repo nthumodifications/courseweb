@@ -9,7 +9,13 @@ import { TOOL_DECLARATIONS, executeTool } from "../chat/tools";
 import { buildSystemPrompt } from "../chat/system-prompt";
 import type { ChatMessage, UserContext } from "../chat/types";
 
-export type ProviderName = "gemini" | "groq" | "workers-ai";
+export type ProviderName =
+  | "gemini"
+  | "groq"
+  | "cerebras"
+  | "openrouter"
+  | "mistral"
+  | "workers-ai";
 export type LLMErrorCode =
   | "quota"
   | "auth"
@@ -34,11 +40,18 @@ export interface WorkerAI {
 export interface LlmEnv {
   GOOGLE_AI_API_KEY?: string;
   GROQ_API_KEY?: string;
+  CEREBRAS_API_KEY?: string;
+  OPENROUTER_API_KEY?: string;
+  MISTRAL_API_KEY?: string;
   AI?: unknown;
+  AI_PROVIDER_ORDER?: string;
   GEMINI_CHAT_MODELS?: string;
   GEMINI_SUMMARY_MODELS?: string;
   GEMINI_BULK_MODELS?: string;
   GROQ_CHAT_MODELS?: string;
+  CEREBRAS_CHAT_MODELS?: string;
+  OPENROUTER_CHAT_MODELS?: string;
+  MISTRAL_CHAT_MODELS?: string;
   WORKERS_AI_CHAT_MODELS?: string;
 }
 
@@ -59,15 +72,107 @@ export const DEFAULT_GROQ_CHAT_MODELS = [
   "openai/gpt-oss-20b",
 ] as const;
 
+export const DEFAULT_CEREBRAS_CHAT_MODELS = [
+  "gpt-oss-120b",
+  "qwen-3.8-27b",
+] as const;
+
+// Keep these pinned to current :free model IDs. OpenRouter's free router is
+// intentionally not used because it does not guarantee a free model slug.
+export const DEFAULT_OPENROUTER_CHAT_MODELS = [
+  "google/gemma-4-31b-it:free",
+  "google/gemma-4-26b-a4b-it:free",
+  "nvidia/nemotron-3-super-120b-a12b:free",
+] as const;
+
+export const DEFAULT_MISTRAL_CHAT_MODELS = [
+  "mistral-small-latest",
+  "ministral-8b-latest",
+] as const;
+
 export const DEFAULT_WORKERS_AI_CHAT_MODELS = [
   "@cf/openai/gpt-oss-120b",
   "@cf/meta/llama-4-scout-17b-16e-instruct",
 ] as const;
 
-const GROQ_API_URL =
-  "https://api.groq.com/openai/v1/chat/completions";
 const DEAD_PROVIDER_CACHE = new Map<string, number>();
 const MAX_TURNS = 10;
+
+type OpenAICompatibleProviderName = Exclude<
+  ProviderName,
+  "gemini" | "workers-ai"
+>;
+
+export interface OpenAICompatibleProvider {
+  name: OpenAICompatibleProviderName;
+  baseUrl: string;
+  keyEnv:
+    | "GROQ_API_KEY"
+    | "CEREBRAS_API_KEY"
+    | "OPENROUTER_API_KEY"
+    | "MISTRAL_API_KEY";
+  modelsEnv:
+    | "GROQ_CHAT_MODELS"
+    | "CEREBRAS_CHAT_MODELS"
+    | "OPENROUTER_CHAT_MODELS"
+    | "MISTRAL_CHAT_MODELS";
+  defaultModels: readonly string[];
+  supportsJsonMode: boolean;
+  supportsTools: boolean;
+  headers?: Record<string, string>;
+}
+
+export const OPENAI_COMPATIBLE_PROVIDERS: readonly OpenAICompatibleProvider[] = [
+  {
+    name: "groq",
+    baseUrl: "https://api.groq.com/openai/v1",
+    keyEnv: "GROQ_API_KEY",
+    modelsEnv: "GROQ_CHAT_MODELS",
+    defaultModels: DEFAULT_GROQ_CHAT_MODELS,
+    supportsJsonMode: true,
+    supportsTools: true,
+  },
+  {
+    name: "cerebras",
+    baseUrl: "https://api.cerebras.ai/v1",
+    keyEnv: "CEREBRAS_API_KEY",
+    modelsEnv: "CEREBRAS_CHAT_MODELS",
+    defaultModels: DEFAULT_CEREBRAS_CHAT_MODELS,
+    supportsJsonMode: true,
+    supportsTools: true,
+  },
+  {
+    name: "openrouter",
+    baseUrl: "https://openrouter.ai/api/v1",
+    keyEnv: "OPENROUTER_API_KEY",
+    modelsEnv: "OPENROUTER_CHAT_MODELS",
+    defaultModels: DEFAULT_OPENROUTER_CHAT_MODELS,
+    supportsJsonMode: true,
+    supportsTools: true,
+    headers: {
+      "HTTP-Referer": "https://nthumods.com",
+      "X-Title": "NTHUMods",
+    },
+  },
+  {
+    name: "mistral",
+    baseUrl: "https://api.mistral.ai/v1",
+    keyEnv: "MISTRAL_API_KEY",
+    modelsEnv: "MISTRAL_CHAT_MODELS",
+    defaultModels: DEFAULT_MISTRAL_CHAT_MODELS,
+    supportsJsonMode: true,
+    supportsTools: true,
+  },
+];
+
+const DEFAULT_PROVIDER_ORDER: readonly ProviderName[] = [
+  "gemini",
+  "groq",
+  "cerebras",
+  "openrouter",
+  "mistral",
+  "workers-ai",
+];
 
 export type JsonSchema = Record<string, unknown>;
 
@@ -164,7 +269,21 @@ export function classifyProviderError(
   return { code: "unknown", status, message };
 }
 
-function deadCacheTtl(classification: ProviderErrorClassification): number {
+function deadCacheTtl(
+  provider: ProviderName,
+  classification: ProviderErrorClassification,
+): number {
+  const lower = classification.message.toLowerCase();
+  const dailyQuota =
+    classification.status === 429 &&
+    /(daily|per day|requests?\s*\/\s*day|requests?\s+per\s+day|day limit)/.test(lower);
+  const openRouterFreeQuota =
+    provider === "openrouter" &&
+    classification.status === 402 &&
+    /(insufficient credits|free model|balance|credits)/.test(lower);
+  if (dailyQuota || openRouterFreeQuota) {
+    return 24 * 60 * 60 * 1000;
+  }
   if (
     classification.code === "auth" ||
     classification.status === 402 ||
@@ -200,7 +319,7 @@ function rememberDead(
   model: string,
   classification: ProviderErrorClassification,
 ): void {
-  const ttl = deadCacheTtl(classification);
+  const ttl = deadCacheTtl(provider, classification);
   if (ttl > 0) {
     DEAD_PROVIDER_CACHE.set(`${provider}:${model}`, Date.now() + ttl);
   }
@@ -451,6 +570,47 @@ interface ProviderAttempt {
   userSuppliedKey?: boolean;
 }
 
+function getOpenAIProvider(
+  provider: ProviderName,
+): OpenAICompatibleProvider | undefined {
+  return OPENAI_COMPATIBLE_PROVIDERS.find((candidate) => candidate.name === provider);
+}
+
+function getProviderKey(
+  env: LlmEnv,
+  provider: OpenAICompatibleProvider,
+): string | undefined {
+  const value = env[provider.keyEnv];
+  return typeof value === "string" && value.trim() ? value : undefined;
+}
+
+function providerOrder(env: LlmEnv): ProviderName[] {
+  const configured = env.AI_PROVIDER_ORDER
+    ?.split(",")
+    .map((name) => name.trim() as ProviderName)
+    .filter((name): name is ProviderName =>
+      DEFAULT_PROVIDER_ORDER.includes(name),
+    );
+  const requested = configured?.length ? configured : [...DEFAULT_PROVIDER_ORDER];
+  return [...new Set([...requested, ...DEFAULT_PROVIDER_ORDER])];
+}
+
+function addGeminiAttempts(
+  attempts: ProviderAttempt[],
+  models: string[],
+  apiKey: string,
+  userSuppliedKey = false,
+): void {
+  for (const model of models) {
+    attempts.push({
+      provider: "gemini",
+      model,
+      apiKey,
+      userSuppliedKey,
+    });
+  }
+}
+
 function providerAttempts(
   env: LlmEnv,
   purpose: "chat" | "summary" | "bulk",
@@ -465,26 +625,35 @@ function providerAttempts(
       : env.GEMINI_SUMMARY_MODELS ?? env.GEMINI_BULK_MODELS;
   const geminiModels = modelsFromEnv(geminiEnv, geminiDefaults);
 
+  // A user key is always tried before any server-configured provider. The
+  // optional order still controls the rest of the chain, including whether
+  // the server Gemini key is before or after another configured provider.
   if (userGeminiKey) {
-    for (const model of geminiModels) {
-      attempts.push({ provider: "gemini", model, apiKey: userGeminiKey, userSuppliedKey: true });
-    }
-  } else if (env.GOOGLE_AI_API_KEY) {
-    for (const model of geminiModels) {
-      attempts.push({ provider: "gemini", model, apiKey: env.GOOGLE_AI_API_KEY });
-    }
+    addGeminiAttempts(attempts, geminiModels, userGeminiKey, true);
   }
 
-  if (env.GROQ_API_KEY) {
-    const models = modelsFromEnv(env.GROQ_CHAT_MODELS, DEFAULT_GROQ_CHAT_MODELS);
-    for (const model of models) attempts.push({ provider: "groq", model });
-  }
-  if (env.AI) {
-    const models = modelsFromEnv(
-      env.WORKERS_AI_CHAT_MODELS,
-      DEFAULT_WORKERS_AI_CHAT_MODELS,
-    );
-    for (const model of models) attempts.push({ provider: "workers-ai", model });
+  for (const provider of providerOrder(env)) {
+    if (provider === "gemini") {
+      if (env.GOOGLE_AI_API_KEY) {
+        addGeminiAttempts(attempts, geminiModels, env.GOOGLE_AI_API_KEY);
+      }
+      continue;
+    }
+    if (provider === "workers-ai") {
+      if (!env.AI) continue;
+      const models = modelsFromEnv(
+        env.WORKERS_AI_CHAT_MODELS,
+        DEFAULT_WORKERS_AI_CHAT_MODELS,
+      );
+      for (const model of models) attempts.push({ provider, model });
+      continue;
+    }
+    const config = getOpenAIProvider(provider);
+    if (!config) continue;
+    const apiKey = getProviderKey(env, config);
+    if (!apiKey) continue;
+    const models = modelsFromEnv(env[config.modelsEnv], config.defaultModels);
+    for (const model of models) attempts.push({ provider, model });
   }
   return attempts;
 }
@@ -519,19 +688,23 @@ function strictJsonInstruction(system: string, schema: JsonSchema): string {
   return `${system}\n\nReturn ONLY valid JSON matching this schema. Do not use markdown fences or add commentary.\n${JSON.stringify(schema)}`;
 }
 
-async function generateGroqJson(
+async function generateOpenAICompatibleJson(
   attempt: ProviderAttempt,
   options: GenerateJsonOptions,
   pdf: LoadedPdf | undefined,
 ): Promise<unknown> {
-  if (!options.env.GROQ_API_KEY) throw new Error("Groq API key is not configured");
+  const provider = getOpenAIProvider(attempt.provider);
+  if (!provider) throw new Error(`${attempt.provider} is not OpenAI-compatible`);
+  const apiKey = getProviderKey(options.env, provider);
+  if (!apiKey) throw new Error(`${attempt.provider} API key is not configured`);
   let text = options.text;
   if (pdf) text += `\n\nPDF contents:\n${await pdfMarkdown(options.env, pdf)}`;
-  const response = await fetch(GROQ_API_URL, {
+  const response = await fetch(`${provider.baseUrl}/chat/completions`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${options.env.GROQ_API_KEY}`,
+      Authorization: `Bearer ${apiKey}`,
+      ...provider.headers,
     },
     body: JSON.stringify({
       model: attempt.model,
@@ -539,16 +712,20 @@ async function generateGroqJson(
         { role: "system", content: strictJsonInstruction(options.system, options.schema) },
         { role: "user", content: text },
       ],
-      response_format: { type: "json_object" },
+      ...(provider.supportsJsonMode
+        ? { response_format: { type: "json_object" } }
+        : {}),
       temperature: 0.1,
     }),
   });
-  if (!response.ok) throw new Error(`Groq ${response.status}: ${await response.text()}`);
+  if (!response.ok) {
+    throw new Error(`${attempt.provider} ${response.status}: ${await response.text()}`);
+  }
   const body = (await response.json()) as {
     choices?: Array<{ message?: { content?: string | null } }>;
   };
   const output = body.choices?.[0]?.message?.content;
-  if (!output) throw new Error("Groq returned an empty JSON response");
+  if (!output) throw new Error(`${attempt.provider} returned an empty JSON response`);
   return parseJson(output);
 }
 
@@ -580,7 +757,9 @@ async function runJsonProvider(
 ): Promise<unknown> {
   try {
     if (attempt.provider === "gemini") return await generateGeminiJson(attempt, options, pdf);
-    if (attempt.provider === "groq") return await generateGroqJson(attempt, options, pdf);
+    if (attempt.provider !== "workers-ai") {
+      return await generateOpenAICompatibleJson(attempt, options, pdf);
+    }
     return await generateWorkersJson(attempt, options, pdf);
   } catch (error) {
     throw new LLMProviderError(
@@ -851,15 +1030,15 @@ async function* runGeminiTurn(
   return { text, toolCalls };
 }
 
-interface GroqToolAccumulator {
+interface OpenAIToolAccumulator {
   id: string;
   name: string;
   arguments: string;
 }
 
 /** Accumulates one OpenAI-compatible streamed tool-call delta. */
-export function accumulateGroqToolCallDelta(
-  calls: Map<number, GroqToolAccumulator>,
+export function accumulateOpenAIToolCallDelta(
+  calls: Map<number, OpenAIToolAccumulator>,
   delta: {
     index?: number;
     id?: string;
@@ -874,6 +1053,8 @@ export function accumulateGroqToolCallDelta(
   calls.set(index, current);
 }
 
+// Kept as a compatibility export for callers/tests that used the old Groq name.
+export const accumulateGroqToolCallDelta = accumulateOpenAIToolCallDelta;
 export const accumulateToolCallDelta = accumulateGroqToolCallDelta;
 
 async function* readSse(response: Response): AsyncGenerator<unknown> {
@@ -926,14 +1107,17 @@ interface GroqChoiceDelta {
   }>;
 }
 
-async function* runGroqTurn(
+async function* runOpenAICompatibleTurn(
   c: Context,
   attempt: ProviderAttempt,
   history: HistoryMessage[],
   userContext: UserContext,
 ): AsyncGenerator<ProviderEvent, ProviderTurnResult> {
-  const apiKey = (c.env as unknown as LlmEnv).GROQ_API_KEY;
-  if (!apiKey) throw new Error("Groq API key is not configured");
+  const provider = getOpenAIProvider(attempt.provider);
+  if (!provider) throw new Error(`${attempt.provider} is not OpenAI-compatible`);
+  const env = c.env as unknown as LlmEnv;
+  const apiKey = getProviderKey(env, provider);
+  if (!apiKey) throw new Error(`${attempt.provider} API key is not configured`);
   const messages = [
     { role: "system", content: buildSystemPrompt(userContext) },
     ...history.map((message) => ({
@@ -952,24 +1136,31 @@ async function* runGroqTurn(
         : {}),
     })),
   ];
-  const response = await fetch(GROQ_API_URL, {
+  const response = await fetch(`${provider.baseUrl}/chat/completions`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${apiKey}`,
+      ...provider.headers,
     },
     body: JSON.stringify({
       model: attempt.model,
       messages,
-      tools: convertToolDeclarations(),
-      tool_choice: "auto",
+      ...(provider.supportsTools
+        ? {
+            tools: convertToolDeclarations(),
+            tool_choice: "auto",
+          }
+        : {}),
       stream: true,
     }),
   });
-  if (!response.ok) throw new Error(`Groq ${response.status}: ${await response.text()}`);
+  if (!response.ok) {
+    throw new Error(`${attempt.provider} ${response.status}: ${await response.text()}`);
+  }
 
   let text = "";
-  const toolDeltas = new Map<number, GroqToolAccumulator>();
+  const toolDeltas = new Map<number, OpenAIToolAccumulator>();
   for await (const raw of readSse(response)) {
     const choice = (raw as { choices?: Array<{ delta?: GroqChoiceDelta }> }).choices?.[0];
     const delta = choice?.delta;
@@ -1044,8 +1235,8 @@ async function* runProviderTurn(
     if (attempt.provider === "gemini") {
       return yield* runGeminiTurn(c, attempt, history, userContext, pdfCache);
     }
-    if (attempt.provider === "groq") {
-      return yield* runGroqTurn(c, attempt, history, userContext);
+    if (attempt.provider !== "workers-ai") {
+      return yield* runOpenAICompatibleTurn(c, attempt, history, userContext);
     }
     return yield* runWorkersAiTurn(c, attempt, history, userContext);
   } catch (error) {

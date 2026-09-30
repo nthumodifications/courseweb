@@ -1,0 +1,9 @@
+# Optional AI provider secrets. Leave unset to use only configured providers.
+GOOGLE_AI_API_KEY=
+GROQ_API_KEY=
+CEREBRAS_API_KEY=
+OPENROUTER_API_KEY=
+MISTRAL_API_KEY=
+
+# Optional comma-separated override. Omitted providers are appended in default order.
+# AI_PROVIDER_ORDER=gemini,groq,cerebras,openrouter,mistral,workers-ai

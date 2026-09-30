@@ -11,6 +11,11 @@ minify = true
 # Set these as Worker secrets. The backup pair is optional and must belong to
 # a different Algolia application.
 # ALGOLIA_APP_ID, ALGOLIA_API_KEY, ALGOLIA_BACKUP_APP_ID, ALGOLIA_BACKUP_API_KEY
+# Optional AI provider secrets: GOOGLE_AI_API_KEY enables Gemini; GROQ_API_KEY,
+# CEREBRAS_API_KEY, OPENROUTER_API_KEY, and MISTRAL_API_KEY enable their
+# respective free-tier fallback providers.
+# AI_PROVIDER_ORDER optionally overrides the provider order (comma-separated);
+# the AI binding below enables keyless Workers AI as the final fallback.
 
 [dev]
 port = 5001
