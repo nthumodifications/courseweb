@@ -10,18 +10,17 @@ import CourseListItem from "@/components/Courses/CourseListItem";
 import Filter from "./Filters";
 import { ScrollArea } from "@courseweb/ui";
 import ResetFiltersButton from "@/app/[lang]/(mods-pages)/courses/ResetFiltersButton";
-import { useEffect, useRef, memo, useMemo } from "react";
+import { useEffect, useRef, memo, useMemo, useState } from "react";
 import CourseListItemSkeleton from "../../../../components/Courses/CourseListItemSkeleton";
 import { cn } from "@courseweb/ui";
 import { EmptyState, ErrorState, Separator } from "@courseweb/ui";
 import { Drawer, DrawerContent, DrawerTrigger } from "@courseweb/ui";
 import { Button } from "@courseweb/ui";
-import { Calendar, FilterIcon, Sparkles, Search } from "lucide-react";
+import { Calendar, FilterIcon, Search } from "lucide-react";
 import Filters from "./Filters";
 import CourseSidePanel from "./CourseSidePanel";
 import SearchBox from "@/components/SearchBox/SearchBox";
 import SemesterSelector from "./SemesterSelector";
-import { Link, useParams } from "react-router-dom";
 import { Label } from "@courseweb/ui";
 import useCustomMenu from "@/app/[lang]/(mods-pages)/courses/useCustomMenu";
 import { lastSemester } from "@courseweb/shared";
@@ -32,6 +31,7 @@ import SearchDegradationBanner from "@/components/Search/SearchDegradationBanner
 import type { ResilientSearchClient } from "@/lib/search-client";
 import { useCourseTextHits } from "@/hooks/useCourseTextHits";
 import type { CourseSyllabusView } from "@/config/supabase";
+import AiSearchBox from "./AiSearchBox";
 
 type SearchClient = ResilientSearchClient;
 type InfiniteHitsCache = ReturnType<
@@ -152,10 +152,10 @@ const SearchContainer = memo(
     sessionStorageCache: InfiniteHitsCache;
   }) => {
     const dict = useDictionary();
-    const { lang } = useParams<{ lang: string }>();
     const { nbHits, processingTimeMS } = useStats();
     const { query } = useSearchBox();
     const previousNbHitsRef = useRef<number>(0);
+    const [aiSearchEnabled, setAiSearchEnabled] = useState(false);
 
     const { items } = useCustomMenu({
       attribute: "semester",
@@ -191,20 +191,22 @@ const SearchContainer = memo(
         <div className="flex flex-col gap-4 flex-1 px-2">
           <SearchDegradationBanner searchClient={searchClient} />
           <div className="">
-            <div className="flex items-center gap-1">
-              <SemesterSelector />
-              <Separator orientation="vertical" className="h-full" />
-              <SearchBox
-                placeholder={dict.course.list.search_placeholder}
-                autoFocus
-              />
-              <Separator orientation="vertical" className="h-full" />
-              <Link to={`/${lang}/chat`}>
-                <Button variant="ghost" size="icon" title={dict.chat.title}>
-                  <Sparkles size="16" />
-                </Button>
-              </Link>
-              <Separator orientation="vertical" className="h-full" />
+            <div className="flex flex-wrap items-center gap-1">
+              <div className="w-full shrink-0 sm:w-auto">
+                <SemesterSelector />
+              </div>
+              <Separator orientation="vertical" className="hidden h-full sm:block" />
+              <AiSearchBox
+                enabled={aiSearchEnabled}
+                onEnabledChange={setAiSearchEnabled}
+                semester={semester}
+              >
+                <SearchBox
+                  placeholder={dict.course.list.search_placeholder}
+                  autoFocus
+                />
+              </AiSearchBox>
+              <Separator orientation="vertical" className="hidden h-full sm:block" />
               <div className="md:hidden">
                 <Drawer>
                   <DrawerTrigger asChild>
@@ -222,7 +224,7 @@ const SearchContainer = memo(
                   </DrawerContent>
                 </Drawer>
               </div>
-              <Separator orientation="vertical" className="h-full" />
+              <Separator orientation="vertical" className="hidden h-full sm:block" />
               <div className="md:hidden">
                 <Drawer>
                   <DrawerTrigger asChild>

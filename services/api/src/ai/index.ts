@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import type { Bindings } from "../index";
 import summarize from "./summarize";
+import searchIntent from "./search-intent";
 import { testGeminiKey } from "./llm";
 
 const app = new Hono<{ Bindings: Bindings }>()
@@ -30,6 +31,7 @@ const app = new Hono<{ Bindings: Bindings }>()
       chat: true,
     }),
   )
+  .route("/search-intent", searchIntent)
   .route("/summarize", summarize);
 
 export default app;
