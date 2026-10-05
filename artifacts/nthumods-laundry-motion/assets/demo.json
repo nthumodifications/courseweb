@@ -1,0 +1,68 @@
+{
+  "dorm": "明齋",
+  "dorms": [
+    "義齋",
+    "明齋",
+    "實齋",
+    "新齋",
+    "華齋",
+    "禮齋",
+    "誠齋",
+    "雅齋",
+    "慧齋",
+    "靜齋",
+    "碩齋",
+    "仁齋",
+    "清華會館"
+  ],
+  "illustrative": true,
+  "description": "Actual dorm inventory, illustrative states. No live telemetry captured.",
+  "washers": [
+    {
+      "number": 1,
+      "state": "available"
+    },
+    {
+      "number": 2,
+      "state": "running",
+      "seconds": 708
+    },
+    {
+      "number": 3,
+      "state": "available"
+    }
+  ],
+  "dryers": [
+    {
+      "number": 1,
+      "state": "available"
+    },
+    {
+      "number": 2,
+      "state": "running",
+      "seconds": 984,
+      "totalSeconds": 2400
+    },
+    {
+      "number": 3,
+      "state": "pickup"
+    }
+  ],
+  "labels": {
+    "washer": "洗衣機",
+    "dryer": "烘衣機",
+    "available": "空機",
+    "running": "運轉中",
+    "pickup": "待取",
+    "ready_now": "現在可用",
+    "connection_live": "即時連線",
+    "all": "全部",
+    "all_dorms": "所有宿舍",
+    "gender_all": "性別",
+    "machine_number": "{type} {number}"
+  },
+  "inventory_source": "apps/web/src/const/laundry-machines.ts",
+  "inventory_sha256": "af6bb70be3edab7ab990dd8e8134209992e1e1a1d6a615d71df14324585afc79",
+  "ui_source": "apps/web/src/app/[lang]/(mods-pages)/laundry/page.tsx",
+  "route": "/zh/laundry"
+}

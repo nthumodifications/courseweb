@@ -1,0 +1,20 @@
+{
+  "duration": "00:00:15.00",
+  "frames": 900,
+  "fps": 60,
+  "width": 1080,
+  "height": 1920,
+  "language": "zh-Hant",
+  "format": "H.264 / AAC stereo 48 kHz",
+  "bytes": 6023442,
+  "decode_errors": false,
+  "black_frames": false,
+  "silent_gaps": false,
+  "unexpected_frozen_sections": false,
+  "intentional_closing_brand_hold": [],
+  "soundtrack": "Original synthesized score at 128 BPM, cuts on the beat grid",
+  "sample_dorm": "明齋",
+  "machine_inventory": "3 washers, 3 dryers (apps/web/src/const/laundry-machines.ts)",
+  "machine_states": "Illustrative, no live telemetry captured",
+  "storyboard": "Extracted from final encoded MP4"
+}
