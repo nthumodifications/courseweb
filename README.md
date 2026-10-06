@@ -86,7 +86,6 @@ courseweb/
 **Infrastructure:**
 
 - [Turborepo](https://turbo.build/) for monorepo management
-- [Vercel](https://vercel.com/) for web deployment
 - [Cloudflare Workers](https://workers.cloudflare.com/) for API and edge deployment
 - [DigitalOcean](https://www.digitalocean.com/) for production hosting
 - [Algolia](https://www.algolia.com/) for search functionality
@@ -292,10 +291,7 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/) for commi
 
 ### Web Application (Primary)
 
-The web app is built as a Vite static application. The repository includes:
-
-- `vercel.json` for Vercel builds, with output from `apps/web/dist`
-- `apps/web/wrangler.toml` and `apps/web/worker.ts` for Cloudflare Workers deployment
+The web app is built as a Vite static application and deployed to Cloudflare Workers using `apps/web/wrangler.toml` and `apps/web/worker.ts`.
 
 The API service is deployed to Cloudflare Workers from the `main` branch through GitHub Actions.
 
@@ -376,7 +372,6 @@ This project is licensed under the **GNU General Public License v3.0**.
 
 **Infrastructure:**
 
-- [Vercel](https://vercel.com/) - Web hosting and deployment platform
 - [DigitalOcean](https://www.digitalocean.com/) - Production infrastructure
 - [Cloudflare](https://www.cloudflare.com/) - API hosting and CDN services
 
