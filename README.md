@@ -31,323 +31,194 @@ This project is organized as a modern monorepo using **Turborepo** for efficient
 
 ```
 courseweb/
-├── apps/                    # Applications
-│   └── web/                # Main Vite + React web application
-├── packages/               # Shared packages
-│   ├── api-types/          # Shared Hono API types and client factories
-│   ├── database/           # Database schema and migrations
-│   ├── eslint-config/      # Shared ESLint configuration
-│   ├── shared/             # Shared utilities, types, and constants
-│   ├── tailwind-config/    # Shared Tailwind CSS configuration
-│   ├── ui/                 # Shared React components (40+ components)
-├── services/               # Backend service workspaces
-│   ├── api/                # Main API service (Cloudflare Workers)
-│   └── secure-api/         # Authentication API service
-├── tools/                  # Development and build tools
-│   ├── build-scripts/      # Build automation scripts
-│   ├── data-sync/          # Course data synchronization tools
-│   └── dict-manager/       # i18n dictionary management CLI
-└── docs/                   # Project documentation
+├── apps/web/              # Main Vite + React web application
+├── packages/              # Shared UI, types, database, and config packages
+├── services/api/          # Main Hono Cloudflare Worker API
+├── services/secure-api/   # Bun/Hono authentication API
+├── tools/data-sync/       # Course data synchronization
+├── tools/dict-manager/    # i18n dictionary CLI
+└── docs/                  # Project documentation
 ```
-
-### Package Overview
-
-| Package                      | Description                    | Technology                       |
-| ---------------------------- | ------------------------------ | -------------------------------- |
-| `@courseweb/web`             | Main web application           | Vite 5, React 18, React Router 6 |
-| `@courseweb/ui`              | UI component library           | React, Radix UI, Tailwind CSS    |
-| `@courseweb/shared`          | Shared utilities and types     | TypeScript                       |
-| `@courseweb/api-types`       | API types and client factories | TypeScript, Hono RPC             |
-| `@courseweb/database`        | Database schema and migrations | Supabase, SQL                    |
-| `@courseweb/tailwind-config` | Shared Tailwind configuration  | Tailwind CSS                     |
-| `@courseweb/eslint-config`   | Shared lint configuration      | ESLint                           |
-| `@courseweb/api`             | Main API service               | Hono, Cloudflare Workers, D1     |
-| `@courseweb/secure-api`      | Authentication API service     | Hono, Bun, Prisma                |
 
 ## 🚀 Technologies Used
 
-**Frontend:**
-
-- [Vite 5](https://vite.dev/) for development and production builds
-- [React 18](https://react.dev/) with [React Router 6](https://reactrouter.com/)
-- [TypeScript](https://www.typescriptlang.org/) for type safety
-- [Tailwind CSS](https://tailwindcss.com/) for styling
-- [Radix UI](https://www.radix-ui.com/) for accessible components
-- [Framer Motion](https://www.framer.com/motion/) for animations
-- [Vite PWA](https://vite-pwa-org.netlify.app/) for installable and offline-capable web experiences
-
-**Backend:**
-
-- [Hono](https://hono.dev/) web framework
-- [Cloudflare Workers](https://workers.cloudflare.com/) for serverless compute
-- [Supabase](https://supabase.com/) for database and authentication
-- [Firebase](https://firebase.google.com/) for additional services
-
-**Infrastructure:**
-
-- [Turborepo](https://turbo.build/) for monorepo management
-- [Cloudflare Workers](https://workers.cloudflare.com/) for API and edge deployment
-- [DigitalOcean](https://www.digitalocean.com/) for production hosting
-- [Algolia](https://www.algolia.com/) for search functionality
+- **Frontend:** Vite 5, React 18, React Router 6, TypeScript, Tailwind CSS, Radix UI
+- **Backend:** Hono, Cloudflare Workers, Supabase, Firebase, Prisma
+- **Infrastructure:** Turborepo, Cloudflare Workers, DigitalOcean, Algolia
 
 ## 🌐 Usage
 
-Access the website at **[nthumods.com](https://nthumods.com)**
+Access the website at **[nthumods.com](https://nthumods.com)**.
 
 For issues, feature requests, or bug reports, please [open an issue](https://github.com/nthumodifications/courseweb/issues/new/choose).
 
 ## 🛠️ Development
 
-### Prerequisites
+### Prerequisites and quick start
 
-- **Node.js 20+**
-- **Bun 1.3+**
+- **Bun 1.3 or newer** (`packageManager` pins 1.3.11; other 1.3.x versions normally work)
 - **Git**
 
-### Quick Start
-
-1. **Clone the repository:**
-
-   ```bash
-   git clone https://github.com/nthumodifications/courseweb.git
-   cd courseweb
-   ```
-
-2. **Install dependencies:**
-
-   ```bash
-   bun install --frozen-lockfile
-   ```
-
-3. **Set up frontend environment variables:**
-
-   ```bash
-   cp apps/web/.env.example apps/web/.env.local
-   # Add the required VITE_* values described below.
-   ```
-
-4. **Start the web development server:**
-
-   ```bash
-   bun run dev:web
-   ```
-
-5. **Open your browser:**
-   Navigate to [http://localhost:5173](http://localhost:5173). If that port is already in use, Vite automatically selects the next available port.
-
-To run the backend services locally in separate terminals:
-
 ```bash
-bun run dev:api          # Main API on http://localhost:5001
-bun run dev:secure-api   # Authentication API on http://localhost:5002
+git clone https://github.com/nthumodifications/courseweb.git
+cd courseweb
+bun run setup
+bun run dev:web
 ```
 
-Each service reads its own secrets, separately from `apps/web/.env.local`:
+Open [http://localhost:5173](http://localhost:5173). `bun run setup` installs the
+locked dependencies, creates `apps/web/.env.development.local` only when it is missing, and
+builds the frontend-safe shared packages. The example uses public, read-only
+production services, so frontend contributors do not need a local backend or a
+secret. Use `bun run doctor` to diagnose a setup without changing files.
 
-| Service               | File                       | Contents                                                                   |
-| --------------------- | -------------------------- | -------------------------------------------------------------------------- |
-| `services/api`        | `services/api/.dev.vars`   | See [services/api/README.md](services/api/README.md#environment-variables) |
-| `services/secure-api` | `services/secure-api/.env` | See `services/secure-api/.env.example`                                     |
+### Development tracks
 
-Neither file is in the repository and neither has a committed example, so ask a
-maintainer for the values. Without `services/api/.dev.vars`, `/course`,
-`/course/dates`, `/acacalendar`, `/weather` and `/search` return HTTP 500, and
-the pages that depend on them — course search, the timetable and `/today` —
-cannot be exercised locally. The bus page works without it.
+#### Frontend only (most contributors)
 
-`bun run dev` starts development tasks across the entire monorepo. For frontend-only work, prefer `bun run dev:web`.
+Use `bun run setup`, then `bun run dev:web`. Pages live under
+`apps/web/src/app`; reusable UI is in `packages/ui`, shared code is in
+`packages/shared`, and API client types are in `packages/api-types`.
 
-### Available Scripts
-
-```bash
-# Development
-bun run dev                 # Start development tasks across all workspaces
-bun run dev:web             # Start only the web app
-bun run dev:api             # Start the main API
-bun run dev:secure-api      # Start the authentication API
-
-# Building
-bun run build               # Build all packages and apps
-bun run build:web           # Build the web app and its dependencies
-bun run build:api           # Build the main API
-bun run build:secure-api    # Build the authentication API
-bun run build:apis          # Build both API services
-bun run build:api-types     # Build the shared API types
-
-# Tools
-bun run dict                # Manage the translation dictionary
-bun run dict:create <key> <zh> <en>   # Create or overwrite a translation entry
-bun run dict:remove <key>             # Remove a translation entry
-bun run dict:move <from> <to>          # Move or rename a translation entry
-bun run sync:once           # Sync course data once
-bun run sync:scheduled      # Start the scheduled sync service
-
-# Utilities
-bun run lint                # Lint all packages
-bun run test                # Run workspace tests
-bun run format              # Format TypeScript, TSX, and Markdown files
-bun run clean               # Clean build artifacts
-bunx turbo run type-check   # Run TypeScript checks across supported workspaces
-```
-
-### Monorepo Commands
-
-The project uses **Turborepo** for efficient task running:
+Useful checks, scoped to the web workspace:
 
 ```bash
-# Run build for specific package
-bunx turbo run build --filter=@courseweb/web
-
-# Run dev for all packages
-bunx turbo run dev
-
-# Run type checks
-bunx turbo run type-check
-
-# Clear Turborepo cache
-bunx turbo run clean
+bun run --cwd apps/web type-check
+bun run --cwd apps/web test
+bun run --cwd apps/web lint
 ```
+
+The web type-check imports declarations from API workspaces. If it reports
+missing `dist` declarations after a fresh clone, run `bun run setup --full`;
+that path also needs backend configuration before the API services can run.
+
+#### API (`services/api`)
+
+The main API is a Cloudflare Worker. It normally listens on
+`http://localhost:5001` and reads `services/api/.dev.vars`. Start with
+`bun run setup --full`, fill the maintainer-owned values described in
+`services/api/README.md`, then run:
+
+```bash
+bun run dev:api
+```
+
+The checked-in `services/api/.dev.vars.example` contains only optional AI
+provider settings. Database, Supabase service-role, Algolia admin, OAuth,
+weather, calendar, GitHub, Turnstile, and Cloudflare KV credentials are not
+frontend credentials and must come from a maintainer.
+
+#### Auth (`services/secure-api`) + data-sync
+
+The secure API listens on `http://localhost:5002`; it needs PostgreSQL,
+Prisma-generated clients, signing keys, Firebase configuration, and upstream
+OAuth credentials. The data-sync tool writes course data and Algolia indexes;
+it needs a Supabase service-role key and an Algolia admin key. These are
+maintainer-only operations, not part of the frontend quick start.
+
+```bash
+bun run setup --full
+bun run dev:secure-api
+bun run --cwd tools/data-sync sync:once
+```
+
+Do not run the sync command without explicit maintainer credentials and a
+review of the target database/index.
+
+### Scripts and i18n
+
+The root scripts are the supported entry points: `bun run build`, `bun run
+build:web`, `bun run build:apis`, `bun run build:api-types`, `bun run test`,
+`bun run dict`, `bun run sync:once`, and `bun run sync:scheduled`. For a
+production web preview use `bun run build:web` followed by `bun run --cwd apps/web
+preview`.
+
+Translation dictionaries are JSON files under `apps/web/src/dictionaries`.
+Use the dictionary CLI rather than editing key structure by hand:
+
+```bash
+bun run dict -- create "settings.theme" "主題" "Theme"
+bun run dict -- remove "old.key"
+bun run dict -- move "old.key" "new.key"
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the first-PR walkthrough and the
+three development tracks.
+
+### Troubleshooting
+
+- `Bun ... is too old`: run `bun upgrade`, then rerun `bun run setup`. A
+  different 1.3.x patch version only prints a notice.
+- Requests going to `http://localhost:5001` during frontend-only work: Vite
+  loads `apps/web/.env.development` before `.env.local`, so overrides must
+  live in `apps/web/.env.development.local` (what `bun run setup` creates).
+- `supabaseUrl is required` or `VITE_COURSEWEB_API_URL is not defined`: run
+  `bun run setup` and restart Vite. Use only `apps/web/.env.example` for the
+  browser environment.
+- CORS errors for `https://api.nthumods.com` from `localhost`: the production
+  API only allows the nthumods.com origin. Keep
+  `VITE_COURSEWEB_API_URL=http://localhost:5173/__api` so requests go through
+  the dev-server proxy, and update the port if Vite runs on another one.
+- A `401` from the production API is an application/auth response; it is not
+  the same as a missing local Worker. Public course reads should still use the
+  production API configured in `apps/web/.env.development.local`.
+- Missing `@courseweb/api-types` or secure API declarations during web
+  type-check means the backend dist chain has not been built. Run
+  `bun run setup --full` and fill backend env values where required.
+- API local development uses port 5001; secure API uses port 5002; Vite uses
+  port 5173 and selects another free port if necessary.
+- `bun run setup --full` creates ignored env files from examples but never
+  invents secrets. Backend services remain unavailable until their real
+  maintainer credentials and databases are configured.
+
+### Windows notes
+
+Run commands from the repository root in PowerShell, Git Bash, or macOS/Linux
+shells. `bun run setup` and `bun run doctor` do not depend on `cp`, `rm`, or
+shell-specific environment syntax. For data-sync Docker helpers, use
+`tools/data-sync/run-docker.bat` on Windows and `run-docker.sh` on macOS/Linux.
 
 ## 📱 Progressive Web App
 
-NTHUMods is an installable Progressive Web App configured through `vite-plugin-pwa`. The manifest, icons, update behavior, and offline caching rules are defined in `apps/web/vite.config.ts`.
+NTHUMods is an installable Progressive Web App configured through
+`vite-plugin-pwa`. Build and preview it with:
 
 ```bash
-# Build the production PWA
 bun run build:web
-
-# Preview the production build locally
 bun run --cwd apps/web preview
-```
-
-## 🌍 Internationalization
-
-We use a custom dictionary management system for translations:
-
-```bash
-# Create new translation entry
-bun run dict -- create "settings.theme" "主題" "Theme"
-
-# Remove translation entry
-bun run dict -- remove "old.key"
-
-# Move/rename translation key
-bun run dict -- move "old.key" "new.key"
 ```
 
 ## 🤝 Contributing
 
-We welcome contributions from everyone! Here's how to get started:
-
-### 1. Fork & Clone
-
-```bash
-git clone https://github.com/your-username/courseweb.git
-cd courseweb
-bun install --frozen-lockfile
-```
-
-### 2. Create a Branch
-
-```bash
-git checkout -b feat/my-awesome-feature
-# or
-git checkout -b fix/bug-description
-```
-
-### 3. Make Your Changes
-
-- Follow our coding standards (ESLint + Prettier configured)
-- Add tests if applicable
-- Update documentation as needed
-- Test your changes with `bun run test` and `bun run build:web`
-
-### 4. Commit & Push
-
-```bash
-git add .
-git commit -m "feat: add awesome new feature"
-git push origin feat/my-awesome-feature
-```
-
-We follow [Conventional Commits](https://www.conventionalcommits.org/) for commit messages.
-
-### 5. Open a Pull Request
-
-- Create a PR against the `main` branch
-- Provide a clear description of your changes
-- Link any related issues
-- Wait for review and CI checks
-
-### Development Guidelines
-
-- **Code Style**: We use ESLint + Prettier (automatically configured)
-- **TypeScript**: All new code should be properly typed
-- **Components**: Use shared UI components from `@courseweb/ui` when possible
-- **Testing**: Add tests where applicable and run them with Bun/Turborepo
-- **Performance**: Consider bundle size and runtime performance
+We welcome contributions from everyone. Read [CONTRIBUTING.md](CONTRIBUTING.md)
+for setup, the frontend/API/auth tracks, focused checks, and the first-PR
+walkthrough. We follow [Conventional Commits](https://www.conventionalcommits.org/).
 
 ## 🚀 Deployment
 
-### Web Application (Primary)
+The web app is a Vite static application deployed to Cloudflare Workers using
+`apps/web/wrangler.toml` and `apps/web/worker.ts`. The API service is deployed
+to Cloudflare Workers from `main` through GitHub Actions.
 
-The web app is built as a Vite static application and deployed to Cloudflare Workers using `apps/web/wrangler.toml` and `apps/web/worker.ts`.
+**Production:** [nthumods.com](https://nthumods.com)
 
-The API service is deployed to Cloudflare Workers from the `main` branch through GitHub Actions.
-
-**Production**: [nthumods.com](https://nthumods.com)
-
-### Docker Status
-
-`apps/web/Dockerfile` still targets the previous Next.js application structure and is not part of the current Vite deployment workflow. It must be migrated before Docker self-hosting is supported again.
-
-### Environment Variables
-
-Frontend variables are exposed to the browser and must use the `VITE_` prefix. Configure them in `apps/web/.env.local`:
-
-```env
-# Main API
-VITE_COURSEWEB_API_URL=http://localhost:5001
-
-# Authentication
-VITE_NTHUMODS_AUTH_URL=
-VITE_AUTH_CLIENT_ID=
-VITE_NTHUMODS_AUTH_REDIRECT=http://localhost:5173/auth/callback
-VITE_NTHUMODS_AUTH_SILENT_REDIRECT=http://localhost:5173/auth/silent
-
-# Supabase
-VITE_SUPABASE_URL=
-VITE_SUPABASE_ANON_KEY=
-
-# Search
-VITE_ALGOLIA_APP_ID=
-VITE_ALGOLIA_SEARCH_KEY=
-VITE_ALGOLIA_BACKUP_APP_ID=
-VITE_ALGOLIA_BACKUP_SEARCH_KEY=
-
-# Turnstile
-VITE_TURNSTILE_SITE_KEY=
-
-# Optional analytics
-VITE_GTM_ID=
-```
-
-Never place private credentials in a `VITE_*` variable because Vite includes these values in the client bundle. Database URLs, service-role keys, API keys, signing keys, and other server secrets belong in their respective service environments. See `services/api/wrangler.toml`, `services/api/README.md`, and `services/secure-api/.env.example` for backend configuration.
+`apps/web/Dockerfile` still targets the previous Next.js application structure
+and is not part of the current Vite deployment workflow.
 
 ## 📊 Performance & Monitoring
 
-- **Error Tracking**: Sentry integration through the Vite build
-- **Search**: Algolia-powered course search
-- **Offline Support**: Service worker and runtime caching through Vite PWA
-- **Production Builds**: Vite bundling with source maps and Turborepo caching
+- **Error Tracking:** Sentry integration through the Vite build
+- **Search:** Algolia-powered course search with a production API fallback
+- **Offline Support:** Service worker and runtime caching through Vite PWA
+- **Production Builds:** Vite bundling with source maps and Turborepo caching
 
 ## 📄 License
 
 This project is licensed under the **GNU General Public License v3.0**.
 
-- ✅ **You can**: Use, modify, distribute, and contribute
-- ❌ **You must**: Keep it open source, include license and copyright
-- 📖 **Learn more**: [License Details](LICENSE) | [GPL-3.0 Guide](https://gist.github.com/kn9ts/cbe95340d29fc1aaeaa5dd5c059d2e60)
+- ✅ **You can:** Use, modify, distribute, and contribute
+- ❌ **You must:** Keep it open source, include license and copyright
+- 📖 **Learn more:** [License Details](LICENSE) | [GPL-3.0 Guide](https://gist.github.com/kn9ts/cbe95340d29fc1aaeaa5dd5c059d2e60)
 
 ## 👥 Team
 
@@ -367,25 +238,12 @@ This project is licensed under the **GNU General Public License v3.0**.
 
 **Technology Partners:**
 
-- [Algolia](https://www.algolia.com/) - Powering our lightning-fast course search functionality
-- [Cerana Technology](https://cerana.tech/) - Sponsoring our infrastructure to keep the project running
-
-**Infrastructure:**
-
-- [DigitalOcean](https://www.digitalocean.com/) - Production infrastructure
+- [Algolia](https://www.algolia.com/) - Powering our course search
+- [Cerana Technology](https://cerana.tech/) - Sponsoring our infrastructure
 - [Cloudflare](https://www.cloudflare.com/) - API hosting and CDN services
 
 ## 🔗 Links
 
-- **Website**: [nthumods.com](https://nthumods.com)
-- **Instagram**: [@nthumods](https://www.instagram.com/nthumods/)
-- **Email**: [nthumods@gmail.com](mailto:nthumods@gmail.com)
-- **GitHub**: [nthumodifications/courseweb](https://github.com/nthumodifications/courseweb)
-
-## 💡 Inspiration
-
-Inspired by [NUSMods](https://nusmods.com) from the National University of Singapore. The lack of a modern, student-friendly course planning system at NTHU motivated us to create this open-source alternative that puts students first.
-
----
-
-**Made with ❤️ by students, for students at National Tsing Hua University**
+- **Website:** [nthumods.com](https://nthumods.com)
+- **Issues:** [GitHub Issues](https://github.com/nthumodifications/courseweb/issues)
+- **Instagram:** [@nthumods](https://www.instagram.com/nthumods/)

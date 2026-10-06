@@ -130,6 +130,18 @@ export default defineConfig(({ mode }) => ({
         silent: true,
       }),
   ].filter(Boolean),
+  server: {
+    proxy: {
+      // The production API only allows the nthumods.com origin, so
+      // frontend-only development reaches it same-origin through this proxy
+      // (VITE_COURSEWEB_API_URL=http://localhost:5173/__api).
+      "/__api": {
+        target: "https://api.nthumods.com",
+        changeOrigin: true,
+        rewrite: (requestPath) => requestPath.replace(/^\/__api/, ""),
+      },
+    },
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),
