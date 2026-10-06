@@ -26,6 +26,8 @@ import recruit from "./recruit";
 import dining from "./dining";
 import { syncPeoOpeningTimes } from "./scheduled/peo-opening-times";
 import { D1Database } from "@cloudflare/workers-types";
+import usage from "./usage";
+import { syncUsageTick } from "./usage/collector";
 
 export type Bindings = {
   DB: D1Database;
@@ -82,15 +84,22 @@ export const app = new Hono<{ Bindings: Bindings }>()
   .route("/l", shortlinkRedirect)
   .route("/sports", sports)
   .route("/recruit", recruit)
-  .route("/dining", dining);
+  .route("/dining", dining)
+  .route("/usage", usage);
 
 export default {
   fetch: app.fetch.bind(app),
   async scheduled(
-    _event: ScheduledEvent,
+    event: ScheduledEvent,
     env: Bindings,
     ctx: ExecutionContext,
   ) {
-    ctx.waitUntil(syncPeoOpeningTimes(env));
+    if (event.cron === "0 2 * * 1") {
+      ctx.waitUntil(syncPeoOpeningTimes(env));
+    } else if (event.cron === "*/10 * * * *") {
+      ctx.waitUntil(syncUsageTick(env));
+    } else {
+      console.warn(`Ignoring unknown scheduled event: ${event.cron}`);
+    }
   },
 };

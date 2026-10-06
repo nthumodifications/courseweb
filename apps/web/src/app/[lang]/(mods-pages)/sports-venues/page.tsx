@@ -19,6 +19,13 @@ import useTime from "@/hooks/useTime";
 import { semesterInfo } from "@courseweb/shared";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useSettings } from "@/hooks/contexts/settings";
+import UsageForecast from "@/components/Venue/UsageForecast";
+import {
+  getUsageSeries,
+  shouldShowUsageLearningNotice,
+  useUsageForecast,
+  type UsageSeries,
+} from "@/lib/usage-forecast";
 
 type OccupancyItem = {
   project_id: string;
@@ -213,10 +220,18 @@ const ScheduleSheet = ({
   facility,
   open,
   onClose,
+  forecast,
+  forecastCapacity,
+  forecastGeneratedAt,
+  now,
 }: {
   facility: FacilitySchedule;
   open: boolean;
   onClose: () => void;
+  forecast?: UsageSeries | null;
+  forecastCapacity?: number | null;
+  forecastGeneratedAt?: string | null;
+  now: Date;
 }) => {
   const dict = useDictionary();
   const currentSemesterLabel = getCurrentSemesterLabel({
@@ -279,6 +294,17 @@ const ScheduleSheet = ({
           </SheetTitle>
         </SheetHeader>
 
+        {forecast && (
+          <UsageForecast
+            capacity={forecastCapacity}
+            kind="occupancy"
+            now={now}
+            generatedAt={forecastGeneratedAt}
+            series={forecast}
+            variant="detail"
+          />
+        )}
+
         {/* Semester tabs + refresh button */}
         <div className="flex gap-2 mb-4 flex-wrap items-center">
           {facility.schedules.map((s) => (
@@ -293,7 +319,8 @@ const ScheduleSheet = ({
               )}
             >
               {s.semester}
-              {s.semester.includes(currentSemesterLabel) && ` ${dict.sports.current}`}
+              {s.semester.includes(currentSemesterLabel) &&
+                ` ${dict.sports.current}`}
             </button>
           ))}
           <button
@@ -384,8 +411,14 @@ const SportsVenuesPage = () => {
   const { language } = useSettings();
   const [selectedFacility, setSelectedFacility] =
     useState<FacilitySchedule | null>(null);
+  const [selectedForecast, setSelectedForecast] = useState<{
+    series: UsageSeries;
+    capacity: number;
+    generatedAt: string | null;
+  } | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const queryClient = useQueryClient();
+  const { data: usageForecast } = useUsageForecast("gym");
 
   const handleGlobalRefresh = async () => {
     if (refreshing) return;
@@ -444,13 +477,39 @@ const SportsVenuesPage = () => {
     await Promise.all([refetchOccupancy(), refetchOpeningTimes()]);
   };
 
+  const openFacility = (
+    facility: FacilitySchedule,
+    forecast: UsageSeries | undefined,
+    capacity: number,
+  ) => {
+    setSelectedFacility(facility);
+    setSelectedForecast(
+      forecast?.status === "ready"
+        ? {
+            series: forecast,
+            capacity,
+            generatedAt: usageForecast?.generatedAt ?? null,
+          }
+        : null,
+    );
+  };
+
+  const closeFacility = () => {
+    setSelectedFacility(null);
+    setSelectedForecast(null);
+  };
+
   if (occupancyError || openingTimesError) {
     return (
       <div className="flex flex-col px-4">
         <ErrorState
           title={dict.common.load_error}
           action={
-            <Button variant="outline" size="sm" onClick={() => void retryQueries()}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void retryQueries()}
+            >
               {dict.common.try_again}
             </Button>
           }
@@ -488,12 +547,15 @@ const SportsVenuesPage = () => {
       : undefined;
 
     const currentSemester = facility
-      ? getBestAvailableSemester(facility.schedules.map((s) => s.semester), {
-          first: dict.sports.semester_first,
-          second: dict.sports.semester_second,
-          summer: dict.sports.semester_break,
-          winter: dict.sports.semester_winter_break,
-        })
+      ? getBestAvailableSemester(
+          facility.schedules.map((s) => s.semester),
+          {
+            first: dict.sports.semester_first,
+            second: dict.sports.semester_second,
+            summer: dict.sports.semester_break,
+            winter: dict.sports.semester_winter_break,
+          },
+        )
       : null;
     const todaySlots = (() => {
       if (!facility || !currentSemester) return null;
@@ -512,7 +574,9 @@ const SportsVenuesPage = () => {
     <div className="flex flex-col px-4">
       {/* Header */}
       <div className="flex items-center justify-between py-4">
-        <h1 className="text-base font-bold text-foreground">{dict.sports.title}</h1>
+        <h1 className="text-base font-bold text-foreground">
+          {dict.sports.title}
+        </h1>
         <div className="flex items-center gap-2">
           {dataUpdatedAt > 0 && (
             <span className="text-xs text-muted-foreground">
@@ -520,9 +584,9 @@ const SportsVenuesPage = () => {
               {new Date(dataUpdatedAt).toLocaleTimeString(
                 language === "en" ? "en-US" : "zh-TW",
                 {
-                hour: "2-digit",
-                minute: "2-digit",
-                second: "2-digit",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  second: "2-digit",
                 },
               )}
             </span>
@@ -542,6 +606,12 @@ const SportsVenuesPage = () => {
         </div>
       </div>
 
+      {shouldShowUsageLearningNotice(usageForecast) && (
+        <p className="border-b border-border py-2 text-xs text-muted-foreground">
+          {dict.usage_forecast.learning}
+        </p>
+      )}
+
       {/* Venue list */}
       <div className="flex flex-col divide-y divide-border">
         {items.map(({ item, facility, todaySlots }) => {
@@ -550,17 +620,22 @@ const SportsVenuesPage = () => {
           const { capacity, Icon } = venueInfo(displayName);
           const ratio = Math.min(item.entry_count_now / capacity, 1);
           const pct = Math.round(ratio * 100);
-
+          const forecastSeries = getUsageSeries(usageForecast, item.project_id);
           return (
-            <div key={item.project_id} className="flex flex-col gap-4 py-4">
+            <div
+              key={item.project_id}
+              className={cn(
+                "flex flex-col gap-4 py-4",
+                facility ? "cursor-pointer" : "",
+              )}
+              onClick={
+                facility
+                  ? () => openFacility(facility, forecastSeries, capacity)
+                  : undefined
+              }
+            >
               {/* Top row */}
-              <div
-                className={cn(
-                  "flex flex-row items-center gap-4",
-                  facility ? "cursor-pointer" : "",
-                )}
-                onClick={() => facility && setSelectedFacility(facility)}
-              >
+              <div className="flex flex-row items-center gap-4">
                 <Icon className="h-7 w-7 text-primary shrink-0" />
                 <div className="flex flex-col flex-1 min-w-0">
                   <h3 className="min-w-0 whitespace-normal text-foreground font-bold">
@@ -583,6 +658,21 @@ const SportsVenuesPage = () => {
                 )}
               </div>
 
+              {forecastSeries?.status === "ready" && (
+                <UsageForecast
+                  series={forecastSeries}
+                  kind={usageForecast?.kind ?? "occupancy"}
+                  generatedAt={usageForecast?.generatedAt}
+                  liveValue={item.entry_count_now}
+                  now={now}
+                  onOpenDetails={
+                    facility
+                      ? () => openFacility(facility, forecastSeries, capacity)
+                      : undefined
+                  }
+                />
+              )}
+
               {/* Progress bar */}
               <div className="relative h-2 w-full rounded-full bg-muted overflow-hidden">
                 <div
@@ -596,8 +686,13 @@ const SportsVenuesPage = () => {
 
               {/* Bottom row */}
               <div className="flex flex-row justify-between text-sm text-muted-foreground">
-                <span>{dict.sports.utilization} {pct}%</span>
-                <span>{dict.sports.entries_today} {item.entry_count_today} {dict.sports.occupancy_people}</span>
+                <span>
+                  {dict.sports.utilization} {pct}%
+                </span>
+                <span>
+                  {dict.sports.entries_today} {item.entry_count_today}{" "}
+                  {dict.sports.occupancy_people}
+                </span>
               </div>
             </div>
           );
@@ -633,7 +728,7 @@ const SportsVenuesPage = () => {
               <div
                 key={facility.name_zh}
                 className="flex flex-row items-center gap-4 py-4 cursor-pointer"
-                onClick={() => setSelectedFacility(facility)}
+                onClick={() => openFacility(facility, undefined, 0)}
               >
                 <Users className="h-7 w-7 text-primary shrink-0" />
                 <div className="flex flex-col flex-1 min-w-0">
@@ -655,7 +750,7 @@ const SportsVenuesPage = () => {
 
       {/* Data source */}
       <div className="mt-4 pb-4 text-xs text-muted-foreground">
-         {dict.sports.data_source}
+        {dict.sports.data_source}
         <a
           href="https://peo178.et.nthu.edu.tw"
           target="_blank"
@@ -672,7 +767,11 @@ const SportsVenuesPage = () => {
         <ScheduleSheet
           facility={selectedFacility}
           open={!!selectedFacility}
-          onClose={() => setSelectedFacility(null)}
+          onClose={closeFacility}
+          forecast={selectedForecast?.series}
+          forecastCapacity={selectedForecast?.capacity}
+          forecastGeneratedAt={selectedForecast?.generatedAt}
+          now={now}
         />
       )}
     </div>

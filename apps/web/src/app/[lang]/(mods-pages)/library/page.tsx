@@ -19,6 +19,7 @@ import { Button, cn, ErrorState, Skeleton } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useSettings } from "@/hooks/contexts/settings";
 import useTime from "@/hooks/useTime";
+import UsageForecast from "@/components/Venue/UsageForecast";
 import {
   formatZoneName,
   getBranchFromItem,
@@ -34,6 +35,11 @@ import {
   type LibraryVacancyResponse,
   type SpaceCategory,
 } from "@/lib/library";
+import {
+  pickLibraryForecastSeries,
+  shouldShowUsageLearningNotice,
+  useUsageForecast,
+} from "@/lib/usage-forecast";
 
 function getCategoryIcon(category: SpaceCategory) {
   switch (category) {
@@ -76,6 +82,7 @@ const LibraryPage = () => {
   const [selectedCategory, setSelectedCategory] =
     useState<SpaceCategory>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const { data: usageForecast } = useUsageForecast("library");
 
   const { data, dataUpdatedAt, isLoading, isFetching, error, refetch } =
     useQuery<LibraryVacancyItem[]>({
@@ -102,6 +109,18 @@ const LibraryPage = () => {
     });
 
   const items = useMemo(() => data ?? [], [data]);
+
+  const forecastSeriesById = useMemo(() => {
+    const capacities = new Map<string, number | null>();
+    for (const item of items) {
+      capacities.set(item.zoneid, getZoneCapacity(item));
+    }
+    return new Map(
+      pickLibraryForecastSeries(usageForecast?.series ?? [], capacities).map(
+        (series) => [series.id, series] as const,
+      ),
+    );
+  }, [items, usageForecast]);
 
   // Overall statistics calculations - respect operating hours
   const stats = useMemo(() => {
@@ -265,6 +284,12 @@ const LibraryPage = () => {
             </a>
           </div>
         </div>
+
+        {shouldShowUsageLearningNotice(usageForecast) && (
+          <p className="border-b border-border py-2 text-xs text-muted-foreground">
+            {dict.usage_forecast.learning}
+          </p>
+        )}
 
         {/* Overview Stats Row */}
         <div className="grid grid-cols-2 gap-3 py-4 sm:grid-cols-4 border-b border-border">
@@ -463,6 +488,7 @@ const LibraryPage = () => {
                       : dict.library.branch_main_short;
 
               const displayName = formatZoneName(item.zonename, language);
+              const forecastSeries = forecastSeriesById.get(item.zoneid);
 
               return (
                 <div
@@ -522,6 +548,17 @@ const LibraryPage = () => {
                       </a>
                     </div>
                   </div>
+
+                  {forecastSeries?.status === "ready" && (
+                    <UsageForecast
+                      series={forecastSeries}
+                      kind={usageForecast?.kind ?? "vacancy"}
+                      capacity={capacity}
+                      generatedAt={usageForecast?.generatedAt}
+                      liveValue={item.count}
+                      now={now}
+                    />
+                  )}
 
                   {/* Vacancy Progress Bar */}
                   <div className="relative h-2 w-full rounded-full bg-muted overflow-hidden">
