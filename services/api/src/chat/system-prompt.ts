@@ -53,10 +53,13 @@ Use concise markdown: short paragraphs, bullets, and small tables when they impr
     if (selected.length > 0) {
       sections.push(
         `Selected timetable (use for conflict/free-period checks):\n${selected
-          .map(
-            (course) =>
-              `- ${course.name_zh || course.name_en || course.raw_id} (${course.raw_id})${course.times?.length ? `: ${course.times.join(", ")}` : ": time unknown"}`,
-          )
+          .map((course) => {
+            const name = course.name_zh || course.name_en || course.raw_id;
+            const times = course.times?.length
+              ? `: ${course.times.join(", ")}`
+              : ": time unknown";
+            return `- ${name} (${course.raw_id})${times}`;
+          })
           .join("\n")}`,
       );
     }
@@ -69,7 +72,10 @@ Use concise markdown: short paragraphs, bullets, and small tables when they impr
             (semester) =>
               `- ${semester.semester}: ${semester.courses
                 .slice(0, 15)
-                .map((course) => `${course.name_zh || course.name_en || course.raw_id} (${course.raw_id})`)
+                .map(
+                  (course) =>
+                    `${course.name_zh || course.name_en || course.raw_id} (${course.raw_id})`,
+                )
                 .join(", ")}`,
           )
           .join("\n")}`,

@@ -196,7 +196,9 @@ function validateIcs(ics: string): string[] {
     if (line.startsWith("BEGIN:")) depth++;
     if (line.startsWith("END:")) depth--;
     if (depth < 0) {
-      errors.push("Unbalanced BEGIN/END: encountered END without matching BEGIN");
+      errors.push(
+        "Unbalanced BEGIN/END: encountered END without matching BEGIN",
+      );
       break;
     }
   }
@@ -416,14 +418,14 @@ describe("generateTimetableIcs – event count", () => {
     const ics = generateTimetableIcs([SAMPLE_COURSE], SEMESTER_11320);
     const vevents = extractVEvents(ics);
     // M3M4 = one block on Monday
-    expect(vevents.length).toBe(1);
+    expect(vevents).toHaveLength(1);
   });
 
   it("produces 2 events for a course with 2 separate time strings", () => {
     const ics = generateTimetableIcs([MULTI_DAY_COURSE], SEMESTER_11320);
     const vevents = extractVEvents(ics);
     // T1T2 and R1R2 = 2 events (Tuesday + Thursday)
-    expect(vevents.length).toBe(2);
+    expect(vevents).toHaveLength(2);
   });
 
   it("produces correct total events for multiple courses", () => {
@@ -433,7 +435,7 @@ describe("generateTimetableIcs – event count", () => {
     );
     const vevents = extractVEvents(ics);
     // 1 + 2 + 1 = 4
-    expect(vevents.length).toBe(4);
+    expect(vevents).toHaveLength(4);
   });
 });
 
@@ -609,7 +611,8 @@ describe("foldLine", () => {
   });
 
   it("can be unfolded back to the original content", () => {
-    const original = "DESCRIPTION:" + "Test content with many characters. ".repeat(10);
+    const original =
+      "DESCRIPTION:" + "Test content with many characters. ".repeat(10);
     const folded = foldLine(original);
     const unfolded = unfold(folded);
     expect(unfolded).toBe(original);
@@ -672,7 +675,7 @@ describe("courseToEvents", () => {
 
   it("parses a single time block", () => {
     const events = courseToEvents(SAMPLE_COURSE);
-    expect(events.length).toBe(1);
+    expect(events).toHaveLength(1);
     expect(events[0]!.dayOfWeek).toBe(0); // M = Monday = index 0
     expect(events[0]!.venue).toBe("台達館105");
   });
@@ -686,7 +689,7 @@ describe("courseToEvents", () => {
 
   it("parses multiple time strings into separate events", () => {
     const events = courseToEvents(MULTI_DAY_COURSE);
-    expect(events.length).toBe(2);
+    expect(events).toHaveLength(2);
     // T = Tuesday = index 1, R = Thursday = index 3
     const days = events.map((e) => e.dayOfWeek).sort();
     expect(days).toEqual([1, 3]);
@@ -694,7 +697,7 @@ describe("courseToEvents", () => {
 
   it("handles evening slots", () => {
     const events = courseToEvents(EVENING_COURSE);
-    expect(events.length).toBe(1);
+    expect(events).toHaveLength(1);
     expect(events[0]!.dayOfWeek).toBe(2); // W = Wednesday = index 2
     // "a" is the evening slot at index 10
     expect(events[0]!.startTime).toBe(10);
@@ -708,7 +711,7 @@ describe("courseToEvents", () => {
       venues: ["", "Room A"],
     };
     const events = courseToEvents(course);
-    expect(events.length).toBe(1);
+    expect(events).toHaveLength(1);
     expect(events[0]!.venue).toBe("Room A");
   });
 });
@@ -735,12 +738,7 @@ describe("generateTimetableIcs – all semesters", () => {
     for (const sem of SEMESTER_INFO) {
       const ics = generateTimetableIcs([SAMPLE_COURSE], sem);
       const errors = validateIcs(ics);
-      if (errors.length > 0) {
-        // Provide a helpful failure message
-        throw new Error(
-          `Semester ${sem.id} produced invalid ICS:\n${errors.join("\n")}`,
-        );
-      }
+      expect(errors).toHaveLength(0);
     }
   });
 });
@@ -782,7 +780,7 @@ describe("generateTimetableIcs – edge cases", () => {
     const errors = validateIcs(ics);
     expect(errors).toEqual([]);
     const vevents = extractVEvents(ics);
-    expect(vevents.length).toBe(20);
+    expect(vevents).toHaveLength(20);
   });
 
   it("handles a course spanning many consecutive slots", () => {
@@ -801,7 +799,7 @@ describe("generateTimetableIcs – edge cases", () => {
     expect(errors).toEqual([]);
     const vevents = extractVEvents(ics);
     // Should be one continuous block
-    expect(vevents.length).toBe(1);
+    expect(vevents).toHaveLength(1);
   });
 
   it("VCALENDAR contains VERSION and PRODID", () => {

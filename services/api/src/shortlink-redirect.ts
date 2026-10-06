@@ -6,6 +6,23 @@ import { z } from "zod";
 const endpoint = (key: string, accountID: string, namespaceID: string) =>
   `https://api.cloudflare.com/client/v4/accounts/${accountID}/storage/kv/namespaces/${namespaceID}/values/${encodeURIComponent(key)}`;
 
+const ALLOWED_REDIRECT_ORIGINS = new Set(["https://nthumods.com"]);
+
+const getSafeRedirectUrl = (value: string) => {
+  try {
+    const url = new URL(value);
+    if (
+      url.protocol !== "https:" ||
+      !ALLOWED_REDIRECT_ORIGINS.has(url.origin)
+    ) {
+      return null;
+    }
+    return url.toString();
+  } catch {
+    return null;
+  }
+};
+
 const app = new Hono().get(
   "/:slug",
   zValidator("param", z.object({ slug: z.string() })),
@@ -46,17 +63,12 @@ const app = new Hono().get(
       return c.json({ error: { message: "Link does not exist" } }, 404);
     }
 
-    // Validate URL is a safe http/https URL
-    try {
-      const parsed = new URL(url);
-      if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-        return c.json({ error: { message: "Invalid redirect URL" } }, 400);
-      }
-    } catch {
+    const safeUrl = getSafeRedirectUrl(url);
+    if (!safeUrl) {
       return c.json({ error: { message: "Invalid redirect URL" } }, 400);
     }
 
-    return c.redirect(url);
+    return c.redirect(safeUrl);
   },
 );
 

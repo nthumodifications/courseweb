@@ -189,7 +189,7 @@ describe("iCalendar Utility", () => {
     // There should be no events in the calendar
     const eventRegex = /BEGIN:VEVENT[\s\S]*?END:VEVENT/g;
     const events = Array.from(calendar.matchAll(eventRegex));
-    expect(events.length).toBe(0);
+    expect(events).toHaveLength(0);
   });
 
   // Tests for specific event types
@@ -235,7 +235,7 @@ describe("iCalendar Utility", () => {
     // Extract the event from the calendar
     const eventRegex = /BEGIN:VEVENT[\s\S]*?END:VEVENT/g;
     const events = Array.from(calendar.matchAll(eventRegex));
-    expect(events.length).toBe(1);
+    expect(events).toHaveLength(1);
 
     const eventText = events[0][0];
 
@@ -295,7 +295,7 @@ describe("iCalendar Utility", () => {
     // Extract the event from the calendar
     const eventRegex = /BEGIN:VEVENT[\s\S]*?END:VEVENT/g;
     const events = Array.from(calendar.matchAll(eventRegex));
-    expect(events.length).toBe(1);
+    expect(events).toHaveLength(1);
 
     const eventText = events[0][0];
 
@@ -354,7 +354,7 @@ describe("iCalendar Utility", () => {
     // Extract the event from the calendar
     const eventRegex = /BEGIN:VEVENT[\s\S]*?END:VEVENT/g;
     const events = Array.from(calendar.matchAll(eventRegex));
-    expect(events.length).toBe(1);
+    expect(events).toHaveLength(1);
 
     const eventText = events[0][0];
 
@@ -417,7 +417,7 @@ describe("iCalendar Utility", () => {
     // Extract the event from the calendar
     const eventRegex = /BEGIN:VEVENT[\s\S]*?END:VEVENT/g;
     const events = Array.from(calendar.matchAll(eventRegex));
-    expect(events.length).toBe(1);
+    expect(events).toHaveLength(1);
 
     const eventText = events[0][0];
 
@@ -486,7 +486,7 @@ describe("iCalendar Utility", () => {
     // Extract the event from the calendar
     const eventRegex = /BEGIN:VEVENT[\s\S]*?END:VEVENT/g;
     const events = Array.from(calendar.matchAll(eventRegex));
-    expect(events.length).toBe(1);
+    expect(events).toHaveLength(1);
 
     const eventText = events[0][0];
 
@@ -550,7 +550,7 @@ describe("iCalendar Utility", () => {
     // Extract the event from the calendar
     const eventRegex = /BEGIN:VEVENT[\s\S]*?END:VEVENT/g;
     const events = Array.from(calendar.matchAll(eventRegex));
-    expect(events.length).toBe(1);
+    expect(events).toHaveLength(1);
 
     const eventText = events[0][0];
 
@@ -610,7 +610,7 @@ describe("iCalendar Utility", () => {
     // Extract the event from the calendar
     const eventRegex = /BEGIN:VEVENT[\s\S]*?END:VEVENT/g;
     const events = Array.from(calendar.matchAll(eventRegex));
-    expect(events.length).toBe(1);
+    expect(events).toHaveLength(1);
 
     const eventText = events[0][0];
 

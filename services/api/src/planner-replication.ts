@@ -44,7 +44,9 @@ type UuidCheckpoint = {
   serverTimestamp: string;
 };
 
-type Checkpoint<T extends "id" | "uuid"> = T extends "id"
+type ModelIdField = "id" | "uuid";
+
+type Checkpoint<T extends ModelIdField> = T extends "id"
   ? IdCheckpoint
   : UuidCheckpoint;
 
@@ -53,7 +55,7 @@ type ModelDelegates = {
 };
 
 // Define interfaces for the callbacks
-interface PullHandlers<M extends Model, IdField extends "id" | "uuid"> {
+interface PullHandlers<M extends Model, IdField extends ModelIdField> {
   findItems: (
     userId: string,
     idField: IdField,
@@ -67,7 +69,7 @@ interface PullHandlers<M extends Model, IdField extends "id" | "uuid"> {
 interface PushHandlers<M extends Model> {
   findItem: (
     userId: string,
-    idField: "id" | "uuid",
+    idField: ModelIdField,
     id: string,
   ) => Promise<M | null>;
   processItems: (
@@ -178,7 +180,7 @@ async function handlePushRequest<M extends Model>(
     const { newDocumentState, assumedMasterState } = row;
     const idValue = newDocumentState[idField as keyof typeof newDocumentState];
     if (typeof idValue !== "string") {
-      throw new Error(
+      throw new TypeError(
         `Expected ${idField} to be a string, but got ${typeof idValue}`,
       );
     }

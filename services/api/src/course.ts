@@ -245,10 +245,13 @@ const app = new Hono()
         throw new Error("Failed to fetch course data");
       }
       const course = dataCourse![0];
-      const semester = parseInt(course.semester.substring(0, 3));
-      const getsemesters = [semester - 2, semester - 1, semester, semester + 1]
-        .map((s) => [s.toString() + "10", s.toString() + "20"])
-        .flat();
+      const semester = Number.parseInt(course.semester.substring(0, 3));
+      const getsemesters = [
+        semester - 2,
+        semester - 1,
+        semester,
+        semester + 1,
+      ].flatMap((s) => [s.toString() + "10", s.toString() + "20"]);
 
       const { data, error } = await supabase_server(c)
         .from("courses")
@@ -329,8 +332,6 @@ const app = new Hono()
       }),
     ),
     async (c) => {
-      const { dates } = c.req.valid("json");
-      const { courseId } = c.req.valid("param");
       return c.notFound();
       // try {
       //   const session = {

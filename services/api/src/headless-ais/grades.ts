@@ -57,11 +57,13 @@ const app = new Hono().post(
       /修習總學分\(包含及格,不及格及成績未到\) Total credits\( including passing, failing, and not submitted grades\)：(?<total_credits>.+)　已修及格畢業學分 Passing grade：(?<passed_credits>.+)　成績未到畢業學分 Not submitted grade：(?<pending_credits>.+)/;
     const credits_info_match = credits_info?.match(credits_info_regex);
     const credits = {
-      total_credits: parseInt(credits_info_match?.groups?.total_credits ?? "0"),
-      passed_credits: parseInt(
+      total_credits: Number.parseInt(
+        credits_info_match?.groups?.total_credits ?? "0",
+      ),
+      passed_credits: Number.parseInt(
         credits_info_match?.groups?.passed_credits ?? "0",
       ),
-      pending_credits: parseInt(
+      pending_credits: Number.parseInt(
         credits_info_match?.groups?.pending_credits ?? "0",
       ),
     };
@@ -79,7 +81,7 @@ const app = new Hono().post(
       const course_name_raw = cells[3].textContent?.trim().split("\n");
       const name_zh_ge = course_name_raw?.[0]?.trim() ?? "";
       const name_en = course_name_raw?.[2]?.trim() ?? "";
-      const credits = parseInt(cells[4].textContent?.trim() ?? "0");
+      const credits = Number.parseInt(cells[4].textContent?.trim() ?? "0");
       const grade_text = cells[5].textContent?.trim();
       const grade = !grade_text?.startsWith("成績未到")
         ? grade_text
@@ -139,11 +141,19 @@ const app = new Hono().post(
       const gpa = cells[2].textContent?.trim();
       const t_score_avg = cells[3].textContent?.trim();
       const relative_avg = cells[4].textContent?.trim();
-      const credits = parseInt(cells[5].textContent?.trim() ?? "0");
-      const actual_credits = parseInt(cells[6].textContent?.trim() ?? "0");
-      const num_of_courses = parseInt(cells[7].textContent?.trim() ?? "0");
-      const summer_credits = parseInt(cells[8].textContent?.trim() ?? "0");
-      const transfer_credits = parseInt(cells[9].textContent?.trim() ?? "0");
+      const credits = Number.parseInt(cells[5].textContent?.trim() ?? "0");
+      const actual_credits = Number.parseInt(
+        cells[6].textContent?.trim() ?? "0",
+      );
+      const num_of_courses = Number.parseInt(
+        cells[7].textContent?.trim() ?? "0",
+      );
+      const summer_credits = Number.parseInt(
+        cells[8].textContent?.trim() ?? "0",
+      );
+      const transfer_credits = Number.parseInt(
+        cells[9].textContent?.trim() ?? "0",
+      );
       const letter_class_rank = cells[10].textContent?.trim();
       const letter_dept_rank = cells[11].textContent?.trim();
       const t_score_class_rank = cells[12].textContent?.trim();

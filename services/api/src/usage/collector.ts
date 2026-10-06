@@ -25,9 +25,11 @@ export const PEO_OCCUPANCY_URL =
   "https://peo178.et.nthu.edu.tw/api/verify/count/report";
 export const LIBRARY_STATUS_URL =
   "https://libsms.lib.nthu.edu.tw/RWDAPI_New/GetDevUseStatus.aspx";
-export const USAGE_USER_AGENT = "NTHUMods-usage-history/1.0 (+https://nthumods.com)";
+export const USAGE_USER_AGENT =
+  "NTHUMods-usage-history/1.0 (+https://nthumods.com)";
 export const MAX_PROFILE_REBUILDS_PER_TICK = 2;
-export const SNAPSHOT_CACHE_KEY = (source: UsageSource) => `usage-snapshot:${source}`;
+export const SNAPSHOT_CACHE_KEY = (source: UsageSource) =>
+  `usage-snapshot:${source}`;
 export const PROFILE_CACHE_KEY = (source: UsageSource, seriesId: string) =>
   `usage-profile:${source}:${seriesId}`;
 export const RETENTION_CACHE_KEY = "usage-retention";
@@ -100,7 +102,11 @@ export function parseLibraryPayload(payload: unknown): UsageSample[] | null {
     ) {
       return null;
     }
-    items.push({ id: String(raw.zoneid), name: raw.zonename, value: raw.count });
+    items.push({
+      id: String(raw.zoneid),
+      name: raw.zonename,
+      value: raw.count,
+    });
   }
   return items.length > 0 ? items : null;
 }
@@ -118,7 +124,8 @@ async function fetchJson(
       headers: { Accept: "application/json", "User-Agent": USAGE_USER_AGENT },
       signal: controller.signal,
     });
-    if (!response.ok) throw new Error(`${url} returned HTTP ${response.status}`);
+    if (!response.ok)
+      throw new Error(`${url} returned HTTP ${response.status}`);
     const parsed = parse(await response.json());
     if (!parsed) throw new Error(`${url} returned a malformed payload`);
     return parsed;
@@ -132,11 +139,15 @@ export async function fetchUsageUpstreams(
 ): Promise<{ gym: UpstreamResult; library: UpstreamResult }> {
   const [gym, library] = await Promise.all([
     fetchJson(PEO_OCCUPANCY_URL, parsePeoPayload, fetcher)
-      .then((samples) => ({ samples } satisfies UpstreamResult))
-      .catch((error: unknown) => ({ samples: null, error } satisfies UpstreamResult)),
+      .then((samples) => ({ samples }) satisfies UpstreamResult)
+      .catch(
+        (error: unknown) => ({ samples: null, error }) satisfies UpstreamResult,
+      ),
     fetchJson(LIBRARY_STATUS_URL, parseLibraryPayload, fetcher)
-      .then((samples) => ({ samples } satisfies UpstreamResult))
-      .catch((error: unknown) => ({ samples: null, error } satisfies UpstreamResult)),
+      .then((samples) => ({ samples }) satisfies UpstreamResult)
+      .catch(
+        (error: unknown) => ({ samples: null, error }) satisfies UpstreamResult,
+      ),
   ]);
   return { gym, library };
 }
@@ -243,7 +254,9 @@ interface SlotRow {
   value: number;
 }
 
-function parseProfile(data: string | null): ReturnType<typeof buildProfile> | null {
+function parseProfile(
+  data: string | null,
+): ReturnType<typeof buildProfile> | null {
   if (!data) return null;
   try {
     const profile = JSON.parse(data) as ReturnType<typeof buildProfile>;
@@ -287,7 +300,8 @@ export function assembleUsageSnapshot(
   for (const row of rows) {
     if (row.source !== source) continue;
     const previous = parseState(row);
-    const profile = profiles.get(`${row.source}:${row.seriesId}`) ??
+    const profile =
+      profiles.get(`${row.source}:${row.seriesId}`) ??
       emptyUsageProfile(sourceKind(source));
     const result = buildSeriesForecast({
       meta: row,
@@ -312,11 +326,15 @@ export function assembleUsageSnapshot(
     timezone: "Asia/Taipei",
     series,
   };
-  if (source === "library" &&
-    new TextEncoder().encode(JSON.stringify(response)).byteLength > 150 * 1024) {
+  if (
+    source === "library" &&
+    new TextEncoder().encode(JSON.stringify(response)).byteLength > 150 * 1024
+  ) {
     response.series = response.series.map((item) => ({
       ...item,
-      week: item.week.map((day) => day.map((value) => value === null ? null : Math.round(value))),
+      week: item.week.map((day) =>
+        day.map((value) => (value === null ? null : Math.round(value))),
+      ),
     }));
   }
   return { response, stateUpdates };
@@ -344,8 +362,14 @@ async function refreshSnapshots(db: D1Database, now: Date): Promise<void> {
     .filter((row) => {
       if (!parseProfile(row.profileData)) return true;
       if (!row.profileUpdatedAt) return true;
-      const updated = Date.parse(row.profileUpdatedAt.replace(" ", "T") + (row.profileUpdatedAt.includes("Z") ? "" : "Z"));
-      return !Number.isFinite(updated) || now.getTime() - updated >= 24 * 60 * 60 * 1000;
+      const updated = Date.parse(
+        row.profileUpdatedAt.replace(" ", "T") +
+          (row.profileUpdatedAt.includes("Z") ? "" : "Z"),
+      );
+      return (
+        !Number.isFinite(updated) ||
+        now.getTime() - updated >= 24 * 60 * 60 * 1000
+      );
     })
     .slice(0, MAX_PROFILE_REBUILDS_PER_TICK);
   const profiles = new Map<string, ReturnType<typeof buildProfile>>();
@@ -364,7 +388,10 @@ async function refreshSnapshots(db: D1Database, now: Date): Promise<void> {
       )
       .bind(row.source, row.seriesId, cutoff, local.date)
       .all<HistoryObservation>();
-    const profile = buildProfile(history.results ?? [], sourceKind(row.source as UsageSource));
+    const profile = buildProfile(
+      history.results ?? [],
+      sourceKind(row.source as UsageSource),
+    );
     profiles.set(`${row.source}:${row.seriesId}`, profile);
   }
 
@@ -375,7 +402,11 @@ async function refreshSnapshots(db: D1Database, now: Date): Promise<void> {
         `INSERT INTO "Cache" ("key", "data", "updatedAt") VALUES (?, ?, ?)
          ON CONFLICT ("key") DO UPDATE SET "data" = excluded."data", "updatedAt" = excluded."updatedAt"`,
       )
-      .bind(PROFILE_CACHE_KEY(row.source as UsageSource, row.seriesId), JSON.stringify(profile), now.toISOString());
+      .bind(
+        PROFILE_CACHE_KEY(row.source as UsageSource, row.seriesId),
+        JSON.stringify(profile),
+        now.toISOString(),
+      );
   });
   if (profileWrites.length > 0) await db.batch(profileWrites);
 
@@ -390,7 +421,10 @@ async function refreshSnapshots(db: D1Database, now: Date): Promise<void> {
       .all<SlotRow>();
     const bySeries = new Map<string, TodayObservation[]>();
     for (const item of todayRows.results ?? []) {
-      bySeries.set(item.seriesId, [...(bySeries.get(item.seriesId) ?? []), { slot: item.slot, value: item.value }]);
+      bySeries.set(item.seriesId, [
+        ...(bySeries.get(item.seriesId) ?? []),
+        { slot: item.slot, value: item.value },
+      ]);
     }
     todayBySource.set(source, bySeries);
   }
@@ -438,8 +472,14 @@ async function refreshSnapshots(db: D1Database, now: Date): Promise<void> {
     .prepare(`SELECT "updatedAt" FROM "Cache" WHERE "key" = ?`)
     .bind(RETENTION_CACHE_KEY)
     .first<{ updatedAt: string }>();
-  const retentionDue = !retention?.updatedAt ||
-    now.getTime() - Date.parse(String(retention.updatedAt).replace(" ", "T") + (String(retention.updatedAt).includes("Z") ? "" : "Z")) >= 24 * 60 * 60 * 1000;
+  const retentionDue =
+    !retention?.updatedAt ||
+    now.getTime() -
+      Date.parse(
+        String(retention.updatedAt).replace(" ", "T") +
+          (String(retention.updatedAt).includes("Z") ? "" : "Z"),
+      ) >=
+      24 * 60 * 60 * 1000;
   const writes = [...stateWrites];
   for (const source of ["gym", "library"] as const) {
     writes.push(
@@ -448,35 +488,52 @@ async function refreshSnapshots(db: D1Database, now: Date): Promise<void> {
           `INSERT INTO "Cache" ("key", "data", "updatedAt") VALUES (?, ?, ?)
            ON CONFLICT ("key") DO UPDATE SET "data" = excluded."data", "updatedAt" = excluded."updatedAt"`,
         )
-        .bind(SNAPSHOT_CACHE_KEY(source), JSON.stringify(responses.get(source)), now.toISOString()),
+        .bind(
+          SNAPSHOT_CACHE_KEY(source),
+          JSON.stringify(responses.get(source)),
+          now.toISOString(),
+        ),
     );
   }
   if (retentionDue) {
-    writes.push(db.prepare(`DELETE FROM "UsageSlot" WHERE "date" < ?`).bind(addLocalDays(local.date, -400)));
+    writes.push(
+      db
+        .prepare(`DELETE FROM "UsageSlot" WHERE "date" < ?`)
+        .bind(addLocalDays(local.date, -400)),
+    );
     writes.push(
       db
         .prepare(
           `INSERT INTO "Cache" ("key", "data", "updatedAt") VALUES (?, ?, ?)
            ON CONFLICT ("key") DO UPDATE SET "data" = excluded."data", "updatedAt" = excluded."updatedAt"`,
         )
-        .bind(RETENTION_CACHE_KEY, JSON.stringify({ date: local.date }), now.toISOString()),
+        .bind(
+          RETENTION_CACHE_KEY,
+          JSON.stringify({ date: local.date }),
+          now.toISOString(),
+        ),
     );
   }
   if (writes.length > 0) await db.batch(writes);
 }
 
-function sameStoredState(a: StoredAnomalyState | null, b: StoredAnomalyState): boolean {
+function sameStoredState(
+  a: StoredAnomalyState | null,
+  b: StoredAnomalyState,
+): boolean {
   return Boolean(
-    ((a === null && b.type === null && b.since === null && b.samples === 0) ||
-      (a &&
-        a.type === b.type &&
+    (a === null && b.type === null && b.since === null && b.samples === 0) ||
+      (a?.type === b.type &&
         a.since === b.since &&
         a.samples === b.samples &&
-        a.lastObservedAt === b.lastObservedAt)),
+        a.lastObservedAt === b.lastObservedAt),
   );
 }
 
-export async function syncUsageTick(env: Bindings, now = new Date()): Promise<void> {
+export async function syncUsageTick(
+  env: Bindings,
+  now = new Date(),
+): Promise<void> {
   try {
     const upstreams = await fetchUsageUpstreams();
     await Promise.all(

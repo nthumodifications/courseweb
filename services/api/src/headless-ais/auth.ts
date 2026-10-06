@@ -147,7 +147,7 @@ const app = new Hono().post(
       }
 
       const redirectMatch = resHTML.match(
-        /(select_entry\.php\?ACIXSTORE=[a-zA-Z0-9_-]+&hint=[0-9]+)/,
+        /(select_entry\.php\?ACIXSTORE=[a-zA-Z\d_-]+&hint=\d+)/,
       );
       if (!redirectMatch) {
         console.log(resHTML);

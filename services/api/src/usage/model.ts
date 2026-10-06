@@ -6,8 +6,8 @@ import type {
   UsageSeries,
   UsageSource,
   UsageTrend,
+  UsageKind,
 } from "./types";
-import type { UsageKind } from "./types";
 
 export const SLOT_MINUTES = 30;
 export const SLOT_COUNT = 48;
@@ -83,7 +83,9 @@ export interface SeriesForecastResult {
 function localDayNumber(date: string): number {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
   if (!match) return Number.NaN;
-  return Math.floor(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])) / DAY_MS);
+  return Math.floor(
+    Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])) / DAY_MS,
+  );
 }
 
 export function addLocalDays(date: string, days: number): string {
@@ -186,18 +188,31 @@ function backtest(
 ): UsageQuality | null {
   if (weeks < 3) return null;
   const values = dateValueMap(observations);
-  const dates = [...new Set(observations.map((observation) => observation.date))].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+  const dates = [
+    ...new Set(observations.map((observation) => observation.date)),
+  ].sort((a, b) => {
+    if (a < b) return -1;
+    if (a > b) return 1;
+    return 0;
+  });
   const dateDows = new Map<string, number>();
   const byDowSlot = new Map<string, IndexedObservation[]>();
   const byTypeSlot = new Map<string, IndexedObservation[]>();
   for (const observation of observations) {
-    if (!dateDows.has(observation.date)) dateDows.set(observation.date, observation.dow);
+    if (!dateDows.has(observation.date))
+      dateDows.set(observation.date, observation.dow);
     const indexed = { date: observation.date, value: observation.value };
     appendIndexed(byDowSlot, `${observation.dow}:${observation.slot}`, indexed);
-    appendIndexed(byTypeSlot, `${dayType(observation.dow)}:${observation.slot}`, indexed);
+    appendIndexed(
+      byTypeSlot,
+      `${dayType(observation.dow)}:${observation.slot}`,
+      indexed,
+    );
   }
-  for (const list of byDowSlot.values()) list.sort((a, b) => a.date.localeCompare(b.date));
-  for (const list of byTypeSlot.values()) list.sort((a, b) => a.date.localeCompare(b.date));
+  for (const list of byDowSlot.values())
+    list.sort((a, b) => a.date.localeCompare(b.date));
+  for (const list of byTypeSlot.values())
+    list.sort((a, b) => a.date.localeCompare(b.date));
 
   const priorByDowSlot = new Map<string, number[]>();
   const priorByTypeSlot = new Map<string, number[]>();
@@ -237,12 +252,11 @@ function backtest(
       const naive = values.get(`${lastWeek}:${slot}`);
       const exact = priorByDowSlot.get(`${dow}:${slot}`) ?? [];
       const pooled = priorByTypeSlot.get(`${dayType(dow)}:${slot}`) ?? [];
-      const expected = exact.length >= 3
-        ? median(exact)
-        : pooled.length >= 3
-          ? median(pooled)
-          : null;
-      if (actual === undefined || naive === undefined || expected === null) continue;
+      let expected: number | null = null;
+      if (exact.length >= 3) expected = median(exact);
+      else if (pooled.length >= 3) expected = median(pooled);
+      if (actual === undefined || naive === undefined || expected === null)
+        continue;
       modelError += Math.abs(actual - expected);
       naiveError += Math.abs(actual - naive);
       samples += 1;
@@ -263,18 +277,22 @@ export function emptyUsageProfile(kind: UsageKind): UsageProfile {
   return {
     v: 1,
     kind,
-    b: Array(SLOT_COUNT * 7).fill(null),
-    s: Array(SLOT_COUNT * 7).fill(null),
-    n: Array(SLOT_COUNT * 7).fill(0),
+    b: new Array(SLOT_COUNT * 7).fill(null),
+    s: new Array(SLOT_COUNT * 7).fill(null),
+    n: new Array(SLOT_COUNT * 7).fill(0),
     c: null,
     l: null,
-    closed: Array(SLOT_COUNT * 7).fill(1),
+    closed: new Array(SLOT_COUNT * 7).fill(1),
     weeks: 0,
     q: null,
   };
 }
 
-function openScore(kind: UsageKind, value: number, capacity: number | null): number {
+function openScore(
+  kind: UsageKind,
+  value: number,
+  capacity: number | null,
+): number {
   return kind === "occupancy" ? value : (capacity ?? 0) - value;
 }
 
@@ -297,7 +315,9 @@ function buildLevels(
     value === null || isClosedBaseline(kind, value, capacity) ? 1 : 0,
   );
   const scores = baseline.flatMap((value, index) =>
-    value !== null && closed[index] === 0 ? [openScore(kind, value, capacity)] : [],
+    value !== null && closed[index] === 0
+      ? [openScore(kind, value, capacity)]
+      : [],
   );
   if (scores.length === 0) return { thresholds: null, closed };
   return {
@@ -318,51 +338,74 @@ export function buildProfile(
       observation.dow >= 0 &&
       observation.dow < 7,
   );
-  const latestDay = Math.max(...valid.map((observation) => localDayNumber(observation.date)));
+  const latestDay = Math.max(
+    ...valid.map((observation) => localDayNumber(observation.date)),
+  );
   const recent = Number.isFinite(latestDay)
-    ? valid.filter((observation) => localDayNumber(observation.date) >= latestDay - 55)
+    ? valid.filter(
+        (observation) => localDayNumber(observation.date) >= latestDay - 55,
+      )
     : valid;
-  const byDowSlot: number[][] = Array.from({ length: SLOT_COUNT * 7 }, () => []);
-  const byTypeSlot: number[][] = Array.from({ length: SLOT_COUNT * 2 }, () => []);
+  const byDowSlot: number[][] = Array.from(
+    { length: SLOT_COUNT * 7 },
+    () => [],
+  );
+  const byTypeSlot: number[][] = Array.from(
+    { length: SLOT_COUNT * 2 },
+    () => [],
+  );
   const rawValues = recent.map((observation) => observation.value);
   const days = new Set(recent.map((observation) => observation.date));
-  const weeks = new Set(recent.map((observation) => isoWeekKey(observation.date))).size;
+  const weeks = new Set(
+    recent.map((observation) => isoWeekKey(observation.date)),
+  ).size;
 
   for (const observation of recent) {
-    byDowSlot[profileIndex(observation.dow, observation.slot)].push(observation.value);
+    byDowSlot[profileIndex(observation.dow, observation.slot)].push(
+      observation.value,
+    );
     const typeOffset = dayType(observation.dow) === "weekend" ? SLOT_COUNT : 0;
     byTypeSlot[typeOffset + observation.slot].push(observation.value);
   }
 
   const provisionalCapacity = quantile(rawValues, 0.99);
-  const baseline: Array<number | null> = Array(SLOT_COUNT * 7).fill(null);
-  const spread: Array<number | null> = Array(SLOT_COUNT * 7).fill(null);
-  const counts = Array(SLOT_COUNT * 7).fill(0);
+  const baseline: Array<number | null> = new Array(SLOT_COUNT * 7).fill(null);
+  const spread: Array<number | null> = new Array(SLOT_COUNT * 7).fill(null);
+  const counts = new Array(SLOT_COUNT * 7).fill(0);
   for (let dow = 0; dow < 7; dow += 1) {
     for (let slot = 0; slot < SLOT_COUNT; slot += 1) {
       const exact = byDowSlot[profileIndex(dow, slot)];
       const typeOffset = dayType(dow) === "weekend" ? SLOT_COUNT : 0;
       const pooled = byTypeSlot[typeOffset + slot];
-      const values = exact.length >= 3 ? exact : pooled.length >= 3 ? pooled : [];
+      let values: number[] = [];
+      if (exact.length >= 3) values = exact;
+      else if (pooled.length >= 3) values = pooled;
       const center = median(values);
       if (center === null) continue;
       const index = profileIndex(dow, slot);
       baseline[index] = round1(center);
       counts[index] = values.length;
       spread[index] = round1(
-        Math.max(1.4826 * mad(values, center), Math.sqrt(Math.max(center, 1)), 1),
+        Math.max(
+          1.4826 * mad(values, center),
+          Math.sqrt(Math.max(center, 1)),
+          1,
+        ),
       );
     }
   }
 
-  const weekdayCovered = Array.from({ length: SLOT_COUNT }, (_, slot) =>
-    byTypeSlot[slot].length >= 3,
+  const weekdayCovered = Array.from(
+    { length: SLOT_COUNT },
+    (_, slot) => byTypeSlot[slot].length >= 3,
   ).every(Boolean);
-  const weekendCovered = Array.from({ length: SLOT_COUNT }, (_, slot) =>
-    byTypeSlot[SLOT_COUNT + slot].length >= 3,
+  const weekendCovered = Array.from(
+    { length: SLOT_COUNT },
+    (_, slot) => byTypeSlot[SLOT_COUNT + slot].length >= 3,
   ).every(Boolean);
   const ready = days.size >= 7 && weekdayCovered && weekendCovered;
-  const capacity = ready && provisionalCapacity !== null ? round1(provisionalCapacity) : null;
+  const capacity =
+    ready && provisionalCapacity !== null ? round1(provisionalCapacity) : null;
   const levels = buildLevels(kind, baseline, capacity ?? provisionalCapacity);
   const quality = ready ? backtest(recent, weeks) : null;
 
@@ -388,11 +431,19 @@ function formatSlot(slot: number): string {
   return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
 }
 
-function baselineAt(profile: UsageProfile, dow: number, slot: number): number | null {
+function baselineAt(
+  profile: UsageProfile,
+  dow: number,
+  slot: number,
+): number | null {
   return profile.b[profileIndex(dow, slot)] ?? null;
 }
 
-function spreadAt(profile: UsageProfile, dow: number, slot: number): number | null {
+function spreadAt(
+  profile: UsageProfile,
+  dow: number,
+  slot: number,
+): number | null {
   return profile.s[profileIndex(dow, slot)] ?? null;
 }
 
@@ -400,12 +451,15 @@ function closedAt(profile: UsageProfile, dow: number, slot: number): boolean {
   return profile.closed[profileIndex(dow, slot)] === 1;
 }
 
-function typicalWeek(profile: UsageProfile, ready: boolean): (number | null)[][] {
+function typicalWeek(
+  profile: UsageProfile,
+  ready: boolean,
+): (number | null)[][] {
   if (!ready) return [];
   return Array.from({ length: 7 }, (_, dow) =>
     Array.from({ length: SLOT_COUNT }, (_, slot) => {
       const index = profileIndex(dow, slot);
-      return profile.closed[index] === 1 ? null : profile.b[index] ?? null;
+      return profile.closed[index] === 1 ? null : (profile.b[index] ?? null);
     }),
   );
 }
@@ -453,7 +507,11 @@ function materialBaselineMoveOverWindow(
   return Number.isFinite(minimum) && maximum - minimum >= threshold;
 }
 
-function closedValue(kind: UsageKind, value: number, capacity: number | null): boolean {
+function closedValue(
+  kind: UsageKind,
+  value: number,
+  capacity: number | null,
+): boolean {
   return kind === "occupancy"
     ? value <= 0.5
     : value >= (capacity ?? value) - Math.max(1, (capacity ?? value) * 0.05);
@@ -488,14 +546,18 @@ function anomalyDecision(
   const lastChanged = input.meta.lastValueChangedAt
     ? Date.parse(input.meta.lastValueChangedAt)
     : Number.NaN;
-  const noSampleSince = Number.isFinite(lastSuccess) && lastSuccess + 30 * 60 * 1000 <= nowMs
-    ? new Date(lastSuccess + 30 * 60 * 1000).toISOString()
+  const noSampleSince =
+    Number.isFinite(lastSuccess) && lastSuccess + 30 * 60 * 1000 <= nowMs
+      ? new Date(lastSuccess + 30 * 60 * 1000).toISOString()
+      : null;
+  const lastChangedLocal = Number.isFinite(lastChanged)
+    ? taipeiSlotAt(lastChanged)
     : null;
-  const lastChangedLocal = Number.isFinite(lastChanged) ? taipeiSlotAt(lastChanged) : null;
-  const unchangedStartSlot = lastChangedLocal?.date === input.local.date &&
-      lastChangedLocal.slot <= input.local.slot
-    ? lastChangedLocal.slot
-    : 0;
+  const unchangedStartSlot =
+    lastChangedLocal?.date === input.local.date &&
+    lastChangedLocal.slot <= input.local.slot
+      ? lastChangedLocal.slot
+      : 0;
   const noChangeSince =
     Number.isFinite(lastChanged) &&
     lastChanged + 2 * 60 * 60 * 1000 <= nowMs &&
@@ -514,9 +576,12 @@ function anomalyDecision(
     candidate = {
       type: "stale",
       z: 0,
-      since: noSampleSince && noChangeSince
-        ? new Date(Math.min(Date.parse(noSampleSince), Date.parse(noChangeSince))).toISOString()
-        : (noSampleSince ?? noChangeSince)!,
+      since:
+        noSampleSince && noChangeSince
+          ? new Date(
+              Math.min(Date.parse(noSampleSince), Date.parse(noChangeSince)),
+            ).toISOString()
+          : (noSampleSince ?? noChangeSince)!,
       immediate: true,
     };
   } else if (
@@ -560,8 +625,11 @@ function anomalyDecision(
     lastObservedAt: nowIso,
   };
   const ageMs = nowMs - Date.parse(nextState.since!);
-  const active = candidate.immediate ||
-    (candidate.type === "unexpected_closed" ? ageMs >= 60 * 60 * 1000 : nextState.samples >= 2);
+  const active =
+    candidate.immediate ||
+    (candidate.type === "unexpected_closed"
+      ? ageMs >= 60 * 60 * 1000
+      : nextState.samples >= 2);
   if (!active) return { anomaly: null, state: nextState };
   return {
     anomaly: {
@@ -575,23 +643,28 @@ function anomalyDecision(
   };
 }
 
-function sameState(a: StoredAnomalyState | null, b: StoredAnomalyState): boolean {
+function sameState(
+  a: StoredAnomalyState | null,
+  b: StoredAnomalyState,
+): boolean {
   return Boolean(
-    a &&
-      a.type === b.type &&
+    a?.type === b.type &&
       a.since === b.since &&
       a.samples === b.samples &&
       a.lastObservedAt === b.lastObservedAt,
   );
 }
 
-export function buildSeriesForecast(input: SeriesForecastInput): SeriesForecastResult {
+export function buildSeriesForecast(
+  input: SeriesForecastInput,
+): SeriesForecastResult {
   const { profile, local, meta } = input;
   const actuals = new Map(input.today.map((item) => [item.slot, item.value]));
   const currentValue = meta.current ?? actuals.get(local.slot) ?? null;
   const currentIndex = profileIndex(local.dow, local.slot);
   const expectedCurrent = profile.b[currentIndex] ?? null;
-  const ready = profile.c !== null && profile.b.every((value) => value !== null);
+  const ready =
+    profile.c !== null && profile.b.every((value) => value !== null);
   const emptySeries: UsageSeries = {
     id: meta.seriesId,
     name: meta.name,
@@ -624,29 +697,46 @@ export function buildSeriesForecast(input: SeriesForecastInput): SeriesForecastR
     return {
       t: formatSlot(slot),
       expected,
-      low: expected === null || spread === null ? null : round1(Math.max(0, expected - 2 * spread)),
+      low:
+        expected === null || spread === null
+          ? null
+          : round1(Math.max(0, expected - 2 * spread)),
       high:
         expected === null || spread === null
           ? null
-          : round1(Math.min(profile.c ?? Number.POSITIVE_INFINITY, expected + 2 * spread)),
+          : round1(
+              Math.min(
+                profile.c ?? Number.POSITIVE_INFINITY,
+                expected + 2 * spread,
+              ),
+            ),
       actual: actual === null ? null : round1(actual),
-      level: expected === null ? null : levelForValue(profile, profile.kind, expected, local.dow, slot),
+      level:
+        expected === null
+          ? null
+          : levelForValue(profile, profile.kind, expected, local.dow, slot),
     };
   });
 
-  const nonZeroBaselines = profile.b.filter((value): value is number => value !== null && value > 0);
+  const nonZeroBaselines = profile.b.filter(
+    (value): value is number => value !== null && value > 0,
+  );
   const k = 2 * (median(nonZeroBaselines) ?? 1);
   let actualSum = 0;
   let baselineSum = 0;
   for (let slot = Math.max(0, local.slot - 2); slot <= local.slot; slot += 1) {
     const baseline = baselineAt(profile, local.dow, slot);
-    const actual = actuals.get(slot) ?? (slot === local.slot ? currentValue : null);
+    const actual =
+      actuals.get(slot) ?? (slot === local.slot ? currentValue : null);
     if (baseline !== null && actual !== null) {
       baselineSum += baseline;
       actualSum += actual;
     }
   }
-  const ratio = baselineSum > 0 ? Math.min(3, Math.max(0.33, (actualSum + k) / (baselineSum + k))) : 1;
+  const ratio =
+    baselineSum > 0
+      ? Math.min(3, Math.max(0.33, (actualSum + k) / (baselineSum + k)))
+      : 1;
   const next: { t: string; expected: number }[] = [];
   for (let h = 1; h <= 6; h += 1) {
     const absoluteSlot = local.slot + h;
@@ -657,12 +747,18 @@ export function buildSeriesForecast(input: SeriesForecastInput): SeriesForecastR
     const forecast = baseline * (1 + (ratio - 1) * Math.pow(0.85, h));
     next.push({
       t: formatSlot(slot),
-      expected: round1(Math.max(0, Math.min(profile.c ?? Number.POSITIVE_INFINITY, forecast))),
+      expected: round1(
+        Math.max(0, Math.min(profile.c ?? Number.POSITIVE_INFINITY, forecast)),
+      ),
     });
   }
 
-  const first = next[0] ? busyness(profile, profile.kind, next[0].expected) : null;
-  const second = next[1] ? busyness(profile, profile.kind, next[1].expected) : null;
+  const first = next[0]
+    ? busyness(profile, profile.kind, next[0].expected)
+    : null;
+  const second = next[1]
+    ? busyness(profile, profile.kind, next[1].expected)
+    : null;
   const deadBand = Math.max(1, (profile.c ?? 0) * 0.05);
   let trend: UsageTrend = "steady";
   if (first !== null && second !== null) {
@@ -670,23 +766,33 @@ export function buildSeriesForecast(input: SeriesForecastInput): SeriesForecastR
     else if (first - second > deadBand) trend = "falling";
   }
 
-  const remaining = Array.from({ length: SLOT_COUNT - local.slot }, (_, offset) => local.slot + offset)
-    .filter((slot) => !closedAt(profile, local.dow, slot) && baselineAt(profile, local.dow, slot) !== null);
+  const remaining = Array.from(
+    { length: SLOT_COUNT - local.slot },
+    (_, offset) => local.slot + offset,
+  ).filter(
+    (slot) =>
+      !closedAt(profile, local.dow, slot) &&
+      baselineAt(profile, local.dow, slot) !== null,
+  );
   const remainingScores = remaining.map((slot) => ({
     slot,
-    score: busyness(profile, profile.kind, baselineAt(profile, local.dow, slot)) ?? 0,
+    score:
+      busyness(profile, profile.kind, baselineAt(profile, local.dow, slot)) ??
+      0,
   }));
   const peak = Math.max(...remainingScores.map((item) => item.score), 0);
-  const peakSlots = remainingScores.filter((item) => item.score >= peak * 0.75 && peak > 0).map((item) => item.slot);
+  const peakSlots = remainingScores
+    .filter((item) => item.score >= peak * 0.75 && peak > 0)
+    .map((item) => item.slot);
   const peakRuns: number[][] = [];
   for (const slot of peakSlots) {
-    const previous = peakRuns[peakRuns.length - 1];
-    if (previous && previous[previous.length - 1] === slot - 1) previous.push(slot);
+    const previous = peakRuns.at(-1);
+    if (previous?.at(-1) === slot - 1) previous.push(slot);
     else peakRuns.push([slot]);
   }
   const peaks = peakRuns.slice(0, 3).map((run) => ({
     start: formatSlot(run[0]),
-    end: formatSlot(Math.min(SLOT_COUNT, run[run.length - 1] + 1)),
+    end: formatSlot(Math.min(SLOT_COUNT, run.at(-1)! + 1)),
   }));
 
   let bestTime: { start: string; end: string } | null = null;
@@ -699,7 +805,8 @@ export function buildSeriesForecast(input: SeriesForecastInput): SeriesForecastR
       secondBaseline === null ||
       closedAt(profile, local.dow, start) ||
       closedAt(profile, local.dow, start + 1)
-    ) continue;
+    )
+      continue;
     const score =
       ((busyness(profile, profile.kind, firstBaseline) ?? 0) +
         (busyness(profile, profile.kind, secondBaseline) ?? 0)) /
@@ -723,7 +830,13 @@ export function buildSeriesForecast(input: SeriesForecastInput): SeriesForecastR
       level:
         currentValue === null
           ? null
-          : levelForValue(profile, profile.kind, currentValue, local.dow, local.slot),
+          : levelForValue(
+              profile,
+              profile.kind,
+              currentValue,
+              local.dow,
+              local.slot,
+            ),
       trend,
       today,
       next,
@@ -731,6 +844,8 @@ export function buildSeriesForecast(input: SeriesForecastInput): SeriesForecastR
       bestTime,
       anomaly: decision.anomaly,
     },
-    state: sameState(input.state, decision.state) ? input.state! : decision.state,
+    state: sameState(input.state, decision.state)
+      ? input.state!
+      : decision.state,
   };
 }
