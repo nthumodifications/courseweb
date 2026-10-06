@@ -50,6 +50,7 @@ import { cn } from "@/lib/utils";
 import useDictionary from "@/dictionaries/useDictionary";
 import { ResponsiveDialog } from "./components/responsive-dialog";
 import { useConfirm } from "./lib/use-confirm";
+import { activateOnKey } from "@/lib/activate-on-key";
 
 interface FolderManagementProps {
   isOpen: boolean;
@@ -591,12 +592,7 @@ export function FolderManagement({
         <div
           className={`flex items-center p-2 rounded-md ${selectedFolder?.id === folder.id ? "bg-neutral-50 dark:bg-neutral-800" : "hover:bg-neutral-50/50 dark:hover:bg-neutral-800/50"} cursor-pointer ${isUnsorted ? "opacity-70" : ""}`}
           onClick={() => handleSelectFolder(folder)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault();
-              handleSelectFolder(folder);
-            }
-          }}
+          onKeyDown={activateOnKey(() => handleSelectFolder(folder))}
           role="button"
           tabIndex={0}
           style={{ paddingLeft: `${level * 16 + 8}px` }}
@@ -689,12 +685,7 @@ export function FolderManagement({
           <div
             className={`flex items-center p-2 rounded-md ${isRootSelected ? "bg-neutral-50 dark:bg-neutral-800" : "hover:bg-neutral-50/50 dark:hover:bg-neutral-800/50"} cursor-pointer`}
             onClick={handleSelectRoot}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                handleSelectRoot();
-              }
-            }}
+            onKeyDown={activateOnKey(() => handleSelectRoot())}
             role="button"
             tabIndex={0}
           >

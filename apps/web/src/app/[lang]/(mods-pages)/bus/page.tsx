@@ -21,6 +21,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { getTimeOnDate } from "@/helpers/bus";
 import useDictionary from "@/dictionaries/useDictionary";
 import OpenCollectiveSponsorBanner from "@/components/Sponsorship/OpenCollectiveSponsorBanner";
+import { activateOnKey } from "@/lib/activate-on-key";
 
 type BusListingItemProps = {
   tab: string;
@@ -89,12 +90,7 @@ const BusListingItem = ({
       <div
         className={cn("flex flex-row items-center gap-4 cursor-pointer")}
         onClick={handleItemClick}
-        onKeyDown={(event) => {
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            handleItemClick();
-          }
-        }}
+        onKeyDown={activateOnKey(() => handleItemClick())}
         role="button"
         tabIndex={0}
       >

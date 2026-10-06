@@ -13,6 +13,7 @@ import useCustomMenu from "@/app/[lang]/(mods-pages)/courses/useCustomMenu";
 import { lastSemester } from "@courseweb/shared";
 import { getFormattedClassCode } from "@/helpers/courses";
 import useDictionary from "@/dictionaries/useDictionary";
+import { activateOnKey } from "@/lib/activate-on-key";
 
 type ExpandableClassFilterProps = {
   limit?: number;
@@ -172,12 +173,7 @@ const ExpandableClassFilter = ({
                     : "hover:bg-muted",
                 )}
                 onClick={() => handleItemSelect(item.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    handleItemSelect(item.value);
-                  }
-                }}
+                onKeyDown={activateOnKey(() => handleItemSelect(item.value))}
                 role="button"
                 tabIndex={0}
               >

@@ -34,6 +34,7 @@ import {
   useUsageForecast,
   type UsageSeries,
 } from "@/lib/usage-forecast";
+import { activateOnKey } from "@/lib/activate-on-key";
 
 type OccupancyItem = {
   project_id: string;
@@ -745,12 +746,9 @@ const SportsVenuesPage = () => {
                 key={facility.name_zh}
                 className="flex flex-row items-center gap-4 py-4 cursor-pointer"
                 onClick={() => openFacility(facility, undefined, 0)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    openFacility(facility, undefined, 0);
-                  }
-                }}
+                onKeyDown={activateOnKey(() =>
+                  openFacility(facility, undefined, 0),
+                )}
                 role="button"
                 tabIndex={0}
               >

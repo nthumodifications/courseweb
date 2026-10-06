@@ -29,6 +29,7 @@ import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { useQuery } from "@tanstack/react-query";
 import { CourseDefinition } from "@/config/supabase";
 import client from "@/config/api";
+import { activateOnKey } from "@/lib/activate-on-key";
 
 const TimetableCourseListItem = ({ course }: { course: MinimalCourse }) => {
   const dict = useDictionary();
@@ -68,12 +69,7 @@ const TimetableCourseListItem = ({ course }: { course: MinimalCourse }) => {
       <div
         className="flex min-w-0 flex-1 cursor-pointer"
         onClick={() => openCourse(course.raw_id)}
-        onKeyDown={(event) => {
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            openCourse(course.raw_id);
-          }
-        }}
+        onKeyDown={activateOnKey(() => openCourse(course.raw_id))}
         role="button"
         tabIndex={0}
       >

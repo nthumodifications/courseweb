@@ -30,6 +30,7 @@ import {
   isWeekend,
   startOfHour,
 } from "date-fns";
+import { activateOnKey } from "@/lib/activate-on-key";
 
 type BusDetailsContainerProps = {
   routes: {
@@ -372,12 +373,7 @@ const BusDetailsContainer = ({
                     )}
                     key={hd.toString()}
                     onClick={() => handleTimeSelected(hd)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        handleTimeSelected(hd);
-                      }
-                    }}
+                    onKeyDown={activateOnKey(() => handleTimeSelected(hd))}
                     role="button"
                     tabIndex={0}
                   >

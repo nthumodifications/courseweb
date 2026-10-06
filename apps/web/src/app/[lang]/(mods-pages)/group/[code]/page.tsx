@@ -25,6 +25,7 @@ import {
   EyeOff,
   Trash2,
 } from "lucide-react";
+import { activateOnKey } from "@/lib/activate-on-key";
 
 const MEMBER_COLORS = [
   "hsl(var(--primary))",
@@ -306,12 +307,7 @@ const GroupViewPage = () => {
                     isVisible ? "border-primary" : ""
                   }`}
                   onClick={() => toggleMember(member.userId)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault();
-                      toggleMember(member.userId);
-                    }
-                  }}
+                  onKeyDown={activateOnKey(() => toggleMember(member.userId))}
                   role="button"
                   tabIndex={0}
                 >

@@ -12,6 +12,7 @@ import {
 } from "@courseweb/ui";
 import { X } from "lucide-react";
 import useDictionary from "@/dictionaries/useDictionary";
+import { activateOnKey } from "@/lib/activate-on-key";
 
 type ExpandableFilterMode = "checkbox" | "simple";
 
@@ -215,12 +216,9 @@ const ExpandableFilter = ({
                       : "hover:bg-muted",
                   )}
                   onClick={() => handleClassTypeSelect(item.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault();
-                      handleClassTypeSelect(item.value);
-                    }
-                  }}
+                  onKeyDown={activateOnKey(() =>
+                    handleClassTypeSelect(item.value),
+                  )}
                   role="button"
                   tabIndex={0}
                 >

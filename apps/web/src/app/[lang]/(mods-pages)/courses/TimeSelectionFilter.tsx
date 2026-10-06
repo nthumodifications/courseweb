@@ -20,6 +20,7 @@ import {
 import { scheduleTimeSlots } from "@courseweb/shared";
 import { MinimalCourse } from "@/types/courses";
 import useDictionary from "@/dictionaries/useDictionary";
+import { activateOnKey } from "@/lib/activate-on-key";
 
 type TimeSelectionFilterProps = {
   attribute: string;
@@ -443,12 +444,9 @@ const TimeSelectionFilter = ({
                           onMouseEnter={() => {
                             handleMouseMove(dayIndex, period);
                           }}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" || e.key === " ") {
-                              e.preventDefault();
-                              handleMouseDown(dayIndex, period);
-                            }
-                          }}
+                          onKeyDown={activateOnKey(() =>
+                            handleMouseDown(dayIndex, period),
+                          )}
                           onKeyUp={(e) => {
                             if (e.key === "Enter" || e.key === " ") {
                               e.preventDefault();

@@ -2,6 +2,7 @@ import { apps } from "@/const/apps";
 import useDictionary from "@/dictionaries/useDictionary";
 import { Badge, cn } from "@courseweb/ui";
 import useLaunchApp from "@/hooks/useLaunchApp";
+import { activateOnKey } from "@/lib/activate-on-key";
 
 const AppItem = ({
   app,
@@ -23,12 +24,7 @@ const AppItem = ({
         "cursor-pointer",
       )}
       onClick={onItemClicked}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          onItemClicked();
-        }
-      }}
+      onKeyDown={activateOnKey(() => onItemClicked())}
       role="button"
       tabIndex={0}
     >

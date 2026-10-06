@@ -3,6 +3,7 @@ import { FolderDocType } from "@/app/[lang]/(mods-pages)/student/planner/rxdb";
 import { useDndContext, useDroppable } from "@dnd-kit/core";
 import { cn } from "@/lib/utils";
 import useDictionary from "@/dictionaries/useDictionary";
+import { activateOnKey } from "@/lib/activate-on-key";
 
 interface FolderNavItemProps {
   folder: FolderDocType;
@@ -135,12 +136,7 @@ export function FolderNavItem({
         <div
           className="flex-1 min-w-0 flex flex-row items-center"
           onClick={() => onSelect(folder.id)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault();
-              onSelect(folder.id);
-            }
-          }}
+          onKeyDown={activateOnKey(() => onSelect(folder.id))}
           role="button"
           tabIndex={0}
         >

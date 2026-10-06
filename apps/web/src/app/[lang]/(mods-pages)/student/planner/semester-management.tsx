@@ -33,6 +33,7 @@ import useDictionary from "@/dictionaries/useDictionary";
 import { ResponsiveDialog } from "./components/responsive-dialog";
 import { useConfirm } from "./lib/use-confirm";
 import { useSettings } from "@/hooks/contexts/settings";
+import { activateOnKey } from "@/lib/activate-on-key";
 
 // Static schema kept purely for `z.infer` typing purposes. The actual
 // resolver used by the form is built at runtime (see `useMemo` below) so
@@ -394,12 +395,9 @@ export function SemesterManagement({
                     key={semester.id}
                     className={`flex items-center justify-between p-2 rounded-md ${selectedSemester?.id === semester.id ? "bg-neutral-50 dark:bg-neutral-800" : "hover:bg-neutral-50/50 dark:hover:bg-neutral-800/50"} cursor-pointer`}
                     onClick={() => handleSelectSemester(semester)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        handleSelectSemester(semester);
-                      }
-                    }}
+                    onKeyDown={activateOnKey(() =>
+                      handleSelectSemester(semester),
+                    )}
                     role="button"
                     tabIndex={0}
                   >

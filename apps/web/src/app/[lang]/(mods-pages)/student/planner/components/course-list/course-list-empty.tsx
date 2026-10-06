@@ -11,6 +11,7 @@ import { CreateCourseDialog } from "../dialogs/create-course-dialog";
 import { getFolderColorDotClass } from "../../lib/folder-colors";
 import { getStatusIcon } from "../../lib/status";
 import useDictionary from "@/dictionaries/useDictionary";
+import { activateOnKey } from "@/lib/activate-on-key";
 
 interface CourseListEmptyProps {
   type: "noFolderSelected" | "hasChildFolders" | "noCoursesInFolder";
@@ -148,12 +149,7 @@ export function CourseListEmpty({
                   key={folder.id}
                   className="flex items-center p-2 rounded-md hover:bg-neutral-700 cursor-pointer"
                   onClick={() => onSelectFolder?.(folder.id)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault();
-                      onSelectFolder?.(folder.id);
-                    }
-                  }}
+                  onKeyDown={activateOnKey(() => onSelectFolder?.(folder.id))}
                   role="button"
                   tabIndex={0}
                 >
