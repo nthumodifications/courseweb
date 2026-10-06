@@ -18,15 +18,15 @@ jobs:
     environment: production
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
           bun-version: latest
 
       - name: Install dependencies
-        run: bun install
+        run: bun install --frozen-lockfile --ignore-scripts
 
       - name: Run course scraper
         working-directory: tools/data-sync
@@ -36,4 +36,4 @@ jobs:
           ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID }}
           ALGOLIA_API_KEY: ${{ secrets.ALGOLIA_API_KEY }}
           SEMESTER: ${{ github.event.inputs.semester || '11510' }}
-        run: bun run src/sync-courses.ts ${{ github.event.inputs.semester || '11510' }}
+        run: bun run src/sync-courses.ts "$SEMESTER"

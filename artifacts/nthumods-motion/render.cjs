@@ -27,21 +27,21 @@ async function main(){
   let ws,encoder,log='',browserVersion
   try{
     for(let i=0;i<60;i++){try{browserVersion=await(await fetch(`http://127.0.0.1:${CDP}/json/version`)).json();break}catch{await delay(250)}}
-    if(!browserVersion)throw Error('Chrome did not start')
+     if(!browserVersion)throw new Error('Chrome did not start')
     const pages=await(await fetch(`http://127.0.0.1:${CDP}/json`)).json()
     ws=new WebSocket(pages.find(p=>p.type==='page').webSocketDebuggerUrl)
     await once(ws,'open')
     let seq=0
     const pending=new Map()
     const send=(method,params={})=>new Promise((resolve,reject)=>{const id=++seq;pending.set(id,{resolve,reject});ws.send(JSON.stringify({id,method,params}))})
-    ws.addEventListener('message',({data})=>{const m=JSON.parse(data);if(m.id){const p=pending.get(m.id);pending.delete(m.id);m.error?p.reject(Error(JSON.stringify(m.error))):p.resolve(m.result)}else if(m.method==='Runtime.exceptionThrown')console.error(m.params.exceptionDetails.exception?.description)})
-    const evaluate=async expression=>{const r=await send('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true});if(r.exceptionDetails)throw Error(r.exceptionDetails.exception?.description);return r.result.value}
+     ws.addEventListener('message',({data})=>{const m=JSON.parse(data);if(m.id){const p=pending.get(m.id);pending.delete(m.id);m.error?p.reject(new Error(JSON.stringify(m.error))):p.resolve(m.result)}else if(m.method==='Runtime.exceptionThrown')console.error(m.params.exceptionDetails.exception?.description)})
+     const evaluate=async expression=>{const r=await send('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true});if(r.exceptionDetails){throw new Error(r.exceptionDetails.exception?.description)}return r.result.value}
     await send('Page.enable')
     await send('Runtime.enable')
     await send('Emulation.setDeviceMetricsOverride',{width:1080,height:1920,deviceScaleFactor:1,mobile:false})
     await send('Page.navigate',{url:`http://127.0.0.1:${PORT}/${zh?'zh.html':''}`})
-    for(let i=0;i<100;i++){if(await evaluate('!!window.motionReady'))break;await delay(150)}
-    if(!await evaluate('!!window.motionReady'))throw Error('Artwork did not load')
+     for(let i=0;i<100;i++){if(await evaluate('!!window.motionReady')){break}await delay(150)}
+     if(!await evaluate('!!window.motionReady'))throw new Error('Artwork did not load')
     const frame=async t=>Buffer.from(await evaluate(`(window.renderFrame(${t}),document.getElementById('film').toDataURL('image/png').split(',')[1])`),'base64')
     const stillFolder=path.join(ROOT,'stills'+suffix)
     await fs.mkdir(stillFolder,{recursive:true})
@@ -65,7 +65,7 @@ async function main(){
       }
       encoder.stdin.end()
       const [code]=await done
-      if(code!==0)throw Error('Encoding failed '+log)
+       if(code!==0)throw new Error('Encoding failed '+log)
       console.log('Finished',dest)
       console.log('Bytes',(await fs.stat(dest)).size)
       if(log)console.log(log)

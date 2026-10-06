@@ -4,8 +4,8 @@
  * Provides utilities for automating build processes and import management
  */
 
-import { execSync } from "child_process";
-import path from "path";
+import { execSync } from "node:child_process";
+import path from "node:path";
 
 // Import management utilities
 export const updateUIImports = () => {

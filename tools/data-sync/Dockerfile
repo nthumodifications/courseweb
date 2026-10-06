@@ -2,9 +2,9 @@ FROM oven/bun:1-alpine AS base
 
 # Install necessary packages
 RUN apk add --no-cache \
-    python3 \
-    make \
     g++ \
+    make \
+    python3 \
     && ln -sf python3 /usr/bin/python
 
 # Install dependencies only when needed
@@ -19,7 +19,7 @@ COPY packages/eslint-config/package.json ./packages/eslint-config/package.json
 COPY tools/data-sync/package.json ./tools/data-sync/package.json
 
 # Install dependencies (can't use --frozen-lockfile in Docker with partial monorepo)
-RUN bun install
+RUN bun install --ignore-scripts
 
 # Production image
 FROM base AS runner

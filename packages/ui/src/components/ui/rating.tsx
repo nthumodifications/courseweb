@@ -45,27 +45,26 @@ export const Rating = ({
 }: RatingProps) => {
   const [hoverRating, setHoverRating] = useState<number | null>(null);
   const [currentRating, setCurrentRating] = useState(initialRating);
-  const [isHovering, setIsHovering] = useState(false);
 
   const handleMouseEnter = (event: React.MouseEvent<HTMLDivElement>) => {
     if (!disabled) {
-      setIsHovering(true);
-      const starIndex = parseInt(
+      const starIndex = Number.parseInt(
         (event.currentTarget as HTMLDivElement).dataset.starIndex || "0",
+        10,
       );
       setHoverRating(starIndex);
     }
   };
 
   const handleMouseLeave = () => {
-    setIsHovering(false);
     setHoverRating(null);
   };
 
   const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
     if (!disabled) {
-      const starIndex = parseInt(
+      const starIndex = Number.parseInt(
         (event.currentTarget as HTMLDivElement).dataset.starIndex || "0",
+        10,
       );
       setCurrentRating(starIndex);
       setHoverRating(null);
@@ -98,7 +97,7 @@ export const Rating = ({
       {...props}
     >
       <div className="flex items-center" onMouseEnter={handleMouseEnter}>
-        {[...Array(fullStars)].map((_, i) =>
+        {[...new Array(fullStars)].map((_, i) =>
           React.cloneElement(Icon, {
             key: i,
             size,
@@ -113,7 +112,9 @@ export const Rating = ({
         )}
         {partialStar}
         {[
-          ...Array(Math.max(0, totalStars - fullStars - (partialStar ? 1 : 0))),
+          ...new Array(
+            Math.max(0, totalStars - fullStars - (partialStar ? 1 : 0)),
+          ),
         ].map((_, i) =>
           React.cloneElement(Icon, {
             key: i + fullStars + 1,

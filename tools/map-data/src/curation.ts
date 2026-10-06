@@ -89,28 +89,30 @@ function parseNames(value: unknown, field: string): CurationNames {
 
 export function parseCampusMapCuration(value: unknown): CampusMapCuration {
   if (!isRecord(value))
-    throw new Error("Campus map curation must be an object");
+    throw new TypeError("Campus map curation must be an object");
   if (!Array.isArray(value.labels)) {
-    throw new Error("Campus map curation labels must be an array");
+    throw new TypeError("Campus map curation labels must be an array");
   }
   if (!Array.isArray(value.excludedSourceIds)) {
-    throw new Error("Campus map curation excludedSourceIds must be an array");
+    throw new TypeError(
+      "Campus map curation excludedSourceIds must be an array",
+    );
   }
   if (!isRecord(value.renamed)) {
-    throw new Error("Campus map curation renamed must be an object");
+    throw new TypeError("Campus map curation renamed must be an object");
   }
   if (!Array.isArray(value.groups)) {
-    throw new Error("Campus map curation groups must be an array");
+    throw new TypeError("Campus map curation groups must be an array");
   }
   const treeClusterValues = value.illustrativeTreeClusters ?? [];
   if (!Array.isArray(treeClusterValues)) {
-    throw new Error(
+    throw new TypeError(
       "Campus map curation illustrativeTreeClusters must be an array",
     );
   }
   const vegetationAreaValues = value.illustrativeVegetationAreas ?? [];
   if (!Array.isArray(vegetationAreaValues)) {
-    throw new Error(
+    throw new TypeError(
       "Campus map curation illustrativeVegetationAreas must be an array",
     );
   }
@@ -176,7 +178,7 @@ export function parseCampusMapCuration(value: unknown): CampusMapCuration {
       }
     }
     if (typeof label.name !== "string") {
-      throw new Error(`labels[${labelIndex}].name must be a string`);
+      throw new TypeError(`labels[${labelIndex}].name must be a string`);
     }
     return {
       number: label.number,
@@ -524,10 +526,8 @@ export function syncCampusMapLabelCatalog(
     });
   }
 
-  return {
-    ...compactedCuration,
-    labels: labels.sort((a, b) => a.number - b.number),
-  };
+  labels.sort((a, b) => a.number - b.number);
+  return { ...compactedCuration, labels };
 }
 
 export function applyCampusMapCuration(
