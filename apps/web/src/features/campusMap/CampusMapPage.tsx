@@ -209,9 +209,12 @@ export default function CampusMapPage() {
             onSelect={selectIdentity}
           />
           {requestWarning && (
-            <output className="pointer-events-auto mt-2 rounded-lg border border-destructive/40 bg-background/95 px-2 py-2 text-sm text-destructive">
+            <p
+              className="pointer-events-auto mt-2 rounded-lg border border-destructive/40 bg-background/95 px-2 py-2 text-sm text-destructive"
+              role="status"
+            >
               {requestWarning}
-            </output>
+            </p>
           )}
         </div>
         <div className="pointer-events-auto flex shrink-0 gap-2">

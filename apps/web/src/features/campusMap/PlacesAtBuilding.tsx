@@ -35,15 +35,18 @@ export default function PlacesAtBuilding({
         )}
       </div>
       {isPending ? (
-        <output className="flex items-center gap-2 py-3 text-sm text-muted-foreground">
+        <p
+          className="flex items-center gap-2 py-3 text-sm text-muted-foreground"
+          role="status"
+        >
           <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
           {dict.campus_map.placesLoading}
-        </output>
+        </p>
       ) : isError && !data ? (
         <div className="flex items-center justify-between gap-3 py-2">
-          <output className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground" role="status">
             {dict.campus_map.placesError}
-          </output>
+          </p>
           <Button
             type="button"
             variant="outline"
@@ -56,9 +59,9 @@ export default function PlacesAtBuilding({
           </Button>
         </div>
       ) : shops.length === 0 ? (
-        <output className="py-3 text-sm text-muted-foreground">
+        <p className="py-3 text-sm text-muted-foreground" role="status">
           {dict.campus_map.placesEmpty}
-        </output>
+        </p>
       ) : (
         <ul
           className="min-h-0 touch-pan-y divide-y divide-border overflow-y-auto overscroll-contain pr-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
