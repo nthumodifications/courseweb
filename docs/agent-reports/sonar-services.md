@@ -145,3 +145,7 @@ The remaining in-scope fixes are behavior-preserving maintainability changes fro
 - SonarCloud was not rescanned, so the disposition table is source-based and should be confirmed by the next analysis.
 - The secure-api typecheck remains blocked by the same 21 pre-existing Prisma/admin diagnostics. ESLint remains unverified because the shared `@typescript-eslint/recommended` config is unavailable in this checkout.
 - No browser test, production endpoint test, or live OIDC-provider integration test was performed. The calendar validation intentionally rejects HTML-like markup in upstream data; if the upstream service relies on HTML in an iCalendar extension, that contract should be reviewed before deployment.
+
+## Correction after CI (2026-10-07)
+
+The `--ignore-scripts` change described above was reverted. Bun runs install scripts only for trusted dependencies, and Prisma is one of them: with the flag set, `prisma generate` fails in CI with an exec format error. `docker:S6505` is therefore deferred, not fixed.
