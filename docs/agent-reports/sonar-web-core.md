@@ -174,3 +174,9 @@ response, but it was not exercised in a browser. The deferred cognitive
 complexity and JSX-component rules need a separate review if the team wants
 further reduction; they were intentionally not addressed with risky broad
 refactors.
+
+## Correction after CI (2026-10-07)
+
+The `--ignore-scripts` change described above was reverted. Bun runs install scripts only for trusted dependencies, and Prisma is one of them: with the flag set, `prisma generate` fails in CI with an exec format error. `docker:S6505` is therefore deferred, not fixed.
+
+The viewport change described above was also reverted: `user-scalable=no` is kept, because removing it changes how the installed PWA behaves on phones and was outside this cleanup.
