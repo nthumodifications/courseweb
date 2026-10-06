@@ -6,8 +6,8 @@ import { Label } from "../ui/label";
 import { TimePickerInput } from "./time-picker-input";
 
 interface TimePickerDemoProps {
-  date: Date | undefined;
-  setDate: (date: Date | undefined) => void;
+  readonly date: Date | undefined;
+  readonly setDate: (date: Date | undefined) => void;
 }
 
 export function HourMinuteInput({ date, setDate }: TimePickerDemoProps) {

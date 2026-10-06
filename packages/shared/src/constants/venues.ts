@@ -369,7 +369,7 @@ export const getBuildingDefinition = (str: string) => {
   //first, only keep chinese characters
   let result = "";
   for (const char of str) {
-    if (char.match(/[\u4e00-\u9fff]/)) {
+    if (/[\u4e00-\u9fff]/.test(char)) {
       result += char;
     }
   }
@@ -387,10 +387,10 @@ export const getRoomNumber = (str: string) => {
   let found = false;
   let read = false;
   for (const char of str) {
-    if (char.match(/[\u4e00-\u9fff]/)) {
+    if (/[\u4e00-\u9fff]/.test(char)) {
       found = true;
     }
-    if (!char.match(/[\u4e00-\u9fff]/) && found) {
+    if (!/[\u4e00-\u9fff]/.test(char) && found) {
       read = true;
     }
     if (read) {

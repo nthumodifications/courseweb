@@ -2,8 +2,6 @@
 import * as React from "react";
 
 import clsx from "clsx";
-import { CommandList, Command as CommandPrimitive } from "cmdk";
-import { Command, CommandGroup, CommandItem } from "../ui/command";
 import { set } from "date-fns";
 import { Popover, PopoverContent } from "./popover";
 import { PopoverAnchor, PopoverPortal } from "@radix-ui/react-popover";
@@ -42,12 +40,12 @@ export function TimeSelect({
   onDateChange,
   minuteStep = 15,
 }: {
-  label?: string;
-  placeholder?: string;
-  parentClassName?: string;
-  date: Date;
-  onDateChange: (date: Date) => void;
-  minuteStep?: number;
+  readonly label?: string;
+  readonly placeholder?: string;
+  readonly parentClassName?: string;
+  readonly date: Date;
+  readonly onDateChange: (date: Date) => void;
+  readonly minuteStep?: number;
 }) {
   const inputRef = React.useRef<HTMLInputElement>(null);
   const [open, setOpen] = React.useState(false);
@@ -96,13 +94,12 @@ export function TimeSelect({
   const handleInputBlur = React.useCallback(() => {
     setOpen(false);
     // check if inputvalue is not same as selected
-    const selected = selectables.find((item) => item.label === inputValue);
-    if (selected) return;
+    if (selectables.some((item) => item.label === inputValue)) return;
     // since is new value, try to parse it, accept HH:MM, HHMM, HH MM or HH MM AM/PM
     const match = inputValue.match(/(\d{1,2})[ :]?(\d{2})? ?(am|pm)?/i);
     if (match) {
-      let hours = parseInt(match[1]);
-      const minutes = parseInt(match[2]) || 0;
+      let hours = Number.parseInt(match[1], 10);
+      const minutes = Number.parseInt(match[2], 10) || 0;
       const ampm = match[3];
       //adjust hours to 24-hour format
       if (ampm) {

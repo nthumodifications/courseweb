@@ -29,7 +29,7 @@ function Fade(props: PropsWithChildren<Props>) {
   const delay = typeof props.delay === "number" ? props.delay : 50;
   const WrapperTag = props.wrapperTag || "div";
   const ChildTag = props.childTag || "div";
-  const visible = typeof props.visible === "undefined" ? true : props.visible;
+  const visible = props.visible === undefined ? true : props.visible;
 
   useEffect(() => {
     let count = React.Children.count(props.children);

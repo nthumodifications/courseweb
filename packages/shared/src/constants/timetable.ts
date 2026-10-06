@@ -18,6 +18,6 @@ export const scheduleTimeSlots: TimeSlot[] = [
 ];
 
 export const parseSlotTime = (time: string): [number, number] => {
-  const [hour, minute] = time.split(":").map((t) => parseInt(t));
+  const [hour, minute] = time.split(":").map((t) => Number.parseInt(t, 10));
   return [hour, minute];
 };
