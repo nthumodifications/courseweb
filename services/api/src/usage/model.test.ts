@@ -291,7 +291,9 @@ describe("usage profile cold start and robustness", () => {
       timings.push(performance.now() - started);
     }
     timings.sort((a, b) => a - b);
-    expect(timings[Math.floor(timings.length / 2)]).toBeLessThan(25);
+    // Guards against the quadratic backtest (~10x slower); loose enough for
+    // shared CI runners, which are 2-3x slower than a dev machine.
+    expect(timings[Math.floor(timings.length / 2)]).toBeLessThan(100);
   });
 });
 
