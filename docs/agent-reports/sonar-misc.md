@@ -73,3 +73,7 @@ The remaining safe pass changes include explicit radix arguments and `Number.isN
 - No files under `apps/`, `services/`, dictionaries, lockfiles, package manifests, or generated/node_modules paths were touched. Findings outside the supplied scope were not audited.
 - No SonarCloud reanalysis or GitHub Actions execution was available, so the fixed/deferred counts are source-review dispositions, not a replacement Sonar report.
 - The deferred findings are mainly public type-alias compatibility, minified/render-loop sequencing, scraper regex/backtracking and cognitive complexity, map curation/geometry complexity, and non-native time-picker accessibility. They should be handled in dedicated, behavior-tested passes.
+
+## Correction after CI (2026-10-07)
+
+The `--ignore-scripts` change described above was reverted. Bun runs install scripts only for trusted dependencies, and Prisma is one of them: with the flag set, `prisma generate` fails in CI with an exec format error. `githubactions:S6505` and `docker:S6505` are therefore deferred, not fixed. The edits to the minified scripts under `artifacts/` were also dropped from this branch.

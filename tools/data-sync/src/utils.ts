@@ -2,8 +2,8 @@ import { createClient } from "@supabase/supabase-js";
 import algoliasearch from "algoliasearch";
 import type { SyncEnvironment } from "./types";
 
-const sanitizeLogValue = (value: string) =>
-  value.replace(
+const sanitizeLogValue = (value: unknown) =>
+  String(value).replace(
     /[\u0000-\u001f\u007f]/g,
     (character) =>
       `\\x${character.codePointAt(0)!.toString(16).padStart(2, "0")}`,
