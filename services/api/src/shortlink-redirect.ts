@@ -6,18 +6,15 @@ import { z } from "zod";
 const endpoint = (key: string, accountID: string, namespaceID: string) =>
   `https://api.cloudflare.com/client/v4/accounts/${accountID}/storage/kv/namespaces/${namespaceID}/values/${encodeURIComponent(key)}`;
 
-const ALLOWED_REDIRECT_ORIGINS = new Set(["https://nthumods.com"]);
+const REDIRECT_ORIGIN = "https://nthumods.com";
 
+// Rebuilds the target on a fixed origin, so a stored link can only ever point
+// somewhere on the site.
 const getSafeRedirectUrl = (value: string) => {
   try {
     const url = new URL(value);
-    if (
-      url.protocol !== "https:" ||
-      !ALLOWED_REDIRECT_ORIGINS.has(url.origin)
-    ) {
-      return null;
-    }
-    return url.toString();
+    if (url.origin !== REDIRECT_ORIGIN) return null;
+    return `${REDIRECT_ORIGIN}${url.pathname}${url.search}${url.hash}`;
   } catch {
     return null;
   }
