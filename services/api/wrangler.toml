@@ -50,4 +50,4 @@ namespace_id = "1002"
   period = 60
 
 [triggers]
-crons = ["0 2 * * 1"] # Every Monday at 02:00 UTC
+crons = ["0 2 * * 1", "*/10 * * * *"] # PEO opening times Monday; usage collector every 10 minutes

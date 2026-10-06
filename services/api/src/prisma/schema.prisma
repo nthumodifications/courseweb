@@ -97,6 +97,52 @@ model Cache {
   updatedAt  DateTime @updatedAt
 }
 
+model UsageSlot {
+  source        String
+  seriesId      String
+  date          String
+  slot          Int
+  dow           Int
+  sum           Float
+  n             Int
+  min           Float
+  max           Float
+  lastValue     Float
+  lastSampleAt  String
+
+  @@id([source, seriesId, date, slot])
+  @@index([source, seriesId, date])
+}
+
+model UsageSeriesMeta {
+  id                  String   @id
+  source              String
+  seriesId            String
+  name                String
+  firstSeen           String
+  lastSeen            String
+  lastValue           Float?
+  lastSampleAt        String?
+  lastValueChangedAt  String?
+  lastSuccessfulAt    String?
+
+  @@unique([source, seriesId])
+  @@index([source, seriesId])
+}
+
+model UsageAnomalyState {
+  id              String   @id
+  source          String
+  seriesId        String
+  type            String?
+  since           String?
+  samples         Int      @default(0)
+  lastObservedAt  String?
+  updatedAt       DateTime @updatedAt
+
+  @@unique([source, seriesId])
+}
+
 model SharedTimetable {
   id           String    @id
   ownerId      String
