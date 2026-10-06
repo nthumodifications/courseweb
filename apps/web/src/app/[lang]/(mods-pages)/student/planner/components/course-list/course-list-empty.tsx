@@ -1,6 +1,5 @@
-import { Button } from "@courseweb/ui";
 import { FolderDocType } from "@/app/[lang]/(mods-pages)/student/planner/rxdb";
-import { Badge } from "@courseweb/ui";
+import { Badge, Button } from "@courseweb/ui";
 import {
   ChevronRight,
   FolderTree,
@@ -149,6 +148,14 @@ export function CourseListEmpty({
                   key={folder.id}
                   className="flex items-center p-2 rounded-md hover:bg-neutral-700 cursor-pointer"
                   onClick={() => onSelectFolder?.(folder.id)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      onSelectFolder?.(folder.id);
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
                 >
                   {childFolders.some((f) => f.parent === folder.id) ? (
                     <ChevronRight className="h-4 w-4 text-neutral-400 mr-2" />

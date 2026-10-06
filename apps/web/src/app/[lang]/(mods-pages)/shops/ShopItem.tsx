@@ -34,30 +34,32 @@ const checkOpen = (schedule: string): [boolean, string, string?] => {
     ];
     const today = days[new Date().getDay()];
     if (today == "weekday") {
-      const timeslot1 = schedule.match(
-        /(?<=(週|周)一(~|至)(週|周)五:?)\d{1,2}:\d{1,2}:\d{1,2}:\d{1,2}(?=、)/,
-      );
+      const timeslot1 =
+        /(?<=(週|周)一(~|至)(週|周)五:?)\d{1,2}:\d{1,2}:\d{1,2}:\d{1,2}(?=、)/.exec(
+          schedule,
+        );
       if (timeslot1) {
         schedule = schedule.replace(/(\d{1,2}:\d{2}):(\d{1,2}:\d{2})/, "$1-$2");
       }
 
-      const timeslot = schedule.match(
-        /(?<=(週|周)一(~|至)(週|周)五:?)\d{1,2}:\d{1,2}-\d{1,2}:\d{1,2}(?=、)/,
-      );
+      const timeslot =
+        /(?<=(週|周)一(~|至)(週|周)五:?)\d{1,2}:\d{1,2}-\d{1,2}:\d{1,2}(?=、)/.exec(
+          schedule,
+        );
       if (!timeslot) {
         return [false, "無資訊"];
       }
       let [start, end] = timeslot[0].split("-");
       let startDate = new Date();
       startDate.setHours(
-        parseInt(start.split(":")[0]),
-        parseInt(start.split(":")[1]),
+        Number.parseInt(start.split(":")[0]),
+        Number.parseInt(start.split(":")[1]),
         0,
       );
       let endDate = new Date();
       endDate.setHours(
-        parseInt(end.split(":")[0]),
-        parseInt(end.split(":")[1]),
+        Number.parseInt(end.split(":")[0]),
+        Number.parseInt(end.split(":")[1]),
         0,
       );
 
@@ -87,23 +89,21 @@ const checkOpen = (schedule: string): [boolean, string, string?] => {
       return [false, "無資訊"];
     }
     if (today == "saturday") {
-      const timeslot = schedule.match(
-        /(?<=(週|周)六:?)\d{2}:\d{2}-\d{2}:\d{2}/,
-      );
+      const timeslot = /(?<=(週|周)六:?)\d{2}:\d{2}-\d{2}:\d{2}/.exec(schedule);
       if (!timeslot) {
         return [false, "無資訊"];
       }
       let [start, end] = timeslot[0].split("-");
       let startDate = new Date();
       startDate.setHours(
-        parseInt(start.split(":")[0]),
-        parseInt(start.split(":")[1]),
+        Number.parseInt(start.split(":")[0]),
+        Number.parseInt(start.split(":")[1]),
         0,
       );
       let endDate = new Date();
       endDate.setHours(
-        parseInt(end.split(":")[0]),
-        parseInt(end.split(":")[1]),
+        Number.parseInt(end.split(":")[0]),
+        Number.parseInt(end.split(":")[1]),
         0,
       );
 
@@ -133,23 +133,21 @@ const checkOpen = (schedule: string): [boolean, string, string?] => {
       return [false, "無資訊"];
     }
     if (today == "sunday") {
-      const timeslot = schedule.match(
-        /(?<=(週|周)日:?)\d{2}:\d{2}-\d{2}:\d{2}/,
-      );
+      const timeslot = /(?<=(週|周)日:?)\d{2}:\d{2}-\d{2}:\d{2}/.exec(schedule);
       if (!timeslot) {
         return [false, "無資訊"];
       }
       let [start, end] = timeslot[0].split("-");
       let startDate = new Date();
       startDate.setHours(
-        parseInt(start.split(":")[0]),
-        parseInt(start.split(":")[1]),
+        Number.parseInt(start.split(":")[0]),
+        Number.parseInt(start.split(":")[1]),
         0,
       );
       let endDate = new Date();
       endDate.setHours(
-        parseInt(end.split(":")[0]),
-        parseInt(end.split(":")[1]),
+        Number.parseInt(end.split(":")[0]),
+        Number.parseInt(end.split(":")[1]),
         0,
       );
 
@@ -185,14 +183,14 @@ const checkOpen = (schedule: string): [boolean, string, string?] => {
       let [start, end] = slot.split("-");
       let startDate = new Date();
       startDate.setHours(
-        parseInt(start.split(":")[0]),
-        parseInt(start.split(":")[1]),
+        Number.parseInt(start.split(":")[0]),
+        Number.parseInt(start.split(":")[1]),
         0,
       );
       let endDate = new Date();
       endDate.setHours(
-        parseInt(end.split(":")[0]),
-        parseInt(end.split(":")[1]),
+        Number.parseInt(end.split(":")[0]),
+        Number.parseInt(end.split(":")[1]),
         0,
       );
 
@@ -226,14 +224,14 @@ const checkOpen = (schedule: string): [boolean, string, string?] => {
     let [start, end] = schedule.split("-");
     let startDate = new Date();
     startDate.setHours(
-      parseInt(start.split(":")[0]),
-      parseInt(start.split(":")[1]),
+      Number.parseInt(start.split(":")[0]),
+      Number.parseInt(start.split(":")[1]),
       0,
     );
     let endDate = new Date();
     endDate.setHours(
-      parseInt(end.split(":")[0]),
-      parseInt(end.split(":")[1]),
+      Number.parseInt(end.split(":")[0]),
+      Number.parseInt(end.split(":")[1]),
       0,
     );
 
@@ -280,23 +278,17 @@ const ShopItem: React.FC<ShopItemProps> = ({ shop, filter }) => {
   let [isOpen, status, message] = checkOpen(shop.schedule[today]);
 
   if (
-    filter &&
-    filter.search &&
+    filter?.search &&
     !shop.name.toLowerCase().includes(filter.search.toLowerCase())
   ) {
     return null;
   }
 
-  if (filter && filter.open && !isOpen) {
+  if (filter?.open && !isOpen) {
     return null;
   }
 
-  if (
-    filter &&
-    filter.area &&
-    filter.area !== shop.area &&
-    filter.area !== "anywhere"
-  ) {
+  if (filter?.area && filter.area !== shop.area && filter.area !== "anywhere") {
     return null;
   }
 

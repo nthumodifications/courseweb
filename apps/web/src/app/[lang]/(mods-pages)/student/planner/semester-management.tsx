@@ -1,18 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Calendar, Edit, Plus, Save, Trash2, X } from "lucide-react";
-import { Button } from "@courseweb/ui";
-import { Input } from "@courseweb/ui";
-import { Label } from "@courseweb/ui";
 import {
+  Badge,
+  Button,
+  Input,
+  Label,
+  ScrollArea,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Switch,
 } from "@courseweb/ui";
-import { ScrollArea } from "@courseweb/ui";
-import { Badge } from "@courseweb/ui";
-import { Switch } from "@courseweb/ui";
 import {
   getSemesters,
   createSemester,
@@ -181,7 +181,7 @@ export function SemesterManagement({
     };
 
     if (isOpen) {
-      loadSemesters();
+      void loadSemesters();
     }
   }, [isOpen, semesterCol]);
 
@@ -394,6 +394,14 @@ export function SemesterManagement({
                     key={semester.id}
                     className={`flex items-center justify-between p-2 rounded-md ${selectedSemester?.id === semester.id ? "bg-neutral-50 dark:bg-neutral-800" : "hover:bg-neutral-50/50 dark:hover:bg-neutral-800/50"} cursor-pointer`}
                     onClick={() => handleSelectSemester(semester)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        handleSelectSemester(semester);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">

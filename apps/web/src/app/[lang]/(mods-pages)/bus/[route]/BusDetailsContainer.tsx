@@ -1,15 +1,19 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@courseweb/ui";
-import { BusDepartureDetails, LineInfo } from "@/libs/bus";
 import {
+  Button,
+  cn,
   Table,
   TableBody,
   TableCell,
   TableHeader,
   TableRow,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
 } from "@courseweb/ui";
+import { BusDepartureDetails, LineInfo } from "@/libs/bus";
 import { useParams, useNavigate } from "react-router-dom";
-import { SVGProps, useEffect, useMemo, useRef, useState } from "react";
-import { Button } from "@courseweb/ui";
+import { SVGProps, useEffect, useRef, useState } from "react";
 import { ChevronLeft } from "lucide-react";
 import { GreenLineIcon } from "@/components/BusIcons/GreenLineIcon";
 import { RedLineIcon } from "@/components/BusIcons/RedLineIcon";
@@ -19,7 +23,6 @@ import { exportNotes, getTimeOnDate } from "@/helpers/bus";
 import useDictionary from "@/dictionaries/useDictionary";
 import { getLocale } from "@/helpers/dateLocale";
 import { Language } from "@/types/settings";
-import { cn } from "@courseweb/ui";
 import {
   eachHourOfInterval,
   format,
@@ -225,8 +228,8 @@ const BusDetailsContainer = ({
     const busesUp = weektab == "weekday" ? up.weekday : up.weekend;
     const busesDown = weektab == "weekday" ? down.weekday : down.weekend;
     // get last bus of both up and down busses
-    const lastBusUp = busesUp[busesUp.length - 1];
-    const lastBusDown = busesDown[busesDown.length - 1];
+    const lastBusUp = busesUp.at(-1)!;
+    const lastBusDown = busesDown.at(-1)!;
     // if the last bus is already gone, do not scroll
     if (
       getTimeOnDate(now, lastBusUp.time) < now &&
@@ -369,6 +372,14 @@ const BusDetailsContainer = ({
                     )}
                     key={hd.toString()}
                     onClick={() => handleTimeSelected(hd)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        handleTimeSelected(hd);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
                   >
                     <div className="text-foreground text-sm font-medium leading-normal w-max">
                       {/* 7 am */}

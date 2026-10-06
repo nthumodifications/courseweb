@@ -1,9 +1,13 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { X } from "lucide-react";
-import { Input } from "@courseweb/ui";
-import { cn } from "@courseweb/ui";
-import { Badge } from "@courseweb/ui";
-import { Popover, PopoverContent, PopoverTrigger } from "@courseweb/ui";
+import {
+  Badge,
+  Input,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  cn,
+} from "@courseweb/ui";
 import useCustomRefinementList from "@/app/[lang]/(mods-pages)/courses/useCustomRefinementList";
 import useCustomMenu from "@/app/[lang]/(mods-pages)/courses/useCustomMenu";
 import { lastSemester } from "@courseweb/shared";
@@ -168,6 +172,14 @@ const ExpandableClassFilter = ({
                     : "hover:bg-muted",
                 )}
                 onClick={() => handleItemSelect(item.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    handleItemSelect(item.value);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
               >
                 <div className="flex-1">
                   {getFormattedClassCode(item.label, selectedSemester, "zh")}{" "}

@@ -105,21 +105,13 @@ const BusRouteDetailsPage = () => {
     enabled: route === "nanda",
   });
 
-  const {
-    data: route1BusData,
-    isLoading: isRoute1BusLoading,
-    error: route1BusError,
-  } = useQuery({
+  const { isLoading: isRoute1BusLoading, error: route1BusError } = useQuery({
     queryKey: ["route1Buses"],
     queryFn: getRoute1Buses,
     enabled: route === "route1",
   });
 
-  const {
-    data: route2BusData,
-    isLoading: isRoute2BusLoading,
-    error: route2BusError,
-  } = useQuery({
+  const { isLoading: isRoute2BusLoading, error: route2BusError } = useQuery({
     queryKey: ["route2Buses"],
     queryFn: getRoute2Buses,
     enabled: route === "route2",
@@ -148,9 +140,7 @@ const BusRouteDetailsPage = () => {
       <>
         {seoHelmet}
         <div className="flex justify-center items-center min-h-[200px]">
-          <div className="text-red-500">
-            {dict.bus.load_error}
-          </div>
+          <div className="text-red-500">{dict.bus.load_error}</div>
         </div>
       </>
     );

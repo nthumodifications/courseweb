@@ -12,7 +12,6 @@ import { Helmet } from "react-helmet-async";
 import { useSettings } from "@/hooks/contexts/settings";
 import SearchContainer from "./SearchContainer";
 import { lastSemester } from "@courseweb/shared";
-import useDictionary from "@/dictionaries/useDictionary";
 import CourseSidePanel from "./CourseSidePanel";
 import { createResilientSearchClient } from "@/lib/search-client";
 
@@ -20,7 +19,6 @@ const searchClient = createResilientSearchClient();
 const sessionStorageCache = createInfiniteHitsSessionStorageCache();
 
 const CourseSearchContainer = () => {
-  const dict = useDictionary();
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const [searchParams] = useSearchParams();
   const { language } = useSettings();

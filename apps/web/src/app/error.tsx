@@ -1,26 +1,25 @@
 import * as Sentry from "@sentry/browser";
 import { useEffect } from "react";
-import { Link } from "react-router-dom";
 import { AlertOctagon, View } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@courseweb/ui";
-import { Button } from "@courseweb/ui";
-import NTHUModsLogo from "@/components/Branding/NTHUModsLogo";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@courseweb/ui";
-import { useParams } from "react-router-dom";
 import {
+  Button,
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
+  Tabs,
+  TabsContent,
 } from "@courseweb/ui";
+import NTHUModsLogo from "@/components/Branding/NTHUModsLogo";
+import { useParams } from "react-router-dom";
 import { reloadApp } from "@/lib/chunk-recovery";
 import useDictionary from "@/dictionaries/useDictionary";
-export default function Error({
+export default function ErrorPage({
   error,
   resetErrorBoundary: reset,
-}: {
+}: Readonly<{
   error: Error;
   resetErrorBoundary: () => void;
-}) {
+}>) {
   const { lang } = useParams();
   const dict = useDictionary();
 
@@ -58,7 +57,9 @@ export default function Error({
             <Tabs defaultValue={finalLang}>
               <TabsContent value="zh" className="flex flex-col gap-2">
                 <p className="">{dict.error.client_description}</p>
-                <p className="text-sm text-muted-foreground">{dict.error.tips_title}</p>
+                <p className="text-sm text-muted-foreground">
+                  {dict.error.tips_title}
+                </p>
                 <ul className="list-disc list-inside text-sm text-muted-foreground">
                   <li>{dict.error.check_connection}</li>
                   <li>{dict.error.clear_cache}</li>
@@ -81,10 +82,10 @@ export default function Error({
                 </ul>
               </TabsContent>
               <TabsContent value="en" className="flex flex-col gap-2">
-                <p className="">
-                  {dict.error.client_description}
+                <p className="">{dict.error.client_description}</p>
+                <p className="text-sm text-muted-foreground">
+                  {dict.error.tips_title}
                 </p>
-                <p className="text-sm text-muted-foreground">{dict.error.tips_title}</p>
                 <ul className="list-disc list-inside text-sm text-muted-foreground">
                   <li>{dict.error.check_connection}</li>
                   <li>{dict.error.clear_cache}</li>

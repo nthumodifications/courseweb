@@ -1,7 +1,4 @@
-import { Button } from "@courseweb/ui";
-import { Input } from "@courseweb/ui";
-import { Label } from "@courseweb/ui";
-import { Textarea } from "@courseweb/ui";
+import { Button, Input, Label, Textarea } from "@courseweb/ui";
 import client from "@/config/api";
 import { FormEvent, useState } from "react";
 import useDictionary from "@/dictionaries/useDictionary";

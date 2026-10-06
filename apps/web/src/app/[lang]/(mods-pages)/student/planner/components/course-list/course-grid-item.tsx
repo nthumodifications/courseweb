@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Badge } from "@courseweb/ui";
-import { Button } from "@courseweb/ui";
 import {
+  Badge,
+  Button,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -140,6 +140,14 @@ export function CourseGridItem({
       className={`p-3 rounded-md border ${isSelected ? "border-primary" : isMultiSelected ? "border-primary bg-primary/10" : "border-border"}
         bg-neutral-50 dark:bg-neutral-800 cursor-pointer hover:border-primary transition-colors duration-200 min-h-32 flex flex-col group relative touch-none`}
       onClick={onClick}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onClick();
+        }
+      }}
+      role="button"
+      tabIndex={0}
     >
       {/* Selection checkbox - always rendered, at reduced opacity until hover/focus/selected */}
       <button

@@ -1,16 +1,15 @@
 import * as Sentry from "@sentry/browser";
 import { useEffect } from "react";
 import { AlertOctagon } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@courseweb/ui";
-import { Button } from "@courseweb/ui";
+import { Alert, AlertDescription, AlertTitle, Button } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
-export default function Error({
+export default function ErrorPage({
   error,
   resetErrorBoundary: reset,
-}: {
+}: Readonly<{
   error: Error;
   resetErrorBoundary: () => void;
-}) {
+}>) {
   useEffect(() => {
     Sentry.captureException(error);
     console.error(error);

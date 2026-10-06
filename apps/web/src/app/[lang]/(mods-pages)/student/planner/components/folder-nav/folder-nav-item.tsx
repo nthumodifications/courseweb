@@ -135,6 +135,14 @@ export function FolderNavItem({
         <div
           className="flex-1 min-w-0 flex flex-row items-center"
           onClick={() => onSelect(folder.id)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              onSelect(folder.id);
+            }
+          }}
+          role="button"
+          tabIndex={0}
         >
           <div className="flex items-center flex-1">
             <div

@@ -190,7 +190,7 @@ export const initializeRxDB = async () => {
 export const PlannerDBProvider: FC<PropsWithChildren> = ({ children }) => {
   const [db, setDb] = useState<Awaited<ReturnType<typeof initializeRxDB>>>();
   useEffect(() => {
-    initializeRxDB().then(setDb);
+    void initializeRxDB().then(setDb).catch(console.error);
   }, []);
   return <Provider db={db}>{children}</Provider>;
 };

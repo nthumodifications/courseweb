@@ -9,7 +9,6 @@ import {
 } from "@courseweb/ui";
 import { v4 as uuidv4 } from "uuid";
 import { useRxCollection } from "rxdb-hooks";
-import { useNavigate } from "react-router-dom";
 import { useMediaQuery } from "usehooks-ts";
 import useDictionary from "@/dictionaries/useDictionary";
 import {
@@ -62,7 +61,6 @@ import { CourseDetailsDialog } from "./components/dialogs/course-details-dialog"
 import { CourseEditDialog } from "./components/dialogs/course-edit-dialog";
 import { BulkActionsMenu } from "./components/bulk-actions/bulk-actions-menu";
 import { CourseSearchDialog } from "./components/dialogs/course-search-dialog";
-import { CreateCourseDialog } from "./components/dialogs/create-course-dialog";
 
 function GraduationPlanner() {
   const dict = useDictionary();
@@ -112,8 +110,6 @@ function GraduationPlanner() {
     string | null
   >(null);
 
-  const navigate = useNavigate();
-
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(TouchSensor, {
@@ -146,7 +142,7 @@ function GraduationPlanner() {
       setPlannedCredits(planned);
       setProgressPercentage(percentage);
     };
-    updatePlannerStats();
+    void updatePlannerStats();
     const unsub = coursesCol?.$.subscribe(updatePlannerStats);
     return () => {
       unsub?.unsubscribe();
@@ -175,7 +171,7 @@ function GraduationPlanner() {
       setExpandedFolders(expanded);
     });
 
-    const coursesSub = coursesCol.find().$.subscribe(async (courses) => {
+    const coursesSub = coursesCol.find().$.subscribe((courses) => {
       const courseData = courses.map((doc) => doc.toMutableJSON());
       setCourseData(courseData);
     });
@@ -184,7 +180,7 @@ function GraduationPlanner() {
       setSemesterData(semesters.map((doc) => doc.toMutableJSON()));
     });
 
-    const plannerSub = plannerCol.find().$.subscribe(async (planners) => {
+    const plannerSub = plannerCol.find().$.subscribe((planners) => {
       const planner = planners.length > 0 ? planners[0].toMutableJSON() : null;
       if (planner == null) {
         setPlannerSettingsOpen(true);
@@ -313,11 +309,7 @@ function GraduationPlanner() {
     uuid: string,
     newStatus: CourseStatus,
   ) => {
-    const updatedCourse = await updateCourseStatus(
-      coursesCol!,
-      uuid,
-      newStatus,
-    );
+    await updateCourseStatus(coursesCol!, uuid, newStatus);
   };
 
   // Update course semester
@@ -330,7 +322,7 @@ function GraduationPlanner() {
 
   // Update course
   const handleUpdateCourse = async (updatedCourse: ItemDocType) => {
-    const result = await updateCourseItem(coursesCol!, updatedCourse);
+    await updateCourseItem(coursesCol!, updatedCourse);
     setEditCourseOpen(false);
   };
 
@@ -405,7 +397,7 @@ function GraduationPlanner() {
         ? Math.max(...courseData.map((c) => c.order)) + 1
         : 0;
 
-    const course = await coursesCol!.insert({
+    await coursesCol!.insert({
       uuid: uuidv4(),
       id: newCourse.raw_id.slice(5),
       raw_id: newCourse.raw_id,
@@ -566,9 +558,12 @@ function GraduationPlanner() {
     if (activeData?.type !== "course" || !activeData.course) return;
 
     if (overData?.type === "semester" && overData.semesterId !== undefined) {
-      handleUpdateCourseSemester(activeData.course.uuid, overData.semesterId);
+      void handleUpdateCourseSemester(
+        activeData.course.uuid,
+        overData.semesterId,
+      );
     } else if (overData?.type === "folder" && overData.folderId !== undefined) {
-      updateCourseItem(coursesCol!, {
+      void updateCourseItem(coursesCol!, {
         ...activeData.course,
         parent: overData.folderId,
       });

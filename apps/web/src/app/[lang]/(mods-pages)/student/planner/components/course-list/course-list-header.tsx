@@ -2,7 +2,6 @@ import { Button } from "@courseweb/ui";
 import { FolderDocType } from "@/app/[lang]/(mods-pages)/student/planner/rxdb";
 import { Plus, Search } from "lucide-react";
 import { CreateCourseDialog } from "../dialogs/create-course-dialog";
-import { CourseStatus } from "../../types";
 import useDictionary from "@/dictionaries/useDictionary";
 
 interface CourseListHeaderProps {

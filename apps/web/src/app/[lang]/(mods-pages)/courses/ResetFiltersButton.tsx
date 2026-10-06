@@ -1,12 +1,10 @@
 import { Button } from "@courseweb/ui";
 import { lastSemester } from "@courseweb/shared";
-import useDictionary from "@/dictionaries/useDictionary";
 import { Undo } from "lucide-react";
-import { useClearRefinements, useInstantSearch } from "react-instantsearch";
+import { useInstantSearch } from "react-instantsearch";
 
 const ResetFiltersButton = () => {
   const { setIndexUiState } = useInstantSearch();
-  const dict = useDictionary();
 
   const handleReset = () => {
     setIndexUiState((prev) => {
