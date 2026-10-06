@@ -3,7 +3,7 @@
 ## 快速開始（繁體中文）
 
 在專案根目錄執行 `bun run setup`，再執行 `bun run dev:web`，即可在
-`http://localhost:5173` 開始前端開發。前端開發會直接使用正式站公開的唯讀服務，不需要
+`http://localhost:5173` 開始前端開發。前端開發會直接連到正式站的服務（不是測試環境，登入後儲存的資料是真的），不需要
 密鑰；`bun run doctor` 可以檢查設定。需要 API、登入服務或資料同步時，請先和
 維護者確認權限與資料庫，再執行 `bun run setup --full`。
 
@@ -18,7 +18,7 @@ bun run dev:web
 
 The setup command does not overwrite existing env files. It creates
 `apps/web/.env.development.local` from the safe browser example and points frontend-only
-development at the production read-only API. No local database or secret is
+development at the production API through a dev-server proxy. It is the real service, not a sandbox: data you save while signed in is saved for real, and public write forms (issues, recruitment, shortlinks) are blocked locally. No local database or secret is
 needed for the usual student-contributor path.
 
 ## Choose a development track

@@ -218,6 +218,9 @@ function runCommand(args, dryRun) {
   if (dryRun) return 0;
   const result = Bun.spawnSync([process.execPath, ...args], {
     cwd: repoRoot,
+    // The API schema reads DATABASE_URL even for `prisma generate`; any
+    // well-formed value lets a fresh checkout generate the client.
+    env: { DATABASE_URL: "file:./dev.db", ...process.env },
     stdout: "inherit",
     stderr: "inherit",
   });
@@ -241,7 +244,7 @@ export function main(argv = process.argv.slice(2)) {
   console.log(
     options.full
       ? "Preparing frontend and backend development files. Backend env files contain placeholders; fill them with maintainer-provided values before starting services."
-      : "Preparing frontend-only development with public production read-only services.",
+      : "Preparing frontend-only development against the production API (real data; public write forms are blocked locally).",
   );
   if (options.dryRun) {
     console.log("[plan] bun install --frozen-lockfile (skipped by --dry-run)");

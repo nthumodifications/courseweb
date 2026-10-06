@@ -68,9 +68,7 @@ bun run dev:web
 
 Open [http://localhost:5173](http://localhost:5173). `bun run setup` installs the
 locked dependencies, creates `apps/web/.env.development.local` only when it is missing, and
-builds the frontend-safe shared packages. The example uses public, read-only
-production services, so frontend contributors do not need a local backend or a
-secret. Use `bun run doctor` to diagnose a setup without changing files.
+builds the frontend-safe shared packages. The example points at the production API through a dev-server proxy. It is the real service, not a sandbox: data you save while signed in is saved for real, and public write forms (issues, recruitment, shortlinks) are blocked locally. Use `bun run doctor` to diagnose a setup without changing files.
 
 ### Development tracks
 
