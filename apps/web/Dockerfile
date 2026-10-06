@@ -20,7 +20,7 @@ COPY packages/tailwind-config/package.json ./packages/tailwind-config/package.js
 COPY apps/web/package.json ./apps/web/package.json
 
 # Install dependencies
-RUN bun install --frozen-lockfile --ignore-scripts
+RUN bun install --frozen-lockfile
 
 # Rebuild the source code only when needed
 FROM base AS builder
