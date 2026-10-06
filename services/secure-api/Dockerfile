@@ -25,7 +25,7 @@ COPY tools/dict-manager/package.json ./tools/dict-manager/package.json
 COPY tools/map-data/package.json ./tools/map-data/package.json
 
 # Install dependencies
-RUN bun install --frozen-lockfile --ignore-scripts
+RUN bun install --frozen-lockfile
 
 # Build dependencies and copy source code
 FROM base AS builder
