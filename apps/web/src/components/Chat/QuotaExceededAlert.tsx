@@ -1,6 +1,5 @@
 import { AlertCircle, Settings, X } from "lucide-react";
-import { Button } from "@courseweb/ui";
-import { Alert, AlertDescription, AlertTitle } from "@courseweb/ui";
+import { Button, Alert, AlertDescription, AlertTitle } from "@courseweb/ui";
 import { AISettingsDialog } from "./AISettingsDialog";
 import useDictionary from "@/dictionaries/useDictionary";
 
@@ -12,7 +11,7 @@ interface QuotaExceededAlertProps {
 export function QuotaExceededAlert({
   retryAfter,
   onDismiss,
-}: QuotaExceededAlertProps) {
+}: Readonly<QuotaExceededAlertProps>) {
   const dict = useDictionary();
 
   return (

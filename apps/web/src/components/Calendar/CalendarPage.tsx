@@ -4,19 +4,22 @@ import UpcomingEvents from "./UpcomingEvents";
 import OthersTimetablePanel, {
   type OverlayEntry,
 } from "./OthersTimetablePanel";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@courseweb/ui";
-import { useSavedTimetables } from "@/hooks/useSavedTimetables";
-import { Badge } from "@courseweb/ui";
-import { Button } from "@courseweb/ui";
-import { Users } from "lucide-react";
-import useDictionary from "@/dictionaries/useDictionary";
 import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  Badge,
+  Button,
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
 } from "@courseweb/ui";
+import { useSavedTimetables } from "@/hooks/useSavedTimetables";
+import { Users } from "lucide-react";
+import useDictionary from "@/dictionaries/useDictionary";
 
 const CalendarPage = () => {
   const [activeOverlays, setActiveOverlays] = useState<OverlayEntry[]>([]);

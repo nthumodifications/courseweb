@@ -11,7 +11,7 @@ const WeatherIcon = ({ wxCode }: { wxCode: string | undefined }) => {
   // Based on https://www.cwa.gov.tw/V8/assets/img/weather_icons/weathers/svg_icon/day/XX.svg
   if (!wxCode) return <Sun className="h-5 w-5 text-yellow-500" />;
 
-  const code = parseInt(wxCode);
+  const code = Number.parseInt(wxCode);
 
   // Sunny (01)
   if (code === 1) return <Sun className="h-5 w-5 text-yellow-500" />;

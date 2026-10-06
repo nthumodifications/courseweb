@@ -1,4 +1,3 @@
-import { useSettings } from "@/hooks/contexts/settings";
 import { currentSemester } from "@courseweb/shared";
 import { useMemo } from "react";
 
@@ -7,7 +6,7 @@ const CurrentSemesterLabel = ({ language }: { language: "en" | "zh" }) => {
     () =>
       currentSemester
         ? Math.floor(
-            (new Date().getTime() - currentSemester.begins.getTime()) /
+            (Date.now() - currentSemester.begins.getTime()) /
               (1000 * 60 * 60 * 24 * 7),
           ) + 1
         : null,

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useMemo, useState, ReactNode } from "react";
 import {
   useAIChat,
   ChatMessage,
@@ -25,14 +25,16 @@ interface ChatContextValue {
 
 const ChatContext = createContext<ChatContextValue | null>(null);
 
-export function ChatProvider({ children }: { children: ReactNode }) {
+export function ChatProvider({ children }: { readonly children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const chat = useAIChat();
+  const contextValue = useMemo(
+    () => ({ isOpen, setIsOpen, ...chat }),
+    [isOpen, chat],
+  );
 
   return (
-    <ChatContext.Provider value={{ isOpen, setIsOpen, ...chat }}>
-      {children}
-    </ChatContext.Provider>
+    <ChatContext.Provider value={contextValue}>{children}</ChatContext.Provider>
   );
 }
 

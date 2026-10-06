@@ -1,6 +1,5 @@
 import { Share2 } from "lucide-react";
-import { Button } from "@courseweb/ui";
-import { toast } from "@courseweb/ui";
+import { Button, toast } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
 
 type ShareCourseButtonProps = {

@@ -14,7 +14,7 @@ export function ChatErrorAlert({
   error,
   onRetry,
   onDismiss,
-}: ChatErrorAlertProps) {
+}: Readonly<ChatErrorAlertProps>) {
   const dict = useDictionary();
   const { lang } = useParams<{ lang: string }>();
   const copy = dict.chat.errors[error.code];

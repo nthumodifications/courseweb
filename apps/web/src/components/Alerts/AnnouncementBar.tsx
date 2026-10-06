@@ -97,8 +97,7 @@ const AnnouncementBar = () => {
   };
 
   return (
-    <div
-      role="status"
+    <output
       className={cn(
         "flex w-full items-center gap-2 border-b px-4 py-1 text-sm",
         style.className,
@@ -106,9 +105,7 @@ const AnnouncementBar = () => {
     >
       <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
       <div className="flex min-w-0 flex-1 items-center gap-2">
-        <span className="font-medium">
-          {title}
-        </span>
+        <span className="font-medium">{title}</span>
         {description && (
           <span className="hidden text-current/80 sm:inline">
             — {description}
@@ -144,7 +141,7 @@ const AnnouncementBar = () => {
           <X className="h-4 w-4" aria-hidden="true" />
         </button>
       )}
-    </div>
+    </output>
   );
 };
 

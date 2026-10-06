@@ -10,9 +10,8 @@ import { TimetableItemDrawer } from "@/components/Timetable/TimetableItemDrawer"
 import AppItem from "@/app/[lang]/(mods-pages)/apps/AppItem";
 import { useQuery } from "@tanstack/react-query";
 import client from "@/config/api";
-import { Badge } from "@courseweb/ui";
+import { Badge, cn } from "@courseweb/ui";
 import WeatherIcon from "./WeatherIcon";
-import { cn } from "@courseweb/ui";
 import { formatInTimeZone } from "date-fns-tz";
 import UpcomingEventList from "@/components/Calendar/UpcomingEventList";
 import { NextUpLine } from "@/components/Widgets/CountdownWidget";
@@ -95,8 +94,7 @@ const TodaySchedule: FC = () => {
           isClient &&
           Boolean(
             weather?.find(
-              (item: { date: string }) =>
-                item.date === getTaipeiDateKey(day),
+              (item: { date: string }) => item.date === getTaipeiDateKey(day),
             ),
           ),
       })),
@@ -112,10 +110,9 @@ const TodaySchedule: FC = () => {
             (item) => getTaipeiDateKey(item.day) === getTaipeiDateKey(day),
           );
           return Boolean(
-            schedule &&
-            schedule.classes.length === 0 &&
-            schedule.otherEvents.length === 0 &&
-            !schedule.hasWeather,
+            schedule?.classes.length === 0 &&
+              schedule.otherEvents.length === 0 &&
+              !schedule.hasWeather,
           );
         },
       ),
@@ -285,7 +282,7 @@ const TodaySchedule: FC = () => {
 
   const renderEmptyDayGroup = (group: UpcomingDayGroup) => {
     const firstDay = group.days[0];
-    const lastDay = group.days[group.days.length - 1];
+    const lastDay = group.days.at(-1)!;
     const rangeCount =
       language === "zh"
         ? (["", "一", "二", "三", "四", "五"][group.days.length] ??

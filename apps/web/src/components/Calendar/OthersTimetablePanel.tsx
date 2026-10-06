@@ -8,13 +8,9 @@ import {
   Camera,
   Trash2,
   ExternalLink,
-  Bell,
   Users,
 } from "lucide-react";
-import { Button } from "@courseweb/ui";
-import { Badge } from "@courseweb/ui";
-import { Separator } from "@courseweb/ui";
-import { ScrollArea } from "@courseweb/ui";
+import { Badge, Button } from "@courseweb/ui";
 import { useSavedTimetables } from "@/hooks/useSavedTimetables";
 import { useAuth } from "react-oidc-context";
 import { toPrettySemester } from "@/helpers/semester";
@@ -50,7 +46,7 @@ function SavedTimetableItem({
   onMarkSeen,
   hasNewChanges,
   overlayColor,
-}: {
+}: Readonly<{
   saved: SavedTimetable;
   index: number;
   isOverlaid: boolean;
@@ -59,21 +55,21 @@ function SavedTimetableItem({
   onMarkSeen: () => void;
   hasNewChanges: boolean;
   overlayColor: string;
-}) {
+}>) {
   const navigate = useNavigate();
   const { lang } = useParams<{ lang: string }>();
   const dict = useDictionary();
 
   const share = saved.share;
   const semesters = share?.semesters ?? [];
-  const [activeSem, setActiveSem] = useState(semesters[0] ?? "");
+  const [activeSem] = useState(semesters[0] ?? "");
   const courseIds =
     (saved.syncMode === "snapshot"
       ? saved.savedCourses?.[activeSem]
       : share?.courses[activeSem]) ?? [];
 
   const { data: courses = [] } = useQuery({
-    queryKey: ["courses", [...courseIds].sort()],
+    queryKey: ["courses", [...courseIds].sort((a, b) => a.localeCompare(b))],
     queryFn: async () => {
       if (!courseIds.length) return [];
       const res = await client.course.$get({ query: { courses: courseIds } });
@@ -119,11 +115,13 @@ function SavedTimetableItem({
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             {saved.syncMode === "live" ? (
               <>
-                <RefreshCw className="h-2.5 w-2.5" /> {dict.calendar.others.live}
+                <RefreshCw className="h-2.5 w-2.5" />{" "}
+                {dict.calendar.others.live}
               </>
             ) : (
               <>
-                <Camera className="h-2.5 w-2.5" /> {dict.calendar.others.snapshot}
+                <Camera className="h-2.5 w-2.5" />{" "}
+                {dict.calendar.others.snapshot}
               </>
             )}
             {semesters.length > 0 && (

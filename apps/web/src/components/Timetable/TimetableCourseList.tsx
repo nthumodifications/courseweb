@@ -18,8 +18,24 @@ import {
   hasSameCourse,
   hasTimes,
 } from "@/helpers/courses";
-import { MinimalCourse, RawCourseID } from "@/types/courses";
-import { Button } from "@courseweb/ui";
+import { MinimalCourse } from "@/types/courses";
+import {
+  Button,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  Separator,
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+  Switch,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@courseweb/ui";
 import {
   DndContext,
   closestCenter,
@@ -36,28 +52,16 @@ import {
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
+  useSortable,
 } from "@dnd-kit/sortable";
-import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
 import {
   restrictToVerticalAxis,
   restrictToWindowEdges,
 } from "@dnd-kit/modifiers";
-import { Popover, PopoverContent, PopoverTrigger } from "@courseweb/ui";
 import Compact from "@uiw/react-color-compact";
-import { Separator } from "@courseweb/ui";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@courseweb/ui";
 import { TimetableItemDrawer } from "./TimetableItemDrawer";
-import { Switch } from "@courseweb/ui";
-import { Label } from "@courseweb/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@courseweb/ui";
 
 const DownloadTimetableDialogLazy = lazy(
   () => import("./DownloadTimetableDialog"),
@@ -158,12 +162,8 @@ const TimetableCourseListItem = ({
   priority: number;
   displaySettings: DisplaySettings;
 }) => {
-  const { language } = useSettings();
   const dict = useDictionary();
 
-  const handleCopyClipboard = (id: RawCourseID) => {
-    navigator.clipboard.writeText(id);
-  };
   const { deleteCourse, colorMap, setColor, currentColors } =
     useUserTimetable();
 
@@ -311,8 +311,7 @@ export const TimetableCourseList = ({
   const dict = useDictionary();
   const navigate = useNavigate();
 
-  const { getSemesterCourses, courses, addCourse, colorMap, setCourses } =
-    useUserTimetable();
+  const { getSemesterCourses, courses, setCourses } = useUserTimetable();
 
   const defaultSettings: DisplaySettings = {
     englishNames: "add",
@@ -419,11 +418,9 @@ export const TimetableCourseList = ({
               <TimetableCourseListItem
                 key={course.raw_id}
                 course={course as MinimalCourse}
-                hasConflict={
-                  !!timeConflicts.find(
-                    (ts) => ts.course.raw_id == course.raw_id,
-                  )
-                }
+                hasConflict={timeConflicts.some(
+                  (ts) => ts.course.raw_id == course.raw_id,
+                )}
                 isDuplicate={duplicates.includes(course.raw_id)}
                 priority={peAndGeAllocation.indexOf(course.raw_id) + 1}
                 displaySettings={displaySettings}
@@ -472,7 +469,7 @@ export const TimetableCourseList = ({
                   }
                 >
                   <SelectTrigger className="w-[120px]">
-                  <SelectValue placeholder={dict.timetable.select_display} />
+                    <SelectValue placeholder={dict.timetable.select_display} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="add">

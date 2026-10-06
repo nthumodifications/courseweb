@@ -1,20 +1,20 @@
-import { Button } from "@courseweb/ui";
-import { Input } from "@courseweb/ui";
-import { Label } from "@courseweb/ui";
-import { Textarea } from "@courseweb/ui";
 import {
+  Button,
+  Input,
+  Label,
+  Textarea,
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  toast,
+  ScrollArea,
 } from "@courseweb/ui";
 import { MessageCircle } from "lucide-react";
 import { DialogDescription } from "@radix-ui/react-dialog";
 import { useEffect, useState, ReactNode } from "react";
-import { toast } from "@courseweb/ui";
 import { useQuery } from "@tanstack/react-query";
-import { ScrollArea } from "@courseweb/ui";
 import { event } from "@/lib/gtag";
 import Turnstile from "react-turnstile";
 import client from "@/config/api";
@@ -33,7 +33,11 @@ const parseApiError = async (response: Response): Promise<ApiError> => {
   try {
     const contentType = response.headers.get("content-type");
     if (contentType?.includes("application/json")) {
-      const errorData = await response.json();
+      const errorData = (await response.json()) as {
+        error?: string;
+        message?: string;
+        code?: string;
+      };
       errorMessage = errorData.error || errorData.message || errorMessage;
       errorCode = errorData.code || "";
     } else {
@@ -332,11 +336,7 @@ const GenericIssueForm = ({ children }: { children?: ReactNode }) => {
     }
   };
 
-  const {
-    data: issues,
-    isLoading,
-    error: issuesError,
-  } = useQuery({
+  const { data: issues } = useQuery({
     queryKey: ["issues"],
     queryFn: async () => {
       try {
@@ -347,7 +347,11 @@ const GenericIssueForm = ({ children }: { children?: ReactNode }) => {
         });
 
         if (!res.ok) {
-          const errorData = await res.json();
+          const errorData = (await res.json()) as {
+            error?: string;
+            message?: string;
+            code?: string;
+          };
           console.warn("Failed to fetch known issues:", errorData);
           return []; // Return empty array on error to prevent UI breaking
         }
@@ -387,10 +391,7 @@ const GenericIssueForm = ({ children }: { children?: ReactNode }) => {
           <DialogDescription>{dict.forms.issue.description}</DialogDescription>
         </DialogHeader>
         <ScrollArea className="max-h-[90vh]">
-          <form
-            onSubmit={handleSubmit}
-            className="flex flex-col gap-4"
-          >
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
               <Label htmlFor="title">{dict.forms.issue.label_title}</Label>
               <Input
@@ -428,11 +429,7 @@ const GenericIssueForm = ({ children }: { children?: ReactNode }) => {
                 placeholder={placeholderIssueDescription}
                 disabled={isSubmitting}
               />
-              <p className="text-xs">
-                {
-                  dict.forms.issue.detail_hint
-                }
-              </p>
+              <p className="text-xs">{dict.forms.issue.detail_hint}</p>
               <p className="text-xs">{dict.forms.issue.markdown_hint}</p>
             </div>
             <Turnstile

@@ -11,12 +11,12 @@ import {
   isSameTaipeiWeek,
   isTaipeiDateKey,
   startOfTaipeiDay,
+  isTaipeiToday,
 } from "@/helpers/dates";
 import { cn } from "@courseweb/ui";
-import { isTaipeiToday } from "@/helpers/dates";
 import { useCalendar } from "./calendar_hook";
 import { eventsToDisplay } from "@/components/Calendar/calendar_utils";
-import { getContrastColor, getBrightness } from "@/helpers/colors";
+import { getContrastColor } from "@/helpers/colors";
 import { EventPopover } from "./EventPopover";
 import { useMediaQuery } from "usehooks-ts";
 import { Fragment, useCallback, useMemo } from "react";
@@ -50,7 +50,7 @@ export const CalendarMonthContainer = ({
   const rows_length = Math.ceil(displayMonth.length / 7);
 
   // Resolve the NTHU event color from the CSS custom property at render time so
-  // that color-utility helpers (getBrightness / getContrastColor) receive an
+  // that the color utility helper receives an
   // actual hex value rather than an unresolvable "var(...)" string.
   const nthuEventColor =
     typeof window !== "undefined"
@@ -59,20 +59,16 @@ export const CalendarMonthContainer = ({
           .trim() || "#A973D9"
       : "#A973D9";
 
-  const {
-    data: nthuCalendarEvents = [],
-    error: calendarError,
-    isLoading: calendarLoading,
-  } = useQuery<CalendarEventInternal[]>({
+  const { data: nthuCalendarEvents = [] } = useQuery<CalendarEventInternal[]>({
     queryKey: [
       "event",
       getTaipeiDateKey(displayMonth[0]),
-      getTaipeiDateKey(displayMonth[displayMonth.length - 1]),
+      getTaipeiDateKey(displayMonth.at(-1)!),
     ],
     queryFn: async () => {
       const query = getTaipeiAcademicCalendarQuery(
         getTaipeiDateKey(displayMonth[0]),
-        getTaipeiDateKey(displayMonth[displayMonth.length - 1]),
+        getTaipeiDateKey(displayMonth.at(-1)!),
       );
       if (!query) return [];
 
@@ -111,7 +107,6 @@ export const CalendarMonthContainer = ({
           ? getCourseDateForDay(event.courseId, day)
           : null;
         const isNoClass = courseDate?.type === "no_class";
-        const brightness = getBrightness(event.color);
         const textColor = isNoClass ? "#fff" : getContrastColor(event.color);
         return { ...event, textColor, courseDate, isNoClass };
       });
@@ -148,15 +143,13 @@ export const CalendarMonthContainer = ({
 
       return (
         <div className="flex flex-col gap-0.5 mt-1" key={day.getTime()}>
-          {Array(padding)
-            .fill(0)
-            .map((_, index) => (
-              <div
-                key={index}
-                className="w-full"
-                style={{ height: isScreenMD ? 20 : 16 }}
-              ></div>
-            ))}
+          {new Array(padding).fill(0).map((_, index) => (
+            <div
+              key={index}
+              className="w-full"
+              style={{ height: isScreenMD ? 20 : 16 }}
+            ></div>
+          ))}
           {allSortedEvents.map((event, index) => (
             <EventPopover key={index} event={event}>
               <button
@@ -208,8 +201,7 @@ export const CalendarMonthContainer = ({
           ? event.end
           : endOfTaipeiDay(end);
         // Determine the text color
-        const brightness = getBrightness(event.color);
-        // From the brightness, using the getContrastColor function, create a complementary color that is legible
+        // Use the event color to create a complementary color that is legible.
         const textColor = getContrastColor(event.color);
         const span = Math.min(
           differenceInTaipeiCalendarDays(snippetEnd, snippetStart) + 1,

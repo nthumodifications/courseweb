@@ -53,11 +53,7 @@ const eventsEqual = (
   // Keep the pure API useful with the compact { id, courseId } shape too.
   // Real RxDB documents contain these required fields, so metadata changes
   // still produce an upsert in the application path.
-  if (
-    !fullEventFields.every((field) =>
-      Object.prototype.hasOwnProperty.call(right, field),
-    )
-  ) {
+  if (!fullEventFields.every((field) => Object.hasOwn(right, field))) {
     return true;
   }
 
