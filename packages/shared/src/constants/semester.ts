@@ -117,4 +117,4 @@ export const getSemester = (date: Date) => {
   });
 };
 
-export const lastSemester = semesterInfo.at(-1);
+export const lastSemester = semesterInfo[semesterInfo.length - 1];
