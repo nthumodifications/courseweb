@@ -47,8 +47,7 @@ const expectInertCalendar = (response: Response) => {
 describe("calendar proxy", () => {
   it("encodes the user path and serves upstream calendars as safe attachments", async () => {
     const requestedUrls = mockUpstream(
-      "BEGIN:VCALENDAR
-END:VCALENDAR",
+      "BEGIN:VCALENDAR\nEND:VCALENDAR",
       "text/calendar",
     );
 
@@ -65,9 +64,7 @@ END:VCALENDAR",
 
   it("serves event text containing angle brackets as an inert attachment", async () => {
     const body =
-      "BEGIN:VCALENDAR
-SUMMARY:<script>alert(1)</script>
-END:VCALENDAR";
+      "BEGIN:VCALENDAR\nSUMMARY:<script>alert(1)</script>\nEND:VCALENDAR";
     mockUpstream(body, "text/calendar");
 
     const response = await requestCalendar();
