@@ -1,6 +1,6 @@
 import { useSettings } from "@/hooks/contexts/settings";
 import { Helmet } from "react-helmet-async";
-import { Button, cn, Tabs, TabsList, TabsTrigger } from "@courseweb/ui";
+import { cn, Tabs, TabsList, TabsTrigger } from "@courseweb/ui";
 import { FC, SVGProps, useEffect, useMemo, useState } from "react";
 import useTime from "@/hooks/useTime";
 import { useQuery } from "@tanstack/react-query";

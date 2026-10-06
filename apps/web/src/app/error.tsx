@@ -6,11 +6,8 @@ import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-  Tabs,
-  TabsContent,
 } from "@courseweb/ui";
 import NTHUModsLogo from "@/components/Branding/NTHUModsLogo";
-import { useParams } from "react-router-dom";
 import { reloadApp } from "@/lib/chunk-recovery";
 import useDictionary from "@/dictionaries/useDictionary";
 export default function ErrorPage({
@@ -20,7 +17,6 @@ export default function ErrorPage({
   error: Error;
   resetErrorBoundary: () => void;
 }>) {
-  const { lang } = useParams();
   const dict = useDictionary();
 
   useEffect(() => {
@@ -28,7 +24,6 @@ export default function ErrorPage({
     console.error(error);
   }, [error]);
 
-  const finalLang = lang === "en" ? "en" : "zh";
   const errorStrings = [
     dict.error.message_1,
     dict.error.message_2,
@@ -54,60 +49,32 @@ export default function ErrorPage({
           <NTHUModsLogo width={64} height={64} />
           <div className="flex flex-col gap-3">
             <h1 className="text-4xl font-bold">{selectedString}</h1>
-            <Tabs defaultValue={finalLang}>
-              <TabsContent value="zh" className="flex flex-col gap-2">
-                <p className="">{dict.error.client_description}</p>
-                <p className="text-sm text-muted-foreground">
-                  {dict.error.tips_title}
-                </p>
-                <ul className="list-disc list-inside text-sm text-muted-foreground">
-                  <li>{dict.error.check_connection}</li>
-                  <li>{dict.error.clear_cache}</li>
-                  <li>{dict.error.dcard}</li>
-                  <li>
-                    {dict.error.report_here}{" "}
-                    <a
-                      href="https://github.com/nthumodifications/courseweb/issues/new/choose"
-                      className="underline text-purple-500"
-                    >
-                      Github
-                    </a>{" "}
-                    <a
-                      href="https://instagram.com/nthumods"
-                      className="underline text-purple-500"
-                    >
-                      IG
-                    </a>
-                  </li>
-                </ul>
-              </TabsContent>
-              <TabsContent value="en" className="flex flex-col gap-2">
-                <p className="">{dict.error.client_description}</p>
-                <p className="text-sm text-muted-foreground">
-                  {dict.error.tips_title}
-                </p>
-                <ul className="list-disc list-inside text-sm text-muted-foreground">
-                  <li>{dict.error.check_connection}</li>
-                  <li>{dict.error.clear_cache}</li>
-                  <li>{dict.error.dcard}</li>
-                  <li>
-                    {dict.error.report_here}{" "}
-                    <a
-                      href="https://github.com/nthumodifications/courseweb/issues/new/choose"
-                      className="underline text-purple-500"
-                    >
-                      Github
-                    </a>{" "}
-                    <a
-                      href="https://instagram.com/nthumods"
-                      className="underline text-purple-500"
-                    >
-                      IG
-                    </a>
-                  </li>
-                </ul>
-              </TabsContent>
-            </Tabs>
+            <div className="flex flex-col gap-2">
+              <p className="">{dict.error.client_description}</p>
+              <p className="text-sm text-muted-foreground">
+                {dict.error.tips_title}
+              </p>
+              <ul className="list-disc list-inside text-sm text-muted-foreground">
+                <li>{dict.error.check_connection}</li>
+                <li>{dict.error.clear_cache}</li>
+                <li>{dict.error.dcard}</li>
+                <li>
+                  {dict.error.report_here}{" "}
+                  <a
+                    href="https://github.com/nthumodifications/courseweb/issues/new/choose"
+                    className="underline text-purple-500"
+                  >
+                    Github
+                  </a>{" "}
+                  <a
+                    href="https://instagram.com/nthumods"
+                    className="underline text-purple-500"
+                  >
+                    IG
+                  </a>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
         <Collapsible>
