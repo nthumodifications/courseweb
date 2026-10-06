@@ -1,6 +1,6 @@
 import { Navigate } from "react-router-dom";
 
-const locales = ["en", "zh"];
+const locales = new Set(["en", "zh"]);
 
 function getLocale(): string {
   // Check cookie first
@@ -8,13 +8,13 @@ function getLocale(): string {
     .split("; ")
     .find((c) => c.startsWith("locale="))
     ?.split("=")[1];
-  if (cookieLocale && locales.includes(cookieLocale)) {
+  if (cookieLocale && locales.has(cookieLocale)) {
     return cookieLocale;
   }
 
   // Check browser language
   const browserLang = navigator.language.split("-")[0];
-  if (locales.includes(browserLang)) {
+  if (locales.has(browserLang)) {
     return browserLang;
   }
 

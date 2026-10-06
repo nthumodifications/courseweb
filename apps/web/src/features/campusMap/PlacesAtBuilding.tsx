@@ -9,9 +9,9 @@ import {
 
 export default function PlacesAtBuilding({
   location,
-}: {
+}: Readonly<{
   location: CampusDiningLocation;
-}) {
+}>) {
   const dict = useDictionary();
   const { data, isPending, isError, refetch, isFetching } = useDining();
   const shops = data ? getCampusDiningShops(data, location) : [];
@@ -35,18 +35,15 @@ export default function PlacesAtBuilding({
         )}
       </div>
       {isPending ? (
-        <p
-          className="flex items-center gap-2 py-3 text-sm text-muted-foreground"
-          role="status"
-        >
+        <output className="flex items-center gap-2 py-3 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
           {dict.campus_map.placesLoading}
-        </p>
+        </output>
       ) : isError && !data ? (
         <div className="flex items-center justify-between gap-3 py-2">
-          <p className="text-sm text-muted-foreground" role="status">
+          <output className="text-sm text-muted-foreground">
             {dict.campus_map.placesError}
-          </p>
+          </output>
           <Button
             type="button"
             variant="outline"
@@ -59,9 +56,9 @@ export default function PlacesAtBuilding({
           </Button>
         </div>
       ) : shops.length === 0 ? (
-        <p className="py-3 text-sm text-muted-foreground" role="status">
+        <output className="py-3 text-sm text-muted-foreground">
           {dict.campus_map.placesEmpty}
-        </p>
+        </output>
       ) : (
         <ul
           className="min-h-0 touch-pan-y divide-y divide-border overflow-y-auto overscroll-contain pr-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"

@@ -20,9 +20,9 @@ const bestTermScore = (
   for (let field = 0; field < SEARCHABLE_FIELDS.length; field += 1) {
     const fieldValues = values[field] ?? [];
     const tokens = tokenGroups[field] ?? [];
-    const exactValue = fieldValues.some((value) => value === term);
+    const exactValue = fieldValues.includes(term);
     const startsValue = fieldValues.some((value) => value.startsWith(term));
-    const exactToken = tokens.some((token) => token === term);
+    const exactToken = tokens.includes(term);
     const startsToken = tokens.some((token) => token.startsWith(term));
 
     if (shortQuery) {

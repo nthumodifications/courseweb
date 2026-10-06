@@ -1,4 +1,3 @@
-import { CourseDefinition } from "@/config/supabase";
 import { MinimalCourse } from "@/types/courses";
 
 export const CUSTOM_TIMETABLE_DAYS = [

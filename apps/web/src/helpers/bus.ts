@@ -3,7 +3,7 @@ import { Language } from "@/types/settings";
 import { BusDepartureDetails } from "@/libs/bus";
 
 export const getTimeOnDate = (date: Date, time: string) => {
-  const [hour, minute] = time.split(":").map((n) => parseInt(n));
+  const [hour, minute] = time.split(":").map((n) => Number.parseInt(n));
   return set(date, { hours: hour, minutes: minute });
 };
 

@@ -19,7 +19,7 @@ export type FilterCondition = {
   negated?: boolean;
 };
 
-const OPERATORS = /^(.*?)(>=|<=|!=|=|>|<|:)(.*)$/;
+const OPERATORS = /^([^><:=]+)(>=|<=|!=|=|>|<|:)(.*)$/;
 
 const unquote = (value: string) => {
   const trimmed = value.trim();
@@ -184,11 +184,11 @@ const separateTimeMaskForRecord = (record: SearchProjectionRecord) => {
 
 const numericValue = (record: SearchProjectionRecord, attribute: string) => {
   const value = record[attribute];
-  return value === null || value === undefined || value === ""
-    ? Number.NaN
-    : typeof value === "number"
-      ? value
-      : Number(value);
+  if (value === null || value === undefined || value === "") {
+    return Number.NaN;
+  }
+  if (typeof value === "number") return value;
+  return Number(value);
 };
 
 const exactValue = (
@@ -202,13 +202,9 @@ const exactValue = (
     return usesAny(separateTimeMaskForRecord(record), wantedTimeMask);
   }
   if (attribute === "times") {
-    return normalizedFacetValues(record, "times").some(
-      (candidate) => candidate === expected,
-    );
+    return normalizedFacetValues(record, "times").includes(expected);
   }
-  return normalizedFacetValues(record, attribute).some(
-    (candidate) => candidate === expected,
-  );
+  return normalizedFacetValues(record, attribute).includes(expected);
 };
 
 const matchesConditionWithExpected = (
@@ -237,9 +233,7 @@ const matchesConditionWithExpected = (
     matched =
       condition.operator === "!=" ? !usesAny(actual, wantedTimeMask) : false;
   } else if (condition.attribute === "times") {
-    const actual = normalizedFacetValues(record, "times").some(
-      (candidate) => candidate === expected,
-    );
+    const actual = normalizedFacetValues(record, "times").includes(expected);
     matched = condition.operator === "!=" ? !actual : false;
   } else if (condition.operator === "!=") {
     matched = !exactValue(
@@ -267,7 +261,6 @@ const matchesConditionWithExpected = (
         matched = actual <= expected;
         break;
       default:
-        matched = false;
     }
   }
   return condition.negated ? !matched : matched;
@@ -355,13 +348,10 @@ export const compileRefinements = (
   const parsedNumericConditions = numericConditions.map((value) =>
     parseFilterCondition(String(value)),
   );
-  const expression = parseFilterExpression(
-    typeof spec.filters === "string"
-      ? spec.filters
-      : typeof spec.filters === "undefined"
-        ? ""
-        : String(spec.filters),
-  );
+  let rawExpression = "";
+  if (typeof spec.filters === "string") rawExpression = spec.filters;
+  else if (spec.filters !== undefined) rawExpression = String(spec.filters);
+  const expression = parseFilterExpression(rawExpression);
 
   const compiledFacetConditions = facetConditions.map((group) =>
     group.map(compileCondition),
@@ -379,11 +369,7 @@ export const compileRefinements = (
     );
     if (!facetMatch) return false;
 
-    if (
-      !compiledNumericConditions.every(
-        (condition) => condition && condition(record),
-      )
-    ) {
+    if (!compiledNumericConditions.every((condition) => condition?.(record))) {
       return false;
     }
 

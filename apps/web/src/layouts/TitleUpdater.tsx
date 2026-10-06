@@ -53,7 +53,10 @@ const organizationJsonLd = {
 
 const normalizePath = (pathname: string): string => {
   if (!pathname || pathname === "/") return "/";
-  const withoutTrailing = pathname.replace(/\/+$/, "");
+  let withoutTrailing = pathname;
+  while (withoutTrailing.endsWith("/")) {
+    withoutTrailing = withoutTrailing.slice(0, -1);
+  }
   return withoutTrailing || "/";
 };
 
@@ -95,11 +98,10 @@ const TitleUpdater = () => {
     ? (handle?.descriptionZh ?? handle?.description ?? DEFAULT_DESCRIPTION_ZH)
     : (handle?.description ?? handle?.descriptionZh ?? DEFAULT_DESCRIPTION_EN);
 
-  const fullTitle = pageTitle
-    ? `${pageTitle} | NTHUMods`
-    : isZh
-      ? "NTHUMods｜清大課程查詢・課表規劃・校車時刻表"
-      : "NTHUMods | NTHU Course Search & Campus Tools";
+  let fullTitle = isZh
+    ? "NTHUMods｜清大課程查詢・課表規劃・校車時刻表"
+    : "NTHUMods | NTHU Course Search & Campus Tools";
+  if (pageTitle) fullTitle = pageTitle + " | NTHUMods";
 
   const canonicalPath = normalizePath(location.pathname);
   const canonicalUrl = `${BASE_URL}${canonicalPath}`;

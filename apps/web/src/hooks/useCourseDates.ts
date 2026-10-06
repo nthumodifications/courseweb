@@ -12,7 +12,10 @@ export type CourseDate = {
 };
 
 const useCourseDates = (courseIds: string[]) => {
-  const sortedIds = useMemo(() => [...courseIds].sort(), [courseIds]);
+  const sortedIds = useMemo(
+    () => [...courseIds].sort((left, right) => left.localeCompare(right)),
+    [courseIds],
+  );
 
   const { data = [] } = useQuery<CourseDate[]>({
     queryKey: ["course-dates", ...sortedIds],

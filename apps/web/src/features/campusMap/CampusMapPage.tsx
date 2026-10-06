@@ -38,11 +38,11 @@ function MapMessage({
   title,
   detail,
   loading = false,
-}: {
+}: Readonly<{
   title: string;
   detail?: string;
   loading?: boolean;
-}) {
+}>) {
   return (
     <div className="flex h-full min-h-[32rem] flex-col gap-2 bg-muted/30 p-4">
       <div className="flex flex-col gap-2">
@@ -209,12 +209,9 @@ export default function CampusMapPage() {
             onSelect={selectIdentity}
           />
           {requestWarning && (
-            <p
-              className="pointer-events-auto mt-2 rounded-lg border border-destructive/40 bg-background/95 px-2 py-2 text-sm text-destructive"
-              role="status"
-            >
+            <output className="pointer-events-auto mt-2 rounded-lg border border-destructive/40 bg-background/95 px-2 py-2 text-sm text-destructive">
               {requestWarning}
-            </p>
+            </output>
           )}
         </div>
         <div className="pointer-events-auto flex shrink-0 gap-2">
