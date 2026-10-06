@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 import { sentryVitePlugin } from "@sentry/vite-plugin";
@@ -36,8 +36,39 @@ const searchBackendEnv = (): Record<string, string> => {
   return values;
 };
 
+// The dev proxy talks to production. These routes create public records
+// there without a login (GitHub issues, recruitment applications, shortlinks),
+// so they are refused locally; run services/api to exercise them.
+const PUBLIC_WRITE_ROUTES = [
+  "/__api/issue",
+  "/__api/recruit",
+  "/__api/shortlink",
+];
+const devApiWriteGuard = (): Plugin => ({
+  name: "dev-api-write-guard",
+  configureServer(server) {
+    server.middlewares.use((req, res, next) => {
+      const requestPath = (req.url ?? "").split("?")[0];
+      const isWrite = !["GET", "HEAD", "OPTIONS"].includes(req.method ?? "GET");
+      const blocked = PUBLIC_WRITE_ROUTES.some(
+        (route) => requestPath === route || requestPath.startsWith(`${route}/`),
+      );
+      if (!isWrite || !blocked) return next();
+      res.statusCode = 403;
+      res.setHeader("Content-Type", "application/json");
+      res.end(
+        JSON.stringify({
+          error:
+            "Blocked by the dev proxy: this would write to production. Run services/api locally to test it.",
+        }),
+      );
+    });
+  },
+});
+
 export default defineConfig(({ mode }) => ({
   plugins: [
+    devApiWriteGuard(),
     react(),
     VitePWA({
       registerType: "autoUpdate",
@@ -130,6 +161,22 @@ export default defineConfig(({ mode }) => ({
         silent: true,
       }),
   ].filter(Boolean),
+  server: {
+    // The example env and the OAuth redirect URIs both assume this port, so
+    // fail loudly instead of silently moving to 5174.
+    port: 5173,
+    strictPort: true,
+    proxy: {
+      // The production API only allows the nthumods.com origin, so
+      // frontend-only development reaches it same-origin through this proxy
+      // (VITE_COURSEWEB_API_URL=http://localhost:5173/__api).
+      "/__api": {
+        target: "https://api.nthumods.com",
+        changeOrigin: true,
+        rewrite: (requestPath) => requestPath.replace(/^\/__api/, ""),
+      },
+    },
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),

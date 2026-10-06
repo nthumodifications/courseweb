@@ -28,6 +28,8 @@
     "build:api-types": "turbo run build --filter=@courseweb/api-types",
     "dev:api": "turbo run dev --filter=api",
     "dev:secure-api": "turbo run dev --filter=secure-api",
+    "setup": "bun tools/dev-setup/index.mjs",
+    "doctor": "bun tools/dev-setup/index.mjs --doctor",
     "runner:update-courses": "node --import=tsimp/import tools/data-sync/src/update-courses.ts",
     "runner:sync-courses": "node --import=tsimp/import tools/data-sync/src/sync-courses.ts",
     "dict": "node --import=tsimp/import tools/dict-manager/src/dict.ts",
