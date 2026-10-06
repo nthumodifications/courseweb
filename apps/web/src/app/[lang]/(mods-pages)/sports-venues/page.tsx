@@ -643,7 +643,11 @@ const SportsVenuesPage = () => {
                   : undefined
               }
               onKeyDown={(event) => {
-                if (facility && (event.key === "Enter" || event.key === " ")) {
+                if (
+                  facility &&
+                  event.target === event.currentTarget &&
+                  (event.key === "Enter" || event.key === " ")
+                ) {
                   event.preventDefault();
                   openFacility(facility, forecastSeries, capacity);
                 }

@@ -84,7 +84,9 @@ export const MobileQuickNav = ({
             ref={drawerRef}
             className="absolute right-0 top-0 bottom-0 w-64 bg-background p-4 shadow-xl"
             onClick={(e) => e.stopPropagation()}
-            onKeyDown={(e) => e.stopPropagation()}
+            onKeyDown={(e) => {
+              if (e.key !== "Escape") e.stopPropagation();
+            }}
             role="presentation"
           >
             <button
