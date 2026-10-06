@@ -186,7 +186,7 @@ function backtest(
 ): UsageQuality | null {
   if (weeks < 3) return null;
   const values = dateValueMap(observations);
-  const dates = [...new Set(observations.map((observation) => observation.date))].sort();
+  const dates = [...new Set(observations.map((observation) => observation.date))].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
   const dateDows = new Map<string, number>();
   const byDowSlot = new Map<string, IndexedObservation[]>();
   const byTypeSlot = new Map<string, IndexedObservation[]>();
