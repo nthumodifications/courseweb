@@ -83,7 +83,7 @@ const SideNav: FC = () => {
       {visibleLinks.map((link) => (
         <button
           type="button"
-          className={`w-full flex flex-row items-center justify-start gap-2 rounded-md cursor-pointer transition font-medium px-3 py-1.5 ${link.href === pathname ? "bg-primary text-primary-foreground" : "text-sidebar-foreground hover:bg-accent hover:text-accent-foreground"}`}
+          className={`w-full flex flex-row items-center justify-start gap-2 text-left rounded-md cursor-pointer transition font-medium px-3 py-1.5 ${link.href === pathname ? "bg-primary text-primary-foreground" : "text-sidebar-foreground hover:bg-accent hover:text-accent-foreground"}`}
           key={link.id}
           onClick={handleLinkClick(link.href)}
         >

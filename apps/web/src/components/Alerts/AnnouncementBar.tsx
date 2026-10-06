@@ -97,7 +97,8 @@ const AnnouncementBar = () => {
   };
 
   return (
-    <output
+    <div
+      role="status"
       className={cn(
         "flex w-full items-center gap-2 border-b px-4 py-1 text-sm",
         style.className,
@@ -141,7 +142,7 @@ const AnnouncementBar = () => {
           <X className="h-4 w-4" aria-hidden="true" />
         </button>
       )}
-    </output>
+    </div>
   );
 };
 
