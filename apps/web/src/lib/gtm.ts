@@ -33,7 +33,7 @@ export function initializeGTM(): void {
 
   // Insert script before first script tag
   const firstScript = document.getElementsByTagName("script")[0];
-  if (firstScript && firstScript.parentNode) {
+  if (firstScript?.parentNode) {
     firstScript.parentNode.insertBefore(script, firstScript);
   } else {
     document.head.appendChild(script);
@@ -42,7 +42,7 @@ export function initializeGTM(): void {
   // Initialize dataLayer
   window.dataLayer = window.dataLayer || [];
   window.dataLayer.push({
-    "gtm.start": new Date().getTime(),
+    "gtm.start": Date.now(),
     event: "gtm.js",
   });
 

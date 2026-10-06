@@ -24,12 +24,12 @@ import { getCampusRenderQuality, readCampusDeviceHints } from "./renderQuality";
 import { createAreaGeometry, createRibbonGeometry } from "./sceneGeometry";
 import { CAMPUS_ROAD_COLOR, isCampusBuilding } from "./sceneLogic";
 
-type SurfaceProps = {
+type SurfaceProps = Readonly<{
   areas: CampusAreaFeature[];
   origin: LatLon;
   color: string;
   y: number;
-};
+}>;
 
 function Surface({ areas, origin, color, y }: SurfaceProps) {
   const geometry = useMemo(
@@ -45,14 +45,14 @@ function Surface({ areas, origin, color, y }: SurfaceProps) {
   );
 }
 
-type LinearFeaturesProps = {
+type LinearFeaturesProps = Readonly<{
   features: CampusLinearFeature[];
   origin: LatLon;
   color: string;
   y: number;
   widthOffset?: number;
   clipToCampus?: boolean;
-};
+}>;
 
 function LinearFeatures({
   features,
@@ -86,10 +86,10 @@ function LinearFeatures({
 function CampusClipMask({
   boundary,
   origin,
-}: {
+}: Readonly<{
   boundary?: CampusAreaFeature;
   origin: LatLon;
-}) {
+}>) {
   const areas = useMemo(() => (boundary ? [boundary] : []), [boundary]);
   const geometry = useMemo(
     () => createAreaGeometry(areas, origin),
@@ -114,14 +114,14 @@ function CampusClipMask({
   );
 }
 
-type CampusWorldProps = {
+type CampusWorldProps = Readonly<{
   data: CampusMapData;
   selectedFeature?: CampusMapFeature;
   resetNonce: number;
   language: "en" | "zh";
   onSelectFeature: (feature: CampusMapFeature) => void;
   maxLabels: number;
-};
+}>;
 
 function CampusWorld({
   data,

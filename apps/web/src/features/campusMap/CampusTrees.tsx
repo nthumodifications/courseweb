@@ -8,11 +8,11 @@ import {
 } from "three";
 import { geoToWorld, type CampusTree, type LatLon } from "@courseweb/shared";
 
-type CampusTreesProps = {
+type CampusTreesProps = Readonly<{
   trees: CampusTree[];
   origin: LatLon;
   y: number;
-};
+}>;
 
 function stableTreeVariant(id: string): { rotation: number; scale: number } {
   let hash = 0;

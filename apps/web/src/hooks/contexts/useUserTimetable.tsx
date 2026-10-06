@@ -19,10 +19,11 @@ import {
   mergeCourseStorage,
   mergeCustomTimetableStorage,
   mergeStringArray,
+  normalizeCustomTimetableStorage,
+  valuesEqual,
 } from "../syncedStorage";
 import client from "@/config/api";
 import { CustomTimetableItem, CustomTimetableStorage } from "@/types/timetable";
-import { normalizeCustomTimetableStorage, valuesEqual } from "../syncedStorage";
 
 export type TimetableFieldKey =
   | "code"
@@ -122,7 +123,7 @@ const normalizeTimetableDisplayPreferences = (
     value?.fontFamily ?? DEFAULT_TIMETABLE_DISPLAY_PREFERENCES.fontFamily,
   display: {
     ...DEFAULT_TIMETABLE_DISPLAY_PREFERENCES.display,
-    ...(value?.display ?? {}),
+    ...value?.display,
   },
   fieldOrder:
     value?.fieldOrder?.filter((field) => DEFAULT_FIELD_ORDER.includes(field))
@@ -215,8 +216,8 @@ const useUserTimetableProvider = (loadCourse = true) => {
   );
   useEffect(() => {
     if (
-      !Object.prototype.hasOwnProperty.call(storedPreferences, "fontSize") ||
-      !Object.prototype.hasOwnProperty.call(storedPreferences, "fontFamily")
+      !Object.hasOwn(storedPreferences, "fontSize") ||
+      !Object.hasOwn(storedPreferences, "fontFamily")
     ) {
       setStoredPreferences(preferences);
     }
@@ -290,9 +291,9 @@ const useUserTimetableProvider = (loadCourse = true) => {
 
       // Check and confirm if coursesCopy is traversable
       if (Object.keys(coursesCopy).length === 0) return;
-      if (Object.keys(coursesCopy).find((sem) => sem.length !== 5)) return;
+      if (Object.keys(coursesCopy).some((sem) => sem.length !== 5)) return;
       if (
-        Object.keys(coursesCopy).find((sem) => !Array.isArray(coursesCopy[sem]))
+        Object.keys(coursesCopy).some((sem) => !Array.isArray(coursesCopy[sem]))
       )
         return;
 
@@ -330,11 +331,20 @@ const useUserTimetableProvider = (loadCourse = true) => {
     error,
     isLoading,
   } = useQuery({
-    queryKey: ["courses", [...Object.values(courses).flat()].sort()],
+    queryKey: [
+      "courses",
+      Object.values(courses)
+        .flat()
+        .sort((left, right) => left.localeCompare(right)),
+    ],
     queryFn: async () => {
       if (Object.values(courses).flat().length == 0) return [];
       const res = await client.course.$get({
-        query: { courses: [...Object.values(courses).flat()].sort() },
+        query: {
+          courses: Object.values(courses)
+            .flat()
+            .sort((left, right) => left.localeCompare(right)),
+        },
       });
 
       const data = await res.json();
@@ -361,7 +371,7 @@ const useUserTimetableProvider = (loadCourse = true) => {
           (courseID) =>
             semesterFilteredCourses.find((c) => c.raw_id == courseID)!,
         )
-        .filter((c) => c);
+        .filter(Boolean);
       return sortedCourses;
     },
     [courses, user_courses_data],

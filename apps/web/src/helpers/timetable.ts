@@ -18,9 +18,7 @@ export const timeToMinutes = (time: string): number => {
 };
 
 export const timetableGridStart = timeToMinutes(scheduleTimeSlots[0]!.start);
-export const timetableGridEnd = timeToMinutes(
-  scheduleTimeSlots[scheduleTimeSlots.length - 1]!.end,
-);
+export const timetableGridEnd = timeToMinutes(scheduleTimeSlots.at(-1)!.end);
 
 export type CustomTimetableSlotClassification = "grid" | "start" | "end";
 
@@ -283,8 +281,8 @@ export const createTimetableFromCourses = (
       // groupedTimeslots, so it is a loop rather than a reduce whose return
       // value would be discarded.
       for (const current of timeslots) {
-        const previousGroup = groupedTimeslots[groupedTimeslots.length - 1];
-        const previous = previousGroup?.[previousGroup.length - 1];
+        const previousGroup = groupedTimeslots.at(-1);
+        const previous = previousGroup?.at(-1);
         const previousIndex = previous
           ? scheduleTimeSlots.findIndex(
               (period) => period.time === previous.time,

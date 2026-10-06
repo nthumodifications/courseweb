@@ -17,13 +17,13 @@ import {
   isCampusBuilding,
 } from "./sceneLogic";
 
-type CampusLabelsProps = {
+type CampusLabelsProps = Readonly<{
   data: CampusMapData;
   selected?: CampusMapFeature;
   language: "en" | "zh";
   limit: number;
   onSelect: (feature: CampusMapFeature) => void;
-};
+}>;
 
 const fixedOverlay = (
   _object: unknown,
@@ -59,6 +59,13 @@ export default function CampusLabels({
       const number = numbers.get(key);
       const text = `#${number} ${name}`;
       const building = isCampusBuilding(feature);
+      let priority = 1;
+      if (building) {
+        const profile = getBuildingModelProfile(feature);
+        priority = 0;
+        if (profile) priority = 3;
+        else if (feature.identityId) priority = 2;
+      }
       return {
         key,
         feature,
@@ -69,18 +76,12 @@ export default function CampusLabels({
           building ? getBuildingHeight(feature) + 3 : 1,
           world.z,
         ),
-        priority: building
-          ? getBuildingModelProfile(feature)
-            ? 3
-            : feature.identityId
-              ? 2
-              : 0
-          : 1,
+        priority,
         width: Math.min(
           160,
           22 +
             Array.from(text).reduce(
-              (n, char) => n + (char.charCodeAt(0) > 255 ? 11 : 6),
+              (n, char) => n + (char.codePointAt(0)! > 255 ? 11 : 6),
               0,
             ),
         ),

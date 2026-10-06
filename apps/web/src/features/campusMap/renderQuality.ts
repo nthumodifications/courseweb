@@ -9,12 +9,12 @@ export function getCampusRenderQuality(hints: DeviceHints) {
     (hints.deviceMemory !== undefined && hints.deviceMemory <= 4) ||
     (hints.hardwareConcurrency !== undefined && hints.hardwareConcurrency <= 4);
   const mobile = hints.coarsePointer;
-  return {
-    maxDpr: limited ? 1 : mobile ? 1.25 : 1.5,
-    maxLabels: limited || mobile ? 24 : 40,
-    powerPreference:
-      mobile || limited ? ("low-power" as const) : ("default" as const),
-  };
+  let maxDpr = 1.5;
+  if (mobile) maxDpr = 1.25;
+  if (limited) maxDpr = 1;
+  const maxLabels = limited || mobile ? 24 : 40;
+  const powerPreference = mobile || limited ? "low-power" : "default";
+  return { maxDpr, maxLabels, powerPreference } as const;
 }
 
 export function readCampusDeviceHints(): DeviceHints {

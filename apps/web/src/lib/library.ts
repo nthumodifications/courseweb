@@ -191,12 +191,12 @@ export function getTaipeiTimeParts(date = new Date()): TaipeiTimeParts {
   const dayOfWeekIndex = dayNames.indexOf(map.weekday ?? "Sun");
 
   return {
-    year: parseInt(map.year, 10),
-    month: parseInt(map.month, 10),
-    day: parseInt(map.day, 10),
-    dayOfWeek: dayOfWeekIndex >= 0 ? dayOfWeekIndex : 0,
-    hours: parseInt(map.hour, 10) % 24,
-    minutes: parseInt(map.minute, 10),
+    year: Number.parseInt(map.year, 10),
+    month: Number.parseInt(map.month, 10),
+    day: Number.parseInt(map.day, 10),
+    dayOfWeek: Math.max(dayOfWeekIndex, 0),
+    hours: Number.parseInt(map.hour, 10) % 24,
+    minutes: Number.parseInt(map.minute, 10),
   };
 }
 
@@ -233,8 +233,8 @@ export function isTaiwanNationalHoliday(
     let lunarDay = 0;
 
     for (const p of lunarParts) {
-      if (p.type === "month") lunarMonth = parseInt(p.value, 10);
-      if (p.type === "day") lunarDay = parseInt(p.value, 10);
+      if (p.type === "month") lunarMonth = Number.parseInt(p.value, 10);
+      if (p.type === "day") lunarDay = Number.parseInt(p.value, 10);
     }
 
     // Lunar New Year's Eve & Days 1-3 (除夕至初三)
