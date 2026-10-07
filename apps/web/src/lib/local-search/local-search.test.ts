@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, jest, test } from "bun:test";
 import type { SearchClient as AlgoliaSearchClient } from "algoliasearch/lite";
 import {
   createResilientSearchClient,
@@ -47,6 +47,10 @@ type FetchState = {
   conditional304: boolean;
   calls: Array<{ url: string; init?: RequestInit }>;
   records: UnknownRecord[];
+  manifestFailure?: boolean;
+  chunkFailure?: boolean;
+  hangChunk?: boolean;
+  hangText?: boolean;
 };
 
 const makeFetch =
@@ -55,6 +59,7 @@ const makeFetch =
     const url = String(input);
     state.calls.push({ url, init });
     if (url.endsWith("/search/chunk/manifest")) {
+      if (state.manifestFailure) return new Response("broken", { status: 503 });
       return new Response(
         JSON.stringify(makeManifest(state.hash, state.records.length)),
         {
@@ -64,6 +69,7 @@ const makeFetch =
       );
     }
     if (url.endsWith("/search/chunk/11510/text")) {
+      if (state.hangText) return new Promise<Response>(() => {});
       if (state.conditional304 && init?.headers) {
         return new Response(null, { status: 304 });
       }
@@ -79,6 +85,8 @@ const makeFetch =
       );
     }
     if (url.includes("/search/chunk/")) {
+      if (state.hangChunk) return new Promise<Response>(() => {});
+      if (state.chunkFailure) return new Response("broken", { status: 503 });
       if (state.conditional304 && init?.headers) {
         return new Response(null, { status: 304 });
       }
@@ -458,6 +466,38 @@ describe("chunk cache, conditional requests, and worker lifecycle", () => {
     );
   });
 
+  test("keeps the old cache when a replacement chunk fails", async () => {
+    const { engine, cache, state } = createEngine();
+    await engine.search("11510", request({ query: "CS" }));
+    await engine.clear("11510");
+    state.hash = "hash-b";
+    state.chunkFailure = true;
+
+    const result = await engine.search("11510", request({ query: "CS" }));
+
+    expect(result.nbHits).toBeGreaterThan(0);
+    expect(
+      await cache.get(searchChunkCacheKey("11510", "hash-a", "1")),
+    ).toBeDefined();
+    expect(cache.entries().map(([key]) => key)).toEqual([
+      searchChunkCacheKey("11510", "hash-a", "1"),
+    ]);
+  });
+
+  test("uses the cached chunk when the manifest is unavailable", async () => {
+    const { engine, cache, state } = createEngine();
+    await engine.search("11510", request({ query: "CS" }));
+    await engine.clear("11510");
+    state.manifestFailure = true;
+
+    const result = await engine.search("11510", request({ query: "CS" }));
+
+    expect(result.nbHits).toBeGreaterThan(0);
+    expect(
+      await cache.get(searchChunkCacheKey("11510", "hash-a", "1")),
+    ).toBeDefined();
+  });
+
   test("reports loading and ready states while the worker builds", async () => {
     const { engine } = createEngine();
     const states: string[] = [];
@@ -467,6 +507,110 @@ describe("chunk cache, conditional requests, and worker lifecycle", () => {
     await pending;
     expect(engine.getStatus()).toBe("ready");
     expect(states).toEqual(expect.arrayContaining(["loading", "ready"]));
+  });
+
+  test("times out a hanging manifest request", async () => {
+    jest.useFakeTimers();
+    try {
+      let signal: AbortSignal | undefined;
+      let resolveStarted!: () => void;
+      const started = new Promise<void>((resolve) => {
+        resolveStarted = resolve;
+      });
+      const engine = new LocalSearchEngine({
+        baseUrl: "https://api.example.test",
+        defaultSemester: "11510",
+        workerFactory: () => new FakeWorker(),
+        fetch: async (_input, init) => {
+          signal = init?.signal;
+          resolveStarted();
+          return new Promise<Response>(() => {});
+        },
+      });
+      const pending = engine.search("11510", request({ query: "CS" }));
+
+      await started;
+      jest.advanceTimersByTime(8_000);
+      await expect(pending).rejects.toThrow("timed out");
+      expect(signal?.aborted).toBe(true);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  test("times out a hanging course chunk request", async () => {
+    jest.useFakeTimers();
+    try {
+      let signal: AbortSignal | undefined;
+      let resolveStarted!: () => void;
+      const started = new Promise<void>((resolve) => {
+        resolveStarted = resolve;
+      });
+      const engine = new LocalSearchEngine({
+        baseUrl: "https://api.example.test",
+        defaultSemester: "11510",
+        workerFactory: () => new FakeWorker(),
+        fetch: async (input, init) => {
+          const url = String(input);
+          if (url.endsWith("/search/chunk/manifest")) {
+            return new Response(JSON.stringify(makeManifest("hash-a")), {
+              status: 200,
+            });
+          }
+          signal = init?.signal;
+          resolveStarted();
+          return new Promise<Response>(() => {});
+        },
+      });
+      const pending = engine.search("11510", request({ query: "CS" }));
+
+      await started;
+      jest.advanceTimersByTime(30_000);
+      await expect(pending).rejects.toThrow("timed out");
+      expect(signal?.aborted).toBe(true);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  test("times out a hanging text chunk request", async () => {
+    jest.useFakeTimers();
+    try {
+      let signal: AbortSignal | undefined;
+      let resolveStarted!: () => void;
+      const started = new Promise<void>((resolve) => {
+        resolveStarted = resolve;
+      });
+      const engine = new LocalSearchEngine({
+        baseUrl: "https://api.example.test",
+        defaultSemester: "11510",
+        workerFactory: () => new FakeWorker(),
+        fetch: async (input, init) => {
+          const url = String(input);
+          if (url.endsWith("/search/chunk/manifest")) {
+            return new Response(JSON.stringify(makeManifest("hash-a")), {
+              status: 200,
+            });
+          }
+          if (url.endsWith("/search/chunk/11510/text")) {
+            signal = init?.signal;
+            resolveStarted();
+            return new Promise<Response>(() => {});
+          }
+          return new Response(JSON.stringify(fixture), { status: 200 });
+        },
+      });
+      await engine.search("11510", request({ query: "CS" }));
+      const textPending = engine.waitForTextChunk("11510");
+
+      jest.advanceTimersByTime(1);
+      await started;
+      jest.advanceTimersByTime(30_000);
+      await textPending;
+      expect(signal?.aborted).toBe(true);
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   test("covers every period code present in the real fixture", () => {
@@ -670,6 +814,55 @@ describe("local-first resilient client", () => {
     };
     expect(remoteCalls).toBe(1);
     expect(result.results[0].hits[0].objectID).toBe("remote");
+
+    await client.retry();
+    await client.search([request({ query: "CS" })] as never);
+    expect(remoteCalls).toBe(2);
+  });
+
+  test("falls through to the remote tier after a local timeout", async () => {
+    jest.useFakeTimers();
+    try {
+      let signal: AbortSignal | undefined;
+      let resolveStarted!: () => void;
+      const started = new Promise<void>((resolve) => {
+        resolveStarted = resolve;
+      });
+      let remoteCalls = 0;
+      const remoteWithCount = {
+        ...remote,
+        search: async () => {
+          remoteCalls += 1;
+          return remoteResponse;
+        },
+      } as unknown as AlgoliaSearchClient;
+      const client = createResilientSearchClient({
+        remoteClient: remoteWithCount,
+        localSearch: {
+          baseUrl: "https://api.example.test",
+          defaultSemester: "11510",
+          workerFactory: () => new FakeWorker(),
+          fetch: async (_input, init) => {
+            signal = init?.signal;
+            resolveStarted();
+            return new Promise<Response>(() => {});
+          },
+        },
+      });
+      const pending = client.search([request({ query: "CS" })] as never);
+
+      await started;
+      jest.advanceTimersByTime(8_000);
+      const result = (await pending) as {
+        results: Array<{ hits: Array<{ objectID: string }> }>;
+      };
+
+      expect(signal?.aborted).toBe(true);
+      expect(remoteCalls).toBe(1);
+      expect(result.results[0].hits[0].objectID).toBe("remote");
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   test("keeps a local hpp=0 response local with counts and no hits", async () => {

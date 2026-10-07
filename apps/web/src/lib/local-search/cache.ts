@@ -22,6 +22,7 @@ export type SearchTextRecord = {
 
 export type SearchChunkCache = {
   get: (key: string) => Promise<CachedSearchChunk | undefined>;
+  getLatest: (semester: string) => Promise<CachedSearchChunk | undefined>;
   set: (key: string, value: CachedSearchChunk) => Promise<void>;
   delete: (key: string) => Promise<void>;
   deleteSemester: (semester: string, exceptKey?: string) => Promise<void>;
@@ -55,6 +56,22 @@ export const createIndexedDbSearchChunkCache = (): SearchChunkCache => ({
   async get(key) {
     try {
       return await get<CachedSearchChunk>(key);
+    } catch {
+      return undefined;
+    }
+  },
+  async getLatest(semester) {
+    try {
+      const prefix = `${CACHE_PREFIX}${encodeURIComponent(semester)}:`;
+      const cacheKeys = await keys();
+      const matchingKeys = cacheKeys.filter(
+        (key): key is string =>
+          typeof key === "string" && key.startsWith(prefix),
+      );
+      const values = await Promise.all(
+        matchingKeys.map((key) => get<CachedSearchChunk>(key)),
+      );
+      return values.find(Boolean);
     } catch {
       return undefined;
     }
@@ -148,6 +165,13 @@ export class MemorySearchChunkCache implements SearchChunkCache {
 
   async get(key: string) {
     return this.values.get(key);
+  }
+
+  async getLatest(semester: string) {
+    const prefix = `${CACHE_PREFIX}${encodeURIComponent(semester)}:`;
+    return [...this.values.entries()].find(([key]) =>
+      key.startsWith(prefix),
+    )?.[1];
   }
 
   async set(key: string, value: CachedSearchChunk) {

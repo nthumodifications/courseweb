@@ -22,6 +22,7 @@ export type ResilientSearchClient = Pick<
 > & {
   getStatus: () => SearchBackend;
   getVersion: () => number;
+  retry: () => Promise<void>;
   /**
    * Syllabus text (brief/keywords) that the local engine loads after the hits
    * it already served. Undefined when served remotely or not yet loaded.
@@ -59,6 +60,8 @@ type FallbackPayload<T> = {
   data?: T & { warnings?: string[] };
   error?: { message?: string; details?: string };
 };
+
+const FALLBACK_TIMEOUT_MS = 10_000;
 
 export type ResilientSearchClientOptions = {
   /** Test/embedded override for the local chunk loader and cache. */
@@ -251,19 +254,39 @@ const fallbackFacetUrl = (request: { params?: unknown }) => {
 };
 
 const fetchFallback = async <T>(url: string): Promise<T> => {
-  const response = await fetch(url);
-  const payload = (await response.json()) as FallbackPayload<T>;
-  if (!response.ok || !payload.success || !payload.data) {
-    throw new Error(
-      payload.error?.details ??
-        payload.error?.message ??
-        "Fallback search failed",
-    );
+  const controller = new AbortController();
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => {
+      controller.abort();
+      reject(
+        new Error(
+          `Course-search API fallback timed out after ${FALLBACK_TIMEOUT_MS}ms`,
+        ),
+      );
+    }, FALLBACK_TIMEOUT_MS);
+  });
+
+  try {
+    const response = await Promise.race([
+      fetch(url, { signal: controller.signal }),
+      timeout,
+    ]);
+    const payload = (await response.json()) as FallbackPayload<T>;
+    if (!response.ok || !payload.success || !payload.data) {
+      throw new Error(
+        payload.error?.details ??
+          payload.error?.message ??
+          "Fallback search failed",
+      );
+    }
+    if (payload.data.warnings?.length) {
+      console.warn("Course search fallback limitations:", payload.data.warnings);
+    }
+    return payload.data;
+  } finally {
+    if (timeoutId !== undefined) clearTimeout(timeoutId);
   }
-  if (payload.data.warnings?.length) {
-    console.warn("Course search fallback limitations:", payload.data.warnings);
-  }
-  return payload.data;
 };
 
 const emptySearchResponse = <T>(request: {
@@ -704,6 +727,7 @@ export const createResilientSearchClient = (
   return {
     search,
     searchForFacetValues,
+    retry: () => localClient?.clear() ?? Promise.resolve(),
     getStatus: () =>
       localStatus ??
       getActiveState()?.backend ??

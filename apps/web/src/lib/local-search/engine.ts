@@ -133,6 +133,36 @@ const getEnv = () =>
 const isSuccessful = (response: Response) =>
   response.ok || (response.status >= 200 && response.status < 300);
 
+const MANIFEST_TIMEOUT_MS = 8_000;
+const CHUNK_TIMEOUT_MS = 30_000;
+const TEXT_CHUNK_TIMEOUT_MS = 30_000;
+
+const fetchWithTimeout = async (
+  fetchFn: FetchLike,
+  input: RequestInfo | URL,
+  init: RequestInit | undefined,
+  timeoutMs: number,
+  label: string,
+) => {
+  const controller = new AbortController();
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => {
+      controller.abort();
+      reject(new Error(`${label} timed out after ${timeoutMs}ms`));
+    }, timeoutMs);
+  });
+
+  try {
+    return await Promise.race([
+      fetchFn(input, { ...init, signal: controller.signal }),
+      timeout,
+    ]);
+  } finally {
+    if (timeoutId !== undefined) clearTimeout(timeoutId);
+  }
+};
+
 const defaultWorkerFactory = () => {
   if (typeof Worker === "undefined") return undefined;
   return new Worker(new URL("./index.worker.ts", import.meta.url), {
@@ -551,8 +581,12 @@ export class LocalSearchEngine {
   }
 
   private async manifest() {
-    const response = await this.fetchFn(
+    const response = await fetchWithTimeout(
+      this.fetchFn,
       `${this.baseUrl}/search/chunk/manifest`,
+      undefined,
+      MANIFEST_TIMEOUT_MS,
+      "Course-search manifest",
     );
     if (!isSuccessful(response)) {
       throw new Error(`Course-search manifest failed (${response.status})`);
@@ -562,52 +596,75 @@ export class LocalSearchEngine {
 
   private async loadChunk(semester: string): Promise<LoadedChunk> {
     this.setStatus("loading");
-    const manifest = (await this.manifest()).find(
-      (entry) => entry.id === semester,
-    );
+    let manifest: SearchManifestEntry | undefined;
+    let records: SearchProjectionRecord[];
+    try {
+      manifest = (await this.manifest()).find((entry) => entry.id === semester);
+      if (!manifest)
+        throw new Error(`No local course chunk for semester ${semester}`);
+
+      const key = searchChunkCacheKey(
+        semester,
+        manifest.contentHash,
+        manifest.formatVersion,
+      );
+      const cached = await this.cache.get(key);
+
+      const response = await fetchWithTimeout(
+        this.fetchFn,
+        `${this.baseUrl}/search/chunk/${encodeURIComponent(semester)}`,
+        cached
+          ? {
+              headers: {
+                "If-None-Match": JSON.stringify(manifest.contentHash),
+              },
+            }
+          : undefined,
+        CHUNK_TIMEOUT_MS,
+        "Course-search chunk",
+      );
+      if (response.status === 304) {
+        if (!cached)
+          throw new Error("Course chunk returned 304 without a cache entry");
+        records = cached.records;
+      } else {
+        if (!isSuccessful(response)) {
+          throw new Error(`Course-search chunk failed (${response.status})`);
+        }
+        records = normalizeChunk(await response.json()).map(
+          prepareSearchRecord,
+        );
+        if (
+          manifest.rowCount !== undefined &&
+          records.length !== manifest.rowCount
+        ) {
+          throw new Error(
+            `Course-search chunk row count mismatch (${records.length}/${manifest.rowCount})`,
+          );
+        }
+        const cacheValue: CachedSearchChunk = {
+          semester,
+          formatVersion: manifest.formatVersion,
+          contentHash: manifest.contentHash,
+          records,
+        };
+        await this.cache.set(key, cacheValue);
+        await this.cache.deleteSemester(semester, key);
+      }
+    } catch (error) {
+      const cached = await this.cache.getLatest(semester);
+      if (!cached) throw error;
+      records = cached.records;
+      manifest = {
+        id: semester,
+        rowCount: records.length,
+        contentHash: cached.contentHash,
+        formatVersion: cached.formatVersion,
+      };
+    }
+
     if (!manifest)
       throw new Error(`No local course chunk for semester ${semester}`);
-
-    const key = searchChunkCacheKey(
-      semester,
-      manifest.contentHash,
-      manifest.formatVersion,
-    );
-    const cached = await this.cache.get(key);
-    if (!cached) await this.cache.deleteSemester(semester, key);
-
-    let records: SearchProjectionRecord[];
-    const response = await this.fetchFn(
-      `${this.baseUrl}/search/chunk/${encodeURIComponent(semester)}`,
-      cached
-        ? { headers: { "If-None-Match": JSON.stringify(manifest.contentHash) } }
-        : undefined,
-    );
-    if (response.status === 304) {
-      if (!cached)
-        throw new Error("Course chunk returned 304 without a cache entry");
-      records = cached.records;
-    } else {
-      if (!isSuccessful(response)) {
-        throw new Error(`Course-search chunk failed (${response.status})`);
-      }
-      records = normalizeChunk(await response.json()).map(prepareSearchRecord);
-      if (
-        manifest.rowCount !== undefined &&
-        records.length !== manifest.rowCount
-      ) {
-        throw new Error(
-          `Course-search chunk row count mismatch (${records.length}/${manifest.rowCount})`,
-        );
-      }
-      const cacheValue: CachedSearchChunk = {
-        semester,
-        formatVersion: manifest.formatVersion,
-        contentHash: manifest.contentHash,
-        records,
-      };
-      await this.cache.set(key, cacheValue);
-    }
 
     const index = workerIndexFor(records, this.workerFactory);
     await index.build(
@@ -675,11 +732,14 @@ export class LocalSearchEngine {
     // still checks the text tier's own ETag and replaces this data if needed.
     if (cached) this.mergeTextRecords(chunk, cached.texts);
 
-    const response = await this.fetchFn(
+    const response = await fetchWithTimeout(
+      this.fetchFn,
       `${this.baseUrl}/search/chunk/${encodeURIComponent(semester)}/text`,
       cached
         ? { headers: { "If-None-Match": JSON.stringify(cached.contentHash) } }
         : undefined,
+      TEXT_CHUNK_TIMEOUT_MS,
+      "Course-search text chunk",
     );
     if (response.status === 304) {
       if (!cached)
