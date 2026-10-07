@@ -318,6 +318,7 @@ export const TimetableCourseList = ({
     colorMap,
     setCourses,
     isLoading,
+    isFetchingCourses,
     error,
   } = useUserTimetable();
 
@@ -469,6 +470,7 @@ export const TimetableCourseList = ({
           </div>
         )}
         {unresolvedCourseIds.length > 0 &&
+          !isFetchingCourses &&
           listStatus !== "loading" &&
           listStatus !== "error" && (
             <div

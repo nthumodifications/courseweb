@@ -7,9 +7,6 @@ import {
   getTimetableExtendedHoursGeometry,
   getTimetableOffGridBounds,
   getTimetableTimeRangePosition,
-  mergeImportedColorMap,
-  mergeImportedCourseStorage,
-  mergeImportedCustomItems,
   migrateLegacySemesterCourses,
   reorderStoredCourseIdsByCredits,
   timetableGridEnd,
@@ -182,29 +179,7 @@ describe("stored timetable course ids", () => {
   });
 });
 
-describe("timetable imports and legacy migration", () => {
-  test("adds imported courses, colors, and custom items without replacing current data", () => {
-    expect(
-      mergeImportedCourseStorage(
-        { "11410": ["keep"], "11510": ["existing"] },
-        { "11510": ["existing", "imported"], "11610": ["new-semester"] },
-      ),
-    ).toEqual({
-      "11410": ["keep"],
-      "11510": ["existing", "imported"],
-      "11610": ["new-semester"],
-    });
-    expect(
-      mergeImportedColorMap({ keep: "red" }, { imported: "blue" }),
-    ).toEqual({ keep: "red", imported: "blue" });
-    expect(
-      mergeImportedCustomItems(
-        { "11510": [{ id: "keep" }] },
-        { "11510": [{ id: "keep" }, { id: "imported" }] },
-      ),
-    ).toEqual({ "11510": [{ id: "keep" }, { id: "imported" }] });
-  });
-
+describe("legacy semester_1121 migration", () => {
   test("guards legacy JSON and groups every migrated course by semester", () => {
     expect(migrateLegacySemesterCourses("not-json")).toBeNull();
     expect(

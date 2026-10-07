@@ -1,47 +1,35 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  useTimetableShare,
-  type SharedTimetable,
-} from "@/hooks/useTimetableShare";
+import { useTimetableShare } from "@/hooks/useTimetableShare";
 import { useAuth } from "react-oidc-context";
 import Timetable from "@/components/Timetable/Timetable";
-import {
-  createTimetableFromCoursesAndCustomItems,
-  mergeImportedColorMap,
-  mergeImportedCourseStorage,
-  mergeImportedCustomItems,
-} from "@/helpers/timetable";
+import { createTimetableFromCoursesAndCustomItems } from "@/helpers/timetable";
 import { MinimalCourse } from "@/types/courses";
 import { renderTimetableSlot } from "@/helpers/timetable_course";
 import client from "@/config/api";
 import { toPrettySemester } from "@/helpers/semester";
 import { useState } from "react";
 import {
+  Badge,
+  Button,
   Card,
-  CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
+  Separator,
+  toast,
 } from "@courseweb/ui";
-import { Button } from "@courseweb/ui";
-import { Badge } from "@courseweb/ui";
-import { Separator } from "@courseweb/ui";
-import { toast } from "@courseweb/ui";
 import {
-  BookmarkPlus,
   Camera,
   CheckCircle,
   Download,
   Globe,
   Loader2,
-  Lock,
   RefreshCw,
   UserCircle,
 } from "lucide-react";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
-import SemesterSwitcher from "@/components/Timetable/SemesterSwitcher";
 import { normalizeCustomTimetableStorage } from "@/hooks/syncedStorage";
 
 const ShareViewPage = () => {
@@ -49,14 +37,8 @@ const ShareViewPage = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const { getShareView, saveShare } = useTimetableShare();
-  const {
-    setSemester,
-    semester,
-    setCourses,
-    setColorMap,
-    setCustomItems,
-    currentColors,
-  } = useUserTimetable();
+  const { setSemester, addCourse, setColorMap, setCustomItems, currentColors } =
+    useUserTimetable();
   const queryClient = useQueryClient();
   const [selectedSem, setSelectedSem] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -76,7 +58,7 @@ const ShareViewPage = () => {
   const courseIds = share?.courses[activeSem] ?? [];
 
   const { data: courses = [], isLoading: coursesLoading } = useQuery({
-    queryKey: ["courses", [...courseIds].sort()],
+    queryKey: ["courses", [...courseIds].sort((a, b) => a.localeCompare(b))],
     queryFn: async () => {
       if (!courseIds.length) return [];
       const res = await client.course.$get({ query: { courses: courseIds } });
@@ -115,19 +97,26 @@ const ShareViewPage = () => {
     courseIds.forEach((id, i) => {
       partialColorMap[id] = currentColors[i % currentColors.length];
     });
-    setCourses((previous) =>
-      mergeImportedCourseStorage(previous, { [activeSem]: courseIds }),
-    );
-    setColorMap((prev) => mergeImportedColorMap(prev, partialColorMap));
+    addCourse(courseIds);
+    setColorMap((prev) => ({ ...prev, ...partialColorMap }));
     const importedCustomItems =
       normalizeCustomTimetableStorage({
         [activeSem]: share?.customItems?.[activeSem] ?? [],
       })[activeSem] ?? [];
-    setCustomItems((previous) =>
-      mergeImportedCustomItems(previous, {
-        [activeSem]: importedCustomItems,
-      }),
-    );
+    if (importedCustomItems.length > 0) {
+      setCustomItems((prev) => ({
+        ...prev,
+        [activeSem]: [
+          ...(prev[activeSem] ?? []),
+          ...importedCustomItems.filter(
+            (item) =>
+              !(prev[activeSem] ?? []).some(
+                (current) => current.id === item.id,
+              ),
+          ),
+        ],
+      }));
+    }
     setSemester(activeSem);
     navigate(-1);
     toast({

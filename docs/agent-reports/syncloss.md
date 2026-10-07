@@ -164,3 +164,14 @@ After editing:
    tombstone/order protocol before promising cross-device deletions or order.
 3. Schedule the separate hardening-branch review for storage failures and
    anonymous handoff; this branch intentionally does not claim those fixes.
+
+
+## Final review round (before merge)
+
+A last adversarial review found three things, all addressed:
+
+- **Imports.** An earlier version of this branch changed "Import all" and "Import this semester" from replace to merge. The buttons' own text says they overwrite, so replacing is the intended behaviour; both import pages are back to exactly what `main` does. Whether import should offer a merge is a product decision, not a bug fix.
+- **Legacy `semester_1121` migration.** It no longer removes the old key at all. It imports the list once and records a `semester_1121_migrated` marker; if storage is unavailable it simply tries again on a later visit. It runs once per page load instead of on every render.
+- **Live share gating.** Publishing is held back only while the read of the account's course list has failed, not for a colour-map or custom-item read failure, and readiness flags are otherwise as on `main`.
+
+Also: the "N courses couldn't be loaded" notice is hidden while courses are being refetched, so adding a course does not flash it.

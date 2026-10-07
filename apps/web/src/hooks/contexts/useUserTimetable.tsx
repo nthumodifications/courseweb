@@ -6,7 +6,6 @@ import {
   useContext,
   useMemo,
   useLayoutEffect,
-  useRef,
 } from "react";
 import { CourseDefinition } from "@/config/supabase";
 import { RawCourseID } from "@/types/courses";
@@ -139,6 +138,8 @@ const normalizeTimetableDisplayPreferences = (
 
 export type CourseLocalStorage = { [sem: string]: RawCourseID[] };
 
+const LEGACY_SEMESTER_MIGRATED_KEY = "semester_1121_migrated";
+
 const userTimetableContext = createContext<
   ReturnType<typeof useUserTimetableProvider>
 >({
@@ -203,10 +204,9 @@ const useUserTimetableProvider = (loadCourse = true) => {
   const [courses, setCourses, coursesSyncReady, coursesSyncError] =
     useSyncedStorage<CourseLocalStorage>("courses", {}, mergeCourseStorage);
   const [hoverCourse, setHoverCourse] = useState<CourseDefinition | null>(null);
-  const [colorMap, setColorMap, colorMapSyncReady, colorMapSyncError] =
-    useSyncedStorage<{
-      [courseID: string]: string;
-    }>("course_color_map", {}); //map from courseID to color
+  const [colorMap, setColorMap, colorMapSyncReady] = useSyncedStorage<{
+    [courseID: string]: string;
+  }>("course_color_map", {}); //map from courseID to color
   const [timetableTheme, _setTimetableTheme] = useSyncedStorage<string>(
     "timetable_theme",
     "pastelColors",
@@ -251,16 +251,12 @@ const useUserTimetableProvider = (loadCourse = true) => {
     },
     [setStoredPreferences],
   );
-  const [
-    storedCustomItems,
-    setStoredCustomItems,
-    customItemsDataReady,
-    customItemsSyncError,
-  ] = useSyncedStorage<CustomTimetableStorage>(
-    "timetable_custom_items",
-    {},
-    mergeCustomTimetableStorage,
-  );
+  const [storedCustomItems, setStoredCustomItems, customItemsDataReady] =
+    useSyncedStorage<CustomTimetableStorage>(
+      "timetable_custom_items",
+      {},
+      mergeCustomTimetableStorage,
+    );
   const customItems = useMemo(
     () => normalizeCustomTimetableStorage(storedCustomItems),
     [storedCustomItems],
@@ -402,11 +398,6 @@ const useUserTimetableProvider = (loadCourse = true) => {
     [courses, getSemesterCourses],
   );
 
-  const legacySemesterMigrationRef = useRef<{
-    raw: string;
-    courseIds: string[];
-  }>();
-
   //handlers for courses
   const addCourse = (courseID: string | string[]) => {
     const courseIDs = Array.isArray(courseID) ? courseID : [courseID];
@@ -442,42 +433,24 @@ const useUserTimetableProvider = (loadCourse = true) => {
     });
   };
 
-  // Keep the old list until every migrated ID is present in the new map.
-  // Invalid JSON remains untouched so a later recovery can still inspect it.
+  // One-time import of the pre-2023 "semester_1121" list. The old key is left
+  // in place and a marker records that it was imported, so nothing is lost if
+  // a write fails. (This used to delete the semester it had just imported.)
   useEffect(() => {
     if (typeof window === "undefined") return;
-
-    let raw: string | null;
     try {
-      raw = window.localStorage.getItem("semester_1121");
+      if (window.localStorage.getItem(LEGACY_SEMESTER_MIGRATED_KEY)) return;
+      const migrated = migrateLegacySemesterCourses(
+        window.localStorage.getItem("semester_1121"),
+      );
+      if (!migrated) return;
+      addCourse(Object.values(migrated).flat());
+      window.localStorage.setItem(LEGACY_SEMESTER_MIGRATED_KEY, "1");
     } catch {
-      return;
+      // Storage unavailable: leave the legacy list for a later visit.
     }
-    if (!raw || legacySemesterMigrationRef.current?.raw === raw) return;
-
-    const migrated = migrateLegacySemesterCourses(raw);
-    if (!migrated) return;
-    const courseIds = Object.values(migrated).flat();
-    legacySemesterMigrationRef.current = { raw, courseIds };
-    addCourse(courseIds);
-  }, [addCourse]);
-
-  useEffect(() => {
-    const migration = legacySemesterMigrationRef.current;
-    if (!migration || coursesSyncError || !coursesSyncReady) return;
-
-    const present = migration.courseIds.every((courseId) =>
-      (courses[getSemesterFromID(courseId)] ?? []).includes(courseId),
-    );
-    if (!present || typeof window === "undefined") return;
-
-    try {
-      window.localStorage.removeItem("semester_1121");
-      legacySemesterMigrationRef.current = undefined;
-    } catch {
-      // Keep the source key when storage cannot confirm its removal.
-    }
-  }, [courses, coursesSyncError, coursesSyncReady]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const deleteCourse = (courseID: string | string[]) => {
     const courseIDs = Array.isArray(courseID) ? courseID : [courseID];
@@ -630,13 +603,10 @@ const useUserTimetableProvider = (loadCourse = true) => {
   return {
     getSemesterCourses,
     getSemesterUnresolvedCourseIds,
-    timetableDataReady:
-      coursesSyncReady &&
-      colorMapSyncReady &&
-      !coursesSyncError &&
-      !colorMapSyncError,
-    timetableSyncError:
-      coursesSyncError || colorMapSyncError || customItemsSyncError,
+    timetableDataReady: coursesSyncReady && colorMapSyncReady,
+    // True while the last read of the account's course list failed, i.e. the
+    // local list may be missing courses that exist remotely.
+    timetableSyncError: Boolean(coursesSyncError),
     colorMap,
     semester,
     timetableTheme,
@@ -662,7 +632,7 @@ const useUserTimetableProvider = (loadCourse = true) => {
     semesterCustomItems,
     getSemesterCustomItems,
     setCustomItems,
-    customItemsDataReady: customItemsDataReady && !customItemsSyncError,
+    customItemsDataReady,
     hoverCourse,
     setHoverCourse,
     preferences,

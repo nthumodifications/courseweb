@@ -12,61 +12,6 @@ import { getContrastColor } from "./colors";
 import { hasTimes } from "./courses";
 import { normalizeCustomTimetableItem } from "@/hooks/syncedStorage";
 
-export type TimetableCourseStorage = Record<string, readonly string[]>;
-
-export const mergeImportedCourseStorage = (
-  current: TimetableCourseStorage,
-  imported: TimetableCourseStorage,
-): Record<string, string[]> => {
-  const merged: Record<string, string[]> = {};
-  const semesters = new Set([
-    ...Object.keys(current),
-    ...Object.keys(imported),
-  ]);
-
-  for (const semester of semesters) {
-    merged[semester] = [
-      ...new Set([...(current[semester] ?? []), ...(imported[semester] ?? [])]),
-    ];
-  }
-
-  return merged;
-};
-
-export const mergeImportedColorMap = (
-  current: Record<string, string>,
-  imported: Record<string, string>,
-) => ({
-  ...current,
-  ...imported,
-});
-
-export const mergeImportedCustomItems = <T extends { id: string }>(
-  current: Record<string, readonly T[]>,
-  imported: Record<string, readonly T[]>,
-): Record<string, T[]> => {
-  const merged: Record<string, T[]> = {};
-  const semesters = new Set([
-    ...Object.keys(current),
-    ...Object.keys(imported),
-  ]);
-
-  for (const semester of semesters) {
-    const existing = [...(current[semester] ?? [])];
-    const existingIds = new Set(existing.map((item) => item.id));
-    merged[semester] = [
-      ...existing,
-      ...(imported[semester] ?? []).filter((item) => {
-        if (existingIds.has(item.id)) return false;
-        existingIds.add(item.id);
-        return true;
-      }),
-    ];
-  }
-
-  return merged;
-};
-
 /** Decode semester_1121 without mutating or discarding the source value. */
 export const migrateLegacySemesterCourses = (
   raw: string | null,

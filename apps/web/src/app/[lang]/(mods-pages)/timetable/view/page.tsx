@@ -1,12 +1,6 @@
 import Timetable from "@/components/Timetable/Timetable";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import supabase from "@/config/supabase";
-import {
-  createTimetableFromCoursesAndCustomItems,
-  mergeImportedColorMap,
-  mergeImportedCourseStorage,
-  mergeImportedCustomItems,
-} from "@/helpers/timetable";
+import { createTimetableFromCoursesAndCustomItems } from "@/helpers/timetable";
 import { MinimalCourse } from "@/types/courses";
 import { CustomTimetableStorageInput } from "@/types/timetable";
 import { normalizeCustomTimetableStorage } from "@/hooks/syncedStorage";
@@ -16,15 +10,15 @@ import SemesterSwitcher from "@/components/Timetable/SemesterSwitcher";
 import { renderTimetableSlot } from "@/helpers/timetable_course";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import {
+  Button,
   Card,
   CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
+  Separator,
 } from "@courseweb/ui";
-import { Button } from "@courseweb/ui";
 import { useQuery } from "@tanstack/react-query";
-import { Separator } from "@courseweb/ui";
 import client from "@/config/api";
 import useDictionary from "@/dictionaries/useDictionary";
 
@@ -71,11 +65,7 @@ const ViewTimetablePage = () => {
     return null;
   }
 
-  const {
-    data: courses = [],
-    error,
-    isLoading,
-  } = useQuery({
+  const { data: courses = [] } = useQuery({
     queryKey: ["courses", courseCodes![semester]],
     queryFn: async () => {
       const res = await client.course.$get({
@@ -99,40 +89,29 @@ const ViewTimetablePage = () => {
   }, [courses]);
 
   const handleImportCourses = () => {
-    setCourses((currentCourses) =>
-      mergeImportedCourseStorage(currentCourses, courseCodes!),
-    );
-    setColorMap((currentColorMap) =>
-      mergeImportedColorMap(currentColorMap, colorMap),
-    );
-    setCustomItems((currentItems) =>
-      mergeImportedCustomItems(
-        currentItems,
-        normalizeCustomTimetableStorage(sharedCustomItems),
-      ),
-    );
+    setCourses(courseCodes!);
+    setColorMap(colorMap);
+    setCustomItems(normalizeCustomTimetableStorage(sharedCustomItems));
     navigate(`/${routeLang}/timetable`);
   };
 
   const handleImportThisSemester = () => {
-    setCourses((courses) =>
-      mergeImportedCourseStorage(courses, {
-        [semester]: courseCodes![semester] ?? [],
-      }),
-    );
-    setCustomItems((items) =>
-      mergeImportedCustomItems(
-        items,
+    setCourses((courses) => ({
+      ...courses,
+      [semester]: courseCodes![semester] ?? [],
+    }));
+    setCustomItems((items) => ({
+      ...items,
+      [semester]:
         normalizeCustomTimetableStorage({
           [semester]: sharedCustomItems[semester] ?? [],
-        }),
-      ),
-    );
+        })[semester] ?? [],
+    }));
     const partialColorMap: { [c: string]: string } = {};
     courseCodes![semester].forEach((code, index) => {
       partialColorMap[code] = currentColors[index];
     });
-    setColorMap((colorMap) => mergeImportedColorMap(colorMap, partialColorMap));
+    setColorMap((colorMap) => ({ ...colorMap, ...partialColorMap }));
     navigate(`/${routeLang}/timetable`);
   };
 
@@ -167,8 +146,11 @@ const ViewTimetablePage = () => {
           </Card>
 
           {courses &&
-            courses.map((course, index) => (
-              <div key={index} className="flex flex-row gap-4 items-center">
+            courses.map((course) => (
+              <div
+                key={course.raw_id}
+                className="flex flex-row gap-4 items-center"
+              >
                 <div
                   className="w-4 h-4 rounded-full"
                   style={{ backgroundColor: colorMap[course.raw_id] }}
