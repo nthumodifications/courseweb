@@ -6,11 +6,16 @@ import {
   useContext,
   useMemo,
   useLayoutEffect,
+  useRef,
 } from "react";
 import { CourseDefinition } from "@/config/supabase";
 import { RawCourseID } from "@/types/courses";
 import { lastSemester, timetableColors } from "@courseweb/shared";
 import { getSemesterFromID } from "@/helpers/courses";
+import {
+  getUnresolvedCourseIds,
+  migrateLegacySemesterCourses,
+} from "@/helpers/timetable";
 import { event } from "@/lib/gtag";
 
 import { useQuery } from "@tanstack/react-query";
@@ -138,7 +143,9 @@ const userTimetableContext = createContext<
   ReturnType<typeof useUserTimetableProvider>
 >({
   getSemesterCourses: () => [],
+  getSemesterUnresolvedCourseIds: () => [],
   timetableDataReady: false,
+  timetableSyncError: false,
   customItemsDataReady: false,
   semesterCourses: [],
   timetableTheme: Object.keys(timetableColors)[0],
@@ -166,6 +173,7 @@ const userTimetableContext = createContext<
   setCustomItemColor: () => {},
   isCourseSelected: () => false,
   isLoading: true,
+  isFetchingCourses: false,
   error: null,
   semester: lastSemester.id,
   isCoursesEmpty: true,
@@ -192,12 +200,13 @@ const userTimetableContext = createContext<
 });
 
 const useUserTimetableProvider = (loadCourse = true) => {
-  const [courses, setCourses, coursesSyncReady] =
+  const [courses, setCourses, coursesSyncReady, coursesSyncError] =
     useSyncedStorage<CourseLocalStorage>("courses", {}, mergeCourseStorage);
   const [hoverCourse, setHoverCourse] = useState<CourseDefinition | null>(null);
-  const [colorMap, setColorMap, colorMapSyncReady] = useSyncedStorage<{
-    [courseID: string]: string;
-  }>("course_color_map", {}); //map from courseID to color
+  const [colorMap, setColorMap, colorMapSyncReady, colorMapSyncError] =
+    useSyncedStorage<{
+      [courseID: string]: string;
+    }>("course_color_map", {}); //map from courseID to color
   const [timetableTheme, _setTimetableTheme] = useSyncedStorage<string>(
     "timetable_theme",
     "pastelColors",
@@ -242,12 +251,16 @@ const useUserTimetableProvider = (loadCourse = true) => {
     },
     [setStoredPreferences],
   );
-  const [storedCustomItems, setStoredCustomItems, customItemsDataReady] =
-    useSyncedStorage<CustomTimetableStorage>(
-      "timetable_custom_items",
-      {},
-      mergeCustomTimetableStorage,
-    );
+  const [
+    storedCustomItems,
+    setStoredCustomItems,
+    customItemsDataReady,
+    customItemsSyncError,
+  ] = useSyncedStorage<CustomTimetableStorage>(
+    "timetable_custom_items",
+    {},
+    mergeCustomTimetableStorage,
+  );
   const customItems = useMemo(
     () => normalizeCustomTimetableStorage(storedCustomItems),
     [storedCustomItems],
@@ -330,6 +343,7 @@ const useUserTimetableProvider = (loadCourse = true) => {
     data: user_courses_data = [],
     error,
     isLoading,
+    isFetching,
   } = useQuery({
     queryKey: [
       "courses",
@@ -377,26 +391,21 @@ const useUserTimetableProvider = (loadCourse = true) => {
     [courses, user_courses_data],
   );
 
-  //migration from old localStorage key "semester_1121"
-  useEffect(() => {
-    //check if the old localStorage key "semester_1121" exists
-    if (typeof window == "undefined") return;
-    const oldCourses = window.localStorage.getItem("semester_1121");
-    if (!oldCourses) return;
+  const getSemesterUnresolvedCourseIds = useCallback(
+    (semesterId: keyof CourseLocalStorage | undefined) => {
+      if (!semesterId) return [];
+      return getUnresolvedCourseIds(
+        courses[semesterId] ?? [],
+        getSemesterCourses(semesterId),
+      );
+    },
+    [courses, getSemesterCourses],
+  );
 
-    //migrate old data to new data format
-    const oldCoursesArray = JSON.parse(oldCourses) as RawCourseID[];
-    oldCoursesArray.forEach(addCourse);
-
-    setCourses((courses) => {
-      const newCourses = { ...courses };
-      delete newCourses["11210"];
-      return newCourses;
-    });
-
-    //remove old data
-    window.localStorage.removeItem("semester_1121");
-  }, []);
+  const legacySemesterMigrationRef = useRef<{
+    raw: string;
+    courseIds: string[];
+  }>();
 
   //handlers for courses
   const addCourse = (courseID: string | string[]) => {
@@ -432,6 +441,43 @@ const useUserTimetableProvider = (loadCourse = true) => {
       return oldCourses;
     });
   };
+
+  // Keep the old list until every migrated ID is present in the new map.
+  // Invalid JSON remains untouched so a later recovery can still inspect it.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    let raw: string | null;
+    try {
+      raw = window.localStorage.getItem("semester_1121");
+    } catch {
+      return;
+    }
+    if (!raw || legacySemesterMigrationRef.current?.raw === raw) return;
+
+    const migrated = migrateLegacySemesterCourses(raw);
+    if (!migrated) return;
+    const courseIds = Object.values(migrated).flat();
+    legacySemesterMigrationRef.current = { raw, courseIds };
+    addCourse(courseIds);
+  }, [addCourse]);
+
+  useEffect(() => {
+    const migration = legacySemesterMigrationRef.current;
+    if (!migration || coursesSyncError || !coursesSyncReady) return;
+
+    const present = migration.courseIds.every((courseId) =>
+      (courses[getSemesterFromID(courseId)] ?? []).includes(courseId),
+    );
+    if (!present || typeof window === "undefined") return;
+
+    try {
+      window.localStorage.removeItem("semester_1121");
+      legacySemesterMigrationRef.current = undefined;
+    } catch {
+      // Keep the source key when storage cannot confirm its removal.
+    }
+  }, [courses, coursesSyncError, coursesSyncReady]);
 
   const deleteCourse = (courseID: string | string[]) => {
     const courseIDs = Array.isArray(courseID) ? courseID : [courseID];
@@ -583,7 +629,14 @@ const useUserTimetableProvider = (loadCourse = true) => {
 
   return {
     getSemesterCourses,
-    timetableDataReady: coursesSyncReady && colorMapSyncReady,
+    getSemesterUnresolvedCourseIds,
+    timetableDataReady:
+      coursesSyncReady &&
+      colorMapSyncReady &&
+      !coursesSyncError &&
+      !colorMapSyncError,
+    timetableSyncError:
+      coursesSyncError || colorMapSyncError || customItemsSyncError,
     colorMap,
     semester,
     timetableTheme,
@@ -601,6 +654,7 @@ const useUserTimetableProvider = (loadCourse = true) => {
     setUserDefinedColors,
     setColor,
     isLoading,
+    isFetchingCourses: isFetching,
     isCoursesEmpty,
     error,
     courses,
@@ -608,7 +662,7 @@ const useUserTimetableProvider = (loadCourse = true) => {
     semesterCustomItems,
     getSemesterCustomItems,
     setCustomItems,
-    customItemsDataReady,
+    customItemsDataReady: customItemsDataReady && !customItemsSyncError,
     hoverCourse,
     setHoverCourse,
     preferences,

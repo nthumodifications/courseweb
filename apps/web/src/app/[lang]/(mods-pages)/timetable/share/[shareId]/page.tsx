@@ -6,7 +6,12 @@ import {
 } from "@/hooks/useTimetableShare";
 import { useAuth } from "react-oidc-context";
 import Timetable from "@/components/Timetable/Timetable";
-import { createTimetableFromCoursesAndCustomItems } from "@/helpers/timetable";
+import {
+  createTimetableFromCoursesAndCustomItems,
+  mergeImportedColorMap,
+  mergeImportedCourseStorage,
+  mergeImportedCustomItems,
+} from "@/helpers/timetable";
 import { MinimalCourse } from "@/types/courses";
 import { renderTimetableSlot } from "@/helpers/timetable_course";
 import client from "@/config/api";
@@ -47,7 +52,6 @@ const ShareViewPage = () => {
   const {
     setSemester,
     semester,
-    addCourse,
     setCourses,
     setColorMap,
     setCustomItems,
@@ -111,26 +115,19 @@ const ShareViewPage = () => {
     courseIds.forEach((id, i) => {
       partialColorMap[id] = currentColors[i % currentColors.length];
     });
-    addCourse(courseIds);
-    setColorMap((prev) => ({ ...prev, ...partialColorMap }));
+    setCourses((previous) =>
+      mergeImportedCourseStorage(previous, { [activeSem]: courseIds }),
+    );
+    setColorMap((prev) => mergeImportedColorMap(prev, partialColorMap));
     const importedCustomItems =
       normalizeCustomTimetableStorage({
         [activeSem]: share?.customItems?.[activeSem] ?? [],
       })[activeSem] ?? [];
-    if (importedCustomItems.length > 0) {
-      setCustomItems((prev) => ({
-        ...prev,
-        [activeSem]: [
-          ...(prev[activeSem] ?? []),
-          ...importedCustomItems.filter(
-            (item) =>
-              !(prev[activeSem] ?? []).some(
-                (current) => current.id === item.id,
-              ),
-          ),
-        ],
-      }));
-    }
+    setCustomItems((previous) =>
+      mergeImportedCustomItems(previous, {
+        [activeSem]: importedCustomItems,
+      }),
+    );
     setSemester(activeSem);
     navigate(-1);
     toast({

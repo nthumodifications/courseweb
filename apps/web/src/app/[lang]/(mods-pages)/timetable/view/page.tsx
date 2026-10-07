@@ -1,7 +1,12 @@
 import Timetable from "@/components/Timetable/Timetable";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import supabase from "@/config/supabase";
-import { createTimetableFromCoursesAndCustomItems } from "@/helpers/timetable";
+import {
+  createTimetableFromCoursesAndCustomItems,
+  mergeImportedColorMap,
+  mergeImportedCourseStorage,
+  mergeImportedCustomItems,
+} from "@/helpers/timetable";
 import { MinimalCourse } from "@/types/courses";
 import { CustomTimetableStorageInput } from "@/types/timetable";
 import { normalizeCustomTimetableStorage } from "@/hooks/syncedStorage";
@@ -94,29 +99,40 @@ const ViewTimetablePage = () => {
   }, [courses]);
 
   const handleImportCourses = () => {
-    setCourses(courseCodes!);
-    setColorMap(colorMap);
-    setCustomItems(normalizeCustomTimetableStorage(sharedCustomItems));
+    setCourses((currentCourses) =>
+      mergeImportedCourseStorage(currentCourses, courseCodes!),
+    );
+    setColorMap((currentColorMap) =>
+      mergeImportedColorMap(currentColorMap, colorMap),
+    );
+    setCustomItems((currentItems) =>
+      mergeImportedCustomItems(
+        currentItems,
+        normalizeCustomTimetableStorage(sharedCustomItems),
+      ),
+    );
     navigate(`/${routeLang}/timetable`);
   };
 
   const handleImportThisSemester = () => {
-    setCourses((courses) => ({
-      ...courses,
-      [semester]: courseCodes![semester] ?? [],
-    }));
-    setCustomItems((items) => ({
-      ...items,
-      [semester]:
+    setCourses((courses) =>
+      mergeImportedCourseStorage(courses, {
+        [semester]: courseCodes![semester] ?? [],
+      }),
+    );
+    setCustomItems((items) =>
+      mergeImportedCustomItems(
+        items,
         normalizeCustomTimetableStorage({
           [semester]: sharedCustomItems[semester] ?? [],
-        })[semester] ?? [],
-    }));
+        }),
+      ),
+    );
     const partialColorMap: { [c: string]: string } = {};
     courseCodes![semester].forEach((code, index) => {
       partialColorMap[code] = currentColors[index];
     });
-    setColorMap((colorMap) => ({ ...colorMap, ...partialColorMap }));
+    setColorMap((colorMap) => mergeImportedColorMap(colorMap, partialColorMap));
     navigate(`/${routeLang}/timetable`);
   };
 
