@@ -1,18 +1,11 @@
 import { useSettings } from "@/hooks/contexts/settings";
 import { Helmet } from "react-helmet-async";
-import { cn, Tabs, TabsList, TabsTrigger } from "@courseweb/ui";
-import { FC, SVGProps, useEffect, useMemo, useState } from "react";
+import { Tabs, TabsList, TabsTrigger } from "@courseweb/ui";
+import { useEffect, useMemo, useState } from "react";
 import useTime from "@/hooks/useTime";
 import { useQuery } from "@tanstack/react-query";
 import { getAllBusData } from "@/libs/bus";
-import {
-  addMinutes,
-  differenceInMinutes,
-  format,
-  isWeekend,
-  set,
-} from "date-fns";
-import { ChevronRight, Timer } from "lucide-react";
+import { addMinutes, differenceInMinutes, format, isWeekend } from "date-fns";
 import { RedLineIcon } from "@/components/BusIcons/RedLineIcon";
 import { GreenLineIcon } from "@/components/BusIcons/GreenLineIcon";
 import { Route1LineIcon } from "@/components/BusIcons/Route1LineIcon";
@@ -21,128 +14,75 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { getTimeOnDate } from "@/helpers/bus";
 import useDictionary from "@/dictionaries/useDictionary";
 import OpenCollectiveSponsorBanner from "@/components/Sponsorship/OpenCollectiveSponsorBanner";
-import { activateOnKey } from "@/lib/activate-on-key";
+import {
+  BusListingItem,
+  type BusListingItemProps,
+} from "@/features/bus/BusListingItem";
+import CityBusCatalogue, {
+  CityBusSelectedLines,
+} from "@/features/bus/CityBusCatalogue";
+import { useBusPins, type CampusBusPin } from "@/features/bus/busPins";
+import type { CompleteBusData } from "@/libs/bus";
 
-type BusListingItemProps = {
-  tab: string;
-  startTime: string;
-  refTime: Date;
-  Icon: FC<SVGProps<SVGSVGElement>>;
-  line: string;
-  direction: string;
-  title: string;
-  destination?: string;
-  notes?: string[];
-  arrival: string;
-};
-const BusListingItem = ({
-  tab,
-  startTime,
-  refTime,
-  Icon,
-  line,
-  title,
-  destination,
-  direction,
-  notes = [],
-  arrival,
-}: BusListingItemProps) => {
-  const { language } = useSettings();
-  const dict = useDictionary();
-
-  const displayTime = useMemo(() => {
-    // check if is time, else return as is
-    if (!/\d{2}:\d{2}/.exec(arrival)) return arrival;
-    const time_arr = set(new Date(), {
-      hours: Number.parseInt(arrival.split(":")[0]),
-      minutes: Number.parseInt(arrival.split(":")[1]),
-    });
-    // if now - time < 1 minutes, display "即將發車"
-    if (time_arr.getTime() < refTime.getTime()) {
-      return dict.bus.departed;
-    } else if (time_arr.getTime() - refTime.getTime() < 2 * 60 * 1000) {
-      return dict.bus.departing;
-    }
-    // within 5 minutes, display relative time
-    else if (time_arr.getTime() - refTime.getTime() < 5 * 60 * 1000) {
-      return `${differenceInMinutes(time_arr, refTime)} min`;
-    }
-    return arrival;
-  }, [arrival, refTime, dict]);
-
-  const navigate = useNavigate();
-  const route =
-    line == "nanda" || line == "route1" || line == "route2" ? "nanda" : "main";
-
-  const handleItemClick = () => {
-    navigate(
-      `/${language}/bus/${route}/${line == "nanda" || line == "route1" || line == "route2" ? `${line}_${direction}` : line}?return_url=/${language}/bus?tab=${tab}`,
-    );
+function selectedCampusBus(
+  pin: CampusBusPin,
+  busData: CompleteBusData,
+  time: Date,
+  weektype: "weekday" | "weekend",
+  dict: ReturnType<typeof useDictionary>,
+): Omit<BusListingItemProps, "refTime"> {
+  const mainDirection =
+    pin.direction === "up" ? "toward_TSMC_building" : "toward_main_gate";
+  const nandaDirection =
+    pin.direction === "up" ? "toward_south_campus" : "toward_main_campus";
+  const schedule =
+    pin.line === "red" || pin.line === "green"
+      ? busData.main[weektype][mainDirection].filter(
+          (bus) => bus.route === "校園公車" && bus.line === pin.line,
+        )
+      : busData.nanda[weektype][nandaDirection].filter(
+          (bus) => bus.type === pin.line,
+        );
+  const next = schedule
+    .filter((bus) => getTimeOnDate(time, bus.time).getTime() >= time.getTime())
+    .sort(
+      (a, b) =>
+        getTimeOnDate(time, a.time).getTime() -
+        getTimeOnDate(time, b.time).getTime(),
+    )[0];
+  const lineTitle =
+    pin.line === "red"
+      ? dict.bus.red_line
+      : pin.line === "green"
+        ? dict.bus.green_line
+        : pin.line === "route1"
+          ? dict.bus.route1_line
+          : dict.bus.route2_line;
+  const isNanda = pin.line === "route1" || pin.line === "route2";
+  return {
+    tab: isNanda ? "nanda" : pin.direction === "up" ? "north_gate" : "tsmc",
+    startTime: next?.time ?? "0:00",
+    Icon:
+      pin.line === "red"
+        ? RedLineIcon
+        : pin.line === "green"
+          ? GreenLineIcon
+          : pin.line === "route1"
+            ? Route1LineIcon
+            : Route2LineIcon,
+    line: pin.line,
+    direction: pin.direction,
+    title: lineTitle,
+    destination: isNanda
+      ? `${dict.bus.to}${
+          pin.direction === "up" ? dict.bus.nanda : dict.bus.main_campus
+        }`
+      : undefined,
+    notes: next?.description ? [next.description] : [],
+    arrival: next?.time ?? dict.bus.service_over,
+    pin,
   };
-
-  return (
-    <div
-      className={cn(
-        "flex flex-col gap-4 py-4",
-        arrival == dict.bus.service_over ? "opacity-30" : "",
-      )}
-    >
-      <div
-        className={cn("flex flex-row items-center gap-4 cursor-pointer")}
-        onClick={handleItemClick}
-        onKeyDown={activateOnKey(() => handleItemClick())}
-        role="button"
-        tabIndex={0}
-      >
-        <Icon className="h-7 w-7" />
-        <div className="flex flex-row flex-wrap gap-2">
-          <h3 className="text-foreground font-bold">
-            <span>{title}</span>
-            {destination && <span>-{destination}</span>}
-          </h3>
-        </div>
-        <div
-          className={cn(
-            "flex-1 text-right text-foreground font-bold whitespace-nowrap",
-            displayTime == dict.bus.departing ? "text-nthu-500" : "",
-          )}
-        >
-          {displayTime}
-        </div>
-        <div className="grid place-items-center">
-          <ChevronRight className="w-4 h-4" />
-        </div>
-      </div>
-      <div className="flex flex-row gap-2">
-        <div
-          className="justify-center items-center gap-2 inline-flex cursor-pointer"
-          onClick={() => navigate(`/${language}/bus/${route}`)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault();
-              navigate(`/${language}/bus/${route}`);
-            }
-          }}
-          role="button"
-          tabIndex={0}
-        >
-          <Timer className="w-4 h-4" />
-          <div className="text-center text-sm font-medium">
-            {dict.bus.schedule}
-          </div>
-        </div>
-        {notes.map((note) => (
-          <div
-            className="justify-center items-center gap-2 inline-flex"
-            key={note}
-          >
-            <div className="text-center text-sm font-medium">・{note}</div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
+}
 
 const BusPage = () => {
   const { language } = useSettings();
@@ -151,7 +91,7 @@ const BusPage = () => {
   const [searchParams] = useSearchParams();
   const [tab, setTab] = useState("north_gate");
   const navigate = useNavigate();
-
+  const { pins, toggle: togglePin } = useBusPins();
   useEffect(() => {
     if (searchParams.has("tab")) {
       setTab(searchParams.get("tab") as string);
@@ -168,14 +108,30 @@ const BusPage = () => {
     queryKey: ["all_bus_data"],
     queryFn: getAllBusData,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled: tab !== "city",
   });
+
+  const isCampusLoading = tab !== "city" && isLoading;
+  const campusError = tab !== "city" && error;
+
+  const selectedCampusBuses = useMemo(
+    () =>
+      busData
+        ? pins
+            .filter((pin): pin is CampusBusPin => pin.kind === "campus")
+            .map((pin) => ({
+              ...selectedCampusBus(pin, busData, time, weektype, dict),
+              isPinned: true,
+              onTogglePin: togglePin,
+            }))
+        : [],
+    [busData, dict, language, pins, time, togglePin, weektype],
+  );
 
   const displayBuses = useMemo(() => {
     if (!busData) return [];
 
-    const returnData: (Omit<BusListingItemProps, "refTime"> & {
-      line: "red" | "green" | "nanda" | "route1" | "route2" | "tld";
-    })[] = [];
+    const returnData: Omit<BusListingItemProps, "refTime">[] = [];
 
     const currentDayData =
       weektype === "weekend" ? busData.main.weekend : busData.main.weekday;
@@ -473,7 +429,7 @@ const BusPage = () => {
     </Helmet>
   );
 
-  if (isLoading) {
+  if (isCampusLoading) {
     return (
       <>
         {seoHelmet}
@@ -484,7 +440,7 @@ const BusPage = () => {
     );
   }
 
-  if (error) {
+  if (campusError) {
     return (
       <>
         {seoHelmet}
@@ -498,6 +454,21 @@ const BusPage = () => {
   return (
     <div className="flex flex-col px-4">
       {seoHelmet}
+      {pins.length > 0 && (
+        <section className="mb-4 flex flex-col">
+          <h2 className="px-2 font-bold">{dict.bus.my_buses}</h2>
+          <div className="flex flex-col px-2 divide-y divide-border">
+            {selectedCampusBuses.map((bus, index) => (
+              <BusListingItem
+                key={`${bus.line}:${bus.direction}:${index}`}
+                {...bus}
+                refTime={time}
+              />
+            ))}
+            <CityBusSelectedLines refTime={time} />
+          </div>
+        </section>
+      )}
       <Tabs
         defaultValue="north_gate"
         value={tab}
@@ -513,12 +484,19 @@ const BusPage = () => {
           <TabsTrigger className="flex-1" value="nanda">
             {dict.bus.nanda}
           </TabsTrigger>
+          <TabsTrigger className="flex-1" value="city">
+            {dict.bus.add_line}
+          </TabsTrigger>
         </TabsList>
-        <div className="flex flex-col px-2 divide-y divide-border">
-          {displayBuses.map((bus, index) => (
-            <BusListingItem key={index} {...bus} refTime={time} />
-          ))}
-        </div>
+        {tab === "city" ? (
+          <CityBusCatalogue />
+        ) : (
+          <div className="flex flex-col px-2 divide-y divide-border">
+            {displayBuses.map((bus, index) => (
+              <BusListingItem key={index} {...bus} refTime={time} />
+            ))}
+          </div>
+        )}
       </Tabs>
       <div className="h-6"></div>
       <OpenCollectiveSponsorBanner />

@@ -48,6 +48,12 @@ import useDictionary from "@/dictionaries/useDictionary";
 import { useQuery } from "@tanstack/react-query";
 import CourseDetailsSkeleton from "./CourseDetailsSkeleton";
 import { useCourseLink } from "@/components/Courses/CourseDialog";
+import { ModuleTermAvailability } from "@/components/Courses/ModuleTermAvailability";
+import {
+  createModuleKey,
+  getModuleHistory,
+  getModuleHistoryVariant,
+} from "@/lib/modules";
 
 const PDFViewerDynamic = lazy(
   () => import("@/components/CourseDetails/PDFViewer"),
@@ -86,6 +92,7 @@ const TOCNavItem = ({
 };
 
 const CrossDisciplineTagList = ({ course }: { course: CourseDefinition }) => {
+  if (!course.cross_discipline?.length) return null;
   return (
     <div className="flex flex-row gap-2 flex-wrap">
       {course.cross_discipline?.map((m, index) => (
@@ -207,6 +214,23 @@ const CourseDetailContainer = ({
     },
     enabled: !!course, // Only fetch if course data is available
   });
+
+  // Which terms this course runs in, across every semester on record. Kept out
+  // of the modal, and never blocks or breaks the page.
+  const moduleKey = course
+    ? createModuleKey(course.department, course.course)
+    : "";
+  const { data: moduleHistory } = useQuery({
+    queryKey: ["module-history", moduleKey],
+    queryFn: () => getModuleHistory(moduleKey),
+    enabled: !!course && !modal,
+    staleTime: 7 * 24 * 60 * 60 * 1000,
+    retry: false,
+  });
+  const moduleVariant =
+    course && moduleHistory
+      ? getModuleHistoryVariant(moduleHistory, course.name_zh)
+      : undefined;
 
   // Dynamic SEO metadata for course detail pages (full-page view only)
   const courseJsonLd =
@@ -395,7 +419,7 @@ const CourseDetailContainer = ({
       <div className={cn("relative flex min-w-0 flex-col pb-6")}>
         <div className={cn("flex min-w-0 flex-col gap-4 pb-20 md:pb-0")}>
           <div className="flex flex-col md:flex-row md:items-end gap-4">
-            <div className="min-w-0 flex-1 w-full">
+            <div className="flex min-w-0 w-full flex-1 flex-col gap-2">
               <div className="flex flex-col gap-2">
                 <div className="font-medium text-base">
                   {toPrettySemester(course.semester)}{" "}
@@ -415,19 +439,21 @@ const CourseDetailContainer = ({
                   <span>{course?.teacher_en?.join(",") ?? ""}</span>
                 </h2>
               </div>
-              <div className="mt-2">
-                <CourseTagList course={course} />
+              <CourseTagList course={course} />
+              <div>
+                {course.venues ? (
+                  course.venues.map((vn, i) => (
+                    <p key={vn} className="text-muted-foreground text-sm">
+                      {vn}{" "}
+                      <span className="text-foreground">
+                        {course.times![i]}
+                      </span>
+                    </p>
+                  ))
+                ) : (
+                  <p>{dict.course.details.no_venues}</p>
+                )}
               </div>
-              {course.venues ? (
-                course.venues.map((vn, i) => (
-                  <p key={vn} className="text-muted-foreground text-sm">
-                    {vn}{" "}
-                    <span className="text-foreground">{course.times![i]}</span>
-                  </p>
-                ))
-              ) : (
-                <p>{dict.course.details.no_venues}</p>
-              )}
               <CrossDisciplineTagList course={course} />
             </div>
             <div className="hidden md:flex flex-col gap-2 absolute top-0 right-0 mt-4 mr-4">
@@ -748,6 +774,23 @@ const CourseDetailContainer = ({
                 />
               ) : (
                 <>
+                  {moduleVariant && (
+                    <div className="flex flex-col gap-1">
+                      <h3 className="font-bold text-base">
+                        {dict.course.module.offering_history}
+                      </h3>
+                      <ModuleTermAvailability
+                        semesters={moduleVariant.semesters}
+                        size="sm"
+                      />
+                      <Link
+                        to={`/${lang}/courses/module/${encodeURIComponent(moduleKey)}?title=${encodeURIComponent(course.name_zh)}`}
+                        className="w-fit text-sm text-muted-foreground underline-offset-4 hover:underline"
+                      >
+                        {dict.course.module.view_all_semesters}
+                      </Link>
+                    </div>
+                  )}
                   {(course.note ?? "").trim().length > 0 && (
                     <div className="flex flex-col gap-1">
                       <h3 className="font-bold text-base">

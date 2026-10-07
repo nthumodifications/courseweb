@@ -1,0 +1,22 @@
+[
+  {
+    "RouteUID": "HSZ0008",
+    "SubRouteUID": "HSZ000801",
+    "StopUID": "HSZ303610",
+    "EstimateTime": 45,
+    "UpdateTime": "2026-10-06T14:38:40+08:00"
+  },
+  {
+    "RouteUID": "HSZ0008",
+    "SubRouteUID": "HSZ000802",
+    "StopUID": "HSZ303610",
+    "EstimateTime": 420,
+    "UpdateTime": "2026-10-06T14:38:40+08:00"
+  },
+  {
+    "RouteUID": "HSZ0008",
+    "SubRouteUID": "HSZ000801",
+    "StopUID": "HSZ303610",
+    "EstimateTime": null
+  }
+]
