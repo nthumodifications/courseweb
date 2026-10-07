@@ -1,5 +1,6 @@
 import {
   LocalSearchEngine,
+  MissingLocalSearchChunkError,
   semesterFromRequest,
   type LocalSearchEngineOptions,
   type LocalSearchRequest,
@@ -57,20 +58,32 @@ export const createLocalSearchClient = (
     async trySearch(requests) {
       const semester = uniqueSemester(requests, defaultSemester);
       if (!semester) return { handled: false };
-      const results = await Promise.all(
-        requests.map((request) => engine.search(semester, request)),
-      );
-      return { handled: true, result: { results } };
+      try {
+        const results = await Promise.all(
+          requests.map((request) => engine.search(semester, request)),
+        );
+        return { handled: true, result: { results } };
+      } catch (error) {
+        if (error instanceof MissingLocalSearchChunkError)
+          return { handled: false };
+        throw error;
+      }
     },
     async trySearchForFacetValues(requests) {
       const semester = uniqueSemester(requests, defaultSemester);
       if (!semester) return { handled: false };
-      const results = await Promise.all(
-        requests.map((request) =>
-          engine.searchForFacetValues(semester, request),
-        ),
-      );
-      return { handled: true, result: results };
+      try {
+        const results = await Promise.all(
+          requests.map((request) =>
+            engine.searchForFacetValues(semester, request),
+          ),
+        );
+        return { handled: true, result: results };
+      } catch (error) {
+        if (error instanceof MissingLocalSearchChunkError)
+          return { handled: false };
+        throw error;
+      }
     },
     getStatus: engine.getStatus,
     getText: engine.getText,

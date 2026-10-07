@@ -22,7 +22,8 @@ export type SearchTextRecord = {
 
 export type SearchChunkCache = {
   get: (key: string) => Promise<CachedSearchChunk | undefined>;
-  set: (key: string, value: CachedSearchChunk) => Promise<void>;
+  getLatest: (semester: string) => Promise<CachedSearchChunk | undefined>;
+  set: (key: string, value: CachedSearchChunk) => Promise<boolean>;
   delete: (key: string) => Promise<void>;
   deleteSemester: (semester: string, exceptKey?: string) => Promise<void>;
   getText: (key: string) => Promise<CachedSearchTextChunk | undefined>;
@@ -30,7 +31,7 @@ export type SearchChunkCache = {
     semester: string,
     formatVersion: string,
   ) => Promise<CachedSearchTextChunk | undefined>;
-  setText: (key: string, value: CachedSearchTextChunk) => Promise<void>;
+  setText: (key: string, value: CachedSearchTextChunk) => Promise<boolean>;
   deleteTextSemester: (semester: string, exceptKey?: string) => Promise<void>;
 };
 
@@ -59,11 +60,30 @@ export const createIndexedDbSearchChunkCache = (): SearchChunkCache => ({
       return undefined;
     }
   },
+  async getLatest(semester) {
+    try {
+      const prefix = `${CACHE_PREFIX}${encodeURIComponent(semester)}:`;
+      const cacheKeys = await keys();
+      const matchingKeys = cacheKeys.filter(
+        (key): key is string =>
+          typeof key === "string" && key.startsWith(prefix),
+      );
+      const values = await Promise.all(
+        matchingKeys.map((key) => get<CachedSearchChunk>(key)),
+      );
+      return values.find(Boolean);
+    } catch {
+      return undefined;
+    }
+  },
   async set(key, value) {
     try {
       await set(key, value);
+      return true;
     } catch {
-      // A private browsing quota/permission error must not disable local search.
+      // A private browsing quota/permission error must not disable local search,
+      // but callers must keep the previous value when this write did not stick.
+      return false;
     }
   },
   async delete(key) {
@@ -117,8 +137,11 @@ export const createIndexedDbSearchChunkCache = (): SearchChunkCache => ({
   async setText(key, value) {
     try {
       await set(key, value);
+      return true;
     } catch {
-      // A private browsing quota/permission error must not disable local search.
+      // A private browsing quota/permission error must not disable local search,
+      // but callers must keep the previous value when this write did not stick.
+      return false;
     }
   },
   async deleteTextSemester(semester, exceptKey) {
@@ -150,8 +173,16 @@ export class MemorySearchChunkCache implements SearchChunkCache {
     return this.values.get(key);
   }
 
+  async getLatest(semester: string) {
+    const prefix = `${CACHE_PREFIX}${encodeURIComponent(semester)}:`;
+    return [...this.values.entries()].find(([key]) =>
+      key.startsWith(prefix),
+    )?.[1];
+  }
+
   async set(key: string, value: CachedSearchChunk) {
     this.values.set(key, value);
+    return true;
   }
 
   async delete(key: string) {
@@ -178,6 +209,7 @@ export class MemorySearchChunkCache implements SearchChunkCache {
 
   async setText(key: string, value: CachedSearchTextChunk) {
     this.textValues.set(key, value);
+    return true;
   }
 
   async deleteTextSemester(semester: string, exceptKey?: string) {
