@@ -49,7 +49,9 @@ export const getTermAvailability = (
   latestKnownSemester = lastSemester.id,
 ): TermAvailability[] => {
   const offered = [...new Set(semesters)].filter(getSemesterTerm);
-  const newest = [...offered, latestKnownSemester].sort().at(-1)!;
+  const newest = [...offered, latestKnownSemester]
+    .sort((left, right) => left.localeCompare(right))
+    .at(-1)!;
   const firstYear = Math.min(
     ...offered.map((semester) => Number(semester.slice(0, 3))),
   );
@@ -62,7 +64,7 @@ export const getTermAvailability = (
   return terms.map((term) => {
     const mine = offered
       .filter((semester) => getSemesterTerm(semester) === term)
-      .sort();
+      .sort((left, right) => left.localeCompare(right));
     if (offered.length === 0 || mine.length === 0) {
       return { term, status: "never", offeredYears: 0, possibleYears: 0 };
     }

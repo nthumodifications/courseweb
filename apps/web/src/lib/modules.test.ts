@@ -4,22 +4,16 @@ import {
   aggregateModuleHistoryRows,
   aggregateModuleSearchRows,
   createModuleKey,
-  getAvailableTerms,
-  getModuleAcademicYearGroups,
-  getModuleAcademicYears,
   getModuleHistoryVariant,
   getModuleInstructorSummaries,
   getModuleVariant,
-  getRecentModuleAcademicYearGroups,
-  getRecentSemesterSlots,
-  getOfferingPattern,
-  inferNextOffering,
   normalizeCourseTitle,
   parseModuleKey,
   rankModuleSearchResults,
-  type ModuleOfferingRow,
-  type ModuleSearchRow,
 } from "./modules";
+
+type ModuleOfferingRow = Parameters<typeof aggregateModuleOfferings>[0][number];
+type ModuleSearchRow = Parameters<typeof aggregateModuleSearchRows>[0][number];
 
 const courseRow = (
   rawId: string,
@@ -146,16 +140,7 @@ describe("module variants and aggregation", () => {
     expect(module?.variants).toHaveLength(2);
   });
 
-  test("only exposes terms that occur in the selected variant", () => {
-    const module = aggregateModuleOfferings([
-      courseRow("11410CS135501", "11410", "1"),
-      courseRow("11510CS135501", "11510", "1"),
-    ]);
-
-    expect(getAvailableTerms(module!.variants[0])).toEqual(["fall"]);
-  });
-
-  test("builds a continuous year range and instructor summaries", () => {
+  test("builds instructor summaries", () => {
     const module = aggregateModuleOfferings([
       courseRow("11010CS135501", "11010", "1"),
       courseRow("11210CS135501", "11210", "1"),
@@ -167,15 +152,6 @@ describe("module variants and aggregation", () => {
     ]);
     const variant = module!.variants[0];
 
-    expect(getModuleAcademicYears(variant, "11610")).toEqual([
-      "110",
-      "111",
-      "112",
-      "113",
-      "114",
-      "115",
-      "116",
-    ]);
     expect(getModuleInstructorSummaries(variant)).toEqual([
       {
         key: "教師",
@@ -191,106 +167,6 @@ describe("module variants and aggregation", () => {
         semesterCount: 1,
         latestSemester: "11510",
       },
-    ]);
-  });
-
-  test("groups terms inside each academic year in semester order", () => {
-    expect(
-      getModuleAcademicYearGroups(["10810", "10920", "11030"], "11110"),
-    ).toEqual([
-      {
-        year: "108",
-        slots: [
-          { semester: "10810", term: "fall", offered: true, predicted: false },
-          {
-            semester: "10820",
-            term: "spring",
-            offered: false,
-            predicted: false,
-          },
-          {
-            semester: "10830",
-            term: "summer",
-            offered: false,
-            predicted: false,
-          },
-        ],
-      },
-      {
-        year: "109",
-        slots: [
-          { semester: "10910", term: "fall", offered: false, predicted: false },
-          {
-            semester: "10920",
-            term: "spring",
-            offered: true,
-            predicted: false,
-          },
-          {
-            semester: "10930",
-            term: "summer",
-            offered: false,
-            predicted: false,
-          },
-        ],
-      },
-      {
-        year: "110",
-        slots: [
-          { semester: "11010", term: "fall", offered: false, predicted: false },
-          {
-            semester: "11020",
-            term: "spring",
-            offered: false,
-            predicted: false,
-          },
-          {
-            semester: "11030",
-            term: "summer",
-            offered: true,
-            predicted: false,
-          },
-        ],
-      },
-      {
-        year: "111",
-        slots: [
-          { semester: "11110", term: "fall", offered: false, predicted: true },
-          {
-            semester: "11120",
-            term: "spring",
-            offered: false,
-            predicted: false,
-          },
-          {
-            semester: "11130",
-            term: "summer",
-            offered: false,
-            predicted: false,
-          },
-        ],
-      },
-    ]);
-  });
-
-  test("keeps only the newest academic-year groups for compact strips", () => {
-    const groups = getModuleAcademicYearGroups(
-      ["10810", "10920", "11010", "11120", "11210"],
-      "11310",
-    );
-
-    expect(
-      getRecentModuleAcademicYearGroups(groups, 4).map((group) => group.year),
-    ).toEqual(["110", "111", "112", "113"]);
-    expect(getRecentModuleAcademicYearGroups(groups, 10)).toHaveLength(6);
-  });
-
-  test("fills recent detail dots with hollow gaps", () => {
-    expect(getRecentSemesterSlots(["11410", "11510"], 4)).toEqual([
-      { semester: "11320", offered: false },
-      { semester: "11410", offered: true },
-      { semester: "11420", offered: false },
-      { semester: "11510", offered: true },
     ]);
   });
 
@@ -333,60 +209,5 @@ describe("module variants and aggregation", () => {
     expect(
       ranked[0].instructors.map((instructor) => instructor.nameZh),
     ).toEqual(["丙老師"]);
-  });
-});
-
-describe("module offering prediction", () => {
-  test("predicts a fall-only course still running after the newest known term", () => {
-    expect(inferNextOffering(["11310", "11410", "11510"])).toEqual({
-      kind: "next",
-      semester: "11610",
-      term: "fall",
-    });
-  });
-
-  test("reports a fall-only course stopped after two missed slots", () => {
-    expect(inferNextOffering(["11110", "11210"], "11510")).toEqual({
-      kind: "stopped",
-      semester: "11310",
-      term: "fall",
-    });
-  });
-
-  test("predicts the next spring for an every-semester course", () => {
-    expect(
-      inferNextOffering(["11310", "11320", "11410", "11420", "11510"]),
-    ).toEqual({
-      kind: "next",
-      semester: "11520",
-      term: "spring",
-    });
-  });
-
-  test("detects an alternating-year course", () => {
-    expect(inferNextOffering(["11110", "11310", "11510"])).toEqual({
-      kind: "next",
-      semester: "11710",
-      term: "fall",
-    });
-  });
-
-  test("supports summer-only histories even though live data has no summer rows", () => {
-    expect(inferNextOffering(["11330", "11430", "11530"], "11530")).toEqual({
-      kind: "next",
-      semester: "11630",
-      term: "summer",
-    });
-  });
-
-  test("does not guess for a brand-new or irregular course", () => {
-    expect(inferNextOffering(["11510"])).toBeNull();
-    expect(inferNextOffering(["11310", "11420", "11510"])).toBeNull();
-  });
-
-  test("recognizes the fall/spring pattern in real semester IDs", () => {
-    expect(getOfferingPattern(["10810", "10820", "10910", "10920"])).toBe(
-      "fall_spring",
-    );
   });
 });

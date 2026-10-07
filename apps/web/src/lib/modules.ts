@@ -1,11 +1,11 @@
-import { lastSemester, semesterInfo } from "@courseweb/shared";
+import { semesterInfo } from "@courseweb/shared";
 import type { CourseDefinition } from "@/config/supabase";
 
 // Loaded on demand so the pure helpers in this file can be imported (and
 // tested) without a configured Supabase client.
 const loadSupabase = async () => (await import("@/config/supabase")).default;
 
-export type ModuleOfferingRow = Pick<
+type ModuleOfferingRow = Pick<
   CourseDefinition,
   | "raw_id"
   | "semester"
@@ -24,25 +24,15 @@ export type ModuleOfferingRow = Pick<
   | "enrolled"
 >;
 
-export const MODULE_OFFERING_SELECT =
+const MODULE_OFFERING_SELECT =
   "raw_id, semester, department, course, class, name_zh, name_en, credits, language, teacher_zh, teacher_en, times, venues, capacity, enrolled";
 
-export type SemesterTerm = "fall" | "spring" | "summer";
+type SemesterTerm = "fall" | "spring" | "summer";
 
-export type OfferingPattern =
-  | "none"
-  | "fall_only"
-  | "spring_only"
-  | "summer_only"
-  | "fall_spring"
-  | "fall_summer"
-  | "spring_summer"
-  | "every_semester";
-
-export interface ParsedModuleKey {
+type ParsedModuleKey = {
   department: string;
   course: string;
-}
+};
 
 export interface ModuleOffering extends ModuleOfferingRow {
   semester: string;
@@ -57,7 +47,7 @@ export interface ModuleHistory {
   offerings: ModuleOffering[];
 }
 
-export interface ModuleTitle {
+interface ModuleTitle {
   nameZh: string;
   nameEn: string;
 }
@@ -75,29 +65,12 @@ export interface ModuleVariant {
   mergedRename: boolean;
 }
 
-export interface ModuleInstructorSummary {
+interface ModuleInstructorSummary {
   key: string;
   nameZh: string;
   nameEn: string;
   semesterCount: number;
   latestSemester: string;
-}
-
-export interface ModuleSemesterSlot {
-  semester: string;
-  offered: boolean;
-}
-
-export interface ModuleAcademicYearSlot {
-  semester: string;
-  term: SemesterTerm;
-  offered: boolean;
-  predicted: boolean;
-}
-
-export interface ModuleAcademicYearGroup {
-  year: string;
-  slots: ModuleAcademicYearSlot[];
 }
 
 export interface ModuleAggregate {
@@ -108,12 +81,12 @@ export interface ModuleAggregate {
   variants: ModuleVariant[];
 }
 
-export type ModuleHistoryRow = Pick<
+type ModuleHistoryRow = Pick<
   CourseDefinition,
   "semester" | "department" | "course" | "name_zh" | "name_en" | "credits"
 >;
 
-export type ModuleSearchRow = Pick<
+type ModuleSearchRow = Pick<
   CourseDefinition,
   | "raw_id"
   | "semester"
@@ -126,7 +99,7 @@ export type ModuleSearchRow = Pick<
   | "teacher_en"
 >;
 
-export interface ModuleHistoryVariant {
+interface ModuleHistoryVariant {
   titleKey: string;
   titleKeys: string[];
   nameZh: string;
@@ -137,14 +110,14 @@ export interface ModuleHistoryVariant {
   mergedRename: boolean;
 }
 
-export interface ModuleHistoryAggregate {
+interface ModuleHistoryAggregate {
   key: string;
   department: string;
   course: string;
   variants: ModuleHistoryVariant[];
 }
 
-export interface ModuleSearchInstructor {
+interface ModuleSearchInstructor {
   nameZh: string;
   nameEn: string;
 }
@@ -161,10 +134,6 @@ export interface ModuleSearchResult {
   latestSemester: string;
   instructors: ModuleSearchInstructor[];
 }
-
-export type OfferingPrediction =
-  | { kind: "next"; semester: string; term: SemesterTerm }
-  | { kind: "stopped"; semester: string; term: SemesterTerm };
 
 const normalizePart = (value: string) =>
   value.normalize("NFKC").trim().replace(/\s+/g, " ");
@@ -183,7 +152,9 @@ export const normalizeCourseTitle = (value: string) => {
     .replace(/[！!]/g, "!")
     .replace(/[？?]/g, "?");
 
-  return normalized.replace(/[.,;:!?]+$/g, "").trim();
+  let end = normalized.length;
+  while (end > 0 && ".,;:!?".includes(normalized[end - 1])) end -= 1;
+  return normalized.slice(0, end).trim();
 };
 
 export const createModuleKey = (department: string, course: string) => {
@@ -241,12 +212,19 @@ const compareOfferings = (left: ModuleOffering, right: ModuleOffering) => {
     : classDifference || left.raw_id.localeCompare(right.raw_id);
 };
 
-const normalizeOffering = (row: ModuleOfferingRow): ModuleOffering => ({
+const normalizeModuleRow = <
+  T extends { semester: unknown; department: string; course: string },
+>(
+  row: T,
+) => ({
   ...row,
   semester: String(row.semester),
   department: normalizePart(row.department),
   course: normalizePart(row.course),
 });
+
+const normalizeOffering = (row: ModuleOfferingRow): ModuleOffering =>
+  normalizeModuleRow(row);
 
 const buildHistory = (offerings: ModuleOffering[]) => {
   const history = new Map<string, ModuleHistory>();
@@ -292,7 +270,7 @@ const makeVariant = (
   const history = buildHistory(sortedOfferings);
 
   return {
-    titleKey: titleKeys[titleKeys.length - 1],
+    titleKey: titleKeys.at(-1)!,
     titleKeys,
     nameZh: latestOffering.name_zh,
     nameEn: latestOffering.name_en,
@@ -318,12 +296,8 @@ const distinctHistoryTitles = (rows: ModuleHistoryRow[]) => {
   return [...titles.values()];
 };
 
-const normalizeHistoryRow = (row: ModuleHistoryRow): ModuleHistoryRow => ({
-  ...row,
-  semester: String(row.semester),
-  department: normalizePart(row.department),
-  course: normalizePart(row.course),
-});
+const normalizeHistoryRow = (row: ModuleHistoryRow): ModuleHistoryRow =>
+  normalizeModuleRow(row);
 
 const makeHistoryVariant = (
   titleKeys: string[],
@@ -341,7 +315,7 @@ const makeHistoryVariant = (
   ].sort((left, right) => semesterSortValue(left) - semesterSortValue(right));
 
   return {
-    titleKey: titleKeys[titleKeys.length - 1],
+    titleKey: titleKeys.at(-1)!,
     titleKeys,
     nameZh: latestRow.name_zh,
     nameEn: latestRow.name_en,
@@ -369,7 +343,7 @@ const hasSharedTitleStem = (left: string, right: string) => {
 };
 
 const sequenceSuffix = (title: string) =>
-  titleWithoutPunctuation(title).match(/[一二三四五六七八九十ⅠⅡⅢⅣⅤAB]$/u)?.[0];
+  /[一二三四五六七八九十ⅠⅡⅢⅣⅤAB]$/u.exec(titleWithoutPunctuation(title))?.[0];
 
 const haveConflictingSequenceSuffixes = (left: string, right: string) => {
   const leftSuffix = sequenceSuffix(left);
@@ -423,7 +397,7 @@ const canMergeRename = (left: RenameComparable, right: RenameComparable) => {
   );
 };
 
-export const mergeRenameVariants = (variants: ModuleVariant[]) => {
+const mergeRenameVariants = (variants: ModuleVariant[]) => {
   if (variants.length !== 2 || !canMergeRename(variants[0], variants[1])) {
     return variants;
   }
@@ -470,7 +444,7 @@ export const aggregateModuleHistoryRows = (
     key: createModuleKey(first.department, first.course),
     department: first.department,
     course: first.course,
-    variants: mergedVariants.sort(variantSort),
+    variants: [...mergedVariants].sort(variantSort),
   };
 };
 
@@ -513,111 +487,31 @@ export const aggregateModuleOfferings = (
   };
 };
 
-export const getModuleVariant = (
-  module: ModuleAggregate,
+const selectModuleVariant = <
+  T extends { titleKeys: string[]; semesters: string[] },
+>(
+  variants: readonly T[],
   title?: string | null,
 ) => {
-  const variants = [...module.variants].sort(variantSort);
-  if (!title) return variants[0];
+  const sortedVariants = [...variants].sort(variantSort);
+  if (!title) return sortedVariants[0];
 
   const titleKey = normalizeCourseTitle(title);
   return (
-    variants.find((variant) => variant.titleKeys.includes(titleKey)) ??
-    variants[0]
+    sortedVariants.find((variant) => variant.titleKeys.includes(titleKey)) ??
+    sortedVariants[0]
   );
 };
+
+export const getModuleVariant = (
+  module: ModuleAggregate,
+  title?: string | null,
+) => selectModuleVariant(module.variants, title);
 
 export const getModuleHistoryVariant = (
   module: ModuleHistoryAggregate,
   title?: string | null,
-) => {
-  const variants = [...module.variants].sort(variantSort);
-  if (!title) return variants[0];
-
-  const titleKey = normalizeCourseTitle(title);
-  return (
-    variants.find((variant) => variant.titleKeys.includes(titleKey)) ??
-    variants[0]
-  );
-};
-
-export const getAvailableTerms = (variant: ModuleVariant) =>
-  (["fall", "spring", "summer"] as SemesterTerm[]).filter((term) =>
-    variant.history.some((item) => item.term === term),
-  );
-
-export const getModuleAcademicYears = (
-  variant: ModuleVariant,
-  predictedSemester?: string,
-) => {
-  const years = [
-    ...variant.semesters,
-    ...(predictedSemester ? [predictedSemester] : []),
-  ]
-    .map((semester) => Number(String(semester).slice(0, 3)))
-    .filter((year) => Number.isFinite(year));
-  if (years.length === 0) return [];
-
-  const first = Math.min(...years);
-  const last = Math.max(...years);
-  return Array.from({ length: last - first + 1 }, (_, index) =>
-    String(first + index),
-  );
-};
-
-const academicYearFromSemester = (semester: string) =>
-  String(semester).slice(0, 3);
-
-const semesterForAcademicYear = (year: string, term: SemesterTerm) =>
-  `${year}${term === "fall" ? "10" : term === "spring" ? "20" : "30"}`;
-
-export const getModuleAcademicYearGroups = (
-  semesters: readonly string[],
-  predictedSemester?: string,
-): ModuleAcademicYearGroup[] => {
-  const observed = new Set(
-    semesters.map(String).filter((semester) => getSemesterTerm(semester)),
-  );
-  const predicted =
-    predictedSemester && getSemesterTerm(predictedSemester)
-      ? String(predictedSemester)
-      : undefined;
-  const allSemesters = [...observed, ...(predicted ? [predicted] : [])];
-  const years = allSemesters
-    .map(academicYearFromSemester)
-    .map(Number)
-    .filter(Number.isFinite);
-  if (years.length === 0) return [];
-
-  const first = Math.min(...years);
-  const last = Math.max(...years);
-  const terms = (["fall", "spring", "summer"] as SemesterTerm[]).filter(
-    (term) =>
-      [...observed].some((semester) => getSemesterTerm(semester) === term) ||
-      getSemesterTerm(predicted ?? "") === term,
-  );
-
-  return Array.from({ length: last - first + 1 }, (_, index) => {
-    const year = String(first + index);
-    return {
-      year,
-      slots: terms.map((term) => {
-        const semester = semesterForAcademicYear(year, term);
-        return {
-          semester,
-          term,
-          offered: observed.has(semester),
-          predicted: predicted === semester,
-        };
-      }),
-    };
-  });
-};
-
-export const getRecentModuleAcademicYearGroups = (
-  groups: readonly ModuleAcademicYearGroup[],
-  count: number,
-) => groups.slice(-Math.max(0, Math.floor(count)));
+) => selectModuleVariant(module.variants, title);
 
 export const getModuleInstructorSummaries = (variant: ModuleVariant) => {
   const instructors = new Map<
@@ -669,137 +563,6 @@ export const getModuleInstructorSummaries = (variant: ModuleVariant) => {
     });
 };
 
-export const getRecentSemesterSlots = (
-  semesters: readonly string[],
-  count = 8,
-): ModuleSemesterSlot[] => {
-  const observed = new Set(semesters.map(String));
-  const latest = [...observed].sort(
-    (left, right) => semesterSortValue(right) - semesterSortValue(left),
-  )[0];
-  if (!latest) return [];
-
-  const candidates = [
-    ...new Set([...semesterInfo.map((item) => item.id), ...observed]),
-  ]
-    .filter(
-      (semester) => semesterSortValue(semester) <= semesterSortValue(latest),
-    )
-    .sort((left, right) => semesterSortValue(left) - semesterSortValue(right));
-
-  return candidates.slice(-count).map((semester) => ({
-    semester,
-    offered: observed.has(semester),
-  }));
-};
-
-export const getOfferingPattern = (
-  semesters: readonly string[],
-): OfferingPattern => {
-  const terms = new Set(semesters.map(getSemesterTerm).filter(Boolean));
-  const has = (term: SemesterTerm) => terms.has(term);
-
-  if (terms.size === 0) return "none";
-  if (terms.size === 3) return "every_semester";
-  if (terms.size === 1) {
-    if (has("fall")) return "fall_only";
-    if (has("spring")) return "spring_only";
-    return "summer_only";
-  }
-  if (has("fall") && has("spring")) return "fall_spring";
-  if (has("fall") && has("summer")) return "fall_summer";
-  return "spring_summer";
-};
-
-const semesterFromYearAndTerm = (year: number, term: SemesterTerm) =>
-  `${year}${term === "fall" ? "10" : term === "spring" ? "20" : "30"}`;
-
-const getRegularYearStep = (semesters: string[], term: SemesterTerm) => {
-  const years = semesters
-    .filter((semester) => getSemesterTerm(semester) === term)
-    .map((semester) => Number(semester.slice(0, 3)))
-    .filter((year, index, all) => all.indexOf(year) === index)
-    .sort((left, right) => left - right);
-  if (years.length < 2) return null;
-
-  const steps = years.slice(1).map((year, index) => year - years[index]);
-  return steps.every((step) => step === steps[0]) ? steps[0] : null;
-};
-
-/**
- * Predict from the newest semester known to the site, not from the course's
- * last row. Two or more missed expected slots are reported as stopped;
- * one missed slot remains eligible for the next scheduled offering.
- */
-export const inferNextOffering = (
-  semesters: readonly string[],
-  latestKnownSemester = lastSemester.id,
-): OfferingPrediction | null => {
-  const observed = [...new Set(semesters.map(String))]
-    .filter((semester) => getSemesterTerm(semester))
-    .sort((left, right) => semesterSortValue(left) - semesterSortValue(right));
-  if (observed.length < 2) return null;
-
-  const terms = ["fall", "spring", "summer"].filter((term) =>
-    observed.some((semester) => getSemesterTerm(semester) === term),
-  ) as SemesterTerm[];
-  const schedules = terms.map((term) => {
-    const step = getRegularYearStep(observed, term);
-    if (!step) return null;
-
-    const termSemesters = observed.filter(
-      (semester) => getSemesterTerm(semester) === term,
-    );
-    const lastYear = Number(termSemesters.at(-1)!.slice(0, 3));
-    const observedSet = new Set(termSemesters);
-    const newestObserved = observed.at(-1)!;
-    const boundary = Math.max(
-      semesterSortValue(latestKnownSemester),
-      semesterSortValue(newestObserved),
-    );
-    const missed: string[] = [];
-    for (
-      let year = lastYear + step;
-      semesterSortValue(semesterFromYearAndTerm(year, term)) <= boundary;
-      year += step
-    ) {
-      const expected = semesterFromYearAndTerm(year, term);
-      if (!observedSet.has(expected)) missed.push(expected);
-    }
-
-    return {
-      term,
-      missed,
-      next: semesterFromYearAndTerm(lastYear + step, term),
-    };
-  });
-
-  if (schedules.some((schedule) => schedule === null)) return null;
-  const validSchedules = schedules as Array<{
-    term: SemesterTerm;
-    missed: string[];
-    next: string;
-  }>;
-  const missed = validSchedules
-    .flatMap((schedule) => schedule.missed)
-    .sort((left, right) => semesterSortValue(left) - semesterSortValue(right));
-  if (missed.length >= 2) {
-    const semester = missed[0];
-    return { kind: "stopped", semester, term: getSemesterTerm(semester)! };
-  }
-
-  const next = validSchedules
-    .map((schedule) => ({
-      semester: schedule.next,
-      term: schedule.term,
-    }))
-    .sort(
-      (left, right) =>
-        semesterSortValue(left.semester) - semesterSortValue(right.semester),
-    )[0];
-  return next ? { kind: "next", ...next } : null;
-};
-
 export const getModuleOfferings = async (moduleKey: string) => {
   const parsed = parseModuleKey(moduleKey);
   if (!parsed) throw new Error("Invalid module key");
@@ -818,7 +581,7 @@ export const getModuleOfferings = async (moduleKey: string) => {
   );
 };
 
-export const MODULE_HISTORY_SELECT =
+const MODULE_HISTORY_SELECT =
   "semester, department, course, name_zh, name_en, credits";
 
 export const getModuleHistory = async (moduleKey: string) => {
@@ -838,10 +601,10 @@ export const getModuleHistory = async (moduleKey: string) => {
   );
 };
 
-export const MODULE_SEARCH_SELECT =
+const MODULE_SEARCH_SELECT =
   "raw_id, semester, department, course, name_zh, name_en, credits, teacher_zh, teacher_en";
 
-export const MODULE_SEARCH_ROW_LIMIT = 500;
+const MODULE_SEARCH_ROW_LIMIT = 500;
 
 const normalizeSearchRow = (row: ModuleSearchRow): ModuleSearchRow => ({
   ...row,
