@@ -36,6 +36,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@courseweb/ui";
+import { getTimetableCourseListStatus } from "@/helpers/timetable";
 import {
   DndContext,
   closestCenter,
@@ -311,7 +312,14 @@ export const TimetableCourseList = ({
   const dict = useDictionary();
   const navigate = useNavigate();
 
-  const { getSemesterCourses, courses, setCourses } = useUserTimetable();
+  const {
+    getSemesterCourses,
+    getSemesterUnresolvedCourseIds,
+    setCourses,
+    isLoading,
+    isFetchingCourses,
+    error,
+  } = useUserTimetable();
 
   const defaultSettings: DisplaySettings = {
     englishNames: "add",
@@ -336,6 +344,13 @@ export const TimetableCourseList = ({
   const totalCredits = useMemo(() => {
     return displayCourseData.reduce((acc, cur) => acc + (cur?.credits ?? 0), 0);
   }, [displayCourseData]);
+  const unresolvedCourseIds = getSemesterUnresolvedCourseIds(semester);
+  const listStatus = getTimetableCourseListStatus(
+    isLoading,
+    error,
+    displayCourseData.length,
+    unresolvedCourseIds.length,
+  );
 
   const duplicates = useMemo(
     () => hasSameCourse(displayCourseData as MinimalCourse[]),
@@ -383,11 +398,16 @@ export const TimetableCourseList = ({
     const { active, over } = event;
     if (!over) return;
     if (active.id !== over.id) {
-      const courseCopy = [...courses[semester]];
-      const oldIndex = courseCopy.indexOf(active.id as string);
-      const newIndex = courseCopy.indexOf(over.id as string);
-      const newCourseCopy = arrayMove(courseCopy, oldIndex, newIndex);
-      setCourses({ ...courses, [semester]: newCourseCopy });
+      setCourses((currentCourses) => {
+        const courseCopy = [...(currentCourses[semester] ?? [])];
+        const oldIndex = courseCopy.indexOf(active.id as string);
+        const newIndex = courseCopy.indexOf(over.id as string);
+        if (oldIndex < 0 || newIndex < 0) return currentCourses;
+        return {
+          ...currentCourses,
+          [semester]: arrayMove(courseCopy, oldIndex, newIndex),
+        };
+      });
     }
   }
 
@@ -428,7 +448,40 @@ export const TimetableCourseList = ({
             ))}
           </SortableContext>
         </DndContext>
-        {displayCourseData.length == 0 && (
+        {listStatus === "loading" && (
+          <div
+            className="flex items-center gap-2 text-sm text-muted-foreground"
+            role="status"
+          >
+            <Loader2 className="h-4 w-4 animate-spin" />
+            {dict.timetable.course_data_loading}
+          </div>
+        )}
+        {listStatus === "error" && (
+          <div
+            className="flex items-center gap-2 text-sm text-destructive"
+            role="alert"
+          >
+            <AlertTriangle className="h-4 w-4 shrink-0" />
+            {dict.timetable.course_data_error}
+          </div>
+        )}
+        {unresolvedCourseIds.length > 0 &&
+          !isFetchingCourses &&
+          listStatus !== "loading" &&
+          listStatus !== "error" && (
+            <div
+              className="flex items-center gap-2 text-sm text-muted-foreground"
+              role="status"
+            >
+              <AlertTriangle className="h-4 w-4 shrink-0" />
+              {dict.timetable.unresolved_courses.replace(
+                "{count}",
+                String(unresolvedCourseIds.length),
+              )}
+            </div>
+          )}
+        {listStatus === "empty" && (
           <div className="flex flex-col items-center space-y-4">
             <span className="text-lg font-semibold text-muted-foreground">
               {dict.timetable.no_courses}
