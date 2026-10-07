@@ -21,12 +21,17 @@ import { useSettings } from "@/hooks/contexts/settings";
 import useTime from "@/hooks/useTime";
 import {
   formatNextServiceDay,
+  formatCityBusRealtimeDisplay,
+  formatCityBusUpdatedAt,
   getCityBusRoute,
+  getCityBusRealtimeDisplay,
   getCityBusTrips,
   getDistinctCityBusDirections,
   getNextCityBusTripIndex,
   getScheduleStatus,
+  mergeCityBusEtaIntoTimeline,
   stepCityBusTrip,
+  useCityBusEta,
   type CityBusRoute,
 } from "@/libs/citybus";
 import { useBusPins, type CityBusPin } from "@/features/bus/busPins";
@@ -112,6 +117,11 @@ const CityBusDetails = ({ routeId }: CityBusDetailsProps) => {
     direction?.stops.find((item) => item.id === stopId) ??
     direction?.stops.find((item) => item.nearCampus) ??
     direction?.stops[0];
+  const { data: realtimeData } = useCityBusEta(
+    route?.id ?? routeId,
+    direction?.id,
+    Boolean(route && direction),
+  );
 
   const pin = useMemo<CityBusPin | undefined>(() => {
     if (!route || !direction || !stop) return undefined;
@@ -139,8 +149,10 @@ const CityBusDetails = ({ routeId }: CityBusDetailsProps) => {
     [now, trips],
   );
   const [selectedTripId, setSelectedTripId] = useState<string>();
+  const [view, setView] = useState<"realtime" | "timetable">("realtime");
   useEffect(() => {
     setSelectedTripId(undefined);
+    setView("realtime");
   }, [direction?.id, stop?.id]);
 
   const selectedTripIndex = selectedTripId
@@ -186,6 +198,20 @@ const CityBusDetails = ({ routeId }: CityBusDetailsProps) => {
   const directionStops = [...direction.stops].sort(
     (a, b) => a.sequence - b.sequence,
   );
+  const realtimeAvailable = Boolean(
+    realtimeData?.realtime &&
+      (realtimeData.buses.length > 0 ||
+        realtimeData.stops.some((item) =>
+          Boolean(getCityBusRealtimeDisplay(item)),
+        )),
+  );
+  const showingRealtime = realtimeAvailable && view === "realtime";
+  const realtimeTimeline = realtimeData
+    ? mergeCityBusEtaIntoTimeline(
+        directionStops.map((item) => item.id),
+        realtimeData,
+      )
+    : [];
 
   const setDirection = (nextDirectionId: string) => {
     const nextDirection = directions.find(
@@ -258,7 +284,71 @@ const CityBusDetails = ({ routeId }: CityBusDetailsProps) => {
         </div>
       )}
 
-      {selectedTrip ? (
+      {realtimeAvailable && (
+        <Tabs
+          value={view}
+          onValueChange={(value) => setView(value as "realtime" | "timetable")}
+          className="px-4"
+        >
+          <TabsList className="w-full justify-evenly mb-4">
+            <TabsTrigger className="flex-1" value="realtime">
+              {dict.bus.realtime_tab}
+            </TabsTrigger>
+            <TabsTrigger className="flex-1" value="timetable">
+              {dict.bus.timetable_tab}
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      )}
+
+      {showingRealtime ? (
+        <>
+          <div className="flex items-center justify-between gap-4 px-4">
+            <div className="min-w-0">
+              <p className="font-bold text-nthu-500">{dict.bus.realtime}</p>
+              {realtimeData?.updatedAt && (
+                <p className="text-sm font-medium text-muted-foreground">
+                  {dict.bus.realtime_updated_at.replace(
+                    "{time}",
+                    formatCityBusUpdatedAt(
+                      realtimeData.updatedAt,
+                      language as "zh" | "en",
+                    ),
+                  )}
+                </p>
+              )}
+            </div>
+          </div>
+          <BusStopTimeline
+            activeId={stop.id}
+            items={directionStops.map((item, index) => {
+              const live = realtimeTimeline[index];
+              const liveText = formatCityBusRealtimeDisplay(
+                live?.display,
+                language as "zh" | "en",
+                {
+                  arriving: dict.bus.realtime_arriving,
+                  lastBus: dict.bus.realtime_last_bus,
+                  notOperating: dict.bus.realtime_not_operating,
+                  minutes: dict.bus.minutes,
+                },
+              );
+              return {
+                id: item.id,
+                station: language === "zh" ? item.nameZh : item.nameEn,
+                time: liveText ?? "",
+                state:
+                  live?.state === "at_station"
+                    ? BusStationState.AT_STATION
+                    : live?.state === "arriving"
+                      ? BusStationState.ARRIVING
+                      : BusStationState.UNAVAILABLE,
+                onSelect: () => navigateTo(direction.id, item.id),
+              };
+            })}
+          />
+        </>
+      ) : selectedTrip ? (
         <>
           <div className="flex items-center justify-between gap-4 px-4">
             <div className="min-w-0">
