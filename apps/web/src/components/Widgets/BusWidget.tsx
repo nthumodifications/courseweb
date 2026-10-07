@@ -1,11 +1,19 @@
 import { FC, useMemo } from "react";
 import { WidgetShell } from "./WidgetShell";
-import { useQuery } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { useSettings } from "@/hooks/contexts/settings";
 import { Bus } from "lucide-react";
 import { getAllBusData } from "@/libs/bus";
 import { isWeekend } from "date-fns";
 import { getTimeOnDate } from "@/helpers/bus";
+import {
+  formatDepartureCountdown,
+  formatDepartureTime,
+  getCityBusDepartures,
+  getCityBusRoutes,
+} from "@/libs/citybus";
+import { useBusPins, type BusPin } from "@/features/bus/busPins";
+import useDictionary from "@/dictionaries/useDictionary";
 
 interface BusWidgetProps {
   onRemove?: () => void;
@@ -15,8 +23,11 @@ interface BusWidgetProps {
 
 interface WidgetDeparture {
   time: string;
+  countdown?: string;
   lineLabel: string;
   directionIcon: string;
+  sourceLabel?: string;
+  pin?: BusPin;
 }
 
 const BusWidget: FC<BusWidgetProps> = ({
@@ -25,7 +36,8 @@ const BusWidget: FC<BusWidgetProps> = ({
   isDragging,
 }) => {
   const { language } = useSettings();
-  const title = language === "zh" ? "校園公車" : "Campus Bus";
+  const dict = useDictionary();
+  const { pins, pinned } = useBusPins();
 
   const { data, isLoading } = useQuery({
     queryKey: ["all_bus_data"],
@@ -33,84 +45,147 @@ const BusWidget: FC<BusWidgetProps> = ({
     staleTime: 1000 * 60 * 5,
     refetchInterval: 1000 * 60 * 5,
   });
+  const cityPins = pins.filter(
+    (pin): pin is Extract<BusPin, { kind: "city" }> => pin.kind === "city",
+  );
+  const title =
+    cityPins.length > 0 ? dict.bus.widget_title : dict.bus.campus_widget_title;
+  const { data: cityRoutes, isLoading: isCityRoutesLoading } = useQuery({
+    queryKey: ["citybus_static_index"],
+    queryFn: getCityBusRoutes,
+    enabled: cityPins.length > 0,
+    staleTime: 60 * 60 * 1000,
+  });
+  const cityDepartureQueries = useQueries({
+    queries: cityPins.map((pin) => {
+      const route = cityRoutes?.routes.find((item) => item.id === pin.routeId);
+      const direction = route?.directions.find(
+        (item) =>
+          item.id === pin.directionId ||
+          item.campusStops.some((stop) => stop.id === pin.stopId),
+      );
+      return {
+        queryKey: [
+          "citybus_departures",
+          pin.routeId,
+          direction?.id,
+          pin.stopId,
+        ],
+        queryFn: () =>
+          getCityBusDepartures(pin.routeId, direction!.id, pin.stopId, 1),
+        enabled: Boolean(direction),
+        staleTime: 30 * 1000,
+        refetchInterval: 60 * 1000,
+      };
+    }),
+  });
 
   const departures: WidgetDeparture[] = useMemo(() => {
-    if (!data) return [];
+    if (!data && cityPins.length === 0) return [];
     const now = new Date();
     const schedule = isWeekend(now) ? "weekend" : "weekday";
     const results: WidgetDeparture[] = [];
 
-    const mainSchedule = data.main[schedule];
-    for (const dep of mainSchedule.toward_TSMC_building) {
+    const mainSchedule = data?.main[schedule];
+    for (const dep of mainSchedule?.toward_TSMC_building ?? []) {
       if (getTimeOnDate(now, dep.time) > now) {
         results.push({
           time: dep.time,
           lineLabel:
-            dep.line === "red"
-              ? language === "zh"
-                ? "紅線"
-                : "Red"
-              : language === "zh"
-                ? "綠線"
-                : "Green",
+            dep.line === "red" ? dict.bus.red_line : dict.bus.green_line,
           directionIcon: "↑",
+          sourceLabel: cityPins.length > 0 ? dict.bus.scheduled : undefined,
+          pin: {
+            kind: "campus",
+            line: dep.line === "red" ? "red" : "green",
+            direction: "up",
+          },
         });
       }
     }
-    for (const dep of mainSchedule.toward_main_gate) {
+    for (const dep of mainSchedule?.toward_main_gate ?? []) {
       if (getTimeOnDate(now, dep.time) > now) {
         results.push({
           time: dep.time,
           lineLabel:
-            dep.line === "red"
-              ? language === "zh"
-                ? "紅線"
-                : "Red"
-              : language === "zh"
-                ? "綠線"
-                : "Green",
+            dep.line === "red" ? dict.bus.red_line : dict.bus.green_line,
           directionIcon: "↓",
+          sourceLabel: cityPins.length > 0 ? dict.bus.scheduled : undefined,
+          pin: {
+            kind: "campus",
+            line: dep.line === "red" ? "red" : "green",
+            direction: "down",
+          },
         });
       }
     }
 
-    const nandaSchedule = data.nanda[schedule];
-    for (const dep of nandaSchedule.toward_south_campus) {
+    const nandaSchedule = data?.nanda[schedule];
+    for (const dep of nandaSchedule?.toward_south_campus ?? []) {
       if (getTimeOnDate(now, dep.time) > now) {
         results.push({
           time: dep.time,
           lineLabel:
-            dep.type === "route2"
-              ? language === "zh"
-                ? "南大2路"
-                : "Nanda 2"
-              : language === "zh"
-                ? "南大1路"
-                : "Nanda 1",
+            dep.type === "route2" ? dict.bus.route2_line : dict.bus.route1_line,
           directionIcon: "↓",
+          sourceLabel: cityPins.length > 0 ? dict.bus.scheduled : undefined,
+          pin: {
+            kind: "campus",
+            line: dep.type === "route2" ? "route2" : "route1",
+            direction: "up",
+          },
         });
       }
     }
-    for (const dep of nandaSchedule.toward_main_campus) {
+    for (const dep of nandaSchedule?.toward_main_campus ?? []) {
       if (getTimeOnDate(now, dep.time) > now) {
         results.push({
           time: dep.time,
           lineLabel:
-            dep.type === "route2"
-              ? language === "zh"
-                ? "南大2路"
-                : "Nanda 2"
-              : language === "zh"
-                ? "南大1路"
-                : "Nanda 1",
+            dep.type === "route2" ? dict.bus.route2_line : dict.bus.route1_line,
           directionIcon: "↑",
+          sourceLabel: cityPins.length > 0 ? dict.bus.scheduled : undefined,
+          pin: {
+            kind: "campus",
+            line: dep.type === "route2" ? "route2" : "route1",
+            direction: "down",
+          },
         });
       }
     }
 
-    results.sort((a, b) => a.time.localeCompare(b.time));
+    cityPins.forEach((pin, index) => {
+      const departure = cityDepartureQueries[index]?.data?.departures[0];
+      if (!departure) return;
+      const countdown = formatDepartureCountdown(departure.minutes, language, {
+        underHour: dict.bus.minutes,
+        minute: dict.bus.countdown_minute,
+        hour: dict.bus.countdown_hour,
+      });
+      results.push({
+        time: formatDepartureTime(departure, language, {
+          tomorrow: dict.bus.tomorrow,
+          daysAfter: dict.bus.days_after,
+        }),
+        countdown,
+        lineLabel:
+          language === "zh"
+            ? `${pin.routeNameZh} · ${pin.stopNameZh}`
+            : `${pin.routeNameEn} · ${pin.stopNameEn}`,
+        directionIcon: "",
+        sourceLabel: departure.realtime
+          ? dict.bus.realtime
+          : dict.bus.scheduled,
+        pin,
+      });
+    });
+
+    const pinRank = (pin?: BusPin) => (pin ? Number(pinned(pin)) : 0);
+    results.sort(
+      (a, b) => pinRank(b.pin) - pinRank(a.pin) || a.time.localeCompare(b.time),
+    );
     return results.slice(0, 5);
-  }, [data, language]);
+  }, [data, dict, language, cityPins, cityDepartureQueries, pinned]);
 
   return (
     <WidgetShell
@@ -120,16 +195,14 @@ const BusWidget: FC<BusWidgetProps> = ({
       isDragging={isDragging}
     >
       <div className="p-4">
-        {isLoading ? (
+        {isLoading || isCityRoutesLoading ? (
           <div className="flex justify-center py-4">
             <div className="h-8 w-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
           </div>
         ) : departures.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-4 text-muted-foreground">
             <Bus className="h-8 w-8 mb-2 text-muted-foreground/40" />
-            <span className="text-sm">
-              {language === "zh" ? "今日無班次" : "No departures today"}
-            </span>
+            <span className="text-sm">{dict.bus.no_departures}</span>
           </div>
         ) : (
           <div className="flex flex-col gap-2">
@@ -146,8 +219,20 @@ const BusWidget: FC<BusWidgetProps> = ({
                   <span className="text-xs text-muted-foreground">
                     {dep.directionIcon}
                   </span>
-                  <span className="text-xs font-mono font-semibold text-primary">
-                    {dep.time}
+                  {dep.sourceLabel && (
+                    <span className="text-[10px] text-muted-foreground">
+                      {dep.sourceLabel}
+                    </span>
+                  )}
+                  <span className="flex flex-col items-end">
+                    <span className="text-xs font-mono font-semibold text-primary">
+                      {dep.time}
+                    </span>
+                    {dep.countdown && (
+                      <span className="text-[10px] text-muted-foreground">
+                        {dep.countdown}
+                      </span>
+                    )}
                   </span>
                 </div>
               </div>

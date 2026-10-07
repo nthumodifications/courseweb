@@ -23,12 +23,14 @@ import {
   set,
   getDay,
 } from "date-fns";
-import { Bus, ChevronLeft } from "lucide-react";
+import { Bus, ChevronLeft, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useParams, useSearchParams } from "react-router-dom";
 import { useMemo } from "react";
 import { getAllBusData } from "@/libs/bus";
 import { useQuery } from "@tanstack/react-query";
+import CityBusDetails from "./CityBusDetails";
+import { useBusPins, type CampusBusPin } from "@/features/bus/busPins";
 
 enum BusStationState {
   UNAVAILABLE,
@@ -224,7 +226,7 @@ const linesDict: {
   },
 };
 
-const LineDisplayPage = () => {
+const CampusLineDisplayPage = () => {
   const { line } = useParams() as { line: string };
   const [searchParams] = useSearchParams();
   const time = useTime();
@@ -235,7 +237,23 @@ const LineDisplayPage = () => {
 
   const { language } = useSettings();
   const dict = useDictionary();
+  const { pinned, toggle } = useBusPins();
   const returnUrl = searchParams.get("return_url") ?? `/${language}/bus`;
+  const campusLine =
+    line === "red" || line === "green"
+      ? line
+      : line.startsWith("route1")
+        ? "route1"
+        : line.startsWith("route2")
+          ? "route2"
+          : undefined;
+  const campusPin: CampusBusPin | undefined = campusLine
+    ? {
+        kind: "campus",
+        line: campusLine,
+        direction: line.endsWith("_down") ? "down" : "up",
+      }
+    : undefined;
 
   const weektype = isWeekend(time) ? "weekend" : "weekday";
 
@@ -631,6 +649,26 @@ const LineDisplayPage = () => {
             </>
           )}
         </div>
+        {campusPin && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="ml-auto min-h-11 min-w-11"
+            aria-label={
+              pinned(campusPin) ? dict.bus.remove_bus : dict.bus.add_bus
+            }
+            onClick={() => toggle(campusPin)}
+          >
+            <Star
+              className={cn(
+                "h-4 w-4",
+                pinned(campusPin) ? "text-nthu-500" : "text-muted-foreground",
+              )}
+              fill={pinned(campusPin) ? "currentColor" : "none"}
+            />
+          </Button>
+        )}
       </div>
       <div className="w-full items-start inline-flex px-4">
         <div className="w-full p-2 flex-col justify-start inline-flex">
@@ -742,6 +780,12 @@ const LineDisplayPage = () => {
       </div>
     </div>
   );
+};
+
+const LineDisplayPage = () => {
+  const { route, line } = useParams() as { route: string; line: string };
+  if (route === "city") return <CityBusDetails routeId={line} />;
+  return <CampusLineDisplayPage />;
 };
 
 export default LineDisplayPage;
