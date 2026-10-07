@@ -207,6 +207,42 @@ const createEngine = (
   return { engine, cache, state };
 };
 
+type HangingRequest = "manifest" | "chunk" | "text";
+
+const makeHangingEngine = (request: HangingRequest) => {
+  let signal: AbortSignal | undefined;
+  let resolveStarted!: () => void;
+  const started = new Promise<void>((resolve) => {
+    resolveStarted = resolve;
+  });
+  const hangingSuffix = {
+    manifest: "/search/chunk/manifest",
+    chunk: "/search/chunk/11510",
+    text: "/search/chunk/11510/text",
+  }[request];
+  const engine = new LocalSearchEngine({
+    baseUrl: "https://api.example.test",
+    cache: new MemorySearchChunkCache(),
+    defaultSemester: "11510",
+    workerFactory: () => new FakeWorker(),
+    fetch: async (input, init) => {
+      const url = String(input);
+      if (url.endsWith(hangingSuffix)) {
+        signal = init?.signal;
+        resolveStarted();
+        return new Promise<Response>(() => {});
+      }
+      if (url.endsWith("/search/chunk/manifest")) {
+        return new Response(JSON.stringify(makeManifest("hash-a")), {
+          status: 200,
+        });
+      }
+      return new Response(JSON.stringify(fixture), { status: 200 });
+    },
+  });
+  return { engine, started, getSignal: () => signal };
+};
+
 class FailingReplacementCache extends MemorySearchChunkCache {
   failChunkWrites = false;
 
@@ -652,100 +688,32 @@ describe("chunk cache, conditional requests, and worker lifecycle", () => {
     expect(states).toEqual(expect.arrayContaining(["loading", "ready"]));
   });
 
-  test("times out a hanging manifest request", async () => {
-    jest.useFakeTimers();
-    try {
-      let signal: AbortSignal | undefined;
-      let resolveStarted!: () => void;
-      const started = new Promise<void>((resolve) => {
-        resolveStarted = resolve;
-      });
-      const engine = new LocalSearchEngine({
-        baseUrl: "https://api.example.test",
-        cache: new MemorySearchChunkCache(),
-        defaultSemester: "11510",
-        workerFactory: () => new FakeWorker(),
-        fetch: async (_input, init) => {
-          signal = init?.signal;
-          resolveStarted();
-          return new Promise<Response>(() => {});
-        },
-      });
-      const pending = engine.search("11510", request({ query: "CS" }));
+  test.each([
+    ["manifest request", "manifest", 10_000],
+    ["course chunk request", "chunk", 15_000],
+  ] as const)(
+    "times out a hanging %s",
+    async (_label, hangingRequest, timeoutMs) => {
+      jest.useFakeTimers();
+      try {
+        const { engine, started, getSignal } =
+          makeHangingEngine(hangingRequest);
+        const pending = engine.search("11510", request({ query: "CS" }));
 
-      await started;
-      jest.advanceTimersByTime(10_000);
-      await expect(pending).rejects.toThrow("timed out");
-      expect(signal?.aborted).toBe(true);
-    } finally {
-      jest.useRealTimers();
-    }
-  });
-
-  test("times out a hanging course chunk request", async () => {
-    jest.useFakeTimers();
-    try {
-      let signal: AbortSignal | undefined;
-      let resolveStarted!: () => void;
-      const started = new Promise<void>((resolve) => {
-        resolveStarted = resolve;
-      });
-      const engine = new LocalSearchEngine({
-        baseUrl: "https://api.example.test",
-        cache: new MemorySearchChunkCache(),
-        defaultSemester: "11510",
-        workerFactory: () => new FakeWorker(),
-        fetch: async (input, init) => {
-          const url = String(input);
-          if (url.endsWith("/search/chunk/manifest")) {
-            return new Response(JSON.stringify(makeManifest("hash-a")), {
-              status: 200,
-            });
-          }
-          signal = init?.signal;
-          resolveStarted();
-          return new Promise<Response>(() => {});
-        },
-      });
-      const pending = engine.search("11510", request({ query: "CS" }));
-
-      await started;
-      jest.advanceTimersByTime(15_000);
-      await expect(pending).rejects.toThrow("timed out");
-      expect(signal?.aborted).toBe(true);
-    } finally {
-      jest.useRealTimers();
-    }
-  });
+        await started;
+        jest.advanceTimersByTime(timeoutMs);
+        await expect(pending).rejects.toThrow("timed out");
+        expect(getSignal()?.aborted).toBe(true);
+      } finally {
+        jest.useRealTimers();
+      }
+    },
+  );
 
   test("times out a hanging text chunk request", async () => {
     jest.useFakeTimers();
     try {
-      let signal: AbortSignal | undefined;
-      let resolveStarted!: () => void;
-      const started = new Promise<void>((resolve) => {
-        resolveStarted = resolve;
-      });
-      const engine = new LocalSearchEngine({
-        baseUrl: "https://api.example.test",
-        cache: new MemorySearchChunkCache(),
-        defaultSemester: "11510",
-        workerFactory: () => new FakeWorker(),
-        fetch: async (input, init) => {
-          const url = String(input);
-          if (url.endsWith("/search/chunk/manifest")) {
-            return new Response(JSON.stringify(makeManifest("hash-a")), {
-              status: 200,
-            });
-          }
-          if (url.endsWith("/search/chunk/11510/text")) {
-            signal = init?.signal;
-            resolveStarted();
-            return new Promise<Response>(() => {});
-          }
-          return new Response(JSON.stringify(fixture), { status: 200 });
-        },
-      });
+      const { engine, started, getSignal } = makeHangingEngine("text");
       await engine.search("11510", request({ query: "CS" }));
       const textPending = engine.waitForTextChunk("11510");
 
@@ -753,7 +721,7 @@ describe("chunk cache, conditional requests, and worker lifecycle", () => {
       await started;
       jest.advanceTimersByTime(15_000);
       await textPending;
-      expect(signal?.aborted).toBe(true);
+      expect(getSignal()?.aborted).toBe(true);
     } finally {
       jest.useRealTimers();
     }

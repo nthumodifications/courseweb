@@ -1,5 +1,42 @@
 # Search robustness round 3 report
 
+## Round 5 Sonar duplication cleanup
+
+### What I found
+
+- The public SonarCloud duplication response for PR 933 (`https://sonarcloud.io/api/duplications/show?key=nthumodifications_courseweb:apps/web/src/lib/local-search/local-search.test.ts&pullRequest=933`) reported one duplicate: 27 lines at `apps/web/src/lib/local-search/local-search.test.ts:678-704` and `:714-740` (54 duplicated new lines).
+- The duplicate was the repeated setup for the manifest and course-chunk timeout tests. The text timeout test had the same fake engine setup with a distinct streaming phase.
+
+### Design and changes
+
+- Added `makeHangingEngine` in `apps/web/src/lib/local-search/local-search.test.ts` to own the cache, worker, manifest fallback, fixture fallback, hanging fetch, start promise, and abort-signal capture for all three timeout targets.
+- Combined the manifest and course-chunk cases with `test.each`; retained both timeout budgets and every assertion. The text timeout remains a separate scenario because it must first complete course loading and then call `waitForTextChunk`.
+- No production source, dependency, dictionary, or API behavior was changed. Changes remain uncommitted.
+
+### Commands and results for this round
+
+Baseline before editing:
+
+- `bun run --cwd apps/web type-check`: failed with the two existing diagnostics `apps/web/src/features/dining/useDining.ts:20` (`dining` missing from generated API types) and `apps/web/worker.ts:856` (`CacheStorage.default` does not exist).
+- `bun --no-env-file test src/lib/local-search` from `apps/web`: `48 pass, 2 skip, 0 fail`, `269 expect()` calls across `50 tests` and `4 files`.
+
+After editing:
+
+- `bunx prettier --write src/lib/local-search/local-search.test.ts` from `apps/web`: passed.
+- `bun --no-env-file test src/lib/local-search` from `apps/web`: `48 pass, 2 skip, 0 fail`, `269 expect()` calls across `50 tests` and `4 files`; the count matches baseline.
+- `bun --no-env-file test src` from `apps/web`: `282 pass, 2 skip, 0 fail`, `1,130 expect()` calls across `284 tests` and `38 files`.
+- `bun run --cwd apps/web type-check`: still failed with only the same two baseline diagnostics; no changed-file diagnostic appeared.
+- `bunx eslint src/lib/local-search/local-search.test.ts` from `apps/web`: blocked before linting because the junctioned dependency checkout cannot resolve `@typescript-eslint/recommended` from `packages/eslint-config/index.js`.
+- `bunx prettier --check src/lib/local-search/local-search.test.ts` from `apps/web`: passed.
+- `git diff --check`: passed; only the test and report files are modified.
+- SonarCloud’s live duplication result after this uncommitted change is not available until the PR analysis is refreshed; the local diff removes the reported repeated setup block.
+
+### Unverified and open questions
+
+- SonarCloud cannot analyze this uncommitted worktree locally; the final duplication percentage requires a refreshed PR 933 analysis.
+- The repository-wide type-check remains blocked by the two baseline diagnostics above unless those unrelated declarations are repaired.
+- Maintainer follow-up: refresh PR 933’s SonarCloud analysis and confirm the duplicated-new-line count is below the 12-line target.
+
 ## Round 4 merge-gate fixes
 
 - `engine.ts` now terminates a failed worker once, rejects its in-flight queries, evicts that semester's loaded index on worker/search failure, and generation-checks deferred text responses after `clear()`; active text loads remain deduplicated.
