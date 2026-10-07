@@ -1,25 +1,34 @@
-import { Button } from "@courseweb/ui";
-import { Calendar } from "@courseweb/ui";
-import { Popover, PopoverContent, PopoverTrigger } from "@courseweb/ui";
-import { cn } from "@courseweb/ui";
-import { format } from "date-fns";
 import {
-  CalendarIcon,
-  Edit2,
-  Minus,
-  MinusCircle,
-  Plus,
-  CalendarPlus,
-} from "lucide-react";
-import { PropsWithChildren, useEffect, useMemo, useState } from "react";
-import {
+  Button,
+  Calendar,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  cn,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Input,
+  Alert,
+  AlertDescription,
+  AlertTitle,
+  ErrorState,
+  toast,
+  Dialog,
+  DialogContent,
+  DialogTrigger,
 } from "@courseweb/ui";
-import { Input } from "@courseweb/ui";
+import { format } from "date-fns";
+import {
+  CalendarIcon,
+  Edit2,
+  MinusCircle,
+  Plus,
+  CalendarPlus,
+} from "lucide-react";
+import { PropsWithChildren, useEffect, useMemo, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import {
   Form,
@@ -28,13 +37,10 @@ import {
   FormItem,
   FormMessage,
 } from "../ui/form";
-import { Alert, AlertDescription, AlertTitle } from "@courseweb/ui";
 import { ScrollArea } from "@radix-ui/react-scroll-area";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
-import { ErrorState, toast } from "@courseweb/ui";
-import { Dialog, DialogContent, DialogTrigger } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
 import client from "@/config/api";
 import authClient from "@/config/auth";
@@ -108,12 +114,10 @@ const DateContributeForm = ({
     form.reset({ dates: existingDates ?? [] });
   }, [existingDates]);
 
-  const { fields, append, prepend, remove, swap, move, insert } = useFieldArray(
-    {
-      control: form.control, // control props comes from useForm (optional: if you are using FormProvider)
-      name: "dates", // unique name for your Field Array,
-    },
-  );
+  const { fields, append, remove } = useFieldArray({
+    control: form.control, // control props comes from useForm (optional: if you are using FormProvider)
+    name: "dates", // unique name for your Field Array,
+  });
 
   const onSubmit = async (data: z.infer<typeof schema>) => {
     const submitDates = data.dates.map((d) => ({
@@ -183,164 +187,175 @@ const DateContributeForm = ({
               <ErrorState
                 title={dict.common.load_error}
                 action={
-                  <Button variant="outline" size="sm" onClick={() => void refetch()}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => void refetch()}
+                  >
                     {dict.common.try_again}
                   </Button>
                 }
               />
             ) : (
-            <ScrollArea>
-              <Form {...form}>
-                <div className="flex flex-col gap-2">
-                  {fields.map((field, index) => (
-                    <div key={field.id} className="flex flex-row gap-2">
-                      <FormField
-                        control={form.control}
-                        name={`dates.${index}.type`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <Select
-                                defaultValue={field.value}
-                                value={field.value}
-                                onValueChange={field.onChange}
-                                disabled={disabled}
-                              >
-                                <SelectTrigger className="w-[90px]">
-                                  <SelectValue
-                                    placeholder={
-                                      dict.dialogs.DateContributeForm.type
-                                    }
-                                  />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="exam">
-                                    {dict.dialogs.DateContributeForm.types.exam}
-                                  </SelectItem>
-                                  <SelectItem value="quiz">
-                                    {dict.dialogs.DateContributeForm.types.quiz}
-                                  </SelectItem>
-                                  <SelectItem value="no_class">
-                                    {
-                                      dict.dialogs.DateContributeForm.types
-                                        .no_class
-                                    }
-                                  </SelectItem>
-                                  <SelectItem value="other">
-                                    {
-                                      dict.dialogs.DateContributeForm.types
-                                        .other
-                                    }
-                                  </SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name={`dates.${index}.title`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <Input
-                                autoComplete="off"
-                                placeholder={
-                                  dict.dialogs.DateContributeForm.title_placeholder
-                                }
-                                disabled={disabled}
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name={`dates.${index}.date`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <Popover modal={true}>
-                                <PopoverTrigger asChild disabled={disabled}>
-                                  <Button
-                                    variant={"outline"}
-                                    className={cn(
-                                      "w-[180px] justify-start text-left font-normal",
-                                      !field.value && "text-muted-foreground",
-                                    )}
-                                  >
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {field.value ? (
-                                      format(field.value, "PPP", {
-                                        locale: getLocale(language),
-                                      })
-                                    ) : (
-                                      <span>
-                                        {
-                                          dict.dialogs.DateContributeForm
-                                            .date_placeholder
-                                        }
-                                      </span>
-                                    )}
-                                  </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0">
-                                  <Calendar
-                                    mode="single"
-                                    selected={field.value}
-                                    onSelect={field.onChange}
-                                    initialFocus
-                                  />
-                                </PopoverContent>
-                              </Popover>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <Button
-                        variant="destructive"
-                        size="icon"
-                        disabled={disabled}
-                        onClick={() => remove(index)}
-                      >
-                        <MinusCircle className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ))}
-                  <Button
-                    variant={"outline"}
-                    disabled={disabled}
-                    onClick={() =>
-                      append({ type: "exam", title: "", date: new Date() })
-                    }
-                  >
-                    <Plus className="mr-2" />{" "}
-                    {dict.dialogs.DateContributeForm.add_date}
-                  </Button>
-                  <div className="flex flex-row gap-2 justify-end">
+              <ScrollArea>
+                <Form {...form}>
+                  <div className="flex flex-col gap-2">
+                    {fields.map((field, index) => (
+                      <div key={field.id} className="flex flex-row gap-2">
+                        <FormField
+                          control={form.control}
+                          name={`dates.${index}.type`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Select
+                                  defaultValue={field.value}
+                                  value={field.value}
+                                  onValueChange={field.onChange}
+                                  disabled={disabled}
+                                >
+                                  <SelectTrigger className="w-[90px]">
+                                    <SelectValue
+                                      placeholder={
+                                        dict.dialogs.DateContributeForm.type
+                                      }
+                                    />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="exam">
+                                      {
+                                        dict.dialogs.DateContributeForm.types
+                                          .exam
+                                      }
+                                    </SelectItem>
+                                    <SelectItem value="quiz">
+                                      {
+                                        dict.dialogs.DateContributeForm.types
+                                          .quiz
+                                      }
+                                    </SelectItem>
+                                    <SelectItem value="no_class">
+                                      {
+                                        dict.dialogs.DateContributeForm.types
+                                          .no_class
+                                      }
+                                    </SelectItem>
+                                    <SelectItem value="other">
+                                      {
+                                        dict.dialogs.DateContributeForm.types
+                                          .other
+                                      }
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name={`dates.${index}.title`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Input
+                                  autoComplete="off"
+                                  placeholder={
+                                    dict.dialogs.DateContributeForm
+                                      .title_placeholder
+                                  }
+                                  disabled={disabled}
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name={`dates.${index}.date`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Popover modal={true}>
+                                  <PopoverTrigger asChild disabled={disabled}>
+                                    <Button
+                                      variant={"outline"}
+                                      className={cn(
+                                        "w-[180px] justify-start text-left font-normal",
+                                        !field.value && "text-muted-foreground",
+                                      )}
+                                    >
+                                      <CalendarIcon className="mr-2 h-4 w-4" />
+                                      {field.value ? (
+                                        format(field.value, "PPP", {
+                                          locale: getLocale(language),
+                                        })
+                                      ) : (
+                                        <span>
+                                          {
+                                            dict.dialogs.DateContributeForm
+                                              .date_placeholder
+                                          }
+                                        </span>
+                                      )}
+                                    </Button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-auto p-0">
+                                    <Calendar
+                                      mode="single"
+                                      selected={field.value}
+                                      onSelect={field.onChange}
+                                      initialFocus
+                                    />
+                                  </PopoverContent>
+                                </Popover>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          disabled={disabled}
+                          onClick={() => remove(index)}
+                        >
+                          <MinusCircle className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
                     <Button
                       variant={"outline"}
-                      onClick={() => form.reset()}
                       disabled={disabled}
+                      onClick={() =>
+                        append({ type: "exam", title: "", date: new Date() })
+                      }
                     >
-                      {dict.dialogs.DateContributeForm.reset}
+                      <Plus className="mr-2" />{" "}
+                      {dict.dialogs.DateContributeForm.add_date}
                     </Button>
-                    <Button
-                      type="submit"
-                      onClick={form.handleSubmit(onSubmit)}
-                      disabled={disabled}
-                    >
-                      {dict.dialogs.DateContributeForm.submit}
-                    </Button>
+                    <div className="flex flex-row gap-2 justify-end">
+                      <Button
+                        variant={"outline"}
+                        onClick={() => form.reset()}
+                        disabled={disabled}
+                      >
+                        {dict.dialogs.DateContributeForm.reset}
+                      </Button>
+                      <Button
+                        type="submit"
+                        onClick={form.handleSubmit(onSubmit)}
+                        disabled={disabled}
+                      >
+                        {dict.dialogs.DateContributeForm.submit}
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              </Form>
-            </ScrollArea>
+                </Form>
+              </ScrollArea>
             )}
           </div>
         )}

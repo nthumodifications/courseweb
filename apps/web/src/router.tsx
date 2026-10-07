@@ -27,6 +27,9 @@ const CourseDetailPage = lazy(
 const ModulePage = lazy(
   () => import("@/app/[lang]/(mods-pages)/courses/module/[moduleKey]/page"),
 );
+const ModulesSearchPage = lazy(
+  () => import("@/app/[lang]/(mods-pages)/courses/modules/page"),
+);
 const BusPage = lazy(() => import("@/app/[lang]/(mods-pages)/bus/page"));
 const SportsVenuesPage = lazy(
   () => import("@/app/[lang]/(mods-pages)/sports-venues/page"),
@@ -211,6 +214,17 @@ export const router = createBrowserRouter([
                     "Search and browse NTHU courses. View syllabi, grading policies, past scores, prerequisites, and student reviews for any course at National Tsing Hua University.",
                   descriptionZh:
                     "搜尋清大課程、查看課程大綱、評分記錄與學生心得。支援跨系選修、先修課程查詢，快速找到最適合的清華大學課程。",
+                },
+              },
+              {
+                path: "courses/modules",
+                element: <ModulesSearchPage />,
+                handle: {
+                  title: "Search Course Modules",
+                  titleZh: "搜尋課程模組",
+                  description:
+                    "Search one NTHU course across its recorded semesters and title variants.",
+                  descriptionZh: "跨學期搜尋清大課程的開課紀錄與課名變化。",
                 },
               },
               {

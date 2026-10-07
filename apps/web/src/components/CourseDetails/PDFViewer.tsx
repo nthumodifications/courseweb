@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { Viewer } from "@react-pdf-viewer/core";
-import { Worker } from "@react-pdf-viewer/core";
+import { Viewer, Worker } from "@react-pdf-viewer/core";
 import { ScrollArea } from "@radix-ui/react-scroll-area";
 import { Button, ErrorState } from "@courseweb/ui";
 

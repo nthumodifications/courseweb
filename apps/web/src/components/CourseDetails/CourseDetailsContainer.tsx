@@ -4,47 +4,46 @@ import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import DownloadSyllabus from "./DownloadSyllabus";
 import SyllabusSummary from "./SyllabusSummary";
-import { Fade } from "@courseweb/ui";
-import { toPrettySemester } from "@/helpers/semester";
-import CourseTagList from "@/components/Courses/CourseTagsList";
 import {
-  colorMapFromCourses,
-  createTimetableFromCourses,
-} from "@/helpers/timetable";
-import { MinimalCourse, RawCourseID } from "@/types/courses";
-import {
-  hasTimes,
-  getScoreType,
-  getFormattedClassCode,
-} from "@/helpers/courses";
-import { Button, ErrorState } from "@courseweb/ui";
-import { Separator } from "@courseweb/ui";
-import { Alert, AlertDescription } from "@courseweb/ui";
-import { Badge } from "@courseweb/ui";
-import { CourseDefinition } from "@/config/supabase";
-import { ScrollArea, ScrollBar } from "@courseweb/ui";
-import { timetableColors } from "@courseweb/shared";
-import { lazy, Suspense } from "react";
-import { Language } from "@/types/settings";
-import { sanitizeCourseHtml } from "@/lib/sanitizeHtml";
-import {
+  Fade,
+  Button,
+  ErrorState,
+  Separator,
+  Alert,
+  AlertDescription,
+  Badge,
+  ScrollArea,
+  ScrollBar,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  cn,
 } from "@courseweb/ui";
-import { Dialog, DialogContent, DialogTrigger } from "@courseweb/ui";
-import { Card, CardContent, CardHeader, CardTitle } from "@courseweb/ui";
-import { cn } from "@courseweb/ui";
+import { toPrettySemester } from "@/helpers/semester";
+import CourseTagList from "@/components/Courses/CourseTagsList";
+import { MinimalCourse } from "@/types/courses";
+import { getScoreType, getFormattedClassCode } from "@/helpers/courses";
+import { CourseDefinition } from "@/config/supabase";
+import { lazy, Suspense } from "react";
+import { Language } from "@/types/settings";
+import { sanitizeCourseHtml } from "@/lib/sanitizeHtml";
 import ShareCourseButton from "./ShareCourseButton";
-import DateContributeForm from "./DateContributeForm";
 import client from "@/config/api";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useQuery } from "@tanstack/react-query";
 import CourseDetailsSkeleton from "./CourseDetailsSkeleton";
 import { useCourseLink } from "@/components/Courses/CourseDialog";
+import { ModuleTermAvailability } from "@/components/Courses/ModuleTermAvailability";
 import {
   createModuleKey,
   getModuleHistory,
@@ -162,6 +161,8 @@ const CourseDetailContainer = ({
     enabled: !!course, // Only fetch if course data is available
   });
 
+  // Which terms this course runs in, across every semester on record. Kept out
+  // of the modal, and never blocks or breaks the page.
   const moduleKey = course
     ? createModuleKey(course.department, course.course)
     : "";
@@ -169,8 +170,8 @@ const CourseDetailContainer = ({
     queryKey: ["module-history", moduleKey],
     queryFn: () => getModuleHistory(moduleKey),
     enabled: !!course && !modal,
-    staleTime: 24 * 60 * 60 * 1000,
-    gcTime: 7 * 24 * 60 * 60 * 1000,
+    staleTime: 7 * 24 * 60 * 60 * 1000,
+    retry: false,
   });
   const moduleVariant =
     course && moduleHistory
@@ -303,17 +304,6 @@ const CourseDetailContainer = ({
 
   const missingSyllabus = course.course_syllabus == null;
 
-  // times might not be available, check if it is empty list or its items are all empty strings
-  const showTimetable = hasTimes(course as MinimalCourse);
-
-  const colorMap = colorMapFromCourses(
-    [course as MinimalCourse].map((c) => c.raw_id),
-    timetableColors[Object.keys(timetableColors)[0]],
-  );
-  const timetableData = showTimetable
-    ? createTimetableFromCourses([course as MinimalCourse], colorMap)
-    : [];
-
   return (
     <Fade>
       {!modal && course && (
@@ -409,26 +399,6 @@ const CourseDetailContainer = ({
                 <p>{dict.course.details.no_venues}</p>
               )}
               <CrossDisciplineTagList course={course} />
-              {!modal && moduleVariant && (
-                <div className="mt-3 flex flex-col gap-1 rounded-md border p-3 text-sm">
-                  <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                    <span className="font-medium">
-                      {dict.course.details.offered_in}
-                    </span>
-                    <span className="text-muted-foreground">
-                      {moduleVariant.semesters
-                        .map((semester) => toPrettySemester(semester))
-                        .join("、")}
-                    </span>
-                  </div>
-                  <Link
-                    to={`/${lang}/courses/module/${encodeURIComponent(moduleKey)}?title=${encodeURIComponent(course.name_zh)}`}
-                    className="w-fit text-nthu-600 hover:underline"
-                  >
-                    {dict.course.details.view_all_semesters}
-                  </Link>
-                </div>
-              )}
             </div>
             <div className="hidden md:flex flex-col gap-2 absolute top-0 right-0 mt-4 mr-4">
               <Suspense fallback={null}>
@@ -504,10 +474,6 @@ const CourseDetailContainer = ({
                   />
                 </div>
               )}
-              {/* {showTimetable && <div className="flex flex-col gap-2">
-                            <h3 className="font-bold" id="timetable">{dict.course.details.timetable}</h3>
-                            <TimetableDynamic timetableData={timetableData} />
-                        </div>} */}
               {reviewsError ? (
                 <ErrorState
                   title={dict.common.load_error}
@@ -698,7 +664,6 @@ const CourseDetailContainer = ({
                         label={dict.course.details.prerequesites}
                       />
                     )}
-                    {/* {showTimetable && <TOCNavItem href="#timetable" label={dict.course.details.timetable} />} */}
                     {course.course_scores && (
                       <TOCNavItem
                         href="#scores"
@@ -730,6 +695,23 @@ const CourseDetailContainer = ({
                 />
               ) : (
                 <>
+                  {moduleVariant && (
+                    <div className="flex flex-col gap-1">
+                      <h3 className="font-bold text-base">
+                        {dict.course.module.offering_history}
+                      </h3>
+                      <ModuleTermAvailability
+                        semesters={moduleVariant.semesters}
+                        size="sm"
+                      />
+                      <Link
+                        to={`/${lang}/courses/module/${encodeURIComponent(moduleKey)}?title=${encodeURIComponent(course.name_zh)}`}
+                        className="w-fit text-sm text-muted-foreground underline-offset-4 hover:underline"
+                      >
+                        {dict.course.module.view_all_semesters}
+                      </Link>
+                    </div>
+                  )}
                   {(course.note ?? "").trim().length > 0 && (
                     <div className="flex flex-col gap-1">
                       <h3 className="font-bold text-base">

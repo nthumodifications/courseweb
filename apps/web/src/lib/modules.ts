@@ -71,6 +71,31 @@ export interface ModuleVariant {
   mergedRename: boolean;
 }
 
+export interface ModuleInstructorSummary {
+  key: string;
+  nameZh: string;
+  nameEn: string;
+  semesterCount: number;
+  latestSemester: string;
+}
+
+export interface ModuleSemesterSlot {
+  semester: string;
+  offered: boolean;
+}
+
+export interface ModuleAcademicYearSlot {
+  semester: string;
+  term: SemesterTerm;
+  offered: boolean;
+  predicted: boolean;
+}
+
+export interface ModuleAcademicYearGroup {
+  year: string;
+  slots: ModuleAcademicYearSlot[];
+}
+
 export interface ModuleAggregate {
   key: string;
   department: string;
@@ -82,6 +107,19 @@ export interface ModuleAggregate {
 export type ModuleHistoryRow = Pick<
   CourseDefinition,
   "semester" | "department" | "course" | "name_zh" | "name_en" | "credits"
+>;
+
+export type ModuleSearchRow = Pick<
+  CourseDefinition,
+  | "raw_id"
+  | "semester"
+  | "department"
+  | "course"
+  | "name_zh"
+  | "name_en"
+  | "credits"
+  | "teacher_zh"
+  | "teacher_en"
 >;
 
 export interface ModuleHistoryVariant {
@@ -100,6 +138,24 @@ export interface ModuleHistoryAggregate {
   department: string;
   course: string;
   variants: ModuleHistoryVariant[];
+}
+
+export interface ModuleSearchInstructor {
+  nameZh: string;
+  nameEn: string;
+}
+
+export interface ModuleSearchResult {
+  key: string;
+  department: string;
+  course: string;
+  titleKey: string;
+  nameZh: string;
+  nameEn: string;
+  semesters: string[];
+  credits: number[];
+  latestSemester: string;
+  instructors: ModuleSearchInstructor[];
 }
 
 export type OfferingPrediction =
@@ -486,6 +542,153 @@ export const getAvailableTerms = (variant: ModuleVariant) =>
     variant.history.some((item) => item.term === term),
   );
 
+export const getModuleAcademicYears = (
+  variant: ModuleVariant,
+  predictedSemester?: string,
+) => {
+  const years = [
+    ...variant.semesters,
+    ...(predictedSemester ? [predictedSemester] : []),
+  ]
+    .map((semester) => Number(String(semester).slice(0, 3)))
+    .filter((year) => Number.isFinite(year));
+  if (years.length === 0) return [];
+
+  const first = Math.min(...years);
+  const last = Math.max(...years);
+  return Array.from({ length: last - first + 1 }, (_, index) =>
+    String(first + index),
+  );
+};
+
+const academicYearFromSemester = (semester: string) =>
+  String(semester).slice(0, 3);
+
+const semesterForAcademicYear = (year: string, term: SemesterTerm) =>
+  `${year}${term === "fall" ? "10" : term === "spring" ? "20" : "30"}`;
+
+export const getModuleAcademicYearGroups = (
+  semesters: readonly string[],
+  predictedSemester?: string,
+): ModuleAcademicYearGroup[] => {
+  const observed = new Set(
+    semesters.map(String).filter((semester) => getSemesterTerm(semester)),
+  );
+  const predicted =
+    predictedSemester && getSemesterTerm(predictedSemester)
+      ? String(predictedSemester)
+      : undefined;
+  const allSemesters = [...observed, ...(predicted ? [predicted] : [])];
+  const years = allSemesters
+    .map(academicYearFromSemester)
+    .map(Number)
+    .filter(Number.isFinite);
+  if (years.length === 0) return [];
+
+  const first = Math.min(...years);
+  const last = Math.max(...years);
+  const terms = (["fall", "spring", "summer"] as SemesterTerm[]).filter(
+    (term) =>
+      [...observed].some((semester) => getSemesterTerm(semester) === term) ||
+      getSemesterTerm(predicted ?? "") === term,
+  );
+
+  return Array.from({ length: last - first + 1 }, (_, index) => {
+    const year = String(first + index);
+    return {
+      year,
+      slots: terms.map((term) => {
+        const semester = semesterForAcademicYear(year, term);
+        return {
+          semester,
+          term,
+          offered: observed.has(semester),
+          predicted: predicted === semester,
+        };
+      }),
+    };
+  });
+};
+
+export const getRecentModuleAcademicYearGroups = (
+  groups: readonly ModuleAcademicYearGroup[],
+  count: number,
+) => groups.slice(-Math.max(0, Math.floor(count)));
+
+export const getModuleInstructorSummaries = (variant: ModuleVariant) => {
+  const instructors = new Map<
+    string,
+    ModuleInstructorSummary & { semesters: Set<string> }
+  >();
+
+  for (const offering of variant.offerings) {
+    const teacherZh = offering.teacher_zh ?? [];
+    const teacherEn = offering.teacher_en ?? [];
+    const count = Math.max(teacherZh.length, teacherEn.length);
+
+    for (let index = 0; index < count; index += 1) {
+      const nameZh = teacherZh[index] ?? "";
+      const nameEn = teacherEn[index] ?? nameZh;
+      const key = nameZh || nameEn;
+      if (!key) continue;
+
+      const current = instructors.get(key) ?? {
+        key,
+        nameZh,
+        nameEn,
+        semesterCount: 0,
+        latestSemester: offering.semester,
+        semesters: new Set<string>(),
+      };
+      current.semesters.add(offering.semester);
+      current.semesterCount = current.semesters.size;
+      if (
+        semesterSortValue(offering.semester) >
+        semesterSortValue(current.latestSemester)
+      ) {
+        current.latestSemester = offering.semester;
+      }
+      instructors.set(key, current);
+    }
+  }
+
+  return [...instructors.values()]
+    .map(({ semesters: _semesters, ...summary }) => summary)
+    .sort((left, right) => {
+      if (right.semesterCount !== left.semesterCount) {
+        return right.semesterCount - left.semesterCount;
+      }
+      const latestDifference =
+        semesterSortValue(right.latestSemester) -
+        semesterSortValue(left.latestSemester);
+      return latestDifference || left.nameZh.localeCompare(right.nameZh);
+    });
+};
+
+export const getRecentSemesterSlots = (
+  semesters: readonly string[],
+  count = 8,
+): ModuleSemesterSlot[] => {
+  const observed = new Set(semesters.map(String));
+  const latest = [...observed].sort(
+    (left, right) => semesterSortValue(right) - semesterSortValue(left),
+  )[0];
+  if (!latest) return [];
+
+  const candidates = [
+    ...new Set([...semesterInfo.map((item) => item.id), ...observed]),
+  ]
+    .filter(
+      (semester) => semesterSortValue(semester) <= semesterSortValue(latest),
+    )
+    .sort((left, right) => semesterSortValue(left) - semesterSortValue(right));
+
+  return candidates.slice(-count).map((semester) => ({
+    semester,
+    offered: observed.has(semester),
+  }));
+};
+
 export const getOfferingPattern = (
   semesters: readonly string[],
 ): OfferingPattern => {
@@ -629,4 +832,212 @@ export const getModuleHistory = async (moduleKey: string) => {
   return aggregateModuleHistoryRows(
     (data ?? []) as unknown as ModuleHistoryRow[],
   );
+};
+
+export const MODULE_SEARCH_SELECT =
+  "raw_id, semester, department, course, name_zh, name_en, credits, teacher_zh, teacher_en";
+
+export const MODULE_SEARCH_ROW_LIMIT = 500;
+
+const normalizeSearchRow = (row: ModuleSearchRow): ModuleSearchRow => ({
+  ...row,
+  raw_id: String(row.raw_id),
+  semester: String(row.semester),
+  department: normalizePart(row.department),
+  course: normalizePart(row.course),
+});
+
+const getSearchInstructors = (
+  rows: readonly ModuleSearchRow[],
+  latestSemester: string,
+  titleKeys: readonly string[],
+) => {
+  const instructors = new Map<string, ModuleSearchInstructor>();
+  for (const row of rows) {
+    if (
+      row.semester !== latestSemester ||
+      !titleKeys.includes(normalizeCourseTitle(row.name_zh))
+    ) {
+      continue;
+    }
+    const teacherZh = row.teacher_zh ?? [];
+    const teacherEn = row.teacher_en ?? [];
+    const count = Math.max(teacherZh.length, teacherEn.length);
+    for (let index = 0; index < count; index += 1) {
+      const nameZh = teacherZh[index] ?? "";
+      const nameEn = teacherEn[index] ?? nameZh;
+      const key = nameZh || nameEn;
+      if (key && !instructors.has(key)) {
+        instructors.set(key, { nameZh, nameEn });
+      }
+    }
+  }
+  return [...instructors.values()];
+};
+
+export const aggregateModuleSearchRows = (
+  rows: readonly ModuleSearchRow[],
+): ModuleSearchResult[] => {
+  const rowsByModule = new Map<string, ModuleSearchRow[]>();
+  for (const row of rows.map(normalizeSearchRow)) {
+    if (!getSemesterTerm(row.semester)) continue;
+    const key = createModuleKey(row.department, row.course);
+    const current = rowsByModule.get(key) ?? [];
+    current.push(row);
+    rowsByModule.set(key, current);
+  }
+
+  return [...rowsByModule.values()].flatMap((moduleRows) => {
+    const history = aggregateModuleHistoryRows(moduleRows);
+    if (!history) return [];
+
+    return history.variants.map((variant) => ({
+      key: history.key,
+      department: history.department,
+      course: history.course,
+      titleKey: variant.titleKey,
+      nameZh: variant.nameZh,
+      nameEn: variant.nameEn,
+      semesters: variant.semesters,
+      credits: variant.credits,
+      latestSemester: variant.semesters.at(-1)!,
+      instructors: getSearchInstructors(
+        moduleRows,
+        variant.semesters.at(-1)!,
+        variant.titleKeys,
+      ),
+    }));
+  });
+};
+
+const normalizeCodeQuery = (value: string) =>
+  normalizePart(value)
+    .replace(/[\s:./_-]+/g, "")
+    .toLocaleUpperCase();
+
+export const rankModuleSearchResults = (
+  results: readonly ModuleSearchResult[],
+  keyword: string,
+) => {
+  const queryCode = normalizeCodeQuery(keyword);
+  return [...results].sort((left, right) => {
+    const leftExact =
+      normalizeCodeQuery(`${left.department}${left.course}`) === queryCode;
+    const rightExact =
+      normalizeCodeQuery(`${right.department}${right.course}`) === queryCode;
+    if (leftExact !== rightExact) return leftExact ? -1 : 1;
+
+    const latestDifference =
+      semesterSortValue(right.latestSemester) -
+      semesterSortValue(left.latestSemester);
+    if (latestDifference !== 0) return latestDifference;
+
+    return (
+      left.key.localeCompare(right.key) ||
+      left.titleKey.localeCompare(right.titleKey)
+    );
+  });
+};
+
+export const searchModules = async (keyword: string, signal?: AbortSignal) => {
+  const trimmedKeyword = keyword.trim();
+  if (!trimmedKeyword) return [];
+
+  let request = supabase
+    .rpc("search_courses", { keyword: trimmedKeyword })
+    .select(MODULE_SEARCH_SELECT)
+    .order("semester", { ascending: false })
+    .limit(MODULE_SEARCH_ROW_LIMIT);
+  if (signal) request = request.abortSignal(signal);
+
+  const { data, error } = await request;
+  if (error) throw error;
+
+  return rankModuleSearchResults(
+    aggregateModuleSearchRows((data ?? []) as unknown as ModuleSearchRow[]),
+    trimmedKeyword,
+  );
+};
+
+export type TermAvailabilityStatus =
+  | "every_year"
+  | "most_years"
+  | "some_years"
+  | "once"
+  | "stopped"
+  | "never";
+
+export interface TermAvailability {
+  term: SemesterTerm;
+  status: TermAvailabilityStatus;
+  /** Academic years in which this term was offered. */
+  offeredYears: number;
+  /** Academic years, since the course first appeared, in which it could have been. */
+  possibleYears: number;
+  lastSemester?: string;
+}
+
+const TERM_DIGIT: Record<SemesterTerm, string> = {
+  fall: "1",
+  spring: "2",
+  summer: "3",
+};
+
+/**
+ * How reliably a course runs in each term, as one status per term.
+ *
+ * The span runs from the academic year the course first appeared to the
+ * newest semester the site knows. A term counts as stopped when it ran
+ * before but not in either of its two most recent possible years.
+ */
+export const getTermAvailability = (
+  semesters: readonly string[],
+  latestKnownSemester = lastSemester.id,
+): TermAvailability[] => {
+  const offered = [...new Set(semesters)].filter(getSemesterTerm);
+  const newest = [...offered, latestKnownSemester].sort().at(-1)!;
+  const firstYear = Math.min(
+    ...offered.map((semester) => Number(semester.slice(0, 3))),
+  );
+  const terms: SemesterTerm[] = offered.some(
+    (semester) => getSemesterTerm(semester) === "summer",
+  )
+    ? ["fall", "spring", "summer"]
+    : ["fall", "spring"];
+
+  return terms.map((term) => {
+    const mine = offered
+      .filter((semester) => getSemesterTerm(semester) === term)
+      .sort();
+    if (offered.length === 0 || mine.length === 0) {
+      return { term, status: "never", offeredYears: 0, possibleYears: 0 };
+    }
+
+    // The newest year only counts if this term of it has been published.
+    const newestYear = Number(newest.slice(0, 3));
+    const lastPossibleYear =
+      `${newestYear}${TERM_DIGIT[term]}0` <= newest
+        ? newestYear
+        : newestYear - 1;
+    const possibleYears = Math.max(lastPossibleYear - firstYear + 1, 1);
+    const offeredYears = new Set(mine.map((semester) => semester.slice(0, 3)))
+      .size;
+    const lastOffered = mine.at(-1)!;
+    const yearsSinceLast = lastPossibleYear - Number(lastOffered.slice(0, 3));
+
+    let status: TermAvailabilityStatus;
+    if (yearsSinceLast >= 2) status = "stopped";
+    else if (offeredYears === 1) status = "once";
+    else if (offeredYears >= possibleYears) status = "every_year";
+    else if (offeredYears / possibleYears >= 2 / 3) status = "most_years";
+    else status = "some_years";
+
+    return {
+      term,
+      status,
+      offeredYears,
+      possibleYears,
+      lastSemester: lastOffered,
+    };
+  });
 };

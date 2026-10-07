@@ -2,15 +2,23 @@ import { describe, expect, test } from "bun:test";
 import {
   aggregateModuleOfferings,
   aggregateModuleHistoryRows,
+  aggregateModuleSearchRows,
   createModuleKey,
   getAvailableTerms,
+  getModuleAcademicYearGroups,
+  getModuleAcademicYears,
   getModuleHistoryVariant,
+  getModuleInstructorSummaries,
   getModuleVariant,
+  getRecentModuleAcademicYearGroups,
+  getRecentSemesterSlots,
   getOfferingPattern,
   inferNextOffering,
   normalizeCourseTitle,
   parseModuleKey,
+  rankModuleSearchResults,
   type ModuleOfferingRow,
+  type ModuleSearchRow,
 } from "./modules";
 
 const courseRow = (
@@ -35,6 +43,25 @@ const courseRow = (
   venues: ["台達館"],
   capacity: 90,
   enrolled: 0,
+});
+
+const searchRow = (
+  rawId: string,
+  semester: string,
+  department: string,
+  course: string,
+  title = "資料結構導論",
+  teacher = "教師",
+): ModuleSearchRow => ({
+  raw_id: rawId,
+  semester,
+  department,
+  course,
+  name_zh: title,
+  name_en: "Data Structures",
+  credits: 3,
+  teacher_zh: [teacher],
+  teacher_en: [teacher],
 });
 
 describe("module keys and title normalization", () => {
@@ -128,6 +155,145 @@ describe("module variants and aggregation", () => {
     expect(getAvailableTerms(module!.variants[0])).toEqual(["fall"]);
   });
 
+  test("builds a continuous year range and instructor summaries", () => {
+    const module = aggregateModuleOfferings([
+      courseRow("11010CS135501", "11010", "1"),
+      courseRow("11210CS135501", "11210", "1"),
+      {
+        ...courseRow("11510CS135502", "11510", "2"),
+        teacher_zh: ["教師", "助教"],
+        teacher_en: ["Teacher", "Assistant"],
+      },
+    ]);
+    const variant = module!.variants[0];
+
+    expect(getModuleAcademicYears(variant, "11610")).toEqual([
+      "110",
+      "111",
+      "112",
+      "113",
+      "114",
+      "115",
+      "116",
+    ]);
+    expect(getModuleInstructorSummaries(variant)).toEqual([
+      {
+        key: "教師",
+        nameZh: "教師",
+        nameEn: "Teacher",
+        semesterCount: 3,
+        latestSemester: "11510",
+      },
+      {
+        key: "助教",
+        nameZh: "助教",
+        nameEn: "Assistant",
+        semesterCount: 1,
+        latestSemester: "11510",
+      },
+    ]);
+  });
+
+  test("groups terms inside each academic year in semester order", () => {
+    expect(
+      getModuleAcademicYearGroups(["10810", "10920", "11030"], "11110"),
+    ).toEqual([
+      {
+        year: "108",
+        slots: [
+          { semester: "10810", term: "fall", offered: true, predicted: false },
+          {
+            semester: "10820",
+            term: "spring",
+            offered: false,
+            predicted: false,
+          },
+          {
+            semester: "10830",
+            term: "summer",
+            offered: false,
+            predicted: false,
+          },
+        ],
+      },
+      {
+        year: "109",
+        slots: [
+          { semester: "10910", term: "fall", offered: false, predicted: false },
+          {
+            semester: "10920",
+            term: "spring",
+            offered: true,
+            predicted: false,
+          },
+          {
+            semester: "10930",
+            term: "summer",
+            offered: false,
+            predicted: false,
+          },
+        ],
+      },
+      {
+        year: "110",
+        slots: [
+          { semester: "11010", term: "fall", offered: false, predicted: false },
+          {
+            semester: "11020",
+            term: "spring",
+            offered: false,
+            predicted: false,
+          },
+          {
+            semester: "11030",
+            term: "summer",
+            offered: true,
+            predicted: false,
+          },
+        ],
+      },
+      {
+        year: "111",
+        slots: [
+          { semester: "11110", term: "fall", offered: false, predicted: true },
+          {
+            semester: "11120",
+            term: "spring",
+            offered: false,
+            predicted: false,
+          },
+          {
+            semester: "11130",
+            term: "summer",
+            offered: false,
+            predicted: false,
+          },
+        ],
+      },
+    ]);
+  });
+
+  test("keeps only the newest academic-year groups for compact strips", () => {
+    const groups = getModuleAcademicYearGroups(
+      ["10810", "10920", "11010", "11120", "11210"],
+      "11310",
+    );
+
+    expect(
+      getRecentModuleAcademicYearGroups(groups, 4).map((group) => group.year),
+    ).toEqual(["110", "111", "112", "113"]);
+    expect(getRecentModuleAcademicYearGroups(groups, 10)).toHaveLength(6);
+  });
+
+  test("fills recent detail dots with hollow gaps", () => {
+    expect(getRecentSemesterSlots(["11410", "11510"], 4)).toEqual([
+      { semester: "11320", offered: false },
+      { semester: "11410", offered: true },
+      { semester: "11420", offered: false },
+      { semester: "11510", offered: true },
+    ]);
+  });
+
   test("history-only aggregation selects a title without offering columns", () => {
     const history = aggregateModuleHistoryRows([
       {
@@ -152,6 +318,21 @@ describe("module variants and aggregation", () => {
     expect(
       history && getModuleHistoryVariant(history, "資料結構導論")?.semesters,
     ).toEqual(["11410"]);
+  });
+
+  test("groups search rows into module title variants and ranks exact codes first", () => {
+    const results = aggregateModuleSearchRows([
+      searchRow("11510MA135501", "11510", "MA", "1355", "微積分", "甲老師"),
+      searchRow("11310CS135501", "11310", "CS", "1355", "資料結構", "乙老師"),
+      searchRow("11410CS135501", "11410", "CS", "1355", "資料結構", "丙老師"),
+    ]);
+
+    const ranked = rankModuleSearchResults(results, "CS 1355");
+    expect(ranked.map((result) => result.key)).toEqual(["CS:1355", "MA:1355"]);
+    expect(ranked[0].latestSemester).toBe("11410");
+    expect(
+      ranked[0].instructors.map((instructor) => instructor.nameZh),
+    ).toEqual(["丙老師"]);
   });
 });
 
