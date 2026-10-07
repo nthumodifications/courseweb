@@ -13,12 +13,21 @@ import {
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { useNavigate, useParams } from "react-router-dom";
 import useDictionary from "@/dictionaries/useDictionary";
-import { Button } from "@courseweb/ui";
 import {
+  Button,
   Dialog,
   DialogContent,
   DialogTitle,
   DialogTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
 } from "@courseweb/ui";
 import {
   DownloadTimetableDialogDynamic,
@@ -26,24 +35,19 @@ import {
   CourseSearchContainerDynamic,
   TimetableCourseList,
 } from "./TimetableCourseList";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@courseweb/ui";
 import OpenCollectiveSponsorBanner from "../Sponsorship/OpenCollectiveSponsorBanner";
 import { useAuth } from "react-oidc-context";
 import { useQuery } from "@tanstack/react-query";
 import { useTimetableShare } from "@/hooks/useTimetableShare";
 import { toPrettySemester } from "@/helpers/semester";
-import { Popover, PopoverContent, PopoverTrigger } from "@courseweb/ui";
 import Compact from "@uiw/react-color-compact";
 import { useMemo } from "react";
 import { TimetableCustomItemDrawer } from "./TimetableItemDrawer";
 import { CustomTimetableItem } from "@/types/timetable";
+import {
+  canSortTimetableCourses,
+  reorderStoredCourseIdsByCredits,
+} from "@/helpers/timetable";
 
 const createEmptyCustomItem = (color: string): CustomTimetableItem => ({
   // crypto.randomUUID rather than Math.random: the project already moved its
@@ -61,7 +65,6 @@ const TimetableSidebar = ({
 }: {
   vertical: boolean;
   setVertical: (v: boolean) => void;
-  hideSettings?: boolean;
 }) => {
   const dict = useDictionary();
 
@@ -78,6 +81,9 @@ const TimetableSidebar = ({
     updateCustomItem,
     deleteCustomItem,
     setCustomItemColor,
+    isLoading,
+    isFetchingCourses,
+    error,
   } = useUserTimetable();
 
   const emptyCustomItem = useMemo(
@@ -123,13 +129,16 @@ const TimetableSidebar = ({
   };
 
   const sortByCredits = (semester: string) => {
-    const semesterCourses = getSemesterCourses(semester);
-    const sortedCourses = [...semesterCourses].sort(
-      (a, b) => b.credits - a.credits,
-    );
-    setCourses({
-      ...courses,
-      [semester]: sortedCourses.map((course) => course.raw_id),
+    if (!canSortTimetableCourses(isLoading || isFetchingCourses, error)) return;
+    setCourses((currentCourses) => {
+      const sortedCourseIds = reorderStoredCourseIdsByCredits(
+        currentCourses[semester] ?? [],
+        getSemesterCourses(semester),
+      );
+      return {
+        ...currentCourses,
+        [semester]: sortedCourseIds,
+      };
     });
   };
 
@@ -331,7 +340,12 @@ const TimetableSidebar = ({
             <DropdownMenuItem onClick={() => handleGroupByDepartment(semester)}>
               {dict.timetable.actions.group_dept}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => sortByCredits(semester)}>
+            <DropdownMenuItem
+              disabled={
+                !canSortTimetableCourses(isLoading || isFetchingCourses, error)
+              }
+              onClick={() => sortByCredits(semester)}
+            >
               {dict.timetable.actions.sort_by_credits}
             </DropdownMenuItem>
           </DropdownMenuContent>

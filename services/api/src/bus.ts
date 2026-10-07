@@ -156,10 +156,7 @@ async function fetchCompleteBusData(): Promise<CompleteBusData> {
   const url2 =
     "https://affairs.site.nthu.edu.tw/p/412-1165-20979.php?Lang=zh-tw"; // inter-campus (route1/route2)
 
-  const [response1, response2] = await Promise.all([
-    fetch(url1),
-    fetch(url2),
-  ]);
+  const [response1, response2] = await Promise.all([fetch(url1), fetch(url2)]);
 
   let busData: ParsedBusData = {};
 
@@ -169,8 +166,7 @@ async function fetchCompleteBusData(): Promise<CompleteBusData> {
     const { document: doc1 } = parseHTML(html1);
     const scripts1 = doc1.querySelectorAll("script");
 
-    for (let i = 0; i < scripts1.length; i++) {
-      const script = scripts1[i];
+    for (const script of scripts1) {
       const scriptContent = script.textContent || script.innerHTML;
 
       if (
@@ -190,8 +186,7 @@ async function fetchCompleteBusData(): Promise<CompleteBusData> {
     const { document: doc2 } = parseHTML(html2);
     const scripts2 = doc2.querySelectorAll("script");
 
-    for (let i = 0; i < scripts2.length; i++) {
-      const script = scripts2[i];
+    for (const script of scripts2) {
       const scriptContent = script.textContent || script.innerHTML;
 
       if (
@@ -492,7 +487,10 @@ function extractBusDataFromScript(scriptContent: string): ParsedBusData {
   try {
     // Use regex to extract the data objects directly
     const extractObject = (varName: string) => {
-      const regex = new RegExp(`const ${varName} = \\{([\\s\\S]*?)\\}`, "m");
+      const regex = new RegExp(
+        String.raw`const ${varName} = \{([\s\S]*?)\}`,
+        "m",
+      );
       const match = scriptContent.match(regex);
       if (match) {
         const result: any = {};
@@ -516,7 +514,10 @@ function extractBusDataFromScript(scriptContent: string): ParsedBusData {
     };
 
     const extractArray = (varName: string) => {
-      const regex = new RegExp(`const ${varName} = \\[([\\s\\S]*?)\\]`, "m");
+      const regex = new RegExp(
+        String.raw`const ${varName} = \[([\s\S]*?)\]`,
+        "m",
+      );
       const match = scriptContent.match(regex);
       if (match) {
         const result: any[] = [];

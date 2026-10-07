@@ -1,6 +1,8 @@
 import React, {
   createContext,
   useContext,
+  useCallback,
+  useMemo,
   useState,
   ReactNode,
   useEffect,
@@ -27,12 +29,14 @@ export const HeaderPortalProvider: React.FC<{ children: ReactNode }> = ({
 }) => {
   const [portalContent, setPortalContent] = useState<ReactNode>(null);
 
-  const clearPortalContent = () => setPortalContent(null);
+  const clearPortalContent = useCallback(() => setPortalContent(null), []);
+  const contextValue = useMemo(
+    () => ({ portalContent, setPortalContent, clearPortalContent }),
+    [portalContent, clearPortalContent],
+  );
 
   return (
-    <HeaderPortalContext.Provider
-      value={{ portalContent, setPortalContent, clearPortalContent }}
-    >
+    <HeaderPortalContext.Provider value={contextValue}>
       {children}
     </HeaderPortalContext.Provider>
   );

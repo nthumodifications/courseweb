@@ -148,15 +148,16 @@ const normalizeTag = (
   if (["18週", "18 weeks", "18-week", "18 week"].includes(normalized))
     return "18週";
   if (normalized === "x-class" || normalized === "x class") return "X-Class";
-  if (
-    ["不可加簽", "no extra selection", "no add/drop"].includes(normalized)
-  )
+  if (["不可加簽", "no extra selection", "no add/drop"].includes(normalized))
     return "不可加簽";
   return undefined;
 };
 
 const normalizedDepartment = (value: string) =>
-  value.trim().toLocaleLowerCase("zh-TW").replace(/[\s._-]+/g, "");
+  value
+    .trim()
+    .toLocaleLowerCase("zh-TW")
+    .replace(/[\s._-]+/g, "");
 
 /** Resolve model department text to one actual department facet code. */
 export function resolveDepartment(
@@ -189,7 +190,7 @@ export function resolveDepartment(
 }
 
 const escapeRegExp = (value: string) =>
-  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  value.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 
 /**
  * Departments the student named outright: a Chinese name with its 系/所
@@ -205,7 +206,11 @@ export function detectDepartments(
   return unique(
     options
       .filter((option) => {
-        if (option.name_zh && option.name_zh.length >= 3 && text.includes(option.name_zh)) {
+        if (
+          option.name_zh &&
+          option.name_zh.length >= 3 &&
+          text.includes(option.name_zh)
+        ) {
           return true;
         }
         const name = option.name_en
@@ -214,7 +219,7 @@ export function detectDepartments(
         if (!name || name.length < 4) return false;
         const n = escapeRegExp(name);
         return new RegExp(
-          `\\b${n}\\s+(department|dept|courses?|classes|major)\\b|\\b(department|dept|school) of ${n}\\b`,
+          String.raw`\b${n}\s+(department|dept|courses?|classes|major)\b|\b(department|dept|school) of ${n}\b`,
         ).test(lower);
       })
       .map((option) => option.code),
@@ -240,7 +245,7 @@ const fallbackExplanation = (lang: "zh" | "en") =>
 const ALWAYS_FILLER =
   /(週|星期|禮拜)[一二三四五六日天]|(上午|早上|中午|下午|晚上|傍晚)|\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday|morning|noon|afternoon|evening|night)s?\b|\d+\s*學分|\b\d+[- ]?credits?\b|學分|\bcredits?\b|課程|的課|\bcourses?\b|\bclass(es)?\b|\b(on|in|at|for|the|a|an|with|find|want|looking|some|any|i|me|please)\b/giu;
 const LANGUAGE_FILLER =
-  /(英文|中文|英語|華語)(授課)?|\b(english|chinese|mandarin)(-| )?(taught)?\b|\btaught in\b/giu;
+  /(英文|中文|英語|華語)(授課)?|\b(english|chinese|mandarin)([- ])?(taught)?\b|\btaught in\b/giu;
 const GE_FILLER =
   /(核心)?通識|第?[一二三四1-4]向度|\bgeneral education\b|\bge\b|\bcore\b/giu;
 
@@ -352,8 +357,11 @@ export function normalizeSearchIntent(
     if (option?.name_zh) query = query.split(option.name_zh).join(" ").trim();
   }
   // "資工" alongside department CS is the filter restated, not a topic.
-  const queryDepartment = query ? resolveDepartment(query, departments) : undefined;
-  if (queryDepartment && filters.department?.includes(queryDepartment)) query = "";
+  const queryDepartment = query
+    ? resolveDepartment(query, departments)
+    : undefined;
+  if (queryDepartment && filters.department?.includes(queryDepartment))
+    query = "";
 
   return {
     query,
@@ -364,7 +372,11 @@ export function normalizeSearchIntent(
 }
 
 export const normalizeSearchQuery = (query: string) =>
-  query.normalize("NFKC").trim().replace(/\s+/g, " ").toLocaleLowerCase("zh-TW");
+  query
+    .normalize("NFKC")
+    .trim()
+    .replace(/\s+/g, " ")
+    .toLocaleLowerCase("zh-TW");
 
 export const searchIntentCacheKey = (
   query: string,
@@ -383,11 +395,15 @@ const loadDepartmentOptions = async (
   c: Parameters<typeof supabase_server>[0],
   semester?: string,
 ): Promise<DepartmentOption[]> => {
-  let query = supabase_server(c).from("courses").select("department").limit(5000);
+  let query = supabase_server(c)
+    .from("courses")
+    .select("department")
+    .limit(5000);
   if (semester) query = query.eq("semester", semester);
   const { data, error } = await query;
   if (error || !data?.length) {
-    if (error) console.error("AI search department lookup failed:", error.message);
+    if (error)
+      console.error("AI search department lookup failed:", error.message);
     return FALLBACK_DEPARTMENTS;
   }
   const known = new Map(FALLBACK_DEPARTMENTS.map((item) => [item.code, item]));
@@ -411,7 +427,9 @@ export const searchIntentSystemPrompt = (
   // English names server-side.
   const departmentList = departments
     .map((department) =>
-      department.name_zh ? `${department.code}=${department.name_zh}` : department.code,
+      department.name_zh
+        ? `${department.code}=${department.name_zh}`
+        : department.code,
     )
     .join(" ");
   return `${
@@ -448,11 +466,14 @@ const app = new Hono<{ Bindings: Bindings }>().post(
     const prisma = await prismaClients.fetch(c.env.DB);
 
     try {
-      const cached = await prisma.cache.findUnique({ where: { key: cacheKey } });
+      const cached = await prisma.cache.findUnique({
+        where: { key: cacheKey },
+      });
       if (cached) {
         try {
           const value = JSON.parse(cached.data) as SearchIntent;
-          if (value && typeof value.explanation === "string") return c.json(value);
+          if (value && typeof value.explanation === "string")
+            return c.json(value);
         } catch {
           // Treat a corrupt cache entry as a miss and regenerate it.
         }
@@ -467,7 +488,10 @@ const app = new Hono<{ Bindings: Bindings }>().post(
         const outcome = await limiter.limit({ key: requestIp(c) });
         if (!outcome.success) {
           return c.json(
-            { error: "Too many uncached AI search requests", code: "rate_limited" },
+            {
+              error: "Too many uncached AI search requests",
+              code: "rate_limited",
+            },
             429,
           );
         }
@@ -485,7 +509,12 @@ const app = new Hono<{ Bindings: Bindings }>().post(
         schema: SEARCH_INTENT_SCHEMA,
         purpose: "bulk",
       });
-      const intent = normalizeSearchIntent(generated.data, lang, departmentOptions, query);
+      const intent = normalizeSearchIntent(
+        generated.data,
+        lang,
+        departmentOptions,
+        query,
+      );
       const response: SearchIntent = {
         ...intent,
         provider: generated.provider,

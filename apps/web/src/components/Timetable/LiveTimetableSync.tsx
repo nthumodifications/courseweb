@@ -13,8 +13,13 @@ import {
 /** Publishes local timetable changes for every live share owned by the user. */
 const LiveTimetableSync = () => {
   const auth = useAuth();
-  const { courses, customItems, timetableDataReady, customItemsDataReady } =
-    useUserTimetable();
+  const {
+    courses,
+    customItems,
+    timetableDataReady,
+    timetableSyncError,
+    customItemsDataReady,
+  } = useUserTimetable();
   const { listOwnShares, updateShare } = useTimetableShare();
   const userId = auth.user?.profile.sub;
   const authSessionKey = auth.user?.expires_at ?? 0;
@@ -36,7 +41,14 @@ const LiveTimetableSync = () => {
   });
 
   useEffect(() => {
-    if (!canSync || !timetableDataReady || !customItemsDataReady) return;
+    if (
+      !canSync ||
+      !timetableDataReady ||
+      !customItemsDataReady ||
+      timetableSyncError
+    ) {
+      return;
+    }
 
     const liveShareIds = new Set(
       ownShares.filter((share) => share.isLive).map((share) => share.id),
@@ -88,6 +100,7 @@ const LiveTimetableSync = () => {
     ownShares,
     syncRevision,
     timetableDataReady,
+    timetableSyncError,
     updateShare,
   ]);
 

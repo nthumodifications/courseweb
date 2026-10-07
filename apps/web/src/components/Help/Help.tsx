@@ -1,7 +1,6 @@
 import {
   HelpCircle,
   Calendar,
-  CalendarSearch,
   Clock,
   Bus,
   Wrench,
@@ -12,13 +11,16 @@ import {
 } from "lucide-react";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useState, useEffect, ReactNode } from "react";
-import { Dialog, DialogContent, DialogTrigger } from "@courseweb/ui";
-import { Button } from "@courseweb/ui";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+  Button,
+  cn,
+} from "@courseweb/ui";
 
 import { useLocalStorage } from "usehooks-ts";
-import { cn } from "@courseweb/ui";
 import { motion } from "framer-motion";
-import { ScrollArea } from "@courseweb/ui";
 import { useAuth } from "react-oidc-context";
 import { GreenLineIcon } from "../BusIcons/GreenLineIcon";
 import { RedLineIcon } from "../BusIcons/RedLineIcon";
@@ -92,7 +94,7 @@ const CoursesAnimation = () => (
     </div>
 
     {/* Horizontal timetable grid lines */}
-    {[...Array(6)].map((_, i) => (
+    {[...new Array(6)].map((_, i) => (
       <motion.div
         key={`h-${i}`}
         className="absolute left-8 right-0 h-px bg-border"
@@ -104,7 +106,7 @@ const CoursesAnimation = () => (
     ))}
 
     {/* Vertical day dividers */}
-    {[...Array(4)].map((_, i) => (
+    {[...new Array(4)].map((_, i) => (
       <motion.div
         key={`v-${i}`}
         className="absolute top-0 bottom-0 w-px bg-border"
@@ -305,7 +307,10 @@ const BusAnimation = ({ title }: { title: string }) => (
         { icon: <GreenLineIcon />, position: "20%" },
         { icon: <RedLineIcon />, position: "40%" },
         { icon: <NandaLineIcon />, position: "60%" },
-        { icon: <Bus size={16} className="text-primary-foreground" />, position: "80%" },
+        {
+          icon: <Bus size={16} className="text-primary-foreground" />,
+          position: "80%",
+        },
       ].map((stop, i) => (
         <motion.div
           key={i}
@@ -421,7 +426,7 @@ const Help = ({ children }: { children?: ReactNode }) => {
       setPage(0);
     } else {
       // wait for 2 seconds before setting hasVisitedBefore to true
-      const timer = setTimeout(() => {
+      setTimeout(() => {
         setHasVisitedBefore(true);
       }, 2000);
     }

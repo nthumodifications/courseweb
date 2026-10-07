@@ -43,7 +43,9 @@ const TimetableDots: FC<TimetableDotsProps> = ({
   const usedTimeSlots = Object.keys(slotMap)
     .map(Number)
     .sort((a, b) => a - b);
-  const usedDays = [...new Set(timetableData.map((s) => s.dayOfWeek))].sort();
+  const usedDays = [...new Set(timetableData.map((s) => s.dayOfWeek))].sort(
+    (a, b) => a - b,
+  );
 
   return (
     <div className={cn("overflow-auto p-3", className)}>

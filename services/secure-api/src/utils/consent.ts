@@ -29,6 +29,11 @@ export function buildClientRedirect(
   return `${base}${separator}${query.toString()}`;
 }
 
+export const getRegisteredRedirectUri = (
+  registeredUris: readonly string[],
+  requestedUri: string,
+) => registeredUris.find((uri) => uri === requestedUri);
+
 /**
  * Compare scope sets, not scope lists.
  *

@@ -30,7 +30,7 @@ function formatToolValue(value: unknown) {
   }
 }
 
-export function ChatMessage({ message }: ChatMessageProps) {
+export function ChatMessage({ message }: Readonly<ChatMessageProps>) {
   const isUser = message.role === "user";
   const dict = useDictionary();
 

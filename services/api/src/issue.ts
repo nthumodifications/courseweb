@@ -141,7 +141,7 @@ const verifyTurnstile = async (token: string, secretKey: string) => {
     });
     const outcome = (await result.json()) as { success: boolean };
     return outcome.success;
-  } catch (err) {
+  } catch {
     return false;
   }
 };
@@ -247,8 +247,7 @@ const app = new Hono()
         );
 
         if (!response.ok) {
-          const errorText = await response.text();
-          console.error(`GitHub API error: ${response.status} ${errorText}`);
+          console.error("GitHub API error", response.status);
 
           let errorResponse: ErrorResponse;
 
@@ -365,10 +364,7 @@ const app = new Hono()
         );
 
         if (!response.ok) {
-          const errorText = await response.text();
-          console.error(
-            `GitHub API GET error: ${response.status} ${errorText}`,
-          );
+          console.error("GitHub API GET error", response.status);
 
           let errorResponse: ErrorResponse;
 
@@ -402,10 +398,7 @@ const app = new Hono()
               };
           }
 
-          return c.json(
-            errorResponse,
-            (response.status >= 500 ? 500 : response.status) as any,
-          );
+          return c.json(errorResponse, Math.min(response.status, 500) as any);
         }
 
         const data = (await response.json()) as GithubIssue[];

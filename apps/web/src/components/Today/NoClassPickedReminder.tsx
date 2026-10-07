@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import useDictionary from "@/dictionaries/useDictionary";
-import { CalendarPlus, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useSettings } from "@/hooks/contexts/settings";
 import { Button } from "@courseweb/ui";
 

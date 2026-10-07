@@ -13,12 +13,9 @@ import {
   isSameMinute,
   subMinutes,
   isWeekend,
-  subHours,
   format,
-  endOfMinute,
   startOfMinute,
   differenceInMinutes,
-  set,
   getDay,
 } from "date-fns";
 import { useParams, useSearchParams } from "react-router-dom";
@@ -251,7 +248,7 @@ const CampusLineDisplayPage = () => {
 
   const weektype = isWeekend(time) ? "weekend" : "weekday";
 
-  const { data: busData, error } = useQuery({
+  const { data: busData } = useQuery({
     queryKey: ["all_bus_data"],
     queryFn: getAllBusData,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -300,7 +297,7 @@ const CampusLineDisplayPage = () => {
         .filter((bus) => {
           // remove duplicate down busses
           if (bus.direction == "down") {
-            const upBus = busses.find(
+            const hasMatchingUpBus = busses.some(
               (b) =>
                 b.direction == "up" &&
                 isSameMinute(
@@ -308,7 +305,7 @@ const CampusLineDisplayPage = () => {
                   subMinutes(getTimeOnDate(time, bus.time), 7),
                 ),
             );
-            if (upBus) return false;
+            if (hasMatchingUpBus) return false;
           }
           return true;
         })
@@ -341,7 +338,7 @@ const CampusLineDisplayPage = () => {
         .filter((bus) => {
           // remove duplicate down busses
           if (bus.direction == "down") {
-            const upBus = busses.find(
+            const hasMatchingUpBus = busses.some(
               (b) =>
                 b.direction == "up" &&
                 isSameMinute(
@@ -349,7 +346,7 @@ const CampusLineDisplayPage = () => {
                   subMinutes(getTimeOnDate(time, bus.time), 7),
                 ),
             );
-            if (upBus) return false;
+            if (hasMatchingUpBus) return false;
           }
           return true;
         })
@@ -508,7 +505,7 @@ const CampusLineDisplayPage = () => {
             (bus.type == "route1" || bus.type == "route2"),
         )
         .map((bus) => {
-          const startIndex = bus.direction == "up" ? 0 : 0;
+          const startIndex = 0;
           const startTime = getTimeOnDate(time, bus.time);
           // Use route1 timing for both routes as they follow similar paths
           const timings = linesDict.route1_up.timings;

@@ -1,23 +1,12 @@
-import { Button } from "@courseweb/ui";
-import { Input } from "@courseweb/ui";
-import { ScrollArea } from "@courseweb/ui";
-import { Progress } from "@courseweb/ui";
+import { Button, Input, Progress, ScrollArea } from "@courseweb/ui";
 import {
   FolderDocType,
   ItemDocType,
   PlannerDataDocType,
 } from "@/app/[lang]/(mods-pages)/student/planner/rxdb";
 import { FolderNavItem } from "../folder-nav/folder-nav-item";
-import {
-  GraduationCap,
-  FileText,
-  Search,
-  FolderTree,
-  Cog,
-  Inbox,
-} from "lucide-react";
+import { FileText, Search, FolderTree, Cog } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import useDictionary from "@/dictionaries/useDictionary";
 import { getStatusLabel } from "@/app/[lang]/(mods-pages)/student/planner/lib/status";
 

@@ -5,21 +5,7 @@ import {
   createTimetableFromCourses,
   colorMapFromCourses,
 } from "@/helpers/timetable";
-import { useSettings } from "@/hooks/contexts/settings";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
-import {
-  RawCourseID,
-  Semester,
-  DepartmentCode,
-  CourseCode,
-  ClassCode,
-  Credits,
-  Venue,
-  Time,
-  TeacherZH,
-  TeacherEN,
-  Language,
-} from "@/types/courses";
 import { useState } from "react";
 
 // raw_id: RawCourseID;

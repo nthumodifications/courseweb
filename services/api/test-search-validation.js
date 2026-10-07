@@ -144,8 +144,7 @@ function runSearchTests() {
     // Validate response
     if (test.path === "/search/info") {
       // Info endpoint validation
-      const validInfo = mockResponse.data && 
-                       mockResponse.data.name && 
+      const validInfo = mockResponse.data?.name &&
                        mockResponse.data.endpoints &&
                        mockResponse.data.examples;
       
@@ -155,14 +154,11 @@ function runSearchTests() {
       } else {
         console.log("❌ Test failed - Info endpoint missing required fields");
       }
+    } else if (validateSearchResponse(mockResponse, test)) {
+      console.log("✅ Test passed - Search response structure valid");
+      passed++;
     } else {
-      // Search endpoint validation
-      if (validateSearchResponse(mockResponse, test)) {
-        console.log("✅ Test passed - Search response structure valid");
-        passed++;
-      } else {
-        console.log("❌ Test failed - Invalid search response structure");
-      }
+      console.log("❌ Test failed - Invalid search response structure");
     }
     
     console.log(`   ${test.method} ${test.path}`);

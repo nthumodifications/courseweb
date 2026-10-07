@@ -10,7 +10,9 @@ interface TimetableRendererProps {
   rawIds: string[];
 }
 
-export default function TimetableRenderer({ rawIds }: TimetableRendererProps) {
+export default function TimetableRenderer({
+  rawIds,
+}: Readonly<TimetableRendererProps>) {
   const { addCourse } = useUserTimetable();
   const dict = useDictionary();
   const [isAdding, setIsAdding] = useState(false);

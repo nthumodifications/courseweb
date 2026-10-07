@@ -28,14 +28,6 @@ const SearchBox = ({ placeholder, autoFocus, ...props }: SearchBoxProps) => {
     refine(newValue);
   };
 
-  const onReset = () => {
-    setInputValue("");
-    clear();
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
-  };
-
   return (
     <form
       onSubmit={onSubmit}
@@ -54,7 +46,12 @@ const SearchBox = ({ placeholder, autoFocus, ...props }: SearchBoxProps) => {
         spellCheck={false}
         className="flex-1"
       />
-      <Button type="submit" variant="ghost" size="icon" title={dict.common.search}>
+      <Button
+        type="submit"
+        variant="ghost"
+        size="icon"
+        title={dict.common.search}
+      >
         <Search size="16" />
       </Button>
     </form>

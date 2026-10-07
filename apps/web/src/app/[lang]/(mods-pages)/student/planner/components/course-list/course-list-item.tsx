@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Badge } from "@courseweb/ui";
-import { Button } from "@courseweb/ui";
 import {
+  Badge,
+  Button,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -34,6 +34,7 @@ import {
 } from "@/app/[lang]/(mods-pages)/student/planner/lib/status";
 import { useConfirm } from "@/app/[lang]/(mods-pages)/student/planner/lib/use-confirm";
 import useDictionary from "@/dictionaries/useDictionary";
+import { activateOnKey } from "@/lib/activate-on-key";
 
 interface CourseListItemProps {
   course: ItemDocType;
@@ -154,6 +155,9 @@ export function CourseListItem({
       className={`flex items-center p-2 rounded-md border ${isSelected ? "border-primary" : isMultiSelected ? "border-primary bg-primary/10" : "border-border"}
         bg-neutral-50 dark:bg-neutral-800 cursor-pointer hover:border-primary transition-colors duration-200 group relative touch-none`}
       onClick={onClick}
+      onKeyDown={activateOnKey(() => onClick())}
+      role="button"
+      tabIndex={0}
     >
       {/* Selection checkbox - always rendered, at reduced opacity until hover/focus/selected */}
       <button

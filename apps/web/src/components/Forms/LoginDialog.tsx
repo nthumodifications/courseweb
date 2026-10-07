@@ -1,8 +1,12 @@
-import { Button } from "@courseweb/ui";
-import { Dialog, DialogContent, DialogTrigger } from "@courseweb/ui";
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+  ScrollArea,
+} from "@courseweb/ui";
 import { ReactNode, useState } from "react";
 import useDictionary from "@/dictionaries/useDictionary";
-import { ScrollArea } from "@courseweb/ui";
 
 const LoginDialog = ({ children }: { children?: ReactNode }) => {
   const [open, setOpen] = useState(false);
@@ -11,11 +15,7 @@ const LoginDialog = ({ children }: { children?: ReactNode }) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {children ? (
-          children
-        ) : (
-          <Button variant="outline">{dict.ccxp.connect}</Button>
-        )}
+        {children || <Button variant="outline">{dict.ccxp.connect}</Button>}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px] h-screen lg:h-auto w-full ">
         <ScrollArea className="h-full">

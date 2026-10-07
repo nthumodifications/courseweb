@@ -1,17 +1,9 @@
 import useDictionary from "@/dictionaries/useDictionary";
-import { departments, GETargetCodes, semesterInfo } from "@courseweb/shared";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@courseweb/ui";
-import ClassRefinementItem from "./ClasssRefinementItem";
+import { departments, GETargetCodes } from "@courseweb/shared";
 import ExpandableClassFilter from "../student/planner/course-picker/ExpandableClassFilter";
 import ExpandableFilter from "../student/planner/course-picker/ExpandableFilter";
 import InlineCheckboxFilter from "../student/planner/course-picker/InlineCheckboxFilter";
 import TimeSelectionFilter from "./TimeSelectionFilter";
-import { Label } from "@courseweb/ui";
 import { MinimalCourse } from "@/types/courses";
 
 const languageSynonyms: Record<string, string> = {

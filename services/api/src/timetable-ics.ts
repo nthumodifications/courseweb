@@ -82,8 +82,8 @@ export function courseToEvents(course: CourseRow): TimeslotEvent[] {
     // Group consecutive slots on the same day into single events
     const groups: { day: string; time: string }[][] = [];
     for (const slot of slots) {
-      const last = groups[groups.length - 1];
-      const lastSlot = last?.[last.length - 1];
+      const last = groups.at(-1);
+      const lastSlot = last?.at(-1);
       if (
         last &&
         lastSlot &&
@@ -149,10 +149,10 @@ export function taipeiTimeToUtc(timeStr: string): {
 
 export function escapeIcsText(text: string): string {
   return text
-    .replace(/\\/g, "\\\\")
-    .replace(/;/g, "\\;")
-    .replace(/,/g, "\\,")
-    .replace(/\n/g, "\\n");
+    .replaceAll("\\", String.raw`\\`)
+    .replaceAll(";", String.raw`\;`)
+    .replaceAll(",", String.raw`\,`)
+    .replaceAll("\n", String.raw`\n`);
 }
 
 /** Fold long lines per RFC 5545 §3.1 (max 75 octets per line).
@@ -249,7 +249,7 @@ export function generateTimetableIcs(
       ]
         .filter((s): s is string => Boolean(s))
         .map(escapeIcsText)
-        .join("\\n");
+        .join(String.raw`\n`);
 
       // UID and DTSTAMP are REQUIRED per RFC 5545 §3.6.1
       const uid = `${row.raw_id}-${ev.dayOfWeek}-${ev.startTime}@nthumods.com`;

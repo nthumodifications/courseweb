@@ -51,26 +51,24 @@ export const updatePlannerData = async (
 };
 
 // Function to calculate total completed credits
-export const calculateCompletedCredits = async (
+export const calculateCompletedCredits = (
   courseItems: ItemDocType[],
-): Promise<number> => {
+): number => {
   return courseItems
     .filter((course) => course.status === "completed")
     .reduce((sum, course) => sum + course.credits, 0);
 };
 
-export const calculateInProgressCredits = async (
+export const calculateInProgressCredits = (
   courseItems: ItemDocType[],
-): Promise<number> => {
+): number => {
   return courseItems
     .filter((course) => course.status === "in-progress")
     .reduce((sum, course) => sum + course.credits, 0);
 };
 
 // Function to calculate planned credits
-export const calculatePlannedCredits = async (
-  courseItems: ItemDocType[],
-): Promise<number> => {
+export const calculatePlannedCredits = (courseItems: ItemDocType[]): number => {
   return courseItems
     .filter((course) => course.status === "planned")
     .reduce((sum, course) => sum + course.credits, 0);

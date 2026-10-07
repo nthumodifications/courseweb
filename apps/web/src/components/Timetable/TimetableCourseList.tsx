@@ -18,8 +18,25 @@ import {
   hasSameCourse,
   hasTimes,
 } from "@/helpers/courses";
-import { MinimalCourse, RawCourseID } from "@/types/courses";
-import { Button } from "@courseweb/ui";
+import { MinimalCourse } from "@/types/courses";
+import {
+  Button,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  Separator,
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+  Switch,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@courseweb/ui";
+import { getTimetableCourseListStatus } from "@/helpers/timetable";
 import {
   DndContext,
   closestCenter,
@@ -36,28 +53,16 @@ import {
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
+  useSortable,
 } from "@dnd-kit/sortable";
-import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
 import {
   restrictToVerticalAxis,
   restrictToWindowEdges,
 } from "@dnd-kit/modifiers";
-import { Popover, PopoverContent, PopoverTrigger } from "@courseweb/ui";
 import Compact from "@uiw/react-color-compact";
-import { Separator } from "@courseweb/ui";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@courseweb/ui";
 import { TimetableItemDrawer } from "./TimetableItemDrawer";
-import { Switch } from "@courseweb/ui";
-import { Label } from "@courseweb/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@courseweb/ui";
 
 const DownloadTimetableDialogLazy = lazy(
   () => import("./DownloadTimetableDialog"),
@@ -158,12 +163,8 @@ const TimetableCourseListItem = ({
   priority: number;
   displaySettings: DisplaySettings;
 }) => {
-  const { language } = useSettings();
   const dict = useDictionary();
 
-  const handleCopyClipboard = (id: RawCourseID) => {
-    navigator.clipboard.writeText(id);
-  };
   const { deleteCourse, colorMap, setColor, currentColors } =
     useUserTimetable();
 
@@ -311,8 +312,14 @@ export const TimetableCourseList = ({
   const dict = useDictionary();
   const navigate = useNavigate();
 
-  const { getSemesterCourses, courses, addCourse, colorMap, setCourses } =
-    useUserTimetable();
+  const {
+    getSemesterCourses,
+    getSemesterUnresolvedCourseIds,
+    setCourses,
+    isLoading,
+    isFetchingCourses,
+    error,
+  } = useUserTimetable();
 
   const defaultSettings: DisplaySettings = {
     englishNames: "add",
@@ -337,6 +344,13 @@ export const TimetableCourseList = ({
   const totalCredits = useMemo(() => {
     return displayCourseData.reduce((acc, cur) => acc + (cur?.credits ?? 0), 0);
   }, [displayCourseData]);
+  const unresolvedCourseIds = getSemesterUnresolvedCourseIds(semester);
+  const listStatus = getTimetableCourseListStatus(
+    isLoading,
+    error,
+    displayCourseData.length,
+    unresolvedCourseIds.length,
+  );
 
   const duplicates = useMemo(
     () => hasSameCourse(displayCourseData as MinimalCourse[]),
@@ -384,11 +398,16 @@ export const TimetableCourseList = ({
     const { active, over } = event;
     if (!over) return;
     if (active.id !== over.id) {
-      const courseCopy = [...courses[semester]];
-      const oldIndex = courseCopy.indexOf(active.id as string);
-      const newIndex = courseCopy.indexOf(over.id as string);
-      const newCourseCopy = arrayMove(courseCopy, oldIndex, newIndex);
-      setCourses({ ...courses, [semester]: newCourseCopy });
+      setCourses((currentCourses) => {
+        const courseCopy = [...(currentCourses[semester] ?? [])];
+        const oldIndex = courseCopy.indexOf(active.id as string);
+        const newIndex = courseCopy.indexOf(over.id as string);
+        if (oldIndex < 0 || newIndex < 0) return currentCourses;
+        return {
+          ...currentCourses,
+          [semester]: arrayMove(courseCopy, oldIndex, newIndex),
+        };
+      });
     }
   }
 
@@ -419,11 +438,9 @@ export const TimetableCourseList = ({
               <TimetableCourseListItem
                 key={course.raw_id}
                 course={course as MinimalCourse}
-                hasConflict={
-                  !!timeConflicts.find(
-                    (ts) => ts.course.raw_id == course.raw_id,
-                  )
-                }
+                hasConflict={timeConflicts.some(
+                  (ts) => ts.course.raw_id == course.raw_id,
+                )}
                 isDuplicate={duplicates.includes(course.raw_id)}
                 priority={peAndGeAllocation.indexOf(course.raw_id) + 1}
                 displaySettings={displaySettings}
@@ -431,7 +448,40 @@ export const TimetableCourseList = ({
             ))}
           </SortableContext>
         </DndContext>
-        {displayCourseData.length == 0 && (
+        {listStatus === "loading" && (
+          <div
+            className="flex items-center gap-2 text-sm text-muted-foreground"
+            role="status"
+          >
+            <Loader2 className="h-4 w-4 animate-spin" />
+            {dict.timetable.course_data_loading}
+          </div>
+        )}
+        {listStatus === "error" && (
+          <div
+            className="flex items-center gap-2 text-sm text-destructive"
+            role="alert"
+          >
+            <AlertTriangle className="h-4 w-4 shrink-0" />
+            {dict.timetable.course_data_error}
+          </div>
+        )}
+        {unresolvedCourseIds.length > 0 &&
+          !isFetchingCourses &&
+          listStatus !== "loading" &&
+          listStatus !== "error" && (
+            <div
+              className="flex items-center gap-2 text-sm text-muted-foreground"
+              role="status"
+            >
+              <AlertTriangle className="h-4 w-4 shrink-0" />
+              {dict.timetable.unresolved_courses.replace(
+                "{count}",
+                String(unresolvedCourseIds.length),
+              )}
+            </div>
+          )}
+        {listStatus === "empty" && (
           <div className="flex flex-col items-center space-y-4">
             <span className="text-lg font-semibold text-muted-foreground">
               {dict.timetable.no_courses}
@@ -472,7 +522,7 @@ export const TimetableCourseList = ({
                   }
                 >
                   <SelectTrigger className="w-[120px]">
-                  <SelectValue placeholder={dict.timetable.select_display} />
+                    <SelectValue placeholder={dict.timetable.select_display} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="add">

@@ -90,7 +90,9 @@ function parseMessageContent(content: string): ContentPart[] {
   return parts;
 }
 
-export function RichMessageContent({ content }: RichMessageContentProps) {
+export function RichMessageContent({
+  content,
+}: Readonly<RichMessageContentProps>) {
   const { lang } = useParams<{ lang: string }>();
   const parts = parseMessageContent(content);
 

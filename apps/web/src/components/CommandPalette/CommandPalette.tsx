@@ -85,18 +85,17 @@ const CommandPalette = () => {
   if (!open) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-[999] flex items-start justify-center pt-[20vh] px-4"
-      onClick={() => setOpen(false)}
-    >
+    <div className="fixed inset-0 z-[999] flex items-start justify-center pt-[20vh] px-4">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+      <button
+        type="button"
+        aria-label={labels.close}
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        onClick={() => setOpen(false)}
+      />
 
       {/* Palette panel */}
-      <div
-        className="relative w-full max-w-lg bg-background border border-border rounded-xl shadow-2xl overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="relative w-full max-w-lg bg-background border border-border rounded-xl shadow-2xl overflow-hidden">
         <Command
           value={search}
           onValueChange={setSearch}
@@ -110,9 +109,7 @@ const CommandPalette = () => {
             <Search className="h-4 w-4 text-muted-foreground shrink-0" />
             <Command.Input
               autoFocus
-              placeholder={
-                labels.placeholder
-              }
+              placeholder={labels.placeholder}
               className="flex-1 bg-transparent outline-none text-sm placeholder:text-muted-foreground"
             />
             <button
@@ -175,11 +172,7 @@ const CommandPalette = () => {
                 ) : (
                   <Moon className="h-4 w-4 text-muted-foreground" />
                 )}
-                <span>
-                  {darkMode
-                    ? labels.light_mode
-                    : labels.dark_mode}
-                </span>
+                <span>{darkMode ? labels.light_mode : labels.dark_mode}</span>
               </Command.Item>
               <Command.Item
                 value={`${labels.enter_zen} ${labels.exit_zen}`}
@@ -191,11 +184,7 @@ const CommandPalette = () => {
                 )}
               >
                 <Maximize2 className="h-4 w-4 text-muted-foreground" />
-                <span>
-                  {zenMode
-                    ? labels.exit_zen
-                    : labels.enter_zen}
-                </span>
+                <span>{zenMode ? labels.exit_zen : labels.enter_zen}</span>
               </Command.Item>
             </Command.Group>
 
@@ -236,13 +225,16 @@ const CommandPalette = () => {
           {/* Footer hint */}
           <div className="border-t border-border px-4 py-2 flex items-center gap-4 text-xs text-muted-foreground">
             <span>
-              <kbd className="font-mono bg-muted px-1 rounded">↑↓</kbd> {labels.navigate}
+              <kbd className="font-mono bg-muted px-1 rounded">↑↓</kbd>{" "}
+              {labels.navigate}
             </span>
             <span>
-              <kbd className="font-mono bg-muted px-1 rounded">↵</kbd> {labels.select}
+              <kbd className="font-mono bg-muted px-1 rounded">↵</kbd>{" "}
+              {labels.select}
             </span>
             <span>
-              <kbd className="font-mono bg-muted px-1 rounded">Esc</kbd> {labels.close}
+              <kbd className="font-mono bg-muted px-1 rounded">Esc</kbd>{" "}
+              {labels.close}
             </span>
           </div>
         </Command>

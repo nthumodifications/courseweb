@@ -6,13 +6,18 @@ import {
   useState,
   useEffect,
   useRef,
+  useMemo,
   PropsWithChildren,
 } from "react";
-import { useLocation, useParams } from "react-router-dom";
-import { Dialog, DialogContent, DialogTitle } from "@courseweb/ui";
-import { Button } from "@courseweb/ui";
-import { Separator } from "@courseweb/ui";
-import { ScrollArea } from "@courseweb/ui";
+import { useLocation } from "react-router-dom";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  Button,
+  Separator,
+  ScrollArea,
+} from "@courseweb/ui";
 import { ExternalLink } from "lucide-react";
 import CourseDetailContainer from "@/components/CourseDetails/CourseDetailsContainer";
 import { Language } from "@/types/settings";
@@ -40,7 +45,6 @@ const CourseDialogContext = createContext<CourseDialogContextValue | null>(
 export const CourseDialogProvider: FC<PropsWithChildren> = ({ children }) => {
   const { language } = useSettings();
   const dict = useDictionary();
-  const { lang } = useParams<{ lang: string }>();
   const location = useLocation();
   const [courseId, setCourseId] = useState<string | null>(null);
   const previousUrlRef = useRef<string>("");
@@ -91,8 +95,10 @@ export const CourseDialogProvider: FC<PropsWithChildren> = ({ children }) => {
     return () => window.removeEventListener("popstate", handlePopState);
   }, [courseId]);
 
+  const contextValue = useMemo(() => ({ openCourse }), [openCourse]);
+
   return (
-    <CourseDialogContext.Provider value={{ openCourse }}>
+    <CourseDialogContext.Provider value={contextValue}>
       {children}
       {courseId && (
         <Dialog open={true} onOpenChange={handleOpenChange}>

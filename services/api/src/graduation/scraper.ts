@@ -5,7 +5,7 @@ const MAIN_PAGE_URL =
 const BASE_URL = "https://registra.site.nthu.edu.tw";
 
 // Known college names (from main page)
-const COLLEGE_NAMES = [
+const COLLEGE_NAMES = new Set([
   "理學院",
   "工學院",
   "原子科學院",
@@ -16,7 +16,7 @@ const COLLEGE_NAMES = [
   "竹師教育學院",
   "藝術學院",
   "清華學院",
-];
+]);
 
 export async function scrapeMainPage(): Promise<
   { name: string; url: string }[]
@@ -40,7 +40,7 @@ export async function scrapeMainPage(): Promise<
   for (const collegeName of COLLEGE_NAMES) {
     // Match pattern: <a href="...">學院名</a>
     const linkPattern = new RegExp(
-      `<a[^>]*href=["']([^"']+)["'][^>]*>\\s*${collegeName}\\s*</a>`,
+      String.raw`<a[^>]*href=["']([^"']+)["'][^>]*>\s*${collegeName}\s*</a>`,
       "i",
     );
     const match = html.match(linkPattern);
@@ -69,7 +69,7 @@ export async function scrapeMainPage(): Promise<
       const href = listMatch[1];
       const text = listMatch[2].trim();
 
-      if (COLLEGE_NAMES.includes(text)) {
+      if (COLLEGE_NAMES.has(text)) {
         let url = href;
         if (url.startsWith("/")) {
           url = BASE_URL + url;
@@ -126,7 +126,7 @@ export async function scrapeCollegePage(
     );
     if (!deptNameMatch) continue;
 
-    const deptName = deptNameMatch[1].replace(/&nbsp;/g, "").trim();
+    const deptName = deptNameMatch[1].replaceAll("&nbsp;", "").trim();
     const years: YearInfo[] = [];
 
     // Remaining cells contain year links
@@ -162,7 +162,9 @@ export async function scrapeCollegePage(
     if (years.length > 0) {
       departments.push({
         name: deptName,
-        years: years.sort((a, b) => parseInt(b.year) - parseInt(a.year)),
+        years: [...years].sort(
+          (a, b) => Number.parseInt(b.year) - Number.parseInt(a.year),
+        ),
       });
     }
   }
@@ -206,7 +208,9 @@ export async function scrapeCollegePage(
       if (years.length > 0) {
         departments.push({
           name: deptName,
-          years: years.sort((a, b) => parseInt(b.year) - parseInt(a.year)),
+          years: [...years].sort(
+            (a, b) => Number.parseInt(b.year) - Number.parseInt(a.year),
+          ),
         });
       }
     }

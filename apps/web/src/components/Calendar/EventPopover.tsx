@@ -10,21 +10,11 @@ import {
   type RefObject,
   type ReactElement,
 } from "react";
-import { Popover, PopoverContent, PopoverTrigger } from "@courseweb/ui";
-import { CalendarEvent, DisplayCalendarEvent } from "./calendar.types";
-import { Button } from "@courseweb/ui";
 import {
-  Edit,
-  MapPin,
-  Text,
-  Trash,
-  X,
-  CalendarPlus,
-} from "lucide-react";
-import { PopoverClose } from "@radix-ui/react-popover";
-import { UpdateType, useCalendar } from "./calendar_hook";
-import DateContributeForm from "@/components/CourseDetails/DateContributeForm";
-import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  Button,
   Dialog,
   DialogContent,
   DialogFooter,
@@ -34,6 +24,11 @@ import {
   DialogClose,
   DialogDescription,
 } from "@courseweb/ui";
+import { CalendarEvent, DisplayCalendarEvent } from "./calendar.types";
+import { Edit, MapPin, Text, Trash, X, CalendarPlus } from "lucide-react";
+import { PopoverClose } from "@radix-ui/react-popover";
+import { UpdateType, useCalendar } from "./calendar_hook";
+import DateContributeForm from "@/components/CourseDetails/DateContributeForm";
 import { AddEventButton } from "./AddEventButton";
 import useDictionary from "@/dictionaries/useDictionary";
 import { getLocale } from "@/helpers/dateLocale";
@@ -205,7 +200,8 @@ export const EventPopover: FC<
     const calendarRoot = document.querySelector<HTMLElement>(
       "[data-calendar-root]",
     );
-    const fallbackTarget = calendarRoot ?? eventTriggerRef.current?.parentElement;
+    const fallbackTarget =
+      calendarRoot ?? eventTriggerRef.current?.parentElement;
     if (!fallbackTarget) return;
 
     if (!calendarRoot) {
@@ -339,10 +335,7 @@ export const EventPopover: FC<
                 <Trash className="w-4 h-4" aria-hidden="true" />
               </Button>
             ) : (
-              <ConfirmDeleteEvent
-                event={event}
-                onDeleted={focusAfterDelete}
-              />
+              <ConfirmDeleteEvent event={event} onDeleted={focusAfterDelete} />
             )}
             <PopoverClose asChild>
               <Button
@@ -367,7 +360,8 @@ export const EventPopover: FC<
                 <p className="text-sm text-slate-500">
                   {format(event.displayStart, "yyyy-M-d", {
                     locale: getLocale(language),
-                  })}{" "}-{" "}
+                  })}{" "}
+                  -{" "}
                   {format(event.displayEnd, "yyyy-M-d", {
                     locale: getLocale(language),
                   })}
@@ -376,15 +370,16 @@ export const EventPopover: FC<
                 <p className="text-sm text-slate-500">
                   {format(event.displayStart, "yyyy-M-d", {
                     locale: getLocale(language),
-                  })}{" "}⋅{" "}
-                  {format(event.displayStart, "HH:mm")} -{" "}
+                  })}{" "}
+                  ⋅ {format(event.displayStart, "HH:mm")} -{" "}
                   {format(event.displayEnd, "HH:mm")}
                 </p>
               ) : (
                 <p className="text-sm text-slate-500">
                   {format(event.displayStart, "yyyy-M-d HH:mm", {
                     locale: getLocale(language),
-                  })}{" "}-{" "}
+                  })}{" "}
+                  -{" "}
                   {format(event.displayEnd, "yyyy-LL-dd HH:mm", {
                     locale: getLocale(language),
                   })}

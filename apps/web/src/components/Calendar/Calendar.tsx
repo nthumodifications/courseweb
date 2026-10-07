@@ -8,16 +8,13 @@ import {
   Rows2,
 } from "lucide-react";
 import { KeyboardEvent, useCallback, useEffect, useRef, useState } from "react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@courseweb/ui";
-import { Button } from "@courseweb/ui";
+import { Button, Tabs, TabsList, TabsTrigger, toast } from "@courseweb/ui";
 
-import { CalendarEvent, TimetableSyncRequest } from "./calendar.types";
+import {
+  CalendarEvent,
+  CalendarEventInternal,
+  TimetableSyncRequest,
+} from "./calendar.types";
 import { useCalendar } from "./calendar_hook";
 import { AddEventButton } from "./AddEventButton";
 import {
@@ -29,7 +26,6 @@ import {
 import { CalendarDateSelector } from "@/components/Calendar/CalendarDateSelector";
 import { CalendarWeekContainer } from "./CalendarWeekContainer";
 import { CalendarMonthContainer } from "./CalendarMonthContainer";
-import { Tabs, TabsList, TabsTrigger } from "@courseweb/ui";
 import { timetableToCalendarEvent } from "./timetableToCalendarEvent";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { createTimetableFromCourses } from "@/helpers/timetable";
@@ -40,18 +36,17 @@ import { useSwipeable } from "react-swipeable";
 import { useRxCollection } from "rxdb-hooks";
 import { TimetableSyncDocType } from "@/config/rxdb";
 import CalendarTimetableSyncDialog from "./CalendarTimetableSyncDialog";
-import { toast } from "@courseweb/ui";
 import { toPrettySemester } from "@/helpers/semester";
 import { useHeaderPortal } from "@/components/Portal/HeaderPortal";
 import UpcomingEvents from "./UpcomingEvents";
-import { useIsMobile } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
 import type { OverlayEntry } from "./OthersTimetablePanel";
-import { CalendarEventInternal } from "./calendar.types";
 import {
   getTimetableSyncSemesters,
   reconcileTimetableEvents,
 } from "./timetableReconcile";
+
+type CalendarDisplayMode = "week" | "month" | "upcoming";
 
 type TimetableSyncPrompt = TimetableSyncRequest & {
   deletionCount: number;
@@ -77,9 +72,7 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
   const [displayDates, setDisplayDates] = useState<Date[]>(
     getTaipeiWeek(new Date()),
   );
-  const [displayMode, setDisplayMode] = useState<"week" | "month" | "upcoming">(
-    "week",
-  );
+  const [displayMode, setDisplayMode] = useState<CalendarDisplayMode>("week");
   const {
     addEvent,
     displayContainer,
@@ -98,7 +91,6 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
     timetableDataReady,
   } = useUserTimetable();
   const { language } = useSettings();
-  const isMobile = useIsMobile();
   const dict = useDictionary();
 
   // Get the portal functions
@@ -216,12 +208,13 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
           ),
         );
         break;
-      case "month":
+      case "month": {
         // get month of current center date
         const month = displayDates[Math.floor(displayDates.length / 2)];
         // subtract 1 month from the month
         setDisplayDates(getTaipeiMonthForDisplay(addTaipeiMonths(month, -1)));
         break;
+      }
     }
   };
 
@@ -234,12 +227,13 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
           ),
         );
         break;
-      case "month":
+      case "month": {
         // get month of current center date
         const month = displayDates[Math.floor(displayDates.length / 2)];
         // add 1 month from the month
         setDisplayDates(getTaipeiMonthForDisplay(addTaipeiMonths(month, 1)));
         break;
+      }
     }
   };
 
@@ -254,7 +248,7 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
     }
   };
 
-  const handleSwitchMode = (mode: "week" | "month" | "upcoming") => {
+  const handleSwitchMode = (mode: CalendarDisplayMode) => {
     setDisplayMode(mode);
     switch (mode) {
       case "week":
@@ -354,10 +348,7 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
   };
 
   const persistedEventsForSemester = (semester: string) =>
-    events.filter(
-      (event) =>
-        event.courseId != null && event.courseId.slice(0, 5) === semester,
-    );
+    events.filter((event) => event.courseId?.slice(0, 5) === semester);
 
   const syncTimetable = async () => {
     if (
@@ -411,7 +402,7 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
       !coursesError &&
       !applyingSyncRef.current
     ) {
-      syncTimetable();
+      void syncTimetable();
     }
   }, [
     courses,

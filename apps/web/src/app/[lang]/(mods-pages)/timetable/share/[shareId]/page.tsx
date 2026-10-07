@@ -1,9 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  useTimetableShare,
-  type SharedTimetable,
-} from "@/hooks/useTimetableShare";
+import { useTimetableShare } from "@/hooks/useTimetableShare";
 import { useAuth } from "react-oidc-context";
 import Timetable from "@/components/Timetable/Timetable";
 import { createTimetableFromCoursesAndCustomItems } from "@/helpers/timetable";
@@ -13,30 +10,26 @@ import client from "@/config/api";
 import { toPrettySemester } from "@/helpers/semester";
 import { useState } from "react";
 import {
+  Badge,
+  Button,
   Card,
-  CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
+  Separator,
+  toast,
 } from "@courseweb/ui";
-import { Button } from "@courseweb/ui";
-import { Badge } from "@courseweb/ui";
-import { Separator } from "@courseweb/ui";
-import { toast } from "@courseweb/ui";
 import {
-  BookmarkPlus,
   Camera,
   CheckCircle,
   Download,
   Globe,
   Loader2,
-  Lock,
   RefreshCw,
   UserCircle,
 } from "lucide-react";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
-import SemesterSwitcher from "@/components/Timetable/SemesterSwitcher";
 import { normalizeCustomTimetableStorage } from "@/hooks/syncedStorage";
 
 const ShareViewPage = () => {
@@ -44,15 +37,8 @@ const ShareViewPage = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const { getShareView, saveShare } = useTimetableShare();
-  const {
-    setSemester,
-    semester,
-    addCourse,
-    setCourses,
-    setColorMap,
-    setCustomItems,
-    currentColors,
-  } = useUserTimetable();
+  const { setSemester, addCourse, setColorMap, setCustomItems, currentColors } =
+    useUserTimetable();
   const queryClient = useQueryClient();
   const [selectedSem, setSelectedSem] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -72,7 +58,7 @@ const ShareViewPage = () => {
   const courseIds = share?.courses[activeSem] ?? [];
 
   const { data: courses = [], isLoading: coursesLoading } = useQuery({
-    queryKey: ["courses", [...courseIds].sort()],
+    queryKey: ["courses", [...courseIds].sort((a, b) => a.localeCompare(b))],
     queryFn: async () => {
       if (!courseIds.length) return [];
       const res = await client.course.$get({ query: { courses: courseIds } });

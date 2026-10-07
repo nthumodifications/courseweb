@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Button } from "@courseweb/ui";
-import { Input } from "@courseweb/ui";
-import { Label } from "@courseweb/ui";
 import {
+  Button,
+  Input,
+  Label,
   Select,
   SelectContent,
   SelectItem,
@@ -61,10 +61,10 @@ export function CreateCourseDialog({
 
   const validate = (): FormErrors => {
     const nextErrors: FormErrors = {};
-    if (!formData.id || !formData.id.trim()) {
+    if (!formData.id?.trim()) {
       nextErrors.id = t.idRequired;
     }
-    if (!formData.title || !formData.title.trim()) {
+    if (!formData.title?.trim()) {
       nextErrors.title = t.titleRequired;
     }
     if (Number.isNaN(formData.credits) || formData.credits < 0) {

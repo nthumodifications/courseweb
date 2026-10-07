@@ -99,23 +99,22 @@ export async function createICalendar(
             location: includeFullDetails ? event.location : undefined,
             allDay: !!event.allDay,
             // Handle recurring events based on the repeat property
-            ...(event.repeat &&
-              event.repeat.type && {
-                repeating: {
-                  freq: event.repeat.type.toUpperCase(),
-                  interval: event.repeat.interval || 1,
-                  ...(event.repeat.mode === "count"
-                    ? { count: event.repeat.value }
-                    : {
-                        until: event.repeat.value
-                          ? new Date(event.repeat.value)
-                          : undefined,
-                      }),
-                  exclude: event.excludedDates
-                    ? event.excludedDates.map((d: string) => new Date(d))
-                    : undefined,
-                },
-              }),
+            ...(event.repeat?.type && {
+              repeating: {
+                freq: event.repeat.type.toUpperCase(),
+                interval: event.repeat.interval || 1,
+                ...(event.repeat.mode === "count"
+                  ? { count: event.repeat.value }
+                  : {
+                      until: event.repeat.value
+                        ? new Date(event.repeat.value)
+                        : undefined,
+                    }),
+                exclude: event.excludedDates
+                  ? event.excludedDates.map((d: string) => new Date(d))
+                  : undefined,
+              },
+            }),
           });
         } catch (err) {
           console.error("Error processing event:", event.id, err);

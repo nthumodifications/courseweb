@@ -577,7 +577,7 @@ const app = new Hono()
                 id,
               });
 
-            case "courseweb://courses/all":
+            case "courseweb://courses/all": {
               // This could be expensive, so limit to essential info
               const { data, error } = await supabase_server(c)
                 .from("courses")
@@ -607,6 +607,7 @@ const app = new Hono()
                 },
                 id,
               });
+            }
 
             default:
               throw new Error(`Unknown resource: ${uri}`);

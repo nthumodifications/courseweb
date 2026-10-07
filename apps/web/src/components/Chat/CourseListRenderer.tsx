@@ -12,7 +12,7 @@ interface CourseListRendererProps {
 
 export default function CourseListRenderer({
   rawIds,
-}: CourseListRendererProps) {
+}: Readonly<CourseListRendererProps>) {
   const dict = useDictionary();
   const {
     data: courses,

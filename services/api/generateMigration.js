@@ -1,7 +1,7 @@
-const { execSync } = require("child_process");
+const { execSync } = require("node:child_process");
 const { format } = require("date-fns");
-const path = require("path");
-const fs = require("fs");
+const path = require("node:path");
+const fs = require("node:fs");
 
 try {
   const timestamp = format(new Date(), "yyyyMMdd_HHmmss");

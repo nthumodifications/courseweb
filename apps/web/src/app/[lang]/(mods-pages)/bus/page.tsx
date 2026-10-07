@@ -8,7 +8,6 @@ import { getAllBusData } from "@/libs/bus";
 import { addMinutes, differenceInMinutes, format, isWeekend } from "date-fns";
 import { RedLineIcon } from "@/components/BusIcons/RedLineIcon";
 import { GreenLineIcon } from "@/components/BusIcons/GreenLineIcon";
-import { NandaLineIcon } from "@/components/BusIcons/NandaLineIcon";
 import { Route1LineIcon } from "@/components/BusIcons/Route1LineIcon";
 import { Route2LineIcon } from "@/components/BusIcons/Route2LineIcon";
 import { useNavigate, useSearchParams } from "react-router-dom";
