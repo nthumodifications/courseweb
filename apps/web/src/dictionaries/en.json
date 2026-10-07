@@ -276,6 +276,7 @@
       "ptt_disclaimer": "PTT reviews are from the NTHU_Course board and are not moderated by NTHUMods. The reviews do not represent the views of NTHUMods. If you find any inappropriate content, please report to the board itself.",
       "important_dates": "Important Dates",
       "view_ccxp_syllabus": "View Original Webpage",
+      "module_history": "Course history",
       "ai_summary": {
         "generate": "Generate AI summary",
         "title": "AI course summary",
@@ -287,6 +288,73 @@
         "workload": "Workload",
         "difficulty": "Difficulty"
       }
+    },
+    "module": {
+      "title": "Course module",
+      "history": "Offering history",
+      "offering_history": "Offering history",
+      "offering_details": "Offerings by semester",
+      "variant_count_prefix": "This code has",
+      "variant_count_suffix": "course titles",
+      "variant_picker": "Choose a course title",
+      "semester": "semester",
+      "semesters_count": "semesters",
+      "instructors": "Instructors",
+      "show_all": "Show all",
+      "show_fewer": "Show fewer",
+      "clear_instructor_filter": "Clear instructor filter",
+      "capacity": "Capacity",
+      "credits_unit": "credits",
+      "view_offering": "View offering",
+      "default_section": "default",
+      "not_available": "—",
+      "recent_offering": "Most recent",
+      "search_title": "Search course modules",
+      "search_description": "Search one course across its recorded semesters.",
+      "search_placeholder": "Search by course code, title, or instructor...",
+      "search_prompt": "Search for a course code, title, or instructor to find its history.",
+      "search_examples": ["Calculus", "Programming", "CS 1355"],
+      "search_no_results": "No matching course modules",
+      "search_results": "course modules",
+      "search_other_modules": "Search other courses",
+      "no_offerings": "No offerings found",
+      "invalid_key": "This course module link is invalid.",
+      "availability": {
+        "terms": {
+          "fall": "Fall",
+          "spring": "Spring",
+          "summer": "Summer"
+        },
+        "status": {
+          "every_year": "Every year",
+          "most_years": "Most years",
+          "some_years": "Some years",
+          "once": "Offered once",
+          "stopped": "No longer offered",
+          "never": "Never"
+        }
+      },
+      "academic_years": "academic years",
+      "view_all_semesters": "See every semester",
+      "demand": {
+        "title": "Demand",
+        "caption": "Students enrolled as a share of seats each semester. Above 100% means extra students were added.",
+        "full": "Full",
+        "seats": "seats"
+      },
+      "stats": {
+        "recent_fill": "Recent fill rate",
+        "recent_fill_hint": "Last four semesters, enrolled over seats",
+        "average_score": "Average grade",
+        "percent_scale": "percent scale",
+        "gpa_scale": "GPA scale",
+        "classes": "classes",
+        "usual_time": "Usual time slot",
+        "language": "Language"
+      },
+      "brief": "About this course",
+      "brief_from": "From the {semester} syllabus",
+      "average_short": "avg"
     }
   },
   "navigation": {
