@@ -7,21 +7,25 @@ import {
 import { createInfiniteHitsSessionStorageCache } from "instantsearch.js/es/lib/infiniteHitsCache";
 import useDictionary from "@/dictionaries/useDictionary";
 import CourseListItem from "@/components/Courses/CourseListItem";
-import Filter from "./Filters";
-import { ScrollArea } from "@courseweb/ui";
+import Filters from "./Filters";
 import ResetFiltersButton from "@/app/[lang]/(mods-pages)/courses/ResetFiltersButton";
 import { useEffect, useRef, memo, useMemo, useState } from "react";
 import CourseListItemSkeleton from "../../../../components/Courses/CourseListItemSkeleton";
-import { cn } from "@courseweb/ui";
-import { EmptyState, ErrorState, Separator } from "@courseweb/ui";
-import { Drawer, DrawerContent, DrawerTrigger } from "@courseweb/ui";
-import { Button } from "@courseweb/ui";
-import { Calendar, FilterIcon, Search } from "lucide-react";
-import Filters from "./Filters";
+import {
+  Button,
+  Drawer,
+  DrawerContent,
+  DrawerTrigger,
+  EmptyState,
+  ErrorState,
+  ScrollArea,
+  Separator,
+  cn,
+} from "@courseweb/ui";
+import { Calendar, FilterIcon } from "lucide-react";
 import CourseSidePanel from "./CourseSidePanel";
 import SearchBox from "@/components/SearchBox/SearchBox";
 import SemesterSelector from "./SemesterSelector";
-import { Label } from "@courseweb/ui";
 import useCustomMenu from "@/app/[lang]/(mods-pages)/courses/useCustomMenu";
 import { lastSemester } from "@courseweb/shared";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
@@ -165,7 +169,7 @@ const SearchContainer = memo(
       () => items.find((item) => item.isRefined)?.value ?? lastSemester.id,
       [items],
     );
-    const { getSemesterCourses, colorMap } = useUserTimetable();
+    const { getSemesterCourses } = useUserTimetable();
     const courses = getSemesterCourses(semester);
 
     // Track search results
@@ -184,7 +188,7 @@ const SearchContainer = memo(
             <ResetFiltersButton />
           </div>
           <ScrollArea className="">
-            <Filter selectedCourses={courses as MinimalCourse[]} />
+            <Filters selectedCourses={courses as MinimalCourse[]} />
           </ScrollArea>
         </div>
 
@@ -195,7 +199,10 @@ const SearchContainer = memo(
               <div className="w-full shrink-0 sm:w-auto">
                 <SemesterSelector />
               </div>
-              <Separator orientation="vertical" className="hidden h-full sm:block" />
+              <Separator
+                orientation="vertical"
+                className="hidden h-full sm:block"
+              />
               <AiSearchBox
                 enabled={aiSearchEnabled}
                 onEnabledChange={setAiSearchEnabled}
@@ -206,7 +213,10 @@ const SearchContainer = memo(
                   autoFocus
                 />
               </AiSearchBox>
-              <Separator orientation="vertical" className="hidden h-full sm:block" />
+              <Separator
+                orientation="vertical"
+                className="hidden h-full sm:block"
+              />
               <div className="md:hidden">
                 <Drawer>
                   <DrawerTrigger asChild>
@@ -224,7 +234,10 @@ const SearchContainer = memo(
                   </DrawerContent>
                 </Drawer>
               </div>
-              <Separator orientation="vertical" className="hidden h-full sm:block" />
+              <Separator
+                orientation="vertical"
+                className="hidden h-full sm:block"
+              />
               <div className="md:hidden">
                 <Drawer>
                   <DrawerTrigger asChild>

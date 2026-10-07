@@ -34,7 +34,9 @@ const MAX_FILTER_LENGTH = 2000;
  * remain literal.
  */
 export const escapePostgrestValue = (value: string) =>
-  value.replace(/\\/g, "\\\\").replace(/([,()*%_])/g, "\\$1");
+  value
+    .replaceAll("\\", String.raw`\\`)
+    .replaceAll(/([,()*%_])/g, String.raw`\$1`);
 
 const parseJsonParam = (value?: string): unknown => {
   if (!value) return undefined;
@@ -57,13 +59,13 @@ const parseFacetFilterGroups = (value?: string): FacetFilterGroup[] => {
   if (!Array.isArray(parsed)) return [];
 
   return parsed
-    .map((group) =>
-      Array.isArray(group)
-        ? group.filter((item): item is string => typeof item === "string")
-        : typeof group === "string"
-          ? [group]
-          : [],
-    )
+    .map((group) => {
+      if (Array.isArray(group)) {
+        return group.filter((item): item is string => typeof item === "string");
+      }
+      if (typeof group === "string") return [group];
+      return [];
+    })
     .filter((group) => group.length > 0);
 };
 
@@ -91,16 +93,17 @@ const parseFacetFilter = (value: string): FilterCondition | null => {
 const parseConditions = (value?: string): FilterCondition[] => {
   if (!value) return [];
   const parsed = parseJsonParam(value);
-  const source = Array.isArray(parsed)
-    ? parsed
-        .filter((item): item is string => typeof item === "string")
-        .join(" AND ")
-    : typeof parsed === "string"
-      ? parsed
-      : value;
+  let source = value;
+  if (Array.isArray(parsed)) {
+    source = parsed
+      .filter((item): item is string => typeof item === "string")
+      .join(" AND ");
+  } else if (typeof parsed === "string") {
+    source = parsed;
+  }
   const conditions: FilterCondition[] = [];
   const matcher =
-    /([A-Za-z_][A-Za-z0-9_]{0,63})[ 	]{0,8}(>=|<=|!=|=|>|<|:)[ 	]{0,8}(?:"([^"]{0,256})"|'([^']{0,256})'|([^\s()]{1,256}))/g;
+    /([A-Za-z_]\w{0,63})[ 	]{0,8}(>=|<=|!=|=|>|<|:)[ 	]{0,8}(?:"([^"]{0,256})"|'([^']{0,256})'|([^\s()]{1,256}))/g;
   // The filter string is caller-supplied. Bounding both its length and every
   // quantifier above keeps matching linear instead of leaving the engine free
   // to backtrack across a long run of identifier characters.
@@ -201,7 +204,7 @@ const rankCourse = (course: CourseHit, query: string) => {
     ...(course.teacher_en ?? []),
     course.department,
   ].map((value) => value.toLocaleLowerCase());
-  const exactIndex = fields.findIndex((value) => value === normalizedQuery);
+  const exactIndex = fields.indexOf(normalizedQuery);
   if (exactIndex >= 0) return 100 - exactIndex;
   const prefixIndex = fields.findIndex((value) =>
     value.startsWith(normalizedQuery),
@@ -333,11 +336,14 @@ const loadCourses = async (
 
 const getRequestedFacets = (value?: string) => {
   const parsed = parseJsonParam(value);
-  const parsedValues = Array.isArray(parsed)
-    ? parsed.filter((item): item is string => typeof item === "string")
-    : typeof parsed === "string"
-      ? [parsed]
-      : [];
+  let parsedValues: string[] = [];
+  if (Array.isArray(parsed)) {
+    parsedValues = parsed.filter(
+      (item): item is string => typeof item === "string",
+    );
+  } else if (typeof parsed === "string") {
+    parsedValues = [parsed];
+  }
   const requested =
     parsedValues.length === 0 || parsedValues.includes("*")
       ? [...SUPPORTED_FACETS]

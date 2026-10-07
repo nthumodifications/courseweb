@@ -25,7 +25,7 @@ export const GPAChart = ({ lineData }: { lineData: any[] }) => {
         >
           <Tooltip
             content={({ active, payload, content }) => {
-              if (active && payload && payload.length) {
+              if (active && payload?.length) {
                 return (
                   <div className="rounded-lg border bg-background p-2 shadow-sm">
                     <div className="grid grid-cols-2 gap-2">

@@ -1,20 +1,18 @@
 import { Calendar, Copy, Mail, Share } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import useDictionary from "@/dictionaries/useDictionary";
-import { useEffect, useState } from "react";
-import { useMemo } from "react";
-import { toast } from "@courseweb/ui";
+import { useEffect, useMemo, useState } from "react";
 import {
+  Button,
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  Skeleton,
+  toast,
 } from "@courseweb/ui";
-import { Button } from "@courseweb/ui";
-import { Input } from "@courseweb/ui";
-import { Skeleton } from "@courseweb/ui";
 import client from "@/config/api";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 
@@ -85,12 +83,15 @@ const ShareSyncTimetableDialog = ({
 
   const handleCopy = () => {
     if (link)
-      navigator.clipboard.writeText(link).then(() => {
-        toast({
-          title: "Copied",
-          description: "Link copied to clipboard",
-        });
-      });
+      void navigator.clipboard
+        .writeText(link)
+        .then(() => {
+          toast({
+            title: "Copied",
+            description: "Link copied to clipboard",
+          });
+        })
+        .catch(() => undefined);
   };
   return (
     <Dialog open={open} onOpenChange={(v) => setOpen(v)}>

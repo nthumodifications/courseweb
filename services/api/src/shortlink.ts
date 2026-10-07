@@ -4,7 +4,7 @@ import { env } from "hono/adapter";
 import { z } from "zod";
 
 const endpoint = (key: string, accountID: string, namespaceID: string) =>
-  `https://api.cloudflare.com/client/v4/accounts/${accountID}/storage/kv/namespaces/${namespaceID}/values/${key}`;
+  `https://api.cloudflare.com/client/v4/accounts/${accountID}/storage/kv/namespaces/${namespaceID}/values/${encodeURIComponent(key)}`;
 
 async function digest(message: string, algo = "SHA-1") {
   return Array.from(

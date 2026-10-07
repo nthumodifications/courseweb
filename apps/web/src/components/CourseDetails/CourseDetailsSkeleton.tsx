@@ -1,5 +1,4 @@
-import { Separator } from "@courseweb/ui";
-import { Skeleton } from "@courseweb/ui";
+import { Separator, Skeleton } from "@courseweb/ui";
 
 const CourseDetailsSkeleton = () => {
   return (

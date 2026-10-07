@@ -34,13 +34,15 @@ COPY --from=deps /usr/src/app/node_modules ./node_modules
 COPY . .
 
 # Build shared packages first
-RUN cd packages/shared && bun run build
+WORKDIR /usr/src/app/packages/shared
+RUN bun run build
 
 # Generate Prisma client for secure-api
-RUN cd services/secure-api && bun run prisma:generate
+WORKDIR /usr/src/app/services/secure-api
+RUN bun run prisma:generate
 
 # Build secure-api
-RUN cd services/secure-api && bun run build
+RUN bun run build
 
 # Production image
 FROM base AS release

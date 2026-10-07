@@ -66,21 +66,6 @@ const app = new Hono()
         const year = cells[0].textContent!.trim();
         const semester = cells[1].textContent!.trim();
         const course_id = cells[2].textContent!.trim()!;
-        const course_name_raw = cells[3].textContent!.trim().split("\n")!;
-        const name_zh_ge = course_name_raw?.[0]?.trim() ?? "";
-        const name_en = course_name_raw?.[2]?.trim() ?? "";
-        const credits = parseInt(cells[4].textContent!.trim() ?? "0");
-        const grade_text = cells[5].textContent!.trim();
-        const grade = !grade_text?.startsWith("成績未到")
-          ? grade_text
-          : "成績未到";
-        const ge_type = cells[6]
-          .textContent!.trim()
-          .replace("Elective GE course:", "");
-        const ranking = cells[7].querySelector("div")?.textContent!.trim();
-        // console.log(cells[7].firstChild);
-        const t_scores = cells[8].textContent!.trim();
-        const [name_zh, ge_description] = name_zh_ge.split(" -- ");
         if (course_id == "ZZ 000000") continue;
         courses.push(`${year}${semester}${course_id}`);
       }
@@ -140,7 +125,7 @@ const app = new Hono()
           .querySelectorAll("select")[1]
           .querySelectorAll("option") as HTMLOptionElement[],
       );
-      const phase = phaseArr[phaseArr.length - 1].value;
+      const phase = phaseArr.at(-1)!.value;
       const stu_no = (
         doc1.querySelector("input[name=stu_no]") as HTMLInputElement
       ).value;
@@ -184,7 +169,7 @@ const app = new Hono()
       ).map((n) => n.children[0].textContent);
 
       return c.json({
-        semester: semester.split(",").join(""),
+        semester: semester.replaceAll(",", ""),
         phase,
         studentid: stu_no,
         courses: raw_ids,
@@ -412,7 +397,7 @@ const app = new Hono()
       let department = "";
 
       if (targetText !== "Text not found") {
-        const cleanedText = targetText.replace(/　/g, " ").trim();
+        const cleanedText = targetText.replaceAll("　", " ").trim();
 
         const degreeTypes = ["大學部", "碩士班", "博士班"];
 

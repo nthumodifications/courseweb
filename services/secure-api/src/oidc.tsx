@@ -15,6 +15,7 @@ import { loadSigningJwk } from "./utils/jwks";
 import {
   buildClientRedirect,
   CONSENT_REQUEST_EXPIRY,
+  getRegisteredRedirectUri,
   isConsentRequired,
   isPendingConsentValid,
 } from "./utils/consent";
@@ -59,13 +60,15 @@ async function verifyPKCE(
   const hashBuffer = await crypto.subtle.digest("SHA-256", verifierBuffer);
 
   // Convert hash to base64 string
-  const base64String = btoa(String.fromCharCode(...new Uint8Array(hashBuffer)));
+  const base64String = btoa(
+    String.fromCodePoint(...new Uint8Array(hashBuffer)),
+  );
 
   // Apply URL-safe transformations per RFC 7636
   const generatedChallenge = base64String
-    .replace(/\+/g, "-") // Replace + with -
-    .replace(/\//g, "_") // Replace / with _
-    .replace(/=/g, ""); // Remove padding
+    .replaceAll("+", "-") // Replace + with -
+    .replaceAll("/", "_") // Replace / with _
+    .replaceAll("=", ""); // Remove padding
 
   // Simple string comparison
   // Implement timing-safe comparison to prevent timing attacks
@@ -78,7 +81,8 @@ async function verifyPKCE(
   for (let i = 0; i < generatedChallenge.length; i++) {
     // XOR the character codes - will be 0 only if characters are identical
     // Bitwise OR with the running result to accumulate any differences
-    result |= generatedChallenge.charCodeAt(i) ^ codeChallenge.charCodeAt(i);
+    result |=
+      generatedChallenge.codePointAt(i)! ^ codeChallenge.codePointAt(i)!;
   }
 
   return result === 0;
@@ -842,7 +846,7 @@ const app = new Hono()
 
       // Convert keys to buffers
       const privateKey = await importPKCS8(
-        JWT_PRIVATE_KEY.replace(/\\n/g, "\n"),
+        JWT_PRIVATE_KEY.replaceAll("\\n", "\n"),
         "RS256",
       );
 
@@ -1099,7 +1103,7 @@ const app = new Hono()
       }>(c);
 
       const publicKey = await importSPKI(
-        JWT_PUBLIC_KEY.replace(/\\n/g, "\n"),
+        JWT_PUBLIC_KEY.replaceAll("\\n", "\n"),
         "RS256",
       );
 
@@ -1133,7 +1137,11 @@ const app = new Hono()
         }
 
         // Verify post_login_redirect_uri is allowed
-        if (!client.logoutUris.includes(post_logout_redirect_uri)) {
+        const redirectTarget = getRegisteredRedirectUri(
+          client.logoutUris,
+          post_logout_redirect_uri,
+        );
+        if (!redirectTarget) {
           return c.json(
             {
               error: "invalid_request",
@@ -1162,7 +1170,9 @@ const app = new Hono()
           });
         }
         return c.redirect(
-          post_logout_redirect_uri + (state ? `?state=${state}` : ""),
+          state
+            ? buildClientRedirect(redirectTarget, { state })
+            : redirectTarget,
         );
       } catch (error) {
         console.error("/logout error", error);

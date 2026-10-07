@@ -7,7 +7,6 @@ import {
   HTMLAttributes,
   PropsWithChildren,
 } from "react";
-import { Users } from "lucide-react";
 
 const HighlightItem: FC<
   PropsWithChildren<
@@ -84,7 +83,8 @@ const CourseTagList = ({ course }: { course: CourseDefinition }) => {
       )}
       {getGECType(course.ge_type || "") && (
         <HighlightItem>
-          {dict.course.tags.general_education_core} {getGECType(course.ge_type!)}
+          {dict.course.tags.general_education_core}{" "}
+          {getGECType(course.ge_type!)}
         </HighlightItem>
       )}
     </div>

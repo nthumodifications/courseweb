@@ -1,7 +1,5 @@
 import { GripVertical, Plus, Heart, Minus } from "lucide-react";
-import { useSettings } from "@/hooks/contexts/settings";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
-import { useSearchParams } from "react-router-dom";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useMemo } from "react";
 import { hasTimes } from "@/helpers/courses";
@@ -22,21 +20,19 @@ import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
+  useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { useQuery } from "@tanstack/react-query";
-import supabase from "@/config/supabase";
 import { CourseDefinition } from "@/config/supabase";
 import client from "@/config/api";
+import { activateOnKey } from "@/lib/activate-on-key";
 
 const TimetableCourseListItem = ({ course }: { course: MinimalCourse }) => {
-  const { language } = useSettings();
   const dict = useDictionary();
-  const [searchParams] = useSearchParams();
   const { openCourse } = useCourseLink();
 
   const {
@@ -73,6 +69,9 @@ const TimetableCourseListItem = ({ course }: { course: MinimalCourse }) => {
       <div
         className="flex min-w-0 flex-1 cursor-pointer"
         onClick={() => openCourse(course.raw_id)}
+        onKeyDown={activateOnKey(() => openCourse(course.raw_id))}
+        role="button"
+        tabIndex={0}
       >
         <span className="text-sm">
           {course.department} {course.course}-{course.class} {course.name_zh} -{" "}
@@ -107,7 +106,9 @@ const TimetableCourseListItem = ({ course }: { course: MinimalCourse }) => {
       <div className="flex flex-col gap-1 items-start">
         <div className="flex flex-row items-center space-x-1">
           <span className="text-base">{course.credits}</span>
-          <span className="text-xs text-muted-foreground">{dict.course.credits}</span>
+          <span className="text-xs text-muted-foreground">
+            {dict.course.credits}
+          </span>
         </div>
         <div className="flex flex-row">
           <Button
@@ -144,16 +145,21 @@ const TimetableCourseListItem = ({ course }: { course: MinimalCourse }) => {
 };
 
 export const FavouritesCourseList = ({}: {}) => {
-  const { language } = useSettings();
   const dict = useDictionary();
   const { favourites, setFavourites } = useUserTimetable();
 
-  const { data: courses = [], error, refetch } = useQuery({
-    queryKey: ["courses", [...favourites].sort()],
+  const {
+    data: courses = [],
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ["courses", [...favourites].sort((a, b) => a.localeCompare(b))],
     queryFn: async () => {
       if (favourites.length == 0) return [] as CourseDefinition[];
       const res = await client.course.$get({
-        query: { courses: [...favourites].sort() },
+        query: {
+          courses: [...favourites].sort((a, b) => a.localeCompare(b)),
+        },
       });
       if (!res.ok) throw new Error("Failed to load favourite courses");
 
@@ -224,9 +230,9 @@ export const FavouritesCourseList = ({}: {}) => {
             items={displayCourseData.map((course) => course.raw_id)}
             strategy={verticalListSortingStrategy}
           >
-            {displayCourseData.map((course, index) => (
+            {displayCourseData.map((course) => (
               <TimetableCourseListItem
-                key={index}
+                key={course.raw_id}
                 course={course as MinimalCourse}
               />
             ))}

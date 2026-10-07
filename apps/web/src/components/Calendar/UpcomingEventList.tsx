@@ -1,8 +1,7 @@
 import { FC, useMemo } from "react";
 import { formatInTimeZone } from "date-fns-tz";
 import { Calendar, Clock } from "lucide-react";
-import { Badge } from "@courseweb/ui";
-import { cn } from "@courseweb/ui";
+import { Badge, cn } from "@courseweb/ui";
 import { EventPopover } from "@/components/Calendar/EventPopover";
 import useDictionary from "@/dictionaries/useDictionary";
 import { getLocale } from "@/helpers/dateLocale";

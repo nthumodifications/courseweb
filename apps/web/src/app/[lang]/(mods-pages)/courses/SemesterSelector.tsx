@@ -19,7 +19,7 @@ const SemesterSelector = () => {
   });
 
   useEffect(() => {
-    if (canRefine && !items.find((item) => item.isRefined)) {
+    if (canRefine && !items.some((item) => item.isRefined)) {
       // default to the latest semester
       refine(lastSemester.id);
     }
@@ -41,7 +41,7 @@ const SemesterSelector = () => {
       </SelectTrigger>
       <SelectContent>
         {[...semesterInfo]
-          .sort((a, b) => parseInt(b.id) - parseInt(a.id))
+          .sort((a, b) => Number.parseInt(b.id) - Number.parseInt(a.id))
           .map((item) => (
             <SelectItem value={item.id} key={item.id}>
               {toPrettySemester(item.id)} {dict.course.refine.semester}

@@ -12,23 +12,18 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  Button,
+  ScrollArea,
+  toast,
 } from "@courseweb/ui";
 import { DialogTrigger } from "@radix-ui/react-dialog";
-import { Button } from "@courseweb/ui";
-import { ScrollArea } from "@courseweb/ui";
-import { toast } from "@courseweb/ui";
 import { useSettings } from "@/hooks/contexts/settings";
 
 const DownloadTimetableComponent = () => {
   const dict = useDictionary();
   const { language } = useSettings();
-  const {
-    getSemesterCourses,
-    getSemesterCustomItems,
-    semester,
-    colorMap,
-    currentColors,
-  } = useUserTimetable();
+  const { getSemesterCourses, getSemesterCustomItems, semester, colorMap } =
+    useUserTimetable();
   const ref = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(false);
   const [generatedImg, setGeneratedImg] = useState<string | null>(null);
@@ -48,7 +43,7 @@ const DownloadTimetableComponent = () => {
       cacheBust: true,
       pixelRatio: 3,
     })
-      .then(async (dataUrl) => {
+      .then((dataUrl) => {
         setGeneratedImg(dataUrl);
         // Create a more user-friendly filename with current date
         const now = new Date();
@@ -58,14 +53,14 @@ const DownloadTimetableComponent = () => {
             month: "2-digit",
             day: "2-digit",
           })
-          .replace(/\//g, "-");
+          .replaceAll("/", "-");
         const timeStr = now
           .toLocaleTimeString(language === "en" ? "en-US" : "zh-TW", {
             hour: "2-digit",
             minute: "2-digit",
             hour12: false,
           })
-          .replace(/:/g, "");
+          .replaceAll(":", "");
         const filename = `課表_${dateStr}_${timeStr}.png`;
 
         const link = document.createElement("a");
@@ -120,11 +115,11 @@ const DownloadTimetableComponent = () => {
     const ab = new ArrayBuffer(byteString.length);
     const ia = new Uint8Array(ab);
     for (let i = 0; i < byteString.length; i++) {
-      ia[i] = byteString.charCodeAt(i);
+      ia[i] = byteString.codePointAt(i) ?? 0;
     }
     const blob = new Blob([ab], { type: "image/png" });
 
-    if (navigator.clipboard && navigator.clipboard.write) {
+    if (navigator.clipboard?.write) {
       navigator.clipboard
         .write([
           new ClipboardItem({
@@ -194,13 +189,17 @@ const DownloadTimetableComponent = () => {
           </DialogHeader>
           <ScrollArea className="max-h-[70dvh]">
             {generatedImg && (
-              <img
-                src={generatedImg}
-                alt={dict.dialogs.DownloadTimetableDialog.image_alt}
+              <button
+                type="button"
                 onClick={handleCopy}
-                className="cursor-pointer hover:opacity-80 transition-opacity"
+                className="border-0 bg-transparent p-0 cursor-pointer hover:opacity-80 transition-opacity"
                 title={dict.dialogs.DownloadTimetableDialog.copy_image_title}
-              />
+              >
+                <img
+                  src={generatedImg}
+                  alt={dict.dialogs.DownloadTimetableDialog.image_alt}
+                />
+              </button>
             )}
           </ScrollArea>
           <div className="flex gap-2">

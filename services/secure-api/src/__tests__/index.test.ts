@@ -1,4 +1,17 @@
-// import { describe, it, expect, beforeAll, afterAll, mock } from "bun:test";
+import { describe, expect, it } from "bun:test";
+import { buildClientRedirect } from "../utils/consent";
+
+describe("service entrypoint contracts", () => {
+  it("keeps registered client state inside the redirect query", () => {
+    expect(
+      buildClientRedirect("https://client.example/callback", {
+        state: "a&b=c",
+      }),
+    ).toBe("https://client.example/callback?state=a%26b%3Dc");
+  });
+});
+
+// import { beforeAll, afterAll, mock } from "bun:test";
 // import { setCookie, getCookie } from "hono/cookie";
 // import type { Context, Next } from "hono";
 // import prisma from "../client";

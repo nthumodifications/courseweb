@@ -5,17 +5,17 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  Button,
 } from "@courseweb/ui";
 import { AIPreferencesPanel } from "@/app/[lang]/(mods-pages)/settings/AIPreferences";
 import { Settings } from "lucide-react";
-import { Button } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
 
 interface AISettingsDialogProps {
   trigger?: React.ReactNode;
 }
 
-export function AISettingsDialog({ trigger }: AISettingsDialogProps) {
+export function AISettingsDialog({ trigger }: Readonly<AISettingsDialogProps>) {
   const dict = useDictionary();
 
   return (

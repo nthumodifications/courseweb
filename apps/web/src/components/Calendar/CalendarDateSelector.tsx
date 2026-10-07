@@ -1,6 +1,10 @@
 import { useState } from "react";
-import { Popover, PopoverContent, PopoverTrigger } from "@courseweb/ui";
-import { Calendar as ShadcnCalendar } from "@courseweb/ui";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  Calendar as ShadcnCalendar,
+} from "@courseweb/ui";
 import { ChevronDown } from "lucide-react";
 import { getLocale } from "@/helpers/dateLocale";
 import {

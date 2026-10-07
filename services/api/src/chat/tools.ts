@@ -115,7 +115,7 @@ export const getCurrentSemester = (date = new Date()) => {
 };
 
 const quoteFilterValue = (value: string) =>
-  value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+  value.replaceAll("\\", String.raw`\\`).replaceAll('"', String.raw`\"`);
 
 const buildCourseFilters = (semester?: string, department?: string) =>
   [
@@ -125,10 +125,7 @@ const buildCourseFilters = (semester?: string, department?: string) =>
     .filter((filter): filter is string => Boolean(filter))
     .join(" AND ");
 
-const toCourseSummary = (
-  value: unknown,
-  briefLength = 450,
-): UnknownRecord => {
+const toCourseSummary = (value: unknown, briefLength = 450): UnknownRecord => {
   const course = asRecord(value);
   const result: UnknownRecord = {
     raw_id: course.raw_id ?? course.objectID,
@@ -228,15 +225,10 @@ const searchWithFallback = async (
       nbHits: typeof data.nbHits === "number" ? data.nbHits : undefined,
     };
   } catch (fallbackError) {
-    throw new Error(
-      `Course search unavailable: ${
-        fallbackError instanceof Error
-          ? fallbackError.message
-          : lastError instanceof Error
-            ? lastError.message
-            : "unknown error"
-      }`,
-    );
+    let message = "unknown error";
+    if (lastError instanceof Error) message = lastError.message;
+    if (fallbackError instanceof Error) message = fallbackError.message;
+    throw new Error(`Course search unavailable: ${message}`);
   }
 };
 
@@ -297,11 +289,11 @@ const getCourseDetails = async (
   result.reserve = course.reserve;
 
   const syllabusValue = course.course_syllabus;
-  const syllabus = Array.isArray(syllabusValue)
-    ? syllabusValue[0]
-    : syllabusValue && typeof syllabusValue === "object"
-      ? syllabusValue
-      : undefined;
+  let syllabus: UnknownRecord | undefined;
+  if (Array.isArray(syllabusValue)) syllabus = syllabusValue[0];
+  else if (syllabusValue && typeof syllabusValue === "object") {
+    syllabus = syllabusValue;
+  }
   if (syllabus) {
     result.syllabus = {
       brief: trimText(syllabus.brief, 1200),
@@ -314,7 +306,10 @@ const getCourseDetails = async (
   return result;
 };
 
-const currentCourses = (userContext: UserContext | undefined, semester: string) =>
+const currentCourses = (
+  userContext: UserContext | undefined,
+  semester: string,
+) =>
   trimList(
     (userContext?.selectedCourses ?? []).filter(
       (course) => !course.semester || course.semester === semester,
@@ -342,7 +337,7 @@ const findFreeCourses = async (
     typeof args.department === "string" ? args.department : undefined,
   );
   const courses = (result.hits ?? [])
-    .map(toCourseSummary)
+    .map((course) => toCourseSummary(course))
     .filter((course) => {
       const slots = parseTimeSlots(
         Array.isArray(course.times)
@@ -500,12 +495,11 @@ const getBusDepartures = async (c: Context, args: Record<string, unknown>) => {
   };
 };
 
-const semesterLabel = (semester: string) =>
-  semester.endsWith("10")
-    ? "上學期"
-    : semester.endsWith("20")
-      ? "下學期"
-      : undefined;
+const semesterLabel = (semester: string) => {
+  if (semester.endsWith("10")) return "上學期";
+  if (semester.endsWith("20")) return "下學期";
+  return undefined;
+};
 
 const getSportsOpeningTimes = async (
   c: Context,
@@ -518,10 +512,12 @@ const getSportsOpeningTimes = async (
       : "";
   const semester =
     typeof args.semester === "string" && args.semester
-      ? semesterLabel(args.semester) ?? args.semester
-      : semesterLabel(getCurrentSemester()) ?? "上學期";
+      ? (semesterLabel(args.semester) ?? args.semester)
+      : (semesterLabel(getCurrentSemester()) ?? "上學期");
   const today = currentTaipeiDateParts().weekday;
-  const facilities = Array.isArray(payload.facilities) ? payload.facilities : [];
+  const facilities = Array.isArray(payload.facilities)
+    ? payload.facilities
+    : [];
   const selected = facilities.filter((facility) => {
     if (!requested) return true;
     const item = asRecord(facility);
@@ -538,8 +534,9 @@ const getSportsOpeningTimes = async (
       const item = asRecord(facility);
       const schedules = Array.isArray(item.schedules) ? item.schedules : [];
       const schedule =
-        schedules.find((candidate) => asRecord(candidate).semester === semester) ??
-        schedules[0];
+        schedules.find(
+          (candidate) => asRecord(candidate).semester === semester,
+        ) ?? schedules[0];
       const scheduleRecord = asRecord(schedule);
       const hours = asRecord(scheduleRecord.hours);
       return {
@@ -602,7 +599,10 @@ export const TOOL_DECLARATIONS: FunctionDeclaration[] = [
           type: Type.STRING,
           description: "Optional five-digit semester, such as 11510",
         },
-        limit: { type: Type.NUMBER, description: "Maximum results, default 10" },
+        limit: {
+          type: Type.NUMBER,
+          description: "Maximum results, default 10",
+        },
       },
       required: ["query"],
     },
@@ -624,26 +624,38 @@ export const TOOL_DECLARATIONS: FunctionDeclaration[] = [
   },
   {
     name: "compare_courses",
-    description: "Search several course topics and compare their current offerings.",
+    description:
+      "Search several course topics and compare their current offerings.",
     parameters: {
       type: Type.OBJECT,
       properties: {
-        queries: { type: Type.STRING, description: "Comma-separated course topics" },
-        department: { type: Type.STRING, description: "Optional department code" },
-        semester: { type: Type.STRING, description: "Optional five-digit semester" },
+        queries: {
+          type: Type.STRING,
+          description: "Comma-separated course topics",
+        },
+        department: {
+          type: Type.STRING,
+          description: "Optional department code",
+        },
+        semester: {
+          type: Type.STRING,
+          description: "Optional five-digit semester",
+        },
       },
       required: ["queries"],
     },
   },
   {
     name: "list_departments",
-    description: "List Chinese department names used by graduation requirement records.",
+    description:
+      "List Chinese department names used by graduation requirement records.",
     parameters: {
       type: Type.OBJECT,
       properties: {
         query: {
           type: Type.STRING,
-          description: "Optional Chinese name, English name, or department code to narrow the list",
+          description:
+            "Optional Chinese name, English name, or department code to narrow the list",
         },
       },
       required: [],
@@ -656,8 +668,14 @@ export const TOOL_DECLARATIONS: FunctionDeclaration[] = [
     parameters: {
       type: Type.OBJECT,
       properties: {
-        department: { type: Type.STRING, description: "Exact Chinese department name" },
-        entranceYear: { type: Type.STRING, description: "ROC entrance year, such as 113" },
+        department: {
+          type: Type.STRING,
+          description: "Exact Chinese department name",
+        },
+        entranceYear: {
+          type: Type.STRING,
+          description: "ROC entrance year, such as 113",
+        },
       },
       required: ["department", "entranceYear"],
     },
@@ -669,10 +687,22 @@ export const TOOL_DECLARATIONS: FunctionDeclaration[] = [
     parameters: {
       type: Type.OBJECT,
       properties: {
-        query: { type: Type.STRING, description: "Optional topic, name, or instructor" },
-        department: { type: Type.STRING, description: "Optional department code" },
-        semester: { type: Type.STRING, description: "Optional five-digit semester" },
-        limit: { type: Type.NUMBER, description: "Maximum matches, default 10" },
+        query: {
+          type: Type.STRING,
+          description: "Optional topic, name, or instructor",
+        },
+        department: {
+          type: Type.STRING,
+          description: "Optional department code",
+        },
+        semester: {
+          type: Type.STRING,
+          description: "Optional five-digit semester",
+        },
+        limit: {
+          type: Type.NUMBER,
+          description: "Maximum matches, default 10",
+        },
       },
       required: [],
     },
@@ -689,7 +719,10 @@ export const TOOL_DECLARATIONS: FunctionDeclaration[] = [
           items: { type: Type.STRING },
           description: "Candidate course raw_ids from search results",
         },
-        semester: { type: Type.STRING, description: "Optional five-digit semester" },
+        semester: {
+          type: Type.STRING,
+          description: "Optional five-digit semester",
+        },
       },
       required: ["courseIds"],
     },
@@ -701,8 +734,14 @@ export const TOOL_DECLARATIONS: FunctionDeclaration[] = [
     parameters: {
       type: Type.OBJECT,
       properties: {
-        startDate: { type: Type.STRING, description: "Optional ISO date YYYY-MM-DD" },
-        endDate: { type: Type.STRING, description: "Optional ISO date YYYY-MM-DD" },
+        startDate: {
+          type: Type.STRING,
+          description: "Optional ISO date YYYY-MM-DD",
+        },
+        endDate: {
+          type: Type.STRING,
+          description: "Optional ISO date YYYY-MM-DD",
+        },
       },
       required: [],
     },
@@ -721,14 +760,18 @@ export const TOOL_DECLARATIONS: FunctionDeclaration[] = [
         direction: {
           type: Type.STRING,
           enum: ["up", "down"],
-          description: "up toward TSMC/Nanda, down toward the main gate/main campus",
+          description:
+            "up toward TSMC/Nanda, down toward the main gate/main campus",
         },
         day: {
           type: Type.STRING,
           enum: ["current", "weekday", "weekend"],
           description: "Use current for next departures",
         },
-        limit: { type: Type.NUMBER, description: "Maximum departures, default 10" },
+        limit: {
+          type: Type.NUMBER,
+          description: "Maximum departures, default 10",
+        },
       },
       required: [],
     },
@@ -740,8 +783,14 @@ export const TOOL_DECLARATIONS: FunctionDeclaration[] = [
     parameters: {
       type: Type.OBJECT,
       properties: {
-        facility: { type: Type.STRING, description: "Optional Chinese or English facility name" },
-        semester: { type: Type.STRING, description: "Optional five-digit semester" },
+        facility: {
+          type: Type.STRING,
+          description: "Optional Chinese or English facility name",
+        },
+        semester: {
+          type: Type.STRING,
+          description: "Optional five-digit semester",
+        },
       },
       required: [],
     },
@@ -796,7 +845,9 @@ export async function executeTool(
         semester,
         filters_applied: { department: department ?? null },
         results: await Promise.all(
-          queries.map(async (query) => searchCourses(c, query, 5, semester, department)),
+          queries.map(async (query) =>
+            searchCourses(c, query, 5, semester, department),
+          ),
         ),
       };
     }
@@ -814,7 +865,9 @@ export async function executeTool(
         })),
       );
       const query =
-        typeof args.query === "string" ? args.query.trim().toLocaleLowerCase() : "";
+        typeof args.query === "string"
+          ? args.query.trim().toLocaleLowerCase()
+          : "";
       const matchingDepartments = query
         ? departments.filter((department) =>
             `${department.college} ${department.department}`
@@ -839,7 +892,11 @@ export async function executeTool(
       if (!department || !entranceYear)
         throw new Error("department and entranceYear are required");
       const colleges = await loadGraduationData(c);
-      const result = await findRequirementsPDF(colleges, department, entranceYear);
+      const result = await findRequirementsPDF(
+        colleges,
+        department,
+        entranceYear,
+      );
       if (!result) {
         return {
           found: false,

@@ -193,11 +193,11 @@ function ChartSummary({
   hours,
   currentHour,
   dict,
-}: {
+}: Readonly<{
   hours: HourBar[];
   currentHour: number;
   dict: ReturnType<typeof useDictionary>;
-}) {
+}>) {
   if (hours.length === 0) return null;
   const template =
     currentHour >= 0
@@ -207,7 +207,7 @@ function ChartSummary({
     <span className="sr-only">
       {template
         .replace("{start}", `${hourLabel(hours[0].hour)}:00`)
-        .replace("{end}", `${hourLabel(hours[hours.length - 1].hour + 1)}:00`)
+        .replace("{end}", `${hourLabel(hours.at(-1)!.hour + 1)}:00`)
         .replace("{current}", `${hourLabel(Math.max(currentHour, 0))}:00`)}
     </span>
   );
@@ -218,12 +218,12 @@ function PopularTimesStrip({
   currentHour,
   currentValue,
   dict,
-}: {
+}: Readonly<{
   hours: HourBar[];
   currentHour: number;
   currentValue: number | null;
   dict: ReturnType<typeof useDictionary>;
-}) {
+}>) {
   if (hours.length === 0) return null;
   const values = hours
     .map((hour) => hour.expected)
@@ -282,13 +282,13 @@ function DetailBars({
   fresh,
   isToday,
   dict,
-}: {
+}: Readonly<{
   hours: HourBar[];
   currentHour: number;
   fresh: boolean;
   isToday: boolean;
   dict: ReturnType<typeof useDictionary>;
-}) {
+}>) {
   if (hours.length === 0) return null;
   const values = hours.flatMap((hour) =>
     [
@@ -380,11 +380,11 @@ function ForecastLegend({
   dict,
   showObserved,
   showPredicted,
-}: {
+}: Readonly<{
   dict: ReturnType<typeof useDictionary>;
   showObserved: boolean;
   showPredicted: boolean;
-}) {
+}>) {
   return (
     <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
       <span className="inline-flex items-center gap-1">
@@ -422,14 +422,14 @@ function DetailView({
   now,
   generatedAt,
   dict,
-}: {
+}: Readonly<{
   series: UsageSeries;
   kind: UsageKind;
   capacity: number | null;
   now: Date;
   generatedAt: string | null | undefined;
   dict: ReturnType<typeof useDictionary>;
-}) {
+}>) {
   const today = currentTaipeiHour(now);
   const todayIndex = Math.max(0, taipeiWeekday(now));
   const [selectedDay, setSelectedDay] = useState(todayIndex);
@@ -601,7 +601,7 @@ export function UsageForecast({
   generatedAt,
   onOpenDetails,
   variant = "row",
-}: UsageForecastProps) {
+}: Readonly<UsageForecastProps>) {
   const dict = useDictionary();
   const [detailOpen, setDetailOpen] = useState(false);
   const state = getUsageForecastState(series);

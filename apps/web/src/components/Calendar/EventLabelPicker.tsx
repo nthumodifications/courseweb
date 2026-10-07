@@ -1,16 +1,18 @@
 import { Check, ChevronsUpDown } from "lucide-react";
-import { cn } from "@courseweb/ui";
-import { forwardRef, useState, type ButtonHTMLAttributes } from "react";
-import { Popover, PopoverContent, PopoverTrigger } from "@courseweb/ui";
 import {
+  cn,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
   Command,
   CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
   CommandList,
+  Button,
 } from "@courseweb/ui";
-import { Button } from "@courseweb/ui";
+import { forwardRef, useState, type ButtonHTMLAttributes } from "react";
 import { useCalendar } from "./calendar_hook";
 import useDictionary from "@/dictionaries/useDictionary";
 

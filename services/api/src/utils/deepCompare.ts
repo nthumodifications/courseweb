@@ -44,7 +44,7 @@ export function deepCompare(
 
   return keysA.every(
     (key) =>
-      Object.prototype.hasOwnProperty.call(b, key) &&
+      Object.hasOwn(b, key) &&
       deepCompare(a[key], b[key], maxDepth, currentDepth + 1),
   );
 }

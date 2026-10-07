@@ -23,8 +23,18 @@ describe("usage collector validation", () => {
         data: [{ project_id: "a", project_name: "A" }],
       }),
     ).toBeNull();
-    expect(parseLibraryPayload({ rescode: 1, rows: [{ zoneid: "1", zonename: "一區" }] })).toBeNull();
-    expect(parseLibraryPayload({ rescode: 1, rows: [{ zoneid: "1", zonename: "一區", count: -1 }] })).toBeNull();
+    expect(
+      parseLibraryPayload({
+        rescode: 1,
+        rows: [{ zoneid: "1", zonename: "一區" }],
+      }),
+    ).toBeNull();
+    expect(
+      parseLibraryPayload({
+        rescode: 1,
+        rows: [{ zoneid: "1", zonename: "一區", count: -1 }],
+      }),
+    ).toBeNull();
   });
 
   it("keeps a working source when the other upstream fails", async () => {
@@ -43,9 +53,13 @@ describe("usage collector validation", () => {
 
     expect(result.gym.samples).toBeNull();
     expect(result.gym.error).toBeInstanceOf(Error);
-    expect(result.library.samples).toEqual([{ id: "zone-1", name: "一區", value: 12 }]);
-    expect(userAgents.length).toBe(2);
-    expect(userAgents.every((value) => value.includes("NTHUMods-usage-history"))).toBe(true);
+    expect(result.library.samples).toEqual([
+      { id: "zone-1", name: "一區", value: 12 },
+    ]);
+    expect(userAgents).toHaveLength(2);
+    expect(
+      userAgents.every((value) => value.includes("NTHUMods-usage-history")),
+    ).toBe(true);
   });
 });
 

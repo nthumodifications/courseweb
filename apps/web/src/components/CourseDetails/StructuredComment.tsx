@@ -1,8 +1,5 @@
 import { useEffect, useState } from "react";
-import { Textarea } from "@courseweb/ui";
-import { Input } from "@courseweb/ui";
-import { Checkbox } from "@courseweb/ui";
-import { Label } from "@courseweb/ui";
+import { Textarea, Input, Checkbox, Label } from "@courseweb/ui";
 const StructuredComment = ({
   onValueChange,
 }: {

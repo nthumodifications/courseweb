@@ -1,10 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { lazy, Suspense } from "react";
-import { Link } from "react-router-dom";
 import { ArrowLeft, Map } from "lucide-react";
-import { Button, EmptyState, ErrorState } from "@courseweb/ui";
-import { Fade } from "@courseweb/ui";
+import { Button, EmptyState, ErrorState, Fade } from "@courseweb/ui";
 import { lastSemester } from "@courseweb/shared";
 import { toPrettySemester } from "@/helpers/semester";
 import VenueList from "@/components/Venue/VenueList";
@@ -48,7 +46,10 @@ const VenuesPage = () => {
         {venuesLoading ? (
           <div className="flex flex-col divide-y divide-border px-4">
             {Array.from({ length: 8 }).map((_, index) => (
-              <div className="flex min-w-0 flex-row items-center gap-4 py-4" key={index}>
+              <div
+                className="flex min-w-0 flex-row items-center gap-4 py-4"
+                key={index}
+              >
                 <div className="h-4 w-4 shrink-0 rounded-sm bg-muted" />
                 <div className="h-4 w-32 rounded bg-muted" />
                 <div className="flex-1" />
@@ -60,7 +61,11 @@ const VenuesPage = () => {
           <ErrorState
             title={dict.common.load_error}
             action={
-              <Button variant="outline" size="sm" onClick={() => void refetchVenues()}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void refetchVenues()}
+              >
                 {dict.common.try_again}
               </Button>
             }
@@ -108,7 +113,10 @@ function VenueDetail({ venueId }: { venueId: string }) {
     return (
       <div className="flex flex-col divide-y divide-border px-4">
         {Array.from({ length: 6 }).map((_, index) => (
-          <div className="flex min-w-0 flex-row items-center gap-4 py-4" key={index}>
+          <div
+            className="flex min-w-0 flex-row items-center gap-4 py-4"
+            key={index}
+          >
             <div className="h-4 w-4 shrink-0 rounded-sm bg-muted" />
             <div className="h-4 w-40 rounded bg-muted" />
             <div className="flex-1" />
@@ -143,7 +151,8 @@ function VenueDetail({ venueId }: { venueId: string }) {
       </div>
       <div className="flex flex-col gap-2 px-2 py-4 md:px-6">
         <h2 className="font-bold text-base">
-          {venueId} - {toPrettySemester(lastSemester.id)} {dict.course.details.semester}
+          {venueId} - {toPrettySemester(lastSemester.id)}{" "}
+          {dict.course.details.semester}
         </h2>
         <Button asChild variant="outline" size="sm">
           <Link to={`/${lang}/map?venue=${encodeURIComponent(venueId)}`}>

@@ -18,8 +18,24 @@ import {
   hasSameCourse,
   hasTimes,
 } from "@/helpers/courses";
-import { MinimalCourse, RawCourseID } from "@/types/courses";
-import { Button } from "@courseweb/ui";
+import { MinimalCourse } from "@/types/courses";
+import {
+  Button,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  Separator,
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+  Switch,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@courseweb/ui";
 import { getTimetableCourseListStatus } from "@/helpers/timetable";
 import {
   DndContext,
@@ -37,28 +53,16 @@ import {
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
+  useSortable,
 } from "@dnd-kit/sortable";
-import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
 import {
   restrictToVerticalAxis,
   restrictToWindowEdges,
 } from "@dnd-kit/modifiers";
-import { Popover, PopoverContent, PopoverTrigger } from "@courseweb/ui";
 import Compact from "@uiw/react-color-compact";
-import { Separator } from "@courseweb/ui";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@courseweb/ui";
 import { TimetableItemDrawer } from "./TimetableItemDrawer";
-import { Switch } from "@courseweb/ui";
-import { Label } from "@courseweb/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@courseweb/ui";
 
 const DownloadTimetableDialogLazy = lazy(
   () => import("./DownloadTimetableDialog"),
@@ -159,12 +163,8 @@ const TimetableCourseListItem = ({
   priority: number;
   displaySettings: DisplaySettings;
 }) => {
-  const { language } = useSettings();
   const dict = useDictionary();
 
-  const handleCopyClipboard = (id: RawCourseID) => {
-    navigator.clipboard.writeText(id);
-  };
   const { deleteCourse, colorMap, setColor, currentColors } =
     useUserTimetable();
 
@@ -315,7 +315,6 @@ export const TimetableCourseList = ({
   const {
     getSemesterCourses,
     getSemesterUnresolvedCourseIds,
-    colorMap,
     setCourses,
     isLoading,
     isFetchingCourses,
@@ -439,11 +438,9 @@ export const TimetableCourseList = ({
               <TimetableCourseListItem
                 key={course.raw_id}
                 course={course as MinimalCourse}
-                hasConflict={
-                  !!timeConflicts.find(
-                    (ts) => ts.course.raw_id == course.raw_id,
-                  )
-                }
+                hasConflict={timeConflicts.some(
+                  (ts) => ts.course.raw_id == course.raw_id,
+                )}
                 isDuplicate={duplicates.includes(course.raw_id)}
                 priority={peAndGeAllocation.indexOf(course.raw_id) + 1}
                 displaySettings={displaySettings}

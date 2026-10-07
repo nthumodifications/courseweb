@@ -3,8 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import React from "react";
 import { Info, X } from "lucide-react";
 import { useLocalStorage } from "usehooks-ts";
-import { Alert, AlertDescription, AlertTitle } from "@courseweb/ui";
-import { Button } from "@courseweb/ui";
+import { Alert, AlertDescription, AlertTitle, Button } from "@courseweb/ui";
 
 const ThemeChangableAlert = () => {
   const [open, setOpen] = useLocalStorage("theme_changable_alert", true);

@@ -1,8 +1,13 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "@/hooks/contexts/theme";
 import { THEME_PRESETS } from "@/config/themePresets";
-import { ThemeBackground, ThemeDensity, ThemeRadius } from "@/types/theme";
-import { FONT_DEFINITIONS, FONT_ORDER } from "@/types/theme";
+import {
+  FONT_DEFINITIONS,
+  FONT_ORDER,
+  ThemeBackground,
+  ThemeDensity,
+  ThemeRadius,
+} from "@/types/theme";
 import { cn } from "@/lib/utils";
 import { Button } from "@courseweb/ui";
 import { RotateCcw, Link2, Check } from "lucide-react";
@@ -71,19 +76,22 @@ export const ThemeSection = () => {
     try {
       const encoded = btoa(JSON.stringify(config));
       const url = `${window.location.origin}${window.location.pathname}?theme=${encoded}`;
-      navigator.clipboard.writeText(url).then(() => {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      });
+      void navigator.clipboard
+        .writeText(url)
+        .then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        })
+        .catch(() => undefined);
     } catch {
       // ignore clipboard errors
     }
   };
 
   const hexToHslTriple = (hex: string): string => {
-    const r = parseInt(hex.slice(1, 3), 16) / 255;
-    const g = parseInt(hex.slice(3, 5), 16) / 255;
-    const b = parseInt(hex.slice(5, 7), 16) / 255;
+    const r = Number.parseInt(hex.slice(1, 3), 16) / 255;
+    const g = Number.parseInt(hex.slice(3, 5), 16) / 255;
+    const b = Number.parseInt(hex.slice(5, 7), 16) / 255;
     const max = Math.max(r, g, b),
       min = Math.min(r, g, b);
     let h = 0,
@@ -250,7 +258,7 @@ export const ThemeSection = () => {
             max={1.25}
             step={0.125}
             value={config.fontScale}
-            onChange={(e) => setFontScale(parseFloat(e.target.value))}
+            onChange={(e) => setFontScale(Number.parseFloat(e.target.value))}
             className="flex-1 accent-primary"
           />
           <span className="text-xs text-muted-foreground">
@@ -303,7 +311,9 @@ export const ThemeSection = () => {
               )}
             >
               <span className="font-mono text-sm leading-none">{opt.icon}</span>
-              <span className="min-w-0">{dict.settings.appearance.background[opt.value]}</span>
+              <span className="min-w-0">
+                {dict.settings.appearance.background[opt.value]}
+              </span>
             </button>
           ))}
         </div>
@@ -349,7 +359,9 @@ export const ThemeSection = () => {
               id="accent-color-picker"
               type="color"
               defaultValue="#7c5cbf"
-              onChange={(e) => setAccentOverride(hexToHslTriple(e.target.value))}
+              onChange={(e) =>
+                setAccentOverride(hexToHslTriple(e.target.value))
+              }
               className="h-6 w-6 cursor-pointer rounded border-0 p-0"
               title={dict.settings.appearance.accent.pick}
               aria-label={dict.settings.appearance.accent.pick}

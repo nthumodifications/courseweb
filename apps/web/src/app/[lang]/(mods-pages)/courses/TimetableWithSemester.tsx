@@ -4,7 +4,6 @@ import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { createTimetableFromCourses } from "@/helpers/timetable";
 import { MinimalCourse } from "@/types/courses";
 import { renderTimetableSlot } from "@/helpers/timetable_course";
-import { CourseDefinition } from "@/config/supabase";
 import { useSettings } from "@/hooks/contexts/settings";
 
 const TimetableWithSemester = ({ semester }: { semester: string }) => {

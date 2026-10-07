@@ -1,6 +1,5 @@
 import { eachHourOfInterval, format, addMinutes } from "date-fns";
-import { cn } from "@courseweb/ui";
-import { Separator } from "@courseweb/ui";
+import { cn, Separator, getNearestTime } from "@courseweb/ui";
 import {
   differenceInTaipeiCalendarDays,
   endOfTaipeiDay,
@@ -34,7 +33,6 @@ import { CalendarEventInternal } from "./calendar.types";
 import { useSettings } from "@/hooks/contexts/settings";
 import client from "@/config/api";
 import { AddEventButton } from "./AddEventButton";
-import { getNearestTime } from "@courseweb/ui";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import useCourseDates from "@/hooks/useCourseDates";
 import { getLocale } from "@/helpers/dateLocale";
@@ -124,11 +122,7 @@ export const CalendarWeekContainer = ({
     [],
   );
 
-  const {
-    data: nthuCalendarEvents = [],
-    error: calendarError,
-    isLoading: calendarLoading,
-  } = useQuery<CalendarEventInternal[]>({
+  const { data: nthuCalendarEvents = [] } = useQuery<CalendarEventInternal[]>({
     queryKey: [
       "event",
       getTaipeiDateKey(displayWeek[0]),
@@ -424,7 +418,7 @@ export const CalendarWeekContainer = ({
       while (!foundRow) {
         // Initialize row if it doesn't exist
         if (!rows[rowIndex]) {
-          rows[rowIndex] = Array(8).fill(0); // 8 columns (1-indexed to match grid)
+          rows[rowIndex] = new Array(8).fill(0); // 8 columns (1-indexed to match grid)
         }
 
         // Check if this row has space for the event
