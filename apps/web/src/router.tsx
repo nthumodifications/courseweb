@@ -24,6 +24,9 @@ const CoursesPage = lazy(
 const CourseDetailPage = lazy(
   () => import("@/app/[lang]/(mods-pages)/courses/[courseId]/page"),
 );
+const ModulePage = lazy(
+  () => import("@/app/[lang]/(mods-pages)/courses/module/[moduleKey]/page"),
+);
 const BusPage = lazy(() => import("@/app/[lang]/(mods-pages)/bus/page"));
 const SportsVenuesPage = lazy(
   () => import("@/app/[lang]/(mods-pages)/sports-venues/page"),
@@ -209,6 +212,10 @@ export const router = createBrowserRouter([
                   descriptionZh:
                     "搜尋清大課程、查看課程大綱、評分記錄與學生心得。支援跨系選修、先修課程查詢，快速找到最適合的清華大學課程。",
                 },
+              },
+              {
+                path: "courses/module/:moduleKey",
+                element: <ModulePage />,
               },
               {
                 path: "courses/:courseId",
