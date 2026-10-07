@@ -155,15 +155,21 @@ const defaultWorkerFactory = () => {
 
 class WorkerIndex implements LocalIndex {
   private readonly worker: SearchWorker;
+  private readonly onFailure: (index: LocalIndex) => void;
   private nextRequestId = 1;
   private built: Promise<void> | undefined;
   private readonly pending = new Map<number, WorkerPending>();
   private buildResolve: (() => void) | undefined;
   private buildReject: ((error: Error) => void) | undefined;
   private failed: Error | undefined;
+  private terminated = false;
 
-  constructor(worker: SearchWorker) {
+  constructor(
+    worker: SearchWorker,
+    onFailure: (index: LocalIndex) => void = () => {},
+  ) {
     this.worker = worker;
+    this.onFailure = onFailure;
     worker.onmessage = (event: MessageEvent<WorkerResponse>) => {
       const response = event.data;
       if (response.type === "built") {
@@ -173,16 +179,7 @@ class WorkerIndex implements LocalIndex {
         return;
       }
       if (response.type === "error") {
-        const error = new Error(response.message);
-        if (response.requestId !== undefined) {
-          const pending = this.pending.get(response.requestId);
-          if (pending) {
-            this.pending.delete(response.requestId);
-            pending.reject(error);
-          }
-        } else {
-          this.fail(error);
-        }
+        this.fail(new Error(response.message));
         return;
       }
       const pending = this.pending.get(response.requestId);
@@ -196,12 +193,18 @@ class WorkerIndex implements LocalIndex {
   }
 
   private fail(error: Error) {
+    if (this.failed) return;
     this.failed = error;
+    if (!this.terminated) {
+      this.terminated = true;
+      this.worker.terminate();
+    }
     this.buildReject?.(error);
     this.buildResolve = undefined;
     this.buildReject = undefined;
     for (const pending of this.pending.values()) pending.reject(error);
     this.pending.clear();
+    this.onFailure(this);
   }
 
   build(documents: WorkerDocument[]) {
@@ -225,7 +228,6 @@ class WorkerIndex implements LocalIndex {
   }
 
   dispose() {
-    this.worker.terminate();
     this.fail(new Error("Local search worker disposed"));
   }
 }
@@ -439,9 +441,12 @@ export const semesterFromRequest = (
 const workerIndexFor = (
   records: SearchProjectionRecord[],
   factory: () => SearchWorker | undefined,
+  onFailure?: (index: LocalIndex) => void,
 ) => {
   const worker = factory();
-  return worker ? new WorkerIndex(worker) : makeMainThreadIndex(records);
+  return worker
+    ? new WorkerIndex(worker, onFailure)
+    : makeMainThreadIndex(records);
 };
 
 const buildShortLatinPrefixIndex = (
@@ -519,7 +524,9 @@ export class LocalSearchEngine {
   private readonly cache: SearchChunkCache;
   private readonly workerFactory: () => SearchWorker | undefined;
   private readonly chunks = new Map<string, Promise<LoadedChunk>>();
+  private readonly loadedChunks = new Map<string, LoadedChunk>();
   private readonly textLoads = new Map<string, Promise<void>>();
+  private readonly textGenerations = new Map<string, number>();
   // Rendered hits are copies (InstantSearch spreads each hit and caches the
   // page), so merging into records alone never reaches hits already on
   // screen. Views read deferred text back through getText instead.
@@ -672,7 +679,9 @@ export class LocalSearchEngine {
     manifest: SearchManifestEntry;
   }): Promise<LoadedChunk> {
     const { records, manifest } = source;
-    const index = workerIndexFor(records, this.workerFactory);
+    const index = workerIndexFor(records, this.workerFactory, (failedIndex) =>
+      this.invalidateChunk(manifest.id, failedIndex),
+    );
     try {
       await index.build(
         records.map((record, id) => ({
@@ -703,6 +712,7 @@ export class LocalSearchEngine {
     this.setStatus("loading");
     const source = await this.downloadChunk(semester);
     const chunk = await this.buildChunk(source);
+    this.loadedChunks.set(semester, chunk);
     this.setStatus("ready");
     const cachedText = await this.cachedTextChunk(semester, chunk.manifest);
     if (cachedText) this.mergeTextRecords(chunk, cachedText.texts);
@@ -737,11 +747,16 @@ export class LocalSearchEngine {
       : this.cache.getLatestText(semester, formatVersion);
   }
 
-  private async loadTextChunk(semester: string, chunk: LoadedChunk) {
+  private async loadTextChunk(
+    semester: string,
+    chunk: LoadedChunk,
+    generation: number,
+  ) {
     const manifest = chunk.manifest;
     const formatVersion = manifest.textFormatVersion ?? manifest.formatVersion;
     const cached = await this.cachedTextChunk(semester, manifest);
 
+    if (!this.isCurrentTextGeneration(semester, generation)) return;
     if (cached) this.mergeTextRecords(chunk, cached.texts);
 
     const { response, data } = await fetchJsonWithIdleTimeout<unknown>(
@@ -757,6 +772,7 @@ export class LocalSearchEngine {
       this.fetchFn,
       "Course-search text chunk",
     );
+    if (!this.isCurrentTextGeneration(semester, generation)) return;
     if (response.status === 304) {
       if (!cached)
         throw new Error("Course text chunk returned 304 without a cache entry");
@@ -770,12 +786,14 @@ export class LocalSearchEngine {
     if (textChunk.semester !== semester) {
       throw new Error("Course-search text chunk semester mismatch");
     }
+    if (!this.isCurrentTextGeneration(semester, generation)) return;
     this.mergeTextRecords(chunk, textChunk.texts);
     // ETag is a cache key only; it is not treated as chunk integrity proof.
     const contentHash =
       manifest.textContentHash ||
       unquoteEntityTag(response.headers.get("etag"));
     if (!contentHash) return;
+    if (!this.isCurrentTextGeneration(semester, generation)) return;
     const key = searchTextCacheKey(semester, contentHash, formatVersion);
     let persisted = false;
     try {
@@ -791,10 +809,16 @@ export class LocalSearchEngine {
     if (persisted) await this.cache.deleteTextSemester(semester, key);
   }
 
+  private isCurrentTextGeneration(semester: string, generation: number) {
+    return (this.textGenerations.get(semester) ?? 0) === generation;
+  }
+
   private startTextLoad(semester: string, chunk: LoadedChunk) {
+    if (this.textLoads.has(semester)) return;
+    const generation = this.textGenerations.get(semester) ?? 0;
     const load = new Promise<void>((resolve) => {
       globalThis.setTimeout(() => {
-        void this.loadTextChunk(semester, chunk)
+        void this.loadTextChunk(semester, chunk, generation)
           .catch((error) => {
             // The small searchable tier remains usable if syllabus text is
             // unavailable.
@@ -824,6 +848,14 @@ export class LocalSearchEngine {
     });
     this.chunks.set(semester, promise);
     return promise;
+  }
+
+  private invalidateChunk(semester: string, failedIndex: LocalIndex) {
+    const chunk = this.loadedChunks.get(semester);
+    if (!chunk || chunk.index !== failedIndex) return;
+    this.loadedChunks.delete(semester);
+    this.chunks.delete(semester);
+    chunk.index.dispose?.();
   }
 
   private facetMaps(
@@ -882,9 +914,17 @@ export class LocalSearchEngine {
     const terms = queryTerms(query);
     const hasSearchTerms = terms.length > 0;
     const refinementMatcher = compileRefinements(params);
-    const indexedIds: readonly (string | number)[] = hasSearchTerms
-      ? await chunk.index.search(query, chunk.records.length)
-      : chunk.ids;
+    let indexedIds: readonly (string | number)[];
+    if (hasSearchTerms) {
+      try {
+        indexedIds = await chunk.index.search(query, chunk.records.length);
+      } catch (error) {
+        this.invalidateChunk(semester, chunk.index);
+        throw error;
+      }
+    } else {
+      indexedIds = chunk.ids;
+    }
     const shortLatinPrefix =
       terms.length === 1 &&
       terms[0]!.length <= 3 &&
@@ -995,11 +1035,20 @@ export class LocalSearchEngine {
   }
 
   async clear(semester?: string) {
-    const semesters = semester ? [semester] : [...this.chunks.keys()];
+    const semesters = semester
+      ? [semester]
+      : [
+          ...new Set([
+            ...this.chunks.keys(),
+            ...this.loadedChunks.keys(),
+            ...this.textLoads.keys(),
+          ]),
+        ];
     for (const id of semesters) {
+      this.textGenerations.set(id, (this.textGenerations.get(id) ?? 0) + 1);
       const chunk = await this.chunks.get(id)?.catch(() => undefined);
-      chunk?.index.dispose?.();
-      this.chunks.delete(id);
+      if (chunk) this.invalidateChunk(id, chunk.index);
+      else this.chunks.delete(id);
       this.textLoads.delete(id);
     }
     if (!this.chunks.size) this.setStatus("idle");

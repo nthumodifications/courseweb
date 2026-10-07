@@ -162,6 +162,30 @@ class TrackedFailingWorker extends FailingWorker {
   }
 }
 
+class FatalSearchWorker extends FakeWorker {
+  terminateCount = 0;
+
+  override postMessage(message: WorkerRequest) {
+    if (message.type === "build") {
+      super.postMessage(message);
+      return;
+    }
+    queueMicrotask(() => {
+      this.onmessage?.({
+        data: {
+          type: "error",
+          requestId: message.requestId,
+          message: "synthetic worker query failure",
+        },
+      } as MessageEvent);
+    });
+  }
+
+  override terminate() {
+    this.terminateCount += 1;
+  }
+}
+
 const createEngine = (
   stateOverrides: Partial<FetchState> = {},
   cache = new MemorySearchChunkCache(),
@@ -1027,6 +1051,84 @@ describe("local-first resilient client", () => {
         .length,
     ).toBeGreaterThan(0);
     expect(remoteCalls).toBe(1);
+  });
+
+  test("evicts and terminates a worker after a fatal query error", async () => {
+    const { state } = createEngine();
+    let workerAttempts = 0;
+    let firstWorker: FatalSearchWorker | undefined;
+    const engine = new LocalSearchEngine({
+      baseUrl: "https://api.example.test",
+      cache: new MemorySearchChunkCache(),
+      defaultSemester: "11510",
+      fetch: makeFetch(state),
+      workerFactory: () => {
+        workerAttempts += 1;
+        if (workerAttempts === 1) {
+          firstWorker = new FatalSearchWorker();
+          return firstWorker;
+        }
+        return new FakeWorker();
+      },
+    });
+
+    await expect(
+      engine.search("11510", request({ query: "CS" })),
+    ).rejects.toThrow("synthetic worker query failure");
+    expect(firstWorker?.terminateCount).toBe(1);
+
+    const recovered = await engine.search("11510", request({ query: "CS" }));
+    expect(recovered.nbHits).toBeGreaterThan(0);
+    expect(workerAttempts).toBe(2);
+    expect(firstWorker?.terminateCount).toBe(1);
+  });
+
+  test("ignores a text response from before clear", async () => {
+    const { state } = createEngine();
+    const textResponses: Array<(response: Response) => void> = [];
+    const rawId = String(fixture[0]?.raw_id);
+    const textResponse = (brief: string) =>
+      new Response(
+        JSON.stringify({
+          data: {
+            schemaVersion: 1,
+            semester: "11510",
+            texts: { [rawId]: { brief, keywords: [brief] } },
+          },
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      );
+    const engine = new LocalSearchEngine({
+      baseUrl: "https://api.example.test",
+      cache: new MemorySearchChunkCache(),
+      defaultSemester: "11510",
+      fetch: async (input, init) => {
+        if (String(input).endsWith("/search/chunk/11510/text")) {
+          return new Promise<Response>((resolve) =>
+            textResponses.push(resolve),
+          );
+        }
+        return makeFetch(state)(input, init);
+      },
+      workerFactory: () => new FakeWorker(),
+    });
+
+    await engine.search("11510", request({ query: "CS" }));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(textResponses).toHaveLength(1);
+
+    await engine.clear("11510");
+    await engine.search("11510", request({ query: "CS" }));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(textResponses).toHaveLength(2);
+
+    textResponses[1]!(textResponse("new"));
+    await engine.waitForTextChunk("11510");
+    expect(engine.getText(rawId)?.brief).toBe("new");
+
+    textResponses[0]!(textResponse("old"));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(engine.getText(rawId)?.brief).toBe("new");
   });
 
   test("falls through to the remote tier after a local timeout", async () => {

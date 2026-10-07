@@ -1,5 +1,10 @@
 # Search robustness round 3 report
 
+## Round 4 merge-gate fixes
+
+- `engine.ts` now terminates a failed worker once, rejects its in-flight queries, evicts that semester's loaded index on worker/search failure, and generation-checks deferred text responses after `clear()`; active text loads remain deduplicated.
+- Added both regression tests in `local-search.test.ts`; baseline `bun --no-env-file test src` was `258 pass, 2 skip, 0 fail`, final runs were `260 pass, 2 skip, 0 fail` three times, type-check remains limited to the same two baseline errors, build/format/diff checks pass, ESLint is blocked by the junctioned missing config, and read-only smoke GETs returned local page 200, manifest 200 (11510: 3,486 rows), and chunk 200 (2,814,465 bytes); no production write was performed.
+
 ## Scope and evidence
 
 This work is on `fix/local-search-robustness`, based on task-start commit `7bcee1bc`. I read `CONTRIBUTING.md`, `README.md`, and the second-review artifact at `C:/Users/chewt/AppData/Local/Temp/claude/C--Users-chewt-Repositories-courseweb/50ae76fc-608b-4983-ae4f-b83c61ab2ed5/scratchpad/w2/out-review-searchfix2.md` before editing.
