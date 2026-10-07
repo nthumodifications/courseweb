@@ -83,6 +83,7 @@ apps/web/public/precache-manifest.*
 apps/web/public/workbox-*.js.map
 
 .playwright-mcp
+tools/citybus/raw/
 .claude/settings.local.json
 tools/data-sync/.env
 .claude/

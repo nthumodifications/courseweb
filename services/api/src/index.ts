@@ -17,6 +17,7 @@ import timetableShare from "./timetable-share";
 import mcpServer from "./mcp-server";
 import search from "./search";
 import bus from "./bus";
+import citybus from "./citybus";
 import chat from "./chat";
 import ai from "./ai";
 import graduation from "./graduation";
@@ -46,6 +47,8 @@ export type Bindings = {
   AI?: Ai;
   VENUE_RATE_LIMITER: RateLimit;
   AI_RATE_LIMITER?: RateLimit;
+  TDX_CLIENT_ID?: string;
+  TDX_CLIENT_SECRET?: string;
 };
 
 export const app = new Hono<{ Bindings: Bindings }>()
@@ -78,6 +81,7 @@ export const app = new Hono<{ Bindings: Bindings }>()
   .route("/mcp", mcpServer)
   .route("/search", search)
   .route("/bus", bus)
+  .route("/citybus", citybus)
   .route("/chat", chat)
   .route("/ai", ai)
   .route("/graduation", graduation)
@@ -89,11 +93,7 @@ export const app = new Hono<{ Bindings: Bindings }>()
 
 export default {
   fetch: app.fetch.bind(app),
-  async scheduled(
-    event: ScheduledEvent,
-    env: Bindings,
-    ctx: ExecutionContext,
-  ) {
+  async scheduled(event: ScheduledEvent, env: Bindings, ctx: ExecutionContext) {
     if (event.cron === "0 2 * * 1") {
       ctx.waitUntil(syncPeoOpeningTimes(env));
     } else if (event.cron === "*/10 * * * *") {
