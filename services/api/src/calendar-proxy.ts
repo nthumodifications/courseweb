@@ -8,6 +8,9 @@ interface AppEnv {
   NTHUMODS_AUTH_URL: string;
 }
 
+const isCalendarData = (value: string) =>
+  value.startsWith("BEGIN:VCALENDAR") && value.includes("END:VCALENDAR");
+
 const app = new Hono<{ Bindings: AppEnv }>().get(
   "/ical/:userId",
   zValidator(
@@ -34,7 +37,10 @@ const app = new Hono<{ Bindings: AppEnv }>().get(
       }>(c);
 
       // Construct the URL for the secure API request
-      const url = new URL(`${secureApiUrl}/calendar/ics/${userId}`);
+      const url = new URL(
+        `/calendar/ics/${encodeURIComponent(userId)}`,
+        secureApiUrl,
+      );
       url.searchParams.set("token", token);
       url.searchParams.set("type", type);
 
@@ -48,25 +54,33 @@ const app = new Hono<{ Bindings: AppEnv }>().get(
 
       // Check if the request was successful
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error(
-          `Error fetching calendar: ${response.status} ${errorText}`,
-        );
+        console.error("Error fetching calendar", response.status);
         return c.json({
           error: `Failed to fetch calendar: ${response.statusText}`,
           status: response.status,
         });
       }
 
+      const contentType = response.headers
+        .get("Content-Type")
+        ?.split(";", 1)[0]
+        .trim()
+        .toLowerCase();
+      if (contentType !== "text/calendar") {
+        return c.json({ error: "Unexpected calendar response" }, 502);
+      }
+
       // Get the calendar data
       const calendarData = await response.text();
+      if (!isCalendarData(calendarData)) {
+        return c.json({ error: "Invalid calendar response" }, 502);
+      }
 
       // Set the appropriate headers for the iCalendar file
-      c.header("Content-Type", "text/calendar");
-      c.header(
-        "Content-Disposition",
-        `attachment; filename=${userId}_calendar.ics`,
-      );
+      c.header("Content-Type", "text/calendar; charset=utf-8");
+      c.header("Content-Disposition", 'attachment; filename="calendar.ics"');
+      c.header("Content-Security-Policy", "default-src 'none'");
+      c.header("X-Content-Type-Options", "nosniff");
       c.header("Cache-Control", "private, max-age=3600"); // Cache for 1 hour
 
       // Return the calendar data

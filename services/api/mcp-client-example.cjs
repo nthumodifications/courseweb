@@ -120,7 +120,7 @@ class CourseWebMCPClient {
           id
         };
         
-      case 'tools/call':
+      case 'tools/call': {
         const { name, arguments: args } = params;
         
         if (name === 'search_courses') {
@@ -159,6 +159,7 @@ class CourseWebMCPClient {
           },
           id
         };
+      }
         
       default:
         return {

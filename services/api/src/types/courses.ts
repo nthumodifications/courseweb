@@ -1,5 +1,3 @@
-import { type } from "os";
-
 export type Department = { code: string; name_zh: string; name_en: string };
 
 export type RawCourseID = string;

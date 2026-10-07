@@ -8,7 +8,7 @@ export async function verifyApiKey(c: Context, next: Next) {
     const authHeader = c.req.header("Authorization");
     let apiKeyString: string | undefined;
 
-    if (authHeader && authHeader.startsWith("ApiKey ")) {
+    if (authHeader?.startsWith("ApiKey ")) {
       apiKeyString = authHeader.slice(7); // Remove "ApiKey " prefix
     }
 

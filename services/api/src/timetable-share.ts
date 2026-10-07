@@ -7,7 +7,7 @@ import prismaClients from "./prisma/client";
 import type { Bindings } from "./index";
 
 function generateShareId(): string {
-  return crypto.randomUUID().replace(/-/g, "").slice(0, 8);
+  return crypto.randomUUID().replaceAll("-", "").slice(0, 8);
 }
 
 function generateInviteCode(): string {
@@ -53,7 +53,7 @@ const ClockCustomTimetableItemSchema = z.object({
 const LegacyCustomTimetableItemSchema = z.object({
   ...CustomTimetableItemFields,
   schedule: z
-    .array(z.string().regex(/^(?:[MTWRFS][1-9nabcdn])+$/))
+    .array(z.string().regex(/^(?:[MTWRFS][1-9abcdn])+$/))
     .min(1)
     .max(42),
 });
