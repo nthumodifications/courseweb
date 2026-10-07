@@ -1,0 +1,5290 @@
+{
+  "sourceSemesters": ["11510", "11420", "11410", "11320"],
+  "entries": [
+    {
+      "raw_id": "11420ESS 502002",
+      "department": "ESS",
+      "course": "5020",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11420EE  366000",
+      "department": "EE",
+      "course": "3660",
+      "name_zh": "數位訊號處理概論",
+      "name_en": "Introduction to Digital Signal Processing"
+    },
+    {
+      "raw_id": "11510DMS 301100",
+      "department": "DMS",
+      "course": "3011",
+      "name_zh": "專題研究",
+      "name_en": "Undergraduate Research"
+    },
+    {
+      "raw_id": "11510PME 320200",
+      "department": "PME",
+      "course": "3202",
+      "name_zh": "電子學二",
+      "name_en": "Electronics II"
+    },
+    {
+      "raw_id": "11510CHE 495000",
+      "department": "CHE",
+      "course": "4950",
+      "name_zh": "專題研究一",
+      "name_en": "Research on special topics"
+    },
+    {
+      "raw_id": "11510PHYS491000",
+      "department": "PHYS",
+      "course": "4910",
+      "name_zh": "專題研究一",
+      "name_en": "Research on special topics"
+    },
+    {
+      "raw_id": "11420WZ  104600",
+      "department": "WZ",
+      "course": "1046",
+      "name_zh": "羽球二",
+      "name_en": "Badminton (II)"
+    },
+    {
+      "raw_id": "11420ECON100300",
+      "department": "ECON",
+      "course": "1003",
+      "name_zh": "經濟學",
+      "name_en": "Economics"
+    },
+    {
+      "raw_id": "11510LSBS590101",
+      "department": "LSBS",
+      "course": "5901",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11510GEC 120301",
+      "department": "GEC",
+      "course": "1203",
+      "name_zh": "探索心智與行為：當代心理學",
+      "name_en": "Exploring Minds and Behaviors: Contemporary Psychology"
+    },
+    {
+      "raw_id": "11420PE  206108",
+      "department": "PE",
+      "course": "2061",
+      "name_zh": "重量訓練",
+      "name_en": "Weight Training"
+    },
+    {
+      "raw_id": "11510GEC 110800",
+      "department": "GEC",
+      "course": "1108",
+      "name_zh": "思想經典：《荀子》選讀",
+      "name_en": "Selections from the Xunzi"
+    },
+    {
+      "raw_id": "11510JAD 226200",
+      "department": "JAD",
+      "course": "2262",
+      "name_zh": "進階水墨一",
+      "name_en": "Advanced Chinese Ink Painting I"
+    },
+    {
+      "raw_id": "11320JMU 104800",
+      "department": "JMU",
+      "course": "1048",
+      "name_zh": "語韻學二",
+      "name_en": "Diction Ⅱ"
+    },
+    {
+      "raw_id": "11510MS  102101",
+      "department": "MS",
+      "course": "1021",
+      "name_zh": "材料科學與工程一",
+      "name_en": "Material Science and Engineering  I"
+    },
+    {
+      "raw_id": "11510MATH361000",
+      "department": "MATH",
+      "course": "3610",
+      "name_zh": "幾何一",
+      "name_en": "Geometry I"
+    },
+    {
+      "raw_id": "11510KPC 120000",
+      "department": "KPC",
+      "course": "1200",
+      "name_zh": "心理與教育統計一",
+      "name_en": "Psychological and Educational Statistics (I)"
+    },
+    {
+      "raw_id": "11420KSPE240200",
+      "department": "KSPE",
+      "course": "2402",
+      "name_zh": "教育心理學",
+      "name_en": "Educational Psychology"
+    },
+    {
+      "raw_id": "11420KPC 382200",
+      "department": "KPC",
+      "course": "3822",
+      "name_zh": "心理專業倫理與法律",
+      "name_en": "Ethics and Law of Psychology Profession"
+    },
+    {
+      "raw_id": "11410ISS 700400",
+      "department": "ISS",
+      "course": "7004",
+      "name_zh": "研究方法",
+      "name_en": "Research Methods<font color=\"red\">停開</font>"
+    },
+    {
+      "raw_id": "11510QF  320101",
+      "department": "QF",
+      "course": "3201",
+      "name_zh": "衍生性金融市場",
+      "name_en": "Derivatives Market"
+    },
+    {
+      "raw_id": "11510THSM107000",
+      "department": "THSM",
+      "course": "1070",
+      "name_zh": "大體解剖學",
+      "name_en": "Gross Anatomy"
+    },
+    {
+      "raw_id": "11420CL  171000",
+      "department": "CL",
+      "course": "1710",
+      "name_zh": "華語教學通論",
+      "name_en": "Survey of Teaching Chinese as a Second Language"
+    },
+    {
+      "raw_id": "11420KPC 342700",
+      "department": "KPC",
+      "course": "3427",
+      "name_zh": "團體諮商",
+      "name_en": "Group Counseling"
+    },
+    {
+      "raw_id": "11510EE  214000",
+      "department": "EE",
+      "course": "2140",
+      "name_zh": "電磁學",
+      "name_en": "Electromagnetism"
+    },
+    {
+      "raw_id": "11320WW  596300",
+      "department": "WW",
+      "course": "5963",
+      "name_zh": "行政法",
+      "name_en": "Administrative Law"
+    },
+    {
+      "raw_id": "11510IMBA501100",
+      "department": "IMBA",
+      "course": "5011",
+      "name_zh": "財務管理",
+      "name_en": "Financial Management"
+    },
+    {
+      "raw_id": "11510TEE 200201",
+      "department": "TEE",
+      "course": "2002",
+      "name_zh": "國民小學國語教材教法",
+      "name_en": "Language Arts Teaching Materials and Methods"
+    },
+    {
+      "raw_id": "11420QF  100501",
+      "department": "QF",
+      "course": "1005",
+      "name_zh": "會計學二",
+      "name_en": "Accounting (II)"
+    },
+    {
+      "raw_id": "11510JMU 200500",
+      "department": "JMU",
+      "course": "2005",
+      "name_zh": "對位法一",
+      "name_en": "Counterpoint I"
+    },
+    {
+      "raw_id": "11420JMU 304300",
+      "department": "JMU",
+      "course": "3043",
+      "name_zh": "主修六",
+      "name_en": "Major Music Instruction Ⅵ"
+    },
+    {
+      "raw_id": "11510KEE 400301",
+      "department": "KEE",
+      "course": "4003",
+      "name_zh": "幼兒園教保實習",
+      "name_en": "Practicum in Preschool and Kindergarten"
+    },
+    {
+      "raw_id": "11420MS  103200",
+      "department": "MS",
+      "course": "1032",
+      "name_zh": "普通化學二",
+      "name_en": "General Chemistry (II)"
+    },
+    {
+      "raw_id": "11510JAD 327800",
+      "department": "JAD",
+      "course": "3278",
+      "name_zh": "複合媒材創作一",
+      "name_en": "Mixed Media Art I"
+    },
+    {
+      "raw_id": "11410JAD 431300",
+      "department": "JAD",
+      "course": "4313",
+      "name_zh": "設計畢業製作一",
+      "name_en": "Graduate Project in Design Ⅰ"
+    },
+    {
+      "raw_id": "11420GE  102600",
+      "department": "GE",
+      "course": "1026",
+      "name_zh": "紀錄片賞析與創作",
+      "name_en": "Introduction of documentary"
+    },
+    {
+      "raw_id": "11420FL  203700",
+      "department": "FL",
+      "course": "2037",
+      "name_zh": "句法學",
+      "name_en": "Syntax"
+    },
+    {
+      "raw_id": "11420WW  158000",
+      "department": "WW",
+      "course": "1580",
+      "name_zh": "線性代數",
+      "name_en": "Linear Algebra"
+    },
+    {
+      "raw_id": "11420JMU 204800",
+      "department": "JMU",
+      "course": "2048",
+      "name_zh": "主修四",
+      "name_en": "Major Music Instruction Ⅳ"
+    },
+    {
+      "raw_id": "11320KEL 280100",
+      "department": "KEL",
+      "course": "2801",
+      "name_zh": "表演藝術",
+      "name_en": "Performing Arts"
+    },
+    {
+      "raw_id": "11420ISS 509800",
+      "department": "ISS",
+      "course": "5098",
+      "name_zh": "研究方法",
+      "name_en": "Research Methods"
+    },
+    {
+      "raw_id": "11510HSS 220000",
+      "department": "HSS",
+      "course": "2200",
+      "name_zh": "邏輯",
+      "name_en": "Logic"
+    },
+    {
+      "raw_id": "11410PE  205109",
+      "department": "PE",
+      "course": "2051",
+      "name_zh": "重量訓練",
+      "name_en": "Weight Training"
+    },
+    {
+      "raw_id": "11510MATH241000",
+      "department": "MATH",
+      "course": "2410",
+      "name_zh": "代數一",
+      "name_en": "Algebra I"
+    },
+    {
+      "raw_id": "11410PE  205102",
+      "department": "PE",
+      "course": "2051",
+      "name_zh": "排球",
+      "name_en": "Volleyball"
+    },
+    {
+      "raw_id": "11510MATH281000",
+      "department": "MATH",
+      "course": "2810",
+      "name_zh": "機率論",
+      "name_en": "Probability Theory"
+    },
+    {
+      "raw_id": "11510COM 501000",
+      "department": "COM",
+      "course": "5010",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11510JAD 371000",
+      "department": "JAD",
+      "course": "3710",
+      "name_zh": "玻璃藝術與設計",
+      "name_en": "Glass Art and Design"
+    },
+    {
+      "raw_id": "11420PE  206025",
+      "department": "PE",
+      "course": "2060",
+      "name_zh": "棒球",
+      "name_en": "Baseball"
+    },
+    {
+      "raw_id": "11510KPC 890200",
+      "department": "KPC",
+      "course": "8902",
+      "name_zh": "獨立研究一",
+      "name_en": "Independent Study (I)"
+    },
+    {
+      "raw_id": "11320IPMT400100",
+      "department": "IPMT",
+      "course": "4001",
+      "name_zh": "組織行為",
+      "name_en": "Organizational Behavior"
+    },
+    {
+      "raw_id": "11420CHEM102001",
+      "department": "CHEM",
+      "course": "1020",
+      "name_zh": "普通化學二",
+      "name_en": "General Chemistry (II)"
+    },
+    {
+      "raw_id": "11510IBP 100201",
+      "department": "IBP",
+      "course": "1002",
+      "name_zh": "聽力與口說一",
+      "name_en": "Listening and Speaking I"
+    },
+    {
+      "raw_id": "11510NEMS100000",
+      "department": "NEMS",
+      "course": "1000",
+      "name_zh": "專題研究",
+      "name_en": "Undergraduate Research"
+    },
+    {
+      "raw_id": "11510TSE 500200",
+      "department": "TSE",
+      "course": "5002",
+      "name_zh": "數量方法導論",
+      "name_en": "Foundation of Quantitative Methods"
+    },
+    {
+      "raw_id": "11510JAD 360300",
+      "department": "JAD",
+      "course": "3603",
+      "name_zh": "水墨創作一",
+      "name_en": "Calligraphy and Painting I"
+    },
+    {
+      "raw_id": "11510JITA410100",
+      "department": "JITA",
+      "course": "4101",
+      "name_zh": "畢業製作一",
+      "name_en": "Graduate Project I"
+    },
+    {
+      "raw_id": "11320KEE 202000",
+      "department": "KEE",
+      "course": "2020",
+      "name_zh": "教育統計",
+      "name_en": "Educational Statistics"
+    },
+    {
+      "raw_id": "11420KSPE110500",
+      "department": "KSPE",
+      "course": "1105",
+      "name_zh": "學習障礙",
+      "name_en": "Learning Disabilities"
+    },
+    {
+      "raw_id": "11320WZ  104100",
+      "department": "WZ",
+      "course": "1041",
+      "name_zh": "網球二",
+      "name_en": "Tennis (II)"
+    },
+    {
+      "raw_id": "11510FL  200901",
+      "department": "FL",
+      "course": "2009",
+      "name_zh": "閱讀與寫作一(上)",
+      "name_en": "Reading &amp; Writing I (1)"
+    },
+    {
+      "raw_id": "11420CHE 114001",
+      "department": "CHE",
+      "course": "1140",
+      "name_zh": "質能均衡",
+      "name_en": "Material and Energy Balance"
+    },
+    {
+      "raw_id": "11510MBA 505800",
+      "department": "MBA",
+      "course": "5058",
+      "name_zh": "組織行為",
+      "name_en": "Organizational Behavior"
+    },
+    {
+      "raw_id": "11510KEL 463601",
+      "department": "KEL",
+      "course": "4636",
+      "name_zh": "教學實習一",
+      "name_en": "Teaching Internship (I)"
+    },
+    {
+      "raw_id": "11510KPC 110000",
+      "department": "KPC",
+      "course": "1100",
+      "name_zh": "普通心理學一",
+      "name_en": "Introduction to Psychology(I)"
+    },
+    {
+      "raw_id": "11420FL  404802",
+      "department": "FL",
+      "course": "4048",
+      "name_zh": "高級日語二",
+      "name_en": "Advanced Japanese II<font color=\"red\">停開</font>"
+    },
+    {
+      "raw_id": "11510EE  226001",
+      "department": "EE",
+      "course": "2260",
+      "name_zh": "電子學二",
+      "name_en": "Electronics II"
+    },
+    {
+      "raw_id": "11320WW  161200",
+      "department": "WW",
+      "course": "1612",
+      "name_zh": "資料結構",
+      "name_en": "Data Structures"
+    },
+    {
+      "raw_id": "11420EMBA502400",
+      "department": "EMBA",
+      "course": "5024",
+      "name_zh": "策略",
+      "name_en": "Strategy"
+    },
+    {
+      "raw_id": "11510MATH201001",
+      "department": "MATH",
+      "course": "2010",
+      "name_zh": "高等微積分一",
+      "name_en": "Advanced Calculus I"
+    },
+    {
+      "raw_id": "11420KPC 120100",
+      "department": "KPC",
+      "course": "1201",
+      "name_zh": "心理與教育統計二",
+      "name_en": "Psychological and Educational Statistics (II)"
+    },
+    {
+      "raw_id": "11420HSS 200300",
+      "department": "HSS",
+      "course": "2003",
+      "name_zh": "人文社會科學經典閱讀",
+      "name_en": "Reading Classics: The Humanities and Social Sciences"
+    },
+    {
+      "raw_id": "11420PE  206017",
+      "department": "PE",
+      "course": "2060",
+      "name_zh": "重量訓練",
+      "name_en": "Weight Training"
+    },
+    {
+      "raw_id": "11410MPMI120400",
+      "department": "MPMI",
+      "course": "1204",
+      "name_zh": "程式設計",
+      "name_en": "Programming"
+    },
+    {
+      "raw_id": "11510CL  101001",
+      "department": "CL",
+      "course": "1010",
+      "name_zh": "大學中文",
+      "name_en": "College Chinese"
+    },
+    {
+      "raw_id": "11510CL  101031",
+      "department": "CL",
+      "course": "1010",
+      "name_zh": "大學中文_僑生專班",
+      "name_en": "College Chinese"
+    },
+    {
+      "raw_id": "11510PHYS212000",
+      "department": "PHYS",
+      "course": "2120",
+      "name_zh": "應用數學二",
+      "name_en": "Applied Mathematics (II)"
+    },
+    {
+      "raw_id": "11410EMD 500100",
+      "department": "EMD",
+      "course": "5001",
+      "name_zh": "財務管理",
+      "name_en": "Financial Management"
+    },
+    {
+      "raw_id": "11510TM  500700",
+      "department": "TM",
+      "course": "5007",
+      "name_zh": "研究方法",
+      "name_en": "Research Methodology"
+    },
+    {
+      "raw_id": "11410KEL 223000",
+      "department": "KEL",
+      "course": "2230",
+      "name_zh": "輔導原理與實務",
+      "name_en": "Principle and Practice of Guidance"
+    },
+    {
+      "raw_id": "11510BME 400100",
+      "department": "BME",
+      "course": "4001",
+      "name_zh": "專題研究",
+      "name_en": "Research Training"
+    },
+    {
+      "raw_id": "11510JMU 200700",
+      "department": "JMU",
+      "course": "2007",
+      "name_zh": "西洋音樂史一",
+      "name_en": "History of Western Music I"
+    },
+    {
+      "raw_id": "11410CS  333500",
+      "department": "CS",
+      "course": "3335",
+      "name_zh": "線性規劃與最佳化",
+      "name_en": "Introduction to Linear Programming and Optimization"
+    },
+    {
+      "raw_id": "11510JAD 260400",
+      "department": "JAD",
+      "course": "2604",
+      "name_zh": "影像美學一",
+      "name_en": "Image Aesthetics I"
+    },
+    {
+      "raw_id": "11420JMU 300600",
+      "department": "JMU",
+      "course": "3006",
+      "name_zh": "曲式與分析二",
+      "name_en": "Musical Forms and Analysis II"
+    },
+    {
+      "raw_id": "11510GEC 161200",
+      "department": "GEC",
+      "course": "1612",
+      "name_zh": "思想經典：《莊子》選讀",
+      "name_en": "The selected readings of Zhuang Zi"
+    },
+    {
+      "raw_id": "11510TEE 102801",
+      "department": "TEE",
+      "course": "1028",
+      "name_zh": "數學",
+      "name_en": "Mathematics"
+    },
+    {
+      "raw_id": "11510CHEM331000",
+      "department": "CHEM",
+      "course": "3310",
+      "name_zh": "無機化學一",
+      "name_en": "Inorganic Chemistry (I)"
+    },
+    {
+      "raw_id": "11420JITA111300",
+      "department": "JITA",
+      "course": "1113",
+      "name_zh": "生物藝術概論",
+      "name_en": "Introduction of BioArt"
+    },
+    {
+      "raw_id": "11420KSS 284201",
+      "department": "KSS",
+      "course": "2842",
+      "name_zh": "重量訓練二",
+      "name_en": "Weight Training (II)"
+    },
+    {
+      "raw_id": "11510CS  233601",
+      "department": "CS",
+      "course": "2336",
+      "name_zh": "離散數學",
+      "name_en": "Discrete Mathematics"
+    },
+    {
+      "raw_id": "11420LST 420202",
+      "department": "LST",
+      "course": "4202",
+      "name_zh": "民法債編一",
+      "name_en": "General Provisions on Obligation I"
+    },
+    {
+      "raw_id": "11510KSS 300800",
+      "department": "KSS",
+      "course": "3008",
+      "name_zh": "桌球一",
+      "name_en": "Table Tennis (I)"
+    },
+    {
+      "raw_id": "11420ECON216201",
+      "department": "ECON",
+      "course": "2162",
+      "name_zh": "統計學二",
+      "name_en": "Statistics II"
+    },
+    {
+      "raw_id": "11420PE  112002",
+      "department": "PE",
+      "course": "1120",
+      "name_zh": "跆拳道",
+      "name_en": "Tae kwon do"
+    },
+    {
+      "raw_id": "11320WZ  102500",
+      "department": "WZ",
+      "course": "1025",
+      "name_zh": "自然環境之變遷與永續",
+      "name_en": "Changes and Sustainability of Nature"
+    },
+    {
+      "raw_id": "11510TE  202101",
+      "department": "TE",
+      "course": "2021",
+      "name_zh": "教育心理學",
+      "name_en": "Educational Psychology"
+    },
+    {
+      "raw_id": "11420GE  109601",
+      "department": "GE",
+      "course": "1096",
+      "name_zh": "陶藝製作",
+      "name_en": "Clay Work"
+    },
+    {
+      "raw_id": "11510ENE 591000",
+      "department": "ENE",
+      "course": "5910",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11510KPC 372600",
+      "department": "KPC",
+      "course": "3726",
+      "name_zh": "生涯輔導與諮商",
+      "name_en": "Career Guidance and Counseling"
+    },
+    {
+      "raw_id": "11510KSS 300500",
+      "department": "KSS",
+      "course": "3005",
+      "name_zh": "武術一",
+      "name_en": "Wu-Shu (I)"
+    },
+    {
+      "raw_id": "11420WW  577000",
+      "department": "WW",
+      "course": "5770",
+      "name_zh": "民法物權",
+      "name_en": "Property Law"
+    },
+    {
+      "raw_id": "11510JAD 272200",
+      "department": "JAD",
+      "course": "2722",
+      "name_zh": "玻璃藝術與設計",
+      "name_en": "Glass Art and Design"
+    },
+    {
+      "raw_id": "11420CHEM104001",
+      "department": "CHEM",
+      "course": "1040",
+      "name_zh": "普通化學實驗二",
+      "name_en": "General Chemistry Laboratory (II)"
+    },
+    {
+      "raw_id": "11510IPT 591000",
+      "department": "IPT",
+      "course": "5910",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11510PHYS523000",
+      "department": "PHYS",
+      "course": "5230",
+      "name_zh": "流體力學",
+      "name_en": "Fluid Dynamics"
+    },
+    {
+      "raw_id": "11510KSS 358000",
+      "department": "KSS",
+      "course": "3580",
+      "name_zh": "書報討論一",
+      "name_en": "Seminar(I)"
+    },
+    {
+      "raw_id": "11420DMS 240200",
+      "department": "DMS",
+      "course": "2402",
+      "name_zh": "分子生物學",
+      "name_en": "Molecular Biology"
+    },
+    {
+      "raw_id": "11410BME 500800",
+      "department": "BME",
+      "course": "5008",
+      "name_zh": "癌症生物學與治療",
+      "name_en": "Cancer Biology and Therapy"
+    },
+    {
+      "raw_id": "11510MATH101002",
+      "department": "MATH",
+      "course": "1010",
+      "name_zh": "微積分Ａ一",
+      "name_en": "Calculus (I)"
+    },
+    {
+      "raw_id": "11510LST 320100",
+      "department": "LST",
+      "course": "3201",
+      "name_zh": "民法總則",
+      "name_en": "General Provisions of Civil Law"
+    },
+    {
+      "raw_id": "11420FL  327200",
+      "department": "FL",
+      "course": "3272",
+      "name_zh": "日語會話二",
+      "name_en": "Japanese Conversation II"
+    },
+    {
+      "raw_id": "11420BMES411200",
+      "department": "BMES",
+      "course": "4112",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11510JAD 260300",
+      "department": "JAD",
+      "course": "2603",
+      "name_zh": "繪畫綜合媒材一",
+      "name_en": "Mixed Media Painting I"
+    },
+    {
+      "raw_id": "11420MBA 550500",
+      "department": "MBA",
+      "course": "5505",
+      "name_zh": "財務管理",
+      "name_en": "Financial Management"
+    },
+    {
+      "raw_id": "11420KSS 282301",
+      "department": "KSS",
+      "course": "2823",
+      "name_zh": "網球二",
+      "name_en": "Tennis (II)"
+    },
+    {
+      "raw_id": "11510KSS 110600",
+      "department": "KSS",
+      "course": "1106",
+      "name_zh": "籃球一",
+      "name_en": "Basketball (I)"
+    },
+    {
+      "raw_id": "11510EE  464000",
+      "department": "EE",
+      "course": "4640",
+      "name_zh": "通訊系統二",
+      "name_en": "Communication Systems (II)"
+    },
+    {
+      "raw_id": "11420WW  578900",
+      "department": "WW",
+      "course": "5789",
+      "name_zh": "深度學習",
+      "name_en": "Deep Learning"
+    },
+    {
+      "raw_id": "11420ECON317100",
+      "department": "ECON",
+      "course": "3171",
+      "name_zh": "政治經濟學",
+      "name_en": "Political Economy"
+    },
+    {
+      "raw_id": "11510IEEM500000",
+      "department": "IEEM",
+      "course": "5000",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11510TEE 200301",
+      "department": "TEE",
+      "course": "2003",
+      "name_zh": "國民小學數學教材教法",
+      "name_en": "Pedagogy of Mathematics in Elementary School"
+    },
+    {
+      "raw_id": "11510MATH571000",
+      "department": "MATH",
+      "course": "5710",
+      "name_zh": "微分幾何一",
+      "name_en": "Differential Geometry I"
+    },
+    {
+      "raw_id": "11510IEEM513500",
+      "department": "IEEM",
+      "course": "5135",
+      "name_zh": "人工智慧",
+      "name_en": "Introduction to Artificial Intelligence"
+    },
+    {
+      "raw_id": "11510JAD 120100",
+      "department": "JAD",
+      "course": "1201",
+      "name_zh": "素描一",
+      "name_en": "Drawing I"
+    },
+    {
+      "raw_id": "11510HSS 291400",
+      "department": "HSS",
+      "course": "2914",
+      "name_zh": "影像敘事書寫",
+      "name_en": "Visualization and Narrative Writing"
+    },
+    {
+      "raw_id": "11510FL  329200",
+      "department": "FL",
+      "course": "3292",
+      "name_zh": "中級法語聽力一",
+      "name_en": "Advanced French oral comprehension I"
+    },
+    {
+      "raw_id": "11320TSE 605400",
+      "department": "TSE",
+      "course": "6054",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11320WW  566800",
+      "department": "WW",
+      "course": "5668",
+      "name_zh": "深度學習",
+      "name_en": "Deep Learning"
+    },
+    {
+      "raw_id": "11510KSS 110500",
+      "department": "KSS",
+      "course": "1105",
+      "name_zh": "游泳一",
+      "name_en": "Swimming (I)"
+    },
+    {
+      "raw_id": "11320DMS 379200",
+      "department": "DMS",
+      "course": "3792",
+      "name_zh": "基因檢測技術與數據分析",
+      "name_en": "Genetic Testing Technology and Data Analysis"
+    },
+    {
+      "raw_id": "11420KPC 542101",
+      "department": "KPC",
+      "course": "5421",
+      "name_zh": "諮商與心理治療實務",
+      "name_en": "Practice of Counseling and Psychotherapy"
+    },
+    {
+      "raw_id": "11510IEEM203001",
+      "department": "IEEM",
+      "course": "2030",
+      "name_zh": "機率論",
+      "name_en": "Probability Theory"
+    },
+    {
+      "raw_id": "11420FL  204201",
+      "department": "FL",
+      "course": "2042",
+      "name_zh": "初級德語二",
+      "name_en": "Beginning German II"
+    },
+    {
+      "raw_id": "11420ENE 638000",
+      "department": "ENE",
+      "course": "6380",
+      "name_zh": "邏輯非揮發性記憶體",
+      "name_en": "Logic Non-Volatile Memory"
+    },
+    {
+      "raw_id": "11410CL  430600",
+      "department": "CL",
+      "course": "4306",
+      "name_zh": "韓非子",
+      "name_en": "Doctrines of Phir, Han Fei"
+    },
+    {
+      "raw_id": "11420PME 320102",
+      "department": "PME",
+      "course": "3201",
+      "name_zh": "電子學一",
+      "name_en": "Electronics I"
+    },
+    {
+      "raw_id": "11510CHEM241000",
+      "department": "CHEM",
+      "course": "2410",
+      "name_zh": "物理化學一",
+      "name_en": "Physical Chemistry (I)"
+    },
+    {
+      "raw_id": "11420LSBT790201",
+      "department": "LSBT",
+      "course": "7902",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11320WW  565200",
+      "department": "WW",
+      "course": "5652",
+      "name_zh": "機器學習",
+      "name_en": "Machine Learning"
+    },
+    {
+      "raw_id": "11510JAD 272300",
+      "department": "JAD",
+      "course": "2723",
+      "name_zh": "陶瓷藝術與設計",
+      "name_en": "Ceramic Art and Design"
+    },
+    {
+      "raw_id": "11510KEE 100100",
+      "department": "KEE",
+      "course": "1001",
+      "name_zh": "教育心理學",
+      "name_en": "Educational Psychology"
+    },
+    {
+      "raw_id": "11420LSBT590201",
+      "department": "LSBT",
+      "course": "5902",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11510KPC 642401",
+      "department": "KPC",
+      "course": "6424",
+      "name_zh": "諮商實習",
+      "name_en": "Counseling Practicum"
+    },
+    {
+      "raw_id": "11510TIGP716000",
+      "department": "TIGP",
+      "course": "7160",
+      "name_zh": "專題研究",
+      "name_en": "Research Training"
+    },
+    {
+      "raw_id": "11420JAD 310800",
+      "department": "JAD",
+      "course": "3108",
+      "name_zh": "美學",
+      "name_en": "Aesthetics"
+    },
+    {
+      "raw_id": "11420EE  563000",
+      "department": "EE",
+      "course": "5630",
+      "name_zh": "數位訊號處理",
+      "name_en": "Digital Signal Processing"
+    },
+    {
+      "raw_id": "11510IMBA400600",
+      "department": "IMBA",
+      "course": "4006",
+      "name_zh": "會計學",
+      "name_en": "Accounting"
+    },
+    {
+      "raw_id": "11510TEE 103101",
+      "department": "TEE",
+      "course": "1031",
+      "name_zh": "英語",
+      "name_en": "English"
+    },
+    {
+      "raw_id": "11410CL  420200",
+      "department": "CL",
+      "course": "4202",
+      "name_zh": "詩經",
+      "name_en": "Shi Jing"
+    },
+    {
+      "raw_id": "11420KSPE510300",
+      "department": "KSPE",
+      "course": "5103",
+      "name_zh": "教育統計",
+      "name_en": "Educational Statistics"
+    },
+    {
+      "raw_id": "11420WZ  104300",
+      "department": "WZ",
+      "course": "1043",
+      "name_zh": "行銷管理",
+      "name_en": "Marketing Management"
+    },
+    {
+      "raw_id": "11510BMES511103",
+      "department": "BMES",
+      "course": "5111",
+      "name_zh": "書報討論(一)-生醫影像工程",
+      "name_en": "Seminar(I)：Biomedical Imaging Engineering"
+    },
+    {
+      "raw_id": "11320JITA231300",
+      "department": "JITA",
+      "course": "2313",
+      "name_zh": "生物藝術：生命科學在藝術中的討論與應用",
+      "name_en": "BioArt: The Discussion and Application of Life Sciences in Art"
+    },
+    {
+      "raw_id": "11420ENE 592000",
+      "department": "ENE",
+      "course": "5920",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11420FL  301001",
+      "department": "FL",
+      "course": "3010",
+      "name_zh": "中級德語二",
+      "name_en": "Intermediate German II"
+    },
+    {
+      "raw_id": "11510LST 310300",
+      "department": "LST",
+      "course": "3103",
+      "name_zh": "行政法一",
+      "name_en": "Administrative Law"
+    },
+    {
+      "raw_id": "11510LMIP391101",
+      "department": "LMIP",
+      "course": "3911",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11420BAI 500100",
+      "department": "BAI",
+      "course": "5001",
+      "name_zh": "科學",
+      "name_en": "Science"
+    },
+    {
+      "raw_id": "11420ECON127201",
+      "department": "ECON",
+      "course": "1272",
+      "name_zh": "會計學二",
+      "name_en": "Accounting (II)"
+    },
+    {
+      "raw_id": "11320KMSN500200",
+      "department": "KMSN",
+      "course": "5002",
+      "name_zh": "教育統計",
+      "name_en": "Educational Statistics"
+    },
+    {
+      "raw_id": "11420GEC 160300",
+      "department": "GEC",
+      "course": "1603",
+      "name_zh": "思想經典：《論》《孟》選讀",
+      "name_en": "The selected readings of Lun Yu and Men Zu"
+    },
+    {
+      "raw_id": "11420ESS 204001",
+      "department": "ESS",
+      "course": "2040",
+      "name_zh": "工程數學二",
+      "name_en": "Engineering Mathematics II"
+    },
+    {
+      "raw_id": "11420MS  102201",
+      "department": "MS",
+      "course": "1022",
+      "name_zh": "材料科學與工程二",
+      "name_en": "Material Science and Engineering II"
+    },
+    {
+      "raw_id": "11420PE  112019",
+      "department": "PE",
+      "course": "1120",
+      "name_zh": "棒球",
+      "name_en": "Baseball"
+    },
+    {
+      "raw_id": "11510QF  510100",
+      "department": "QF",
+      "course": "5101",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11420IEEM201000",
+      "department": "IEEM",
+      "course": "2010",
+      "name_zh": "線性代數",
+      "name_en": "Linear Algebra"
+    },
+    {
+      "raw_id": "11510TEE 300201",
+      "department": "TEE",
+      "course": "3002",
+      "name_zh": "課程發展與設計",
+      "name_en": "Theory and Practice of Curriculum Development &amp; Design"
+    },
+    {
+      "raw_id": "11420PHYS311000",
+      "department": "PHYS",
+      "course": "3110",
+      "name_zh": "物理數學",
+      "name_en": "Mathematical Methods for Physicists"
+    },
+    {
+      "raw_id": "11510CL  310100",
+      "department": "CL",
+      "course": "3101",
+      "name_zh": "中國文學史一",
+      "name_en": "History of Chinese Literature (I)"
+    },
+    {
+      "raw_id": "11420JMU 100201",
+      "department": "JMU",
+      "course": "1002",
+      "name_zh": "音樂基礎訓練二",
+      "name_en": "Musicianship II"
+    },
+    {
+      "raw_id": "11510AES 511100",
+      "department": "AES",
+      "course": "5111",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11510ESS 223000",
+      "department": "ESS",
+      "course": "2230",
+      "name_zh": "電子學一",
+      "name_en": "Electronics I"
+    },
+    {
+      "raw_id": "11510CS  235101",
+      "department": "CS",
+      "course": "2351",
+      "name_zh": "資料結構",
+      "name_en": "Data Structures"
+    },
+    {
+      "raw_id": "11510PE  205104",
+      "department": "PE",
+      "course": "2051",
+      "name_zh": "跆拳道",
+      "name_en": "Tae kwon do"
+    },
+    {
+      "raw_id": "11510EE  390000",
+      "department": "EE",
+      "course": "3900",
+      "name_zh": "實作專題一",
+      "name_en": "Special Topic on Implementation (I)"
+    },
+    {
+      "raw_id": "11420MATH287000",
+      "department": "MATH",
+      "course": "2870",
+      "name_zh": "離散數學",
+      "name_en": "Discrete Mathematics"
+    },
+    {
+      "raw_id": "11420MATH282000",
+      "department": "MATH",
+      "course": "2820",
+      "name_zh": "統計學",
+      "name_en": "Statistics"
+    },
+    {
+      "raw_id": "11510PE  205106",
+      "department": "PE",
+      "course": "2051",
+      "name_zh": "體操",
+      "name_en": "Gymnastics"
+    },
+    {
+      "raw_id": "11510JMU 500900",
+      "department": "JMU",
+      "course": "5009",
+      "name_zh": "主修",
+      "name_en": "Instrument/Voice/Composition/ Conducting"
+    },
+    {
+      "raw_id": "11510BMES316100",
+      "department": "BMES",
+      "course": "3161",
+      "name_zh": "生物化學一",
+      "name_en": "Biochemistry I"
+    },
+    {
+      "raw_id": "11510EECS203001",
+      "department": "EECS",
+      "course": "2030",
+      "name_zh": "常微分方程",
+      "name_en": "Ordinary Differential Equations"
+    },
+    {
+      "raw_id": "11510ESS 220000",
+      "department": "ESS",
+      "course": "2200",
+      "name_zh": "電路學",
+      "name_en": "Electric Circuits"
+    },
+    {
+      "raw_id": "11420WH  101900",
+      "department": "WH",
+      "course": "1019",
+      "name_zh": "金融市場",
+      "name_en": "Financial Markets"
+    },
+    {
+      "raw_id": "11510STAT591000",
+      "department": "STAT",
+      "course": "5910",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11510CSR 500100",
+      "department": "CSR",
+      "course": "5001",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11510LST 541200",
+      "department": "LST",
+      "course": "5412",
+      "name_zh": "著作權法",
+      "name_en": "Copyright Law"
+    },
+    {
+      "raw_id": "11510ESS 401000",
+      "department": "ESS",
+      "course": "4010",
+      "name_zh": "書報討論一",
+      "name_en": "Seminar(I)"
+    },
+    {
+      "raw_id": "11420PE  206047",
+      "department": "PE",
+      "course": "2060",
+      "name_zh": "高爾夫球",
+      "name_en": "Golf"
+    },
+    {
+      "raw_id": "11510FL  300901",
+      "department": "FL",
+      "course": "3009",
+      "name_zh": "中級德語一",
+      "name_en": "Intermediate German I"
+    },
+    {
+      "raw_id": "11420WH  102900",
+      "department": "WH",
+      "course": "1029",
+      "name_zh": "邏輯",
+      "name_en": "Logic"
+    },
+    {
+      "raw_id": "11420LST 420400",
+      "department": "LST",
+      "course": "4204",
+      "name_zh": "民法物權",
+      "name_en": "Property Law"
+    },
+    {
+      "raw_id": "11420CL  430700",
+      "department": "CL",
+      "course": "4307",
+      "name_zh": "易經",
+      "name_en": "I-Ching"
+    },
+    {
+      "raw_id": "11510JAD 272000",
+      "department": "JAD",
+      "course": "2720",
+      "name_zh": "金屬藝術與設計",
+      "name_en": "Metal Art and Design"
+    },
+    {
+      "raw_id": "11510ECON227300",
+      "department": "ECON",
+      "course": "2273",
+      "name_zh": "成本與管理會計一",
+      "name_en": "Cost &amp; Management Accounting (I)"
+    },
+    {
+      "raw_id": "11510KEE 200200",
+      "department": "KEE",
+      "course": "2002",
+      "name_zh": "幼兒園教保活動課程設計",
+      "name_en": "Curriculum Design for Early Childhood Education and Care"
+    },
+    {
+      "raw_id": "11510TEE 102901",
+      "department": "TEE",
+      "course": "1029",
+      "name_zh": "國語文",
+      "name_en": "Chinese Phonetics and Reading Comprehension"
+    },
+    {
+      "raw_id": "11420GE  154300",
+      "department": "GE",
+      "course": "1543",
+      "name_zh": "美國研究",
+      "name_en": "American Studies"
+    },
+    {
+      "raw_id": "11510JMU 401700",
+      "department": "JMU",
+      "course": "4017",
+      "name_zh": "選修樂器七",
+      "name_en": "Selected Instrument/Voice VII"
+    },
+    {
+      "raw_id": "11510EE  364000",
+      "department": "EE",
+      "course": "3640",
+      "name_zh": "通訊系統一",
+      "name_en": "Communication Systems (I)"
+    },
+    {
+      "raw_id": "11420CL  281000",
+      "department": "CL",
+      "course": "2810",
+      "name_zh": "華語教材教法",
+      "name_en": "Methods and Materials in Chinese Language Teaching"
+    },
+    {
+      "raw_id": "11510LST 460300",
+      "department": "LST",
+      "course": "4603",
+      "name_zh": "刑事訴訟法一",
+      "name_en": "Criminal Procedure Law(1)"
+    },
+    {
+      "raw_id": "11420PME 200202",
+      "department": "PME",
+      "course": "2002",
+      "name_zh": "工程數學二",
+      "name_en": "Engineering Mathematics II"
+    },
+    {
+      "raw_id": "11510TSE 503100",
+      "department": "TSE",
+      "course": "5031",
+      "name_zh": "個體經濟分析",
+      "name_en": "Microeconomic Analysis"
+    },
+    {
+      "raw_id": "11420ESS 225000",
+      "department": "ESS",
+      "course": "2250",
+      "name_zh": "電子學二",
+      "name_en": "Electronics II"
+    },
+    {
+      "raw_id": "11510KEL 800300",
+      "department": "KEL",
+      "course": "8003",
+      "name_zh": "高等統計",
+      "name_en": "Advanced Statistics"
+    },
+    {
+      "raw_id": "11510CHEM480000",
+      "department": "CHEM",
+      "course": "4800",
+      "name_zh": "專題研究一",
+      "name_en": "Research on special topics"
+    },
+    {
+      "raw_id": "11510BMES212100",
+      "department": "BMES",
+      "course": "2121",
+      "name_zh": "機率與統計",
+      "name_en": "Probability and Statistics"
+    },
+    {
+      "raw_id": "11420FL  101900",
+      "department": "FL",
+      "course": "1019",
+      "name_zh": "應用語言學",
+      "name_en": "Introduction to Applied Linguistics"
+    },
+    {
+      "raw_id": "11510JAD 421300",
+      "department": "JAD",
+      "course": "4213",
+      "name_zh": "畢業製作一",
+      "name_en": "Graduate Project I"
+    },
+    {
+      "raw_id": "11320ANTH680600",
+      "department": "ANTH",
+      "course": "6806",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11320GEC 111800",
+      "department": "GEC",
+      "course": "1118",
+      "name_zh": "思想經典：《墨子》選讀",
+      "name_en": "Classics of Eastern Thought: Selected Reading of Mo Tze"
+    },
+    {
+      "raw_id": "11420WW  544300",
+      "department": "WW",
+      "course": "5443",
+      "name_zh": "數位訊號處理",
+      "name_en": "Digital Signal Processing"
+    },
+    {
+      "raw_id": "11510FL  404401",
+      "department": "FL",
+      "course": "4044",
+      "name_zh": "中級西班牙語一",
+      "name_en": "Intermediate Spanish I"
+    },
+    {
+      "raw_id": "11510JPIA701100",
+      "department": "JPIA",
+      "course": "7011",
+      "name_zh": "主修",
+      "name_en": "Instrument/Voice/Composition/ Conducting"
+    },
+    {
+      "raw_id": "11420MBA 552800",
+      "department": "MBA",
+      "course": "5528",
+      "name_zh": "經濟學",
+      "name_en": "Economics"
+    },
+    {
+      "raw_id": "11320WW  156300",
+      "department": "WW",
+      "course": "1563",
+      "name_zh": "統計學",
+      "name_en": "Statistics"
+    },
+    {
+      "raw_id": "11420WZ  103400",
+      "department": "WZ",
+      "course": "1034",
+      "name_zh": "電路學",
+      "name_en": "Electric Circuits"
+    },
+    {
+      "raw_id": "11510DMS 320101",
+      "department": "DMS",
+      "course": "3201",
+      "name_zh": "細胞生物學",
+      "name_en": "Cell Biology"
+    },
+    {
+      "raw_id": "11510EECS390000",
+      "department": "EECS",
+      "course": "3900",
+      "name_zh": "實作專題一",
+      "name_en": "Special Topic on Implementation (I)"
+    },
+    {
+      "raw_id": "11420HSS 130000",
+      "department": "HSS",
+      "course": "1300",
+      "name_zh": "語言學導論",
+      "name_en": "General Linguistics"
+    },
+    {
+      "raw_id": "11510KSS 505000",
+      "department": "KSS",
+      "course": "5050",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11510ISA 591100",
+      "department": "ISA",
+      "course": "5911",
+      "name_zh": "獨立研究",
+      "name_en": "Independent Study"
+    },
+    {
+      "raw_id": "11510LSMC790100",
+      "department": "LSMC",
+      "course": "7901",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11510LSC 230100",
+      "department": "LSC",
+      "course": "2301",
+      "name_zh": "生物化學一",
+      "name_en": "Biochemistry I"
+    },
+    {
+      "raw_id": "11510EMBA507800",
+      "department": "EMBA",
+      "course": "5078",
+      "name_zh": "行銷管理",
+      "name_en": "Marketing Management"
+    },
+    {
+      "raw_id": "11510TEE 300400",
+      "department": "TEE",
+      "course": "3004",
+      "name_zh": "教學原理",
+      "name_en": "Teaching Principles"
+    },
+    {
+      "raw_id": "11510MBA 550100",
+      "department": "MBA",
+      "course": "5501",
+      "name_zh": "行銷管理",
+      "name_en": "Marketing Management"
+    },
+    {
+      "raw_id": "11510KLST610600",
+      "department": "KLST",
+      "course": "6106",
+      "name_zh": "實習",
+      "name_en": "Internship"
+    },
+    {
+      "raw_id": "11420JAD 238000",
+      "department": "JAD",
+      "course": "2380",
+      "name_zh": "機電互動設計",
+      "name_en": "Integration of Interaction Design and Mechatronics"
+    },
+    {
+      "raw_id": "11420CL  330900",
+      "department": "CL",
+      "course": "3309",
+      "name_zh": "莊子",
+      "name_en": "Chuang Tzu"
+    },
+    {
+      "raw_id": "11510LST 321000",
+      "department": "LST",
+      "course": "3210",
+      "name_zh": "民事訴訟法一",
+      "name_en": "Civil Procedure"
+    },
+    {
+      "raw_id": "11420MATH102001",
+      "department": "MATH",
+      "course": "1020",
+      "name_zh": "微積分二(數學系)",
+      "name_en": "Calculus (II)"
+    },
+    {
+      "raw_id": "11510MCLC501600",
+      "department": "MCLC",
+      "course": "5016",
+      "name_zh": "獨立研究",
+      "name_en": "Independent Study"
+    },
+    {
+      "raw_id": "11320HSS 291200",
+      "department": "HSS",
+      "course": "2912",
+      "name_zh": "基礎影視實務",
+      "name_en": "Basic Video Production"
+    },
+    {
+      "raw_id": "11510PHYS370000",
+      "department": "PHYS",
+      "course": "3700",
+      "name_zh": "數位智慧科技實作與程式控制",
+      "name_en": "Implementation and Program Coding of Digital Smart Technology"
+    },
+    {
+      "raw_id": "11510FL  204700",
+      "department": "FL",
+      "course": "2047",
+      "name_zh": "語音學",
+      "name_en": "Phonetics"
+    },
+    {
+      "raw_id": "11320WW  588700",
+      "department": "WW",
+      "course": "5887",
+      "name_zh": "深度學習",
+      "name_en": "Deep Learning"
+    },
+    {
+      "raw_id": "11420JMU 100401",
+      "department": "JMU",
+      "course": "1004",
+      "name_zh": "基礎和聲學二",
+      "name_en": "Tonal Harmony II"
+    },
+    {
+      "raw_id": "11420LSMC590201",
+      "department": "LSMC",
+      "course": "5902",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11510CHEM221001",
+      "department": "CHEM",
+      "course": "2210",
+      "name_zh": "有機化學一",
+      "name_en": "Organic Chemistry (I)"
+    },
+    {
+      "raw_id": "11420KENI130800",
+      "department": "KENI",
+      "course": "1308",
+      "name_zh": "初階法語",
+      "name_en": "Beginning French"
+    },
+    {
+      "raw_id": "11510KPC 442900",
+      "department": "KPC",
+      "course": "4429",
+      "name_zh": "輔導與諮商實習一",
+      "name_en": "Guidance and Counseling Practicum(I)"
+    },
+    {
+      "raw_id": "11320WW  564100",
+      "department": "WW",
+      "course": "5641",
+      "name_zh": "機器學習",
+      "name_en": "Machine Learning"
+    },
+    {
+      "raw_id": "11510CL  410100",
+      "department": "CL",
+      "course": "4101",
+      "name_zh": "中國思想史一",
+      "name_en": "History of Chinese Thought (I)"
+    },
+    {
+      "raw_id": "11510FL  100300",
+      "department": "FL",
+      "course": "1003",
+      "name_zh": "語言學概論",
+      "name_en": "Introduction to Linguistics"
+    },
+    {
+      "raw_id": "11420WZ  104900",
+      "department": "WZ",
+      "course": "1049",
+      "name_zh": "武術二",
+      "name_en": "Wu-Shu (II)"
+    },
+    {
+      "raw_id": "11510JAD 226500",
+      "department": "JAD",
+      "course": "2265",
+      "name_zh": "進階油畫一",
+      "name_en": "Advanced Oil Painting I"
+    },
+    {
+      "raw_id": "11420CHE 242000",
+      "department": "CHE",
+      "course": "2420",
+      "name_zh": "物理化學二",
+      "name_en": "Physical Chemistry (II)"
+    },
+    {
+      "raw_id": "11420TE  212400",
+      "department": "TE",
+      "course": "2124",
+      "name_zh": "輔導原理與實務",
+      "name_en": "Principle and Practice of Guidance"
+    },
+    {
+      "raw_id": "11510PME 200101",
+      "department": "PME",
+      "course": "2001",
+      "name_zh": "工程數學一",
+      "name_en": "Engineering Mathematics I"
+    },
+    {
+      "raw_id": "11420KEL 187000",
+      "department": "KEL",
+      "course": "1870",
+      "name_zh": "國語文",
+      "name_en": "Chinese Phonetics and Reading Comprehension"
+    },
+    {
+      "raw_id": "11420WH  103100",
+      "department": "WH",
+      "course": "1031",
+      "name_zh": "教學實習",
+      "name_en": "Teaching Internship"
+    },
+    {
+      "raw_id": "11510LING500100",
+      "department": "LING",
+      "course": "5001",
+      "name_zh": "音韻學一",
+      "name_en": "Phonology (I)"
+    },
+    {
+      "raw_id": "11510MBA 500500",
+      "department": "MBA",
+      "course": "5005",
+      "name_zh": "財務管理",
+      "name_en": "Financial Management"
+    },
+    {
+      "raw_id": "11410IPMT200800",
+      "department": "IPMT",
+      "course": "2008",
+      "name_zh": "統計學一",
+      "name_en": "Statistics (I)"
+    },
+    {
+      "raw_id": "11510JMU 203700",
+      "department": "JMU",
+      "course": "2037",
+      "name_zh": "選修樂器三",
+      "name_en": "Selected Instrument/Voice III"
+    },
+    {
+      "raw_id": "11510LST 310501",
+      "department": "LST",
+      "course": "3105",
+      "name_zh": "刑法總則",
+      "name_en": "General provisions of criminal law"
+    },
+    {
+      "raw_id": "11510CS  390500",
+      "department": "CS",
+      "course": "3905",
+      "name_zh": "獨立研究一",
+      "name_en": "Independent Study (I)"
+    },
+    {
+      "raw_id": "11510FL  404900",
+      "department": "FL",
+      "course": "4049",
+      "name_zh": "日語閱讀一",
+      "name_en": "Japanese Reading I"
+    },
+    {
+      "raw_id": "11320MATH305000",
+      "department": "MATH",
+      "course": "3050",
+      "name_zh": "複變數函數論",
+      "name_en": "Complex Analysis"
+    },
+    {
+      "raw_id": "11510JAD 272100",
+      "department": "JAD",
+      "course": "2721",
+      "name_zh": "木屬藝術與設計",
+      "name_en": "Wood Art and Design"
+    },
+    {
+      "raw_id": "11510ISS 500100",
+      "department": "ISS",
+      "course": "5001",
+      "name_zh": "書報討論一",
+      "name_en": "Seminar(I)"
+    },
+    {
+      "raw_id": "11510KEL 180100",
+      "department": "KEL",
+      "course": "1801",
+      "name_zh": "數學",
+      "name_en": "Mathematics"
+    },
+    {
+      "raw_id": "11510KSPE130100",
+      "department": "KSPE",
+      "course": "1301",
+      "name_zh": "特殊教育導論",
+      "name_en": "Introduction to Special Education"
+    },
+    {
+      "raw_id": "11510BMES318100",
+      "department": "BMES",
+      "course": "3181",
+      "name_zh": "專題研究一",
+      "name_en": "Research on special topics"
+    },
+    {
+      "raw_id": "11510ISS 500200",
+      "department": "ISS",
+      "course": "5002",
+      "name_zh": "產業實習",
+      "name_en": "Industry Practice"
+    },
+    {
+      "raw_id": "11420FL  201001",
+      "department": "FL",
+      "course": "2010",
+      "name_zh": "閱讀與寫作一(下)",
+      "name_en": "Reading &amp; Writing I (2)"
+    },
+    {
+      "raw_id": "11510TIGP730300",
+      "department": "TIGP",
+      "course": "7303",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11420WW  162000",
+      "department": "WW",
+      "course": "1620",
+      "name_zh": "總體經濟學",
+      "name_en": "Macroeconomics"
+    },
+    {
+      "raw_id": "11420MATH242000",
+      "department": "MATH",
+      "course": "2420",
+      "name_zh": "代數二",
+      "name_en": "Algebra II"
+    },
+    {
+      "raw_id": "11420WW  102700",
+      "department": "WW",
+      "course": "1027",
+      "name_zh": "電路學",
+      "name_en": "Electric Circuits"
+    },
+    {
+      "raw_id": "11510ECON891100",
+      "department": "ECON",
+      "course": "8911",
+      "name_zh": "書報討論一",
+      "name_en": "Seminar(I)"
+    },
+    {
+      "raw_id": "11510EE  610000",
+      "department": "EE",
+      "course": "6100",
+      "name_zh": "研究方法",
+      "name_en": "Research Methodology"
+    },
+    {
+      "raw_id": "11420GE  196200",
+      "department": "GE",
+      "course": "1962",
+      "name_zh": "生活中的選擇與賽局",
+      "name_en": "Decision making and Games in daily life"
+    },
+    {
+      "raw_id": "11510JAD 429200",
+      "department": "JAD",
+      "course": "4292",
+      "name_zh": "裝置藝術創作一",
+      "name_en": "Installation Art I"
+    },
+    {
+      "raw_id": "11510KEE 100200",
+      "department": "KEE",
+      "course": "1002",
+      "name_zh": "幼兒教保概論",
+      "name_en": "Foundation of Early Childhood Education and Care"
+    },
+    {
+      "raw_id": "11510FL  204101",
+      "department": "FL",
+      "course": "2041",
+      "name_zh": "初級德語一",
+      "name_en": "Beginning German I"
+    },
+    {
+      "raw_id": "11510LING500300",
+      "department": "LING",
+      "course": "5003",
+      "name_zh": "句法學一",
+      "name_en": "Syntax (I)"
+    },
+    {
+      "raw_id": "11420ESS 427000",
+      "department": "ESS",
+      "course": "4270",
+      "name_zh": "機器學習導論",
+      "name_en": "Introduction to Machine Learning"
+    },
+    {
+      "raw_id": "11420GEC 120701",
+      "department": "GEC",
+      "course": "1207",
+      "name_zh": "自然環境之變遷與永續",
+      "name_en": "Changes and Sustainability of Nature"
+    },
+    {
+      "raw_id": "11420KES 700600",
+      "department": "KES",
+      "course": "7006",
+      "name_zh": "獨立研究",
+      "name_en": "Independent Study"
+    },
+    {
+      "raw_id": "11420KEE 300500",
+      "department": "KEE",
+      "course": "3005",
+      "name_zh": "幼兒園教材教法II",
+      "name_en": "Teaching Materials and Methods in Preschool and Kindergarten II"
+    },
+    {
+      "raw_id": "11420FL  404501",
+      "department": "FL",
+      "course": "4045",
+      "name_zh": "中級西班牙語二",
+      "name_en": "Intermediate Spanish II"
+    },
+    {
+      "raw_id": "11510CS  580100",
+      "department": "CS",
+      "course": "5801",
+      "name_zh": "研究方法一",
+      "name_en": "Research Methodology I"
+    },
+    {
+      "raw_id": "11420WW  159000",
+      "department": "WW",
+      "course": "1590",
+      "name_zh": "管理學",
+      "name_en": "Management"
+    },
+    {
+      "raw_id": "11420KEL 280000",
+      "department": "KEL",
+      "course": "2800",
+      "name_zh": "特殊教育導論",
+      "name_en": "Introduction to Special Education"
+    },
+    {
+      "raw_id": "11410HSS 391800",
+      "department": "HSS",
+      "course": "3918",
+      "name_zh": "影像敘事與鏡頭語言",
+      "name_en": "Visualization and The Language of Cinematography"
+    },
+    {
+      "raw_id": "11510BME 400300",
+      "department": "BME",
+      "course": "4003",
+      "name_zh": "分子與細胞生物學",
+      "name_en": "Molecular and Cellular Biology"
+    },
+    {
+      "raw_id": "11320WW  566000",
+      "department": "WW",
+      "course": "5660",
+      "name_zh": "數位訊號處理",
+      "name_en": "Digital Signal Processing"
+    },
+    {
+      "raw_id": "11510PMED790100",
+      "department": "PMED",
+      "course": "7901",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11510QF  214800",
+      "department": "QF",
+      "course": "2148",
+      "name_zh": "線性代數",
+      "name_en": "Linear Algebra"
+    },
+    {
+      "raw_id": "11420BMES232200",
+      "department": "BMES",
+      "course": "2322",
+      "name_zh": "分析化學一",
+      "name_en": "Analytical Chemistry (I)"
+    },
+    {
+      "raw_id": "11510MS  201101",
+      "department": "MS",
+      "course": "2011",
+      "name_zh": "工程數學一",
+      "name_en": "Engineering Mathematics I"
+    },
+    {
+      "raw_id": "11510QF  100401",
+      "department": "QF",
+      "course": "1004",
+      "name_zh": "會計學一",
+      "name_en": "Accounting (I)"
+    },
+    {
+      "raw_id": "11510KSS 281501",
+      "department": "KSS",
+      "course": "2815",
+      "name_zh": "重量訓練一",
+      "name_en": "Weight Training (I)"
+    },
+    {
+      "raw_id": "11510TEE 300800",
+      "department": "TEE",
+      "course": "3008",
+      "name_zh": "輔導原理與實務",
+      "name_en": "Principle and Practice of Guidance"
+    },
+    {
+      "raw_id": "11510ESS 202000",
+      "department": "ESS",
+      "course": "2020",
+      "name_zh": "程式語言",
+      "name_en": "Programming Languages"
+    },
+    {
+      "raw_id": "11510ECON210101",
+      "department": "ECON",
+      "course": "2101",
+      "name_zh": "貨幣銀行學一",
+      "name_en": "Money and Banking (I)"
+    },
+    {
+      "raw_id": "11510ISDC500000",
+      "department": "ISDC",
+      "course": "5000",
+      "name_zh": "書報討論一",
+      "name_en": "Seminar(I)"
+    },
+    {
+      "raw_id": "11510JAD 371100",
+      "department": "JAD",
+      "course": "3711",
+      "name_zh": "陶瓷藝術與設計",
+      "name_en": "Ceramic Art and Design"
+    },
+    {
+      "raw_id": "11510KPC 720100",
+      "department": "KPC",
+      "course": "7201",
+      "name_zh": "書報討論一",
+      "name_en": "Seminar(I)"
+    },
+    {
+      "raw_id": "11420PME 101602",
+      "department": "PME",
+      "course": "1016",
+      "name_zh": "工場實習",
+      "name_en": "Work Shop Practices"
+    },
+    {
+      "raw_id": "11510EE  313000",
+      "department": "EE",
+      "course": "3130",
+      "name_zh": "光電工程",
+      "name_en": "Optics and Photonics<font color=\"red\">停開</font>"
+    },
+    {
+      "raw_id": "11420JAD 260900",
+      "department": "JAD",
+      "course": "2609",
+      "name_zh": "複合形態版畫創作",
+      "name_en": "Mixed Media Printmaking Art"
+    },
+    {
+      "raw_id": "11420CHEM292000",
+      "department": "CHEM",
+      "course": "2920",
+      "name_zh": "化學數學",
+      "name_en": "Mathematics for Chemistry"
+    },
+    {
+      "raw_id": "11510IEEM510800",
+      "department": "IEEM",
+      "course": "5108",
+      "name_zh": "線性規劃",
+      "name_en": "Linear Programming"
+    },
+    {
+      "raw_id": "11510KSPE211900",
+      "department": "KSPE",
+      "course": "2119",
+      "name_zh": "語言發展與矯治",
+      "name_en": "Speech/Language Development and Therapy"
+    },
+    {
+      "raw_id": "11410IPHD700200",
+      "department": "IPHD",
+      "course": "7002",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11510LSBT790100",
+      "department": "LSBT",
+      "course": "7901",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11510BMES337100",
+      "department": "BMES",
+      "course": "3371",
+      "name_zh": "物理化學一",
+      "name_en": "Physical Chemistry (I)"
+    },
+    {
+      "raw_id": "11420LSMM790201",
+      "department": "LSMM",
+      "course": "7902",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11510ECON709500",
+      "department": "ECON",
+      "course": "7095",
+      "name_zh": "數量方法導論",
+      "name_en": "Foundation of Quantitative Methods"
+    },
+    {
+      "raw_id": "11510JMU 202200",
+      "department": "JMU",
+      "course": "2022",
+      "name_zh": "舞台肢體訓練一",
+      "name_en": "Staged Performance  and Choreography Ⅰ"
+    },
+    {
+      "raw_id": "11320WH  101300",
+      "department": "WH",
+      "course": "1013",
+      "name_zh": "中級日語二",
+      "name_en": "Intermediate Japanese II"
+    },
+    {
+      "raw_id": "11510CHE 211001",
+      "department": "CHE",
+      "course": "2110",
+      "name_zh": "工程數學一",
+      "name_en": "Engineering Mathematics I"
+    },
+    {
+      "raw_id": "11510CS  431101",
+      "department": "CS",
+      "course": "4311",
+      "name_zh": "計算方法設計",
+      "name_en": "Design and Analysis of Algorithms"
+    },
+    {
+      "raw_id": "11510GPTS510800",
+      "department": "GPTS",
+      "course": "5108",
+      "name_zh": "文化人類學",
+      "name_en": "Advance Cultural Anthropology"
+    },
+    {
+      "raw_id": "11510JAD 120300",
+      "department": "JAD",
+      "course": "1203",
+      "name_zh": "油畫一",
+      "name_en": "Oil Painting I"
+    },
+    {
+      "raw_id": "11420KSPE140500",
+      "department": "KSPE",
+      "course": "1405",
+      "name_zh": "教學原理",
+      "name_en": "Teaching Principles"
+    },
+    {
+      "raw_id": "11420FL  201401",
+      "department": "FL",
+      "course": "2014",
+      "name_zh": "初級西班牙語二",
+      "name_en": "Beginning Spanish II"
+    },
+    {
+      "raw_id": "11510TL  571100",
+      "department": "TL",
+      "course": "5711",
+      "name_zh": "影視劇本創作一",
+      "name_en": "Script Writing I"
+    },
+    {
+      "raw_id": "11510JMU 400700",
+      "department": "JMU",
+      "course": "4007",
+      "name_zh": "曲式與分析三",
+      "name_en": "Musical Forms and Analysis III"
+    },
+    {
+      "raw_id": "11420FL  327400",
+      "department": "FL",
+      "course": "3274",
+      "name_zh": "日語聽解二",
+      "name_en": "Japanese Listening II"
+    },
+    {
+      "raw_id": "11320WZ  104400",
+      "department": "WZ",
+      "course": "1044",
+      "name_zh": "武術二",
+      "name_en": "Wu-Shu (II)"
+    },
+    {
+      "raw_id": "11510JPIA700100",
+      "department": "JPIA",
+      "course": "7001",
+      "name_zh": "方法論",
+      "name_en": "Methodology"
+    },
+    {
+      "raw_id": "11410BME 500700",
+      "department": "BME",
+      "course": "5007",
+      "name_zh": "生醫材料特性分析",
+      "name_en": "Analytical and Sensing Technologies in Biomedical Sciences"
+    },
+    {
+      "raw_id": "11420KMS 500200",
+      "department": "KMS",
+      "course": "5002",
+      "name_zh": "教育統計",
+      "name_en": "Educational Statistics"
+    },
+    {
+      "raw_id": "11420MPM 500500",
+      "department": "MPM",
+      "course": "5005",
+      "name_zh": "國際政治經濟學",
+      "name_en": "International Political Economy"
+    },
+    {
+      "raw_id": "11510TSE 501200",
+      "department": "TSE",
+      "course": "5012",
+      "name_zh": "國際政治經濟",
+      "name_en": "International Political Economy"
+    },
+    {
+      "raw_id": "11420QF  214500",
+      "department": "QF",
+      "course": "2145",
+      "name_zh": "統計學二",
+      "name_en": "Statistics II"
+    },
+    {
+      "raw_id": "11510JMU 105000",
+      "department": "JMU",
+      "course": "1050",
+      "name_zh": "主修一",
+      "name_en": "Major Music Instruction I"
+    },
+    {
+      "raw_id": "11420KPC 173100",
+      "department": "KPC",
+      "course": "1731",
+      "name_zh": "人際關係與溝通",
+      "name_en": "Human Relations and Communication"
+    },
+    {
+      "raw_id": "11420KEE 302300",
+      "department": "KEE",
+      "course": "3023",
+      "name_zh": "人際關係與溝通",
+      "name_en": "Human Relations and Communication"
+    },
+    {
+      "raw_id": "11510KSS 200900",
+      "department": "KSS",
+      "course": "2009",
+      "name_zh": "舞蹈一",
+      "name_en": "Dance (I)"
+    },
+    {
+      "raw_id": "11510LSMM590101",
+      "department": "LSMM",
+      "course": "5901",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11420CHE 510000",
+      "department": "CHE",
+      "course": "5100",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11510TIGP731000",
+      "department": "TIGP",
+      "course": "7310",
+      "name_zh": "程式語言",
+      "name_en": "Programming Languages"
+    },
+    {
+      "raw_id": "11510TEE 200101",
+      "department": "TEE",
+      "course": "2001",
+      "name_zh": "教學實習",
+      "name_en": "Teaching Internship"
+    },
+    {
+      "raw_id": "11510FL  404701",
+      "department": "FL",
+      "course": "4047",
+      "name_zh": "高級日語一",
+      "name_en": "Advanced Japanese I"
+    },
+    {
+      "raw_id": "11420KEL 500400",
+      "department": "KEL",
+      "course": "5004",
+      "name_zh": "教育學方法論",
+      "name_en": "Methodology of Educational Research"
+    },
+    {
+      "raw_id": "11420FL  201606",
+      "department": "FL",
+      "course": "2016",
+      "name_zh": "初級法語二",
+      "name_en": "Beginning French II<font color=\"red\">停開</font>"
+    },
+    {
+      "raw_id": "11510PME 500000",
+      "department": "PME",
+      "course": "5000",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11510SL  510100",
+      "department": "SL",
+      "course": "5101",
+      "name_zh": "研究方法",
+      "name_en": "Research Methodology"
+    },
+    {
+      "raw_id": "11510KEEN510300",
+      "department": "KEEN",
+      "course": "5103",
+      "name_zh": "教育統計",
+      "name_en": "Educational Statistics"
+    },
+    {
+      "raw_id": "11420BMES223200",
+      "department": "BMES",
+      "course": "2232",
+      "name_zh": "電子學二",
+      "name_en": "Electronics II"
+    },
+    {
+      "raw_id": "11510PME 300700",
+      "department": "PME",
+      "course": "3007",
+      "name_zh": "線性代數",
+      "name_en": "Linear Algebra"
+    },
+    {
+      "raw_id": "11510PE  205029",
+      "department": "PE",
+      "course": "2050",
+      "name_zh": "棒球",
+      "name_en": "Baseball"
+    },
+    {
+      "raw_id": "11510KIPE101600",
+      "department": "KIPE",
+      "course": "1016",
+      "name_zh": "探索心智與行為：當代心理學",
+      "name_en": "Exploring Minds and Behaviors: Contemporary Psychology"
+    },
+    {
+      "raw_id": "11420WW  167700",
+      "department": "WW",
+      "course": "1677",
+      "name_zh": "生物化學",
+      "name_en": "Biochemistry"
+    },
+    {
+      "raw_id": "11420ESS 250001",
+      "department": "ESS",
+      "course": "2500",
+      "name_zh": "材料科學導論一",
+      "name_en": "Introduction to Materials Science I"
+    },
+    {
+      "raw_id": "11410JMU 200300",
+      "department": "JMU",
+      "course": "2003",
+      "name_zh": "高級和聲學一",
+      "name_en": "Advanced Harmony I"
+    },
+    {
+      "raw_id": "11510CHEM623000",
+      "department": "CHEM",
+      "course": "6230",
+      "name_zh": "有機合成一",
+      "name_en": "Organic Synthesis (I)"
+    },
+    {
+      "raw_id": "11510KENI110200",
+      "department": "KENI",
+      "course": "1102",
+      "name_zh": "西洋文學概論",
+      "name_en": "Introduction to Western Literature"
+    },
+    {
+      "raw_id": "11420CHE 212001",
+      "department": "CHE",
+      "course": "2120",
+      "name_zh": "工程數學二",
+      "name_en": "Engineering Mathematics II"
+    },
+    {
+      "raw_id": "11420KPC 242300",
+      "department": "KPC",
+      "course": "2423",
+      "name_zh": "諮商輔導技術與策略",
+      "name_en": "Techniques and Strategies of Counseling"
+    },
+    {
+      "raw_id": "11320WZ  102100",
+      "department": "WZ",
+      "course": "1021",
+      "name_zh": "普通心理學二",
+      "name_en": "Introduction to Psychology(II)"
+    },
+    {
+      "raw_id": "11510QF  214101",
+      "department": "QF",
+      "course": "2141",
+      "name_zh": "財務管理",
+      "name_en": "Financial Management"
+    },
+    {
+      "raw_id": "11510CHEM293000",
+      "department": "CHEM",
+      "course": "2930",
+      "name_zh": "應用數學",
+      "name_en": "Applied Mathematics"
+    },
+    {
+      "raw_id": "11510CL  331000",
+      "department": "CL",
+      "course": "3310",
+      "name_zh": "荀子",
+      "name_en": "Hsun Tzu<font color=\"red\">停開</font>"
+    },
+    {
+      "raw_id": "11420EE  241000",
+      "department": "EE",
+      "course": "2410",
+      "name_zh": "資料結構",
+      "name_en": "Data Structures"
+    },
+    {
+      "raw_id": "11320WH  101800",
+      "department": "WH",
+      "course": "1018",
+      "name_zh": "普通心理學二",
+      "name_en": "Introduction to Psychology(II)"
+    },
+    {
+      "raw_id": "11510IPT 620000",
+      "department": "IPT",
+      "course": "6200",
+      "name_zh": "研究方法一",
+      "name_en": "Research Methodology I"
+    },
+    {
+      "raw_id": "11510KEL 700100",
+      "department": "KEL",
+      "course": "7001",
+      "name_zh": "教育學方法論",
+      "name_en": "Methodology of Educational Research"
+    },
+    {
+      "raw_id": "11420WW  564600",
+      "department": "WW",
+      "course": "5646",
+      "name_zh": "流體力學",
+      "name_en": "Fluid Dynamics"
+    },
+    {
+      "raw_id": "11320CL  120200",
+      "department": "CL",
+      "course": "1202",
+      "name_zh": "文學作品讀法",
+      "name_en": "Methodology of Literary Reading"
+    },
+    {
+      "raw_id": "11510JITA110800",
+      "department": "JITA",
+      "course": "1108",
+      "name_zh": "計算機程式設計",
+      "name_en": "Introduction to Programming"
+    },
+    {
+      "raw_id": "11510MFB 500100",
+      "department": "MFB",
+      "course": "5001",
+      "name_zh": "數據分析",
+      "name_en": "Data analysis"
+    },
+    {
+      "raw_id": "11420LS  220400",
+      "department": "LS",
+      "course": "2204",
+      "name_zh": "分子與細胞生物學一",
+      "name_en": "Molecular and Cellular Biology I"
+    },
+    {
+      "raw_id": "11420WH  102500",
+      "department": "WH",
+      "course": "1025",
+      "name_zh": "普通心理學二",
+      "name_en": "Introduction to Psychology(II)"
+    },
+    {
+      "raw_id": "11510HSS 150000",
+      "department": "HSS",
+      "course": "1500",
+      "name_zh": "人類學導論",
+      "name_en": "Introduction to Anthropology"
+    },
+    {
+      "raw_id": "11420KPC 140000",
+      "department": "KPC",
+      "course": "1400",
+      "name_zh": "輔導原理與實務",
+      "name_en": "Principle and Practice of Guidance"
+    },
+    {
+      "raw_id": "11510PME 543900",
+      "department": "PME",
+      "course": "5439",
+      "name_zh": "人工智慧",
+      "name_en": "Introduction to Artificial Intelligence"
+    },
+    {
+      "raw_id": "11510MS  500000",
+      "department": "MS",
+      "course": "5000",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11510FL  343100",
+      "department": "FL",
+      "course": "3431",
+      "name_zh": "日語聽解三",
+      "name_en": "Japanese Listening III"
+    },
+    {
+      "raw_id": "11510IMBA501301",
+      "department": "IMBA",
+      "course": "5013",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11510GE  124500",
+      "department": "GE",
+      "course": "1245",
+      "name_zh": "行銷管理",
+      "name_en": "Marketing Management"
+    },
+    {
+      "raw_id": "11510FL  300501",
+      "department": "FL",
+      "course": "3005",
+      "name_zh": "中級日語一",
+      "name_en": "Intermediate Japanese I"
+    },
+    {
+      "raw_id": "11420KEE 300400",
+      "department": "KEE",
+      "course": "3004",
+      "name_zh": "幼兒園教材教法I",
+      "name_en": "Teaching Materials and Methods in Preschool and Kindergarten I"
+    },
+    {
+      "raw_id": "11510PME 534200",
+      "department": "PME",
+      "course": "5342",
+      "name_zh": "高等振動學",
+      "name_en": "Advanced Mechanical Vibrations"
+    },
+    {
+      "raw_id": "11420PME 332000",
+      "department": "PME",
+      "course": "3320",
+      "name_zh": "振動學",
+      "name_en": "Mechanical Vibrations"
+    },
+    {
+      "raw_id": "11420JAD 270601",
+      "department": "JAD",
+      "course": "2706",
+      "name_zh": "產品設計二",
+      "name_en": "Product Design II"
+    },
+    {
+      "raw_id": "11420KSS 220100",
+      "department": "KSS",
+      "course": "2201",
+      "name_zh": "跆拳道一",
+      "name_en": "Tae Kwon Do (I)"
+    },
+    {
+      "raw_id": "11320HSS 221400",
+      "department": "HSS",
+      "course": "2214",
+      "name_zh": "美學",
+      "name_en": "Aesthetics"
+    },
+    {
+      "raw_id": "11420PME 300600",
+      "department": "PME",
+      "course": "3006",
+      "name_zh": "材料科學導論",
+      "name_en": "Introduction to Materials Science"
+    },
+    {
+      "raw_id": "11420WH  102000",
+      "department": "WH",
+      "course": "1020",
+      "name_zh": "人體生理與解剖學",
+      "name_en": "Human Anatomy &amp; Physiology"
+    },
+    {
+      "raw_id": "11420MATH142000",
+      "department": "MATH",
+      "course": "1420",
+      "name_zh": "線性代數二",
+      "name_en": "Linear Algebra II"
+    },
+    {
+      "raw_id": "11510ISA 557900",
+      "department": "ISA",
+      "course": "5579",
+      "name_zh": "互動設計",
+      "name_en": "Interaction Design"
+    },
+    {
+      "raw_id": "11510TEE 101801",
+      "department": "TEE",
+      "course": "1018",
+      "name_zh": "教育心理學",
+      "name_en": "Educational Psychology"
+    },
+    {
+      "raw_id": "11510FL  420800",
+      "department": "FL",
+      "course": "4208",
+      "name_zh": "高級西班牙語一",
+      "name_en": "Advanced Spanish I"
+    },
+    {
+      "raw_id": "11510ECON127102",
+      "department": "ECON",
+      "course": "1271",
+      "name_zh": "會計學一",
+      "name_en": "Accounting (I)"
+    },
+    {
+      "raw_id": "11420CS  333201",
+      "department": "CS",
+      "course": "3332",
+      "name_zh": "機率",
+      "name_en": "Probability"
+    },
+    {
+      "raw_id": "11320KEL 187000",
+      "department": "KEL",
+      "course": "1870",
+      "name_zh": "口語表達(包含國音及說話)",
+      "name_en": "Phonetics and Speech"
+    },
+    {
+      "raw_id": "11420DMS 274300",
+      "department": "DMS",
+      "course": "2743",
+      "name_zh": "組織學",
+      "name_en": "Histology"
+    },
+    {
+      "raw_id": "11510EE  591002",
+      "department": "EE",
+      "course": "5910",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11420ECON100201",
+      "department": "ECON",
+      "course": "1002",
+      "name_zh": "經濟學原理二",
+      "name_en": "Principles of Economics (II)"
+    },
+    {
+      "raw_id": "11420KENI110400",
+      "department": "KENI",
+      "course": "1104",
+      "name_zh": "英語語言學概論",
+      "name_en": "Introduction to English Linguistics"
+    },
+    {
+      "raw_id": "11510IEEM314000",
+      "department": "IEEM",
+      "course": "3140",
+      "name_zh": "資料結構",
+      "name_en": "Data Structures"
+    },
+    {
+      "raw_id": "11510ECON309101",
+      "department": "ECON",
+      "course": "3091",
+      "name_zh": "總體經濟學一",
+      "name_en": "Macroeconomics (I)"
+    },
+    {
+      "raw_id": "11510EECS101001",
+      "department": "EECS",
+      "course": "1010",
+      "name_zh": "邏輯設計",
+      "name_en": "Logic Design"
+    },
+    {
+      "raw_id": "11320WH  103900",
+      "department": "WH",
+      "course": "1039",
+      "name_zh": "貨幣銀行學",
+      "name_en": "Money and Banking"
+    },
+    {
+      "raw_id": "11510KSS 110300",
+      "department": "KSS",
+      "course": "1103",
+      "name_zh": "田徑一",
+      "name_en": "Track and Field (I)"
+    },
+    {
+      "raw_id": "11510GEC 161300",
+      "department": "GEC",
+      "course": "1613",
+      "name_zh": "思想經典：《六祖壇經》選讀",
+      "name_en": "Reading Classics in Eastern Philosophy: the Platform Sutra of the Sixth Patriarch"
+    },
+    {
+      "raw_id": "11510PE  205054",
+      "department": "PE",
+      "course": "2050",
+      "name_zh": "高爾夫球",
+      "name_en": "Golf"
+    },
+    {
+      "raw_id": "11420WW  128100",
+      "department": "WW",
+      "course": "1281",
+      "name_zh": "微分方程",
+      "name_en": "Differential Equations"
+    },
+    {
+      "raw_id": "11420MATH305100",
+      "department": "MATH",
+      "course": "3051",
+      "name_zh": "複變數函數論一",
+      "name_en": "Complex Analysis I"
+    },
+    {
+      "raw_id": "11510KEL 282001",
+      "department": "KEL",
+      "course": "2820",
+      "name_zh": "英語",
+      "name_en": "English"
+    },
+    {
+      "raw_id": "11420CL  221700",
+      "department": "CL",
+      "course": "2217",
+      "name_zh": "杜詩",
+      "name_en": "Poetry of Du Fu"
+    },
+    {
+      "raw_id": "11510PME 101801",
+      "department": "PME",
+      "course": "1018",
+      "name_zh": "程式設計",
+      "name_en": "Programming"
+    },
+    {
+      "raw_id": "11510DMS 370300",
+      "department": "DMS",
+      "course": "3703",
+      "name_zh": "人體生理與解剖學",
+      "name_en": "Human Anatomy &amp; Physiology"
+    },
+    {
+      "raw_id": "11420KIPE101500",
+      "department": "KIPE",
+      "course": "1015",
+      "name_zh": "認知心理學",
+      "name_en": "Cognitive Psychology"
+    },
+    {
+      "raw_id": "11510CHEM103001",
+      "department": "CHEM",
+      "course": "1030",
+      "name_zh": "普通化學實驗一",
+      "name_en": "General Chemistry Laboratory (I)"
+    },
+    {
+      "raw_id": "11510ECON328200",
+      "department": "ECON",
+      "course": "3282",
+      "name_zh": "審計學一",
+      "name_en": "Auditing and Assurance Service I"
+    },
+    {
+      "raw_id": "11420IBP 201002",
+      "department": "IBP",
+      "course": "2010",
+      "name_zh": "閱讀與寫作二",
+      "name_en": "Reading and Writing (II)"
+    },
+    {
+      "raw_id": "11510KPC 542000",
+      "department": "KPC",
+      "course": "5420",
+      "name_zh": "諮商與心理治療理論(研)",
+      "name_en": "Theories of Counseling and Psychotherapy"
+    },
+    {
+      "raw_id": "11510KLST520100",
+      "department": "KLST",
+      "course": "5201",
+      "name_zh": "書報討論一",
+      "name_en": "Seminar(I)"
+    },
+    {
+      "raw_id": "11420IEEM204000",
+      "department": "IEEM",
+      "course": "2040",
+      "name_zh": "工程統計",
+      "name_en": "Engineering Statistics"
+    },
+    {
+      "raw_id": "11510PME 526800",
+      "department": "PME",
+      "course": "5268",
+      "name_zh": "數位訊號處理",
+      "name_en": "Digital Signal Processing"
+    },
+    {
+      "raw_id": "11510FL  405100",
+      "department": "FL",
+      "course": "4051",
+      "name_zh": "日語寫作一",
+      "name_en": "Japanese writing 1"
+    },
+    {
+      "raw_id": "11420MATH104001",
+      "department": "MATH",
+      "course": "1040",
+      "name_zh": "微積分Ｂ二",
+      "name_en": "Calculus II"
+    },
+    {
+      "raw_id": "11420WW  131200",
+      "department": "WW",
+      "course": "1312",
+      "name_zh": "電磁學",
+      "name_en": "Electromagnetism"
+    },
+    {
+      "raw_id": "11510ECON206101",
+      "department": "ECON",
+      "course": "2061",
+      "name_zh": "個體經濟學一",
+      "name_en": "Microeconomics (I)"
+    },
+    {
+      "raw_id": "11510BMES211100",
+      "department": "BMES",
+      "course": "2111",
+      "name_zh": "工程數學一",
+      "name_en": "Engineering Mathematics I"
+    },
+    {
+      "raw_id": "11420WW  160800",
+      "department": "WW",
+      "course": "1608",
+      "name_zh": "資料結構",
+      "name_en": "Data Structures"
+    },
+    {
+      "raw_id": "11510FL  100500",
+      "department": "FL",
+      "course": "1005",
+      "name_zh": "西洋文學概論一",
+      "name_en": "Introduction to Western Literature I"
+    },
+    {
+      "raw_id": "11510FL  300301",
+      "department": "FL",
+      "course": "3003",
+      "name_zh": "閱讀與寫作二(上)",
+      "name_en": "Reading &amp; Writing II (1)"
+    },
+    {
+      "raw_id": "11510CLC 400100",
+      "department": "CLC",
+      "course": "4001",
+      "name_zh": "高級華語一",
+      "name_en": "Mandarin Advanced I"
+    },
+    {
+      "raw_id": "11420TSE 505100",
+      "department": "TSE",
+      "course": "5051",
+      "name_zh": "數量方法一",
+      "name_en": "Quantitative Methods Ⅰ"
+    },
+    {
+      "raw_id": "11420WW  144000",
+      "department": "WW",
+      "course": "1440",
+      "name_zh": "微分方程",
+      "name_en": "Differential Equations"
+    },
+    {
+      "raw_id": "11420EE  307000",
+      "department": "EE",
+      "course": "3070",
+      "name_zh": "統計",
+      "name_en": "Statistics"
+    },
+    {
+      "raw_id": "11510CHEM223001",
+      "department": "CHEM",
+      "course": "2230",
+      "name_zh": "有機化學實驗一",
+      "name_en": "Organic Chemistry Laboratory(I)"
+    },
+    {
+      "raw_id": "11410JMU 301400",
+      "department": "JMU",
+      "course": "3014",
+      "name_zh": "指揮法一",
+      "name_en": "Conducting Technique I"
+    },
+    {
+      "raw_id": "11510JAD 270201",
+      "department": "JAD",
+      "course": "2702",
+      "name_zh": "產品設計一",
+      "name_en": "Product Design I"
+    },
+    {
+      "raw_id": "11420PE  112030",
+      "department": "PE",
+      "course": "1120",
+      "name_zh": "體操",
+      "name_en": "Gymnastics"
+    },
+    {
+      "raw_id": "11510THSM113000",
+      "department": "THSM",
+      "course": "1130",
+      "name_zh": "專題研究一",
+      "name_en": "Research on special topics"
+    },
+    {
+      "raw_id": "11510JAD 226400",
+      "department": "JAD",
+      "course": "2264",
+      "name_zh": "素描：圖像與媒材一",
+      "name_en": "Drawing: Image and Media I"
+    },
+    {
+      "raw_id": "11420BMES337200",
+      "department": "BMES",
+      "course": "3372",
+      "name_zh": "物理化學二",
+      "name_en": "Physical Chemistry (II)"
+    },
+    {
+      "raw_id": "11420TIGP749200",
+      "department": "TIGP",
+      "course": "7492",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11420EE  655000",
+      "department": "EE",
+      "course": "6550",
+      "name_zh": "機器學習",
+      "name_en": "Machine Learning"
+    },
+    {
+      "raw_id": "11420KSPE320600",
+      "department": "KSPE",
+      "course": "3206",
+      "name_zh": "資賦優異教材教法(2)",
+      "name_en": "Teaching Materials and Methods for Gifted Children (2)"
+    },
+    {
+      "raw_id": "11510EE  306000",
+      "department": "EE",
+      "course": "3060",
+      "name_zh": "機率",
+      "name_en": "Probability"
+    },
+    {
+      "raw_id": "11320WZ  501400",
+      "department": "WZ",
+      "course": "5014",
+      "name_zh": "機器學習",
+      "name_en": "Machine Learning"
+    },
+    {
+      "raw_id": "11420ANTH654200",
+      "department": "ANTH",
+      "course": "6542",
+      "name_zh": "人類學方法論",
+      "name_en": "Anthropological Methodology"
+    },
+    {
+      "raw_id": "11510KEL 231000",
+      "department": "KEL",
+      "course": "2310",
+      "name_zh": "組織行為",
+      "name_en": "Organizational Behavior"
+    },
+    {
+      "raw_id": "11420KEC 100200",
+      "department": "KEC",
+      "course": "1002",
+      "name_zh": "統計學",
+      "name_en": "Statistics"
+    },
+    {
+      "raw_id": "11510ESS 102000",
+      "department": "ESS",
+      "course": "1020",
+      "name_zh": "普通化學",
+      "name_en": "General Chemistry"
+    },
+    {
+      "raw_id": "11510KSS 356000",
+      "department": "KSS",
+      "course": "3560",
+      "name_zh": "運動專題一",
+      "name_en": "Selected Topics in Sports and Exercise I"
+    },
+    {
+      "raw_id": "11420MS  412000",
+      "department": "MS",
+      "course": "4120",
+      "name_zh": "有機化學",
+      "name_en": "Organic Chemistry"
+    },
+    {
+      "raw_id": "11420KPC 220200",
+      "department": "KPC",
+      "course": "2202",
+      "name_zh": "心理與教育測驗",
+      "name_en": "Psychological and Educational Testing"
+    },
+    {
+      "raw_id": "11510MBA 503000",
+      "department": "MBA",
+      "course": "5030",
+      "name_zh": "企業社會責任",
+      "name_en": "Corporate Social Responsibility"
+    },
+    {
+      "raw_id": "11510ICMS551000",
+      "department": "ICMS",
+      "course": "5510",
+      "name_zh": "應用數學一",
+      "name_en": "Applied Mathematics (I)"
+    },
+    {
+      "raw_id": "11510CS  233401",
+      "department": "CS",
+      "course": "2334",
+      "name_zh": "線性代數",
+      "name_en": "Linear Algebra"
+    },
+    {
+      "raw_id": "11320JITA220600",
+      "department": "JITA",
+      "course": "2206",
+      "name_zh": "生物藝術概論",
+      "name_en": "Introduction of BioArt"
+    },
+    {
+      "raw_id": "11510IPNS300100",
+      "department": "IPNS",
+      "course": "3001",
+      "name_zh": "專題研究一",
+      "name_en": "Research on special topics"
+    },
+    {
+      "raw_id": "11420LSMM590202",
+      "department": "LSMM",
+      "course": "5902",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11510KPC 232000",
+      "department": "KPC",
+      "course": "2320",
+      "name_zh": "教育心理學",
+      "name_en": "Educational Psychology"
+    },
+    {
+      "raw_id": "11510KSPE320500",
+      "department": "KSPE",
+      "course": "3205",
+      "name_zh": "資賦優異教材教法(1)",
+      "name_en": "Teaching Materials and Methods for Gifted Children (1)"
+    },
+    {
+      "raw_id": "11410KSS 201001",
+      "department": "KSS",
+      "course": "2010",
+      "name_zh": "高爾夫球一",
+      "name_en": "Golf (I)"
+    },
+    {
+      "raw_id": "11510RADM501100",
+      "department": "RADM",
+      "course": "5011",
+      "name_zh": "書報討論一",
+      "name_en": "Seminar(I)"
+    },
+    {
+      "raw_id": "11420KSPE311600",
+      "department": "KSPE",
+      "course": "3116",
+      "name_zh": "身心障礙教材教法(2)",
+      "name_en": "Teaching Materials and Methods for Children with Special Needs (2)"
+    },
+    {
+      "raw_id": "11420CHE 306000",
+      "department": "CHE",
+      "course": "3060",
+      "name_zh": "化工單操",
+      "name_en": "Chemical Engineering Unit Operations"
+    },
+    {
+      "raw_id": "11320WW  565900",
+      "department": "WW",
+      "course": "5659",
+      "name_zh": "生醫工程",
+      "name_en": "Biomedical Engineering"
+    },
+    {
+      "raw_id": "11510TE  210000",
+      "department": "TE",
+      "course": "2100",
+      "name_zh": "教學原理",
+      "name_en": "Teaching Principles"
+    },
+    {
+      "raw_id": "11510CHEM101001",
+      "department": "CHEM",
+      "course": "1010",
+      "name_zh": "普通化學一",
+      "name_en": "General Chemistry (I)"
+    },
+    {
+      "raw_id": "11320CL  333200",
+      "department": "CL",
+      "course": "3332",
+      "name_zh": "孟子",
+      "name_en": "Mencius"
+    },
+    {
+      "raw_id": "11510STAT410100",
+      "department": "STAT",
+      "course": "4101",
+      "name_zh": "機器學習導論",
+      "name_en": "Introduction to Machine Learning"
+    },
+    {
+      "raw_id": "11510GE  192600",
+      "department": "GE",
+      "course": "1926",
+      "name_zh": "水彩",
+      "name_en": "Watercolor Painting"
+    },
+    {
+      "raw_id": "11420JMU 101500",
+      "department": "JMU",
+      "course": "1015",
+      "name_zh": "四手聯彈",
+      "name_en": "Piano Duet"
+    },
+    {
+      "raw_id": "11420KMSN600200",
+      "department": "KMSN",
+      "course": "6002",
+      "name_zh": "教育統計",
+      "name_en": "Educational Statistics"
+    },
+    {
+      "raw_id": "11510IPMT301100",
+      "department": "IPMT",
+      "course": "3011",
+      "name_zh": "行銷管理",
+      "name_en": "Marketing Management"
+    },
+    {
+      "raw_id": "11320CL  292000",
+      "department": "CL",
+      "course": "2920",
+      "name_zh": "基礎影像敘事",
+      "name_en": "Fundamental Storytelling Strategies"
+    },
+    {
+      "raw_id": "11510STMP500100",
+      "department": "STMP",
+      "course": "5001",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11510NES 598001",
+      "department": "NES",
+      "course": "5980",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11510JMU 402300",
+      "department": "JMU",
+      "course": "4023",
+      "name_zh": "音樂治療一",
+      "name_en": "Music Therapy I"
+    },
+    {
+      "raw_id": "11510TIGP718100",
+      "department": "TIGP",
+      "course": "7181",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11320WW  591000",
+      "department": "WW",
+      "course": "5910",
+      "name_zh": "深度學習",
+      "name_en": "Deep Learning"
+    },
+    {
+      "raw_id": "11420BMES511203",
+      "department": "BMES",
+      "course": "5112",
+      "name_zh": "書報討論(一)-生醫影像工程",
+      "name_en": "Seminar(I)：Biomedical Imaging Engineering"
+    },
+    {
+      "raw_id": "11420EE  223001",
+      "department": "EE",
+      "course": "2230",
+      "name_zh": "邏輯設計實驗",
+      "name_en": "Logic Design Laboratory"
+    },
+    {
+      "raw_id": "11510JAD 160300",
+      "department": "JAD",
+      "course": "1603",
+      "name_zh": "水彩",
+      "name_en": "Watercolor Painting"
+    },
+    {
+      "raw_id": "11510CS  591000",
+      "department": "CS",
+      "course": "5910",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11510CTM 210200",
+      "department": "CTM",
+      "course": "2102",
+      "name_zh": "企業導師與職涯發展(一)",
+      "name_en": "Mentor Program and Career Development"
+    },
+    {
+      "raw_id": "11320WZ  103600",
+      "department": "WZ",
+      "course": "1036",
+      "name_zh": "思想經典：《莊子》選讀",
+      "name_en": "The selected readings of Zhuang Zi"
+    },
+    {
+      "raw_id": "11420DMS 391202",
+      "department": "DMS",
+      "course": "3912",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11510EE  370000",
+      "department": "EE",
+      "course": "3700",
+      "name_zh": "機器學習導論",
+      "name_en": "Introduction to Machine Learning"
+    },
+    {
+      "raw_id": "11510JAD 130101",
+      "department": "JAD",
+      "course": "1301",
+      "name_zh": "基礎設計一",
+      "name_en": "Basic Design I"
+    },
+    {
+      "raw_id": "11510STAT511000",
+      "department": "STAT",
+      "course": "5110",
+      "name_zh": "數理統計",
+      "name_en": "Mathematical Statistics"
+    },
+    {
+      "raw_id": "11510MATH171001",
+      "department": "MATH",
+      "course": "1710",
+      "name_zh": "程式設計一",
+      "name_en": "Introduction to Programming I"
+    },
+    {
+      "raw_id": "11410ANTH679500",
+      "department": "ANTH",
+      "course": "6795",
+      "name_zh": "文化人類學",
+      "name_en": "Advance Cultural Anthropology"
+    },
+    {
+      "raw_id": "11510KSS 200800",
+      "department": "KSS",
+      "course": "2008",
+      "name_zh": "體操一",
+      "name_en": "Gymnastics (I)"
+    },
+    {
+      "raw_id": "11320TEE 102902",
+      "department": "TEE",
+      "course": "1029",
+      "name_zh": "口語表達(包含國音及說話)",
+      "name_en": "Phonetics and Speech"
+    },
+    {
+      "raw_id": "11510DMS 390001",
+      "department": "DMS",
+      "course": "3900",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11320WW  564300",
+      "department": "WW",
+      "course": "5643",
+      "name_zh": "數位訊號處理",
+      "name_en": "Digital Signal Processing"
+    },
+    {
+      "raw_id": "11510QF  314801",
+      "department": "QF",
+      "course": "3148",
+      "name_zh": "數理統計一",
+      "name_en": "Mathematical Statistics I"
+    },
+    {
+      "raw_id": "11510KSS 110700",
+      "department": "KSS",
+      "course": "1107",
+      "name_zh": "足球一",
+      "name_en": "Soccer (I)"
+    },
+    {
+      "raw_id": "11510PME 400300",
+      "department": "PME",
+      "course": "4003",
+      "name_zh": "專題研究一",
+      "name_en": "Research on special topics"
+    },
+    {
+      "raw_id": "11510KSS 301100",
+      "department": "KSS",
+      "course": "3011",
+      "name_zh": "壘球一",
+      "name_en": "Softball (I)"
+    },
+    {
+      "raw_id": "11420MPM 500400",
+      "department": "MPM",
+      "course": "5004",
+      "name_zh": "實證研究方法",
+      "name_en": "Empirical Research methods"
+    },
+    {
+      "raw_id": "11510CHEM500000",
+      "department": "CHEM",
+      "course": "5000",
+      "name_zh": "教學實習一",
+      "name_en": "Teaching Internship (I)"
+    },
+    {
+      "raw_id": "11420CL  110400",
+      "department": "CL",
+      "course": "1104",
+      "name_zh": "詩選",
+      "name_en": "Selected Readings from Chinese Poetry"
+    },
+    {
+      "raw_id": "11510NEMS500000",
+      "department": "NEMS",
+      "course": "5000",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11410JAD 327900",
+      "department": "JAD",
+      "course": "3279",
+      "name_zh": "書畫創作一",
+      "name_en": "Calligraphy and Painting I"
+    },
+    {
+      "raw_id": "11420KSS 180302",
+      "department": "KSS",
+      "course": "1803",
+      "name_zh": "羽球二",
+      "name_en": "Badminton (II)<font color=\"red\">停開</font>"
+    },
+    {
+      "raw_id": "11510JMU 304200",
+      "department": "JMU",
+      "course": "3042",
+      "name_zh": "主修五",
+      "name_en": "Major Music Instruction Ⅴ"
+    },
+    {
+      "raw_id": "11510EMS 502600",
+      "department": "EMS",
+      "course": "5026",
+      "name_zh": "研究方法",
+      "name_en": "Research Methodology"
+    },
+    {
+      "raw_id": "11420KEL 120000",
+      "department": "KEL",
+      "course": "1200",
+      "name_zh": "教育心理學",
+      "name_en": "Educational Psychology"
+    },
+    {
+      "raw_id": "11420EECS204000",
+      "department": "EECS",
+      "course": "2040",
+      "name_zh": "資料結構",
+      "name_en": "Data Structures"
+    },
+    {
+      "raw_id": "11410GEC 161400",
+      "department": "GEC",
+      "course": "1614",
+      "name_zh": "思想經典：《傳習錄》",
+      "name_en": "selected readings of Ch'uan-hsi-lu"
+    },
+    {
+      "raw_id": "11510ICMS520100",
+      "department": "ICMS",
+      "course": "5201",
+      "name_zh": "機器學習",
+      "name_en": "Machine Learning"
+    },
+    {
+      "raw_id": "11510FL  327100",
+      "department": "FL",
+      "course": "3271",
+      "name_zh": "日語會話一",
+      "name_en": "Japanese Conversation I"
+    },
+    {
+      "raw_id": "11510JMU 100101",
+      "department": "JMU",
+      "course": "1001",
+      "name_zh": "音樂基礎訓練一",
+      "name_en": "MusicianshipⅠ"
+    },
+    {
+      "raw_id": "11420PME 312000",
+      "department": "PME",
+      "course": "3120",
+      "name_zh": "熱傳與質傳學",
+      "name_en": "Heat and Mass Transfer"
+    },
+    {
+      "raw_id": "11420CL  232500",
+      "department": "CL",
+      "course": "2325",
+      "name_zh": "左傳",
+      "name_en": "Tso Chuan"
+    },
+    {
+      "raw_id": "11510ECON303300",
+      "department": "ECON",
+      "course": "3033",
+      "name_zh": "計量經濟學一",
+      "name_en": "Econometrics (I)"
+    },
+    {
+      "raw_id": "11420KPC 542200",
+      "department": "KPC",
+      "course": "5422",
+      "name_zh": "團體諮商理論與實務",
+      "name_en": "Theories and Practice of Group Counseling"
+    },
+    {
+      "raw_id": "11510MS  103100",
+      "department": "MS",
+      "course": "1031",
+      "name_zh": "普通化學一",
+      "name_en": "General Chemistry (I)"
+    },
+    {
+      "raw_id": "11420JITA110600",
+      "department": "JITA",
+      "course": "1106",
+      "name_zh": "微電子互動創作",
+      "name_en": "Micro Electronic Creation"
+    },
+    {
+      "raw_id": "11510CHE 509000",
+      "department": "CHE",
+      "course": "5090",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11510ENE 553000",
+      "department": "ENE",
+      "course": "5530",
+      "name_zh": "兆赫波科技",
+      "name_en": "Terahertz Science and Technology<font color=\"red\">停開</font>"
+    },
+    {
+      "raw_id": "11420CL  111200",
+      "department": "CL",
+      "course": "1112",
+      "name_zh": "語言學導論",
+      "name_en": "General Linguistics"
+    },
+    {
+      "raw_id": "11420JMU 105100",
+      "department": "JMU",
+      "course": "1051",
+      "name_zh": "主修二",
+      "name_en": "Major Music Instruction Ⅱ"
+    },
+    {
+      "raw_id": "11510FL  201101",
+      "department": "FL",
+      "course": "2011",
+      "name_zh": "初級日語一",
+      "name_en": "Beginning Japanese I"
+    },
+    {
+      "raw_id": "11510BMES411100",
+      "department": "BMES",
+      "course": "4111",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11510TM  200201",
+      "department": "TM",
+      "course": "2002",
+      "name_zh": "管理學",
+      "name_en": "Management"
+    },
+    {
+      "raw_id": "11420WW  161600",
+      "department": "WW",
+      "course": "1616",
+      "name_zh": "資料結構",
+      "name_en": "Data Structures"
+    },
+    {
+      "raw_id": "11420WW  930500",
+      "department": "WW",
+      "course": "9305",
+      "name_zh": "電路學",
+      "name_en": "Electric Circuits"
+    },
+    {
+      "raw_id": "11510LSSN590101",
+      "department": "LSSN",
+      "course": "5901",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11320WW  140600",
+      "department": "WW",
+      "course": "1406",
+      "name_zh": "電路學",
+      "name_en": "Electric Circuits"
+    },
+    {
+      "raw_id": "11320WW  596400",
+      "department": "WW",
+      "course": "5964",
+      "name_zh": "民法物權",
+      "name_en": "Property Law"
+    },
+    {
+      "raw_id": "11320WZ  104000",
+      "department": "WZ",
+      "course": "1040",
+      "name_zh": "重量訓練二",
+      "name_en": "Weight Training (II)"
+    },
+    {
+      "raw_id": "11420WW  529900",
+      "department": "WW",
+      "course": "5299",
+      "name_zh": "音韻學",
+      "name_en": "Phonology"
+    },
+    {
+      "raw_id": "11420GEC 111300",
+      "department": "GEC",
+      "course": "1113",
+      "name_zh": "思想經典：《周易》選讀",
+      "name_en": "Selected Readings of Changes"
+    },
+    {
+      "raw_id": "11510MS  413100",
+      "department": "MS",
+      "course": "4131",
+      "name_zh": "生醫材料",
+      "name_en": "Biomedical Materials"
+    },
+    {
+      "raw_id": "11320WW  570200",
+      "department": "WW",
+      "course": "5702",
+      "name_zh": "機器學習",
+      "name_en": "Machine Learning"
+    },
+    {
+      "raw_id": "11410MBA 555800",
+      "department": "MBA",
+      "course": "5558",
+      "name_zh": "組織行為",
+      "name_en": "Organizational Behavior"
+    },
+    {
+      "raw_id": "11510BME 500400",
+      "department": "BME",
+      "course": "5004",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11510TIGP717600",
+      "department": "TIGP",
+      "course": "7176",
+      "name_zh": "分子與細胞生物學",
+      "name_en": "Molecular and Cellular Biology"
+    },
+    {
+      "raw_id": "11420PHYS211000",
+      "department": "PHYS",
+      "course": "2110",
+      "name_zh": "應用數學一",
+      "name_en": "Applied Mathematics (I)"
+    },
+    {
+      "raw_id": "11510IBP 100100",
+      "department": "IBP",
+      "course": "1001",
+      "name_zh": "漢字學習",
+      "name_en": "Chinese Character Learning"
+    },
+    {
+      "raw_id": "11510JAD 636800",
+      "department": "JAD",
+      "course": "6368",
+      "name_zh": "獨立研究",
+      "name_en": "Independent Study"
+    },
+    {
+      "raw_id": "11510MATH101001",
+      "department": "MATH",
+      "course": "1010",
+      "name_zh": "微積分一(數學系)",
+      "name_en": "Calculus (I)"
+    },
+    {
+      "raw_id": "11420ENE 590200",
+      "department": "ENE",
+      "course": "5902",
+      "name_zh": "人工神經網路特論",
+      "name_en": "Special Topics on Artificial Neural Network"
+    },
+    {
+      "raw_id": "11320WZ  105100",
+      "department": "WZ",
+      "course": "1051",
+      "name_zh": "羽球二",
+      "name_en": "Badminton (II)"
+    },
+    {
+      "raw_id": "11510JAD 327700",
+      "department": "JAD",
+      "course": "3277",
+      "name_zh": "繪畫：圖像與構成一",
+      "name_en": "Painting: Image and Composition of Painting I"
+    },
+    {
+      "raw_id": "11510FL  343400",
+      "department": "FL",
+      "course": "3434",
+      "name_zh": "日語會話三",
+      "name_en": "Japanese Conversation III"
+    },
+    {
+      "raw_id": "11510KEL 210000",
+      "department": "KEL",
+      "course": "2100",
+      "name_zh": "教學原理",
+      "name_en": "Teaching Principles"
+    },
+    {
+      "raw_id": "11510FL  407100",
+      "department": "FL",
+      "course": "4071",
+      "name_zh": "高級德語一",
+      "name_en": "Advanced German I"
+    },
+    {
+      "raw_id": "11510MATH102000",
+      "department": "MATH",
+      "course": "1020",
+      "name_zh": "微積分Ａ二",
+      "name_en": "Calculus (II)"
+    },
+    {
+      "raw_id": "11510JMU 300500",
+      "department": "JMU",
+      "course": "3005",
+      "name_zh": "曲式與分析一",
+      "name_en": "Musical Forms and Analysis I"
+    },
+    {
+      "raw_id": "11320XA  100100",
+      "department": "XA",
+      "course": "1001",
+      "name_zh": "普通化學實驗二",
+      "name_en": "General Chemistry Laboratory (II)"
+    },
+    {
+      "raw_id": "11510IOSE500500",
+      "department": "IOSE",
+      "course": "5005",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11510MATH301000",
+      "department": "MATH",
+      "course": "3010",
+      "name_zh": "微分方程",
+      "name_en": "Differential Equations"
+    },
+    {
+      "raw_id": "11510QF  214401",
+      "department": "QF",
+      "course": "2144",
+      "name_zh": "統計學一",
+      "name_en": "Statistics (I)"
+    },
+    {
+      "raw_id": "11510GE  120601",
+      "department": "GE",
+      "course": "1206",
+      "name_zh": "油畫",
+      "name_en": "Oil Painting"
+    },
+    {
+      "raw_id": "11510JMU 104700",
+      "department": "JMU",
+      "course": "1047",
+      "name_zh": "語韻學一",
+      "name_en": "Diction I"
+    },
+    {
+      "raw_id": "11420MBA 503700",
+      "department": "MBA",
+      "course": "5037",
+      "name_zh": "研究方法",
+      "name_en": "Research Methods"
+    },
+    {
+      "raw_id": "11420FL  300801",
+      "department": "FL",
+      "course": "3008",
+      "name_zh": "中級法語二",
+      "name_en": "Intermediate French II"
+    },
+    {
+      "raw_id": "11510JAD 160100",
+      "department": "JAD",
+      "course": "1601",
+      "name_zh": "基礎水墨一",
+      "name_en": "Basic Ink Painting I"
+    },
+    {
+      "raw_id": "11420PE  206117",
+      "department": "PE",
+      "course": "2061",
+      "name_zh": "排球",
+      "name_en": "Volleyball"
+    },
+    {
+      "raw_id": "11510CHE 241000",
+      "department": "CHE",
+      "course": "2410",
+      "name_zh": "物理化學一",
+      "name_en": "Physical Chemistry (I)"
+    },
+    {
+      "raw_id": "11510JAD 429300",
+      "department": "JAD",
+      "course": "4293",
+      "name_zh": "造形藝術創作一",
+      "name_en": "Plastic Art Creation I"
+    },
+    {
+      "raw_id": "11320WW  157900",
+      "department": "WW",
+      "course": "1579",
+      "name_zh": "線性代數",
+      "name_en": "Linear Algebra"
+    },
+    {
+      "raw_id": "11420FL  201201",
+      "department": "FL",
+      "course": "2012",
+      "name_zh": "初級日語二",
+      "name_en": "Beginning Japanese II"
+    },
+    {
+      "raw_id": "11510ECON216101",
+      "department": "ECON",
+      "course": "2161",
+      "name_zh": "統計學一",
+      "name_en": "Statistics (I)"
+    },
+    {
+      "raw_id": "11510LS  340100",
+      "department": "LS",
+      "course": "3401",
+      "name_zh": "分子與細胞生物學二",
+      "name_en": "Molecular and Cellular Biology II"
+    },
+    {
+      "raw_id": "11420THC 104700",
+      "department": "THC",
+      "course": "1047",
+      "name_zh": "跨域自主實踐一",
+      "name_en": "Interdisciplinary Self-directed Learning and Practice I"
+    },
+    {
+      "raw_id": "11420BMES211200",
+      "department": "BMES",
+      "course": "2112",
+      "name_zh": "工程數學二",
+      "name_en": "Engineering Mathematics II"
+    },
+    {
+      "raw_id": "11510TM  511000",
+      "department": "TM",
+      "course": "5110",
+      "name_zh": "組織行為",
+      "name_en": "Organizational Behavior"
+    },
+    {
+      "raw_id": "11410JAD 328000",
+      "department": "JAD",
+      "course": "3280",
+      "name_zh": "複合形態版畫創作一",
+      "name_en": "Mixed Media Printmaking Art I"
+    },
+    {
+      "raw_id": "11510GEC 140203",
+      "department": "GEC",
+      "course": "1402",
+      "name_zh": "社會文化分析：跨文化比較",
+      "name_en": "Social and Cultural Analysis: Cross-Cultural Comparison"
+    },
+    {
+      "raw_id": "11420KENI231100",
+      "department": "KENI",
+      "course": "2311",
+      "name_zh": "音韻學",
+      "name_en": "Phonology"
+    },
+    {
+      "raw_id": "11510EE  490000",
+      "department": "EE",
+      "course": "4900",
+      "name_zh": "專題研究",
+      "name_en": "Research Training"
+    },
+    {
+      "raw_id": "11510FL  327300",
+      "department": "FL",
+      "course": "3273",
+      "name_zh": "日語聽解一",
+      "name_en": "Japanese Listening I"
+    },
+    {
+      "raw_id": "11320BMES224200",
+      "department": "BMES",
+      "course": "2242",
+      "name_zh": "電磁學",
+      "name_en": "Electromagnetism"
+    },
+    {
+      "raw_id": "11410MATU500200",
+      "department": "MATU",
+      "course": "5002",
+      "name_zh": "機器學習",
+      "name_en": "Machine Learning"
+    },
+    {
+      "raw_id": "11510CS  135501",
+      "department": "CS",
+      "course": "1355",
+      "name_zh": "計算機程式設計一",
+      "name_en": "Introduction to Programming (I)"
+    },
+    {
+      "raw_id": "11510KSPE311500",
+      "department": "KSPE",
+      "course": "3115",
+      "name_zh": "身心障礙教材教法(1)",
+      "name_en": "Teaching Materials and Methods for Children with Special Needs (1)"
+    },
+    {
+      "raw_id": "11510KPCN542000",
+      "department": "KPCN",
+      "course": "5420",
+      "name_zh": "諮商理論與技術專題",
+      "name_en": "Seminar on Theories and Skills of Counseling"
+    },
+    {
+      "raw_id": "11410HSS 317000",
+      "department": "HSS",
+      "course": "3170",
+      "name_zh": "明史",
+      "name_en": "The History of Ming China"
+    },
+    {
+      "raw_id": "11420WW  154100",
+      "department": "WW",
+      "course": "1541",
+      "name_zh": "材料科學導論",
+      "name_en": "Introduction to Materials Science"
+    },
+    {
+      "raw_id": "11320WW  113500",
+      "department": "WW",
+      "course": "1135",
+      "name_zh": "發展心理學",
+      "name_en": "Developmental Psychology"
+    },
+    {
+      "raw_id": "11510JAD 431400",
+      "department": "JAD",
+      "course": "4314",
+      "name_zh": "畢業展演實務一",
+      "name_en": "Graduate Exhibition Practice Ⅰ"
+    },
+    {
+      "raw_id": "11420KSS 311400",
+      "department": "KSS",
+      "course": "3114",
+      "name_zh": "武術二",
+      "name_en": "Wu-Shu (II)<font color=\"red\">停開</font>"
+    },
+    {
+      "raw_id": "11510JAD 370800",
+      "department": "JAD",
+      "course": "3708",
+      "name_zh": "金屬藝術與設計",
+      "name_en": "Metal Art and Design"
+    },
+    {
+      "raw_id": "11420ENE 631000",
+      "department": "ENE",
+      "course": "6310",
+      "name_zh": "半導體光偵測器與電路",
+      "name_en": "Semiconductor Photodetectors and Circuits"
+    },
+    {
+      "raw_id": "11510TEE 103700",
+      "department": "TEE",
+      "course": "1037",
+      "name_zh": "音樂",
+      "name_en": "General Music"
+    },
+    {
+      "raw_id": "11320WW  161500",
+      "department": "WW",
+      "course": "1615",
+      "name_zh": "財務管理",
+      "name_en": "Financial Management"
+    },
+    {
+      "raw_id": "11420FL  405500",
+      "department": "FL",
+      "course": "4055",
+      "name_zh": "中級西班牙語會話二",
+      "name_en": "Intermediate Spanish Conversation II"
+    },
+    {
+      "raw_id": "11510KEC 211100",
+      "department": "KEC",
+      "course": "2111",
+      "name_zh": "研究方法",
+      "name_en": "Research Methodology"
+    },
+    {
+      "raw_id": "11510FL  201301",
+      "department": "FL",
+      "course": "2013",
+      "name_zh": "初級西班牙語一",
+      "name_en": "Beginning Spanish I"
+    },
+    {
+      "raw_id": "11510PME 220101",
+      "department": "PME",
+      "course": "2201",
+      "name_zh": "電路學",
+      "name_en": "Electric Circuits"
+    },
+    {
+      "raw_id": "11420KSPE110400",
+      "department": "KSPE",
+      "course": "1104",
+      "name_zh": "情緒行為障礙",
+      "name_en": "Behavior and Emotional Disorders"
+    },
+    {
+      "raw_id": "11510JAD 260500",
+      "department": "JAD",
+      "course": "2605",
+      "name_zh": "版畫",
+      "name_en": "Modern Printmaking"
+    },
+    {
+      "raw_id": "11420CHE 240100",
+      "department": "CHE",
+      "course": "2401",
+      "name_zh": "資訊系統應用",
+      "name_en": "Computer Systems &amp; Applications"
+    },
+    {
+      "raw_id": "11420FL  300601",
+      "department": "FL",
+      "course": "3006",
+      "name_zh": "中級日語二",
+      "name_en": "Intermediate Japanese II"
+    },
+    {
+      "raw_id": "11510KSPE111000",
+      "department": "KSPE",
+      "course": "1110",
+      "name_zh": "視覺障礙",
+      "name_en": "Visual Impairment<font color=\"red\">停開</font>"
+    },
+    {
+      "raw_id": "11420LS  390205",
+      "department": "LS",
+      "course": "3902",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11320ECON327201",
+      "department": "ECON",
+      "course": "3272",
+      "name_zh": "中級會計二",
+      "name_en": "Intermediate Accounting II"
+    },
+    {
+      "raw_id": "11510PHYS401200",
+      "department": "PHYS",
+      "course": "4012",
+      "name_zh": "計算物理",
+      "name_en": "Computational Physics"
+    },
+    {
+      "raw_id": "11420PE  112001",
+      "department": "PE",
+      "course": "1120",
+      "name_zh": "重量訓練",
+      "name_en": "Weight Training"
+    },
+    {
+      "raw_id": "11510GE  168200",
+      "department": "GE",
+      "course": "1682",
+      "name_zh": "鑑識科學的奧妙",
+      "name_en": "Identify the Mysteries of Forensic Science"
+    },
+    {
+      "raw_id": "11510EE  203001",
+      "department": "EE",
+      "course": "2030",
+      "name_zh": "線性代數",
+      "name_en": "Linear Algebra"
+    },
+    {
+      "raw_id": "11510IEEM202101",
+      "department": "IEEM",
+      "course": "2021",
+      "name_zh": "離散數學",
+      "name_en": "Discrete Mathematics"
+    },
+    {
+      "raw_id": "11510CS  565600",
+      "department": "CS",
+      "course": "5656",
+      "name_zh": "深度學習",
+      "name_en": "Deep Learning"
+    },
+    {
+      "raw_id": "11420WW  545600",
+      "department": "WW",
+      "course": "5456",
+      "name_zh": "生醫工程",
+      "name_en": "Biomedical Engineering"
+    },
+    {
+      "raw_id": "11510BMES213300",
+      "department": "BMES",
+      "course": "2133",
+      "name_zh": "電子學一",
+      "name_en": "Electronics I"
+    },
+    {
+      "raw_id": "11510BMES511101",
+      "department": "BMES",
+      "course": "5111",
+      "name_zh": "書報討論(一)-分子生醫工程與材料",
+      "name_en": "Seminar(I)：Molecular Biomedical Engineering and Materials"
+    },
+    {
+      "raw_id": "11420MATH202001",
+      "department": "MATH",
+      "course": "2020",
+      "name_zh": "高等微積分二",
+      "name_en": "Advanced Calculus II"
+    },
+    {
+      "raw_id": "11510KSPE110300",
+      "department": "KSPE",
+      "course": "1103",
+      "name_zh": "智能障礙",
+      "name_en": "Intellectual Disability"
+    },
+    {
+      "raw_id": "11420CL  102001",
+      "department": "CL",
+      "course": "1020",
+      "name_zh": "大學中文",
+      "name_en": "College Chinese"
+    },
+    {
+      "raw_id": "11510EE  225000",
+      "department": "EE",
+      "course": "2250",
+      "name_zh": "電子學一",
+      "name_en": "Electronics I"
+    },
+    {
+      "raw_id": "11510PHYS101004",
+      "department": "PHYS",
+      "course": "1010",
+      "name_zh": "普通物理實驗一",
+      "name_en": "General Physics Laboratory (I)"
+    },
+    {
+      "raw_id": "11410MPMI544100",
+      "department": "MPMI",
+      "course": "5441",
+      "name_zh": "程式設計",
+      "name_en": "Programming"
+    },
+    {
+      "raw_id": "11510MATH141000",
+      "department": "MATH",
+      "course": "1410",
+      "name_zh": "線性代數一",
+      "name_en": "Linear Algebra I"
+    },
+    {
+      "raw_id": "11510TM  400300",
+      "department": "TM",
+      "course": "4003",
+      "name_zh": "行銷管理",
+      "name_en": "Marketing Management"
+    },
+    {
+      "raw_id": "11510FL  201501",
+      "department": "FL",
+      "course": "2015",
+      "name_zh": "初級法語一",
+      "name_en": "Beginning French I"
+    },
+    {
+      "raw_id": "11510LST 420600",
+      "department": "LST",
+      "course": "4206",
+      "name_zh": "商事法一",
+      "name_en": "Business Law (I)"
+    },
+    {
+      "raw_id": "11420FL  330100",
+      "department": "FL",
+      "course": "3301",
+      "name_zh": "音韻學",
+      "name_en": "Phonology"
+    },
+    {
+      "raw_id": "11510ECON591100",
+      "department": "ECON",
+      "course": "5911",
+      "name_zh": "書報討論一",
+      "name_en": "Seminar(I)"
+    },
+    {
+      "raw_id": "11420ANTH676700",
+      "department": "ANTH",
+      "course": "6767",
+      "name_zh": "考古學方法論",
+      "name_en": "Archaeological Methodology"
+    },
+    {
+      "raw_id": "11510LSBT590101",
+      "department": "LSBT",
+      "course": "5901",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11420CHEM242000",
+      "department": "CHEM",
+      "course": "2420",
+      "name_zh": "物理化學二",
+      "name_en": "Physical Chemistry (II)"
+    },
+    {
+      "raw_id": "11410PE  205012",
+      "department": "PE",
+      "course": "2050",
+      "name_zh": "跆拳道",
+      "name_en": "Tae kwon do"
+    },
+    {
+      "raw_id": "11420WH  101100",
+      "department": "WH",
+      "course": "1011",
+      "name_zh": "發展心理學",
+      "name_en": "Developmental Psychology"
+    },
+    {
+      "raw_id": "11420BMES325300",
+      "department": "BMES",
+      "course": "3253",
+      "name_zh": "光學",
+      "name_en": "Optics"
+    },
+    {
+      "raw_id": "11510PE  205018",
+      "department": "PE",
+      "course": "2050",
+      "name_zh": "重量訓練",
+      "name_en": "Weight Training"
+    },
+    {
+      "raw_id": "11510GEC 140201",
+      "department": "GEC",
+      "course": "1402",
+      "name_zh": "社會文化分析",
+      "name_en": "Social and cultural Analysis"
+    },
+    {
+      "raw_id": "11420IEEM307100",
+      "department": "IEEM",
+      "course": "3071",
+      "name_zh": "會計學",
+      "name_en": "Accounting"
+    },
+    {
+      "raw_id": "11510JAD 370900",
+      "department": "JAD",
+      "course": "3709",
+      "name_zh": "木屬藝術與設計",
+      "name_en": "Wood Art and Design"
+    },
+    {
+      "raw_id": "11510JMU 102900",
+      "department": "JMU",
+      "course": "1029",
+      "name_zh": "選修樂器一",
+      "name_en": "Elective: Instrument/ Voice /Composition I"
+    },
+    {
+      "raw_id": "11510EE  221001",
+      "department": "EE",
+      "course": "2210",
+      "name_zh": "電路學",
+      "name_en": "Electric Circuits"
+    },
+    {
+      "raw_id": "11420IBP 101002",
+      "department": "IBP",
+      "course": "1010",
+      "name_zh": "閱讀與寫作一",
+      "name_en": "Reading and Writing (I)"
+    },
+    {
+      "raw_id": "11510CL  121000",
+      "department": "CL",
+      "course": "1210",
+      "name_zh": "文學概論",
+      "name_en": "Introduction to Literature"
+    },
+    {
+      "raw_id": "11510ESS 203001",
+      "department": "ESS",
+      "course": "2030",
+      "name_zh": "工程數學一",
+      "name_en": "Engineering Mathematics I"
+    },
+    {
+      "raw_id": "11510JAD 327600",
+      "department": "JAD",
+      "course": "3276",
+      "name_zh": "古典油畫技法一",
+      "name_en": "Classical Oil Painting Techniques I"
+    },
+    {
+      "raw_id": "11510KPC 210400",
+      "department": "KPC",
+      "course": "2104",
+      "name_zh": "認知心理學",
+      "name_en": "Cognitive Psychology"
+    },
+    {
+      "raw_id": "11420QF  100300",
+      "department": "QF",
+      "course": "1003",
+      "name_zh": "計算機程式設計",
+      "name_en": "Introduction to Programming"
+    },
+    {
+      "raw_id": "11420BMES511201",
+      "department": "BMES",
+      "course": "5112",
+      "name_zh": "書報討論(一)-分子生醫工程與材料",
+      "name_en": "Seminar(I)：Molecular Biomedical Engineering and Materials"
+    },
+    {
+      "raw_id": "11420EMIM500900",
+      "department": "EMIM",
+      "course": "5009",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11420MBA 500100",
+      "department": "MBA",
+      "course": "5001",
+      "name_zh": "行銷管理",
+      "name_en": "Marketing Management"
+    },
+    {
+      "raw_id": "11510TIGP749100",
+      "department": "TIGP",
+      "course": "7491",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11510JMU 301600",
+      "department": "JMU",
+      "course": "3016",
+      "name_zh": "西洋音樂史三",
+      "name_en": "History of Western Music III"
+    },
+    {
+      "raw_id": "11420WW  585000",
+      "department": "WW",
+      "course": "5850",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11420LSBS590201",
+      "department": "LSBS",
+      "course": "5902",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11510KSS 281301",
+      "department": "KSS",
+      "course": "2813",
+      "name_zh": "網球一",
+      "name_en": "Tennis (I)"
+    },
+    {
+      "raw_id": "11510CHEM311000",
+      "department": "CHEM",
+      "course": "3110",
+      "name_zh": "分析化學一",
+      "name_en": "Analytical Chemistry (I)"
+    },
+    {
+      "raw_id": "11320MBA 501100",
+      "department": "MBA",
+      "course": "5011",
+      "name_zh": "策略",
+      "name_en": "Strategy"
+    },
+    {
+      "raw_id": "11420ISS 581100",
+      "department": "ISS",
+      "course": "5811",
+      "name_zh": "組織行為",
+      "name_en": "Organizational Behavior"
+    },
+    {
+      "raw_id": "11510KSS 301501",
+      "department": "KSS",
+      "course": "3015",
+      "name_zh": "排球一",
+      "name_en": "Volleyball (I)"
+    },
+    {
+      "raw_id": "11510KPC 262400",
+      "department": "KPC",
+      "course": "2624",
+      "name_zh": "行銷管理",
+      "name_en": "Marketing Management"
+    },
+    {
+      "raw_id": "11320WW  140700",
+      "department": "WW",
+      "course": "1407",
+      "name_zh": "線性代數",
+      "name_en": "Linear Algebra"
+    },
+    {
+      "raw_id": "11420LSSN590201",
+      "department": "LSSN",
+      "course": "5902",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11510JAD 429400",
+      "department": "JAD",
+      "course": "4294",
+      "name_zh": "現代水墨創作一",
+      "name_en": "Modern Chinese Ink Painting I"
+    },
+    {
+      "raw_id": "11420JMU 200600",
+      "department": "JMU",
+      "course": "2006",
+      "name_zh": "對位法二",
+      "name_en": "Counterpoint II"
+    },
+    {
+      "raw_id": "11510KIPE300700",
+      "department": "KIPE",
+      "course": "3007",
+      "name_zh": "教育心理學",
+      "name_en": "Educational Psychology"
+    },
+    {
+      "raw_id": "11510LING500700",
+      "department": "LING",
+      "course": "5007",
+      "name_zh": "生理語音學",
+      "name_en": "Articulatory Phonetics"
+    },
+    {
+      "raw_id": "11320PE  206117",
+      "department": "PE",
+      "course": "2061",
+      "name_zh": "高爾夫球",
+      "name_en": "Golf"
+    },
+    {
+      "raw_id": "11420WW  139300",
+      "department": "WW",
+      "course": "1393",
+      "name_zh": "電路學",
+      "name_en": "Electric Circuits"
+    },
+    {
+      "raw_id": "11510QF  320400",
+      "department": "QF",
+      "course": "3204",
+      "name_zh": "高等微積分二",
+      "name_en": "Advanced Calculus II"
+    },
+    {
+      "raw_id": "11510JAD 260200",
+      "department": "JAD",
+      "course": "2602",
+      "name_zh": "物件與創作一",
+      "name_en": "Objects and Creations I"
+    },
+    {
+      "raw_id": "11510MATH103001",
+      "department": "MATH",
+      "course": "1030",
+      "name_zh": "微積分Ｂ一",
+      "name_en": "Calculus I"
+    },
+    {
+      "raw_id": "11320EMM 600100",
+      "department": "EMM",
+      "course": "6001",
+      "name_zh": "行銷管理",
+      "name_en": "Marketing Management"
+    },
+    {
+      "raw_id": "11510IMBA516600",
+      "department": "IMBA",
+      "course": "5166",
+      "name_zh": "統計學",
+      "name_en": "Statistics"
+    },
+    {
+      "raw_id": "11420KPC 210200",
+      "department": "KPC",
+      "course": "2102",
+      "name_zh": "發展心理學",
+      "name_en": "Developmental Psychology"
+    },
+    {
+      "raw_id": "11510KPC 844000",
+      "department": "KPC",
+      "course": "8440",
+      "name_zh": "諮商督導理論",
+      "name_en": "Theory of supervision in counseling"
+    },
+    {
+      "raw_id": "11510KEL 330000",
+      "department": "KEL",
+      "course": "3300",
+      "name_zh": "行政法",
+      "name_en": "Administrative Law"
+    },
+    {
+      "raw_id": "11510EE  231001",
+      "department": "EE",
+      "course": "2310",
+      "name_zh": "計算機程式設計",
+      "name_en": "Introduction to Programming"
+    },
+    {
+      "raw_id": "11510ESS 501003",
+      "department": "ESS",
+      "course": "5010",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11320WW  158100",
+      "department": "WW",
+      "course": "1581",
+      "name_zh": "線性代數",
+      "name_en": "Linear Algebra"
+    },
+    {
+      "raw_id": "11420PHYS102001",
+      "department": "PHYS",
+      "course": "1020",
+      "name_zh": "普通物理實驗二",
+      "name_en": "General Physics Laboratory (II)"
+    },
+    {
+      "raw_id": "11510FL  300701",
+      "department": "FL",
+      "course": "3007",
+      "name_zh": "中級法語一",
+      "name_en": "Intermediate  French  I"
+    },
+    {
+      "raw_id": "11510IPHD700100",
+      "department": "IPHD",
+      "course": "7001",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11510JMU 200101",
+      "department": "JMU",
+      "course": "2001",
+      "name_zh": "音樂基礎訓練三",
+      "name_en": "Musicianship III"
+    },
+    {
+      "raw_id": "11510FL  560100",
+      "department": "FL",
+      "course": "5601",
+      "name_zh": "研究方法",
+      "name_en": "Research Methodology"
+    },
+    {
+      "raw_id": "11510PE  205007",
+      "department": "PE",
+      "course": "2050",
+      "name_zh": "排球",
+      "name_en": "Volleyball"
+    },
+    {
+      "raw_id": "11420EMBA501300",
+      "department": "EMBA",
+      "course": "5013",
+      "name_zh": "財務管理",
+      "name_en": "Financial Management"
+    },
+    {
+      "raw_id": "11510LS  390101",
+      "department": "LS",
+      "course": "3901",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11420LS  340200",
+      "department": "LS",
+      "course": "3402",
+      "name_zh": "分子與細胞生物學三",
+      "name_en": "Molecular and Cellular Biology III"
+    },
+    {
+      "raw_id": "11510IMBA501400",
+      "department": "IMBA",
+      "course": "5014",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11510CHE 412000",
+      "department": "CHE",
+      "course": "4120",
+      "name_zh": "材料科學",
+      "name_en": "Materials Science"
+    },
+    {
+      "raw_id": "11510GE  173201",
+      "department": "GE",
+      "course": "1732",
+      "name_zh": "鑑識科學與犯罪預防",
+      "name_en": "Forensic Science and Crime Prevention"
+    },
+    {
+      "raw_id": "11420KPC 142100",
+      "department": "KPC",
+      "course": "1421",
+      "name_zh": "團體動力學",
+      "name_en": "Group Dynamics"
+    },
+    {
+      "raw_id": "11510SNHC710000",
+      "department": "SNHC",
+      "course": "7100",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11420IPT 591100",
+      "department": "IPT",
+      "course": "5911",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11420KPC 363300",
+      "department": "KPC",
+      "course": "3633",
+      "name_zh": "工商產業實習一",
+      "name_en": "Business Internship(I)"
+    },
+    {
+      "raw_id": "11510KSS 110201",
+      "department": "KSS",
+      "course": "1102",
+      "name_zh": "羽球一",
+      "name_en": "Badminton (I)"
+    },
+    {
+      "raw_id": "11510JMU 301700",
+      "department": "JMU",
+      "course": "3017",
+      "name_zh": "鋼琴作品研究一",
+      "name_en": "Piano Literature I"
+    },
+    {
+      "raw_id": "11510PME 101500",
+      "department": "PME",
+      "course": "1015",
+      "name_zh": "工場實習一",
+      "name_en": "Work Shop Practices I"
+    },
+    {
+      "raw_id": "11420CL  111002",
+      "department": "CL",
+      "course": "1110",
+      "name_zh": "基礎寫作",
+      "name_en": "Basic Writing"
+    },
+    {
+      "raw_id": "11420GE  199600",
+      "department": "GE",
+      "course": "1996",
+      "name_zh": "音樂創作",
+      "name_en": "Write Some Notes for Music"
+    },
+    {
+      "raw_id": "11510KSS 301000",
+      "department": "KSS",
+      "course": "3010",
+      "name_zh": "棒球一",
+      "name_en": "Baseball (I)"
+    },
+    {
+      "raw_id": "11510GEC 111100",
+      "department": "GEC",
+      "course": "1111",
+      "name_zh": "思想經典：《易經》選讀",
+      "name_en": "Selected Readings of Changes"
+    },
+    {
+      "raw_id": "11510ECON327100",
+      "department": "ECON",
+      "course": "3271",
+      "name_zh": "中級會計一",
+      "name_en": "Intermediate Accounting I"
+    },
+    {
+      "raw_id": "11420PHIL501100",
+      "department": "PHIL",
+      "course": "5011",
+      "name_zh": "書報討論一",
+      "name_en": "Seminar(I)"
+    },
+    {
+      "raw_id": "11420CL  330000",
+      "department": "CL",
+      "course": "3300",
+      "name_zh": "史記",
+      "name_en": "Shi-Ji"
+    },
+    {
+      "raw_id": "11510BME 503600",
+      "department": "BME",
+      "course": "5036",
+      "name_zh": "奈米光學材料",
+      "name_en": "Optical Nanomaterials"
+    },
+    {
+      "raw_id": "11510EECS121000",
+      "department": "EECS",
+      "course": "1210",
+      "name_zh": "Python語言程式入門",
+      "name_en": "Introduction to Programming in Python"
+    },
+    {
+      "raw_id": "11510JAD 570100",
+      "department": "JAD",
+      "course": "5701",
+      "name_zh": "研究方法",
+      "name_en": "Research Methodology"
+    },
+    {
+      "raw_id": "11420MS  201200",
+      "department": "MS",
+      "course": "2012",
+      "name_zh": "工程數學二",
+      "name_en": "Engineering Mathematics II"
+    },
+    {
+      "raw_id": "11420LSMC790201",
+      "department": "LSMC",
+      "course": "7902",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11420TSE 503300",
+      "department": "TSE",
+      "course": "5033",
+      "name_zh": "總體經濟分析",
+      "name_en": "Macroeconomic Analysis"
+    },
+    {
+      "raw_id": "11410COM 524500",
+      "department": "COM",
+      "course": "5245",
+      "name_zh": "通訊及信號處理之凸優化方法",
+      "name_en": "Convex Optimization for Communications and Signal Processing"
+    },
+    {
+      "raw_id": "11510BMES327200",
+      "department": "BMES",
+      "course": "3272",
+      "name_zh": "生醫材料",
+      "name_en": "Biomedical Materials"
+    },
+    {
+      "raw_id": "11510IPNS400000",
+      "department": "IPNS",
+      "course": "4000",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11420EE  592001",
+      "department": "EE",
+      "course": "5920",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11420PMED790200",
+      "department": "PMED",
+      "course": "7902",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11510KPC 242000",
+      "department": "KPC",
+      "course": "2420",
+      "name_zh": "諮商與心理治療理論",
+      "name_en": "Theories of Counseling and Psychotherapy"
+    },
+    {
+      "raw_id": "11420KPC 110100",
+      "department": "KPC",
+      "course": "1101",
+      "name_zh": "普通心理學二",
+      "name_en": "Introduction to Psychology(II)"
+    },
+    {
+      "raw_id": "11510JMU 100800",
+      "department": "JMU",
+      "course": "1008",
+      "name_zh": "主修",
+      "name_en": "Instrument/Voice/Composition/ Conducting"
+    },
+    {
+      "raw_id": "11420IEEM205000",
+      "department": "IEEM",
+      "course": "2050",
+      "name_zh": "心理學",
+      "name_en": "General Psychology"
+    },
+    {
+      "raw_id": "11510JMU 204700",
+      "department": "JMU",
+      "course": "2047",
+      "name_zh": "主修三",
+      "name_en": "Major Music Instruction Ⅲ"
+    },
+    {
+      "raw_id": "11510FL  403900",
+      "department": "FL",
+      "course": "4039",
+      "name_zh": "高級法語一",
+      "name_en": "Advanced French I"
+    },
+    {
+      "raw_id": "11510CL  382900",
+      "department": "CL",
+      "course": "3829",
+      "name_zh": "華語教學實務",
+      "name_en": "Chinese Language Teaching Practicum"
+    },
+    {
+      "raw_id": "11510LSBS790101",
+      "department": "LSBS",
+      "course": "7901",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11320WW  154000",
+      "department": "WW",
+      "course": "1540",
+      "name_zh": "邏輯設計",
+      "name_en": "Logic Design"
+    },
+    {
+      "raw_id": "11510LSMM790100",
+      "department": "LSMM",
+      "course": "7901",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11410JMU 500200",
+      "department": "JMU",
+      "course": "5002",
+      "name_zh": "研究方法",
+      "name_en": "Research Methods"
+    },
+    {
+      "raw_id": "11510LSMC590101",
+      "department": "LSMC",
+      "course": "5901",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11420COM 502000",
+      "department": "COM",
+      "course": "5020",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11510MATH513000",
+      "department": "MATH",
+      "course": "5130",
+      "name_zh": "實變數函數論一",
+      "name_en": "Real Analysis I"
+    },
+    {
+      "raw_id": "11510CS  390100",
+      "department": "CS",
+      "course": "3901",
+      "name_zh": "系統整合實作一",
+      "name_en": "System Integration Implementation  I"
+    },
+    {
+      "raw_id": "11410EECS206000",
+      "department": "EECS",
+      "course": "2060",
+      "name_zh": "離散數學",
+      "name_en": "Discrete Mathematics"
+    },
+    {
+      "raw_id": "11420NES 599002",
+      "department": "NES",
+      "course": "5990",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11510PE  205123",
+      "department": "PE",
+      "course": "2051",
+      "name_zh": "足球",
+      "name_en": "Football"
+    },
+    {
+      "raw_id": "11420EE  380000",
+      "department": "EE",
+      "course": "3800",
+      "name_zh": "電能處理",
+      "name_en": "Power Processing"
+    },
+    {
+      "raw_id": "11510LSBS564300",
+      "department": "LSBS",
+      "course": "5643",
+      "name_zh": "生物巨分子晶體學",
+      "name_en": "Biomacromolecular Crystallography"
+    },
+    {
+      "raw_id": "11510BME 504000",
+      "department": "BME",
+      "course": "5040",
+      "name_zh": "金屬生物醫藥與生醫材料",
+      "name_en": "Metal-based biomedicine and biomaterials"
+    },
+    {
+      "raw_id": "11420ESS 304000",
+      "department": "ESS",
+      "course": "3040",
+      "name_zh": "機率與統計",
+      "name_en": "Probability and Statistics"
+    },
+    {
+      "raw_id": "11510JMU 302200",
+      "department": "JMU",
+      "course": "3022",
+      "name_zh": "選修樂器五",
+      "name_en": "Selected Instrument/Voice V"
+    },
+    {
+      "raw_id": "11420LSBS790201",
+      "department": "LSBS",
+      "course": "7902",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11510PME 321200",
+      "department": "PME",
+      "course": "3212",
+      "name_zh": "電磁學",
+      "name_en": "Electromagnetism"
+    },
+    {
+      "raw_id": "11510CHE 352000",
+      "department": "CHE",
+      "course": "3520",
+      "name_zh": "輸送現象及單元操作一",
+      "name_en": "Transport Phenomena and Unit Operations(I)"
+    },
+    {
+      "raw_id": "11510BMES215100",
+      "department": "BMES",
+      "course": "2151",
+      "name_zh": "有機化學一",
+      "name_en": "Organic Chemistry (I)"
+    },
+    {
+      "raw_id": "11510E   500100",
+      "department": "E",
+      "course": "5001",
+      "name_zh": "書報討論",
+      "name_en": "Seminar"
+    },
+    {
+      "raw_id": "11510TSE 500300",
+      "department": "TSE",
+      "course": "5003",
+      "name_zh": "經濟學導論",
+      "name_en": "Foundation of Economics"
+    },
+    {
+      "raw_id": "11420PE  206081",
+      "department": "PE",
+      "course": "2060",
+      "name_zh": "排球",
+      "name_en": "Volleyball"
+    },
+    {
+      "raw_id": "11410EMS 500100",
+      "department": "EMS",
+      "course": "5001",
+      "name_zh": "營銷管理",
+      "name_en": "Marketing Management"
+    },
+    {
+      "raw_id": "11510KEE 500300",
+      "department": "KEE",
+      "course": "5003",
+      "name_zh": "教育統計",
+      "name_en": "Educational Statistics"
+    },
+    {
+      "raw_id": "11320GEC 111400",
+      "department": "GEC",
+      "course": "1114",
+      "name_zh": "思想經典：《韓非子》選讀",
+      "name_en": "Selected Readings of Han Feizi"
+    },
+    {
+      "raw_id": "11420QF  214900",
+      "department": "QF",
+      "course": "2149",
+      "name_zh": "高等微積分一",
+      "name_en": "Advanced Calculus I"
+    },
+    {
+      "raw_id": "11420MS  207200",
+      "department": "MS",
+      "course": "2072",
+      "name_zh": "電子學",
+      "name_en": "Electronics"
+    },
+    {
+      "raw_id": "11420HSS 330200",
+      "department": "HSS",
+      "course": "3302",
+      "name_zh": "音韻學",
+      "name_en": "Phonology<font color=\"red\">停開</font>"
+    },
+    {
+      "raw_id": "11510THSM108000",
+      "department": "THSM",
+      "course": "1080",
+      "name_zh": "大體解剖學實驗一",
+      "name_en": "Gross Anatomy Laboratory (I)"
+    },
+    {
+      "raw_id": "11420JITA320400",
+      "department": "JITA",
+      "course": "3204",
+      "name_zh": "互動科技與藝術專題",
+      "name_en": "Projects in Interactive and Techart"
+    },
+    {
+      "raw_id": "11420FL  103600",
+      "department": "FL",
+      "course": "1036",
+      "name_zh": "文學作品讀法二",
+      "name_en": "Introduction to Literature II"
+    },
+    {
+      "raw_id": "11510JMU 100301",
+      "department": "JMU",
+      "course": "1003",
+      "name_zh": "基礎和聲學一",
+      "name_en": "Tonal HarmonyⅠ"
+    },
+    {
+      "raw_id": "11510JAD 120200",
+      "department": "JAD",
+      "course": "1202",
+      "name_zh": "媒材與應用一",
+      "name_en": "Media and Application I"
+    },
+    {
+      "raw_id": "11420EE  429700",
+      "department": "EE",
+      "course": "4297",
+      "name_zh": "醫療電子之臨床導入",
+      "name_en": "Clinical Application of Medical Electronic Device"
+    },
+    {
+      "raw_id": "11510JAD 328100",
+      "department": "JAD",
+      "course": "3281",
+      "name_zh": "膠彩畫一",
+      "name_en": "Gouache Ⅰ"
+    },
+    {
+      "raw_id": "11510KEL 340000",
+      "department": "KEL",
+      "course": "3400",
+      "name_zh": "課程發展與設計",
+      "name_en": "Theory and Practice of Curriculum Development &amp; Design"
+    },
+    {
+      "raw_id": "11510ECON100101",
+      "department": "ECON",
+      "course": "1001",
+      "name_zh": "經濟學原理一",
+      "name_en": "Principles of Economics (I)"
+    },
+    {
+      "raw_id": "11320TSED701200",
+      "department": "TSED",
+      "course": "7012",
+      "name_zh": "國際關係",
+      "name_en": "International Relations"
+    },
+    {
+      "raw_id": "11510TE  207400",
+      "department": "TE",
+      "course": "2074",
+      "name_zh": "課程發展與設計",
+      "name_en": "Theory and Practice of Curriculum Development &amp; Design"
+    },
+    {
+      "raw_id": "11510KEE 100300",
+      "department": "KEE",
+      "course": "1003",
+      "name_zh": "幼兒發展",
+      "name_en": "Child Development"
+    },
+    {
+      "raw_id": "11510FL  103500",
+      "department": "FL",
+      "course": "1035",
+      "name_zh": "文學作品讀法一",
+      "name_en": "Introduction to Literature I"
+    },
+    {
+      "raw_id": "11420EE  206000",
+      "department": "EE",
+      "course": "2060",
+      "name_zh": "離散數學",
+      "name_en": "Discrete Mathematics"
+    }
+  ]
+}

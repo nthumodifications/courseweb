@@ -286,7 +286,15 @@
         "unavailable": "AI 摘要服務暫時無法使用。",
         "workload": "負擔",
         "difficulty": "難度"
-      }
+      },
+      "prerequisite_all_of": "以下都要符合",
+      "prerequisite_any_of": "以下任一項即可",
+      "prerequisite_original": "查看原始文字",
+      "prerequisite_applies_to": "適用對象：",
+      "prerequisite_all_students": "全校學生",
+      "prerequisite_grade_above": "以上",
+      "prerequisite_and": "而且",
+      "prerequisite_not_taken_prefix": "未修過"
     }
   },
   "navigation": {

@@ -4,6 +4,8 @@ import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import DownloadSyllabus from "./DownloadSyllabus";
 import SyllabusSummary from "./SyllabusSummary";
+import PrerequisiteBlock from "./PrerequisiteBlock";
+import { parsePrerequisites } from "@courseweb/shared";
 import {
   Fade,
   Button,
@@ -34,7 +36,7 @@ import CourseTagList from "@/components/Courses/CourseTagsList";
 import { MinimalCourse } from "@/types/courses";
 import { getScoreType, getFormattedClassCode } from "@/helpers/courses";
 import { CourseDefinition } from "@/config/supabase";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useMemo } from "react";
 import { Language } from "@/types/settings";
 import { sanitizeCourseHtml } from "@/lib/sanitizeHtml";
 import ShareCourseButton from "./ShareCourseButton";
@@ -120,6 +122,19 @@ const CourseDetailContainer = ({
       return res.json();
     },
   });
+
+  // NTHU generates this text from a fixed grammar; show it as groups when it
+  // parses completely, otherwise exactly as before.
+  const parsedPrerequisite = useMemo(
+    () =>
+      course?.prerequisites?.trim()
+        ? parsePrerequisites(course.prerequisites)
+        : null,
+    [course?.prerequisites],
+  );
+  const hasStructuredPrerequisites =
+    parsedPrerequisite?.coverage === "full" &&
+    parsedPrerequisite.nodes.some((node) => node.type !== "unparsed");
 
   // Use React Query for reviews
   const {
@@ -443,12 +458,32 @@ const CourseDetailContainer = ({
                   <h3 className="font-bold" id="prerequesites">
                     {dict.course.details.prerequesites}
                   </h3>
-                  <div
-                    className="whitespace-pre-line text-sm"
-                    dangerouslySetInnerHTML={{
-                      __html: sanitizeCourseHtml(course.prerequisites),
-                    }}
-                  />
+                  {hasStructuredPrerequisites && parsedPrerequisite ? (
+                    <>
+                      <PrerequisiteBlock
+                        parsed={parsedPrerequisite}
+                        dict={dict}
+                      />
+                      <details>
+                        <summary className="cursor-pointer text-sm text-muted-foreground">
+                          {dict.course.details.prerequisite_original}
+                        </summary>
+                        <div
+                          className="mt-2 whitespace-pre-line text-sm"
+                          dangerouslySetInnerHTML={{
+                            __html: sanitizeCourseHtml(course.prerequisites),
+                          }}
+                        />
+                      </details>
+                    </>
+                  ) : (
+                    <div
+                      className="whitespace-pre-line text-sm"
+                      dangerouslySetInnerHTML={{
+                        __html: sanitizeCourseHtml(course.prerequisites),
+                      }}
+                    />
+                  )}
                 </div>
               )}
               {reviewsError ? (

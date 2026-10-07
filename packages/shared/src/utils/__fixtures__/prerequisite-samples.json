@@ -1,0 +1,341 @@
+{
+  "sourceSemesters": ["11510", "11420", "11410", "11320"],
+  "entries": [
+    {
+      "category": "courseName",
+      "text": "擋修對象 : 全校 \n  先修科目 : 曾修管理學上述條件一定要有，則不擋修。"
+    },
+    {
+      "category": "courseName",
+      "text": "擋修對象 : 全校 \n  先修科目 : 曾修電磁學上述條件一定要有，則不擋修。"
+    },
+    {
+      "category": "courseName",
+      "text": "擋修對象 : 全校 \n  先修科目 : 未修過策略上述條件一定要有，則不擋修。"
+    },
+    {
+      "category": "courseName",
+      "text": "擋修對象 : 全校 \n  先修科目 : 未修過海洋史上述條件一定要有，則不擋修。"
+    },
+    {
+      "category": "courseName",
+      "text": "擋修對象 : 全校 \n  先修科目 : 曾修分析化學一上述條件一定要有，則不擋修。"
+    },
+    {
+      "category": "courseName",
+      "text": "擋修對象 : 全校 \n  先修科目 : 曾修普通化學一上述條件一定要有，則不擋修。"
+    },
+    {
+      "category": "courseName",
+      "text": "擋修對象 : 全校 \n  先修科目 : 曾修普通化學二上述條件一定要有，則不擋修。"
+    },
+    {
+      "category": "courseName",
+      "text": "擋修對象 : 全校 \n  先修科目 : 曾修有機合成一上述條件一定要有，則不擋修。"
+    },
+    {
+      "category": "courseNumber",
+      "text": "【上學期原修代數一MATH241000(張介玉老師)同學選課優先,第3次選課起開放】"
+    },
+    {
+      "category": "courseNumber",
+      "text": "【上學期原修代數一MATH241000(魏福村老師)同學選課優先,第3次選課起開放】"
+    },
+    {
+      "category": "courseNumber",
+      "text": "【上學期原修幾何一MATH361000(何南國老師)同學選課優先,第3次選課起開放】"
+    },
+    {
+      "category": "courseNumber",
+      "text": "【上學期原修幾何一MATH361000(陳俊成老師)同學選課優先,第3次選課起開放】"
+    },
+    {
+      "category": "courseNumber",
+      "text": "【上學期原修插畫一JAD 226800(林士棻老師)同學選課優先,第3次選課起開放】"
+    },
+    {
+      "category": "courseNumber",
+      "text": "【上學期原修油畫一JAD 120300(吳宇棠老師)同學選課優先,第3次選課起開放】"
+    },
+    {
+      "category": "courseNumber",
+      "text": "【上學期原修素描一JAD 120100(紀宇芳老師)同學選課優先,第3次選課起開放】"
+    },
+    {
+      "category": "courseNumber",
+      "text": "【上學期原修會計學一ECON127101(沈瑜峰老師)同學選課優先,第3次選課起開放】"
+    },
+    {
+      "category": "anyOf",
+      "text": "擋修對象 : 全校 \n  先修科目 : 初級日語一-成績需C-以上上述條件任選一科，則不擋修。"
+    },
+    {
+      "category": "anyOf",
+      "text": "擋修對象 : 全校 \n  先修科目 : 曾修通訊系統二曾修通訊系統一上述條件任選一科，則不擋修。"
+    },
+    {
+      "category": "anyOf",
+      "text": "擋修對象 : 全校 \n  先修科目 : 文學作品讀法一-成績需C-以上上述條件任選一科，則不擋修。"
+    },
+    {
+      "category": "anyOf",
+      "text": "擋修對象 : 全校 \n  先修科目 : 曾修微分方程與複變函數曾修常微分方程上述條件任選一科，則不擋修。"
+    },
+    {
+      "category": "anyOf",
+      "text": "擋修對象 : 全校 \n  先修科目 : 曾修數位訊號處理曾修數位訊號處理概論上述條件任選一科，則不擋修。"
+    },
+    {
+      "category": "anyOf",
+      "text": "擋修對象 : 全校 \n  先修科目 : 代數-成績需D以上代數一-成績需D以上上述條件任選一科，則不擋修。"
+    },
+    {
+      "category": "anyOf",
+      "text": "擋修對象 : 全校 \n  先修科目 : 普通數學-成績需C-以上數學-成績需C-以上上述條件任選一科，則不擋修。"
+    },
+    {
+      "category": "anyOf",
+      "text": "擋修對象 : 全校 \n  先修科目 : 句法學一-成績需B-以上句法學-成績需B-以上上述條件任選一科，則不擋修。"
+    },
+    {
+      "category": "allOf",
+      "text": "擋修對象 : 全校 \n  先修科目 : 曾修管理學上述條件一定要有，則不擋修。"
+    },
+    {
+      "category": "allOf",
+      "text": "擋修對象 : 全校 \n  先修科目 : 曾修電磁學上述條件一定要有，則不擋修。"
+    },
+    {
+      "category": "allOf",
+      "text": "擋修對象 : 全校 \n  先修科目 : 未修過策略上述條件一定要有，則不擋修。"
+    },
+    {
+      "category": "allOf",
+      "text": "擋修對象 : 全校 \n  先修科目 : 未修過海洋史上述條件一定要有，則不擋修。"
+    },
+    {
+      "category": "allOf",
+      "text": "擋修對象 : 全校 \n  先修科目 : 曾修分析化學一上述條件一定要有，則不擋修。"
+    },
+    {
+      "category": "allOf",
+      "text": "擋修對象 : 全校 \n  先修科目 : 曾修普通化學一上述條件一定要有，則不擋修。"
+    },
+    {
+      "category": "allOf",
+      "text": "擋修對象 : 全校 \n  先修科目 : 曾修普通化學二上述條件一定要有，則不擋修。"
+    },
+    {
+      "category": "allOf",
+      "text": "擋修對象 : 全校 \n  先修科目 : 曾修有機合成一上述條件一定要有，則不擋修。"
+    },
+    {
+      "category": "grade",
+      "text": "擋修對象 : 全校 \n  先修科目 : 幾何一-成績需D以上上述條件一定要有，則不擋修。"
+    },
+    {
+      "category": "grade",
+      "text": "擋修對象 : 全校 \n  先修科目 : 主修一-成績需C-以上上述條件一定要有，則不擋修。"
+    },
+    {
+      "category": "grade",
+      "text": "擋修對象 : 全校 \n  先修科目 : 主修三-成績需C-以上上述條件一定要有，則不擋修。"
+    },
+    {
+      "category": "grade",
+      "text": "擋修對象 : 全校 \n  先修科目 : 主修二-成績需C-以上上述條件一定要有，則不擋修。"
+    },
+    {
+      "category": "grade",
+      "text": "擋修對象 : 全校 \n  先修科目 : 主修五-成績需C-以上上述條件一定要有，則不擋修。"
+    },
+    {
+      "category": "grade",
+      "text": "擋修對象 : 全校 \n  先修科目 : 主修六-成績需C-以上上述條件一定要有，則不擋修。"
+    },
+    {
+      "category": "grade",
+      "text": "擋修對象 : 全校 \n  先修科目 : 主修四-成績需C-以上上述條件一定要有，則不擋修。"
+    },
+    {
+      "category": "grade",
+      "text": "擋修對象 : 全校 \n  先修科目 : 壘球一-成績需C-以上上述條件一定要有，則不擋修。"
+    },
+    {
+      "category": "departmentYear",
+      "text": "限4年級"
+    },
+    {
+      "category": "departmentYear",
+      "text": "限中文系"
+    },
+    {
+      "category": "departmentYear",
+      "text": "限動機系"
+    },
+    {
+      "category": "departmentYear",
+      "text": "限化學系"
+    },
+    {
+      "category": "departmentYear",
+      "text": "限化工系"
+    },
+    {
+      "category": "departmentYear",
+      "text": "限博士班"
+    },
+    {
+      "category": "departmentYear",
+      "text": "限外語系"
+    },
+    {
+      "category": "departmentYear",
+      "text": "限大學部"
+    },
+    {
+      "category": "corequisite",
+      "text": "大三以上修讀，需修過或同時修習管理學與行銷管理"
+    },
+    {
+      "category": "corequisite",
+      "text": "上課時間詳見課程大綱。修大體解剖學實驗課程者，需同時選修本門課。"
+    },
+    {
+      "category": "corequisite",
+      "text": "數學教育組二年級生必修課。選修此課程者，不可同時選修專題討論一。"
+    },
+    {
+      "category": "corequisite",
+      "text": "科學教育組二年級生必修課。選修此課程者，不可同時選修專題討論一。"
+    },
+    {
+      "category": "corequisite",
+      "text": "數學教育組一年級生的必修課。選修此課程者，不可同時選修專題討論二。"
+    },
+    {
+      "category": "corequisite",
+      "text": "科學教育組一年級生的必修課。選修此課程者，不可同時選修專題討論二。"
+    },
+    {
+      "category": "corequisite",
+      "text": "1.數學教育組一年級生的必修課。2.選修此課程者，不可同時選修專題討論二。3.科學教育組勿選。"
+    },
+    {
+      "category": "corequisite",
+      "text": "1.數學教育組二年級生的必修課。2.選修此課程者，不可同時選修專題討論一。3.科學教育組勿選。"
+    },
+    {
+      "category": "consent",
+      "text": "加簽選課"
+    },
+    {
+      "category": "consent",
+      "text": "不可加簽。"
+    },
+    {
+      "category": "consent",
+      "text": "限人工加簽"
+    },
+    {
+      "category": "consent",
+      "text": "碩士班可加簽"
+    },
+    {
+      "category": "consent",
+      "text": "請以加簽選課"
+    },
+    {
+      "category": "consent",
+      "text": "限加簽選課。"
+    },
+    {
+      "category": "consent",
+      "text": "以加簽方式選課"
+    },
+    {
+      "category": "consent",
+      "text": "授課教師:盧緯"
+    },
+    {
+      "category": "html",
+      "text": "博班屬三組領域共同選修課程&lt;除境外生(不含陸生)外，均須選修&gt;"
+    },
+    {
+      "category": "html",
+      "text": "限擔任物理系教學助理者&lt;加簽選課&gt;,若為物理系學生可計入畢業學分"
+    },
+    {
+      "category": "html",
+      "text": "&lt;加簽選課&gt;請自行找指導教授進行專題(限本系專兼任/合聘教授),並於加簽申請時備註專題老師姓名。"
+    },
+    {
+      "category": "html",
+      "text": "英教系同學限修此科，不可修習其他英文二；非英教系同學修此科無法抵&lt;&lt;英文領域必修&gt;&gt;"
+    },
+    {
+      "category": "english",
+      "text": "X-Class"
+    },
+    {
+      "category": "english",
+      "text": "X-Class。"
+    },
+    {
+      "category": "english",
+      "text": "Elective."
+    },
+    {
+      "category": "english",
+      "text": "MED Core."
+    },
+    {
+      "category": "english",
+      "text": "X-Class課程"
+    },
+    {
+      "category": "english",
+      "text": "MAPE Core."
+    },
+    {
+      "category": "english",
+      "text": "MGPE Core."
+    },
+    {
+      "category": "english",
+      "text": "X-class課程。"
+    },
+    {
+      "category": "garbage",
+      "text": "博二"
+    },
+    {
+      "category": "garbage",
+      "text": "德韻"
+    },
+    {
+      "category": "garbage",
+      "text": "必修"
+    },
+    {
+      "category": "garbage",
+      "text": "法韻"
+    },
+    {
+      "category": "garbage",
+      "text": "義韻"
+    },
+    {
+      "category": "garbage",
+      "text": "英韻"
+    },
+    {
+      "category": "garbage",
+      "text": "(科)"
+    },
+    {
+      "category": "garbage",
+      "text": "(競)"
+    }
+  ]
+}

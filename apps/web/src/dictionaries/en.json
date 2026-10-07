@@ -286,7 +286,15 @@
         "unavailable": "The AI summary service is temporarily unavailable.",
         "workload": "Workload",
         "difficulty": "Difficulty"
-      }
+      },
+      "prerequisite_all_of": "all of",
+      "prerequisite_any_of": "any one of",
+      "prerequisite_original": "Show original text",
+      "prerequisite_applies_to": "Applies to: ",
+      "prerequisite_all_students": "all students",
+      "prerequisite_grade_above": "or above",
+      "prerequisite_and": "and",
+      "prerequisite_not_taken_prefix": "Not taken"
     }
   },
   "navigation": {
