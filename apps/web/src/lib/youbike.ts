@@ -81,27 +81,14 @@ async function fetchClientFallback(): Promise<YouBikeStation[]> {
     throw new Error(`Public YouBike API failed (${response.status})`);
   }
   const rawData = (await response.json()) as any[];
-  const campusStations: YouBikeStation[] = [];
+  if (!Array.isArray(rawData)) return [];
 
-  for (const item of rawData) {
-    const stationNo = String(item.station_no ?? "");
-    if (!stationNo.startsWith("5004")) continue;
-
-    const lat = Number(item.lat ?? 0);
-    const lng = Number(item.lng ?? 0);
-    const nameTw = String(item.name_tw ?? "");
-
-    const isMainCampus =
-      lat >= 24.783 && lat <= 24.805 && lng >= 120.982 && lng <= 121.012;
-    const isNandaCampus =
-      lat >= 24.78 && lat <= 24.797 && lng >= 120.955 && lng <= 120.982;
-    const isNthuNamed = nameTw.includes("清華") || nameTw.includes("清大");
-
-    if (isMainCampus || isNandaCampus || isNthuNamed) {
-      campusStations.push({
-        id: stationNo,
-        nameZh: nameTw,
-        nameEn: String(item.name_en ?? nameTw),
+  return rawData
+    .map(
+      (item): YouBikeStation => ({
+        id: String(item.station_no ?? ""),
+        nameZh: String(item.name_tw ?? ""),
+        nameEn: String(item.name_en ?? item.name_tw ?? ""),
         districtZh: String(item.district_tw ?? "東區"),
         districtEn: String(item.district_en ?? "East Dist"),
         addressZh: String(item.address_tw ?? ""),
@@ -111,15 +98,27 @@ async function fetchClientFallback(): Promise<YouBikeStation[]> {
         regularBikes: Number(item.available_spaces_detail?.yb2 ?? 0),
         eBikes: Number(item.available_spaces_detail?.eyb ?? 0),
         emptyDocks: Number(item.empty_spaces ?? 0),
-        lat,
-        lng,
+        lat: Number(item.lat ?? 0),
+        lng: Number(item.lng ?? 0),
         status: Number(item.status ?? 1),
         updatedAt: String(item.updated_at ?? ""),
-      });
-    }
-  }
-
-  return campusStations;
+      }),
+    )
+    .filter((st) => {
+      if (!st.id.startsWith("5004")) return false;
+      const isMain =
+        st.lat >= 24.783 &&
+        st.lat <= 24.805 &&
+        st.lng >= 120.982 &&
+        st.lng <= 121.012;
+      const isNanda =
+        st.lat >= 24.78 &&
+        st.lat <= 24.797 &&
+        st.lng >= 120.955 &&
+        st.lng <= 120.982;
+      const isNamed = st.nameZh.includes("清華") || st.nameZh.includes("清大");
+      return isMain || isNanda || isNamed;
+    });
 }
 
 export const getYouBikeStations = async (): Promise<YouBikeStation[]> => {

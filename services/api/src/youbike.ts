@@ -45,45 +45,49 @@ const app = new Hono().get("/", async (c) => {
       return c.json({ error: "Invalid YouBike payload" }, 502);
     }
 
-    const campusStations: YouBikeStationData[] = [];
+    const campusStations = rawData
+      .filter((raw) => {
+        const no = String(raw.station_no ?? "");
+        if (!no.startsWith("5004")) return false;
 
-    for (const item of rawData) {
-      const stationNo = String(item.station_no ?? "");
-      if (!stationNo.startsWith("5004")) continue;
+        const latitude = Number(raw.lat ?? 0);
+        const longitude = Number(raw.lng ?? 0);
+        const twName = String(raw.name_tw ?? "");
 
-      const lat = Number(item.lat ?? 0);
-      const lng = Number(item.lng ?? 0);
-      const nameTw = String(item.name_tw ?? "");
+        const inMain =
+          latitude >= 24.783 &&
+          latitude <= 24.805 &&
+          longitude >= 120.982 &&
+          longitude <= 121.012;
+        const inNanda =
+          latitude >= 24.78 &&
+          latitude <= 24.797 &&
+          longitude >= 120.955 &&
+          longitude <= 120.982;
+        const matchName = twName.includes("清華") || twName.includes("清大");
 
-      // Main campus box: 24.783..24.805, 120.982..121.012
-      const isMainCampus =
-        lat >= 24.783 && lat <= 24.805 && lng >= 120.982 && lng <= 121.012;
-      // Nanda campus & interconnecting shuttle box: 24.780..24.797, 120.955..120.982
-      const isNandaCampus =
-        lat >= 24.78 && lat <= 24.797 && lng >= 120.955 && lng <= 120.982;
-      const isNthuNamed = nameTw.includes("清華") || nameTw.includes("清大");
-
-      if (isMainCampus || isNandaCampus || isNthuNamed) {
-        campusStations.push({
-          id: stationNo,
-          nameZh: nameTw,
-          nameEn: String(item.name_en ?? nameTw),
-          districtZh: String(item.district_tw ?? "東區"),
-          districtEn: String(item.district_en ?? "East Dist"),
-          addressZh: String(item.address_tw ?? ""),
-          addressEn: String(item.address_en ?? ""),
-          totalCapacity: Number(item.parking_spaces ?? 0),
-          availableBikes: Number(item.available_spaces ?? 0),
-          regularBikes: Number(item.available_spaces_detail?.yb2 ?? 0),
-          eBikes: Number(item.available_spaces_detail?.eyb ?? 0),
-          emptyDocks: Number(item.empty_spaces ?? 0),
-          lat,
-          lng,
-          status: Number(item.status ?? 1),
-          updatedAt: String(item.updated_at ?? ""),
-        });
-      }
-    }
+        return inMain || inNanda || matchName;
+      })
+      .map(
+        (raw): YouBikeStationData => ({
+          id: String(raw.station_no ?? ""),
+          nameZh: String(raw.name_tw ?? ""),
+          nameEn: String(raw.name_en ?? raw.name_tw ?? ""),
+          districtZh: String(raw.district_tw ?? "東區"),
+          districtEn: String(raw.district_en ?? "East Dist"),
+          addressZh: String(raw.address_tw ?? ""),
+          addressEn: String(raw.address_en ?? ""),
+          totalCapacity: Number(raw.parking_spaces ?? 0),
+          availableBikes: Number(raw.available_spaces ?? 0),
+          regularBikes: Number(raw.available_spaces_detail?.yb2 ?? 0),
+          eBikes: Number(raw.available_spaces_detail?.eyb ?? 0),
+          emptyDocks: Number(raw.empty_spaces ?? 0),
+          lat: Number(raw.lat ?? 0),
+          lng: Number(raw.lng ?? 0),
+          status: Number(raw.status ?? 1),
+          updatedAt: String(raw.updated_at ?? ""),
+        }),
+      );
 
     return c.json(campusStations, {
       headers: {
