@@ -73,7 +73,8 @@ const BottomNav: FC = () => {
         style={{ gridTemplateColumns: `repeat(${colCount}, 1fr)` }}
       >
         {visibleLinks.map((link) => (
-          <div
+          <button
+            type="button"
             className={`flex flex-col items-center gap-1 ${link.href === pathname ? "text-primary" : "text-muted-foreground"}`}
             key={link.id}
             onClick={() => navigate(link.href)}
@@ -82,7 +83,7 @@ const BottomNav: FC = () => {
             <span className="text-xs font-medium select-none">
               {link.title}
             </span>
-          </div>
+          </button>
         ))}
       </nav>
       <Separator />

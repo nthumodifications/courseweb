@@ -53,31 +53,33 @@ const TimeslotSelector: FC<{
     <div className="grid grid-cols-[repeat(7,24px)] grid-rows-[repeat(14,24px)] gap-1 text-sm">
       <div className="w-4 h-4"></div>
       {days.map((day) => (
-        <div
+        <button
+          type="button"
           key={day}
           className="rounded-md hover:bg-accent cursor-pointer"
           onClick={handleSelectColumn(day)}
         >
           {day}
-        </div>
+        </button>
       ))}
       {scheduleTimeSlots.map((timeSlot) => [
-        <div
+        <button
+          type="button"
           key={timeSlot.time}
           className="rounded-md hover:bg-accent cursor-pointer"
           onClick={handleSelectRow(timeSlot.time)}
         >
           {timeSlot.time}
-        </div>,
-        ...days
-          .map((day) => (
-            <div
-              key={day + timeSlot.time}
-              className={`${!isSelected(day + timeSlot.time) ? "bg-muted hover:bg-accent" : "bg-primary hover:bg-primary/80"} transition-colors cursor-pointer`}
-              onClick={handleChange(day + timeSlot.time)}
-            ></div>
-          ))
-          .flat(),
+        </button>,
+        ...days.flatMap((day) => (
+          <button
+            type="button"
+            key={day + timeSlot.time}
+            className={`${!isSelected(day + timeSlot.time) ? "bg-muted hover:bg-accent" : "bg-primary hover:bg-primary/80"} transition-colors cursor-pointer`}
+            onClick={handleChange(day + timeSlot.time)}
+            aria-pressed={isSelected(day + timeSlot.time)}
+          ></button>
+        )),
       ])}
     </div>
   );

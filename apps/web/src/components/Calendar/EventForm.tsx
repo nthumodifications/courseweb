@@ -1,5 +1,25 @@
 import { addMinutes } from "date-fns";
-import { cn } from "@courseweb/ui";
+import {
+  cn,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  Calendar as ShadcnCalendar,
+  Input,
+  Switch,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Button,
+  Textarea,
+  getNearestTime,
+  ScrollArea,
+  RadioGroup,
+  RadioGroupItem,
+  Label,
+} from "@courseweb/ui";
 import {
   useCallback,
   useEffect,
@@ -9,9 +29,7 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
 import { z } from "zod";
-import { UseFormReturn, useForm, useWatch } from "react-hook-form";
-import { Popover, PopoverContent, PopoverTrigger } from "@courseweb/ui";
-import { Calendar as ShadcnCalendar } from "@courseweb/ui";
+import { useForm, useWatch } from "react-hook-form";
 import {
   Form,
   FormControl,
@@ -20,26 +38,11 @@ import {
   FormLabel,
   FormMessage,
 } from "../ui/form";
-import { Input } from "@courseweb/ui";
-import { Switch } from "@courseweb/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@courseweb/ui";
-import { Button } from "@courseweb/ui";
-import { Textarea } from "@courseweb/ui";
 import { CalendarEvent } from "./calendar.types";
 import { eventFormSchema } from "./eventFormSchema";
 import { EventLabelPicker } from "./EventLabelPicker";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
-import { getNearestTime } from "@courseweb/ui";
 import { PopoverPortal } from "@radix-ui/react-popover";
-import { ScrollArea } from "@courseweb/ui";
-import { RadioGroup, RadioGroupItem } from "@courseweb/ui";
-import { Label } from "@courseweb/ui";
 import { useCalendar } from "./calendar_hook";
 import { CalendarIcon, ChevronDown } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
@@ -464,7 +467,7 @@ export const EventForm = ({
                     const [hours, minutes] = e.target.value
                       .split(":")
                       .map(Number);
-                    if (isNaN(hours) || isNaN(minutes)) return;
+                    if (Number.isNaN(hours) || Number.isNaN(minutes)) return;
 
                     // Create new date with updated time
                     const newTime = setTaipeiWallClock(field.value, {
@@ -561,7 +564,7 @@ export const EventForm = ({
                     const [hours, minutes] = e.target.value
                       .split(":")
                       .map(Number);
-                    if (isNaN(hours) || isNaN(minutes)) return;
+                    if (Number.isNaN(hours) || Number.isNaN(minutes)) return;
 
                     // Create new date with updated time
                     const newTime = setTaipeiWallClock(field.value, {
@@ -727,8 +730,10 @@ export const EventForm = ({
                   placeholder={dict.calendar.form.interval}
                   {...field}
                   onChange={(e) => {
-                    const value = parseInt(e.target.value);
-                    field.onChange(isNaN(value) || value < 1 ? 1 : value);
+                    const value = Number.parseInt(e.target.value);
+                    field.onChange(
+                      Number.isNaN(value) || value < 1 ? 1 : value,
+                    );
                   }}
                 />
               </FormControl>
@@ -784,9 +789,13 @@ export const EventForm = ({
                                   disabled={repeatMode !== "count"}
                                   {...valueField}
                                   onChange={(e) => {
-                                    const value = parseInt(e.target.value);
+                                    const value = Number.parseInt(
+                                      e.target.value,
+                                    );
                                     valueField.onChange(
-                                      isNaN(value) || value < 1 ? 1 : value,
+                                      Number.isNaN(value) || value < 1
+                                        ? 1
+                                        : value,
                                     );
                                   }}
                                 />

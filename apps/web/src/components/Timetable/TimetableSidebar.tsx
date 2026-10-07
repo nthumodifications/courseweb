@@ -13,12 +13,21 @@ import {
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { useNavigate, useParams } from "react-router-dom";
 import useDictionary from "@/dictionaries/useDictionary";
-import { Button } from "@courseweb/ui";
 import {
+  Button,
   Dialog,
   DialogContent,
   DialogTitle,
   DialogTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
 } from "@courseweb/ui";
 import {
   DownloadTimetableDialogDynamic,
@@ -26,20 +35,11 @@ import {
   CourseSearchContainerDynamic,
   TimetableCourseList,
 } from "./TimetableCourseList";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@courseweb/ui";
 import OpenCollectiveSponsorBanner from "../Sponsorship/OpenCollectiveSponsorBanner";
 import { useAuth } from "react-oidc-context";
 import { useQuery } from "@tanstack/react-query";
 import { useTimetableShare } from "@/hooks/useTimetableShare";
 import { toPrettySemester } from "@/helpers/semester";
-import { Popover, PopoverContent, PopoverTrigger } from "@courseweb/ui";
 import Compact from "@uiw/react-color-compact";
 import { useMemo } from "react";
 import { TimetableCustomItemDrawer } from "./TimetableItemDrawer";
@@ -61,7 +61,6 @@ const TimetableSidebar = ({
 }: {
   vertical: boolean;
   setVertical: (v: boolean) => void;
-  hideSettings?: boolean;
 }) => {
   const dict = useDictionary();
 

@@ -56,9 +56,9 @@ const TimetableTimeline: FC<TimetableTimelineProps> = ({
   );
 
   // Determine which days have courses
-  const daysPresent = [
-    ...new Set(timetableData.map((s) => s.dayOfWeek)),
-  ].sort();
+  const daysPresent = [...new Set(timetableData.map((s) => s.dayOfWeek))].sort(
+    (a, b) => a - b,
+  );
   const days = daysPresent.length > 0 ? daysPresent : [0, 1, 2, 3, 4];
   const layoutData = addTimetableFractions(timetableData);
 
@@ -134,7 +134,7 @@ const TimetableTimeline: FC<TimetableTimelineProps> = ({
               ))}
 
               {/* Course blocks */}
-              {daySlots.map((slot, i) => {
+              {daySlots.map((slot, slotIndex) => {
                 const range = getTimetableDataTimeRange(slot);
                 const top = minutesToTop(range.start, startHour);
                 const bottom = minutesToTop(range.end, startHour);
@@ -147,7 +147,7 @@ const TimetableTimeline: FC<TimetableTimelineProps> = ({
 
                 return (
                   <div
-                    key={i}
+                    key={`${slot.course.raw_id}-${range.start}-${range.end}-${slotIndex}`}
                     className={cn(
                       "absolute rounded overflow-hidden flex flex-col px-1.5 py-0.5",
                       slot.customItem && "border border-dashed",

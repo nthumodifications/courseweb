@@ -1,17 +1,20 @@
 import { FormField, FormItem, FormLabel } from "../ui/form";
 import { useState } from "react";
-import { Button, buttonVariants } from "@courseweb/ui";
-import { Check, ChevronsUpDown, X } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@courseweb/ui";
 import {
+  Button,
+  buttonVariants,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
   Command,
   CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
   CommandList,
+  cn,
 } from "@courseweb/ui";
-import { cn } from "@courseweb/ui";
+import { Check, ChevronsUpDown, X } from "lucide-react";
 import useDictionary from "@/dictionaries/useDictionary";
 
 export const AutocompleteShadcn = ({

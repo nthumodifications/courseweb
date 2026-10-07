@@ -14,7 +14,7 @@ interface SyllabusSummary {
 
 type SummaryErrorCode = "rate_limited" | "unavailable" | "unknown";
 
-function DifficultyDots({ rating }: { rating: number }) {
+function DifficultyDots({ rating }: { readonly rating: number }) {
   return (
     <div className="flex items-center gap-1">
       {Array.from({ length: 5 }, (_, i) => (
@@ -33,7 +33,7 @@ function DifficultyDots({ rating }: { rating: number }) {
 export default function SyllabusSummary({
   courseId,
 }: {
-  courseId: RawCourseID;
+  readonly courseId: RawCourseID;
 }) {
   const dict = useDictionary();
   const [summary, setSummary] = useState<SyllabusSummary | null>(null);

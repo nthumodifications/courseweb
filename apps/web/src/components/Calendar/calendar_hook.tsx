@@ -32,7 +32,7 @@ import {
   migrateEventToV2,
   TimetableSyncDocType,
 } from "@/config/rxdb";
-import { Badge, toast } from "@courseweb/ui";
+import { Badge } from "@courseweb/ui";
 import { replicateRxCollection } from "rxdb/plugins/replication";
 import { useAuth } from "react-oidc-context";
 import authClient from "@/config/auth";
@@ -490,7 +490,7 @@ export const useCalendarProvider = () => {
             }),
           });
           break;
-        case UpdateType.FOLLOWING:
+        case UpdateType.FOLLOWING: {
           // Keep only the occurrences before the selected one. Count rules
           // must remain counts; their value is not a timestamp.
           const { displayStart, ...originalEvent } = event;
@@ -510,6 +510,7 @@ export const useCalendarProvider = () => {
             },
           });
           break;
+        }
         case UpdateType.ALL:
           //remove all events
           //@ts-ignore
@@ -546,7 +547,7 @@ export const useCalendarProvider = () => {
       return;
     } else if (oldEvent.repeat && newEvent.repeat) {
       switch (type) {
-        case UpdateType.THIS:
+        case UpdateType.THIS: {
           //add this event to the list of excluded dates
           await eventsCol!.findOne(newEvent.id).update({
             $set: {
@@ -571,7 +572,8 @@ export const useCalendarProvider = () => {
             actualEnd: getActualEndDate(newEvent1),
           });
           break;
-        case UpdateType.FOLLOWING:
+        }
+        case UpdateType.FOLLOWING: {
           //set the repeat end date to the new event start date
           const newEvent2 = {
             ...oldEvent,
@@ -621,6 +623,7 @@ export const useCalendarProvider = () => {
             actualEnd: getActualEndDate(newEvent3),
           });
           break;
+        }
         case UpdateType.ALL:
           //just update the event
           {
