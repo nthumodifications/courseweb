@@ -1,5 +1,3 @@
-import client from "@/config/api";
-
 export interface YouBikeStation {
   id: string;
   nameZh: string;
