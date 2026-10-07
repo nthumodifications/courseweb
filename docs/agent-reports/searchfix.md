@@ -1,60 +1,62 @@
-# Local search robustness review fixes
+# Search robustness round 3 report
 
-## What I found
+## Scope and evidence
 
-- The review artifact at `C:/Users/chewt/AppData/Local/Temp/claude/C--Users-chewt-Repositories-courseweb/50ae76fc-608b-4983-ae4f-b83c61ab2ed5/scratchpad/w2/out-review-searchfix.md` identified seven findings: cache-write loss, successful manifests missing a semester, stale chunks pinned for the page lifetime, header-only deadlines, missing chunk integrity validation, leaked failed workers, and error-state result counts.
-- `apps/web/src/lib/local-search/cache.ts:26-34` previously exposed cache writes as `Promise<void>`, while `apps/web/src/lib/local-search/cache.ts:79-85,134-140` swallowed IndexedDB write failures. That allowed cleanup to run after an unsuccessful replacement.
-- `origin/main:services/api/src/search-chunk.ts:143-147,272-290,378-389` shows that the API exposes the chunk validity token through `ETag`; the chunk token is derived from semester, row count, and maximum update time, not from serialized chunk bytes.
-- The dictionaries already contain `common.loading` in both `apps/web/src/dictionaries/en.json` and `apps/web/src/dictionaries/zh.json`, so no dictionary change was needed.
+This work is on `fix/local-search-robustness`, based on task-start commit `7bcee1bc`. I read `CONTRIBUTING.md`, `README.md`, and the second-review artifact at `C:/Users/chewt/AppData/Local/Temp/claude/C--Users-chewt-Repositories-courseweb/50ae76fc-608b-4983-ae4f-b83c61ab2ed5/scratchpad/w2/out-review-searchfix2.md` before editing.
+
+The review found that cache writes could fail after a fresh chunk was downloaded, while cleanup still removed the old entry (`apps/web/src/lib/local-search/cache.ts:23-35,79-145`); stale chunks were being revalidated and swapped in the background; ETag comparison added a rejection path that main did not have; body deadlines were total-body deadlines; rejected chunk loads were permanently memoized; and failed worker builds did not always dispose the worker (`apps/web/src/lib/local-search/engine.ts:144-146,579-666,819-823`). The existing production contract is visible at `https://api.nthumods.com/search/chunk/manifest` and `https://api.nthumods.com/search/chunk/11510`.
 
 ## Design decisions
 
-- Cache replacement is write-confirmed: `set` and `setText` return `true` or `false`; `deleteSemester`/`deleteTextSemester` run only after `true`. A failed replacement falls back to the previous cached semester entry.
-- A successfully fetched manifest without the requested semester throws `MissingLocalSearchChunkError` (`apps/web/src/lib/local-search/engine.ts:92-97,744`) and the adapter returns `handled: false` (`apps/web/src/lib/local-search/client.ts:64-84`). Failed or timed-out manifest/chunk loads may use the previous cache entry.
-- Stale chunks schedule one background revalidation per semester (`apps/web/src/lib/local-search/engine.ts:161-162,621-697`): 30 seconds initially, doubling after failures, capped at 10 minutes. Scheduled timers are cancelled while the document is hidden and resumed on `visibilitychange`; successful data is indexed and swapped into the existing chunk object.
-- `fetchJsonWithDeadline` (`apps/web/src/lib/local-search/deadline.ts:8-35`) keeps one controller and deadline through both `fetch` and `response.json()`. The total budgets are manifest 8 seconds, course chunk 30 seconds, text chunk 30 seconds (`engine.ts:158-160`), and API fallback 10 seconds (`search-client.ts:65,258-266`).
-- Fresh course chunks compare a normalized weak/quoted ETag with the manifest `contentHash` when the ETag is exposed (`engine.ts:783-788`) and still enforce the API row count. The API does not provide a cryptographic hash of serialized chunk bytes, so the report does not claim byte-level hashing.
-- Worker index builds dispose their worker on failure (`engine.ts:810-818`). Result counts retain the main markup and original count format except that loading text is shown only for `loading`/`stalled` with zero hits (`SearchContainer.tsx:268-271`; `PlannerSearchContainer.tsx:152-155`). Algolia flags, tier ordering, failover branches, and markup remain unchanged.
+- `set` and `setText` now report whether persistence succeeded (`apps/web/src/lib/local-search/cache.ts:23-35,79-145`). Cleanup runs only after a confirmed write (`apps/web/src/lib/local-search/engine.ts:648-663,781-797`). A failed write is non-fatal: the new records remain in the in-memory index, while the previous IndexedDB entry is left untouched.
+- Manifest failure and chunk failure use the previous cached semester when one exists. A successful manifest that does not contain the requested semester throws `MissingLocalSearchChunkError`; the adapter returns `handled: false`, allowing the existing remote tiers to answer. A failed local load is retryable later in the same session; concurrent loads still share one promise.
+- Background revalidation, backoff, visibility listeners, and index swapping were removed. A stale chunk can remain served for the rest of that page session; the next page load asks the manifest again. This is an intentional known limit.
+- Chunk and text downloads use streaming idle timeouts (`apps/web/src/lib/local-search/deadline.ts:89-151`): 15 seconds to connect/receive the first byte, 20 seconds between non-empty body chunks, and a 180-second absolute cap (`apps/web/src/lib/local-search/engine.ts:144-150,617-625,747-755`). The manifest has a 10-second total deadline (`engine.ts:144,565-572`) and the API fallback has a 15-second total deadline (`apps/web/src/lib/search-client.ts:65,257-263`). Caller-provided abort signals are combined with the internal timeout signal. Non-streaming bodies use the absolute cap.
+- Chunk validation remains the main behavior: successful downloads are checked for HTTP success and manifest row count. ETag/hash verification was removed. The text ETag may still be used as a cache key when no manifest text hash exists, but it is not treated as integrity proof.
+- Worker build failures dispose the failed index (`apps/web/src/lib/local-search/engine.ts:670-685`). Existing Algolia flags, tier order, and markup remain unchanged. Result counts keep their original format and show `common.loading` only while InstantSearch is `loading`/`stalled` with zero results (`apps/web/src/app/[lang]/(mods-pages)/courses/SearchContainer.tsx:268-271`; `apps/web/src/app/[lang]/(mods-pages)/student/planner/course-picker/PlannerSearchContainer.tsx:152-155`).
 
-## What changed
+## Changes
 
-- `apps/web/src/lib/local-search/cache.ts`: write success reporting for course/text caches.
-- `apps/web/src/lib/local-search/deadline.ts`: shared total-body JSON deadline helper.
-- `apps/web/src/lib/local-search/client.ts`: handled-false mapping for a valid manifest that omits a semester.
-- `apps/web/src/lib/local-search/engine.ts`: atomic replacement sequencing, manifest distinction, ETag validation, stale revalidation/backoff/visibility handling, total-body deadlines, text write confirmation, and worker disposal.
-- `apps/web/src/lib/search-client.ts`: uses the shared deadline helper for the API fallback.
-- `apps/web/src/app/[lang]/(mods-pages)/courses/SearchContainer.tsx` and `apps/web/src/app/[lang]/(mods-pages)/student/planner/course-picker/PlannerSearchContainer.tsx`: removed the error-to-null count branch while preserving existing markup and styling.
-- `apps/web/src/lib/local-search/local-search.test.ts`: added regression coverage for failed course/text writes, missing semesters, stale recovery/backoff, ETag mismatch, body-stalling deadlines, and failed-worker disposal followed by successful local retry.
-- No new UI strings, dictionary changes, dependency changes, production writes, commits, or pushes.
+- `apps/web/src/lib/local-search/cache.ts`: report persistence success for IndexedDB and memory cache writes.
+- `apps/web/src/lib/local-search/deadline.ts`: add total and streaming JSON deadline helpers with timer cleanup and caller-signal propagation.
+- `apps/web/src/lib/local-search/engine.ts`: simplify load lifecycle, implement safe replacement/fallback, use the timeout budgets, remove revalidation machinery and ETag rejection, retry failed loads, and dispose failed workers.
+- `apps/web/src/lib/local-search/client.ts`: map a missing manifest semester to `handled: false`.
+- `apps/web/src/lib/search-client.ts`: set API fallback timeout to 15 seconds.
+- `apps/web/src/lib/local-search/local-search.test.ts`: cover failed persistence, missing semesters, retry/deduplication, worker disposal, streaming progress/idle/caller abort, and the specified timeout budgets; remove tests for deleted revalidation and integrity machinery.
+- `apps/web/src/lib/local-search/integration.test.ts`: update the real search-chunk integration expectation for retryable failed loads.
+- Existing course/planner result-count changes remain limited to the loading-count behavior; no dictionary, dependency, or visual-style change was added.
+- No production write, commit, push, install, or branch switch was performed.
 
 ## Commands and results
 
-Baseline before edits:
+Baseline before this round:
 
-- `bun run --cwd apps/web type-check` — failed with the same two pre-existing diagnostics: `src/features/dining/useDining.ts:20` (`dining` missing from generated API types) and `worker.ts:842` (`CacheStorage.default` does not exist).
-- `bun --no-env-file test src` from `apps/web` — `253 pass, 2 skip, 0 fail`; `1,065 expect()` calls across 255 tests.
+- `bun run --cwd apps/web type-check`: failed with the two pre-existing diagnostics `apps/web/src/features/dining/useDining.ts:20` (`dining` missing from generated API types) and `apps/web/worker.ts:842` (`CacheStorage.default` does not exist).
+- `bun --no-env-file test src` from `apps/web`: `260 pass, 2 skip, 0 fail`, `1,091 expect()` calls across `262 tests`.
+- The prior WIP code diff against `7bcee1bc` was `852 insertions, 76 deletions` across 8 code/test files.
 
-Focused and final checks:
+Final validation:
 
-- `bun --no-env-file test src/lib/local-search/local-search.test.ts` — `33 pass, 0 fail`.
-- `bun --no-env-file test src/lib/local-search/integration.test.ts` — `8 pass, 0 fail` against the in-process real search-chunk API.
-- Required `bun --no-env-file test src`, run three separate times — each run: `260 pass, 2 skip, 0 fail`; `1,091 expect()` calls across 262 tests.
-- `bun run --cwd apps/web type-check` — still only the two baseline diagnostics above; no changed-file diagnostic appeared.
-- `bun run --cwd apps/web build` — passed twice; final run transformed 7,262 modules and completed the Vite/PWA build. Existing Browserslist, Tailwind, PDF eval, and large-chunk warnings remain.
-- `bunx prettier --check` on every edited web file — passed after formatting only task-owned files.
-- Scoped `bunx eslint` on every edited web file — blocked before linting because the junctioned dependency checkout lacks `@typescript-eslint/recommended` from `packages/eslint-config/index.js`.
-- `git diff --check` — passed. The tracked diff is limited to the two containers, local-search files/tests, `search-client.ts`, and this report; the new deadline helper is also under `local-search`.
+- `bun --no-env-file test src/lib/local-search/local-search.test.ts`: `31 pass, 0 fail`, `139 expect()` calls.
+- `bun --no-env-file test src/lib/local-search/integration.test.ts`: `8 pass, 0 fail`, `67 expect()` calls. The printed upstream failures are intentional synthetic fixtures in that test.
+- Required `bun --no-env-file test src`, run three times after the final formatting pass: each run was `258 pass, 2 skip, 0 fail`, `1,074 expect()` calls across `260 tests`.
+- `bun run --cwd apps/web type-check`: still only the same two baseline diagnostics; no changed-file diagnostic appeared.
+- `bun run --cwd apps/web build`: passed; Vite transformed `7,262 modules`, completed in about 41 seconds, and generated the PWA service worker. Existing Browserslist, Tailwind `@variants`, PDF.js `eval`, and large-chunk warnings remain.
+- `bunx prettier --check` on the five changed implementation/test files: passed.
+- Scoped `bunx eslint` on those five files: blocked before linting because the junctioned dependency checkout cannot resolve `@typescript-eslint/recommended` from `packages/eslint-config/index.js`.
+- `git diff --check`: passed.
+- Code/test diff after the formatting pass: `838 insertions, 139 deletions` across 9 task-owned code/test files, versus the prior-WIP `852 insertions, 76 deletions`. Production implementation additions changed from 388 to 386 lines; the main reduction is the local-search engine diff, from 314 to 217 changed lines, while the new 154-line helper and required streaming/retry regression coverage remain. `git diff origin/main --stat` is not a valid whole-branch comparison here because `origin/main` advanced during the task from `7bcee1bc` to `7dad50a9` and includes an unrelated module feature; the scoped comparison above uses the immutable task-start base.
 
-Real-data and UI verification:
+Live and browser verification:
 
-- Read-only `GET https://api.nthumods.com/search/chunk/manifest` returned HTTP 200, 2,564 bytes; `GET https://api.nthumods.com/search/chunk/11510` returned HTTP 200, 2,608,412 bytes. The live manifest reports `11510` row count `3165`; its `contentHash` equals the live chunk ETag after normalizing `W/"..."`.
-- Started `bun run --cwd apps/web dev -- --port 5188 --strictPort`; after the first compile and a 30-second wait, `GET /en/courses`, `GET /zh/courses`, `GET /en/student/planner`, and the local proxy manifest each returned HTTP 200. The course page rendered real 115-1 results (`3165 results`) in a 390x844 Chrome screenshot; the planner landing page rendered its mobile shell and course-search entry.
-- Captured equivalent 390x844 branch and temporary `origin/main`-expression baseline screenshots of the course and planner pages. Outside the intentionally toggled result-count expressions, the rendered layout, gutters, spacing, rows, and navigation were unchanged. Temporary screenshots/profiles were deleted, and port 5188 was verified free.
-- No POST, PUT, or DELETE request was sent to production, Supabase, or GitHub.
+- Read-only `GET https://api.nthumods.com/search/chunk/manifest`: HTTP `200`, `2,565` bytes. The live entry for semester `11510` reports `3,486` rows and `maxUpdatedAt` `2026-10-07T11:23:11.503-07:00`.
+- Read-only `GET https://api.nthumods.com/search/chunk/11510`: HTTP `200`, `2,814,465` bytes. No POST, PUT, or DELETE request was sent to production, Supabase, or GitHub.
+- Started `bun run --cwd apps/web dev -- --port 5188 --strictPort`, waited 30 seconds after the first compile, and verified `GET http://localhost:5188/en/courses` returned HTTP `200` with the Vite root shell. Chrome loaded real course results at 390x844; the unauthenticated planner route rendered its real create-planner dialog. The server was stopped and port `5188` was verified free.
+- Captured full-height 390x844 branch screenshots for `/en/courses` and `/en/student/planner`, plus temporary origin-equivalent captures with only the new result-count expressions disabled. Visual comparison showed unchanged surrounding headings, gutters, spacing, rows, navigation, and planner dialog. Temporary screenshot and browser-profile directories were deleted.
 
 ## Unverified and open questions
 
-- The broad type-check cannot be cleanly green until the two pre-existing diagnostics are fixed; scoped ESLint cannot start until the missing shared config is available.
-- The API currently supplies a metadata-derived ETag rather than a serialized-body hash. The implementation validates the ETag when exposed and row count, but does not claim cryptographic body integrity.
-- The planner course-picker dialog itself was not opened in the browser pass; its count expression is covered by source review and the shared local-search tests. A manual hidden-tab/visibility transition was not exercised in Chrome; fake-timer coverage verifies the retry cadence and no retry storm.
-- Changes are intentionally left uncommitted on `fix/local-search-robustness`.
+- The repository-wide type-check cannot be green until the two pre-existing diagnostics are fixed. Scoped ESLint cannot run until the shared `@typescript-eslint/recommended` config is available.
+- The browser pass was unauthenticated, so it did not verify signed-in planner data or an interactive planner course-picker search. It verified the public course page and the actual unauthenticated planner landing state.
+- No production deployment or Xcode/browser production session was performed. The stale-session behavior is intentionally documented above: refresh/revalidation happens on the next page load, not in the current session.
+- Changes remain uncommitted on `fix/local-search-robustness`.

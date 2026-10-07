@@ -62,7 +62,7 @@ type FallbackPayload<T> = {
   error?: { message?: string; details?: string };
 };
 
-const FALLBACK_TIMEOUT_MS = 10_000;
+const FALLBACK_TIMEOUT_MS = 15_000;
 
 export type ResilientSearchClientOptions = {
   /** Test/embedded override for the local chunk loader and cache. */

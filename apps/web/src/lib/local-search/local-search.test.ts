@@ -10,7 +10,6 @@ import {
   MemorySearchChunkCache,
   prepareSearchRecord,
   searchChunkCacheKey,
-  searchTextCacheKey,
   tokenizeCjk,
   matchesLocalQuery,
   matchesRefinements,
@@ -26,7 +25,7 @@ import {
   type UnknownRecord,
   SEARCHABLE_FIELDS,
 } from "./client";
-import { fetchJsonWithDeadline } from "./deadline";
+import { fetchJsonWithIdleTimeout } from "./deadline";
 import type { WorkerRequest } from "./worker-protocol";
 
 const fixturePath = `${import.meta.dir}/__fixtures__/courses-11510.json`;
@@ -54,9 +53,6 @@ type FetchState = {
   chunkFailure?: boolean;
   hangChunk?: boolean;
   hangText?: boolean;
-  chunkEtag?: string;
-  textBrief?: string;
-  textEtag?: string;
 };
 
 const makeFetch =
@@ -91,7 +87,7 @@ const makeFetch =
             semester: "11510",
             texts: {
               [String(state.records[0]?.raw_id ?? "course")]: {
-                brief: state.textBrief ?? null,
+                brief: null,
                 keywords: null,
               },
             },
@@ -99,9 +95,7 @@ const makeFetch =
         }),
         {
           status: 200,
-          headers: {
-            ETag: state.textEtag ?? JSON.stringify(`${state.hash}-text`),
-          },
+          headers: { "content-type": "application/json" },
         },
       );
     }
@@ -113,7 +107,7 @@ const makeFetch =
       }
       return new Response(JSON.stringify(state.records), {
         status: 200,
-        headers: { ETag: state.chunkEtag ?? JSON.stringify(state.hash) },
+        headers: { "content-type": "application/json" },
       });
     }
     throw new Error(`unexpected test fetch ${url}`);
@@ -191,7 +185,6 @@ const createEngine = (
 
 class FailingReplacementCache extends MemorySearchChunkCache {
   failChunkWrites = false;
-  failTextWrites = false;
 
   override async set(
     key: string,
@@ -199,14 +192,6 @@ class FailingReplacementCache extends MemorySearchChunkCache {
   ) {
     if (this.failChunkWrites) return false;
     return super.set(key, value);
-  }
-
-  override async setText(
-    key: string,
-    value: Parameters<MemorySearchChunkCache["setText"]>[1],
-  ) {
-    if (this.failTextWrites) return false;
-    return super.setText(key, value);
   }
 }
 
@@ -232,6 +217,43 @@ const request = (params: Record<string, unknown>) => ({
     ...params,
   },
 });
+
+type StreamingPart = string | { text: string; delay: number };
+
+const flushMicrotasks = async () => {
+  for (let i = 0; i < 20; i += 1) await Promise.resolve();
+};
+
+const makeStreamingResponse = (
+  parts: readonly StreamingPart[],
+  hangAfter = Number.POSITIVE_INFINITY,
+) => {
+  const encoder = new TextEncoder();
+  let index = 0;
+  return {
+    status: 200,
+    body: {
+      getReader: () => ({
+        read: () => {
+          if (index >= hangAfter) return new Promise<never>(() => {});
+          const part = parts[index++];
+          if (part === undefined) return Promise.resolve({ done: true });
+          const text = typeof part === "string" ? part : part.text;
+          const delay = typeof part === "string" ? 0 : part.delay;
+          return delay
+            ? new Promise<{ done: false; value: Uint8Array }>((resolve) =>
+                setTimeout(
+                  () => resolve({ done: false, value: encoder.encode(text) }),
+                  delay,
+                ),
+              )
+            : Promise.resolve({ done: false, value: encoder.encode(text) });
+        },
+        cancel: async () => {},
+      }),
+    },
+  } as unknown as Response;
+};
 
 describe("CJK tokenizer and 98-bit timetable masks", () => {
   test("emits lowercase words, CJK unigrams, and adjacent bigrams", () => {
@@ -537,39 +559,29 @@ describe("chunk cache, conditional requests, and worker lifecycle", () => {
     await engine.clear("11510");
   });
 
-  test("keeps serving the old chunk when its replacement is not persisted", async () => {
+  test("serves the fresh chunk when its replacement is not persisted", async () => {
     const cache = new FailingReplacementCache();
     const { engine, state } = createEngine({}, cache);
     await engine.search("11510", request({ query: "CS" }));
     await engine.clear("11510");
     state.hash = "hash-b";
+    state.records = state.records.map((record, index) =>
+      index === 0 ? { ...record, name_en: "Fresh course" } : record,
+    );
     cache.failChunkWrites = true;
 
-    const result = await engine.search("11510", request({ query: "CS" }));
+    const result = await engine.search(
+      "11510",
+      request({ query: "Fresh course" }),
+    );
 
-    expect(result.nbHits).toBeGreaterThan(0);
+    expect(result.hits[0]?.name_en).toBe("Fresh course");
     expect(
       await cache.get(searchChunkCacheKey("11510", "hash-a", "1")),
     ).toBeDefined();
     await expect(cache.getLatest("11510")).resolves.toMatchObject({
       contentHash: "hash-a",
     });
-    await engine.clear("11510");
-  });
-
-  test("rejects a fresh chunk whose ETag disagrees with the manifest", async () => {
-    const { engine, cache, state } = createEngine();
-    await engine.search("11510", request({ query: "CS" }));
-    await engine.clear("11510");
-    state.hash = "hash-b";
-    state.chunkEtag = 'W/"wrong"';
-
-    const result = await engine.search("11510", request({ query: "CS" }));
-
-    expect(result.nbHits).toBeGreaterThan(0);
-    expect(cache.entries().map(([key]) => key)).toEqual([
-      searchChunkCacheKey("11510", "hash-a", "1"),
-    ]);
     await engine.clear("11510");
   });
 
@@ -605,30 +617,6 @@ describe("chunk cache, conditional requests, and worker lifecycle", () => {
     await engine.clear("11510");
   });
 
-  test("keeps the old text cache when its replacement is not persisted", async () => {
-    const cache = new FailingReplacementCache();
-    const { engine, state } = createEngine({ textBrief: "old brief" }, cache);
-    await engine.search("11510", request({ query: "CS" }));
-    await engine.waitForTextChunk("11510");
-    const oldKey = searchTextCacheKey("11510", "hash-a-text", "1");
-    expect(await cache.getText(oldKey)).toMatchObject({
-      texts: { [String(state.records[0]?.raw_id)]: { brief: "old brief" } },
-    });
-
-    await engine.clear("11510");
-    state.textBrief = "new brief";
-    state.textEtag = '"text-b"';
-    cache.failTextWrites = true;
-    await engine.search("11510", request({ query: "CS" }));
-    await engine.waitForTextChunk("11510");
-
-    expect(await cache.getText(oldKey)).toBeDefined();
-    expect(
-      await cache.getText(searchTextCacheKey("11510", "text-b", "1")),
-    ).toBeUndefined();
-    await engine.clear("11510");
-  });
-
   test("reports loading and ready states while the worker builds", async () => {
     const { engine } = createEngine();
     const states: string[] = [];
@@ -638,78 +626,6 @@ describe("chunk cache, conditional requests, and worker lifecycle", () => {
     await pending;
     expect(engine.getStatus()).toBe("ready");
     expect(states).toEqual(expect.arrayContaining(["loading", "ready"]));
-  });
-
-  test("revalidates a stale chunk and swaps in recovered data without reload", async () => {
-    jest.useFakeTimers();
-    try {
-      const { engine, state } = createEngine();
-      await engine.search("11510", request({ query: "CS" }));
-      await engine.clear("11510");
-      state.manifestFailure = true;
-      const stale = await engine.search("11510", request({ query: "CS" }));
-      const oldName = stale.hits[0]?.name_en;
-
-      state.manifestFailure = false;
-      state.hash = "hash-b";
-      state.records = state.records.map((record, index) =>
-        index === 0 ? { ...record, name_en: "Recovered course" } : record,
-      );
-      const manifestCalls = () =>
-        state.calls.filter((call) =>
-          call.url.endsWith("/search/chunk/manifest"),
-        ).length;
-
-      jest.advanceTimersByTime(29_999);
-      expect(manifestCalls()).toBe(2);
-      jest.advanceTimersByTime(1);
-      for (let i = 0; i < 50; i += 1) await Promise.resolve();
-
-      expect(manifestCalls()).toBe(3);
-      expect(oldName).not.toBe("Recovered course");
-      const recovered = await engine.search(
-        "11510",
-        request({ query: "Recovered" }),
-      );
-      expect(recovered.hits[0]?.name_en).toBe("Recovered course");
-      await engine.clear("11510");
-    } finally {
-      jest.useRealTimers();
-    }
-  });
-
-  test("backs off stale revalidation failures without a retry storm", async () => {
-    jest.useFakeTimers();
-    try {
-      const { engine, state } = createEngine();
-      await engine.search("11510", request({ query: "CS" }));
-      await engine.clear("11510");
-      state.manifestFailure = true;
-      await engine.search("11510", request({ query: "CS" }));
-      const manifestCalls = () =>
-        state.calls.filter((call) =>
-          call.url.endsWith("/search/chunk/manifest"),
-        ).length;
-
-      await engine.search("11510", request({ query: "CS 1" }));
-      expect(manifestCalls()).toBe(2);
-      jest.advanceTimersByTime(29_999);
-      expect(manifestCalls()).toBe(2);
-      jest.advanceTimersByTime(1);
-      for (let i = 0; i < 50; i += 1) await Promise.resolve();
-      expect(manifestCalls()).toBe(3);
-
-      await engine.search("11510", request({ query: "CS 10" }));
-      expect(manifestCalls()).toBe(3);
-      jest.advanceTimersByTime(59_999);
-      expect(manifestCalls()).toBe(3);
-      jest.advanceTimersByTime(1);
-      for (let i = 0; i < 50; i += 1) await Promise.resolve();
-      expect(manifestCalls()).toBe(4);
-      await engine.clear("11510");
-    } finally {
-      jest.useRealTimers();
-    }
   });
 
   test("times out a hanging manifest request", async () => {
@@ -734,7 +650,7 @@ describe("chunk cache, conditional requests, and worker lifecycle", () => {
       const pending = engine.search("11510", request({ query: "CS" }));
 
       await started;
-      jest.advanceTimersByTime(8_000);
+      jest.advanceTimersByTime(10_000);
       await expect(pending).rejects.toThrow("timed out");
       expect(signal?.aborted).toBe(true);
     } finally {
@@ -770,7 +686,7 @@ describe("chunk cache, conditional requests, and worker lifecycle", () => {
       const pending = engine.search("11510", request({ query: "CS" }));
 
       await started;
-      jest.advanceTimersByTime(30_000);
+      jest.advanceTimersByTime(15_000);
       await expect(pending).rejects.toThrow("timed out");
       expect(signal?.aborted).toBe(true);
     } finally {
@@ -811,7 +727,7 @@ describe("chunk cache, conditional requests, and worker lifecycle", () => {
 
       jest.advanceTimersByTime(1);
       await started;
-      jest.advanceTimersByTime(30_000);
+      jest.advanceTimersByTime(15_000);
       await textPending;
       expect(signal?.aborted).toBe(true);
     } finally {
@@ -819,46 +735,79 @@ describe("chunk cache, conditional requests, and worker lifecycle", () => {
     }
   });
 
-  test("keeps the deadline through JSON body consumption and clears it on success", async () => {
+  test("allows a slow progressing streamed body to complete", async () => {
     jest.useFakeTimers();
     try {
-      let stalledSignal: AbortSignal | undefined;
-      const stalled = fetchJsonWithDeadline(
-        "https://api.example.test/stalled",
-        1_000,
-        undefined,
-        async (_input, init) => {
-          stalledSignal = init?.signal;
-          return {
-            status: 200,
-            json: () => new Promise<unknown>(() => {}),
-          } as Response;
-        },
-        "Stalled body",
-      );
-      jest.advanceTimersByTime(999);
-      await Promise.resolve();
-      jest.advanceTimersByTime(1);
-      await expect(stalled).rejects.toThrow("Stalled body timed out");
-      expect(stalledSignal?.aborted).toBe(true);
+      const response = makeStreamingResponse([
+        { delay: 10, text: '{"ok":' },
+        { delay: 19, text: "true}" },
+      ]);
 
-      let normalSignal: AbortSignal | undefined;
-      const normal = fetchJsonWithDeadline(
-        "https://api.example.test/normal",
-        1_000,
+      const pending = fetchJsonWithIdleTimeout<{ ok: boolean }>(
+        "https://api.example.test/stream",
+        { firstByteMs: 15, idleMs: 20, absoluteMs: 180 },
         undefined,
-        async (_input, init) => {
-          normalSignal = init?.signal;
-          return new Response(JSON.stringify({ ok: true }), { status: 200 });
-        },
-        "Normal body",
+        async () => response,
+        "Streaming body",
       );
-      await expect(normal).resolves.toMatchObject({ data: { ok: true } });
-      jest.advanceTimersByTime(1_000);
-      expect(normalSignal?.aborted).toBe(false);
+      await flushMicrotasks();
+      jest.advanceTimersByTime(10);
+      await flushMicrotasks();
+      jest.advanceTimersByTime(19);
+      await flushMicrotasks();
+
+      await expect(pending).resolves.toMatchObject({ data: { ok: true } });
     } finally {
       jest.useRealTimers();
     }
+  });
+
+  test("aborts a streamed body after the idle limit", async () => {
+    jest.useFakeTimers();
+    try {
+      let signal: AbortSignal | undefined;
+      const response = makeStreamingResponse(['{"ok":'], 1);
+      const pending = fetchJsonWithIdleTimeout(
+        "https://api.example.test/stream",
+        { firstByteMs: 15, idleMs: 20, absoluteMs: 180 },
+        undefined,
+        async (_input, init) => {
+          signal = init?.signal;
+          return response;
+        },
+        "Streaming body",
+      );
+      await flushMicrotasks();
+      jest.advanceTimersByTime(20);
+      await flushMicrotasks();
+
+      await expect(pending).rejects.toThrow("Streaming body timed out");
+      expect(signal?.aborted).toBe(true);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  test("propagates a caller abort through streamed body loading", async () => {
+    const caller = new AbortController();
+    let signal: AbortSignal | undefined;
+    const response = makeStreamingResponse([], 0);
+    const pending = fetchJsonWithIdleTimeout(
+      "https://api.example.test/stream",
+      { firstByteMs: 15_000, idleMs: 20_000, absoluteMs: 180_000 },
+      { signal: caller.signal },
+      async (_input, init) => {
+        signal = init?.signal;
+        return response;
+      },
+      "Streaming body",
+    );
+    await flushMicrotasks();
+    const reason = new Error("caller stopped");
+    caller.abort(reason);
+
+    await expect(pending).rejects.toBe(reason);
+    expect(signal?.aborted).toBe(true);
   });
 
   test("covers every period code present in the real fixture", () => {
@@ -978,61 +927,59 @@ describe("local-first resilient client", () => {
     expect(result.handled).toBe(false);
   });
 
-  test("stops retrying and stays failed after the chunk load fails", async () => {
-    // Regression: a failed load used to be evicted from the chunk cache, so
-    // every later query retried it. The engine kept flipping back to
-    // "loading" and the UI showed "Preparing local course search…" forever
-    // while re-requesting the chunk on each keystroke.
+  test("retries a failed chunk load later in the same session", async () => {
     let fetchCalls = 0;
-    const failingLocal = createLocalSearchClient({
+    let shouldFail = true;
+    const { state } = createEngine();
+    const local = createLocalSearchClient({
       baseUrl: "https://api.example.test",
       cache: new MemorySearchChunkCache(),
-      fetch: async () => {
+      fetch: async (input, init) => {
         fetchCalls += 1;
-        return new Response("broken", { status: 503 });
+        if (shouldFail) return new Response("broken", { status: 503 });
+        return makeFetch(state)(input, init);
       },
       workerFactory: () => new FakeWorker(),
       defaultSemester: "11510",
     });
 
-    await expect(
-      failingLocal.trySearch([request({ query: "CS" })]),
-    ).rejects.toThrow();
-    const callsAfterFirst = fetchCalls;
+    await expect(local.trySearch([request({ query: "CS" })])).rejects.toThrow();
+    expect(local.getStatus()).toBe("error");
+    shouldFail = false;
 
-    for (const query of ["C", "CS", "CS 1", "CS 10"]) {
-      await expect(
-        failingLocal.trySearch([request({ query })]),
-      ).rejects.toThrow();
-    }
-
-    expect(fetchCalls).toBe(callsAfterFirst);
-    expect(failingLocal.getStatus()).toBe("error");
+    const result = await local.trySearch([request({ query: "CS" })]);
+    expect(result.handled).toBe(true);
+    expect(fetchCalls).toBeGreaterThan(1);
+    expect(local.getStatus()).toBe("ready");
   });
 
-  test("falls back after manifest errors and worker build errors", async () => {
-    const failingLocal = createLocalSearchClient({
+  test("deduplicates concurrent chunk loads", async () => {
+    const { state } = createEngine();
+    let releaseManifest!: () => void;
+    const manifestReady = new Promise<void>((resolve) => {
+      releaseManifest = resolve;
+    });
+    let manifestCalls = 0;
+    const engine = new LocalSearchEngine({
       baseUrl: "https://api.example.test",
       cache: new MemorySearchChunkCache(),
-      fetch: async () => new Response("broken", { status: 503 }),
+      defaultSemester: "11510",
       workerFactory: () => new FakeWorker(),
-      defaultSemester: "11510",
+      fetch: async (input, init) => {
+        if (String(input).endsWith("/search/chunk/manifest")) {
+          manifestCalls += 1;
+          await manifestReady;
+        }
+        return makeFetch(state)(input, init);
+      },
     });
-    await expect(
-      failingLocal.trySearch([request({ query: "CS" })]),
-    ).rejects.toThrow();
 
-    const { state, cache } = createEngine();
-    const failingWorkerLocal = createLocalSearchClient({
-      cache,
-      fetch: makeFetch(state),
-      baseUrl: "https://api.example.test",
-      workerFactory: () => new FailingWorker(),
-      defaultSemester: "11510",
-    });
-    await expect(
-      failingWorkerLocal.trySearch([request({ query: "CS" })]),
-    ).rejects.toThrow();
+    const first = engine.search("11510", request({ query: "CS" }));
+    const second = engine.search("11510", request({ query: "CS 1" }));
+    await Promise.resolve();
+    expect(manifestCalls).toBe(1);
+    releaseManifest();
+    await Promise.all([first, second]);
   });
 
   test("retries locally after disposing a failed worker", async () => {
@@ -1114,7 +1061,7 @@ describe("local-first resilient client", () => {
       const pending = client.search([request({ query: "CS" })] as never);
 
       await started;
-      jest.advanceTimersByTime(8_000);
+      jest.advanceTimersByTime(10_000);
       const result = (await pending) as {
         results: Array<{ hits: Array<{ objectID: string }> }>;
       };
