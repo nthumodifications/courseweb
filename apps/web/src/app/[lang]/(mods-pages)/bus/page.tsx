@@ -1,10 +1,10 @@
 import { useSettings } from "@/hooks/contexts/settings";
 import { Helmet } from "react-helmet-async";
-import { Tabs, TabsList, TabsTrigger } from "@courseweb/ui";
+import { cn, Tabs, TabsList, TabsTrigger } from "@courseweb/ui";
 import { FC, SVGProps, useEffect, useMemo, useState } from "react";
 import useTime from "@/hooks/useTime";
 import { useQuery } from "@tanstack/react-query";
-import { getAllBusData, CompleteBusData } from "@/libs/bus";
+import { getAllBusData } from "@/libs/bus";
 import {
   addMinutes,
   differenceInMinutes,
@@ -12,17 +12,16 @@ import {
   isWeekend,
   set,
 } from "date-fns";
-import { cn } from "@courseweb/ui";
 import { ChevronRight, Timer } from "lucide-react";
 import { RedLineIcon } from "@/components/BusIcons/RedLineIcon";
 import { GreenLineIcon } from "@/components/BusIcons/GreenLineIcon";
-import { NandaLineIcon } from "@/components/BusIcons/NandaLineIcon";
 import { Route1LineIcon } from "@/components/BusIcons/Route1LineIcon";
 import { Route2LineIcon } from "@/components/BusIcons/Route2LineIcon";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { getTimeOnDate } from "@/helpers/bus";
 import useDictionary from "@/dictionaries/useDictionary";
 import OpenCollectiveSponsorBanner from "@/components/Sponsorship/OpenCollectiveSponsorBanner";
+import { activateOnKey } from "@/lib/activate-on-key";
 
 type BusListingItemProps = {
   tab: string;
@@ -53,10 +52,10 @@ const BusListingItem = ({
 
   const displayTime = useMemo(() => {
     // check if is time, else return as is
-    if (!arrival.match(/\d{2}:\d{2}/)) return arrival;
+    if (!/\d{2}:\d{2}/.exec(arrival)) return arrival;
     const time_arr = set(new Date(), {
-      hours: parseInt(arrival.split(":")[0]),
-      minutes: parseInt(arrival.split(":")[1]),
+      hours: Number.parseInt(arrival.split(":")[0]),
+      minutes: Number.parseInt(arrival.split(":")[1]),
     });
     // if now - time < 1 minutes, display "即將發車"
     if (time_arr.getTime() < refTime.getTime()) {
@@ -75,11 +74,6 @@ const BusListingItem = ({
   const route =
     line == "nanda" || line == "route1" || line == "route2" ? "nanda" : "main";
 
-  // index should start at 0 if is green/up and red/up, but when is down , green/down should start at 5 and red/down at 4
-  // if is nanda, both dir index should start at 0
-  const index =
-    direction == "up" ? 0 : line == "green" ? 5 : line == "red" ? 4 : 0;
-
   const handleItemClick = () => {
     navigate(
       `/${language}/bus/${route}/${line == "nanda" || line == "route1" || line == "route2" ? `${line}_${direction}` : line}?return_url=/${language}/bus?tab=${tab}`,
@@ -96,6 +90,9 @@ const BusListingItem = ({
       <div
         className={cn("flex flex-row items-center gap-4 cursor-pointer")}
         onClick={handleItemClick}
+        onKeyDown={activateOnKey(() => handleItemClick())}
+        role="button"
+        tabIndex={0}
       >
         <Icon className="h-7 w-7" />
         <div className="flex flex-row flex-wrap gap-2">
@@ -120,6 +117,14 @@ const BusListingItem = ({
         <div
           className="justify-center items-center gap-2 inline-flex cursor-pointer"
           onClick={() => navigate(`/${language}/bus/${route}`)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              navigate(`/${language}/bus/${route}`);
+            }
+          }}
+          role="button"
+          tabIndex={0}
         >
           <Timer className="w-4 h-4" />
           <div className="text-center text-sm font-medium">
@@ -484,9 +489,7 @@ const BusPage = () => {
       <>
         {seoHelmet}
         <div className="flex justify-center items-center min-h-[200px]">
-          <div className="text-red-500">
-            {dict.bus.load_error}
-          </div>
+          <div className="text-red-500">{dict.bus.load_error}</div>
         </div>
       </>
     );

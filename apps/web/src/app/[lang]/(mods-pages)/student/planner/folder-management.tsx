@@ -12,19 +12,9 @@ import {
   Download,
   Upload,
 } from "lucide-react";
-import { Button } from "@courseweb/ui";
-import { Input } from "@courseweb/ui";
-import { Label } from "@courseweb/ui";
-import { Checkbox } from "@courseweb/ui";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@courseweb/ui";
-import { ScrollArea } from "@courseweb/ui";
-import {
+  Alert,
+  AlertDescription,
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -33,9 +23,18 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  Button,
+  Checkbox,
+  Input,
+  Label,
+  ScrollArea,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  toast,
 } from "@courseweb/ui";
-import { toast } from "@courseweb/ui";
-import { Alert, AlertDescription } from "@courseweb/ui";
 import {
   getFolders,
   createFolder,
@@ -51,6 +50,7 @@ import { cn } from "@/lib/utils";
 import useDictionary from "@/dictionaries/useDictionary";
 import { ResponsiveDialog } from "./components/responsive-dialog";
 import { useConfirm } from "./lib/use-confirm";
+import { activateOnKey } from "@/lib/activate-on-key";
 
 interface FolderManagementProps {
   isOpen: boolean;
@@ -137,7 +137,7 @@ export function FolderManagement({
     };
 
     if (isOpen) {
-      loadFolders();
+      void loadFolders();
     }
   }, [isOpen, folderCol]);
 
@@ -592,6 +592,9 @@ export function FolderManagement({
         <div
           className={`flex items-center p-2 rounded-md ${selectedFolder?.id === folder.id ? "bg-neutral-50 dark:bg-neutral-800" : "hover:bg-neutral-50/50 dark:hover:bg-neutral-800/50"} cursor-pointer ${isUnsorted ? "opacity-70" : ""}`}
           onClick={() => handleSelectFolder(folder)}
+          onKeyDown={activateOnKey(() => handleSelectFolder(folder))}
+          role="button"
+          tabIndex={0}
           style={{ paddingLeft: `${level * 16 + 8}px` }}
         >
           <div className="mr-2 flex-shrink-0">
@@ -682,6 +685,9 @@ export function FolderManagement({
           <div
             className={`flex items-center p-2 rounded-md ${isRootSelected ? "bg-neutral-50 dark:bg-neutral-800" : "hover:bg-neutral-50/50 dark:hover:bg-neutral-800/50"} cursor-pointer`}
             onClick={handleSelectRoot}
+            onKeyDown={activateOnKey(() => handleSelectRoot())}
+            role="button"
+            tabIndex={0}
           >
             <div className="mr-2 flex-shrink-0">
               <ChevronRight className="h-4 w-4 text-gray-400" />

@@ -1,18 +1,12 @@
 import useDictionary from "@/dictionaries/useDictionary";
 import { departments, GETargetCodes, semesterInfo } from "@courseweb/shared";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@courseweb/ui";
 import SemesterSelector from "./SemesterSelector";
 import ExpandableFilter from "./ExpandableFilter";
 import ExpandableClassFilter from "./ExpandableClassFilter";
 import InlineCheckboxFilter from "./InlineCheckboxFilter";
 import { Language } from "@/types/settings";
 
-const latestSemID = semesterInfo[semesterInfo.length - 1].id;
+const latestSemID = semesterInfo.at(-1)!.id;
 
 const languageSynonyms: Record<string, string> = {
   中: "Chinese",

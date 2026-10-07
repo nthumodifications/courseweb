@@ -1,7 +1,17 @@
 import { useSettings } from "@/hooks/contexts/settings";
 import useDictionary from "@/dictionaries/useDictionary";
-import { Badge } from "@courseweb/ui";
 import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
   Table,
   TableBody,
   TableCell,
@@ -15,24 +25,17 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
 } from "@courseweb/ui";
 
 import { GradeObject } from "@/types/grades";
 import { toPrettySemester } from "@/helpers/semester";
 import { lazy, Suspense, useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@courseweb/ui";
-import { Card, CardContent, CardHeader, CardTitle } from "@courseweb/ui";
-import { Button } from "@courseweb/ui";
 import { useMediaQuery } from "usehooks-ts";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@courseweb/ui";
 import { ExternalLink } from "lucide-react";
-import { distinct } from "rxjs";
 
 const GPAChart = lazy(() =>
   import("./GPAChart").then((m) => ({ default: m.GPAChart })),
@@ -202,10 +205,6 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
   const [selectedSemester, setSelectedSemester] = useState<string>("All");
   const [semesterSort, setSemesterSort] = useState<"asc" | "desc">("asc");
 
-  // get unique semesters
-  const semesters = Array.from(
-    new Set(grades.ranking.data.map((grade) => grade.year + grade.semester)),
-  ).toReversed();
   // grades might have semesters that are not in ranking
   const gradesSemesters = Array.from(
     new Set(grades.grades.map((grade) => grade.year + grade.semester)),
@@ -248,7 +247,8 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
             {dict.grade.overview}
           </div>
           <div className="self-stretch text-zinc-900 dark:text-zinc-100 text-sm font-normal leading-tight">
-            {dict.grade.as_of} {grades.ranking.cumulative.letter.gpa_cum_year_tw}
+            {dict.grade.as_of}{" "}
+            {grades.ranking.cumulative.letter.gpa_cum_year_tw}
           </div>
         </div>
         <GradeOverview grades={grades} />
@@ -319,63 +319,60 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {displayedSemesters
-                .map((semester, index) => (
-                  <>
-                    <TableRow key={index}>
-                      <TableCell
-                        colSpan={3}
-                        className="text-zinc-950 dark:text-zinc-50 text-2xl font-semibold leading-loose"
+              {displayedSemesters.flatMap((semester, index) => (
+                <>
+                  <TableRow key={index}>
+                    <TableCell
+                      colSpan={3}
+                      className="text-zinc-950 dark:text-zinc-50 text-2xl font-semibold leading-loose"
+                    >
+                      {toPrettySemester(semester)}
+                    </TableCell>
+                  </TableRow>
+                  {displayGrades
+                    .filter((c) => c.year + c.semester == semester)
+                    .map((grade, index) => (
+                      <TableRow
+                        key={index + index * 10}
+                        className="[&>td]:py-2"
                       >
-                        {toPrettySemester(semester)}
-                      </TableCell>
-                    </TableRow>
-                    {displayGrades
-                      .filter((c) => c.year + c.semester == semester)
-                      .map((grade, index) => (
-                        <TableRow
-                          key={index + index * 10}
-                          className="[&>td]:py-2"
-                        >
-                          <TableCell>
-                            <div className="flex-col justify-center items-start gap-2.5 inline-flex">
-                              <div className="inline-flex flex-col">
-                                <span className="text-slate-400 dark:text-slate-600 text-xs">
-                                  {grade.course_id}
-                                </span>
-                                <span>
-                                  {language == "en"
-                                    ? grade.name_en
-                                    : grade.name_zh}
-                                </span>
-                              </div>
-                              {grade.ge_description && (
-                                <div>
-                                  <Badge
-                                    className="text-xs min-w-0 rounded-lg"
-                                    variant="default"
-                                  >
-                                    {dict.course.tags.general_education}：
-                                    {grade.ge_type} -{" "}
-                                    {grade.ge_description}
-                                  </Badge>
-                                </div>
-                              )}
+                        <TableCell>
+                          <div className="flex-col justify-center items-start gap-2.5 inline-flex">
+                            <div className="inline-flex flex-col">
+                              <span className="text-slate-400 dark:text-slate-600 text-xs">
+                                {grade.course_id}
+                              </span>
+                              <span>
+                                {language == "en"
+                                  ? grade.name_en
+                                  : grade.name_zh}
+                              </span>
                             </div>
-                          </TableCell>
-                          <TableCell className="hidden md:table-cell">
-                            {grade.credits}
-                          </TableCell>
-                          <TableCell>{grade.grade}</TableCell>
-                          <TableCell>{grade.ranking}</TableCell>
-                          <TableCell className="hidden md:table-cell">
-                            {grade.t_scores}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                  </>
-                ))
-                .flat()}
+                            {grade.ge_description && (
+                              <div>
+                                <Badge
+                                  className="text-xs min-w-0 rounded-lg"
+                                  variant="default"
+                                >
+                                  {dict.course.tags.general_education}：
+                                  {grade.ge_type} - {grade.ge_description}
+                                </Badge>
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          {grade.credits}
+                        </TableCell>
+                        <TableCell>{grade.grade}</TableCell>
+                        <TableCell>{grade.ranking}</TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          {grade.t_scores}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                </>
+              ))}
             </TableBody>
           </Table>
         </TabsContent>
@@ -469,7 +466,7 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
           <div className="flex flex-row flex-wrap gap-6">
             <Card className=" min-w-[300px] flex-1">
               <CardHeader>
-              <CardTitle>{dict.grade.gpa}</CardTitle>
+                <CardTitle>{dict.grade.gpa}</CardTitle>
               </CardHeader>
               <CardContent>
                 <Suspense fallback={null}>

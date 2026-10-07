@@ -1,16 +1,18 @@
-import { Popover, PopoverTrigger, PopoverContent } from "@courseweb/ui";
 import { useClearRefinements } from "react-instantsearch";
 import { Trash } from "lucide-react";
-import { Button } from "@courseweb/ui";
-import { useCallback, useEffect, useState } from "react";
-import TimeslotSelector from "@/components/Courses/TimeslotSelector";
 import {
+  Button,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@courseweb/ui";
+import { useCallback, useEffect, useState } from "react";
+import TimeslotSelector from "@/components/Courses/TimeslotSelector";
 import useCustomRefinementList from "./useCustomRefinementList";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { scheduleTimeSlots } from "@courseweb/shared";
@@ -29,7 +31,7 @@ const TimeslotFilterItem = ({
   synonms = {},
   placeholder,
 }: TimeslotFilterItemProps) => {
-  const { getSemesterCourses, semester, setSemester } = useUserTimetable();
+  const { getSemesterCourses, semester } = useUserTimetable();
   const dict = useDictionary();
   const [mode, setMode] = useState("includes");
   const {
@@ -50,12 +52,11 @@ const TimeslotFilterItem = ({
   });
   const [timeslotValue, setTimeslotValue] = useState<string[]>([]);
 
-  const { canRefine: canClearRefine, refine: clearRefine } =
-    useClearRefinements({
-      includedAttributes: ["times", "separate_times"],
-    });
+  const { refine: clearRefine } = useClearRefinements({
+    includedAttributes: ["times", "separate_times"],
+  });
 
-  const [searchValue, setSearchValue] = useState("");
+  const [, setSearchValue] = useState("");
   const [searching, setSearching] = useState(false);
 
   const items = mode == "exact" ? timesItems : separateItems;
@@ -65,7 +66,7 @@ const TimeslotFilterItem = ({
 
   const customSort = (a: string, b: string) => {
     if (a[0] == b[0]) {
-      return parseInt(a.slice(1)) - parseInt(b.slice(1));
+      return Number.parseInt(a.slice(1)) - Number.parseInt(b.slice(1));
     }
     const arr = ["M", "T", "W", "R", "F", "S"];
     return arr.indexOf(a[0]) - arr.indexOf(b[0]);
@@ -87,9 +88,6 @@ const TimeslotFilterItem = ({
     if (!clientSearch) {
       searchForItems(name);
     }
-    if (name == "") {
-      const refinedItems = items.filter((item) => item.isRefined);
-    }
   };
 
   const openChange = (open: boolean) => {
@@ -101,24 +99,17 @@ const TimeslotFilterItem = ({
     }
   };
 
-  const select = (value: string) => {
-    setSearchValue("");
-    refine(value);
-  };
-
   const clear = () => {
     setTimeslotValue([]);
     clearRefine();
   };
 
   const handleFillTimes = useCallback(() => {
-    const timeslots = getSemesterCourses(semester)
-      .map((course) =>
-        course.times
-          .map((time) => time.match(/.{1,2}/g) ?? ([] as unknown as string[]))
-          .flat(),
-      )
-      .flat();
+    const timeslots = getSemesterCourses(semester).flatMap((course) =>
+      course.times.flatMap(
+        (time) => time.match(/.{1,2}/g) ?? ([] as unknown as string[]),
+      ),
+    );
     const timeslotSet = new Set(timeslots);
     const timeslotList = Array.from(timeslotSet);
     const days = ["M", "T", "W", "R", "F", "S"];
@@ -170,7 +161,9 @@ const TimeslotFilterItem = ({
             <SelectValue placeholder={dict.course.refine.mode} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="includes">{dict.course.refine.includes}</SelectItem>
+            <SelectItem value="includes">
+              {dict.course.refine.includes}
+            </SelectItem>
             <SelectItem value="exact">{dict.course.refine.exact}</SelectItem>
           </SelectContent>
         </Select>

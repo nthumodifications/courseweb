@@ -1,22 +1,16 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
-import {
-  useRefinementList,
-  useClearRefinements,
-  useInstantSearch,
-} from "react-instantsearch";
+import { useRefinementList, useInstantSearch } from "react-instantsearch";
 import { Check, Trash } from "lucide-react";
-import { cn } from "@courseweb/ui";
-import { Badge } from "@courseweb/ui";
 import {
+  Badge,
+  Button,
+  cn,
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@courseweb/ui";
-import { Button } from "@courseweb/ui";
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -26,6 +20,7 @@ import {
 import { scheduleTimeSlots } from "@courseweb/shared";
 import { MinimalCourse } from "@/types/courses";
 import useDictionary from "@/dictionaries/useDictionary";
+import { activateOnKey } from "@/lib/activate-on-key";
 
 type TimeSelectionFilterProps = {
   attribute: string;
@@ -53,7 +48,7 @@ const TimeSelectionFilter = ({
   const [pendingSlots, setPendingSlots] = useState<string[]>([]);
   const dict = useDictionary();
 
-  const { refine, items, createURL } = useRefinementList({
+  const { items } = useRefinementList({
     attribute,
     limit: 100,
     escapeFacetValues: true,
@@ -359,14 +354,20 @@ const TimeSelectionFilter = ({
             <div className="flex flex-col rounded-lg border overflow-hidden">
               <div className="flex items-center justify-between px-4 py-2 border-b">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm">{dict.course.refine.strict_search}</span>
+                  <span className="text-sm">
+                    {dict.course.refine.strict_search}
+                  </span>
                   <Select value={mode} onValueChange={setMode}>
                     <SelectTrigger className="w-[80px] h-7">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="includes">{dict.course.refine.includes}</SelectItem>
-                      <SelectItem value="exact">{dict.course.refine.exact}</SelectItem>
+                      <SelectItem value="includes">
+                        {dict.course.refine.includes}
+                      </SelectItem>
+                      <SelectItem value="exact">
+                        {dict.course.refine.exact}
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -434,9 +435,7 @@ const TimeSelectionFilter = ({
                             isDragging ? "cursor-crosshair" : "cursor-pointer",
                           )}
                           title={
-                            isOccupied
-                              ? dict.course.refine.occupied_slot
-                              : ""
+                            isOccupied ? dict.course.refine.occupied_slot : ""
                           }
                           onMouseDown={(e) => {
                             e.preventDefault();
@@ -445,6 +444,17 @@ const TimeSelectionFilter = ({
                           onMouseEnter={() => {
                             handleMouseMove(dayIndex, period);
                           }}
+                          onKeyDown={activateOnKey(() =>
+                            handleMouseDown(dayIndex, period),
+                          )}
+                          onKeyUp={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              handleMouseUp();
+                            }
+                          }}
+                          role="button"
+                          tabIndex={0}
                         >
                           {period}
                         </div>

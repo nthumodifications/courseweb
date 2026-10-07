@@ -12,9 +12,13 @@ import { MinimalCourse } from "@/types/courses";
 import { createTimetableFromCourses } from "@/helpers/timetable";
 import Timetable from "@/components/Timetable/Timetable";
 import { renderTimetableSlot } from "@/helpers/timetable_course";
-import { Button } from "@courseweb/ui";
-import { Badge } from "@courseweb/ui";
 import {
+  Badge,
+  Button,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
   Select,
   SelectContent,
   SelectItem,
@@ -23,12 +27,6 @@ import {
 } from "@courseweb/ui";
 import { Loader2, Globe, RefreshCw, Camera, Star } from "lucide-react";
 import useDictionary from "@/dictionaries/useDictionary";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@courseweb/ui";
 
 function TimetableCard({
   share,
@@ -125,7 +123,7 @@ function TimetableDetailDialog({
   const courseIds = share.courses[activeSem] ?? [];
 
   const { data: courses = [] } = useQuery({
-    queryKey: ["courses", [...courseIds].sort()],
+    queryKey: ["courses", [...courseIds].sort((a, b) => a.localeCompare(b))],
     queryFn: async () => {
       if (!courseIds.length) return [];
       const res = await client.course.$get({ query: { courses: courseIds } });

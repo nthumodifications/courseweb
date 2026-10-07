@@ -3,29 +3,24 @@ import { NandaLineIcon } from "@/components/BusIcons/NandaLineIcon";
 import { RedLineIcon } from "@/components/BusIcons/RedLineIcon";
 import { Route1LineIcon } from "@/components/BusIcons/Route1LineIcon";
 import { Route2LineIcon } from "@/components/BusIcons/Route2LineIcon";
-import { Button } from "@courseweb/ui";
+import { Button, cn } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
 import { getTimeOnDate } from "@/helpers/bus";
 import { useSettings } from "@/hooks/contexts/settings";
 import useTime from "@/hooks/useTime";
-import { cn } from "@courseweb/ui";
 import {
   addMinutes,
   formatDate,
   isSameMinute,
   subMinutes,
   isWeekend,
-  subHours,
   format,
-  endOfMinute,
   startOfMinute,
   differenceInMinutes,
-  set,
   getDay,
 } from "date-fns";
 import { Bus, ChevronLeft } from "lucide-react";
-import { Link } from "react-router-dom";
-import { useParams, useSearchParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useMemo } from "react";
 import { getAllBusData } from "@/libs/bus";
 import { useQuery } from "@tanstack/react-query";
@@ -239,7 +234,7 @@ const LineDisplayPage = () => {
 
   const weektype = isWeekend(time) ? "weekend" : "weekday";
 
-  const { data: busData, error } = useQuery({
+  const { data: busData } = useQuery({
     queryKey: ["all_bus_data"],
     queryFn: getAllBusData,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -288,7 +283,7 @@ const LineDisplayPage = () => {
         .filter((bus) => {
           // remove duplicate down busses
           if (bus.direction == "down") {
-            const upBus = busses.find(
+            const hasMatchingUpBus = busses.some(
               (b) =>
                 b.direction == "up" &&
                 isSameMinute(
@@ -296,7 +291,7 @@ const LineDisplayPage = () => {
                   subMinutes(getTimeOnDate(time, bus.time), 7),
                 ),
             );
-            if (upBus) return false;
+            if (hasMatchingUpBus) return false;
           }
           return true;
         })
@@ -329,7 +324,7 @@ const LineDisplayPage = () => {
         .filter((bus) => {
           // remove duplicate down busses
           if (bus.direction == "down") {
-            const upBus = busses.find(
+            const hasMatchingUpBus = busses.some(
               (b) =>
                 b.direction == "up" &&
                 isSameMinute(
@@ -337,7 +332,7 @@ const LineDisplayPage = () => {
                   subMinutes(getTimeOnDate(time, bus.time), 7),
                 ),
             );
-            if (upBus) return false;
+            if (hasMatchingUpBus) return false;
           }
           return true;
         })
@@ -496,7 +491,7 @@ const LineDisplayPage = () => {
             (bus.type == "route1" || bus.type == "route2"),
         )
         .map((bus) => {
-          const startIndex = bus.direction == "up" ? 0 : 0;
+          const startIndex = 0;
           const startTime = getTimeOnDate(time, bus.time);
           // Use route1 timing for both routes as they follow similar paths
           const timings = linesDict.route1_up.timings;

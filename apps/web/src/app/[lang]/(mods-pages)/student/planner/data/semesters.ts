@@ -1,5 +1,4 @@
 import { SemesterDocType } from "@/app/[lang]/(mods-pages)/student/planner/rxdb";
-import { CourseStatus } from "../types";
 import { RxCollection } from "rxdb";
 
 // Function to get all semesters

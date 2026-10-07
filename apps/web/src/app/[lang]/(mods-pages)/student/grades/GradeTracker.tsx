@@ -71,10 +71,13 @@ const formatGpa = (value: number | null) =>
 const formatCredits = (value: number) =>
   Number.isInteger(value) ? value.toString() : value.toFixed(1);
 
-const createEntryId = () =>
-  typeof crypto.randomUUID === "function"
-    ? crypto.randomUUID()
-    : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+const createEntryId = () => {
+  if (typeof crypto.randomUUID === "function") return crypto.randomUUID();
+
+  const randomBytes = new Uint32Array(2);
+  crypto.getRandomValues(randomBytes);
+  return `${Date.now()}-${randomBytes[0].toString(16)}-${randomBytes[1].toString(16)}`;
+};
 
 const GradeTracker = () => {
   const dict = useDictionary();

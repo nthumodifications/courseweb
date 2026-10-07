@@ -1,18 +1,35 @@
 import { useState, useEffect, useRef } from "react";
 import { Save, X, Trash2, Download, Upload, RefreshCw } from "lucide-react";
-import { Button } from "@courseweb/ui";
-import { Input } from "@courseweb/ui";
-import { Label } from "@courseweb/ui";
-import { Textarea } from "@courseweb/ui";
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  Button,
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  Input,
+  Label,
+  ScrollArea,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  Textarea,
+  toast,
 } from "@courseweb/ui";
-import { ScrollArea } from "@courseweb/ui";
 import {
   FolderDocType,
   ItemDocType,
@@ -30,26 +47,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { v4 as uuidv4 } from "uuid";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@courseweb/ui";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@courseweb/ui";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@courseweb/ui";
 import { getCourseItems } from "./data/courses";
 import { getFolders, ensureUnsortedFolder } from "./data/folders";
-import { toast } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useConfirm } from "./lib/use-confirm";
 
@@ -109,11 +108,9 @@ export function PlannerSettings({
         department: z
           .string()
           .min(1, { message: ps.departmentRequired ?? "學系/學院為必填欄位" }),
-        enrollmentYear: z
-          .string()
-          .min(1, {
-            message: ps.enrollmentYearRequired ?? "入學學年為必填欄位",
-          }),
+        enrollmentYear: z.string().min(1, {
+          message: ps.enrollmentYearRequired ?? "入學學年為必填欄位",
+        }),
         graduationYear: z.string().min(1, {
           message: ps.graduationYearRequired ?? "預計畢業學年為必填欄位",
         }),
@@ -172,7 +169,7 @@ export function PlannerSettings({
     };
 
     if (isOpen) {
-      loadData();
+      void loadData();
     }
   }, [isOpen, plannerCol, reset]);
 
