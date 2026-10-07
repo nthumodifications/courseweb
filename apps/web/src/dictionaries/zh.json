@@ -287,14 +287,26 @@
         "workload": "負擔",
         "difficulty": "難度"
       },
-      "prerequisite_all_of": "以下都要符合",
-      "prerequisite_any_of": "以下任一項即可",
       "prerequisite_original": "查看原始文字",
       "prerequisite_applies_to": "適用對象：",
       "prerequisite_all_students": "全校學生",
       "prerequisite_grade_above": "以上",
+      "prerequisite_not_taken_prefix": "未修過",
       "prerequisite_and": "而且",
-      "prerequisite_not_taken_prefix": "未修過"
+      "prerequisite_requires": "需要",
+      "prerequisite_unlocks": "修完可修",
+      "prerequisite_group_any": "任一即可",
+      "prerequisite_group_all": "都需要",
+      "prerequisite_group_not_taken": "不可修過",
+      "prerequisite_aria_any": "任一",
+      "prerequisite_aria_all": "全部",
+      "prerequisite_aria_not_taken": "未修過",
+      "prerequisite_aria_separator": "、",
+      "prerequisite_aria_group_separator": "；且",
+      "prerequisite_aria_requires_separator": "",
+      "prerequisite_aria_unlock_separator": " ",
+      "prerequisite_aria_sentence_end": "。",
+      "prerequisite_show_more": "展開另外 {count} 門課程"
     }
   },
   "navigation": {

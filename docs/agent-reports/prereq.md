@@ -195,3 +195,156 @@ After Round 2 edits:
 - The live check used read-only production API/Supabase data through the local Vite proxy and recorded the exact React Query request: `courses?select=raw_id,department,course,name_zh,name_en,semester&name_zh=in.(數位邏輯設計,邏輯設計,邏輯設計實驗)&order=semester.desc&limit=100` returned HTTP 200. It did not exercise signed-in behavior.
 - The public CCXP official list remains inaccessible without authentication, as recorded above. This Round 2 parser intentionally treats the scraped `prerequisites` grammar as the source of truth and does not modify production data.
 - No commit, push, dependency installation, deployment, or production write was performed.
+
+## Round 3 dependency graph implementation
+
+### Findings and evidence
+
+- The existing course-detail section is at `apps/web/src/components/CourseDetails/CourseDetailsContainer.tsx:493-516`; its heading, `gap-2` section wrapper, original-text disclosure, and surrounding related-course table were left in place. The existing programme-tag chip contract is visible in `apps/web/src/components/Courses/CourseTagsList.tsx:8-22`.
+- The parser already exposes normalized matching and parsed nodes through `packages/shared/src/utils/prerequisites.ts:34-39,421-518`. The new graph model is exported from `packages/shared/src/utils/prerequisite-graph.ts:9-161` and re-exported by `packages/shared/src/utils/index.ts:19`.
+- A read-only live Supabase query for semesters `11510` and `11420`, selecting `raw_id, semester, department, course, name_zh, name_en, prerequisites` and filtering non-empty prerequisites, returned 334 rows for 11510 and 455 for 11420 (789 total). It did not hit the 1000-row cap.
+- Real page/API reads through the local Vite proxy returned HTTP 200 for `http://localhost:5184/zh/courses/11510CS%20%20210401` and the syllabus JSON at `http://localhost:5184/__api/course/11510CS%20%20210401/syllabus`. The live rows showed `11510CS  210401` as `硬體設計與實驗` and `11510CHE 211001` as `工程數學一`; the latter resolved 9 unlocks.
+
+### Design decisions and changes
+
+- `buildPrerequisiteGraph(course, parsed, rows)` keeps the parser tree as flattened all/any `Group[]`, resolves exact normalized `name_zh` matches with same-department priority and newest-semester fallback, preserves unresolved nodes as plain nodes, and derives one-level unlocks with department/course de-duplication and self-exclusion (`packages/shared/src/utils/prerequisite-graph.ts:83-161`). Tests cover any/all, grade, not-taken, unresolved, department collisions, newest rows, unlock sorting, de-duplication, and self-exclusion (`packages/shared/src/utils/prerequisite-graph.test.ts:33-127`).
+- `PrerequisiteGraph.tsx` renders the three lanes, responsive 560px container breakpoint, node links, not-taken dashed styling/edges, junction pills, SVG Bézier edges with arrowheads, ARIA sentence, and `+N` expansion (`apps/web/src/components/CourseDetails/PrerequisiteGraph.tsx:74-390`). The `ResizeObserver` is on the graph container (`:234`), not the viewport; links remain keyboard reachable.
+- `PrerequisiteBlock.tsx` retains the existing audience line and passes the graph data into the new renderer (`apps/web/src/components/CourseDetails/PrerequisiteBlock.tsx:9-44`). The original disclosure remains immediately below it in the unchanged course-detail call site.
+- The course-detail query is lazy (`import("@/config/supabase")` inside the query function), limited to the viewed semester and immediately preceding semester, capped at 1000, cached for 24 hours, disabled for modal views, and set to `retry: false` (`apps/web/src/components/CourseDetails/CourseDetailsContainer.tsx:60-177`). Loading/error states pass an empty row set so requirements still render without links or unlocks.
+- English and Traditional Chinese lane, junction, ARIA, and expansion strings were added while removing the old chip-group-only keys; both trees remain identical (`apps/web/src/dictionaries/en.json:289-307`, `apps/web/src/dictionaries/zh.json:289-307`).
+
+### Commands and results
+
+Baseline before edits:
+
+- `bun run --cwd apps/web type-check` — failed with only the existing `src/features/dining/useDining.ts:20` `dining` property error and `worker.ts:842` `CacheStorage.default` error.
+- `bun --no-env-file test src` from `apps/web` — 239 passed, 2 skipped, 0 failed, 1047 expectations.
+- `bun --no-env-file test src` from `packages/shared` — 108 passed, 0 failed, 690 expectations.
+
+After edits:
+
+- `bun --no-env-file test src` from `apps/web` — 239 passed, 2 skipped, 0 failed, 1057 expectations. Existing synthetic local-search errors were printed as expected test output.
+- `bun --no-env-file test src` from `packages/shared` — 112 passed, 0 failed, 695 expectations.
+- `bun run type-check` from `packages/shared` — passed.
+- `bun run --cwd apps/web type-check` — still reports only the same two baseline errors above; no changed file is reported.
+- `bun run --cwd apps/web build` — passed. Existing warnings remain for stale Browserslist data, deprecated Tailwind `@variants`, `pdfjs-dist` eval, the statically imported Supabase module preventing a separate dynamic chunk, and large chunks.
+- Focused lint was attempted with `bunx eslint` for changed files from both owning workspaces. It is blocked before linting because the existing config references unavailable `@typescript-eslint/recommended`; no dependency was installed.
+- `bunx prettier --write` over changed source/dictionary/test files — passed. `git diff --check` — passed.
+
+### Browser and visual verification
+
+- Started exactly with `bun run --cwd apps/web dev -- --port 5184 --strictPort`, set `VITE_COURSEWEB_API_URL=http://localhost:5184/__api` in the ignored development-local env, waited for the first compile, and used real production-backed GET data only.
+- Captured and visually inspected full-height screenshots at 390x844 and 1280x800 for CS 210401 and CHE 211001. The browser reported `horizontalOverflow: false` for every target. CS produced 5 SVG paths; CHE produced 22 paths with the collapsed `+3` node. Clicking `+3` expanded the list in place, produced 24 paths, and still had no horizontal overflow.
+- Screenshot paths:
+  - `C:\Users\chewt\AppData\Local\Temp\courseweb-prereq-cs-210401-390.png`
+  - `C:\Users\chewt\AppData\Local\Temp\courseweb-prereq-cs-210401-1280.png`
+  - `C:\Users\chewt\AppData\Local\Temp\courseweb-prereq-che-211001-390.png`
+  - `C:\Users\chewt\AppData\Local\Temp\courseweb-prereq-che-211001-1280.png`
+  - `C:\Users\chewt\AppData\Local\Temp\courseweb-prereq-che-211001-390-expanded.png`
+- For the accepted no-second-worktree comparison, I temporarily disabled only the graph block behind a local constant, captured `C:\Users\chewt\AppData\Local\Temp\courseweb-prereq-cs-210401-390-baseline.png`, compared the regions above/below the block with the graph screenshot, restored the final code, and reran the checks. The heading, raw section/table placement, row styling, and mobile navigation outside the new block remained unchanged.
+- The Vite server was stopped, port 5184 was confirmed free, the temporary browser profile `C:\Users\chewt\AppData\Local\Temp\courseweb-prereq-chrome-profile` was deleted, and `apps/web/.env.development.local` was deleted. Screenshots were intentionally left in the system temp directory and are not tracked.
+
+### Unverified and maintainer questions
+
+- The exact `origin/main` page was not checked out in a second worktree; the required graph-disabled same-page comparison was used instead. It is a visual region comparison, not a pixel-diff against a separately rendered `origin/main` checkout.
+- I did not run signed-in automation, deploy, or any production write. Supabase/API access was read-only. I also did not instrument browser console collection; the visual/DOM checks confirmed nonblank pages, ARIA labels, SVG paths, and no horizontal overflow.
+- The mandated non-empty-prerequisite query cannot resolve a prerequisite name whose course rows are absent from those two semesters or have empty prerequisite text. Should the maintainer later want broader link coverage, approve a separate bounded catalog query rather than silently widening this one.
+- Please confirm whether the open left bracket around any-of items matches the reviewer’s intended visual bracket; all other graph styling follows the specified node, lane, gutter, and edge contract.
+
+## Round 4 prerequisite graph redraw (current implementation)
+
+Round 3’s junction-pill/per-item-edge description above is superseded by this section. The parser, resolver, ARIA sentence, and existing unit-test assertions were left unchanged; this round changes only the graph drawing contract requested by the reviewer.
+
+### Findings and design decisions
+
+- The current course-detail integration remains at `apps/web/src/components/CourseDetails/CourseDetailsContainer.tsx:493-516`; the heading, audience line, original-text disclosure, and related-course table were not restyled. `PrerequisiteBlock.tsx:9,29-45` retains the existing `gap-2` section and passes the graph data through.
+- Group edge definitions are now one per requirement group, with a single optional anchor-to-unlock-group edge (`apps/web/src/components/CourseDetails/PrerequisiteGraph.tsx:191-205`). All-not-taken groups alone make their container and edge dashed (`:196-198,280-297`); a single all-of item remains a standalone dashed chip.
+- Any-of and multi-item all-of groups use one `relative w-fit max-w-full rounded-lg border border-border p-2` container with a background-overlapping legend and `flex flex-wrap gap-2` chips (`:280-303`). The unlock lane uses the same container/legend contract and keeps `+N` inside it (`:364-397`). There is no lane caption, junction pill, or anchor caption.
+- Wide paths use the exact box/anchor refs and a capped requirement track; narrow paths use bottom-to-top curves with `gap-y-8` (`:349-350`). The SVG has no clipping container, uses cubic paths, one marker at the target, 1.5px border-colour strokes, and dashed strokes only for not-taken groups (`:312-340`). The explicit 35% requirement track is below the requested 60% maximum and reserves enough width for unlock chips in the actual 700px course-detail column.
+- Duplicate unlock names are counted by normalized display name and receive the existing raw-ID department code only when duplicated. The parser graph shape is unchanged; the code handles both spaced IDs such as `11510CHE 211001` and compact IDs such as `11510BMES211200` (`:133-134,166-180,386-393`).
+- New visible labels are in both dictionaries: `Any one of`/`任一即可`, `All of`/`都需要`, `Must not have taken`/`不可修過`, and `Unlocks`/`修完可修` (`apps/web/src/dictionaries/en.json:296-299`, `apps/web/src/dictionaries/zh.json:296-299`). The key trees contain the same 1,713 keys.
+
+### Commands and results
+
+Baseline before the redraw:
+
+- `bun run --cwd apps/web type-check` — failed with the two pre-existing errors only: `src/features/dining/useDining.ts:20` (`dining` property) and `worker.ts:842` (`CacheStorage.default`).
+- `bun --no-env-file test src` from `apps/web` — 239 passed, 2 skipped, 0 failed, 1,057 expectations.
+- `bun test src` from `packages/shared` — 112 passed, 0 failed, 695 expectations.
+
+After the redraw, with the temporary comparison flag removed and the graph rendered unconditionally as before:
+
+- `bun --no-env-file test src` from `apps/web` — 239 passed, 2 skipped, 0 failed, 1,057 expectations. Existing synthetic local-search error output and SSR `useLayoutEffect` warnings remain expected repository output.
+- `bun test src` from `packages/shared` — 112 passed, 0 failed, 695 expectations.
+- `bun run --cwd packages/shared type-check` — passed.
+- `bun run --cwd apps/web type-check` — still reports only the same two baseline errors above; no changed file is reported.
+- `bun run --cwd apps/web build` — passed (`✓ built in 29.70s`). Existing Browserslist, deprecated Tailwind `@variants`, pdfjs `eval`, Supabase chunking, and large-chunk warnings remain.
+- `bunx eslint src/components/CourseDetails/PrerequisiteGraph.tsx` — blocked before linting because the existing config cannot resolve `@typescript-eslint/recommended`; no dependency was installed.
+- `bunx prettier --write` on the graph passed; the final dictionary parity check reported identical 1,713-key trees; `git diff --check` passed. The final graph was formatted after the last mechanical helper adjustment.
+
+### Real-data browser verification
+
+- Started `bun run --cwd apps/web dev -- --port 5184 --strictPort` with `VITE_COURSEWEB_API_URL=http://localhost:5184/__api` in the temporary ignored env file, waited 30 seconds after the first compile, and used only read-only GETs. Both course pages returned HTTP 200 with 9,653-byte HTML; `GET http://localhost:5184/__api/course/11510CS%20%20210401/syllabus` returned HTTP 200 with 5,081 bytes.
+- Final screenshots were captured at the `#prerequesites` section and opened for visual inspection:
+  - `C:\Users\chewt\AppData\Local\Temp\courseweb-prereq-cs-210401-390.png`
+  - `C:\Users\chewt\AppData\Local\Temp\courseweb-prereq-cs-210401-1280.png`
+  - `C:\Users\chewt\AppData\Local\Temp\courseweb-prereq-che-211001-390.png`
+  - `C:\Users\chewt\AppData\Local\Temp\courseweb-prereq-che-211001-1280.png`
+  - `C:\Users\chewt\AppData\Local\Temp\courseweb-prereq-che-211001-390-expanded.png`
+  - The graph-disabled comparison was `C:\Users\chewt\AppData\Local\Temp\courseweb-prereq-cs-210401-390-baseline.png`.
+- DOM measurements on the final branch: CS 390px graph `374x168`, 2 edges; CS 1280px graph `700x144`, 2 edges; CHE 390px graph `374x622`, 3 edges; CHE 1280px graph `700x576`, 3 edges. All four had `scrollWidth === innerWidth`; no sideways scroll or clipped group border was observed. The CHE `+3` interaction changed 3 visible unlocks plus `+3` to the full list, removed the button, kept exactly 3 edges, and retained no horizontal overflow.
+- The screenshots show no per-item curves, no sibling-to-sibling unlock edges, no separate lane captions, and department prefixes `BMES`/`CHE` on the duplicated `工程數學二` unlocks. Vite was stopped, port 5184 had no listener, the temporary env file was deleted, and all temporary Chrome profiles/scripts were deleted. Screenshot PNGs were intentionally left in the system temp directory.
+
+### Unverified and maintainer questions
+
+- `origin/main` was not checked out in a second worktree. The required same-page comparison used a temporary local constant that disabled only the new graph; the heading, audience line, original-text disclosure, related-course table, and mobile navigation outside the block remained structurally unchanged. This was visual comparison, not a pixel-diff against a separately rendered `origin/main` page.
+- No signed-in automation, deployment, or production write was performed. The live API/Supabase reads were unauthenticated/read-only. The bounded semester query still cannot resolve prerequisite names absent from those two semesters or rows with empty prerequisite text; broader catalog coverage would need a separate maintainer-approved query.
+- The repository’s pre-existing web type-check and ESLint configuration blockers remain for the maintainer to resolve; neither reports a changed-file diagnostic.
+
+## Round 5 narrow-layout connector correction
+
+### Findings and design decisions
+
+- The existing graph integration remains in `apps/web/src/components/CourseDetails/CourseDetailsContainer.tsx:494-507`, with the unchanged course-detail heading, original-text disclosure, and related-course table surrounding `PrerequisiteBlock`. The narrow-only rendering change is contained in `apps/web/src/components/CourseDetails/PrerequisiteGraph.tsx:381-413`.
+- At narrow widths, consecutive requirement groups now insert the existing `prerequisite_and` dictionary label (`apps/web/src/components/CourseDetails/PrerequisiteGraph.tsx:390-398`; `apps/web/src/dictionaries/en.json:295`; `apps/web/src/dictionaries/zh.json:295`) using the same `gap-2` group stack. The label is small, muted, and left-aligned with the groups.
+- Narrow mode now omits the graph SVG entirely (`PrerequisiteGraph.tsx:348-379`) and renders two 20px vertical SVG connector lanes (`:324-339`): requirements-to-anchor and, when present, anchor-to-unlocks. The connector is a solid 1.5px border-colour line with a downward arrowhead, positioned at the measured anchor-chip centre (`:164, 215-232, 328`). Not-taken chips/boxes retain their own dashed styling; no narrow connector is dashed.
+- Wide mode still uses the existing grid classes, lane gap, marker, and cubic path function (`PrerequisiteGraph.tsx:107-131, 348-385`). The new separator and narrow connectors are gated by `!wide`, so the accepted wide layout is not restyled.
+- The SSR test now checks the rendered `and`/`而且` separator for the two-group example (`apps/web/src/components/CourseDetails/PrerequisiteBlock.ssr.test.tsx:69-76`) while retaining the exact accessibility-label assertions. No dependency was added or upgraded.
+
+### Commands and results
+
+Baseline before this round’s narrow change:
+
+- `bun run --cwd apps/web type-check` — failed with the same two pre-existing diagnostics: `apps/web/src/features/dining/useDining.ts:20` (`dining` property missing) and `apps/web/worker.ts:842` (`CacheStorage.default` missing).
+- `bun --no-env-file test src` from `apps/web` — 239 passed, 2 skipped, 0 failed, 1,057 expectations.
+- `bun test src` from `packages/shared` — 112 passed, 0 failed, 695 expectations.
+
+After the final source was restored from the temporary screenshot-only edits:
+
+- `bun --no-env-file test src` from `apps/web` — 239 passed, 2 skipped, 0 failed, 1,059 expectations. The campus-map mismatch summary, synthetic local-search error output, and SSR `useLayoutEffect` warnings are expected existing test output.
+- `bun test src` from `packages/shared` — 112 passed, 0 failed, 695 expectations.
+- `bun run --cwd packages/shared type-check` — passed.
+- `bun run --cwd apps/web type-check` — still failed only with the two baseline diagnostics above; no changed-file diagnostic was reported.
+- `bun run --cwd apps/web build` — passed (`✓ built in 38.86s`). Existing Browserslist, deprecated Tailwind `@variants`, pdfjs `eval`, Supabase chunking, and large-chunk warnings remain.
+- `bunx eslint src/components/CourseDetails/PrerequisiteGraph.tsx src/components/CourseDetails/PrerequisiteBlock.ssr.test.tsx` — blocked before linting because the existing config cannot resolve `@typescript-eslint/recommended`; no dependency was installed.
+- `bunx prettier --check src/components/CourseDetails/PrerequisiteGraph.tsx src/components/CourseDetails/PrerequisiteBlock.ssr.test.tsx src/dictionaries/en.json src/dictionaries/zh.json` — passed.
+- The dictionary key-tree parity check reported 1,913 keys in each language and identical paths.
+- `git diff --check` — passed. The worktree was left uncommitted; no commit, push, stash, or production write was performed.
+
+### Real-data and visual verification
+
+- Started `bun run --cwd apps/web dev -- --port 5184 --strictPort` with a temporary `apps/web/.env.development.local` containing `VITE_COURSEWEB_API_URL=http://localhost:5184/__api`; waited 30 seconds after the first request/compile and confirmed the app was nonblank. Both page GETs returned HTTP 200 with 9,653-byte HTML: `http://localhost:5184/zh/courses/11510CS%20%20210401` and `http://localhost:5184/zh/courses/11510CHE%20211001`. The read-only course API returned HTTP 200 for `GET http://localhost:5184/__api/course/11510CHE%20211001`; the first CS syllabus probe transiently returned 500 while the proxy was warming, and the retry returned HTTP 200 with course/syllabus data.
+- Because headless Chrome’s direct post-load `scrollIntoView` capture rasterized a blank scrolled viewport, I captured real rendered full-page images, used the measured prerequisite heading offsets (CS narrow 1699, CHE narrow 1280, CS wide 1197, CHE wide 877), cropped the section viewport with ffmpeg, and opened all four final PNGs. Temporary telemetry and the temporary desktop help-dialog default were removed before the final checks.
+- Final screenshot dimensions and paths:
+  - `C:\Users\chewt\AppData\Local\Temp\courseweb-prereq-cs-210401-390-round5.png` — 390x844.
+  - `C:\Users\chewt\AppData\Local\Temp\courseweb-prereq-cs-210401-1280-round5.png` — 1280x800.
+  - `C:\Users\chewt\AppData\Local\Temp\courseweb-prereq-che-211001-390-round5.png` — 390x844.
+  - `C:\Users\chewt\AppData\Local\Temp\courseweb-prereq-che-211001-1280-round5.png` — 1280x800.
+- Visual inspection showed `而且` between the stacked groups, no line crossing a chip, one short solid connector into the anchor, one short connector into the unlocks box, and retained dashed not-taken chips. The wide captures retain the accepted curved layout. The current CS mobile crop was compared with the graph-disabled baseline `C:\Users\chewt\AppData\Local\Temp\courseweb-prereq-cs-210401-390-baseline.png`; the heading, audience line, original-text disclosure, related-course table, row styling, and navigation outside the graph remained unchanged.
+- Vite was stopped, port 5184 was confirmed free, the temporary env file was deleted, and all browser profile directories created under `%TEMP%` were deleted. The four final screenshot PNGs were intentionally left in `%TEMP%`.
+
+### Unverified and maintainer questions
+
+- This round did not check out `origin/main` in a second worktree; the comparison used the existing graph-disabled same-page baseline because the shared checkout cannot safely switch/stash. It is a visual surrounding-region comparison, not a pixel diff against a separately rendered `origin/main` checkout.
+- No signed-in flow, deployment, or production write was attempted. API/browser checks were unauthenticated and read-only.
+- The repository’s web type-check and ESLint configuration blockers remain maintainer-owned follow-up items.

@@ -5,7 +5,10 @@ import { Helmet } from "react-helmet-async";
 import DownloadSyllabus from "./DownloadSyllabus";
 import SyllabusSummary from "./SyllabusSummary";
 import PrerequisiteBlock from "./PrerequisiteBlock";
-import { parsePrerequisites } from "@courseweb/shared";
+import {
+  parsePrerequisites,
+  type PrerequisiteGraphRow,
+} from "@courseweb/shared";
 import {
   Fade,
   Button,
@@ -52,6 +55,11 @@ const PDFViewerDynamic = lazy(
 const SelectCourseButtonDynamic = lazy(
   () => import("@/components/Courses/SelectCourseButton"),
 );
+
+const previousSemester = (semester: string) => {
+  const year = Number(semester.slice(0, 3));
+  return semester.slice(3, 4) === "1" ? `${year - 1}20` : `${year}10`;
+};
 
 const TOCNavItem = ({
   href,
@@ -135,6 +143,36 @@ const CourseDetailContainer = ({
   const hasStructuredPrerequisites =
     parsedPrerequisite?.coverage === "full" &&
     parsedPrerequisite.nodes.some((node) => node.type !== "unparsed");
+
+  const {
+    data: fetchedPrerequisiteRows = [],
+    isLoading: prerequisiteRowsLoading,
+    error: prerequisiteRowsError,
+  } = useQuery<PrerequisiteGraphRow[]>({
+    queryKey: ["course-prerequisite-graph", course?.semester],
+    queryFn: async () => {
+      const { default: supabase } = await import("@/config/supabase");
+      const semesters = [course!.semester, previousSemester(course!.semester)];
+      const { data, error } = await supabase
+        .from("courses")
+        .select(
+          "raw_id, semester, department, course, name_zh, name_en, prerequisites",
+        )
+        .in("semester", semesters)
+        .not("prerequisites", "is", null)
+        .neq("prerequisites", "")
+        .limit(1000);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !modal && Boolean(course && hasStructuredPrerequisites),
+    staleTime: 24 * 60 * 60 * 1000,
+    retry: false,
+  });
+  const prerequisiteRows =
+    prerequisiteRowsLoading || prerequisiteRowsError
+      ? []
+      : fetchedPrerequisiteRows;
 
   // Use React Query for reviews
   const {
@@ -462,6 +500,9 @@ const CourseDetailContainer = ({
                     <>
                       <PrerequisiteBlock
                         parsed={parsedPrerequisite}
+                        course={course}
+                        rows={prerequisiteRows}
+                        lang={lang}
                         dict={dict}
                       />
                       <details>

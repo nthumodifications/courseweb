@@ -287,14 +287,26 @@
         "workload": "Workload",
         "difficulty": "Difficulty"
       },
-      "prerequisite_all_of": "all of",
-      "prerequisite_any_of": "any one of",
       "prerequisite_original": "Show original text",
       "prerequisite_applies_to": "Applies to: ",
       "prerequisite_all_students": "all students",
       "prerequisite_grade_above": "or above",
+      "prerequisite_not_taken_prefix": "Not taken",
       "prerequisite_and": "and",
-      "prerequisite_not_taken_prefix": "Not taken"
+      "prerequisite_requires": "Requires",
+      "prerequisite_unlocks": "Unlocks",
+      "prerequisite_group_any": "Any one of",
+      "prerequisite_group_all": "All of",
+      "prerequisite_group_not_taken": "Must not have taken",
+      "prerequisite_aria_any": "any one of",
+      "prerequisite_aria_all": "all of",
+      "prerequisite_aria_not_taken": "not having taken",
+      "prerequisite_aria_separator": ", ",
+      "prerequisite_aria_group_separator": "; and ",
+      "prerequisite_aria_requires_separator": " ",
+      "prerequisite_aria_unlock_separator": " ",
+      "prerequisite_aria_sentence_end": ".",
+      "prerequisite_show_more": "Show {count} more courses"
     }
   },
   "navigation": {
