@@ -3,7 +3,7 @@ import useDictionary from "@/dictionaries/useDictionary";
 import {
   getTermAvailability,
   type TermAvailabilityStatus,
-} from "@/lib/modules";
+} from "@/lib/module-availability";
 
 type BarFill = "solid" | "striped" | "empty";
 

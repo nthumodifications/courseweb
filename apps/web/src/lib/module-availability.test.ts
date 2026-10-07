@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { getTermAvailability } from "./modules";
+import { getTermAvailability } from "./module-availability";
 
 const years = (from: number, to: number, term: 1 | 2) =>
   Array.from({ length: to - from + 1 }, (_, i) => `${from + i}${term}0`);
