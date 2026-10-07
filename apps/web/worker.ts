@@ -465,6 +465,17 @@ const STATIC_PAGE_METADATA: Record<string, { zh: PageMeta; en: PageMeta }> = {
         "Search all NTHU courses, view syllabi, grading policies, past scores, prerequisites, and student reviews at National Tsing Hua University.",
     },
   },
+  "/courses/modules": {
+    zh: {
+      title: "搜尋清大課程模組 | NTHUMods",
+      description: "跨學期搜尋清大課程的開課紀錄與課名變化。",
+    },
+    en: {
+      title: "Search NTHU Course Modules | NTHUMods",
+      description:
+        "Search one NTHU course across its recorded semesters and title variants.",
+    },
+  },
   "/timetable": {
     zh: {
       title: "清大個人課表規劃 | NTHUMods",
@@ -681,6 +692,7 @@ const FALLBACK_STATIC_SITEMAP = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://nthumods.com/zh/</loc><changefreq>weekly</changefreq><priority>1.00</priority></url>
   <url><loc>https://nthumods.com/zh/courses</loc><changefreq>daily</changefreq><priority>1.00</priority></url>
+  <url><loc>https://nthumods.com/zh/courses/modules</loc><changefreq>daily</changefreq><priority>0.90</priority></url>
   <url><loc>https://nthumods.com/zh/timetable</loc><changefreq>weekly</changefreq><priority>0.90</priority></url>
   <url><loc>https://nthumods.com/zh/bus</loc><changefreq>daily</changefreq><priority>0.80</priority></url>
   <url><loc>https://nthumods.com/zh/laundry</loc><changefreq>daily</changefreq><priority>0.75</priority></url>
@@ -701,6 +713,8 @@ function buildSitemapXML(courses: any[]): string {
     { path: "/en/", priority: "1.00", changefreq: "weekly" },
     { path: "/zh/courses", priority: "1.00", changefreq: "daily" },
     { path: "/en/courses", priority: "1.00", changefreq: "daily" },
+    { path: "/zh/courses/modules", priority: "0.90", changefreq: "daily" },
+    { path: "/en/courses/modules", priority: "0.90", changefreq: "daily" },
     { path: "/zh/timetable", priority: "0.90", changefreq: "weekly" },
     { path: "/en/timetable", priority: "0.90", changefreq: "weekly" },
     { path: "/zh/today", priority: "0.85", changefreq: "daily" },
@@ -917,7 +931,10 @@ export default {
     }
 
     // Course detail page
-    const courseMatch = /^\/(zh|en)\/courses\/(.+)$/.exec(url.pathname);
+    const courseMatch =
+      /^\/(zh|en)\/courses\/(?!modules(?:\/|$)|module(?:\/|$))(.+)$/.exec(
+        url.pathname,
+      );
     if (courseMatch) {
       return handleCourseDetailPage(
         courseMatch[1],
