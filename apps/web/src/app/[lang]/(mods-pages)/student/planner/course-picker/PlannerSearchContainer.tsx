@@ -130,6 +130,7 @@ const SearchContainer = ({
   const dict = useDictionary();
   const { language } = useSettings();
   const { nbHits, processingTimeMS } = useStats();
+  const { status } = useInstantSearch();
 
   return (
     <div className="flex w-full gap-4">
@@ -148,7 +149,9 @@ const SearchContainer = ({
         <div className="flex items-end ml-4">
           <span className="text-2xl">{dict.course.refine.search_results}</span>
           <span className="text-sm mr-auto ml-2">
-            ({nbHits}, {processingTimeMS}ms)
+            {(status === "loading" || status === "stalled") && nbHits === 0
+              ? dict.common.loading
+              : `(${nbHits}, ${processingTimeMS}ms)`}
           </span>
           <a
             href="https://www.algolia.com/?utm_medium=AOS-referral"

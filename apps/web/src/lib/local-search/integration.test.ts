@@ -399,7 +399,7 @@ describe("local search against the real in-process search-chunk API", () => {
     expect(result.nbPages).toBe(0);
   });
 
-  test("memoizes a failed real chunk load and lets the resilient client fall through", async () => {
+  test("retries a failed real chunk load and lets the resilient client fall through", async () => {
     let courseLoadCalls = 0;
     const failingApp = new Hono().route(
       "/search/chunk",
@@ -426,7 +426,7 @@ describe("local search against the real in-process search-chunk API", () => {
     for (const query of ["", "E", "Env"]) {
       await expect(local.trySearch([request({ query })])).rejects.toThrow();
     }
-    expect(courseLoadCalls).toBe(1);
+    expect(courseLoadCalls).toBe(4);
     expect(local.getStatus()).toBe("error");
 
     let remoteCalls = 0;
@@ -462,6 +462,6 @@ describe("local search against the real in-process search-chunk API", () => {
     };
     expect(remoteCalls).toBe(1);
     expect(remoteResult.results[0]?.hits[0]?.objectID).toBe("remote");
-    expect(courseLoadCalls).toBe(2);
+    expect(courseLoadCalls).toBe(5);
   });
 });
