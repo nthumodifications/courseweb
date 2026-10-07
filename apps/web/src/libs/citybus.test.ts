@@ -2,9 +2,12 @@ import { describe, expect, test } from "bun:test";
 import {
   formatDepartureCountdown,
   formatDepartureTime,
+  getCityBusTrips,
   getCityBusTimetable,
   getDistinctCityBusDirections,
+  getNextCityBusTripIndex,
   hasDistinctCityBusDayTypes,
+  stepCityBusTrip,
   type CityBusRoute,
   type CityBusSchedule,
 } from "./citybus";
@@ -66,6 +69,31 @@ function schedule(
   };
 }
 
+function frequencySchedule(
+  serviceDays: Partial<CityBusSchedule["serviceDays"]>,
+  startTime: string,
+  endTime: string,
+): CityBusSchedule {
+  return {
+    kind: "frequency",
+    serviceDays: {
+      Sunday: false,
+      Monday: false,
+      Tuesday: false,
+      Wednesday: false,
+      Thursday: false,
+      Friday: false,
+      Saturday: false,
+      ...serviceDays,
+    },
+    timesByStop: {},
+    timeBasis: "stop",
+    originStopId: "stop",
+    specialDays: [],
+    frequency: { startTime, endTime, headwayMinutes: 15 },
+  };
+}
+
 function makeRoute(schedules: CityBusSchedule[]): CityBusRoute {
   const makeDirection = (id: string, label: string) => ({
     id,
@@ -96,6 +124,8 @@ function makeRoute(schedules: CityBusSchedule[]): CityBusRoute {
     tdxRouteName: "test",
     generatedAt: "2026-01-01",
     sourceInfo: source,
+    stopNamesZh: ["清華大學"],
+    stopNamesEn: ["National Tsing Hua University"],
     directions: [
       makeDirection("one", "路線 A"),
       makeDirection("duplicate", "路線 B"),
@@ -139,5 +169,45 @@ describe("city bus route variants and full-day timetable", () => {
         (item) => item.departureTime,
       ),
     ).toEqual(["09:00"]);
+  });
+});
+
+describe("city bus trip selection", () => {
+  test("keeps a cross-midnight trip after the same-day departure", () => {
+    const route = makeRoute([schedule({ Monday: true }, ["23:50", "25:10"])]);
+    const now = new Date("2026-10-05T23:40:00+08:00");
+    const trips = getCityBusTrips(route, "one", "stop", now);
+    const nextIndex = getNextCityBusTripIndex(trips, now);
+
+    expect(trips[nextIndex]?.departureTime).toBe("23:50");
+    expect(trips[nextIndex + 1]?.departureTime).toBe("01:10");
+    expect(trips[nextIndex + 1]?.dayOffset).toBe(1);
+  });
+
+  test("steps to the previous and next trip without leaving the list", () => {
+    const route = makeRoute([schedule({ Monday: true }, ["08:00", "13:00"])]);
+    const now = new Date("2026-10-05T09:00:00+08:00");
+    const trips = getCityBusTrips(route, "one", "stop", now);
+    const currentIndex = getNextCityBusTripIndex(trips, now);
+
+    expect(trips[currentIndex]?.departureTime).toBe("13:00");
+    expect(stepCityBusTrip(trips, currentIndex, -1)).toBe(currentIndex - 1);
+    expect(stepCityBusTrip(trips, currentIndex, 1)).toBe(currentIndex + 1);
+    expect(stepCityBusTrip(trips, 0, -1)).toBe(-1);
+    expect(stepCityBusTrip(trips, trips.length - 1, 1)).toBe(-1);
+  });
+
+  test("keeps frequency routes as one window without inventing stop times", () => {
+    const route = makeRoute([
+      frequencySchedule({ Monday: true }, "06:00", "22:00"),
+    ]);
+    const now = new Date("2026-10-05T12:00:00+08:00");
+    const trips = getCityBusTrips(route, "one", "stop", now);
+
+    expect(getNextCityBusTripIndex(trips, now)).toBeGreaterThanOrEqual(0);
+    const trip = trips[getNextCityBusTripIndex(trips, now)];
+    expect(trip?.kind).toBe("frequency");
+    expect(trip?.departureTime).toBe("06:00–22:00");
+    expect(trip?.timesByStop).toEqual({});
   });
 });

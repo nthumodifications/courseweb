@@ -112,6 +112,17 @@ export interface CityBusDeparture {
 
 export type CityBusTimetableEntry = CityBusDeparture & { past: boolean };
 
+export interface CityBusTrip {
+  id: string;
+  kind: CityBusSchedule["kind"];
+  departureTime: string;
+  dayOffset: number;
+  absoluteMinutes: number;
+  timesByStop: Record<string, string | undefined>;
+  timeBasis: CityBusSchedule["timeBasis"];
+  frequency?: CityBusSchedule["frequency"];
+}
+
 export type CityBusScheduleStatus = "scheduled" | "no_timetable" | "no_service";
 
 export interface CityBusDeparturesResponse {
@@ -302,6 +313,110 @@ function scheduleTimesAtStop(schedule: CityBusSchedule, stopId: string) {
   const origin = schedule.timesByStop[schedule.originStopId];
   if (!origin?.length) return undefined;
   return { values: origin, basis: "origin" as const };
+}
+
+function tripTimeAtStop(
+  schedule: CityBusSchedule,
+  stopId: string,
+  tripIndex: number,
+) {
+  return schedule.timesByStop[stopId]?.[tripIndex];
+}
+
+export function getCityBusTrips(
+  route: CityBusRoute,
+  directionId: string,
+  stopId: string,
+  now: Date,
+): CityBusTrip[] {
+  const direction = route.directions.find((item) => item.id === directionId);
+  const stop = direction?.stops.find((item) => item.id === stopId);
+  const currentMinutes = clockToMinutes(taipeiClock(now).time);
+  if (!direction || !stop || currentMinutes === null) return [];
+
+  const trips: CityBusTrip[] = [];
+  for (let dayOffset = -7; dayOffset <= 7; dayOffset += 1) {
+    const day = taipeiClock(now, dayOffset);
+    for (
+      let scheduleIndex = 0;
+      scheduleIndex < direction.schedules.length;
+      scheduleIndex += 1
+    ) {
+      const schedule = direction.schedules[scheduleIndex];
+      if (!scheduleRunsOn(schedule, day.weekday, day.date)) continue;
+
+      if (schedule.kind === "frequency") {
+        const start = timeToMinutes(schedule.frequency?.startTime ?? "");
+        const end = timeToMinutes(schedule.frequency?.endTime ?? "");
+        if (start === null || end === null) continue;
+        if (schedule.timeBasis === "stop" && schedule.originStopId !== stop.id)
+          continue;
+
+        const endMinutes = end <= start ? end + 1440 : end;
+        const absoluteStart = dayOffset * 1440 + start;
+        const absoluteEnd = dayOffset * 1440 + endMinutes;
+        if (absoluteEnd < currentMinutes) continue;
+        const isActive =
+          absoluteStart <= currentMinutes && currentMinutes <= absoluteEnd;
+        const absoluteMinutes = isActive ? currentMinutes : absoluteStart;
+        trips.push({
+          id: `${scheduleIndex}:${dayOffset}:frequency`,
+          kind: schedule.kind,
+          departureTime: `${minutesToTime(start)}–${minutesToTime(end)}`,
+          dayOffset: Math.floor(absoluteMinutes / 1440),
+          absoluteMinutes,
+          timesByStop: {},
+          timeBasis: schedule.timeBasis,
+          frequency: schedule.frequency,
+        });
+        continue;
+      }
+
+      const boardingTimes = scheduleTimesAtStop(schedule, stop.id);
+      if (!boardingTimes) continue;
+      for (
+        let tripIndex = 0;
+        tripIndex < boardingTimes.values.length;
+        tripIndex += 1
+      ) {
+        const rawMinutes = timeToMinutes(boardingTimes.values[tripIndex]);
+        if (rawMinutes === null) continue;
+        const absoluteMinutes = dayOffset * 1440 + rawMinutes;
+        const timesByStop = Object.fromEntries(
+          direction.stops.map((item) => [
+            item.id,
+            tripTimeAtStop(schedule, item.id, tripIndex),
+          ]),
+        );
+        trips.push({
+          id: `${scheduleIndex}:${dayOffset}:${tripIndex}`,
+          kind: schedule.kind,
+          departureTime: minutesToTime(rawMinutes),
+          dayOffset: Math.floor(absoluteMinutes / 1440),
+          absoluteMinutes,
+          timesByStop,
+          timeBasis: boardingTimes.basis,
+        });
+      }
+    }
+  }
+
+  return trips.sort((a, b) => a.absoluteMinutes - b.absoluteMinutes);
+}
+
+export function getNextCityBusTripIndex(trips: CityBusTrip[], now: Date) {
+  const currentMinutes = clockToMinutes(taipeiClock(now).time);
+  if (currentMinutes === null) return -1;
+  return trips.findIndex((trip) => trip.absoluteMinutes >= currentMinutes);
+}
+
+export function stepCityBusTrip(
+  trips: CityBusTrip[],
+  currentIndex: number,
+  direction: -1 | 1,
+) {
+  const nextIndex = currentIndex + direction;
+  return nextIndex >= 0 && nextIndex < trips.length ? nextIndex : -1;
 }
 
 function representativeDate(now: Date, dayType: CityBusDayType) {

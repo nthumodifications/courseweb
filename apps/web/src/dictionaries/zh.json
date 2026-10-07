@@ -508,11 +508,9 @@
     "remove_bus": "移除我的公車",
     "directions": "方向",
     "stops": "站",
-    "choose_stop": "選擇上車站",
-    "from_stop": "上車",
+    "previous_trip": "上一班",
+    "next_trip": "下一班",
     "head_to": "前往",
-    "from_origin": "起點發車",
-    "at_stop": "時刻為此上車站發車時間",
     "no_timetable": "此日沒有公布時刻表",
     "frequency_window": "班距",
     "no_route_matches": "找不到符合的路線",
@@ -537,7 +535,7 @@
     "campus_widget_title": "校園公車",
     "widget_title": "校園及市區公車",
     "no_departures": "今日無班次",
-    "full_day_timetable": "全天時刻表"
+    "direction": "方向"
   },
   "settings": {
     "navigation_aria": "設定導覽",

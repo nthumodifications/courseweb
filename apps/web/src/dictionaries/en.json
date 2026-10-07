@@ -508,11 +508,9 @@
     "remove_bus": "Remove from my buses",
     "directions": "Directions",
     "stops": "stops",
-    "choose_stop": "Choose boarding stop",
-    "from_stop": "From",
+    "previous_trip": "Previous trip",
+    "next_trip": "Next trip",
     "head_to": "To",
-    "from_origin": "Origin departure",
-    "at_stop": "Times shown are departures from this boarding stop",
     "no_timetable": "No timetable published for this day",
     "frequency_window": "Every",
     "no_route_matches": "No matching routes",
@@ -537,7 +535,7 @@
     "campus_widget_title": "Campus Bus",
     "widget_title": "Campus and city buses",
     "no_departures": "No departures today",
-    "full_day_timetable": "Full-day timetable"
+    "direction": "Direction"
   },
   "settings": {
     "navigation_aria": "Settings navigation",

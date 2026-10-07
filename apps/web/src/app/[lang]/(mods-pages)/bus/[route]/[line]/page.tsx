@@ -3,12 +3,10 @@ import { NandaLineIcon } from "@/components/BusIcons/NandaLineIcon";
 import { RedLineIcon } from "@/components/BusIcons/RedLineIcon";
 import { Route1LineIcon } from "@/components/BusIcons/Route1LineIcon";
 import { Route2LineIcon } from "@/components/BusIcons/Route2LineIcon";
-import { Button } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
 import { getTimeOnDate } from "@/helpers/bus";
 import { useSettings } from "@/hooks/contexts/settings";
 import useTime from "@/hooks/useTime";
-import { cn } from "@courseweb/ui";
 import {
   addMinutes,
   formatDate,
@@ -23,21 +21,17 @@ import {
   set,
   getDay,
 } from "date-fns";
-import { Bus, ChevronLeft, Star } from "lucide-react";
-import { Link } from "react-router-dom";
 import { useParams, useSearchParams } from "react-router-dom";
 import { useMemo } from "react";
 import { getAllBusData } from "@/libs/bus";
 import { useQuery } from "@tanstack/react-query";
 import CityBusDetails from "./CityBusDetails";
 import { useBusPins, type CampusBusPin } from "@/features/bus/busPins";
-
-enum BusStationState {
-  UNAVAILABLE,
-  ARRIVING,
-  AT_STATION,
-  LEFT,
-}
+import {
+  BusLineHeader,
+  BusStationState,
+  BusStopTimeline,
+} from "@/features/bus/BusLineDetailShared";
 
 const linesDict: {
   [key: string]: {
@@ -623,161 +617,45 @@ const CampusLineDisplayPage = () => {
   }
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex flex-row items-center px-2 gap-4">
-        <Button variant={"ghost"} asChild>
-          <Link to={returnUrl}>
-            <ChevronLeft className="w-4 h-4 mr-2" />
-          </Link>
-        </Button>
-        <div className="flex flex-row gap-4 items-center">
-          {isNandaCombined ? (
+      <BusLineHeader
+        returnUrl={returnUrl}
+        title={
+          isNandaCombined
+            ? language == "zh"
+              ? "南大校車 經台積館 & 經教育學院"
+              : "Nanda Via TSMC & COE"
+            : language == "zh"
+              ? lineData.title_zh
+              : lineData.title_en
+        }
+        icon={
+          isNandaCombined ? (
             <>
               <Route1LineIcon />
               <Route2LineIcon />
-              <h3 className="text-foreground font-bold">
-                {language == "zh"
-                  ? "南大校車 經台積館 & 經教育學院"
-                  : "Nanda Via TSMC & COE"}
-              </h3>
             </>
           ) : (
-            <>
-              <lineData.Icon />
-              <h3 className="text-foreground font-bold">
-                {language == "zh" ? lineData.title_zh : lineData.title_en}
-              </h3>
-            </>
-          )}
-        </div>
-        {campusPin && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="ml-auto min-h-11 min-w-11"
-            aria-label={
-              pinned(campusPin) ? dict.bus.remove_bus : dict.bus.add_bus
-            }
-            onClick={() => toggle(campusPin)}
-          >
-            <Star
-              className={cn(
-                "h-4 w-4",
-                pinned(campusPin) ? "text-nthu-500" : "text-muted-foreground",
-              )}
-              fill={pinned(campusPin) ? "currentColor" : "none"}
-            />
-          </Button>
-        )}
-      </div>
-      <div className="w-full items-start inline-flex px-4">
-        <div className="w-full p-2 flex-col justify-start inline-flex">
-          {isNandaCombined
-            ? displayText.map((m, i) => (
-                <div key={i} className={cn("items-stretch gap-4 inline-flex")}>
-                  <div className="h-auto relative w-5">
-                    <div className="absolute top-0 left-[calc(50%-2px)] w-1 h-1/2 bg-border z-10" />
-                    {m.state == BusStationState.ARRIVING && (
-                      <div className="absolute top-[calc(-10px)] w-5 h-5 bg-nthu-500 rounded-full z-20 grid place-items-center">
-                        <Bus className="w-3.5 h-3.5 text-white" />
-                      </div>
-                    )}
-                    {m.state == BusStationState.AT_STATION && (
-                      <div className="absolute top-[calc(50%-10px)] w-5 h-5 bg-nthu-500 rounded-full z-20 grid place-items-center">
-                        <Bus className="w-3.5 h-3.5 text-white" />
-                      </div>
-                    )}
-                    {m.state == BusStationState.LEFT && (
-                      <div className="absolute top-[calc(100%+10px)] w-5 h-5 bg-nthu-500 rounded-full z-20 grid place-items-center">
-                        <Bus className="w-3.5 h-3.5 text-white" />
-                      </div>
-                    )}
-                    <div className="absolute left-[calc(50%-6px)] top-[calc(50%-6px)] w-3 h-3 bg-border rounded-full z-10" />
-                    {i != displayText.length - 1 && (
-                      <div className="absolute top-1/2 left-[calc(50%-2px)] w-1 h-1/2 bg-border z-10" />
-                    )}
-                  </div>
-                  <div
-                    className={cn(
-                      "flex-1 py-4 justify-start items-center gap-2 flex border-b border-border",
-                      m.state > BusStationState.AT_STATION ? "opacity-30" : "",
-                    )}
-                  >
-                    <div className="text-foreground text-base font-bold">
-                      {m.station}
-                    </div>
-                    <div className="flex-1 text-right flex items-center justify-end gap-2">
-                      {m.bus && "type" in m.bus && (
-                        <div className="text-foreground">
-                          {m.bus.type === "route1" ? (
-                            <Route1LineIcon width={15} height={15} />
-                          ) : m.bus.type === "route2" ? (
-                            <Route2LineIcon width={15} height={15} />
-                          ) : null}
-                        </div>
-                      )}
-                      <div
-                        className={cn(
-                          "text-base font-bold",
-                          m.state == BusStationState.AT_STATION
-                            ? "text-nthu-500"
-                            : "text-muted-foreground",
-                        )}
-                      >
-                        {m.time}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))
-            : displayText.map((m, i) => (
-                <div key={i} className={cn("items-stretch gap-4 inline-flex")}>
-                  <div className="h-auto relative w-5">
-                    <div className="absolute top-0 left-[calc(50%-2px)] w-1 h-1/2 bg-border z-10" />
-                    {m.state == BusStationState.ARRIVING && (
-                      <div className="absolute top-[calc(-10px)] w-5 h-5 bg-nthu-500 rounded-full z-20 grid place-items-center">
-                        <Bus className="w-3.5 h-3.5 text-white" />
-                      </div>
-                    )}
-                    {m.state == BusStationState.AT_STATION && (
-                      <div className="absolute top-[calc(50%-10px)] w-5 h-5 bg-nthu-500 rounded-full z-20 grid place-items-center">
-                        <Bus className="w-3.5 h-3.5 text-white" />
-                      </div>
-                    )}
-                    {m.state == BusStationState.LEFT && (
-                      <div className="absolute top-[calc(100%+10px)] w-5 h-5 bg-nthu-500 rounded-full z-20 grid place-items-center">
-                        <Bus className="w-3.5 h-3.5 text-white" />
-                      </div>
-                    )}
-                    <div className="absolute left-[calc(50%-6px)] top-[calc(50%-6px)] w-3 h-3 bg-border rounded-full z-10" />
-                    {i != displayText.length - 1 && (
-                      <div className="absolute top-1/2 left-[calc(50%-2px)] w-1 h-1/2 bg-border z-10" />
-                    )}
-                  </div>
-                  <div
-                    className={cn(
-                      "flex-1 py-4 justify-start items-center gap-2 flex border-b border-border",
-                      m.state > BusStationState.AT_STATION ? "opacity-30" : "",
-                    )}
-                  >
-                    <div className="text-foreground text-base font-bold">
-                      {m.station}
-                    </div>
-                    <div
-                      className={cn(
-                        "flex-1 text-right text-base font-bold",
-                        m.state == BusStationState.AT_STATION
-                          ? "text-nthu-500"
-                          : "text-muted-foreground",
-                      )}
-                    >
-                      {m.time}
-                    </div>
-                  </div>
-                </div>
-              ))}
-        </div>
-      </div>
+            <lineData.Icon />
+          )
+        }
+        pinned={campusPin ? pinned(campusPin) : undefined}
+        onTogglePin={campusPin ? () => toggle(campusPin) : undefined}
+      />
+      <BusStopTimeline
+        items={displayText.map((m) => ({
+          state: m.state,
+          station: m.station,
+          time: m.time,
+          lineIcon:
+            isNandaCombined && m.bus && "type" in m.bus ? (
+              m.bus.type === "route1" ? (
+                <Route1LineIcon width={15} height={15} />
+              ) : m.bus.type === "route2" ? (
+                <Route2LineIcon width={15} height={15} />
+              ) : undefined
+            ) : undefined,
+        }))}
+      />
     </div>
   );
 };
