@@ -6,6 +6,7 @@ import {
   type LocalSearchClientOptions,
 } from "./local-search/client";
 import type { SearchTextRecord } from "./local-search/cache";
+import { fetchJsonWithDeadline } from "./local-search/deadline";
 import { lastSemester } from "@courseweb/shared";
 
 export type SearchBackend =
@@ -254,39 +255,25 @@ const fallbackFacetUrl = (request: { params?: unknown }) => {
 };
 
 const fetchFallback = async <T>(url: string): Promise<T> => {
-  const controller = new AbortController();
-  let timeoutId: ReturnType<typeof setTimeout> | undefined;
-  const timeout = new Promise<never>((_, reject) => {
-    timeoutId = setTimeout(() => {
-      controller.abort();
-      reject(
-        new Error(
-          `Course-search API fallback timed out after ${FALLBACK_TIMEOUT_MS}ms`,
-        ),
-      );
-    }, FALLBACK_TIMEOUT_MS);
-  });
-
-  try {
-    const response = await Promise.race([
-      fetch(url, { signal: controller.signal }),
-      timeout,
-    ]);
-    const payload = (await response.json()) as FallbackPayload<T>;
-    if (!response.ok || !payload.success || !payload.data) {
-      throw new Error(
-        payload.error?.details ??
-          payload.error?.message ??
-          "Fallback search failed",
-      );
-    }
-    if (payload.data.warnings?.length) {
-      console.warn("Course search fallback limitations:", payload.data.warnings);
-    }
-    return payload.data;
-  } finally {
-    if (timeoutId !== undefined) clearTimeout(timeoutId);
+  const { response, data } = await fetchJsonWithDeadline<FallbackPayload<T>>(
+    url,
+    FALLBACK_TIMEOUT_MS,
+    undefined,
+    (input, init) => fetch(input, init),
+    "Course-search API fallback",
+  );
+  const payload = data;
+  if (!response.ok || !payload.success || !payload.data) {
+    throw new Error(
+      payload.error?.details ??
+        payload.error?.message ??
+        "Fallback search failed",
+    );
   }
+  if (payload.data.warnings?.length) {
+    console.warn("Course search fallback limitations:", payload.data.warnings);
+  }
+  return payload.data;
 };
 
 const emptySearchResponse = <T>(request: {

@@ -34,6 +34,7 @@ import type {
   WorkerDocument,
   WorkerResponse,
 } from "./worker-protocol";
+import { fetchJsonWithDeadline } from "./deadline";
 
 export type LocalSearchParams = RefinementSpec & {
   query?: string;
@@ -88,6 +89,13 @@ export type FetchLike = (
 
 export type LocalSearchStatus = "idle" | "loading" | "ready" | "error";
 
+export class MissingLocalSearchChunkError extends Error {
+  constructor(semester: string) {
+    super(`No local course chunk for semester ${semester}`);
+    this.name = "MissingLocalSearchChunkError";
+  }
+}
+
 export type LocalSearchEngineOptions = {
   baseUrl?: string;
   fetch?: FetchLike;
@@ -104,6 +112,12 @@ type LoadedChunk = {
   shortLatinPrefixes: Map<string, Set<number>>;
   shortLatinRankScores: Map<string, Map<number, number>>;
   manifest: SearchManifestEntry;
+};
+
+type ChunkSource = {
+  records: SearchProjectionRecord[];
+  manifest: SearchManifestEntry;
+  stale: boolean;
 };
 
 type SearchTextChunk = {
@@ -123,6 +137,14 @@ type WorkerPending = {
   reject: (error: Error) => void;
 };
 
+type RevalidationState = {
+  chunk: LoadedChunk;
+  delayMs: number;
+  retryAt: number;
+  timer?: ReturnType<typeof setTimeout>;
+  inFlight?: Promise<void>;
+};
+
 const getEnv = () =>
   (
     import.meta as ImportMeta & {
@@ -136,32 +158,8 @@ const isSuccessful = (response: Response) =>
 const MANIFEST_TIMEOUT_MS = 8_000;
 const CHUNK_TIMEOUT_MS = 30_000;
 const TEXT_CHUNK_TIMEOUT_MS = 30_000;
-
-const fetchWithTimeout = async (
-  fetchFn: FetchLike,
-  input: RequestInfo | URL,
-  init: RequestInit | undefined,
-  timeoutMs: number,
-  label: string,
-) => {
-  const controller = new AbortController();
-  let timeoutId: ReturnType<typeof setTimeout> | undefined;
-  const timeout = new Promise<never>((_, reject) => {
-    timeoutId = setTimeout(() => {
-      controller.abort();
-      reject(new Error(`${label} timed out after ${timeoutMs}ms`));
-    }, timeoutMs);
-  });
-
-  try {
-    return await Promise.race([
-      fetchFn(input, { ...init, signal: controller.signal }),
-      timeout,
-    ]);
-  } finally {
-    if (timeoutId !== undefined) clearTimeout(timeoutId);
-  }
-};
+const REVALIDATION_INITIAL_DELAY_MS = 30_000;
+const REVALIDATION_MAX_DELAY_MS = 10 * 60_000;
 
 const defaultWorkerFactory = () => {
   if (typeof Worker === "undefined") return undefined;
@@ -545,6 +543,8 @@ export class LocalSearchEngine {
   private readonly listeners = new Set<() => void>();
   private status: LocalSearchStatus = "idle";
   private readonly defaultSemester?: string;
+  private readonly revalidations = new Map<string, RevalidationState>();
+  private visibilityListenerAttached = false;
 
   constructor(options: LocalSearchEngineOptions = {}) {
     const env = getEnv();
@@ -580,39 +580,179 @@ export class LocalSearchEngine {
     for (const listener of this.listeners) listener();
   }
 
+  private pageIsHidden() {
+    return (
+      typeof document !== "undefined" && document.visibilityState === "hidden"
+    );
+  }
+
+  private readonly handleVisibilityChange = () => {
+    if (this.pageIsHidden()) {
+      for (const state of this.revalidations.values()) {
+        if (state.timer !== undefined) {
+          clearTimeout(state.timer);
+          state.timer = undefined;
+        }
+      }
+      return;
+    }
+    for (const [semester, state] of this.revalidations) {
+      this.scheduleRevalidation(semester, state);
+    }
+  };
+
+  private attachVisibilityListener() {
+    if (this.visibilityListenerAttached || typeof document === "undefined")
+      return;
+    document.addEventListener("visibilitychange", this.handleVisibilityChange);
+    this.visibilityListenerAttached = true;
+  }
+
+  private detachVisibilityListener() {
+    if (!this.visibilityListenerAttached || typeof document === "undefined")
+      return;
+    document.removeEventListener(
+      "visibilitychange",
+      this.handleVisibilityChange,
+    );
+    this.visibilityListenerAttached = false;
+  }
+
+  private scheduleRevalidation(semester: string, state: RevalidationState) {
+    if (
+      state.timer !== undefined ||
+      state.inFlight !== undefined ||
+      this.pageIsHidden()
+    )
+      return;
+    const delay = Math.max(0, state.retryAt - Date.now());
+    state.timer = globalThis.setTimeout(() => {
+      state.timer = undefined;
+      this.runRevalidation(semester, state);
+    }, delay);
+  }
+
+  private startRevalidation(semester: string, chunk: LoadedChunk) {
+    if (this.revalidations.has(semester)) return;
+    const state: RevalidationState = {
+      chunk,
+      delayMs: REVALIDATION_INITIAL_DELAY_MS,
+      retryAt: Date.now() + REVALIDATION_INITIAL_DELAY_MS,
+    };
+    this.revalidations.set(semester, state);
+    this.attachVisibilityListener();
+    this.scheduleRevalidation(semester, state);
+  }
+
+  private stopRevalidation(semester: string) {
+    const state = this.revalidations.get(semester);
+    if (!state) return;
+    if (state.timer !== undefined) clearTimeout(state.timer);
+    this.revalidations.delete(semester);
+    if (!this.revalidations.size) this.detachVisibilityListener();
+  }
+
+  private async runRevalidation(semester: string, state: RevalidationState) {
+    if (this.revalidations.get(semester) !== state || state.inFlight) return;
+    const attempt = (async () => {
+      try {
+        const source = await this.downloadChunk(semester, false);
+        const freshChunk = await this.buildChunk(source);
+        if (this.revalidations.get(semester) !== state) {
+          freshChunk.index.dispose?.();
+          return;
+        }
+
+        const oldIndex = state.chunk.index;
+        Object.assign(state.chunk, freshChunk);
+        oldIndex.dispose?.();
+        this.stopRevalidation(semester);
+        this.setStatus("ready");
+        this.startTextLoad(semester, state.chunk);
+        this.notify();
+      } catch (error) {
+        if (this.revalidations.get(semester) !== state) return;
+        if (error instanceof MissingLocalSearchChunkError) {
+          this.stopRevalidation(semester);
+          this.chunks.delete(semester);
+          this.failedChunks.set(semester, error);
+          state.chunk.index.dispose?.();
+          this.setStatus("idle");
+          return;
+        }
+        state.delayMs = Math.min(state.delayMs * 2, REVALIDATION_MAX_DELAY_MS);
+        state.retryAt = Date.now() + state.delayMs;
+      }
+    })();
+    state.inFlight = attempt;
+    try {
+      await attempt;
+    } finally {
+      if (state.inFlight === attempt) {
+        state.inFlight = undefined;
+        if (this.revalidations.get(semester) === state)
+          this.scheduleRevalidation(semester, state);
+      }
+    }
+  }
+
   private async manifest() {
-    const response = await fetchWithTimeout(
-      this.fetchFn,
+    const { response, data } = await fetchJsonWithDeadline<unknown>(
       `${this.baseUrl}/search/chunk/manifest`,
-      undefined,
       MANIFEST_TIMEOUT_MS,
+      undefined,
+      this.fetchFn,
       "Course-search manifest",
     );
     if (!isSuccessful(response)) {
       throw new Error(`Course-search manifest failed (${response.status})`);
     }
-    return normalizeManifest(await response.json());
+    return normalizeManifest(data);
   }
 
-  private async loadChunk(semester: string): Promise<LoadedChunk> {
-    this.setStatus("loading");
-    let manifest: SearchManifestEntry | undefined;
-    let records: SearchProjectionRecord[];
-    try {
-      manifest = (await this.manifest()).find((entry) => entry.id === semester);
-      if (!manifest)
-        throw new Error(`No local course chunk for semester ${semester}`);
+  private async cachedChunkOrThrow(
+    semester: string,
+    error: unknown,
+  ): Promise<ChunkSource> {
+    const cached = await this.cache.getLatest(semester);
+    if (!cached) throw error;
+    return {
+      records: cached.records,
+      stale: true,
+      manifest: {
+        id: semester,
+        rowCount: cached.records.length,
+        contentHash: cached.contentHash,
+        formatVersion: cached.formatVersion,
+      },
+    };
+  }
 
+  private async downloadChunk(
+    semester: string,
+    allowCachedFallback: boolean,
+  ): Promise<ChunkSource> {
+    let entries: SearchManifestEntry[];
+    try {
+      entries = await this.manifest();
+    } catch (error) {
+      if (!allowCachedFallback) throw error;
+      return this.cachedChunkOrThrow(semester, error);
+    }
+
+    const manifest = entries.find((entry) => entry.id === semester);
+    if (!manifest) throw new MissingLocalSearchChunkError(semester);
+
+    try {
       const key = searchChunkCacheKey(
         semester,
         manifest.contentHash,
         manifest.formatVersion,
       );
       const cached = await this.cache.get(key);
-
-      const response = await fetchWithTimeout(
-        this.fetchFn,
+      const { response, data } = await fetchJsonWithDeadline<unknown>(
         `${this.baseUrl}/search/chunk/${encodeURIComponent(semester)}`,
+        CHUNK_TIMEOUT_MS,
         cached
           ? {
               headers: {
@@ -620,65 +760,68 @@ export class LocalSearchEngine {
               },
             }
           : undefined,
-        CHUNK_TIMEOUT_MS,
+        this.fetchFn,
         "Course-search chunk",
       );
       if (response.status === 304) {
         if (!cached)
           throw new Error("Course chunk returned 304 without a cache entry");
-        records = cached.records;
-      } else {
-        if (!isSuccessful(response)) {
-          throw new Error(`Course-search chunk failed (${response.status})`);
-        }
-        records = normalizeChunk(await response.json()).map(
-          prepareSearchRecord,
-        );
-        if (
-          manifest.rowCount !== undefined &&
-          records.length !== manifest.rowCount
-        ) {
-          throw new Error(
-            `Course-search chunk row count mismatch (${records.length}/${manifest.rowCount})`,
-          );
-        }
-        const cacheValue: CachedSearchChunk = {
-          semester,
-          formatVersion: manifest.formatVersion,
-          contentHash: manifest.contentHash,
-          records,
-        };
-        await this.cache.set(key, cacheValue);
-        await this.cache.deleteSemester(semester, key);
+        return { records: cached.records, manifest, stale: false };
       }
-    } catch (error) {
-      const cached = await this.cache.getLatest(semester);
-      if (!cached) throw error;
-      records = cached.records;
-      manifest = {
-        id: semester,
-        rowCount: records.length,
-        contentHash: cached.contentHash,
-        formatVersion: cached.formatVersion,
+      if (!isSuccessful(response)) {
+        throw new Error(`Course-search chunk failed (${response.status})`);
+      }
+      const records = normalizeChunk(data).map(prepareSearchRecord);
+      if (
+        manifest.rowCount !== undefined &&
+        records.length !== manifest.rowCount
+      ) {
+        throw new Error(
+          `Course-search chunk row count mismatch (${records.length}/${manifest.rowCount})`,
+        );
+      }
+      const responseHash = unquoteEntityTag(response.headers.get("etag"));
+      if (responseHash && responseHash !== manifest.contentHash) {
+        throw new Error(
+          `Course-search chunk integrity mismatch (${responseHash}/${manifest.contentHash})`,
+        );
+      }
+      const cacheValue: CachedSearchChunk = {
+        semester,
+        formatVersion: manifest.formatVersion,
+        contentHash: manifest.contentHash,
+        records,
       };
+      if (!(await this.cache.set(key, cacheValue))) {
+        throw new Error("Course-search chunk cache write failed");
+      }
+      await this.cache.deleteSemester(semester, key);
+      return { records, manifest, stale: false };
+    } catch (error) {
+      if (!allowCachedFallback) throw error;
+      return this.cachedChunkOrThrow(semester, error);
     }
+  }
 
-    if (!manifest)
-      throw new Error(`No local course chunk for semester ${semester}`);
-
+  private async buildChunk(source: ChunkSource): Promise<LoadedChunk> {
+    const { records, manifest } = source;
     const index = workerIndexFor(records, this.workerFactory);
-    await index.build(
-      records.map((record, id) => ({
-        id: String(id),
-        text: searchableText(record),
-      })),
-    );
+    try {
+      await index.build(
+        records.map((record, id) => ({
+          id: String(id),
+          text: searchableText(record),
+        })),
+      );
+    } catch (error) {
+      index.dispose?.();
+      throw error;
+    }
     // Pay the Latin matcher cache cost during chunk load, not the first
     // broad query (where it would look like search latency).
     const facetValueRows = buildFacetValueRows(records);
-    this.setStatus("ready");
     const shortLatinIndex = buildShortLatinPrefixIndex(records);
-    const chunk = {
+    return {
       records,
       index,
       ids: records.map((_, id) => id),
@@ -687,12 +830,20 @@ export class LocalSearchEngine {
       shortLatinRankScores: shortLatinIndex.rankScores,
       manifest,
     };
+  }
+
+  private async loadChunk(semester: string): Promise<LoadedChunk> {
+    this.setStatus("loading");
+    const source = await this.downloadChunk(semester, true);
+    const chunk = await this.buildChunk(source);
+    this.setStatus("ready");
     // A repeat visit can render the separately cached syllabus text as soon
     // as the small searchable tier is ready. Network revalidation remains
     // deferred and never delays the first usable result.
-    const cachedText = await this.cachedTextChunk(semester, manifest);
+    const cachedText = await this.cachedTextChunk(semester, chunk.manifest);
     if (cachedText) this.mergeTextRecords(chunk, cachedText.texts);
     this.startTextLoad(semester, chunk);
+    if (source.stale) this.startRevalidation(semester, chunk);
     return chunk;
   }
 
@@ -732,13 +883,13 @@ export class LocalSearchEngine {
     // still checks the text tier's own ETag and replaces this data if needed.
     if (cached) this.mergeTextRecords(chunk, cached.texts);
 
-    const response = await fetchWithTimeout(
-      this.fetchFn,
+    const { response, data } = await fetchJsonWithDeadline<unknown>(
       `${this.baseUrl}/search/chunk/${encodeURIComponent(semester)}/text`,
+      TEXT_CHUNK_TIMEOUT_MS,
       cached
         ? { headers: { "If-None-Match": JSON.stringify(cached.contentHash) } }
         : undefined,
-      TEXT_CHUNK_TIMEOUT_MS,
+      this.fetchFn,
       "Course-search text chunk",
     );
     if (response.status === 304) {
@@ -750,7 +901,7 @@ export class LocalSearchEngine {
       throw new Error(`Course-search text chunk failed (${response.status})`);
     }
 
-    const textChunk = normalizeTextChunk(await response.json());
+    const textChunk = normalizeTextChunk(data);
     if (textChunk.semester !== semester) {
       throw new Error("Course-search text chunk semester mismatch");
     }
@@ -762,12 +913,16 @@ export class LocalSearchEngine {
       manifest.textContentHash;
     if (!contentHash) return;
     const key = searchTextCacheKey(semester, contentHash, formatVersion);
-    await this.cache.setText(key, {
-      semester,
-      formatVersion,
-      contentHash,
-      texts: textChunk.texts,
-    });
+    if (
+      !(await this.cache.setText(key, {
+        semester,
+        formatVersion,
+        contentHash,
+        texts: textChunk.texts,
+      }))
+    ) {
+      throw new Error("Course-search text chunk cache write failed");
+    }
     await this.cache.deleteTextSemester(semester, key);
   }
 
@@ -799,7 +954,9 @@ export class LocalSearchEngine {
     const promise = this.loadChunk(semester).catch((error) => {
       const failure = error instanceof Error ? error : new Error(String(error));
       this.failedChunks.set(semester, failure);
-      this.setStatus("error");
+      this.setStatus(
+        failure instanceof MissingLocalSearchChunkError ? "idle" : "error",
+      );
       throw failure;
     });
     this.chunks.set(semester, promise);
@@ -979,6 +1136,7 @@ export class LocalSearchEngine {
       ? [semester]
       : [...new Set([...this.chunks.keys(), ...this.failedChunks.keys()])];
     for (const id of semesters) {
+      this.stopRevalidation(id);
       const chunk = await this.chunks.get(id)?.catch(() => undefined);
       chunk?.index.dispose?.();
       this.chunks.delete(id);

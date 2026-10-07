@@ -10,6 +10,7 @@ import {
   MemorySearchChunkCache,
   prepareSearchRecord,
   searchChunkCacheKey,
+  searchTextCacheKey,
   tokenizeCjk,
   matchesLocalQuery,
   matchesRefinements,
@@ -25,6 +26,7 @@ import {
   type UnknownRecord,
   SEARCHABLE_FIELDS,
 } from "./client";
+import { fetchJsonWithDeadline } from "./deadline";
 import type { WorkerRequest } from "./worker-protocol";
 
 const fixturePath = `${import.meta.dir}/__fixtures__/courses-11510.json`;
@@ -48,9 +50,13 @@ type FetchState = {
   calls: Array<{ url: string; init?: RequestInit }>;
   records: UnknownRecord[];
   manifestFailure?: boolean;
+  manifestMissing?: boolean;
   chunkFailure?: boolean;
   hangChunk?: boolean;
   hangText?: boolean;
+  chunkEtag?: string;
+  textBrief?: string;
+  textEtag?: string;
 };
 
 const makeFetch =
@@ -61,7 +67,11 @@ const makeFetch =
     if (url.endsWith("/search/chunk/manifest")) {
       if (state.manifestFailure) return new Response("broken", { status: 503 });
       return new Response(
-        JSON.stringify(makeManifest(state.hash, state.records.length)),
+        JSON.stringify(
+          state.manifestMissing
+            ? []
+            : makeManifest(state.hash, state.records.length),
+        ),
         {
           status: 200,
           headers: { "content-type": "application/json" },
@@ -76,11 +86,22 @@ const makeFetch =
       return new Response(
         JSON.stringify({
           success: true,
-          data: { schemaVersion: 1, semester: "11510", texts: {} },
+          data: {
+            schemaVersion: 1,
+            semester: "11510",
+            texts: {
+              [String(state.records[0]?.raw_id ?? "course")]: {
+                brief: state.textBrief ?? null,
+                keywords: null,
+              },
+            },
+          },
         }),
         {
           status: 200,
-          headers: { ETag: JSON.stringify(`${state.hash}-text`) },
+          headers: {
+            ETag: state.textEtag ?? JSON.stringify(`${state.hash}-text`),
+          },
         },
       );
     }
@@ -92,7 +113,7 @@ const makeFetch =
       }
       return new Response(JSON.stringify(state.records), {
         status: 200,
-        headers: { ETag: JSON.stringify(state.hash) },
+        headers: { ETag: state.chunkEtag ?? JSON.stringify(state.hash) },
       });
     }
     throw new Error(`unexpected test fetch ${url}`);
@@ -139,7 +160,18 @@ class FailingWorker extends FakeWorker {
   }
 }
 
-const createEngine = (stateOverrides: Partial<FetchState> = {}) => {
+class TrackedFailingWorker extends FailingWorker {
+  terminated = false;
+
+  override terminate() {
+    this.terminated = true;
+  }
+}
+
+const createEngine = (
+  stateOverrides: Partial<FetchState> = {},
+  cache = new MemorySearchChunkCache(),
+) => {
   const state: FetchState = {
     hash: "hash-a",
     conditional304: false,
@@ -147,7 +179,6 @@ const createEngine = (stateOverrides: Partial<FetchState> = {}) => {
     records: fixture,
     ...stateOverrides,
   };
-  const cache = new MemorySearchChunkCache();
   const engine = new LocalSearchEngine({
     baseUrl: "https://api.example.test",
     cache,
@@ -157,6 +188,27 @@ const createEngine = (stateOverrides: Partial<FetchState> = {}) => {
   });
   return { engine, cache, state };
 };
+
+class FailingReplacementCache extends MemorySearchChunkCache {
+  failChunkWrites = false;
+  failTextWrites = false;
+
+  override async set(
+    key: string,
+    value: Parameters<MemorySearchChunkCache["set"]>[1],
+  ) {
+    if (this.failChunkWrites) return false;
+    return super.set(key, value);
+  }
+
+  override async setText(
+    key: string,
+    value: Parameters<MemorySearchChunkCache["setText"]>[1],
+  ) {
+    if (this.failTextWrites) return false;
+    return super.setText(key, value);
+  }
+}
 
 const request = (params: Record<string, unknown>) => ({
   indexName: "nthu_courses",
@@ -482,6 +534,43 @@ describe("chunk cache, conditional requests, and worker lifecycle", () => {
     expect(cache.entries().map(([key]) => key)).toEqual([
       searchChunkCacheKey("11510", "hash-a", "1"),
     ]);
+    await engine.clear("11510");
+  });
+
+  test("keeps serving the old chunk when its replacement is not persisted", async () => {
+    const cache = new FailingReplacementCache();
+    const { engine, state } = createEngine({}, cache);
+    await engine.search("11510", request({ query: "CS" }));
+    await engine.clear("11510");
+    state.hash = "hash-b";
+    cache.failChunkWrites = true;
+
+    const result = await engine.search("11510", request({ query: "CS" }));
+
+    expect(result.nbHits).toBeGreaterThan(0);
+    expect(
+      await cache.get(searchChunkCacheKey("11510", "hash-a", "1")),
+    ).toBeDefined();
+    await expect(cache.getLatest("11510")).resolves.toMatchObject({
+      contentHash: "hash-a",
+    });
+    await engine.clear("11510");
+  });
+
+  test("rejects a fresh chunk whose ETag disagrees with the manifest", async () => {
+    const { engine, cache, state } = createEngine();
+    await engine.search("11510", request({ query: "CS" }));
+    await engine.clear("11510");
+    state.hash = "hash-b";
+    state.chunkEtag = 'W/"wrong"';
+
+    const result = await engine.search("11510", request({ query: "CS" }));
+
+    expect(result.nbHits).toBeGreaterThan(0);
+    expect(cache.entries().map(([key]) => key)).toEqual([
+      searchChunkCacheKey("11510", "hash-a", "1"),
+    ]);
+    await engine.clear("11510");
   });
 
   test("uses the cached chunk when the manifest is unavailable", async () => {
@@ -496,6 +585,48 @@ describe("chunk cache, conditional requests, and worker lifecycle", () => {
     expect(
       await cache.get(searchChunkCacheKey("11510", "hash-a", "1")),
     ).toBeDefined();
+    await engine.clear("11510");
+  });
+
+  test("does not handle a semester omitted by a successful manifest", async () => {
+    const { engine, state } = createEngine();
+    const client = createLocalSearchClient({ engine });
+    await engine.search("11510", request({ query: "CS" }));
+    await engine.clear("11510");
+    state.manifestMissing = true;
+    state.calls.length = 0;
+
+    const result = await client.trySearch([request({ query: "CS" })]);
+
+    expect(result).toEqual({ handled: false });
+    expect(
+      state.calls.some((call) => call.url.endsWith("/search/chunk/11510")),
+    ).toBe(false);
+    await engine.clear("11510");
+  });
+
+  test("keeps the old text cache when its replacement is not persisted", async () => {
+    const cache = new FailingReplacementCache();
+    const { engine, state } = createEngine({ textBrief: "old brief" }, cache);
+    await engine.search("11510", request({ query: "CS" }));
+    await engine.waitForTextChunk("11510");
+    const oldKey = searchTextCacheKey("11510", "hash-a-text", "1");
+    expect(await cache.getText(oldKey)).toMatchObject({
+      texts: { [String(state.records[0]?.raw_id)]: { brief: "old brief" } },
+    });
+
+    await engine.clear("11510");
+    state.textBrief = "new brief";
+    state.textEtag = '"text-b"';
+    cache.failTextWrites = true;
+    await engine.search("11510", request({ query: "CS" }));
+    await engine.waitForTextChunk("11510");
+
+    expect(await cache.getText(oldKey)).toBeDefined();
+    expect(
+      await cache.getText(searchTextCacheKey("11510", "text-b", "1")),
+    ).toBeUndefined();
+    await engine.clear("11510");
   });
 
   test("reports loading and ready states while the worker builds", async () => {
@@ -509,6 +640,78 @@ describe("chunk cache, conditional requests, and worker lifecycle", () => {
     expect(states).toEqual(expect.arrayContaining(["loading", "ready"]));
   });
 
+  test("revalidates a stale chunk and swaps in recovered data without reload", async () => {
+    jest.useFakeTimers();
+    try {
+      const { engine, state } = createEngine();
+      await engine.search("11510", request({ query: "CS" }));
+      await engine.clear("11510");
+      state.manifestFailure = true;
+      const stale = await engine.search("11510", request({ query: "CS" }));
+      const oldName = stale.hits[0]?.name_en;
+
+      state.manifestFailure = false;
+      state.hash = "hash-b";
+      state.records = state.records.map((record, index) =>
+        index === 0 ? { ...record, name_en: "Recovered course" } : record,
+      );
+      const manifestCalls = () =>
+        state.calls.filter((call) =>
+          call.url.endsWith("/search/chunk/manifest"),
+        ).length;
+
+      jest.advanceTimersByTime(29_999);
+      expect(manifestCalls()).toBe(2);
+      jest.advanceTimersByTime(1);
+      for (let i = 0; i < 50; i += 1) await Promise.resolve();
+
+      expect(manifestCalls()).toBe(3);
+      expect(oldName).not.toBe("Recovered course");
+      const recovered = await engine.search(
+        "11510",
+        request({ query: "Recovered" }),
+      );
+      expect(recovered.hits[0]?.name_en).toBe("Recovered course");
+      await engine.clear("11510");
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  test("backs off stale revalidation failures without a retry storm", async () => {
+    jest.useFakeTimers();
+    try {
+      const { engine, state } = createEngine();
+      await engine.search("11510", request({ query: "CS" }));
+      await engine.clear("11510");
+      state.manifestFailure = true;
+      await engine.search("11510", request({ query: "CS" }));
+      const manifestCalls = () =>
+        state.calls.filter((call) =>
+          call.url.endsWith("/search/chunk/manifest"),
+        ).length;
+
+      await engine.search("11510", request({ query: "CS 1" }));
+      expect(manifestCalls()).toBe(2);
+      jest.advanceTimersByTime(29_999);
+      expect(manifestCalls()).toBe(2);
+      jest.advanceTimersByTime(1);
+      for (let i = 0; i < 50; i += 1) await Promise.resolve();
+      expect(manifestCalls()).toBe(3);
+
+      await engine.search("11510", request({ query: "CS 10" }));
+      expect(manifestCalls()).toBe(3);
+      jest.advanceTimersByTime(59_999);
+      expect(manifestCalls()).toBe(3);
+      jest.advanceTimersByTime(1);
+      for (let i = 0; i < 50; i += 1) await Promise.resolve();
+      expect(manifestCalls()).toBe(4);
+      await engine.clear("11510");
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   test("times out a hanging manifest request", async () => {
     jest.useFakeTimers();
     try {
@@ -519,6 +722,7 @@ describe("chunk cache, conditional requests, and worker lifecycle", () => {
       });
       const engine = new LocalSearchEngine({
         baseUrl: "https://api.example.test",
+        cache: new MemorySearchChunkCache(),
         defaultSemester: "11510",
         workerFactory: () => new FakeWorker(),
         fetch: async (_input, init) => {
@@ -548,6 +752,7 @@ describe("chunk cache, conditional requests, and worker lifecycle", () => {
       });
       const engine = new LocalSearchEngine({
         baseUrl: "https://api.example.test",
+        cache: new MemorySearchChunkCache(),
         defaultSemester: "11510",
         workerFactory: () => new FakeWorker(),
         fetch: async (input, init) => {
@@ -583,6 +788,7 @@ describe("chunk cache, conditional requests, and worker lifecycle", () => {
       });
       const engine = new LocalSearchEngine({
         baseUrl: "https://api.example.test",
+        cache: new MemorySearchChunkCache(),
         defaultSemester: "11510",
         workerFactory: () => new FakeWorker(),
         fetch: async (input, init) => {
@@ -608,6 +814,48 @@ describe("chunk cache, conditional requests, and worker lifecycle", () => {
       jest.advanceTimersByTime(30_000);
       await textPending;
       expect(signal?.aborted).toBe(true);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  test("keeps the deadline through JSON body consumption and clears it on success", async () => {
+    jest.useFakeTimers();
+    try {
+      let stalledSignal: AbortSignal | undefined;
+      const stalled = fetchJsonWithDeadline(
+        "https://api.example.test/stalled",
+        1_000,
+        undefined,
+        async (_input, init) => {
+          stalledSignal = init?.signal;
+          return {
+            status: 200,
+            json: () => new Promise<unknown>(() => {}),
+          } as Response;
+        },
+        "Stalled body",
+      );
+      jest.advanceTimersByTime(999);
+      await Promise.resolve();
+      jest.advanceTimersByTime(1);
+      await expect(stalled).rejects.toThrow("Stalled body timed out");
+      expect(stalledSignal?.aborted).toBe(true);
+
+      let normalSignal: AbortSignal | undefined;
+      const normal = fetchJsonWithDeadline(
+        "https://api.example.test/normal",
+        1_000,
+        undefined,
+        async (_input, init) => {
+          normalSignal = init?.signal;
+          return new Response(JSON.stringify({ ok: true }), { status: 200 });
+        },
+        "Normal body",
+      );
+      await expect(normal).resolves.toMatchObject({ data: { ok: true } });
+      jest.advanceTimersByTime(1_000);
+      expect(normalSignal?.aborted).toBe(false);
     } finally {
       jest.useRealTimers();
     }
@@ -787,7 +1035,7 @@ describe("local-first resilient client", () => {
     ).rejects.toThrow();
   });
 
-  test("uses the remote tier after a local worker build failure", async () => {
+  test("retries locally after disposing a failed worker", async () => {
     let remoteCalls = 0;
     const remoteWithCount = {
       ...remote,
@@ -797,13 +1045,22 @@ describe("local-first resilient client", () => {
       },
     } as unknown as AlgoliaSearchClient;
     const { state, cache } = createEngine();
+    let workerAttempts = 0;
+    let failedWorker: TrackedFailingWorker | undefined;
     const client = createResilientSearchClient({
       remoteClient: remoteWithCount,
       localSearch: {
         cache,
         fetch: makeFetch(state),
         baseUrl: "https://api.example.test",
-        workerFactory: () => new FailingWorker(),
+        workerFactory: () => {
+          workerAttempts += 1;
+          if (workerAttempts === 1) {
+            failedWorker = new TrackedFailingWorker();
+            return failedWorker;
+          }
+          return new FakeWorker();
+        },
         defaultSemester: "11510",
       },
     });
@@ -814,10 +1071,15 @@ describe("local-first resilient client", () => {
     };
     expect(remoteCalls).toBe(1);
     expect(result.results[0].hits[0].objectID).toBe("remote");
+    expect(failedWorker?.terminated).toBe(true);
 
     await client.retry();
-    await client.search([request({ query: "CS" })] as never);
-    expect(remoteCalls).toBe(2);
+    const recovered = await client.search([request({ query: "CS" })] as never);
+    expect(
+      (recovered as { results: Array<{ hits: unknown[] }> }).results[0]?.hits
+        .length,
+    ).toBeGreaterThan(0);
+    expect(remoteCalls).toBe(1);
   });
 
   test("falls through to the remote tier after a local timeout", async () => {

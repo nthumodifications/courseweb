@@ -265,12 +265,9 @@ const SearchContainer = memo(
                 {dict.course.refine.search_results}
               </h2>
               <span className="text-sm mr-auto">
-                {status === "error"
-                  ? null
-                  : (status === "loading" || status === "stalled") &&
-                      nbHits === 0
-                    ? dict.common.loading
-                    : `${nbHits} ${dict.course.refine.results} (${processingTimeMS}ms)`}
+                {(status === "loading" || status === "stalled") && nbHits === 0
+                  ? dict.common.loading
+                  : `${nbHits} ${dict.course.refine.results} (${processingTimeMS}ms)`}
               </span>
             </div>
             <a
