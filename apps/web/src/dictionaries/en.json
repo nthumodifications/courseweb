@@ -335,7 +335,26 @@
         }
       },
       "academic_years": "academic years",
-      "view_all_semesters": "See every semester"
+      "view_all_semesters": "See every semester",
+      "demand": {
+        "title": "Demand",
+        "caption": "Students enrolled as a share of seats each semester. Above 100% means extra students were added.",
+        "full": "Full",
+        "seats": "seats"
+      },
+      "stats": {
+        "recent_fill": "Recent fill rate",
+        "recent_fill_hint": "Last four semesters, enrolled over seats",
+        "average_score": "Average grade",
+        "percent_scale": "percent scale",
+        "gpa_scale": "GPA scale",
+        "classes": "classes",
+        "usual_time": "Usual time slot",
+        "language": "Language"
+      },
+      "brief": "About this course",
+      "brief_from": "From the {semester} syllabus",
+      "average_short": "avg"
     }
   },
   "navigation": {

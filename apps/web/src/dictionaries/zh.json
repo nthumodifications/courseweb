@@ -335,7 +335,26 @@
         }
       },
       "academic_years": "學年度",
-      "view_all_semesters": "查看各學期開課"
+      "view_all_semesters": "查看各學期開課",
+      "demand": {
+        "title": "選課熱度",
+        "caption": "各學期選上人數佔名額的比例，超過 100% 代表加簽後超收。",
+        "full": "額滿",
+        "seats": "人"
+      },
+      "stats": {
+        "recent_fill": "近期滿班率",
+        "recent_fill_hint": "近四個學期，選上人數佔名額",
+        "average_score": "歷年平均成績",
+        "percent_scale": "百分制",
+        "gpa_scale": "等級制",
+        "classes": "個班",
+        "usual_time": "最常開課時段",
+        "language": "授課語言"
+      },
+      "brief": "課程簡介",
+      "brief_from": "取自 {semester} 課程大綱",
+      "average_short": "平均"
     }
   },
   "navigation": {

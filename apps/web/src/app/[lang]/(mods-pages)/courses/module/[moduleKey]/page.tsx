@@ -16,9 +16,14 @@ import {
 } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
 import { ModuleTermAvailability } from "@/components/Courses/ModuleTermAvailability";
+import {
+  ModuleBrief,
+  ModuleDemand,
+  ModuleInstructors,
+  ModuleStats,
+} from "@/components/Courses/ModuleInsights";
 import { toPrettySemester } from "@/helpers/semester";
 import {
-  getModuleInstructorSummaries,
   getModuleOfferings,
   getModuleVariant,
   parseModuleKey,
@@ -174,81 +179,6 @@ const VariantPicker = ({
         </SelectContent>
       </Select>
     </div>
-  );
-};
-
-const InstructorList = ({
-  variant,
-  lang,
-  dict,
-  selectedInstructor,
-  onSelect,
-}: {
-  variant: ModuleVariant;
-  lang: string;
-  dict: Dictionary;
-  selectedInstructor: string | null;
-  onSelect: (key: string | null) => void;
-}) => {
-  const [expanded, setExpanded] = useState(false);
-  const instructors = getModuleInstructorSummaries(variant);
-  const visible = expanded ? instructors : instructors.slice(0, 6);
-
-  if (instructors.length === 0) return null;
-
-  return (
-    <section
-      aria-labelledby="module-instructors"
-      className="flex flex-col gap-2"
-    >
-      <h2 id="module-instructors" className="font-bold">
-        {dict.course.module.instructors}
-      </h2>
-      <div className="flex flex-wrap gap-2">
-        {visible.map((instructor) => {
-          const name = lang === "en" ? instructor.nameEn : instructor.nameZh;
-          return (
-            <button
-              key={instructor.key}
-              type="button"
-              aria-pressed={selectedInstructor === instructor.key}
-              className={`flex flex-row items-center gap-2 rounded-md px-2 py-2 text-sm select-none ${selectedInstructor === instructor.key ? "bg-nthu-500 text-white" : "bg-muted text-foreground"}`}
-              onClick={() =>
-                onSelect(
-                  selectedInstructor === instructor.key ? null : instructor.key,
-                )
-              }
-            >
-              <span>{name}</span>
-              <span className="opacity-60">
-                {semesterCount(dict, instructor.semesterCount)}
-              </span>
-            </button>
-          );
-        })}
-        {instructors.length > 6 && (
-          <button
-            type="button"
-            className="rounded-md px-2 py-2 text-sm text-muted-foreground hover:text-foreground"
-            onClick={() => setExpanded((value) => !value)}
-            aria-expanded={expanded}
-          >
-            {expanded
-              ? dict.course.module.show_fewer
-              : `+${instructors.length - 6}`}
-          </button>
-        )}
-      </div>
-      {selectedInstructor && (
-        <button
-          type="button"
-          className="w-fit text-sm text-muted-foreground underline-offset-4 hover:underline"
-          onClick={() => onSelect(null)}
-        >
-          {dict.course.module.clear_instructor_filter}
-        </button>
-      )}
-    </section>
   );
 };
 
@@ -557,19 +487,28 @@ const ModulePage = () => {
 
             <Separator />
 
-            <InstructorList
-              variant={selectedVariant}
-              lang={lang}
-              dict={dict}
-              selectedInstructor={selectedInstructor}
-              onSelect={setSelectedInstructor}
-            />
-            <OfferingList
-              variant={selectedVariant}
-              lang={lang}
-              dict={dict}
-              selectedInstructor={selectedInstructor}
-            />
+            <div className="grid min-w-0 gap-x-10 gap-y-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
+              {/* Phones see the summary first; on desktop it is the side column. */}
+              <aside className="flex min-w-0 flex-col gap-6 lg:order-last lg:sticky lg:top-4 lg:self-start">
+                <ModuleStats variant={selectedVariant} />
+                <ModuleInstructors
+                  variant={selectedVariant}
+                  lang={lang}
+                  selected={selectedInstructor}
+                  onSelect={setSelectedInstructor}
+                />
+              </aside>
+              <div className="flex min-w-0 flex-col gap-6">
+                <ModuleBrief variant={selectedVariant} />
+                <ModuleDemand variant={selectedVariant} />
+                <OfferingList
+                  variant={selectedVariant}
+                  lang={lang}
+                  dict={dict}
+                  selectedInstructor={selectedInstructor}
+                />
+              </div>
+            </div>
           </div>
         </Fade>
       </div>

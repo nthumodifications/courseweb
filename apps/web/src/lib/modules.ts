@@ -1,5 +1,6 @@
 import { semesterInfo } from "@courseweb/shared";
 import type { CourseDefinition } from "@/config/supabase";
+import type { ModuleScore } from "./module-insights";
 
 // Loaded on demand so the pure helpers in this file can be imported (and
 // tested) without a configured Supabase client.
@@ -579,6 +580,30 @@ export const getModuleOfferings = async (moduleKey: string) => {
   return aggregateModuleOfferings(
     (data ?? []) as unknown as ModuleOfferingRow[],
   );
+};
+
+/** Published class averages for these offerings; an empty list on failure. */
+export const getModuleScores = async (
+  rawIds: readonly string[],
+): Promise<ModuleScore[]> => {
+  if (rawIds.length === 0) return [];
+  const { data, error } = await (await loadSupabase())
+    .from("course_scores")
+    .select("raw_id, average, std_dev, type, enrollment")
+    .in("raw_id", rawIds.slice(-300));
+  if (error) throw error;
+  return (data ?? []) as ModuleScore[];
+};
+
+/** The course description from one offering's syllabus, if it has one. */
+export const getModuleBrief = async (rawId: string) => {
+  const { data, error } = await (await loadSupabase())
+    .from("course_syllabus")
+    .select("brief")
+    .eq("raw_id", rawId)
+    .maybeSingle();
+  if (error) throw error;
+  return ((data as { brief: string | null } | null)?.brief ?? "").trim();
 };
 
 const MODULE_HISTORY_SELECT =
