@@ -220,14 +220,18 @@ export function searchCampusBuildingIdentities(
 
   return CAMPUS_BUILDING_IDENTITIES.map((identity) => {
     const aliases = identity.venue.aliases.map(compactSearchText);
-    const exact = aliases.some((alias) => alias === query);
+    const exact = aliases.includes(query);
     const startsWith = aliases.some(
       (alias) => alias.startsWith(query) || query.startsWith(alias),
     );
     const includes = aliases.some(
       (alias) => alias.includes(query) || query.includes(alias),
     );
-    return { identity, score: exact ? 3 : startsWith ? 2 : includes ? 1 : 0 };
+    let score = 0;
+    if (exact) score = 3;
+    else if (startsWith) score = 2;
+    else if (includes) score = 1;
+    return { identity, score };
   })
     .filter(({ score }) => score > 0)
     .sort(
@@ -248,11 +252,11 @@ export function findCampusIdentityForOsmFeature(
   );
   if (explicit) return explicit;
 
-  const normalizedNames = names.filter(Boolean).map(compactSearchText);
+  const normalizedNames = new Set(names.filter(Boolean).map(compactSearchText));
   return CAMPUS_BUILDING_IDENTITIES.find((identity) =>
     identity.venue.aliases
       .filter((alias) => compactSearchText(alias).length >= 2)
-      .some((alias) => normalizedNames.includes(compactSearchText(alias))),
+      .some((alias) => normalizedNames.has(compactSearchText(alias))),
   );
 }
 

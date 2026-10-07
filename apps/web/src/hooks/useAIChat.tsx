@@ -202,14 +202,16 @@ export function useAIChat(options: UseAIChatOptions = {}) {
       const semesterCourseData = getSemesterCourses(sem);
       if (semesterCourseData && semesterCourseData.length > 0) {
         const firstCourseId = semesterCourseData[0].raw_id;
-        const yearPart = parseInt(firstCourseId.substring(0, 3));
-        const semesterPart = parseInt(firstCourseId.substring(3, 5));
+        const yearPart = Number.parseInt(firstCourseId.substring(0, 3));
+        const semesterPart = Number.parseInt(firstCourseId.substring(3, 5));
+        let semesterNumber: 1 | 2 | undefined;
+        if (semesterPart === 10) semesterNumber = 1;
+        else if (semesterPart === 20) semesterNumber = 2;
 
         courseHistory.push({
           semester: sem,
           year: 1911 + yearPart,
-          semesterNumber:
-            semesterPart === 10 ? 1 : semesterPart === 20 ? 2 : undefined,
+          semesterNumber,
           courses: semesterCourseData.map((course) => ({
             raw_id: course.raw_id,
             name_zh: course.name_zh,
@@ -220,7 +222,7 @@ export function useAIChat(options: UseAIChatOptions = {}) {
     });
 
     const currentYear = semester
-      ? 1911 + parseInt(semester.substring(0, 3))
+      ? 1911 + Number.parseInt(semester.substring(0, 3))
       : undefined;
 
     const selectedCourses: SelectedCourseInfo[] = Object.keys(courses).flatMap(
@@ -307,7 +309,7 @@ export function useAIChat(options: UseAIChatOptions = {}) {
 
         if (event.type === "meta") {
           const data = event.data as {
-            provider?: NonNullable<ChatMessage["metadata"]>["provider"];
+            provider: NonNullable<ChatMessage["metadata"]>["provider"];
             model?: string;
           };
           metadata = {
@@ -418,14 +420,10 @@ export function useAIChat(options: UseAIChatOptions = {}) {
             return;
           }
 
-          const code: ChatErrorCode =
-            response.status === 429
-              ? "quota"
-              : response.status === 400
-                ? "bad_request"
-                : response.status >= 500
-                  ? "unavailable"
-                  : "unknown";
+          let code: ChatErrorCode = "unknown";
+          if (response.status === 429) code = "quota";
+          else if (response.status === 400) code = "bad_request";
+          else if (response.status >= 500) code = "unavailable";
           const message = getErrorMessage(
             payload?.error ?? payload,
             `Chat request failed (${response.status}).`,

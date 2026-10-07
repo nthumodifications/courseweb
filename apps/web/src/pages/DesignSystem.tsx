@@ -16,12 +16,9 @@ import {
   TabsContent,
 } from "@courseweb/ui";
 import {
-  ChevronRight,
   Plus,
-  Calendar,
   Settings,
   Search,
-  Bell,
   Palette,
   Type,
   Ruler,

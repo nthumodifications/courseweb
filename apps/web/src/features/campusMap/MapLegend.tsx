@@ -6,7 +6,7 @@ import {
   type CampusBuildingColorCategory,
 } from "./sceneLogic";
 
-type MapLegendProps = {
+type MapLegendProps = Readonly<{
   labels: {
     button: string;
     title: string;
@@ -16,7 +16,7 @@ type MapLegendProps = {
     other: string;
     road: string;
   };
-};
+}>;
 
 export default function MapLegend({ labels }: MapLegendProps) {
   const entries: Array<{

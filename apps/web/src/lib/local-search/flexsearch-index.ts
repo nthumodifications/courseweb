@@ -33,7 +33,7 @@ export const buildFlexSearchIndex = (documents: WorkerDocument[]) => {
         [...terms[0]!].every(isCjkCharacter)
       ) {
         const ids = new Set<string>();
-        for (const character of [...terms[0]!]) {
+        for (const character of terms[0]!) {
           for (const id of flexIndex.search(character, limit)) {
             ids.add(String(id));
           }

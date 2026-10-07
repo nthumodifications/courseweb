@@ -1,4 +1,3 @@
-import { CourseDefinition } from "../config/supabase";
 import { MinimalCourse } from "./courses";
 export type TimeSlot = {
   time: string;

@@ -1,5 +1,5 @@
-const fs = require("fs");
-const path = require("path");
+const fs = require("node:fs");
+const path = require("node:path");
 
 function updateImportsInDirectory(dir) {
   const files = fs.readdirSync(dir, { withFileTypes: true });
@@ -25,7 +25,7 @@ function updateImportsInFile(filePath) {
 
     // Replace @/components/ui/ imports with @courseweb/ui imports
     if (content.includes('from "@/components/ui/')) {
-      content = content.replace(
+      content = content.replaceAll(
         /from "@\/components\/ui\/([^"]+)"/g,
         'from "@courseweb/ui"',
       );
@@ -34,7 +34,7 @@ function updateImportsInFile(filePath) {
 
     // Replace relative ./ui/ imports with @courseweb/ui imports
     if (content.includes('from "./ui/')) {
-      content = content.replace(
+      content = content.replaceAll(
         /from "\.\/ui\/([^"]+)"/g,
         'from "@courseweb/ui"',
       );
@@ -43,7 +43,7 @@ function updateImportsInFile(filePath) {
 
     // Replace relative ../ui/ imports with @courseweb/ui imports
     if (content.includes('from "../ui/')) {
-      content = content.replace(
+      content = content.replaceAll(
         /from "\.\.\/ui\/([^"]+)"/g,
         'from "@courseweb/ui"',
       );
@@ -52,7 +52,7 @@ function updateImportsInFile(filePath) {
 
     // Replace @/lib/utils imports with @courseweb/ui imports (since cn is exported from there)
     if (content.includes('from "@/lib/utils"')) {
-      content = content.replace(
+      content = content.replaceAll(
         /from "@\/lib\/utils"/g,
         'from "@courseweb/ui"',
       );
@@ -61,7 +61,7 @@ function updateImportsInFile(filePath) {
 
     // Replace relative ./lib/utils imports with @courseweb/ui imports
     if (content.includes('from "./lib/utils"')) {
-      content = content.replace(
+      content = content.replaceAll(
         /from "\.\/lib\/utils"/g,
         'from "@courseweb/ui"',
       );
@@ -70,7 +70,7 @@ function updateImportsInFile(filePath) {
 
     // Replace @/hooks/use-mobile imports with @courseweb/ui imports
     if (content.includes('from "@/hooks/use-mobile"')) {
-      content = content.replace(
+      content = content.replaceAll(
         /from "@\/hooks\/use-mobile"/g,
         'from "@courseweb/ui"',
       );
@@ -79,7 +79,7 @@ function updateImportsInFile(filePath) {
 
     // Replace @/components/Animation/ imports with @courseweb/ui imports
     if (content.includes('from "@/components/Animation/')) {
-      content = content.replace(
+      content = content.replaceAll(
         /from "@\/components\/Animation\/([^"]+)"/g,
         'from "@courseweb/ui"',
       );
@@ -88,7 +88,7 @@ function updateImportsInFile(filePath) {
 
     // Replace relative Animation imports
     if (content.includes('from "./Animation/')) {
-      content = content.replace(
+      content = content.replaceAll(
         /from "\.\/Animation\/([^"]+)"/g,
         'from "@courseweb/ui"',
       );
@@ -97,7 +97,7 @@ function updateImportsInFile(filePath) {
 
     // Fix default import issues for Animation components
     if (content.includes('import Fade from "@courseweb/ui"')) {
-      content = content.replace(
+      content = content.replaceAll(
         /import Fade from "@courseweb\/ui"/g,
         'import { Fade } from "@courseweb/ui"',
       );
@@ -105,7 +105,7 @@ function updateImportsInFile(filePath) {
     }
 
     if (content.includes('import ButtonSpinner from "@courseweb/ui"')) {
-      content = content.replace(
+      content = content.replaceAll(
         /import ButtonSpinner from "@courseweb\/ui"/g,
         'import { ButtonSpinner } from "@courseweb/ui"',
       );

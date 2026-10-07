@@ -22,18 +22,15 @@ This package provides utilities for synchronizing course data, syllabus informat
 ### Local Development
 
 ```bash
-# Install dependencies
-npm install
+# From the repository root, prepare the full backend/data-sync track
+bun run setup --full
 
-# Copy environment file
-cp .env.example .env
-
-# Edit .env with your credentials
+# Edit tools/data-sync/.env with maintainer-provided credentials
 # Run one-time sync
-npm run sync:once
+bun run --cwd tools/data-sync sync:once
 
 # Run scheduled sync (development)
-npm run sync:scheduled
+bun run --cwd tools/data-sync sync:scheduled
 ```
 
 ### Docker Usage
@@ -58,8 +55,8 @@ docker run -d --env-file .env --name courseweb-sync \
 For a ready-to-use daily scraping service:
 
 ```bash
-# Copy environment file and configure
-cp .env.example .env
+# Configure tools/data-sync/.env with maintainer-provided credentials
+bun run setup --full
 
 # Start scheduled daily sync service
 docker-compose up -d
@@ -107,7 +104,7 @@ gcloud scheduler jobs create http courseweb-sync-job \
 Runs a one-time synchronization of course data:
 
 ```bash
-npm run sync:once [semester]
+bun run --cwd tools/data-sync sync:once [semester]
 ```
 
 This will:
@@ -122,7 +119,7 @@ This will:
 Runs persistent scheduled synchronization:
 
 ```bash
-npm run sync:scheduled [cronPattern] [semester]
+bun run --cwd tools/data-sync sync:scheduled [cronPattern] [semester]
 ```
 
 This starts a persistent process that runs the sync operation on schedule.
@@ -131,10 +128,10 @@ This starts a persistent process that runs the sync operation on schedule.
 
 ```bash
 # Build image
-npm run docker:build
+bun run --cwd tools/data-sync docker:build
 
 # Run container with environment file
-npm run docker:run
+bun run --cwd tools/data-sync docker:run
 ```
 
 ## Usage
@@ -143,14 +140,14 @@ npm run docker:run
 
 ```bash
 # One-time sync
-npm run runner:sync-courses
+bun run runner:sync-courses
 
 # Scheduled sync (persistent process)
-npm run runner:update-courses
+bun run runner:update-courses
 
 # Using workspace commands
-npm run sync:once
-npm run sync:scheduled
+bun run sync:once
+bun run sync:scheduled
 ```
 
 ### Programmatic Usage
@@ -272,28 +269,28 @@ graph TD
 
 ```bash
 # Install dependencies
-npm install
+bun install
 
 # Build the package
-npm run build
+bun run build
 
 # Development mode with watch
-npm run dev
+bun run dev
 
 # Clean build artifacts
-npm run clean
+bun run clean
 
 # Lint code
-npm run lint
+bun run lint
 
 # Type check
-npm run type-check
+bun run type-check
 
 # Build Docker image
-npm run docker:build
+bun run docker:build
 
 # Run in Docker
-npm run docker:run
+bun run docker:run
 ```
 
 ## CI/CD Pipeline

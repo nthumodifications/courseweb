@@ -46,12 +46,9 @@ const DEFAULT_EVENT_DATE = new Date(0).toISOString();
 type MigrationDocument = Record<string, any>;
 
 const toDateTimeString = (value: unknown, fallback: string) => {
-  const date =
-    value instanceof Date
-      ? value
-      : typeof value === "string"
-        ? new Date(value)
-        : null;
+  let date: Date | null = null;
+  if (value instanceof Date) date = value;
+  else if (typeof value === "string") date = new Date(value);
   if (date && !Number.isNaN(date.getTime())) {
     return date.toISOString();
   }

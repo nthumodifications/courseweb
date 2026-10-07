@@ -9,9 +9,9 @@ import {
 
 export default function PlacesAtBuilding({
   location,
-}: {
+}: Readonly<{
   location: CampusDiningLocation;
-}) {
+}>) {
   const dict = useDictionary();
   const { data, isPending, isError, refetch, isFetching } = useDining();
   const shops = data ? getCampusDiningShops(data, location) : [];

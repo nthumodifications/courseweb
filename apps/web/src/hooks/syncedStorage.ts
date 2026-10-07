@@ -94,14 +94,14 @@ const legacyScheduleToSlots = (schedule: unknown): CustomTimetableSlot[] => {
       const flush = () => {
         if (group.length === 0) return;
         const first = scheduleTimeSlots[group[0]!];
-        const last = scheduleTimeSlots[group[group.length - 1]!];
+        const last = scheduleTimeSlots[group.at(-1)!];
         if (first && last) {
           slots.push({ day, start: first.start, end: last.end });
         }
         group = [];
       };
       for (const period of sorted) {
-        if (group.length > 0 && period !== group[group.length - 1]! + 1) {
+        if (group.length > 0 && period !== group.at(-1)! + 1) {
           flush();
         }
         group.push(period);
@@ -169,11 +169,12 @@ export const normalizeSyncedData = <T = unknown>(
   now = Date.now(),
 ): SyncedData<T> => {
   if (isRecord(data) && "value" in data) {
-    const lastModified = isFiniteNumber(data.lastModified)
-      ? data.lastModified
-      : isFiniteNumber(data.updatedAt)
-        ? data.updatedAt
-        : now;
+    let lastModified = now;
+    if (isFiniteNumber(data.lastModified)) {
+      lastModified = data.lastModified;
+    } else if (isFiniteNumber(data.updatedAt)) {
+      lastModified = data.updatedAt;
+    }
     const updatedAt = isFiniteNumber(data.updatedAt)
       ? data.updatedAt
       : lastModified;

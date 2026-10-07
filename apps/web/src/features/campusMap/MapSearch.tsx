@@ -12,7 +12,7 @@ import {
   type CampusBuildingIdentity,
 } from "@courseweb/shared";
 
-type MapSearchProps = {
+type MapSearchProps = Readonly<{
   availableIdentityIds: Set<string>;
   language: "en" | "zh";
   labels: {
@@ -21,7 +21,7 @@ type MapSearchProps = {
     noResults: string;
   };
   onSelect: (identityId: string) => void;
-};
+}>;
 
 export default function MapSearch({
   availableIdentityIds,

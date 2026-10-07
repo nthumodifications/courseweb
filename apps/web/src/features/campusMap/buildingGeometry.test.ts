@@ -103,7 +103,7 @@ describe("batched campus buildings", () => {
   test("keeps all campus buildings within a mobile geometry and batch budget", () => {
     const model = createCampusBuildingModel(campus.buildings, campus.origin);
     expect(model.tiles.length).toBeLessThanOrEqual(40);
-    expect(model.tiles.flatMap((tile) => tile.faces).length).toBe(
+    expect(model.tiles.flatMap((tile) => tile.faces)).toHaveLength(
       campus.buildings.length,
     );
     let triangles = 0;

@@ -39,6 +39,12 @@ const serialize = (params: Record<string, unknown>) => {
   return query.toString();
 };
 
+test("serializes parity request parameters", () => {
+  expect(serialize({ query: "微積分", page: 0 })).toBe(
+    "query=%E5%BE%AE%E7%A9%8D%E5%88%86&page=0",
+  );
+});
+
 const remoteSearch = async (params: Record<string, unknown>) => {
   const response = await fetch(
     `https://api.nthumods.com/search/fallback?${serialize({

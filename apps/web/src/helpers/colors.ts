@@ -36,7 +36,7 @@ function calculateRelativeLuminance(r: number, g: number, b: number): number {
 }
 
 const hexToRgb = (hex: string) => {
-  const bigint = parseInt(hex.replace("#", ""), 16);
+  const bigint = Number.parseInt(hex.replace("#", ""), 16);
   const r = (bigint >> 16) & 255;
   const g = (bigint >> 8) & 255;
   const b = bigint & 255;
@@ -53,7 +53,9 @@ const rgbToHex = (r: number, g: number, b: number) => {
 };
 
 const rgbToHsl = (r: number, g: number, b: number) => {
-  (r /= 255), (g /= 255), (b /= 255);
+  r /= 255;
+  g /= 255;
+  b /= 255;
 
   const max = Math.max(r, g, b),
     min = Math.min(r, g, b);
@@ -113,8 +115,8 @@ const hslToRgb = (h: number, s: number, l: number) => {
 // based on if the color is dark or light, get a complementary color that is legible
 export function adjustLuminance(color: string, luminance: number) {
   let [r, g, b] = hexToRgb(color);
-  var hsl = rgbToHsl(r, g, b);
+  const hsl = rgbToHsl(r, g, b);
   hsl[2] = luminance;
-  var rgb = hslToRgb(hsl[0], hsl[1], hsl[2]);
+  const rgb = hslToRgb(hsl[0], hsl[1], hsl[2]);
   return rgbToHex(rgb[0], rgb[1], rgb[2]);
 }

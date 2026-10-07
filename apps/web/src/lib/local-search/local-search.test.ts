@@ -436,9 +436,8 @@ describe("chunk cache, conditional requests, and worker lifecycle", () => {
     const { engine, cache, state } = createEngine();
     await engine.search("11510", request({ query: "CS" }));
     expect(
-      state.calls.filter((call) => call.url.includes("/search/chunk/11510"))
-        .length,
-    ).toBe(1);
+      state.calls.filter((call) => call.url.includes("/search/chunk/11510")),
+    ).toHaveLength(1);
     expect(cache.entries()).toHaveLength(1);
 
     await engine.clear("11510");

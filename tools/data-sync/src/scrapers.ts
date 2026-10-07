@@ -145,10 +145,10 @@ export const scrapeArchivedCourses = async (
     }
   });
 
-  const skippedDepartments = ["X", "XA", "XZ", "YZ"];
+  const skippedDepartments = new Set(["X", "XA", "XZ", "YZ"]);
   // Filter out departments that are in the skipped list
   departments = departments.filter(
-    (department) => !skippedDepartments.includes(department.code.trim()),
+    (department) => !skippedDepartments.has(department.code.trim()),
   );
 
   console.log(`Found ${departments.length} departments`);
@@ -219,7 +219,7 @@ export const scrapeArchivedCourses = async (
 
           // Check if the course is already added
           if (
-            normalizedCourses.find((course: any) => course.raw_id === course_id)
+            normalizedCourses.some((course: any) => course.raw_id === course_id)
           ) {
             continue;
           }
@@ -264,8 +264,9 @@ export const scrapeArchivedCourses = async (
           let reserve = 0;
           const size_limit = cells[6].textContent?.trim() ?? "";
           if (size_limit.includes("新生保留")) {
-            reserve = parseInt(
+            reserve = Number.parseInt(
               size_limit.split("新生保留")[1].replace("人", ""),
+              10,
             );
           }
 
@@ -374,16 +375,16 @@ export const scrapeArchivedCourses = async (
           const prerequisites = cells[10].textContent?.trim() ?? "";
 
           const normalizedCourse = {
-            capacity: parseInt(size_limit),
+            capacity: Number.parseInt(size_limit, 10),
             course: course_id.slice(9, 13),
             department: course_id.slice(5, 9).trim(),
             semester: course_id.slice(0, 5),
-            class: parseInt(course_id.slice(13, 15)).toString(),
+            class: Number.parseInt(course_id.slice(13, 15), 10).toString(),
             name_en: course_name_en,
             name_zh: course_name_zh,
             teacher_en: teacher_en,
             teacher_zh: teacher_zh,
-            credits: parseInt(credit),
+            credits: Number.parseInt(credit, 10),
             reserve: reserve,
             ge_type: course_ge_type,
             ge_target: object,
@@ -404,7 +405,7 @@ export const scrapeArchivedCourses = async (
             prerequisites: prerequisites,
             restrictions: course_restriction,
             raw_id: course_id,
-            enrolled: parseInt(enrollment) ?? 0,
+            enrolled: Number.parseInt(enrollment, 10) ?? 0,
             updated_at: new Date().toISOString(),
           } satisfies Course;
           departmentCourses.push(normalizedCourse);
@@ -572,7 +573,7 @@ const parseContent = async (
         .querySelectorAll("table")[5]
         ?.querySelector(".class2 a")
         ?.getAttribute("href");
-    downloadPDF(env, url, c_key);
+    await downloadPDF(env, url, c_key);
   } else {
     content = doc
       .querySelectorAll("table")[5]

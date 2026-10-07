@@ -8,7 +8,7 @@ import {
   isCampusBuilding,
 } from "./sceneLogic";
 
-type BuildingInfoPanelProps = {
+type BuildingInfoPanelProps = Readonly<{
   feature: CampusMapFeature;
   labelNumber?: number;
   language: "en" | "zh";
@@ -20,7 +20,7 @@ type BuildingInfoPanelProps = {
     closeDetails: string;
   };
   onClose: () => void;
-};
+}>;
 
 export default function BuildingInfoPanel({
   feature,

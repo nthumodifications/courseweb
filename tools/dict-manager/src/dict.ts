@@ -5,8 +5,8 @@
  * Use this script to create, update, and delete dictionary items.
  */
 
-import fs from "fs";
-import path from "path";
+import fs from "node:fs";
+import path from "node:path";
 import { Command } from "commander";
 
 const program = new Command();
@@ -54,8 +54,6 @@ program
       enPointer = enPointer[k];
       zhPointer = zhPointer[k];
     });
-
-    function write() {}
 
     // check if key already exists, confirm overwrite
     if (enPointer[lastKey] || zhPointer[lastKey])
