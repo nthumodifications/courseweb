@@ -76,6 +76,7 @@ const TOCNavItem = ({
 };
 
 const CrossDisciplineTagList = ({ course }: { course: CourseDefinition }) => {
+  if (!course.cross_discipline?.length) return null;
   return (
     <div className="flex flex-row gap-2 flex-wrap">
       {course.cross_discipline?.map((m, index) => (
@@ -342,7 +343,7 @@ const CourseDetailContainer = ({
       <div className={cn("relative flex min-w-0 flex-col pb-6")}>
         <div className={cn("flex min-w-0 flex-col gap-4 pb-20 md:pb-0")}>
           <div className="flex flex-col md:flex-row md:items-end gap-4">
-            <div className="min-w-0 flex-1 w-full">
+            <div className="flex min-w-0 w-full flex-1 flex-col gap-2">
               <div className="flex flex-col gap-2">
                 <div className="font-medium text-base">
                   {toPrettySemester(course.semester)}{" "}
@@ -362,19 +363,21 @@ const CourseDetailContainer = ({
                   <span>{course?.teacher_en?.join(",") ?? ""}</span>
                 </h2>
               </div>
-              <div className="mt-2">
-                <CourseTagList course={course} />
+              <CourseTagList course={course} />
+              <div>
+                {course.venues ? (
+                  course.venues.map((vn, i) => (
+                    <p key={vn} className="text-muted-foreground text-sm">
+                      {vn}{" "}
+                      <span className="text-foreground">
+                        {course.times![i]}
+                      </span>
+                    </p>
+                  ))
+                ) : (
+                  <p>{dict.course.details.no_venues}</p>
+                )}
               </div>
-              {course.venues ? (
-                course.venues.map((vn, i) => (
-                  <p key={vn} className="text-muted-foreground text-sm">
-                    {vn}{" "}
-                    <span className="text-foreground">{course.times![i]}</span>
-                  </p>
-                ))
-              ) : (
-                <p>{dict.course.details.no_venues}</p>
-              )}
               <CrossDisciplineTagList course={course} />
             </div>
             <div className="hidden md:flex flex-col gap-2 absolute top-0 right-0 mt-4 mr-4">
