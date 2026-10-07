@@ -1,11 +1,10 @@
-import { CourseLanguage, MinimalCourse, RawCourseID } from "@courseweb/shared";
+import { MinimalCourse, RawCourseID } from "@courseweb/shared";
 import { createTimetableFromCourses } from "./timetable";
-import { departments, classCode } from "@courseweb/shared";
 
 export const getGECType = (ge_type: string) => {
   //核心通識Core GE courses 1, 核心通識Core GE courses 2  <- return this number
   if (ge_type.includes("核心通識Core GE courses")) {
-    return parseInt(ge_type.slice(-1));
+    return Number.parseInt(ge_type.slice(-1));
   } else return null;
 };
 
@@ -13,13 +12,11 @@ export const hasConflictingTimeslots = (courses: MinimalCourse[]) => {
   const timetableData = createTimetableFromCourses(courses);
   return timetableData.filter((timeslot, index, self) => {
     const otherTimeslots = self.filter((ts, i) => i != index);
-    return (
-      otherTimeslots.find(
-        (ts) =>
-          ts.dayOfWeek == timeslot.dayOfWeek &&
-          ts.startTime <= timeslot.endTime &&
-          ts.endTime >= timeslot.startTime,
-      ) != undefined
+    return otherTimeslots.some(
+      (ts) =>
+        ts.dayOfWeek == timeslot.dayOfWeek &&
+        ts.startTime <= timeslot.endTime &&
+        ts.endTime >= timeslot.startTime,
     );
   });
 };
@@ -28,10 +25,8 @@ export const hasConflictingTimeslots = (courses: MinimalCourse[]) => {
 export const hasSameCourse = (courses: MinimalCourse[]) => {
   const sameCourse = courses.filter((course, index, self) => {
     const otherCourses = self.filter((c, i) => i != index);
-    return (
-      otherCourses.find(
-        (c) => c.department == course.department && c.course == course.course,
-      ) != undefined
+    return otherCourses.some(
+      (c) => c.department == course.department && c.course == course.course,
     );
   });
   return sameCourse.map((course) => course.raw_id) as RawCourseID[];
@@ -70,18 +65,18 @@ const classLetters: { [key: string]: any } = {
 
 export const checkValidClassCode = (class_code: string, semester: string) => {
   // Parse the input string
-  const match = class_code.toUpperCase().match(/(^[^\d]+)(\d+)([BMD])([A-D]?)/);
+  const match = /(^[^\d]+)(\d+)([BMD])([A-D]?)/.exec(class_code.toUpperCase());
   if (!match) {
     return class_code;
   }
 
-  const sem = parseInt(semester.slice(0, 3));
+  const sem = Number.parseInt(semester.slice(0, 3));
 
   // Extract components
-  const [, deptName, year, degreeType, classLetter] = match;
+  const [, , year] = match;
 
   //if degreetype = B and year - sem > 4, return false
-  if (sem - parseInt(year) > 4) {
+  if (sem - Number.parseInt(year) > 4) {
     return false;
   }
   return true;
@@ -93,35 +88,22 @@ export const getFormattedClassCode = (
   lang: string,
 ) => {
   // Parse the input string
-  const match = class_code
-    .toUpperCase()
-    .match(/(^[^\d]+)(\d+)([BMDP])([A-D]?)/);
+  const match = /(^[^\d]+)(\d+)([BMDP])([A-D]?)/.exec(class_code.toUpperCase());
   if (!match) {
     return class_code;
   }
 
-  const sem = parseInt(semester.slice(0, 3));
+  const sem = Number.parseInt(semester.slice(0, 3));
 
   // Extract components
   const [, deptName, year, degreeType, classLetter] = match;
 
   // Translate components
-  const yearNumber = sem - parseInt(year) + 1;
+  const yearNumber = sem - Number.parseInt(year) + 1;
   const readableYear = lang === "zh" ? `${yearNumber}年級` : ` Y${yearNumber} `;
 
   const readableDegreeType = degreeTypes[lang][degreeType] || "";
   const readableClassLetter = classLetters[lang][classLetter] || "";
-
-  const department = classCode.find((dept) => dept.code_zh === deptName);
-
-  let deptCode;
-
-  if (department?.code_zh == "NA") {
-    deptCode = deptName;
-  } else {
-    // Select the department name based on the language
-    deptCode = lang === "zh" ? department?.code_zh : department?.code;
-  }
 
   // exception for EECS-GS
   if (deptName == "電資院學士班" && degreeType == "B" && classLetter == "A") {

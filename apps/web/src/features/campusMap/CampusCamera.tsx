@@ -17,12 +17,12 @@ type Tween = {
   toTarget: Vector3;
 };
 
-type CampusCameraProps = {
+type CampusCameraProps = Readonly<{
   focusFeature?: CampusMapFeature;
   origin: LatLon;
   bounds: CampusBounds;
   resetNonce: number;
-};
+}>;
 
 export default function CampusCamera({
   focusFeature,

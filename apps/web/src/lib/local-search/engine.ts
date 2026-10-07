@@ -318,19 +318,23 @@ const normalizeTextChunk = (payload: unknown): SearchTextChunk => {
     throw new Error("Invalid course-search text chunk");
   }
   if (typeof texts !== "object" || Array.isArray(texts)) {
-    throw new Error("Invalid course-search text records");
+    throw new TypeError("Invalid course-search text records");
   }
 
   const normalizedTexts: SearchTextChunk["texts"] = {};
   for (const [rawId, value] of Object.entries(texts)) {
     const text = value as UnknownRecord;
+    let keywords: string[] | null;
+    if (Array.isArray(text.keywords)) {
+      keywords = text.keywords.filter((keyword) => keyword != null).map(String);
+    } else if (text.keywords == null) {
+      keywords = null;
+    } else {
+      keywords = [String(text.keywords)];
+    }
     normalizedTexts[rawId] = {
       brief: text.brief == null ? null : String(text.brief),
-      keywords: Array.isArray(text.keywords)
-        ? text.keywords.filter((keyword) => keyword != null).map(String)
-        : text.keywords == null
-          ? null
-          : [String(text.keywords)],
+      keywords,
     };
   }
   return {
@@ -396,7 +400,7 @@ export const semesterFromRequest = (
     ? rawFacetFilters.map((group) => (Array.isArray(group) ? group : [group]))
     : [];
   const semesters = groups
-    .flatMap((group) => group)
+    .flat()
     .map((condition) => parseFilterCondition(String(condition)))
     .filter(
       (condition) =>
@@ -414,7 +418,9 @@ export const semesterFromRequest = (
         ].map((match) => match[1].replace(/^['"]|['"]$/g, ""))
       : [];
   const all = [...new Set([...semesters, ...filterMatches])];
-  return all.length === 1 ? all[0] : all.length === 0 ? defaultSemester : null;
+  if (all.length === 1) return all[0];
+  if (all.length === 0) return defaultSemester;
+  return null;
 };
 
 const workerIndexFor = (
@@ -469,12 +475,9 @@ const buildShortLatinPrefixIndex = (
       }
     }
     for (const field of [3, 5, 4, 6, 7]) {
-      const score =
-        field === 3 || field === 5
-          ? [90_000, 88_000]
-          : field === 4 || field === 6
-            ? [80_000, 78_000]
-            : [70_000, 68_000];
+      let score = [70_000, 68_000];
+      if (field === 3 || field === 5) score = [90_000, 88_000];
+      else if (field === 4 || field === 6) score = [80_000, 78_000];
       for (const token of latinGroups[field] ?? []) {
         addRankPrefixes(token, id, (prefix) =>
           token === prefix ? score[0]! : score[1]!,

@@ -119,14 +119,14 @@ function namesFromTags(tags: OsmTags): string[] {
 
 function createBuildingParts(element: OsmElement): CampusBuilding[] {
   const tags = element.tags ?? {};
-  const polygons =
-    element.type === "relation"
-      ? relationPolygonRings(element)
-      : element.geometry
-        ? [closeRing(element.geometry)]
-            .filter((ring): ring is OsmPoint[] => Boolean(ring))
-            .map((outer) => ({ outer, holes: [] }))
-        : [];
+  let polygons: OsmPolygonRings[] = [];
+  if (element.type === "relation") {
+    polygons = relationPolygonRings(element);
+  } else if (element.geometry) {
+    polygons = [closeRing(element.geometry)]
+      .filter((ring): ring is OsmPoint[] => Boolean(ring))
+      .map((outer) => ({ outer, holes: [] }));
+  }
   const identity =
     element.type === "way" || element.type === "relation"
       ? findCampusIdentityForOsmFeature(
@@ -205,13 +205,16 @@ function createLinearFeatures(
   const parts = sourceParts.flatMap((part) =>
     clipGeoPolylineToBounds(part.map(toCoordinate), bounds),
   );
-  return parts.map((points, index) => ({
-    id: `osm-way-${element.id}${parts.length > 1 ? `-${index}` : ""}`,
-    kind,
-    ...(kind === "road" ? { roadClass: roadClass(highway) } : {}),
-    points,
-    width: roadWidth(highway),
-  }));
+  return parts.map((points, index) => {
+    const partSuffix = parts.length > 1 ? `-${index}` : "";
+    return {
+      id: `osm-way-${element.id}${partSuffix}`,
+      kind,
+      ...(kind === "road" ? { roadClass: roadClass(highway) } : {}),
+      points,
+      width: roadWidth(highway),
+    };
+  });
 }
 
 function createAreaParts(
@@ -219,26 +222,24 @@ function createAreaParts(
   kind: CampusAreaFeature["kind"],
   sport?: string,
 ): CampusAreaFeature[] {
-  const polygons =
-    element.type === "relation"
-      ? relationPolygonRings(element)
-      : element.geometry
-        ? [closeRing(element.geometry)]
-            .filter((ring): ring is OsmPoint[] => Boolean(ring))
-            .map((outer) => ({ outer, holes: [] }))
-        : [];
+  let polygons: OsmPolygonRings[] = [];
+  if (element.type === "relation") {
+    polygons = relationPolygonRings(element);
+  } else if (element.geometry) {
+    polygons = [closeRing(element.geometry)]
+      .filter((ring): ring is OsmPoint[] => Boolean(ring))
+      .map((outer) => ({ outer, holes: [] }));
+  }
   const tags = element.tags ?? {};
   const elementId = `${element.type}/${element.id}`;
-  const names =
-    kind === "water"
-      ? (CAMPUS_WATER_NAMES[elementId] ??
-        (tags.name
-          ? {
-              zh: tags["name:zh"] ?? tags.name,
-              en: tags["name:en"],
-            }
-          : undefined))
-      : undefined;
+  let names: CampusAreaFeature["names"];
+  if (kind === "water") {
+    names =
+      CAMPUS_WATER_NAMES[elementId] ??
+      (tags.name
+        ? { zh: tags["name:zh"] ?? tags.name, en: tags["name:en"] }
+        : undefined);
+  }
 
   return polygons.map(({ outer, holes }, index) => {
     const polygon = outer.map(toCoordinate);

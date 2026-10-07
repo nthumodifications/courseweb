@@ -38,11 +38,11 @@ function MapMessage({
   title,
   detail,
   loading = false,
-}: {
+}: Readonly<{
   title: string;
   detail?: string;
   loading?: boolean;
-}) {
+}>) {
   return (
     <div className="flex h-full min-h-[32rem] flex-col gap-2 bg-muted/30 p-4">
       <div className="flex flex-col gap-2">

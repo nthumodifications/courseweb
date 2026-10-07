@@ -5,7 +5,6 @@ import {
   createContext,
   useContext,
   useEffect,
-  useLayoutEffect,
   useMemo,
 } from "react";
 import { useLocalStorage } from "usehooks-ts";
@@ -46,7 +45,7 @@ const useSettingsProvider = () => {
     "locale",
     "ACIXSTORE",
   ]);
-  const [timetableTheme, setTimetableTheme] = useLocalStorage<string>(
+  const [, setTimetableTheme] = useLocalStorage<string>(
     "timetable_theme",
     "pastelColors",
   );

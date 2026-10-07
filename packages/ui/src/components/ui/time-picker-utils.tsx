@@ -2,7 +2,7 @@
  * regular expression to check for valid hour format (01-23)
  */
 export function isValidHour(value: string) {
-  return /^(0[0-9]|1[0-9]|2[0-3])$/.test(value);
+  return /^(0\d|1\d|2[0-3])$/.test(value);
 }
 
 /**
@@ -16,29 +16,30 @@ export function isValid12Hour(value: string) {
  * regular expression to check for valid minute format (00-59)
  */
 export function isValidMinuteOrSecond(value: string) {
-  return /^[0-5][0-9]$/.test(value);
+  return /^[0-5]\d$/.test(value);
 }
 
 type GetValidNumberConfig = { max: number; min?: number; loop?: boolean };
+
+function normalizeValidNumber(
+  value: number,
+  { max, min, loop }: Required<GetValidNumberConfig>,
+) {
+  if (!loop) return Math.min(max, Math.max(min, value));
+  if (value > max) return min;
+  if (value < min) return max;
+  return value;
+}
 
 export function getValidNumber(
   value: string,
   { max, min = 0, loop = false }: GetValidNumberConfig,
 ) {
-  let numericValue = parseInt(value, 10);
-
-  if (!isNaN(numericValue)) {
-    if (!loop) {
-      if (numericValue > max) numericValue = max;
-      if (numericValue < min) numericValue = min;
-    } else {
-      if (numericValue > max) numericValue = min;
-      if (numericValue < min) numericValue = max;
-    }
-    return numericValue.toString().padStart(2, "0");
-  }
-
-  return "00";
+  const numericValue = Number.parseInt(value, 10);
+  if (Number.isNaN(numericValue)) return "00";
+  return normalizeValidNumber(numericValue, { max, min, loop })
+    .toString()
+    .padStart(2, "0");
 }
 
 export function getValidHour(value: string) {
@@ -66,8 +67,8 @@ export function getValidArrowNumber(
   value: string,
   { min, max, step }: GetValidArrowNumberConfig,
 ) {
-  let numericValue = parseInt(value, 10);
-  if (!isNaN(numericValue)) {
+  let numericValue = Number.parseInt(value, 10);
+  if (!Number.isNaN(numericValue)) {
     numericValue += step;
     return getValidNumber(String(numericValue), { min, max, loop: true });
   }
@@ -84,19 +85,19 @@ export function getValidArrowMinuteOrSecond(value: string, step: number) {
 
 export function setMinutes(date: Date, value: string) {
   const minutes = getValidMinuteOrSecond(value);
-  date.setMinutes(parseInt(minutes, 10));
+  date.setMinutes(Number.parseInt(minutes, 10));
   return date;
 }
 
 export function setSeconds(date: Date, value: string) {
   const seconds = getValidMinuteOrSecond(value);
-  date.setSeconds(parseInt(seconds, 10));
+  date.setSeconds(Number.parseInt(seconds, 10));
   return date;
 }
 
 export function setHours(date: Date, value: string) {
   const hours = getValidHour(value);
-  date.setHours(parseInt(hours, 10));
+  date.setHours(Number.parseInt(hours, 10));
   return date;
 }
 

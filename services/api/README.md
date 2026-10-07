@@ -50,39 +50,39 @@ The NTHU Mods API provides access to:
 ### Installation
 
 ```bash
-npm install
-# or
 bun install
 ```
 
 ### Environment Variables
 
 For local development these go in `services/api/.dev.vars`, which `wrangler dev`
-reads automatically. In production they are Worker secrets, set with
-`bunx wrangler secret put <NAME>`. The file is not in the repository; ask a
-maintainer for the values.
+reads automatically. Start from the repository root with `bun run setup --full`;
+the checked-in example contains only optional AI settings. In production these
+are Worker secrets, set with `bunx wrangler secret put <NAME>`. Ask a maintainer
+for values before running routes that write data or call private services.
 
-Required environment variables:
+Worker bindings and environment values:
 
 ```env
 # Database
 SUPABASE_URL=your_supabase_url
 SUPABASE_SERVICE_ROLE_KEY=your_supabase_key
 
-# External APIs
-CALENDAR_API_KEY=your_google_calendar_api_key
-CWA_API_KEY=your_taiwan_weather_api_key
+# Search and external APIs (production values are maintainer-only)
 ALGOLIA_APP_ID=your_algolia_app_id
-ALGOLIA_API_KEY=your_algolia_api_key
-ALGOLIA_BACKUP_APP_ID=your_backup_algolia_app_id
-ALGOLIA_BACKUP_API_KEY=your_backup_algolia_api_key
+ALGOLIA_API_KEY=your_algolia_admin_key
+ALGOLIA_BACKUP_APP_ID=optional_backup_app_id
+ALGOLIA_BACKUP_API_KEY=optional_backup_admin_key
+CALENDAR_API_KEY=optional_google_calendar_api_key
+CWA_API_KEY=optional_taiwan_weather_api_key
 
 # GitHub Integration
 GITHUB_CLIENT_ID=your_github_app_client_id
 GITHUB_APP_PRIVATE_KEY=your_github_private_key_base64
 GITHUB_INSTALLATION_ID=your_github_installation_id
 
-# Authentication
+# Authentication and integrations (only needed by matching routes)
+NTHUMODS_AUTH_URL=auth_service_base_url
 NTHUMODS_AUTH_INTROSPECTION_URL=auth_introspection_endpoint
 NTHUMODS_AUTH_CLIENT_ID=auth_client_id
 NTHUMODS_AUTH_CLIENT_SECRET=auth_client_secret
@@ -92,7 +92,14 @@ TURNSTILE_SECRET_KEY=cloudflare_turnstile_secret
 CLOUDFLARE_WORKER_ACCOUNT_ID=cf_account_id
 CLOUDFLARE_KV_SHORTLINKS_NAMESPACE=kv_namespace_id
 CLOUDFLARE_KV_API_TOKEN=kv_api_token
+NTHUMODS_OCR_BASE_URL=https://ocr.nthumods.com
 ```
+
+`DB`, `AI`, `VENUE_RATE_LIMITER`, and `AI_RATE_LIMITER` are Wrangler bindings
+from `services/api/wrangler.toml`, not values to copy into `.dev.vars`.
+`GOOGLE_AI_API_KEY`, `GROQ_API_KEY`, `CEREBRAS_API_KEY`,
+`OPENROUTER_API_KEY`, `MISTRAL_API_KEY`, and `AI_PROVIDER_ORDER` are optional
+AI settings; they are listed in `.dev.vars.example`.
 
 ## Authentication
 
@@ -592,8 +599,8 @@ bun test
 # Generate Prisma client
 bun run db:generate
 
-# Deploy database migrations
-bun run db:push
+# Apply local D1 migrations when working on the local Worker database
+bun run prisma:migration:apply:local
 ```
 
 ### Project Structure
@@ -612,10 +619,10 @@ src/
 
 ### Environment Setup
 
-1. Copy `.env.example` to `.env`
-2. Fill in required environment variables
-3. Set up Supabase database
-4. Configure external service API keys
+1. From the repository root, run `bun run setup --full`
+2. Fill in the maintainer-owned values in `services/api/.dev.vars`
+3. Configure the local Worker bindings and D1 database as needed
+4. Configure only the external service keys required by your route
 
 ### Testing
 

@@ -11,7 +11,7 @@ type DiningBuilding = { sources: string[]; area: RegExp };
 
 // Match API location fields, never shop names or group headings with contacts.
 // Keep this module independent of the Three.js map so shops stay lightweight.
-const floorSuffix = "(?:\\s*(\\d+|[一二三四五六七八九十]+)\\s*樓)?$";
+const floorSuffix = String.raw`(?:\s*(\d+|[一二三四五六七八九十]+)\s*樓)?$`;
 const buildings: Record<DiningLocation, DiningBuilding> = {
   "food-court": {
     sources: ["way/158391363", "way/749979081"],

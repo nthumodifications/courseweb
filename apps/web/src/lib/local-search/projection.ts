@@ -76,12 +76,19 @@ const asNullableNumber = (value: unknown): number | null => {
 
 /** Remove presentation markup from the indexed value without changing hits. */
 export const stripHtmlTags = (value: string) =>
-  value.replace(/<!--[\s\S]*?-->|<[^>]*>/g, " ");
+  value.replace(/<!--[\s\S]*?-->/g, " ").replace(/<[^>]*>/g, " ");
 
 export const asStringArray = (value: unknown): string[] =>
   Array.isArray(value)
     ? value.filter((item) => item != null && item !== "").map(String)
     : [];
+
+const asNullableStringArray = (value: unknown): string[] | null => {
+  if (value == null) return null;
+  if (Array.isArray(value))
+    return value.filter((item) => item != null).map(String);
+  return [String(value)];
+};
 
 export const separateTimes = (times: readonly string[] | null | undefined) =>
   asStringArray(times).flatMap((time) => String(time).match(/.{1,2}/g) ?? []);
@@ -112,14 +119,7 @@ export const prepareSearchRecord = (
     name_en: asString(input.name_en),
     teacher_zh: asStringArray(input.teacher_zh),
     teacher_en: asStringArray(input.teacher_en),
-    credits:
-      typeof input.credits === "number" && Number.isFinite(input.credits)
-        ? input.credits
-        : input.credits == null || input.credits === ""
-          ? null
-          : Number.isFinite(Number(input.credits))
-            ? Number(input.credits)
-            : null,
+    credits: asNullableNumber(input.credits),
     venues: asStringArray(input.venues),
     times,
     language: asString(input.language),
@@ -134,11 +134,7 @@ export const prepareSearchRecord = (
     restrictions: asNullableString(input.restrictions),
     note: asNullableString(input.note),
     prerequisites: asNullableString(input.prerequisites),
-    keywords: Array.isArray(input.keywords)
-      ? input.keywords.filter((item) => item != null).map(String)
-      : input.keywords == null
-        ? null
-        : [String(input.keywords)],
+    keywords: asNullableStringArray(input.keywords),
     cross_discipline: asStringArray(input.cross_discipline),
     first_specialization: asStringArray(input.first_specialization),
     second_specialization: asStringArray(input.second_specialization),
@@ -179,7 +175,7 @@ export const searchableFields = (record: SearchProjectionRecord) =>
 export const searchableText = (record: SearchProjectionRecord) =>
   searchableFields(record).join(" ");
 
-export const recordTimeMask = timeMaskForRecord;
+export { timeMaskForRecord as recordTimeMask };
 
 const facetValuesCache = new WeakMap<
   SearchProjectionRecord,

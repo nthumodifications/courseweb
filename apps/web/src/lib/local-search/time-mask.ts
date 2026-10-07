@@ -35,6 +35,11 @@ const isTimeMask = (value: unknown): value is TimeMask =>
 
 const emptyMask = (): TimeMask => new Uint32Array(WORD_COUNT);
 
+type TimeMaskInput =
+  | TimeMask
+  | { timeMask?: TimeMask; times?: readonly string[] }
+  | readonly string[];
+
 /** Convert a day and period code into the stable 0..97 bit index. */
 export const slotIndex = (day: string, period: string): number => {
   const dayIndex = TIME_DAYS.indexOf(day.toUpperCase() as TimeDay);
@@ -78,12 +83,7 @@ export const maskHasBits = (mask: TimeMask) => mask.some((word) => word !== 0);
 export const maskHasOverlap = (left: TimeMask, right: TimeMask) =>
   left.some((word, index) => (word & right[index]) !== 0);
 
-const asMask = (
-  value:
-    | TimeMask
-    | { timeMask?: TimeMask; times?: readonly string[] }
-    | readonly string[],
-): TimeMask => {
+const asMask = (value: TimeMaskInput): TimeMask => {
   if (isTimeMask(value)) return value;
   if (Array.isArray(value)) return maskFromTimes(value);
   if (value && typeof value === "object") {

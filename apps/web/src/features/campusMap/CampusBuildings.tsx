@@ -9,12 +9,12 @@ import {
 import { createBuildingMaterial } from "./buildingMaterial";
 import { getCampusFeatureLabelKey } from "./sceneLogic";
 
-type CampusBuildingsProps = {
+type CampusBuildingsProps = Readonly<{
   buildings: CampusBuilding[];
   origin: LatLon;
   selected?: CampusBuilding;
   onSelect: (building: CampusBuilding) => void;
-};
+}>;
 
 export default function CampusBuildings({
   buildings,

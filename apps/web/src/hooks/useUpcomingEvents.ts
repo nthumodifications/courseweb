@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { addDays, format } from "date-fns";
+import { format } from "date-fns";
 import { fromZonedTime, toZonedTime } from "date-fns-tz";
 import { useQuery } from "@tanstack/react-query";
 import { semesterInfo } from "@courseweb/shared";
@@ -264,8 +264,11 @@ const sortEvents = (a: UpcomingEvent, b: UpcomingEvent) => {
   return a.id.localeCompare(b.id);
 };
 
-const toError = (error: unknown) =>
-  error instanceof Error ? error : error ? new Error(String(error)) : null;
+const toError = (error: unknown) => {
+  if (error instanceof Error) return error;
+  if (!error) return null;
+  return new Error(String(error));
+};
 
 const useUpcomingEvents = (
   options: UseUpcomingEventsOptions = {},
@@ -448,12 +451,9 @@ const useUpcomingEvents = (
 
   const events = useMemo(() => {
     const withState = rawEvents.map((event): UpcomingEvent => {
-      const state: UpcomingEventState =
-        event.start > now
-          ? "upcoming"
-          : event.end > now
-            ? "in-progress"
-            : "past";
+      let state: UpcomingEventState = "past";
+      if (event.start > now) state = "upcoming";
+      else if (event.end > now) state = "in-progress";
       return {
         ...event,
         state,

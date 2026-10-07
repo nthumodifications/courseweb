@@ -358,12 +358,9 @@ export const createResilientSearchClient = (
   localClient?.subscribe(() => {
     version += 1;
     const status = localClient.getStatus();
-    localStatus =
-      status === "loading"
-        ? "local-loading"
-        : status === "ready"
-          ? "local"
-          : undefined;
+    if (status === "loading") localStatus = "local-loading";
+    else if (status === "ready") localStatus = "local";
+    else localStatus = undefined;
     listeners.forEach((listener) => listener());
   });
 
@@ -657,11 +654,12 @@ export const createResilientSearchClient = (
           };
         }
       },
-      async () => ({
-        results: requests.map((request) =>
-          emptySearchResponse<TObject>(request),
-        ),
-      }),
+      () =>
+        Promise.resolve({
+          results: requests.map((request) =>
+            emptySearchResponse<TObject>(request),
+          ),
+        }),
     );
   };
 
@@ -699,7 +697,7 @@ export const createResilientSearchClient = (
           if (!fallbackHadError) setLastError(false);
           return results;
         },
-        async () => requests.map(() => emptyFacetResponse()),
+        () => Promise.resolve(requests.map(() => emptyFacetResponse())),
       );
     };
 

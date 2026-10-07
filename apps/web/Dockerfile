@@ -33,14 +33,14 @@ COPY services/api ./services/api
 COPY services/secure-api ./services/secure-api
 
 # Build workspace packages first
-RUN bunx turbo run build --filter=@courseweb/shared
-RUN bunx turbo run build --filter=@courseweb/ui
-RUN bunx turbo run build --filter=@courseweb/api-types
-RUN bunx turbo run build --filter=@courseweb/database || true
-RUN bunx turbo run build --filter=@courseweb/eslint-config || true
+RUN bunx turbo@2.5.6 run build --filter=@courseweb/shared
+RUN bunx turbo@2.5.6 run build --filter=@courseweb/ui
+RUN bunx turbo@2.5.6 run build --filter=@courseweb/api-types
+RUN bunx turbo@2.5.6 run build --filter=@courseweb/database || true
+RUN bunx turbo@2.5.6 run build --filter=@courseweb/eslint-config || true
 
 # Build web application
-RUN bunx turbo run build --filter=@courseweb/web
+RUN bunx turbo@2.5.6 run build --filter=@courseweb/web
 
 # Production image, copy all the files and run Next.js
 FROM base AS runner
@@ -56,8 +56,7 @@ RUN adduser --system --uid 1001 nextjs
 COPY --from=builder /app/apps/web/public ./public
 
 # Set the correct permission for prerender cache
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
+RUN mkdir .next && chown nextjs:nodejs .next
 
 # Automatically leverage output traces to reduce image size
 # https://nextjs.org/docs/advanced-features/output-file-tracing

@@ -4,7 +4,7 @@ export const semesterInfo = [
     year: 2019,
     semester: 1,
     begins: new Date(2019, 9 - 1, 9),
-    ends: new Date(2020, 1 - 1, 12),
+    ends: new Date(2020, 0, 12),
   },
   {
     id: "10820",
@@ -18,7 +18,7 @@ export const semesterInfo = [
     year: 2020,
     semester: 1,
     begins: new Date(2020, 9 - 1, 14),
-    ends: new Date(2021, 1 - 1, 29),
+    ends: new Date(2021, 0, 29),
   },
   {
     id: "10920",
@@ -32,7 +32,7 @@ export const semesterInfo = [
     year: 2021,
     semester: 1,
     begins: new Date(2021, 9 - 1, 13),
-    ends: new Date(2022, 1 - 1, 14),
+    ends: new Date(2022, 0, 14),
   },
   {
     id: "11020",
@@ -46,7 +46,7 @@ export const semesterInfo = [
     year: 2022,
     semester: 1,
     begins: new Date(2022, 9 - 1, 12),
-    ends: new Date(2023, 1 - 1, 13),
+    ends: new Date(2023, 0, 13),
   },
   {
     id: "11120",
@@ -60,7 +60,7 @@ export const semesterInfo = [
     year: 2023,
     semester: 1,
     begins: new Date(2023, 9 - 1, 11),
-    ends: new Date(2024, 1 - 1, 12),
+    ends: new Date(2024, 0, 12),
   },
   {
     id: "11220",

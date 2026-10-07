@@ -1,5 +1,5 @@
-const fs = require("fs");
-const path = require("path");
+const fs = require("node:fs");
+const path = require("node:path");
 
 function updateImportsInDirectory(dir) {
   const files = fs.readdirSync(dir, { withFileTypes: true });
@@ -25,7 +25,7 @@ function updateImportsInFile(filePath) {
 
     // Replace @/lib/utils imports with relative path
     if (content.includes('from "@/lib/utils"')) {
-      content = content.replace(
+      content = content.replaceAll(
         /from "@\/lib\/utils"/g,
         'from "../../lib/utils"',
       );
@@ -34,7 +34,7 @@ function updateImportsInFile(filePath) {
 
     // Replace other common @/ imports that might exist
     if (content.includes('from "@/components/')) {
-      content = content.replace(/from "@\/components\//g, 'from "../');
+      content = content.replaceAll(/from "@\/components\//g, 'from "../');
       updated = true;
     }
 

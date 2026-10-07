@@ -293,7 +293,7 @@ function clipSegmentToPolygons(
     }
   }
 
-  const sortedRatios = ratios
+  const sortedRatios = [...ratios]
     .sort((left, right) => left - right)
     .filter(
       (ratio, index, values) =>

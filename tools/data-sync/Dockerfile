@@ -2,9 +2,9 @@ FROM oven/bun:1-alpine AS base
 
 # Install necessary packages
 RUN apk add --no-cache \
-    python3 \
-    make \
     g++ \
+    make \
+    python3 \
     && ln -sf python3 /usr/bin/python
 
 # Install dependencies only when needed

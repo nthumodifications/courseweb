@@ -29,37 +29,17 @@ This repository contains the secure API for NTHUMods, providing secure endpoints
 
 ### Installation
 
-1. Clone the repository:
+From the courseweb repository root, run `bun run setup --full` to install
+dependencies, create the ignored env files without overwriting existing ones,
+generate the Prisma clients, and build the API declaration chain. Fill
+`services/secure-api/.env` with PostgreSQL, signing-key, Firebase, and OAuth
+values from a maintainer before starting the service. The Firebase runtime
+expects `FIREBASE_SERVICE_ACCOUNT` as base64-encoded service-account JSON.
 
-   ```bash
-   git clone https://github.com/your-org/nthumods-secure-api.git
-   cd nthumods-secure-api
-   ```
-
-2. Install dependencies:
-
-   ```bash
-   bun install
-   ```
-
-3. Set up environment variables:
-
-   ```bash
-   cp .env.example .env
-   ```
-
-   Then edit `.env` with your configuration
-
-4. Generate Prisma client:
-
-   ```bash
-   bunx prisma generate
-   ```
-
-5. Start the development server:
-   ```bash
-   bun dev
-   ```
+```bash
+bun run --cwd services/secure-api prisma:generate
+bun run dev:secure-api
+```
 
 ## API Documentation
 
@@ -359,18 +339,8 @@ Before deploying to production, ensure the following security measures are imple
 Before deployment, run comprehensive security tests:
 
 ```bash
-# Run security-focused tests
-bun test:security
-
-# Static security analysis
-npm audit
-bun audit
-
-# Check for known vulnerabilities
-npx retire
-
-# Test API endpoints for security issues
-npm run test:integration:security
+# Run security-focused tests and dependency checks
+bun run --cwd services/secure-api security:check
 ```
 
 ### Incident Response

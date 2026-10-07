@@ -1,7 +1,7 @@
 import { scheduleTimeSlots } from "../constants/timetable";
 import { CourseTimeslotData } from "../types/timetable";
 import { MinimalCourse } from "../types/courses";
-import { getBrightness, getContrastColor } from "./colors";
+import { getContrastColor } from "./colors";
 import { timetableColors } from "../constants/timetableColors";
 import { hasTimes } from "./courses";
 
@@ -30,13 +30,14 @@ export const createTimetableFromCourses = (
       // 1. get first timeslot, check if next consecutive timeslot is present
       // 2. if present, group them together
       // 3. if not present, push the group to the groupedTimeslots array
-      const groupedTimeslots: { day: string; time: string }[][] = [];
-      timeslots!.reduce((acc, curr) => {
+      const groupedTimeslots = timeslots!.reduce<
+        { day: string; time: string }[][]
+      >((acc, curr) => {
         if (acc.length === 0) {
           acc.push([curr]);
         } else {
-          const last = acc[acc.length - 1];
-          const lastTime = last[last.length - 1];
+          const last = acc.at(-1)!;
+          const lastTime = last.at(-1)!;
           const lastTimeIndex = scheduleTimeSlots
             .map((m) => m.time)
             .indexOf(lastTime.time);
@@ -56,7 +57,7 @@ export const createTimetableFromCourses = (
           }
         }
         return acc;
-      }, groupedTimeslots);
+      }, []);
 
       groupedTimeslots.forEach((group) => {
         const day = group[0].day;

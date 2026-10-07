@@ -95,6 +95,10 @@ export function clipGeoPolylineToBounds(
 ): GeoCoordinate[][] {
   const parts: GeoCoordinate[][] = [];
   let current: GeoCoordinate[] | undefined;
+  const finishCurrent = () => {
+    if (current && current.length >= 2) parts.push(current);
+    current = undefined;
+  };
 
   for (let index = 0; index < points.length - 1; index += 1) {
     const clipped = clipSegmentToBounds(
@@ -103,18 +107,17 @@ export function clipGeoPolylineToBounds(
       bounds,
     );
     if (!clipped) {
-      if (current && current.length >= 2) parts.push(current);
-      current = undefined;
+      finishCurrent();
       continue;
     }
 
     if (!current || !sameCoordinate(current.at(-1)!, clipped[0])) {
-      if (current && current.length >= 2) parts.push(current);
+      finishCurrent();
       current = [clipped[0], clipped[1]];
     } else if (!sameCoordinate(current.at(-1)!, clipped[1])) {
       current.push(clipped[1]);
     }
   }
-  if (current && current.length >= 2) parts.push(current);
+  finishCurrent();
   return parts;
 }

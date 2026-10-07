@@ -917,7 +917,7 @@ export default {
     }
 
     // Course detail page
-    const courseMatch = url.pathname.match(/^\/(zh|en)\/courses\/(.+)$/);
+    const courseMatch = /^\/(zh|en)\/courses\/(.+)$/.exec(url.pathname);
     if (courseMatch) {
       return handleCourseDetailPage(
         courseMatch[1],
@@ -929,21 +929,21 @@ export default {
 
     // Department-filtered course list
     const deptMatch =
-      url.pathname.match(/^\/(zh|en)\/courses$/) &&
+      /^\/(zh|en)\/courses$/.exec(url.pathname) &&
       url.searchParams.has("department");
     if (deptMatch) {
       return handleDepartmentPage(url, env);
     }
 
     // Bus route/line pages
-    const busMatch = url.pathname.match(/^\/(zh|en)\/bus\/(.+)$/);
+    const busMatch = /^\/(zh|en)\/bus\/(.+)$/.exec(url.pathname);
     if (busMatch) {
       return handleBusPage(busMatch[1], busMatch[2], env, url.origin);
     }
 
     // All other bot requests to lang-prefixed pages: inject correct canonical,
     // hreflang, title, and description so Google doesn't index generic index.html metadata.
-    const langPageMatch = url.pathname.match(/^\/(zh|en)(\/|$)/);
+    const langPageMatch = /^\/(zh|en)(\/|$)/.exec(url.pathname);
     if (langPageMatch) {
       return handleGenericBotPage(url, env);
     }
