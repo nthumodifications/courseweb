@@ -26,7 +26,6 @@ export type BusListingItemProps = {
   onTogglePin?: (pin: BusPin) => void;
   countdown?: string;
   sourceLabel?: string;
-  compactMeta?: boolean;
 };
 
 export const BusListingItem = ({
@@ -47,7 +46,6 @@ export const BusListingItem = ({
   onTogglePin,
   countdown,
   sourceLabel,
-  compactMeta = false,
 }: BusListingItemProps) => {
   const { language } = useSettings();
   const dict = useDictionary();
@@ -86,93 +84,91 @@ export const BusListingItem = ({
     );
   };
 
+  const openSchedule = () =>
+    line === "city" && detailLine
+      ? handleItemClick()
+      : navigate(`/${language}/bus/${route}`);
+
+  // Same anatomy as the original shuttle row. City lines only add what a
+  // shuttle row lacks: a countdown under the time and the star.
   return (
     <div
       className={cn(
-        "flex flex-col py-3",
+        "flex flex-col gap-4 py-4",
         arrival === dict.bus.service_over ? "opacity-30" : "",
       )}
     >
       <div
-        className="flex cursor-pointer flex-row items-start gap-3"
+        className="flex cursor-pointer flex-row items-center gap-4"
         onClick={handleItemClick}
       >
-        <div className="shrink-0 pt-1">
+        <div className="shrink-0">
           {leading ?? (Icon ? <Icon className="h-7 w-7" /> : null)}
         </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex min-w-0 items-center gap-2">
-            <h3 className="min-w-0 flex-1 break-words font-bold text-foreground">
-              <span>{title}</span>
-              {destination && <span>-{destination}</span>}
-            </h3>
-            <div className="flex shrink-0 flex-col items-end text-right">
-              <div
-                className={cn(
-                  "whitespace-nowrap font-bold text-foreground",
-                  displayTime === dict.bus.departing ? "text-nthu-500" : "",
-                )}
-              >
-                {displayTime}
-              </div>
-              {countdown && (
-                <div className="whitespace-nowrap text-xs font-medium text-muted-foreground">
-                  {countdown}
-                </div>
-              )}
-            </div>
-            <div className="flex shrink-0 items-center">
-              {pin && onTogglePin && (
-                <button
-                  type="button"
-                  aria-label={isPinned ? dict.bus.unpin : dict.bus.pin}
-                  className="grid min-h-11 min-w-9 place-items-center rounded-full text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring hover:text-nthu-500"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onTogglePin(pin);
-                  }}
-                >
-                  <Star
-                    className="h-4 w-4"
-                    fill={isPinned ? "currentColor" : "none"}
-                  />
-                </button>
-              )}
-              <ChevronRight className="h-4 w-4" />
-            </div>
+        <h3 className="min-w-0 break-words font-bold text-foreground">
+          <span>{title}</span>
+          {destination && <span>-{destination}</span>}
+        </h3>
+        <div className="flex flex-1 flex-col items-end text-right">
+          <div
+            className={cn(
+              "whitespace-nowrap font-bold text-foreground",
+              displayTime === dict.bus.departing ? "text-nthu-500" : "",
+            )}
+          >
+            {displayTime}
           </div>
-          {compactMeta ? (
-            <div className="flex flex-row flex-wrap items-center gap-2 text-xs font-medium text-muted-foreground">
-              {notes.map((note) => (
-                <span key={note}>{note}</span>
-              ))}
-              {sourceLabel && <span>{sourceLabel}</span>}
-            </div>
-          ) : (
-            <div className="flex flex-row flex-wrap items-center gap-2">
-              <div
-                className="inline-flex cursor-pointer items-center gap-2"
-                onClick={() =>
-                  line === "city" && detailLine
-                    ? handleItemClick()
-                    : navigate(`/${language}/bus/${route}`)
-                }
-              >
-                <Timer className="h-4 w-4" />
-                <div className="text-sm font-medium leading-relaxed">
-                  {dict.bus.schedule}
-                </div>
-              </div>
-              {notes.map((note) => (
-                <div className="inline-flex items-center gap-2" key={note}>
-                  <div className="text-sm font-medium leading-relaxed">
-                    ・{note}
-                  </div>
-                </div>
-              ))}
+          {countdown && (
+            <div className="whitespace-nowrap text-xs font-medium text-muted-foreground">
+              {countdown}
             </div>
           )}
         </div>
+        {pin && onTogglePin && (
+          <button
+            type="button"
+            aria-label={isPinned ? dict.bus.unpin : dict.bus.pin}
+            className="-mx-2 grid h-11 w-9 shrink-0 place-items-center rounded-full text-muted-foreground hover:text-nthu-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            onClick={(event) => {
+              event.stopPropagation();
+              onTogglePin(pin);
+            }}
+          >
+            <Star
+              className={cn("h-4 w-4", isPinned && "text-nthu-500")}
+              fill={isPinned ? "currentColor" : "none"}
+            />
+          </button>
+        )}
+        <div className="grid place-items-center">
+          <ChevronRight className="h-4 w-4" />
+        </div>
+      </div>
+      <div className="flex flex-row flex-wrap gap-2">
+        <div
+          className="inline-flex cursor-pointer items-center justify-center gap-2"
+          onClick={openSchedule}
+        >
+          <Timer className="h-4 w-4" />
+          <div className="text-center text-sm font-medium">
+            {dict.bus.schedule}
+          </div>
+        </div>
+        {notes.map((note) => (
+          <div
+            className="inline-flex items-center justify-center gap-2"
+            key={note}
+          >
+            <div className="text-center text-sm font-medium">・{note}</div>
+          </div>
+        ))}
+        {sourceLabel && (
+          <div className="inline-flex items-center justify-center gap-2">
+            <div className="text-center text-sm font-medium text-muted-foreground">
+              ・{sourceLabel}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

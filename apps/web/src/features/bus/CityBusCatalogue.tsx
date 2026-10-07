@@ -52,10 +52,15 @@ function destinationSummary(
       ),
     ),
   ];
-  if (destinations.length <= 1) return destinations[0] ?? "";
-  return `${destinations[0]} · ${moreDirections
-    .replace("{count}", String(destinations.length - 1))
-    .replace("{total}", String(destinations.length))}`;
+  return {
+    destination: destinations[0] ?? "",
+    more:
+      destinations.length > 1
+        ? moreDirections
+            .replace("{count}", String(destinations.length - 1))
+            .replace("{total}", String(destinations.length))
+        : undefined,
+  };
 }
 
 function makePin(
@@ -85,12 +90,11 @@ function defaultSelection(route: CityBusRouteSummary) {
 
 function CityBusSkeleton() {
   return (
-    <div className="divide-y divide-border">
+    <div className="flex flex-col px-2 divide-y divide-border">
       {[0, 1, 2].map((item) => (
-        <div className="flex min-h-11 items-center gap-3 py-3" key={item}>
-          <Skeleton className="h-7 w-10 rounded-full" />
+        <div className="flex items-center gap-4 py-4" key={item}>
+          <Skeleton className="h-7 w-7 rounded-full" />
           <Skeleton className="h-5 flex-1" />
-          <Skeleton className="h-11 w-11 rounded-full" />
         </div>
       ))}
     </div>
@@ -120,64 +124,66 @@ function CatalogueRouteRow({
   const stopName = selection
     ? localized(language, selection.stop)
     : dict.bus.no_campus_stop;
+  const summary = destinationSummary(language, route, dict.bus.more_directions);
   const detailUrl = `/${language}/bus/city/${encodeURIComponent(route.id)}${selection ? `?direction=${encodeURIComponent(selection.direction.id)}&stop=${encodeURIComponent(selection.stop.id)}` : ""}`;
 
+  // Same row anatomy and spacing as BusListingItem.
   return (
-    <div className="flex min-h-11 items-start gap-3 py-3">
-      <button
-        type="button"
-        className="flex min-w-0 flex-1 items-start gap-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        onClick={() => navigate(detailUrl)}
-      >
-        <CityBusLineBadge
-          nameZh={route.nameZh}
-          nameEn={route.nameEn}
-          category={route.category}
-          language={language as "zh" | "en"}
-        />
-        <span className="min-w-0 flex-1 text-sm leading-relaxed">
-          <span className="block break-words font-bold">{routeName}</span>
-          <span className="block break-words font-bold">
-            {destinationSummary(language, route, dict.bus.more_directions)}
-          </span>
-          <span className="block break-words font-medium text-muted-foreground">
-            {stopName}
-            {route.source === "intercity" && (
-              <span className="ml-2">{dict.bus.times_not_available}</span>
-            )}
-          </span>
-        </span>
-      </button>
-      {route.source === "intercity" && route.timesUrl && (
-        <a
-          className="grid min-h-11 min-w-11 shrink-0 place-items-center rounded-full text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          href={route.timesUrl}
-          target="_blank"
-          rel="noreferrer"
-          aria-label={dict.bus.operator_times}
-          title={dict.bus.operator_times}
-          onClick={(event) => event.stopPropagation()}
+    <div className="flex flex-col gap-4 py-4">
+      <div className="flex flex-row items-center gap-4">
+        <button
+          type="button"
+          className="flex min-w-0 flex-1 flex-row items-center gap-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          onClick={() => navigate(detailUrl)}
         >
-          <ExternalLink className="h-4 w-4" />
-        </a>
-      )}
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        className="min-h-11 min-w-11 shrink-0"
-        aria-label={pin && isPinned ? dict.bus.remove_bus : dict.bus.add_bus}
-        onClick={() => {
-          if (pin) togglePin(pin);
-          else navigate(detailUrl);
-        }}
-      >
-        {pin && isPinned ? (
-          <Star className="h-4 w-4 text-nthu-500" fill="currentColor" />
-        ) : (
-          <Plus className="h-4 w-4" />
+          <CityBusLineBadge
+            nameZh={route.nameZh}
+            nameEn={route.nameEn}
+            category={route.category}
+            language={language as "zh" | "en"}
+          />
+          <h3 className="min-w-0 break-words font-bold text-foreground">
+            <span>{routeName}</span>
+            {summary.destination && <span>-{summary.destination}</span>}
+          </h3>
+        </button>
+        {route.source === "intercity" && route.timesUrl && (
+          <a
+            className="-my-2 grid h-11 w-9 shrink-0 place-items-center rounded-full text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            href={route.timesUrl}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={dict.bus.operator_times}
+            title={dict.bus.operator_times}
+          >
+            <ExternalLink className="h-4 w-4" />
+          </a>
         )}
-      </Button>
+        <button
+          type="button"
+          className="-mx-2.5 -my-2 grid h-11 w-9 shrink-0 place-items-center rounded-full text-foreground hover:text-nthu-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          aria-label={pin && isPinned ? dict.bus.remove_bus : dict.bus.add_bus}
+          onClick={() => {
+            if (pin) togglePin(pin);
+            else navigate(detailUrl);
+          }}
+        >
+          {pin && isPinned ? (
+            <Star className="h-4 w-4 text-nthu-500" fill="currentColor" />
+          ) : (
+            <Plus className="h-4 w-4" />
+          )}
+        </button>
+      </div>
+      <div className="flex flex-row flex-wrap gap-2 text-sm font-medium">
+        <span>{stopName}</span>
+        {summary.more && <span>・{summary.more}</span>}
+        {route.source === "intercity" && (
+          <span className="text-muted-foreground">
+            ・{dict.bus.times_not_available}
+          </span>
+        )}
+      </div>
     </div>
   );
 }
@@ -200,8 +206,8 @@ function RouteSection({
   togglePin: (pin: BusPin) => void;
 }) {
   return (
-    <section className="flex flex-col gap-2">
-      <div className="flex items-baseline justify-between gap-3">
+    <section className="flex flex-col px-2">
+      <div className="flex items-baseline justify-between gap-4">
         <h2 className="font-bold">{title}</h2>
         <span className="text-xs font-medium text-muted-foreground">
           {routes.length}
@@ -319,7 +325,6 @@ export function CityBusSelectedLines({ refTime }: { refTime: Date }) {
             sourceLabel={
               departure?.realtime ? dict.bus.realtime : dict.bus.scheduled
             }
-            compactMeta
             countdown={formatDepartureCountdown(departure?.minutes, locale, {
               underHour: dict.bus.minutes,
               minute: dict.bus.countdown_minute,
@@ -402,7 +407,7 @@ export default function CityBusCatalogue() {
   return (
     <div className="flex flex-col gap-4">
       {!hasSearch && suggestions.length > 0 && (
-        <section className="flex flex-col gap-2">
+        <section className="flex flex-col px-2">
           <h2 className="font-bold">{dict.bus.campus_suggestions}</h2>
           <div className="divide-y divide-border">
             {suggestions.map(({ route, direction, stop }) => (
@@ -419,7 +424,7 @@ export default function CityBusCatalogue() {
         </section>
       )}
 
-      <section className="flex flex-col gap-2">
+      <section className="flex flex-col gap-2 px-2">
         <h2 className="font-bold">{dict.bus.browse_lines}</h2>
         <div className="relative">
           <Search className="pointer-events-none absolute left-2 top-3 h-4 w-4 text-muted-foreground" />
@@ -427,14 +432,14 @@ export default function CityBusCatalogue() {
             value={searchValue}
             onChange={(event) => setSearchValue(event.target.value)}
             placeholder={dict.bus.search_city_buses}
-            className="h-10 pl-6"
+            className="h-10 pl-8"
             aria-label={dict.bus.search_city_buses}
           />
         </div>
       </section>
 
       {hasSearch && !hasMatches ? (
-        <p className="py-4 text-sm text-muted-foreground">
+        <p className="px-2 py-4 text-sm text-muted-foreground">
           {dict.bus.no_route_matches}
         </p>
       ) : (

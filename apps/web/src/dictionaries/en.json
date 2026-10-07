@@ -500,7 +500,7 @@
     "search_city_buses": "Search line, destination, or stop",
     "pilot_routes": "Pilot bus",
     "pilot_routes_caption": "TDX lists the pilot bus as one line with multiple directions.",
-    "more_directions": "{count} more",
+    "more_directions": "+{count} more directions",
     "other_city_routes": "Other city buses",
     "intercity_routes": "Intercity buses",
     "intercity_routes_caption": "Timetables are not provided here; check the operator page.",

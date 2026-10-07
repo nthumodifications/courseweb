@@ -1,6 +1,6 @@
 import { useSettings } from "@/hooks/contexts/settings";
 import { Helmet } from "react-helmet-async";
-import { Skeleton, Tabs, TabsList, TabsTrigger } from "@courseweb/ui";
+import { Tabs, TabsList, TabsTrigger } from "@courseweb/ui";
 import { useEffect, useMemo, useState } from "react";
 import useTime from "@/hooks/useTime";
 import { useQuery } from "@tanstack/react-query";
@@ -434,13 +434,8 @@ const BusPage = () => {
     return (
       <>
         {seoHelmet}
-        <div className="flex flex-col gap-4 px-4 py-4">
-          <Skeleton className="h-10 w-full" />
-          <div className="divide-y divide-border">
-            {[0, 1, 2, 3].map((item) => (
-              <Skeleton className="my-4 h-10 w-full" key={item} />
-            ))}
-          </div>
+        <div className="flex justify-center items-center min-h-[200px]">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-nthu-500"></div>
         </div>
       </>
     );
@@ -450,8 +445,8 @@ const BusPage = () => {
     return (
       <>
         {seoHelmet}
-        <div className="px-4 py-4 text-sm text-destructive">
-          {dict.bus.load_error}
+        <div className="flex justify-center items-center min-h-[200px]">
+          <div className="text-red-500">{dict.bus.load_error}</div>
         </div>
       </>
     );
@@ -461,9 +456,9 @@ const BusPage = () => {
     <div className="flex flex-col px-4">
       {seoHelmet}
       {pins.length > 0 && (
-        <section className="mb-4 flex flex-col gap-2">
-          <h2 className="font-bold">{dict.bus.my_buses}</h2>
-          <div className="divide-y divide-border">
+        <section className="mb-4 flex flex-col">
+          <h2 className="px-2 font-bold">{dict.bus.my_buses}</h2>
+          <div className="flex flex-col px-2 divide-y divide-border">
             {selectedCampusBuses.map((bus, index) => (
               <BusListingItem
                 key={`${bus.line}:${bus.direction}:${index}`}
@@ -490,7 +485,7 @@ const BusPage = () => {
           <TabsTrigger className="flex-1" value="nanda">
             {dict.bus.nanda}
           </TabsTrigger>
-          <TabsTrigger className="flex-1 text-xs sm:text-sm" value="city">
+          <TabsTrigger className="flex-1" value="city">
             {dict.bus.add_line}
           </TabsTrigger>
         </TabsList>
