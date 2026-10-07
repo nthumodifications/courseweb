@@ -2,10 +2,15 @@ import { apps, categories } from "@/const/apps";
 import { Settings, Star } from "lucide-react";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useSettings } from "@/hooks/contexts/settings";
-import { cn } from "@courseweb/ui";
-import { Dialog, DialogContent, DialogTrigger } from "@courseweb/ui";
-import { ScrollArea } from "@courseweb/ui";
-import { Button, Badge } from "@courseweb/ui";
+import {
+  Badge,
+  Button,
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+  ScrollArea,
+  cn,
+} from "@courseweb/ui";
 import AppItem from "./AppItem";
 import SponsorshipBanner from "@/components/Sponsorship/SponsorshipBanner";
 
@@ -52,7 +57,10 @@ const AppList = () => {
                                   }
                                 </h2>
                                 {app.beta && (
-                                  <Badge variant="secondary" className="shrink-0">
+                                  <Badge
+                                    variant="secondary"
+                                    className="shrink-0"
+                                  >
                                     {dict.applist.beta}
                                   </Badge>
                                 )}

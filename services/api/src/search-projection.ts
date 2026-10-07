@@ -137,9 +137,11 @@ export const toSearchProjection = (
  * stable primary key prevents page/order changes from causing unstable bytes.
  */
 export const sortSearchProjections = (courses: SearchProjection[]) =>
-  [...courses].sort((a, b) =>
-    a.raw_id < b.raw_id ? -1 : a.raw_id > b.raw_id ? 1 : 0,
-  );
+  [...courses].sort((a, b) => {
+    if (a.raw_id < b.raw_id) return -1;
+    if (a.raw_id > b.raw_id) return 1;
+    return 0;
+  });
 
 export type SearchChunkData = {
   schemaVersion: number;

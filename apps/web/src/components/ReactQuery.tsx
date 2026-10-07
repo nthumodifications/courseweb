@@ -1,7 +1,5 @@
 import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
-import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
-
 import { PropsWithChildren } from "react";
 import { createIDBPersister } from "@/lib/idb_persister";
 

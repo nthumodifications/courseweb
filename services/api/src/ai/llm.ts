@@ -1,8 +1,4 @@
-import {
-  FunctionCallingConfigMode,
-  GoogleGenAI,
-  Type,
-} from "@google/genai";
+import { FunctionCallingConfigMode, GoogleGenAI, Type } from "@google/genai";
 import type { FunctionDeclaration } from "@google/genai";
 import type { Context } from "hono";
 import { TOOL_DECLARATIONS, executeTool } from "../chat/tools";
@@ -26,14 +22,19 @@ export type LLMErrorCode =
 export interface WorkerAI {
   run(model: string, input: Record<string, unknown>): Promise<unknown>;
   toMarkdown?:
-    | ((
-        file: { name: string; blob: Blob },
-      ) => Promise<{ name: string; mimeType: string; format: "markdown"; data: string }>)
+    | ((file: { name: string; blob: Blob }) => Promise<{
+        name: string;
+        mimeType: string;
+        format: "markdown";
+        data: string;
+      }>)
     | {
-        transform(file: {
+        transform(file: { name: string; blob: Blob }): Promise<{
           name: string;
-          blob: Blob;
-        }): Promise<{ name: string; mimeType: string; format: "markdown"; data: string }>;
+          mimeType: string;
+          format: "markdown";
+          data: string;
+        }>;
       };
 }
 
@@ -122,57 +123,58 @@ export interface OpenAICompatibleProvider {
   headers?: Record<string, string>;
 }
 
-export const OPENAI_COMPATIBLE_PROVIDERS: readonly OpenAICompatibleProvider[] = [
-  {
-    name: "groq",
-    baseUrl: "https://api.groq.com/openai/v1",
-    keyEnv: "GROQ_API_KEY",
-    modelsEnv: "GROQ_CHAT_MODELS",
-    defaultModels: DEFAULT_GROQ_CHAT_MODELS,
-    supportsJsonMode: true,
-    supportsTools: true,
-  },
-  {
-    name: "cerebras",
-    baseUrl: "https://api.cerebras.ai/v1",
-    keyEnv: "CEREBRAS_API_KEY",
-    modelsEnv: "CEREBRAS_CHAT_MODELS",
-    defaultModels: DEFAULT_CEREBRAS_CHAT_MODELS,
-    supportsJsonMode: true,
-    supportsTools: true,
-  },
-  {
-    name: "openrouter",
-    baseUrl: "https://openrouter.ai/api/v1",
-    keyEnv: "OPENROUTER_API_KEY",
-    modelsEnv: "OPENROUTER_CHAT_MODELS",
-    defaultModels: DEFAULT_OPENROUTER_CHAT_MODELS,
-    supportsJsonMode: true,
-    supportsTools: true,
-    headers: {
-      "HTTP-Referer": "https://nthumods.com",
-      "X-Title": "NTHUMods",
+export const OPENAI_COMPATIBLE_PROVIDERS: readonly OpenAICompatibleProvider[] =
+  [
+    {
+      name: "groq",
+      baseUrl: "https://api.groq.com/openai/v1",
+      keyEnv: "GROQ_API_KEY",
+      modelsEnv: "GROQ_CHAT_MODELS",
+      defaultModels: DEFAULT_GROQ_CHAT_MODELS,
+      supportsJsonMode: true,
+      supportsTools: true,
     },
-  },
-  {
-    name: "mistral",
-    baseUrl: "https://api.mistral.ai/v1",
-    keyEnv: "MISTRAL_API_KEY",
-    modelsEnv: "MISTRAL_CHAT_MODELS",
-    defaultModels: DEFAULT_MISTRAL_CHAT_MODELS,
-    supportsJsonMode: true,
-    supportsTools: true,
-  },
-];
+    {
+      name: "cerebras",
+      baseUrl: "https://api.cerebras.ai/v1",
+      keyEnv: "CEREBRAS_API_KEY",
+      modelsEnv: "CEREBRAS_CHAT_MODELS",
+      defaultModels: DEFAULT_CEREBRAS_CHAT_MODELS,
+      supportsJsonMode: true,
+      supportsTools: true,
+    },
+    {
+      name: "openrouter",
+      baseUrl: "https://openrouter.ai/api/v1",
+      keyEnv: "OPENROUTER_API_KEY",
+      modelsEnv: "OPENROUTER_CHAT_MODELS",
+      defaultModels: DEFAULT_OPENROUTER_CHAT_MODELS,
+      supportsJsonMode: true,
+      supportsTools: true,
+      headers: {
+        "HTTP-Referer": "https://nthumods.com",
+        "X-Title": "NTHUMods",
+      },
+    },
+    {
+      name: "mistral",
+      baseUrl: "https://api.mistral.ai/v1",
+      keyEnv: "MISTRAL_API_KEY",
+      modelsEnv: "MISTRAL_CHAT_MODELS",
+      defaultModels: DEFAULT_MISTRAL_CHAT_MODELS,
+      supportsJsonMode: true,
+      supportsTools: true,
+    },
+  ];
 
-const DEFAULT_PROVIDER_ORDER: readonly ProviderName[] = [
+const DEFAULT_PROVIDER_ORDER = new Set<ProviderName>([
   "gemini",
   "groq",
   "cerebras",
   "openrouter",
   "mistral",
   "workers-ai",
-];
+]);
 
 export type JsonSchema = Record<string, unknown>;
 
@@ -242,11 +244,11 @@ export function classifyProviderError(
   if (
     status === 401 ||
     status === 403 ||
-    status === 400 &&
+    (status === 400 &&
       (lower.includes("api key") ||
         lower.includes("api_key") ||
         lower.includes("invalid key") ||
-        lower.includes("authentication"))
+        lower.includes("authentication")))
   ) {
     return { code: "auth", status, message };
   }
@@ -276,7 +278,9 @@ function deadCacheTtl(
   const lower = classification.message.toLowerCase();
   const dailyQuota =
     classification.status === 429 &&
-    /(daily|per day|requests?\s*\/\s*day|requests?\s+per\s+day|day limit)/.test(lower);
+    /(daily|per day|requests?\s*\/\s*day|requests?\s+per\s+day|day limit)/.test(
+      lower,
+    );
   const openRouterFreeQuota =
     provider === "openrouter" &&
     classification.status === 402 &&
@@ -401,7 +405,10 @@ export function convertToolDeclarations(
   });
 }
 
-export function validateAgainstSchema(value: unknown, schema: unknown): boolean {
+export function validateAgainstSchema(
+  value: unknown,
+  schema: unknown,
+): boolean {
   if (!schema || typeof schema !== "object") return true;
   const definition = schema as Record<string, unknown>;
   const type = lowerType(definition.type);
@@ -410,7 +417,8 @@ export function validateAgainstSchema(value: unknown, schema: unknown): boolean 
     return false;
   }
   if (type === "object") {
-    if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+    if (!value || typeof value !== "object" || Array.isArray(value))
+      return false;
     const record = value as Record<string, unknown>;
     const required = Array.isArray(definition.required)
       ? definition.required.filter(
@@ -422,7 +430,10 @@ export function validateAgainstSchema(value: unknown, schema: unknown): boolean 
       for (const [key, propertySchema] of Object.entries(
         definition.properties as Record<string, unknown>,
       )) {
-        if (key in record && !validateAgainstSchema(record[key], propertySchema)) {
+        if (
+          key in record &&
+          !validateAgainstSchema(record[key], propertySchema)
+        ) {
           return false;
         }
       }
@@ -437,8 +448,10 @@ export function validateAgainstSchema(value: unknown, schema: unknown): boolean 
     );
   }
   if (type === "string") return typeof value === "string";
-  if (type === "number") return typeof value === "number" && Number.isFinite(value);
-  if (type === "integer") return typeof value === "number" && Number.isInteger(value);
+  if (type === "number")
+    return typeof value === "number" && Number.isFinite(value);
+  if (type === "integer")
+    return typeof value === "number" && Number.isInteger(value);
   if (type === "boolean") return typeof value === "boolean";
   return true;
 }
@@ -459,9 +472,13 @@ interface LoadedPdf {
   markdownBody?: Promise<string>;
 }
 
-async function loadPdf(pdf: { url?: string; bytes?: ArrayBuffer | Uint8Array }): Promise<LoadedPdf> {
+async function loadPdf(pdf: {
+  url?: string;
+  bytes?: ArrayBuffer | Uint8Array;
+}): Promise<LoadedPdf> {
   if (pdf.bytes) {
-    const bytes = pdf.bytes instanceof Uint8Array ? pdf.bytes : new Uint8Array(pdf.bytes);
+    const bytes =
+      pdf.bytes instanceof Uint8Array ? pdf.bytes : new Uint8Array(pdf.bytes);
     return { bytes, blob: new Blob([bytes], { type: "application/pdf" }) };
   }
   if (!pdf.url) throw new Error("PDF input must include url or bytes");
@@ -473,7 +490,8 @@ async function loadPdf(pdf: { url?: string; bytes?: ArrayBuffer | Uint8Array }):
 
 async function pdfMarkdown(env: LlmEnv, pdf: LoadedPdf): Promise<string> {
   const ai = env.AI as WorkerAI | undefined;
-  if (!ai?.toMarkdown) throw new Error("Workers AI PDF conversion is unavailable");
+  if (!ai?.toMarkdown)
+    throw new Error("Workers AI PDF conversion is unavailable");
   const file = {
     name: "document.pdf",
     blob: pdf.blob,
@@ -498,7 +516,10 @@ async function pdfMarkdown(env: LlmEnv, pdf: LoadedPdf): Promise<string> {
  */
 export function pdfMarkdownBody(markdown: string): string {
   const contents = markdown.split(/^## Contents\s*$/m)[1] ?? markdown;
-  return contents.replace(/^#{1,6} .*$/gm, "").replace(/\s+/g, " ").trim();
+  return contents
+    .replace(/^#{1,6} .*$/gm, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 const MIN_PDF_TEXT = 80;
@@ -550,7 +571,9 @@ export function normalizeWorkersAiOutput(output: unknown): WorkersAiOutput {
   const body = output as {
     response?: unknown;
     tool_calls?: RawCall[];
-    choices?: Array<{ message?: { content?: unknown; tool_calls?: RawCall[] } }>;
+    choices?: Array<{
+      message?: { content?: unknown; tool_calls?: RawCall[] };
+    }>;
   };
   const message = body.choices?.[0]?.message;
 
@@ -579,7 +602,10 @@ export function normalizeWorkersAiOutput(output: unknown): WorkersAiOutput {
 }
 
 function parseJson(text: string): unknown {
-  const trimmed = text.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+  const trimmed = text
+    .trim()
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/, "");
   return JSON.parse(trimmed);
 }
 
@@ -611,7 +637,9 @@ interface ProviderAttempt {
 function getOpenAIProvider(
   provider: ProviderName,
 ): OpenAICompatibleProvider | undefined {
-  return OPENAI_COMPATIBLE_PROVIDERS.find((candidate) => candidate.name === provider);
+  return OPENAI_COMPATIBLE_PROVIDERS.find(
+    (candidate) => candidate.name === provider,
+  );
 }
 
 function getProviderKey(
@@ -623,13 +651,12 @@ function getProviderKey(
 }
 
 function providerOrder(env: LlmEnv): ProviderName[] {
-  const configured = env.AI_PROVIDER_ORDER
-    ?.split(",")
+  const configured = env.AI_PROVIDER_ORDER?.split(",")
     .map((name) => name.trim() as ProviderName)
-    .filter((name): name is ProviderName =>
-      DEFAULT_PROVIDER_ORDER.includes(name),
-    );
-  const requested = configured?.length ? configured : [...DEFAULT_PROVIDER_ORDER];
+    .filter((name): name is ProviderName => DEFAULT_PROVIDER_ORDER.has(name));
+  const requested = configured?.length
+    ? configured
+    : [...DEFAULT_PROVIDER_ORDER];
   return [...new Set([...requested, ...DEFAULT_PROVIDER_ORDER])];
 }
 
@@ -656,11 +683,13 @@ function providerAttempts(
 ): ProviderAttempt[] {
   const attempts: ProviderAttempt[] = [];
   const geminiDefaults =
-    purpose === "chat" ? DEFAULT_GEMINI_CHAT_MODELS : DEFAULT_GEMINI_SUMMARY_MODELS;
+    purpose === "chat"
+      ? DEFAULT_GEMINI_CHAT_MODELS
+      : DEFAULT_GEMINI_SUMMARY_MODELS;
   const geminiEnv =
     purpose === "chat"
       ? env.GEMINI_CHAT_MODELS
-      : env.GEMINI_SUMMARY_MODELS ?? env.GEMINI_BULK_MODELS;
+      : (env.GEMINI_SUMMARY_MODELS ?? env.GEMINI_BULK_MODELS);
   const geminiModels = modelsFromEnv(geminiEnv, geminiDefaults);
 
   // A user key is always tried before any server-configured provider. The
@@ -706,7 +735,10 @@ async function generateGeminiJson(
   const parts: Array<Record<string, unknown>> = [{ text: options.text }];
   if (pdf) {
     parts.push({
-      inlineData: { mimeType: "application/pdf", data: encodeBase64(pdf.bytes) },
+      inlineData: {
+        mimeType: "application/pdf",
+        data: encodeBase64(pdf.bytes),
+      },
     });
   }
   const response = await ai.models.generateContent({
@@ -718,7 +750,8 @@ async function generateGeminiJson(
       responseSchema: options.schema,
     },
   });
-  if (!response.text) throw new Error("Provider returned an empty JSON response");
+  if (!response.text)
+    throw new Error("Provider returned an empty JSON response");
   return parseJson(response.text);
 }
 
@@ -732,7 +765,8 @@ async function generateOpenAICompatibleJson(
   pdf: LoadedPdf | undefined,
 ): Promise<unknown> {
   const provider = getOpenAIProvider(attempt.provider);
-  if (!provider) throw new Error(`${attempt.provider} is not OpenAI-compatible`);
+  if (!provider)
+    throw new Error(`${attempt.provider} is not OpenAI-compatible`);
   const apiKey = getProviderKey(options.env, provider);
   if (!apiKey) throw new Error(`${attempt.provider} API key is not configured`);
   const text = await withPdfText(options.text, options, pdf);
@@ -746,7 +780,10 @@ async function generateOpenAICompatibleJson(
     body: JSON.stringify({
       model: attempt.model,
       messages: [
-        { role: "system", content: strictJsonInstruction(options.system, options.schema) },
+        {
+          role: "system",
+          content: strictJsonInstruction(options.system, options.schema),
+        },
         { role: "user", content: text },
       ],
       ...(provider.supportsJsonMode
@@ -756,13 +793,16 @@ async function generateOpenAICompatibleJson(
     }),
   });
   if (!response.ok) {
-    throw new Error(`${attempt.provider} ${response.status}: ${await response.text()}`);
+    throw new Error(
+      `${attempt.provider} ${response.status}: ${await response.text()}`,
+    );
   }
   const body = (await response.json()) as {
     choices?: Array<{ message?: { content?: string | null } }>;
   };
   const output = body.choices?.[0]?.message?.content;
-  if (!output) throw new Error(`${attempt.provider} returned an empty JSON response`);
+  if (!output)
+    throw new Error(`${attempt.provider} returned an empty JSON response`);
   return parseJson(output);
 }
 
@@ -776,7 +816,10 @@ async function generateWorkersJson(
   const text = await withPdfText(options.text, options, pdf);
   const output = await ai.run(attempt.model, {
     messages: [
-      { role: "system", content: strictJsonInstruction(options.system, options.schema) },
+      {
+        role: "system",
+        content: strictJsonInstruction(options.system, options.schema),
+      },
       { role: "user", content: text },
     ],
     response_format: { type: "json_object" },
@@ -795,7 +838,8 @@ async function runJsonProvider(
   pdf: LoadedPdf | undefined,
 ): Promise<unknown> {
   try {
-    if (attempt.provider === "gemini") return await generateGeminiJson(attempt, options, pdf);
+    if (attempt.provider === "gemini")
+      return await generateGeminiJson(attempt, options, pdf);
     if (attempt.provider !== "workers-ai") {
       return await generateOpenAICompatibleJson(attempt, options, pdf);
     }
@@ -824,22 +868,38 @@ export async function generateJSON<T = unknown>(
       message: "No AI provider is configured",
     });
   }
-  const pdf = options.pdf ? await loadPdf(options.pdf).catch((error) => {
-    throw new LLMProviderError("gemini", "pdf", classifyProviderError(error));
-  }) : undefined;
+  const pdf = options.pdf
+    ? await loadPdf(options.pdf).catch((error) => {
+        throw new LLMProviderError(
+          "gemini",
+          "pdf",
+          classifyProviderError(error),
+        );
+      })
+    : undefined;
   let lastError: LLMProviderError | undefined;
 
   for (const attempt of attempts) {
-    if (!attempt.userSuppliedKey && isDead(attempt.provider, attempt.model)) continue;
+    if (!attempt.userSuppliedKey && isDead(attempt.provider, attempt.model))
+      continue;
     try {
       const data = await runJsonProvider(attempt, options, pdf);
       if (!validateAgainstSchema(data, options.schema)) {
-        throw new LLMProviderError(attempt.provider, attempt.model, {
-          code: "unknown",
-          message: "Provider returned JSON that does not match the schema",
-        }, attempt.userSuppliedKey);
+        throw new LLMProviderError(
+          attempt.provider,
+          attempt.model,
+          {
+            code: "unknown",
+            message: "Provider returned JSON that does not match the schema",
+          },
+          attempt.userSuppliedKey,
+        );
       }
-      return { data: data as T, provider: attempt.provider, model: attempt.model };
+      return {
+        data: data as T,
+        provider: attempt.provider,
+        model: attempt.model,
+      };
     } catch (error) {
       const providerError =
         error instanceof LLMProviderError
@@ -851,10 +911,14 @@ export async function generateJSON<T = unknown>(
               attempt.userSuppliedKey,
             );
       lastError = providerError;
+      const providerStatus = providerError.status
+        ? ` ${providerError.status}`
+        : "";
       console.warn(
-        `[ai] ${options.purpose ?? "summary"} ${attempt.provider}/${attempt.model} failed (${providerError.code}${providerError.status ? ` ${providerError.status}` : ""}): ${providerError.message.slice(0, 300)}`,
+        `[ai] ${options.purpose ?? "summary"} ${attempt.provider}/${attempt.model} failed (${providerError.code}${providerStatus}): ${providerError.message.slice(0, 300)}`,
       );
-      if (providerError.userSuppliedKey && providerError.code === "auth") throw providerError;
+      if (providerError.userSuppliedKey && providerError.code === "auth")
+        throw providerError;
       if (!providerError.userSuppliedKey) {
         rememberDead(attempt.provider, attempt.model, {
           code: providerError.code,
@@ -864,10 +928,13 @@ export async function generateJSON<T = unknown>(
       }
     }
   }
-  throw lastError ?? new LLMProviderError("workers-ai", "none", {
-    code: "unavailable",
-    message: "All AI providers failed",
-  });
+  throw (
+    lastError ??
+    new LLMProviderError("workers-ai", "none", {
+      code: "unavailable",
+      message: "All AI providers failed",
+    })
+  );
 }
 
 export interface TestKeyResult {
@@ -885,7 +952,7 @@ export async function testGeminiKey(
     const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateContent({
       model,
-      contents: "Reply with the JSON object {\"ok\":true}.",
+      contents: 'Reply with the JSON object {"ok":true}.',
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -896,8 +963,16 @@ export async function testGeminiKey(
       },
     });
     const data = response.text ? parseJson(response.text) : undefined;
-    if (!data || typeof data !== "object" || (data as { ok?: unknown }).ok !== true) {
-      return { ok: false, code: "unavailable", error: "Gemini returned an invalid response" };
+    if (
+      !data ||
+      typeof data !== "object" ||
+      (data as { ok?: unknown }).ok !== true
+    ) {
+      return {
+        ok: false,
+        code: "unavailable",
+        error: "Gemini returned an invalid response",
+      };
     }
     return { ok: true, model };
   } catch (error) {
@@ -906,7 +981,11 @@ export async function testGeminiKey(
       classification.code === "auth" || classification.code === "quota"
         ? classification.code
         : "unavailable";
-    return { ok: false, code, error: readableProviderMessage(classification.message) };
+    return {
+      ok: false,
+      code,
+      error: readableProviderMessage(classification.message),
+    };
   }
 }
 
@@ -918,7 +997,8 @@ export function readableProviderMessage(message: string): string {
       const parsed = JSON.parse(message.slice(start)) as {
         error?: { message?: unknown };
       };
-      if (typeof parsed.error?.message === "string") return parsed.error.message.trim();
+      if (typeof parsed.error?.message === "string")
+        return parsed.error.message.trim();
     } catch {
       // Not JSON after all; fall through to the raw text.
     }
@@ -937,7 +1017,11 @@ interface ToolCall {
 interface HistoryMessage {
   role: "user" | "assistant" | "tool";
   content: string;
-  toolCalls?: Array<{ id: string; name: string; args: Record<string, unknown> }>;
+  toolCalls?: Array<{
+    id: string;
+    name: string;
+    args: Record<string, unknown>;
+  }>;
   toolCallId?: string;
   name?: string;
 }
@@ -946,7 +1030,10 @@ export type ChatStreamEvent =
   | { type: "meta"; data: { provider: ProviderName; model: string } }
   | { type: "text"; data: string }
   | { type: "tool_call"; data: { name: string; args: Record<string, unknown> } }
-  | { type: "tool_result"; data: { name: string; result?: unknown; error?: string } }
+  | {
+      type: "tool_result";
+      data: { name: string; result?: unknown; error?: string };
+    }
   | { type: "done" }
   | { type: "error"; data: string; code: LLMErrorCode };
 
@@ -958,7 +1045,10 @@ interface ProviderTurnResult {
 type ProviderEvent =
   | { type: "text"; data: string }
   | { type: "tool_call"; data: { name: string; args: Record<string, unknown> } }
-  | { type: "tool_result"; data: { name: string; result?: unknown; error?: string } };
+  | {
+      type: "tool_result";
+      data: { name: string; result?: unknown; error?: string };
+    };
 
 function asToolArgs(value: unknown): Record<string, unknown> {
   if (typeof value === "string") {
@@ -983,10 +1073,17 @@ async function* executeToolCalls(
     yield { type: "tool_call", data: { name: call.name, args: call.args } };
     try {
       call.result = await executeTool(c, call.name, call.args, userContext);
-      yield { type: "tool_result", data: { name: call.name, result: call.result } };
+      yield {
+        type: "tool_result",
+        data: { name: call.name, result: call.result },
+      };
     } catch (error) {
-      call.error = error instanceof Error ? error.message : "Tool execution failed";
-      yield { type: "tool_result", data: { name: call.name, error: call.error } };
+      call.error =
+        error instanceof Error ? error.message : "Tool execution failed";
+      yield {
+        type: "tool_result",
+        data: { name: call.name, error: call.error },
+      };
     }
   }
 }
@@ -995,7 +1092,8 @@ async function historyToGemini(
   history: HistoryMessage[],
   pdfCache: Map<string, LoadedPdf>,
 ): Promise<Array<{ role: string; parts: Array<Record<string, unknown>> }>> {
-  const output: Array<{ role: string; parts: Array<Record<string, unknown>> }> = [];
+  const output: Array<{ role: string; parts: Array<Record<string, unknown>> }> =
+    [];
   for (const message of history) {
     if (message.role === "user") {
       output.push({ role: "user", parts: [{ text: message.content }] });
@@ -1003,7 +1101,9 @@ async function historyToGemini(
       const parts: Array<Record<string, unknown>> = [];
       if (message.content) parts.push({ text: message.content });
       for (const call of message.toolCalls ?? []) {
-        parts.push({ functionCall: { name: call.name, args: call.args, id: call.id } });
+        parts.push({
+          functionCall: { name: call.name, args: call.args, id: call.id },
+        });
       }
       output.push({ role: "model", parts });
     } else {
@@ -1038,7 +1138,10 @@ async function historyToGemini(
           pdfCache.set(pdfUrl, pdf);
         }
         parts.push({
-          inlineData: { mimeType: "application/pdf", data: encodeBase64(pdf.bytes) },
+          inlineData: {
+            mimeType: "application/pdf",
+            data: encodeBase64(pdf.bytes),
+          },
         });
       }
       output.push({ role: "user", parts });
@@ -1062,7 +1165,9 @@ async function* runGeminiTurn(
     config: {
       systemInstruction: buildSystemPrompt(userContext),
       tools: [{ functionDeclarations: TOOL_DECLARATIONS }],
-      toolConfig: { functionCallingConfig: { mode: FunctionCallingConfigMode.AUTO } },
+      toolConfig: {
+        functionCallingConfig: { mode: FunctionCallingConfigMode.AUTO },
+      },
     },
   });
   const calls = new Map<string, ToolCall>();
@@ -1073,7 +1178,9 @@ async function* runGeminiTurn(
       yield { type: "text", data: chunk.text };
     }
     for (const functionCall of chunk.functionCalls ?? []) {
-      const key = functionCall.id ?? `${functionCall.name}:${JSON.stringify(functionCall.args)}`;
+      const key =
+        functionCall.id ??
+        `${functionCall.name}:${JSON.stringify(functionCall.args)}`;
       if (!calls.has(key) && functionCall.name) {
         calls.set(key, {
           id: functionCall.id ?? key,
@@ -1084,7 +1191,8 @@ async function* runGeminiTurn(
     }
   }
   const toolCalls = [...calls.values()];
-  for await (const event of executeToolCalls(c, toolCalls, userContext)) yield event;
+  for await (const event of executeToolCalls(c, toolCalls, userContext))
+    yield event;
   return { text, toolCalls };
 }
 
@@ -1104,7 +1212,11 @@ export function accumulateOpenAIToolCallDelta(
   },
 ): void {
   const index = delta.index ?? 0;
-  const current = calls.get(index) ?? { id: `call_${index}`, name: "", arguments: "" };
+  const current = calls.get(index) ?? {
+    id: `call_${index}`,
+    name: "",
+    arguments: "",
+  };
   if (delta.id) current.id = delta.id;
   if (delta.function?.name) current.name += delta.function.name;
   if (delta.function?.arguments) current.arguments += delta.function.arguments;
@@ -1172,7 +1284,8 @@ async function* runOpenAICompatibleTurn(
   userContext: UserContext,
 ): AsyncGenerator<ProviderEvent, ProviderTurnResult> {
   const provider = getOpenAIProvider(attempt.provider);
-  if (!provider) throw new Error(`${attempt.provider} is not OpenAI-compatible`);
+  if (!provider)
+    throw new Error(`${attempt.provider} is not OpenAI-compatible`);
   const env = c.env as unknown as LlmEnv;
   const apiKey = getProviderKey(env, provider);
   if (!apiKey) throw new Error(`${attempt.provider} API key is not configured`);
@@ -1188,7 +1301,10 @@ async function* runOpenAICompatibleTurn(
             tool_calls: message.toolCalls.map((call) => ({
               id: call.id,
               type: "function",
-              function: { name: call.name, arguments: JSON.stringify(call.args) },
+              function: {
+                name: call.name,
+                arguments: JSON.stringify(call.args),
+              },
             })),
           }
         : {}),
@@ -1214,13 +1330,16 @@ async function* runOpenAICompatibleTurn(
     }),
   });
   if (!response.ok) {
-    throw new Error(`${attempt.provider} ${response.status}: ${await response.text()}`);
+    throw new Error(
+      `${attempt.provider} ${response.status}: ${await response.text()}`,
+    );
   }
 
   let text = "";
   const toolDeltas = new Map<number, OpenAIToolAccumulator>();
   for await (const raw of readSse(response)) {
-    const choice = (raw as { choices?: Array<{ delta?: GroqChoiceDelta }> }).choices?.[0];
+    const choice = (raw as { choices?: Array<{ delta?: GroqChoiceDelta }> })
+      .choices?.[0];
     const delta = choice?.delta;
     if (!delta) continue;
     if (delta.content) {
@@ -1234,9 +1353,14 @@ async function* runOpenAICompatibleTurn(
   const calls: ToolCall[] = [];
   for (const call of toolDeltas.values()) {
     if (!call.name) continue;
-    calls.push({ id: call.id, name: call.name, args: asToolArgs(call.arguments) });
+    calls.push({
+      id: call.id,
+      name: call.name,
+      args: asToolArgs(call.arguments),
+    });
   }
-  for await (const event of executeToolCalls(c, calls, userContext)) yield event;
+  for await (const event of executeToolCalls(c, calls, userContext))
+    yield event;
   return { text, toolCalls: calls };
 }
 
@@ -1261,7 +1385,10 @@ async function* runWorkersAiTurn(
               tool_calls: message.toolCalls.map((call) => ({
                 id: call.id,
                 type: "function",
-                function: { name: call.name, arguments: JSON.stringify(call.args) },
+                function: {
+                  name: call.name,
+                  arguments: JSON.stringify(call.args),
+                },
               })),
             }
           : {}),
@@ -1279,7 +1406,8 @@ async function* runWorkersAiTurn(
     name: call.name,
     args: asToolArgs(call.args),
   }));
-  for await (const event of executeToolCalls(c, calls, userContext)) yield event;
+  for await (const event of executeToolCalls(c, calls, userContext))
+    yield event;
   return { text, toolCalls: calls };
 }
 
@@ -1326,7 +1454,11 @@ export async function* streamChatWithTools(
   }));
   const pdfCache = new Map<string, LoadedPdf>();
   if (attempts.length === 0) {
-    yield { type: "error", data: "No AI provider is configured", code: "unavailable" };
+    yield {
+      type: "error",
+      data: "No AI provider is configured",
+      code: "unavailable",
+    };
     yield { type: "done" };
     return;
   }
@@ -1336,7 +1468,8 @@ export async function* streamChatWithTools(
     let needsNextTurn = false;
     let lastError: LLMProviderError | undefined;
     for (const attempt of attempts) {
-      if (!attempt.userSuppliedKey && isDead(attempt.provider, attempt.model)) continue;
+      if (!attempt.userSuppliedKey && isDead(attempt.provider, attempt.model))
+        continue;
       let emittedOutput = false;
       const result = { text: "", toolCalls: [] as ToolCall[] };
       try {
@@ -1357,7 +1490,10 @@ export async function* streamChatWithTools(
           const event = step.value;
           if (!emittedOutput) {
             emittedOutput = true;
-            yield { type: "meta", data: { provider: attempt.provider, model: attempt.model } };
+            yield {
+              type: "meta",
+              data: { provider: attempt.provider, model: attempt.model },
+            };
           }
           yield event as ChatStreamEvent;
         }
@@ -1373,7 +1509,8 @@ export async function* streamChatWithTools(
                 attempt.userSuppliedKey,
               );
         lastError = providerError;
-        if (providerError.userSuppliedKey && providerError.code === "auth") break;
+        if (providerError.userSuppliedKey && providerError.code === "auth")
+          break;
         if (!providerError.userSuppliedKey) {
           rememberDead(attempt.provider, attempt.model, {
             code: providerError.code,
@@ -1382,7 +1519,11 @@ export async function* streamChatWithTools(
           });
         }
         if (emittedOutput) {
-          yield { type: "error", data: providerError.message, code: providerError.code };
+          yield {
+            type: "error",
+            data: providerError.message,
+            code: providerError.code,
+          };
           yield { type: "done" };
           return;
         }
@@ -1408,7 +1549,9 @@ export async function* streamChatWithTools(
             role: "tool",
             name: tool.name,
             toolCallId: tool.id,
-            content: JSON.stringify(tool.error ? { error: tool.error } : tool.result),
+            content: JSON.stringify(
+              tool.error ? { error: tool.error } : tool.result,
+            ),
           });
         }
         needsNextTurn = true;
@@ -1419,11 +1562,19 @@ export async function* streamChatWithTools(
     if (lastError) {
       yield { type: "error", data: lastError.message, code: lastError.code };
     } else {
-      yield { type: "error", data: "All AI providers are unavailable", code: "unavailable" };
+      yield {
+        type: "error",
+        data: "All AI providers are unavailable",
+        code: "unavailable",
+      };
     }
     yield { type: "done" };
     return;
   }
-  yield { type: "error", data: "AI conversation exceeded the turn limit", code: "unavailable" };
+  yield {
+    type: "error",
+    data: "AI conversation exceeded the turn limit",
+    code: "unavailable",
+  };
   yield { type: "done" };
 }

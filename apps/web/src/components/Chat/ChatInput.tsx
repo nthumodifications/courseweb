@@ -1,7 +1,6 @@
 import { useState, useRef, KeyboardEvent } from "react";
 import { useChatContext } from "./ChatProvider";
-import { Button } from "@courseweb/ui";
-import { Textarea } from "@courseweb/ui";
+import { Button, Textarea } from "@courseweb/ui";
 import { Send, Square } from "lucide-react";
 import useDictionary from "@/dictionaries/useDictionary";
 
@@ -22,7 +21,7 @@ export function ChatInput() {
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSubmit();
+      void handleSubmit();
     }
   };
 

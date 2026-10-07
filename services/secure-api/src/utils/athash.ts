@@ -5,11 +5,11 @@ function base64UrlEncode(buffer: ArrayBuffer) {
   let binary = "";
   const bytes = new Uint8Array(buffer);
   for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
+    binary += String.fromCodePoint(bytes[i]);
   }
   return btoa(binary)
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
+    .replaceAll("+", "-")
+    .replaceAll("/", "_")
     .replace(/=+$/, "");
 }
 

@@ -1,13 +1,13 @@
-import { Button } from "@courseweb/ui";
-import { Input } from "@courseweb/ui";
-import { Label } from "@courseweb/ui";
-import { Textarea } from "@courseweb/ui";
 import {
+  Button,
+  Input,
+  Label,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Textarea,
 } from "@courseweb/ui";
 import { useEffect, useState } from "react";
 import {
@@ -58,7 +58,7 @@ export function CourseEditDialog({
 
   const validate = (form: ItemDocType): FormErrors => {
     const nextErrors: FormErrors = {};
-    if (!form.title || !form.title.trim()) {
+    if (!form.title?.trim()) {
       nextErrors.title = t.titleRequired;
     }
     if (
@@ -135,7 +135,7 @@ export function CourseEditDialog({
               onChange={(e) =>
                 setEditCourseForm({
                   ...editCourseForm,
-                  credits: parseInt(e.target.value, 10),
+                  credits: Number.parseInt(e.target.value, 10),
                 })
               }
             />

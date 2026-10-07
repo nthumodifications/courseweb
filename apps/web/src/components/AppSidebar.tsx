@@ -4,6 +4,7 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
+  Badge,
 } from "@courseweb/ui";
 import NTHUModsLogo from "@/components/Branding/NTHUModsLogo";
 
@@ -11,7 +12,6 @@ import { lazy, Suspense } from "react";
 import CurrentSemesterLabel from "./Today/CurrentSemesterLabel";
 import { Language } from "@/types/settings";
 import SponsorshipBanner from "./Sponsorship/SponsorshipBanner";
-import { Badge } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
 
 const HelpDynamic = lazy(() => import("@/components/Help/Help"));

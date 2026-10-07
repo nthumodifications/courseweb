@@ -1,9 +1,14 @@
 import { describe, expect, test } from "bun:test";
 import {
   classifyCustomTimetableSlot,
+  canSortTimetableCourses,
+  getTimetableCourseListStatus,
+  getUnresolvedCourseIds,
   getTimetableExtendedHoursGeometry,
   getTimetableOffGridBounds,
   getTimetableTimeRangePosition,
+  migrateLegacySemesterCourses,
+  reorderStoredCourseIdsByCredits,
   timetableGridEnd,
   timetableGridStart,
 } from "./timetable";
@@ -117,10 +122,7 @@ describe("extended timetable band geometry", () => {
     // Starts inside the grid...
     expect(position.start).toBe(780);
     // ...and runs continuously to the far edge of the end region.
-    expect(position.end).toBeCloseTo(
-      geometry.gridSize + lateSize,
-      5,
-    );
+    expect(position.end).toBeCloseTo(geometry.gridSize + lateSize, 5);
     expect(position.size).toBeCloseTo(position.end - position.start, 5);
     expect(position.size).toBeGreaterThan(geometry.gridSize - 780);
   });
@@ -139,5 +141,54 @@ describe("extended timetable band geometry", () => {
 
     expect(geometry.pre?.start).toBe(375);
     expect(geometry.late?.end).toBe(1430);
+  });
+});
+
+describe("stored timetable course ids", () => {
+  const storedIds = ["11510-A", "11510-missing", "11510-B"];
+  const resolvedCourses = [
+    { raw_id: "11510-A", credits: 2 },
+    { raw_id: "11510-B", credits: 3 },
+  ];
+
+  test("keeps unresolved ids visible to storage-aware callers", () => {
+    expect(getUnresolvedCourseIds(storedIds, resolvedCourses)).toEqual([
+      "11510-missing",
+    ]);
+  });
+
+  test("sorts resolved ids without deleting unresolved stored ids", () => {
+    expect(reorderStoredCourseIdsByCredits(storedIds, resolvedCourses)).toEqual(
+      ["11510-B", "11510-A", "11510-missing"],
+    );
+  });
+
+  test("disables credit sorting while course data is loading or failed", () => {
+    expect(canSortTimetableCourses(true, null)).toBe(false);
+    expect(canSortTimetableCourses(false, new Error("failed"))).toBe(false);
+    expect(canSortTimetableCourses(false, null)).toBe(true);
+  });
+
+  test("distinguishes loading, failed, empty, and populated course lists", () => {
+    expect(getTimetableCourseListStatus(true, null, 0, 0)).toBe("loading");
+    expect(getTimetableCourseListStatus(false, new Error("failed"), 0, 0)).toBe(
+      "error",
+    );
+    expect(getTimetableCourseListStatus(false, null, 0, 0)).toBe("empty");
+    expect(getTimetableCourseListStatus(false, null, 0, 1)).toBe("ready");
+  });
+});
+
+describe("legacy semester_1121 migration", () => {
+  test("guards legacy JSON and groups every migrated course by semester", () => {
+    expect(migrateLegacySemesterCourses("not-json")).toBeNull();
+    expect(
+      migrateLegacySemesterCourses(
+        JSON.stringify(["11410-A", "11510-B", "11410-C", "11410-A"]),
+      ),
+    ).toEqual({
+      "11410": ["11410-A", "11410-C"],
+      "11510": ["11510-B"],
+    });
   });
 });

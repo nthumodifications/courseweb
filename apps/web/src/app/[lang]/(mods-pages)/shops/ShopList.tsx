@@ -1,25 +1,14 @@
-import { useState, useEffect } from "react";
-import { Input } from "@courseweb/ui";
+import { useState } from "react";
 import {
-  Search,
-  AlarmClockCheck,
-  MapPinned,
-  MapPin,
-  Phone,
-  Clock,
-  Info,
-  Store,
-} from "lucide-react";
-import { Toggle } from "@courseweb/ui";
-import { Badge } from "@courseweb/ui";
-import { Separator } from "@courseweb/ui";
-import {
+  Input,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Toggle,
 } from "@courseweb/ui";
+import { Search, AlarmClockCheck, Store } from "lucide-react";
 // import shops from "./shops.json"
 import ShopItem from "./ShopItem";
 import areas from "./areas.json";
@@ -27,7 +16,7 @@ import useDictionary from "@/dictionaries/useDictionary";
 import type { DiningArea } from "./types";
 
 const Shops = ({ data }: { data: DiningArea[] }) => {
-  const shops = data.map((area) => area.restaurants).flat();
+  const shops = data.flatMap((area) => area.restaurants);
   const dict = useDictionary();
 
   const [search, setSearch] = useState("");

@@ -1,13 +1,18 @@
 import { useMemo, useState } from "react";
 import { useRefinementList } from "react-instantsearch";
-import { Input } from "@courseweb/ui";
-import { cn } from "@courseweb/ui";
-import { Badge } from "@courseweb/ui";
-import { Button } from "@courseweb/ui";
-import { Checkbox } from "@courseweb/ui";
-import { Popover, PopoverContent, PopoverTrigger } from "@courseweb/ui";
+import {
+  Badge,
+  Button,
+  Checkbox,
+  Input,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  cn,
+} from "@courseweb/ui";
 import { X } from "lucide-react";
 import useDictionary from "@/dictionaries/useDictionary";
+import { activateOnKey } from "@/lib/activate-on-key";
 
 type ExpandableFilterMode = "checkbox" | "simple";
 
@@ -211,6 +216,11 @@ const ExpandableFilter = ({
                       : "hover:bg-muted",
                   )}
                   onClick={() => handleClassTypeSelect(item.value)}
+                  onKeyDown={activateOnKey(() =>
+                    handleClassTypeSelect(item.value),
+                  )}
+                  role="button"
+                  tabIndex={0}
                 >
                   <div className="flex-1 break-words whitespace-normal">
                     {label}{" "}

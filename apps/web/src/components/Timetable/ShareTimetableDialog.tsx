@@ -7,44 +7,42 @@ import {
   Link,
   Loader2,
   Lock,
-  Plus,
   QrCode,
   RefreshCw,
   Share2,
   Trash2,
   Users,
 } from "lucide-react";
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "@courseweb/ui";
 import {
+  Badge,
+  Button,
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@courseweb/ui";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@courseweb/ui";
-import { Button } from "@courseweb/ui";
-import { Input } from "@courseweb/ui";
-import { Label } from "@courseweb/ui";
-import { Switch } from "@courseweb/ui";
-import { Badge } from "@courseweb/ui";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@courseweb/ui";
-import { Separator } from "@courseweb/ui";
-import { ScrollArea } from "@courseweb/ui";
-import {
+  Input,
+  Label,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Separator,
+  ScrollArea,
+  Switch,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  toast,
 } from "@courseweb/ui";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import {
@@ -64,15 +62,16 @@ function useLang() {
 }
 
 type Visibility = "link_only" | "public";
+type ShareTab = "create" | "manage" | "groups";
 
 // ── Compact share list item with collapsible QR ──────────────────────────────
 function ShareListItem({
   share,
   onDelete,
-}: {
+}: Readonly<{
   share: SharedTimetable;
   onDelete: () => void;
-}) {
+}>) {
   const [expanded, setExpanded] = useState(false);
   const [showQr, setShowQr] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -80,10 +79,13 @@ function ShareListItem({
   const url = `${window.location.origin}/${lang}/timetable/share/${share.id}`;
 
   const copy = () => {
-    navigator.clipboard.writeText(url).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
+    void navigator.clipboard
+      .writeText(url)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      })
+      .catch(() => undefined);
   };
 
   return (
@@ -173,12 +175,12 @@ function NoteEditor({
   courseNote,
   courseName,
   onSave,
-}: {
+}: Readonly<{
   courseId: string;
   courseNote: string;
   courseName: string;
   onSave: (note: string) => void;
-}) {
+}>) {
   const [value, setValue] = useState(courseNote);
   return (
     <div className="flex flex-col gap-1">
@@ -205,7 +207,11 @@ function NoteEditor({
 }
 
 // ── Groups tab — create a group with semester picker + nickname ───────────────
-function GroupsTab({ semester: activeSemester }: { semester: string }) {
+function GroupsTab({
+  semester: activeSemester,
+}: {
+  readonly semester: string;
+}) {
   const [groupName, setGroupName] = useState("");
   const [groupSemester, setGroupSemester] = useState(activeSemester);
   const [creatorLabel, setCreatorLabel] = useState("");
@@ -256,10 +262,13 @@ function GroupsTab({ semester: activeSemester }: { semester: string }) {
 
   const copyInvite = () => {
     if (!inviteUrl) return;
-    navigator.clipboard.writeText(inviteUrl).then(() => {
-      setCopiedInvite(true);
-      setTimeout(() => setCopiedInvite(false), 2000);
-    });
+    void navigator.clipboard
+      .writeText(inviteUrl)
+      .then(() => {
+        setCopiedInvite(true);
+        setTimeout(() => setCopiedInvite(false), 2000);
+      })
+      .catch(() => undefined);
   };
 
   if (created && inviteUrl) {
@@ -376,10 +385,10 @@ const ShareTimetableDialog = ({
   initialTab = "create",
 }: {
   children: React.ReactNode;
-  initialTab?: "create" | "manage" | "groups";
+  initialTab?: ShareTab;
 }) => {
   const [open, setOpen] = useState(false);
-  const [tab, setTab] = useState<"create" | "manage" | "groups">(initialTab);
+  const [tab, setTab] = useState<ShareTab>(initialTab);
   const [visibility, setVisibility] = useState<Visibility>("link_only");
   const [isLive, setIsLive] = useState(true);
   const [isAnonymous, setIsAnonymous] = useState(false);
@@ -391,7 +400,7 @@ const ShareTimetableDialog = ({
     Record<string, { grade?: string; difficulty?: number; attendance?: string }>
   >({});
 
-  const { courses, customItems, semester, colorMap } = useUserTimetable();
+  const { courses, customItems, semester } = useUserTimetable();
   const { isAuthenticated, user } = useAuth();
   const { createShare, deleteShare, listOwnShares } = useTimetableShare();
   const queryClient = useQueryClient();
@@ -426,7 +435,10 @@ const ShareTimetableDialog = ({
   });
 
   const { data: semesterCourses = [] } = useQuery({
-    queryKey: ["courses", [...allSelectedCourseIds].sort()],
+    queryKey: [
+      "courses",
+      [...allSelectedCourseIds].sort((a, b) => a.localeCompare(b)),
+    ],
     queryFn: async () => {
       if (!allSelectedCourseIds.length) return [];
       const res = await client.course.$get({

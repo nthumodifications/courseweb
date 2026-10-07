@@ -169,9 +169,11 @@ export const buildSearchManifest = async (
 ): Promise<SearchManifestData> => {
   const semesters = await Promise.all(
     [...rows]
-      .sort((a, b) =>
-        a.semester < b.semester ? -1 : a.semester > b.semester ? 1 : 0,
-      )
+      .sort((a, b) => {
+        if (a.semester < b.semester) return -1;
+        if (a.semester > b.semester) return 1;
+        return 0;
+      })
       .map(async (row): Promise<SearchManifestEntry> => {
         const rowCount = Number(row.row_count);
         return {
@@ -228,7 +230,11 @@ export const buildSearchTextChunk = (
   semester,
   texts: Object.fromEntries(
     [...rows]
-      .sort((a, b) => (a.raw_id < b.raw_id ? -1 : a.raw_id > b.raw_id ? 1 : 0))
+      .sort((a, b) => {
+        if (a.raw_id < b.raw_id) return -1;
+        if (a.raw_id > b.raw_id) return 1;
+        return 0;
+      })
       .map((row) => [row.raw_id, toSearchTextRecord(row)]),
   ),
 });

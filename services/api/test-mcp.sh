@@ -31,6 +31,7 @@ run_mcp_info() {
     echo "curl -X GET $MCP_ENDPOINT"
     echo "Expected: Server capabilities and info"
     # curl -X GET "$MCP_ENDPOINT" | jq '.' 2>/dev/null || echo "❌ Failed or jq not available"
+    return 0
 }
 
 run_mcp_initialize() {
@@ -44,6 +45,7 @@ run_mcp_initialize() {
     echo "curl -X POST $MCP_ENDPOINT -H 'Content-Type: application/json' -d '$request'"
     echo "Expected: Protocol version and capabilities"
     # curl -X POST "$MCP_ENDPOINT" -H "Content-Type: application/json" -d "$request" | jq '.' 2>/dev/null || echo "❌ Failed or jq not available"
+    return 0
 }
 
 run_mcp_tools_list() {
@@ -57,6 +59,7 @@ run_mcp_tools_list() {
     echo "curl -X POST $MCP_ENDPOINT -H 'Content-Type: application/json' -d '$request'"
     echo "Expected: List of 4 available tools"
     # curl -X POST "$MCP_ENDPOINT" -H "Content-Type: application/json" -d "$request" | jq '.' 2>/dev/null || echo "❌ Failed or jq not available"
+    return 0
 }
 
 run_mcp_resources_list() {
@@ -70,6 +73,7 @@ run_mcp_resources_list() {
     echo "curl -X POST $MCP_ENDPOINT -H 'Content-Type: application/json' -d '$request'"
     echo "Expected: List of 2 available resources"
     # curl -X POST "$MCP_ENDPOINT" -H "Content-Type: application/json" -d "$request" | jq '.' 2>/dev/null || echo "❌ Failed or jq not available"
+    return 0
 }
 
 run_mcp_search_tool() {
@@ -89,6 +93,7 @@ run_mcp_search_tool() {
     echo "curl -X POST $MCP_ENDPOINT -H 'Content-Type: application/json' -d '$request'"
     echo "Expected: Search results with course information"
     # curl -X POST "$MCP_ENDPOINT" -H "Content-Type: application/json" -d "$request" | jq '.' 2>/dev/null || echo "❌ Failed or jq not available"
+    return 0
 }
 
 run_search_get() {
@@ -97,6 +102,7 @@ run_search_get() {
     echo "curl '$url'"
     echo "Expected: Algolia search results"
     # curl "$url" | jq '.' 2>/dev/null || echo "❌ Failed or jq not available"
+    return 0
 }
 
 run_search_post() {
@@ -109,6 +115,7 @@ run_search_post() {
     echo "curl -X POST $SEARCH_ENDPOINT -H 'Content-Type: application/json' -d '$request'"
     echo "Expected: Filtered search results"
     # curl -X POST "$SEARCH_ENDPOINT" -H "Content-Type: application/json" -d "$request" | jq '.' 2>/dev/null || echo "❌ Failed or jq not available"
+    return 0
 }
 
 run_search_info() {
@@ -116,24 +123,27 @@ run_search_info() {
     echo "curl -X GET $SEARCH_ENDPOINT/info"
     echo "Expected: API documentation and examples"
     # curl -X GET "$SEARCH_ENDPOINT/info" | jq '.' 2>/dev/null || echo "❌ Failed or jq not available"
+    return 0
 }
 
 run_mcp_validation() {
     echo -e "\n✅ Test 9: MCP Structure Validation"
-    if [ -f "test-mcp-validation.js" ]; then
+    if [[ -f "test-mcp-validation.js" ]]; then
         node test-mcp-validation.js
     else
         echo "❌ test-mcp-validation.js not found"
     fi
+    return 0
 }
 
 run_search_validation() {
     echo -e "\n✅ Test 10: Search API Validation"
-    if [ -f "test-search-validation.js" ]; then
+    if [[ -f "test-search-validation.js" ]]; then
         node test-search-validation.js
     else
         echo "❌ test-search-validation.js not found"
     fi
+    return 0
 }
 
 run_all_network_tests() {
@@ -146,6 +156,7 @@ run_all_network_tests() {
     run_search_get
     run_search_post
     run_search_info
+    return 0
 }
 
 # Execute based on user choice

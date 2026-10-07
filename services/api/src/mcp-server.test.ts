@@ -216,7 +216,7 @@ function mockBulkSearchResults(queries: string[], filters: any, limit: number) {
 
 describe("MCP Server Tools", () => {
   it("should have all 5 tools defined", () => {
-    expect(MCP_TOOLS.length).toBe(5);
+    expect(MCP_TOOLS).toHaveLength(5);
   });
 
   it("should have bulk_search_courses tool", () => {
@@ -241,7 +241,7 @@ describe("MCP Server Tools", () => {
         tool.name === "search_courses" ||
         tool.name === "bulk_search_courses",
     );
-    expect(toolsWithRawId.length).toBe(MCP_TOOLS.length);
+    expect(toolsWithRawId).toHaveLength(MCP_TOOLS.length);
   });
 });
 
@@ -283,7 +283,7 @@ describe("Bulk Search", () => {
 
     expect(result.filters_applied).toEqual(filters);
     expect(Array.isArray(result.results)).toBe(true);
-    expect(result.results.length).toBe(2);
+    expect(result.results).toHaveLength(2);
 
     expect(result.results[0].query).toBe("machine learning");
     expect(result.results[1].query).toBe("artificial intelligence");
@@ -297,7 +297,7 @@ describe("Bulk Search", () => {
     const queries = ["ML", "AI", "data science"];
     const result = mockBulkSearchResults(queries, {}, 3);
 
-    expect(result.results.length).toBe(queries.length);
+    expect(result.results).toHaveLength(queries.length);
     queries.forEach((query, idx) => {
       expect(result.results[idx].query).toBe(query);
     });

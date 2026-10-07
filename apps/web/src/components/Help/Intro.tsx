@@ -6,7 +6,11 @@ const Intro = () => {
   return (
     <div className="flex flex-col gap-2">
       <div className="flex justify-center mb-4">
-        <img src="/images/friendship.gif" className="w-48 h-48" />
+        <img
+          src="/images/friendship.gif"
+          alt={dict.help.intro.title}
+          className="w-48 h-48"
+        />
       </div>
       <span className="font-bold text-xl">{dict.help.intro.title}</span>
       <p className="leading-relaxed">{dict.help.intro.description}</p>

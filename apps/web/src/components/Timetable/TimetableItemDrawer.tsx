@@ -1,27 +1,35 @@
-import { CalendarClock, Trash } from "lucide-react";
+import {
+  CalendarClock,
+  Trash,
+  ExternalLink,
+  CalendarPlus,
+  MapPin,
+} from "lucide-react";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { PropsWithChildren, useEffect, useState } from "react";
 import { hasTimes } from "@/helpers/courses";
 import { MinimalCourse, RawCourseID } from "@/types/courses";
-import { Popover, PopoverContent, PopoverTrigger } from "@courseweb/ui";
-import Compact from "@uiw/react-color-compact";
-import { Drawer, DrawerContent, DrawerTrigger } from "@courseweb/ui";
-import { Button } from "@courseweb/ui";
-import { Input } from "@courseweb/ui";
-import { ExternalLink, CalendarPlus, MapPin } from "lucide-react";
-import { format } from "date-fns";
-import { Badge } from "@courseweb/ui";
-import DateContributeForm from "@/components/CourseDetails/DateContributeForm";
-import { useQuery } from "@tanstack/react-query";
-import useDictionary from "@/dictionaries/useDictionary";
-import { useMediaQuery } from "usehooks-ts";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  Drawer,
+  DrawerContent,
+  DrawerTrigger,
+  Button,
+  Input,
+  Badge,
   Dialog,
   DialogContent,
   DialogTitle,
   DialogTrigger,
 } from "@courseweb/ui";
-import { currentSemester } from "@courseweb/shared";
+import Compact from "@uiw/react-color-compact";
+import { format } from "date-fns";
+import DateContributeForm from "@/components/CourseDetails/DateContributeForm";
+import { useQuery } from "@tanstack/react-query";
+import useDictionary from "@/dictionaries/useDictionary";
+import { useMediaQuery } from "usehooks-ts";
 import client from "@/config/api";
 import CourseTagList from "@/components/Courses/CourseTagsList";
 import { CourseDefinition } from "@/config/supabase";
@@ -35,11 +43,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { getCampusMapHref } from "@/features/campusMap/navigation";
 
 const ImportantDates = ({ raw_id }: { raw_id: RawCourseID }) => {
-  const {
-    data: dates,
-    isLoading,
-    isError,
-  } = useQuery({
+  const { data: dates } = useQuery({
     queryKey: ["contrib_dates", raw_id],
     queryFn: async () => {
       const res = await client.course[":courseId"].dates.$get({

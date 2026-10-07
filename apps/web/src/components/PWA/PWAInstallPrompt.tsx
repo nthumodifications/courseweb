@@ -1,15 +1,14 @@
 import { useState, useEffect } from "react";
 import { Download, Smartphone } from "lucide-react";
-import { Button } from "@courseweb/ui";
-import useDictionary from "@/dictionaries/useDictionary";
 import {
+  Button,
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@courseweb/ui";
+import useDictionary from "@/dictionaries/useDictionary";
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];

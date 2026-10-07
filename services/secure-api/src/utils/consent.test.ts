@@ -3,6 +3,7 @@ import {
   buildClientRedirect,
   CONSENT_REQUEST_EXPIRY,
   coversScopes,
+  getRegisteredRedirectUri,
   isConsentRequired,
   isPendingConsentValid,
   sameScopes,
@@ -44,6 +45,19 @@ describe("buildClientRedirect", () => {
         state: undefined,
       }),
     ).toBe("https://chumei.observe.tw/cb?code=abc");
+  });
+});
+
+describe("getRegisteredRedirectUri", () => {
+  it("returns only an exact registered URI", () => {
+    const registered = ["https://client.example/callback"];
+
+    expect(getRegisteredRedirectUri(registered, registered[0])).toBe(
+      registered[0],
+    );
+    expect(
+      getRegisteredRedirectUri(registered, "https://attacker.example/callback"),
+    ).toBeUndefined();
   });
 });
 

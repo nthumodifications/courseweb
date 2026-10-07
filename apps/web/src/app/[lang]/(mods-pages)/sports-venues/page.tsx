@@ -1,6 +1,15 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import client from "@/config/api";
-import { Button, cn, ErrorState, Skeleton } from "@courseweb/ui";
+import {
+  Button,
+  ErrorState,
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  Skeleton,
+  cn,
+} from "@courseweb/ui";
 import {
   Dumbbell,
   Droplets,
@@ -13,7 +22,6 @@ import {
   Loader2,
   ExternalLink,
 } from "lucide-react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@courseweb/ui";
 import { useState } from "react";
 import useTime from "@/hooks/useTime";
 import { semesterInfo } from "@courseweb/shared";
@@ -26,6 +34,7 @@ import {
   useUsageForecast,
   type UsageSeries,
 } from "@/lib/usage-forecast";
+import { activateOnKey } from "@/lib/activate-on-key";
 
 type OccupancyItem = {
   project_id: string;
@@ -159,9 +168,9 @@ function getCurrentSemesterLabel(labels: {
 
   const past = semesterInfo.filter((s) => now > s.ends);
   if (past.length === 0) return labels.first;
-  const lastEnded = past[past.length - 1];
-  const next = semesterInfo.find((s) => s.begins > now);
-  if (!next) return labels.summer;
+  const lastEnded = past.at(-1)!;
+  const hasNext = semesterInfo.some((s) => s.begins > now);
+  if (!hasNext) return labels.summer;
   return lastEnded.semester === 1 ? labels.winter : labels.summer;
 }
 
@@ -633,6 +642,18 @@ const SportsVenuesPage = () => {
                   ? () => openFacility(facility, forecastSeries, capacity)
                   : undefined
               }
+              onKeyDown={(event) => {
+                if (
+                  facility &&
+                  event.target === event.currentTarget &&
+                  (event.key === "Enter" || event.key === " ")
+                ) {
+                  event.preventDefault();
+                  openFacility(facility, forecastSeries, capacity);
+                }
+              }}
+              role={facility ? "button" : undefined}
+              tabIndex={facility ? 0 : undefined}
             >
               {/* Top row */}
               <div className="flex flex-row items-center gap-4">
@@ -729,6 +750,11 @@ const SportsVenuesPage = () => {
                 key={facility.name_zh}
                 className="flex flex-row items-center gap-4 py-4 cursor-pointer"
                 onClick={() => openFacility(facility, undefined, 0)}
+                onKeyDown={activateOnKey(() =>
+                  openFacility(facility, undefined, 0),
+                )}
+                role="button"
+                tabIndex={0}
               >
                 <Users className="h-7 w-7 text-primary shrink-0" />
                 <div className="flex flex-col flex-1 min-w-0">

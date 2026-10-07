@@ -12,6 +12,77 @@ import { getContrastColor } from "./colors";
 import { hasTimes } from "./courses";
 import { normalizeCustomTimetableItem } from "@/hooks/syncedStorage";
 
+/** Decode semester_1121 without mutating or discarding the source value. */
+export const migrateLegacySemesterCourses = (
+  raw: string | null,
+): Record<string, string[]> | null => {
+  if (!raw) return null;
+
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (
+      !Array.isArray(parsed) ||
+      parsed.length === 0 ||
+      !parsed.every(
+        (courseId): courseId is string =>
+          typeof courseId === "string" && courseId.length >= 5,
+      )
+    ) {
+      return null;
+    }
+
+    const migrated: Record<string, string[]> = {};
+    for (const courseId of parsed) {
+      const semester = courseId.slice(0, 5);
+      migrated[semester] = [
+        ...new Set([...(migrated[semester] ?? []), courseId]),
+      ];
+    }
+    return migrated;
+  } catch {
+    return null;
+  }
+};
+
+export const getUnresolvedCourseIds = (
+  storedIds: readonly string[],
+  resolvedCourses: readonly Pick<MinimalCourse, "raw_id">[],
+) => {
+  const resolvedIds = new Set(resolvedCourses.map((course) => course.raw_id));
+  return storedIds.filter((courseId) => !resolvedIds.has(courseId));
+};
+
+/** Reorders resolved courses and retains unresolved stored IDs after them. */
+export const reorderStoredCourseIdsByCredits = (
+  storedIds: readonly string[],
+  resolvedCourses: readonly Pick<MinimalCourse, "raw_id" | "credits">[],
+) => {
+  const storedIdSet = new Set(storedIds);
+  const sortedResolvedIds = [...resolvedCourses]
+    .filter((course) => storedIdSet.has(course.raw_id))
+    .sort((left, right) => right.credits - left.credits)
+    .map((course) => course.raw_id);
+  const unresolvedIds = getUnresolvedCourseIds(storedIds, resolvedCourses);
+  return [...sortedResolvedIds, ...unresolvedIds];
+};
+
+export const canSortTimetableCourses = (isLoading: boolean, error: unknown) =>
+  !isLoading && !error;
+
+export type TimetableCourseListStatus = "loading" | "error" | "empty" | "ready";
+
+export const getTimetableCourseListStatus = (
+  isLoading: boolean,
+  error: unknown,
+  resolvedCount: number,
+  unresolvedCount: number,
+): TimetableCourseListStatus => {
+  if (isLoading) return "loading";
+  if (error) return "error";
+  if (resolvedCount === 0 && unresolvedCount === 0) return "empty";
+  return "ready";
+};
+
 export const timeToMinutes = (time: string): number => {
   const [hours, minutes] = time.split(":").map(Number);
   return hours * 60 + minutes;

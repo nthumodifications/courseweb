@@ -1,21 +1,14 @@
-import CurrentSemesterLabel from "./Today/CurrentSemesterLabel";
-import { SidebarTrigger } from "@courseweb/ui";
 import {
+  SidebarTrigger,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@courseweb/ui";
-import { LogIn, LogOut } from "lucide-react";
-import { Button } from "@courseweb/ui";
-import useDictionary from "@/dictionaries/useDictionary";
-import { useAuth } from "react-oidc-context";
-import { MouseEvent, useState } from "react";
-import { Checkbox } from "@courseweb/ui";
-import { Label } from "@courseweb/ui";
-import {
+  Button,
+  Checkbox,
+  Label,
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -24,11 +17,14 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  useIsMobile,
 } from "@courseweb/ui";
+import { LogIn, LogOut } from "lucide-react";
+import useDictionary from "@/dictionaries/useDictionary";
+import { useAuth } from "react-oidc-context";
+import { MouseEvent, useState } from "react";
 import { useRxCollection } from "rxdb-hooks";
 import { HeaderPortalOutlet } from "./Portal/HeaderPortal";
-import { useIsMobile } from "@courseweb/ui";
-import { Badge } from "@courseweb/ui";
 import { getSyncedStorageKey } from "@/hooks/syncedStorage";
 
 const Header = () => {

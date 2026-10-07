@@ -4,11 +4,7 @@ import { z } from "zod";
 import supabase_server from "../config/supabase_server";
 import prismaClients from "../prisma/client";
 import type { Bindings } from "../index";
-import {
-  generateJSON,
-  type LLMProviderError,
-  type ProviderName,
-} from "./llm";
+import { generateJSON, type LLMProviderError, type ProviderName } from "./llm";
 
 export type Workload =
   | "輕鬆"
@@ -58,8 +54,8 @@ function workloadForLanguage(value: Workload, english: boolean): Workload {
     Heavy: "繁重",
   };
   return english
-    ? englishValue[value] ?? value
-    : chineseValue[value] ?? value;
+    ? (englishValue[value] ?? value)
+    : (chineseValue[value] ?? value);
 }
 
 /** Validates and normalizes model output before it is cached permanently. */
@@ -67,10 +63,13 @@ export function normalizeSyllabusSummary(
   value: unknown,
   english: boolean,
 ): SyllabusSummary {
-  if (!value || typeof value !== "object") throw new Error("Invalid summary object");
+  if (!value || typeof value !== "object")
+    throw new Error("Invalid summary object");
   const summary = value as Record<string, unknown>;
   const bullets = Array.isArray(summary.bullets)
-    ? summary.bullets.filter((item): item is string => typeof item === "string").slice(0, 3)
+    ? summary.bullets
+        .filter((item): item is string => typeof item === "string")
+        .slice(0, 3)
     : [];
   const workload = summary.workload;
   if (
@@ -84,10 +83,11 @@ export function normalizeSyllabusSummary(
     throw new Error("Invalid workload in summary");
   }
   if (typeof summary.audience !== "string") {
-    throw new Error("Invalid audience in summary");
+    throw new TypeError("Invalid audience in summary");
   }
   const difficulty = Number(summary.difficultyRating);
-  if (!Number.isFinite(difficulty)) throw new Error("Invalid difficulty in summary");
+  if (!Number.isFinite(difficulty))
+    throw new Error("Invalid difficulty in summary");
   return {
     bullets,
     workload: workloadForLanguage(workload, english),
@@ -96,7 +96,9 @@ export function normalizeSyllabusSummary(
   };
 }
 
-function requestIp(c: { req: { header(name: string): string | undefined } }): string {
+function requestIp(c: {
+  req: { header(name: string): string | undefined };
+}): string {
   return (
     c.req.header("cf-connecting-ip") ??
     c.req.header("x-forwarded-for") ??
@@ -105,7 +107,10 @@ function requestIp(c: { req: { header(name: string): string | undefined } }): st
   );
 }
 
-function providerFailure(error: unknown): { error: string; code: "unavailable" } {
+function providerFailure(error: unknown): {
+  error: string;
+  code: "unavailable";
+} {
   const message =
     error instanceof Error ? error.message : "All AI providers failed";
   return { error: message, code: "unavailable" };
@@ -142,7 +147,10 @@ const app = new Hono<{ Bindings: Bindings }>().get(
         const outcome = await limiter.limit({ key: requestIp(c) });
         if (!outcome.success) {
           return c.json(
-            { error: "Too many uncached AI summary requests", code: "rate_limited" },
+            {
+              error: "Too many uncached AI summary requests",
+              code: "rate_limited",
+            },
             429,
           );
         }
@@ -226,7 +234,11 @@ const app = new Hono<{ Bindings: Bindings }>().get(
         update: { data: JSON.stringify(summary) },
         create: { key: cacheKey, data: JSON.stringify(summary) },
       });
-      return c.json({ ...summary, provider: generated.provider, model: generated.model });
+      return c.json({
+        ...summary,
+        provider: generated.provider,
+        model: generated.model,
+      });
     } catch (error) {
       const failure = providerFailure(error as LLMProviderError);
       return c.json(failure, 503);

@@ -1,4 +1,3 @@
-import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { semesterInfo } from "@courseweb/shared";
 import { rocYear } from "@/helpers/roc";
@@ -14,7 +13,7 @@ const SemesterSwitcher = ({
 }) => {
   const semesterObj = semesterInfo.find((s) => s.id == semester)!;
 
-  const hasPrev = semesterInfo.indexOf(semesterObj) > 0;
+  const hasPrev = semesterInfo.slice(1).includes(semesterObj);
   const hasNext = semesterInfo.indexOf(semesterObj) < semesterInfo.length - 1;
 
   const goPrev = () => {

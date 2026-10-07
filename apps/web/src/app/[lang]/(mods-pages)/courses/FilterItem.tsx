@@ -1,16 +1,18 @@
-import { Popover, PopoverTrigger, PopoverContent } from "@courseweb/ui";
 import {
+  Badge,
+  Button,
   Command,
   CommandEmpty,
   CommandInput,
   CommandItem,
   CommandList,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  ScrollArea,
 } from "@courseweb/ui";
-import { ScrollArea } from "@courseweb/ui";
-import { Badge } from "@courseweb/ui";
 import { Check, X } from "lucide-react";
-import { Button } from "@courseweb/ui";
-import { useEffect, useState, useCallback, useMemo, memo, useRef } from "react";
+import { useEffect, useState, useCallback, memo, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import useCustomRefinementList from "./useCustomRefinementList";
 import useDictionary from "@/dictionaries/useDictionary";
@@ -22,7 +24,7 @@ const FilterItem = memo(
     searchable = false,
     clientSearch = false,
     synonms = {},
-     placeholder,
+    placeholder,
     defaultSearch = "",
   }: {
     attribute: string;
@@ -35,14 +37,7 @@ const FilterItem = memo(
   }) => {
     const dict = useDictionary();
     const resolvedPlaceholder = placeholder ?? dict.planner.coursePicker.search;
-    const {
-      items,
-      refine,
-      searchForItems,
-      canToggleShowMore,
-      isShowingMore,
-      toggleShowMore,
-    } = useCustomRefinementList({
+    const { items, refine, searchForItems } = useCustomRefinementList({
       attribute: attribute,
       limit: limit,
     });
@@ -153,7 +148,7 @@ const FilterItem = memo(
                 maxLength={512}
                 value={searchValue}
                 onValueChange={(value) => search(value)}
-                 placeholder={resolvedPlaceholder}
+                placeholder={resolvedPlaceholder}
               />
             )}
             <ScrollArea
@@ -161,7 +156,7 @@ const FilterItem = memo(
               className="h-[300px]"
             >
               <CommandList className="max-h-none">
-                 <CommandEmpty>{dict.common.no_results}</CommandEmpty>
+                <CommandEmpty>{dict.common.no_results}</CommandEmpty>
                 {items
                   .sort((a, b) => {
                     if (a.isRefined) return -1;
