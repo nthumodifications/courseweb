@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import DownloadSyllabus from "./DownloadSyllabus";
 import SyllabusSummary from "./SyllabusSummary";
+import PrerequisiteBlock from "./PrerequisiteBlock";
 import {
   Fade,
   Button,
@@ -49,6 +50,7 @@ import {
   getModuleHistory,
   getModuleHistoryVariant,
 } from "@/lib/modules";
+import { usePrerequisiteGraphData } from "./usePrerequisiteGraphData";
 
 const PDFViewerDynamic = lazy(
   () => import("@/components/CourseDetails/PDFViewer"),
@@ -127,6 +129,12 @@ const CourseDetailContainer = ({
       return res.json();
     },
   });
+
+  const {
+    parsedPrerequisite,
+    hasStructuredPrerequisites,
+    prerequisiteRows,
+  } = usePrerequisiteGraphData(course, !modal);
 
   // Use React Query for reviews
   const {
@@ -469,12 +477,35 @@ const CourseDetailContainer = ({
                   <h3 className="font-bold" id="prerequesites">
                     {dict.course.details.prerequesites}
                   </h3>
-                  <div
-                    className="whitespace-pre-line text-sm"
-                    dangerouslySetInnerHTML={{
-                      __html: sanitizeCourseHtml(course.prerequisites),
-                    }}
-                  />
+                  {hasStructuredPrerequisites && parsedPrerequisite ? (
+                    <>
+                      <PrerequisiteBlock
+                        parsed={parsedPrerequisite}
+                        course={course}
+                        rows={prerequisiteRows}
+                        lang={lang}
+                        dict={dict}
+                      />
+                      <details>
+                        <summary className="cursor-pointer text-sm text-muted-foreground">
+                          {dict.course.details.prerequisite_original}
+                        </summary>
+                        <div
+                          className="mt-2 whitespace-pre-line text-sm"
+                          dangerouslySetInnerHTML={{
+                            __html: sanitizeCourseHtml(course.prerequisites),
+                          }}
+                        />
+                      </details>
+                    </>
+                  ) : (
+                    <div
+                      className="whitespace-pre-line text-sm"
+                      dangerouslySetInnerHTML={{
+                        __html: sanitizeCourseHtml(course.prerequisites),
+                      }}
+                    />
+                  )}
                 </div>
               )}
               {reviewsError ? (

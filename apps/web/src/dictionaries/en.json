@@ -226,6 +226,7 @@
       "description": "Description",
       "restrictions": "Restrictions",
       "prerequesites": "Prerequisites",
+      "prerequisite_based_on_offering": "Based on the {semester} offering",
       "timetable": "Timetable",
       "course_list": "Course List",
       "no_venues": "No Venues",
@@ -287,7 +288,27 @@
         "unavailable": "The AI summary service is temporarily unavailable.",
         "workload": "Workload",
         "difficulty": "Difficulty"
-      }
+      },
+      "prerequisite_original": "Show original text",
+      "prerequisite_applies_to": "Applies to: ",
+      "prerequisite_all_students": "all students",
+      "prerequisite_grade_above": "or above",
+      "prerequisite_not_taken_prefix": "Not taken",
+      "prerequisite_and": "and",
+      "prerequisite_requires": "Requires",
+      "prerequisite_unlocks": "Unlocks",
+      "prerequisite_group_any": "Any one of",
+      "prerequisite_group_all": "All of",
+      "prerequisite_group_not_taken": "Must not have taken",
+      "prerequisite_aria_any": "any one of",
+      "prerequisite_aria_all": "all of",
+      "prerequisite_aria_not_taken": "not having taken",
+      "prerequisite_aria_separator": ", ",
+      "prerequisite_aria_group_separator": "; and ",
+      "prerequisite_aria_requires_separator": " ",
+      "prerequisite_aria_unlock_separator": " ",
+      "prerequisite_aria_sentence_end": ".",
+      "prerequisite_show_more": "Show {count} more courses"
     },
     "module": {
       "title": "Course module",
@@ -366,7 +387,8 @@
     "bus": "Bus",
     "laundry": "Dorm Laundry",
     "apps": "Apps",
-    "admin": "Admin Center"
+    "admin": "Admin Center",
+    "youbike": "YouBike 2.0"
   },
   "command_palette": {
     "placeholder": "Type a command…",
@@ -983,6 +1005,7 @@
       "campus-map": "Interactive Campus Map",
       "bus": "Bus",
       "laundry": "Dorm Laundry",
+      "youbike": "YouBike 2.0 Availability",
       "sports-venues": "Sports Venue Occupancy",
       "library": "Library Vacancy",
       "shops": "Shops",
@@ -2306,5 +2329,25 @@
         }
       }
     }
+  },
+  "youbike": {
+    "title": "YouBike 2.0",
+    "tabs": {
+      "all": "All",
+      "main": "Main Campus",
+      "nanda": "Nanda Campus",
+      "mine": "My Stations"
+    },
+    "regular_bikes": "Regular",
+    "ebikes": "e-Bikes",
+    "empty_docks": "Empty Docks",
+    "out_of_service": "Out of Service",
+    "no_stations": "No stations found",
+    "no_my_stations": "No pinned stations yet",
+    "pin": "Pin Station",
+    "unpin": "Unpin Station",
+    "last_updated": "Last Updated",
+    "search_placeholder": "Search station or road...",
+    "open_in_google_maps": "View on Google Maps"
   }
 }
