@@ -123,10 +123,16 @@ const isLatinWordCharacter = (character: string | undefined) =>
 const isSentencePunctuation = (value: string) =>
   /[。．.!?！？:：;；]$/u.test(value.trimEnd());
 
+const SPACED_LIST_MARKER =
+  /^\s*(?:\d+[.)]|[（(]\s*\d+\s*[）)]|[一二三四五六七八九十]+、|[●•*-])(?:\s|$)/u;
+// Teachers often type the marker straight against the text (`2.病假須證明`,
+// `第五週：…`, `Ch 5 Alkenes`), so these need no space after them. `3.5` is a
+// number and `M.D. Deal` is a name, hence the lookaheads.
+const TIGHT_LIST_MARKER =
+  /^\s*(?:\d{1,2}[.．、)）](?![\d.])|[（(]\s*[\d一二三四五六七八九十A-Za-z]{1,3}\s*[）)]|[一二三四五六七八九十]+[、.．]|[A-Z][.、)](?=\p{Script=Han})|第\s*[\d一二三四五六七八九十]+\s*(?:[週周章講]|單元)|(?:week|chapter|ch|unit|lecture|lesson|part)\.?\s*\d|[①-⑳■◆★※◎○▲△□◇])/iu;
+
 const isListMarker = (line: string) =>
-  /^\s*(?:\d+[.)]|[（(]\s*\d+\s*[）)]|[一二三四五六七八九十]+、|[●•*-])(?:\s|$)/u.test(
-    line,
-  );
+  SPACED_LIST_MARKER.test(line) || TIGHT_LIST_MARKER.test(line);
 
 const HEADING_NUMERALS = "一二三四五六七八九十";
 
@@ -338,7 +344,7 @@ const joinWrappedLines = (left: string, right: string) => {
   ) {
     return `${leftTrimmed} ${rightTrimmed}`;
   }
-  if (/[,，]$/u.test(leftTrimmed) && isLatinWordCharacter(rightCharacter)) {
+  if (/，$/u.test(leftTrimmed) && isLatinWordCharacter(rightCharacter)) {
     return `${leftTrimmed}${rightTrimmed}`;
   }
   if (isLatinWordCharacter(rightCharacter) && /[.,;:!?)]$/u.test(leftTrimmed)) {

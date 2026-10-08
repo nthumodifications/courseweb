@@ -112,6 +112,35 @@ describe("syllabus text cleaners", () => {
     }
   });
 
+  test("keeps list items typed without a space after the marker on their own lines", () => {
+    const lists = [
+      // 11510PE  111023
+      "1.提升學生運動技能，增加體育認知，培養終身運動習慣\r\n2.增進健康體適能、提升生活適應能力\r\n3.建立休閒及規律運動觀念，促進身心健康",
+      // 11510PE  205071
+      "一、學會網球運動的規則與禮儀\r\n二、學會正反拍抽球、切球、截擊、發球等基本動作\r\n三、培養網球運動興趣及習慣",
+      // 11510ISDC500300
+      "week 1-2: The students are given lectures of basic knowledge\r\nweek 3-7: AR6 WGI, Physical Science Basis\r\nweek 8-9: Midterm presentations",
+      // 11510GEC 160202
+      "二、從〈遵大路〉說明揣測「描寫對象」，及其對於解詩的重要性\r\n第五週：〈遵大路〉之誤讀\r\n一、朱熹〈遵大路〉解釋的不合理之處",
+      // 11510CHEM221001
+      "Ch 4 Isomers: The arrangement of atoms in space\r\nCh 5 Alkenes\r\nCh 6 The Reactions of Alkenes",
+      // 11510GE  108600
+      "A.畫面構成原理，主體與客體的輕重關係\r\nB.視覺流動構圖，透過線條、筆觸、明暗變化產生觀者視覺韻律\r\nC.構圖美感分析，輕重、大小、韻律構成視覺美感",
+    ];
+    for (const list of lists) {
+      expect(cleanBrief(list)).toBe(list.replaceAll("\r\n", "\n"));
+    }
+
+    // A decimal or an initial at the start of a wrapped line is not a marker.
+    expect(
+      cleanBrief(
+        "Silicon VLSI Technology: Fundamentals, Practice and Modeling, J. D. Plummer,\r\nM.D. Deal, and P.B. Griffin, Prentice Hall, the main textbook of this class",
+      ),
+    ).toBe(
+      "Silicon VLSI Technology: Fundamentals, Practice and Modeling, J. D. Plummer, M.D. Deal, and P.B. Griffin, Prentice Hall, the main textbook of this class",
+    );
+  });
+
   test("keyword cleaning is idempotent and re-cleaning text loses nothing", () => {
     for (const row of fixture) {
       const brief = cleanBrief(row.brief);
