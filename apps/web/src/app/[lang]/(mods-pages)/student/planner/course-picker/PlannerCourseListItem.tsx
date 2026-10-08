@@ -13,6 +13,7 @@ import CourseTagList from "@/components/Courses/CourseTagsList";
 import { MinimalCourse } from "@/types/courses";
 import { useCourseLink } from "@/components/Courses/CourseDialog";
 import { sanitizeCourseHtml } from "@/lib/sanitizeHtml";
+import { cleanSyllabusFields } from "@/lib/syllabus-text";
 
 type PlannerCourseListItemProps = {
   course: CourseSyllabusView;
@@ -26,6 +27,7 @@ const PlannerCourseListItem: FC<PlannerCourseListItemProps> = memo(
     const dict = useDictionary();
     const { language } = useSettings();
     const { openCourse } = useCourseLink();
+    const syllabus = cleanSyllabusFields(course);
 
     const courseTitle =
       language === "zh"
@@ -80,7 +82,7 @@ const PlannerCourseListItem: FC<PlannerCourseListItemProps> = memo(
             </div>
             <div className="space-y-2 ">
               <p className="text-xs line-clamp-2 text-muted-foreground">
-                {course.brief}
+                {syllabus.brief}
               </p>
               {course.restrictions && course.restrictions.length > 0 && (
                 <p className="text-xs whitespace-pre-line text-muted-foreground">

@@ -1,4 +1,5 @@
 import { semesterInfo } from "@courseweb/shared";
+import { cleanSyllabusFields } from "@/lib/syllabus-text";
 import type { CourseDefinition } from "@/config/supabase";
 import type { ModuleScore } from "./module-insights";
 
@@ -603,7 +604,7 @@ export const getModuleBrief = async (rawId: string) => {
     .eq("raw_id", rawId)
     .maybeSingle();
   if (error) throw error;
-  return ((data as { brief: string | null } | null)?.brief ?? "").trim();
+  return cleanSyllabusFields(data as { brief: string | null } | null).brief ?? "";
 };
 
 const MODULE_HISTORY_SELECT =

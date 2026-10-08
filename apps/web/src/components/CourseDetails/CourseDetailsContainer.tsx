@@ -34,7 +34,7 @@ import CourseTagList from "@/components/Courses/CourseTagsList";
 import { MinimalCourse } from "@/types/courses";
 import { getScoreType, getFormattedClassCode } from "@/helpers/courses";
 import { CourseDefinition } from "@/config/supabase";
-import { lazy, Suspense } from "react";
+import { Fragment, lazy, Suspense } from "react";
 import { Language } from "@/types/settings";
 import { sanitizeCourseHtml } from "@/lib/sanitizeHtml";
 import ShareCourseButton from "./ShareCourseButton";
@@ -49,6 +49,7 @@ import {
   getModuleHistory,
   getModuleHistoryVariant,
 } from "@/lib/modules";
+import { cleanSyllabusFields } from "@/lib/syllabus-text";
 
 const PDFViewerDynamic = lazy(
   () => import("@/components/CourseDetails/PDFViewer"),
@@ -178,6 +179,7 @@ const CourseDetailContainer = ({
     course && moduleHistory
       ? getModuleHistoryVariant(moduleHistory, course.name_zh)
       : undefined;
+  const syllabus = cleanSyllabusFields(course?.course_syllabus);
 
   // Dynamic SEO metadata for course detail pages (full-page view only)
   const courseJsonLd =
@@ -188,7 +190,7 @@ const CourseDetailContainer = ({
           name: course.name_zh,
           alternateName: course.name_en,
           description:
-            course.course_syllabus?.brief ??
+            syllabus.brief ??
             `清大 ${course.department} ${course.name_zh} 課程`,
           provider: {
             "@type": "EducationalOrganization",
@@ -441,7 +443,7 @@ const CourseDetailContainer = ({
                     {dict.course.details.brief}
                   </h3>
                   <p className="whitespace-pre-line text-sm">
-                    {course.course_syllabus!.brief}
+                    {syllabus.brief}
                   </p>
                 </div>
               )}
@@ -451,7 +453,28 @@ const CourseDetailContainer = ({
                     {dict.course.details.description}
                   </h3>
                   <p className="whitespace-pre-line text-sm">
-                    {course.course_syllabus!.content ?? (
+                    {syllabus.content.text ? (
+                      syllabus.content.sections.length > 1 ? (
+                        syllabus.content.sections.map((section, index) => (
+                          <Fragment
+                            key={`${section.key}-${section.title}-${index}`}
+                          >
+                            {index > 0 ? "\n" : null}
+                            {section.title ? (
+                              <>
+                                <span className="font-bold">
+                                  {section.title}
+                                </span>
+                                {"\n"}
+                              </>
+                            ) : null}
+                            {section.body}
+                          </Fragment>
+                        ))
+                      ) : (
+                        syllabus.content.text
+                      )
+                    ) : course.course_syllabus!.has_file ? (
                       <div className="flex flex-col gap-2">
                         <DownloadSyllabus courseId={course.raw_id} />
                         <Suspense fallback={null}>
@@ -460,7 +483,7 @@ const CourseDetailContainer = ({
                           />
                         </Suspense>
                       </div>
-                    )}
+                    ) : null}
                   </p>
                 </div>
               )}

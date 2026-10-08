@@ -1,4 +1,5 @@
 import { timeMaskForRecord } from "./time-mask";
+import { cleanSyllabusFields } from "@/lib/syllabus-text";
 
 export const LOCAL_FACETS = [
   "courseLevel",
@@ -83,13 +84,6 @@ export const asStringArray = (value: unknown): string[] =>
     ? value.filter((item) => item != null && item !== "").map(String)
     : [];
 
-const asNullableStringArray = (value: unknown): string[] | null => {
-  if (value == null) return null;
-  if (Array.isArray(value))
-    return value.filter((item) => item != null).map(String);
-  return [String(value)];
-};
-
 export const separateTimes = (times: readonly string[] | null | undefined) =>
   asStringArray(times).flatMap((time) => String(time).match(/.{1,2}/g) ?? []);
 
@@ -106,6 +100,15 @@ export const prepareSearchRecord = (
   const separate = asStringArray(input.separate_times);
   const compulsory = asStringArray(input.compulsory_for);
   const elective = asStringArray(input.elective_for);
+  const syllabus = cleanSyllabusFields({
+    brief: asNullableString(input.brief),
+    keywords:
+      input.keywords == null
+        ? null
+        : Array.isArray(input.keywords)
+          ? input.keywords.map(String)
+          : String(input.keywords),
+  });
 
   return {
     ...input,
@@ -130,11 +133,11 @@ export const prepareSearchRecord = (
     tags: asStringArray(input.tags),
     ge_target: asNullableString(input.ge_target),
     ge_type: asNullableString(input.ge_type),
-    brief: asNullableString(input.brief),
+    brief: syllabus.brief,
     restrictions: asNullableString(input.restrictions),
     note: asNullableString(input.note),
     prerequisites: asNullableString(input.prerequisites),
-    keywords: asNullableStringArray(input.keywords),
+    keywords: syllabus.keywords,
     cross_discipline: asStringArray(input.cross_discipline),
     first_specialization: asStringArray(input.first_specialization),
     second_specialization: asStringArray(input.second_specialization),

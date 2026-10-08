@@ -9,6 +9,7 @@ export * from "./semester";
 export * from "./timetable";
 export * from "./characters";
 export * from "./fetch";
+export * from "./syllabus-text";
 
 // Re-export commonly used external libraries for consistency
 export { clsx } from "clsx";
