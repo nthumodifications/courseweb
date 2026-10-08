@@ -8,6 +8,7 @@ import {
 import type { SearchTextRecord } from "./local-search/cache";
 import { fetchJsonWithDeadline } from "./local-search/deadline";
 import { lastSemester } from "@courseweb/shared";
+import { cleanSyllabusFields } from "@/lib/syllabus-text";
 
 export type SearchBackend =
   | "local"
@@ -746,7 +747,14 @@ export const withCourseText = <
   searchClient: Pick<ResilientSearchClient, "getCourseText">,
 ): T => {
   const text = searchClient.getCourseText(hit.raw_id);
-  if (!text || (hit.brief === text.brief && hit.keywords === text.keywords))
+  const syllabus = cleanSyllabusFields({
+    brief: text?.brief ?? hit.brief,
+    keywords: text?.keywords ?? hit.keywords,
+  });
+  if (
+    hit.brief === syllabus.brief &&
+    JSON.stringify(hit.keywords) === JSON.stringify(syllabus.keywords)
+  )
     return hit;
-  return { ...hit, brief: text.brief, keywords: text.keywords };
+  return { ...hit, brief: syllabus.brief, keywords: syllabus.keywords };
 };

@@ -35,7 +35,7 @@ import CourseTagList from "@/components/Courses/CourseTagsList";
 import { MinimalCourse } from "@/types/courses";
 import { getScoreType, getFormattedClassCode } from "@/helpers/courses";
 import { CourseDefinition } from "@/config/supabase";
-import { lazy, Suspense } from "react";
+import { Fragment, lazy, Suspense } from "react";
 import { Language } from "@/types/settings";
 import { sanitizeCourseHtml } from "@/lib/sanitizeHtml";
 import ShareCourseButton from "./ShareCourseButton";
@@ -50,6 +50,7 @@ import {
   getModuleHistory,
   getModuleHistoryVariant,
 } from "@/lib/modules";
+import { cleanSyllabusFields } from "@/lib/syllabus-text";
 import { usePrerequisiteGraphData } from "./usePrerequisiteGraphData";
 
 const PDFViewerDynamic = lazy(
@@ -58,6 +59,46 @@ const PDFViewerDynamic = lazy(
 const SelectCourseButtonDynamic = lazy(
   () => import("@/components/Courses/SelectCourseButton"),
 );
+
+type CleanSyllabusDescription = ReturnType<
+  typeof cleanSyllabusFields
+>["content"];
+
+const renderSyllabusDescription = (
+  content: CleanSyllabusDescription,
+  hasFile: boolean,
+  courseId: string,
+): React.ReactNode => {
+  if (content.text) {
+    if (content.sections.length > 1) {
+      return content.sections.map((section, index) => (
+        <Fragment key={`${section.key}-${section.title}-${index}`}>
+          {index > 0 ? "\n" : null}
+          {section.title ? (
+            <>
+              <span className="font-bold">{section.title}</span>
+              {"\n"}
+            </>
+          ) : null}
+          {section.body}
+        </Fragment>
+      ));
+    }
+    return content.text;
+  }
+
+  if (!hasFile) return null;
+  return (
+    <div className="flex flex-col gap-2">
+      <DownloadSyllabus courseId={courseId} />
+      <Suspense fallback={null}>
+        <PDFViewerDynamic
+          file={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/syllabus/${encodeURIComponent(courseId)}.pdf`}
+        />
+      </Suspense>
+    </div>
+  );
+};
 
 const TOCNavItem = ({
   href,
@@ -186,6 +227,7 @@ const CourseDetailContainer = ({
     course && moduleHistory
       ? getModuleHistoryVariant(moduleHistory, course.name_zh)
       : undefined;
+  const syllabus = cleanSyllabusFields(course?.course_syllabus);
 
   // Dynamic SEO metadata for course detail pages (full-page view only)
   const courseJsonLd =
@@ -196,7 +238,7 @@ const CourseDetailContainer = ({
           name: course.name_zh,
           alternateName: course.name_en,
           description:
-            course.course_syllabus?.brief ??
+            syllabus.brief ??
             `清大 ${course.department} ${course.name_zh} 課程`,
           provider: {
             "@type": "EducationalOrganization",
@@ -449,7 +491,7 @@ const CourseDetailContainer = ({
                     {dict.course.details.brief}
                   </h3>
                   <p className="whitespace-pre-line text-sm">
-                    {course.course_syllabus!.brief}
+                    {syllabus.brief}
                   </p>
                 </div>
               )}
@@ -459,15 +501,10 @@ const CourseDetailContainer = ({
                     {dict.course.details.description}
                   </h3>
                   <p className="whitespace-pre-line text-sm">
-                    {course.course_syllabus!.content ?? (
-                      <div className="flex flex-col gap-2">
-                        <DownloadSyllabus courseId={course.raw_id} />
-                        <Suspense fallback={null}>
-                          <PDFViewerDynamic
-                            file={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/syllabus/${encodeURIComponent(course.raw_id)}.pdf`}
-                          />
-                        </Suspense>
-                      </div>
+                    {renderSyllabusDescription(
+                      syllabus.content,
+                      course.course_syllabus!.has_file,
+                      course.raw_id,
                     )}
                   </p>
                 </div>

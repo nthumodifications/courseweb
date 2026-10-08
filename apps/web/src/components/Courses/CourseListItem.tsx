@@ -14,6 +14,7 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { useCourseLink } from "@/components/Courses/CourseDialog";
 import { sanitizeCourseHtml } from "@/lib/sanitizeHtml";
+import { cleanSyllabusFields } from "@/lib/syllabus-text";
 
 // Memoize the CourseListItem component
 const CourseListItem: FC<{
@@ -23,6 +24,7 @@ const CourseListItem: FC<{
   const dict = useDictionary();
   const { language } = useSettings();
   const { openCourse } = useCourseLink();
+  const syllabus = cleanSyllabusFields(course);
 
   const { setHoverCourse } = useUserTimetable();
 
@@ -72,7 +74,7 @@ const CourseListItem: FC<{
           <CourseTagList course={course as unknown as CourseDefinition} />
         </div>
         <div className="flex flex-col gap-2">
-          <p className="text-xs text-muted-foreground">{course.brief}</p>
+          <p className="text-xs text-muted-foreground">{syllabus.brief}</p>
           {course.restrictions && course.restrictions.length > 0 && (
             <p className="text-xs whitespace-pre-line text-muted-foreground">
               {dict.course.details.restriction_prefix}
