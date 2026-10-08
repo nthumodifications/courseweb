@@ -78,6 +78,7 @@ export default defineConfig(({ mode }) => ({
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         // Keep the optional Three.js experience out of the PWA install path.
         // The route remains available online and is cached by the browser after use.
         globIgnores: ["**/campus-map-*.js"],

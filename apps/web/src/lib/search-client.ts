@@ -6,6 +6,7 @@ import {
   type LocalSearchClientOptions,
 } from "./local-search/client";
 import type { SearchTextRecord } from "./local-search/cache";
+import { fetchJsonWithDeadline } from "./local-search/deadline";
 import { lastSemester } from "@courseweb/shared";
 
 export type SearchBackend =
@@ -22,6 +23,7 @@ export type ResilientSearchClient = Pick<
 > & {
   getStatus: () => SearchBackend;
   getVersion: () => number;
+  retry: () => Promise<void>;
   /**
    * Syllabus text (brief/keywords) that the local engine loads after the hits
    * it already served. Undefined when served remotely or not yet loaded.
@@ -59,6 +61,8 @@ type FallbackPayload<T> = {
   data?: T & { warnings?: string[] };
   error?: { message?: string; details?: string };
 };
+
+const FALLBACK_TIMEOUT_MS = 15_000;
 
 export type ResilientSearchClientOptions = {
   /** Test/embedded override for the local chunk loader and cache. */
@@ -251,8 +255,14 @@ const fallbackFacetUrl = (request: { params?: unknown }) => {
 };
 
 const fetchFallback = async <T>(url: string): Promise<T> => {
-  const response = await fetch(url);
-  const payload = (await response.json()) as FallbackPayload<T>;
+  const { response, data } = await fetchJsonWithDeadline<FallbackPayload<T>>(
+    url,
+    FALLBACK_TIMEOUT_MS,
+    undefined,
+    (input, init) => fetch(input, init),
+    "Course-search API fallback",
+  );
+  const payload = data;
   if (!response.ok || !payload.success || !payload.data) {
     throw new Error(
       payload.error?.details ??
@@ -704,6 +714,7 @@ export const createResilientSearchClient = (
   return {
     search,
     searchForFacetValues,
+    retry: () => localClient?.clear() ?? Promise.resolve(),
     getStatus: () =>
       localStatus ??
       getActiveState()?.backend ??

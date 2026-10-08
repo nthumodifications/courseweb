@@ -34,6 +34,7 @@ import type {
   WorkerDocument,
   WorkerResponse,
 } from "./worker-protocol";
+import { fetchJsonWithDeadline, fetchJsonWithIdleTimeout } from "./deadline";
 
 export type LocalSearchParams = RefinementSpec & {
   query?: string;
@@ -88,6 +89,13 @@ export type FetchLike = (
 
 export type LocalSearchStatus = "idle" | "loading" | "ready" | "error";
 
+export class MissingLocalSearchChunkError extends Error {
+  constructor(semester: string) {
+    super(`No local course chunk for semester ${semester}`);
+    this.name = "MissingLocalSearchChunkError";
+  }
+}
+
 export type LocalSearchEngineOptions = {
   baseUrl?: string;
   fetch?: FetchLike;
@@ -133,6 +141,11 @@ const getEnv = () =>
 const isSuccessful = (response: Response) =>
   response.ok || (response.status >= 200 && response.status < 300);
 
+const MANIFEST_TIMEOUT_MS = 10_000;
+const CHUNK_FIRST_BYTE_TIMEOUT_MS = 15_000;
+const CHUNK_IDLE_TIMEOUT_MS = 20_000;
+const CHUNK_ABSOLUTE_TIMEOUT_MS = 180_000;
+
 const defaultWorkerFactory = () => {
   if (typeof Worker === "undefined") return undefined;
   return new Worker(new URL("./index.worker.ts", import.meta.url), {
@@ -142,15 +155,21 @@ const defaultWorkerFactory = () => {
 
 class WorkerIndex implements LocalIndex {
   private readonly worker: SearchWorker;
+  private readonly onFailure: (index: LocalIndex) => void;
   private nextRequestId = 1;
   private built: Promise<void> | undefined;
   private readonly pending = new Map<number, WorkerPending>();
   private buildResolve: (() => void) | undefined;
   private buildReject: ((error: Error) => void) | undefined;
   private failed: Error | undefined;
+  private terminated = false;
 
-  constructor(worker: SearchWorker) {
+  constructor(
+    worker: SearchWorker,
+    onFailure: (index: LocalIndex) => void = () => {},
+  ) {
     this.worker = worker;
+    this.onFailure = onFailure;
     worker.onmessage = (event: MessageEvent<WorkerResponse>) => {
       const response = event.data;
       if (response.type === "built") {
@@ -160,16 +179,7 @@ class WorkerIndex implements LocalIndex {
         return;
       }
       if (response.type === "error") {
-        const error = new Error(response.message);
-        if (response.requestId !== undefined) {
-          const pending = this.pending.get(response.requestId);
-          if (pending) {
-            this.pending.delete(response.requestId);
-            pending.reject(error);
-          }
-        } else {
-          this.fail(error);
-        }
+        this.fail(new Error(response.message));
         return;
       }
       const pending = this.pending.get(response.requestId);
@@ -183,12 +193,18 @@ class WorkerIndex implements LocalIndex {
   }
 
   private fail(error: Error) {
+    if (this.failed) return;
     this.failed = error;
+    if (!this.terminated) {
+      this.terminated = true;
+      this.worker.terminate();
+    }
     this.buildReject?.(error);
     this.buildResolve = undefined;
     this.buildReject = undefined;
     for (const pending of this.pending.values()) pending.reject(error);
     this.pending.clear();
+    this.onFailure(this);
   }
 
   build(documents: WorkerDocument[]) {
@@ -212,7 +228,6 @@ class WorkerIndex implements LocalIndex {
   }
 
   dispose() {
-    this.worker.terminate();
     this.fail(new Error("Local search worker disposed"));
   }
 }
@@ -426,9 +441,12 @@ export const semesterFromRequest = (
 const workerIndexFor = (
   records: SearchProjectionRecord[],
   factory: () => SearchWorker | undefined,
+  onFailure?: (index: LocalIndex) => void,
 ) => {
   const worker = factory();
-  return worker ? new WorkerIndex(worker) : makeMainThreadIndex(records);
+  return worker
+    ? new WorkerIndex(worker, onFailure)
+    : makeMainThreadIndex(records);
 };
 
 const buildShortLatinPrefixIndex = (
@@ -506,8 +524,9 @@ export class LocalSearchEngine {
   private readonly cache: SearchChunkCache;
   private readonly workerFactory: () => SearchWorker | undefined;
   private readonly chunks = new Map<string, Promise<LoadedChunk>>();
-  private readonly failedChunks = new Map<string, Error>();
+  private readonly loadedChunks = new Map<string, LoadedChunk>();
   private readonly textLoads = new Map<string, Promise<void>>();
+  private readonly textGenerations = new Map<string, number>();
   // Rendered hits are copies (InstantSearch spreads each hit and caches the
   // page), so merging into records alone never reaches hits already on
   // screen. Views read deferred text back through getText instead.
@@ -551,47 +570,83 @@ export class LocalSearchEngine {
   }
 
   private async manifest() {
-    const response = await this.fetchFn(
+    const { response, data } = await fetchJsonWithDeadline<unknown>(
       `${this.baseUrl}/search/chunk/manifest`,
+      MANIFEST_TIMEOUT_MS,
+      undefined,
+      this.fetchFn,
+      "Course-search manifest",
     );
     if (!isSuccessful(response)) {
       throw new Error(`Course-search manifest failed (${response.status})`);
     }
-    return normalizeManifest(await response.json());
+    return normalizeManifest(data);
   }
 
-  private async loadChunk(semester: string): Promise<LoadedChunk> {
-    this.setStatus("loading");
-    const manifest = (await this.manifest()).find(
-      (entry) => entry.id === semester,
-    );
-    if (!manifest)
-      throw new Error(`No local course chunk for semester ${semester}`);
+  private async cachedChunkOrThrow(
+    semester: string,
+    error: unknown,
+  ): Promise<{
+    records: SearchProjectionRecord[];
+    manifest: SearchManifestEntry;
+  }> {
+    const cached = await this.cache.getLatest(semester);
+    if (!cached) throw error;
+    return {
+      records: cached.records,
+      manifest: {
+        id: semester,
+        rowCount: cached.records.length,
+        contentHash: cached.contentHash,
+        formatVersion: cached.formatVersion,
+      },
+    };
+  }
 
-    const key = searchChunkCacheKey(
-      semester,
-      manifest.contentHash,
-      manifest.formatVersion,
-    );
-    const cached = await this.cache.get(key);
-    if (!cached) await this.cache.deleteSemester(semester, key);
+  private async downloadChunk(semester: string) {
+    let entries: SearchManifestEntry[];
+    try {
+      entries = await this.manifest();
+    } catch (error) {
+      return this.cachedChunkOrThrow(semester, error);
+    }
 
-    let records: SearchProjectionRecord[];
-    const response = await this.fetchFn(
-      `${this.baseUrl}/search/chunk/${encodeURIComponent(semester)}`,
-      cached
-        ? { headers: { "If-None-Match": JSON.stringify(manifest.contentHash) } }
-        : undefined,
-    );
-    if (response.status === 304) {
-      if (!cached)
-        throw new Error("Course chunk returned 304 without a cache entry");
-      records = cached.records;
-    } else {
+    const manifest = entries.find((entry) => entry.id === semester);
+    if (!manifest) throw new MissingLocalSearchChunkError(semester);
+
+    try {
+      const key = searchChunkCacheKey(
+        semester,
+        manifest.contentHash,
+        manifest.formatVersion,
+      );
+      const cached = await this.cache.get(key);
+      const { response, data } = await fetchJsonWithIdleTimeout<unknown>(
+        `${this.baseUrl}/search/chunk/${encodeURIComponent(semester)}`,
+        {
+          firstByteMs: CHUNK_FIRST_BYTE_TIMEOUT_MS,
+          idleMs: CHUNK_IDLE_TIMEOUT_MS,
+          absoluteMs: CHUNK_ABSOLUTE_TIMEOUT_MS,
+        },
+        cached
+          ? {
+              headers: {
+                "If-None-Match": JSON.stringify(manifest.contentHash),
+              },
+            }
+          : undefined,
+        this.fetchFn,
+        "Course-search chunk",
+      );
+      if (response.status === 304) {
+        if (!cached)
+          throw new Error("Course chunk returned 304 without a cache entry");
+        return { records: cached.records, manifest };
+      }
       if (!isSuccessful(response)) {
         throw new Error(`Course-search chunk failed (${response.status})`);
       }
-      records = normalizeChunk(await response.json()).map(prepareSearchRecord);
+      const records = normalizeChunk(data).map(prepareSearchRecord);
       if (
         manifest.rowCount !== undefined &&
         records.length !== manifest.rowCount
@@ -606,22 +661,43 @@ export class LocalSearchEngine {
         contentHash: manifest.contentHash,
         records,
       };
-      await this.cache.set(key, cacheValue);
+      let persisted = false;
+      try {
+        persisted = await this.cache.set(key, cacheValue);
+      } catch {
+        // The downloaded chunk is still usable for this page session.
+      }
+      if (persisted) await this.cache.deleteSemester(semester, key);
+      return { records, manifest };
+    } catch (error) {
+      return this.cachedChunkOrThrow(semester, error);
     }
+  }
 
-    const index = workerIndexFor(records, this.workerFactory);
-    await index.build(
-      records.map((record, id) => ({
-        id: String(id),
-        text: searchableText(record),
-      })),
+  private async buildChunk(source: {
+    records: SearchProjectionRecord[];
+    manifest: SearchManifestEntry;
+  }): Promise<LoadedChunk> {
+    const { records, manifest } = source;
+    const index = workerIndexFor(records, this.workerFactory, (failedIndex) =>
+      this.invalidateChunk(manifest.id, failedIndex),
     );
+    try {
+      await index.build(
+        records.map((record, id) => ({
+          id: String(id),
+          text: searchableText(record),
+        })),
+      );
+    } catch (error) {
+      index.dispose?.();
+      throw error;
+    }
     // Pay the Latin matcher cache cost during chunk load, not the first
     // broad query (where it would look like search latency).
     const facetValueRows = buildFacetValueRows(records);
-    this.setStatus("ready");
     const shortLatinIndex = buildShortLatinPrefixIndex(records);
-    const chunk = {
+    return {
       records,
       index,
       ids: records.map((_, id) => id),
@@ -630,10 +706,15 @@ export class LocalSearchEngine {
       shortLatinRankScores: shortLatinIndex.rankScores,
       manifest,
     };
-    // A repeat visit can render the separately cached syllabus text as soon
-    // as the small searchable tier is ready. Network revalidation remains
-    // deferred and never delays the first usable result.
-    const cachedText = await this.cachedTextChunk(semester, manifest);
+  }
+
+  private async loadChunk(semester: string): Promise<LoadedChunk> {
+    this.setStatus("loading");
+    const source = await this.downloadChunk(semester);
+    const chunk = await this.buildChunk(source);
+    this.loadedChunks.set(semester, chunk);
+    this.setStatus("ready");
+    const cachedText = await this.cachedTextChunk(semester, chunk.manifest);
     if (cachedText) this.mergeTextRecords(chunk, cachedText.texts);
     this.startTextLoad(semester, chunk);
     return chunk;
@@ -666,21 +747,32 @@ export class LocalSearchEngine {
       : this.cache.getLatestText(semester, formatVersion);
   }
 
-  private async loadTextChunk(semester: string, chunk: LoadedChunk) {
+  private async loadTextChunk(
+    semester: string,
+    chunk: LoadedChunk,
+    generation: number,
+  ) {
     const manifest = chunk.manifest;
     const formatVersion = manifest.textFormatVersion ?? manifest.formatVersion;
     const cached = await this.cachedTextChunk(semester, manifest);
 
-    // Cached text is useful before revalidation completes. The request below
-    // still checks the text tier's own ETag and replaces this data if needed.
+    if (!this.isCurrentTextGeneration(semester, generation)) return;
     if (cached) this.mergeTextRecords(chunk, cached.texts);
 
-    const response = await this.fetchFn(
+    const { response, data } = await fetchJsonWithIdleTimeout<unknown>(
       `${this.baseUrl}/search/chunk/${encodeURIComponent(semester)}/text`,
+      {
+        firstByteMs: CHUNK_FIRST_BYTE_TIMEOUT_MS,
+        idleMs: CHUNK_IDLE_TIMEOUT_MS,
+        absoluteMs: CHUNK_ABSOLUTE_TIMEOUT_MS,
+      },
       cached
         ? { headers: { "If-None-Match": JSON.stringify(cached.contentHash) } }
         : undefined,
+      this.fetchFn,
+      "Course-search text chunk",
     );
+    if (!this.isCurrentTextGeneration(semester, generation)) return;
     if (response.status === 304) {
       if (!cached)
         throw new Error("Course text chunk returned 304 without a cache entry");
@@ -690,35 +782,46 @@ export class LocalSearchEngine {
       throw new Error(`Course-search text chunk failed (${response.status})`);
     }
 
-    const textChunk = normalizeTextChunk(await response.json());
+    const textChunk = normalizeTextChunk(data);
     if (textChunk.semester !== semester) {
       throw new Error("Course-search text chunk semester mismatch");
     }
-    // Show the text even when it cannot be versioned for caching (e.g. a
-    // cross-origin response whose ETag is not exposed).
+    if (!this.isCurrentTextGeneration(semester, generation)) return;
     this.mergeTextRecords(chunk, textChunk.texts);
+    // ETag is a cache key only; it is not treated as chunk integrity proof.
     const contentHash =
-      unquoteEntityTag(response.headers.get("etag")) ||
-      manifest.textContentHash;
+      manifest.textContentHash ||
+      unquoteEntityTag(response.headers.get("etag"));
     if (!contentHash) return;
+    if (!this.isCurrentTextGeneration(semester, generation)) return;
     const key = searchTextCacheKey(semester, contentHash, formatVersion);
-    await this.cache.setText(key, {
-      semester,
-      formatVersion,
-      contentHash,
-      texts: textChunk.texts,
-    });
-    await this.cache.deleteTextSemester(semester, key);
+    let persisted = false;
+    try {
+      persisted = await this.cache.setText(key, {
+        semester,
+        formatVersion,
+        contentHash,
+        texts: textChunk.texts,
+      });
+    } catch {
+      // The downloaded text is already merged into the in-memory chunk.
+    }
+    if (persisted) await this.cache.deleteTextSemester(semester, key);
+  }
+
+  private isCurrentTextGeneration(semester: string, generation: number) {
+    return (this.textGenerations.get(semester) ?? 0) === generation;
   }
 
   private startTextLoad(semester: string, chunk: LoadedChunk) {
+    if (this.textLoads.has(semester)) return;
+    const generation = this.textGenerations.get(semester) ?? 0;
     const load = new Promise<void>((resolve) => {
       globalThis.setTimeout(() => {
-        void this.loadTextChunk(semester, chunk)
+        void this.loadTextChunk(semester, chunk, generation)
           .catch((error) => {
             // The small searchable tier remains usable if syllabus text is
-            // unavailable. Keep this failure memoized for this load so every
-            // keystroke cannot start another text request.
+            // unavailable.
             console.warn("Course-search text tier unavailable:", error);
           })
           .finally(resolve);
@@ -732,18 +835,27 @@ export class LocalSearchEngine {
   }
 
   private getChunk(semester: string) {
-    const failed = this.failedChunks.get(semester);
-    if (failed) return Promise.reject(failed);
     const existing = this.chunks.get(semester);
     if (existing) return existing;
-    const promise = this.loadChunk(semester).catch((error) => {
+    let promise: Promise<LoadedChunk>;
+    promise = this.loadChunk(semester).catch((error) => {
       const failure = error instanceof Error ? error : new Error(String(error));
-      this.failedChunks.set(semester, failure);
-      this.setStatus("error");
+      if (this.chunks.get(semester) === promise) this.chunks.delete(semester);
+      this.setStatus(
+        failure instanceof MissingLocalSearchChunkError ? "idle" : "error",
+      );
       throw failure;
     });
     this.chunks.set(semester, promise);
     return promise;
+  }
+
+  private invalidateChunk(semester: string, failedIndex: LocalIndex) {
+    const chunk = this.loadedChunks.get(semester);
+    if (!chunk || chunk.index !== failedIndex) return;
+    this.loadedChunks.delete(semester);
+    this.chunks.delete(semester);
+    chunk.index.dispose?.();
   }
 
   private facetMaps(
@@ -802,9 +914,17 @@ export class LocalSearchEngine {
     const terms = queryTerms(query);
     const hasSearchTerms = terms.length > 0;
     const refinementMatcher = compileRefinements(params);
-    const indexedIds: readonly (string | number)[] = hasSearchTerms
-      ? await chunk.index.search(query, chunk.records.length)
-      : chunk.ids;
+    let indexedIds: readonly (string | number)[];
+    if (hasSearchTerms) {
+      try {
+        indexedIds = await chunk.index.search(query, chunk.records.length);
+      } catch (error) {
+        this.invalidateChunk(semester, chunk.index);
+        throw error;
+      }
+    } else {
+      indexedIds = chunk.ids;
+    }
     const shortLatinPrefix =
       terms.length === 1 &&
       terms[0]!.length <= 3 &&
@@ -917,15 +1037,21 @@ export class LocalSearchEngine {
   async clear(semester?: string) {
     const semesters = semester
       ? [semester]
-      : [...new Set([...this.chunks.keys(), ...this.failedChunks.keys()])];
+      : [
+          ...new Set([
+            ...this.chunks.keys(),
+            ...this.loadedChunks.keys(),
+            ...this.textLoads.keys(),
+          ]),
+        ];
     for (const id of semesters) {
+      this.textGenerations.set(id, (this.textGenerations.get(id) ?? 0) + 1);
       const chunk = await this.chunks.get(id)?.catch(() => undefined);
-      chunk?.index.dispose?.();
-      this.chunks.delete(id);
-      this.failedChunks.delete(id);
+      if (chunk) this.invalidateChunk(id, chunk.index);
+      else this.chunks.delete(id);
       this.textLoads.delete(id);
     }
-    if (!this.chunks.size && !this.failedChunks.size) this.setStatus("idle");
+    if (!this.chunks.size) this.setStatus("idle");
   }
 
   getDefaultSemester() {

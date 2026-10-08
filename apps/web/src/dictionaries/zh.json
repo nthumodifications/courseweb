@@ -386,7 +386,8 @@
     "bus": "校車",
     "laundry": "宿舍洗衣機",
     "apps": "應用程式",
-    "admin": "管理中心"
+    "admin": "管理中心",
+    "youbike": "YouBike 2.0"
   },
   "command_palette": {
     "placeholder": "輸入指令…",
@@ -1003,6 +1004,7 @@
       "campus-map": "互動式校園地圖",
       "bus": "公車",
       "laundry": "宿舍洗衣機",
+      "youbike": "YouBike 2.0 即時車量",
       "sports-venues": "體育場館使用人數",
       "library": "圖書館即時座位",
       "shops": "餐廳及服務",
@@ -2293,5 +2295,25 @@
       "improvement": "改進",
       "fix": "修正"
     }
+  },
+  "youbike": {
+    "title": "YouBike 2.0",
+    "tabs": {
+      "all": "全部",
+      "main": "校本部",
+      "nanda": "南大校區",
+      "mine": "常用站點"
+    },
+    "regular_bikes": "一般車",
+    "ebikes": "電輔車",
+    "empty_docks": "可還空位",
+    "out_of_service": "暫停營運",
+    "no_stations": "找不到相關站點",
+    "no_my_stations": "尚未設定常用站點",
+    "pin": "加入常用",
+    "unpin": "取消常用",
+    "last_updated": "最後更新",
+    "search_placeholder": "搜尋站點名稱或路名...",
+    "open_in_google_maps": "在 Google 地圖中查看"
   }
 }

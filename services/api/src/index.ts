@@ -25,6 +25,7 @@ import shortlinkRedirect from "./shortlink-redirect";
 import sports from "./sports";
 import recruit from "./recruit";
 import dining from "./dining";
+import youbike from "./youbike";
 import { syncPeoOpeningTimes } from "./scheduled/peo-opening-times";
 import { D1Database } from "@cloudflare/workers-types";
 import usage from "./usage";
@@ -89,6 +90,7 @@ export const app = new Hono<{ Bindings: Bindings }>()
   .route("/sports", sports)
   .route("/recruit", recruit)
   .route("/dining", dining)
+  .route("/youbike", youbike)
   .route("/usage", usage);
 
 export default {

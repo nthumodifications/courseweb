@@ -125,7 +125,11 @@ export function InfiniteHits({
           <ErrorState
             title={dict.common.load_error}
             action={
-              <Button variant="outline" size="sm" onClick={() => refresh()}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void searchClient.retry().then(() => refresh())}
+              >
                 {dict.common.try_again}
               </Button>
             }
@@ -157,6 +161,7 @@ const SearchContainer = memo(
   }) => {
     const dict = useDictionary();
     const { nbHits, processingTimeMS } = useStats();
+    const { status } = useInstantSearch();
     const { query } = useSearchBox();
     const previousNbHitsRef = useRef<number>(0);
     const [aiSearchEnabled, setAiSearchEnabled] = useState(false);
@@ -260,7 +265,9 @@ const SearchContainer = memo(
                 {dict.course.refine.search_results}
               </h2>
               <span className="text-sm mr-auto">
-                {nbHits} {dict.course.refine.results} ({processingTimeMS}ms)
+                {(status === "loading" || status === "stalled") && nbHits === 0
+                  ? dict.common.loading
+                  : `${nbHits} ${dict.course.refine.results} (${processingTimeMS}ms)`}
               </span>
             </div>
             <a
