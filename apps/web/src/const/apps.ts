@@ -1,6 +1,7 @@
 import {
   Store,
   Bus,
+  Bike,
   MapPin,
   Gamepad,
   BookOpen,
@@ -115,6 +116,15 @@ export const apps: {
     title_en: "Dorm Laundry",
     href: "/laundry",
     Icon: WashingMachine,
+    beta: true,
+  },
+  {
+    id: "youbike",
+    category: "campuslife",
+    title_zh: "YouBike 2.0 即時車量",
+    title_en: "YouBike 2.0 Availability",
+    href: "/youbike",
+    Icon: Bike,
     beta: true,
   },
   {

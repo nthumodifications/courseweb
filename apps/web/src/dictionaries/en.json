@@ -366,7 +366,8 @@
     "bus": "Bus",
     "laundry": "Dorm Laundry",
     "apps": "Apps",
-    "admin": "Admin Center"
+    "admin": "Admin Center",
+    "youbike": "YouBike 2.0"
   },
   "command_palette": {
     "placeholder": "Type a command…",
@@ -983,6 +984,7 @@
       "campus-map": "Interactive Campus Map",
       "bus": "Bus",
       "laundry": "Dorm Laundry",
+      "youbike": "YouBike 2.0 Availability",
       "sports-venues": "Sports Venue Occupancy",
       "library": "Library Vacancy",
       "shops": "Shops",
@@ -2273,5 +2275,25 @@
       "improvement": "Improvement",
       "fix": "Fix"
     }
+  },
+  "youbike": {
+    "title": "YouBike 2.0",
+    "tabs": {
+      "all": "All",
+      "main": "Main Campus",
+      "nanda": "Nanda Campus",
+      "mine": "My Stations"
+    },
+    "regular_bikes": "Regular",
+    "ebikes": "e-Bikes",
+    "empty_docks": "Empty Docks",
+    "out_of_service": "Out of Service",
+    "no_stations": "No stations found",
+    "no_my_stations": "No pinned stations yet",
+    "pin": "Pin Station",
+    "unpin": "Unpin Station",
+    "last_updated": "Last Updated",
+    "search_placeholder": "Search station or road...",
+    "open_in_google_maps": "View on Google Maps"
   }
 }
