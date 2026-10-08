@@ -1,6 +1,7 @@
 import type { FunctionDeclaration } from "@google/genai";
 import { Type } from "@google/genai";
 import type { Context } from "hono";
+import { z } from "zod";
 import acaCalendar from "../aca-calendar";
 import bus from "../bus";
 import supabase_server from "../config/supabase_server";
@@ -26,6 +27,7 @@ import {
 import { findRequirementsPDF, scrapeAllColleges } from "../graduation/scraper";
 
 const MAX_RESULT_ITEMS = 15;
+const MAX_COMPARE_QUERIES = 8;
 const SEARCH_ATTRIBUTES = [
   "raw_id",
   "objectID",
@@ -582,6 +584,136 @@ const loadGraduationData = async (c: Context) => {
   return colleges;
 };
 
+const toolSemester = z
+  .string()
+  .trim()
+  .regex(/^\d{5}$/, "semester must be a five-digit semester code")
+  .optional();
+const optionalText = (max: number) => z.string().trim().max(max).optional();
+const courseId = z.string().trim().min(1).max(100);
+const resultLimit = z.number().int().min(1).max(MAX_RESULT_ITEMS).optional();
+
+const compareQueries = z
+  .string()
+  .trim()
+  .min(1)
+  .max(800)
+  .superRefine((value, context) => {
+    const queries = value
+      .split(",")
+      .map((query) => query.trim())
+      .filter(Boolean);
+    if (queries.length === 0) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "queries must contain at least one search term",
+      });
+    } else if (queries.length > MAX_COMPARE_QUERIES) {
+      context.addIssue({
+        code: z.ZodIssueCode.too_big,
+        type: "array",
+        maximum: MAX_COMPARE_QUERIES,
+        inclusive: true,
+        message: `queries may contain at most ${MAX_COMPARE_QUERIES} search terms`,
+      });
+    }
+    if (queries.some((query) => query.length > 200)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "each search term must be at most 200 characters",
+      });
+    }
+  });
+
+const TOOL_ARGUMENT_SCHEMAS = {
+  search_courses: z
+    .object({
+      query: z.string().trim().min(1).max(200),
+      semester: toolSemester,
+      limit: resultLimit,
+    })
+    .strict(),
+  get_course_details: z.object({ courseId }).strict(),
+  compare_courses: z
+    .object({
+      queries: compareQueries,
+      department: optionalText(120),
+      semester: toolSemester,
+    })
+    .strict(),
+  list_departments: z.object({ query: optionalText(120) }).strict(),
+  get_graduation_requirements: z
+    .object({
+      department: z.string().trim().min(1).max(120),
+      entranceYear: z
+        .string()
+        .trim()
+        .regex(/^\d{2,3}$/),
+    })
+    .strict(),
+  find_courses_in_free_periods: z
+    .object({
+      query: optionalText(200),
+      department: optionalText(120),
+      semester: toolSemester,
+      limit: resultLimit,
+    })
+    .strict(),
+  check_timetable_conflicts: z
+    .object({
+      courseIds: z.array(courseId).min(1).max(MAX_RESULT_ITEMS),
+      semester: toolSemester,
+    })
+    .strict(),
+  get_academic_calendar: z
+    .object({
+      startDate: z
+        .string()
+        .trim()
+        .regex(/^\d{4}-\d{2}-\d{2}$/)
+        .optional(),
+      endDate: z
+        .string()
+        .trim()
+        .regex(/^\d{4}-\d{2}-\d{2}$/)
+        .optional(),
+    })
+    .strict(),
+  get_bus_departures: z
+    .object({
+      busType: z
+        .enum(["all", "main", "nanda", "red", "green", "route1", "route2"])
+        .optional(),
+      direction: z.enum(["up", "down"]).optional(),
+      day: z.enum(["current", "weekday", "weekend"]).optional(),
+      limit: resultLimit,
+    })
+    .strict(),
+  get_sports_opening_times: z
+    .object({ facility: optionalText(120), semester: toolSemester })
+    .strict(),
+  get_weather: z.object({}).strict(),
+} as const;
+
+type ToolName = keyof typeof TOOL_ARGUMENT_SCHEMAS;
+
+const formatToolArgumentError = (toolName: string, error: z.ZodError) => {
+  const issue = error.issues[0];
+  return `Invalid arguments for ${toolName}: ${issue?.message ?? "invalid object"}`;
+};
+
+export function validateToolArguments(
+  toolName: string,
+  args: Record<string, unknown>,
+): Record<string, unknown> {
+  const schema = TOOL_ARGUMENT_SCHEMAS[toolName as ToolName];
+  if (!schema) throw new Error(`Unknown tool: ${toolName}`);
+  const parsed = schema.safeParse(args);
+  if (!parsed.success)
+    throw new Error(formatToolArgumentError(toolName, parsed.error));
+  return parsed.data as Record<string, unknown>;
+}
+
 // Keep every declaration within the provider-neutral JSON-schema subset in the chat contract.
 export const TOOL_DECLARATIONS: FunctionDeclaration[] = [
   {
@@ -808,8 +940,9 @@ export async function executeTool(
   args: Record<string, unknown>,
   userContext?: UserContext,
 ): Promise<unknown> {
+  const validatedArgs = validateToolArguments(toolName, args);
   const semester =
-    (typeof args.semester === "string" && args.semester) ||
+    (typeof validatedArgs.semester === "string" && validatedArgs.semester) ||
     userContext?.currentSemester ||
     getCurrentSemester();
 
@@ -817,30 +950,20 @@ export async function executeTool(
     case "search_courses":
       return searchCourses(
         c,
-        typeof args.query === "string" ? args.query : "",
-        typeof args.limit === "number" ? args.limit : undefined,
+        validatedArgs.query as string,
+        validatedArgs.limit as number | undefined,
         semester,
       );
 
     case "get_course_details":
-      if (typeof args.courseId !== "string" || !args.courseId.trim()) {
-        throw new Error("courseId is required");
-      }
-      return getCourseDetails(c, args.courseId.trim());
+      return getCourseDetails(c, validatedArgs.courseId as string);
 
     case "compare_courses": {
-      const queries =
-        typeof args.queries === "string"
-          ? args.queries
-              .split(",")
-              .map((query) => query.trim())
-              .filter(Boolean)
-              .slice(0, MAX_RESULT_ITEMS)
-          : [];
-      if (queries.length === 0)
-        throw new Error("queries must contain at least one search term");
-      const department =
-        typeof args.department === "string" ? args.department : undefined;
+      const queries = (validatedArgs.queries as string)
+        .split(",")
+        .map((query) => query.trim())
+        .filter(Boolean);
+      const department = validatedArgs.department as string | undefined;
       return {
         semester,
         filters_applied: { department: department ?? null },
@@ -864,10 +987,9 @@ export async function executeTool(
           ),
         })),
       );
-      const query =
-        typeof args.query === "string"
-          ? args.query.trim().toLocaleLowerCase()
-          : "";
+      const query = ((validatedArgs.query as string | undefined) ?? "")
+        .trim()
+        .toLocaleLowerCase();
       const matchingDepartments = query
         ? departments.filter((department) =>
             `${department.college} ${department.department}`
@@ -885,12 +1007,8 @@ export async function executeTool(
     }
 
     case "get_graduation_requirements": {
-      const department =
-        typeof args.department === "string" ? args.department.trim() : "";
-      const entranceYear =
-        typeof args.entranceYear === "string" ? args.entranceYear.trim() : "";
-      if (!department || !entranceYear)
-        throw new Error("department and entranceYear are required");
+      const department = (validatedArgs.department as string).trim();
+      const entranceYear = (validatedArgs.entranceYear as string).trim();
       const colleges = await loadGraduationData(c);
       const result = await findRequirementsPDF(
         colleges,
@@ -916,19 +1034,19 @@ export async function executeTool(
     }
 
     case "find_courses_in_free_periods":
-      return findFreeCourses(c, args, userContext);
+      return findFreeCourses(c, validatedArgs, userContext);
 
     case "check_timetable_conflicts":
-      return checkConflicts(c, args, userContext);
+      return checkConflicts(c, validatedArgs, userContext);
 
     case "get_academic_calendar":
-      return getCalendar(c, args);
+      return getCalendar(c, validatedArgs);
 
     case "get_bus_departures":
-      return getBusDepartures(c, args);
+      return getBusDepartures(c, validatedArgs);
 
     case "get_sports_opening_times":
-      return getSportsOpeningTimes(c, args);
+      return getSportsOpeningTimes(c, validatedArgs);
 
     case "get_weather":
       return getWeather(c);

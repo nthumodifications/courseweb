@@ -1,6 +1,7 @@
 import { FunctionCallingConfigMode, GoogleGenAI, Type } from "@google/genai";
 import type { FunctionDeclaration } from "@google/genai";
 import type { Context } from "hono";
+import { sanitizeUserContext } from "../chat/guardrails";
 import { TOOL_DECLARATIONS, executeTool } from "../chat/tools";
 import { buildSystemPrompt } from "../chat/system-prompt";
 import type { ChatMessage, UserContext } from "../chat/types";
@@ -44,6 +45,7 @@ export interface LlmEnv {
   CEREBRAS_API_KEY?: string;
   OPENROUTER_API_KEY?: string;
   MISTRAL_API_KEY?: string;
+  SUPABASE_URL?: string;
   AI?: unknown;
   AI_PROVIDER_ORDER?: string;
   GEMINI_CHAT_MODELS?: string;
@@ -98,6 +100,9 @@ export const DEFAULT_WORKERS_AI_CHAT_MODELS = [
 
 const DEAD_PROVIDER_CACHE = new Map<string, number>();
 const MAX_TURNS = 10;
+export const MAX_TOOL_CALLS_PER_REQUEST = 30;
+export const TOOL_CALL_BUDGET_ERROR =
+  "The tool-call budget for this request has been exhausted";
 
 type OpenAICompatibleProviderName = Exclude<
   ProviderName,
@@ -472,17 +477,65 @@ interface LoadedPdf {
   markdownBody?: Promise<string>;
 }
 
-async function loadPdf(pdf: {
-  url?: string;
-  bytes?: ArrayBuffer | Uint8Array;
-}): Promise<LoadedPdf> {
+export const ALLOWED_PDF_HOSTS = new Set(["registra.site.nthu.edu.tw"]);
+
+export function allowedPdfHosts(
+  env?: Pick<LlmEnv, "SUPABASE_URL">,
+): Set<string> {
+  const hosts = new Set(ALLOWED_PDF_HOSTS);
+  if (!env?.SUPABASE_URL) return hosts;
+  try {
+    const url = new URL(env.SUPABASE_URL);
+    if (url.protocol === "https:" && !url.username && !url.password) {
+      // The storage URL is server configuration, not model output. Keep the
+      // exact configured host in the allowlist rather than allowing arbitrary
+      // Supabase or cloud-storage domains.
+      hosts.add(url.hostname.toLowerCase());
+    }
+  } catch {
+    // An invalid storage URL will fail closed when the PDF is requested.
+  }
+  return hosts;
+}
+
+export function isAllowedPdfUrl(
+  value: string,
+  allowedHosts: ReadonlySet<string> = ALLOWED_PDF_HOSTS,
+): boolean {
+  try {
+    const url = new URL(value);
+    return (
+      url.protocol === "https:" &&
+      !url.username &&
+      !url.password &&
+      (!url.port || url.port === "443") &&
+      allowedHosts.has(url.hostname.toLowerCase())
+    );
+  } catch {
+    return false;
+  }
+}
+
+async function loadPdf(
+  pdf: {
+    url?: string;
+    bytes?: ArrayBuffer | Uint8Array;
+  },
+  allowedHosts: ReadonlySet<string> = ALLOWED_PDF_HOSTS,
+): Promise<LoadedPdf> {
   if (pdf.bytes) {
     const bytes =
       pdf.bytes instanceof Uint8Array ? pdf.bytes : new Uint8Array(pdf.bytes);
     return { bytes, blob: new Blob([bytes], { type: "application/pdf" }) };
   }
   if (!pdf.url) throw new Error("PDF input must include url or bytes");
-  const response = await fetch(pdf.url);
+  if (!isAllowedPdfUrl(pdf.url, allowedHosts)) {
+    throw new Error("PDF host is not allowlisted");
+  }
+  const response = await fetch(pdf.url, { redirect: "manual" });
+  if (response.status >= 300 && response.status < 400) {
+    throw new Error("PDF redirects are not allowed");
+  }
   if (!response.ok) throw new Error(`Failed to fetch PDF: ${response.status}`);
   const bytes = new Uint8Array(await response.arrayBuffer());
   return { bytes, blob: new Blob([bytes], { type: "application/pdf" }) };
@@ -869,13 +922,15 @@ export async function generateJSON<T = unknown>(
     });
   }
   const pdf = options.pdf
-    ? await loadPdf(options.pdf).catch((error) => {
-        throw new LLMProviderError(
-          "gemini",
-          "pdf",
-          classifyProviderError(error),
-        );
-      })
+    ? await loadPdf(options.pdf, allowedPdfHosts(options.env)).catch(
+        (error) => {
+          throw new LLMProviderError(
+            "gemini",
+            "pdf",
+            classifyProviderError(error),
+          );
+        },
+      )
     : undefined;
   let lastError: LLMProviderError | undefined;
 
@@ -1014,6 +1069,11 @@ interface ToolCall {
   error?: string;
 }
 
+interface ToolCallBudget {
+  used: number;
+  exceeded: boolean;
+}
+
 interface HistoryMessage {
   role: "user" | "assistant" | "tool";
   content: string;
@@ -1068,9 +1128,20 @@ async function* executeToolCalls(
   c: Context,
   calls: ToolCall[],
   userContext: UserContext,
+  budget: ToolCallBudget,
 ): AsyncGenerator<ProviderEvent> {
   for (const call of calls) {
     yield { type: "tool_call", data: { name: call.name, args: call.args } };
+    if (budget.used >= MAX_TOOL_CALLS_PER_REQUEST) {
+      budget.exceeded = true;
+      call.error = TOOL_CALL_BUDGET_ERROR;
+      yield {
+        type: "tool_result",
+        data: { name: call.name, error: call.error },
+      };
+      continue;
+    }
+    budget.used += 1;
     try {
       call.result = await executeTool(c, call.name, call.args, userContext);
       yield {
@@ -1091,6 +1162,7 @@ async function* executeToolCalls(
 async function historyToGemini(
   history: HistoryMessage[],
   pdfCache: Map<string, LoadedPdf>,
+  allowedHosts: ReadonlySet<string>,
 ): Promise<Array<{ role: string; parts: Array<Record<string, unknown>> }>> {
   const output: Array<{ role: string; parts: Array<Record<string, unknown>> }> =
     [];
@@ -1134,7 +1206,7 @@ async function historyToGemini(
         const pdfUrl = (response as unknown as { pdfUrl: string }).pdfUrl;
         let pdf = pdfCache.get(pdfUrl);
         if (!pdf) {
-          pdf = await loadPdf({ url: pdfUrl });
+          pdf = await loadPdf({ url: pdfUrl }, allowedHosts);
           pdfCache.set(pdfUrl, pdf);
         }
         parts.push({
@@ -1156,12 +1228,17 @@ async function* runGeminiTurn(
   history: HistoryMessage[],
   userContext: UserContext,
   pdfCache: Map<string, LoadedPdf>,
+  budget: ToolCallBudget,
 ): AsyncGenerator<ProviderEvent, ProviderTurnResult> {
   if (!attempt.apiKey) throw new Error("Gemini API key is not configured");
   const ai = new GoogleGenAI({ apiKey: attempt.apiKey });
   const response = await ai.models.generateContentStream({
     model: attempt.model,
-    contents: await historyToGemini(history, pdfCache),
+    contents: await historyToGemini(
+      history,
+      pdfCache,
+      allowedPdfHosts(c.env as unknown as LlmEnv),
+    ),
     config: {
       systemInstruction: buildSystemPrompt(userContext),
       tools: [{ functionDeclarations: TOOL_DECLARATIONS }],
@@ -1191,7 +1268,7 @@ async function* runGeminiTurn(
     }
   }
   const toolCalls = [...calls.values()];
-  for await (const event of executeToolCalls(c, toolCalls, userContext))
+  for await (const event of executeToolCalls(c, toolCalls, userContext, budget))
     yield event;
   return { text, toolCalls };
 }
@@ -1282,6 +1359,7 @@ async function* runOpenAICompatibleTurn(
   attempt: ProviderAttempt,
   history: HistoryMessage[],
   userContext: UserContext,
+  budget: ToolCallBudget,
 ): AsyncGenerator<ProviderEvent, ProviderTurnResult> {
   const provider = getOpenAIProvider(attempt.provider);
   if (!provider)
@@ -1359,7 +1437,7 @@ async function* runOpenAICompatibleTurn(
       args: asToolArgs(call.arguments),
     });
   }
-  for await (const event of executeToolCalls(c, calls, userContext))
+  for await (const event of executeToolCalls(c, calls, userContext, budget))
     yield event;
   return { text, toolCalls: calls };
 }
@@ -1369,6 +1447,7 @@ async function* runWorkersAiTurn(
   attempt: ProviderAttempt,
   history: HistoryMessage[],
   userContext: UserContext,
+  budget: ToolCallBudget,
 ): AsyncGenerator<ProviderEvent, ProviderTurnResult> {
   const ai = (c.env as unknown as LlmEnv).AI as WorkerAI | undefined;
   if (!ai) throw new Error("Workers AI is not configured");
@@ -1406,7 +1485,7 @@ async function* runWorkersAiTurn(
     name: call.name,
     args: asToolArgs(call.args),
   }));
-  for await (const event of executeToolCalls(c, calls, userContext))
+  for await (const event of executeToolCalls(c, calls, userContext, budget))
     yield event;
   return { text, toolCalls: calls };
 }
@@ -1417,15 +1496,29 @@ async function* runProviderTurn(
   history: HistoryMessage[],
   userContext: UserContext,
   pdfCache: Map<string, LoadedPdf>,
+  budget: ToolCallBudget,
 ): AsyncGenerator<ProviderEvent, ProviderTurnResult> {
   try {
     if (attempt.provider === "gemini") {
-      return yield* runGeminiTurn(c, attempt, history, userContext, pdfCache);
+      return yield* runGeminiTurn(
+        c,
+        attempt,
+        history,
+        userContext,
+        pdfCache,
+        budget,
+      );
     }
     if (attempt.provider !== "workers-ai") {
-      return yield* runOpenAICompatibleTurn(c, attempt, history, userContext);
+      return yield* runOpenAICompatibleTurn(
+        c,
+        attempt,
+        history,
+        userContext,
+        budget,
+      );
     }
-    return yield* runWorkersAiTurn(c, attempt, history, userContext);
+    return yield* runWorkersAiTurn(c, attempt, history, userContext, budget);
   } catch (error) {
     throw new LLMProviderError(
       attempt.provider,
@@ -1448,11 +1541,13 @@ export async function* streamChatWithTools(
   options: StreamChatOptions,
 ): AsyncGenerator<ChatStreamEvent> {
   const attempts = providerAttempts(options.env, "chat", options.userGeminiKey);
+  const safeUserContext = sanitizeUserContext(userContext);
   const history: HistoryMessage[] = messages.map((message) => ({
     role: message.role,
     content: message.content,
   }));
   const pdfCache = new Map<string, LoadedPdf>();
+  const toolBudget: ToolCallBudget = { used: 0, exceeded: false };
   if (attempts.length === 0) {
     yield {
       type: "error",
@@ -1477,8 +1572,9 @@ export async function* streamChatWithTools(
           c,
           attempt,
           history,
-          userContext,
+          safeUserContext,
           pdfCache,
+          toolBudget,
         );
         while (true) {
           const step = await generator.next();
@@ -1531,6 +1627,15 @@ export async function* streamChatWithTools(
       }
 
       if (completed) {
+        if (toolBudget.exceeded) {
+          yield {
+            type: "error",
+            data: TOOL_CALL_BUDGET_ERROR,
+            code: "bad_request",
+          };
+          yield { type: "done" };
+          return;
+        }
         if (!result.toolCalls.length) {
           yield { type: "done" };
           return;

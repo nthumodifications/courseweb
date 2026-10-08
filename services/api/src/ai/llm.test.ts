@@ -4,11 +4,17 @@ import {
   classifyProviderError,
   convertToolDeclarations,
   generateJSON,
+  isAllowedPdfUrl,
+  allowedPdfHosts,
+  MAX_TOOL_CALLS_PER_REQUEST,
   normalizeWorkersAiOutput,
   pdfMarkdownBody,
   readableProviderMessage,
+  streamChatWithTools,
+  TOOL_CALL_BUDGET_ERROR,
   validateAgainstSchema,
 } from "./llm";
+import type { Context } from "hono";
 
 const originalFetch = globalThis.fetch;
 
@@ -17,16 +23,52 @@ afterEach(() => {
 });
 
 describe("LLM provider helpers", () => {
+  it("allows only HTTPS PDF hosts on the explicit allowlist", () => {
+    expect(isAllowedPdfUrl("https://registra.site.nthu.edu.tw/r.pdf")).toBe(
+      true,
+    );
+    expect(isAllowedPdfUrl("http://registra.site.nthu.edu.tw/r.pdf")).toBe(
+      false,
+    );
+    expect(isAllowedPdfUrl("https://attacker.example/r.pdf")).toBe(false);
+    expect(
+      isAllowedPdfUrl(
+        "https://project.supabase.co/r.pdf",
+        allowedPdfHosts({ SUPABASE_URL: "https://project.supabase.co" }),
+      ),
+    ).toBe(true);
+  });
+
+  it("rejects an unallowlisted PDF before making a fetch", async () => {
+    let fetchCalls = 0;
+    globalThis.fetch = mock(async () => {
+      fetchCalls += 1;
+      return new Response(new Uint8Array([37, 80, 68, 70]));
+    }) as unknown as typeof fetch;
+
+    await expect(
+      generateJSON({
+        env: { GROQ_API_KEY: "test-key", GROQ_CHAT_MODELS: "test-model" },
+        purpose: "summary",
+        system: "Return JSON.",
+        text: "test",
+        pdf: { url: "https://attacker.example/document.pdf" },
+        schema: { type: "object" },
+      }),
+    ).rejects.toThrow("PDF host is not allowlisted");
+    expect(fetchCalls).toBe(0);
+  });
+
   it("classifies quota, auth, unavailable, and malformed request errors", () => {
     expect(classifyProviderError({ status: 402 }).code).toBe("quota");
     expect(classifyProviderError({ status: 401 }).code).toBe("auth");
     expect(classifyProviderError({ status: 404 }).code).toBe("unavailable");
-    expect(classifyProviderError({ status: 400, message: "API_KEY_INVALID" }).code).toBe(
-      "auth",
-    );
-    expect(classifyProviderError({ status: 400, message: "invalid schema" }).code).toBe(
-      "bad_request",
-    );
+    expect(
+      classifyProviderError({ status: 400, message: "API_KEY_INVALID" }).code,
+    ).toBe("auth");
+    expect(
+      classifyProviderError({ status: 400, message: "invalid schema" }).code,
+    ).toBe("bad_request");
   });
 
   it("converts the Gemini tool declarations to lowercase JSON Schema", () => {
@@ -35,12 +77,16 @@ describe("LLM provider helpers", () => {
     expect(tool.function.parameters.type).toBe("object");
     expect(tool.function.parameters.properties).toBeDefined();
     expect(
-      (tool.function.parameters.properties as Record<string, { type?: string }>).query.type,
+      (tool.function.parameters.properties as Record<string, { type?: string }>)
+        .query.type,
     ).toBe("string");
   });
 
   it("accumulates fragmented Groq tool-call arguments", () => {
-    const calls = new Map<number, { id: string; name: string; arguments: string }>();
+    const calls = new Map<
+      number,
+      { id: string; name: string; arguments: string }
+    >();
     accumulateGroqToolCallDelta(calls, {
       index: 0,
       id: "call-1",
@@ -65,10 +111,7 @@ describe("LLM provider helpers", () => {
         choices: [
           {
             message: {
-              content:
-                call === 1
-                  ? "not json"
-                  : JSON.stringify({ ok: true }),
+              content: call === 1 ? "not json" : JSON.stringify({ ok: true }),
             },
           },
         ],
@@ -130,7 +173,11 @@ describe("LLM provider helpers", () => {
       purpose: "summary",
       system: "Return JSON.",
       text: "test",
-      schema: { type: "object", properties: { ok: { type: "boolean" } }, required: ["ok"] },
+      schema: {
+        type: "object",
+        properties: { ok: { type: "boolean" } },
+        required: ["ok"],
+      },
     });
 
     expect(result).toMatchObject({ provider: "groq", model: "groq-order" });
@@ -157,7 +204,11 @@ describe("LLM provider helpers", () => {
       purpose: "summary",
       system: "Return JSON.",
       text: "test",
-      schema: { type: "object", properties: { ok: { type: "boolean" } }, required: ["ok"] },
+      schema: {
+        type: "object",
+        properties: { ok: { type: "boolean" } },
+        required: ["ok"],
+      },
     });
 
     const headers = new Headers(request?.headers);
@@ -234,7 +285,11 @@ describe("LLM provider helpers", () => {
         purpose: "summary",
         system: "Return JSON.",
         text: "test",
-        schema: { type: "object", properties: { ok: { type: "boolean" } }, required: ["ok"] },
+        schema: {
+          type: "object",
+          properties: { ok: { type: "boolean" } },
+          required: ["ok"],
+        },
       });
 
       expect(result.provider).toBe(testCase.fallback);
@@ -299,6 +354,152 @@ describe("normalizeWorkersAiOutput", () => {
       { id: "call_0", name: "search_courses", args: { query: "ml" } },
     ]);
   });
+
+  it("returns invalid tool arguments to the model instead of throwing a request error", async () => {
+    let calls = 0;
+    const env = {
+      AI_PROVIDER_ORDER: "workers-ai",
+      AI: {
+        run: async () => {
+          calls += 1;
+          return calls === 1
+            ? {
+                choices: [
+                  {
+                    message: {
+                      content: null,
+                      tool_calls: [
+                        {
+                          id: "bad-args",
+                          function: {
+                            name: "get_bus_departures",
+                            arguments: JSON.stringify({
+                              direction: "sideways",
+                            }),
+                          },
+                        },
+                      ],
+                    },
+                  },
+                ],
+              }
+            : {
+                choices: [
+                  { message: { content: "The request was rejected." } },
+                ],
+              };
+        },
+      },
+    };
+
+    const events = [];
+    for await (const event of streamChatWithTools(
+      { env } as unknown as Context,
+      [{ role: "user", content: "check the bus" }],
+      {},
+      { env },
+    )) {
+      events.push(event);
+    }
+
+    expect(events).toContainEqual({
+      type: "tool_result",
+      data: {
+        name: "get_bus_departures",
+        error: expect.stringContaining(
+          "Invalid arguments for get_bus_departures",
+        ),
+      },
+    });
+    expect(events.at(-1)).toEqual({ type: "done" });
+  });
+
+  it("does not send unknown or unused context fields to the model", async () => {
+    let modelInput: Record<string, unknown> | undefined;
+    const env = {
+      AI_PROVIDER_ORDER: "workers-ai",
+      AI: {
+        run: async (_model: string, input: Record<string, unknown>) => {
+          modelInput = input;
+          return { choices: [{ message: { content: "done" } }] };
+        },
+      },
+    };
+
+    for await (const _event of streamChatWithTools(
+      { env } as unknown as Context,
+      [{ role: "user", content: "help me plan" }],
+      {
+        department: "資訊工程學系",
+        entranceYear: "113",
+        currentSemester: "11510",
+        currentYear: 2026,
+        language: "zh",
+        token: "secret-token",
+        email: "student@example.com",
+        studentId: "S123456",
+        selectedCourses: [
+          {
+            raw_id: "11510CS 535100",
+            name_zh: "人工智慧",
+            times: ["M3M4"],
+            credits: 3,
+          },
+        ],
+      } as never,
+      { env },
+    )) {
+      // Consume the stream so the provider request is made.
+    }
+
+    const serialized = JSON.stringify(modelInput);
+    expect(serialized).toContain("資訊工程學系");
+    expect(serialized).not.toContain("secret-token");
+    expect(serialized).not.toContain("student@example.com");
+    expect(serialized).not.toContain("S123456");
+    expect(serialized).not.toContain('"credits"');
+  });
+
+  it("stops after the total tool-call budget across turns", async () => {
+    const env = {
+      AI_PROVIDER_ORDER: "workers-ai",
+      AI: {
+        run: async () => ({
+          choices: [
+            {
+              message: {
+                content: null,
+                tool_calls: Array.from({ length: 4 }, (_, index) => ({
+                  id: `unknown-${index}`,
+                  function: { name: "unknown_tool", arguments: "{}" },
+                })),
+              },
+            },
+          ],
+        }),
+      },
+    };
+
+    const events = [];
+    for await (const event of streamChatWithTools(
+      { env } as unknown as Context,
+      [{ role: "user", content: "keep trying" }],
+      {},
+      { env },
+    )) {
+      events.push(event);
+    }
+
+    expect(events.filter((event) => event.type === "tool_call")).toHaveLength(
+      32,
+    );
+    expect(events).toContainEqual({
+      type: "error",
+      data: TOOL_CALL_BUDGET_ERROR,
+      code: "bad_request",
+    });
+    expect(events.at(-1)).toEqual({ type: "done" });
+  });
 });
 
 describe("readableProviderMessage", () => {
@@ -308,7 +509,9 @@ describe("readableProviderMessage", () => {
         '{"error":{"code":400,"message":"API key not valid. Please pass a valid API key.","status":"INVALID_ARGUMENT"}}',
       ),
     ).toBe("API key not valid. Please pass a valid API key.");
-    expect(readableProviderMessage("groq 413: plain text")).toBe("groq 413: plain text");
+    expect(readableProviderMessage("groq 413: plain text")).toBe(
+      "groq 413: plain text",
+    );
   });
 });
 
@@ -322,7 +525,9 @@ describe("pdfMarkdownBody", () => {
 
   it("keeps real page text", () => {
     expect(
-      pdfMarkdownBody("# a.pdf\n## Metadata\n- x=y\n## Contents\n### Page 1\n課程目標 Learn things\n"),
+      pdfMarkdownBody(
+        "# a.pdf\n## Metadata\n- x=y\n## Contents\n### Page 1\n課程目標 Learn things\n",
+      ),
     ).toBe("課程目標 Learn things");
   });
 });

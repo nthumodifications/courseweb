@@ -1,19 +1,34 @@
 import { Hono } from "hono";
 import type { Bindings } from "../index";
+import { rateLimitMiddleware, userIdKeyGenerator } from "../utils/rate-limit";
 import summarize from "./summarize";
 import searchIntent from "./search-intent";
 import { testGeminiKey } from "./llm";
 
 const app = new Hono<{ Bindings: Bindings }>()
+  .use(
+    "/*",
+    rateLimitMiddleware({
+      limiter: "AI_RATE_LIMITER",
+      keyGenerator: userIdKeyGenerator,
+      errorMessage: "Too many AI requests. Please try again in a minute.",
+    }),
+  )
   .post("/test-key", async (c) => {
     let body: { apiKey?: unknown };
     try {
       body = await c.req.json<{ apiKey?: unknown }>();
     } catch {
-      return c.json({ ok: false, code: "auth", error: "Invalid JSON body" }, 200);
+      return c.json(
+        { ok: false, code: "auth", error: "Invalid JSON body" },
+        200,
+      );
     }
     if (typeof body.apiKey !== "string" || !body.apiKey.trim()) {
-      return c.json({ ok: false, code: "auth", error: "A Gemini API key is required" }, 200);
+      return c.json(
+        { ok: false, code: "auth", error: "A Gemini API key is required" },
+        200,
+      );
     }
     const result = await testGeminiKey(body.apiKey.trim());
     return c.json(result, 200);
