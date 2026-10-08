@@ -48,6 +48,10 @@ export type Bindings = {
   AI?: Ai;
   VENUE_RATE_LIMITER: RateLimit;
   AI_RATE_LIMITER?: RateLimit;
+  MCP_RATE_LIMITER?: RateLimit;
+  SEARCH_RATE_LIMITER?: RateLimit;
+  SHORTLINK_RATE_LIMITER?: RateLimit;
+  ISSUE_RATE_LIMITER?: RateLimit;
   TDX_CLIENT_ID?: string;
   TDX_CLIENT_SECRET?: string;
 };

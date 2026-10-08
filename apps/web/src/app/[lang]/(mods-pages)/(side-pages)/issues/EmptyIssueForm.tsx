@@ -2,11 +2,13 @@ import { Button, Input, Label, Textarea } from "@courseweb/ui";
 import client from "@/config/api";
 import { FormEvent, useState } from "react";
 import useDictionary from "@/dictionaries/useDictionary";
+import Turnstile from "react-turnstile";
 
 const EmptyIssueForm = () => {
   const dict = useDictionary();
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [token, setToken] = useState<string | null>(null);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -28,6 +30,7 @@ const EmptyIssueForm = () => {
           title,
           body: description,
           labels: [],
+          turnstileToken: token ?? undefined,
         },
       });
       setSubmitted(true);
@@ -51,8 +54,15 @@ const EmptyIssueForm = () => {
         <Label htmlFor="description">{dict.issues.form.description}</Label>
         <Textarea id="description" name="description" />
       </div>
+      <Turnstile
+        sitekey={import.meta.env.VITE_TURNSTILE_SITE_KEY!}
+        onVerify={(token) => setToken(token)}
+        size="flexible"
+      />
       <div className="flex flex-row gap-2 justify-end">
-        <Button type="submit">{dict.issues.form.submit}</Button>
+        <Button type="submit" disabled={!token}>
+          {dict.issues.form.submit}
+        </Button>
       </div>
     </form>
   );

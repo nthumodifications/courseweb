@@ -73,6 +73,14 @@ export const SEARCH_PROJECTION_FIELDS = [
   ...DERIVED_SEARCH_FIELDS,
 ] as const;
 
+/** Algolia fields that the public search endpoint may return. */
+export const SEARCH_ATTRIBUTE_ALLOWLIST = [
+  ...SEARCH_PROJECTION_FIELDS,
+  // These fields are present in the Algolia index from course_syllabus.
+  "brief",
+  "keywords",
+] as const;
+
 /** Raw course columns emitted in the search chunk. */
 export const SEARCH_SOURCE_COLUMNS = SEARCH_PROJECTION_FIELDS.filter(
   (field) => !DERIVED_SEARCH_FIELDS.includes(field as never),

@@ -49,5 +49,37 @@ namespace_id = "1002"
   limit = 10
   period = 60
 
+[[ratelimits]]
+name = "MCP_RATE_LIMITER"
+namespace_id = "1003"
+
+  [ratelimits.simple]
+  limit = 300
+  period = 60
+
+[[ratelimits]]
+name = "SEARCH_RATE_LIMITER"
+namespace_id = "1004"
+
+  [ratelimits.simple]
+  limit = 120
+  period = 60
+
+[[ratelimits]]
+name = "SHORTLINK_RATE_LIMITER"
+namespace_id = "1005"
+
+  [ratelimits.simple]
+  limit = 20
+  period = 60
+
+[[ratelimits]]
+name = "ISSUE_RATE_LIMITER"
+namespace_id = "1006"
+
+  [ratelimits.simple]
+  limit = 5
+  period = 60
+
 [triggers]
 crons = ["0 2 * * 1", "*/10 * * * *"] # PEO opening times Monday; usage collector every 10 minutes
