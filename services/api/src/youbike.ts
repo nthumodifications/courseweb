@@ -47,7 +47,7 @@ const YOUBIKE_CACHE_CONTROL =
 const SYNTHETIC_CACHE_KEY = "https://youbike.internal/v1/campus-stations";
 
 const app = new Hono().get("/", async (c) => {
-  const cacheKey = new Request(SYNTHETIC_CACHE_KEY, c.req.raw);
+  const cacheKey = new Request(SYNTHETIC_CACHE_KEY);
   let cache: Cache | undefined;
   try {
     cache = typeof caches !== "undefined" ? caches.default : undefined;
