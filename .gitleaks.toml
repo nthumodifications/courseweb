@@ -1,0 +1,28 @@
+title = "Courseweb secret scanning"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Tracked example environment files contain placeholders only"
+paths = [
+  '''(^|/)\.env\.example$'''
+]
+
+[[allowlists]]
+description = "Public-by-design client identifiers and configuration names"
+regexTarget = "line"
+regexes = [
+  '''^\s*(export\s+)?(NEXT_PUBLIC_SUPABASE_ANON_KEY|VITE_SUPABASE_ANON_KEY|NEXT_PUBLIC_ALGOLIA_APP_ID|NEXT_PUBLIC_ALGOLIA_SEARCH_KEY|VITE_ALGOLIA_APP_ID|VITE_ALGOLIA_SEARCH_KEY|VITE_ALGOLIA_BACKUP_APP_ID|VITE_ALGOLIA_BACKUP_SEARCH_KEY|NEXT_PUBLIC_TURNSTILE_SITE_KEY|VITE_TURNSTILE_SITE_KEY|NTHU_OAUTH_CLIENT_ID|GITHUB_CLIENT_ID|NEXT_PUBLIC_AUTH_CLIENT_ID|VITE_AUTH_CLIENT_ID|CLOUDFLARE_KV_SHORTLINKS_NAMESPACE|CLOUDFLARE_WORKER_ACCOUNT_ID)\s*='''
+]
+
+[[allowlists]]
+description = "Public Cloudflare identifiers in the API Wrangler manifest"
+condition = "AND"
+regexTarget = "line"
+paths = [
+  '''(^|/)services/api/wrangler\.toml$'''
+]
+regexes = [
+  '''^\s*(account_id|namespace_id)\s*='''
+]
