@@ -15,6 +15,8 @@ import {
   SelectValue,
 } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
+import PrerequisiteBlock from "@/components/CourseDetails/PrerequisiteBlock";
+import { usePrerequisiteGraphData } from "@/components/CourseDetails/usePrerequisiteGraphData";
 import { ModuleTermAvailability } from "@/components/Courses/ModuleTermAvailability";
 import {
   ModuleBrief,
@@ -350,6 +352,23 @@ const ModulePage = () => {
     staleTime: MODULE_STALE_TIME,
     gcTime: MODULE_STALE_TIME * 7,
   });
+  const selectedVariant = module
+    ? getModuleVariant(module, requestedTitle)
+    : undefined;
+  const prerequisiteOfferings = selectedVariant?.offerings.filter((offering) =>
+    offering.prerequisites?.trim(),
+  );
+  const prerequisiteOffering = prerequisiteOfferings?.at(-1);
+  const prerequisiteTexts = prerequisiteOfferings?.map(
+    (offering) => offering.prerequisites?.trim(),
+  );
+  const prerequisitesDiffer =
+    prerequisiteTexts && new Set(prerequisiteTexts).size > 1;
+  const {
+    parsedPrerequisite,
+    prerequisiteRows,
+    prerequisiteGraph,
+  } = usePrerequisiteGraphData(prerequisiteOffering);
 
   const genericTitle = `${dict.course.module.title} | NTHUMods`;
   const pageShellClass = "flex min-w-0 flex-col gap-4 px-4 md:px-6";
@@ -412,7 +431,6 @@ const ModulePage = () => {
     );
   }
 
-  const selectedVariant = getModuleVariant(module, requestedTitle);
   if (!selectedVariant) {
     return (
       <>
@@ -499,6 +517,35 @@ const ModulePage = () => {
                 />
               </aside>
               <div className="flex min-w-0 flex-col gap-6">
+                {prerequisiteOffering &&
+                  parsedPrerequisite &&
+                  prerequisiteGraph &&
+                  (prerequisiteGraph.requirements.length > 0 ||
+                    prerequisiteGraph.unlocks.length > 0) && (
+                    <section
+                      aria-labelledby="module-prerequisites"
+                      className="flex flex-col gap-2"
+                    >
+                      <h2 id="module-prerequisites" className="font-bold">
+                        {dict.course.details.prerequesites}
+                      </h2>
+                      <PrerequisiteBlock
+                        parsed={parsedPrerequisite}
+                        course={prerequisiteOffering}
+                        rows={prerequisiteRows}
+                        lang={lang}
+                        dict={dict}
+                      />
+                      {prerequisitesDiffer && (
+                        <p className="text-sm text-muted-foreground">
+                          {dict.course.details.prerequisite_based_on_offering.replace(
+                            "{semester}",
+                            toPrettySemester(prerequisiteOffering.semester),
+                          )}
+                        </p>
+                      )}
+                    </section>
+                  )}
                 <ModuleBrief variant={selectedVariant} />
                 <ModuleDemand variant={selectedVariant} />
                 <OfferingList

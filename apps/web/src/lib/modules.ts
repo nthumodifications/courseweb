@@ -16,7 +16,8 @@ type ModuleOfferingRow = Pick<
   | "class"
   | "name_zh"
   | "name_en"
-  | "credits"
+  | "prerequisites"
+   | "credits"
   | "language"
   | "teacher_zh"
   | "teacher_en"
@@ -27,7 +28,7 @@ type ModuleOfferingRow = Pick<
 >;
 
 const MODULE_OFFERING_SELECT =
-  "raw_id, semester, department, course, class, name_zh, name_en, credits, language, teacher_zh, teacher_en, times, venues, capacity, enrolled";
+  "raw_id, semester, department, course, class, name_zh, name_en, prerequisites, credits, language, teacher_zh, teacher_en, times, venues, capacity, enrolled";
 
 type SemesterTerm = "fall" | "spring" | "summer";
 
