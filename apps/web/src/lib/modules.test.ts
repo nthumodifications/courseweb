@@ -29,6 +29,7 @@ const courseRow = (
   class: classCode,
   name_zh: title,
   name_en: "Data Structures",
+  prerequisites: null,
   credits,
   language: "英",
   teacher_zh: ["教師"],

@@ -79,4 +79,100 @@ describe("PrerequisiteBlock server rendering", () => {
       });
     }
   });
+
+  test("links requirement and unlock chips to module pages", () => {
+    const parsed = parsePrerequisites(
+      "先修科目 : 曾修資料結構上述條件一定要有，則不擋修。",
+    );
+    const markup = renderToStaticMarkup(
+      <StaticRouter location="/zh/courses/example">
+        <PrerequisiteBlock
+          parsed={parsed}
+          course={{ ...course, department: "CS" }}
+          rows={[
+            {
+              raw_id: "11510CS  210001",
+              semester: "11510",
+              department: "CS",
+              course: "210001",
+              name_zh: "資料結構",
+              name_en: "Data Structures",
+              prerequisites: null,
+            },
+            {
+              raw_id: "11510EE  300001",
+              semester: "11510",
+              department: "EE",
+              course: "300001",
+              name_zh: "訊號處理",
+              name_en: "Signal Processing",
+              prerequisites:
+                "先修科目 : 曾修範例課程上述條件一定要有，則不擋修。",
+            },
+          ]}
+          lang="zh"
+          dict={zh}
+        />
+      </StaticRouter>,
+    );
+
+    expect(markup).toContain('href="/zh/courses/module/CS%3A210001"');
+    expect(markup).toContain('href="/zh/courses/module/EE%3A300001"');
+  });
+
+  test("labels same-name unlocks outside the anchor department", () => {
+    const anchor = {
+      ...course,
+      department: "AA",
+      course: "100000",
+      name_zh: "錨點課程",
+    };
+    const parsed = parsePrerequisites("");
+    const markup = renderToStaticMarkup(
+      <StaticRouter location="/zh/courses/example">
+        <PrerequisiteBlock
+          parsed={parsed}
+          course={anchor}
+          rows={[
+            {
+              raw_id: "11510AA  100000",
+              semester: "11510",
+              department: "AA",
+              course: "100000",
+              name_zh: "錨點課程",
+              name_en: "Anchor course",
+              prerequisites: null,
+            },
+            {
+              raw_id: "11510AA  200000",
+              semester: "11510",
+              department: "AA",
+              course: "200000",
+              name_zh: "同名解鎖",
+              name_en: "Same-name unlock",
+              prerequisites:
+                "先修科目 : 曾修錨點課程上述條件一定要有，則不擋修。",
+            },
+            {
+              raw_id: "11510BB  200000",
+              semester: "11510",
+              department: "BB",
+              course: "200000",
+              name_zh: "同名解鎖",
+              name_en: "Same-name unlock",
+              prerequisites:
+                "先修科目 : 曾修錨點課程上述條件一定要有，則不擋修。",
+            },
+          ]}
+          lang="zh"
+          dict={zh}
+        />
+      </StaticRouter>,
+    );
+
+    expect(markup).toContain('href="/zh/courses/module/AA%3A200000"');
+    expect(markup).toContain('href="/zh/courses/module/BB%3A200000"');
+    expect(markup).toContain('class="opacity-60">BB </span>');
+    expect(markup).not.toContain('class="opacity-60">AA </span>');
+  });
 });

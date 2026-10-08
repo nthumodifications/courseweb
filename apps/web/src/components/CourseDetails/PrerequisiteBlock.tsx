@@ -26,7 +26,7 @@ const PrerequisiteBlock = ({
       : parsed.audience;
 
   return (
-    <div className="flex flex-col gap-2 text-sm">
+    <div className="flex flex-col gap-3 text-sm">
       {audience && (
         <p className="text-muted-foreground">
           {labels.prerequisite_applies_to}

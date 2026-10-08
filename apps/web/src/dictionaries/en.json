@@ -226,6 +226,7 @@
       "description": "Description",
       "restrictions": "Restrictions",
       "prerequesites": "Prerequisites",
+      "prerequisite_based_on_offering": "Based on the {semester} offering",
       "timetable": "Timetable",
       "course_list": "Course List",
       "no_venues": "No Venues",

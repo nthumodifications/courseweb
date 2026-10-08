@@ -17,6 +17,7 @@ import {
   type PrerequisiteGraphRow,
 } from "@courseweb/shared";
 import type useDictionary from "@/dictionaries/useDictionary";
+import { createModuleKey } from "@/lib/modules";
 
 type DetailsDictionary = ReturnType<typeof useDictionary>["course"]["details"];
 
@@ -56,7 +57,7 @@ const nodeText = (
 
 const nodeClass = (node: PrerequisiteGraphNode, anchor = false) =>
   [
-    "flex w-fit min-w-0 max-w-full flex-row items-center gap-2 rounded-md px-2 py-2 text-sm select-none",
+    "flex w-fit min-w-0 max-w-full flex-row items-center gap-2 rounded-md px-2 py-0.5 text-sm leading-5 select-none",
     anchor
       ? "bg-nthu-500 font-medium text-white"
       : node.mustNotHaveTaken
@@ -130,12 +131,6 @@ const getEdgePath = (
   const control = Math.max(24, Math.abs(endY - startY) / 2);
   return `M ${startX} ${startY} C ${startX} ${startY + control}, ${endX} ${endY - control}, ${endX} ${endY}`;
 };
-
-const getDepartmentCode = (rawId?: string) =>
-  rawId
-    ?.slice(5)
-    .replace(/\s*\d{6}(?:-\d+)?$/, "")
-    .trim();
 
 const PrerequisiteGraph = ({
   course,
@@ -268,13 +263,19 @@ const PrerequisiteGraph = ({
   ) => {
     const className = nodeClass(node, anchor);
     const content = nodeText(node, labels, department);
-    if (node.courseRawId && !anchor) {
+    const href =
+      node.moduleDepartment && node.moduleCourse
+        ? `/${lang}/courses/module/${encodeURIComponent(createModuleKey(node.moduleDepartment, node.moduleCourse))}`
+        : node.courseSearchQuery
+          ? `/${lang}/courses/modules?q=${encodeURIComponent(node.courseSearchQuery)}`
+          : undefined;
+    if (href && !anchor) {
       return (
         <Link
           key={key}
           ref={registerNode(key)}
-          to={`/${lang}/courses/${node.courseRawId}`}
-          className={`${className} hover:bg-nthu-100 dark:hover:bg-nthu-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2`}
+          to={href}
+          className={`${className} cursor-pointer hover:bg-nthu-100 dark:hover:bg-nthu-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2`}
         >
           {content}
         </Link>
@@ -303,7 +304,7 @@ const PrerequisiteGraph = ({
       <div
         key={groupKey}
         ref={registerNode(groupKey)}
-        className={`relative w-fit max-w-full rounded-lg border border-border p-2 ${mustNotHaveTaken ? "border-dashed" : ""}`}
+        className={`relative w-fit max-w-full rounded-lg border border-border px-2 pt-2.5 pb-1.5 ${mustNotHaveTaken ? "border-dashed" : ""}`}
       >
         <span className="pointer-events-none absolute -top-2 left-2 bg-background px-1 text-xs text-muted-foreground">
           {mustNotHaveTaken
@@ -312,7 +313,7 @@ const PrerequisiteGraph = ({
               ? labels.prerequisite_group_any
               : labels.prerequisite_group_all}
         </span>
-        <div className="flex min-w-0 max-w-full flex-wrap gap-2">
+        <div className="flex min-w-0 max-w-full flex-wrap gap-1.5">
           {group.items.map((node, itemIndex) =>
             renderNode(node, `${groupKey}-${itemIndex}`),
           )}
@@ -322,7 +323,7 @@ const PrerequisiteGraph = ({
   };
 
   const renderNarrowConnector = (key: string) => (
-    <div key={key} className="relative h-8 w-full" aria-hidden="true">
+    <div key={key} className="relative h-6 w-full" aria-hidden="true">
       <svg
         className="absolute top-1/2 h-5 w-[6px] -translate-x-1/2 -translate-y-1/2 text-border"
         style={{ left: narrowAnchorCenter ?? "50%" }}
@@ -386,7 +387,7 @@ const PrerequisiteGraph = ({
         }
       >
         <div className="min-w-0 max-w-full">
-          <div className="flex min-w-0 flex-col gap-2">
+          <div className="flex min-w-0 flex-col gap-3">
             {graph.requirements.map((group, index) => (
               <Fragment key={`requirement-${index}`}>
                 {index > 0 && !wide && (
@@ -416,19 +417,19 @@ const PrerequisiteGraph = ({
           <div className="min-w-0 max-w-full justify-self-start">
             <div
               ref={registerNode("unlock-group")}
-              className="relative w-fit max-w-full rounded-lg border border-border p-2"
+              className="relative w-fit max-w-full rounded-lg border border-border px-2 pt-2.5 pb-1.5"
             >
               <span className="pointer-events-none absolute -top-2 left-2 bg-background px-1 text-xs text-muted-foreground">
                 {labels.prerequisite_unlocks}
               </span>
-              <div className="flex min-w-0 max-w-full flex-wrap gap-2">
+              <div className="flex min-w-0 max-w-full flex-wrap gap-1.5">
                 {unlockNodes.map((node, index) => {
                   if (!node.courseRawId) {
                     return (
                       <button
                         key={overflowKey}
                         type="button"
-                        className="w-fit rounded-md bg-muted px-2 py-2 text-sm text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        className="w-fit rounded-md bg-muted px-2 py-0.5 text-sm leading-5 text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         aria-label={labels.prerequisite_show_more.replace(
                           "{count}",
                           String(remainingUnlocks),
@@ -440,8 +441,9 @@ const PrerequisiteGraph = ({
                     );
                   }
                   const department =
-                    unlockNameCounts.get(node.name)! > 1
-                      ? getDepartmentCode(node.courseRawId)
+                    unlockNameCounts.get(node.name)! > 1 &&
+                    node.moduleDepartment !== course.department
+                      ? node.moduleDepartment
                       : undefined;
                   return renderNode(node, `unlock-${index}`, false, department);
                 })}

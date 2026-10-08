@@ -9,6 +9,9 @@ import {
 export interface PrerequisiteGraphNode {
   name: string;
   courseRawId?: string;
+  moduleDepartment?: string;
+  moduleCourse?: string;
+  courseSearchQuery?: string;
   minimumGrade?: string;
   mustNotHaveTaken?: boolean;
 }
@@ -45,6 +48,34 @@ const isNewerSemester = (left: string, right: string) => {
   return left > right;
 };
 
+const moduleKey = (
+  row: Pick<PrerequisiteGraphCourse, "department" | "course">,
+) => `${row.department}\u0000${row.course}`;
+
+const isSameDepartment = (left: string, right: string) =>
+  left === right ||
+  (["CS", "EECS"].includes(left) && ["CS", "EECS"].includes(right));
+
+const NON_COURSE_PREREQUISITE_SUFFIX =
+  /\((?:(?:基本|基礎)科目免修測試|AP先修課程)\)$/u;
+
+const isNonCoursePrerequisiteName = (name: string) =>
+  NON_COURSE_PREREQUISITE_SUFFIX.test(name.normalize("NFKC"));
+
+const latestModuleRows = (rows: readonly PrerequisiteGraphRow[]) => {
+  const latestByModule = new Map<string, PrerequisiteGraphRow>();
+
+  for (const row of rows) {
+    const key = moduleKey(row);
+    const existing = latestByModule.get(key);
+    if (!existing || isNewerSemester(row.semester, existing.semester)) {
+      latestByModule.set(key, row);
+    }
+  }
+
+  return [...latestByModule.values()];
+};
+
 const getNodeItems = (
   nodes: readonly PrerequisiteNode[],
   mode: PrerequisiteGraphGroup["mode"],
@@ -70,6 +101,9 @@ const getNodeItems = (
       item.type === "course"
         ? {
             name: item.name,
+            ...(isNonCoursePrerequisiteName(item.name)
+              ? {}
+              : { courseSearchQuery: item.name }),
             ...(item.minimumGrade ? { minimumGrade: item.minimumGrade } : {}),
             ...(item.mustNotHaveTaken ? { mustNotHaveTaken: true } : {}),
           }
@@ -84,21 +118,40 @@ const findCourse = (
   name: string,
   course: PrerequisiteGraphCourse,
   rows: readonly PrerequisiteGraphRow[],
+  additionalCourses: readonly PrerequisiteGraphCourse[] = [],
 ) => {
+  const candidateRows = [
+    ...rows,
+    ...additionalCourses.map((additionalCourse) => ({
+      ...additionalCourse,
+      prerequisites: null,
+    })),
+  ];
+  const codeMatch = /\b([A-Za-z]{2,8})\s*[- ]?\s*(\d{3,6})\b/u.exec(name);
+  if (codeMatch) {
+    const departmentCode = codeMatch[1].toLocaleUpperCase();
+    const courseCode = codeMatch[2].replace(/^0+(?=\d)/, "");
+    const codeMatches = candidateRows.filter(
+      (row) =>
+        row.department.replace(/\s+/g, "").toLocaleUpperCase() ===
+          departmentCode &&
+        row.course.replace(/\s+/g, "").replace(/^0+(?=\d)/, "") === courseCode,
+    );
+    const modules = latestModuleRows(codeMatches);
+    if (modules.length === 1) return modules[0];
+  }
+
   const normalizedName = normalizePrerequisiteName(name);
-  return rows
-    .filter((row) => normalizePrerequisiteName(row.name_zh) === normalizedName)
-    .sort((left, right) => {
-      const leftDepartment = left.department === course.department ? 0 : 1;
-      const rightDepartment = right.department === course.department ? 0 : 1;
-      if (leftDepartment !== rightDepartment) {
-        return leftDepartment - rightDepartment;
-      }
-      if (left.semester !== right.semester) {
-        return isNewerSemester(left.semester, right.semester) ? -1 : 1;
-      }
-      return 0;
-    })[0];
+  const nameMatches = latestModuleRows(
+    candidateRows.filter(
+      (row) => normalizePrerequisiteName(row.name_zh) === normalizedName,
+    ),
+  );
+  const sameDepartmentMatches = nameMatches.filter((row) =>
+    isSameDepartment(row.department, course.department),
+  );
+  if (sameDepartmentMatches.length === 1) return sameDepartmentMatches[0];
+  return nameMatches.length === 1 ? nameMatches[0] : undefined;
 };
 
 const resolveRequirements = (
@@ -109,17 +162,34 @@ const resolveRequirements = (
   getNodeItems(parsed.nodes, "all").map((group) => ({
     ...group,
     items: group.items.map((item) => {
+      if (!item.courseSearchQuery) return item;
       const resolved = findCourse(item.name, course, rows);
-      return resolved ? { ...item, courseRawId: resolved.raw_id } : item;
+      if (!resolved) return item;
+      const { courseSearchQuery: _courseSearchQuery, ...resolvedItem } = item;
+      return {
+        ...resolvedItem,
+        courseRawId: resolved.raw_id,
+        moduleDepartment: resolved.department,
+        moduleCourse: resolved.course,
+      };
     }),
   }));
+
+const referencesCourse = (
+  name: string,
+  requiringCourse: PrerequisiteGraphCourse,
+  targetCourse: PrerequisiteGraphCourse,
+  rows: readonly PrerequisiteGraphRow[],
+) => {
+  const resolved = findCourse(name, requiringCourse, rows, [targetCourse]);
+  return Boolean(resolved && moduleKey(resolved) === moduleKey(targetCourse));
+};
 
 const resolveUnlocks = (
   course: PrerequisiteGraphCourse,
   rows: readonly PrerequisiteGraphRow[],
 ) => {
-  const normalizedCourseName = normalizePrerequisiteName(course.name_zh);
-  const latestByCourse = new Map<string, PrerequisiteGraphRow>();
+  const latestByModule = new Map<string, PrerequisiteGraphRow>();
 
   for (const row of rows) {
     if (row.department === course.department && row.course === course.course) {
@@ -127,31 +197,44 @@ const resolveUnlocks = (
     }
     if (!row.prerequisites?.trim()) continue;
 
-    const parsed = parsePrerequisites(row.prerequisites, rows);
+    const parsed = parsePrerequisites(row.prerequisites, rows, {
+      currentDepartment: row.department,
+    });
     if (
-      !getPrerequisiteItemNames(parsed).some(
-        (name) => normalizePrerequisiteName(name) === normalizedCourseName,
+      !getPrerequisiteItemNames(parsed).some((name) =>
+        referencesCourse(name, row, course, rows),
       )
     ) {
       continue;
     }
 
-    const key = `${row.department}\u0000${row.course}`;
-    const existing = latestByCourse.get(key);
+    const key = moduleKey(row);
+    const existing = latestByModule.get(key);
     if (!existing || isNewerSemester(row.semester, existing.semester)) {
-      latestByCourse.set(key, row);
+      latestByModule.set(key, row);
     }
   }
 
-  return [...latestByCourse.values()]
+  return [...latestByModule.values()]
     .sort((left, right) => {
+      const leftDepartmentOrder = left.department === course.department ? 0 : 1;
+      const rightDepartmentOrder =
+        right.department === course.department ? 0 : 1;
+      const departmentPriority = leftDepartmentOrder - rightDepartmentOrder;
+      if (departmentPriority) return departmentPriority;
+
       const departmentOrder = left.department.localeCompare(right.department);
       return (
         departmentOrder ||
         left.course.localeCompare(right.course, undefined, { numeric: true })
       );
     })
-    .map((row) => ({ name: row.name_zh, courseRawId: row.raw_id }));
+    .map((row) => ({
+      name: row.name_zh,
+      courseRawId: row.raw_id,
+      moduleDepartment: row.department,
+      moduleCourse: row.course,
+    }));
 };
 
 export const buildPrerequisiteGraph = (

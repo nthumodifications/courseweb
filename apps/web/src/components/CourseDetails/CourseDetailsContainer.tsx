@@ -6,10 +6,6 @@ import DownloadSyllabus from "./DownloadSyllabus";
 import SyllabusSummary from "./SyllabusSummary";
 import PrerequisiteBlock from "./PrerequisiteBlock";
 import {
-  parsePrerequisites,
-  type PrerequisiteGraphRow,
-} from "@courseweb/shared";
-import {
   Fade,
   Button,
   ErrorState,
@@ -39,7 +35,7 @@ import CourseTagList from "@/components/Courses/CourseTagsList";
 import { MinimalCourse } from "@/types/courses";
 import { getScoreType, getFormattedClassCode } from "@/helpers/courses";
 import { CourseDefinition } from "@/config/supabase";
-import { lazy, Suspense, useMemo } from "react";
+import { lazy, Suspense } from "react";
 import { Language } from "@/types/settings";
 import { sanitizeCourseHtml } from "@/lib/sanitizeHtml";
 import ShareCourseButton from "./ShareCourseButton";
@@ -54,6 +50,7 @@ import {
   getModuleHistory,
   getModuleHistoryVariant,
 } from "@/lib/modules";
+import { usePrerequisiteGraphData } from "./usePrerequisiteGraphData";
 
 const PDFViewerDynamic = lazy(
   () => import("@/components/CourseDetails/PDFViewer"),
@@ -61,11 +58,6 @@ const PDFViewerDynamic = lazy(
 const SelectCourseButtonDynamic = lazy(
   () => import("@/components/Courses/SelectCourseButton"),
 );
-
-const previousSemester = (semester: string) => {
-  const year = Number(semester.slice(0, 3));
-  return semester.slice(3, 4) === "1" ? `${year - 1}20` : `${year}10`;
-};
 
 const TOCNavItem = ({
   href,
@@ -138,48 +130,11 @@ const CourseDetailContainer = ({
     },
   });
 
-  // NTHU generates this text from a fixed grammar; show it as groups when it
-  // parses completely, otherwise exactly as before.
-  const parsedPrerequisite = useMemo(
-    () =>
-      course?.prerequisites?.trim()
-        ? parsePrerequisites(course.prerequisites)
-        : null,
-    [course?.prerequisites],
-  );
-  const hasStructuredPrerequisites =
-    parsedPrerequisite?.coverage === "full" &&
-    parsedPrerequisite.nodes.some((node) => node.type !== "unparsed");
-
   const {
-    data: fetchedPrerequisiteRows = [],
-    isLoading: prerequisiteRowsLoading,
-    error: prerequisiteRowsError,
-  } = useQuery<PrerequisiteGraphRow[]>({
-    queryKey: ["course-prerequisite-graph", course?.semester],
-    queryFn: async () => {
-      const { default: supabase } = await import("@/config/supabase");
-      const semesters = [course!.semester, previousSemester(course!.semester)];
-      const { data, error } = await supabase
-        .from("courses")
-        .select(
-          "raw_id, semester, department, course, name_zh, name_en, prerequisites",
-        )
-        .in("semester", semesters)
-        .not("prerequisites", "is", null)
-        .neq("prerequisites", "")
-        .limit(1000);
-      if (error) throw error;
-      return data ?? [];
-    },
-    enabled: !modal && Boolean(course && hasStructuredPrerequisites),
-    staleTime: 24 * 60 * 60 * 1000,
-    retry: false,
-  });
-  const prerequisiteRows =
-    prerequisiteRowsLoading || prerequisiteRowsError
-      ? []
-      : fetchedPrerequisiteRows;
+    parsedPrerequisite,
+    hasStructuredPrerequisites,
+    prerequisiteRows,
+  } = usePrerequisiteGraphData(course, !modal);
 
   // Use React Query for reviews
   const {
