@@ -16,7 +16,10 @@ import {
   type SearchProjectionRecord,
   type UnknownRecord,
 } from "./projection";
-import { cleanSyllabusFields } from "@/lib/syllabus-text";
+import {
+  cleanSyllabusFields,
+  normalizeSyllabusKeywords,
+} from "@/lib/syllabus-text";
 import {
   compileRefinements,
   parseFilterCondition,
@@ -342,12 +345,7 @@ const normalizeTextChunk = (payload: unknown): SearchTextChunk => {
     const text = value as UnknownRecord;
     const syllabus = cleanSyllabusFields({
       brief: text.brief == null ? null : String(text.brief),
-      keywords:
-        text.keywords == null
-          ? null
-          : Array.isArray(text.keywords)
-            ? text.keywords.filter((keyword) => keyword != null).map(String)
-            : String(text.keywords),
+      keywords: normalizeSyllabusKeywords(text.keywords),
     });
     normalizedTexts[rawId] = {
       brief: syllabus.brief,

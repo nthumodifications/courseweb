@@ -1,5 +1,8 @@
 import { timeMaskForRecord } from "./time-mask";
-import { cleanSyllabusFields } from "@/lib/syllabus-text";
+import {
+  cleanSyllabusFields,
+  normalizeSyllabusKeywords,
+} from "@/lib/syllabus-text";
 
 export const LOCAL_FACETS = [
   "courseLevel",
@@ -102,12 +105,7 @@ export const prepareSearchRecord = (
   const elective = asStringArray(input.elective_for);
   const syllabus = cleanSyllabusFields({
     brief: asNullableString(input.brief),
-    keywords:
-      input.keywords == null
-        ? null
-        : Array.isArray(input.keywords)
-          ? input.keywords.map(String)
-          : String(input.keywords),
+    keywords: normalizeSyllabusKeywords(input.keywords),
   });
 
   return {

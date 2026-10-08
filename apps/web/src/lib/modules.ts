@@ -604,7 +604,9 @@ export const getModuleBrief = async (rawId: string) => {
     .eq("raw_id", rawId)
     .maybeSingle();
   if (error) throw error;
-  return cleanSyllabusFields(data as { brief: string | null } | null).brief ?? "";
+  return (
+    cleanSyllabusFields(data as { brief: string | null } | null).brief ?? ""
+  );
 };
 
 const MODULE_HISTORY_SELECT =

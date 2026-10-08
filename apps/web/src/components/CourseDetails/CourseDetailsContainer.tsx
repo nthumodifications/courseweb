@@ -58,6 +58,46 @@ const SelectCourseButtonDynamic = lazy(
   () => import("@/components/Courses/SelectCourseButton"),
 );
 
+type CleanSyllabusDescription = ReturnType<
+  typeof cleanSyllabusFields
+>["content"];
+
+const renderSyllabusDescription = (
+  content: CleanSyllabusDescription,
+  hasFile: boolean,
+  courseId: string,
+): React.ReactNode => {
+  if (content.text) {
+    if (content.sections.length > 1) {
+      return content.sections.map((section, index) => (
+        <Fragment key={`${section.key}-${section.title}-${index}`}>
+          {index > 0 ? "\n" : null}
+          {section.title ? (
+            <>
+              <span className="font-bold">{section.title}</span>
+              {"\n"}
+            </>
+          ) : null}
+          {section.body}
+        </Fragment>
+      ));
+    }
+    return content.text;
+  }
+
+  if (!hasFile) return null;
+  return (
+    <div className="flex flex-col gap-2">
+      <DownloadSyllabus courseId={courseId} />
+      <Suspense fallback={null}>
+        <PDFViewerDynamic
+          file={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/syllabus/${encodeURIComponent(courseId)}.pdf`}
+        />
+      </Suspense>
+    </div>
+  );
+};
+
 const TOCNavItem = ({
   href,
   children,
@@ -453,37 +493,11 @@ const CourseDetailContainer = ({
                     {dict.course.details.description}
                   </h3>
                   <p className="whitespace-pre-line text-sm">
-                    {syllabus.content.text ? (
-                      syllabus.content.sections.length > 1 ? (
-                        syllabus.content.sections.map((section, index) => (
-                          <Fragment
-                            key={`${section.key}-${section.title}-${index}`}
-                          >
-                            {index > 0 ? "\n" : null}
-                            {section.title ? (
-                              <>
-                                <span className="font-bold">
-                                  {section.title}
-                                </span>
-                                {"\n"}
-                              </>
-                            ) : null}
-                            {section.body}
-                          </Fragment>
-                        ))
-                      ) : (
-                        syllabus.content.text
-                      )
-                    ) : course.course_syllabus!.has_file ? (
-                      <div className="flex flex-col gap-2">
-                        <DownloadSyllabus courseId={course.raw_id} />
-                        <Suspense fallback={null}>
-                          <PDFViewerDynamic
-                            file={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/syllabus/${encodeURIComponent(course.raw_id)}.pdf`}
-                          />
-                        </Suspense>
-                      </div>
-                    ) : null}
+                    {renderSyllabusDescription(
+                      syllabus.content,
+                      course.course_syllabus!.has_file,
+                      course.raw_id,
+                    )}
                   </p>
                 </div>
               )}

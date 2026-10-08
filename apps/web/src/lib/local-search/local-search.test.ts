@@ -27,6 +27,7 @@ import {
 } from "./client";
 import { fetchJsonWithIdleTimeout } from "./deadline";
 import type { WorkerRequest } from "./worker-protocol";
+import { normalizeSyllabusKeywords } from "../syllabus-text";
 
 const fixturePath = `${import.meta.dir}/__fixtures__/courses-11510.json`;
 const fixture = JSON.parse(
@@ -42,6 +43,13 @@ const makeManifest = (hash: string, rowCount = fixture.length) => [
     formatVersion: "1",
   },
 ];
+
+test("does not stringify object keyword values", () => {
+  expect(normalizeSyllabusKeywords({ keyword: "object" })).toBeNull();
+  expect(
+    normalizeSyllabusKeywords(["environment", { keyword: "object" }, 3]),
+  ).toEqual(["environment", "3"]);
+});
 
 type FetchState = {
   hash: string;

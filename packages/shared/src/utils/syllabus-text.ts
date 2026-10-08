@@ -73,8 +73,24 @@ const normalizeLineEndings = (value: string) => value.replace(/\r\n?/g, "\n");
 const stripControls = (value: string, keepTabs = false) =>
   value.replace(CONTROL_CHARACTERS, "").replace(keepTabs ? /$^/g : /\t/g, " ");
 
+const isWhitespace = (character: string | undefined) =>
+  character !== undefined && character.trim() === "";
+
+const skipWhitespace = (value: string, start: number) => {
+  let cursor = start;
+  while (cursor < value.length && isWhitespace(value[cursor])) cursor++;
+  return cursor;
+};
+
 const trimTrailingWhitespace = (value: string) =>
-  value.replace(/[ \t\u00a0\u3000]+$/gmu, "");
+  value
+    .split("\n")
+    .map((line) => {
+      let end = line.length;
+      while (end > 0 && isWhitespace(line[end - 1])) end--;
+      return line.slice(0, end);
+    })
+    .join("\n");
 
 const prepareText = (value: string, keepTabs = false, trimTrailing = true) => {
   const prepared = stripControls(
@@ -108,26 +124,174 @@ const isSentencePunctuation = (value: string) =>
   /[。．.!?！？:：;；]$/u.test(value.trimEnd());
 
 const isListMarker = (line: string) =>
-  /^\s*(?:\d+[.)]|[（(]\s*\d+\s*[）)]|[一二三四五六七八九十]+、|[●•*\-])(?:\s|$)/u.test(
+  /^\s*(?:\d+[.)]|[（(]\s*\d+\s*[）)]|[一二三四五六七八九十]+、|[●•*-])(?:\s|$)/u.test(
     line,
   );
 
-const isKnownHeading = (line: string) =>
-  /^(?:課程(?:簡介|說明|簡述|大綱|概述)|本課程之教學目標|指定用書|參考書籍|教學方式|教學進度|成績考核|可連結之網頁|課程相關網站|生成式?\s*AI|AI\s*使用|course\s+description|text\s*books?|references?|teaching\s+methods?|course\s+schedule|syllabus|evaluation|course[- ]related\s+website|AI\s+(?:usage|use|guideline|policy))/iu.test(
-    line
-      .replace(
-        /^\s*(?:#?\s*[一二三四五六七八九十]+、|[（(]\s*[一二三四五六七八九十]+\s*[）)]|\d+[.)]|[●•]|[A-H][.)])\s*/u,
-        "",
-      )
-      .trim(),
+const HEADING_NUMERALS = "一二三四五六七八九十";
+
+const isHeadingNumeral = (character: string | undefined) =>
+  character !== undefined && HEADING_NUMERALS.includes(character);
+
+const isAsciiDigit = (character: string | undefined) =>
+  character !== undefined && character >= "0" && character <= "9";
+
+const isAsciiUppercase = (character: string | undefined) =>
+  character !== undefined && character >= "A" && character <= "H";
+
+const consumeChineseNumeralMarker = (value: string, start: number) => {
+  let cursor = start;
+  while (isHeadingNumeral(value[cursor])) cursor++;
+  return cursor > start && value[cursor] === "、" ? cursor + 1 : undefined;
+};
+
+const consumeParenthesizedNumeralMarker = (value: string, start: number) => {
+  if (value[start] !== "(" && value[start] !== "（") return undefined;
+  let cursor = skipWhitespace(value, start + 1);
+  const numeralStart = cursor;
+  while (isHeadingNumeral(value[cursor])) cursor++;
+  if (cursor === numeralStart) return undefined;
+  cursor = skipWhitespace(value, cursor);
+  if (value[cursor] !== ")" && value[cursor] !== "）") return undefined;
+  return cursor + 1;
+};
+
+const consumeHeadingMarker = (
+  value: string,
+  start: number,
+  includeParenthesized = true,
+) => {
+  const chineseNumeralEnd = consumeChineseNumeralMarker(value, start);
+  if (chineseNumeralEnd !== undefined) return chineseNumeralEnd;
+
+  if (includeParenthesized) {
+    const parenthesizedNumeralEnd = consumeParenthesizedNumeralMarker(
+      value,
+      start,
+    );
+    if (parenthesizedNumeralEnd !== undefined) return parenthesizedNumeralEnd;
+  }
+
+  let cursor = start;
+  while (isAsciiDigit(value[cursor])) cursor++;
+  if (cursor > start && (value[cursor] === "." || value[cursor] === ")")) {
+    return cursor + 1;
+  }
+
+  if (value[start] === "●" || value[start] === "•") return start + 1;
+  if (
+    isAsciiUppercase(value[start]) &&
+    (value[start + 1] === "." || value[start + 1] === ")")
+  ) {
+    return start + 2;
+  }
+  return undefined;
+};
+
+const removeHeadingMarker = (line: string, includeParenthesized = true) => {
+  const trimmed = line.trim();
+  let markerStart = 0;
+  if (trimmed[markerStart] === "#") {
+    markerStart = skipWhitespace(trimmed, markerStart + 1);
+  }
+  const markerEnd = consumeHeadingMarker(
+    trimmed,
+    markerStart,
+    includeParenthesized,
   );
+  if (markerEnd === undefined) return { text: trimmed, markerLength: 0 };
+  const textStart = skipWhitespace(trimmed, markerEnd);
+  return { text: trimmed.slice(textStart), markerLength: textStart };
+};
+
+const KNOWN_HEADING_PREFIXES = [
+  "課程簡介",
+  "課程說明",
+  "課程簡述",
+  "課程大綱",
+  "課程概述",
+  "本課程之教學目標",
+  "指定用書",
+  "參考書籍",
+  "教學方式",
+  "教學進度",
+  "成績考核",
+  "可連結之網頁",
+  "課程相關網站",
+  "生成ai",
+  "生成 ai",
+  "生成式ai",
+  "生成式 ai",
+  "ai使用",
+  "ai 使用",
+  "course description",
+  "textbook",
+  "text book",
+  "text books",
+  "reference",
+  "references",
+  "teaching method",
+  "teaching methods",
+  "course schedule",
+  "syllabus",
+  "evaluation",
+  "course-related website",
+  "course related website",
+  "ai usage",
+  "ai use",
+  "ai guideline",
+  "ai policy",
+];
+
+const normalizeHeadingText = (value: string) =>
+  value.trim().toLowerCase().replace(/\s+/gu, " ");
+
+const isKnownHeading = (line: string) => {
+  const { text } = removeHeadingMarker(line);
+  const normalized = normalizeHeadingText(text);
+  return KNOWN_HEADING_PREFIXES.some((prefix) => normalized.startsWith(prefix));
+};
 
 const startsNewBlock = (line: string) =>
   line.trim() === "" || isListMarker(line) || isKnownHeading(line.trim());
 
-const isStandaloneHeading = (line: string) =>
-  /^(?:基本素養|核心能力|備註)$/u.test(line.trim()) ||
-  (isKnownHeading(line) && !/[：:]\s*\S+$/u.test(line.trim()));
+const hasNonWhitespaceTextAfter = (value: string, separator: number) => {
+  const suffix = value.slice(separator + 1).trim();
+  if (!suffix) return false;
+  for (const character of suffix) {
+    if (isWhitespace(character)) return false;
+  }
+  return true;
+};
+
+const hasInlineHeadingBody = (line: string) => {
+  const trimmed = line.trim();
+  for (let index = 0; index < trimmed.length; index++) {
+    if (
+      (trimmed[index] === ":" || trimmed[index] === "：") &&
+      hasNonWhitespaceTextAfter(trimmed, index)
+    ) {
+      return true;
+    }
+  }
+  return false;
+};
+
+const isStandaloneHeading = (line: string) => {
+  const trimmed = line.trim();
+  if (["基本素養", "核心能力", "備註"].includes(trimmed)) return true;
+  return isKnownHeading(trimmed) && !hasInlineHeadingBody(trimmed);
+};
+
+const isLowercaseAscii = (character: string | undefined) =>
+  character !== undefined && character >= "a" && character <= "z";
+
+const startsWithLowercaseAscii = (value: string) => isLowercaseAscii(value[0]);
+
+const isLowercaseHyphenatedWord = (value: string) =>
+  value.endsWith("-") &&
+  isLowercaseAscii(value.at(-2)) &&
+  isLowercaseAscii(value.at(-3));
 
 const canJoinWrappedLines = (left: string, right: string) => {
   const leftTrimmed = left.trimEnd();
@@ -140,7 +304,8 @@ const canJoinWrappedLines = (left: string, right: string) => {
   const leftCharacter = [...leftTrimmed].at(-1);
   const rightCharacter = [...rightTrimmed][0];
   return (
-    (/[a-z]{2,}-$/u.test(leftTrimmed) && /^[a-z]/u.test(rightTrimmed)) ||
+    (isLowercaseHyphenatedWord(leftTrimmed) &&
+      startsWithLowercaseAscii(rightTrimmed)) ||
     (isCjk(leftCharacter) && isCjk(rightCharacter)) ||
     (isLatinWordCharacter(leftCharacter) &&
       isLatinWordCharacter(rightCharacter)) ||
@@ -156,9 +321,8 @@ const joinWrappedLines = (left: string, right: string) => {
   if (!leftTrimmed || !rightTrimmed) return `${leftTrimmed}${rightTrimmed}`;
 
   if (
-    /[a-z]-$/u.test(leftTrimmed) &&
-    /^[a-z]/u.test(rightTrimmed) &&
-    /[a-z]{2}-$/u.test(leftTrimmed)
+    isLowercaseHyphenatedWord(leftTrimmed) &&
+    startsWithLowercaseAscii(rightTrimmed)
   ) {
     return `${leftTrimmed}${rightTrimmed}`;
   }
@@ -217,17 +381,19 @@ const unwrapHardWrappedText = (value: string) => {
   };
 
   const unwrapped: string[] = [];
-  for (let index = 0; index < lines.length; index++) {
+  let index = 0;
+  while (index < lines.length) {
     let joined = lines[index];
     let segment = lines[index];
     let afterFullLine = false;
+    let cursor = index;
     while (
       segment.trim() !== "" &&
       !isStandaloneHeading(segment) &&
       (isFull(segment) || (afterFullLine && displayWidth(segment) <= tailLimit))
     ) {
       afterFullLine = isFull(segment);
-      let nextIndex = index + 1;
+      let nextIndex = cursor + 1;
       while (nextIndex < lines.length && lines[nextIndex].trim() === "") {
         nextIndex++;
       }
@@ -239,15 +405,26 @@ const unwrapHardWrappedText = (value: string) => {
       }
       segment = lines[nextIndex];
       joined = joinWrappedLines(joined, segment);
-      index = nextIndex;
+      cursor = nextIndex;
     }
     unwrapped.push(joined);
+    index = cursor + 1;
   }
   return unwrapped.join("\n");
 };
 
 const collapseExcessiveBreaks = (value: string) =>
   value.replace(/\n{3,}/g, "\n\n");
+
+const hasWrappedLineAcrossGap = (
+  lines: string[],
+  index: number,
+  next: number,
+  lineThreshold: number,
+) =>
+  next - index > 1 &&
+  displayWidth(lines[index]) >= lineThreshold &&
+  canJoinWrappedLines(lines[index], lines[next]);
 
 const looksDoubleSpaced = (value: string) => {
   const lines = value.split("\n");
@@ -258,22 +435,26 @@ const looksDoubleSpaced = (value: string) => {
   let gaps = 0;
   let doubledGaps = 0;
   let hasWrappedDoubleGap = false;
-  for (let index = 0; index < lines.length; index++) {
-    if (lines[index].trim() === "") continue;
+  let index = 0;
+  while (index < lines.length) {
+    if (lines[index].trim() === "") {
+      index++;
+      continue;
+    }
     let next = index + 1;
     while (next < lines.length && lines[next].trim() === "") next++;
-    if (next >= lines.length) continue;
+    if (next >= lines.length) {
+      index++;
+      continue;
+    }
     gaps++;
     if (next - index > 1) {
       doubledGaps++;
-      if (
-        displayWidth(lines[index]) >= lineThreshold &&
-        canJoinWrappedLines(lines[index], lines[next])
-      ) {
+      if (hasWrappedLineAcrossGap(lines, index, next, lineThreshold)) {
         hasWrappedDoubleGap = true;
       }
     }
-    index = next - 1;
+    index = next;
   }
   return gaps >= 2 && doubledGaps / gaps >= 0.9 && hasWrappedDoubleGap;
 };
@@ -307,25 +488,21 @@ const SECTION_DEFINITIONS: Array<{
 
 const parseSectionHeading = (line: string) => {
   const trimmed = line.trim();
-  const withoutMarker = trimmed.replace(
-    /^(?:#?\s*[一二三四五六七八九十]+、|\d+[.)]|[●•]|[A-H][.)])\s*/u,
-    "",
+  const { text: withoutMarker, markerLength } = removeHeadingMarker(
+    trimmed,
+    false,
   );
   const definition = SECTION_DEFINITIONS.find(({ pattern }) =>
     pattern.test(withoutMarker),
   );
   if (!definition) return undefined;
 
-  const hasRecognizedMarker =
-    /^(?:#?\s*[一二三四五六七八九十]+、|\d+[.)]|[●•]|[A-H][.)])\s*/u.test(
-      trimmed,
-    );
+  const hasRecognizedMarker = markerLength > 0;
   const isPlainKnownHeading = definition.pattern.test(withoutMarker);
   if (!hasRecognizedMarker && !isPlainKnownHeading) return undefined;
 
   const separator = withoutMarker.search(SECTION_SEPARATOR);
   if (separator >= 0 && separator < 120) {
-    const markerLength = trimmed.length - withoutMarker.length;
     return {
       key: definition.key,
       title: trimmed.slice(0, markerLength + separator + 1).trimEnd(),
@@ -423,12 +600,63 @@ const rebuildSections = (sections: SyllabusSection[]) =>
     .trim();
 
 const stripLeadingKeywordParagraph = (value: string) => {
-  const label = value.match(/^\s*Course\s+keywords\s*:/iu);
+  const label = /^\s*Course\s+keywords\s*:/iu.exec(value);
   if (!label) return value;
   const suffix = value.slice(label[0].length);
-  const separator = suffix.match(/^.*?( {4,})/su);
+  const separator = /^.*?( {4,})/su.exec(suffix);
   if (!separator) return value;
   return suffix.slice(separator[0].length).replace(/^(?:[ \t]*\n)+/u, "");
+};
+
+const consumeKeywordLabel = (value: string, start: number) => {
+  const label = "course keywords";
+  let cursor = skipWhitespace(value, start);
+  if (value.slice(cursor, cursor + label.length).toLowerCase() !== label) {
+    return undefined;
+  }
+  cursor = skipWhitespace(value, cursor + label.length);
+  if (value[cursor] !== ":") return undefined;
+  return skipWhitespace(value, cursor + 1);
+};
+
+const stripLeadingKeywordLabels = (value: string) => {
+  let cursor = 0;
+  while (true) {
+    const next = consumeKeywordLabel(value, cursor);
+    if (next === undefined) return value.slice(cursor);
+    cursor = next;
+  }
+};
+
+const stripOneLeadingKeywordLabel = (value: string) => {
+  const next = consumeKeywordLabel(value, 0);
+  return next === undefined ? value : value.slice(next);
+};
+
+const stripMarkupTags = (value: string) => {
+  let output = "";
+  let textStart = 0;
+  let tagStart = -1;
+  for (let index = 0; index < value.length; index++) {
+    if (tagStart < 0 && value[index] === "<") {
+      output += value.slice(textStart, index);
+      tagStart = index;
+    } else if (tagStart >= 0 && value[index] === ">") {
+      tagStart = -1;
+      textStart = index + 1;
+    }
+  }
+  return (
+    output + (tagStart >= 0 ? value.slice(tagStart) : value.slice(textStart))
+  );
+};
+
+const stripTrailingPeriods = (value: string) => {
+  let end = value.length;
+  while (end > 0 && (value[end - 1] === "." || value[end - 1] === "。")) {
+    end--;
+  }
+  return value.slice(0, end);
 };
 
 export const cleanKeywords = (
@@ -436,18 +664,13 @@ export const cleanKeywords = (
 ): string[] => {
   if (raw == null) return [];
   const joined = Array.isArray(raw) ? raw.join(",") : raw;
-  const value = stripControls(
-    normalizeLineEndings(decodeEntities(joined)),
-  ).replace(/<[^>]*>/gu, "");
-  const withoutLabel = value.replace(/^(?:\s*Course keywords\s*:\s*)+/iu, "");
+  const value = stripControls(normalizeLineEndings(decodeEntities(joined)));
+  const withoutLabel = stripLeadingKeywordLabels(stripMarkupTags(value));
   const seen = new Set<string>();
   const keywords: string[] = [];
   for (const keyword of withoutLabel.split(/[,，、;；\n]+/u)) {
-    const cleaned = keyword
-      .replace(/^\s*Course keywords\s*:\s*/iu, "")
-      .trim()
-      .replace(/[。.]+$/u, "")
-      .trim();
+    let cleaned = stripOneLeadingKeywordLabel(keyword).trim();
+    cleaned = stripTrailingPeriods(cleaned).trim();
     if (!cleaned) continue;
     const identity = cleaned.toLocaleLowerCase("zh-TW");
     if (seen.has(identity)) continue;

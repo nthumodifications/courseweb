@@ -127,4 +127,30 @@ describe("syllabus text cleaners", () => {
       );
     }
   });
+
+  test("keeps pathological inputs within the cleaner time budget", () => {
+    const inputs = [
+      " ".repeat(50_000),
+      "a-".repeat(20_000),
+      "一、".repeat(20_000),
+      "x".repeat(100_000),
+      "(".repeat(5_000),
+    ];
+    const cleaners: Array<[string, (value: string) => unknown]> = [
+      ["brief", cleanBrief],
+      ["content", cleanContent],
+      ["keywords", cleanKeywords],
+    ];
+
+    for (const [name, cleaner] of cleaners) {
+      for (const input of inputs) {
+        const started = performance.now();
+        cleaner(input);
+        expect(
+          performance.now() - started,
+          `${name} exceeded the budget`,
+        ).toBeLessThan(500);
+      }
+    }
+  });
 });
