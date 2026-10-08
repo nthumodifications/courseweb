@@ -2268,10 +2268,43 @@
     "whats_new": "最新消息",
     "dismiss": "關閉",
     "view_all": "查看所有更新",
+    "actions": {
+      "bus": "查看市區公車",
+      "modules": "查看課程模組",
+      "search": "開啟課程搜尋",
+      "timetable": "開啟課表",
+      "usage": "查看使用量預測"
+    },
+    "previous": "上一步",
+    "next": "下一步",
+    "finish": "完成",
     "types": {
       "feature": "新功能",
       "improvement": "改進",
       "fix": "修正"
+    },
+    "preview": {
+      "bus": {
+        "line_83": "83號公車",
+        "line_blue": "藍線",
+        "campus_line": "紅線",
+        "campus_destination": "往台積館",
+        "destination_83": "北校門",
+        "destination_blue": "竹中",
+        "countdown_83": "1 小時 21 分"
+      },
+      "search": {
+        "loading": "載入中",
+        "loaded": "已載入",
+        "loading_state": "載入索引時",
+        "offline_state": "離線也能搜尋"
+      },
+      "smaller": {
+        "items": {
+          "course_header": "課程詳細頁標題間距更整齊",
+          "usage_forecast": "健身房與圖書館新增使用量預測"
+        }
+      }
     }
   }
 }

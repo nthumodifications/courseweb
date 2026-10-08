@@ -1,9 +1,24 @@
+import type { ChangelogVisualId } from "@/components/Changelog/previewRegistry";
+
 export type ChangelogEntryType = "feature" | "improvement" | "fix";
+
+export type ChangelogActionKey =
+  | "bus"
+  | "modules"
+  | "search"
+  | "timetable"
+  | "usage";
+
+export type ChangelogVisual =
+  | { kind: "component"; id: ChangelogVisualId }
+  | { kind: "image"; src: string; alt: string; width: number; height: number };
 
 export interface ChangelogItem {
   type: ChangelogEntryType;
   title: { zh: string; en: string };
   description?: { zh: string; en: string };
+  action?: { href: string; key: ChangelogActionKey };
+  visual?: ChangelogVisual;
 }
 
 export interface ChangelogRelease {
@@ -20,9 +35,69 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG: ChangelogRelease[] = [
   {
+    version: "2026.10.1",
+    date: "2026-10-07",
+    highlight: true,
+    title: {
+      zh: "公車、課程與課表更新",
+      en: "Buses, courses & timetable",
+    },
+    items: [
+      {
+        type: "feature",
+        title: { zh: "市區公車", en: "City buses" },
+        description: {
+          zh: "挑選常搭路線，把「我的公車」放在最上方；現在也能查看 29 條新竹市區路線與城際公車的路線詳情。",
+          en: "Pick your lines and keep My buses at the top. Browse 29 Hsinchu city routes plus intercity buses, with a detail page for each line.",
+        },
+        action: { href: "/bus?tab=city", key: "bus" },
+        visual: { kind: "component", id: "city-buses" },
+      },
+      {
+        type: "feature",
+        title: { zh: "課程模組", en: "Course modules" },
+        description: {
+          zh: "跨學期查看開課情況、滿班率、平均成績、授課教師與選課熱度。",
+          en: "See when a course runs, its fill rate, average grade, instructors, and demand across semesters.",
+        },
+        action: { href: "/courses/modules", key: "modules" },
+        visual: { kind: "component", id: "course-module" },
+      },
+      {
+        type: "improvement",
+        title: { zh: "搜尋更穩", en: "More reliable search" },
+        description: {
+          zh: "搜尋索引載入時會顯示載入中；即使離線，也會繼續使用快取的索引。",
+          en: "Search keeps using its cached index offline and shows loading while a fresh index is unavailable.",
+        },
+        action: { href: "/courses", key: "search" },
+        visual: { kind: "component", id: "search-states" },
+      },
+      {
+        type: "fix",
+        title: { zh: "課表更安全", en: "Safer timetables" },
+        description: {
+          zh: "依學分排序不會再刪掉課程；暫時無法載入的課程也會保留在課表中。",
+          en: "Sorting by credits no longer deletes courses, and courses that cannot load are kept in your timetable.",
+        },
+        action: { href: "/timetable", key: "timetable" },
+        visual: { kind: "component", id: "timetable-safe" },
+      },
+      {
+        type: "improvement",
+        title: { zh: "另外幾個小更新", en: "A few smaller updates" },
+        description: {
+          zh: "健身房與圖書館現在會預測各時段人潮；課程詳細頁的標題間距也更整齊。",
+          en: "The gym and library now forecast how busy each hour gets, and course detail headers keep even spacing.",
+        },
+        action: { href: "/sports-venues", key: "usage" },
+        visual: { kind: "component", id: "smaller-updates" },
+      },
+    ],
+  },
+  {
     version: "2026.09.1",
     date: "2026-09-10",
-    highlight: true,
     title: { zh: "搜尋與穩定性更新", en: "Search & stability" },
     items: [
       {

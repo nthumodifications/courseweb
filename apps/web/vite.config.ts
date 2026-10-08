@@ -78,6 +78,9 @@ export default defineConfig(({ mode }) => ({
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
+        // The main app bundle is just over Workbox's 2 MiB default after the
+        // recent course and venue additions; keep it in the offline shell.
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         // Keep the optional Three.js experience out of the PWA install path.
         // The route remains available online and is cached by the browser after use.
         globIgnores: ["**/campus-map-*.js"],

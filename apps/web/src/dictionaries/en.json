@@ -2268,10 +2268,43 @@
     "whats_new": "What's new",
     "dismiss": "Dismiss",
     "view_all": "View all changes",
+    "actions": {
+      "bus": "Explore city buses",
+      "modules": "Explore course modules",
+      "search": "Open course search",
+      "timetable": "Open your timetable",
+      "usage": "See usage forecasts"
+    },
+    "previous": "Previous",
+    "next": "Next",
+    "finish": "Done",
     "types": {
       "feature": "Feature",
       "improvement": "Improvement",
       "fix": "Fix"
+    },
+    "preview": {
+      "bus": {
+        "line_83": "Bus 83",
+        "line_blue": "Blue line",
+        "campus_line": "Red line",
+        "campus_destination": "To TSMC Building",
+        "destination_83": "North Gate",
+        "destination_blue": "Zhuzhong",
+        "countdown_83": "1 hr 21 min"
+      },
+      "search": {
+        "loading": "Loading",
+        "loaded": "Loaded",
+        "loading_state": "While the index loads",
+        "offline_state": "Search offline too"
+      },
+      "smaller": {
+        "items": {
+          "course_header": "Course detail headers now keep even spacing",
+          "usage_forecast": "Gym and library pages now show usage forecasts"
+        }
+      }
     }
   }
 }
