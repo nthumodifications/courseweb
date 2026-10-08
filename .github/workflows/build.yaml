@@ -169,14 +169,29 @@ jobs:
           bun run prisma:generate
 
       # Deploy API service to Cloudflare Workers
+      # `wrangler deploy` uploads the Worker (which puts the new code live) and
+      # then syncs routes and cron triggers. The deploy token cannot read the
+      # zone's Workers routes, so that second half fails with "No access" even
+      # though the code is deployed. Report exactly that case as a warning;
+      # any other failure still fails the job.
       - name: Deploy API Service
-        uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3
-        with:
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          workingDirectory: services/api
-          command: deploy src/index.ts
-          packageManager: bun
+        working-directory: services/api
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          set +e
+          bunx wrangler deploy src/index.ts 2>&1 | tee /tmp/wrangler-deploy.log
+          status=${PIPESTATUS[0]}
+          set -e
+          if [ "$status" -eq 0 ]; then
+            exit 0
+          fi
+          if grep -q 'Uploaded nthumods-api' /tmp/wrangler-deploy.log             && grep -q '/workers/routes) failed' /tmp/wrangler-deploy.log             && grep -q 'No access to the specified resource' /tmp/wrangler-deploy.log; then
+            echo "::warning title=API deployed, routes and crons not synced::The Worker code was uploaded, but CLOUDFLARE_API_TOKEN cannot read the zone's Workers routes, so changes to routes or cron triggers in wrangler.toml were not applied. Add Zone > Workers Routes > Edit to the token to clear this."
+            exit 0
+          fi
+          exit "$status"
 
   # build-and-push-web:
   #   runs-on: ubuntu-latest
