@@ -34,7 +34,10 @@ type KvStorageDependencies = {
 const lazyRequireAuth = (scopes: string[]) =>
   (async (c, next) => {
     const { requireAuth } = await import("../middleware/requireAuth");
-    return (requireAuth(scopes) as MiddlewareHandler<SecureApiEnv>)(c, next);
+    return (requireAuth(scopes) as unknown as MiddlewareHandler<SecureApiEnv>)(
+      c,
+      next,
+    );
   }) as MiddlewareHandler<SecureApiEnv>;
 
 export const createKvStorageApp = ({
