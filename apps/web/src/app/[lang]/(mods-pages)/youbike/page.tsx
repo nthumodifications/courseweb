@@ -16,13 +16,13 @@ import useDictionary from "@/dictionaries/useDictionary";
 import OpenCollectiveSponsorBanner from "@/components/Sponsorship/OpenCollectiveSponsorBanner";
 import { activateOnKey } from "@/lib/activate-on-key";
 
-type YouBikeItemProps = {
+export type YouBikeItemProps = {
   station: YouBikeStation;
   isPinned: boolean;
   onTogglePin: (id: string) => void;
 };
 
-const YouBikeListingItem = ({
+export const YouBikeListingItem = ({
   station,
   isPinned,
   onTogglePin,

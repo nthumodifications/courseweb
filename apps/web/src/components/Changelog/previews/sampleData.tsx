@@ -5,6 +5,12 @@ import { RedLineIcon } from "@/components/BusIcons/RedLineIcon";
 import type { CourseSyllabusView } from "@/config/supabase";
 import type { MinimalCourse } from "@/types/courses";
 import type { UsageSeries } from "@/lib/usage-forecast";
+import { parsePrerequisites } from "@courseweb/shared";
+import type {
+  PrerequisiteGraphCourse,
+  PrerequisiteGraphRow,
+} from "@courseweb/shared";
+import type { YouBikeStation } from "@/lib/youbike";
 
 export const CITY_BUS_PREVIEW_REF_TIME = new Date("2026-10-07T14:00:00");
 
@@ -169,6 +175,106 @@ export const TIMETABLE_PREVIEW_COURSES: readonly MinimalCourse[] = [
 ];
 
 export const TIMETABLE_PREVIEW_UNRESOLVED_COUNT = 1;
+
+export const PREREQUISITE_PREVIEW_COURSE: PrerequisiteGraphCourse = {
+  raw_id: "11510CS  210401",
+  semester: "11510",
+  department: "CS",
+  course: "210401",
+  name_zh: "資料結構",
+  name_en: "Data Structures",
+};
+
+export const PREREQUISITE_PREVIEW_PARSED = parsePrerequisites(
+  "先修科目 : 離散數學-成績需C-以上曾修線性代數上述條件任選一科，而且未修過資料庫系統上述條件一定要有，則不擋修。",
+);
+
+export const PREREQUISITE_PREVIEW_ROWS: readonly PrerequisiteGraphRow[] = [
+  {
+    raw_id: "11510CS  210401",
+    semester: "11510",
+    department: "CS",
+    course: "210401",
+    name_zh: "資料結構",
+    name_en: "Data Structures",
+    prerequisites: null,
+  },
+  {
+    raw_id: "11510CS  210201",
+    semester: "11510",
+    department: "CS",
+    course: "210201",
+    name_zh: "離散數學",
+    name_en: "Discrete Mathematics",
+    prerequisites: null,
+  },
+  {
+    raw_id: "11510CS  110101",
+    semester: "11510",
+    department: "CS",
+    course: "110101",
+    name_zh: "線性代數",
+    name_en: "Linear Algebra",
+    prerequisites: null,
+  },
+  {
+    raw_id: "11510CS  210301",
+    semester: "11510",
+    department: "CS",
+    course: "210301",
+    name_zh: "資料庫系統",
+    name_en: "Database Systems",
+    prerequisites: null,
+  },
+  {
+    raw_id: "11510CS  310001",
+    semester: "11510",
+    department: "CS",
+    course: "310001",
+    name_zh: "演算法",
+    name_en: "Algorithms",
+    prerequisites: "先修科目 : 曾修資料結構上述條件一定要有，則不擋修。",
+  },
+];
+
+export const YOUBIKE_PREVIEW_STATIONS: readonly YouBikeStation[] = [
+  {
+    id: "500401004",
+    nameZh: "清華大學(小吃部)",
+    nameEn: "National Tsing Hua University (Small Food Center)",
+    districtZh: "東區",
+    districtEn: "East Dist",
+    addressZh: "光復路二段101號",
+    addressEn: "No. 101, Sec. 2, Kuang-Fu Rd.",
+    totalCapacity: 48,
+    availableBikes: 1,
+    regularBikes: 0,
+    eBikes: 1,
+    emptyDocks: 47,
+    lat: 24.79307,
+    lng: 120.99335,
+    status: 1,
+    updatedAt: "2026-10-07 23:00:00",
+  },
+  {
+    id: "500401030",
+    nameZh: "清華大學(南大校區)",
+    nameEn: "National Tsing Hua University (Nanda Campus)",
+    districtZh: "東區",
+    districtEn: "East Dist",
+    addressZh: "食品路227號",
+    addressEn: "No. 227, Shipin Rd.",
+    totalCapacity: 60,
+    availableBikes: 35,
+    regularBikes: 31,
+    eBikes: 4,
+    emptyDocks: 24,
+    lat: 24.79429,
+    lng: 120.96453,
+    status: 1,
+    updatedAt: "2026-10-07 23:00:00",
+  },
+];
 
 const USAGE_PREVIEW_TIMES = [
   "08:00",

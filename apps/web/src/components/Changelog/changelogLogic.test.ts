@@ -6,6 +6,17 @@ import { ROUTE_PATHS } from "@/routerPaths";
 import { CHANGELOG_PREVIEW_REGISTRY } from "./previewRegistry";
 import { getHighlightedRelease, shouldShowWhatsNew } from "./changelogLogic";
 
+const matchesRoutePath = (pathname: string, routePath: string) => {
+  const pathnameParts = pathname.split("/");
+  const routeParts = routePath.split("/");
+  return (
+    pathnameParts.length === routeParts.length &&
+    routeParts.every(
+      (part, index) => part.startsWith(":") || part === pathnameParts[index],
+    )
+  );
+};
+
 describe("What's new release selection", () => {
   test("selects the highlighted release", () => {
     expect(getHighlightedRelease(CHANGELOG)?.version).toBe("2026.10.1");
@@ -77,7 +88,11 @@ test("every release action matches a real router path", () => {
         item.action.href,
         "https://nthumods.test",
       ).pathname.slice(1);
-      expect(routePaths.has(pathname)).toBe(true);
+      expect(
+        [...routePaths].some((routePath) =>
+          matchesRoutePath(pathname, routePath),
+        ),
+      ).toBe(true);
     }
   }
 });

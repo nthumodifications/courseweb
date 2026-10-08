@@ -2294,9 +2294,11 @@
     "actions": {
       "bus": "Explore city buses",
       "modules": "Explore course modules",
+      "prerequisites": "View prerequisites",
       "search": "Open course search",
       "timetable": "Open your timetable",
-      "usage": "See usage forecasts"
+      "usage": "See usage forecasts",
+      "youbike": "Explore YouBike"
     },
     "previous": "Previous",
     "next": "Next",

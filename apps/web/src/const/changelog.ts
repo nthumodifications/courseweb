@@ -5,9 +5,11 @@ export type ChangelogEntryType = "feature" | "improvement" | "fix";
 export type ChangelogActionKey =
   | "bus"
   | "modules"
+  | "prerequisites"
   | "search"
   | "timetable"
-  | "usage";
+  | "usage"
+  | "youbike";
 
 export type ChangelogVisual =
   | { kind: "component"; id: ChangelogVisualId }
@@ -39,8 +41,8 @@ export const CHANGELOG: ChangelogRelease[] = [
     date: "2026-10-07",
     highlight: true,
     title: {
-      zh: "公車、課程與課表更新",
-      en: "Buses, courses & timetable",
+      zh: "公車、YouBike、課程與課表更新",
+      en: "Buses, YouBike, courses & timetable",
     },
     items: [
       {
@@ -55,6 +57,16 @@ export const CHANGELOG: ChangelogRelease[] = [
       },
       {
         type: "feature",
+        title: { zh: "YouBike 車量", en: "YouBike availability" },
+        description: {
+          zh: "即時查看清大校本部與南大校區的可借車輛與可還空位。",
+          en: "Check available bikes and empty docks around NTHU's Main and Nanda campuses.",
+        },
+        action: { href: "/youbike", key: "youbike" },
+        visual: { kind: "component", id: "youbike" },
+      },
+      {
+        type: "feature",
         title: { zh: "課程模組", en: "Course modules" },
         description: {
           zh: "跨學期查看開課情況、滿班率、平均成績、授課教師與選課熱度。",
@@ -62,6 +74,16 @@ export const CHANGELOG: ChangelogRelease[] = [
         },
         action: { href: "/courses/modules", key: "modules" },
         visual: { kind: "component", id: "course-module" },
+      },
+      {
+        type: "feature",
+        title: { zh: "先修課程圖", en: "Prerequisite graph" },
+        description: {
+          zh: "查看課程需要先修哪些科目，以及修完後會解鎖哪些課程。",
+          en: "See required prerequisites for a course and which courses they unlock next.",
+        },
+        action: { href: "/courses/module/CS%3A2104", key: "prerequisites" },
+        visual: { kind: "component", id: "prerequisite-graph" },
       },
       {
         type: "improvement",

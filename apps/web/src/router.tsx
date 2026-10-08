@@ -232,7 +232,7 @@ export const router = createBrowserRouter([
                 },
               },
               {
-                path: "courses/module/:moduleKey",
+                path: ROUTE_PATHS.module,
                 element: <ModulePage />,
               },
               {
@@ -319,7 +319,7 @@ export const router = createBrowserRouter([
                 },
               },
               {
-                path: "youbike",
+                path: ROUTE_PATHS.youbike,
                 element: <YouBikePage />,
                 handle: {
                   title: "YouBike 2.0 Availability",

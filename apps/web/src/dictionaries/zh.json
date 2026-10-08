@@ -2294,9 +2294,11 @@
     "actions": {
       "bus": "查看市區公車",
       "modules": "查看課程模組",
+      "prerequisites": "查看先修課程",
       "search": "開啟課程搜尋",
       "timetable": "開啟課表",
-      "usage": "查看使用量預測"
+      "usage": "查看使用量預測",
+      "youbike": "查看 YouBike"
     },
     "previous": "上一步",
     "next": "下一步",
