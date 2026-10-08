@@ -8,7 +8,15 @@ export interface RateLimitOptions {
   /**
    * The rate limiter binding to use
    */
-  limiter: keyof Pick<Bindings, "VENUE_RATE_LIMITER">;
+  limiter: keyof Pick<
+    Bindings,
+    | "VENUE_RATE_LIMITER"
+    | "AI_RATE_LIMITER"
+    | "MCP_RATE_LIMITER"
+    | "SEARCH_RATE_LIMITER"
+    | "SHORTLINK_RATE_LIMITER"
+    | "ISSUE_RATE_LIMITER"
+  >;
 
   /**
    * Function to generate the rate limit key from the request context
@@ -92,7 +100,7 @@ export const rateLimitMiddleware = (
 
   return async (c, next) => {
     const key = keyGenerator(c);
-    const rateLimiter = c.env[limiter] as any;
+    const rateLimiter = c.env?.[limiter] as any;
 
     if (!rateLimiter) {
       console.error(`Rate limiter binding "${limiter}" not found`);

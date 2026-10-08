@@ -2,6 +2,11 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { env } from "hono/adapter";
 import { z } from "zod";
+import type { Bindings } from "./index";
+import { rateLimitMiddleware } from "./utils/rate-limit";
+import { getSafeShortlinkUrl } from "./utils/shortlink-url";
+
+const MAX_SHORTLINK_URL_LENGTH = 8192;
 
 const endpoint = (key: string, accountID: string, namespaceID: string) =>
   `https://api.cloudflare.com/client/v4/accounts/${accountID}/storage/kv/namespaces/${namespaceID}/values/${encodeURIComponent(key)}`;
@@ -15,19 +20,33 @@ async function digest(message: string, algo = "SHA-1") {
   ).join("");
 }
 
-const app = new Hono()
+// Only the routes that cost something are limited; reads stay open.
+const shortlinkRateLimit = rateLimitMiddleware({
+  limiter: "SHORTLINK_RATE_LIMITER",
+  errorMessage: "Too many short link requests. Please try again in a minute.",
+});
+
+const app = new Hono<{ Bindings: Bindings }>()
   .put(
     "/",
+    shortlinkRateLimit,
     zValidator(
       "query",
       z.object({
-        url: z.string(),
+        url: z.string().max(MAX_SHORTLINK_URL_LENGTH),
       }),
     ),
     async (c) => {
       const { url } = c.req.valid("query");
+      const safeUrl = getSafeShortlinkUrl(url);
+      if (!safeUrl) {
+        return c.json(
+          { error: "Short links must target https://nthumods.com" },
+          400,
+        );
+      }
       // use url md5 as key
-      const key = await digest(url);
+      const key = await digest(safeUrl);
       const {
         CLOUDFLARE_WORKER_ACCOUNT_ID,
         CLOUDFLARE_KV_SHORTLINKS_NAMESPACE,
@@ -53,7 +72,7 @@ const app = new Hono()
             Authorization: `Bearer ${CLOUDFLARE_KV_API_TOKEN}`,
             "Content-Type": "application/json",
           },
-          body: url,
+          body: safeUrl,
         },
       ).then((response) => response.json() as any);
 

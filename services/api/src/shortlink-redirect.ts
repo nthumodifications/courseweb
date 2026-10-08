@@ -2,23 +2,10 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { env } from "hono/adapter";
 import { z } from "zod";
+import { getSafeShortlinkUrl } from "./utils/shortlink-url";
 
 const endpoint = (key: string, accountID: string, namespaceID: string) =>
   `https://api.cloudflare.com/client/v4/accounts/${accountID}/storage/kv/namespaces/${namespaceID}/values/${encodeURIComponent(key)}`;
-
-const REDIRECT_ORIGIN = "https://nthumods.com";
-
-// Rebuilds the target on a fixed origin, so a stored link can only ever point
-// somewhere on the site.
-const getSafeRedirectUrl = (value: string) => {
-  try {
-    const url = new URL(value);
-    if (url.origin !== REDIRECT_ORIGIN) return null;
-    return `${REDIRECT_ORIGIN}${url.pathname}${url.search}${url.hash}`;
-  } catch {
-    return null;
-  }
-};
 
 const app = new Hono().get(
   "/:slug",
@@ -60,7 +47,7 @@ const app = new Hono().get(
       return c.json({ error: { message: "Link does not exist" } }, 404);
     }
 
-    const safeUrl = getSafeRedirectUrl(url);
+    const safeUrl = getSafeShortlinkUrl(url);
     if (!safeUrl) {
       return c.json({ error: { message: "Invalid redirect URL" } }, 400);
     }

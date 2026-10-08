@@ -13,6 +13,7 @@ import {
 } from "@courseweb/ui";
 import { DialogDescription } from "@radix-ui/react-dialog";
 import { PropsWithChildren, useState } from "react";
+import Turnstile from "react-turnstile";
 import { useQuery } from "@tanstack/react-query";
 import client from "@/config/api";
 import useDictionary from "@/dictionaries/useDictionary";
@@ -126,6 +127,7 @@ const IssueFormDialog = ({ children }: PropsWithChildren) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [token, setToken] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [lastError, setLastError] = useState<ApiError | null>(null);
 
@@ -133,6 +135,16 @@ const IssueFormDialog = ({ children }: PropsWithChildren) => {
   const RETRY_DELAYS = [1000, 3000]; // 1s, then 3s
 
   const validateForm = (): boolean => {
+    if (!token) {
+      toast({
+        title: "Verification Required",
+        description:
+          "Please complete the verification to prove you're not a bot",
+        variant: "destructive",
+      });
+      return false;
+    }
+
     if (!title || title.length < 7) {
       toast({
         title: "Validation Error",
@@ -183,6 +195,7 @@ const IssueFormDialog = ({ children }: PropsWithChildren) => {
           title: `[UI Submitted]: ${title}`,
           body: description,
           labels: ["generic"],
+          turnstileToken: token,
         },
       } as any);
 
@@ -387,8 +400,13 @@ const IssueFormDialog = ({ children }: PropsWithChildren) => {
               <p className="text-xs">{dict.forms.issue.detail_hint}</p>
               <p className="text-xs">{dict.forms.issue.markdown_hint}</p>
             </div>
+            <Turnstile
+              sitekey={import.meta.env.VITE_TURNSTILE_SITE_KEY!}
+              onVerify={(token) => setToken(token)}
+              size="flexible"
+            />
             <div className="flex flex-row gap-2 justify-end">
-              <Button type="submit" disabled={isSubmitting}>
+              <Button type="submit" disabled={isSubmitting || !token}>
                 {isSubmitting
                   ? retryCount > 0
                     ? `${dict.forms.issue.retrying} (${retryCount}/${MAX_RETRIES})`

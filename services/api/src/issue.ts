@@ -3,13 +3,23 @@ import { Hono } from "hono";
 import jwt from "@tsndr/cloudflare-worker-jwt";
 import { z } from "zod";
 import { env } from "hono/adapter";
+import type { Bindings } from "./index";
+import { rateLimitMiddleware } from "./utils/rate-limit";
 
 type GithubEnv = {
   GITHUB_CLIENT_ID: string;
   GITHUB_APP_PRIVATE_KEY: string;
   GITHUB_INSTALLATION_ID: string;
   TURNSTILE_SECRET_KEY: string;
+  ISSUE_REQUIRE_TURNSTILE?: string;
 };
+
+const MAX_TITLE_LENGTH = 200;
+const MAX_BODY_LENGTH = 10000;
+const ALLOWED_ISSUE_LABELS = new Set(["generic"]);
+
+export const filterIssueLabels = (labels: string[]) =>
+  labels.filter((label) => ALLOWED_ISSUE_LABELS.has(label));
 
 type ErrorResponse = {
   error: string;
@@ -146,14 +156,21 @@ const verifyTurnstile = async (token: string, secretKey: string) => {
   }
 };
 
-const app = new Hono()
+// Only the routes that cost something are limited; reads stay open.
+const issueRateLimit = rateLimitMiddleware({
+  limiter: "ISSUE_RATE_LIMITER",
+  errorMessage: "Too many issue requests. Please try again in a minute.",
+});
+
+const app = new Hono<{ Bindings: Bindings }>()
   .post(
     "/",
+    issueRateLimit,
     zValidator(
       "json",
       z.object({
-        title: z.string(),
-        body: z.string(),
+        title: z.string().max(MAX_TITLE_LENGTH),
+        body: z.string().max(MAX_BODY_LENGTH),
         labels: z.array(z.string()),
         turnstileToken: z.string().optional(),
       }),
@@ -166,9 +183,21 @@ const app = new Hono()
         GITHUB_APP_PRIVATE_KEY,
         GITHUB_INSTALLATION_ID,
         TURNSTILE_SECRET_KEY,
+        ISSUE_REQUIRE_TURNSTILE,
       } = env<GithubEnv>(c);
 
-      // Verify Turnstile token if provided
+      if (ISSUE_REQUIRE_TURNSTILE === "true" && !turnstileToken) {
+        return c.json(
+          {
+            error: "Turnstile verification is required",
+            code: "TURNSTILE_REQUIRED",
+            details: "Please complete the verification and try again",
+          } as ErrorResponse,
+          400,
+        );
+      }
+
+      // Verify Turnstile token if provided, or always when enforcement is on.
       if (turnstileToken) {
         const isValid = await verifyTurnstile(
           turnstileToken,
@@ -231,6 +260,7 @@ const app = new Hono()
       }
       const repoOwner = "nthumodifications";
       const repoName = "courseweb";
+      const safeLabels = filterIssueLabels(labels);
 
       try {
         const response = await fetch(
@@ -242,7 +272,7 @@ const app = new Hono()
               Authorization: `token ${accessToken}`,
               Accept: "application/vnd.github.v3+json",
             },
-            body: JSON.stringify({ title, body, labels }),
+            body: JSON.stringify({ title, body, labels: safeLabels }),
           },
         );
 
