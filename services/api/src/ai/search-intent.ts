@@ -385,12 +385,6 @@ export const searchIntentCacheKey = (
 ) =>
   `${CACHE_KEY_PREFIX}${encodeURIComponent(semester)}:${lang}:${encodeURIComponent(normalizeSearchQuery(query))}`;
 
-const requestIp = (c: { req: { header(name: string): string | undefined } }) =>
-  c.req.header("cf-connecting-ip") ??
-  c.req.header("x-forwarded-for") ??
-  c.req.header("x-real-ip") ??
-  "unknown";
-
 const loadDepartmentOptions = async (
   c: Parameters<typeof supabase_server>[0],
   semester?: string,
@@ -480,24 +474,6 @@ const app = new Hono<{ Bindings: Bindings }>().post(
       }
     } catch (error) {
       console.error("Failed to read AI search intent cache:", error);
-    }
-
-    const limiter = c.env.AI_RATE_LIMITER;
-    if (limiter) {
-      try {
-        const outcome = await limiter.limit({ key: requestIp(c) });
-        if (!outcome.success) {
-          return c.json(
-            {
-              error: "Too many uncached AI search requests",
-              code: "rate_limited",
-            },
-            429,
-          );
-        }
-      } catch (error) {
-        console.error("AI search rate limiting failed:", error);
-      }
     }
 
     const departmentOptions = await loadDepartmentOptions(c, semester);

@@ -96,17 +96,6 @@ export function normalizeSyllabusSummary(
   };
 }
 
-function requestIp(c: {
-  req: { header(name: string): string | undefined };
-}): string {
-  return (
-    c.req.header("cf-connecting-ip") ??
-    c.req.header("x-forwarded-for") ??
-    c.req.header("x-real-ip") ??
-    "unknown"
-  );
-}
-
 function providerFailure(error: unknown): {
   error: string;
   code: "unavailable";
@@ -118,7 +107,10 @@ function providerFailure(error: unknown): {
 
 const app = new Hono<{ Bindings: Bindings }>().get(
   "/:courseId",
-  zValidator("param", z.object({ courseId: z.string() })),
+  zValidator(
+    "param",
+    z.object({ courseId: z.string().trim().min(1).max(100) }),
+  ),
   async (c) => {
     const { courseId } = c.req.valid("param");
     const prisma = await prismaClients.fetch(c.env.DB);
@@ -138,24 +130,6 @@ const app = new Hono<{ Bindings: Bindings }>().get(
         return c.json(JSON.parse(cached.data) as SyllabusSummary);
       } catch {
         // Treat a corrupt cache entry as a miss and regenerate it.
-      }
-    }
-
-    const limiter = c.env.AI_RATE_LIMITER;
-    if (limiter) {
-      try {
-        const outcome = await limiter.limit({ key: requestIp(c) });
-        if (!outcome.success) {
-          return c.json(
-            {
-              error: "Too many uncached AI summary requests",
-              code: "rate_limited",
-            },
-            429,
-          );
-        }
-      } catch (error) {
-        console.error("AI summary rate limiting failed:", error);
       }
     }
 
