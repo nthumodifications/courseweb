@@ -158,32 +158,33 @@ const YouBikePage = () => {
   };
 
   const {
-    data: stations = [],
+    data: result = { stations: [], source: "api" as const },
     isLoading,
     error,
   } = useQuery({
     queryKey: ["youbike_stations"],
     queryFn: getYouBikeStations,
     staleTime: 60 * 1000,
-    refetchInterval: 60 * 1000,
+    refetchInterval: (query) =>
+      query.state.data?.source === "api" ? 60 * 1000 : false,
   });
 
   const filteredStations = useMemo(() => {
-    let result = stations;
+    let list = result.stations;
 
     // Filter by tab
     if (tab === "main") {
-      result = result.filter((s) => !isNandaCampusStation(s));
+      list = list.filter((s) => !isNandaCampusStation(s));
     } else if (tab === "nanda") {
-      result = result.filter((s) => isNandaCampusStation(s));
+      list = list.filter((s) => isNandaCampusStation(s));
     } else if (tab === "mine") {
-      result = result.filter((s) => pinnedIds.includes(s.id));
+      list = list.filter((s) => pinnedIds.includes(s.id));
     }
 
     // Filter by search text
     if (search.trim()) {
       const q = search.toLowerCase();
-      result = result.filter(
+      list = list.filter(
         (s) =>
           s.nameZh.toLowerCase().includes(q) ||
           s.nameEn.toLowerCase().includes(q) ||
@@ -192,8 +193,8 @@ const YouBikePage = () => {
       );
     }
 
-    return result;
-  }, [stations, tab, search, pinnedIds]);
+    return list;
+  }, [result.stations, tab, search, pinnedIds]);
 
   return (
     <div className="flex flex-col px-4 md:px-6">

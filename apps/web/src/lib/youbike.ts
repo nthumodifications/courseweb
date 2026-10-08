@@ -18,6 +18,33 @@ export interface YouBikeStation {
 }
 
 export type YouBikeTab = "all" | "main" | "nanda" | "mine";
+export type YouBikeSource = "api" | "upstream";
+
+export interface YouBikeResult {
+  stations: YouBikeStation[];
+  source: YouBikeSource;
+}
+
+interface RawStation {
+  station_no?: string;
+  name_tw?: string;
+  name_en?: string;
+  district_tw?: string;
+  district_en?: string;
+  address_tw?: string;
+  address_en?: string;
+  parking_spaces?: number;
+  available_spaces?: number;
+  available_spaces_detail?: {
+    yb2?: number;
+    eyb?: number;
+  };
+  empty_spaces?: number;
+  lat?: number;
+  lng?: number;
+  status?: number;
+  updated_at?: string;
+}
 
 export const DEFAULT_PINNED_STATIONS = [
   "500401008", // 清華大學(北校門)
@@ -80,7 +107,7 @@ async function fetchClientFallback(): Promise<YouBikeStation[]> {
   if (!response.ok) {
     throw new Error(`Public YouBike API failed (${response.status})`);
   }
-  const rawData = (await response.json()) as any[];
+  const rawData = (await response.json()) as RawStation[];
   if (!Array.isArray(rawData)) return [];
 
   return rawData
@@ -121,20 +148,20 @@ async function fetchClientFallback(): Promise<YouBikeStation[]> {
     });
 }
 
-export const getYouBikeStations = async (): Promise<YouBikeStation[]> => {
+export const getYouBikeStations = async (): Promise<YouBikeResult> => {
   try {
-    // Try backend proxy API first if available
-    const response = await fetch("/__api/youbike");
+    const baseUrl = import.meta.env.VITE_COURSEWEB_API_URL ?? "";
+    const response = await fetch(`${baseUrl}/youbike`);
     if (response.ok) {
       const data = await response.json();
       if (Array.isArray(data)) {
-        return data as YouBikeStation[];
+        return { stations: data as YouBikeStation[], source: "api" };
       }
     }
   } catch {
-    // Fall back gracefully
+    // Fall back gracefully to public feed
   }
 
-  // Fallback to client fetch
-  return fetchClientFallback();
+  const stations = await fetchClientFallback();
+  return { stations, source: "upstream" };
 };

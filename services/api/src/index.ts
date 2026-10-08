@@ -95,7 +95,7 @@ export const app = new Hono<{ Bindings: Bindings }>()
 
 export default {
   fetch: app.fetch.bind(app),
-  scheduled(event: ScheduledEvent, env: Bindings, ctx: ExecutionContext) {
+  async scheduled(event: ScheduledEvent, env: Bindings, ctx: ExecutionContext) {
     if (event.cron === "0 2 * * 1") {
       ctx.waitUntil(syncPeoOpeningTimes(env));
     } else if (event.cron === "*/10 * * * *") {

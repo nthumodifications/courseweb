@@ -19,17 +19,52 @@ export interface YouBikeStationData {
   updatedAt: string;
 }
 
+interface RawStation {
+  station_no?: string;
+  name_tw?: string;
+  name_en?: string;
+  district_tw?: string;
+  district_en?: string;
+  address_tw?: string;
+  address_en?: string;
+  parking_spaces?: number;
+  available_spaces?: number;
+  available_spaces_detail?: {
+    yb2?: number;
+    eyb?: number;
+  };
+  empty_spaces?: number;
+  lat?: number;
+  lng?: number;
+  status?: number;
+  updated_at?: string;
+}
+
 const YOUBIKE_API_URL = "https://apis.youbike.com.tw/json/station-yb2.json";
 const YOUBIKE_TIMEOUT_MS = 8_000;
 const YOUBIKE_CACHE_CONTROL =
   "public, max-age=60, s-maxage=60, stale-while-revalidate=120";
+const SYNTHETIC_CACHE_KEY = "https://youbike.internal/v1/campus-stations";
 
 const app = new Hono().get("/", async (c) => {
+  const cacheKey = new Request(SYNTHETIC_CACHE_KEY, c.req.raw);
+  let cache: Cache | undefined;
+  try {
+    cache = typeof caches !== "undefined" ? caches.default : undefined;
+  } catch {
+    // Cache API not available in some non-worker environments
+  }
+
+  if (cache) {
+    const cachedResponse = await cache.match(cacheKey);
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+  }
+
   try {
     const response = await fetch(YOUBIKE_API_URL, {
       headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         Accept: "application/json",
       },
       signal: AbortSignal.timeout(YOUBIKE_TIMEOUT_MS),
@@ -37,10 +72,14 @@ const app = new Hono().get("/", async (c) => {
 
     if (!response.ok) {
       console.error(`YouBike API returned ${response.status}`);
+      if (cache) {
+        const staleResponse = await cache.match(cacheKey);
+        if (staleResponse) return staleResponse;
+      }
       return c.json({ error: "YouBike service unavailable" }, 502);
     }
 
-    const rawData = (await response.json()) as any[];
+    const rawData = (await response.json()) as RawStation[];
     if (!Array.isArray(rawData)) {
       return c.json({ error: "Invalid YouBike payload" }, 502);
     }
@@ -89,13 +128,23 @@ const app = new Hono().get("/", async (c) => {
         }),
       );
 
-    return c.json(campusStations, {
+    const res = c.json(campusStations, {
       headers: {
         "Cache-Control": YOUBIKE_CACHE_CONTROL,
       },
     });
+
+    if (cache) {
+      c.executionCtx.waitUntil(cache.put(cacheKey, res.clone()));
+    }
+
+    return res;
   } catch (error) {
     console.error("Failed to fetch YouBike data", error);
+    if (cache) {
+      const staleResponse = await cache.match(cacheKey);
+      if (staleResponse) return staleResponse;
+    }
     return c.json({ error: "YouBike service unavailable" }, 502);
   }
 });
