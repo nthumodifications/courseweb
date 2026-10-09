@@ -1,0 +1,42 @@
+課名：計算方法設計
+科號：CS 431101
+老師：韓永楷
+課本：Algorithms in C++, (or Algorithms in Java), by R. Sedgewick
+      The Art of Computer Programming, by D. Knuth
+課別：資工系必修
+學分：3
+涼度：★★★☆
+甜度：☆
+
+建議先修課程：資料結構
+
+課程內容\簡介：
+
+時間複雜度分析
+排序
+動態規劃
+Greedy
+Amortized Analysis
+Binomial Heaps, Fibonacii Heaps, Disjoint Sets
+Topological Sort
+SCC
+Minimum Spanning Tree
+Single-Source Shortest Paths
+
+上課方式：
+教材為老師自製的PPT，上課時使用板書教學
+
+給分：3次EXAM，學期成績取以下兩個公式中算出來最高的。
+
+考試作業型態：
+考試難度高，每次六題，不會加時，每次考試皆為110分鐘。老師會提供作業給大家練習，
+但是作業所練習的範圍並不完全包含考試範圍，所以老師的簡報也需要讀熟。認真複習、
+把作業做過一遍，通過應該不困難，但拿高分很吃天分或先備知識。
+
+老師的喜好、個性：老師邏輯清晰，總是能以精簡的話講解複雜的演算法，也喜歡回答問題。
+
+給加簽嗎？給
+
+補充：這應該是我修過等級制分數和T分數差距最大的課了。
+
+總結來說，我認為這門課並非努力便能夠穩定拿高分，很吃天分或先備知識。
