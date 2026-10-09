@@ -103,6 +103,7 @@ const MAX_TURNS = 10;
 export const MAX_TOOL_CALLS_PER_REQUEST = 30;
 export const TOOL_CALL_BUDGET_ERROR =
   "The tool-call budget for this request has been exhausted";
+const EMPTY_CHAT_RESPONSE_ERROR = "Provider returned an empty chat response";
 
 type OpenAICompatibleProviderName = Exclude<
   ProviderName,
@@ -1637,6 +1638,16 @@ export async function* streamChatWithTools(
           return;
         }
         if (!result.toolCalls.length) {
+          if (!result.text.trim()) {
+            lastError = new LLMProviderError(
+              attempt.provider,
+              attempt.model,
+              { code: "unavailable", message: EMPTY_CHAT_RESPONSE_ERROR },
+              attempt.userSuppliedKey,
+            );
+            if (attempt.userSuppliedKey) break;
+            continue;
+          }
           yield { type: "done" };
           return;
         }

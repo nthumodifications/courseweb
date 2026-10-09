@@ -293,6 +293,7 @@ export function useAIChat(options: UseAIChatOptions = {}) {
       const toolCalls: ToolCall[] = [];
       let fullContent = "";
       let metadata: ChatMessage["metadata"];
+      let receivedDone = false;
 
       const updateAssistant = (changes: Partial<ChatMessage>) => {
         setMessages((prev) =>
@@ -306,6 +307,11 @@ export function useAIChat(options: UseAIChatOptions = {}) {
 
       const handleEvent = (event: ParsedSSEEvent | "[DONE]") => {
         if (event === "[DONE]") return;
+
+        if (event.type === "done") {
+          receivedDone = true;
+          return;
+        }
 
         if (event.type === "meta") {
           const data = event.data as {
@@ -466,6 +472,10 @@ export function useAIChat(options: UseAIChatOptions = {}) {
         }
         for (const event of parser.push(decoder.decode())) handleEvent(event);
         for (const event of parser.finish()) handleEvent(event);
+
+        if (receivedDone && !fullContent.trim() && toolCalls.length === 0) {
+          throw new Error();
+        }
 
         updateAssistant({
           content: fullContent,

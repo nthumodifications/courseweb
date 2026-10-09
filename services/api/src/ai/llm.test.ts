@@ -414,6 +414,168 @@ describe("normalizeWorkersAiOutput", () => {
     expect(events.at(-1)).toEqual({ type: "done" });
   });
 
+  it("falls through when a provider returns an empty final answer", async () => {
+    const calls: string[] = [];
+    const env = {
+      AI_PROVIDER_ORDER: "workers-ai",
+      WORKERS_AI_CHAT_MODELS: "empty-model,answer-model",
+      AI: {
+        run: async (model: string) => {
+          calls.push(model);
+          return model === "empty-model"
+            ? { choices: [{ message: { content: null } }] }
+            : { choices: [{ message: { content: "The answer" } }] };
+        },
+      },
+    };
+    const events = [];
+
+    for await (const event of streamChatWithTools(
+      { env } as unknown as Context,
+      [{ role: "user", content: "hello" }],
+      {},
+      { env },
+    )) {
+      events.push(event);
+    }
+
+    expect(calls).toEqual(["empty-model", "answer-model"]);
+    expect(events).toContainEqual({ type: "text", data: "The answer" });
+    expect(events).not.toContainEqual(
+      expect.objectContaining({ type: "error" }),
+    );
+    expect(events.at(-1)).toEqual({ type: "done" });
+  });
+
+  it("falls through after tool use when the next answer is empty", async () => {
+    const calls: string[] = [];
+    const env = {
+      AI_PROVIDER_ORDER: "workers-ai",
+      WORKERS_AI_CHAT_MODELS: "tool-model,answer-model",
+      AI: {
+        run: async (model: string) => {
+          calls.push(model);
+          if (model === "tool-model" && calls.length === 1) {
+            return {
+              choices: [
+                {
+                  message: {
+                    content: null,
+                    tool_calls: [
+                      {
+                        id: "call-1",
+                        function: {
+                          name: "unknown_tool",
+                          arguments: "{}",
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            };
+          }
+          if (model === "tool-model") {
+            return { choices: [{ message: { content: null } }] };
+          }
+          return { choices: [{ message: { content: "The closing answer" } }] };
+        },
+      },
+    };
+    const events = [];
+
+    for await (const event of streamChatWithTools(
+      { env } as unknown as Context,
+      [{ role: "user", content: "use a tool" }],
+      {},
+      { env },
+    )) {
+      events.push(event);
+    }
+
+    expect(calls).toEqual(["tool-model", "tool-model", "answer-model"]);
+    expect(events).toContainEqual({
+      type: "text",
+      data: "The closing answer",
+    });
+    expect(events.at(-1)).toEqual({ type: "done" });
+  });
+
+  it("reports an error when every provider returns an empty answer", async () => {
+    const urls: string[] = [];
+    globalThis.fetch = mock(async (input) => {
+      const url = String(input);
+      urls.push(url);
+      if (url.includes("generativelanguage.googleapis.com")) {
+        return new Response("data: {}\n\n");
+      }
+      return new Response(
+        `data: ${JSON.stringify({ choices: [{ delta: { content: "   " } }] })}\n\ndata: [DONE]\n\n`,
+      );
+    }) as unknown as typeof fetch;
+    const env = {
+      AI_PROVIDER_ORDER: "gemini,groq",
+      GOOGLE_AI_API_KEY: "gemini-key",
+      GEMINI_CHAT_MODELS: "gemini-empty",
+      GROQ_API_KEY: "groq-key",
+      GROQ_CHAT_MODELS: "groq-empty",
+    };
+    const events = [];
+
+    for await (const event of streamChatWithTools(
+      { env } as unknown as Context,
+      [{ role: "user", content: "hello" }],
+      {},
+      { env },
+    )) {
+      events.push(event);
+    }
+
+    expect(events).toContainEqual(
+      expect.objectContaining({ type: "error", code: "unavailable" }),
+    );
+    expect(events.at(-1)).toEqual({ type: "done" });
+    expect(urls).toHaveLength(2);
+    expect(urls[0]).toContain("generativelanguage.googleapis.com");
+    expect(urls[1]).toContain("api.groq.com");
+  });
+
+  it("does not fall through after a user-key provider returns blank", async () => {
+    const urls: string[] = [];
+    globalThis.fetch = mock(async (input) => {
+      const url = String(input);
+      urls.push(url);
+      if (url.includes("generativelanguage.googleapis.com")) {
+        return new Response("data: {}\n\n");
+      }
+      return new Response(
+        `data: ${JSON.stringify({ choices: [{ delta: { content: "answer" } }] })}\n\ndata: [DONE]\n\n`,
+      );
+    }) as unknown as typeof fetch;
+    const env = {
+      AI_PROVIDER_ORDER: "groq",
+      GEMINI_CHAT_MODELS: "user-key-model",
+      GROQ_API_KEY: "server-groq-key",
+      GROQ_CHAT_MODELS: "server-model",
+    };
+    const events = [];
+
+    for await (const event of streamChatWithTools(
+      { env } as unknown as Context,
+      [{ role: "user", content: "hello" }],
+      {},
+      { env, userGeminiKey: "user-gemini-key" },
+    )) {
+      events.push(event);
+    }
+
+    expect(urls).toHaveLength(1);
+    expect(urls[0]).toContain("generativelanguage.googleapis.com");
+    expect(events).toContainEqual(
+      expect.objectContaining({ type: "error", code: "unavailable" }),
+    );
+  });
+
   it("does not send unknown or unused context fields to the model", async () => {
     let modelInput: Record<string, unknown> | undefined;
     const env = {
