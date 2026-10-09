@@ -178,11 +178,12 @@
     },
     "selection_period": {
       "title": "Course selection",
-      "current": "Now",
-      "next": "Next",
-      "open_now": "Within published dates",
-      "opens_today": "Opens today",
-      "opens_in": "Opens in {days} days",
+      "schedule_title": "{semester} Course selection schedule",
+      "dialog_description": "Course selection phases arranged by date.",
+      "starts_in_days": "Starts in {days} days",
+      "until": "until {date}",
+      "starts_on": "{date} onward",
+      "view_schedule": "View full schedule",
       "no_data": "No selection dates available",
       "phases": {
         "round-1": "1st selection round",
@@ -192,10 +193,6 @@
         "add-drop": "Add/drop",
         "inter-school": "Inter-school selection",
         "withdrawal": "Course withdrawal"
-      },
-      "audience": {
-        "new-students": "New and transfer students",
-        "inter-school": "Inter-school students"
       }
     },
     "refine": {

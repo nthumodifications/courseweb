@@ -29,6 +29,7 @@ import SemesterSelector from "./SemesterSelector";
 import useCustomMenu from "@/app/[lang]/(mods-pages)/courses/useCustomMenu";
 import { lastSemester } from "@courseweb/shared";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
+import { useSettings } from "@/hooks/contexts/settings";
 import { MinimalCourse } from "@/types/courses";
 import { courseEvents } from "@/lib/trackingEvents";
 import SearchDegradationBanner from "@/components/Search/SearchDegradationBanner";
@@ -36,8 +37,14 @@ import type { ResilientSearchClient } from "@/lib/search-client";
 import { useCourseTextHits } from "@/hooks/useCourseTextHits";
 import type { CourseSyllabusView } from "@/config/supabase";
 import AiSearchBox from "./AiSearchBox";
-import CourseSelectionStatus from "@/components/CourseSelection/CourseSelectionStatus";
+import CourseSelectionScheduleDialog from "@/components/CourseSelection/CourseSelectionScheduleDialog";
+import { formatCourseSelectionCompactDate } from "@/components/CourseSelection/CourseSelectionSchedule";
 import { SearchResultCount } from "@/components/Search/SearchResultCount";
+import useCourseSelectionPeriods from "@/hooks/useCourseSelectionPeriods";
+import {
+  getCourseSelectionPhaseStatus,
+  sortCourseSelectionPeriods,
+} from "@/lib/course-selection-schedule";
 
 type SearchClient = ResilientSearchClient;
 type InfiniteHitsCache = ReturnType<
@@ -162,6 +169,7 @@ const SearchContainer = memo(
     sessionStorageCache: InfiniteHitsCache;
   }) => {
     const dict = useDictionary();
+    const { language } = useSettings();
     const { nbHits, processingTimeMS } = useStats();
     const { status } = useInstantSearch();
     const { query } = useSearchBox();
@@ -176,6 +184,58 @@ const SearchContainer = memo(
       () => items.find((item) => item.isRefined)?.value ?? lastSemester.id,
       [items],
     );
+    const {
+      periods: courseSelectionPeriods,
+      nowDateKey: courseSelectionDateKey,
+      isLoading: courseSelectionIsLoading,
+    } = useCourseSelectionPeriods(semester);
+    const selectedCourseSelectionPeriods = useMemo(
+      () =>
+        sortCourseSelectionPeriods(
+          courseSelectionPeriods.filter(
+            (period) => period.semester === semester,
+          ),
+        ),
+      [courseSelectionPeriods, semester],
+    );
+    const courseSelectionSummaryPeriod = useMemo(
+      () =>
+        selectedCourseSelectionPeriods.find(
+          (period) =>
+            getCourseSelectionPhaseStatus(period, courseSelectionDateKey) ===
+            "in-progress",
+        ) ??
+        selectedCourseSelectionPeriods.find(
+          (period) =>
+            getCourseSelectionPhaseStatus(period, courseSelectionDateKey) ===
+            "upcoming",
+        ),
+      [courseSelectionDateKey, selectedCourseSelectionPeriods],
+    );
+    const courseSelectionSummaryStatus = courseSelectionSummaryPeriod
+      ? getCourseSelectionPhaseStatus(
+          courseSelectionSummaryPeriod,
+          courseSelectionDateKey,
+        )
+      : null;
+    const courseSelectionButtonLabel =
+      courseSelectionSummaryPeriod &&
+      selectedCourseSelectionPeriods.length > 0 &&
+      courseSelectionSummaryStatus !== "finished"
+        ? `${dict.course.selection_period.phases[courseSelectionSummaryPeriod.phase]} · ${(courseSelectionSummaryStatus ===
+          "in-progress"
+            ? dict.course.selection_period.until
+            : dict.course.selection_period.starts_on
+          ).replace(
+            "{date}",
+            formatCourseSelectionCompactDate(
+              courseSelectionSummaryStatus === "in-progress"
+                ? courseSelectionSummaryPeriod.endDate
+                : courseSelectionSummaryPeriod.startDate,
+              language,
+            ),
+          )}`
+        : dict.course.selection_period.title;
     const { getSemesterCourses } = useUserTimetable();
     const courses = getSemesterCourses(semester);
 
@@ -206,10 +266,21 @@ const SearchContainer = memo(
               <div className="w-full shrink-0 sm:w-auto">
                 <SemesterSelector />
               </div>
-              <CourseSelectionStatus
-                semester={semester}
-                className="w-full sm:flex-1"
-              />
+              <div className="w-full shrink-0 sm:w-auto">
+                <CourseSelectionScheduleDialog
+                  periods={courseSelectionPeriods}
+                  semester={semester}
+                  nowDateKey={courseSelectionDateKey}
+                  isLoading={courseSelectionIsLoading}
+                >
+                  <Button
+                    variant="outline"
+                    className="w-full whitespace-nowrap sm:w-auto"
+                  >
+                    {courseSelectionButtonLabel}
+                  </Button>
+                </CourseSelectionScheduleDialog>
+              </div>
               <Separator
                 orientation="vertical"
                 className="hidden h-full sm:block"
