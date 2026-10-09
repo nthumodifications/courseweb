@@ -4,6 +4,7 @@ import { z } from "zod";
 import { env } from "hono/adapter";
 import { HTTPException } from "hono/http-exception";
 import {
+  parseCourseSelectionPeriod,
   parseCourseSelectionPeriods,
   type AcademicCalendarEvent,
 } from "./course-selection-periods";
@@ -103,10 +104,14 @@ const app = new Hono()
 
       return c.json(
         calendarDatas.map((item) => {
-          return {
+          const event = {
             summary: item.summary,
             date: item.start.date,
             id: item.id,
+          } satisfies AcademicCalendarEvent;
+          return {
+            ...event,
+            courseSelectionPeriod: parseCourseSelectionPeriod(event),
           };
         }),
       );

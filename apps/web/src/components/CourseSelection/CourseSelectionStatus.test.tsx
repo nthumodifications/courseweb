@@ -17,12 +17,36 @@ process.env.VITE_COURSEWEB_API_URL ??= "https://api.example.test";
 ).IS_REACT_ACT_ENVIRONMENT = true;
 
 let showAcademicCalendar = true;
-let calendarEvents = [
-  {
-    id: "future",
-    date: "2026-11-20",
-    summary: "115學年度第1學期加退選開始 Add-or-Drop Selection (11/20-11/22)",
+const addDropEvent = (
+  id: string,
+  date: string,
+  summary: string,
+  startDate: string,
+  endDate: string,
+) => ({
+  id,
+  date,
+  summary,
+  courseSelectionPeriod: {
+    id: `course-selection:${id}`,
+    semester: "11510",
+    phase: "add-drop" as const,
+    audience: "unspecified" as const,
+    startDate,
+    endDate,
+    sourceEventId: id,
+    sourceSummary: summary,
   },
+});
+
+let calendarEvents = [
+  addDropEvent(
+    "future",
+    "2026-11-20",
+    "115學年度第1學期加退選開始 Add-or-Drop Selection (11/20-11/22)",
+    "2026-11-20",
+    "2026-11-22",
+  ),
 ];
 
 mock.module("@/config/api", () => ({
@@ -105,11 +129,13 @@ afterEach(() => {
   activeDom = null;
   showAcademicCalendar = true;
   calendarEvents = [
-    {
-      id: "future",
-      date: "2026-11-20",
-      summary: "115學年度第1學期加退選開始 Add-or-Drop Selection (11/20-11/22)",
-    },
+    addDropEvent(
+      "future",
+      "2026-11-20",
+      "115學年度第1學期加退選開始 Add-or-Drop Selection (11/20-11/22)",
+      "2026-11-20",
+      "2026-11-22",
+    ),
   ];
 });
 
@@ -179,12 +205,13 @@ describe("CourseSelectionStatus", () => {
   test("does not render when academic calendar is disabled", async () => {
     showAcademicCalendar = false;
     calendarEvents = [
-      {
-        id: "near-disabled",
-        date: "2026-10-20",
-        summary:
-          "115學年度第1學期加退選開始 Add-or-Drop Selection (10/20-10/22)",
-      },
+      addDropEvent(
+        "near-disabled",
+        "2026-10-20",
+        "115學年度第1學期加退選開始 Add-or-Drop Selection (10/20-10/22)",
+        "2026-10-20",
+        "2026-10-22",
+      ),
     ];
     createTestDom();
     const rendered = await renderStatus();
@@ -212,12 +239,13 @@ describe("CourseSelectionStatus", () => {
 
   test("renders and dismisses a period within the banner window", async () => {
     calendarEvents = [
-      {
-        id: "near",
-        date: "2026-10-20",
-        summary:
-          "115學年度第1學期加退選開始 Add-or-Drop Selection (10/20-10/22)",
-      },
+      addDropEvent(
+        "near",
+        "2026-10-20",
+        "115學年度第1學期加退選開始 Add-or-Drop Selection (10/20-10/22)",
+        "2026-10-20",
+        "2026-10-22",
+      ),
     ];
     const dom = createTestDom();
     const rendered = await renderStatus();
@@ -241,12 +269,13 @@ describe("CourseSelectionStatus", () => {
 
   test("does not apply a dismissal to an open period", async () => {
     calendarEvents = [
-      {
-        id: "current",
-        date: "2026-10-01",
-        summary:
-          "115學年度第1學期加退選開始 Add-or-Drop Selection (10/1-10/10)",
-      },
+      addDropEvent(
+        "current",
+        "2026-10-01",
+        "115學年度第1學期加退選開始 Add-or-Drop Selection (10/1-10/10)",
+        "2026-10-01",
+        "2026-10-10",
+      ),
     ];
     createTestDom(["course-selection:current"]);
     const rendered = await renderStatus();
@@ -258,17 +287,20 @@ describe("CourseSelectionStatus", () => {
 
   test("prunes ended dismissals when writing a new dismissal", async () => {
     calendarEvents = [
-      {
-        id: "ended",
-        date: "2026-09-01",
-        summary: "115學年度第1學期加退選開始 Add-or-Drop Selection (9/1-9/5)",
-      },
-      {
-        id: "near",
-        date: "2026-10-20",
-        summary:
-          "115學年度第1學期加退選開始 Add-or-Drop Selection (10/20-10/22)",
-      },
+      addDropEvent(
+        "ended",
+        "2026-09-01",
+        "115學年度第1學期加退選開始 Add-or-Drop Selection (9/1-9/5)",
+        "2026-09-01",
+        "2026-09-05",
+      ),
+      addDropEvent(
+        "near",
+        "2026-10-20",
+        "115學年度第1學期加退選開始 Add-or-Drop Selection (10/20-10/22)",
+        "2026-10-20",
+        "2026-10-22",
+      ),
     ];
     const dom = createTestDom(["course-selection:ended"]);
     const rendered = await renderStatus();
