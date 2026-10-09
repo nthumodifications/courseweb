@@ -332,7 +332,7 @@ const GradeTracker = () => {
                   : dict.grade.no_courses}
               </CardDescription>
             </CardHeader>
-            <CardContent className="grid gap-4 p-4 sm:grid-cols-3">
+            <CardContent className="grid gap-4 px-6 py-4 sm:grid-cols-3">
               <div className="space-y-1">
                 <p className="text-sm text-muted-foreground">
                   {dict.grade.predicted_term_gpa}
