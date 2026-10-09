@@ -12,6 +12,13 @@ import {
   type LibraryBranch,
 } from "@/lib/library";
 import useDictionary from "@/dictionaries/useDictionary";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@courseweb/ui";
 
 interface LibraryWidgetProps {
   onRemove?: () => void;
@@ -69,28 +76,32 @@ const LibraryWidget: FC<LibraryWidgetProps> = ({
       isDragging={isDragging}
     >
       <div className="flex flex-col gap-3 p-4">
-        <select
+        <Select
           value={branch}
-          onChange={(event) =>
-            setStoredBranch(event.target.value as LibraryBranch)
-          }
-          aria-label={dict.library.filter_branch_all}
-          className="w-full rounded-md border border-border bg-transparent px-2 py-1 text-xs"
+          onValueChange={(value) => setStoredBranch(value as LibraryBranch)}
         >
-          {branches.map((value) => (
-            <option key={value} value={value}>
-              {
+          <SelectTrigger
+            className="h-7 w-full text-xs"
+            aria-label={dict.library.filter_branch_all}
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {branches.map((value) => (
+              <SelectItem key={value} value={value}>
                 {
-                  all: dict.library.filter_branch_all,
-                  main: dict.library.filter_branch_main,
-                  moonlight: dict.library.filter_branch_moonlight,
-                  hss: dict.library.filter_branch_hss,
-                  ctm: dict.library.filter_branch_ctm,
-                }[value]
-              }
-            </option>
-          ))}
-        </select>
+                  {
+                    all: dict.library.filter_branch_all,
+                    main: dict.library.filter_branch_main,
+                    moonlight: dict.library.filter_branch_moonlight,
+                    hss: dict.library.filter_branch_hss,
+                    ctm: dict.library.filter_branch_ctm,
+                  }[value]
+                }
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         {isLoading ? (
           <div className="flex justify-center py-4">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />

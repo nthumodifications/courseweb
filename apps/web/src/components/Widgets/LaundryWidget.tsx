@@ -18,6 +18,13 @@ import {
   type LaundrySummary,
 } from "@/lib/laundry-selectors";
 import useDictionary from "@/dictionaries/useDictionary";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@courseweb/ui";
 
 interface LaundryWidgetProps {
   onRemove?: () => void;
@@ -107,19 +114,25 @@ const LaundryWidget: FC<LaundryWidgetProps> = ({
       isDragging={isDragging}
     >
       <div className="flex flex-col gap-3 p-4">
-        <select
+        <Select
           value={dorm}
-          onChange={(event) => setStoredDorm(event.target.value as WidgetDorm)}
-          aria-label={dict.laundry.my_dorm}
-          className="w-full rounded-md border border-border bg-transparent px-2 py-1 text-xs"
+          onValueChange={(value) => setStoredDorm(value as WidgetDorm)}
         >
-          <option value="all">{dict.laundry.all_dorms}</option>
-          {(Object.keys(LAUNDRY_DORMS) as LaundryDorm[]).map((value) => (
-            <option key={value} value={value}>
-              {LAUNDRY_DORMS[value][language]}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger
+            className="h-7 w-full text-xs"
+            aria-label={dict.laundry.my_dorm}
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{dict.laundry.all_dorms}</SelectItem>
+            {(Object.keys(LAUNDRY_DORMS) as LaundryDorm[]).map((value) => (
+              <SelectItem key={value} value={value}>
+                {LAUNDRY_DORMS[value][language]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         {isLoading ? (
           <div className="flex justify-center py-4">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
