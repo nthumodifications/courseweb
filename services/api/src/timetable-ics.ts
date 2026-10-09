@@ -309,7 +309,9 @@ const app = new Hono().get(
     const courseIds = coursesParam?.split(",").filter(Boolean) ?? [];
 
     if (!semObj) {
-      const message = `Bad Request: unsupported semester "${semester}"; no calendar generated`;
+      // Never echo the raw query value into the log or the response.
+      const shown = /^\d{5}$/.test(semester) ? semester : "invalid";
+      const message = `Bad Request: unsupported semester "${shown}"; no calendar generated`;
       console.error(`[timetable-ics] ${message}`);
       return new Response(message, {
         status: 400,
