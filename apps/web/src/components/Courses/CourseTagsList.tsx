@@ -22,7 +22,15 @@ const HighlightItem: FC<
     </div>
   );
 };
-const CourseTagList = ({ course }: { course: CourseDefinition }) => {
+const CourseTagList = ({
+  course,
+  showCredits = true,
+  priority,
+}: {
+  course: CourseDefinition;
+  showCredits?: boolean;
+  priority?: number;
+}) => {
   const dict = useDictionary();
   return (
     <div className="flex flex-row flex-wrap gap-1 text-sm">
@@ -47,11 +55,13 @@ const CourseTagList = ({ course }: { course: CourseDefinition }) => {
           </span>
         </HighlightItem>
       )}
-      <HighlightItem>
-        <span className="">
-          {course.credits} {dict.course.credits}
-        </span>
-      </HighlightItem>
+      {showCredits && (
+        <HighlightItem>
+          <span className="">
+            {course.credits} {dict.course.credits}
+          </span>
+        </HighlightItem>
+      )}
       {course.tags.includes("16周") && (
         <HighlightItem>
           <span className="">{dict.course.tags.sixteen_weeks}</span>
@@ -85,6 +95,11 @@ const CourseTagList = ({ course }: { course: CourseDefinition }) => {
         <HighlightItem>
           {dict.course.tags.general_education_core}{" "}
           {getGECType(course.ge_type!)}
+        </HighlightItem>
+      )}
+      {priority != null && priority !== 0 && (
+        <HighlightItem className="bg-foreground text-muted">
+          {priority} {dict.timetable.priority}
         </HighlightItem>
       )}
     </div>

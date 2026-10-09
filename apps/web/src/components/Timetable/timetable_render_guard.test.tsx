@@ -9,7 +9,7 @@ import {
 import { createRoot } from "react-dom/client";
 import { JSDOM } from "jsdom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { describe, expect, mock, test } from "bun:test";
+import { afterEach, describe, expect, mock, test } from "bun:test";
 
 process.env.VITE_COURSEWEB_API_URL ??= "https://api.example.test";
 (
@@ -19,10 +19,12 @@ process.env.VITE_COURSEWEB_API_URL ??= "https://api.example.test";
 mock.module("react-oidc-context", () => ({
   useAuth: () => ({ isAuthenticated: false, user: undefined }),
 }));
+let courseResponseData: unknown[] = [];
 mock.module("@/config/api", () => ({
   default: {
     course: {
-      $get: async () => new Response("[]", { status: 200 }),
+      $get: async () =>
+        new Response(JSON.stringify(courseResponseData), { status: 200 }),
     },
   },
 }));
@@ -35,13 +37,36 @@ mock.module("@/dictionaries/useDictionary", () => ({
   default: () => ({
     course: {
       credits: "credits",
-      details: { missing_time: "Missing time" },
+      details: {
+        favourite_unavailable: "Unavailable",
+        missing_time: "Missing time",
+        note_prefix: "Note: ",
+        prerequisites_available: "Prerequisites available",
+        restriction_prefix: "Restriction: ",
+        taken: "Taken",
+      },
       item: { add_to_semester: "Add to semester" },
+      tags: {
+        chinese: "Chinese",
+        enrolled_suffix: "enrolled",
+        english: "English",
+        sixteen_weeks: "16 weeks",
+        eighteen_weeks: "18 weeks",
+        general_education: "general education",
+        general_education_core: "general education core",
+        people: "people",
+        reserve_prefix: "reserve",
+        x_class: "X-Class",
+      },
     },
     timetable: {
       all_courses: "All courses",
       conflict: "Conflict",
       course: "course",
+      course_actions: {
+        hide_course: "Hide course",
+        show_course: "Show course",
+      },
       course_data_error: "Course data failed",
       course_data_loading: "Loading course data",
       credits: "credits",
@@ -131,14 +156,53 @@ Object.assign(globalThis, {
 const { UserTimetableProvider, default: useUserTimetable } = await import(
   "@/hooks/contexts/useUserTimetable"
 );
+const { CourseDialogProvider } = await import(
+  "@/components/Courses/CourseDialog"
+);
 const { TimetableCourseList } = await import("./TimetableCourseList");
 
 const COURSES_KEY = "nthumods-storage-anonymous-courses";
 const PREFERENCES_KEY =
   "nthumods-storage-anonymous-timetable_display_preferences";
+const DISPLAY_SETTINGS_KEY =
+  "nthumods-storage-anonymous-timetable-display-settings";
 
 const syncedRecord = (value: unknown) =>
   JSON.stringify({ value, lastModified: 1, updatedAt: 1, deviceId: "test" });
+
+const testCourse = {
+  capacity: 30,
+  class: "1",
+  closed_mark: null,
+  compulsory_for: [],
+  course: "1010",
+  credits: 2,
+  cross_discipline: [],
+  department: "CS",
+  elective_for: [],
+  enrolled: 20,
+  first_specialization: [],
+  ge_target: null,
+  ge_type: null,
+  language: "中",
+  name_en: "Discrete Mathematics",
+  name_zh: "離散數學",
+  no_extra_selection: false,
+  note: null,
+  prerequisites: null,
+  raw_id: "11410-CS 1010 1",
+  reserve: 0,
+  restrictions: null,
+  second_specialization: [],
+  semester: "11410",
+  tags: [],
+  teacher_en: ["Alice Chen"],
+  teacher_zh: ["陳老師"],
+  times: ["M1M2"],
+  updated_at: "2026-01-01T00:00:00Z",
+  venues: ["DELTA台達217 M9MaMb"],
+  time_slots: null,
+};
 
 const renderTimetable = async (
   children: ReactNode,
@@ -166,7 +230,9 @@ const renderTimetable = async (
   await act(async () => {
     root.render(
       <QueryClientProvider client={queryClient}>
-        <UserTimetableProvider>{children}</UserTimetableProvider>
+        <UserTimetableProvider>
+          <CourseDialogProvider>{children}</CourseDialogProvider>
+        </UserTimetableProvider>
       </QueryClientProvider>,
     );
     await new Promise((resolve) => setTimeout(resolve, 0));
@@ -201,6 +267,10 @@ const renderTimetable = async (
 };
 
 describe("timetable provider render stability", () => {
+  afterEach(() => {
+    courseResponseData = [];
+  });
+
   test("settles when the provider and empty course list mount", async () => {
     let renderCount = 0;
     const fixture = await renderTimetable(
@@ -212,6 +282,65 @@ describe("timetable provider render stability", () => {
 
     expect(renderCount).toBeLessThan(30);
     expect(fixture.container.textContent).toContain("No courses");
+    await fixture.cleanup();
+  });
+
+  test("renders timetable course fields through the standard course row", async () => {
+    const course = testCourse;
+    courseResponseData = [course];
+
+    const fixture = await renderTimetable(
+      <TimetableCourseList semester="11410" />,
+      {
+        [COURSES_KEY]: { "11410": [course.raw_id] },
+        [DISPLAY_SETTINGS_KEY]: {
+          englishNames: "add",
+          showCourseCode: true,
+          showVenue: true,
+          showPriority: false,
+          showCredits: true,
+          lockOrder: true,
+        },
+      },
+    );
+    await fixture.waitFor(
+      () => fixture.container.textContent?.includes(course.name_zh) ?? false,
+    );
+
+    const text = fixture.container.textContent ?? "";
+    expect(text).toContain("CS 101001");
+    expect(text).toContain("離散數學 - 陳老師");
+    expect(text).toContain("Discrete Mathematics - Alice Chen");
+    expect(text).toContain("DELTA台達217 M9MaMb / M1M2");
+    expect(text).toContain("2 credits");
+    await fixture.cleanup();
+  });
+
+  test("omits a timetable field disabled in display settings", async () => {
+    const course = testCourse;
+    courseResponseData = [course];
+
+    const fixture = await renderTimetable(
+      <TimetableCourseList semester="11410" />,
+      {
+        [COURSES_KEY]: { "11410": [course.raw_id] },
+        [DISPLAY_SETTINGS_KEY]: {
+          englishNames: "none",
+          showCourseCode: true,
+          showVenue: false,
+          showPriority: false,
+          showCredits: false,
+          lockOrder: true,
+        },
+      },
+    );
+    await fixture.waitFor(
+      () => fixture.container.textContent?.includes(course.name_zh) ?? false,
+    );
+
+    const text = fixture.container.textContent ?? "";
+    expect(text).not.toContain("DELTA台達217 M9MaMb");
+    expect(text).not.toContain("2 credits");
     await fixture.cleanup();
   });
 
