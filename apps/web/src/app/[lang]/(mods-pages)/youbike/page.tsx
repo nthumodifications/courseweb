@@ -2,15 +2,14 @@ import { useSettings } from "@/hooks/contexts/settings";
 import { Helmet } from "react-helmet-async";
 import { cn, Tabs, TabsList, TabsTrigger } from "@courseweb/ui";
 import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import {
-  getYouBikeStations,
   getPinnedStationIds,
   togglePinnedStationId,
   isNandaCampusStation,
   type YouBikeStation,
   type YouBikeTab,
 } from "@/lib/youbike";
+import { useYouBikeStations } from "@/hooks/useYouBikeStations";
 import { Bike, Zap, Star, Search, MapPin } from "lucide-react";
 import useDictionary from "@/dictionaries/useDictionary";
 import OpenCollectiveSponsorBanner from "@/components/Sponsorship/OpenCollectiveSponsorBanner";
@@ -167,13 +166,7 @@ const YouBikePage = () => {
     data: result = { stations: [], source: "api" as const },
     isLoading,
     error,
-  } = useQuery({
-    queryKey: ["youbike_stations"],
-    queryFn: getYouBikeStations,
-    staleTime: 60 * 1000,
-    refetchInterval: (query) =>
-      query.state.data?.source === "api" ? 60 * 1000 : false,
-  });
+  } = useYouBikeStations();
 
   const filteredStations = useMemo(() => {
     let list = result.stations;

@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import {
@@ -28,13 +27,11 @@ import {
   getLocalizedSpaceTypeName,
   getTaipeiDate,
   getZoneCapacity,
-  LIBRARY_API_ENDPOINT,
   LIBRARY_BOOKING_URL,
   type LibraryBranch,
-  type LibraryVacancyItem,
-  type LibraryVacancyResponse,
   type SpaceCategory,
 } from "@/lib/library";
+import { useLibraryVacancy } from "@/hooks/useLibraryVacancy";
 import {
   pickLibraryForecastSeries,
   shouldShowUsageLearningNotice,
@@ -85,27 +82,7 @@ const LibraryPage = () => {
   const { data: usageForecast } = useUsageForecast("library");
 
   const { data, dataUpdatedAt, isLoading, isFetching, error, refetch } =
-    useQuery<LibraryVacancyItem[]>({
-      queryKey: ["library-vacancy-status"],
-      queryFn: async () => {
-        const res = await fetch(LIBRARY_API_ENDPOINT);
-        if (!res.ok) {
-          throw new Error(`Failed to fetch library API (${res.status})`);
-        }
-        const json = (await res.json()) as LibraryVacancyResponse;
-        if (
-          json?.rescode !== 1 ||
-          json?.resmsg !== "成功" ||
-          !Array.isArray(json?.rows)
-        ) {
-          throw new Error(
-            json?.resmsg || "Invalid or failing API response format",
-          );
-        }
-        return json.rows;
-      },
-      refetchInterval: 30_000,
-    });
+    useLibraryVacancy();
 
   const items = useMemo(() => data ?? [], [data]);
 

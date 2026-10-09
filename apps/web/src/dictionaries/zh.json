@@ -861,6 +861,7 @@
         "description": "用可自訂的小工具格取代今日頁面",
         "columns": "欄數",
         "widgets": "小工具",
+        "view_full_page": "查看完整頁面",
         "widget_options": {
           "schedule": {
             "title": "課程表"
@@ -879,6 +880,18 @@
           },
           "bus": {
             "title": "公車時刻"
+          },
+          "library": {
+            "title": "圖書館座位"
+          },
+          "laundry": {
+            "title": "洗衣機"
+          },
+          "sports-venues": {
+            "title": "體育場館"
+          },
+          "youbike": {
+            "title": "YouBike"
           }
         },
         "weather": {
@@ -2388,6 +2401,7 @@
       "mine": "常用站點"
     },
     "regular_bikes": "一般車",
+    "available_bikes": "可用車輛",
     "ebikes": "電輔車",
     "empty_docks": "可還空位",
     "out_of_service": "暫停營運",
