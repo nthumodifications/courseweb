@@ -12,6 +12,11 @@ import {
   timetableGridEnd,
   timetableGridStart,
 } from "./timetable";
+import {
+  filterHiddenCourseIds,
+  filterHiddenCourses,
+  normalizeHiddenCourses,
+} from "./timetableVisibility";
 import { CourseTimeslotData, CustomTimetableItem } from "@/types/timetable";
 
 const slot = (start: string, end: string) => ({
@@ -176,6 +181,29 @@ describe("stored timetable course ids", () => {
     );
     expect(getTimetableCourseListStatus(false, null, 0, 0)).toBe("empty");
     expect(getTimetableCourseListStatus(false, null, 0, 1)).toBe("ready");
+  });
+});
+
+describe("hidden timetable courses", () => {
+  test("keeps old preference data visible and normalizes only true flags", () => {
+    expect(normalizeHiddenCourses(undefined)).toEqual({});
+    expect(
+      normalizeHiddenCourses({ hidden: true, visible: false, invalid: "yes" }),
+    ).toEqual({ hidden: true });
+  });
+
+  test("filters hidden courses without changing the stored course list", () => {
+    const courses = [{ raw_id: "11510-hidden" }, { raw_id: "11510-visible" }];
+
+    expect(filterHiddenCourses(courses, { "11510-hidden": true })).toEqual([
+      courses[1],
+    ]);
+    expect(
+      filterHiddenCourseIds(
+        courses.map((course) => course.raw_id),
+        { "11510-hidden": true },
+      ),
+    ).toEqual(["11510-visible"]);
   });
 });
 

@@ -19,19 +19,28 @@ import {
 } from "@courseweb/ui";
 import { DialogTrigger } from "@radix-ui/react-dialog";
 import { useSettings } from "@/hooks/contexts/settings";
+import { filterHiddenCourses } from "@/helpers/timetableVisibility";
 import { setTimetableCourseCodeDisplay } from "./timetableExport";
 
 const DownloadTimetableComponent = () => {
   const dict = useDictionary();
   const { language } = useSettings();
-  const { getSemesterCourses, getSemesterCustomItems, semester, colorMap } =
-    useUserTimetable();
+  const {
+    getSemesterCourses,
+    getSemesterCustomItems,
+    semester,
+    colorMap,
+    preferences,
+  } = useUserTimetable();
   const ref = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(false);
   const [generatedImg, setGeneratedImg] = useState<string | null>(null);
 
   const timetableData = createTimetableFromCoursesAndCustomItems(
-    getSemesterCourses(semester) as MinimalCourse[],
+    filterHiddenCourses(
+      getSemesterCourses(semester),
+      preferences.hiddenCourses,
+    ) as MinimalCourse[],
     getSemesterCustomItems(semester),
     colorMap,
   );

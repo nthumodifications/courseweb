@@ -52,7 +52,9 @@
     },
     "course_actions": {
       "course_location": "Course Location",
-      "location_unavailable": "This course has no mapped venue"
+      "location_unavailable": "This course has no mapped venue",
+      "hide_course": "Hide course from timetable",
+      "show_course": "Show course"
     },
     "credits": "credits",
     "course": "courses",

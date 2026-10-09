@@ -48,6 +48,7 @@ import {
   canSortTimetableCourses,
   reorderStoredCourseIdsByCredits,
 } from "@/helpers/timetable";
+import { filterHiddenCourseIds } from "@/helpers/timetableVisibility";
 
 const createEmptyCustomItem = (color: string): CustomTimetableItem => ({
   // crypto.randomUUID rather than Math.random: the project already moved its
@@ -84,6 +85,7 @@ const TimetableSidebar = ({
     isLoading,
     isFetchingCourses,
     error,
+    preferences,
   } = useUserTimetable();
 
   const emptyCustomItem = useMemo(
@@ -107,7 +109,11 @@ const TimetableSidebar = ({
   });
 
   const apiBase = import.meta.env.VITE_COURSEWEB_API_URL;
-  const icsQuery = `semester=${semester}&semester_${semester}=${(courses[semester] ?? []).map((id) => encodeURI(id)).join(",")}`;
+  const visibleCourseIds = filterHiddenCourseIds(
+    courses[semester] ?? [],
+    preferences.hiddenCourses,
+  );
+  const icsQuery = `semester=${semester}&semester_${semester}=${visibleCourseIds.map((id) => encodeURI(id)).join(",")}`;
   const icsfileLink = `${apiBase}/timetable/calendar.ics?${icsQuery}`;
 
   const handleGroupByDepartment = (semester: string) => {
