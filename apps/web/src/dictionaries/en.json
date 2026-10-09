@@ -987,19 +987,24 @@
   },
   "applist": {
     "title": "Apps",
+    "quick_links_title": "Quick Links",
+    "pinned_widget_empty": "Pin shortcuts from the Apps page",
     "to_ccxp": "NTHU AIS",
     "empty_pinned_apps_reminder": "Pin your most used apps here!",
     "pinned_apps_title": "Pinned Apps",
     "edit_pinned_apps_title": "Edit Pinned Apps",
     "beta": "Beta",
     "categories": {
-      "campuslife": "Campus Life",
-      "course": "Courses",
-      "club": "Clubs",
-      "other": "Others"
+      "courses": "Courses",
+      "studies": "My Studies",
+      "transport": "Getting Around",
+      "facilities": "Campus Facilities",
+      "services": "Food and Services",
+      "links": "Links"
     },
     "apps": {
       "courses": "Course Search",
+      "modules": "Course Modules",
       "chat": "AI Course Assistant",
       "venues": "Venues",
       "campus-map": "Interactive Campus Map",
