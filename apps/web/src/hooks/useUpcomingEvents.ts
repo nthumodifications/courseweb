@@ -1,12 +1,11 @@
 import { useMemo } from "react";
 import { format } from "date-fns";
-import { fromZonedTime, toZonedTime } from "date-fns-tz";
+import { fromZonedTime } from "date-fns-tz";
 import { useQuery } from "@tanstack/react-query";
 import { semesterInfo } from "@courseweb/shared";
 import { EventData } from "@/types/calendar_event";
 import { MinimalCourse } from "@/types/courses";
 import {
-  CalendarEvent,
   CalendarEventInternal,
   DisplayCalendarEvent,
 } from "@/components/Calendar/calendar.types";
@@ -38,7 +37,6 @@ export {
   isTaipeiDateKey,
   toAcademicCalendarBoundary,
 };
-const WALL_DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS";
 const DATE_KEY_FORMAT = "yyyy-MM-dd";
 const MINUTE_IN_MS = 60 * 1000;
 
@@ -127,21 +125,6 @@ export type EventDescriptor = {
   course?: MinimalCourse;
 };
 
-const toWallDateTime = (date: Date) =>
-  format(toZonedTime(date, UPCOMING_TIME_ZONE), WALL_DATE_TIME_FORMAT);
-
-const fromTaipeiWallDateTime = (date: Date) =>
-  fromZonedTime(toWallDateTime(date), UPCOMING_TIME_ZONE);
-
-const fromBrowserWallDateTime = (date: Date) =>
-  fromZonedTime(format(date, WALL_DATE_TIME_FORMAT), UPCOMING_TIME_ZONE);
-
-const normalizeRepeatValue = (repeat: NonNullable<CalendarEvent["repeat"]>) => {
-  if (repeat.mode === "count") return repeat.value;
-  const range = getTaipeiDateRange(getTaipeiDateKey(new Date(repeat.value)));
-  return range ? range.end.getTime() - 1 : repeat.value;
-};
-
 export const getTaipeiDayStart = (date: Date) =>
   fromTaipeiDateKey(getTaipeiDateKey(date));
 
@@ -150,28 +133,6 @@ const isExcludedOccurrence = (event: CalendarEventInternal, start: Date) => {
   return (event.excludedDates ?? []).some(
     (excludedDate) => getTaipeiDateKey(excludedDate) === dateKey,
   );
-};
-
-const normalizeTimetableEvent = (
-  event: CalendarEvent,
-): CalendarEventInternal => {
-  // timetableToCalendarEvent creates wall-clock Dates with the browser's
-  // calendar fields; interpret those fields as Taipei time explicitly.
-  const start = fromBrowserWallDateTime(event.start);
-  const end = fromBrowserWallDateTime(event.end);
-  const repeat = event.repeat
-    ? {
-        ...event.repeat,
-        value: normalizeRepeatValue(event.repeat),
-      }
-    : null;
-  return {
-    ...event,
-    start,
-    end,
-    repeat,
-    actualEnd: repeat?.mode === "date" ? new Date(repeat.value) : end,
-  };
 };
 
 const toDisplayCalendarEvent = (
@@ -352,9 +313,10 @@ const useUpcomingEvents = (
   );
   const classEvents = useMemo(
     () =>
-      timetableToCalendarEvent(timetableData, language).map(
-        normalizeTimetableEvent,
-      ),
+      timetableToCalendarEvent(timetableData, language).map((event) => ({
+        ...event,
+        actualEnd: event.repeat ? new Date(event.repeat.value) : event.end,
+      })),
     [language, timetableData],
   );
   const dayStarts = useMemo(
