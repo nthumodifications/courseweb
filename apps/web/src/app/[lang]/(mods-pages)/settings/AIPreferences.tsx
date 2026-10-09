@@ -2,7 +2,17 @@ import { useState, useEffect } from "react";
 import useDictionary from "@/dictionaries/useDictionary";
 import {
   Button,
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  cn,
   Input,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
   Select,
   SelectContent,
   SelectItem,
@@ -14,7 +24,7 @@ import { event } from "@/lib/gtag";
 import { useQuery } from "@tanstack/react-query";
 import client from "@/config/api";
 import { SettingItem } from "./SettingItem";
-import { Check } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
 
 const CURRENT_ROC_YEAR = new Date().getFullYear() - 1911;
 const ENTRANCE_YEARS = Array.from({ length: 8 }, (_, index) =>
@@ -45,6 +55,7 @@ export function AIPreferencesPanel() {
   >(null);
   const [testedModel, setTestedModel] = useState<string | null>(null);
   const [isSaved, setIsSaved] = useState(false);
+  const [isDepartmentPickerOpen, setIsDepartmentPickerOpen] = useState(false);
 
   // Load departments from API using React Query
   const {
@@ -183,33 +194,76 @@ export function AIPreferencesPanel() {
       <SettingItem
         title={dict.settings.ai.profile.department.label}
         control={
-          <Select
-            value={settings.department}
-            onValueChange={(v) => setSettings((s) => ({ ...s, department: v }))}
+          <Popover
+            open={isDepartmentPickerOpen}
+            onOpenChange={setIsDepartmentPickerOpen}
+            modal={true}
           >
-            <SelectTrigger className="w-[160px]">
-              <SelectValue
-                placeholder={dict.settings.ai.profile.department.placeholder}
-              />
-            </SelectTrigger>
-            <SelectContent>
-              {isLoadingDepts ? (
-                <SelectItem value="loading" disabled>
-                  {dict.common.loading}
-                </SelectItem>
-              ) : isDepartmentsError ? (
-                <SelectItem value="error" disabled>
-                  {dict.common.error}
-                </SelectItem>
-              ) : (
-                departments.map((dept) => (
-                  <SelectItem key={dept.department} value={dept.department}>
-                    {dept.department} ({dept.college})
-                  </SelectItem>
-                ))
-              )}
-            </SelectContent>
-          </Select>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                role="combobox"
+                aria-expanded={isDepartmentPickerOpen}
+                aria-haspopup="listbox"
+                className="w-[160px] justify-between px-3 [&>span]:line-clamp-1"
+              >
+                <span>
+                  {settings.department ||
+                    dict.settings.ai.profile.department.placeholder}
+                </span>
+                <ChevronDown
+                  className="h-4 w-4 opacity-50"
+                  aria-hidden="true"
+                />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[160px] p-0" align="start">
+              <Command>
+                <CommandInput placeholder={dict.common.search} autoFocus />
+                <CommandList>
+                  <CommandEmpty>{dict.common.no_results}</CommandEmpty>
+                  <CommandGroup>
+                    {isLoadingDepts ? (
+                      <CommandItem value="loading" disabled>
+                        {dict.common.loading}
+                      </CommandItem>
+                    ) : isDepartmentsError ? (
+                      <CommandItem value="error" disabled>
+                        {dict.common.error}
+                      </CommandItem>
+                    ) : (
+                      departments.map((dept) => (
+                        <CommandItem
+                          key={`${dept.department}-${dept.college}`}
+                          value={`${dept.department} (${dept.college})`}
+                          keywords={[dept.department, dept.college]}
+                          onSelect={() => {
+                            setSettings((s) => ({
+                              ...s,
+                              department: dept.department,
+                            }));
+                            setIsDepartmentPickerOpen(false);
+                          }}
+                        >
+                          <Check
+                            aria-hidden="true"
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              settings.department === dept.department
+                                ? "opacity-100"
+                                : "opacity-0",
+                            )}
+                          />
+                          {dept.department} ({dept.college})
+                        </CommandItem>
+                      ))
+                    )}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         }
       />
 
