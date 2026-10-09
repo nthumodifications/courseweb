@@ -770,6 +770,7 @@
       "signout": "Sign Out",
       "title": "Account",
       "description": "NTHU AIS Login",
+      "syncDescription": "Sign in to sync your timetable and settings across devices.",
       "ccxp": {
         "title": "Proxy Login into your NTHU AIS Account",
         "description": "Access more features by connecting with NTHU AIS securely."

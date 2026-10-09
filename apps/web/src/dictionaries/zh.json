@@ -770,6 +770,7 @@
       "signout": "登出",
       "title": "帳號",
       "description": "校務資訊系統代理登入",
+      "syncDescription": "登入後即可在不同裝置間同步課表與設定。",
       "ccxp": {
         "title": "代理登入校務資訊系統",
         "description": "系統會用代理登入方式，讓學生們可以在 NTHUMods 上輕鬆連結校務系統功能。"

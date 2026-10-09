@@ -30,6 +30,7 @@ import { SettingsSection } from "./SettingsSection";
 import { SettingItem } from "./SettingItem";
 import { MobileQuickNav } from "./MobileQuickNav";
 import { useScrollTracking } from "./useScrollTracking";
+import { AccountSection } from "./AccountSection";
 import {
   Monitor,
   Calendar,
@@ -37,6 +38,7 @@ import {
   Sparkles,
   Shield,
   Palette,
+  UserRound,
 } from "lucide-react";
 import { useMemo } from "react";
 
@@ -75,6 +77,7 @@ const SettingsPage = () => {
       "calendar",
       "timetable",
       "ai",
+      "account",
       "privacy",
       "advanced",
     ],
@@ -117,6 +120,11 @@ const SettingsPage = () => {
         id: "ai",
         title: dict.settings.ai.title,
         icon: <Sparkles className="h-5 w-5" />,
+      },
+      {
+        id: "account",
+        title: dict.settings.account.title,
+        icon: <UserRound className="h-5 w-5" />,
       },
       {
         id: "privacy",
@@ -299,6 +307,9 @@ const SettingsPage = () => {
             <SettingsSection id="ai" title={dict.settings.ai.title}>
               <AIPreferencesPanel />
             </SettingsSection>
+
+            {/* Account Settings */}
+            <AccountSection />
 
             {/* Privacy Settings */}
             <SettingsSection id="privacy" title={dict.settings.privacy.title}>
