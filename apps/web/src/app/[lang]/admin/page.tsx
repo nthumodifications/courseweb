@@ -72,11 +72,11 @@ const ChartTooltip = ({
   if (!active || !payload?.length) return null;
   const row = payload[0];
   return (
-    <div className="rounded-lg border bg-background p-2 text-sm shadow-sm">
-      <div className="text-[0.7rem] uppercase text-muted-foreground">
+    <div className="rounded-lg border bg-background p-2 text-sm">
+      <div className="text-[0.7rem] text-muted-foreground">
         {labelFormatter(row.payload ?? {})}
       </div>
-      <div className="font-semibold tabular-nums">
+      <div className="font-medium tabular-nums">
         {row.value} <span className="font-normal">{valueLabel}</span>
       </div>
     </div>

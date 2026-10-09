@@ -101,20 +101,20 @@ const ParcelPage = () => {
   //       <TabsContent value="archive">
   //         {archiveParcels.map((parcel) => (
   //           <div
-  //             className="flex flex-col bg-white rounded-lg shadow-md p-4 mb-4"
+  //             className="flex flex-col bg-white rounded-lg p-4 mb-4"
   //             key={parcel.barcode}
   //           >
   //             <div className="flex flex-row gap-1">
   //               <Badge className="rounded-md" variant="secondary">
   //                 {parcel.statusText}
   //               </Badge>
-  //               <span className="text-sm text-gray-500">{parcel.takeTime}</span>
+  //               <span className="text-sm text-muted-foreground">{parcel.takeTime}</span>
   //             </div>
-  //             <span className="text-lg font-semibold">{parcel.name}</span>
-  //             <span className="text-sm text-gray-500">
+  //             <span className="text-lg font-medium">{parcel.name}</span>
+  //             <span className="text-sm text-muted-foreground">
   //               {parcel.studentNumber}
   //             </span>
-  //             <span className="text-sm text-gray-500">
+  //             <span className="text-sm text-muted-foreground">
   //               {parcel.logistic} {parcel.barcode}
   //             </span>
   //           </div>

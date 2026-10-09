@@ -518,7 +518,7 @@ const ClientFormDialog = ({
             <FieldError message={errors.scopes} />
           </div>
 
-          <DialogFooter className="gap-2 sm:gap-0">
+          <DialogFooter className="gap-2 sm:gap-1">
             <DialogClose asChild>
               <Button type="button" variant="outline">
                 Cancel
@@ -698,11 +698,11 @@ const AdminClientsPage = () => {
         />
         <div className="flex items-start gap-3 rounded-md border border-destructive/40 bg-destructive/10 p-4">
           <ShieldAlert
-            className="mt-0.5 h-5 w-5 shrink-0 text-destructive"
+            className="mt-1 h-5 w-5 shrink-0 text-destructive"
             aria-hidden
           />
           <div>
-            <h2 className="font-semibold">Superuser only</h2>
+            <h2 className="font-medium">Superuser only</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               OAuth client registrations and secrets can be managed only by a
               superuser.
@@ -887,7 +887,7 @@ const AdminClientsPage = () => {
                         <TableCell colSpan={7} className="bg-muted/20">
                           <div className="space-y-3 py-1">
                             <div>
-                              <div className="mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                              <div className="mb-1 text-xs font-medium tracking-wide text-muted-foreground">
                                 Redirect URIs
                               </div>
                               <ul className="grid gap-1">
@@ -900,7 +900,7 @@ const AdminClientsPage = () => {
                             </div>
                             {client.logoutUris.length > 0 && (
                               <div>
-                                <div className="mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                <div className="mb-1 text-xs font-medium tracking-wide text-muted-foreground">
                                   Logout URIs
                                 </div>
                                 <ul className="grid gap-1">

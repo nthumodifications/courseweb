@@ -9,14 +9,14 @@ export const STATUS_BADGE_CLASS: Record<CourseStatus, string> = {
   failed:
     "bg-red-500/10 dark:bg-red-500/20 text-red-700 dark:text-red-400 border-red-500/30",
   planned:
-    "bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 border-neutral-300 dark:border-neutral-600",
+    "bg-foreground/10 text-foreground/80 border-foreground/15",
 };
 
 const STATUS_ICON_COLOR_CLASS: Record<CourseStatus, string> = {
   completed: "text-green-500 dark:text-green-400",
   "in-progress": "text-blue-500 dark:text-blue-400",
   failed: "text-red-500 dark:text-red-400",
-  planned: "text-neutral-400",
+  planned: "text-muted-foreground",
 };
 
 export function getStatusBadgeClass(status: CourseStatus | undefined | null) {

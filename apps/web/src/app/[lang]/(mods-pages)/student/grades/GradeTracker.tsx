@@ -281,7 +281,7 @@ const GradeTracker = () => {
   };
 
   return (
-    <div className="flex flex-col gap-4 px-4 pb-8">
+    <div className="flex flex-col gap-4 px-4 pb-6">
       <div className="flex flex-wrap items-center justify-between gap-3 py-4">
         <h1 className="text-xl font-bold">{dict.grade.tracker_title}</h1>
         <div className="flex flex-wrap items-center gap-2 sm:justify-end">
@@ -332,12 +332,12 @@ const GradeTracker = () => {
                   : dict.grade.no_courses}
               </CardDescription>
             </CardHeader>
-            <CardContent className="grid gap-4 p-4 sm:grid-cols-3">
+            <CardContent className="grid gap-4 px-6 py-4 sm:grid-cols-3">
               <div className="space-y-1">
                 <p className="text-sm text-muted-foreground">
                   {dict.grade.predicted_term_gpa}
                 </p>
-                <p className="text-3xl font-semibold">{formatGpa(termGpa)}</p>
+                <p className="text-xl font-bold">{formatGpa(termGpa)}</p>
                 <p className="text-xs text-muted-foreground">
                   {formatCredits(termCredits)}{" "}
                   {dict.grade.credits_counted.toLowerCase()}
@@ -347,7 +347,7 @@ const GradeTracker = () => {
                 <p className="text-sm text-muted-foreground">
                   {dict.grade.projected_cumulative_gpa}
                 </p>
-                <p className="text-3xl font-semibold">
+                <p className="text-xl font-bold">
                   {formatGpa(projectedCumulativeGpa)}
                 </p>
                 <p className="text-xs text-muted-foreground">
@@ -360,7 +360,7 @@ const GradeTracker = () => {
                 <p className="text-sm text-muted-foreground">
                   {dict.grade.your_courses}
                 </p>
-                <p className="text-3xl font-semibold">{entries.length}</p>
+                <p className="text-xl font-bold">{entries.length}</p>
                 <p className="text-xs text-muted-foreground">
                   {dict.grade.courses_count.replace(
                     "{count}",
@@ -505,7 +505,7 @@ const GradeTracker = () => {
                 </CardHeader>
                 <CardContent>
                   {entries.length === 0 ? (
-                    <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
+                    <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
                       {dict.grade.no_courses}
                     </div>
                   ) : (

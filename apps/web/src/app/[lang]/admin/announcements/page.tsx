@@ -263,7 +263,7 @@ const severityStyles: Record<
   },
   error: {
     className:
-      "border-destructive/50 bg-destructive/10 text-destructive dark:border-destructive",
+      "border-destructive/50 bg-destructive/10 text-destructive",
     Icon: AlertTriangle,
   },
 };
@@ -668,7 +668,7 @@ const AdminAnnouncementsPage = () => {
         <CardHeader>
           <CardTitle className="text-base">All announcements</CardTitle>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent className="p-1">
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>

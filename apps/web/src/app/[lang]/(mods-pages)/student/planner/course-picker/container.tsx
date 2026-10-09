@@ -83,7 +83,7 @@ const TakenCoursesPanel = ({
                 {addableCourses.map((course) => (
                   <div
                     key={course.raw_id}
-                    className="p-3 border rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors"
+                    className="p-3 border rounded-lg hover:bg-muted/50 transition-colors"
                   >
                     <div className="flex justify-between items-center">
                       <div>
@@ -91,12 +91,12 @@ const TakenCoursesPanel = ({
                         <div className="flex items-center mt-1 text-sm text-muted-foreground">
                           <span className="mr-2">{course.raw_id.slice(5)}</span>
                           {course.credits && (
-                            <span className="bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded text-xs">
+                            <span className="bg-muted px-2 py-1 rounded text-xs">
                               {course.credits} {dict.course.credits}
                             </span>
                           )}
                           {course.isSimilar && (
-                            <span className="bg-yellow-100 dark:bg-yellow-800 px-2 py-0.5 rounded text-xs ml-2">
+                            <span className="bg-yellow-100 dark:bg-yellow-800 px-2 py-1 rounded text-xs ml-2">
                               {dict.planner.coursePicker.similarCourse}
                             </span>
                           )}
@@ -196,7 +196,7 @@ const CourseSearchContainer = (props: CourseSearchContainerProps) => {
       // search. Disabled since no deep-linking feature depends on it.
       routing={false}
     >
-      <div className="flex flex-col h-full max-h-[90dvh] gap-4 md:gap-8">
+      <div className="flex flex-col h-full max-h-[90dvh] gap-4 md:gap-6">
         <div className="">
           <div className="flex items-center">
             <SearchBox
@@ -257,7 +257,7 @@ const CourseSearchContainer = (props: CourseSearchContainerProps) => {
             />
           </ResizablePanel>
 
-          <ResizableHandle className="hidden md:block outline-none self-center px-[2px] h-48 mx-4 my-8 rounded-full bg-muted" />
+          <ResizableHandle className="hidden md:block outline-none self-center px-[2px] h-48 mx-4 my-6 rounded-full bg-muted" />
 
           <ResizablePanel
             collapsible={true}
