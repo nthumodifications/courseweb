@@ -93,16 +93,16 @@ export const CourseSelectionScheduleRows = ({
           return (
             <div
               className={cn(
-                "flex min-w-0 flex-col gap-1 px-4",
+                "grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-x-2 gap-y-1 px-4",
                 compact ? "py-2" : "py-3",
                 status === "finished" && "text-muted-foreground",
-                "sm:flex-row sm:items-center sm:gap-4",
+                "sm:grid-cols-[10rem_minmax(0,1fr)_auto] sm:items-center",
               )}
               key={period.id}
             >
               <span
                 className={cn(
-                  "min-w-0 flex-1 text-sm font-medium",
+                  "min-w-0 whitespace-nowrap text-sm font-medium",
                   compact && "text-xs",
                 )}
               >
@@ -110,25 +110,28 @@ export const CourseSelectionScheduleRows = ({
               </span>
               <span
                 className={cn(
-                  "text-sm text-muted-foreground sm:w-48 sm:shrink-0 sm:text-left",
+                  "col-span-2 row-start-2 whitespace-nowrap text-sm text-muted-foreground sm:col-start-2 sm:col-span-1 sm:row-start-1 sm:text-left",
                   compact && "text-xs",
                 )}
               >
                 {formatCourseSelectionDateRange(period, language)}
               </span>
-              <span className="shrink-0 text-xs sm:min-w-28 sm:text-right">
-                {status === "in-progress" && (
-                  <Badge
-                    variant="outline"
-                    className="px-2 py-0 leading-5 text-primary"
-                  >
-                    {dict.today.upcoming.in_progress}
-                  </Badge>
-                )}
-                {status === "upcoming" && isNext && (
-                  <span className="text-muted-foreground">{statusLabel}</span>
-                )}
-              </span>
+              {(status === "in-progress" ||
+                (status === "upcoming" && isNext)) && (
+                <span className="col-start-2 row-start-1 min-w-max whitespace-nowrap text-right text-xs sm:col-start-3 sm:row-start-1">
+                  {status === "in-progress" && (
+                    <Badge
+                      variant="outline"
+                      className="px-2 py-0 leading-5 text-primary"
+                    >
+                      {dict.today.upcoming.in_progress}
+                    </Badge>
+                  )}
+                  {status === "upcoming" && isNext && (
+                    <span className="text-muted-foreground">{statusLabel}</span>
+                  )}
+                </span>
+              )}
             </div>
           );
         })}

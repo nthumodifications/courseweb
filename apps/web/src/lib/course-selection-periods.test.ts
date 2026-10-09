@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
   daysUntilCourseSelection,
+  getCourseSelectionCalendarRange,
   getCourseSelectionState,
   type CourseSelectionPeriod,
 } from "./course-selection-periods";
@@ -29,6 +30,13 @@ const periods: CourseSelectionPeriod[] = [
 ];
 
 describe("course selection state", () => {
+  test("requests one academic-cycle calendar window", () => {
+    expect(getCourseSelectionCalendarRange("2026-10-09")).toEqual({
+      startDateKey: "2026-05-01",
+      endDateKey: "2027-03-01",
+    });
+  });
+
   test("returns the open phase and next phase", () => {
     expect(getCourseSelectionState(periods, "11510", "2026-09-10")).toEqual({
       current: [periods[1]],

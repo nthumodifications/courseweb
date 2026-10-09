@@ -1,5 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import type { CourseSelectionPeriod } from "./course-selection-periods";
+import {
+  parseCourseSelectionPeriods,
+  type AcademicCalendarEvent,
+  type CourseSelectionPeriod,
+} from "./course-selection-periods";
 import {
   getCompactCourseSelectionPeriods,
   getCourseSelectionPhaseStatus,
@@ -38,6 +42,50 @@ const createPeriod = (overrides: Partial<CourseSelectionPeriod>) => ({
 });
 
 describe("course selection schedule helpers", () => {
+  test("keeps the API-provided new-students phase in the 11510 schedule", () => {
+    const event: AcademicCalendarEvent = {
+      id: "475cegj8e9rkd5vr64db1ajik1",
+      summary:
+        "115學年度入學各級新生、轉學生選課(至20日止) Course Selection for New Students/Transfer Students in Fall 2026 (8/18-8/20)",
+      date: "2026-08-18",
+      courseSelectionPeriod: {
+        id: "course-selection:475cegj8e9rkd5vr64db1ajik1",
+        semester: "11510",
+        phase: "new-students",
+        audience: "new-students",
+        startDate: "2026-08-18",
+        endDate: "2026-08-20",
+        sourceEventId: "475cegj8e9rkd5vr64db1ajik1",
+        sourceSummary:
+          "115學年度入學各級新生、轉學生選課(至20日止) Course Selection for New Students/Transfer Students in Fall 2026 (8/18-8/20)",
+      },
+    };
+    const schedule = getCourseSelectionSchedule(
+      [
+        createPeriod({
+          id: "course-selection:round-2",
+          phase: "round-2",
+          startDate: "2026-06-23",
+          endDate: "2026-06-25",
+        }),
+        ...parseCourseSelectionPeriods([event]),
+        createPeriod({
+          id: "course-selection:round-3",
+          phase: "round-3",
+          startDate: "2026-08-25",
+          endDate: "2026-08-27",
+        }),
+      ],
+      "11510",
+    );
+
+    expect(schedule.periods.map(({ phase }) => phase)).toEqual([
+      "round-2",
+      "new-students",
+      "round-3",
+    ]);
+  });
+
   test("renders every 11510 phase in date order", () => {
     const semesterPeriods = [
       createPeriod({
