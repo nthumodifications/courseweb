@@ -1,4 +1,5 @@
-import { addDays, set } from "date-fns";
+import { addDays, format } from "date-fns";
+import { fromZonedTime } from "date-fns-tz";
 import { CourseTimeslotData } from "@/types/timetable";
 import {
   semesterInfo,
@@ -7,6 +8,13 @@ import {
 } from "@courseweb/shared";
 import { CalendarEvent } from "./calendar.types";
 import { Language } from "@/types/settings";
+import { TAIPEI_TIME_ZONE } from "@/helpers/dates";
+
+const taipeiDateTime = (date: Date, time: string) =>
+  fromZonedTime(
+    `${format(date, "yyyy-MM-dd")}T${time}:00.000`,
+    TAIPEI_TIME_ZONE,
+  );
 
 export const timetableToCalendarEvent = (
   timetable: CourseTimeslotData[],
@@ -20,14 +28,16 @@ export const timetableToCalendarEvent = (
       const semester = semesterInfo.find((s) => s.id == t.course.semester)!;
       const startTime = parseSlotTime(scheduleTimeSlots[t.startTime].start);
       const endTime = parseSlotTime(scheduleTimeSlots[t.endTime].end);
-      const startDate = set(addDays(semester.begins, t.dayOfWeek), {
-        hours: startTime[0],
-        minutes: startTime[1],
-      });
-      const endDate = set(addDays(semester.begins, t.dayOfWeek), {
-        hours: endTime[0],
-        minutes: endTime[1],
-      });
+      const classDate = addDays(semester.begins, t.dayOfWeek);
+      const startDate = taipeiDateTime(
+        classDate,
+        `${String(startTime[0]).padStart(2, "0")}:${String(startTime[1]).padStart(2, "0")}`,
+      );
+      const endDate = taipeiDateTime(
+        classDate,
+        `${String(endTime[0]).padStart(2, "0")}:${String(endTime[1]).padStart(2, "0")}`,
+      );
+      const semesterEnd = taipeiDateTime(semester.ends, "00:00");
 
       const title = language == "en" ? t.course.name_en : t.course.name_zh;
 
@@ -49,7 +59,7 @@ export const timetableToCalendarEvent = (
           type: "weekly",
           interval: 1,
           mode: "date",
-          value: semester.ends.getTime(),
+          value: semesterEnd.getTime(),
         },
         color: t.color,
         tag: "course",

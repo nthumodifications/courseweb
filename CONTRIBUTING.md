@@ -88,6 +88,34 @@ Do not run data-sync against shared infrastructure without an explicit review.
    `main`. Follow the repository's Conventional Commits convention for the PR
    title/commit message.
 
+## Announcing a feature in What's New
+
+1. Add one newest-first, bilingual release entry to
+   `apps/web/src/const/changelog.ts`. Give it a new `version`; an item without
+   `visual` keeps the original list dialog.
+2. For a product preview, add one component under
+   `apps/web/src/components/Changelog/previews/` and one lazy entry in
+   `previewRegistry.tsx`. Reuse real components with static props; do not fetch
+   or make the preview interactive.
+3. Run the focused web tests and type-check, then open the dialog locally in
+   both languages and check the mobile frame. Clear
+   `last_seen_changelog_version` in DevTools Local Storage to see the current
+   release again after onboarding has completed.
+
+```ts
+{
+  version: "2026.10.2",
+  date: "2026-10-08",
+  highlight: true,
+  title: { zh: "新功能", en: "New feature" },
+  items: [{
+    type: "feature",
+    title: { zh: "功能名稱", en: "Feature name" },
+    action: { href: "/courses", key: "search" },
+  }],
+}
+```
+
 ## Troubleshooting
 
 - Run `bun run doctor` when setup is unclear. It checks Bun, dependencies, env

@@ -474,17 +474,17 @@ const BusPage = () => {
         value={tab}
         onValueChange={handleTabChange}
       >
-        <TabsList className="w-full justify-evenly mb-4">
-          <TabsTrigger className="flex-1" value="north_gate">
+        <TabsList className="w-full justify-start overflow-x-auto mb-4">
+          <TabsTrigger className="flex-1 shrink-0" value="north_gate">
             {dict.bus.north_gate}
           </TabsTrigger>
-          <TabsTrigger className="flex-1" value="tsmc">
+          <TabsTrigger className="flex-1 shrink-0" value="tsmc">
             {dict.bus.tsmc}
           </TabsTrigger>
-          <TabsTrigger className="flex-1" value="nanda">
+          <TabsTrigger className="flex-1 shrink-0" value="nanda">
             {dict.bus.nanda}
           </TabsTrigger>
-          <TabsTrigger className="flex-1" value="city">
+          <TabsTrigger className="flex-1 shrink-0" value="city">
             {dict.bus.add_line}
           </TabsTrigger>
         </TabsList>

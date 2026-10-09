@@ -15,13 +15,8 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useLocalStorage } from "usehooks-ts";
-import {
-  DashboardConfig,
-  DEFAULT_DASHBOARD_CONFIG,
-  WidgetConfig,
-  ensureDashboardConfig,
-} from "@/types/widget";
+import { WidgetConfig } from "@/types/widget";
+import { useDashboardConfig } from "@/hooks/useDashboardConfig";
 import ScheduleWidget from "./ScheduleWidget";
 import WeatherWidget from "./WeatherWidget";
 import PinnedAppsWidget from "./PinnedAppsWidget";
@@ -29,6 +24,10 @@ import NotepadWidget from "./NotepadWidget";
 import CountdownWidget from "./CountdownWidget";
 import CourseSelectionWidget from "./CourseSelectionWidget";
 import BusWidget from "./BusWidget";
+import LibraryWidget from "./LibraryWidget";
+import LaundryWidget from "./LaundryWidget";
+import SportsVenuesWidget from "./SportsVenuesWidget";
+import YouBikeWidget from "./YouBikeWidget";
 import { cn } from "@/lib/utils";
 
 // Individual sortable widget wrapper
@@ -73,6 +72,14 @@ const SortableWidget: FC<{
         return <CourseSelectionWidget {...commonProps} />;
       case "bus":
         return <BusWidget {...commonProps} />;
+      case "library":
+        return <LibraryWidget {...commonProps} />;
+      case "laundry":
+        return <LaundryWidget {...commonProps} />;
+      case "sports-venues":
+        return <SportsVenuesWidget {...commonProps} />;
+      case "youbike":
+        return <YouBikeWidget {...commonProps} />;
       default:
         return null;
     }
@@ -91,11 +98,7 @@ const SortableWidget: FC<{
 
 // Main widget grid component
 const WidgetGrid: FC = () => {
-  const [storedConfig, setConfig] = useLocalStorage<DashboardConfig>(
-    "widget_config_v1",
-    DEFAULT_DASHBOARD_CONFIG,
-  );
-  const config = ensureDashboardConfig(storedConfig);
+  const [config, setConfig] = useDashboardConfig();
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
@@ -114,16 +117,13 @@ const WidgetGrid: FC = () => {
       if (!over || active.id === over.id) return;
 
       setConfig((prev) => {
-        const normalized = ensureDashboardConfig(prev);
-        const oldIndex = normalized.widgets.findIndex(
-          (w) => w.id === active.id,
-        );
-        const newIndex = normalized.widgets.findIndex((w) => w.id === over.id);
+        const oldIndex = prev.widgets.findIndex((w) => w.id === active.id);
+        const newIndex = prev.widgets.findIndex((w) => w.id === over.id);
         if (oldIndex === -1 || newIndex === -1) return prev;
-        const reordered = arrayMove(normalized.widgets, oldIndex, newIndex).map(
+        const reordered = arrayMove(prev.widgets, oldIndex, newIndex).map(
           (w, i) => ({ ...w, order: i }),
         );
-        return { ...normalized, widgets: reordered };
+        return { ...prev, widgets: reordered };
       });
     },
     [setConfig],
@@ -131,15 +131,12 @@ const WidgetGrid: FC = () => {
 
   const handleRemove = useCallback(
     (id: string) => {
-      setConfig((prev) => {
-        const normalized = ensureDashboardConfig(prev);
-        return {
-          ...normalized,
-          widgets: normalized.widgets.map((w) =>
-            w.id === id ? { ...w, enabled: false } : w,
-          ),
-        };
-      });
+      setConfig((prev) => ({
+        ...prev,
+        widgets: prev.widgets.map((w) =>
+          w.id === id ? { ...w, enabled: false } : w,
+        ),
+      }));
     },
     [setConfig],
   );

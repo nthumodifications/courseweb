@@ -5,4 +5,8 @@ export { default as PinnedAppsWidget } from "./PinnedAppsWidget";
 export { default as NotepadWidget } from "./NotepadWidget";
 export { default as CountdownWidget } from "./CountdownWidget";
 export { default as BusWidget } from "./BusWidget";
+export { default as LibraryWidget } from "./LibraryWidget";
+export { default as LaundryWidget } from "./LaundryWidget";
+export { default as SportsVenuesWidget } from "./SportsVenuesWidget";
+export { default as YouBikeWidget } from "./YouBikeWidget";
 export { default as WidgetGrid } from "./WidgetGrid";

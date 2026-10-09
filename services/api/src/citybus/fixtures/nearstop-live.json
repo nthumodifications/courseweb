@@ -1,0 +1,11 @@
+[
+  {
+    "StopUID": "HSZ303610",
+    "StopID": "303610",
+    "SubRouteUID": "HSZ000801",
+    "Direction": 0,
+    "PlateNumb": "ABC-1234",
+    "EventType": "at_station",
+    "SrcUpdateTime": "2026-10-08T02:35:35+08:00"
+  }
+]

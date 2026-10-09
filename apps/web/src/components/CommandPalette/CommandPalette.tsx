@@ -4,6 +4,8 @@ import { Command } from "cmdk";
 import { useSettings } from "@/hooks/contexts/settings";
 import { useTheme } from "@/hooks/contexts/theme";
 import { THEME_PRESETS } from "@/config/themePresets";
+import { apps } from "@/const/apps";
+import { event } from "@/lib/gtag";
 import {
   LayoutList,
   Calendar,
@@ -53,6 +55,19 @@ const CommandPalette = () => {
     setSearch("");
     fn();
   }, []);
+
+  const launchApp = (app: (typeof apps)[number]) => {
+    event({
+      action: "open_app" + app.id,
+      category: "app",
+      label: "open_app_" + app.id,
+    });
+    if (app.href.startsWith("http")) {
+      window.open(app.href, "_blank");
+    } else {
+      navigate(`/${language}${app.href}`);
+    }
+  };
 
   const navLinks = [
     {
@@ -148,6 +163,37 @@ const CommandPalette = () => {
                   <span>{link.label}</span>
                 </Command.Item>
               ))}
+            </Command.Group>
+
+            {/* Apps */}
+            <Command.Group
+              heading={
+                <span className="text-xs font-medium text-muted-foreground px-2 py-1 block">
+                  {dict.applist.title}
+                </span>
+              }
+            >
+              {apps
+                .filter((app) => !app.hidden)
+                .map((app) => {
+                  const label =
+                    dict.applist.apps[app.id as keyof typeof dict.applist.apps];
+                  return (
+                    <Command.Item
+                      key={app.id}
+                      value={`app ${app.id} ${label}`}
+                      onSelect={() => runCommand(() => launchApp(app))}
+                      className={cn(
+                        "flex items-center gap-2 rounded-lg px-2 py-2 cursor-pointer text-sm",
+                        "hover:bg-accent hover:text-accent-foreground transition-colors",
+                        "data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground",
+                      )}
+                    >
+                      <app.Icon className="h-4 w-4 text-muted-foreground" />
+                      <span>{label}</span>
+                    </Command.Item>
+                  );
+                })}
             </Command.Group>
 
             {/* Display */}

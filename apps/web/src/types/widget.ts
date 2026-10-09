@@ -5,7 +5,11 @@ export type WidgetType =
   | "notepad"
   | "countdown"
   | "course-selection"
-  | "bus";
+  | "bus"
+  | "library"
+  | "laundry"
+  | "sports-venues"
+  | "youbike";
 
 export interface WidgetConfig {
   id: string; // unique instance uuid
@@ -36,28 +40,16 @@ export const DEFAULT_DASHBOARD_CONFIG: DashboardConfig = {
       enabled: true,
     },
     { id: "bus-default", type: "bus", order: 6, enabled: false },
+    { id: "library-default", type: "library", order: 7, enabled: false },
+    { id: "laundry-default", type: "laundry", order: 8, enabled: false },
+    {
+      id: "sports-venues-default",
+      type: "sports-venues",
+      order: 9,
+      enabled: false,
+    },
+    { id: "youbike-default", type: "youbike", order: 10, enabled: false },
   ],
-};
-
-export const ensureDashboardConfig = (
-  config: DashboardConfig,
-): DashboardConfig => {
-  const missingWidgets = DEFAULT_DASHBOARD_CONFIG.widgets.filter(
-    (defaultWidget) =>
-      !config.widgets.some((widget) => widget.id === defaultWidget.id),
-  );
-  if (missingWidgets.length === 0) return config;
-
-  return {
-    ...config,
-    widgets: [
-      ...config.widgets,
-      ...missingWidgets.map((widget, index) => ({
-        ...widget,
-        order: config.widgets.length + index,
-      })),
-    ],
-  };
 };
 
 export interface WidgetDefinition {
@@ -118,4 +110,92 @@ export const WIDGET_DEFINITIONS: WidgetDefinition[] = [
     description: "Next NTHU bus departures",
     defaultEnabled: false,
   },
+  {
+    type: "library",
+    label: "Library Seats",
+    labelZh: "圖書館座位",
+    description: "Live library vacancy",
+    defaultEnabled: false,
+  },
+  {
+    type: "laundry",
+    label: "Laundry",
+    labelZh: "洗衣機",
+    description: "Available dorm laundry machines",
+    defaultEnabled: false,
+  },
+  {
+    type: "sports-venues",
+    label: "Sports Venues",
+    labelZh: "體育場館",
+    description: "Current sports venue occupancy",
+    defaultEnabled: false,
+  },
+  {
+    type: "youbike",
+    label: "YouBike",
+    labelZh: "YouBike",
+    description: "Your favourite station availability",
+    defaultEnabled: false,
+  },
 ];
+
+const widgetTypes = new Set<WidgetType>(
+  DEFAULT_DASHBOARD_CONFIG.widgets.map((widget) => widget.type),
+);
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const isWidgetConfig = (value: unknown): value is WidgetConfig => {
+  if (!isRecord(value)) return false;
+  return (
+    typeof value.id === "string" &&
+    widgetTypes.has(value.type as WidgetType) &&
+    typeof value.order === "number" &&
+    Number.isFinite(value.order) &&
+    typeof value.enabled === "boolean"
+  );
+};
+
+export const needsDashboardConfigMigration = (value: unknown): boolean => {
+  if (!isRecord(value)) return true;
+  if (value.version !== 1 || ![1, 2, 3].includes(value.columns as number))
+    return true;
+  if (!Array.isArray(value.widgets) || !value.widgets.every(isWidgetConfig))
+    return true;
+  return DEFAULT_DASHBOARD_CONFIG.widgets.some(
+    (defaultWidget) =>
+      !(value.widgets as WidgetConfig[]).some(
+        (widget) => widget.type === defaultWidget.type,
+      ),
+  );
+};
+
+/** Add newly shipped widget types without changing an existing user's choices. */
+export const mergeDashboardConfig = (value: unknown): DashboardConfig => {
+  const source = isRecord(value) ? value : {};
+  const widgets = Array.isArray(source.widgets)
+    ? source.widgets.filter(isWidgetConfig)
+    : [];
+  const nextOrder =
+    widgets.reduce((max, widget) => Math.max(max, widget.order), -1) + 1;
+  const missingWidgets = DEFAULT_DASHBOARD_CONFIG.widgets
+    .filter(
+      (defaultWidget) =>
+        !widgets.some((widget) => widget.type === defaultWidget.type),
+    )
+    .map((widget, index) => ({
+      ...widget,
+      order: nextOrder + index,
+      enabled: widget.enabled,
+    }));
+
+  return {
+    version: 1,
+    columns: [1, 2, 3].includes(source.columns as number)
+      ? (source.columns as 1 | 2 | 3)
+      : DEFAULT_DASHBOARD_CONFIG.columns,
+    widgets: [...widgets, ...missingWidgets],
+  };
+};

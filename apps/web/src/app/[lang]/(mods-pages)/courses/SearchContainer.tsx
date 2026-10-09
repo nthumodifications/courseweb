@@ -37,6 +37,7 @@ import { useCourseTextHits } from "@/hooks/useCourseTextHits";
 import type { CourseSyllabusView } from "@/config/supabase";
 import AiSearchBox from "./AiSearchBox";
 import CourseSelectionStatus from "@/components/CourseSelection/CourseSelectionStatus";
+import { SearchResultCount } from "@/components/Search/SearchResultCount";
 
 type SearchClient = ResilientSearchClient;
 type InfiniteHitsCache = ReturnType<
@@ -269,11 +270,11 @@ const SearchContainer = memo(
               <h2 className="text-xl font-medium">
                 {dict.course.refine.search_results}
               </h2>
-              <span className="text-sm mr-auto">
-                {(status === "loading" || status === "stalled") && nbHits === 0
-                  ? dict.common.loading
-                  : `${nbHits} ${dict.course.refine.results} (${processingTimeMS}ms)`}
-              </span>
+              <SearchResultCount
+                status={status}
+                nbHits={nbHits}
+                processingTimeMS={processingTimeMS}
+              />
             </div>
             <a
               title="Algolia"

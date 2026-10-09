@@ -257,6 +257,7 @@
       "dialog_title": "課程詳細資訊",
       "open_new_tab": "在新分頁開啟",
       "missing_time": "無上課時間",
+      "favourite_unavailable": "此收藏課程在目前學期已無法使用",
       "no_favourites": "尚未新增收藏課程",
       "taken": "已修課",
       "restriction_prefix": "限制：",
@@ -297,6 +298,25 @@
       "second_specialization": "二專",
       "ptt_title": "PTT 心得",
       "ptt_disclaimer": "PTT 心得來自 NTHU_Course 版，並非由 NTHUMods 審核。心得不代表 NTHUMods 的立場。若您發現任何不當內容，請向 PTT 版檢舉。",
+      "ptt_fields": {
+        "course_name": "課名",
+        "instructor": "授課教師",
+        "semester": "修課學年度",
+        "target": "開課系所與授課對象",
+        "course_content": "課程大概內容",
+        "textbook": "用書",
+        "teaching_method": "教學方式",
+        "grading": "評分方式",
+        "notes": "注意事項",
+        "experience": "心得",
+        "summary": "總結",
+        "workload": "課程負擔",
+        "sweetness": "甜度",
+        "coolness": "涼度"
+      },
+      "ptt_different_instructor": "其他授課教師",
+      "ptt_expand": "展開完整心得",
+      "ptt_collapse": "收合心得",
       "important_dates": "重要日期",
       "view_ccxp_syllabus": "瀏覽校務系統大綱網頁",
       "module_history": "歷年開課",
@@ -650,7 +670,13 @@
     "campus_widget_title": "校園公車",
     "widget_title": "校園及市區公車",
     "no_departures": "今日無班次",
-    "direction": "方向"
+    "direction": "方向",
+    "realtime_arriving": "進站中",
+    "realtime_last_bus": "末班車已過",
+    "realtime_not_operating": "今日未營運",
+    "realtime_updated_at": "更新於 {time}",
+    "realtime_tab": "即時",
+    "timetable_tab": "時刻表"
   },
   "settings": {
     "navigation_aria": "設定導覽",
@@ -857,6 +883,7 @@
         "description": "用可自訂的小工具格取代今日頁面",
         "columns": "欄數",
         "widgets": "小工具",
+        "view_full_page": "查看完整頁面",
         "widget_options": {
           "schedule": {
             "title": "課程表"
@@ -878,7 +905,27 @@
           },
           "bus": {
             "title": "公車時刻"
+          },
+          "library": {
+            "title": "圖書館座位"
+          },
+          "laundry": {
+            "title": "洗衣機"
+          },
+          "sports-venues": {
+            "title": "體育場館"
+          },
+          "youbike": {
+            "title": "YouBike"
           }
+        },
+        "weather": {
+          "title": "新竹天氣",
+          "rain": "降雨機率",
+          "high": "最高",
+          "low": "最低",
+          "missing_value": "—",
+          "unavailable": "無法取得天氣資料"
         }
       }
     },
@@ -959,12 +1006,68 @@
       "placeholder_title": "請輸入問題或功能名稱",
       "known_issues": "已知問題",
       "label_description": "詳情",
-      "detail_hint": "請盡量提供詳細資訊與聯絡方式。",
+      "detail_hint": "請盡量提供詳細資訊，讓我們能夠重現問題。",
       "markdown_hint": "支援 Markdown。",
       "feedback": "回饋",
-      "retrying": "重試中…",
       "submitting": "送出中…",
-      "submit": "送出"
+      "submit": "送出",
+      "success_title": "問題已送出",
+      "success_description": "謝謝你的回饋，我們會再查看這份回報。",
+      "success_description_with_diagnostics": "謝謝你的回饋，匿名診斷資料已附加。",
+      "report_type": "類型",
+      "report_area": "功能區域",
+      "type_bug": "錯誤",
+      "type_missing_data": "資料遺失或錯誤",
+      "type_suggestion": "建議",
+      "type_praise": "讚美",
+      "area_timetable": "課表",
+      "area_search": "課程搜尋",
+      "area_sync_login": "同步或登入",
+      "area_bus": "校車",
+      "area_other": "其他",
+      "expected": "你原本預期什麼？",
+      "expected_placeholder": "你預期看到的結果",
+      "actual": "實際發生什麼？",
+      "actual_placeholder": "你實際看到的結果",
+      "placeholder_description": "請提供重現步驟、使用情境，或其他可能有幫助的資訊。",
+      "public_warning_title": "這份回報會公開",
+      "public_warning_description": "請勿填寫姓名、Email、學號、電話、權杖或課表內容。",
+      "diagnostics_attach": "附加匿名診斷資料以協助排查",
+      "diagnostics_attached": "將附加匿名診斷資料。",
+      "diagnostics_opted_out": "不會附加診斷資料。",
+      "diagnostics_see_attached": "查看附加的資料",
+      "diagnostics_app_version": "應用程式版本",
+      "diagnostics_build_commit": "建置版本",
+      "diagnostics_route": "頁面路徑",
+      "diagnostics_language": "語言",
+      "diagnostics_theme": "主題",
+      "diagnostics_browser": "瀏覽器",
+      "diagnostics_os": "作業系統",
+      "diagnostics_viewport": "視窗大小",
+      "diagnostics_online": "網路連線",
+      "diagnostics_service_worker": "Service worker",
+      "diagnostics_signed_in": "已登入",
+      "diagnostics_service_worker_not_supported": "不支援",
+      "diagnostics_service_worker_unregistered": "未註冊",
+      "diagnostics_service_worker_active": "使用中",
+      "diagnostics_service_worker_update_available": "有可用更新",
+      "yes": "是",
+      "no": "否",
+      "likely_duplicates": "可能相似的問題",
+      "validation_error": "資料驗證錯誤",
+      "verification_required": "請完成驗證。",
+      "title_invalid": "請輸入 7 到 180 個字元的標題。",
+      "description_invalid": "請至少提供 10 個字元的詳細說明。",
+      "expected_actual_required": "回報錯誤時，請說明預期結果與實際發生的情況。",
+      "description_too_long": "請縮短回報內容後再送出。",
+      "verification_failed": "驗證失敗",
+      "verification_failed_description": "請重新整理頁面並再次完成驗證。",
+      "too_many_requests": "請求過於頻繁",
+      "too_many_requests_description": "請稍候再送出另一份回報。",
+      "server_error": "伺服器錯誤",
+      "server_error_description": "無法送出回報，請稍後再試。",
+      "submission_failed": "送出失敗",
+      "submission_failed_description": "無法送出回報，請再試一次。"
     }
   },
   "venues": {
@@ -1012,19 +1115,24 @@
   },
   "applist": {
     "title": "功能清單",
+    "quick_links_title": "快速連結",
+    "pinned_widget_empty": "前往應用程式頁面釘選捷徑",
     "to_ccxp": "校務系統連結",
     "empty_pinned_apps_reminder": "可以到右上角新增常用功能。",
     "pinned_apps_title": "常用功能",
     "edit_pinned_apps_title": "編輯常用功能",
     "beta": "測試",
     "categories": {
-      "campuslife": "校園生活",
-      "course": "課程資訊",
-      "club": "社團",
-      "other": "其他"
+      "courses": "課程",
+      "studies": "我的學業",
+      "transport": "交通",
+      "facilities": "校園設施",
+      "services": "餐飲與服務",
+      "links": "外部連結"
     },
     "apps": {
       "courses": "課程查詢",
+      "modules": "課程模組",
       "chat": "AI 課程助手",
       "venues": "地點相關課程",
       "campus-map": "互動式校園地圖",
@@ -1073,7 +1181,15 @@
       "category:qr": "QR 碼",
       "category:links": "連結",
       "links": {
-        "email": "寄送電子郵件"
+        "email": "寄送電子郵件",
+        "google": "新增至 Google 行事曆",
+        "apple": "新增至 Apple 行事曆",
+        "outlook": "Outlook",
+        "copy_link": "複製連結",
+        "copied": "已複製",
+        "copied_description": "連結已複製到剪貼簿",
+        "calendar_name": "NTHUMods 課表",
+        "subscription_hint": "訂閱會自動更新，但各行事曆 App 會依自己的排程重新整理。"
       }
     },
     "DateContributeForm": {
@@ -2316,10 +2432,45 @@
     "whats_new": "最新消息",
     "dismiss": "關閉",
     "view_all": "查看所有更新",
+    "actions": {
+      "bus": "查看市區公車",
+      "modules": "查看課程模組",
+      "prerequisites": "查看先修課程",
+      "search": "開啟課程搜尋",
+      "timetable": "開啟課表",
+      "usage": "查看使用量預測",
+      "youbike": "查看 YouBike"
+    },
+    "previous": "上一步",
+    "next": "下一步",
+    "finish": "完成",
     "types": {
       "feature": "新功能",
       "improvement": "改進",
       "fix": "修正"
+    },
+    "preview": {
+      "bus": {
+        "line_83": "83號公車",
+        "line_blue": "藍線",
+        "campus_line": "紅線",
+        "campus_destination": "往台積館",
+        "destination_83": "北校門",
+        "destination_blue": "竹中",
+        "countdown_83": "1 小時 21 分"
+      },
+      "search": {
+        "loading": "載入中",
+        "loaded": "已載入",
+        "loading_state": "載入索引時",
+        "offline_state": "離線也能搜尋"
+      },
+      "smaller": {
+        "items": {
+          "course_header": "課程詳細頁標題間距更整齊",
+          "usage_forecast": "健身房與圖書館新增使用量預測"
+        }
+      }
     }
   },
   "youbike": {
@@ -2331,6 +2482,7 @@
       "mine": "常用站點"
     },
     "regular_bikes": "一般車",
+    "available_bikes": "可用車輛",
     "ebikes": "電輔車",
     "empty_docks": "可還空位",
     "out_of_service": "暫停營運",

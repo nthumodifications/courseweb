@@ -6,6 +6,7 @@ import MainLayout from "@/layouts/MainLayout";
 import OAuthCallbackRedirect from "@/layouts/OAuthCallbackRedirect";
 import ShortlinkRedirect from "@/layouts/ShortlinkRedirect";
 import AppProviders from "@/layouts/AppProviders";
+import { ROUTE_PATHS } from "@/routerPaths";
 
 // Auth callback (outside lang layout)
 const AuthCallbackPage = lazy(() => import("@/app/auth/callback/page"));
@@ -184,7 +185,7 @@ export const router = createBrowserRouter([
                 },
               },
               {
-                path: "timetable",
+                path: ROUTE_PATHS.timetable,
                 element: <TimetablePage />,
                 handle: {
                   title: "Timetable",
@@ -208,7 +209,7 @@ export const router = createBrowserRouter([
                 },
               },
               {
-                path: "courses",
+                path: ROUTE_PATHS.courses,
                 element: <CoursesPage />,
                 handle: {
                   title: "Courses",
@@ -220,7 +221,7 @@ export const router = createBrowserRouter([
                 },
               },
               {
-                path: "courses/modules",
+                path: ROUTE_PATHS.modules,
                 element: <ModulesSearchPage />,
                 handle: {
                   title: "Search Course Modules",
@@ -231,7 +232,7 @@ export const router = createBrowserRouter([
                 },
               },
               {
-                path: "courses/module/:moduleKey",
+                path: ROUTE_PATHS.module,
                 element: <ModulePage />,
               },
               {
@@ -239,7 +240,7 @@ export const router = createBrowserRouter([
                 element: <CourseDetailPage />,
               },
               {
-                path: "bus",
+                path: ROUTE_PATHS.bus,
                 element: <BusPage />,
                 handle: {
                   title: "Bus",
@@ -294,7 +295,7 @@ export const router = createBrowserRouter([
                 },
               },
               {
-                path: "sports-venues",
+                path: ROUTE_PATHS.sportsVenues,
                 element: <SportsVenuesPage />,
                 handle: {
                   title: "Sports Venues",
@@ -318,7 +319,7 @@ export const router = createBrowserRouter([
                 },
               },
               {
-                path: "youbike",
+                path: ROUTE_PATHS.youbike,
                 element: <YouBikePage />,
                 handle: {
                   title: "YouBike 2.0 Availability",

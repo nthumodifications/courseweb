@@ -26,6 +26,7 @@ export type BusListingItemProps = {
   onTogglePin?: (pin: BusPin) => void;
   countdown?: string;
   sourceLabel?: string;
+  compact?: boolean;
 };
 
 export const BusListingItem = ({
@@ -46,6 +47,7 @@ export const BusListingItem = ({
   onTogglePin,
   countdown,
   sourceLabel,
+  compact = false,
 }: BusListingItemProps) => {
   const { language } = useSettings();
   const dict = useDictionary();
@@ -94,7 +96,7 @@ export const BusListingItem = ({
   return (
     <div
       className={cn(
-        "flex flex-col gap-4 py-4",
+        compact ? "flex flex-col gap-2 py-2" : "flex flex-col gap-4 py-4",
         arrival === dict.bus.service_over ? "opacity-30" : "",
       )}
     >

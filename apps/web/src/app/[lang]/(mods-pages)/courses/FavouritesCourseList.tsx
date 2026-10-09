@@ -2,10 +2,9 @@ import { GripVertical, Plus, Heart, Minus } from "lucide-react";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useMemo } from "react";
-import { hasTimes } from "@/helpers/courses";
-import { MinimalCourse } from "@/types/courses";
 import { Button, EmptyState, ErrorState } from "@courseweb/ui";
-import { useCourseLink } from "@/components/Courses/CourseDialog";
+import CourseListItem from "@/components/Courses/CourseListItem";
+import CourseListItemSkeleton from "@/components/Courses/CourseListItemSkeleton";
 import {
   DndContext,
   closestCenter,
@@ -27,14 +26,12 @@ import { CSS } from "@dnd-kit/utilities";
 
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { useQuery } from "@tanstack/react-query";
-import { CourseDefinition } from "@/config/supabase";
+import type { CourseDefinition } from "@/config/supabase";
 import client from "@/config/api";
-import { activateOnKey } from "@/lib/activate-on-key";
+import { getFavouriteCourseItems } from "./favouriteCourseItems";
+import type { FavouriteCourseItem } from "./favouriteCourseItems";
 
-const TimetableCourseListItem = ({ course }: { course: MinimalCourse }) => {
-  const dict = useDictionary();
-  const { openCourse } = useCourseLink();
-
+const FavouriteCourseActions = ({ courseId }: { courseId: string }) => {
   const {
     addCourse,
     deleteCourse,
@@ -43,103 +40,73 @@ const TimetableCourseListItem = ({ course }: { course: MinimalCourse }) => {
     setFavourites,
   } = useUserTimetable();
 
+  const unfavourite = () => {
+    setFavourites(favourites.filter((fav) => fav != courseId));
+  };
+
+  return (
+    <div className="flex flex-row">
+      <Button
+        className="rounded-r-none"
+        variant="outline"
+        size="icon"
+        onClick={() => unfavourite()}
+      >
+        <Heart className="w-4 h-4 fill-red-500 text-red-500" />
+      </Button>
+      {isCourseSelected(courseId) ? (
+        <Button
+          className="rounded-l-none"
+          variant="destructive"
+          size="icon"
+          onClick={() => deleteCourse(courseId)}
+        >
+          <Minus className="w-4 h-4" />
+        </Button>
+      ) : (
+        <Button
+          className="rounded-l-none"
+          variant="outline"
+          size="icon"
+          onClick={() => addCourse(courseId)}
+        >
+          <Plus className="w-4 h-4" />
+        </Button>
+      )}
+    </div>
+  );
+};
+
+const FavouriteCourseListItem = ({
+  item,
+}: {
+  item: FavouriteCourseItem<CourseDefinition>;
+}) => {
+  const course = "course" in item ? item.course : null;
+  const courseId = "course" in item ? item.course.raw_id : item.raw_id;
+
   const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id: course.raw_id });
+    useSortable({ id: courseId });
 
   const style = {
     transform: CSS.Translate.toString(transform),
     transition,
   };
 
-  const unfavourite = () => {
-    setFavourites(favourites.filter((fav) => fav != course.raw_id));
-  };
-
   return (
-    <div
-      className="flex min-w-0 flex-row items-center gap-2 py-4"
-      ref={setNodeRef}
-      style={style}
-    >
-      <GripVertical
-        className="h-4 w-4 shrink-0 text-muted-foreground"
-        {...attributes}
-        {...listeners}
+    <div ref={setNodeRef} style={style}>
+      <CourseListItem
+        course={course}
+        missingCourseId={!course ? courseId : undefined}
+        leading={
+          <GripVertical
+            className="h-4 w-4 shrink-0 text-muted-foreground"
+            {...attributes}
+            {...listeners}
+          />
+        }
+        actions={<FavouriteCourseActions courseId={courseId} />}
       />
-      <div
-        className="flex min-w-0 flex-1 cursor-pointer"
-        onClick={() => openCourse(course.raw_id)}
-        onKeyDown={activateOnKey(() => openCourse(course.raw_id))}
-        role="button"
-        tabIndex={0}
-      >
-        <span className="text-sm">
-          {course.department} {course.course}-{course.class} {course.name_zh} -{" "}
-          {course.teacher_zh.join(",")}
-        </span>
-        <span className="text-xs">{course.name_en}</span>
-        <div className="mt-1">
-          {course.venues?.map((venue, index) => {
-            const time = course.times![index];
-            return (
-              <div
-                key={index}
-                className="flex flex-row items-center gap-2 text-muted-foreground"
-              >
-                <span className="text-xs">{venue}</span>
-                {hasTimes(course as MinimalCourse) ? (
-                  <span className="text-xs">{time}</span>
-                ) : (
-                  <span className="text-xs text-destructive">
-                    {dict.course.details.missing_time}
-                  </span>
-                )}
-              </div>
-            );
-          }) || (
-            <span className="text-muted-foreground text-xs">
-              {dict.course.details.no_venues}
-            </span>
-          )}
-        </div>
-      </div>
-      <div className="flex flex-col gap-1 items-start">
-        <div className="flex flex-row items-center space-x-1">
-          <span className="text-base">{course.credits}</span>
-          <span className="text-xs text-muted-foreground">
-            {dict.course.credits}
-          </span>
-        </div>
-        <div className="flex flex-row">
-          <Button
-            className="rounded-r-none"
-            variant="outline"
-            size="icon"
-            onClick={() => unfavourite()}
-          >
-            <Heart className="w-4 h-4 fill-red-500 text-red-500" />
-          </Button>
-          {isCourseSelected(course.raw_id) ? (
-            <Button
-              className="rounded-l-none"
-              variant="destructive"
-              size="icon"
-              onClick={() => deleteCourse(course.raw_id)}
-            >
-              <Minus className="w-4 h-4" />
-            </Button>
-          ) : (
-            <Button
-              className="rounded-l-none"
-              variant="outline"
-              size="icon"
-              onClick={() => addCourse(course.raw_id)}
-            >
-              <Plus className="w-4 h-4" />
-            </Button>
-          )}
-        </div>
-      </div>
     </div>
   );
 };
@@ -152,6 +119,7 @@ export const FavouritesCourseList = ({}: {}) => {
     data: courses = [],
     error,
     refetch,
+    isLoading,
   } = useQuery({
     queryKey: ["courses", [...favourites].sort((a, b) => a.localeCompare(b))],
     queryFn: async () => {
@@ -170,13 +138,9 @@ export const FavouritesCourseList = ({}: {}) => {
   });
 
   const displayCourseData = useMemo(() => {
-    // Create a copy of the array and ensure it's an array before sorting
-    return Array.isArray(courses)
-      ? [...courses].sort(
-          (a, b) => favourites.indexOf(a.raw_id) - favourites.indexOf(b.raw_id),
-        )
-      : [];
-  }, [courses, favourites]);
+    if (isLoading) return [];
+    return getFavouriteCourseItems(favourites, courses);
+  }, [courses, favourites, isLoading]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -220,6 +184,7 @@ export const FavouritesCourseList = ({}: {}) => {
   return (
     <div className="flex flex-col">
       <div className="flex flex-col divide-y divide-border px-4">
+        {isLoading && <CourseListItemSkeleton />}
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
@@ -227,18 +192,20 @@ export const FavouritesCourseList = ({}: {}) => {
           modifiers={[restrictToVerticalAxis]}
         >
           <SortableContext
-            items={displayCourseData.map((course) => course.raw_id)}
+            items={displayCourseData.map((item) =>
+              "course" in item ? item.course.raw_id : item.raw_id,
+            )}
             strategy={verticalListSortingStrategy}
           >
-            {displayCourseData.map((course) => (
-              <TimetableCourseListItem
-                key={course.raw_id}
-                course={course as MinimalCourse}
+            {displayCourseData.map((item) => (
+              <FavouriteCourseListItem
+                key={"course" in item ? item.course.raw_id : item.raw_id}
+                item={item}
               />
             ))}
           </SortableContext>
         </DndContext>
-        {displayCourseData.length == 0 && (
+        {!isLoading && favourites.length == 0 && (
           <EmptyState title={dict.course.details.no_favourites} />
         )}
       </div>

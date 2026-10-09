@@ -8,6 +8,8 @@ import useDictionary from "@/dictionaries/useDictionary";
 import {
   formatDepartureCountdown,
   formatDepartureTime,
+  formatCityBusRealtimeDisplay,
+  getCityBusRealtimeDisplay,
   getCityBusDepartures,
   getCityBusRoutes,
   type CityBusDirectionSummary,
@@ -276,7 +278,12 @@ export function CityBusSelectedLines({ refTime }: { refTime: Date }) {
         getCityBusDepartures(pin.routeId, direction.id, pin.stopId, 1),
       enabled: Boolean(data),
       staleTime: 30 * 1000,
-      refetchInterval: 60 * 1000,
+      refetchInterval: () =>
+        typeof document !== "undefined" &&
+        document.visibilityState === "visible"
+          ? 20 * 1000
+          : false,
+      retry: false,
     })),
   });
 
@@ -285,19 +292,33 @@ export function CityBusSelectedLines({ refTime }: { refTime: Date }) {
   return (
     <>
       {details.map(({ pin, route, direction, stop }, index) => {
-        const departure = departureQueries[index]?.data?.departures[0];
-        const status = departureQueries[index]?.data?.status;
+        const departureData = departureQueries[index]?.data;
+        const departure = departureData?.departures[0];
+        const liveStop = departureData?.eta?.stops.find(
+          (item) => item.stopId === stop.id,
+        );
+        const liveDisplay = liveStop
+          ? getCityBusRealtimeDisplay(liveStop)
+          : undefined;
         const locale = language as "zh" | "en";
-        const arrival = departure
-          ? formatDepartureTime(departure, locale, {
-              tomorrow: dict.bus.tomorrow,
-              daysAfter: dict.bus.days_after,
-            })
-          : status === "no_timetable"
-            ? dict.bus.no_timetable
-            : status === "no_service"
-              ? dict.bus.city_no_service
-              : dict.bus.loading;
+        const liveText = formatCityBusRealtimeDisplay(liveDisplay, locale, {
+          arriving: dict.bus.realtime_arriving,
+          lastBus: dict.bus.realtime_last_bus,
+          notOperating: dict.bus.realtime_not_operating,
+          minutes: dict.bus.minutes,
+        });
+        const arrival =
+          liveText ??
+          (departure
+            ? formatDepartureTime(departure, locale, {
+                tomorrow: dict.bus.tomorrow,
+                daysAfter: dict.bus.days_after,
+              })
+            : departureData?.status === "no_timetable"
+              ? dict.bus.no_timetable
+              : departureData?.status === "no_service"
+                ? dict.bus.city_no_service
+                : dict.bus.loading);
         const selectedPin = { ...pin, directionId: direction.id };
         return (
           <BusListingItem
@@ -323,13 +344,19 @@ export function CityBusSelectedLines({ refTime }: { refTime: Date }) {
             }
             notes={[localized(language, stop)]}
             sourceLabel={
-              departure?.realtime ? dict.bus.realtime : dict.bus.scheduled
+              liveText || departure?.realtime
+                ? dict.bus.realtime
+                : dict.bus.scheduled
             }
-            countdown={formatDepartureCountdown(departure?.minutes, locale, {
-              underHour: dict.bus.minutes,
-              minute: dict.bus.countdown_minute,
-              hour: dict.bus.countdown_hour,
-            })}
+            countdown={
+              liveText
+                ? undefined
+                : formatDepartureCountdown(departure?.minutes, locale, {
+                    underHour: dict.bus.minutes,
+                    minute: dict.bus.countdown_minute,
+                    hour: dict.bus.countdown_hour,
+                  })
+            }
             arrival={arrival}
             exactArrival
             detailLine={route.id}

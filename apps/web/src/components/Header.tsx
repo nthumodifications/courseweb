@@ -25,7 +25,10 @@ import { useAuth } from "react-oidc-context";
 import { MouseEvent, useState } from "react";
 import { useRxCollection } from "rxdb-hooks";
 import { HeaderPortalOutlet } from "./Portal/HeaderPortal";
-import { getSyncedStorageKey } from "@/hooks/syncedStorage";
+import {
+  getSyncedStorageBackupKey,
+  getSyncedStorageKey,
+} from "@/hooks/syncedStorage";
 
 const Header = () => {
   const {
@@ -73,9 +76,14 @@ const Header = () => {
       localStorageKeys.forEach((key) => {
         // Clear the current account and anonymous namespaces, plus the old
         // unscoped copy. Other account namespaces remain recoverable.
-        localStorage.removeItem(getSyncedStorageKey(key, user?.profile.sub));
-        localStorage.removeItem(getSyncedStorageKey(key));
-        localStorage.removeItem(key);
+        [
+          getSyncedStorageKey(key, user?.profile.sub),
+          getSyncedStorageKey(key),
+          key,
+        ].forEach((storageKey) => {
+          localStorage.removeItem(storageKey);
+          localStorage.removeItem(getSyncedStorageBackupKey(storageKey));
+        });
       });
 
       // Remove the whole identity-scoped database so its event data,

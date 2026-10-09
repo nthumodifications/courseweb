@@ -12,6 +12,8 @@ import {
   reconcileSyncedData,
   type MergeData,
   type SyncedData,
+  valuesEqual,
+  writeSyncedStorageBackup,
 } from "./syncedStorage";
 
 const DEVICE_ID_KEY = "nthumods_device_id";
@@ -58,6 +60,7 @@ const useSyncedStorage = <T = unknown,>(
   );
   const authSessionKey = user?.expires_at ?? 0;
   const reconciledUserRef = useRef<string>();
+  const localFallbackSettledRef = useRef<string>();
   const uploadedVersionRef = useRef<string>();
 
   const {
@@ -66,6 +69,7 @@ const useSyncedStorage = <T = unknown,>(
     isPaused: isRemotePaused,
     isSuccess: isRemoteReadSuccessful,
     isError: isRemoteReadError,
+    isRefetchError: isRemoteRefetchError,
   } = useQuery<SyncedData<T> | null>({
     queryKey: ["kv", userId ?? "anonymous", authSessionKey, key],
     enabled: Boolean(isAuthenticated && userId && user?.access_token),
@@ -156,6 +160,7 @@ const useSyncedStorage = <T = unknown,>(
     // reconciliation or uploads.
     storageKeyRef.current = storageKey;
     reconciledUserRef.current = undefined;
+    localFallbackSettledRef.current = undefined;
     uploadedVersionRef.current = undefined;
   }, [storageKey]);
 
@@ -194,14 +199,13 @@ const useSyncedStorage = <T = unknown,>(
       // A logout starts a fresh reconciliation on the next login. Each
       // identity's local data remains in its own namespace.
       reconciledUserRef.current = undefined;
+      localFallbackSettledRef.current = undefined;
       uploadedVersionRef.current = undefined;
       setDataState(normalizeSyncedData<T>(localData, deviceId));
       return;
     }
 
-    // Cached data may be present while React Query is fetching the current user's record.
-    // It is not safe to persist or overwrite local state until that fetch settles.
-    if (isRemoteFetching || !hasSyncedMetadata(localData)) {
+    if (!hasSyncedMetadata(localData)) {
       return;
     }
 
@@ -210,11 +214,15 @@ const useSyncedStorage = <T = unknown,>(
     // A stale/older API can reject a key with 400, and an offline query can be
     // paused indefinitely. Keep the account-scoped local snapshot usable in
     // either case, but do not upload it until a remote read succeeds.
-    if (isRemoteReadError || isRemotePaused) {
-      reconciledUserRef.current = userId;
+    if (isRemoteReadError || isRemoteRefetchError || isRemotePaused) {
+      localFallbackSettledRef.current = userId;
       setDataState(local);
       return;
     }
+
+    // Cached data may be present while React Query is fetching the current user's record.
+    // It is not safe to persist or overwrite local state until that fetch settles.
+    if (isRemoteFetching) return;
 
     if (!isRemoteReadSuccessful) return;
 
@@ -230,9 +238,15 @@ const useSyncedStorage = <T = unknown,>(
       deviceId,
     });
     reconciledUserRef.current = userId;
-    setDataState(reconciliation.data);
+    localFallbackSettledRef.current = undefined;
+    setDataState((current) =>
+      valuesEqual(current, reconciliation.data) ? current : reconciliation.data,
+    );
     if (reconciliation.persistLocal) {
       setLocalData(reconciliation.data);
+    }
+    if (reconciliation.backupLocal) {
+      writeSyncedStorageBackup(storageKey, local);
     }
     if (reconciliation.upload) {
       upload(reconciliation.data, reconciliation.upload.merge);
@@ -244,6 +258,7 @@ const useSyncedStorage = <T = unknown,>(
     isRemoteFetching,
     isRemotePaused,
     isRemoteReadError,
+    isRemoteRefetchError,
     isRemoteReadSuccessful,
     localData,
     mergeData,
@@ -281,13 +296,21 @@ const useSyncedStorage = <T = unknown,>(
     !storageKeyChanged &&
     (!isAuthenticated ||
       !userId ||
-      (!isRemoteFetching &&
-        hasSyncedMetadata(localData) &&
-        reconciledUserRef.current === userId &&
-        (isRemoteReadSuccessful || isRemoteReadError || isRemotePaused)));
+      (hasSyncedMetadata(localData) &&
+        (reconciledUserRef.current === userId ||
+          localFallbackSettledRef.current === userId) &&
+        (!isRemoteFetching ||
+          isRemoteReadError ||
+          isRemoteRefetchError ||
+          isRemotePaused) &&
+        (isRemoteReadSuccessful ||
+          isRemoteReadError ||
+          isRemoteRefetchError ||
+          isRemotePaused)));
 
   const syncError =
-    Boolean(isAuthenticated && userId) && (isRemoteReadError || isRemotePaused);
+    Boolean(isAuthenticated && userId) &&
+    (isRemoteReadError || isRemoteRefetchError || isRemotePaused);
 
   return [
     storageKeyChanged ? defaultValue : (data.value ?? defaultValue),
