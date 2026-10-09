@@ -30,7 +30,9 @@ mock.module("@/lib/idb_persister", () => ({
   }),
 }));
 
-const { default: ReactQuery } = await import("./ReactQuery");
+const { default: ReactQuery, shouldPersistQuery } = await import(
+  "./ReactQuery"
+);
 
 const waitFor = async (condition: () => boolean) => {
   for (let attempt = 0; attempt < 20; attempt += 1) {
@@ -42,6 +44,23 @@ const waitFor = async (condition: () => boolean) => {
 };
 
 describe("React Query persistence", () => {
+  test("does not persist pending queries, which IndexedDB cannot clone", () => {
+    const client = new QueryClient();
+    client.setQueryData(["courses"], [{ id: "MATH101" }]);
+    void client.prefetchQuery({
+      queryKey: ["pending"],
+      queryFn: () => new Promise(() => {}),
+    });
+
+    const state = dehydrate(client, {
+      shouldDehydrateQuery: shouldPersistQuery,
+    });
+
+    expect(state.queries.map((query) => query.queryKey)).toEqual([["courses"]]);
+    expect(() => structuredClone(state)).not.toThrow();
+    client.clear();
+  });
+
   test("removes restored issue reports and rewrites the filtered snapshot", async () => {
     const dom = new JSDOM("<!doctype html><html><body></body></html>");
     Object.assign(globalThis, {

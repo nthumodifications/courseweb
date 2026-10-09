@@ -1,4 +1,8 @@
-import { QueryClient } from "@tanstack/react-query";
+import {
+  QueryClient,
+  defaultShouldDehydrateQuery,
+  type Query,
+} from "@tanstack/react-query";
 import {
   PersistQueryClientProvider,
   persistQueryClientSave,
@@ -17,8 +21,12 @@ const queryClient = new QueryClient({
 
 const persister = createIDBPersister("nthumods_queries");
 
-const shouldPersistQuery = (query: { queryKey: readonly unknown[] }) =>
-  query.queryKey[0] !== "issues" && query.queryKey[0] !== "issue-report";
+// Keep the default rule (successful queries only): a pending query carries a
+// Promise, which IndexedDB cannot clone, so the whole snapshot would fail.
+export const shouldPersistQuery = (query: Query) =>
+  defaultShouldDehydrateQuery(query) &&
+  query.queryKey[0] !== "issues" &&
+  query.queryKey[0] !== "issue-report";
 
 const persistOptions = {
   persister,
