@@ -28,6 +28,18 @@ const button = ({ children, ...props }: Record<string, unknown>) =>
 const dropdownMenu = ({ children }: Record<string, unknown>) =>
   createElement("div", null, children as never);
 
+const storageKeysFor = (key: string) => [
+  getSyncedStorageKey(key, user.profile.sub),
+  getSyncedStorageKey(key),
+  key,
+];
+
+const forEachStorageKey = (keys: string[], callback: (key: string) => void) => {
+  for (const key of keys) {
+    for (const storageKey of storageKeysFor(key)) callback(storageKey);
+  }
+};
+
 mock.module("@courseweb/ui", () => ({
   SidebarTrigger: button,
   DropdownMenu: dropdownMenu,
@@ -110,19 +122,13 @@ describe("Header local-data logout", () => {
       IS_REACT_ACT_ENVIRONMENT: true,
     });
     const storageKeys = ["courses", "grades"];
-    for (const key of storageKeys) {
-      for (const storageKey of [
-        getSyncedStorageKey(key, user.profile.sub),
-        getSyncedStorageKey(key),
-        key,
-      ]) {
-        window.localStorage.setItem(storageKey, "record");
-        window.localStorage.setItem(
-          getSyncedStorageBackupKey(storageKey),
-          "backup",
-        );
-      }
-    }
+    forEachStorageKey(storageKeys, (storageKey) => {
+      window.localStorage.setItem(storageKey, "record");
+      window.localStorage.setItem(
+        getSyncedStorageBackupKey(storageKey),
+        "backup",
+      );
+    });
 
     const container = document.createElement("div");
     document.body.appendChild(container);
@@ -143,20 +149,13 @@ describe("Header local-data logout", () => {
     );
     await act(async () => logoutButton?.click());
 
-    for (const key of storageKeys) {
-      for (const storageKey of [
-        getSyncedStorageKey(key, user.profile.sub),
-        getSyncedStorageKey(key),
-        key,
-      ]) {
-        expect(window.localStorage.getItem(storageKey)).toBeNull();
-        expect(
-          window.localStorage.getItem(getSyncedStorageBackupKey(storageKey)),
-        ).toBeNull();
-      }
-    }
+    forEachStorageKey(storageKeys, (storageKey) => {
+      expect(window.localStorage.getItem(storageKey)).toBeNull();
+      expect(
+        window.localStorage.getItem(getSyncedStorageBackupKey(storageKey)),
+      ).toBeNull();
+    });
 
     await act(async () => root.unmount());
-    dom.window.close();
   });
 });

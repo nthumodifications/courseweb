@@ -22,6 +22,71 @@ const user = {
 };
 const actualOidcContext = await import("react-oidc-context");
 
+type HookResult = readonly [unknown, unknown, boolean, boolean];
+
+const setupDom = () => {
+  const dom = new JSDOM("<!doctype html><html><body></body></html>", {
+    url: "http://localhost/",
+  });
+  Object.assign(globalThis, {
+    window: dom.window,
+    document: dom.window.document,
+    navigator: dom.window.navigator,
+    StorageEvent: dom.window.StorageEvent,
+    IS_REACT_ACT_ENVIRONMENT: true,
+  });
+  return dom;
+};
+
+const renderSyncedStorage = async (hook: () => HookResult) => {
+  let result: HookResult | undefined;
+  const Probe = () => {
+    result = hook();
+    return null;
+  };
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  const root = createRoot(document.createElement("div"));
+
+  await act(async () => {
+    root.render(
+      createElement(
+        QueryClientProvider,
+        { client: queryClient },
+        createElement(Probe),
+      ),
+    );
+  });
+
+  return {
+    getResult: () => result,
+    queryClient,
+    root,
+  };
+};
+
+const waitForResult = async (
+  getResult: () => HookResult | undefined,
+  predicate: (result: HookResult | undefined) => boolean = (result) =>
+    Boolean(result?.[3]),
+) => {
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    if (predicate(getResult())) return;
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    });
+  }
+};
+
+const cleanupSyncedStorage = async ({
+  root,
+  queryClient,
+}: Awaited<ReturnType<typeof renderSyncedStorage>>) => {
+  await act(async () => root.unmount());
+  queryClient.clear();
+};
+
 mock.module("react-oidc-context", () => ({
   useAuth: () => ({ isAuthenticated: true, user }),
 }));
@@ -48,16 +113,7 @@ describe("useSyncedStorage remote read states", () => {
   });
 
   test("settles local data after a GET error without POST, then reconciles after success", async () => {
-    const dom = new JSDOM("<!doctype html><html><body></body></html>", {
-      url: "http://localhost/",
-    });
-    Object.assign(globalThis, {
-      window: dom.window,
-      document: dom.window.document,
-      navigator: dom.window.navigator,
-      StorageEvent: dom.window.StorageEvent,
-      IS_REACT_ACT_ENVIRONMENT: true,
-    });
+    setupDom();
     const { default: useSyncedStorage } = await import("./useSyncedStorage");
     window.localStorage.setItem("nthumods_device_id", "device-a");
     window.localStorage.setItem(
@@ -70,30 +126,11 @@ describe("useSyncedStorage remote read states", () => {
       }),
     );
 
-    let result: readonly [unknown, unknown, boolean, boolean] | undefined;
-    const Probe = () => {
-      result = useSyncedStorage("grades", { theme: "default" });
-      return null;
-    };
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false } },
-    });
-    const root = createRoot(document.createElement("div"));
-
-    await act(async () => {
-      root.render(
-        createElement(
-          QueryClientProvider,
-          { client: queryClient },
-          createElement(Probe),
-        ),
-      );
-    });
-    for (let attempt = 0; attempt < 10 && !result?.[3]; attempt += 1) {
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 10));
-      });
-    }
+    const rendered = await renderSyncedStorage(() =>
+      useSyncedStorage("grades", { theme: "default" }),
+    );
+    await waitForResult(rendered.getResult);
+    const result = rendered.getResult();
 
     expect(result?.[0]).toEqual({ theme: "local" });
     expect([result?.[2], result?.[3], get.mock.calls.length]).toEqual([
@@ -116,37 +153,23 @@ describe("useSyncedStorage remote read states", () => {
         ),
     );
     await act(async () => {
-      await queryClient.refetchQueries({ queryKey: ["kv"] });
+      await rendered.queryClient.refetchQueries({ queryKey: ["kv"] });
     });
-    for (let attempt = 0; attempt < 10; attempt += 1) {
-      if ((result?.[0] as { theme?: string } | undefined)?.theme === "remote") {
-        break;
-      }
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 10));
-      });
-    }
+    await waitForResult(
+      rendered.getResult,
+      (nextResult) =>
+        (nextResult?.[0] as { theme?: string } | undefined)?.theme === "remote",
+    );
 
-    expect(result?.[0]).toEqual({ theme: "remote" });
-    expect(result?.[2]).toBe(true);
+    expect(rendered.getResult()?.[0]).toEqual({ theme: "remote" });
+    expect(rendered.getResult()?.[2]).toBe(true);
     expect(post).not.toHaveBeenCalled();
 
-    await act(async () => root.unmount());
-    queryClient.clear();
-    dom.window.close();
+    await cleanupSyncedStorage(rendered);
   });
 
   test("keeps the initial merge after a failed first GET", async () => {
-    const dom = new JSDOM("<!doctype html><html><body></body></html>", {
-      url: "http://localhost/",
-    });
-    Object.assign(globalThis, {
-      window: dom.window,
-      document: dom.window.document,
-      navigator: dom.window.navigator,
-      StorageEvent: dom.window.StorageEvent,
-      IS_REACT_ACT_ENVIRONMENT: true,
-    });
+    setupDom();
     const local = {
       value: { "11410": ["A"] },
       lastModified: 100,
@@ -166,30 +189,10 @@ describe("useSyncedStorage remote read states", () => {
     );
 
     const { default: useSyncedStorage } = await import("./useSyncedStorage");
-    let result: readonly [unknown, unknown, boolean, boolean] | undefined;
-    const Probe = () => {
-      result = useSyncedStorage("courses", {}, mergeCourseStorage);
-      return null;
-    };
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false } },
-    });
-    const root = createRoot(document.createElement("div"));
-
-    await act(async () => {
-      root.render(
-        createElement(
-          QueryClientProvider,
-          { client: queryClient },
-          createElement(Probe),
-        ),
-      );
-    });
-    for (let attempt = 0; attempt < 10 && !result?.[3]; attempt += 1) {
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 10));
-      });
-    }
+    const rendered = await renderSyncedStorage(() =>
+      useSyncedStorage("courses", {}, mergeCourseStorage),
+    );
+    await waitForResult(rendered.getResult);
 
     const expected = reconcileSyncedData({
       local,
@@ -202,35 +205,21 @@ describe("useSyncedStorage remote read states", () => {
       async () => new Response(JSON.stringify(remote), { status: 200 }),
     );
     await act(async () => {
-      await queryClient.refetchQueries({ queryKey: ["kv"] });
+      await rendered.queryClient.refetchQueries({ queryKey: ["kv"] });
     });
-    for (let attempt = 0; attempt < 10; attempt += 1) {
-      if (JSON.stringify(result?.[0]) === JSON.stringify(expected)) {
-        break;
-      }
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 10));
-      });
-    }
+    await waitForResult(
+      rendered.getResult,
+      (nextResult) =>
+        JSON.stringify(nextResult?.[0]) === JSON.stringify(expected),
+    );
 
-    expect(result?.[0]).toEqual(expected);
+    expect(rendered.getResult()?.[0]).toEqual(expected);
 
-    await act(async () => root.unmount());
-    queryClient.clear();
-    dom.window.close();
+    await cleanupSyncedStorage(rendered);
   });
 
   test("persists the primary before a quota-failing backup", async () => {
-    const dom = new JSDOM("<!doctype html><html><body></body></html>", {
-      url: "http://localhost/",
-    });
-    Object.assign(globalThis, {
-      window: dom.window,
-      document: dom.window.document,
-      navigator: dom.window.navigator,
-      StorageEvent: dom.window.StorageEvent,
-      IS_REACT_ACT_ENVIRONMENT: true,
-    });
+    setupDom();
     const storageKey = getSyncedStorageKey("grades", user.profile.sub);
     window.localStorage.setItem("nthumods_device_id", "device-a");
     window.localStorage.setItem(
@@ -278,41 +267,21 @@ describe("useSyncedStorage remote read states", () => {
     );
 
     const { default: useSyncedStorage } = await import("./useSyncedStorage");
-    let result: readonly [unknown, unknown, boolean, boolean] | undefined;
-    const Probe = () => {
-      result = useSyncedStorage("grades", { theme: "default" });
-      return null;
-    };
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false } },
-    });
-    const root = createRoot(document.createElement("div"));
-    await act(async () => {
-      root.render(
-        createElement(
-          QueryClientProvider,
-          { client: queryClient },
-          createElement(Probe),
-        ),
-      );
-    });
-    for (let attempt = 0; attempt < 10; attempt += 1) {
-      if ((result?.[0] as { theme?: string } | undefined)?.theme === "remote") {
-        break;
-      }
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 10));
-      });
-    }
+    const rendered = await renderSyncedStorage(() =>
+      useSyncedStorage("grades", { theme: "default" }),
+    );
+    await waitForResult(
+      rendered.getResult,
+      (result) =>
+        (result?.[0] as { theme?: string } | undefined)?.theme === "remote",
+    );
 
-    expect(result?.[0]).toEqual({ theme: "remote" });
+    expect(rendered.getResult()?.[0]).toEqual({ theme: "remote" });
     expect(JSON.parse(originalStorage.getItem(storageKey)!)).toMatchObject({
       value: { theme: "remote" },
     });
     expect(calls).toEqual([storageKey, getSyncedStorageBackupKey(storageKey)]);
 
-    await act(async () => root.unmount());
-    queryClient.clear();
-    dom.window.close();
+    await cleanupSyncedStorage(rendered);
   });
 });
