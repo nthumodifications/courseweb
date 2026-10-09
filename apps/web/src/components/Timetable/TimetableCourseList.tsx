@@ -214,6 +214,7 @@ const TimetableCourseListItem = ({
               <div
                 className="flex shrink-0 flex-row items-center gap-2"
                 onClick={(event) => event.stopPropagation()}
+                onKeyDown={(event) => event.stopPropagation()}
               >
                 {!displaySettings.lockOrder && (
                   <GripVertical
@@ -247,6 +248,7 @@ const TimetableCourseListItem = ({
               <div
                 className="flex flex-row space-x-2 items-center"
                 onClick={(event) => event.stopPropagation()}
+                onKeyDown={(event) => event.stopPropagation()}
               >
                 {hasConflict && (
                   <HoverCard>
