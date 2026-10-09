@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
+  getSyncedStorageBackupKey,
   getSyncedStorageKey,
   getSyncedStorageNamespace,
   mergeCourseStorage,
@@ -10,23 +11,156 @@ import {
   normalizeSyncedData,
   reconcileSyncedData,
 } from "./syncedStorage";
+import type { SyncedData } from "./syncedStorage";
+
+const syncedRecord = <T>(
+  value: T,
+  updatedAt: number,
+  deviceId: string,
+): SyncedData<T> => ({
+  value,
+  lastModified: updatedAt,
+  updatedAt,
+  deviceId,
+});
+
+const accountCourseRecords = () => {
+  const accountAKey = getSyncedStorageKey("courses", "account-a");
+  const accountBKey = getSyncedStorageKey("courses", "account-b");
+  const localRecords = new Map([
+    [accountAKey, syncedRecord({ "11410": ["course-a"] }, 100, "device-a")],
+  ]);
+  return { accountAKey, accountBKey, localRecords };
+};
+
+const emptySyncedRecord = (deviceId: string) => syncedRecord({}, -1, deviceId);
 
 describe("synced storage reconciliation", () => {
-  test("uses separate subject namespaces and never uploads A to B", () => {
-    const accountAKey = getSyncedStorageKey("courses", "account-a");
-    const accountBKey = getSyncedStorageKey("courses", "account-b");
-    const localRecords = new Map([
-      [
-        accountAKey,
-        normalizeSyncedData({ "11410": ["course-a"] }, "device-a", 100),
-      ],
-    ]);
-    const accountBLocal = localRecords.get(accountBKey) ?? {
-      value: {},
-      lastModified: -1,
-      updatedAt: -1,
+  test("takes remote data over an uninitialized local snapshot", () => {
+    const reconciliation = reconcileSyncedData({
+      local: emptySyncedRecord("device-a"),
+      remote: syncedRecord({ "11410": ["course-a"] }, 100, "device-b"),
+      initial: true,
+      deviceId: "device-a",
+      now: 1000,
+    });
+
+    expect(reconciliation.data.value).toEqual({ "11410": ["course-a"] });
+    expect(reconciliation.upload).toBeUndefined();
+  });
+
+  test("keeps and uploads an explicitly emptied local snapshot when newer", () => {
+    const reconciliation = reconcileSyncedData({
+      local: syncedRecord({}, 200, "device-a"),
+      remote: syncedRecord({ "11410": ["course-a"] }, 100, "device-b"),
+      mergeData: mergeCourseStorage,
+      initial: true,
+      deviceId: "device-a",
+    });
+
+    expect(reconciliation.data.value).toEqual({});
+    expect(reconciliation.persistLocal).toBe(false);
+    expect(reconciliation.upload).toEqual({ merge: false });
+  });
+
+  test("takes a newer remote explicit deletion and backs up local data", () => {
+    const reconciliation = reconcileSyncedData({
+      local: syncedRecord({ "11410": ["course-a"] }, 100, "device-a"),
+      remote: syncedRecord({}, 200, "device-b"),
+      mergeData: mergeCourseStorage,
+      initial: true,
+      deviceId: "device-a",
+    });
+
+    expect(reconciliation.data.value).toEqual({});
+    expect(reconciliation.persistLocal).toBe(true);
+    expect(reconciliation.upload).toBeUndefined();
+    expect(reconciliation.backupLocal).toBe(true);
+  });
+
+  test("keeps and uploads non-empty local data when remote is uninitialized", () => {
+    for (const remote of [null, emptySyncedRecord("device-b")]) {
+      const reconciliation = reconcileSyncedData({
+        local: syncedRecord({ theme: "local" }, 100, "device-a"),
+        remote,
+        initial: true,
+        deviceId: "device-a",
+      });
+
+      expect(reconciliation.data.value).toEqual({ theme: "local" });
+      expect(reconciliation.upload).toEqual({ merge: false });
+    }
+  });
+
+  test("does not reconcile or upload after an unsuccessful remote read", () => {
+    const local = syncedRecord({ theme: "local" }, 100, "device-a");
+    const reconciliation = reconcileSyncedData({
+      local,
+      remote: null,
+      remoteReadSuccessful: false,
+      initial: true,
+      deviceId: "device-a",
+      now: 1000,
+    });
+
+    expect(reconciliation.data).toEqual(local);
+    expect(reconciliation.persistLocal).toBe(false);
+    expect(reconciliation.upload).toBeUndefined();
+  });
+
+  test("marks a replaced non-empty local snapshot for one scoped backup", () => {
+    const reconciliation = reconcileSyncedData({
+      local: syncedRecord({ theme: "local" }, 100, "device-a"),
+      remote: syncedRecord({ theme: "remote" }, 200, "device-b"),
+      initial: false,
+      deviceId: "device-a",
+    });
+
+    expect(reconciliation.data.value).toEqual({ theme: "remote" });
+    expect(reconciliation.backupLocal).toBe(true);
+    expect(getSyncedStorageBackupKey("nthumods-storage-user-theme")).toBe(
+      "nthumods-storage-user-theme__backup",
+    );
+  });
+
+  test("does not persist or upload an equal snapshot on initial reconciliation", () => {
+    const local = syncedRecord(["course-a"], 200, "device-a");
+    const reconciliation = reconcileSyncedData({
+      local,
+      remote: syncedRecord(["course-a"], 100, "device-b"),
+      mergeData: (left, right) => [...new Set([...left, ...right])],
+      initial: true,
+      deviceId: "device-a",
+    });
+
+    expect(reconciliation.persistLocal).toBe(false);
+    expect(reconciliation.upload).toBeUndefined();
+  });
+
+  test("keeps account namespaces isolated across sign-out and account switch", () => {
+    const { accountAKey, accountBKey, localRecords } = accountCourseRecords();
+
+    const accountB = reconcileSyncedData({
+      local: localRecords.get(accountBKey) ?? emptySyncedRecord("device-b"),
+      remote: null,
+      mergeData: mergeCourseStorage,
+      initial: true,
       deviceId: "device-b",
-    };
+      now: 200,
+    });
+
+    expect(accountB.data.value).toEqual({});
+    expect(accountB.upload).toBeUndefined();
+    expect(localRecords.has(accountBKey)).toBe(false);
+    expect(localRecords.get(accountAKey)?.value).toEqual({
+      "11410": ["course-a"],
+    });
+  });
+
+  test("uses separate subject namespaces and never uploads A to B", () => {
+    const { accountAKey, accountBKey, localRecords } = accountCourseRecords();
+    const accountBLocal =
+      localRecords.get(accountBKey) ?? emptySyncedRecord("device-b");
 
     const reconciliation = reconcileSyncedData({
       local: accountBLocal,
@@ -48,20 +182,9 @@ describe("synced storage reconciliation", () => {
   });
 
   test("does not merge A's retained snapshot into B's existing remote data", () => {
-    const accountAKey = getSyncedStorageKey("courses", "account-a");
-    const accountBKey = getSyncedStorageKey("courses", "account-b");
-    const localRecords = new Map([
-      [
-        accountAKey,
-        normalizeSyncedData({ "11410": ["course-a"] }, "device-a", 100),
-      ],
-    ]);
-    const accountBLocal = localRecords.get(accountBKey) ?? {
-      value: {},
-      lastModified: -1,
-      updatedAt: -1,
-      deviceId: "device-b",
-    };
+    const { accountAKey, accountBKey, localRecords } = accountCourseRecords();
+    const accountBLocal =
+      localRecords.get(accountBKey) ?? emptySyncedRecord("device-b");
 
     const reconciliation = reconcileSyncedData({
       local: accountBLocal,
@@ -87,15 +210,11 @@ describe("synced storage reconciliation", () => {
     const localRecords = new Map([
       [
         anonymousKey,
-        normalizeSyncedData({ "11410": ["anonymous-course"] }, "device-a", 100),
+        syncedRecord({ "11410": ["anonymous-course"] }, 100, "device-a"),
       ],
     ]);
-    const accountLocal = localRecords.get(accountKey) ?? {
-      value: {},
-      lastModified: -1,
-      updatedAt: -1,
-      deviceId: "device-b",
-    };
+    const accountLocal =
+      localRecords.get(accountKey) ?? emptySyncedRecord("device-b");
 
     const reconciliation = reconcileSyncedData({
       local: accountLocal,
