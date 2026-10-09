@@ -160,6 +160,12 @@ const { CourseDialogProvider } = await import(
   "@/components/Courses/CourseDialog"
 );
 const { TimetableCourseList } = await import("./TimetableCourseList");
+const { default: TimetableSlotHorizontal } = await import(
+  "./TimetableSlotHorizontal"
+);
+const { default: TimetableSlotVertical } = await import(
+  "./TimetableSlotVertical"
+);
 
 const COURSES_KEY = "nthumods-storage-anonymous-courses";
 const PREFERENCES_KEY =
@@ -282,6 +288,32 @@ describe("timetable provider render stability", () => {
 
     expect(renderCount).toBeLessThan(30);
     expect(fixture.container.textContent).toContain("No courses");
+    await fixture.cleanup();
+  });
+
+  test("renders malformed timetable indexes in both layouts without throwing", async () => {
+    const malformedSlot = {
+      course: testCourse,
+      venue: "",
+      dayOfWeek: -1,
+      startTime: -1,
+      endTime: -1,
+      color: "#000000",
+      textColor: "#ffffff",
+    };
+    const tableDim = {
+      header: { width: 40, height: 40 },
+      timetable: { width: 100, height: 50 },
+    };
+
+    const fixture = await renderTimetable(
+      <>
+        <TimetableSlotVertical course={malformedSlot} tableDim={tableDim} />
+        <TimetableSlotHorizontal course={malformedSlot} tableDim={tableDim} />
+      </>,
+    );
+
+    expect(fixture.container.textContent).toContain(testCourse.name_en);
     await fixture.cleanup();
   });
 

@@ -2,7 +2,9 @@ import { describe, expect, test } from "bun:test";
 import {
   classifyCustomTimetableSlot,
   canSortTimetableCourses,
+  createTimetableFromCourses,
   getTimetableCourseListStatus,
+  getTimetableDataTimeRange,
   getUnresolvedCourseIds,
   getTimetableExtendedHoursGeometry,
   getTimetableOffGridBounds,
@@ -18,6 +20,34 @@ import {
   normalizeHiddenCourses,
 } from "./timetableVisibility";
 import { CourseTimeslotData, CustomTimetableItem } from "@/types/timetable";
+import { MinimalCourse } from "@/types/courses";
+import { scheduleTimeSlots } from "@courseweb/shared";
+
+const courseWithTimes = (
+  times: string[],
+  venues: string[] = ["Room 1"],
+): MinimalCourse => ({
+  raw_id: "11510-CS 1010 1",
+  name_zh: "測試課程",
+  name_en: "Test course",
+  semester: "11510",
+  department: "CS",
+  course: "1010",
+  class: "1",
+  credits: 2,
+  venues,
+  times,
+  teacher_zh: [],
+  teacher_en: [],
+  language: "中",
+});
+
+const timetableCoordinates = (timetable: CourseTimeslotData[]) =>
+  timetable.map(({ dayOfWeek, startTime, endTime }) => ({
+    dayOfWeek,
+    startTime,
+    endTime,
+  }));
 
 const slot = (start: string, end: string) => ({
   day: 0,
@@ -181,6 +211,58 @@ describe("stored timetable course ids", () => {
     );
     expect(getTimetableCourseListStatus(false, null, 0, 0)).toBe("empty");
     expect(getTimetableCourseListStatus(false, null, 0, 1)).toBe("ready");
+  });
+});
+
+describe("course timetable slot parsing", () => {
+  test("drops unknown day and period pairs while retaining valid pairs", () => {
+    const course = courseWithTimes(["M1MXM2", "X1", "Ｍ3", "M"]);
+    const before = structuredClone(course);
+
+    const timetable = createTimetableFromCourses([course]);
+
+    expect(timetableCoordinates(timetable)).toEqual([
+      { dayOfWeek: 0, startTime: 0, endTime: 1 },
+    ]);
+    expect(course).toEqual(before);
+    expect(timetable.every((slot) => slot.dayOfWeek >= 0)).toBe(true);
+    expect(timetable.every((slot) => slot.startTime >= 0)).toBe(true);
+    expect(
+      timetable.every((slot) => slot.endTime < scheduleTimeSlots.length),
+    ).toBe(true);
+  });
+
+  test("accepts Sunday and ignores whitespace between valid codes", () => {
+    const timetable = createTimetableFromCourses([
+      courseWithTimes(["U1U2", "M1 M2"]),
+    ]);
+
+    expect(timetableCoordinates(timetable)).toEqual([
+      { dayOfWeek: 6, startTime: 0, endTime: 1 },
+      { dayOfWeek: 0, startTime: 0, endTime: 1 },
+    ]);
+  });
+
+  test("keeps courses with no drawable slots and defaults missing venues", () => {
+    const noTimes = courseWithTimes([], ["Room 1"]);
+    const noVenues = courseWithTimes(["M1"], []);
+
+    expect(createTimetableFromCourses([noTimes])).toEqual([]);
+    expect(createTimetableFromCourses([noVenues])[0]?.venue).toBe("");
+  });
+
+  test("uses safe bounds for a manually malformed consumer slot", () => {
+    expect(
+      getTimetableDataTimeRange({
+        course: courseWithTimes([]),
+        venue: "",
+        dayOfWeek: -1,
+        startTime: -1,
+        endTime: -1,
+        color: "#000000",
+        textColor: "#ffffff",
+      }),
+    ).toEqual({ start: 8 * 60, end: 22 * 60 + 20 });
   });
 });
 

@@ -263,10 +263,16 @@ export const getTimetableTimeRangePosition = (
   };
 };
 
+export const getTimetableSlotTimes = (
+  slot: Pick<CourseTimeslotData, "startTime" | "endTime">,
+) => ({
+  start: scheduleTimeSlots[slot.startTime],
+  end: scheduleTimeSlots[slot.endTime],
+});
+
 export const getTimetableDataTimeRange = (slot: CourseTimeslotData) => {
   if (slot.customSlot) return getCustomSlotTimeRange(slot.customSlot);
-  const start = scheduleTimeSlots[slot.startTime];
-  const end = scheduleTimeSlots[slot.endTime];
+  const { start, end } = getTimetableSlotTimes(slot);
   return {
     start: start ? timeToMinutes(start.start) : timetableGridStart,
     end: end ? timeToMinutes(end.end) : timetableGridEnd,
@@ -331,6 +337,8 @@ export const addTimetableFractions = (data: CourseTimeslotData[]) =>
     >,
   );
 
+const timetableDayCodes = "MTWRFSU";
+
 export const createTimetableFromCourses = (
   data: MinimalCourse[],
   colorMap: { [courseId: string]: string } = colorMapFromCourses(
@@ -345,8 +353,14 @@ export const createTimetableFromCourses = (
     course.times.forEach((timeString, index) => {
       const timeslots =
         timeString
+          .replace(/\s/g, "")
           .match(/.{1,2}/g)
-          ?.map((day) => ({ day: day[0], time: day[1] })) ?? [];
+          ?.map((day) => ({ day: day[0], time: day[1] }))
+          .filter(
+            ({ day, time }) =>
+              timetableDayCodes.includes(day) &&
+              scheduleTimeSlots.some((period) => period.time === time),
+          ) ?? [];
       const groupedTimeslots: { day: string; time: string }[][] = [];
       // Group consecutive periods on the same day. This mutates
       // groupedTimeslots, so it is a loop rather than a reduce whose return
@@ -383,8 +397,8 @@ export const createTimetableFromCourses = (
         const color = colorMap[course.raw_id] || "#555555";
         newTimetableData.push({
           course,
-          venue: course.venues![index]!,
-          dayOfWeek: "MTWRFS".indexOf(day),
+          venue: course.venues?.[index] ?? "",
+          dayOfWeek: timetableDayCodes.indexOf(day),
           startTime,
           endTime,
           color,

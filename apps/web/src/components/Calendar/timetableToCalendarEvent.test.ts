@@ -215,4 +215,19 @@ describe("timetable calendar event dates", () => {
       );
     });
   }
+
+  test("skips malformed timetable indexes without throwing", () => {
+    const malformedCourse: MinimalCourse = {
+      ...course,
+      times: ["MX", "X1", "Ｍ2"],
+      venues: [],
+    };
+    const malformedTimetable = createTimetableFromCourses([malformedCourse]);
+    let events: ReturnType<typeof timetableToCalendarEvent> | undefined;
+
+    expect(() => {
+      events = timetableToCalendarEvent(malformedTimetable, "zh");
+    }).not.toThrow();
+    expect(events).toEqual([]);
+  });
 });
