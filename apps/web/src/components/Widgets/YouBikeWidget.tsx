@@ -6,6 +6,13 @@ import { useSettings } from "@/hooks/contexts/settings";
 import { useYouBikeStations } from "@/hooks/useYouBikeStations";
 import { getPinnedStationIds, togglePinnedStationId } from "@/lib/youbike";
 import useDictionary from "@/dictionaries/useDictionary";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@courseweb/ui";
 
 interface YouBikeWidgetProps {
   onRemove?: () => void;
@@ -53,23 +60,27 @@ const YouBikeWidget: FC<YouBikeWidgetProps> = ({
     >
       <div className="flex flex-col gap-3 p-4">
         {availableToAdd.length > 0 && (
-          <select
+          <Select
             value={stationToAdd}
-            onChange={(event) => {
-              const id = event.target.value;
+            onValueChange={(id) => {
               setStationToAdd("");
               if (id) toggleStation(id);
             }}
-            aria-label={dict.youbike.pin}
-            className="w-full rounded-md border border-border bg-transparent px-2 py-1 text-xs"
           >
-            <option value="">{dict.youbike.pin}</option>
-            {availableToAdd.map((station) => (
-              <option key={station.id} value={station.id}>
-                {language === "zh" ? station.nameZh : station.nameEn}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger
+              className="h-7 w-full text-xs"
+              aria-label={dict.youbike.pin}
+            >
+              <SelectValue placeholder={dict.youbike.pin} />
+            </SelectTrigger>
+            <SelectContent>
+              {availableToAdd.map((station) => (
+                <SelectItem key={station.id} value={station.id}>
+                  {language === "zh" ? station.nameZh : station.nameEn}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         )}
         {isLoading ? (
           <div className="flex justify-center py-4">
