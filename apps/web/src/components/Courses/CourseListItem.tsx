@@ -35,6 +35,12 @@ type CourseListItemProps = {
   showVenue?: boolean;
   showCredits?: boolean;
   showPriority?: boolean;
+  showSyllabusDetails?: boolean;
+  showEnrollment?: boolean;
+  showAdditionalTags?: boolean;
+  showChevron?: boolean;
+  compact?: boolean;
+  alignSideItemsTop?: boolean;
   priority?: number;
   missingTimeLabel?: string;
   dimmed?: boolean;
@@ -53,6 +59,12 @@ const CourseListItem: FC<CourseListItemProps> = memo((props) => {
     showVenue = true,
     showCredits = true,
     showPriority = true,
+    showSyllabusDetails = true,
+    showEnrollment = true,
+    showAdditionalTags = true,
+    showChevron = true,
+    compact = false,
+    alignSideItemsTop = false,
     priority,
     missingTimeLabel,
     dimmed = false,
@@ -85,13 +97,19 @@ const CourseListItem: FC<CourseListItemProps> = memo((props) => {
 
   return (
     <div
-      className={`flex min-w-0 flex-row gap-4 py-4 @container${
-        dimmed ? " opacity-60" : ""
-      }`}
+      className={`flex min-w-0 flex-row ${
+        compact ? "gap-2 py-0.5" : "gap-4 py-4"
+      } @container${dimmed ? " opacity-60" : ""}`}
     >
-      {leading}
+      {alignSideItemsTop && leading ? (
+        <div className="self-start">{leading}</div>
+      ) : (
+        leading
+      )}
       <div className="min-w-0 flex-1">
-        <div className="mb-2 space-y-1 @md:pt-0">
+        <div
+          className={`${compact ? "mb-0 space-y-0" : "mb-2 space-y-1"} @md:pt-0`}
+        >
           <div className="flex flex-row gap-2 items-center">
             {hasTaken && (
               <div className="flex min-w-[65px] flex-row items-center justify-center rounded-md bg-primary px-2 py-1 text-sm text-primary-foreground select-none">
@@ -120,10 +138,12 @@ const CourseListItem: FC<CourseListItemProps> = memo((props) => {
             onMouseLeave={() => course && handleHover(false)}
           >
             <span className="min-w-0 whitespace-normal">{courseTitle}</span>
-            <ChevronRight
-              className="mt-0.5 h-4 w-4 shrink-0"
-              aria-hidden="true"
-            />
+            {showChevron && (
+              <ChevronRight
+                className="mt-0.5 h-4 w-4 shrink-0"
+                aria-hidden="true"
+              />
+            )}
           </button>
           {englishNames === "add" && englishCourseTitle && (
             <div className="text-sm">{englishCourseTitle}</div>
@@ -147,12 +167,16 @@ const CourseListItem: FC<CourseListItemProps> = memo((props) => {
               <CourseTagList
                 course={course}
                 showCredits={showCredits}
-                priority={showPriority ? priority : undefined}
+                showEnrollment={showEnrollment}
+                showAdditionalTags={showAdditionalTags}
+                priority={
+                  showPriority && showAdditionalTags ? priority : undefined
+                }
               />
             </>
           )}
         </div>
-        {course && (
+        {showSyllabusDetails && course && (
           <div className="flex flex-col gap-2">
             <p className="text-xs text-muted-foreground">{syllabus.brief}</p>
             {course.restrictions && course.restrictions.length > 0 && (
@@ -192,7 +216,11 @@ const CourseListItem: FC<CourseListItemProps> = memo((props) => {
           </div>
         )}
       </div>
-      <div className="flex min-w-0 shrink-0 flex-col items-end gap-2">
+      <div
+        className={`flex min-w-0 shrink-0 flex-col items-end gap-2${
+          alignSideItemsTop ? " self-start" : ""
+        }`}
+      >
         {actions ??
           (course && <SelectCourseButton courseId={course.raw_id as string} />)}
       </div>

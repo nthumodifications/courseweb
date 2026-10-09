@@ -25,35 +25,43 @@ const HighlightItem: FC<
 const CourseTagList = ({
   course,
   showCredits = true,
+  showEnrollment = true,
+  showAdditionalTags = true,
   priority,
 }: {
   course: CourseDefinition;
   showCredits?: boolean;
+  showEnrollment?: boolean;
+  showAdditionalTags?: boolean;
   priority?: number;
 }) => {
   const dict = useDictionary();
   return (
     <div className="flex flex-row flex-wrap gap-1 text-sm">
-      {course.closed_mark && (
+      {showAdditionalTags && course.closed_mark && (
         <HighlightItem className="bg-destructive text-destructive-foreground">
           {course.closed_mark}
         </HighlightItem>
       )}
-      <HighlightItem>
-        <span className="">
-          {course.capacity ?? "-"}
-          {(course.reserve ?? 0) > 0 && (
-            <>{` ${dict.course.tags.reserve_prefix} ${course.reserve}`}</>
-          )}{" "}
-          {dict.course.tags.people}
-        </span>
-      </HighlightItem>
-      {course.enrolled != undefined && (
-        <HighlightItem>
-          <span className="">
-            {course.enrolled} {dict.course.tags.enrolled_suffix}{" "}
-          </span>
-        </HighlightItem>
+      {showEnrollment && (
+        <>
+          <HighlightItem>
+            <span className="">
+              {course.capacity ?? "-"}
+              {(course.reserve ?? 0) > 0 && (
+                <>{` ${dict.course.tags.reserve_prefix} ${course.reserve}`}</>
+              )}{" "}
+              {dict.course.tags.people}
+            </span>
+          </HighlightItem>
+          {course.enrolled != undefined && (
+            <HighlightItem>
+              <span className="">
+                {course.enrolled} {dict.course.tags.enrolled_suffix}{" "}
+              </span>
+            </HighlightItem>
+          )}
+        </>
       )}
       {showCredits && (
         <HighlightItem>
@@ -62,12 +70,12 @@ const CourseTagList = ({
           </span>
         </HighlightItem>
       )}
-      {course.tags.includes("16周") && (
+      {showAdditionalTags && course.tags.includes("16周") && (
         <HighlightItem>
           <span className="">{dict.course.tags.sixteen_weeks}</span>
         </HighlightItem>
       )}
-      {course.tags.includes("18周") && (
+      {showAdditionalTags && course.tags.includes("18周") && (
         <HighlightItem>
           <span className="">{dict.course.tags.eighteen_weeks}</span>
         </HighlightItem>
@@ -81,23 +89,23 @@ const CourseTagList = ({
           {dict.course.tags.chinese}
         </HighlightItem>
       )}
-      {course.tags.includes("X-Class") && (
+      {showAdditionalTags && course.tags.includes("X-Class") && (
         <HighlightItem className="bg-destructive text-destructive-foreground">
           {dict.course.tags.x_class}
         </HighlightItem>
       )}
-      {(course.ge_target?.trim() || "").length > 0 && (
+      {showAdditionalTags && (course.ge_target?.trim() || "").length > 0 && (
         <HighlightItem>
           {course.ge_target} {dict.course.tags.general_education}
         </HighlightItem>
       )}
-      {getGECType(course.ge_type || "") && (
+      {showAdditionalTags && getGECType(course.ge_type || "") && (
         <HighlightItem>
           {dict.course.tags.general_education_core}{" "}
           {getGECType(course.ge_type!)}
         </HighlightItem>
       )}
-      {priority != null && priority !== 0 && (
+      {showAdditionalTags && priority != null && priority !== 0 && (
         <HighlightItem className="bg-foreground text-muted">
           {priority} {dict.timetable.priority}
         </HighlightItem>

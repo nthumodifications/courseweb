@@ -286,7 +286,14 @@ describe("timetable provider render stability", () => {
   });
 
   test("renders timetable course fields through the standard course row", async () => {
-    const course = testCourse;
+    const course = {
+      ...testCourse,
+      closed_mark: "Closed",
+      ge_target: "GE",
+      note: "Note that should be hidden",
+      restrictions: "Restriction that should be hidden",
+      tags: ["16周"],
+    };
     courseResponseData = [course];
 
     const fixture = await renderTimetable(
@@ -313,6 +320,47 @@ describe("timetable provider render stability", () => {
     expect(text).toContain("Discrete Mathematics - Alice Chen");
     expect(text).toContain("DELTA台達217 M9MaMb / M1M2");
     expect(text).toContain("2 credits");
+    expect(text).toContain("Chinese");
+    expect(text).not.toContain("30 people");
+    expect(text).not.toContain("20 enrolled");
+    expect(text).not.toContain("Note that should be hidden");
+    expect(text).not.toContain("Restriction that should be hidden");
+    expect(text).not.toContain("Closed");
+    expect(text).not.toContain("16 weeks");
+    expect(text).not.toContain("general education");
+    expect(fixture.container.querySelector("svg.mt-0\\.5")).toBeNull();
+    await fixture.cleanup();
+  });
+
+  test("dims hidden timetable rows and shows the reveal action", async () => {
+    const course = testCourse;
+    courseResponseData = [course];
+
+    const fixture = await renderTimetable(
+      <TimetableCourseList semester="11410" />,
+      {
+        [COURSES_KEY]: { "11410": [course.raw_id] },
+        [PREFERENCES_KEY]: { hiddenCourses: { [course.raw_id]: true } },
+        [DISPLAY_SETTINGS_KEY]: {
+          englishNames: "add",
+          showCourseCode: false,
+          showVenue: true,
+          showPriority: true,
+          showCredits: true,
+          lockOrder: true,
+        },
+      },
+    );
+    await fixture.waitFor(
+      () => fixture.container.textContent?.includes(course.name_zh) ?? false,
+    );
+
+    expect(fixture.container.querySelector(".opacity-60")).not.toBeNull();
+    const revealButton = fixture.container.querySelector<HTMLButtonElement>(
+      'button[aria-pressed="true"]',
+    );
+    expect(revealButton?.getAttribute("aria-label")).toBe("Show course");
+    expect(revealButton?.querySelector("svg")).not.toBeNull();
     await fixture.cleanup();
   });
 

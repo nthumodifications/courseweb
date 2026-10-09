@@ -199,7 +199,13 @@ const TimetableCourseListItem = ({
             showCourseCode={displaySettings.showCourseCode}
             showVenue={displaySettings.showVenue}
             showCredits={displaySettings.showCredits}
-            showPriority={displaySettings.showPriority}
+            showPriority={false}
+            showSyllabusDetails={false}
+            showEnrollment={false}
+            showAdditionalTags={false}
+            showChevron={false}
+            compact
+            alignSideItemsTop
             priority={priority}
             missingTimeLabel={dict.course.details.missing_time}
             dimmed={isHidden}
