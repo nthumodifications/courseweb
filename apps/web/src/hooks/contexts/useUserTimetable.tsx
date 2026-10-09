@@ -28,6 +28,11 @@ import {
 } from "../syncedStorage";
 import client from "@/config/api";
 import { CustomTimetableItem, CustomTimetableStorage } from "@/types/timetable";
+import {
+  HiddenCourseMap,
+  normalizeHiddenCourses,
+  pruneHiddenCourses,
+} from "@/helpers/timetableVisibility";
 
 export type TimetableFieldKey =
   | "code"
@@ -97,6 +102,7 @@ export interface TimetableDisplayPreferences {
     credits: boolean;
   };
   fieldOrder: TimetableFieldKey[];
+  hiddenCourses: HiddenCourseMap;
 }
 
 export const DEFAULT_TIMETABLE_DISPLAY_PREFERENCES: TimetableDisplayPreferences =
@@ -115,6 +121,7 @@ export const DEFAULT_TIMETABLE_DISPLAY_PREFERENCES: TimetableDisplayPreferences 
       credits: false,
     },
     fieldOrder: DEFAULT_FIELD_ORDER,
+    hiddenCourses: {},
   };
 
 const normalizeTimetableDisplayPreferences = (
@@ -134,6 +141,7 @@ const normalizeTimetableDisplayPreferences = (
       .length === DEFAULT_FIELD_ORDER.length
       ? value.fieldOrder
       : DEFAULT_FIELD_ORDER,
+  hiddenCourses: normalizeHiddenCourses(value?.hiddenCourses),
 });
 
 export type CourseLocalStorage = { [sem: string]: RawCourseID[] };
@@ -194,6 +202,7 @@ const userTimetableContext = createContext<
       credits: false,
     },
     fieldOrder: DEFAULT_FIELD_ORDER,
+    hiddenCourses: {},
   },
   setPreferences: () => {},
   favourites: [],
@@ -201,7 +210,7 @@ const userTimetableContext = createContext<
 });
 
 const useUserTimetableProvider = (loadCourse = true) => {
-  const [courses, setCourses, coursesSyncReady, coursesSyncError] =
+  const [courses, setStoredCourses, coursesSyncReady, coursesSyncError] =
     useSyncedStorage<CourseLocalStorage>("courses", {}, mergeCourseStorage);
   const [hoverCourse, setHoverCourse] = useState<CourseDefinition | null>(null);
   const [colorMap, setColorMap, colorMapSyncReady] = useSyncedStorage<{
@@ -219,18 +228,47 @@ const useUserTimetableProvider = (loadCourse = true) => {
       "timetable_display_preferences",
       DEFAULT_TIMETABLE_DISPLAY_PREFERENCES,
     );
-  const preferences = useMemo(
-    () => normalizeTimetableDisplayPreferences(storedPreferences),
-    [storedPreferences],
-  );
+  const preferences = useMemo(() => {
+    const normalized = normalizeTimetableDisplayPreferences(storedPreferences);
+    if (!coursesSyncReady) return normalized;
+    return {
+      ...normalized,
+      hiddenCourses: pruneHiddenCourses(normalized.hiddenCourses, courses),
+    };
+  }, [courses, coursesSyncReady, storedPreferences]);
   useEffect(() => {
-    if (
-      !Object.hasOwn(storedPreferences, "fontSize") ||
-      !Object.hasOwn(storedPreferences, "fontFamily")
-    ) {
+    if (!valuesEqual(storedPreferences, preferences)) {
       setStoredPreferences(preferences);
     }
   }, [preferences, setStoredPreferences, storedPreferences]);
+  const setCourses = useCallback(
+    (
+      nextCourses:
+        | CourseLocalStorage
+        | ((previous: CourseLocalStorage) => CourseLocalStorage),
+    ) => {
+      setStoredCourses((previousCourses) => {
+        const updatedCourses =
+          typeof nextCourses === "function"
+            ? nextCourses(previousCourses)
+            : nextCourses;
+        setStoredPreferences((previousPreferences) => {
+          const normalized =
+            normalizeTimetableDisplayPreferences(previousPreferences);
+          const hiddenCourses = pruneHiddenCourses(
+            normalized.hiddenCourses,
+            updatedCourses,
+          );
+          if (valuesEqual(hiddenCourses, normalized.hiddenCourses)) {
+            return previousPreferences;
+          }
+          return { ...normalized, hiddenCourses };
+        });
+        return updatedCourses;
+      });
+    },
+    [setStoredCourses, setStoredPreferences],
+  );
   const setPreferences = useCallback(
     (
       nextPreferences:

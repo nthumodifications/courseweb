@@ -62,7 +62,17 @@ mock.module("react-router-dom", () => ({
   useSearchParams: () => [new URLSearchParams(), () => {}],
 }));
 
-const { UserTimetableProvider } = await import(
+const moduleDom = new JSDOM("<!doctype html><html><body></body></html>", {
+  url: "http://localhost/zh/timetable",
+});
+Object.assign(globalThis, {
+  window: moduleDom.window,
+  document: moduleDom.window.document,
+  navigator: moduleDom.window.navigator,
+  StorageEvent: moduleDom.window.StorageEvent,
+});
+
+const { UserTimetableProvider, default: useUserTimetable } = await import(
   "@/hooks/contexts/useUserTimetable"
 );
 const { TimetableCourseList } = await import("./TimetableCourseList");
@@ -113,9 +123,152 @@ describe("timetable provider render stability", () => {
     queryClient.clear();
     dom.window.close();
   });
+
+  test("prunes hidden courses when loading and removing timetable courses", async () => {
+    const dom = new JSDOM("<!doctype html><html><body></body></html>", {
+      url: "http://localhost/zh/timetable",
+    });
+    Object.assign(globalThis, {
+      window: dom.window,
+      document: dom.window.document,
+      navigator: dom.window.navigator,
+    });
+    window.localStorage.setItem(
+      "nthumods-storage-anonymous-courses",
+      JSON.stringify({
+        value: { "11410": ["11410-A", "11410-B"] },
+        lastModified: 1,
+        updatedAt: 1,
+        deviceId: "test",
+      }),
+    );
+    window.localStorage.setItem(
+      "nthumods-storage-anonymous-timetable_display_preferences",
+      JSON.stringify({
+        value: { hiddenCourses: { "11410-A": true, "11410-gone": true } },
+        lastModified: 1,
+        updatedAt: 1,
+        deviceId: "test",
+      }),
+    );
+
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    const settle = async () => {
+      for (let attempt = 0; attempt < 10; attempt += 1) {
+        if (
+          container.querySelector("output")?.textContent?.includes("11410-A")
+        ) {
+          return;
+        }
+        await act(async () => {
+          await new Promise((resolve) => setTimeout(resolve, 10));
+        });
+      }
+    };
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <UserTimetableProvider>
+            <TimetableStateProbe />
+          </UserTimetableProvider>
+        </QueryClientProvider>,
+      );
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    await settle();
+
+    expect(container.querySelector("output")?.textContent).toContain(
+      '"hiddenCourses":{"11410-A":true}',
+    );
+    expect(
+      JSON.parse(
+        window.localStorage.getItem(
+          "nthumods-storage-anonymous-timetable_display_preferences",
+        )!,
+      ).value.hiddenCourses,
+    ).toEqual({ "11410-A": true });
+
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>("#delete-course")?.click();
+    });
+    await settle();
+    expect(container.querySelector("output")?.textContent).toContain(
+      '"hiddenCourses":{}',
+    );
+    expect(
+      JSON.parse(
+        window.localStorage.getItem(
+          "nthumods-storage-anonymous-timetable_display_preferences",
+        )!,
+      ).value.hiddenCourses,
+    ).toEqual({});
+
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>("#hide-course")?.click();
+      container.querySelector<HTMLButtonElement>("#replace-courses")?.click();
+    });
+    await settle();
+    expect(container.querySelector("output")?.textContent).toContain(
+      '"hiddenCourses":{}',
+    );
+
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>("#clear-courses")?.click();
+    });
+    await settle();
+    expect(container.querySelector("output")?.textContent).toContain(
+      '"hiddenCourses":{}',
+    );
+
+    await act(async () => {
+      root.unmount();
+    });
+    queryClient.clear();
+    dom.window.close();
+  });
 });
 
 const RenderCount = ({ onRender }: { onRender: () => void }) => {
   onRender();
   return <TimetableCourseList semester="11410" />;
+};
+
+const TimetableStateProbe = () => {
+  const {
+    courses,
+    preferences,
+    deleteCourse,
+    clearCourses,
+    setCourses,
+    setPreferences,
+  } = useUserTimetable();
+
+  return (
+    <>
+      <output>
+        {JSON.stringify({ courses, hiddenCourses: preferences.hiddenCourses })}
+      </output>
+      <button id="delete-course" onClick={() => deleteCourse("11410-A")} />
+      <button
+        id="hide-course"
+        onClick={() =>
+          setPreferences((previous) => ({
+            ...previous,
+            hiddenCourses: { "11410-B": true },
+          }))
+        }
+      />
+      <button
+        id="replace-courses"
+        onClick={() => setCourses({ "11410": ["11410-A"] })}
+      />
+      <button id="clear-courses" onClick={clearCourses} />
+    </>
+  );
 };

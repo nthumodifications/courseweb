@@ -52,7 +52,9 @@
     },
     "course_actions": {
       "course_location": "開課地點",
-      "location_unavailable": "這門課沒有可定位的開課地點"
+      "location_unavailable": "這門課沒有可定位的開課地點",
+      "hide_course": "從課表隱藏課程",
+      "show_course": "顯示課程"
     },
     "credits": "總學分",
     "course": "課",

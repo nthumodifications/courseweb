@@ -13,6 +13,7 @@ import { useEffect, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 import { useSettings } from "@/hooks/contexts/settings";
 import { timetableEvents } from "@/lib/trackingEvents";
+import { filterHiddenCourses } from "@/helpers/timetableVisibility";
 
 const TimetablePage = () => {
   const {
@@ -21,6 +22,7 @@ const TimetablePage = () => {
     semester,
     setSemester,
     colorMap,
+    preferences,
   } = useUserTimetable();
   const [vertical, setVertical] = useLocalStorage("timetable_vertical", true);
   const { language } = useSettings();
@@ -28,7 +30,10 @@ const TimetablePage = () => {
   const previousSemesterRef = useRef(semester);
 
   const timetableData = createTimetableFromCoursesAndCustomItems(
-    getSemesterCourses(semester) as MinimalCourse[],
+    filterHiddenCourses(
+      getSemesterCourses(semester),
+      preferences.hiddenCourses,
+    ) as MinimalCourse[],
     getSemesterCustomItems(semester),
     colorMap,
   );

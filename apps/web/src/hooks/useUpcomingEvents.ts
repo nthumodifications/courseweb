@@ -13,6 +13,7 @@ import {
 import { getRepeatedStartDays } from "@/components/Calendar/calendar_utils";
 import { timetableToCalendarEvent } from "@/components/Calendar/timetableToCalendarEvent";
 import { createTimetableFromCourses } from "@/helpers/timetable";
+import { filterHiddenCourses } from "@/helpers/timetableVisibility";
 import { useCalendar } from "@/components/Calendar/calendar_hook";
 import client from "@/config/api";
 import useCourseDates, { CourseDate } from "@/hooks/useCourseDates";
@@ -279,6 +280,7 @@ const useUpcomingEvents = (
     courses,
     colorMap,
     getSemesterCourses,
+    preferences,
     isLoading: timetableLoading,
     error: timetableError,
   } = useUserTimetable();
@@ -344,11 +346,14 @@ const useUpcomingEvents = (
     () =>
       semesters.flatMap((semester) =>
         createTimetableFromCourses(
-          getSemesterCourses(semester.id) as MinimalCourse[],
+          filterHiddenCourses(
+            getSemesterCourses(semester.id),
+            preferences.hiddenCourses,
+          ) as MinimalCourse[],
           colorMap,
         ),
       ),
-    [colorMap, getSemesterCourses, semesters],
+    [colorMap, getSemesterCourses, preferences.hiddenCourses, semesters],
   );
   const classEvents = useMemo(
     () =>
