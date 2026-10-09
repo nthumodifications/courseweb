@@ -7,7 +7,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  ScrollArea,
 } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
 import { getCourseSelectionSchedule } from "@/lib/course-selection-schedule";
@@ -44,21 +43,18 @@ const CourseSelectionScheduleDialog = ({
   return (
     <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100%-1rem)] overflow-hidden p-4 sm:w-full">
+      <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100%-1rem)] overflow-y-auto p-4 sm:w-full">
         <DialogHeader className="text-left">
-          <DialogTitle className="sr-only">{title}</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
           <DialogDescription className="sr-only">
             {dict.course.selection_period.dialog_description}
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="h-[calc(100dvh-8rem)] max-h-[32rem] pr-2">
-          <CourseSelectionSchedule
-            semester={schedule.semester}
-            periods={schedule.periods}
-            nowDateKey={nowDateKey}
-            isLoading={isLoading}
-          />
-        </ScrollArea>
+        <CourseSelectionSchedule
+          periods={schedule.periods}
+          nowDateKey={nowDateKey}
+          isLoading={isLoading}
+        />
       </DialogContent>
     </Dialog>
   );

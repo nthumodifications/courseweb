@@ -110,7 +110,7 @@ export const CourseSelectionScheduleRows = ({
               </span>
               <span
                 className={cn(
-                  "text-sm text-muted-foreground",
+                  "text-sm text-muted-foreground sm:w-48 sm:shrink-0 sm:text-left",
                   compact && "text-xs",
                 )}
               >
@@ -137,28 +137,18 @@ export const CourseSelectionScheduleRows = ({
 };
 
 type CourseSelectionScheduleProps = CourseSelectionScheduleRowsProps & {
-  semester: string;
   className?: string;
 };
 
 const CourseSelectionSchedule = ({
-  semester,
   periods,
   nowDateKey,
   isLoading,
   compact,
   className,
 }: CourseSelectionScheduleProps) => {
-  const dict = useDictionary();
-
   return (
     <section className={cn("flex flex-col gap-3", className)}>
-      <h2 className="text-base font-bold">
-        {getCourseSelectionScheduleTitle(
-          semester,
-          dict.course.selection_period.schedule_title,
-        )}
-      </h2>
       <CourseSelectionScheduleRows
         periods={periods}
         nowDateKey={nowDateKey}

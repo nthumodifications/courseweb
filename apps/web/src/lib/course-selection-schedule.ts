@@ -16,6 +16,7 @@ export const getCourseSelectionPhaseStatus = (
 
 export const sortCourseSelectionPeriods = (periods: CourseSelectionPeriod[]) =>
   [...periods].sort(
+    // Keep same-day phases deterministic, with add-drop before inter-school.
     (a, b) =>
       a.startDate.localeCompare(b.startDate) || a.id.localeCompare(b.id),
   );
