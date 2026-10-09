@@ -1,28 +1,50 @@
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { JSDOM } from "jsdom";
-import { afterEach, describe, expect, mock, test } from "bun:test";
+import { afterEach, describe, expect, mock, spyOn, test } from "bun:test";
 
+const originalEnvironment = {
+  VITE_COURSEWEB_API_URL: process.env.VITE_COURSEWEB_API_URL,
+  VITE_NTHUMODS_AUTH_URL: process.env.VITE_NTHUMODS_AUTH_URL,
+};
+process.env.VITE_COURSEWEB_API_URL ??= "https://api.example.test";
+process.env.VITE_NTHUMODS_AUTH_URL ??= "https://auth.example.test";
+
+const previousOidcContext = await import("react-oidc-context");
 mock.module("react-oidc-context", () => ({
   useAuth: () => ({ user: undefined }),
 }));
-mock.module("./contexts/useUserTimetable", () => ({
-  default: () => ({
-    courses: {},
-    semester: undefined,
-    getSemesterCourses: () => [],
-  }),
-}));
 
 const { useAIChat } = await import("./useAIChat");
+mock.module("react-oidc-context", () => previousOidcContext);
+for (const [key, value] of Object.entries(originalEnvironment)) {
+  if (value === undefined) delete process.env[key];
+  else process.env[key] = value;
+}
 type HookResult = ReturnType<typeof useAIChat>;
 
-const originalFetch = globalThis.fetch;
-const fetchMock = mock(
-  async (_input: Parameters<typeof fetch>[0], _init?: RequestInit) =>
-    new Response(),
-);
 let active: { dom: JSDOM; root: Root } | undefined;
+let fetchSpy: ReturnType<typeof spyOn> | undefined;
+
+const globalKeys = [
+  "window",
+  "document",
+  "navigator",
+  "localStorage",
+  "IS_REACT_ACT_ENVIRONMENT",
+] as const;
+const originalGlobals = new Map(
+  globalKeys.map((key) => [
+    key,
+    Object.getOwnPropertyDescriptor(globalThis, key),
+  ]),
+);
+
+const restoreGlobal = (key: (typeof globalKeys)[number]) => {
+  const descriptor = originalGlobals.get(key);
+  if (descriptor) Object.defineProperty(globalThis, key, descriptor);
+  else Reflect.deleteProperty(globalThis, key);
+};
 
 const setupDom = () => {
   const dom = new JSDOM("<!doctype html><html><body></body></html>", {
@@ -59,20 +81,37 @@ const renderChat = async () => {
   return { getResult: () => result };
 };
 
+const sendMessage = async (
+  rendered: Awaited<ReturnType<typeof renderChat>>,
+  prompt: string,
+) => {
+  await act(async () => {
+    await rendered.getResult()?.sendMessage(prompt);
+  });
+};
+
 afterEach(async () => {
-  if (active) {
-    await act(async () => active?.root.unmount());
-    active.dom.window.close();
-    active = undefined;
+  try {
+    if (active) {
+      await act(async () => active?.root.unmount());
+      active.dom.window.close();
+      active = undefined;
+    }
+  } finally {
+    fetchSpy?.mockRestore();
+    fetchSpy = undefined;
+    for (const key of globalKeys) restoreGlobal(key);
   }
-  fetchMock.mockReset();
-  globalThis.fetch = originalFetch;
 });
+
+const installFetch = (implementation: typeof fetch) => {
+  fetchSpy = spyOn(globalThis, "fetch").mockImplementation(implementation);
+};
 
 describe("useAIChat empty completed streams", () => {
   test("removes a blank placeholder, reports an error, and retries the prompt", async () => {
     const requestBodies: string[] = [];
-    fetchMock.mockImplementation(async (_input, init) => {
+    installFetch(async (_input, init) => {
       requestBodies.push(String(init?.body));
       return requestBodies.length === 1
         ? streamResponse({ type: "done" })
@@ -81,12 +120,9 @@ describe("useAIChat empty completed streams", () => {
             { type: "done" },
           );
     });
-    globalThis.fetch = fetchMock as unknown as typeof fetch;
     const rendered = await renderChat();
 
-    await act(async () => {
-      await rendered.getResult()?.sendMessage("Try this");
-    });
+    await sendMessage(rendered, "Try this");
     expect(rendered.getResult()?.messages).toHaveLength(1);
     expect(rendered.getResult()?.messages[0]?.role).toBe("user");
     expect(rendered.getResult()?.error).toBe(
@@ -106,7 +142,7 @@ describe("useAIChat empty completed streams", () => {
   });
 
   test("keeps a tool-only completed stream", async () => {
-    fetchMock.mockImplementation(async () =>
+    installFetch(async () =>
       streamResponse(
         {
           type: "tool_call",
@@ -119,12 +155,9 @@ describe("useAIChat empty completed streams", () => {
         { type: "done" },
       ),
     );
-    globalThis.fetch = fetchMock as unknown as typeof fetch;
     const rendered = await renderChat();
 
-    await act(async () => {
-      await rendered.getResult()?.sendMessage("Search");
-    });
+    await sendMessage(rendered, "Search");
     const assistant = rendered
       .getResult()
       ?.messages.find((message) => message.role === "assistant");

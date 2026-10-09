@@ -12,6 +12,7 @@ import {
   readableProviderMessage,
   streamChatWithTools,
   TOOL_CALL_BUDGET_ERROR,
+  type LlmEnv,
   validateAgainstSchema,
 } from "./llm";
 import type { Context } from "hono";
@@ -21,6 +22,41 @@ const originalFetch = globalThis.fetch;
 afterEach(() => {
   globalThis.fetch = originalFetch;
 });
+
+const workerMessage = (message: Record<string, unknown>) => ({
+  choices: [{ message }],
+});
+
+const collectChatEvents = async (
+  env: LlmEnv,
+  prompt = "hello",
+  userGeminiKey?: string,
+) => {
+  const events = [];
+  for await (const event of streamChatWithTools(
+    { env } as unknown as Context,
+    [{ role: "user", content: prompt }],
+    {},
+    { env, userGeminiKey },
+  )) {
+    events.push(event);
+  }
+  return events;
+};
+
+const groqStreamResponse = (content: string) =>
+  new Response(
+    `data: ${JSON.stringify({ choices: [{ delta: { content } }] })}\n\ndata: [DONE]\n\n`,
+  );
+
+const mockGeminiThenGroq = (urls: string[], groqContent: string) =>
+  mock(async (input) => {
+    const url = String(input);
+    urls.push(url);
+    return url.includes("generativelanguage.googleapis.com")
+      ? new Response("data: {}\n\n")
+      : groqStreamResponse(groqContent);
+  });
 
 describe("LLM provider helpers", () => {
   it("allows only HTTPS PDF hosts on the explicit allowlist", () => {
@@ -416,28 +452,19 @@ describe("normalizeWorkersAiOutput", () => {
 
   it("falls through when a provider returns an empty final answer", async () => {
     const calls: string[] = [];
-    const env = {
+    const env: LlmEnv = {
       AI_PROVIDER_ORDER: "workers-ai",
       WORKERS_AI_CHAT_MODELS: "empty-model,answer-model",
       AI: {
         run: async (model: string) => {
           calls.push(model);
-          return model === "empty-model"
-            ? { choices: [{ message: { content: null } }] }
-            : { choices: [{ message: { content: "The answer" } }] };
+          return workerMessage({
+            content: model === "empty-model" ? null : "The answer",
+          });
         },
       },
     };
-    const events = [];
-
-    for await (const event of streamChatWithTools(
-      { env } as unknown as Context,
-      [{ role: "user", content: "hello" }],
-      {},
-      { env },
-    )) {
-      events.push(event);
-    }
+    const events = await collectChatEvents(env);
 
     expect(calls).toEqual(["empty-model", "answer-model"]);
     expect(events).toContainEqual({ type: "text", data: "The answer" });
@@ -449,49 +476,31 @@ describe("normalizeWorkersAiOutput", () => {
 
   it("falls through after tool use when the next answer is empty", async () => {
     const calls: string[] = [];
-    const env = {
+    const env: LlmEnv = {
       AI_PROVIDER_ORDER: "workers-ai",
       WORKERS_AI_CHAT_MODELS: "tool-model,answer-model",
       AI: {
         run: async (model: string) => {
           calls.push(model);
           if (model === "tool-model" && calls.length === 1) {
-            return {
-              choices: [
+            return workerMessage({
+              content: null,
+              tool_calls: [
                 {
-                  message: {
-                    content: null,
-                    tool_calls: [
-                      {
-                        id: "call-1",
-                        function: {
-                          name: "unknown_tool",
-                          arguments: "{}",
-                        },
-                      },
-                    ],
-                  },
+                  id: "call-1",
+                  function: { name: "unknown_tool", arguments: "{}" },
                 },
               ],
-            };
+            });
           }
           if (model === "tool-model") {
-            return { choices: [{ message: { content: null } }] };
+            return workerMessage({ content: null });
           }
-          return { choices: [{ message: { content: "The closing answer" } }] };
+          return workerMessage({ content: "The closing answer" });
         },
       },
     };
-    const events = [];
-
-    for await (const event of streamChatWithTools(
-      { env } as unknown as Context,
-      [{ role: "user", content: "use a tool" }],
-      {},
-      { env },
-    )) {
-      events.push(event);
-    }
+    const events = await collectChatEvents(env, "use a tool");
 
     expect(calls).toEqual(["tool-model", "tool-model", "answer-model"]);
     expect(events).toContainEqual({
@@ -503,33 +512,18 @@ describe("normalizeWorkersAiOutput", () => {
 
   it("reports an error when every provider returns an empty answer", async () => {
     const urls: string[] = [];
-    globalThis.fetch = mock(async (input) => {
-      const url = String(input);
-      urls.push(url);
-      if (url.includes("generativelanguage.googleapis.com")) {
-        return new Response("data: {}\n\n");
-      }
-      return new Response(
-        `data: ${JSON.stringify({ choices: [{ delta: { content: "   " } }] })}\n\ndata: [DONE]\n\n`,
-      );
-    }) as unknown as typeof fetch;
-    const env = {
+    globalThis.fetch = mockGeminiThenGroq(
+      urls,
+      "   ",
+    ) as unknown as typeof fetch;
+    const env: LlmEnv = {
       AI_PROVIDER_ORDER: "gemini,groq",
       GOOGLE_AI_API_KEY: "gemini-key",
       GEMINI_CHAT_MODELS: "gemini-empty",
       GROQ_API_KEY: "groq-key",
       GROQ_CHAT_MODELS: "groq-empty",
     };
-    const events = [];
-
-    for await (const event of streamChatWithTools(
-      { env } as unknown as Context,
-      [{ role: "user", content: "hello" }],
-      {},
-      { env },
-    )) {
-      events.push(event);
-    }
+    const events = await collectChatEvents(env);
 
     expect(events).toContainEqual(
       expect.objectContaining({ type: "error", code: "unavailable" }),
@@ -542,32 +536,17 @@ describe("normalizeWorkersAiOutput", () => {
 
   it("does not fall through after a user-key provider returns blank", async () => {
     const urls: string[] = [];
-    globalThis.fetch = mock(async (input) => {
-      const url = String(input);
-      urls.push(url);
-      if (url.includes("generativelanguage.googleapis.com")) {
-        return new Response("data: {}\n\n");
-      }
-      return new Response(
-        `data: ${JSON.stringify({ choices: [{ delta: { content: "answer" } }] })}\n\ndata: [DONE]\n\n`,
-      );
-    }) as unknown as typeof fetch;
-    const env = {
+    globalThis.fetch = mockGeminiThenGroq(
+      urls,
+      "answer",
+    ) as unknown as typeof fetch;
+    const env: LlmEnv = {
       AI_PROVIDER_ORDER: "groq",
       GEMINI_CHAT_MODELS: "user-key-model",
       GROQ_API_KEY: "server-groq-key",
       GROQ_CHAT_MODELS: "server-model",
     };
-    const events = [];
-
-    for await (const event of streamChatWithTools(
-      { env } as unknown as Context,
-      [{ role: "user", content: "hello" }],
-      {},
-      { env, userGeminiKey: "user-gemini-key" },
-    )) {
-      events.push(event);
-    }
+    const events = await collectChatEvents(env, "hello", "user-gemini-key");
 
     expect(urls).toHaveLength(1);
     expect(urls[0]).toContain("generativelanguage.googleapis.com");

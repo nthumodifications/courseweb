@@ -474,7 +474,7 @@ export function useAIChat(options: UseAIChatOptions = {}) {
         for (const event of parser.finish()) handleEvent(event);
 
         if (receivedDone && !fullContent.trim() && toolCalls.length === 0) {
-          throw new Error();
+          throw new Error("AI provider returned an empty response");
         }
 
         updateAssistant({
