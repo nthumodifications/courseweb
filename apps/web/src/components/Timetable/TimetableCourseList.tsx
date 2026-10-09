@@ -15,11 +15,7 @@ import { useNavigate } from "react-router-dom";
 import useDictionary from "@/dictionaries/useDictionary";
 import { lazy, Suspense, useMemo } from "react";
 import useSyncedStorage from "@/hooks/useSyncedStorage";
-import {
-  hasConflictingTimeslots,
-  hasSameCourse,
-  hasTimes,
-} from "@/helpers/courses";
+import { hasConflictingTimeslots, hasSameCourse } from "@/helpers/courses";
 import { MinimalCourse } from "@/types/courses";
 import {
   Button,
@@ -67,6 +63,8 @@ import Compact from "@uiw/react-color-compact";
 import { TimetableItemDrawer } from "./TimetableItemDrawer";
 import { isCourseHidden } from "@/helpers/timetableVisibility";
 import { UnresolvedCoursesNotice } from "./UnresolvedCoursesNotice";
+import CourseListItem from "@/components/Courses/CourseListItem";
+import type { CourseDefinition } from "@/config/supabase";
 
 const DownloadTimetableDialogLazy = lazy(
   () => import("./DownloadTimetableDialog"),
@@ -189,161 +187,138 @@ const TimetableCourseListItem = ({
 
   return (
     <div
-      className={`flex flex-row gap-2 items-center max-w-3xl ${
-        isHidden ? "text-muted-foreground" : ""
-      }`}
+      className={`min-w-0 max-w-3xl ${isHidden ? "text-muted-foreground" : ""}`}
       ref={setNodeRef}
       style={style}
     >
-      {!displaySettings.lockOrder && (
-        <GripVertical
-          className="w-4 h-4 text-muted-foreground"
-          {...attributes}
-          {...listeners}
-        />
-      )}
-      <Popover>
-        <PopoverTrigger asChild>
-          <div className="p-1 rounded-md hover:outline outline-1 outline-border mr-2">
-            <div
-              className="w-4 h-4 rounded-full"
-              style={{ backgroundColor: colorMap[course.raw_id] }}
-            ></div>
-          </div>
-        </PopoverTrigger>
-        <PopoverContent className="p-0">
-          <Compact
-            color={colorMap[course.raw_id]}
-            onChange={(color) => {
-              setColor(course.raw_id, color.hex);
-            }}
-            colors={currentColors}
-          />
-        </PopoverContent>
-      </Popover>
       <TimetableItemDrawer course={course}>
-        <div className="flex flex-col flex-1">
-          {displaySettings.showCourseCode && (
-            <div className="text-xs text-muted-foreground">
-              {course.department} {course.course}
-            </div>
-          )}
-          {displaySettings.englishNames !== "replace" && (
-            <div className="">
-              {course.name_zh}{" "}
-              <span className="text-muted-foreground">
-                {course.teacher_zh.join(",")}
-              </span>
-            </div>
-          )}
-          {displaySettings.englishNames === "replace" && (
-            <>
-              <div className="font-medium text-sm">{course.name_en}</div>
-              <div className="text-xs text-muted-foreground mt-1">
-                {course.teacher_en.join(",")}
+        <div className="min-w-0">
+          <CourseListItem
+            course={course as CourseDefinition}
+            englishNames={displaySettings.englishNames}
+            showCourseCode={displaySettings.showCourseCode}
+            showVenue={displaySettings.showVenue}
+            showCredits={displaySettings.showCredits}
+            showPriority={false}
+            showSyllabusDetails={false}
+            showEnrollment={false}
+            showAdditionalTags={false}
+            showChevron={false}
+            compact
+            alignSideItemsTop
+            priority={priority}
+            missingTimeLabel={dict.course.details.missing_time}
+            dimmed={isHidden}
+            onCourseClick={() => undefined}
+            leading={
+              <div
+                className="flex shrink-0 flex-row items-center gap-2"
+                onClick={(event) => event.stopPropagation()}
+                onKeyDown={(event) => event.stopPropagation()}
+              >
+                {!displaySettings.lockOrder && (
+                  <GripVertical
+                    className="w-4 h-4 text-muted-foreground"
+                    {...attributes}
+                    {...listeners}
+                  />
+                )}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <div className="p-1 rounded-md hover:outline outline-1 outline-border">
+                      <div
+                        className="w-4 h-4 rounded-full"
+                        style={{ backgroundColor: colorMap[course.raw_id] }}
+                      ></div>
+                    </div>
+                  </PopoverTrigger>
+                  <PopoverContent className="p-0">
+                    <Compact
+                      color={colorMap[course.raw_id]}
+                      onChange={(color) => {
+                        setColor(course.raw_id, color.hex);
+                      }}
+                      colors={currentColors}
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
-            </>
-          )}
-          {displaySettings.englishNames === "add" && (
-            <div className={"text-xs"}>
-              {course.name_en} - {course.teacher_en.join(",")}
-            </div>
-          )}
-          <div className="mt-1 flex flex-row gap-1 text-muted-foreground flex-wrap">
-            {displaySettings.showVenue &&
-              course.venues?.map((venue, index) => {
-                const time = course.times![index];
-                return (
-                  <div
-                    key={index}
-                    className="px-2 py-0.5 bg-foreground/10 mr-1 rounded-md text-xs whitespace-nowrap"
+            }
+            actions={
+              <div
+                className="flex flex-row space-x-2 items-center"
+                onClick={(event) => event.stopPropagation()}
+                onKeyDown={(event) => event.stopPropagation()}
+              >
+                {hasConflict && (
+                  <HoverCard>
+                    <HoverCardTrigger asChild>
+                      <AlertTriangle className="w-6 h-6 text-red-500" />
+                    </HoverCardTrigger>
+                    <HoverCardContent>
+                      <span>{dict.timetable.conflict}</span>
+                    </HoverCardContent>
+                  </HoverCard>
+                )}
+                {isDuplicate && (
+                  <HoverCard>
+                    <HoverCardTrigger asChild>
+                      <Copy className="w-6 h-6 text-yellow-500" />
+                    </HoverCardTrigger>
+                    <HoverCardContent>
+                      <span>{dict.timetable.duplicate}</span>
+                    </HoverCardContent>
+                  </HoverCard>
+                )}
+                <div className="flex flex-row">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    title={
+                      isHidden
+                        ? dict.timetable.course_actions.show_course
+                        : dict.timetable.course_actions.hide_course
+                    }
+                    aria-label={
+                      isHidden
+                        ? dict.timetable.course_actions.show_course
+                        : dict.timetable.course_actions.hide_course
+                    }
+                    aria-pressed={isHidden}
+                    onClick={() =>
+                      setPreferences((previous) => {
+                        const hiddenCourses = { ...previous.hiddenCourses };
+                        if (isCourseHidden(course.raw_id, hiddenCourses)) {
+                          delete hiddenCourses[course.raw_id];
+                        } else {
+                          hiddenCourses[course.raw_id] = true;
+                        }
+                        return { ...previous, hiddenCourses };
+                      })
+                    }
                   >
-                    {venue}{" "}
-                    {hasTimes(course as MinimalCourse)
-                      ? time
-                      : dict.course.details.missing_time}
-                  </div>
-                );
-              })}
-            {displaySettings.showCredits && (
-              <div className="px-2 py-0.5 bg-foreground/10 mr-1 rounded-md text-xs whitespace-nowrap">
-                {course.credits} {dict.course.credits}
+                    {isHidden ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </Button>
+                  <Button
+                    className="rounded-l-none"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => deleteCourse(course.raw_id)}
+                  >
+                    <Trash className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
-            )}
-            {displaySettings.showPriority && priority != 0 && (
-              <span className="px-2 py-0.5 bg-foreground text-muted mr-1 rounded-md text-xs whitespace-nowrap">
-                {priority} {dict.timetable.priority}
-              </span>
-            )}
-          </div>
+            }
+          />
         </div>
       </TimetableItemDrawer>
-      <div className="flex flex-row space-x-2 items-center">
-        {hasConflict && (
-          <HoverCard>
-            <HoverCardTrigger asChild>
-              <AlertTriangle className="w-6 h-6 text-red-500" />
-            </HoverCardTrigger>
-            <HoverCardContent>
-              <span>{dict.timetable.conflict}</span>
-            </HoverCardContent>
-          </HoverCard>
-        )}
-        {isDuplicate && (
-          <HoverCard>
-            <HoverCardTrigger asChild>
-              <Copy className="w-6 h-6 text-yellow-500" />
-            </HoverCardTrigger>
-            <HoverCardContent>
-              <span>{dict.timetable.duplicate}</span>
-            </HoverCardContent>
-          </HoverCard>
-        )}
-        <div className="flex flex-row">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            title={
-              isHidden
-                ? dict.timetable.course_actions.show_course
-                : dict.timetable.course_actions.hide_course
-            }
-            aria-label={
-              isHidden
-                ? dict.timetable.course_actions.show_course
-                : dict.timetable.course_actions.hide_course
-            }
-            aria-pressed={isHidden}
-            onClick={() =>
-              setPreferences((previous) => {
-                const hiddenCourses = { ...previous.hiddenCourses };
-                if (isCourseHidden(course.raw_id, hiddenCourses)) {
-                  delete hiddenCourses[course.raw_id];
-                } else {
-                  hiddenCourses[course.raw_id] = true;
-                }
-                return { ...previous, hiddenCourses };
-              })
-            }
-          >
-            {isHidden ? (
-              <EyeOff className="h-4 w-4" />
-            ) : (
-              <Eye className="h-4 w-4" />
-            )}
-          </Button>
-          <Button
-            className="rounded-l-none"
-            variant="outline"
-            size="icon"
-            onClick={() => deleteCourse(course.raw_id)}
-          >
-            <Trash className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
     </div>
   );
 };
@@ -465,7 +440,7 @@ export const TimetableCourseList = ({
           !vertical
             ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 "
             : "flex flex-col"
-        } gap-4 flex-wrap`}
+        } gap-4`}
       >
         <DndContext
           sensors={sensors}

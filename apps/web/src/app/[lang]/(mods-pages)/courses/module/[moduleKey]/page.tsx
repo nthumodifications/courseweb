@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight, ChevronLeft } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -18,6 +18,8 @@ import useDictionary from "@/dictionaries/useDictionary";
 import PrerequisiteBlock from "@/components/CourseDetails/PrerequisiteBlock";
 import { usePrerequisiteGraphData } from "@/components/CourseDetails/usePrerequisiteGraphData";
 import { ModuleTermAvailability } from "@/components/Courses/ModuleTermAvailability";
+import { CourseOfferingRow } from "@/components/Courses/CourseOfferingRow";
+import { ModuleLoading } from "@/components/Courses/ModuleLoading";
 import {
   ModuleBrief,
   ModuleDemand,
@@ -31,7 +33,6 @@ import {
   parseModuleKey,
   type ModuleAggregate,
   type ModuleHistory,
-  type ModuleOffering,
   type ModuleVariant,
 } from "@/lib/modules";
 
@@ -55,88 +56,10 @@ const decodeModuleKey = (value: string | undefined) => {
   }
 };
 
-const sectionLabel = (dict: Dictionary, classCode: string) =>
-  classCode === "0" ? dict.course.module.default_section : `#${classCode}`;
-
-const semesterCount = (dict: Dictionary, count: number) =>
-  `${count} ${count === 1 ? dict.course.module.semester : dict.course.module.semesters_count}`;
-
-const offeringLink = (lang: string, rawId: string) =>
-  `/${lang}/courses/${encodeURIComponent(rawId)}`;
-
 const academicYearRange = (semesters: readonly string[]) => {
   const years = semesters.map((semester) => Number(semester.slice(0, 3)));
   return `${Math.min(...years)}–${Math.max(...years)}`;
 };
-
-const formatInstructors = (
-  offering: ModuleOffering,
-  lang: string,
-  unavailable: string,
-) => {
-  const names = lang === "en" ? offering.teacher_en : offering.teacher_zh;
-  return (
-    (names?.length ? names : offering.teacher_zh)?.join(
-      lang === "en" ? ", " : "、",
-    ) || unavailable
-  );
-};
-
-const formatTimesAndVenues = (
-  offering: ModuleOffering,
-  unavailable: string,
-) => {
-  const values = offering.times.map((time, index) =>
-    `${time} ${offering.venues[index] ?? ""}`.trim(),
-  );
-  return values.length > 0 ? values.join(" · ") : unavailable;
-};
-
-const ModuleLoading = () => (
-  <div className="flex animate-pulse flex-col gap-6">
-    <header className="flex flex-col gap-3">
-      <div className="h-4 w-24 rounded bg-muted" />
-      <div className="h-8 w-3/4 rounded bg-muted" />
-      <div className="h-5 w-2/3 rounded bg-muted" />
-      <div className="h-4 w-64 rounded bg-muted" />
-    </header>
-    <div className="grid gap-6 lg:grid-cols-2">
-      <div className="flex flex-col gap-6">
-        <div className="flex flex-col gap-3">
-          <div className="h-12 w-4/5 rounded bg-muted" />
-          <div className="h-5 w-2/3 rounded bg-muted" />
-        </div>
-        <div className="flex flex-col gap-4">
-          <div className="h-5 w-32 rounded bg-muted" />
-          <div className="grid grid-cols-8 gap-3">
-            {Array.from({ length: 24 }, (_, index) => (
-              <div
-                key={index}
-                className="justify-self-center h-5 w-5 rounded-full bg-muted"
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-      <div className="flex flex-col gap-6">
-        <div className="h-5 w-24 rounded bg-muted" />
-        <div className="flex flex-wrap gap-2">
-          {Array.from({ length: 6 }, (_, index) => (
-            <div key={index} className="h-11 w-32 rounded-full bg-muted" />
-          ))}
-        </div>
-        <div className="flex flex-col gap-4">
-          <div className="h-5 w-40 rounded bg-muted" />
-          <div className="flex flex-col gap-3">
-            {Array.from({ length: 3 }, (_, index) => (
-              <div key={index} className="h-16 rounded bg-muted/60" />
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-);
 
 const VariantPicker = ({
   module,
@@ -184,54 +107,6 @@ const VariantPicker = ({
   );
 };
 
-const OfferingRow = ({
-  offering,
-  lang,
-  dict,
-  showSemester,
-}: {
-  offering: ModuleOffering;
-  lang: string;
-  dict: Dictionary;
-  showSemester: boolean;
-}) => {
-  const language = offering.language.trim();
-  const capacity =
-    offering.capacity === null
-      ? null
-      : `${dict.course.module.capacity} ${offering.capacity} / ${offering.enrolled}`;
-
-  return (
-    <Link
-      to={offeringLink(lang, offering.raw_id)}
-      className="group flex min-w-0 items-start gap-4 py-3 outline-none hover:bg-muted/40 focus-visible:bg-muted/40"
-      aria-label={`${dict.course.module.view_offering} ${toPrettySemester(offering.semester)} ${sectionLabel(dict, offering.class)}`}
-    >
-      <span className="w-14 shrink-0 text-sm font-bold text-nthu-600">
-        {showSemester ? toPrettySemester(offering.semester) : ""}
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-medium">
-          {formatInstructors(offering, lang, dict.course.module.not_available)}
-          <span className="ml-2 font-normal text-muted-foreground">
-            {sectionLabel(dict, offering.class)}
-          </span>
-        </span>
-        <span className="mt-1 block truncate text-sm text-muted-foreground">
-          {formatTimesAndVenues(offering, dict.course.module.not_available)}
-        </span>
-        {(language || capacity) && (
-          <span className="mt-1 flex flex-wrap gap-2 text-xs text-muted-foreground">
-            {language && <span>{language}</span>}
-            {capacity && <span>{capacity}</span>}
-          </span>
-        )}
-      </span>
-      <ChevronRight className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-    </Link>
-  );
-};
-
 const OfferingList = ({
   variant,
   lang,
@@ -266,7 +141,7 @@ const OfferingList = ({
       className="border-b border-border last:border-b-0"
     >
       {history.offerings.map((offering, index) => (
-        <OfferingRow
+        <CourseOfferingRow
           key={offering.raw_id}
           offering={offering}
           lang={lang}

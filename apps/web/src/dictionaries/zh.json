@@ -438,6 +438,16 @@
       "brief": "課程簡介",
       "brief_from": "取自 {semester} 課程大綱",
       "average_short": "平均"
+    },
+    "instructor": {
+      "title": "授課教師",
+      "description": "歷年開課資料。",
+      "departments": "授課系所",
+      "offerings": "開課資料",
+      "grades": "成績紀錄",
+      "average_grade": "平均成績",
+      "namesake_notice": "此姓名可能由多位教師共用。資料中出現的英文姓名：",
+      "research_portal": "搜尋清華研究人才資料庫"
     }
   },
   "navigation": {

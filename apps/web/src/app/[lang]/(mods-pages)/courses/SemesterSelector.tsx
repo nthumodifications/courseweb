@@ -1,4 +1,5 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import useCustomMenu from "@/app/[lang]/(mods-pages)/courses/useCustomMenu";
 import {
   Select,
@@ -10,22 +11,37 @@ import {
 import { toPrettySemester } from "@/helpers/semester";
 import { lastSemester, semesterInfo } from "@courseweb/shared";
 import useDictionary from "@/dictionaries/useDictionary";
+import { shouldDefaultSemester } from "./semesterDefault";
 
 const SemesterSelector = () => {
   const dict = useDictionary();
+  const [searchParams] = useSearchParams();
+  const hasUserSelectedSemester = useRef(false);
+  const hasDefaultedSemester = useRef(false);
   // refine semester for semester selector
   const { items, refine, canRefine } = useCustomMenu({
     attribute: "semester",
   });
 
   useEffect(() => {
-    if (canRefine && !items.some((item) => item.isRefined)) {
+    if (
+      shouldDefaultSemester({
+        canRefine,
+        hasRefinedItem: items.some((item) => item.isRefined),
+        hasExplicitSemester:
+          searchParams.get("nthu_courses[menu][semester]") !== null,
+        hasUserSelectedSemester: hasUserSelectedSemester.current,
+        hasDefaultedSemester: hasDefaultedSemester.current,
+      })
+    ) {
       // default to the latest semester
+      hasDefaultedSemester.current = true;
       refine(lastSemester.id);
     }
-  }, [canRefine, items, refine]);
+  }, [canRefine, items, refine, searchParams]);
 
   const handleSelect = (v: string) => {
+    hasUserSelectedSemester.current = true;
     refine(v);
   };
 

@@ -15,18 +15,61 @@ import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { useCourseLink } from "@/components/Courses/CourseDialog";
 import { sanitizeCourseHtml } from "@/lib/sanitizeHtml";
 import { cleanSyllabusFields } from "@/lib/syllabus-text";
+import { hasTimes } from "@/helpers/courses";
+import { MinimalCourse } from "@/types/courses";
 
 // Memoize the CourseListItem component
 type CourseListItemCourse = CourseDefinition &
   Partial<Pick<CourseSyllabusView, "brief" | "keywords">>;
 
-const CourseListItem: FC<{
+type EnglishNamesDisplay = "add" | "replace" | "none";
+
+type CourseListItemProps = {
   course: CourseListItemCourse | null;
   missingCourseId?: string;
   hasTaken?: boolean;
   leading?: ReactNode;
   actions?: ReactNode;
-}> = memo(({ course, missingCourseId, hasTaken = false, leading, actions }) => {
+  englishNames?: EnglishNamesDisplay;
+  showCourseCode?: boolean;
+  showVenue?: boolean;
+  showCredits?: boolean;
+  showPriority?: boolean;
+  showSyllabusDetails?: boolean;
+  showEnrollment?: boolean;
+  showAdditionalTags?: boolean;
+  showChevron?: boolean;
+  compact?: boolean;
+  alignSideItemsTop?: boolean;
+  priority?: number;
+  missingTimeLabel?: string;
+  dimmed?: boolean;
+  onCourseClick?: (courseId: string) => void;
+};
+
+const CourseListItem: FC<CourseListItemProps> = memo((props) => {
+  const {
+    course,
+    missingCourseId,
+    hasTaken = false,
+    leading,
+    actions,
+    englishNames,
+    showCourseCode = true,
+    showVenue = true,
+    showCredits = true,
+    showPriority = true,
+    showSyllabusDetails = true,
+    showEnrollment = true,
+    showAdditionalTags = true,
+    showChevron = true,
+    compact = false,
+    alignSideItemsTop = false,
+    priority,
+    missingTimeLabel,
+    dimmed = false,
+    onCourseClick,
+  } = props;
   const dict = useDictionary();
   const { language } = useSettings();
   const { openCourse } = useCourseLink();
@@ -40,54 +83,100 @@ const CourseListItem: FC<{
   };
 
   const courseTitle = course
-    ? language === "zh"
-      ? `${course.name_zh} - ${course.teacher_zh.join(",")}`
-      : `${course.name_en} - ${course.teacher_en?.join(",")}`
+    ? englishNames === "replace"
+      ? `${course.name_en} - ${course.teacher_en?.join(",")}`
+      : englishNames
+        ? `${course.name_zh} - ${course.teacher_zh.join(",")}`
+        : language === "zh"
+          ? `${course.name_zh} - ${course.teacher_zh.join(",")}`
+          : `${course.name_en} - ${course.teacher_en?.join(",")}`
     : dict.course.details.favourite_unavailable;
+  const englishCourseTitle = course
+    ? `${course.name_en} - ${course.teacher_en?.join(",")}`
+    : undefined;
 
   return (
-    <div className="flex min-w-0 flex-row gap-4 py-4 @container">
-      {leading}
+    <div
+      className={`flex min-w-0 flex-row ${
+        compact ? "gap-2 py-0.5" : "gap-4 py-4"
+      } @container${dimmed ? " opacity-60" : ""}`}
+    >
+      {alignSideItemsTop && leading ? (
+        <div className="self-start">{leading}</div>
+      ) : (
+        leading
+      )}
       <div className="min-w-0 flex-1">
-        <div className="mb-2 space-y-1 @md:pt-0">
+        <div
+          className={`${compact ? "mb-0 space-y-0" : "mb-2 space-y-1"} @md:pt-0`}
+        >
           <div className="flex flex-row gap-2 items-center">
             {hasTaken && (
               <div className="flex min-w-[65px] flex-row items-center justify-center rounded-md bg-primary px-2 py-1 text-sm text-primary-foreground select-none">
                 {dict.course.details.taken}
               </div>
             )}
-            <p className="text-nthu-500 text-sm font-bold">
-              {course
-                ? `${course.department} ${course.course}${course.class.padStart(2, "0")}`
-                : missingCourseId}
-            </p>
+            {showCourseCode && (
+              <p className="text-nthu-500 text-sm font-bold">
+                {course
+                  ? `${course.department} ${course.course}${course.class.padStart(2, "0")}`
+                  : missingCourseId}
+              </p>
+            )}
           </div>
           <button
             className="flex min-w-0 max-w-full flex-row items-start gap-1 text-left font-bold hover:underline cursor-pointer"
-            onClick={() => courseId && openCourse(courseId)}
+            onClick={() => {
+              if (!courseId) return;
+              if (onCourseClick) {
+                onCourseClick(courseId);
+              } else {
+                openCourse(courseId);
+              }
+            }}
             onMouseEnter={() => course && handleHover(true)}
             onMouseLeave={() => course && handleHover(false)}
           >
             <span className="min-w-0 whitespace-normal">{courseTitle}</span>
-            <ChevronRight
-              className="mt-0.5 h-4 w-4 shrink-0"
-              aria-hidden="true"
-            />
+            {showChevron && (
+              <ChevronRight
+                className="mt-0.5 h-4 w-4 shrink-0"
+                aria-hidden="true"
+              />
+            )}
           </button>
+          {englishNames === "add" && englishCourseTitle && (
+            <div className="text-sm">{englishCourseTitle}</div>
+          )}
           {course && (
             <>
-              <div className="flex min-w-0 flex-col gap-1">
-                {course.venues.map((vn, i) => (
-                  <div key={i} className="text-muted-foreground text-xs">
-                    {`${vn} / ${course.times![i]}`}
-                  </div>
-                ))}
-              </div>
-              <CourseTagList course={course} />
+              {showVenue && (
+                <div className="flex min-w-0 flex-col gap-1">
+                  {course.venues.map((vn, i) => (
+                    <div key={i} className="text-muted-foreground text-xs">
+                      {`${vn} / ${
+                        missingTimeLabel &&
+                        !hasTimes(course as unknown as MinimalCourse)
+                          ? missingTimeLabel
+                          : course.times![i]
+                      }`}
+                    </div>
+                  ))}
+                </div>
+              )}
+              <CourseTagList
+                course={course}
+                showCredits={showCredits}
+                showEnrollment={showEnrollment}
+                showAdditionalTags={showAdditionalTags}
+                priority={
+                  showPriority && showAdditionalTags ? priority : undefined
+                }
+              />
             </>
           )}
         </div>
-        {course && (
+        {showSyllabusDetails && course && (
           <div className="flex flex-col gap-2">
             <p className="text-xs text-muted-foreground">{syllabus.brief}</p>
             {course.restrictions && course.restrictions.length > 0 && (
@@ -127,7 +216,11 @@ const CourseListItem: FC<{
           </div>
         )}
       </div>
-      <div className="flex min-w-0 shrink-0 flex-col items-end gap-2">
+      <div
+        className={`flex min-w-0 shrink-0 flex-col items-end gap-2${
+          alignSideItemsTop ? " self-start" : ""
+        }`}
+      >
         {actions ??
           (course && <SelectCourseButton courseId={course.raw_id as string} />)}
       </div>

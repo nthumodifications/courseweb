@@ -3,6 +3,7 @@ export const ROUTE_PATHS = {
   courses: "courses",
   modules: "courses/modules",
   module: "courses/module/:moduleKey",
+  instructor: "courses/instructor/:name",
   bus: "bus",
   sportsVenues: "sports-venues",
   youbike: "youbike",

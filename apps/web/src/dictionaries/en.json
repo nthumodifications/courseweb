@@ -438,6 +438,16 @@
       "brief": "About this course",
       "brief_from": "From the {semester} syllabus",
       "average_short": "avg"
+    },
+    "instructor": {
+      "title": "Instructor",
+      "description": "course offerings across recorded semesters.",
+      "departments": "Departments taught",
+      "offerings": "Course offerings",
+      "grades": "Grade history",
+      "average_grade": "Average grade",
+      "namesake_notice": "This name may be shared by more than one instructor. English names seen:",
+      "research_portal": "Search the NTHU Research Portal"
     }
   },
   "navigation": {
