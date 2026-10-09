@@ -228,14 +228,10 @@ const useUserTimetableProvider = (loadCourse = true) => {
       "timetable_display_preferences",
       DEFAULT_TIMETABLE_DISPLAY_PREFERENCES,
     );
-  const preferences = useMemo(() => {
-    const normalized = normalizeTimetableDisplayPreferences(storedPreferences);
-    if (!coursesSyncReady) return normalized;
-    return {
-      ...normalized,
-      hiddenCourses: pruneHiddenCourses(normalized.hiddenCourses, courses),
-    };
-  }, [courses, coursesSyncReady, storedPreferences]);
+  const preferences = useMemo(
+    () => normalizeTimetableDisplayPreferences(storedPreferences),
+    [storedPreferences],
+  );
   useEffect(() => {
     if (!valuesEqual(storedPreferences, preferences)) {
       setStoredPreferences(preferences);
