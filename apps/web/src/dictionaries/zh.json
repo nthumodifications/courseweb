@@ -176,6 +176,28 @@
     "timetable": {
       "title": "時間表"
     },
+    "selection_period": {
+      "title": "選課時程",
+      "current": "目前",
+      "next": "下一階段",
+      "open_now": "在公告日期內",
+      "opens_today": "今天開始",
+      "opens_in": "{days} 天後開始",
+      "no_data": "目前沒有選課日期",
+      "phases": {
+        "round-1": "第一次選課",
+        "round-2": "第二次選課",
+        "round-3": "第三次選課",
+        "new-students": "新生、轉學生選課",
+        "add-drop": "加退選",
+        "inter-school": "校際選課",
+        "withdrawal": "課程停修"
+      },
+      "audience": {
+        "new-students": "新生、轉學生",
+        "inter-school": "校際選課學生"
+      }
+    },
     "refine": {
       "title": "篩選",
       "semester": "學期",
@@ -879,6 +901,9 @@
           },
           "countdown": {
             "title": "學期倒數"
+          },
+          "course-selection": {
+            "title": "選課時程"
           },
           "bus": {
             "title": "公車時刻"

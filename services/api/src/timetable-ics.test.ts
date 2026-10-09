@@ -438,6 +438,17 @@ describe("generateTimetableIcs – event count", () => {
     // 1 + 2 + 1 = 4
     expect(vevents).toHaveLength(4);
   });
+
+  it("does not include academic selection periods in the timetable feed", () => {
+    const ics = Reflect.apply(generateTimetableIcs, null, [
+      [SAMPLE_COURSE],
+      SEMESTER_11320,
+      [{ id: "course-selection:add-drop" }],
+    ]);
+
+    expect(extractVEvents(ics)).toHaveLength(1);
+    expect(ics).not.toContain("course-selection:add-drop");
+  });
 });
 
 describe("generateTimetableIcs – RRULE recurrence", () => {

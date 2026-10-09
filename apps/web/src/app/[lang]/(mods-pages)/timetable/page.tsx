@@ -13,6 +13,7 @@ import { useEffect, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 import { useSettings } from "@/hooks/contexts/settings";
 import { timetableEvents } from "@/lib/trackingEvents";
+import CourseSelectionStatus from "@/components/CourseSelection/CourseSelectionStatus";
 import { filterHiddenCourses } from "@/helpers/timetableVisibility";
 
 const TimetablePage = () => {
@@ -120,6 +121,10 @@ const TimetablePage = () => {
         </script>
       </Helmet>
       <div className="flex flex-col w-full h-full">
+        <CourseSelectionStatus
+          semester={semester}
+          className="mx-1 mt-4 md:mx-4"
+        />
         <div
           className={`grid grid-cols-1 md:grid-rows-1 ${!vertical ? "" : "md:grid-cols-[3fr_2fr]"} px-1 py-4 md:p-4 gap-4 md:gap-2`}
         >

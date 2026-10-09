@@ -4,6 +4,7 @@ export type WidgetType =
   | "pinned-apps"
   | "notepad"
   | "countdown"
+  | "course-selection"
   | "bus"
   | "library"
   | "laundry"
@@ -32,16 +33,22 @@ export const DEFAULT_DASHBOARD_CONFIG: DashboardConfig = {
     { id: "apps-default", type: "pinned-apps", order: 2, enabled: true },
     { id: "notepad-default", type: "notepad", order: 3, enabled: true },
     { id: "countdown-default", type: "countdown", order: 4, enabled: true },
-    { id: "bus-default", type: "bus", order: 5, enabled: false },
-    { id: "library-default", type: "library", order: 6, enabled: false },
-    { id: "laundry-default", type: "laundry", order: 7, enabled: false },
+    {
+      id: "course-selection-default",
+      type: "course-selection",
+      order: 5,
+      enabled: true,
+    },
+    { id: "bus-default", type: "bus", order: 6, enabled: false },
+    { id: "library-default", type: "library", order: 7, enabled: false },
+    { id: "laundry-default", type: "laundry", order: 8, enabled: false },
     {
       id: "sports-venues-default",
       type: "sports-venues",
-      order: 8,
+      order: 9,
       enabled: false,
     },
-    { id: "youbike-default", type: "youbike", order: 9, enabled: false },
+    { id: "youbike-default", type: "youbike", order: 10, enabled: false },
   ],
 };
 
@@ -87,6 +94,13 @@ export const WIDGET_DEFINITIONS: WidgetDefinition[] = [
     label: "Countdown",
     labelZh: "學期倒數",
     description: "Days left in semester",
+    defaultEnabled: true,
+  },
+  {
+    type: "course-selection",
+    label: "Course selection",
+    labelZh: "選課時程",
+    description: "Current and upcoming course selection periods",
     defaultEnabled: true,
   },
   {
@@ -174,7 +188,7 @@ export const mergeDashboardConfig = (value: unknown): DashboardConfig => {
     .map((widget, index) => ({
       ...widget,
       order: nextOrder + index,
-      enabled: widget.type === "bus" ? widget.enabled : false,
+      enabled: widget.enabled,
     }));
 
   return {

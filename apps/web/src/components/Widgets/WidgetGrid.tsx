@@ -22,6 +22,7 @@ import WeatherWidget from "./WeatherWidget";
 import PinnedAppsWidget from "./PinnedAppsWidget";
 import NotepadWidget from "./NotepadWidget";
 import CountdownWidget from "./CountdownWidget";
+import CourseSelectionWidget from "./CourseSelectionWidget";
 import BusWidget from "./BusWidget";
 import LibraryWidget from "./LibraryWidget";
 import LaundryWidget from "./LaundryWidget";
@@ -67,6 +68,8 @@ const SortableWidget: FC<{
         return <NotepadWidget {...commonProps} />;
       case "countdown":
         return <CountdownWidget {...commonProps} />;
+      case "course-selection":
+        return <CourseSelectionWidget {...commonProps} />;
       case "bus":
         return <BusWidget {...commonProps} />;
       case "library":

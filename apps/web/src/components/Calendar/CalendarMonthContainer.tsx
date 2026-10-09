@@ -2,14 +2,12 @@ import {
   differenceInTaipeiCalendarDays,
   endOfTaipeiDay,
   formatTaipei,
-  fromTaipeiDateKey,
   getTaipeiAcademicCalendarQuery,
   getTaipeiDateKey,
   getTaipeiDay,
   getTaipeiWeek,
   isSameTaipeiMonth,
   isSameTaipeiWeek,
-  isTaipeiDateKey,
   startOfTaipeiDay,
   isTaipeiToday,
 } from "@/helpers/dates";
@@ -21,13 +19,14 @@ import { EventPopover } from "./EventPopover";
 import { useMediaQuery } from "usehooks-ts";
 import { Fragment, useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarEventInternal } from "@/components/Calendar/calendar.types";
 import { useSettings } from "@/hooks/contexts/settings";
 import client from "@/config/api";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import useCourseDates from "@/hooks/useCourseDates";
 import { getLocale } from "@/helpers/dateLocale";
 import useDictionary from "@/dictionaries/useDictionary";
+import { toAcademicCalendarEvents } from "./academicCalendarEvents";
+import type { EventData } from "@/types/calendar_event";
 
 export const CalendarMonthContainer = ({
   displayMonth,
@@ -59,7 +58,7 @@ export const CalendarMonthContainer = ({
           .trim() || "#A973D9"
       : "#A973D9";
 
-  const { data: nthuCalendarEvents = [] } = useQuery<CalendarEventInternal[]>({
+  const { data: academicCalendar = [] } = useQuery<EventData[]>({
     queryKey: [
       "event",
       getTaipeiDateKey(displayMonth[0]),
@@ -75,27 +74,19 @@ export const CalendarMonthContainer = ({
       const res = await client.acacalendar.$get({
         query,
       });
-      const nthuEvents = await res.json();
-      return nthuEvents.flatMap((event) => {
-        if (!isTaipeiDateKey(event.date)) return [];
-        const start = fromTaipeiDateKey(event.date);
-        const end = endOfTaipeiDay(start);
-        return {
-          id: "nthu-" + event.id,
-          title: event.summary,
-          start,
-          end,
-          allDay: true,
-          color: nthuEventColor,
-          tag: "NTHU",
-          actualEnd: end,
-          repeat: null,
-          readonly: true,
-        } as CalendarEventInternal;
-      });
+      return res.json();
     },
     enabled: showAcademicCalendar,
   });
+  const nthuCalendarEvents = useMemo(
+    () =>
+      toAcademicCalendarEvents(
+        academicCalendar,
+        nthuEventColor,
+        (period) => dict.course.selection_period.phases[period.phase],
+      ),
+    [academicCalendar, dict.course.selection_period.phases, nthuEventColor],
+  );
   const renderEventsInDay = useCallback(
     (day: Date, padding: number) => {
       const dayEvents = eventsToDisplay(

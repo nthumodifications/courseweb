@@ -36,6 +36,7 @@ import type { ResilientSearchClient } from "@/lib/search-client";
 import { useCourseTextHits } from "@/hooks/useCourseTextHits";
 import type { CourseSyllabusView } from "@/config/supabase";
 import AiSearchBox from "./AiSearchBox";
+import CourseSelectionStatus from "@/components/CourseSelection/CourseSelectionStatus";
 import { SearchResultCount } from "@/components/Search/SearchResultCount";
 
 type SearchClient = ResilientSearchClient;
@@ -205,6 +206,10 @@ const SearchContainer = memo(
               <div className="w-full shrink-0 sm:w-auto">
                 <SemesterSelector />
               </div>
+              <CourseSelectionStatus
+                semester={semester}
+                className="w-full sm:flex-1"
+              />
               <Separator
                 orientation="vertical"
                 className="hidden h-full sm:block"

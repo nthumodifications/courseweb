@@ -6,26 +6,55 @@ import {
 } from "./widget";
 
 describe("widget dashboard config migration", () => {
-  test("adds new widget types disabled without changing an existing layout", () => {
+  test("adds missing widget types with their defaults without changing layout", () => {
     const legacy = {
       ...DEFAULT_DASHBOARD_CONFIG,
-      widgets: DEFAULT_DASHBOARD_CONFIG.widgets.slice(0, 6),
+      widgets: DEFAULT_DASHBOARD_CONFIG.widgets.slice(0, 5),
     };
 
     const migrated = mergeDashboardConfig(legacy);
 
-    expect(migrated.widgets.slice(0, 6)).toEqual(legacy.widgets);
-    expect(migrated.widgets.slice(6)).toEqual([
-      { id: "library-default", type: "library", order: 6, enabled: false },
-      { id: "laundry-default", type: "laundry", order: 7, enabled: false },
+    expect(migrated.widgets.slice(0, 5)).toEqual(legacy.widgets);
+    expect(migrated.widgets.slice(5)).toEqual([
+      {
+        id: "course-selection-default",
+        type: "course-selection",
+        order: 5,
+        enabled: true,
+      },
+      { id: "bus-default", type: "bus", order: 6, enabled: false },
+      { id: "library-default", type: "library", order: 7, enabled: false },
+      { id: "laundry-default", type: "laundry", order: 8, enabled: false },
       {
         id: "sports-venues-default",
         type: "sports-venues",
-        order: 8,
+        order: 9,
         enabled: false,
       },
-      { id: "youbike-default", type: "youbike", order: 9, enabled: false },
+      { id: "youbike-default", type: "youbike", order: 10, enabled: false },
     ]);
+  });
+
+  test("enables a missing course-selection widget without changing existing widgets", () => {
+    const stored = {
+      ...DEFAULT_DASHBOARD_CONFIG,
+      widgets: DEFAULT_DASHBOARD_CONFIG.widgets.filter(
+        (widget) => widget.type !== "course-selection",
+      ),
+    };
+
+    expect(mergeDashboardConfig(stored)).toEqual({
+      ...stored,
+      widgets: [
+        ...stored.widgets,
+        {
+          id: "course-selection-default",
+          type: "course-selection",
+          order: 11,
+          enabled: true,
+        },
+      ],
+    });
   });
 
   test("keeps an already configured new widget unchanged", () => {
@@ -44,11 +73,16 @@ describe("widget dashboard config migration", () => {
   });
 
   test("recognizes an old stored config as needing migration", () => {
-    expect(
-      needsDashboardConfigMigration(
-        DEFAULT_DASHBOARD_CONFIG.widgets.slice(0, 6),
+    const storedWithoutCourseSelection = {
+      ...DEFAULT_DASHBOARD_CONFIG,
+      widgets: DEFAULT_DASHBOARD_CONFIG.widgets.filter(
+        (widget) => widget.type !== "course-selection",
       ),
-    ).toBe(true);
+    };
+
+    expect(needsDashboardConfigMigration(storedWithoutCourseSelection)).toBe(
+      true,
+    );
     expect(needsDashboardConfigMigration(DEFAULT_DASHBOARD_CONFIG)).toBe(false);
   });
 });
