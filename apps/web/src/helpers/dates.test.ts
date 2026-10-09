@@ -1,11 +1,15 @@
 import { describe, expect, test } from "bun:test";
 import {
+  addTaipeiDays,
   fromTaipeiDateKey,
   formatTaipei,
+  getRangeOfDays,
   getTaipeiAcademicCalendarQuery,
   getTaipeiDateKey,
+  getTaipeiMonthForDisplay,
   getTaipeiDateRange,
   getTaipeiWeek,
+  isSameTaipeiWeek,
   setTaipeiWallClock,
   toAcademicCalendarBoundary,
   isTaipeiToday,
@@ -74,6 +78,45 @@ describe("Taipei academic date helpers", () => {
       start: "2026-09-06T00:00:00.000Z",
       end: "2026-09-13T00:00:00.000Z",
     });
+  });
+
+  test("uses Sunday-starting Taipei week boundaries for both edge days", () => {
+    const sunday = new Date("2026-09-06T00:00:00.000Z");
+    const saturday = new Date("2026-09-12T15:59:59.999Z");
+
+    expect(getTaipeiWeek(sunday).map(getTaipeiDateKey)).toEqual([
+      "2026-09-06",
+      "2026-09-07",
+      "2026-09-08",
+      "2026-09-09",
+      "2026-09-10",
+      "2026-09-11",
+      "2026-09-12",
+    ]);
+    expect(isSameTaipeiWeek(sunday, saturday)).toBe(true);
+  });
+
+  test("builds a complete month grid with Taipei-midnight instants", () => {
+    const month = getTaipeiMonthForDisplay(
+      new Date("2026-03-15T04:00:00.000Z"),
+    );
+
+    expect(month).toHaveLength(35);
+    expect(getTaipeiDateKey(month[0]!)).toBe("2026-03-01");
+    expect(getTaipeiDateKey(month.at(-1)!)).toBe("2026-04-04");
+    expect(month.every((date) => date.getUTCHours() === 16)).toBe(true);
+  });
+
+  test("advances ranges by Taipei calendar date rather than milliseconds", () => {
+    const start = fromTaipeiDateKey("2026-09-30");
+    const end = fromTaipeiDateKey("2026-10-02");
+
+    expect(getRangeOfDays(start, end).map(getTaipeiDateKey)).toEqual([
+      "2026-09-30",
+      "2026-10-01",
+      "2026-10-02",
+    ]);
+    expect(getTaipeiDateKey(addTaipeiDays(start, 1))).toBe("2026-10-01");
   });
 });
 

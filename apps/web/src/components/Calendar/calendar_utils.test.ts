@@ -6,8 +6,9 @@ import {
   getRepeatDefinitionBefore,
   getRepeatedStartDays,
   reanchorSeriesEdit,
+  serializeEvent,
 } from "./calendar_utils";
-import type { CalendarEvent } from "./calendar.types";
+import type { CalendarEvent, CalendarEventInternal } from "./calendar.types";
 import { eventFormSchema } from "./eventFormSchema";
 import { fromZonedTime } from "date-fns-tz";
 
@@ -30,7 +31,7 @@ const makeEvent = (
   end: Date,
   repeat: CalendarEvent["repeat"],
   overrides: Partial<CalendarEvent> = {},
-): CalendarEvent => ({
+): CalendarEventInternal => ({
   id: "event-1",
   title: "Calendar event",
   allDay: false,
@@ -39,6 +40,7 @@ const makeEvent = (
   repeat,
   color: "#000000",
   tag: "other",
+  actualEnd: null,
   ...overrides,
 });
 
@@ -283,6 +285,70 @@ describe("calendar recurrence", () => {
     ).toEqual([localDate(2026, 3, 31, 9).toISOString()]);
   });
 
+  test("expands an interval-based weekly rule from its original anchor", () => {
+    const event = makeEvent(
+      localDate(2026, 9, 7, 9),
+      localDate(2026, 9, 7, 10),
+      { type: "weekly", interval: 2, mode: "count", value: 3 },
+    );
+
+    expect(
+      dates(
+        Array.from(
+          getRepeatedStartDays(
+            event,
+            localDate(2026, 9, 1),
+            localDate(2026, 10, 20),
+          ),
+        ),
+      ),
+    ).toEqual(
+      dates([
+        localDate(2026, 9, 7, 9),
+        localDate(2026, 9, 21, 9),
+        localDate(2026, 10, 5, 9),
+      ]),
+    );
+  });
+
+  test("matches an exception by Taipei date even when its time differs", () => {
+    const event = makeEvent(
+      localDate(2026, 9, 10, 9),
+      localDate(2026, 9, 10, 10),
+      { type: "daily", interval: 1, mode: "count", value: 3 },
+      { excludedDates: [localDate(2026, 9, 11, 23, 30)] },
+    );
+
+    expect(
+      eventsToDisplay(
+        [event],
+        localDate(2026, 9, 10),
+        localDate(2026, 9, 14),
+      ).map(({ displayStart }) => displayStart.toISOString()),
+    ).toEqual(dates([localDate(2026, 9, 10, 9), localDate(2026, 9, 12, 9)]));
+  });
+
+  test("keeps an all-day occurrence as a whole-day interval", () => {
+    const event = makeEvent(
+      localDate(2026, 9, 10),
+      localDate(2026, 9, 11),
+      { type: "daily", interval: 1, mode: "count", value: 2 },
+      { allDay: true },
+    );
+
+    const displayed = eventsToDisplay(
+      [event],
+      localDate(2026, 9, 10),
+      localDate(2026, 9, 11),
+    );
+
+    expect(displayed).toHaveLength(1);
+    expect(displayed[0]).toMatchObject({
+      displayStart: localDate(2026, 9, 10),
+      displayEnd: localDate(2026, 9, 11),
+    });
+  });
+
   test("clips a cross-midnight event into both Taipei calendar days", () => {
     const event = makeEvent(
       localDate(2026, 9, 10, 23, 30),
@@ -315,5 +381,20 @@ describe("calendar recurrence", () => {
     expect(secondDay[0].displayEnd.toISOString()).toBe(
       localDate(2026, 9, 11, 1).toISOString(),
     );
+  });
+
+  test("serializes event dates and exception dates without mutating the input", () => {
+    const start = localDate(2026, 9, 10, 9);
+    const end = localDate(2026, 9, 10, 10);
+    const excludedDates = [localDate(2026, 9, 11, 9)];
+    const event = makeEvent(start, end, null, { excludedDates });
+
+    expect(serializeEvent(event)).toMatchObject({
+      start: start.toISOString(),
+      end: end.toISOString(),
+      excludedDates: [excludedDates[0]!.toISOString()],
+    });
+    expect(event.start).toBe(start);
+    expect(event.excludedDates).toBe(excludedDates);
   });
 });
