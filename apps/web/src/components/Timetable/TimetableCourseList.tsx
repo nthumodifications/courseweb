@@ -187,7 +187,7 @@ const TimetableCourseListItem = ({
 
   return (
     <div
-      className={`min-w-0 max-w-3xl ${isHidden ? "text-muted-foreground" : ""}`}
+      className={`h-fit min-w-0 max-w-3xl ${isHidden ? "text-muted-foreground" : ""}`}
       ref={setNodeRef}
       style={style}
     >

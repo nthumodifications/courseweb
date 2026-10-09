@@ -332,6 +332,59 @@ describe("timetable provider render stability", () => {
     await fixture.cleanup();
   });
 
+  test("keeps sortable timetable row wrappers content-sized", async () => {
+    const secondCourse = {
+      ...testCourse,
+      raw_id: "11410-EE 1010 1",
+      department: "EE",
+      course: "1010",
+      name_en: "Second Course",
+      name_zh: "第二課程",
+    };
+    courseResponseData = [testCourse, secondCourse];
+
+    const fixture = await renderTimetable(
+      <TimetableCourseList semester="11410" />,
+      {
+        [COURSES_KEY]: {
+          "11410": [testCourse.raw_id, secondCourse.raw_id],
+        },
+        [DISPLAY_SETTINGS_KEY]: {
+          englishNames: "add",
+          showCourseCode: false,
+          showVenue: true,
+          showPriority: false,
+          showCredits: true,
+          lockOrder: true,
+        },
+      },
+    );
+    await fixture.waitFor(
+      () =>
+        fixture.container.textContent?.includes(secondCourse.name_zh) ?? false,
+    );
+
+    const rows = [...fixture.container.querySelectorAll("div.max-w-3xl")];
+    expect(rows).toHaveLength(2);
+
+    const forbiddenStretchClass =
+      /(?:^|\s)(?:h-full|min-h-\S+|flex-1|grow|self-stretch|items-stretch)(?:\s|$)/;
+    for (const row of rows) {
+      const triggerWrapper = row.firstElementChild;
+      const courseRowRoot = triggerWrapper?.firstElementChild;
+      expect(triggerWrapper).not.toBeNull();
+      expect(courseRowRoot).not.toBeNull();
+      for (const element of [row, triggerWrapper, courseRowRoot]) {
+        expect(element?.getAttribute("class") ?? "").not.toMatch(
+          forbiddenStretchClass,
+        );
+      }
+      expect(row.className).toContain("h-fit");
+    }
+
+    await fixture.cleanup();
+  });
+
   test("dims hidden timetable rows and shows the reveal action", async () => {
     const course = testCourse;
     courseResponseData = [course];
