@@ -182,7 +182,7 @@ export function CourseListItem({
           {isMultiSelected && <Check className="h-3 w-3" />}
         </div>
       </button>
-      <div className="flex-1 min-w-0 pl-4">
+      <div className="flex-1 min-w-0 pl-6">
         <div className="flex items-center flex-wrap gap-1 mb-1">
           <Badge variant="outline" className="text-xs">
             {course.id}

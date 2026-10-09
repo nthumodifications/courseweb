@@ -16,7 +16,7 @@ export const PageHeader = ({
 }) => (
   <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
     <div>
-      <h1 className="text-xl font-medium">{title}</h1>
+      <h1 className="text-xl font-bold">{title}</h1>
       {description && (
         <p className="mt-1 text-sm text-muted-foreground">{description}</p>
       )}
@@ -44,7 +44,7 @@ export const StatCard = ({
       {loading ? (
         <Skeleton className="mt-2 h-8 w-20" />
       ) : (
-        <div className="mt-1 text-xl font-medium tabular-nums">
+        <div className="mt-1 text-xl font-bold tabular-nums">
           {/* A null count means the source database could not be reached, which
               is a different thing from a count of zero and has to read that way. */}
           {value === null || value === undefined
@@ -73,7 +73,7 @@ export const ErrorState = ({ error }: { error: unknown }) => (
 );
 
 export const EmptyState = ({ children }: { children: ReactNode }) => (
-  <div className="py-4 text-center text-sm text-muted-foreground">
+  <div className="py-6 text-center text-sm text-muted-foreground">
     {children}
   </div>
 );

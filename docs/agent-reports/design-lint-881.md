@@ -50,3 +50,12 @@ Reviewer screenshot routes (use `zh` or `en`):
 - `/[lang]/waitlist`
 
 Verification: `git diff --check` passed. `bunx tsc --noEmit -p apps/web` has no errors in touched files, but reports existing errors in untouched planner replication, issue-report form, and worker files. `bun test tools/design-lint` found no design-lint test files.
+
+## Fix round 1
+
+- Finding 1: no success/info status token or CSS variable exists; restored original dark pairs at `course-grid-item.tsx:233`, `course-list-empty.tsx:92,96`, `PlannerCourseListItem.tsx:45`, `container.tsx:99`, `folder-management.tsx:1167,1214`, `lib/status.tsx:6,8,10,16-18`, and `planner-settings.tsx:776` (22 deliberate `dark-color` matches).
+- Finding 2: corrected nearest spacing at `GradeTracker.tsx:284,508`, `GradesViewer.tsx:243-244`, `course-list-empty.tsx:49,137,177`, `course-grid-item.tsx:172`, `course-list-item.tsx:185`, `folder-navigation.tsx:160`, `course-picker/container.tsx:260`, `admin/announcements/page.tsx:522`, `admin/audit/page.tsx:207`, `admin/components.tsx:76`, `admin/layout.tsx:122,173`, `admin/users/page.tsx:156`, and `admin/users/[userId]/page.tsx:755`.
+- Finding 3: kept `font-bold` for the primary grades numbers/headings at `GradeTracker.tsx:340,350,363`, `GradesViewer.tsx:165,246,327,463`, and `admin/components.tsx:19,47`.
+- Final in-scope counts: hardcoded-color 0; dark-color 22 deliberate restorations; large-type 0; overlay-shadow 0; centered-layout 8 unchanged; reading-column 0; cjk-hostile 0; synthetic-weight 0; spacing-vocab 0.
+- Final lint totals: hardcoded-color 40, dark-color 61, large-type 2, overlay-shadow 16, centered-layout 20, reading-column 0, cjk-hostile 14, synthetic-weight 67, spacing-vocab 227. `bun run design-lint` reports only unchanged out-of-scope baseline findings; touched files add none beyond the listed restorations.
+- `bunx tsc --noEmit -p apps/web`: no errors in touched files; existing errors remain in `planner-replication.tsx`, `IssueReportForm.tsx`, and `worker.ts`.

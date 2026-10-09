@@ -519,7 +519,7 @@ const AnnouncementFormDialog = ({
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-x-6 gap-y-3">
           <label className="flex items-center gap-2 text-sm">
             <Switch
               checked={form.active}

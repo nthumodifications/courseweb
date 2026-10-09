@@ -169,7 +169,7 @@ export function CourseGridItem({
         </div>
       </button>
 
-      <div className="flex justify-between items-start mb-2 pr-4">
+      <div className="flex justify-between items-start mb-2 pr-6">
         <Badge variant="outline" className="text-xs">
           {course.id}
         </Badge>
@@ -230,7 +230,7 @@ export function CourseGridItem({
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                className="text-red-500 cursor-pointer"
+                className="text-red-500 dark:text-red-400 cursor-pointer"
                 onClick={handleDeleteCourse}
               >
                 <Trash2 className="h-4 w-4 mr-2" />

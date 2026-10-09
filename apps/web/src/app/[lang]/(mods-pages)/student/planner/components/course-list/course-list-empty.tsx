@@ -46,7 +46,7 @@ export function CourseListEmpty({
   // No folder selected - Show all courses or getting started instructions
   if (type === "noFolderSelected") {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-13rem)] p-4">
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-13rem)] p-6">
         {courseData.length > 0 ? (
           <div className="text-center">
             <h3 className="text-xl font-bold">{t.selectFolderTitle}</h3>
@@ -89,11 +89,11 @@ export function CourseListEmpty({
                   </p>
                   <p className="text-muted-foreground mb-2 text-xs">{t.step2Hint}</p>
                   <div className="flex space-x-2 mb-1">
-                    <Badge className="bg-green-500/10 text-green-700 border-green-500/30 flex items-center gap-1">
+                    <Badge className="bg-green-500/10 dark:bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/30 flex items-center gap-1">
                       {getStatusIcon("completed", "h-3 w-3")}
                       {dict.planner.status.completed}
                     </Badge>
-                    <Badge className="bg-blue-500/10 text-blue-700 border-blue-500/30 flex items-center gap-1">
+                    <Badge className="bg-blue-500/10 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-500/30 flex items-center gap-1">
                       {getStatusIcon("in-progress", "h-3 w-3")}
                       {dict.planner.status.inProgress}
                     </Badge>
@@ -134,7 +134,7 @@ export function CourseListEmpty({
   // Folder selected but not a leaf node and has no courses
   if (type === "hasChildFolders") {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-13rem)] p-4">
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-13rem)] p-6">
         <div className="max-w-md text-center">
           <FolderTree className="h-12 w-12 mx-auto mb-2 text-muted-foreground" />
           <h3 className="text-xl font-bold mb-2">{t.selectSubfolderTitle}</h3>
@@ -174,7 +174,7 @@ export function CourseListEmpty({
   // Leaf folder selected but has no courses
   if (type === "noCoursesInFolder") {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-13rem)] p-4">
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-13rem)] p-6">
         <div className="max-w-md text-center">
           <div className="h-12 w-12 mx-auto mb-2 text-muted-foreground flex items-center justify-center">
             <ChevronRight className="h-12 w-12" />

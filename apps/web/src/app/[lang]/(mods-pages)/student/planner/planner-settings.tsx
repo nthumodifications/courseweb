@@ -773,7 +773,7 @@ export function PlannerSettings({
           <AlertDialogFooter>
             <AlertDialogCancel>{common.cancel}</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-red-200 hover:bg-red-400"
+              className="bg-red-200 hover:bg-red-400 dark:bg-red-900 dark:hover:bg-red-800"
               onClick={handleImportConfirm}
             >
               {ps.confirmImport ?? "確認匯入"}

@@ -162,7 +162,7 @@ const GradeCard = ({ title, data }: { title: string; data: string }) => (
     <div className="text-center text-muted-foreground text-sm font-medium leading-none">
       {title}
     </div>
-    <div className="text-center text-foreground text-xl font-medium">
+    <div className="text-center text-foreground text-xl font-bold">
       {data}
     </div>
   </div>
@@ -240,10 +240,10 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
   const dict = useDictionary();
 
   return (
-    <div className="px-6 pb-4 flex-col justify-start items-start gap-4 inline-flex w-full overflow-x-hidden">
-      <div className="w-full pt-4 flex-col justify-start items-start gap-4 inline-flex">
+    <div className="px-6 pb-6 flex-col justify-start items-start gap-6 inline-flex w-full overflow-x-hidden">
+      <div className="w-full pt-6 flex-col justify-start items-start gap-4 inline-flex">
         <div className="w-full self-stretch flex-col justify-center items-center gap-2 flex">
-          <div className="self-stretch text-foreground text-xl font-medium leading-9">
+          <div className="self-stretch text-foreground text-xl font-bold leading-9">
             {dict.grade.overview}
           </div>
           <div className="self-stretch text-foreground text-sm font-normal leading-tight">
@@ -324,7 +324,7 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
                   <TableRow key={index}>
                     <TableCell
                       colSpan={3}
-                      className="text-foreground text-xl font-medium leading-loose"
+                      className="text-foreground text-xl font-bold leading-loose"
                     >
                       {toPrettySemester(semester)}
                     </TableCell>
@@ -460,7 +460,7 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
       </Tabs>
       {!isMobile && (
         <div className="w-full flex-col justify-start items-start gap-4 md:inline-flex hidden">
-          <div className="text-foreground text-xl font-medium leading-9">
+          <div className="text-foreground text-xl font-bold leading-9">
             {dict.grade.score_curve}
           </div>
           <div className="flex flex-row flex-wrap gap-6">

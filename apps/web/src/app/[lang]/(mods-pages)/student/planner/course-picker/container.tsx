@@ -96,7 +96,7 @@ const TakenCoursesPanel = ({
                             </span>
                           )}
                           {course.isSimilar && (
-                            <span className="bg-yellow-100 px-2 py-1 rounded text-xs ml-2">
+                            <span className="bg-yellow-100 dark:bg-yellow-800 px-2 py-1 rounded text-xs ml-2">
                               {dict.planner.coursePicker.similarCourse}
                             </span>
                           )}
@@ -257,7 +257,7 @@ const CourseSearchContainer = (props: CourseSearchContainerProps) => {
             />
           </ResizablePanel>
 
-          <ResizableHandle className="hidden md:block outline-none self-center px-1 h-48 mx-4 my-4 rounded-full bg-muted" />
+          <ResizableHandle className="hidden md:block outline-none self-center px-1 h-48 mx-4 my-6 rounded-full bg-muted" />
 
           <ResizablePanel
             collapsible={true}

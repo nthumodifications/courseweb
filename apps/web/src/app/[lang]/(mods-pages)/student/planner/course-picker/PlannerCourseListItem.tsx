@@ -42,7 +42,7 @@ const PlannerCourseListItem: FC<PlannerCourseListItemProps> = memo(
               <div className="flex flex-row gap-2 items-center">
                 {course.closed_mark && (
                   <div
-                    className={`flex flex-row items-center justify-center min-w-[65px] py-1 px-2 text-sm select-none rounded-md bg-red-400`}
+                    className={`flex flex-row items-center justify-center min-w-[65px] py-1 px-2 text-sm select-none rounded-md bg-red-400 dark:bg-red-600`}
                   >
                     {course.closed_mark}
                   </div>

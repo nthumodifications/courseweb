@@ -1164,7 +1164,7 @@ export function FolderManagement({
               </div>
 
               <div className="p-4">
-                <Alert className="mb-4 bg-amber-100/20 border-amber-300">
+                <Alert className="mb-4 dark:bg-amber-900/20 dark:border-amber-700 bg-amber-100/20 border-amber-300">
                   <AlertDescription>
                     {fm.importWarning ??
                       "確認匯入將會覆蓋所有現有類別。請仔細檢查下方預覽的資料夾結構。"}
@@ -1211,7 +1211,7 @@ export function FolderManagement({
           <AlertDialogFooter>
             <AlertDialogCancel>{common.cancel}</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-red-200 hover:bg-red-400"
+              className="bg-red-200 hover:bg-red-400 dark:bg-red-900 dark:hover:bg-red-800"
               onClick={handleImportConfirm}
             >
               {fm.confirmImport ?? "確認匯入"}

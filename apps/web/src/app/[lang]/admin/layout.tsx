@@ -119,7 +119,7 @@ const AdminLayout = () => {
   return (
     <div className="min-h-screen bg-muted/30">
       <header className="sticky top-0 z-20 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-2 px-4 py-3">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
           <NavLink
             to={`/${lang === "en" ? "en" : "zh"}/today`}
             className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
@@ -170,7 +170,7 @@ const AdminLayout = () => {
       <main className="mx-auto max-w-7xl px-4 py-6">
         <Suspense
           fallback={
-            <div className="py-4 text-center text-sm text-muted-foreground">
+            <div className="py-6 text-center text-sm text-muted-foreground">
               Loading…
             </div>
           }

@@ -157,7 +157,7 @@ export function FolderNavigation({
           />
         </div>
         {/* Text legend so the credit summary isn't color-only */}
-        <div className="flex items-center flex-wrap gap-1 mt-2 text-xs text-muted-foreground">
+        <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-2 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
             <span className="w-2 h-2 rounded-full bg-green-500" />
             {getStatusLabel("completed", dict.planner.status)}
