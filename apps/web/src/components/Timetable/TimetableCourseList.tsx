@@ -6,6 +6,8 @@ import {
   GripVertical,
   Loader2,
   Settings,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { useSettings } from "@/hooks/contexts/settings";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
@@ -63,6 +65,7 @@ import {
 } from "@dnd-kit/modifiers";
 import Compact from "@uiw/react-color-compact";
 import { TimetableItemDrawer } from "./TimetableItemDrawer";
+import { isCourseHidden } from "@/helpers/timetableVisibility";
 import { UnresolvedCoursesNotice } from "./UnresolvedCoursesNotice";
 
 const DownloadTimetableDialogLazy = lazy(
@@ -166,8 +169,15 @@ const TimetableCourseListItem = ({
 }) => {
   const dict = useDictionary();
 
-  const { deleteCourse, colorMap, setColor, currentColors } =
-    useUserTimetable();
+  const {
+    deleteCourse,
+    colorMap,
+    setColor,
+    currentColors,
+    preferences,
+    setPreferences,
+  } = useUserTimetable();
+  const isHidden = isCourseHidden(course.raw_id, preferences.hiddenCourses);
 
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: course.raw_id, disabled: displaySettings.lockOrder });
@@ -179,7 +189,9 @@ const TimetableCourseListItem = ({
 
   return (
     <div
-      className="flex flex-row gap-2 items-center max-w-3xl"
+      className={`flex flex-row gap-2 items-center max-w-3xl ${
+        isHidden ? "text-muted-foreground" : ""
+      }`}
       ref={setNodeRef}
       style={style}
     >
@@ -288,6 +300,40 @@ const TimetableCourseListItem = ({
           </HoverCard>
         )}
         <div className="flex flex-row">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            title={
+              isHidden
+                ? dict.timetable.course_actions.show_course
+                : dict.timetable.course_actions.hide_course
+            }
+            aria-label={
+              isHidden
+                ? dict.timetable.course_actions.show_course
+                : dict.timetable.course_actions.hide_course
+            }
+            aria-pressed={isHidden}
+            onClick={() =>
+              setPreferences((previous) => {
+                const hiddenCourses = { ...previous.hiddenCourses };
+                if (isCourseHidden(course.raw_id, hiddenCourses)) {
+                  delete hiddenCourses[course.raw_id];
+                } else {
+                  hiddenCourses[course.raw_id] = true;
+                }
+                return { ...previous, hiddenCourses };
+              })
+            }
+          >
+            {isHidden ? (
+              <EyeOff className="h-4 w-4" />
+            ) : (
+              <Eye className="h-4 w-4" />
+            )}
+          </Button>
           <Button
             className="rounded-l-none"
             variant="outline"

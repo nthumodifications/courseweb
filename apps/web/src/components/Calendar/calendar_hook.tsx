@@ -38,6 +38,8 @@ import { useAuth } from "react-oidc-context";
 import authClient from "@/config/auth";
 import { RxCollection, WithDeleted } from "rxdb";
 import useDictionary from "@/dictionaries/useDictionary";
+import useUserTimetable from "@/hooks/contexts/useUserTimetable";
+import { isCourseHidden } from "@/helpers/timetableVisibility";
 
 export type CalendarReplicationStatus =
   | "idle"
@@ -126,6 +128,7 @@ export const useCalendarProvider = () => {
     "Birthday",
     "Anniversary",
   ]);
+  const { preferences } = useUserTimetable();
   const [eventSyncReady, setEventSyncReady] = useState(false);
   const [timetableSyncReady, setTimetableSyncReady] = useState(false);
   const eventsCol = useRxCollection("events");
@@ -428,8 +431,14 @@ export const useCalendarProvider = () => {
   const { result: eventStore } = useRxQuery(eventsCol?.find());
   const events =
     useMemo(() => {
-      return eventStore.map((e) => {
+      return eventStore.flatMap((e) => {
         const event = e.toJSON() as Required<EventDocType>;
+        if (
+          event.courseId &&
+          isCourseHidden(event.courseId, preferences.hiddenCourses)
+        ) {
+          return [];
+        }
         return {
           ...event,
           start: new Date(event.start),
@@ -441,7 +450,7 @@ export const useCalendarProvider = () => {
             : {}),
         } as CalendarEventInternal;
       });
-    }, [eventStore]) ?? [];
+    }, [eventStore, preferences.hiddenCourses]) ?? [];
 
   const displayContainer = useRef<HTMLDivElement>(null);
 

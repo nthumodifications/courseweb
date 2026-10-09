@@ -45,6 +45,7 @@ import {
   getTimetableSyncSemesters,
   reconcileTimetableEvents,
 } from "./timetableReconcile";
+import { filterHiddenCourses } from "@/helpers/timetableVisibility";
 
 type CalendarDisplayMode = "week" | "month" | "upcoming";
 
@@ -86,6 +87,7 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
     courses,
     colorMap,
     getSemesterCourses,
+    preferences,
     error: coursesError,
     isLoading: coursesLoading,
     timetableDataReady,
@@ -324,7 +326,10 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
 
   const getCurrentTimetable = (semester: string) =>
     createTimetableFromCourses(
-      getSemesterCourses(semester) as MinimalCourse[],
+      filterHiddenCourses(
+        getSemesterCourses(semester),
+        preferences.hiddenCourses,
+      ) as MinimalCourse[],
       colorMap,
     );
 

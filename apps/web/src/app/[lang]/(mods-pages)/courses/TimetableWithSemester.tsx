@@ -5,18 +5,29 @@ import { createTimetableFromCourses } from "@/helpers/timetable";
 import { MinimalCourse } from "@/types/courses";
 import { renderTimetableSlot } from "@/helpers/timetable_course";
 import { useSettings } from "@/hooks/contexts/settings";
+import {
+  filterHiddenCourses,
+  isCourseHidden,
+} from "@/helpers/timetableVisibility";
 
 const TimetableWithSemester = ({ semester }: { semester: string }) => {
-  const { courses, getSemesterCourses, colorMap, hoverCourse } =
+  const { courses, getSemesterCourses, colorMap, hoverCourse, preferences } =
     useUserTimetable();
   const { darkMode } = useSettings();
 
   const semesterCourses = useMemo<MinimalCourse[]>(() => {
-    return getSemesterCourses(semester) as MinimalCourse[];
-  }, [semester, getSemesterCourses, courses]);
+    return filterHiddenCourses(
+      getSemesterCourses(semester),
+      preferences.hiddenCourses,
+    ) as MinimalCourse[];
+  }, [semester, getSemesterCourses, courses, preferences.hiddenCourses]);
 
   const displayCourses = useMemo<MinimalCourse[]>(() => {
-    if (!hoverCourse) return semesterCourses;
+    if (
+      !hoverCourse ||
+      isCourseHidden(hoverCourse.raw_id, preferences.hiddenCourses)
+    )
+      return semesterCourses;
 
     if (
       semesterCourses.some((course) => course.raw_id === hoverCourse.raw_id)
@@ -25,10 +36,14 @@ const TimetableWithSemester = ({ semester }: { semester: string }) => {
     }
 
     return [...semesterCourses, hoverCourse as MinimalCourse];
-  }, [semester, hoverCourse, semesterCourses]);
+  }, [hoverCourse, preferences.hiddenCourses, semesterCourses]);
 
   const colorMapMemo = useMemo(() => {
-    if (!hoverCourse) return colorMap;
+    if (
+      !hoverCourse ||
+      isCourseHidden(hoverCourse.raw_id, preferences.hiddenCourses)
+    )
+      return colorMap;
 
     if (
       semesterCourses.some((course) => course.raw_id === hoverCourse.raw_id)
@@ -42,7 +57,7 @@ const TimetableWithSemester = ({ semester }: { semester: string }) => {
         ? "rgb(255 255 255 / 0.65)"
         : "rgb(38 38 38 / 0.25)",
     };
-  }, [colorMap, hoverCourse, semesterCourses]);
+  }, [colorMap, hoverCourse, preferences.hiddenCourses, semesterCourses]);
 
   return (
     <Timetable

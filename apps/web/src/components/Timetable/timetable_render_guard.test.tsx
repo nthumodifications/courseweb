@@ -1,4 +1,11 @@
-import { act } from "react";
+import {
+  act,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { createRoot } from "react-dom/client";
 import { JSDOM } from "jsdom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -62,60 +69,283 @@ mock.module("react-router-dom", () => ({
   useSearchParams: () => [new URLSearchParams(), () => {}],
 }));
 
-const { UserTimetableProvider } = await import(
+const useTestLocalStorage = <T,>(
+  key: string,
+  initialValue: T,
+): [T, (next: T | ((previous: T) => T)) => void] => {
+  const initialValueRef = useRef(initialValue);
+  initialValueRef.current = initialValue;
+  const read = () => {
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return initialValueRef.current;
+    try {
+      return JSON.parse(raw) as T;
+    } catch {
+      return initialValueRef.current;
+    }
+  };
+  const [value, setValue] = useState(read);
+  const update = useCallback(
+    (next: T | ((previous: T) => T)) => {
+      const nextValue =
+        typeof next === "function"
+          ? (next as (previous: T) => T)(read())
+          : next;
+      window.localStorage.setItem(key, JSON.stringify(nextValue));
+      setValue(nextValue);
+      window.dispatchEvent(new StorageEvent("local-storage", { key }));
+    },
+    [key],
+  );
+  useEffect(() => {
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key && event.key !== key) return;
+      setValue(read());
+    };
+    window.addEventListener("storage", handleStorage);
+    window.addEventListener("local-storage", handleStorage);
+    setValue(read());
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener("local-storage", handleStorage);
+    };
+  }, [key]);
+  return [value, update];
+};
+
+mock.module("usehooks-ts", () => ({
+  useLocalStorage: useTestLocalStorage,
+  useMediaQuery: () => false,
+}));
+
+const moduleDom = new JSDOM("<!doctype html><html><body></body></html>", {
+  url: "http://localhost/zh/timetable",
+});
+Object.assign(globalThis, {
+  window: moduleDom.window,
+  document: moduleDom.window.document,
+  navigator: moduleDom.window.navigator,
+  StorageEvent: moduleDom.window.StorageEvent,
+});
+
+const { UserTimetableProvider, default: useUserTimetable } = await import(
   "@/hooks/contexts/useUserTimetable"
 );
 const { TimetableCourseList } = await import("./TimetableCourseList");
 
-describe("timetable provider render stability", () => {
-  test("settles when the provider and empty course list mount", async () => {
-    const dom = new JSDOM("<!doctype html><html><body></body></html>", {
-      url: "http://localhost/zh/timetable",
-    });
-    Object.assign(globalThis, {
-      window: dom.window,
-      document: dom.window.document,
-      navigator: dom.window.navigator,
-    });
+const COURSES_KEY = "nthumods-storage-anonymous-courses";
+const PREFERENCES_KEY =
+  "nthumods-storage-anonymous-timetable_display_preferences";
 
-    let renderCount = 0;
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false } },
-    });
-    const container = document.createElement("div");
-    document.body.appendChild(container);
-    const root = createRoot(container);
+const syncedRecord = (value: unknown) =>
+  JSON.stringify({ value, lastModified: 1, updatedAt: 1, deviceId: "test" });
 
-    await act(async () => {
-      root.render(
-        <QueryClientProvider client={queryClient}>
-          <UserTimetableProvider>
-            <RenderCount onRender={() => (renderCount += 1)} />
-          </UserTimetableProvider>
-        </QueryClientProvider>,
-      );
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    });
+const renderTimetable = async (
+  children: ReactNode,
+  seed: Record<string, unknown> = {},
+) => {
+  const dom = new JSDOM("<!doctype html><html><body></body></html>", {
+    url: "http://localhost/zh/timetable",
+  });
+  Object.assign(globalThis, {
+    window: dom.window,
+    document: dom.window.document,
+    navigator: dom.window.navigator,
+    StorageEvent: dom.window.StorageEvent,
+  });
+  for (const [key, value] of Object.entries(seed)) {
+    window.localStorage.setItem(key, syncedRecord(value));
+  }
 
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  const container = document.createElement("div");
+  document.body.appendChild(container);
+  const root = createRoot(container);
+  await act(async () => {
+    root.render(
+      <QueryClientProvider client={queryClient}>
+        <UserTimetableProvider>{children}</UserTimetableProvider>
+      </QueryClientProvider>,
+    );
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+
+  const readState = () =>
+    JSON.parse(container.querySelector("output")?.textContent ?? "{}");
+  const waitFor = async (predicate: () => boolean) => {
     for (let attempt = 0; attempt < 10; attempt += 1) {
-      if (container.textContent?.includes("No courses")) break;
+      if (predicate()) return;
       await act(async () => {
         await new Promise((resolve) => setTimeout(resolve, 10));
       });
     }
-
-    expect(renderCount).toBeLessThan(30);
-    expect(container.textContent).toContain("No courses");
-
+  };
+  const writeStorage = async (key: string, value: unknown) => {
+    await act(async () => {
+      const newValue = syncedRecord(value);
+      window.localStorage.setItem(key, newValue);
+      window.dispatchEvent(new StorageEvent("storage", { key, newValue }));
+    });
+  };
+  const cleanup = async () => {
     await act(async () => {
       root.unmount();
     });
     queryClient.clear();
     dom.window.close();
+  };
+
+  return { container, cleanup, readState, waitFor, writeStorage };
+};
+
+describe("timetable provider render stability", () => {
+  test("settles when the provider and empty course list mount", async () => {
+    let renderCount = 0;
+    const fixture = await renderTimetable(
+      <RenderCount onRender={() => (renderCount += 1)} />,
+    );
+    await fixture.waitFor(
+      () => fixture.container.textContent?.includes("No courses") ?? false,
+    );
+
+    expect(renderCount).toBeLessThan(30);
+    expect(fixture.container.textContent).toContain("No courses");
+    await fixture.cleanup();
+  });
+
+  test("preserves hidden courses when preferences hydrate before courses", async () => {
+    const fixture = await renderTimetable(<TimetableStateProbe />, {
+      [PREFERENCES_KEY]: {
+        hiddenCourses: { "11410-A": true, "11410-gone": true },
+      },
+    });
+    await fixture.waitFor(
+      () => fixture.readState().hiddenCourses?.["11410-A"] === true,
+    );
+
+    expect(fixture.readState().hiddenCourses).toEqual({
+      "11410-A": true,
+      "11410-gone": true,
+    });
+
+    await fixture.writeStorage(COURSES_KEY, {
+      "11410": ["11410-A", "11410-B"],
+    });
+    await fixture.waitFor(
+      () =>
+        fixture.readState().courses?.["11410"]?.includes("11410-A") ?? false,
+    );
+
+    expect(fixture.readState().hiddenCourses).toEqual({
+      "11410-A": true,
+      "11410-gone": true,
+    });
+    await fixture.cleanup();
+  });
+
+  test("does not prune hidden courses on load, but removes deleted ones", async () => {
+    const fixture = await renderTimetable(<TimetableStateProbe />, {
+      [COURSES_KEY]: { "11410": ["11410-A", "11410-B"] },
+      [PREFERENCES_KEY]: { hiddenCourses: { "11410-A": true } },
+    });
+    await fixture.waitFor(
+      () => fixture.readState().hiddenCourses?.["11410-A"] === true,
+    );
+
+    expect(fixture.readState().hiddenCourses).toEqual({ "11410-A": true });
+    expect(
+      JSON.parse(window.localStorage.getItem(PREFERENCES_KEY)!).value
+        .hiddenCourses,
+    ).toEqual({ "11410-A": true });
+
+    await act(async () => {
+      fixture.container
+        .querySelector<HTMLButtonElement>("#delete-course")
+        ?.click();
+    });
+    await fixture.waitFor(
+      () => Object.keys(fixture.readState().hiddenCourses ?? {}).length === 0,
+    );
+    expect(fixture.readState().hiddenCourses).toEqual({});
+    expect(
+      JSON.parse(window.localStorage.getItem(PREFERENCES_KEY)!).value
+        .hiddenCourses,
+    ).toEqual({});
+    await fixture.cleanup();
+  });
+
+  test("prunes hidden courses during explicit replacement and clear", async () => {
+    const fixture = await renderTimetable(<TimetableStateProbe />, {
+      [COURSES_KEY]: { "11410": ["11410-A", "11410-B"] },
+      [PREFERENCES_KEY]: { hiddenCourses: { "11410-B": true } },
+    });
+    await fixture.waitFor(
+      () => fixture.readState().hiddenCourses?.["11410-B"] === true,
+    );
+
+    await act(async () => {
+      fixture.container
+        .querySelector<HTMLButtonElement>("#replace-courses")
+        ?.click();
+    });
+    await fixture.waitFor(
+      () => Object.keys(fixture.readState().hiddenCourses ?? {}).length === 0,
+    );
+    expect(fixture.readState().hiddenCourses).toEqual({});
+
+    await act(async () => {
+      fixture.container
+        .querySelector<HTMLButtonElement>("#hide-course")
+        ?.click();
+      fixture.container
+        .querySelector<HTMLButtonElement>("#clear-courses")
+        ?.click();
+    });
+    await fixture.waitFor(
+      () => Object.keys(fixture.readState().hiddenCourses ?? {}).length === 0,
+    );
+    expect(fixture.readState().hiddenCourses).toEqual({});
+    await fixture.cleanup();
   });
 });
 
 const RenderCount = ({ onRender }: { onRender: () => void }) => {
   onRender();
   return <TimetableCourseList semester="11410" />;
+};
+
+const TimetableStateProbe = () => {
+  const {
+    courses,
+    preferences,
+    deleteCourse,
+    clearCourses,
+    setCourses,
+    setPreferences,
+  } = useUserTimetable();
+
+  return (
+    <>
+      <output>
+        {JSON.stringify({ courses, hiddenCourses: preferences.hiddenCourses })}
+      </output>
+      <button id="delete-course" onClick={() => deleteCourse("11410-A")} />
+      <button
+        id="hide-course"
+        onClick={() =>
+          setPreferences((previous) => ({
+            ...previous,
+            hiddenCourses: { "11410-B": true },
+          }))
+        }
+      />
+      <button
+        id="replace-courses"
+        onClick={() => setCourses({ "11410": ["11410-A"] })}
+      />
+      <button id="clear-courses" onClick={clearCourses} />
+    </>
+  );
 };
