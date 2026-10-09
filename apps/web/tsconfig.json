@@ -12,6 +12,6 @@
     },
     "types": ["vite/client"]
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/vite-env.d.ts", "worker.ts"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/vite-env.d.ts"],
   "exclude": ["node_modules", "src/**/*.test.ts", "src/**/*.test.tsx"]
 }

@@ -41,6 +41,11 @@ jobs:
         run: |
           bun run test
 
+      # Keep the web app and its Cloudflare Worker entry type-safe.
+      - name: Typecheck web
+        working-directory: apps/web
+        run: bun run type-check
+
       # Build all services
       - name: Build all services
         run: |

@@ -16,6 +16,7 @@ import {
   PlannerDataDocType,
   SemesterDocType,
 } from "./rxdb";
+import { normalizePlannerDataDocuments } from "./planner-response";
 import client from "@/config/api";
 
 // Create context with more detailed initialization state
@@ -44,8 +45,14 @@ const hasPlannerScope = (auth: ReturnType<typeof useAuth>): boolean => {
   return scopes.includes("planner");
 };
 
+type PlannerResponse = {
+  readonly ok: boolean;
+  readonly status: number;
+  text(): Promise<string>;
+};
+
 const ensurePlannerResponseOk = async (
-  response: Response,
+  response: PlannerResponse,
   operation: string,
 ) => {
   if (response.ok) return;
@@ -346,8 +353,7 @@ export const PlannerReplicationProvider: FC<PropsWithChildren> = ({
           const data = await response.json();
 
           return {
-            documents:
-              data.documents as unknown as WithDeleted<PlannerDataDocType>[],
+            documents: normalizePlannerDataDocuments(data.documents),
             checkpoint: data.checkpoint,
           };
         },
