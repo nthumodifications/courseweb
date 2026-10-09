@@ -15,18 +15,18 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useLocalStorage } from "usehooks-ts";
-import {
-  DashboardConfig,
-  DEFAULT_DASHBOARD_CONFIG,
-  WidgetConfig,
-} from "@/types/widget";
+import { WidgetConfig } from "@/types/widget";
+import { useDashboardConfig } from "@/hooks/useDashboardConfig";
 import ScheduleWidget from "./ScheduleWidget";
 import WeatherWidget from "./WeatherWidget";
 import PinnedAppsWidget from "./PinnedAppsWidget";
 import NotepadWidget from "./NotepadWidget";
 import CountdownWidget from "./CountdownWidget";
 import BusWidget from "./BusWidget";
+import LibraryWidget from "./LibraryWidget";
+import LaundryWidget from "./LaundryWidget";
+import SportsVenuesWidget from "./SportsVenuesWidget";
+import YouBikeWidget from "./YouBikeWidget";
 import { cn } from "@/lib/utils";
 
 // Individual sortable widget wrapper
@@ -69,6 +69,14 @@ const SortableWidget: FC<{
         return <CountdownWidget {...commonProps} />;
       case "bus":
         return <BusWidget {...commonProps} />;
+      case "library":
+        return <LibraryWidget {...commonProps} />;
+      case "laundry":
+        return <LaundryWidget {...commonProps} />;
+      case "sports-venues":
+        return <SportsVenuesWidget {...commonProps} />;
+      case "youbike":
+        return <YouBikeWidget {...commonProps} />;
       default:
         return null;
     }
@@ -87,10 +95,7 @@ const SortableWidget: FC<{
 
 // Main widget grid component
 const WidgetGrid: FC = () => {
-  const [config, setConfig] = useLocalStorage<DashboardConfig>(
-    "widget_config_v1",
-    DEFAULT_DASHBOARD_CONFIG,
-  );
+  const [config, setConfig] = useDashboardConfig();
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),

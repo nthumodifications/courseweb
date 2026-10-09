@@ -835,6 +835,7 @@
         "description": "Replace Today page with a customizable widget grid",
         "columns": "Columns",
         "widgets": "Widgets",
+        "view_full_page": "View full page",
         "widget_options": {
           "schedule": {
             "title": "Schedule"
@@ -853,6 +854,18 @@
           },
           "bus": {
             "title": "Bus schedule"
+          },
+          "library": {
+            "title": "Library seats"
+          },
+          "laundry": {
+            "title": "Laundry"
+          },
+          "sports-venues": {
+            "title": "Sports venues"
+          },
+          "youbike": {
+            "title": "YouBike"
           }
         }
       }
@@ -2306,6 +2319,7 @@
       "mine": "My Stations"
     },
     "regular_bikes": "Regular",
+    "available_bikes": "bikes",
     "ebikes": "e-Bikes",
     "empty_docks": "Empty Docks",
     "out_of_service": "Out of Service",

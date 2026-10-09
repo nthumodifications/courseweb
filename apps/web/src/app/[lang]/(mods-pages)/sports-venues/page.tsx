@@ -35,13 +35,12 @@ import {
   type UsageSeries,
 } from "@/lib/usage-forecast";
 import { activateOnKey } from "@/lib/activate-on-key";
+import {
+  useVenueOccupancy,
+  type VenueOccupancy,
+} from "@/hooks/useVenueOccupancy";
 
-type OccupancyItem = {
-  project_id: string;
-  project_name: string;
-  entry_count_now: number;
-  entry_count_today: number;
-};
+type OccupancyItem = VenueOccupancy;
 
 interface TimeSlot {
   open: string;
@@ -453,16 +452,7 @@ const SportsVenuesPage = () => {
     isLoading: occupancyLoading,
     error: occupancyError,
     refetch: refetchOccupancy,
-  } = useQuery<OccupancyItem[]>({
-    queryKey: ["venue-occupancy"],
-    queryFn: async () => {
-      const res = await client.venue.occupancy.$get();
-      if (!res.ok) throw new Error("Failed to fetch occupancy data");
-      const data = await res.json();
-      return Array.isArray(data) ? (data as OccupancyItem[]) : [];
-    },
-    refetchInterval: 30_000,
-  });
+  } = useVenueOccupancy();
 
   const {
     data: openingTimes,

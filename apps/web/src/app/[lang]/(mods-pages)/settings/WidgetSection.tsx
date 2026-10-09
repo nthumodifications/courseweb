@@ -1,9 +1,5 @@
-import { useLocalStorage } from "usehooks-ts";
-import {
-  DashboardConfig,
-  DEFAULT_DASHBOARD_CONFIG,
-  WidgetConfig,
-} from "@/types/widget";
+import { WidgetConfig } from "@/types/widget";
+import { useDashboardConfig } from "@/hooks/useDashboardConfig";
 import { Switch } from "@courseweb/ui";
 import {
   DndContext,
@@ -67,10 +63,7 @@ const SortableWidgetRow = ({
 
 export const WidgetSection = () => {
   const dict = useDictionary();
-  const [config, setConfig] = useLocalStorage<DashboardConfig>(
-    "widget_config_v1",
-    DEFAULT_DASHBOARD_CONFIG,
-  );
+  const [config, setConfig] = useDashboardConfig();
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
