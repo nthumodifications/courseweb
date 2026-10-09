@@ -59,7 +59,7 @@ const YouBikeListingItem = ({
           <Bike className="h-7 w-7 text-foreground group-hover:text-primary transition-colors" />
         </a>
 
-        <div className="flex flex-col gap-0.5 min-w-0">
+        <div className="flex flex-1 min-w-0 flex-col gap-0.5 sm:flex-initial">
           <a
             href={googleMapsUrl}
             target="_blank"
@@ -77,7 +77,7 @@ const YouBikeListingItem = ({
           )}
         </div>
 
-        <div className="flex-1 flex flex-row items-center justify-end gap-3 text-right font-bold whitespace-nowrap">
+        <div className="flex shrink-0 flex-row items-center justify-end gap-3 text-right font-bold whitespace-nowrap sm:flex-1">
           {isOutOfService ? (
             <span className="text-muted-foreground">
               {dict.youbike.out_of_service}
@@ -111,7 +111,13 @@ const YouBikeListingItem = ({
 
               {/* Empty docks count */}
               <div className="flex items-center gap-1 text-sm text-muted-foreground font-medium">
-                <span>
+                <span
+                  className="sm:hidden"
+                  aria-label={`${dict.youbike.empty_docks}: ${station.emptyDocks}`}
+                >
+                  ({station.emptyDocks})
+                </span>
+                <span className="hidden sm:inline">
                   ({dict.youbike.empty_docks}: {station.emptyDocks})
                 </span>
               </div>
@@ -208,17 +214,17 @@ const YouBikePage = () => {
         onValueChange={(val) => setTab(val as YouBikeTab)}
         className="w-full"
       >
-        <TabsList className="w-full justify-evenly mb-4">
-          <TabsTrigger className="flex-1" value="mine">
+        <TabsList className="w-full justify-start overflow-x-auto mb-4">
+          <TabsTrigger className="flex-1 shrink-0" value="mine">
             {dict.youbike.tabs.mine} ({pinnedIds.length})
           </TabsTrigger>
-          <TabsTrigger className="flex-1" value="main">
+          <TabsTrigger className="flex-1 shrink-0" value="main">
             {dict.youbike.tabs.main}
           </TabsTrigger>
-          <TabsTrigger className="flex-1" value="nanda">
+          <TabsTrigger className="flex-1 shrink-0" value="nanda">
             {dict.youbike.tabs.nanda}
           </TabsTrigger>
-          <TabsTrigger className="flex-1" value="all">
+          <TabsTrigger className="flex-1 shrink-0" value="all">
             {dict.youbike.tabs.all}
           </TabsTrigger>
         </TabsList>
