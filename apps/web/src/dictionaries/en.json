@@ -648,7 +648,13 @@
     "campus_widget_title": "Campus Bus",
     "widget_title": "Campus and city buses",
     "no_departures": "No departures today",
-    "direction": "Direction"
+    "direction": "Direction",
+    "realtime_arriving": "Arriving",
+    "realtime_last_bus": "Last bus passed",
+    "realtime_not_operating": "Not in service today",
+    "realtime_updated_at": "Updated {time}",
+    "realtime_tab": "Real-time",
+    "timetable_tab": "Timetable"
   },
   "settings": {
     "navigation_aria": "Settings navigation",

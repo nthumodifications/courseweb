@@ -144,12 +144,38 @@ export interface CityBusDeparturesResponse {
 
 export interface TdxEtaRecord {
   RouteUID?: string;
+  RouteID?: string;
   SubRouteUID?: string;
+  SubRouteID?: string;
   StopUID?: string;
+  StopID?: string;
   StopName?: { Zh_tw?: string; En?: string };
   EstimateTime?: number | null;
+  StopCountDown?: number | null;
   StopStatus?: number;
+  Direction?: number;
+  NextBusTime?: string | null;
+  PlateNumb?: string | null;
+  SrcUpdateTime?: string;
   UpdateTime?: string;
   DataTime?: string;
   IsLastBus?: boolean;
+}
+
+export interface TdxNearStopRecord {
+  RouteUID?: string;
+  RouteID?: string;
+  SubRouteUID?: string;
+  SubRouteID?: string;
+  StopUID?: string;
+  StopID?: string;
+  PlateNumb?: string | null;
+  Direction?: number;
+  EventType?: string | number | null;
+  A2EventType?: string | number | null;
+  Event?: string | number | null;
+  BusStatus?: string | number | null;
+  SrcUpdateTime?: string;
+  UpdateTime?: string;
+  DataTime?: string;
 }

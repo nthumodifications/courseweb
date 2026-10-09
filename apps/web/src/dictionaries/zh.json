@@ -648,7 +648,13 @@
     "campus_widget_title": "校園公車",
     "widget_title": "校園及市區公車",
     "no_departures": "今日無班次",
-    "direction": "方向"
+    "direction": "方向",
+    "realtime_arriving": "進站中",
+    "realtime_last_bus": "末班車已過",
+    "realtime_not_operating": "今日未營運",
+    "realtime_updated_at": "更新於 {time}",
+    "realtime_tab": "即時",
+    "timetable_tab": "時刻表"
   },
   "settings": {
     "navigation_aria": "設定導覽",

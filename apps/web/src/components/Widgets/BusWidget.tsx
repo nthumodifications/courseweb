@@ -9,6 +9,8 @@ import { getTimeOnDate } from "@/helpers/bus";
 import {
   formatDepartureCountdown,
   formatDepartureTime,
+  formatCityBusRealtimeDisplay,
+  getCityBusRealtimeDisplay,
   getCityBusDepartures,
   getCityBusRoutes,
 } from "@/libs/citybus";
@@ -74,8 +76,13 @@ const BusWidget: FC<BusWidgetProps> = ({
         queryFn: () =>
           getCityBusDepartures(pin.routeId, direction!.id, pin.stopId, 1),
         enabled: Boolean(direction),
-        staleTime: 30 * 1000,
-        refetchInterval: 60 * 1000,
+        staleTime: 15 * 1000,
+        refetchInterval: () =>
+          typeof document !== "undefined" &&
+          document.visibilityState === "visible"
+            ? 20 * 1000
+            : false,
+        retry: false,
       };
     }),
   });
@@ -155,27 +162,45 @@ const BusWidget: FC<BusWidgetProps> = ({
     }
 
     cityPins.forEach((pin, index) => {
-      const departure = cityDepartureQueries[index]?.data?.departures[0];
-      if (!departure) return;
-      const countdown = formatDepartureCountdown(departure.minutes, language, {
-        underHour: dict.bus.minutes,
-        minute: dict.bus.countdown_minute,
-        hour: dict.bus.countdown_hour,
+      const departureData = cityDepartureQueries[index]?.data;
+      const departure = departureData?.departures[0];
+      const liveStop = departureData?.eta?.stops.find(
+        (item) => item.stopId === pin.stopId,
+      );
+      const liveDisplay = liveStop
+        ? getCityBusRealtimeDisplay(liveStop)
+        : undefined;
+      const liveText = formatCityBusRealtimeDisplay(liveDisplay, language, {
+        arriving: dict.bus.realtime_arriving,
+        lastBus: dict.bus.realtime_last_bus,
+        notOperating: dict.bus.realtime_not_operating,
+        minutes: dict.bus.minutes,
       });
+      if (!departure && !liveText) return;
+      const countdown = liveText
+        ? undefined
+        : formatDepartureCountdown(departure?.minutes, language, {
+            underHour: dict.bus.minutes,
+            minute: dict.bus.countdown_minute,
+            hour: dict.bus.countdown_hour,
+          });
       results.push({
-        time: formatDepartureTime(departure, language, {
-          tomorrow: dict.bus.tomorrow,
-          daysAfter: dict.bus.days_after,
-        }),
+        time:
+          liveText ??
+          formatDepartureTime(departure!, language, {
+            tomorrow: dict.bus.tomorrow,
+            daysAfter: dict.bus.days_after,
+          }),
         countdown,
         lineLabel:
           language === "zh"
             ? `${pin.routeNameZh} · ${pin.stopNameZh}`
             : `${pin.routeNameEn} · ${pin.stopNameEn}`,
         directionIcon: "",
-        sourceLabel: departure.realtime
-          ? dict.bus.realtime
-          : dict.bus.scheduled,
+        sourceLabel:
+          liveText || departure?.realtime
+            ? dict.bus.realtime
+            : dict.bus.scheduled,
         pin,
       });
     });

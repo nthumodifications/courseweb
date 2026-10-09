@@ -1,3 +1,5 @@
+import { useQuery } from "@tanstack/react-query";
+
 export const SERVICE_DAYS = [
   "Sunday",
   "Monday",
@@ -133,6 +135,44 @@ export interface CityBusDeparturesResponse {
   realtime: boolean;
   status: CityBusScheduleStatus;
   departures: CityBusDeparture[];
+  eta?: CityBusEtaResponse;
+}
+
+export interface CityBusRealtimeStop {
+  stopId: string;
+  etaSeconds: number | null;
+  status: number | null;
+  nextBusTime: string | null;
+  isLastBus: boolean;
+  plate: string | null;
+}
+
+export interface CityBusRealtimeBus {
+  plate: string | null;
+  stopId: string;
+  event: string | number | null;
+}
+
+export interface CityBusEtaResponse {
+  routeId: string;
+  directionId: string;
+  stops: CityBusRealtimeStop[];
+  buses: CityBusRealtimeBus[];
+  updatedAt: string | null;
+  realtime: boolean;
+}
+
+export type CityBusRealtimeLabelKey =
+  | "countdown"
+  | "arriving"
+  | "last_bus"
+  | "not_operating"
+  | "next_bus";
+
+export interface CityBusRealtimeDisplay {
+  labelKey: CityBusRealtimeLabelKey;
+  minutes?: number;
+  nextBusTime?: string;
 }
 
 export function formatDepartureCountdown(
@@ -162,6 +202,86 @@ export function formatDepartureTime(
       .replace("{days}", String(dayOffset))
       .replace("{time}", departure.departureTime);
   return departure.departureTime;
+}
+
+export function getCityBusRealtimeDisplay(
+  stop: Pick<CityBusRealtimeStop, "etaSeconds" | "status" | "nextBusTime">,
+): CityBusRealtimeDisplay | undefined {
+  if (stop.status === 3) return { labelKey: "last_bus" };
+  if (stop.status === 4) return { labelKey: "not_operating" };
+  if (stop.status === 1 && stop.nextBusTime)
+    return { labelKey: "next_bus", nextBusTime: stop.nextBusTime };
+  if (stop.etaSeconds === null) return undefined;
+  const seconds = Math.max(0, stop.etaSeconds);
+  const minutes = Math.ceil(seconds / 60);
+  return seconds < 60
+    ? { labelKey: "arriving", minutes: 0 }
+    : { labelKey: "countdown", minutes };
+}
+
+export function formatCityBusRealtimeDisplay(
+  display: CityBusRealtimeDisplay | undefined,
+  language: "zh" | "en",
+  labels: {
+    arriving: string;
+    lastBus: string;
+    notOperating: string;
+    minutes: string;
+  },
+) {
+  if (!display) return undefined;
+  if (display.labelKey === "arriving") return labels.arriving;
+  if (display.labelKey === "last_bus") return labels.lastBus;
+  if (display.labelKey === "not_operating") return labels.notOperating;
+  if (display.labelKey === "next_bus" && display.nextBusTime) {
+    return formatCityBusTime(display.nextBusTime, language);
+  }
+  return `${display.minutes ?? 0} ${labels.minutes}`;
+}
+
+export function formatCityBusTime(value: string, _language: "zh" | "en") {
+  if (/^\d{1,2}:\d{2}$/.test(value)) return value;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Taipei",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).format(date);
+}
+
+export function formatCityBusUpdatedAt(value: string, language: "zh" | "en") {
+  return formatCityBusTime(value, language);
+}
+
+export type CityBusLiveStationState = "arriving" | "at_station";
+
+export function getCityBusLiveStationState(
+  event: string | number | null,
+): CityBusLiveStationState {
+  if (
+    event === 1 ||
+    (typeof event === "string" &&
+      /(at[_ -]?station|arrived|停靠|到站)/i.test(event))
+  )
+    return "at_station";
+  return "arriving";
+}
+
+export function mergeCityBusEtaIntoTimeline(
+  stopIds: string[],
+  eta: CityBusEtaResponse,
+) {
+  return stopIds.map((stopId) => {
+    const liveStop = eta.stops.find((item) => item.stopId === stopId);
+    const bus = eta.buses.find((item) => item.stopId === stopId);
+    return {
+      stopId,
+      display: liveStop ? getCityBusRealtimeDisplay(liveStop) : undefined,
+      state: bus ? getCityBusLiveStationState(bus.event) : undefined,
+    };
+  });
 }
 
 export function getCityBusDayType(day: ServiceDay): CityBusDayType {
@@ -666,33 +786,58 @@ export function getScheduleStatus(
     : "no_service";
 }
 
-// The real-time route ships with the API, which deploys separately from the
-// web app. Once it answers 404, stop asking for the rest of this page load.
-let realtimeRouteMissing = false;
+const realtimeDisabledRoutes = new Set<string>();
 
-async function getOptionalRealtime(
+export function isCityBusRealtimeDisabled(routeId: string) {
+  return realtimeDisabledRoutes.has(routeId);
+}
+
+export async function getCityBusEta(
   routeId: string,
   directionId: string,
-  stopId: string,
-  limit: number,
-) {
-  if (realtimeRouteMissing) return undefined;
+): Promise<CityBusEtaResponse | undefined> {
+  if (realtimeDisabledRoutes.has(routeId)) return undefined;
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), 1500);
   try {
     const response = await fetch(
-      `${import.meta.env.VITE_COURSEWEB_API_URL}/citybus/departures?route_id=${encodeURIComponent(routeId)}&direction_id=${encodeURIComponent(directionId)}&stop_id=${encodeURIComponent(stopId)}&limit=${limit}`,
+      `${import.meta.env.VITE_COURSEWEB_API_URL}/citybus/eta?route_id=${encodeURIComponent(routeId)}&direction_id=${encodeURIComponent(directionId)}`,
       { signal: controller.signal },
     );
-    if (response.status === 404) realtimeRouteMissing = true;
+    if (response.status === 404) realtimeDisabledRoutes.add(routeId);
     if (!response.ok) return undefined;
-    const data = (await response.json()) as CityBusDeparturesResponse;
-    return data.realtime && data.departures.length ? data : undefined;
+    const data = (await response.json()) as CityBusEtaResponse;
+    if (!data.realtime) realtimeDisabledRoutes.add(routeId);
+    return data.realtime ? data : undefined;
   } catch {
     return undefined;
   } finally {
     window.clearTimeout(timeout);
   }
+}
+
+export function useCityBusEta(
+  routeId: string | undefined,
+  directionId: string | undefined,
+  enabled = true,
+) {
+  return useQuery({
+    queryKey: ["citybus_eta", routeId, directionId],
+    queryFn: async () => (await getCityBusEta(routeId!, directionId!)) ?? null,
+    enabled:
+      enabled &&
+      Boolean(routeId && directionId) &&
+      !isCityBusRealtimeDisabled(routeId ?? ""),
+    retry: false,
+    staleTime: 15_000,
+    refetchOnWindowFocus: true,
+    refetchInterval: () =>
+      typeof document !== "undefined" &&
+      document.visibilityState === "visible" &&
+      !isCityBusRealtimeDisabled(routeId ?? "")
+        ? 20_000
+        : false,
+  });
 }
 
 export async function getCityBusDepartures(
@@ -711,12 +856,57 @@ export async function getCityBusDepartures(
     limit,
   );
   const status = getScheduleStatus(route, directionId, stopId, now);
-  const realtime = await getOptionalRealtime(
-    routeId,
-    directionId,
-    stopId,
-    limit,
-  );
+  const eta = await getCityBusEta(routeId, directionId);
+  const liveStop = eta?.stops.find((item) => item.stopId === stopId);
+  const display = liveStop ? getCityBusRealtimeDisplay(liveStop) : undefined;
+  const realtime =
+    eta && liveStop && display
+      ? {
+          source: route.sourceInfo,
+          routeId,
+          directionId,
+          stopId,
+          realtime: true,
+          status:
+            liveStop.status === 3 || liveStop.status === 4
+              ? ("no_service" as const)
+              : ("scheduled" as const),
+          departures:
+            liveStop.etaSeconds !== null
+              ? [
+                  {
+                    departureTime: formatCityBusTime(
+                      new Date(
+                        now.getTime() + liveStop.etaSeconds * 1000,
+                      ).toISOString(),
+                      "zh",
+                    ),
+                    minutes: Math.ceil(liveStop.etaSeconds / 60),
+                    realtime: true,
+                    arrivalAt: new Date(
+                      now.getTime() + liveStop.etaSeconds * 1000,
+                    ).toISOString(),
+                    ...(liveStop.etaSeconds < 60
+                      ? { status: "approaching" as const }
+                      : {}),
+                    ...(eta.updatedAt ? { updatedAt: eta.updatedAt } : {}),
+                  },
+                ]
+              : liveStop.nextBusTime
+                ? [
+                    {
+                      departureTime: formatCityBusTime(
+                        liveStop.nextBusTime,
+                        "zh",
+                      ),
+                      realtime: true,
+                      ...(eta.updatedAt ? { updatedAt: eta.updatedAt } : {}),
+                    },
+                  ]
+                : [],
+          eta,
+        }
+      : undefined;
   return (
     realtime ?? {
       source: route.sourceInfo,
