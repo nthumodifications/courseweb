@@ -83,3 +83,8 @@ namespace_id = "1006"
 
 [triggers]
 crons = ["0 2 * * 1", "*/10 * * * *"] # PEO opening times Monday; usage collector every 10 minutes
+
+# Issue reports must carry a valid Turnstile token. Every web form sends one
+# since #955; remove this switch once the optional path is deleted.
+[vars]
+ISSUE_REQUIRE_TURNSTILE = "true"
