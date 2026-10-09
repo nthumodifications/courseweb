@@ -1,9 +1,9 @@
 import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
   Button,
   Checkbox,
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
   Dialog,
   DialogContent,
   DialogHeader,
@@ -21,7 +21,7 @@ import {
   toast,
 } from "@courseweb/ui";
 import { DialogDescription } from "@radix-ui/react-dialog";
-import { MessageCircle } from "lucide-react";
+import { ChevronDown, MessageCircle } from "lucide-react";
 import {
   FormEvent,
   ReactNode,
@@ -446,6 +446,7 @@ export const IssueReportDisclosure = ({
 }) => {
   const dict = useDictionary();
   const issue = dict.forms.issue as Record<string, string>;
+  const [diagnosticsOpen, setDiagnosticsOpen] = useState(false);
   const diagnostics = report.diagnostics;
   const typeLabels = reportTypeLabels(issue);
   const areaLabels = reportAreaLabels(issue);
@@ -465,10 +466,12 @@ export const IssueReportDisclosure = ({
   ];
 
   return (
-    <Alert>
-      <AlertTitle>{issue.public_warning_title}</AlertTitle>
-      <AlertDescription className="flex flex-col gap-3">
+    <div className="flex flex-col gap-4 border-t pt-4">
+      <div className="flex flex-col gap-2">
+        <p className="font-medium">{issue.public_warning_title}</p>
         <p>{issue.public_warning_description}</p>
+      </div>
+      <div className="flex flex-col gap-2">
         <label className="flex items-start gap-2 text-sm">
           <Checkbox
             id={`${idPrefix}-attach-diagnostics`}
@@ -480,24 +483,40 @@ export const IssueReportDisclosure = ({
           />
           <span>{issue.diagnostics_attach}</span>
         </label>
-        <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
-          {diagnosticsRows.map(([label, value]) => (
-            <div className="contents" key={label}>
-              <dt className="text-muted-foreground">{label}</dt>
-              <dd className="break-all">{value}</dd>
-            </div>
-          ))}
-        </dl>
-        {!report.attachDiagnostics && (
-          <p className="text-xs text-muted-foreground">
-            {issue.diagnostics_opted_out}
-          </p>
+        <p className="text-xs text-muted-foreground">
+          {report.attachDiagnostics
+            ? issue.diagnostics_attached
+            : issue.diagnostics_opted_out}
+        </p>
+      </div>
+      <Collapsible open={diagnosticsOpen} onOpenChange={setDiagnosticsOpen}>
+        <CollapsibleTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="p-0 h-5 text-xs text-muted-foreground hover:text-foreground"
+          >
+            {issue.diagnostics_see_attached}
+            <ChevronDown className="h-3 w-3 ml-0.5" />
+          </Button>
+        </CollapsibleTrigger>
+        {diagnosticsOpen && (
+          <CollapsibleContent>
+            <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 pt-2 text-xs">
+              {diagnosticsRows.map(([label, value]) => (
+                <div className="contents" key={label}>
+                  <dt className="text-muted-foreground">{label}</dt>
+                  <dd className="break-all">{value}</dd>
+                </div>
+              ))}
+            </dl>
+          </CollapsibleContent>
         )}
-      </AlertDescription>
+      </Collapsible>
       <span className="sr-only">
         {typeLabels[report.reportType]} {areaLabels[report.reportArea]}
       </span>
-    </Alert>
+    </div>
   );
 };
 
@@ -723,18 +742,16 @@ export const IssueReportDialog = ({ children }: { children?: ReactNode }) => {
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{issue.title}</DialogTitle>
           <DialogDescription>{issue.description}</DialogDescription>
         </DialogHeader>
-        <ScrollArea className="max-h-[90vh]">
-          <IssueReportFields
-            report={report}
-            knownIssues={knownIssues}
-            idPrefix="dialog-issue"
-          />
-        </ScrollArea>
+        <IssueReportFields
+          report={report}
+          knownIssues={knownIssues}
+          idPrefix="dialog-issue"
+        />
       </DialogContent>
     </Dialog>
   );
