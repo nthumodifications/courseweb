@@ -995,19 +995,24 @@
   },
   "applist": {
     "title": "功能清單",
+    "quick_links_title": "快速連結",
+    "pinned_widget_empty": "前往應用程式頁面釘選捷徑",
     "to_ccxp": "校務系統連結",
     "empty_pinned_apps_reminder": "可以到右上角新增常用功能。",
     "pinned_apps_title": "常用功能",
     "edit_pinned_apps_title": "編輯常用功能",
     "beta": "測試",
     "categories": {
-      "campuslife": "校園生活",
-      "course": "課程資訊",
-      "club": "社團",
-      "other": "其他"
+      "courses": "課程",
+      "studies": "我的學業",
+      "transport": "交通",
+      "facilities": "校園設施",
+      "services": "餐飲與服務",
+      "links": "外部連結"
     },
     "apps": {
       "courses": "課程查詢",
+      "modules": "課程模組",
       "chat": "AI 課程助手",
       "venues": "地點相關課程",
       "campus-map": "互動式校園地圖",
