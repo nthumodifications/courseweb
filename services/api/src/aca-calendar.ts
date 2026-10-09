@@ -3,6 +3,10 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { env } from "hono/adapter";
 import { HTTPException } from "hono/http-exception";
+import {
+  parseCourseSelectionPeriods,
+  type AcademicCalendarEvent,
+} from "./course-selection-periods";
 
 export type CalendarApiResponse = {
   kind: string;
@@ -46,7 +50,11 @@ const app = new Hono()
         });
       }
 
-      const CALENDAR_API_URL = `https://www.googleapis.com/calendar/v3/calendars/nthu.acad%40gmail.com/events?key=${CALENDAR_API_KEY}&timeMin=${start.toISOString().slice(0, 10)}T00:00:00Z&timeMax=${end.toISOString().slice(0, 10)}T00:00:00Z`;
+      const upstreamStart = new Date(start);
+      upstreamStart.setUTCDate(upstreamStart.getUTCDate() - 120);
+      const windowStart = start.toISOString().slice(0, 10);
+      const windowEnd = end.toISOString().slice(0, 10);
+      const CALENDAR_API_URL = `https://www.googleapis.com/calendar/v3/calendars/nthu.acad%40gmail.com/events?key=${CALENDAR_API_KEY}&timeMin=${upstreamStart.toISOString().slice(0, 10)}T00:00:00Z&timeMax=${windowEnd}T00:00:00Z`;
       const res = await fetch(CALENDAR_API_URL);
       if (!res.ok) {
         // Google reports a revoked, deleted or API-disabled key as a 400
@@ -75,7 +83,23 @@ const app = new Hono()
           message: "Academic calendar upstream returned an unexpected payload",
         });
       }
-      const calendarDatas = resJson.items;
+      const calendarDatas = resJson.items.filter((item) => {
+        const event = {
+          id: item.id,
+          summary: item.summary,
+          date: item.start.date,
+        } satisfies AcademicCalendarEvent;
+        const selectionPeriod = parseCourseSelectionPeriods([event])[0];
+        const eventStart = selectionPeriod?.startDate ?? item.start.date;
+        const eventEnd =
+          selectionPeriod?.endDate ??
+          (() => {
+            const end = new Date(`${item.end.date}T00:00:00Z`);
+            end.setUTCDate(end.getUTCDate() - 1);
+            return end.toISOString().slice(0, 10);
+          })();
+        return eventStart <= windowEnd && eventEnd >= windowStart;
+      });
 
       return c.json(
         calendarDatas.map((item) => {

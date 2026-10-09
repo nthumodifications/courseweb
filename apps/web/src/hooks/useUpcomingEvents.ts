@@ -11,12 +11,14 @@ import {
   DisplayCalendarEvent,
 } from "@/components/Calendar/calendar.types";
 import { getRepeatedStartDays } from "@/components/Calendar/calendar_utils";
+import { toAcademicCalendarEvents } from "@/components/Calendar/academicCalendarEvents";
 import { timetableToCalendarEvent } from "@/components/Calendar/timetableToCalendarEvent";
 import { createTimetableFromCourses } from "@/helpers/timetable";
 import { useCalendar } from "@/components/Calendar/calendar_hook";
 import client from "@/config/api";
 import useCourseDates, { CourseDate } from "@/hooks/useCourseDates";
 import useTime from "@/hooks/useTime";
+import useDictionary from "@/dictionaries/useDictionary";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { useSettings } from "@/hooks/contexts/settings";
 import {
@@ -283,6 +285,7 @@ const useUpcomingEvents = (
     error: timetableError,
   } = useUserTimetable();
   const { language, showAcademicCalendar } = useSettings();
+  const dict = useDictionary();
   const enrolledCourseIds = useMemo(
     () => Object.values(courses).flat(),
     [courses],
@@ -417,22 +420,21 @@ const useUpcomingEvents = (
     }
 
     const academicEvents: BaseUpcomingEvent[] = includeAcademicCalendar
-      ? academicCalendar.flatMap((event) => {
-          if (!event.summary || !isTaipeiDateKey(event.date)) return [];
-          const range = getTaipeiDateRange(event.date);
-          if (!range) return [];
-          return [
-            {
-              id: `academic:${event.id}`,
-              source: "academic" as const,
-              title: event.summary,
-              start: range.start,
-              end: range.end,
-              allDay: true,
-              color: "#0ea5e9",
-            },
-          ];
-        })
+      ? toAcademicCalendarEvents(
+          academicCalendar.filter(
+            (event) => event.summary && isTaipeiDateKey(event.date),
+          ),
+          "#0ea5e9",
+          (period) => dict.course.selection_period.phases[period.phase],
+        ).map((event) => ({
+          id: `academic:${event.id}`,
+          source: "academic" as const,
+          title: event.title,
+          start: event.start,
+          end: event.end,
+          allDay: true,
+          color: event.color,
+        }))
       : [];
 
     return [...expandedEvents, ...courseDateEvents, ...academicEvents];
@@ -443,6 +445,7 @@ const useUpcomingEvents = (
     dayStarts,
     getCourseDateForDay,
     includeAcademicCalendar,
+    dict,
     language,
     timetableData,
     windowEnd,

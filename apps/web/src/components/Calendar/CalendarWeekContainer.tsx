@@ -4,11 +4,9 @@ import {
   differenceInTaipeiCalendarDays,
   endOfTaipeiDay,
   formatTaipei,
-  fromTaipeiDateKey,
   getTaipeiAcademicCalendarQuery,
   getTaipeiDateKey,
   isSameTaipeiMonth,
-  isTaipeiDateKey,
   isTaipeiToday,
   setTaipeiWallClock,
   startOfTaipeiDay,
@@ -37,6 +35,8 @@ import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import useCourseDates from "@/hooks/useCourseDates";
 import { getLocale } from "@/helpers/dateLocale";
 import useDictionary from "@/dictionaries/useDictionary";
+import { toAcademicCalendarEvents } from "./academicCalendarEvents";
+import type { EventData } from "@/types/calendar_event";
 
 export const CalendarWeekContainer = ({
   displayWeek,
@@ -122,7 +122,7 @@ export const CalendarWeekContainer = ({
     [],
   );
 
-  const { data: nthuCalendarEvents = [] } = useQuery<CalendarEventInternal[]>({
+  const { data: academicCalendar = [] } = useQuery<EventData[]>({
     queryKey: [
       "event",
       getTaipeiDateKey(displayWeek[0]),
@@ -138,27 +138,19 @@ export const CalendarWeekContainer = ({
       const res = await client.acacalendar.$get({
         query,
       });
-      const nthuEvents = await res.json();
-      return nthuEvents.flatMap((event) => {
-        if (!isTaipeiDateKey(event.date)) return [];
-        const start = fromTaipeiDateKey(event.date);
-        const end = endOfTaipeiDay(start);
-        return {
-          id: "nthu-" + event.id,
-          title: event.summary,
-          start,
-          end,
-          allDay: true,
-          color: "#A973D9",
-          tag: "NTHU",
-          actualEnd: end,
-          repeat: null,
-          readonly: true,
-        } as CalendarEventInternal;
-      });
+      return res.json();
     },
     enabled: showAcademicCalendar,
   });
+  const nthuCalendarEvents = useMemo(
+    () =>
+      toAcademicCalendarEvents(
+        academicCalendar,
+        "#A973D9",
+        (period) => dict.course.selection_period.phases[period.phase],
+      ),
+    [academicCalendar, dict.course.selection_period.phases],
+  );
 
   const hours = eachHourOfInterval({
     start: new Date(2024, 2, 3, 0),

@@ -4,6 +4,7 @@ export type WidgetType =
   | "pinned-apps"
   | "notepad"
   | "countdown"
+  | "course-selection"
   | "bus";
 
 export interface WidgetConfig {
@@ -28,8 +29,35 @@ export const DEFAULT_DASHBOARD_CONFIG: DashboardConfig = {
     { id: "apps-default", type: "pinned-apps", order: 2, enabled: true },
     { id: "notepad-default", type: "notepad", order: 3, enabled: true },
     { id: "countdown-default", type: "countdown", order: 4, enabled: true },
-    { id: "bus-default", type: "bus", order: 5, enabled: false },
+    {
+      id: "course-selection-default",
+      type: "course-selection",
+      order: 5,
+      enabled: true,
+    },
+    { id: "bus-default", type: "bus", order: 6, enabled: false },
   ],
+};
+
+export const ensureDashboardConfig = (
+  config: DashboardConfig,
+): DashboardConfig => {
+  const missingWidgets = DEFAULT_DASHBOARD_CONFIG.widgets.filter(
+    (defaultWidget) =>
+      !config.widgets.some((widget) => widget.id === defaultWidget.id),
+  );
+  if (missingWidgets.length === 0) return config;
+
+  return {
+    ...config,
+    widgets: [
+      ...config.widgets,
+      ...missingWidgets.map((widget, index) => ({
+        ...widget,
+        order: config.widgets.length + index,
+      })),
+    ],
+  };
 };
 
 export interface WidgetDefinition {
@@ -74,6 +102,13 @@ export const WIDGET_DEFINITIONS: WidgetDefinition[] = [
     label: "Countdown",
     labelZh: "學期倒數",
     description: "Days left in semester",
+    defaultEnabled: true,
+  },
+  {
+    type: "course-selection",
+    label: "Course selection",
+    labelZh: "選課時程",
+    description: "Current and upcoming course selection periods",
     defaultEnabled: true,
   },
   {

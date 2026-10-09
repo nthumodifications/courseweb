@@ -20,12 +20,14 @@ import {
   DashboardConfig,
   DEFAULT_DASHBOARD_CONFIG,
   WidgetConfig,
+  ensureDashboardConfig,
 } from "@/types/widget";
 import ScheduleWidget from "./ScheduleWidget";
 import WeatherWidget from "./WeatherWidget";
 import PinnedAppsWidget from "./PinnedAppsWidget";
 import NotepadWidget from "./NotepadWidget";
 import CountdownWidget from "./CountdownWidget";
+import CourseSelectionWidget from "./CourseSelectionWidget";
 import BusWidget from "./BusWidget";
 import { cn } from "@/lib/utils";
 
@@ -67,6 +69,8 @@ const SortableWidget: FC<{
         return <NotepadWidget {...commonProps} />;
       case "countdown":
         return <CountdownWidget {...commonProps} />;
+      case "course-selection":
+        return <CourseSelectionWidget {...commonProps} />;
       case "bus":
         return <BusWidget {...commonProps} />;
       default:
@@ -87,10 +91,11 @@ const SortableWidget: FC<{
 
 // Main widget grid component
 const WidgetGrid: FC = () => {
-  const [config, setConfig] = useLocalStorage<DashboardConfig>(
+  const [storedConfig, setConfig] = useLocalStorage<DashboardConfig>(
     "widget_config_v1",
     DEFAULT_DASHBOARD_CONFIG,
   );
+  const config = ensureDashboardConfig(storedConfig);
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
@@ -109,13 +114,16 @@ const WidgetGrid: FC = () => {
       if (!over || active.id === over.id) return;
 
       setConfig((prev) => {
-        const oldIndex = prev.widgets.findIndex((w) => w.id === active.id);
-        const newIndex = prev.widgets.findIndex((w) => w.id === over.id);
+        const normalized = ensureDashboardConfig(prev);
+        const oldIndex = normalized.widgets.findIndex(
+          (w) => w.id === active.id,
+        );
+        const newIndex = normalized.widgets.findIndex((w) => w.id === over.id);
         if (oldIndex === -1 || newIndex === -1) return prev;
-        const reordered = arrayMove(prev.widgets, oldIndex, newIndex).map(
+        const reordered = arrayMove(normalized.widgets, oldIndex, newIndex).map(
           (w, i) => ({ ...w, order: i }),
         );
-        return { ...prev, widgets: reordered };
+        return { ...normalized, widgets: reordered };
       });
     },
     [setConfig],
@@ -123,12 +131,15 @@ const WidgetGrid: FC = () => {
 
   const handleRemove = useCallback(
     (id: string) => {
-      setConfig((prev) => ({
-        ...prev,
-        widgets: prev.widgets.map((w) =>
-          w.id === id ? { ...w, enabled: false } : w,
-        ),
-      }));
+      setConfig((prev) => {
+        const normalized = ensureDashboardConfig(prev);
+        return {
+          ...normalized,
+          widgets: normalized.widgets.map((w) =>
+            w.id === id ? { ...w, enabled: false } : w,
+          ),
+        };
+      });
     },
     [setConfig],
   );

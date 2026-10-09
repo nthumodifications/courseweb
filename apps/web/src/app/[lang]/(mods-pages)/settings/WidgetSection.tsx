@@ -3,6 +3,7 @@ import {
   DashboardConfig,
   DEFAULT_DASHBOARD_CONFIG,
   WidgetConfig,
+  ensureDashboardConfig,
 } from "@/types/widget";
 import { Switch } from "@courseweb/ui";
 import {
@@ -67,10 +68,11 @@ const SortableWidgetRow = ({
 
 export const WidgetSection = () => {
   const dict = useDictionary();
-  const [config, setConfig] = useLocalStorage<DashboardConfig>(
+  const [storedConfig, setConfig] = useLocalStorage<DashboardConfig>(
     "widget_config_v1",
     DEFAULT_DASHBOARD_CONFIG,
   );
+  const config = ensureDashboardConfig(storedConfig);
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
@@ -81,10 +83,15 @@ export const WidgetSection = () => {
 
   const handleToggle = useCallback(
     (id: string, enabled: boolean) => {
-      setConfig((prev) => ({
-        ...prev,
-        widgets: prev.widgets.map((w) => (w.id === id ? { ...w, enabled } : w)),
-      }));
+      setConfig((prev) => {
+        const normalized = ensureDashboardConfig(prev);
+        return {
+          ...normalized,
+          widgets: normalized.widgets.map((w) =>
+            w.id === id ? { ...w, enabled } : w,
+          ),
+        };
+      });
     },
     [setConfig],
   );
@@ -94,20 +101,23 @@ export const WidgetSection = () => {
       const { active, over } = event;
       if (!over || active.id === over.id) return;
       setConfig((prev) => {
-        const oldIndex = prev.widgets.findIndex((w) => w.id === active.id);
-        const newIndex = prev.widgets.findIndex((w) => w.id === over.id);
+        const normalized = ensureDashboardConfig(prev);
+        const oldIndex = normalized.widgets.findIndex(
+          (w) => w.id === active.id,
+        );
+        const newIndex = normalized.widgets.findIndex((w) => w.id === over.id);
         if (oldIndex === -1 || newIndex === -1) return prev;
-        const reordered = arrayMove(prev.widgets, oldIndex, newIndex).map(
+        const reordered = arrayMove(normalized.widgets, oldIndex, newIndex).map(
           (w, i) => ({ ...w, order: i }),
         );
-        return { ...prev, widgets: reordered };
+        return { ...normalized, widgets: reordered };
       });
     },
     [setConfig],
   );
 
   const handleColumnChange = (cols: 1 | 2 | 3) => {
-    setConfig((prev) => ({ ...prev, columns: cols }));
+    setConfig((prev) => ({ ...ensureDashboardConfig(prev), columns: cols }));
   };
 
   const sorted = [...config.widgets].sort((a, b) => a.order - b.order);
