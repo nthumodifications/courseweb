@@ -709,13 +709,17 @@ export const IssueReportDialog = ({ children }: { children?: ReactNode }) => {
   useEffect(() => {
     if (!open) return;
     // Keep the existing analytics event shared by both dialog entry points.
-    import("@/lib/gtag").then(({ event }) => {
-      event({
-        action: "open_report_issue",
-        category: "report",
-        label: "open_report_issue",
+    void import("@/lib/gtag")
+      .then(({ event }) => {
+        event({
+          action: "open_report_issue",
+          category: "report",
+          label: "open_report_issue",
+        });
+      })
+      .catch(() => {
+        // Analytics is optional and must not affect the issue report dialog.
       });
-    });
   }, [open]);
 
   const handleOpenChange = (nextOpen: boolean) => {

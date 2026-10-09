@@ -70,6 +70,12 @@ const renderInQueryClient = async (element: React.ReactNode) => {
     HTMLElement: dom.window.HTMLElement,
     MutationObserver: dom.window.MutationObserver,
     Node: dom.window.Node,
+    DocumentFragment: dom.window.DocumentFragment,
+    ResizeObserver: class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    },
   });
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },

@@ -76,6 +76,5 @@ describe("React Query persistence", () => {
     ).toEqual([["courses"]]);
 
     await act(async () => root.unmount());
-    dom.window.close();
   });
 });
