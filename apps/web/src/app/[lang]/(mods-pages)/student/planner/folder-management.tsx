@@ -590,7 +590,7 @@ export function FolderManagement({
     return (
       <div key={folder.id} className="mb-1">
         <div
-          className={`flex items-center p-2 rounded-md ${selectedFolder?.id === folder.id ? "bg-card" : "hover:bg-muted/50"} cursor-pointer ${isUnsorted ? "opacity-70" : ""}`}
+          className={`flex items-center p-2 rounded-md ${selectedFolder?.id === folder.id ? "bg-muted" : "hover:bg-muted/50"} cursor-pointer ${isUnsorted ? "opacity-70" : ""}`}
           onClick={() => handleSelectFolder(folder)}
           onKeyDown={activateOnKey(() => handleSelectFolder(folder))}
           role="button"
@@ -683,7 +683,7 @@ export function FolderManagement({
         {/* Root container folder */}
         <div className="mb-2">
           <div
-            className={`flex items-center p-2 rounded-md ${isRootSelected ? "bg-card" : "hover:bg-muted/50"} cursor-pointer`}
+            className={`flex items-center p-2 rounded-md ${isRootSelected ? "bg-muted" : "hover:bg-muted/50"} cursor-pointer`}
             onClick={handleSelectRoot}
             onKeyDown={activateOnKey(() => handleSelectRoot())}
             role="button"
@@ -954,7 +954,7 @@ export function FolderManagement({
                         <Input
                           id="folder-title"
                           {...register("title", { required: true })}
-                          className="bg-card border-border"
+                          className="bg-muted border-border"
                         />
                       </div>
 
@@ -967,7 +967,7 @@ export function FolderManagement({
                             id="folder-min"
                             type="number"
                             {...register("min", { valueAsNumber: true })}
-                            className="bg-card border-border"
+                            className="bg-muted border-border"
                           />
                         </div>
 
@@ -980,7 +980,7 @@ export function FolderManagement({
                               id="folder-max"
                               type="number"
                               {...register("max", { valueAsNumber: true })}
-                              className="bg-card border-border"
+                              className="bg-muted border-border"
                             />
                             <div className="flex items-center gap-1">
                               <Controller
@@ -1021,7 +1021,7 @@ export function FolderManagement({
                             >
                               <SelectTrigger
                                 id="folder-metric"
-                                className="bg-card border-border"
+                                className="bg-muted border-border"
                               >
                                 <SelectValue
                                   placeholder={
@@ -1029,7 +1029,7 @@ export function FolderManagement({
                                   }
                                 />
                               </SelectTrigger>
-                              <SelectContent className="bg-card border-border">
+                              <SelectContent className="bg-muted border-border">
                                 <SelectItem value="credits">
                                   {fm.creditsUnit ?? "學分"}
                                 </SelectItem>
@@ -1056,7 +1056,7 @@ export function FolderManagement({
                             >
                               <SelectTrigger
                                 id="folder-parent"
-                                className="bg-card border-border"
+                                className="bg-muted border-border"
                               >
                                 <SelectValue
                                   placeholder={
@@ -1064,7 +1064,7 @@ export function FolderManagement({
                                   }
                                 />
                               </SelectTrigger>
-                              <SelectContent className="bg-card border-border">
+                              <SelectContent className="bg-muted border-border">
                                 <SelectItem value="planner-1">
                                   {fm.noneRoot ?? "無 (根類別)"}
                                 </SelectItem>

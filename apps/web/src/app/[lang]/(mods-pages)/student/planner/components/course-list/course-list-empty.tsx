@@ -97,7 +97,7 @@ export function CourseListEmpty({
                       {getStatusIcon("in-progress", "h-3 w-3")}
                       {dict.planner.status.inProgress}
                     </Badge>
-                    <Badge className="bg-muted text-muted-foreground border-border flex items-center gap-1">
+                    <Badge className="bg-muted text-foreground border-border flex items-center gap-1">
                       {getStatusIcon("planned", "h-3 w-3")}
                       {dict.planner.status.planned}
                     </Badge>

@@ -393,7 +393,7 @@ export function SemesterManagement({
                 {semesters.map((semester) => (
                   <div
                     key={semester.id}
-                    className={`flex items-center justify-between p-2 rounded-md ${selectedSemester?.id === semester.id ? "bg-card" : "hover:bg-muted/50"} cursor-pointer`}
+                    className={`flex items-center justify-between p-2 rounded-md ${selectedSemester?.id === semester.id ? "bg-muted" : "hover:bg-muted/50"} cursor-pointer`}
                     onClick={() => handleSelectSemester(semester)}
                     onKeyDown={activateOnKey(() =>
                       handleSelectSemester(semester),
@@ -598,7 +598,7 @@ export function SemesterManagement({
                       </Label>
                       <Input
                         id="semester-id"
-                        className="bg-card border-border"
+                        className="bg-muted border-border"
                         disabled
                         readOnly
                         value={watchId ?? ""}
@@ -626,7 +626,7 @@ export function SemesterManagement({
                         </Label>
                         <Input
                           id="semester-year"
-                          className="bg-card border-border"
+                          className="bg-muted border-border"
                           placeholder={sm.yearPlaceholder ?? "例如: 113"}
                           {...register("year")}
                         />
@@ -647,7 +647,7 @@ export function SemesterManagement({
                         >
                           <SelectTrigger
                             id="semester-term"
-                            className="bg-card border-border"
+                            className="bg-muted border-border"
                           >
                             <SelectValue
                               placeholder={
@@ -655,7 +655,7 @@ export function SemesterManagement({
                               }
                             />
                           </SelectTrigger>
-                          <SelectContent className="bg-card border-border">
+                          <SelectContent className="bg-muted border-border">
                             <SelectItem value="1">
                               {getSemesterTermLabel("1")} (1)
                             </SelectItem>
@@ -681,7 +681,7 @@ export function SemesterManagement({
                       </Label>
                       <Input
                         id="semester-name"
-                        className="bg-card border-border"
+                        className="bg-muted border-border"
                         {...register("name")}
                       />
                       {errors.name && (
@@ -710,7 +710,7 @@ export function SemesterManagement({
                       >
                         <SelectTrigger
                           id="semester-status"
-                          className="bg-card border-border"
+                          className="bg-muted border-border"
                         >
                           <SelectValue
                             placeholder={
@@ -718,7 +718,7 @@ export function SemesterManagement({
                             }
                           />
                         </SelectTrigger>
-                        <SelectContent className="bg-card border-border">
+                        <SelectContent className="bg-muted border-border">
                           <SelectItem value="completed">
                             {status.completed}
                           </SelectItem>
@@ -745,7 +745,7 @@ export function SemesterManagement({
                         <Input
                           id="semester-start-date"
                           type="date"
-                          className="bg-card border-border"
+                          className="bg-muted border-border"
                           {...register("startDate")}
                         />
                         {errors.startDate && (
@@ -762,7 +762,7 @@ export function SemesterManagement({
                         <Input
                           id="semester-end-date"
                           type="date"
-                          className="bg-card border-border"
+                          className="bg-muted border-border"
                           {...register("endDate")}
                         />
                         {errors.endDate && (

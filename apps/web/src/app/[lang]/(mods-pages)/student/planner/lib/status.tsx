@@ -9,7 +9,7 @@ export const STATUS_BADGE_CLASS: Record<CourseStatus, string> = {
   failed:
     "bg-red-500/10 dark:bg-red-500/20 text-red-700 dark:text-red-400 border-red-500/30",
   planned:
-    "bg-muted text-muted-foreground border-border",
+    "bg-muted text-foreground border-border",
 };
 
 const STATUS_ICON_COLOR_CLASS: Record<CourseStatus, string> = {

@@ -153,7 +153,7 @@ export function CourseListItem({
       {...listeners}
       {...attributes}
       className={`flex items-center p-2 rounded-md border ${isSelected ? "border-primary" : isMultiSelected ? "border-primary bg-primary/10" : "border-border"}
-        bg-card cursor-pointer hover:border-primary transition-colors duration-200 group relative touch-none`}
+        bg-muted cursor-pointer hover:border-primary transition-colors duration-200 group relative touch-none`}
       onClick={onClick}
       onKeyDown={activateOnKey(() => onClick())}
       role="button"
@@ -177,7 +177,7 @@ export function CourseListItem({
       >
         <div
           className={`w-4 h-4 rounded border flex items-center justify-center
-          ${isMultiSelected ? "bg-primary border-primary" : "border-border bg-card"}`}
+          ${isMultiSelected ? "bg-primary border-primary" : "border-border bg-muted"}`}
         >
           {isMultiSelected && <Check className="h-3 w-3" />}
         </div>

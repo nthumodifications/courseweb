@@ -83,7 +83,7 @@ const TakenCoursesPanel = ({
                 {addableCourses.map((course) => (
                   <div
                     key={course.raw_id}
-                    className="p-3 border rounded-lg hover:bg-card transition-colors"
+                    className="p-3 border rounded-lg hover:bg-muted transition-colors"
                   >
                     <div className="flex justify-between items-center">
                       <div>

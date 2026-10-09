@@ -59,3 +59,18 @@ Verification: `git diff --check` passed. `bunx tsc --noEmit -p apps/web` has no 
 - Final in-scope counts: hardcoded-color 0; dark-color 22 deliberate restorations; large-type 0; overlay-shadow 0; centered-layout 8 unchanged; reading-column 0; cjk-hostile 0; synthetic-weight 0; spacing-vocab 0.
 - Final lint totals: hardcoded-color 40, dark-color 61, large-type 2, overlay-shadow 16, centered-layout 20, reading-column 0, cjk-hostile 14, synthetic-weight 67, spacing-vocab 227. `bun run design-lint` reports only unchanged out-of-scope baseline findings; touched files add none beyond the listed restorations.
 - `bunx tsc --noEmit -p apps/web`: no errors in touched files; existing errors remain in `planner-replication.tsx`, `IssueReportForm.tsx`, and `worker.ts`.
+
+## Fix round 2
+
+- `student/planner/SemesterPlanning.tsx:110`: `bg-neutral-50/dark:bg-neutral-800` -> `bg-muted`.
+- `student/planner/components/course-list/course-grid-item.tsx:142,166`: grey card/checkbox fills -> `bg-muted`.
+- `student/planner/components/course-list/course-list-item.tsx:156,180`: grey card/checkbox fills -> `bg-muted`.
+- `student/planner/components/dialogs/course-details-dialog.tsx:66,73,82,92,115,121`: grey detail fills -> `bg-muted`.
+- `student/planner/components/dialogs/course-edit-dialog.tsx:115,134,156,160,184,188,215,219,234,249`: grey controls -> `bg-muted`.
+- `student/planner/course-picker/container.tsx:86`: `hover:bg-neutral-50/dark:hover:bg-neutral-900` -> `hover:bg-muted`.
+- `student/planner/folder-management.tsx:593,686`: selected grey rows -> `bg-muted`; `:957,970,983,1024,1032,1059,1067`: grey controls -> `bg-muted`.
+- `student/planner/planner-settings.tsx:488,525,544,567,587,609,627`: tab list, inputs, and textarea -> `bg-muted`.
+- `student/planner/semester-management.tsx:396,601,629,650,658,684,713,721,748,765`: selected row and grey controls -> `bg-muted`.
+- `student/planner/components/course-list/course-list-empty.tsx:100` and `student/planner/lib/status.tsx:12`: strong `text-neutral-700/dark:text-neutral-300` -> `text-foreground`.
+- Cause of the create-plan regression: `planner-settings.tsx` directly supplied `bg-card` to the `TabsList` and six form controls; no wrapper or shared planner class was involved.
+- Verification: lint totals and in-scope counts remain round-1 values (dark-color 22 deliberate, centered-layout 8, all others 0); typecheck has no touched-file errors. `ISSUE-881.md` remains untracked.
