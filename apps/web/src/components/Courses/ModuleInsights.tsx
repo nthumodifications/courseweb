@@ -45,18 +45,22 @@ const useScoreLabel = () => {
     }`;
 };
 
-const Stat = ({
-  value,
-  label,
-  hint,
-}: {
+export type ModuleStatProps = {
   value: string;
   label: string;
   hint?: string;
-}) => (
+  compact?: boolean;
+};
+
+export const ModuleStat = ({
+  value,
+  label,
+  hint,
+  compact = false,
+}: ModuleStatProps) => (
   <div className="flex min-w-0 flex-col">
     <dd
-      className={`break-all font-bold ${value.length > 8 ? "text-lg leading-8" : "text-2xl"}`}
+      className={`break-all font-bold ${compact ? "text-lg leading-6" : value.length > 8 ? "text-lg leading-8" : "text-2xl"}`}
     >
       {value}
     </dd>
@@ -85,14 +89,14 @@ export const ModuleStats = ({ variant }: { variant: ModuleVariant }) => {
   return (
     <dl className="grid grid-cols-2 gap-x-4 gap-y-4">
       {recentFill !== null && (
-        <Stat
+        <ModuleStat
           value={`${Math.round(recentFill * 100)}%`}
           label={labels.recent_fill}
           hint={labels.recent_fill_hint}
         />
       )}
       {score && (
-        <Stat
+        <ModuleStat
           value={scoreLabel(score).split(" ")[0]}
           label={labels.average_score}
           hint={`${
@@ -100,8 +104,8 @@ export const ModuleStats = ({ variant }: { variant: ModuleVariant }) => {
           } · ${score.count} ${labels.classes}`}
         />
       )}
-      {time && <Stat value={time.value} label={labels.usual_time} />}
-      {languages && <Stat value={languages} label={labels.language} />}
+      {time && <ModuleStat value={time.value} label={labels.usual_time} />}
+      {languages && <ModuleStat value={languages} label={labels.language} />}
     </dl>
   );
 };
