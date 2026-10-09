@@ -115,7 +115,7 @@ const ExpandableClassFilter = ({
                       type="button"
                       aria-label={dict.planner.coursePicker.removeFilter}
                       title={dict.planner.coursePicker.removeFilter}
-                      className="ml-1 -mr-1 flex-shrink-0 flex items-center justify-center p-2 -m-1"
+                      className="ml-0.5 -mr-1 flex-shrink-0 flex items-center justify-center p-2 -m-1"
                       onClick={(e) => {
                         e.stopPropagation();
                         refine(value);
@@ -136,7 +136,7 @@ const ExpandableClassFilter = ({
                 value={searchValue}
                 onChange={(e) => handleSearch(e.target.value)}
                 onClick={(e) => e.stopPropagation()}
-                className="border-none p-1 h-auto focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="border-none p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0"
                 placeholder={
                   placeholder ?? dict.planner.coursePicker.searchForCourses
                 }
@@ -148,7 +148,7 @@ const ExpandableClassFilter = ({
               type="button"
               aria-label={dict.planner.coursePicker.clearAll}
               title={dict.planner.coursePicker.clearAll}
-              className="ml-2 flex-shrink-0 flex items-center justify-center p-2 -m-1.5"
+              className="ml-2 flex-shrink-0 flex items-center justify-center p-2.5 -m-1.5"
               onClick={handleClearAll}
             >
               <X className="h-4 w-4 text-muted-foreground" />

@@ -107,7 +107,7 @@ function SemesterCourseRow({
       style={style}
       {...listeners}
       {...attributes}
-      className={`p-2 rounded-md border border-border bg-muted flex justify-between items-center touch-none cursor-grab active:cursor-grabbing ${
+      className={`p-2 rounded-md border border-border bg-muted/50 flex justify-between items-center touch-none cursor-grab active:cursor-grabbing ${
         isDragging ? "opacity-50" : ""
       }`}
     >

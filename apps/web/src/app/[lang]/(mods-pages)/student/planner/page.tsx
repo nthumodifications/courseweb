@@ -576,7 +576,7 @@ function GraduationPlanner() {
 
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-      <div className="flex overflow-hidden -mt-4 md:-ml-2 h-[calc(100vh-var(--header-height))]">
+      <div className="flex overflow-hidden -mt-4 md:-mb-0 md:-ml-2 h-[calc(100vh-var(--header-height))]">
         {/* Left Sidebar - Folder Navigation */}
         {showFolders && (
           <FolderNavigation
@@ -687,7 +687,7 @@ function GraduationPlanner() {
               {/* Course List/Grid */}
               {selectedFolder &&
                 getFilteredCoursesByFolder(selectedFolder).length > 0 && (
-                  <TabsContent value={viewMode} className="m-1 flex-1 min-h-0">
+                  <TabsContent value={viewMode} className="m-0 flex-1 min-h-0">
                     <CourseList
                       viewMode={viewMode}
                       courses={getFilteredCoursesByFolder(selectedFolder)}

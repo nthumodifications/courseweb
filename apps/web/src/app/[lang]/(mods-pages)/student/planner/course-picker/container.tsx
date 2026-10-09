@@ -83,7 +83,7 @@ const TakenCoursesPanel = ({
                 {addableCourses.map((course) => (
                   <div
                     key={course.raw_id}
-                    className="p-3 border rounded-lg hover:bg-muted transition-colors"
+                    className="p-3 border rounded-lg hover:bg-muted/50 transition-colors"
                   >
                     <div className="flex justify-between items-center">
                       <div>
@@ -257,7 +257,7 @@ const CourseSearchContainer = (props: CourseSearchContainerProps) => {
             />
           </ResizablePanel>
 
-          <ResizableHandle className="hidden md:block outline-none self-center px-1 h-48 mx-4 my-6 rounded-full bg-muted" />
+          <ResizableHandle className="hidden md:block outline-none self-center px-[2px] h-48 mx-4 my-6 rounded-full bg-muted" />
 
           <ResizablePanel
             collapsible={true}

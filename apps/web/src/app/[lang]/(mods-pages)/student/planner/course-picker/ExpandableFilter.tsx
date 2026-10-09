@@ -141,7 +141,7 @@ const ExpandableFilter = ({
                         type="button"
                         aria-label={`${dict.planner.coursePicker.removeFilter} ${label}`}
                         title={dict.planner.coursePicker.removeFilter}
-                        className="ml-1 -mr-1 flex-shrink-0 flex items-center justify-center p-2 -m-1"
+                        className="ml-0.5 -mr-1 flex-shrink-0 flex items-center justify-center p-2 -m-1"
                         onClick={(e) => {
                           e.stopPropagation();
                           refine(item.value);
@@ -163,7 +163,7 @@ const ExpandableFilter = ({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onClick={(e) => e.stopPropagation()}
-                className="border-none p-1 h-auto focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="border-none p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0"
                 placeholder={placeholder ?? dict.planner.coursePicker.search}
               />
             )}

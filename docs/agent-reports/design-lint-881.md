@@ -74,3 +74,15 @@ Verification: `git diff --check` passed. `bunx tsc --noEmit -p apps/web` has no 
 - `student/planner/components/course-list/course-list-empty.tsx:100` and `student/planner/lib/status.tsx:12`: strong `text-neutral-700/dark:text-neutral-300` -> `text-foreground`.
 - Cause of the create-plan regression: `planner-settings.tsx` directly supplied `bg-card` to the `TabsList` and six form controls; no wrapper or shared planner class was involved.
 - Verification: lint totals and in-scope counts remain round-1 values (dark-color 22 deliberate, centered-layout 8, all others 0); typecheck has no touched-file errors. `ISSUE-881.md` remains untracked.
+
+## Fix round 3
+
+- Restored structural classes to origin/main: absolute-selection hit areas, directional icon clearance, embedded filter controls, planner tab margins, the zero negative margin, and the resizable-handle width.
+- All original 50-step neutral surfaces now use `bg-muted/50`; 100/200-step surfaces remain `bg-muted`.
+- Planned status chips use `bg-secondary text-secondary-foreground border-border`, preserving a visible filled grey chip in both themes.
+- Final in-scope counts: hardcoded-color 0; dark-color 22 deliberate; large-type 0; overlay-shadow 0; centered-layout 8 unchanged; reading-column 0; cjk-hostile 0; synthetic-weight 0; spacing-vocab 17 deliberate.
+- Deliberate spacing-vocab lines (17): `course-grid-item.tsx:153 p-3.5, :172 pr-8`; `course-list-item.tsx:167 p-3.5, :185 pl-8`; `folder-navigation.tsx:182 pl-10`; `admin/audit/page.tsx:207 pl-8`; `admin/users/page.tsx:156 pl-8`.
+- Remaining deliberate lines: `ExpandableClassFilter.tsx:118 ml-0.5, :139 p-0, :151 p-2.5`; `ExpandableFilter.tsx:144 ml-0.5, :166 p-0`; `PlannerCourseListItem.tsx:103 p-0, :106 ml-0.5`.
+- Remaining deliberate lines: `planner/page.tsx:579 md:-mb-0, :690 m-0`; `course-picker/container.tsx:260 px-[2px]`.
+- Final lint totals: hardcoded-color 40; dark-color 61; large-type 2; overlay-shadow 16; centered-layout 20; reading-column 0; cjk-hostile 14; synthetic-weight 67; spacing-vocab 244. `bun run design-lint` exits 1 only on unchanged out-of-scope findings.
+- `bunx tsc --noEmit -p apps/web` has no errors in touched files; existing errors remain in `planner-replication.tsx`, `IssueReportForm.tsx`, and `worker.ts`. `git diff --check` passed.

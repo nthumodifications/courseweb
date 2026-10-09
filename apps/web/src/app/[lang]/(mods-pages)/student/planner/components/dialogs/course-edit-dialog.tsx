@@ -112,7 +112,7 @@ export function CourseEditDialog({
             <Input
               id="course-title"
               value={editCourseForm.title}
-              className="bg-muted border-border"
+              className="bg-muted/50 border-border"
               onChange={(e) =>
                 setEditCourseForm({
                   ...editCourseForm,
@@ -131,7 +131,7 @@ export function CourseEditDialog({
               type="number"
               min={0}
               value={editCourseForm.credits}
-              className="bg-muted border-border"
+              className="bg-muted/50 border-border"
               onChange={(e) =>
                 setEditCourseForm({
                   ...editCourseForm,
@@ -153,11 +153,11 @@ export function CourseEditDialog({
             >
               <SelectTrigger
                 id="course-category"
-                className="bg-muted border-border"
+                className="bg-muted/50 border-border"
               >
                 <SelectValue placeholder={t.categoryPlaceholder} />
               </SelectTrigger>
-              <SelectContent className="bg-muted border-border max-h-[300px]">
+              <SelectContent className="bg-muted/50 border-border max-h-[300px]">
                 {leafFolders.map((folder) => (
                   <SelectItem key={folder.id} value={folder.id}>
                     {folder.title}
@@ -181,11 +181,11 @@ export function CourseEditDialog({
           >
             <SelectTrigger
               id="course-status"
-              className="bg-muted border-border"
+              className="bg-muted/50 border-border"
             >
               <SelectValue placeholder={t.statusPlaceholder} />
             </SelectTrigger>
-            <SelectContent className="bg-muted border-border">
+            <SelectContent className="bg-muted/50 border-border">
               <SelectItem value="completed">
                 {dict.planner.status.completed}
               </SelectItem>
@@ -212,11 +212,11 @@ export function CourseEditDialog({
           >
             <SelectTrigger
               id="course-semester"
-              className="bg-muted border-border"
+              className="bg-muted/50 border-border"
             >
               <SelectValue placeholder={t.semesterPlaceholder} />
             </SelectTrigger>
-            <SelectContent className="bg-muted border-border">
+            <SelectContent className="bg-muted/50 border-border">
               {semesterData.map((semester) => (
                 <SelectItem key={semester.id} value={semester.id}>
                   {semester.name}
@@ -231,7 +231,7 @@ export function CourseEditDialog({
           <Input
             id="course-instructor"
             value={editCourseForm.instructor || ""}
-            className="bg-muted border-border"
+            className="bg-muted/50 border-border"
             onChange={(e) =>
               setEditCourseForm({
                 ...editCourseForm,
@@ -246,7 +246,7 @@ export function CourseEditDialog({
           <Textarea
             id="course-description"
             value={editCourseForm.description || ""}
-            className="bg-muted border-border min-h-[100px]"
+            className="bg-muted/50 border-border min-h-[100px]"
             onChange={(e) =>
               setEditCourseForm({
                 ...editCourseForm,

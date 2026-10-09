@@ -100,10 +100,10 @@ const PlannerCourseListItem: FC<PlannerCourseListItemProps> = memo(
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="p-1 h-5 text-xs text-muted-foreground hover:text-foreground"
+                      className="p-0 h-5 text-xs text-muted-foreground hover:text-foreground"
                     >
                       {dict.course.details.prerequisites_available}{" "}
-                      <ChevronDown className="h-3 w-3 ml-1" />
+                      <ChevronDown className="h-3 w-3 ml-0.5" />
                     </Button>
                   </CollapsibleTrigger>
                   <CollapsibleContent>

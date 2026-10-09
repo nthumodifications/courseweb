@@ -485,7 +485,7 @@ export function PlannerSettings({
             onValueChange={setActiveTab}
             className="flex-1 flex flex-col overflow-hidden"
           >
-            <TabsList className="bg-muted mb-2">
+            <TabsList className="bg-muted/50 mb-2">
               <TabsTrigger value="basic">
                 {ps.basicTab ?? "基本設定"}
               </TabsTrigger>
@@ -522,7 +522,7 @@ export function PlannerSettings({
                       </Label>
                       <Input
                         id="planner-title"
-                        className="bg-muted border-border h-8 mt-1"
+                        className="bg-muted/50 border-border h-8 mt-1"
                         placeholder={
                           ps.titlePlaceholder ?? "例如：我的畢業規劃"
                         }
@@ -541,7 +541,7 @@ export function PlannerSettings({
                       </Label>
                       <Input
                         id="planner-department"
-                        className="bg-muted border-border h-8 mt-1"
+                        className="bg-muted/50 border-border h-8 mt-1"
                         placeholder={
                           ps.departmentPlaceholder ?? "例如：資訊工程學系"
                         }
@@ -564,7 +564,7 @@ export function PlannerSettings({
                         </Label>
                         <Input
                           id="planner-enrollment-year"
-                          className="bg-muted border-border h-8 mt-1"
+                          className="bg-muted/50 border-border h-8 mt-1"
                           placeholder="113"
                           {...register("enrollmentYear")}
                         />
@@ -584,7 +584,7 @@ export function PlannerSettings({
                         </Label>
                         <Input
                           id="planner-graduation-year"
-                          className="bg-muted border-border h-8 mt-1"
+                          className="bg-muted/50 border-border h-8 mt-1"
                           placeholder="123"
                           {...register("graduationYear")}
                         />
@@ -606,7 +606,7 @@ export function PlannerSettings({
                       <Input
                         id="planner-required-credits"
                         type="number"
-                        className="bg-muted border-border h-8 mt-1"
+                        className="bg-muted/50 border-border h-8 mt-1"
                         {...register("requiredCredits", {
                           valueAsNumber: true,
                         })}
@@ -624,7 +624,7 @@ export function PlannerSettings({
                       </Label>
                       <Textarea
                         id="planner-description"
-                        className="bg-muted border-border min-h-[80px] mt-1"
+                        className="bg-muted/50 border-border min-h-[80px] mt-1"
                         placeholder={ps.descriptionPlaceholder ?? "不必填"}
                         {...register("description")}
                       />

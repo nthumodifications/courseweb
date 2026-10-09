@@ -139,7 +139,7 @@ export function CourseGridItem({
       {...listeners}
       {...attributes}
       className={`p-3 rounded-md border ${isSelected ? "border-primary" : isMultiSelected ? "border-primary bg-primary/10" : "border-border"}
-        bg-muted cursor-pointer hover:border-primary transition-colors duration-200 min-h-32 flex flex-col group relative touch-none`}
+        bg-muted/50 cursor-pointer hover:border-primary transition-colors duration-200 min-h-32 flex flex-col group relative touch-none`}
       onClick={onClick}
       onKeyDown={activateOnKey(() => onClick())}
       role="button"
@@ -150,7 +150,7 @@ export function CourseGridItem({
         type="button"
         aria-label={dict.planner.courseList.selectCourse}
         title={dict.planner.courseList.selectCourse}
-        className={`absolute right-1 top-1 p-3 flex items-center justify-center rounded ${
+        className={`absolute right-1 top-1 p-3.5 flex items-center justify-center rounded ${
           isMultiSelected
             ? "opacity-100"
             : "opacity-60 group-hover:opacity-100 focus-visible:opacity-100"
@@ -163,13 +163,13 @@ export function CourseGridItem({
       >
         <div
           className={`w-4 h-4 rounded border flex items-center justify-center
-          ${isMultiSelected ? "bg-primary border-primary" : "border-border bg-muted"}`}
+          ${isMultiSelected ? "bg-primary border-primary" : "border-border bg-muted/50"}`}
         >
           {isMultiSelected && <Check className="h-3 w-3 text-white" />}
         </div>
       </button>
 
-      <div className="flex justify-between items-start mb-2 pr-6">
+      <div className="flex justify-between items-start mb-2 pr-8">
         <Badge variant="outline" className="text-xs">
           {course.id}
         </Badge>

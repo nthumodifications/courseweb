@@ -153,7 +153,7 @@ const AdminUsersPage = () => {
             aria-hidden
           />
           <Input
-            className="pl-6"
+            className="pl-8"
             placeholder="Student ID, name or email"
             value={searchInput}
             onChange={(event) => {
