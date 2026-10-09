@@ -16,10 +16,93 @@ type GithubEnv = {
 
 const MAX_TITLE_LENGTH = 200;
 const MAX_BODY_LENGTH = 10000;
+const REPORT_TYPES = ["bug", "missing-data", "suggestion", "praise"] as const;
+const REPORT_AREAS = [
+  "timetable",
+  "search",
+  "sync-login",
+  "bus",
+  "other",
+] as const;
+type ReportLabel =
+  | (typeof REPORT_TYPES)[number]
+  | (typeof REPORT_AREAS)[number];
+const REPORT_ROUTE_PATTERNS = [
+  "/[lang]/timetable",
+  "/[lang]/calendar",
+  "/[lang]/courses",
+  "/[lang]/account",
+  "/[lang]/bus",
+  "/[lang]/issues",
+  "/[lang]/contribute",
+  "/[lang]/other",
+] as const;
+const PROVISIONED_TRIAGE_LABELS = new Set(["bug", "search", "timetable"]);
 const ALLOWED_ISSUE_LABELS = new Set(["generic"]);
 
-export const filterIssueLabels = (labels: string[]) =>
-  labels.filter((label) => ALLOWED_ISSUE_LABELS.has(label));
+export const filterIssueLabels = (labels: string[]) => [
+  ...new Set(labels.filter((label) => ALLOWED_ISSUE_LABELS.has(label))),
+];
+
+export const mapTriageLabels = (
+  reportType?: (typeof REPORT_TYPES)[number],
+  reportArea?: (typeof REPORT_AREAS)[number],
+) =>
+  [reportType, reportArea].filter(
+    (label): label is ReportLabel =>
+      label !== undefined && PROVISIONED_TRIAGE_LABELS.has(label),
+  );
+
+const sensitivePublicTextPatterns = [/[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/g];
+
+export const redactPublicText = (value: string) =>
+  sensitivePublicTextPatterns.reduce(
+    (result, pattern) => result.replace(pattern, "[redacted]"),
+    value,
+  );
+
+const diagnosticsSchema = z.object({
+  appVersion: z.string().regex(/^[A-Za-z0-9._+-]{1,50}$/),
+  buildCommit: z.string().regex(/^[A-Za-z0-9._-]{1,100}$/),
+  route: z.enum(REPORT_ROUTE_PATTERNS),
+  language: z.enum(["en", "zh"]),
+  theme: z.enum(["light", "dark"]),
+  browser: z.string().regex(/^(?:Edge|Firefox|Chrome|Safari) \d{1,4}$|^Other$/),
+  os: z.enum(["Android", "iOS", "Windows", "macOS", "Linux", "Other"]),
+  viewport: z.enum(["compact", "standard", "wide"]),
+  online: z.boolean(),
+  serviceWorker: z.enum([
+    "not-supported",
+    "unregistered",
+    "active",
+    "update-available",
+  ]),
+  signedIn: z.boolean(),
+});
+
+type IssueDiagnostics = z.infer<typeof diagnosticsSchema>;
+
+export const parseIssueDiagnostics = (value: unknown) =>
+  diagnosticsSchema.parse(value);
+
+export const formatDiagnosticsBlock = (diagnostics: IssueDiagnostics) => {
+  const lines = [
+    "### Anonymous diagnostics",
+    `- App version: ${redactPublicText(diagnostics.appVersion)}`,
+    `- Build commit: ${redactPublicText(diagnostics.buildCommit)}`,
+    `- Route: ${redactPublicText(diagnostics.route)}`,
+    `- Language: ${diagnostics.language}`,
+    `- Theme: ${diagnostics.theme}`,
+    `- Browser: ${diagnostics.browser}`,
+    `- OS: ${diagnostics.os}`,
+    `- Viewport: ${diagnostics.viewport}`,
+    `- Online: ${diagnostics.online ? "yes" : "no"}`,
+    `- Service worker: ${diagnostics.serviceWorker}`,
+    `- Signed in: ${diagnostics.signedIn ? "yes" : "no"}`,
+  ];
+
+  return lines.join("\n");
+};
 
 type ErrorResponse = {
   error: string;
@@ -95,6 +178,21 @@ type GithubIssue = {
   performed_via_github_app: null;
   state_reason: null;
 };
+
+type PublicGithubIssue = Pick<
+  GithubIssue,
+  "id" | "number" | "title" | "html_url" | "state"
+>;
+
+type AppliedIssueField = "reportType" | "reportArea" | "diagnostics";
+
+const projectPublicIssue = (issue: GithubIssue): PublicGithubIssue => ({
+  id: issue.id,
+  number: issue.number,
+  title: issue.title,
+  html_url: issue.html_url,
+  state: issue.state,
+});
 
 const getJwt = (client_id: string, privateKey: string) => {
   const payload = {
@@ -173,10 +271,21 @@ const app = new Hono<{ Bindings: Bindings }>()
         body: z.string().max(MAX_BODY_LENGTH),
         labels: z.array(z.string()),
         turnstileToken: z.string().optional(),
+        reportType: z.enum(REPORT_TYPES).optional(),
+        reportArea: z.enum(REPORT_AREAS).optional(),
+        diagnostics: diagnosticsSchema.optional(),
       }),
     ),
     async (c) => {
-      const { title, body, labels, turnstileToken } = c.req.valid("json");
+      const {
+        title,
+        body,
+        labels,
+        turnstileToken,
+        reportType,
+        reportArea,
+        diagnostics,
+      } = c.req.valid("json");
 
       const {
         GITHUB_CLIENT_ID,
@@ -215,7 +324,6 @@ const app = new Hono<{ Bindings: Bindings }>()
         }
       }
 
-      // Validate input
       if (!title || title.length < 7) {
         return c.json(
           {
@@ -232,6 +340,34 @@ const app = new Hono<{ Bindings: Bindings }>()
             error:
               "Description is required and must be at least 10 characters long",
             code: "INVALID_DESCRIPTION",
+          } as ErrorResponse,
+          400,
+        );
+      }
+
+      // Redact sensitive identifiers from the public report content.
+      const publicTitle = redactPublicText(title);
+      const publicBody = redactPublicText(
+        [body, diagnostics ? formatDiagnosticsBlock(diagnostics) : ""]
+          .filter(Boolean)
+          .join("\n\n"),
+      );
+
+      if (!publicTitle || publicTitle.length < 7) {
+        return c.json(
+          {
+            error: "Title is required and must be at least 7 characters long",
+            code: "INVALID_TITLE",
+          } as ErrorResponse,
+          400,
+        );
+      }
+
+      if (publicBody.length > MAX_BODY_LENGTH) {
+        return c.json(
+          {
+            error: `Description must be at most ${MAX_BODY_LENGTH} characters long`,
+            code: "DESCRIPTION_TOO_LONG",
           } as ErrorResponse,
           400,
         );
@@ -260,7 +396,11 @@ const app = new Hono<{ Bindings: Bindings }>()
       }
       const repoOwner = "nthumodifications";
       const repoName = "courseweb";
-      const safeLabels = filterIssueLabels(labels);
+      const safeLabels = [
+        ...filterIssueLabels(labels),
+        ...mapTriageLabels(reportType, reportArea),
+      ];
+      const deduplicatedLabels = [...new Set(safeLabels)];
 
       try {
         const response = await fetch(
@@ -272,7 +412,11 @@ const app = new Hono<{ Bindings: Bindings }>()
               Authorization: `token ${accessToken}`,
               Accept: "application/vnd.github.v3+json",
             },
-            body: JSON.stringify({ title, body, labels: safeLabels }),
+            body: JSON.stringify({
+              title: publicTitle,
+              body: publicBody,
+              labels: deduplicatedLabels,
+            }),
           },
         );
 
@@ -315,7 +459,13 @@ const app = new Hono<{ Bindings: Bindings }>()
         }
 
         const data = (await response.json()) as GithubIssue;
-        return c.json(data);
+        const applied = [
+          reportType ? ("reportType" as const) : undefined,
+          reportArea ? ("reportArea" as const) : undefined,
+          diagnostics ? ("diagnostics" as const) : undefined,
+        ].filter((field): field is AppliedIssueField => field !== undefined);
+
+        return c.json({ ...data, applied });
       } catch (error) {
         console.error("Error creating GitHub issue:", error);
         return c.json(
@@ -445,7 +595,7 @@ const app = new Hono<{ Bindings: Bindings }>()
           );
         }
 
-        return c.json(data);
+        return c.json(data.map(projectPublicIssue));
       } catch (error) {
         console.error("Error fetching GitHub issues:", error);
         return c.json(
