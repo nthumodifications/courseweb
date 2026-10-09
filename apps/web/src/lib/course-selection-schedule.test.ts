@@ -5,11 +5,15 @@ import {
   type CourseSelectionPeriod,
 } from "./course-selection-periods";
 import {
+  getCourseSelectionBarPeriod,
   getCompactCourseSelectionPeriods,
+  getCourseSelectionPhaseToHighlight,
   getCourseSelectionPhaseStatus,
   getCourseSelectionSchedule,
   type CourseSelectionPhaseStatus,
 } from "./course-selection-schedule";
+import { COURSE_SELECTION_PHASE_COLORS } from "./course-selection-colors";
+import { getTaipeiDateKey } from "@/helpers/dates";
 
 const period: CourseSelectionPeriod = {
   id: "course-selection:add-drop",
@@ -190,5 +194,113 @@ describe("course selection schedule helpers", () => {
         "2026-09-10",
       ),
     ).toEqual([period, nextOne, nextTwo]);
+  });
+
+  test("highlights the in-progress phase that ends first", () => {
+    const laterEnding = createPeriod({
+      id: "course-selection:later-ending",
+      startDate: "2026-09-01",
+      endDate: "2026-09-20",
+    });
+    const earlierEnding = createPeriod({
+      id: "course-selection:earlier-ending",
+      startDate: "2026-09-03",
+      endDate: "2026-09-10",
+    });
+    const upcoming = createPeriod({
+      id: "course-selection:upcoming",
+      startDate: "2026-09-07",
+      endDate: "2026-09-09",
+    });
+
+    expect(
+      getCourseSelectionPhaseToHighlight(
+        [laterEnding, earlierEnding],
+        "2026-09-05",
+      ),
+    ).toEqual(earlierEnding);
+    expect(
+      getCourseSelectionBarPeriod(
+        [laterEnding, upcoming, earlierEnding],
+        "2026-09-05",
+      ),
+    ).toEqual(earlierEnding);
+  });
+
+  test("shows the nearest phase through the inclusive seven-day window", () => {
+    const nearest = createPeriod({
+      id: "course-selection:nearest",
+      startDate: "2026-09-17",
+      endDate: "2026-09-20",
+    });
+    const outsideWindow = createPeriod({
+      id: "course-selection:outside-window",
+      startDate: "2026-09-19",
+      endDate: "2026-09-20",
+    });
+
+    expect(getCourseSelectionBarPeriod([outsideWindow], "2026-09-11")).toBe(
+      null,
+    );
+    expect(
+      getCourseSelectionBarPeriod([outsideWindow, nearest], "2026-09-10"),
+    ).toEqual(nearest);
+  });
+
+  test("lets the next phase show after dismissing one phase", () => {
+    const current = createPeriod({
+      id: "course-selection:current",
+      startDate: "2026-09-10",
+      endDate: "2026-09-12",
+    });
+    const next = createPeriod({
+      id: "course-selection:next",
+      startDate: "2026-09-15",
+      endDate: "2026-09-17",
+    });
+
+    expect(
+      getCourseSelectionBarPeriod([current, next], "2026-09-10", [current.id]),
+    ).toEqual(next);
+  });
+
+  test("uses Taipei calendar boundaries for the seven-day window", () => {
+    const next = createPeriod({
+      id: "course-selection:taipei-boundary",
+      startDate: "2026-10-16",
+      endDate: "2026-10-18",
+    });
+    const beforeTaipeiMidnight = new Date("2026-10-08T15:59:59.999Z");
+    const atTaipeiMidnight = new Date("2026-10-08T16:00:00.000Z");
+
+    expect(getTaipeiDateKey(beforeTaipeiMidnight)).toBe("2026-10-08");
+    expect(getTaipeiDateKey(atTaipeiMidnight)).toBe("2026-10-09");
+    expect(
+      getCourseSelectionBarPeriod(
+        [next],
+        getTaipeiDateKey(beforeTaipeiMidnight),
+      ),
+    ).toBeNull();
+    expect(
+      getCourseSelectionBarPeriod([next], getTaipeiDateKey(atTaipeiMidnight)),
+    ).toEqual(next);
+  });
+
+  test("defines one colour for every selection phase", () => {
+    expect(Object.keys(COURSE_SELECTION_PHASE_COLORS)).toEqual([
+      "round-1",
+      "round-2",
+      "round-3",
+      "new-students",
+      "add-drop",
+      "inter-school",
+      "withdrawal",
+    ]);
+    expect(Object.values(COURSE_SELECTION_PHASE_COLORS)).toHaveLength(7);
+    expect(
+      Object.values(COURSE_SELECTION_PHASE_COLORS).every((color) =>
+        /^#[0-9A-F]{6}$/i.test(color),
+      ),
+    ).toBe(true);
   });
 });

@@ -24,7 +24,7 @@ const CourseSelectionWidget: FC<CourseSelectionWidgetProps> = ({
 }) => {
   const dict = useDictionary();
   const semester = currentSemester?.id ?? lastSemester.id;
-  const { periods, nowDateKey, isLoading } =
+  const { periods, nowDateKey, isLoading, error } =
     useCourseSelectionPeriods(semester);
   const schedule = getCourseSelectionSchedule(periods, semester);
   const compactPeriods = getCompactCourseSelectionPeriods(
@@ -40,26 +40,30 @@ const CourseSelectionWidget: FC<CourseSelectionWidgetProps> = ({
       isDragging={isDragging}
     >
       <div className="flex flex-col gap-3 p-4">
-        <CourseSelectionScheduleRows
-          periods={compactPeriods}
-          nowDateKey={nowDateKey}
-          isLoading={isLoading}
-          compact
-        />
-        <CourseSelectionScheduleDialog
-          periods={periods}
-          semester={semester}
-          nowDateKey={nowDateKey}
-          isLoading={isLoading}
-        >
-          <Button
-            variant="link"
-            size="sm"
-            className="h-auto justify-start px-0"
-          >
-            {dict.course.selection_period.view_schedule}
-          </Button>
-        </CourseSelectionScheduleDialog>
+        {error ? (
+          <div className="py-4 text-sm text-muted-foreground">
+            {dict.common.load_error}
+          </div>
+        ) : (
+          <>
+            <CourseSelectionScheduleRows
+              periods={compactPeriods}
+              nowDateKey={nowDateKey}
+              isLoading={isLoading}
+              compact
+            />
+            <CourseSelectionScheduleDialog
+              periods={periods}
+              semester={semester}
+              nowDateKey={nowDateKey}
+              isLoading={isLoading}
+            >
+              <Button variant="link" size="sm" className="h-auto justify-start">
+                {dict.course.selection_period.view_schedule}
+              </Button>
+            </CourseSelectionScheduleDialog>
+          </>
+        )}
       </div>
     </WidgetShell>
   );

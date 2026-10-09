@@ -181,8 +181,20 @@
       "schedule_title": "{semester} 選課時程",
       "dialog_description": "依日期排列的選課階段。",
       "starts_in_days": "{days} 天後開始",
-      "until": "至 {date}",
-      "starts_on": "{date} 起",
+      "starts_tomorrow": "明天開始",
+      "starts_today": "今天開始",
+      "in_progress": "進行中",
+      "finished": "已結束",
+      "bar_in_progress_until": "進行中・至 {date}",
+      "bar_in_progress_until_compact": "進行中・{date}",
+      "bar_starts_in_days": "{days} 天後開始・{date}",
+      "bar_starts_in_days_compact": "{days}天後・{date}",
+      "bar_starts_tomorrow": "明天開始・{date}",
+      "bar_starts_tomorrow_compact": "明天・{date}",
+      "bar_starts_today": "今天開始・{date}",
+      "bar_starts_today_compact": "今天・{date}",
+      "bar_link": "選課時程",
+      "bar_link_compact": "選課時程",
       "view_schedule": "查看完整時程",
       "no_data": "目前沒有選課日期",
       "phases": {
@@ -193,6 +205,15 @@
         "add-drop": "加退選",
         "inter-school": "校際選課",
         "withdrawal": "課程停修"
+      },
+      "bar_phases": {
+        "round-1": "第一階段",
+        "round-2": "第二階段",
+        "round-3": "第三階段",
+        "new-students": "新生選課",
+        "add-drop": "加退選",
+        "inter-school": "校際選課",
+        "withdrawal": "停修"
       }
     },
     "refine": {
