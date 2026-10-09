@@ -11,6 +11,7 @@ import { useLocalStorage } from "usehooks-ts";
 import { useCookies } from "react-cookie";
 import { Language } from "@/types/settings";
 import { apps } from "@/const/apps";
+import { updateThemeColor } from "@/lib/theme-color";
 
 const settingsContext = createContext<ReturnType<typeof useSettingsProvider>>({
   language: "zh",
@@ -120,6 +121,12 @@ const useSettingsProvider = () => {
   };
 
   const darkMode = useMemo(() => cookies.theme == "dark", [cookies]);
+
+  useEffect(() => {
+    updateThemeColor(
+      document.documentElement.classList.contains("dark") ? "dark" : "light",
+    );
+  }, [darkMode]);
 
   const toggleApp = (app: string) => {
     if (pinnedApps.includes(app)) {
