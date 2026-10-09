@@ -222,18 +222,12 @@ describe("timetable calendar event dates", () => {
       times: ["MX", "X1", "Ｍ2"],
       venues: [],
     };
+    const malformedTimetable = createTimetableFromCourses([malformedCourse]);
+    let events: ReturnType<typeof timetableToCalendarEvent> | undefined;
 
-    expect(() =>
-      timetableToCalendarEvent(
-        createTimetableFromCourses([malformedCourse]),
-        "zh",
-      ),
-    ).not.toThrow();
-    expect(
-      timetableToCalendarEvent(
-        createTimetableFromCourses([malformedCourse]),
-        "zh",
-      ),
-    ).toEqual([]);
+    expect(() => {
+      events = timetableToCalendarEvent(malformedTimetable, "zh");
+    }).not.toThrow();
+    expect(events).toEqual([]);
   });
 });

@@ -263,10 +263,16 @@ export const getTimetableTimeRangePosition = (
   };
 };
 
+export const getTimetableSlotTimes = (
+  slot: Pick<CourseTimeslotData, "startTime" | "endTime">,
+) => ({
+  start: scheduleTimeSlots[slot.startTime],
+  end: scheduleTimeSlots[slot.endTime],
+});
+
 export const getTimetableDataTimeRange = (slot: CourseTimeslotData) => {
   if (slot.customSlot) return getCustomSlotTimeRange(slot.customSlot);
-  const start = scheduleTimeSlots[slot.startTime];
-  const end = scheduleTimeSlots[slot.endTime];
+  const { start, end } = getTimetableSlotTimes(slot);
   return {
     start: start ? timeToMinutes(start.start) : timetableGridStart,
     end: end ? timeToMinutes(end.end) : timetableGridEnd,

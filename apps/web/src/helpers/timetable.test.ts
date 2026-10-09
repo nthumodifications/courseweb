@@ -42,6 +42,13 @@ const courseWithTimes = (
   language: "中",
 });
 
+const timetableCoordinates = (timetable: CourseTimeslotData[]) =>
+  timetable.map(({ dayOfWeek, startTime, endTime }) => ({
+    dayOfWeek,
+    startTime,
+    endTime,
+  }));
+
 const slot = (start: string, end: string) => ({
   day: 0,
   start,
@@ -214,13 +221,9 @@ describe("course timetable slot parsing", () => {
 
     const timetable = createTimetableFromCourses([course]);
 
-    expect(
-      timetable.map(({ dayOfWeek, startTime, endTime }) => ({
-        dayOfWeek,
-        startTime,
-        endTime,
-      })),
-    ).toEqual([{ dayOfWeek: 0, startTime: 0, endTime: 1 }]);
+    expect(timetableCoordinates(timetable)).toEqual([
+      { dayOfWeek: 0, startTime: 0, endTime: 1 },
+    ]);
     expect(course).toEqual(before);
     expect(timetable.every((slot) => slot.dayOfWeek >= 0)).toBe(true);
     expect(timetable.every((slot) => slot.startTime >= 0)).toBe(true);
@@ -234,13 +237,7 @@ describe("course timetable slot parsing", () => {
       courseWithTimes(["U1U2", "M1 M2"]),
     ]);
 
-    expect(
-      timetable.map(({ dayOfWeek, startTime, endTime }) => ({
-        dayOfWeek,
-        startTime,
-        endTime,
-      })),
-    ).toEqual([
+    expect(timetableCoordinates(timetable)).toEqual([
       { dayOfWeek: 6, startTime: 0, endTime: 1 },
       { dayOfWeek: 0, startTime: 0, endTime: 1 },
     ]);
