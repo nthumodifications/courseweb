@@ -1,8 +1,15 @@
-import { act, createElement } from "react";
+import {
+  act,
+  createElement,
+  useCallback,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 import { createRoot } from "react-dom/client";
 import { JSDOM } from "jsdom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { afterEach, describe, expect, mock, test } from "bun:test";
+import { afterAll, afterEach, describe, expect, mock, test } from "bun:test";
 
 process.env.VITE_COURSEWEB_API_URL ??= "https://api.example.test";
 (
@@ -52,10 +59,49 @@ mock.module("@/dictionaries/useDictionary", () => ({
     },
   }),
 }));
+
+const actualUsehooksTs = await import("usehooks-ts");
+const useTestLocalStorage = <T,>(
+  key: string,
+  initialValue: T,
+): [T, Dispatch<SetStateAction<T>>] => {
+  const [value, setValue] = useState<T>(() => {
+    const stored = window.localStorage.getItem(key);
+    if (stored === null) return initialValue;
+    try {
+      return JSON.parse(stored) as T;
+    } catch {
+      return initialValue;
+    }
+  });
+  const setStoredValue = useCallback<Dispatch<SetStateAction<T>>>(
+    (nextValue) => {
+      setValue((previousValue) => {
+        const next =
+          typeof nextValue === "function"
+            ? (nextValue as (previous: T) => T)(previousValue)
+            : nextValue;
+        window.localStorage.setItem(key, JSON.stringify(next));
+        return next;
+      });
+    },
+    [key],
+  );
+  return [value, setStoredValue];
+};
+
+mock.module("usehooks-ts", () => ({
+  ...actualUsehooksTs,
+  useLocalStorage: useTestLocalStorage,
+}));
+
+const { default: CourseSelectionStatus } = await import(
+  "./CourseSelectionStatus"
+);
+
 let activeDom: JSDOM | null = null;
 afterEach(() => {
   activeDom?.window.localStorage.clear();
-  activeDom?.window.close();
   activeDom = null;
   showAcademicCalendar = true;
   calendarEvents = [
@@ -66,6 +112,68 @@ afterEach(() => {
     },
   ];
 });
+
+afterAll(() => {
+  mock.module("usehooks-ts", () => actualUsehooksTs);
+});
+
+const createTestDom = (dismissedPeriodIds: string[] = []) => {
+  const dom = new JSDOM("<!doctype html><html><body></body></html>", {
+    url: "http://localhost/en/courses",
+  });
+  activeDom = dom;
+  if (dismissedPeriodIds.length > 0) {
+    dom.window.localStorage.setItem(
+      "dismissed_course_selection_periods",
+      JSON.stringify(dismissedPeriodIds),
+    );
+  }
+  Object.assign(globalThis, {
+    window: dom.window,
+    document: dom.window.document,
+    navigator: dom.window.navigator,
+    StorageEvent: dom.window.StorageEvent,
+  });
+  return dom;
+};
+
+const renderStatus = async () => {
+  const container = document.createElement("div");
+  const root = createRoot(container);
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+
+  await act(async () => {
+    root.render(
+      createElement(
+        QueryClientProvider,
+        { client: queryClient },
+        createElement(CourseSelectionStatus, { semester: "11510" }),
+      ),
+    );
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+
+  return { container, queryClient, root };
+};
+
+const waitFor = async (predicate: () => boolean) => {
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    if (predicate()) return;
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    });
+  }
+};
+
+const cleanupStatus = async ({
+  root,
+  queryClient,
+}: Awaited<ReturnType<typeof renderStatus>>) => {
+  await act(async () => root.unmount());
+  queryClient.clear();
+};
 
 describe("CourseSelectionStatus", () => {
   test("does not render when academic calendar is disabled", async () => {
@@ -78,92 +186,28 @@ describe("CourseSelectionStatus", () => {
           "115學年度第1學期加退選開始 Add-or-Drop Selection (10/20-10/22)",
       },
     ];
-    const dom = new JSDOM("<!doctype html><html><body></body></html>", {
-      url: "http://localhost/en/courses",
-    });
-    activeDom = dom;
-    Object.assign(globalThis, {
-      window: dom.window,
-      document: dom.window.document,
-      navigator: dom.window.navigator,
-      StorageEvent: dom.window.StorageEvent,
-    });
-    const { default: CourseSelectionStatus } = await import(
-      "./CourseSelectionStatus"
-    );
-    const container = document.createElement("div");
-    const root = createRoot(container);
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false } },
-    });
-
-    await act(async () => {
-      root.render(
-        createElement(
-          QueryClientProvider,
-          { client: queryClient },
-          createElement(CourseSelectionStatus, { semester: "11510" }),
-        ),
-      );
-      await new Promise((resolve) => setTimeout(resolve, 20));
-    });
-    for (let attempt = 0; attempt < 10; attempt += 1) {
-      if (
-        queryClient.getQueryState([
+    createTestDom();
+    const rendered = await renderStatus();
+    await waitFor(
+      () =>
+        rendered.queryClient.getQueryState([
           "course-selection-periods",
           "2025-08-01",
           "2027-08-01",
-        ])?.status === "success"
-      ) {
-        break;
-      }
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 10));
-      });
-    }
+        ])?.status === "success",
+    );
 
-    expect(container.innerHTML).toBe("");
-    await act(async () => root.unmount());
-    queryClient.clear();
+    expect(rendered.container.innerHTML).toBe("");
+    await cleanupStatus(rendered);
   });
 
   test("renders no markup when the next period is outside the 14-day window", async () => {
-    const dom = new JSDOM("<!doctype html><html><body></body></html>", {
-      url: "http://localhost/en/courses",
-    });
-    activeDom = dom;
-    Object.assign(globalThis, {
-      window: dom.window,
-      document: dom.window.document,
-      navigator: dom.window.navigator,
-      StorageEvent: dom.window.StorageEvent,
-    });
-    const { default: CourseSelectionStatus } = await import(
-      "./CourseSelectionStatus"
-    );
-    const container = document.createElement("div");
-    const root = createRoot(container);
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false } },
-    });
+    createTestDom();
+    const rendered = await renderStatus();
+    await waitFor(() => rendered.container.innerHTML === "");
 
-    await act(async () => {
-      root.render(
-        createElement(
-          QueryClientProvider,
-          { client: queryClient },
-          createElement(CourseSelectionStatus, { semester: "11510" }),
-        ),
-      );
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    });
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 20));
-    });
-
-    expect(container.innerHTML).toBe("");
-    await act(async () => root.unmount());
-    queryClient.clear();
+    expect(rendered.container.innerHTML).toBe("");
+    await cleanupStatus(rendered);
   });
 
   test("renders and dismisses a period within the banner window", async () => {
@@ -175,43 +219,13 @@ describe("CourseSelectionStatus", () => {
           "115學年度第1學期加退選開始 Add-or-Drop Selection (10/20-10/22)",
       },
     ];
-    const dom = new JSDOM("<!doctype html><html><body></body></html>", {
-      url: "http://localhost/en/courses",
-    });
-    activeDom = dom;
-    Object.assign(globalThis, {
-      window: dom.window,
-      document: dom.window.document,
-      navigator: dom.window.navigator,
-      StorageEvent: dom.window.StorageEvent,
-    });
-    const { default: CourseSelectionStatus } = await import(
-      "./CourseSelectionStatus"
+    const dom = createTestDom();
+    const rendered = await renderStatus();
+    await waitFor(() =>
+      Boolean(rendered.container.querySelector('button[aria-label="Dismiss"]')),
     );
-    const container = document.createElement("div");
-    const root = createRoot(container);
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false } },
-    });
 
-    await act(async () => {
-      root.render(
-        createElement(
-          QueryClientProvider,
-          { client: queryClient },
-          createElement(CourseSelectionStatus, { semester: "11510" }),
-        ),
-      );
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    });
-    for (let attempt = 0; attempt < 10; attempt += 1) {
-      if (container.querySelector('button[aria-label="Dismiss"]')) break;
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 10));
-      });
-    }
-
-    const dismissButton = container.querySelector(
+    const dismissButton = rendered.container.querySelector(
       'button[aria-label="Dismiss"]',
     );
     expect(dismissButton).not.toBeNull();
@@ -220,10 +234,9 @@ describe("CourseSelectionStatus", () => {
         new dom.window.MouseEvent("click", { bubbles: true }),
       );
     });
-    expect(container.innerHTML).toBe("");
+    expect(rendered.container.innerHTML).toBe("");
 
-    await act(async () => root.unmount());
-    queryClient.clear();
+    await cleanupStatus(rendered);
   });
 
   test("does not apply a dismissal to an open period", async () => {
@@ -235,49 +248,12 @@ describe("CourseSelectionStatus", () => {
           "115學年度第1學期加退選開始 Add-or-Drop Selection (10/1-10/10)",
       },
     ];
-    const dom = new JSDOM("<!doctype html><html><body></body></html>", {
-      url: "http://localhost/en/courses",
-    });
-    activeDom = dom;
-    dom.window.localStorage.setItem(
-      "dismissed_course_selection_periods",
-      JSON.stringify(["course-selection:current"]),
-    );
-    Object.assign(globalThis, {
-      window: dom.window,
-      document: dom.window.document,
-      navigator: dom.window.navigator,
-      StorageEvent: dom.window.StorageEvent,
-    });
-    const { default: CourseSelectionStatus } = await import(
-      "./CourseSelectionStatus"
-    );
-    const container = document.createElement("div");
-    const root = createRoot(container);
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false } },
-    });
+    createTestDom(["course-selection:current"]);
+    const rendered = await renderStatus();
+    await waitFor(() => rendered.container.textContent?.includes("Add/drop"));
 
-    await act(async () => {
-      root.render(
-        createElement(
-          QueryClientProvider,
-          { client: queryClient },
-          createElement(CourseSelectionStatus, { semester: "11510" }),
-        ),
-      );
-      await new Promise((resolve) => setTimeout(resolve, 20));
-    });
-    for (let attempt = 0; attempt < 10; attempt += 1) {
-      if (container.textContent?.includes("Add/drop")) break;
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 10));
-      });
-    }
-
-    expect(container.textContent).toContain("Add/drop");
-    await act(async () => root.unmount());
-    queryClient.clear();
+    expect(rendered.container.textContent).toContain("Add/drop");
+    await cleanupStatus(rendered);
   });
 
   test("prunes ended dismissals when writing a new dismissal", async () => {
@@ -294,47 +270,13 @@ describe("CourseSelectionStatus", () => {
           "115學年度第1學期加退選開始 Add-or-Drop Selection (10/20-10/22)",
       },
     ];
-    const dom = new JSDOM("<!doctype html><html><body></body></html>", {
-      url: "http://localhost/en/courses",
-    });
-    activeDom = dom;
-    dom.window.localStorage.setItem(
-      "dismissed_course_selection_periods",
-      JSON.stringify(["course-selection:ended"]),
+    const dom = createTestDom(["course-selection:ended"]);
+    const rendered = await renderStatus();
+    await waitFor(() =>
+      Boolean(rendered.container.querySelector('button[aria-label="Dismiss"]')),
     );
-    Object.assign(globalThis, {
-      window: dom.window,
-      document: dom.window.document,
-      navigator: dom.window.navigator,
-      StorageEvent: dom.window.StorageEvent,
-    });
-    const { default: CourseSelectionStatus } = await import(
-      "./CourseSelectionStatus"
-    );
-    const container = document.createElement("div");
-    const root = createRoot(container);
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false } },
-    });
 
-    await act(async () => {
-      root.render(
-        createElement(
-          QueryClientProvider,
-          { client: queryClient },
-          createElement(CourseSelectionStatus, { semester: "11510" }),
-        ),
-      );
-      await new Promise((resolve) => setTimeout(resolve, 20));
-    });
-    for (let attempt = 0; attempt < 10; attempt += 1) {
-      if (container.querySelector('button[aria-label="Dismiss"]')) break;
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 10));
-      });
-    }
-
-    const dismissButton = container.querySelector(
+    const dismissButton = rendered.container.querySelector(
       'button[aria-label="Dismiss"]',
     );
     expect(dismissButton).not.toBeNull();
@@ -350,7 +292,6 @@ describe("CourseSelectionStatus", () => {
           "[]",
       ),
     ).toEqual(["course-selection:near"]);
-    await act(async () => root.unmount());
-    queryClient.clear();
+    await cleanupStatus(rendered);
   });
 });
