@@ -15,6 +15,7 @@ import {
 } from "@courseweb/ui";
 import client from "@/config/api";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
+import { buildCalendarSubscriptionLinks } from "@/lib/calendar-subscription";
 
 const ComponentSkeleton = () => {
   return (
@@ -53,6 +54,14 @@ const ShareSyncTimetableDialog = ({
   const dict = useDictionary();
   const [link, setLink] = useState<string | null>(null);
   const { customItems } = useUserTimetable();
+  const calendarLinks = useMemo(
+    () =>
+      buildCalendarSubscriptionLinks(
+        webcalLink,
+        dict.dialogs.ShareSyncTimetableDialog.links.calendar_name,
+      ),
+    [dict.dialogs.ShareSyncTimetableDialog.links.calendar_name, webcalLink],
+  );
   const shareLinkWithCustomItems = useMemo(() => {
     try {
       const url = new URL(shareLink);
@@ -81,14 +90,15 @@ const ShareSyncTimetableDialog = ({
     }
   }, [open, shareLinkWithCustomItems]);
 
-  const handleCopy = () => {
-    if (link)
+  const handleCopy = (url: string | null) => {
+    if (url)
       void navigator.clipboard
-        .writeText(link)
+        .writeText(url)
         .then(() => {
           toast({
-            title: "Copied",
-            description: "Link copied to clipboard",
+            title: dict.dialogs.ShareSyncTimetableDialog.links.copied,
+            description:
+              dict.dialogs.ShareSyncTimetableDialog.links.copied_description,
           });
         })
         .catch(() => undefined);
@@ -119,7 +129,12 @@ const ShareSyncTimetableDialog = ({
                 readOnly
                 className="flex-1 p-2 bg-muted rounded-md"
               />
-              <Button onClick={handleCopy}>
+              <Button
+                onClick={() => handleCopy(link)}
+                aria-label={
+                  dict.dialogs.ShareSyncTimetableDialog.links.copy_link
+                }
+              >
                 <Copy className="w-4 h-4" />
               </Button>
             </div>
@@ -147,10 +162,48 @@ const ShareSyncTimetableDialog = ({
                   </a>
                 </Button>
                 <Button variant="outline" asChild>
-                  <a href={webcalLink} target="_blank">
-                    <Calendar className="w-4 h-4 mr-2" /> Sync To Calendar
+                  <a
+                    href={calendarLinks.google}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <Calendar className="w-4 h-4 mr-2" />
+                    {dict.dialogs.ShareSyncTimetableDialog.links.google}
                   </a>
                 </Button>
+                <Button variant="outline" asChild>
+                  <a
+                    href={calendarLinks.apple}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <Calendar className="w-4 h-4 mr-2" />
+                    {dict.dialogs.ShareSyncTimetableDialog.links.apple}
+                  </a>
+                </Button>
+                <Button variant="outline" asChild>
+                  <a
+                    href={calendarLinks.outlook}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <Calendar className="w-4 h-4 mr-2" />
+                    {dict.dialogs.ShareSyncTimetableDialog.links.outlook}
+                  </a>
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => handleCopy(calendarLinks.copy)}
+                >
+                  <Copy className="w-4 h-4 mr-2" />
+                  {dict.dialogs.ShareSyncTimetableDialog.links.copy_link}
+                </Button>
+                <p className="text-xs text-muted-foreground">
+                  {
+                    dict.dialogs.ShareSyncTimetableDialog.links
+                      .subscription_hint
+                  }
+                </p>
               </div>
             </div>
           </div>

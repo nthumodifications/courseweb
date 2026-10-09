@@ -119,9 +119,10 @@ export function courseToEvents(course: CourseRow): TimeslotEvent[] {
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
-const CALENDAR_HEADERS = {
+export const CALENDAR_HEADERS = {
   "Content-Type": "text/calendar; charset=utf-8",
   "Content-Disposition": "attachment; filename=timetable.ics",
+  "Cache-Control": "public, max-age=300, s-maxage=300",
 };
 
 export const EMPTY_CALENDAR =

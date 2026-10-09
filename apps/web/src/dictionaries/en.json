@@ -1062,7 +1062,15 @@
       "category:qr": "QR Code",
       "category:links": "Links",
       "links": {
-        "email": "Send Email"
+        "email": "Send Email",
+        "google": "Add to Google Calendar",
+        "apple": "Add to Apple Calendar",
+        "outlook": "Outlook",
+        "copy_link": "Copy link",
+        "copied": "Copied",
+        "copied_description": "Link copied to clipboard",
+        "calendar_name": "NTHUMods Timetable",
+        "subscription_hint": "Subscriptions update automatically; calendar apps refresh on their own schedule."
       }
     },
     "DateContributeForm": {
