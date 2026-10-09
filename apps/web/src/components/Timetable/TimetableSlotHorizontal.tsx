@@ -62,6 +62,8 @@ const TimetableSlotHorizontal = forwardRef<HTMLDivElement, TimetableSlotProps>(
       TIMETABLE_FONT_FAMILIES[preferences.fontFamily ?? "system"];
     const customItem = course.customItem;
     const customSlot = course.customSlot;
+    const startSlot = scheduleTimeSlots[course.startTime];
+    const endSlot = scheduleTimeSlots[course.endTime];
     const customRange = customSlot ? getCustomSlotTimeRange(customSlot) : null;
     const extendedHours = tableDim.extendedHours;
     const customPosition =
@@ -112,15 +114,12 @@ const TimetableSlotHorizontal = forwardRef<HTMLDivElement, TimetableSlotProps>(
             </span>
           ) : null;
         case "time":
-          return display.time &&
-            scheduleTimeSlots[course.startTime] &&
-            scheduleTimeSlots[course.endTime] ? (
+          return display.time && startSlot && endSlot ? (
             <span
               key="time"
               className={cn(fontSizeClass, "line-clamp-1", textAlign)}
             >
-              {scheduleTimeSlots[course.startTime].start} -{" "}
-              {scheduleTimeSlots[course.endTime].end}
+              {startSlot.start} - {endSlot.end}
             </span>
           ) : null;
         case "teacher":
