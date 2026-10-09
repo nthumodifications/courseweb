@@ -332,7 +332,7 @@ describe("timetable provider render stability", () => {
     await fixture.cleanup();
   });
 
-  test("keeps sortable timetable row wrappers content-sized", async () => {
+  test("does not combine a column course list with flex wrapping", async () => {
     const secondCourse = {
       ...testCourse,
       raw_id: "11410-EE 1010 1",
@@ -367,20 +367,10 @@ describe("timetable provider render stability", () => {
     const rows = [...fixture.container.querySelectorAll("div.max-w-3xl")];
     expect(rows).toHaveLength(2);
 
-    const forbiddenStretchClass =
-      /(?:^|\s)(?:h-full|min-h-\S+|flex-1|grow|self-stretch|items-stretch)(?:\s|$)/;
-    for (const row of rows) {
-      const triggerWrapper = row.firstElementChild;
-      const courseRowRoot = triggerWrapper?.firstElementChild;
-      expect(triggerWrapper).not.toBeNull();
-      expect(courseRowRoot).not.toBeNull();
-      for (const element of [row, triggerWrapper, courseRowRoot]) {
-        expect(element?.getAttribute("class") ?? "").not.toMatch(
-          forbiddenStretchClass,
-        );
-      }
-      expect(row.className).toContain("h-fit");
-    }
+    const listContainer = rows[0]?.parentElement;
+    expect(listContainer).not.toBeNull();
+    expect(listContainer?.classList.contains("flex-col")).toBe(true);
+    expect(listContainer?.classList.contains("flex-wrap")).toBe(false);
 
     await fixture.cleanup();
   });

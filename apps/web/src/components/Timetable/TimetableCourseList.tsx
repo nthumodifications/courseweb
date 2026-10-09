@@ -187,7 +187,7 @@ const TimetableCourseListItem = ({
 
   return (
     <div
-      className={`h-fit min-w-0 max-w-3xl ${isHidden ? "text-muted-foreground" : ""}`}
+      className={`min-w-0 max-w-3xl ${isHidden ? "text-muted-foreground" : ""}`}
       ref={setNodeRef}
       style={style}
     >
@@ -438,7 +438,7 @@ export const TimetableCourseList = ({
           !vertical
             ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 "
             : "flex flex-col"
-        } gap-4 flex-wrap`}
+        } gap-4`}
       >
         <DndContext
           sensors={sensors}
