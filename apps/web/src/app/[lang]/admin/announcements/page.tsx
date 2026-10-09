@@ -263,7 +263,7 @@ const severityStyles: Record<
   },
   error: {
     className:
-      "border-destructive/50 bg-destructive/10 text-destructive dark:border-destructive",
+      "border-destructive/50 bg-destructive/10 text-destructive",
     Icon: AlertTriangle,
   },
 };
@@ -519,7 +519,7 @@ const AnnouncementFormDialog = ({
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-x-6 gap-y-3">
+        <div className="flex flex-wrap gap-3">
           <label className="flex items-center gap-2 text-sm">
             <Switch
               checked={form.active}
@@ -668,7 +668,7 @@ const AdminAnnouncementsPage = () => {
         <CardHeader>
           <CardTitle className="text-base">All announcements</CardTitle>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent className="p-1">
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>

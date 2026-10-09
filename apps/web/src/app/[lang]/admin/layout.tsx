@@ -43,7 +43,7 @@ const CenteredNotice = ({
   <div className="grid min-h-screen place-items-center px-6">
     <div className="flex max-w-md flex-col items-center gap-3 text-center">
       <ShieldAlert className="h-8 w-8 text-muted-foreground" aria-hidden />
-      <h1 className="text-xl font-semibold">{title}</h1>
+      <h1 className="text-xl font-medium">{title}</h1>
       <p className="text-sm text-muted-foreground">{description}</p>
       {action}
     </div>
@@ -119,7 +119,7 @@ const AdminLayout = () => {
   return (
     <div className="min-h-screen bg-muted/30">
       <header className="sticky top-0 z-20 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-2 px-4 py-3">
           <NavLink
             to={`/${lang === "en" ? "en" : "zh"}/today`}
             className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
@@ -128,7 +128,7 @@ const AdminLayout = () => {
             <span className="hidden sm:inline">NTHUMods</span>
           </NavLink>
           <div className="flex items-center gap-2">
-            <span className="font-semibold tracking-tight">Admin Center</span>
+            <span className="font-medium">Admin Center</span>
             <Badge variant={identity.isSuperuser ? "default" : "secondary"}>
               {identity.role}
             </Badge>
@@ -170,7 +170,7 @@ const AdminLayout = () => {
       <main className="mx-auto max-w-7xl px-4 py-6">
         <Suspense
           fallback={
-            <div className="py-16 text-center text-sm text-muted-foreground">
+            <div className="py-4 text-center text-sm text-muted-foreground">
               Loading…
             </div>
           }

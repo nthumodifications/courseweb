@@ -139,7 +139,7 @@ export function CourseGridItem({
       {...listeners}
       {...attributes}
       className={`p-3 rounded-md border ${isSelected ? "border-primary" : isMultiSelected ? "border-primary bg-primary/10" : "border-border"}
-        bg-neutral-50 dark:bg-neutral-800 cursor-pointer hover:border-primary transition-colors duration-200 min-h-32 flex flex-col group relative touch-none`}
+        bg-card cursor-pointer hover:border-primary transition-colors duration-200 min-h-32 flex flex-col group relative touch-none`}
       onClick={onClick}
       onKeyDown={activateOnKey(() => onClick())}
       role="button"
@@ -150,7 +150,7 @@ export function CourseGridItem({
         type="button"
         aria-label={dict.planner.courseList.selectCourse}
         title={dict.planner.courseList.selectCourse}
-        className={`absolute right-1 top-1 p-3.5 flex items-center justify-center rounded ${
+        className={`absolute right-1 top-1 p-3 flex items-center justify-center rounded ${
           isMultiSelected
             ? "opacity-100"
             : "opacity-60 group-hover:opacity-100 focus-visible:opacity-100"
@@ -163,13 +163,13 @@ export function CourseGridItem({
       >
         <div
           className={`w-4 h-4 rounded border flex items-center justify-center
-          ${isMultiSelected ? "bg-primary border-primary" : "border-neutral-500 dark:border-neutral-50 bg-neutral-50 dark:bg-neutral-800"}`}
+          ${isMultiSelected ? "bg-primary border-primary" : "border-border bg-card"}`}
         >
           {isMultiSelected && <Check className="h-3 w-3 text-white" />}
         </div>
       </button>
 
-      <div className="flex justify-between items-start mb-2 pr-8">
+      <div className="flex justify-between items-start mb-2 pr-4">
         <Badge variant="outline" className="text-xs">
           {course.id}
         </Badge>
@@ -220,7 +220,7 @@ export function CourseGridItem({
                 {dict.planner.courseList.markAsInProgress}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleStatusChange("planned")}>
-                <CircleDashed className="h-4 w-4 mr-2 text-neutral-400" />
+                <CircleDashed className="h-4 w-4 mr-2 text-muted-foreground" />
                 {dict.planner.courseList.markAsPlanned}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -230,7 +230,7 @@ export function CourseGridItem({
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                className="text-red-500 dark:text-red-400 cursor-pointer"
+                className="text-red-500 cursor-pointer"
                 onClick={handleDeleteCourse}
               >
                 <Trash2 className="h-4 w-4 mr-2" />
@@ -245,14 +245,14 @@ export function CourseGridItem({
       <div className="mt-auto">
         <div className="flex items-center text-xs gap-1 mb-1">
           <Badge
-            className={`${getStatusBadgeClass(status)} text-xs flex items-center gap-1 py-0 px-1 h-5`}
+            className={`${getStatusBadgeClass(status)} text-xs flex items-center gap-1 py-1 px-1 h-5`}
           >
             {getStatusIcon(status, "h-4 w-4")}
             {getStatusLabel(status, dict.planner.status)}
           </Badge>
-          <span className="text-neutral-400">{semesterStatusText}</span>
+          <span className="text-muted-foreground">{semesterStatusText}</span>
         </div>
-        <div className="flex justify-between items-center text-xs text-neutral-400">
+        <div className="flex justify-between items-center text-xs text-muted-foreground">
           <span>
             {course.credits} {dict.course.credits}
           </span>

@@ -138,6 +138,7 @@ function walk(directory) {
   return entries.flatMap((entry) => {
     const filePath = path.join(directory, entry.name);
     if (entry.isDirectory()) return walk(filePath);
+    if (/\.test\./.test(entry.name)) return [];
     if (!/\.(?:css|js|jsx|ts|tsx)$/.test(entry.name)) return [];
     return [filePath];
   });

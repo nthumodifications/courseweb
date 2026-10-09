@@ -124,7 +124,7 @@ const ApplicationCard = ({
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="font-medium capitalize">{application.role}</span>
+              <span className="font-medium">{application.role}</span>
               <Badge
                 variant="outline"
                 className={STATUS_STYLES[application.status]}

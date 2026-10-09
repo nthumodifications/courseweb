@@ -16,7 +16,7 @@ export const PageHeader = ({
 }) => (
   <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
     <div>
-      <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+      <h1 className="text-xl font-medium">{title}</h1>
       {description && (
         <p className="mt-1 text-sm text-muted-foreground">{description}</p>
       )}
@@ -38,13 +38,13 @@ export const StatCard = ({
 }) => (
   <Card>
     <CardContent className="p-4">
-      <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+      <div className="text-xs font-medium tracking-wide text-muted-foreground">
         {label}
       </div>
       {loading ? (
         <Skeleton className="mt-2 h-8 w-20" />
       ) : (
-        <div className="mt-1 text-2xl font-semibold tabular-nums">
+        <div className="mt-1 text-xl font-medium tabular-nums">
           {/* A null count means the source database could not be reached, which
               is a different thing from a count of zero and has to read that way. */}
           {value === null || value === undefined
@@ -67,13 +67,13 @@ export const RoleBadge = ({ role }: { role: AdminRole }) => {
 
 export const ErrorState = ({ error }: { error: unknown }) => (
   <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
-    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+    <AlertTriangle className="mt-1 h-4 w-4 shrink-0" aria-hidden />
     <span>{error instanceof Error ? error.message : "Something failed."}</span>
   </div>
 );
 
 export const EmptyState = ({ children }: { children: ReactNode }) => (
-  <div className="py-12 text-center text-sm text-muted-foreground">
+  <div className="py-4 text-center text-sm text-muted-foreground">
     {children}
   </div>
 );

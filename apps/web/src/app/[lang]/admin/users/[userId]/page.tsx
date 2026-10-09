@@ -78,7 +78,7 @@ const ScopeBadges = ({ scopes }: { scopes: string[] }) =>
         <Badge
           key={`${scope}-${index}`}
           variant="outline"
-          className="px-1.5 py-0 text-[10px]"
+          className="px-1.5 py-1 text-[10px]"
         >
           {scope}
         </Badge>
@@ -130,7 +130,7 @@ const SessionsCard = ({
     <CardHeader>
       <CardTitle className="text-base">Sessions</CardTitle>
     </CardHeader>
-    <CardContent className="p-0 sm:p-6 sm:pt-0">
+    <CardContent className="p-1 sm:p-6 sm:pt-1">
       {sessions.length === 0 ? (
         <EmptyState>No sessions for this account.</EmptyState>
       ) : (
@@ -178,7 +178,7 @@ const TokensCard = ({ tokens }: { tokens: AdminUserDetail["tokens"] }) => (
     <CardHeader>
       <CardTitle className="text-base">Active tokens</CardTitle>
     </CardHeader>
-    <CardContent className="p-0 sm:p-6 sm:pt-0">
+    <CardContent className="p-1 sm:p-6 sm:pt-1">
       {tokens.length === 0 ? (
         <EmptyState>No active tokens for this account.</EmptyState>
       ) : (
@@ -224,7 +224,7 @@ const ApiKeysCard = ({ apiKeys }: { apiKeys: AdminUserDetail["apiKeys"] }) => (
     <CardHeader>
       <CardTitle className="text-base">API keys</CardTitle>
     </CardHeader>
-    <CardContent className="p-0 sm:p-6 sm:pt-0">
+    <CardContent className="p-1 sm:p-6 sm:pt-1">
       {apiKeys.length === 0 ? (
         <EmptyState>No API keys for this account.</EmptyState>
       ) : (
@@ -284,7 +284,7 @@ const ShareTokensCard = ({
     <CardHeader>
       <CardTitle className="text-base">Calendar share links</CardTitle>
     </CardHeader>
-    <CardContent className="p-0 sm:p-6 sm:pt-0">
+    <CardContent className="p-1 sm:p-6 sm:pt-1">
       {shareTokens.length === 0 ? (
         <EmptyState>No calendar share links for this account.</EmptyState>
       ) : (
@@ -361,7 +361,7 @@ const ConsentsCard = ({
     <CardHeader>
       <CardTitle className="text-base">Consented clients</CardTitle>
     </CardHeader>
-    <CardContent className="p-0 sm:p-6 sm:pt-0">
+    <CardContent className="p-1 sm:p-6 sm:pt-1">
       {consents.length === 0 ? (
         <EmptyState>No consented clients for this account.</EmptyState>
       ) : (
@@ -752,7 +752,7 @@ const AdminUserDetailPage = () => {
         <UserDetailLoading />
       ) : detail ? (
         <div className="space-y-6">
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+          <div className="flex flex-wrap items-center gap-2 text-sm">
             <Mono>{detail.user.userId}</Mono>
             <Mono>{detail.user.email}</Mono>
             <span className="text-muted-foreground">

@@ -90,7 +90,7 @@ const SemesterGradeCard = ({
             </TableBody>
           </Table>
           <Table className="w-full">
-            <TableHeader className="text-slate-900 text-base font-bold leading-normal">
+            <TableHeader className="text-foreground text-base font-bold leading-normal">
               {dict.grade.credit}
             </TableHeader>
             <TableBody>
@@ -121,7 +121,7 @@ const SemesterGradeCard = ({
             </TableBody>
           </Table>
           <Table className="w-full">
-            <TableHeader className="text-slate-900 text-base font-bold leading-normal">
+            <TableHeader className="text-foreground text-base font-bold leading-normal">
               {dict.grade.ranking}
             </TableHeader>
             <TableBody>
@@ -159,10 +159,10 @@ const SemesterGradeCard = ({
 
 const GradeCard = ({ title, data }: { title: string; data: string }) => (
   <div className=" p-2 flex-col justify-center items-center gap-2 inline-flex flex-1">
-    <div className="text-center text-zinc-500 dark:text-zinc-400 text-sm font-medium leading-none">
+    <div className="text-center text-muted-foreground text-sm font-medium leading-none">
       {title}
     </div>
-    <div className="text-center text-zinc-900 dark:text-zinc-100 text-2xl font-semibold">
+    <div className="text-center text-foreground text-xl font-medium">
       {data}
     </div>
   </div>
@@ -171,8 +171,8 @@ const GradeCard = ({ title, data }: { title: string; data: string }) => (
 const GradeOverview = ({ grades }: { grades: GradeObject }) => {
   const dict = useDictionary();
   return (
-    <div className="w-full rounded-lg shadow border border-slate-200 dark:border-slate-800 dark:divide-slate-800 justify-start items-start inline-flex flex-col md:flex-row flex-wrap divide-y md:divide-y-0 divide-x-0 md:divide-x divide-slate-200 overflow-hidden">
-      <div className="w-full md:w-auto flex-[3] justify-start items-start inline-flex divide-x divide-slate-200 dark:divide-slate-800">
+    <div className="w-full rounded-lg shadow border border-border justify-start items-start inline-flex flex-col md:flex-row flex-wrap divide-y md:divide-y-0 divide-x-0 md:divide-x divide-border overflow-hidden">
+      <div className="w-full md:w-auto flex-[3] justify-start items-start inline-flex divide-x divide-border">
         <GradeCard
           title={dict.grade.gpa}
           data={grades.ranking.cumulative.letter.gpa}
@@ -186,7 +186,7 @@ const GradeOverview = ({ grades }: { grades: GradeObject }) => {
           data={grades.credits.pending_credits.toString()}
         />
       </div>
-      <div className="w-full md:w-auto flex-[2] justify-start items-start inline-flex divide-x divide-slate-200 dark:divide-slate-800">
+      <div className="w-full md:w-auto flex-[2] justify-start items-start inline-flex divide-x divide-border">
         <GradeCard
           title={dict.grade.class_rank}
           data={grades.ranking.cumulative.letter.letter_cum_class_rank}
@@ -240,13 +240,13 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
   const dict = useDictionary();
 
   return (
-    <div className="px-6 pb-12 flex-col justify-start items-start gap-12 inline-flex w-full overflow-x-hidden">
-      <div className="w-full pt-8 flex-col justify-start items-start gap-4 inline-flex">
+    <div className="px-6 pb-4 flex-col justify-start items-start gap-4 inline-flex w-full overflow-x-hidden">
+      <div className="w-full pt-4 flex-col justify-start items-start gap-4 inline-flex">
         <div className="w-full self-stretch flex-col justify-center items-center gap-2 flex">
-          <div className="self-stretch text-zinc-900 dark:text-zinc-100 text-3xl font-semibold leading-9">
+          <div className="self-stretch text-foreground text-xl font-medium leading-9">
             {dict.grade.overview}
           </div>
-          <div className="self-stretch text-zinc-900 dark:text-zinc-100 text-sm font-normal leading-tight">
+          <div className="self-stretch text-foreground text-sm font-normal leading-tight">
             {dict.grade.as_of}{" "}
             {grades.ranking.cumulative.letter.gpa_cum_year_tw}
           </div>
@@ -306,7 +306,7 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
         <TabsContent value="courses">
           <Table className="w-full">
             <TableHeader>
-              <TableRow className="[&>th]:font-bold [&>th]:text-slate-900 dark:[&>th]:text-slate-100">
+              <TableRow className="[&>th]:font-bold [&>th]:text-foreground">
                 <TableHead>{dict.grade.course_name}</TableHead>
                 <TableHead className="hidden md:table-cell">
                   {dict.course.credits}
@@ -324,7 +324,7 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
                   <TableRow key={index}>
                     <TableCell
                       colSpan={3}
-                      className="text-zinc-950 dark:text-zinc-50 text-2xl font-semibold leading-loose"
+                      className="text-foreground text-xl font-medium leading-loose"
                     >
                       {toPrettySemester(semester)}
                     </TableCell>
@@ -337,9 +337,9 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
                         className="[&>td]:py-2"
                       >
                         <TableCell>
-                          <div className="flex-col justify-center items-start gap-2.5 inline-flex">
+                          <div className="flex-col justify-center items-start gap-2 inline-flex">
                             <div className="inline-flex flex-col">
-                              <span className="text-slate-400 dark:text-slate-600 text-xs">
+                              <span className="text-muted-foreground text-xs">
                                 {grade.course_id}
                               </span>
                               <span>
@@ -379,7 +379,7 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
         <TabsContent value="semester">
           <Table className="w-full">
             <TableHeader>
-              <TableRow className="[&>th]:font-bold [&>th]:text-slate-900 dark:[&>th]:text-slate-100">
+              <TableRow className="[&>th]:font-bold [&>th]:text-foreground">
                 <TableHead className="min-w-[72px] break-all">
                   {dict.grade.semester}
                 </TableHead>
@@ -460,7 +460,7 @@ const GradesViewer = ({ grades }: { grades: GradeObject }) => {
       </Tabs>
       {!isMobile && (
         <div className="w-full flex-col justify-start items-start gap-4 md:inline-flex hidden">
-          <div className="text-zinc-900 dark:text-zinc-100 text-3xl font-semibold leading-9">
+          <div className="text-foreground text-xl font-medium leading-9">
             {dict.grade.score_curve}
           </div>
           <div className="flex flex-row flex-wrap gap-6">

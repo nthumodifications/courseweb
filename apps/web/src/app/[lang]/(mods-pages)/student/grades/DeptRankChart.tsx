@@ -30,10 +30,10 @@ export const DeptRankChart = ({ lineData }: { lineData: any[] }) => {
             content={({ active, payload, content }) => {
               if (active && payload?.length) {
                 return (
-                  <div className="rounded-lg border bg-background p-2 shadow-sm">
+                  <div className="rounded-lg border bg-background p-2">
                     <div className="grid grid-cols-2 gap-2">
                       <div className="flex flex-col">
-                        <span className="text-[0.70rem] uppercase text-muted-foreground">
+                        <span className="text-[0.70rem] text-muted-foreground">
                           {dict.grade.semester}
                         </span>
                         <span className="font-bold text-muted-foreground">
@@ -41,7 +41,7 @@ export const DeptRankChart = ({ lineData }: { lineData: any[] }) => {
                         </span>
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-[0.70rem] uppercase text-muted-foreground">
+                        <span className="text-[0.70rem] text-muted-foreground">
                           {dict.grade.dept_rank}
                         </span>
                         <span className="font-bold">

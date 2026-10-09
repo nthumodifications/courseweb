@@ -204,7 +204,7 @@ const AdminAuditPage = () => {
             aria-hidden
           />
           <Input
-            className="pl-8"
+            className="pl-4"
             placeholder="Action, e.g. role.update"
             value={actionInput}
             onChange={(event) => {
