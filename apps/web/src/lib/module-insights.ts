@@ -114,6 +114,40 @@ export const summariseScores = (
     .sort((left, right) => right.count - left.count);
 };
 
+export interface InstructorScoreHistory {
+  raw_id: string;
+  semester: string;
+  scores: ModuleScore[];
+}
+
+export const getInstructorScoreHistory = (
+  offerings: readonly InsightOffering[],
+  scores: readonly ModuleScore[],
+  instructorName: string,
+): InstructorScoreHistory[] => {
+  const scoresByOffering = new Map<string, ModuleScore[]>();
+  for (const score of scores) {
+    scoresByOffering.set(score.raw_id, [
+      ...(scoresByOffering.get(score.raw_id) ?? []),
+      score,
+    ]);
+  }
+
+  return offerings.flatMap((offering) => {
+    if (!offering.teacher_zh?.includes(instructorName)) return [];
+    const offeringScores = scoresByOffering.get(offering.raw_id) ?? [];
+    return offeringScores.length > 0
+      ? [
+          {
+            raw_id: offering.raw_id,
+            semester: offering.semester,
+            scores: offeringScores,
+          },
+        ]
+      : [];
+  });
+};
+
 export interface InstructorInsight {
   key: string;
   nameZh: string;
