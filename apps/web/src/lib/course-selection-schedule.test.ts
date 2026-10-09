@@ -227,6 +227,55 @@ describe("course selection schedule helpers", () => {
     ).toEqual(earlierEnding);
   });
 
+  test("prefers general phases over audience-specific phases", () => {
+    const general = createPeriod({
+      id: "course-selection:add-drop-general",
+      audience: "unspecified",
+      startDate: "2026-09-03",
+      endDate: "2026-09-20",
+    });
+    const interSchool = createPeriod({
+      id: "course-selection:inter-school-specific",
+      phase: "inter-school",
+      audience: "inter-school",
+      startDate: "2026-09-03",
+      endDate: "2026-09-18",
+    });
+
+    expect(
+      getCourseSelectionBarPeriod([general, interSchool], "2026-09-05"),
+    ).toEqual(general);
+  });
+
+  test("prefers general phases among upcoming phases in the seven-day window", () => {
+    const general = createPeriod({
+      id: "course-selection:general-upcoming",
+      audience: "unspecified",
+      startDate: "2026-09-10",
+      endDate: "2026-09-12",
+    });
+    const generalLater = createPeriod({
+      id: "course-selection:general-upcoming-later",
+      audience: "unspecified",
+      startDate: "2026-09-12",
+      endDate: "2026-09-14",
+    });
+    const newStudents = createPeriod({
+      id: "course-selection:new-students-upcoming",
+      phase: "new-students",
+      audience: "new-students",
+      startDate: "2026-09-08",
+      endDate: "2026-09-09",
+    });
+
+    expect(
+      getCourseSelectionBarPeriod(
+        [generalLater, newStudents, general],
+        "2026-09-05",
+      ),
+    ).toEqual(general);
+  });
+
   test("shows the nearest phase through the inclusive seven-day window", () => {
     const nearest = createPeriod({
       id: "course-selection:nearest",

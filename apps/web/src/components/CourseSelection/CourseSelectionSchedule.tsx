@@ -37,9 +37,14 @@ export const formatCourseSelectionDateRange = (
   language: "en" | "zh",
   withWeekday = true,
 ) => {
-  const start = formatPeriodDate(period.startDate, language, withWeekday);
-  const end = formatPeriodDate(period.endDate, language, withWeekday);
-  return start === end ? start : `${start}–${end}`;
+  const start = withWeekday
+    ? formatCourseSelectionBarDate(period.startDate, language)
+    : formatPeriodDate(period.startDate, language, false);
+  const end = withWeekday
+    ? formatCourseSelectionBarDate(period.endDate, language)
+    : formatPeriodDate(period.endDate, language, false);
+  if (start === end) return start;
+  return language === "zh" ? `${start}– ${end}` : `${start} – ${end}`;
 };
 
 export const formatCourseSelectionCompactDate = (
@@ -54,7 +59,7 @@ export const formatCourseSelectionBarDate = (
   const dateLabel = formatInTimeZone(
     fromTaipeiDateKey(date),
     TAIPEI_TIME_ZONE,
-    "M/d",
+    language === "zh" ? "M/d" : "MMM d",
     { locale: getLocale(language) },
   );
   const weekday = formatInTimeZone(

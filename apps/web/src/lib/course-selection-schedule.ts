@@ -27,8 +27,20 @@ export const sortCourseSelectionPeriods = (periods: CourseSelectionPeriod[]) =>
 const sortInProgressPeriods = (periods: CourseSelectionPeriod[]) =>
   [...periods].sort(
     (a, b) =>
+      Number(a.audience !== "unspecified") -
+        Number(b.audience !== "unspecified") ||
       a.endDate.localeCompare(b.endDate) ||
       a.startDate.localeCompare(b.startDate) ||
+      a.id.localeCompare(b.id),
+  );
+
+const sortUpcomingPeriods = (periods: CourseSelectionPeriod[]) =>
+  [...periods].sort(
+    (a, b) =>
+      Number(a.audience !== "unspecified") -
+        Number(b.audience !== "unspecified") ||
+      a.startDate.localeCompare(b.startDate) ||
+      a.endDate.localeCompare(b.endDate) ||
       a.id.localeCompare(b.id),
   );
 
@@ -74,17 +86,13 @@ export const getCourseSelectionBarPeriod = (
         getCourseSelectionPhaseStatus(period, dateKey) === "in-progress",
     ),
   );
-
-  return (
-    inProgress[0] ??
-    sortCourseSelectionPeriods(
-      qualifyingPeriods.filter(
-        (period) =>
-          getCourseSelectionPhaseStatus(period, dateKey) === "upcoming",
-      ),
-    )[0] ??
-    null
+  const upcoming = sortUpcomingPeriods(
+    qualifyingPeriods.filter(
+      (period) => getCourseSelectionPhaseStatus(period, dateKey) === "upcoming",
+    ),
   );
+
+  return inProgress[0] ?? upcoming[0] ?? null;
 };
 
 export const getCourseSelectionSchedule = (
