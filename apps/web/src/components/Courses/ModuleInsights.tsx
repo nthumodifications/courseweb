@@ -17,6 +17,7 @@ import {
   type ScoreSummary,
 } from "@/lib/module-insights";
 import { ModuleDemandChart } from "./ModuleDemandChart";
+import { InstructorLink } from "./InstructorLink";
 
 const STALE_TIME = 24 * 60 * 60 * 1000;
 
@@ -140,30 +141,34 @@ export const ModuleInstructors = ({
           const score = instructor.scores[0];
           return (
             <li key={instructor.key}>
-              <button
-                type="button"
-                aria-pressed={active}
-                onClick={() => onSelect(active ? null : instructor.key)}
-                className="flex w-full flex-row items-baseline gap-2 py-2 text-left text-sm"
-              >
-                <span
+              <div className="flex w-full flex-row items-baseline gap-2 py-2 text-left text-sm">
+                <InstructorLink
+                  lang={lang}
+                  name={instructor.key}
                   className={active ? "font-bold text-nthu-600" : "font-medium"}
                 >
                   {lang === "en"
                     ? instructor.nameEn || instructor.nameZh
                     : instructor.nameZh}
-                </span>
-                <span className="text-muted-foreground">
-                  {instructor.semesters.length}{" "}
-                  {dict.course.module.semesters_count} ·{" "}
-                  {toPrettySemester(instructor.latestSemester)}
-                </span>
-                {score && (
-                  <span className="ml-auto whitespace-nowrap text-muted-foreground">
-                    {dict.course.module.average_short} {scoreLabel(score)}
+                </InstructorLink>
+                <button
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => onSelect(active ? null : instructor.key)}
+                  className="flex min-w-0 flex-1 flex-row items-baseline gap-2 text-left"
+                >
+                  <span className="text-muted-foreground">
+                    {instructor.semesters.length}{" "}
+                    {dict.course.module.semesters_count} ·{" "}
+                    {toPrettySemester(instructor.latestSemester)}
                   </span>
-                )}
-              </button>
+                  {score && (
+                    <span className="ml-auto whitespace-nowrap text-muted-foreground">
+                      {dict.course.module.average_short} {scoreLabel(score)}
+                    </span>
+                  )}
+                </button>
+              </div>
             </li>
           );
         })}

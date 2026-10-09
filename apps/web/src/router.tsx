@@ -28,6 +28,9 @@ const CourseDetailPage = lazy(
 const ModulePage = lazy(
   () => import("@/app/[lang]/(mods-pages)/courses/module/[moduleKey]/page"),
 );
+const InstructorPage = lazy(
+  () => import("@/app/[lang]/(mods-pages)/courses/instructor/[name]/page"),
+);
 const ModulesSearchPage = lazy(
   () => import("@/app/[lang]/(mods-pages)/courses/modules/page"),
 );
@@ -234,6 +237,10 @@ export const router = createBrowserRouter([
               {
                 path: ROUTE_PATHS.module,
                 element: <ModulePage />,
+              },
+              {
+                path: ROUTE_PATHS.instructor,
+                element: <InstructorPage />,
               },
               {
                 path: "courses/:courseId",

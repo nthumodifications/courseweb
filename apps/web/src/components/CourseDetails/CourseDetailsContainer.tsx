@@ -45,6 +45,7 @@ import { useQuery } from "@tanstack/react-query";
 import CourseDetailsSkeleton from "./CourseDetailsSkeleton";
 import { useCourseLink } from "@/components/Courses/CourseDialog";
 import { ModuleTermAvailability } from "@/components/Courses/ModuleTermAvailability";
+import { InstructorLink } from "@/components/Courses/InstructorLink";
 import {
   createModuleKey,
   getModuleHistory,
@@ -396,6 +397,8 @@ const CourseDetailContainer = ({
   }
 
   const missingSyllabus = course.course_syllabus == null;
+  const bilingualNamesAreAligned =
+    (course.teacher_zh?.length ?? 0) === (course.teacher_en?.length ?? 0);
 
   return (
     <Fade>
@@ -469,13 +472,41 @@ const CourseDetailContainer = ({
                   <span className="min-w-0 whitespace-normal">
                     {course.name_zh}
                   </span>
-                  <span>{course?.teacher_zh?.join(",") ?? ""}</span>
+                  <span>
+                    {course.teacher_zh?.map((displayName, index) => (
+                      <Fragment key={`${displayName}-${index}`}>
+                        {index > 0 ? "," : ""}
+                        <InstructorLink
+                          lang={lang}
+                          name={course.teacher_zh?.[index] ?? ""}
+                        >
+                          {displayName}
+                        </InstructorLink>
+                      </Fragment>
+                    ))}
+                  </span>
                 </h1>
                 <h2 className="flex min-w-0 flex-row flex-wrap gap-1 font-medium">
                   <span className="min-w-0 whitespace-normal">
                     {course.name_en}
                   </span>
-                  <span>{course?.teacher_en?.join(",") ?? ""}</span>
+                  <span>
+                    {course.teacher_en?.map((displayName, index) => (
+                      <Fragment key={`${displayName}-${index}`}>
+                        {index > 0 ? "," : ""}
+                        <InstructorLink
+                          lang={lang}
+                          name={
+                            bilingualNamesAreAligned
+                              ? (course.teacher_zh?.[index] ?? "")
+                              : ""
+                          }
+                        >
+                          {displayName}
+                        </InstructorLink>
+                      </Fragment>
+                    ))}
+                  </span>
                 </h2>
               </div>
               <CourseTagList course={course} />
@@ -832,7 +863,14 @@ const CourseDetailContainer = ({
                           </div>
                         </TableCell>
                         <TableCell className="px-2">
-                          {m.teacher_zh?.join(",")}
+                          {m.teacher_zh?.map((teacher, teacherIndex) => (
+                            <Fragment key={`${teacher}-${teacherIndex}`}>
+                              {teacherIndex > 0 ? "," : ""}
+                              <InstructorLink lang={lang} name={teacher}>
+                                {teacher}
+                              </InstructorLink>
+                            </Fragment>
+                          ))}
                         </TableCell>
                         <TableCell>
                           {m.course_scores && (

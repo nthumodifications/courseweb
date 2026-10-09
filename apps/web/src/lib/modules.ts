@@ -584,6 +584,20 @@ export const getModuleOfferings = async (moduleKey: string) => {
   );
 };
 
+export const getInstructorOfferings = async (name: string) => {
+  const { data, error } = await (await loadSupabase())
+    .from("courses")
+    .select(MODULE_OFFERING_SELECT)
+    .contains("teacher_zh", [name])
+    .order("semester", { ascending: true })
+    .order("raw_id", { ascending: true });
+
+  if (error) throw error;
+  return (data ?? [])
+    .map((row) => normalizeOffering(row as unknown as ModuleOfferingRow))
+    .filter((offering) => getSemesterTerm(offering.semester));
+};
+
 /** Published class averages for these offerings; an empty list on failure. */
 export const getModuleScores = async (
   rawIds: readonly string[],
