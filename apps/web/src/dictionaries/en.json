@@ -235,6 +235,7 @@
       "dialog_title": "Course Details",
       "open_new_tab": "Open in new tab",
       "missing_time": "Time unavailable",
+      "favourite_unavailable": "This favourite is unavailable in the selected semester",
       "no_favourites": "No favourites added yet",
       "taken": "Taken",
       "restriction_prefix": "Restrictions: ",

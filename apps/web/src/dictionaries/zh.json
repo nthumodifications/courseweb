@@ -235,6 +235,7 @@
       "dialog_title": "課程詳細資訊",
       "open_new_tab": "在新分頁開啟",
       "missing_time": "無上課時間",
+      "favourite_unavailable": "此收藏課程在目前學期已無法使用",
       "no_favourites": "尚未新增收藏課程",
       "taken": "已修課",
       "restriction_prefix": "限制：",
