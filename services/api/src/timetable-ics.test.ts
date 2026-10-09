@@ -848,6 +848,7 @@ describe("generateTimetableIcs – 11510 compatibility", () => {
     const ics = generateTimetableIcs(
       [SNAPSHOT_COURSE_11510],
       SEMESTER_11510,
+      undefined,
       new Date(Date.UTC(2026, 9, 9, 12, 0, 0)),
     );
 

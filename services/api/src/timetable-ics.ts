@@ -216,6 +216,7 @@ export function firstOccurrence(
 export function generateTimetableIcs(
   courses: CourseRow[],
   semObj: { begins: Date; ends: Date },
+  _academicSelectionPeriods?: unknown[],
   generatedAt = new Date(),
 ): string {
   // semObj.begins = new Date(year, month, day) — UTC midnight in a UTC runtime.
