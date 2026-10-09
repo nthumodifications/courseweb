@@ -9,6 +9,7 @@ import {
   firstOccurrence,
   pad,
   EMPTY_CALENDAR,
+  CALENDAR_HEADERS,
   SCHEDULE_TIME_SLOTS,
   SEMESTER_INFO,
   type CourseRow,
@@ -449,7 +450,17 @@ describe("generateTimetableIcs – RRULE recurrence", () => {
       expect(rrule).toContain("FREQ=WEEKLY");
       expect(rrule).toContain("INTERVAL=1");
       expect(rrule).toContain("UNTIL=");
+      expect(rrule).not.toContain("COUNT=");
     }
+  });
+
+  it("keeps recurrence within the semester end", () => {
+    const ics = generateTimetableIcs([SAMPLE_COURSE], SEMESTER_11320);
+    const rrule = extractVEvents(ics)[0]!.find((p) => p.startsWith("RRULE:"));
+
+    expect(rrule).toBe(
+      "RRULE:FREQ=WEEKLY;BYDAY=MO;INTERVAL=1;UNTIL=20250607T160000Z",
+    );
   });
 
   it("uses correct BYDAY abbreviation for Monday", () => {
@@ -466,6 +477,36 @@ describe("generateTimetableIcs – RRULE recurrence", () => {
     const bydays = rrules.map((r) => r.match(/BYDAY=(\w+)/)?.[1]);
     expect(bydays).toContain("TU");
     expect(bydays).toContain("TH");
+  });
+});
+
+describe("generateTimetableIcs – stable instants and UIDs", () => {
+  it("encodes Taipei timetable times as the correct UTC instants", () => {
+    const props = extractVEvents(
+      generateTimetableIcs([SAMPLE_COURSE], SEMESTER_11320),
+    )[0]!;
+
+    expect(props).toContain("DTSTART:20250217T021000Z");
+    expect(props).toContain("DTEND:20250217T040000Z");
+  });
+
+  it("keeps UIDs stable across fetches", () => {
+    const getUids = (ics: string) =>
+      extractVEvents(ics).map((props) =>
+        props.find((p) => p.startsWith("UID:")),
+      );
+
+    expect(
+      getUids(generateTimetableIcs([SAMPLE_COURSE], SEMESTER_11320)),
+    ).toEqual(getUids(generateTimetableIcs([SAMPLE_COURSE], SEMESTER_11320)));
+  });
+});
+
+describe("calendar response headers", () => {
+  it("allows short-lived public caching for feed subscribers", () => {
+    expect(CALENDAR_HEADERS["Cache-Control"]).toBe(
+      "public, max-age=300, s-maxage=300",
+    );
   });
 });
 

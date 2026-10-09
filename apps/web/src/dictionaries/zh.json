@@ -1048,7 +1048,15 @@
       "category:qr": "QR 碼",
       "category:links": "連結",
       "links": {
-        "email": "寄送電子郵件"
+        "email": "寄送電子郵件",
+        "google": "新增至 Google 行事曆",
+        "apple": "新增至 Apple 行事曆",
+        "outlook": "Outlook",
+        "copy_link": "複製連結",
+        "copied": "已複製",
+        "copied_description": "連結已複製到剪貼簿",
+        "calendar_name": "NTHUMods 課表",
+        "subscription_hint": "訂閱會自動更新，但各行事曆 App 會依自己的排程重新整理。"
       }
     },
     "DateContributeForm": {
