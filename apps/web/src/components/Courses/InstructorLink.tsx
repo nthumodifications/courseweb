@@ -1,6 +1,9 @@
 import { Link } from "react-router-dom";
 import { cn } from "@courseweb/ui";
-import { isInstructorPageName } from "@/lib/instructors";
+import {
+  encodeInstructorRouteParam,
+  isInstructorPageName,
+} from "@/lib/instructors";
 
 export const InstructorLink = ({
   lang,
@@ -18,7 +21,7 @@ export const InstructorLink = ({
 
   return (
     <Link
-      to={`/${lang}/courses/instructor/${encodeURIComponent(name)}`}
+      to={`/${lang}/courses/instructor/${encodeInstructorRouteParam(name)}`}
       className={cn(className, "underline-offset-4 hover:underline")}
     >
       {children}

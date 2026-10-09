@@ -7,6 +7,9 @@ import type { ModuleScore } from "./module-insights";
 // tested) without a configured Supabase client.
 const loadSupabase = async () => (await import("@/config/supabase")).default;
 
+export const serializePostgresArrayElement = (value: string) =>
+  `"${value.replaceAll("\\", "\\\\").replaceAll('"', '\\"')}"`;
+
 type ModuleOfferingRow = Pick<
   CourseDefinition,
   | "raw_id"
@@ -17,7 +20,7 @@ type ModuleOfferingRow = Pick<
   | "name_zh"
   | "name_en"
   | "prerequisites"
-   | "credits"
+  | "credits"
   | "language"
   | "teacher_zh"
   | "teacher_en"
@@ -585,15 +588,26 @@ export const getModuleOfferings = async (moduleKey: string) => {
 };
 
 export const getInstructorOfferings = async (name: string) => {
-  const { data, error } = await (await loadSupabase())
-    .from("courses")
-    .select(MODULE_OFFERING_SELECT)
-    .contains("teacher_zh", [name])
-    .order("semester", { ascending: true })
-    .order("raw_id", { ascending: true });
+  const pageSize = 1000;
+  const rows: unknown[] = [];
+  const supabase = await loadSupabase();
+  const filterValue = `{${serializePostgresArrayElement(name)}}`;
 
-  if (error) throw error;
-  return (data ?? [])
+  for (let from = 0; ; from += pageSize) {
+    const { data, error } = await supabase
+      .from("courses")
+      .select(MODULE_OFFERING_SELECT)
+      .filter("teacher_zh", "cs", filterValue)
+      .order("semester", { ascending: true })
+      .order("raw_id", { ascending: true })
+      .range(from, from + pageSize - 1);
+
+    if (error) throw error;
+    rows.push(...(data ?? []));
+    if ((data?.length ?? 0) < pageSize) break;
+  }
+
+  return rows
     .map((row) => normalizeOffering(row as unknown as ModuleOfferingRow))
     .filter((offering) => getSemesterTerm(offering.semester));
 };
@@ -603,12 +617,19 @@ export const getModuleScores = async (
   rawIds: readonly string[],
 ): Promise<ModuleScore[]> => {
   if (rawIds.length === 0) return [];
-  const { data, error } = await (await loadSupabase())
-    .from("course_scores")
-    .select("raw_id, average, std_dev, type, enrollment")
-    .in("raw_id", rawIds.slice(-300));
-  if (error) throw error;
-  return (data ?? []) as ModuleScore[];
+
+  const chunkSize = 300;
+  const scores: ModuleScore[] = [];
+  const supabase = await loadSupabase();
+  for (let from = 0; from < rawIds.length; from += chunkSize) {
+    const { data, error } = await supabase
+      .from("course_scores")
+      .select("raw_id, average, std_dev, type, enrollment")
+      .in("raw_id", rawIds.slice(from, from + chunkSize));
+    if (error) throw error;
+    scores.push(...((data ?? []) as ModuleScore[]));
+  }
+  return scores;
 };
 
 /** The course description from one offering's syllabus, if it has one. */

@@ -1,8 +1,12 @@
 import { describe, expect, test } from "bun:test";
 import {
   clusterEnglishNames,
+  decodeInstructorRouteParam,
+  encodeInstructorRouteParam,
+  formatInstructorEnglishNames,
   getInstructorGradeHistory,
   getInstructorEnglishNames,
+  getInstructorModuleTitle,
   groupInstructorOfferings,
   isInstructorPageName,
   normaliseInstructorName,
@@ -44,6 +48,24 @@ const insightOffering = (over: Partial<InsightOffering>): InsightOffering => ({
 });
 
 describe("instructor helpers", () => {
+  test("round-trips instructor route names through the router codec", () => {
+    for (const name of [
+      "A%B",
+      "A/B",
+      "A%2FB",
+      "A#B",
+      "A&B",
+      "A&#160;B",
+      "A B",
+      "中文教師",
+    ]) {
+      const routerParam = decodeURIComponent(
+        encodeInstructorRouteParam(name),
+      ).replace(/%2F/g, "/");
+      expect(decodeInstructorRouteParam(routerParam)).toBe(name);
+    }
+  });
+
   test("normalises entities, width, whitespace, and trimming", () => {
     expect(normaliseInstructorName("  ＨＵＡＮＧ,&nbsp; PO-CHIUN&#160; ")).toBe(
       "HUANG, PO-CHIUN",
@@ -119,6 +141,14 @@ describe("instructor helpers", () => {
       "11310",
       "11210",
     ]);
+    expect(getInstructorModuleTitle(groups[1], "zh")).toBe("課程");
+    expect(getInstructorModuleTitle(groups[1], "en")).toBe("Course");
+  });
+
+  test("separates distinct English names with a readable delimiter", () => {
+    expect(formatInstructorEnglishNames(["TAN KOK HWA", "CHEN, KUO-HUA"])).toBe(
+      "TAN KOK HWA · CHEN, KUO-HUA",
+    );
   });
 
   test("uses per-offering grades below three published offerings", () => {

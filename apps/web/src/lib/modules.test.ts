@@ -1,16 +1,69 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, mock, test } from "bun:test";
 import {
   aggregateModuleOfferings,
   aggregateModuleHistoryRows,
   aggregateModuleSearchRows,
   createModuleKey,
+  getInstructorOfferings,
   getModuleHistoryVariant,
   getModuleInstructorSummaries,
+  getModuleScores,
   getModuleVariant,
   normalizeCourseTitle,
   parseModuleKey,
   rankModuleSearchResults,
+  serializePostgresArrayElement,
 } from "./modules";
+
+type SupabaseCall = {
+  table: string;
+  filter?: { column: string; operator: string; value: string };
+  orders: Array<{ column: string; ascending: boolean }>;
+  range?: [number, number];
+};
+
+const offeringPages: unknown[][] = [];
+const supabaseCalls: SupabaseCall[] = [];
+const scoreChunks: string[][] = [];
+
+const fakeSupabase = {
+  from(table: string) {
+    const call: SupabaseCall = { table, orders: [] };
+    supabaseCalls.push(call);
+
+    const builder = {
+      select: (_columns: string) => builder,
+      filter: (column: string, operator: string, value: string) => {
+        call.filter = { column, operator, value };
+        return builder;
+      },
+      order: (column: string, options: { ascending: boolean }) => {
+        call.orders.push({ column, ascending: options.ascending });
+        return builder;
+      },
+      range: async (from: number, to: number) => {
+        call.range = [from, to];
+        return { data: offeringPages.shift() ?? [], error: null };
+      },
+      in: async (_column: string, values: string[]) => {
+        scoreChunks.push(values);
+        return {
+          data: values.map((raw_id) => ({
+            raw_id,
+            average: 80,
+            std_dev: 10,
+            type: "percent",
+            enrollment: 30,
+          })),
+          error: null,
+        };
+      },
+    };
+    return builder;
+  },
+};
+
+mock.module("@/config/supabase", () => ({ default: fakeSupabase }));
 
 type ModuleOfferingRow = Parameters<typeof aggregateModuleOfferings>[0][number];
 type ModuleSearchRow = Parameters<typeof aggregateModuleSearchRows>[0][number];
@@ -72,6 +125,63 @@ describe("module keys and title normalization", () => {
   test("collapses full-width, whitespace, and editorial punctuation", () => {
     expect(normalizeCourseTitle("  資料　結構導論。 ")).toBe("資料 結構導論");
     expect(normalizeCourseTitle("資料 結構導論．")).toBe("資料 結構導論");
+  });
+});
+
+describe("Supabase module queries", () => {
+  test("serializes one PostgreSQL array element", () => {
+    expect(
+      ["A,B", "{A}", 'A"B', "A\\B", "教師"].map(serializePostgresArrayElement),
+    ).toEqual(['"A,B"', '"{A}"', '"A\\"B"', '"A\\\\B"', '"教師"']);
+  });
+
+  test("pages instructor offerings past the PostgREST row cap", async () => {
+    offeringPages.push(
+      Array.from({ length: 1000 }, (_, index) => ({
+        raw_id: `first-${index}`,
+        semester: "11510",
+        department: "CS",
+        course: "1355",
+      })),
+      [
+        {
+          raw_id: "last",
+          semester: "11520",
+          department: "CS",
+          course: "1355",
+        },
+      ],
+    );
+
+    const offerings = await getInstructorOfferings("A,B");
+
+    expect(offerings).toHaveLength(1001);
+    expect(supabaseCalls.map(({ range }) => range)).toEqual([
+      [0, 999],
+      [1000, 1999],
+    ]);
+    expect(supabaseCalls[0]?.filter).toEqual({
+      column: "teacher_zh",
+      operator: "cs",
+      value: '{"A,B"}',
+    });
+    expect(supabaseCalls[0]?.orders).toEqual([
+      { column: "semester", ascending: true },
+      { column: "raw_id", ascending: true },
+    ]);
+  });
+
+  test("requests every score id in bounded chunks", async () => {
+    const rawIds = Array.from({ length: 601 }, (_, index) => `id-${index}`);
+
+    const scores = await getModuleScores(rawIds);
+
+    expect(scoreChunks).toEqual([
+      rawIds.slice(0, 300),
+      rawIds.slice(300, 600),
+      rawIds.slice(600),
+    ]);
+    expect(scores.map(({ raw_id }) => raw_id)).toEqual(rawIds);
   });
 });
 

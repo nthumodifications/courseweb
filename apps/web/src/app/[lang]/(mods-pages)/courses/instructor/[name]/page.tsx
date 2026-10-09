@@ -17,24 +17,19 @@ import { ModuleLoading } from "@/components/Courses/ModuleLoading";
 import { toPrettySemester } from "@/helpers/semester";
 import {
   clusterEnglishNames,
+  decodeInstructorRouteParam,
   getInstructorEnglishNames,
   getInstructorGradeHistory,
+  getInstructorModuleTitle,
   groupInstructorOfferings,
+  formatInstructorEnglishNames,
+  isInstructorPageName,
   normaliseInstructorName,
 } from "@/lib/instructors";
 import { getInstructorOfferings, getModuleScores } from "@/lib/modules";
 import type { ModuleScore } from "@/lib/module-insights";
 
 const STALE_TIME = 24 * 60 * 60 * 1000;
-
-const decodeInstructorName = (value: string | undefined) => {
-  if (!value) return "";
-  try {
-    return decodeURIComponent(value);
-  } catch {
-    return value;
-  }
-};
 
 type Dictionary = ReturnType<typeof useDictionary>;
 
@@ -78,14 +73,18 @@ const InstructorModule = ({
   dict: Dictionary;
 }) => {
   const gradeHistory = getInstructorGradeHistory(group.offerings, scores, name);
+  const moduleTitle = getInstructorModuleTitle(group, lang);
 
   return (
     <section className="flex flex-col gap-2">
       <Link
         to={`/${lang}/courses/module/${encodeURIComponent(group.key)}`}
-        className="w-fit font-bold text-xl text-nthu-600 underline-offset-4 hover:underline"
+        className="w-fit underline-offset-4 hover:underline"
       >
-        {group.department} {group.course}
+        <span className="font-bold text-xl text-nthu-600">
+          {group.department} {group.course}
+        </span>{" "}
+        <span className="font-bold text-xl">{moduleTitle}</span>
       </Link>
       <div className="divide-y divide-border">
         {group.offerings.map((offering, index) => (
@@ -135,8 +134,9 @@ const InstructorPage = () => {
     name: string;
   }>();
   const lang = rawLang === "en" ? "en" : "zh";
-  const name = decodeInstructorName(rawName);
+  const name = decodeInstructorRouteParam(rawName);
   const displayName = normaliseInstructorName(name);
+  const showInstructorActions = isInstructorPageName(name);
   const dict = useDictionary();
   const {
     data: offerings,
@@ -234,30 +234,34 @@ const InstructorPage = () => {
               </h1>
               {englishNames.length > 0 && (
                 <h2 className="min-w-0 whitespace-normal font-medium">
-                  {englishNames.join(", ")}
+                  {formatInstructorEnglishNames(englishNames)}
                 </h2>
               )}
               <p className="text-sm text-muted-foreground">
                 {dict.course.instructor.departments}: {departments.join(", ")}
               </p>
-              <Button variant="ghost" asChild className="w-fit">
-                <a
-                  href={`https://scholars.nthu.edu.tw/esploro/search/researchers?query=${encodeURIComponent(name)}&page=1`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <ExternalLink className="mr-2 h-4 w-4" aria-hidden="true" />
-                  {dict.course.instructor.research_portal}
-                </a>
-              </Button>
+              {showInstructorActions && (
+                <Button variant="ghost" asChild className="w-fit">
+                  <a
+                    href={`https://scholars.nthu.edu.tw/esploro/search/researchers?query=${encodeURIComponent(name)}&page=1`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <ExternalLink className="mr-2 h-4 w-4" aria-hidden="true" />
+                    {dict.course.instructor.research_portal}
+                  </a>
+                </Button>
+              )}
             </header>
 
-            {namesakeClusters.length > 1 && (
+            {showInstructorActions && namesakeClusters.length > 1 && (
               <Alert>
                 <Info className="h-4 w-4" />
                 <AlertDescription>
                   {dict.course.instructor.namesake_notice}{" "}
-                  <span className="font-medium">{englishNames.join(", ")}</span>
+                  <span className="font-medium">
+                    {formatInstructorEnglishNames(englishNames)}
+                  </span>
                 </AlertDescription>
               </Alert>
             )}

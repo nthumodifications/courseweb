@@ -12,6 +12,18 @@ import {
 export const normaliseInstructorName = (value: string) =>
   decode(value).normalize("NFKC").replace(/\s+/gu, " ").trim();
 
+export const encodeInstructorRouteParam = (value: string) =>
+  encodeURIComponent(encodeURIComponent(value));
+
+export const decodeInstructorRouteParam = (value: string | undefined) => {
+  if (!value) return "";
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+};
+
 type EnglishNameKey = {
   normalized: string;
   tokens: Set<string>;
@@ -198,6 +210,18 @@ export const groupInstructorOfferings = (
         ) || left.key.localeCompare(right.key),
     );
 };
+
+export const getInstructorModuleTitle = (
+  group: Pick<InstructorModuleGroup, "offerings">,
+  lang: string,
+) => {
+  const latestOffering = group.offerings[0];
+  if (!latestOffering) return "";
+  return lang === "en" ? latestOffering.name_en : latestOffering.name_zh;
+};
+
+export const formatInstructorEnglishNames = (names: readonly string[]) =>
+  names.join(" · ");
 
 export interface InstructorGradeHistory {
   mode: "average" | "offerings";
