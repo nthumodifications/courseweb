@@ -854,6 +854,14 @@
           "bus": {
             "title": "Bus schedule"
           }
+        },
+        "weather": {
+          "title": "Hsinchu Weather",
+          "rain": "Rain",
+          "high": "High",
+          "low": "Low",
+          "missing_value": "—",
+          "unavailable": "Weather unavailable"
         }
       }
     },

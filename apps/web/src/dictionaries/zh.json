@@ -854,6 +854,14 @@
           "bus": {
             "title": "公車時刻"
           }
+        },
+        "weather": {
+          "title": "新竹天氣",
+          "rain": "降雨機率",
+          "high": "最高",
+          "low": "最低",
+          "missing_value": "—",
+          "unavailable": "無法取得天氣資料"
         }
       }
     },
