@@ -24,17 +24,17 @@ const ComponentSkeleton = () => {
         <Skeleton className="flex-1 p-2 bg-muted rounded-md w-[300px] h-[40px]" />
         <Skeleton className="w-[40px] h-[40px] rounded-full" />
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="flex flex-col">
           <Skeleton className="text-lg font-semibold w-[150px] h-[24px]" />
           <Skeleton className="p-2 bg-card rounded-md w-[100px] h-[100px]" />
         </div>
         <div className="flex flex-col space-y-2">
           <Skeleton className="text-lg font-semibold w-[150px] h-[24px]" />
-          <Button variant="outline" disabled>
+          <Button variant="outline" className="w-full justify-start" disabled>
             <Skeleton className="w-[200px] h-[40px]" />
           </Button>
-          <Button variant="outline" disabled>
+          <Button variant="outline" className="w-full justify-start" disabled>
             <Skeleton className="w-[200px] h-[40px]" />
           </Button>
         </div>
@@ -138,7 +138,7 @@ const ShareSyncTimetableDialog = ({
                 <Copy className="w-4 h-4" />
               </Button>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="flex flex-col">
                 <h3 className="text-lg font-semibold">
                   {dict.dialogs.ShareSyncTimetableDialog["category:qr"]}
@@ -151,7 +151,11 @@ const ShareSyncTimetableDialog = ({
                 <h3 className="text-lg font-semibold">
                   {dict.dialogs.ShareSyncTimetableDialog["category:links"]}
                 </h3>
-                <Button variant="outline" asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  asChild
+                >
                   <a
                     // Subject: Here is My Timetable, Body: My Timetable can be found on NTHUMODS at {shareLink}
                     href={`mailto:?subject=Here is My Timetable&body=My Timetable can be found on NTHUMODS at ${link}`}
@@ -161,7 +165,11 @@ const ShareSyncTimetableDialog = ({
                     {dict.dialogs.ShareSyncTimetableDialog.links.email}
                   </a>
                 </Button>
-                <Button variant="outline" asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  asChild
+                >
                   <a
                     href={calendarLinks.google}
                     target="_blank"
@@ -171,7 +179,11 @@ const ShareSyncTimetableDialog = ({
                     {dict.dialogs.ShareSyncTimetableDialog.links.google}
                   </a>
                 </Button>
-                <Button variant="outline" asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  asChild
+                >
                   <a
                     href={calendarLinks.apple}
                     target="_blank"
@@ -181,7 +193,11 @@ const ShareSyncTimetableDialog = ({
                     {dict.dialogs.ShareSyncTimetableDialog.links.apple}
                   </a>
                 </Button>
-                <Button variant="outline" asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  asChild
+                >
                   <a
                     href={calendarLinks.outlook}
                     target="_blank"
@@ -193,6 +209,7 @@ const ShareSyncTimetableDialog = ({
                 </Button>
                 <Button
                   variant="outline"
+                  className="w-full justify-start"
                   onClick={() => handleCopy(calendarLinks.copy)}
                 >
                   <Copy className="w-4 h-4 mr-2" />
