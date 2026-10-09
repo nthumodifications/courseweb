@@ -1,6 +1,6 @@
 import { CourseDefinition, CourseSyllabusView } from "@/config/supabase";
 import useDictionary from "@/dictionaries/useDictionary";
-import { FC, memo } from "react";
+import { FC, memo, ReactNode } from "react";
 import CourseTagList from "./CourseTagsList";
 import SelectCourseButton from "./SelectCourseButton";
 import {
@@ -17,13 +17,20 @@ import { sanitizeCourseHtml } from "@/lib/sanitizeHtml";
 import { cleanSyllabusFields } from "@/lib/syllabus-text";
 
 // Memoize the CourseListItem component
+type CourseListItemCourse = CourseDefinition &
+  Partial<Pick<CourseSyllabusView, "brief" | "keywords">>;
+
 const CourseListItem: FC<{
-  course: CourseSyllabusView;
+  course: CourseListItemCourse | null;
+  missingCourseId?: string;
   hasTaken?: boolean;
-}> = memo(({ course, hasTaken = false }) => {
+  leading?: ReactNode;
+  actions?: ReactNode;
+}> = memo(({ course, missingCourseId, hasTaken = false, leading, actions }) => {
   const dict = useDictionary();
   const { language } = useSettings();
   const { openCourse } = useCourseLink();
+  const courseId = course?.raw_id ?? missingCourseId;
   const syllabus = cleanSyllabusFields(course);
 
   const { setHoverCourse } = useUserTimetable();
@@ -32,13 +39,15 @@ const CourseListItem: FC<{
     setHoverCourse(hovering ? course : null);
   };
 
-  const courseTitle =
-    language === "zh"
+  const courseTitle = course
+    ? language === "zh"
       ? `${course.name_zh} - ${course.teacher_zh.join(",")}`
-      : `${course.name_en} - ${course.teacher_en?.join(",")}`;
+      : `${course.name_en} - ${course.teacher_en?.join(",")}`
+    : dict.course.details.favourite_unavailable;
 
   return (
     <div className="flex min-w-0 flex-row gap-4 py-4 @container">
+      {leading}
       <div className="min-w-0 flex-1">
         <div className="mb-2 space-y-1 @md:pt-0">
           <div className="flex flex-row gap-2 items-center">
@@ -48,15 +57,16 @@ const CourseListItem: FC<{
               </div>
             )}
             <p className="text-nthu-500 text-sm font-bold">
-              {course.department} {course.course}
-              {course.class.padStart(2, "0")}
+              {course
+                ? `${course.department} ${course.course}${course.class.padStart(2, "0")}`
+                : missingCourseId}
             </p>
           </div>
           <button
             className="flex min-w-0 max-w-full flex-row items-start gap-1 text-left font-bold hover:underline cursor-pointer"
-            onClick={() => openCourse(course.raw_id as string)}
-            onMouseEnter={() => handleHover(true)}
-            onMouseLeave={() => handleHover(false)}
+            onClick={() => courseId && openCourse(courseId)}
+            onMouseEnter={() => course && handleHover(true)}
+            onMouseLeave={() => course && handleHover(false)}
           >
             <span className="min-w-0 whitespace-normal">{courseTitle}</span>
             <ChevronRight
@@ -64,55 +74,62 @@ const CourseListItem: FC<{
               aria-hidden="true"
             />
           </button>
-          <div className="flex min-w-0 flex-col gap-1">
-            {course.venues.map((vn, i) => (
-              <div key={i} className="text-muted-foreground text-xs">
-                {`${vn} / ${course.times![i]}`}
+          {course && (
+            <>
+              <div className="flex min-w-0 flex-col gap-1">
+                {course.venues.map((vn, i) => (
+                  <div key={i} className="text-muted-foreground text-xs">
+                    {`${vn} / ${course.times![i]}`}
+                  </div>
+                ))}
               </div>
-            ))}
+              <CourseTagList course={course} />
+            </>
+          )}
+        </div>
+        {course && (
+          <div className="flex flex-col gap-2">
+            <p className="text-xs text-muted-foreground">{syllabus.brief}</p>
+            {course.restrictions && course.restrictions.length > 0 && (
+              <p className="text-xs whitespace-pre-line text-muted-foreground">
+                {dict.course.details.restriction_prefix}
+                {course.restrictions}
+              </p>
+            )}
+            {course.note && course.note.length > 0 && (
+              <p className="text-xs whitespace-pre-line text-muted-foreground">
+                {dict.course.details.note_prefix}
+                {course.note}
+              </p>
+            )}
+            {course.prerequisites && (
+              <Collapsible>
+                <CollapsibleTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="p-0 h-5 text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    {dict.course.details.prerequisites_available}{" "}
+                    <ChevronDown className="h-3 w-3 ml-0.5" />
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <p
+                    className="whitespace-pre-line text-sm text-muted-foreground"
+                    dangerouslySetInnerHTML={{
+                      __html: sanitizeCourseHtml(course.prerequisites),
+                    }}
+                  />
+                </CollapsibleContent>
+              </Collapsible>
+            )}
           </div>
-          <CourseTagList course={course as unknown as CourseDefinition} />
-        </div>
-        <div className="flex flex-col gap-2">
-          <p className="text-xs text-muted-foreground">{syllabus.brief}</p>
-          {course.restrictions && course.restrictions.length > 0 && (
-            <p className="text-xs whitespace-pre-line text-muted-foreground">
-              {dict.course.details.restriction_prefix}
-              {course.restrictions}
-            </p>
-          )}
-          {course.note && course.note.length > 0 && (
-            <p className="text-xs whitespace-pre-line text-muted-foreground">
-              {dict.course.details.note_prefix}
-              {course.note}
-            </p>
-          )}
-          {course.prerequisites && (
-            <Collapsible>
-              <CollapsibleTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="p-0 h-5 text-xs text-muted-foreground hover:text-foreground"
-                >
-                  {dict.course.details.prerequisites_available}{" "}
-                  <ChevronDown className="h-3 w-3 ml-0.5" />
-                </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <p
-                  className="whitespace-pre-line text-sm text-muted-foreground"
-                  dangerouslySetInnerHTML={{
-                    __html: sanitizeCourseHtml(course.prerequisites),
-                  }}
-                />
-              </CollapsibleContent>
-            </Collapsible>
-          )}
-        </div>
+        )}
       </div>
       <div className="flex min-w-0 shrink-0 flex-col items-end gap-2">
-        <SelectCourseButton courseId={course.raw_id as string} />
+        {actions ??
+          (course && <SelectCourseButton courseId={course.raw_id as string} />)}
       </div>
     </div>
   );

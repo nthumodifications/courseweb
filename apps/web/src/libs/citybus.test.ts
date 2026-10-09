@@ -2,11 +2,14 @@ import { describe, expect, test } from "bun:test";
 import {
   formatDepartureCountdown,
   formatDepartureTime,
+  formatCityBusRealtimeDisplay,
+  getCityBusRealtimeDisplay,
   getCityBusTrips,
   getCityBusTimetable,
   getDistinctCityBusDirections,
   getNextCityBusTripIndex,
   hasDistinctCityBusDayTypes,
+  mergeCityBusEtaIntoTimeline,
   stepCityBusTrip,
   type CityBusRoute,
   type CityBusSchedule,
@@ -37,6 +40,103 @@ describe("city bus departure display", () => {
         daysAfter: "{days} 天後 {time}",
       }),
     ).toBe("明天 06:40");
+  });
+
+  test("turns TDX ETA seconds and statuses into display labels", () => {
+    expect(
+      getCityBusRealtimeDisplay({
+        etaSeconds: 180,
+        status: 0,
+        nextBusTime: null,
+      }),
+    ).toEqual({
+      labelKey: "countdown",
+      minutes: 3,
+    });
+    expect(
+      getCityBusRealtimeDisplay({
+        etaSeconds: 0,
+        status: 0,
+        nextBusTime: null,
+      }),
+    ).toEqual({
+      labelKey: "arriving",
+      minutes: 0,
+    });
+    expect(
+      getCityBusRealtimeDisplay({
+        etaSeconds: null,
+        status: 3,
+        nextBusTime: null,
+      }),
+    ).toEqual({
+      labelKey: "last_bus",
+    });
+    expect(
+      getCityBusRealtimeDisplay({
+        etaSeconds: null,
+        status: 4,
+        nextBusTime: null,
+      }),
+    ).toEqual({
+      labelKey: "not_operating",
+    });
+    expect(
+      formatCityBusRealtimeDisplay(
+        { labelKey: "countdown", minutes: 3 },
+        "zh",
+        {
+          arriving: "進站中",
+          lastBus: "末班車已過",
+          notOperating: "今日未營運",
+          minutes: "分鐘",
+        },
+      ),
+    ).toBe("3 分鐘");
+  });
+
+  test("merges live ETA and near-stop vehicles without changing stop order", () => {
+    expect(
+      mergeCityBusEtaIntoTimeline(["first", "second"], {
+        routeId: "83",
+        directionId: "HSZ000801",
+        stops: [
+          {
+            stopId: "first",
+            etaSeconds: 45,
+            status: 0,
+            nextBusTime: null,
+            isLastBus: false,
+            plate: "ABC-1234",
+          },
+          {
+            stopId: "second",
+            etaSeconds: null,
+            status: 1,
+            nextBusTime: "2026-10-08T03:00:00+08:00",
+            isLastBus: false,
+            plate: null,
+          },
+        ],
+        buses: [{ plate: "ABC-1234", stopId: "first", event: "at_station" }],
+        updatedAt: "2026-10-08T02:35:35+08:00",
+        realtime: true,
+      }),
+    ).toEqual([
+      {
+        stopId: "first",
+        display: { labelKey: "arriving", minutes: 0 },
+        state: "at_station",
+      },
+      {
+        stopId: "second",
+        display: {
+          labelKey: "next_bus",
+          nextBusTime: "2026-10-08T03:00:00+08:00",
+        },
+        state: undefined,
+      },
+    ]);
   });
 });
 

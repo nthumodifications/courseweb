@@ -71,7 +71,7 @@ export const isNotAuthorisedReplicationError = (error: unknown) => {
 const replicationErrorMessage = (error: unknown) =>
   error instanceof Error ? error.message : String(error);
 
-const combinedReplicationStatus = (
+export const combinedReplicationStatus = (
   eventStatus: CalendarReplicationStatus,
   timetableStatus: CalendarReplicationStatus,
 ) => {

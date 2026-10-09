@@ -22,8 +22,10 @@ const percent = (value: number) => `${Math.round(value * 100)}%`;
 /** Seats filled per semester, as a share of capacity. */
 export const ModuleDemandChart = ({
   series,
+  size = "md",
 }: {
   series: readonly DemandPoint[];
+  size?: "sm" | "md";
 }) => {
   const dict = useDictionary();
   const labels = dict.course.module.demand;
@@ -34,7 +36,7 @@ export const ModuleDemandChart = ({
   );
 
   return (
-    <div className="h-[200px] w-full">
+    <div className={size === "sm" ? "h-[120px] w-full" : "h-[200px] w-full"}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={[...series]}

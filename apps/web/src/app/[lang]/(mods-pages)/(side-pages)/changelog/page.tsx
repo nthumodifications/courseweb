@@ -4,6 +4,7 @@ import { useParams } from "react-router-dom";
 import Footer from "@/components/Footer";
 import useDictionary from "@/dictionaries/useDictionary";
 import { CHANGELOG } from "@/const/changelog";
+import { ChangelogVisual } from "@/components/Changelog/ChangelogVisual";
 
 const formatReleaseDate = (date: string, locale: string) =>
   new Intl.DateTimeFormat(locale, {
@@ -43,20 +44,25 @@ const ChangelogPage = () => {
               {release.items.map((item, index) => (
                 <li
                   key={`${release.version}-${index}`}
-                  className="flex items-start gap-2 py-4"
+                  className="flex flex-col gap-2 py-4"
                 >
-                  <Badge variant="outline" className="mt-0.5 shrink-0">
-                    {dict.changelog.types[item.type]}
-                  </Badge>
-                  <div className="min-w-0 flex flex-col gap-1">
-                    <h3 className="font-bold leading-snug">
-                      {item.title[language]}
-                    </h3>
-                    {item.description && (
-                      <p className="text-sm leading-relaxed text-muted-foreground">
-                        {item.description[language]}
-                      </p>
-                    )}
+                  {item.visual && (
+                    <ChangelogVisual visual={item.visual} language={language} />
+                  )}
+                  <div className="flex items-start gap-2">
+                    <Badge variant="outline" className="mt-0.5 shrink-0">
+                      {dict.changelog.types[item.type]}
+                    </Badge>
+                    <div className="min-w-0 flex flex-col gap-1">
+                      <h3 className="font-bold leading-snug">
+                        {item.title[language]}
+                      </h3>
+                      {item.description && (
+                        <p className="text-sm leading-relaxed text-muted-foreground">
+                          {item.description[language]}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </li>
               ))}

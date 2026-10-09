@@ -14,11 +14,13 @@ import {
   DialogTitle,
   Button,
   ScrollArea,
+  Switch,
   toast,
 } from "@courseweb/ui";
 import { DialogTrigger } from "@radix-ui/react-dialog";
 import { useSettings } from "@/hooks/contexts/settings";
 import { filterHiddenCourses } from "@/helpers/timetableVisibility";
+import { setTimetableCourseCodeDisplay } from "./timetableExport";
 
 const DownloadTimetableComponent = () => {
   const dict = useDictionary();
@@ -238,6 +240,7 @@ const DownloadTimetableDialog = ({
   children?: ReactNode;
 }) => {
   const dict = useDictionary();
+  const { preferences, setPreferences } = useUserTimetable();
 
   const handleDownloadCalendar = async () => {
     const filename = `${new Date().toISOString()}_timetable.ics`;
@@ -281,6 +284,23 @@ const DownloadTimetableDialog = ({
             {dict.dialogs.DownloadTimetableDialog.description}
           </DialogDescription>
         </DialogHeader>
+        <div className="flex flex-row items-center gap-4 py-4">
+          <label
+            htmlFor="download-show-course-code"
+            className="font-bold flex-1 text-sm"
+          >
+            {dict.settings.timetable.slot_code}
+          </label>
+          <Switch
+            id="download-show-course-code"
+            checked={preferences.display.code}
+            onCheckedChange={(showCourseCode) =>
+              setPreferences((current) =>
+                setTimetableCourseCodeDisplay(current, showCourseCode),
+              )
+            }
+          />
+        </div>
         <div className="grid grid-cols-2 gap-4 pt-4">
           <Button onClick={handleDownloadCalendar} variant="outline">
             <Download className="w-4 h-4 mr-2" />

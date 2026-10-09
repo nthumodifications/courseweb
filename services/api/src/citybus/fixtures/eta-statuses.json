@@ -1,0 +1,50 @@
+[
+  {
+    "StopUID": "HSZ310067",
+    "StopID": "310067",
+    "SubRouteUID": "HSZ000801",
+    "Direction": 0,
+    "EstimateTime": 180,
+    "StopStatus": 0,
+    "PlateNumb": "ABC-1234",
+    "IsLastBus": false,
+    "SrcUpdateTime": "2026-10-08T02:35:35+08:00"
+  },
+  {
+    "StopUID": "HSZ310069",
+    "StopID": "310069",
+    "SubRouteUID": "HSZ000801",
+    "Direction": 0,
+    "StopStatus": 1,
+    "NextBusTime": "2026-10-08T03:00:00+08:00",
+    "IsLastBus": false,
+    "SrcUpdateTime": "2026-10-08T02:35:35+08:00"
+  },
+  {
+    "StopUID": "HSZ303612",
+    "StopID": "303612",
+    "SubRouteUID": "HSZ000801",
+    "Direction": 0,
+    "StopStatus": 2,
+    "IsLastBus": false,
+    "SrcUpdateTime": "2026-10-08T02:35:35+08:00"
+  },
+  {
+    "StopUID": "HSZ303610",
+    "StopID": "303610",
+    "SubRouteUID": "HSZ000801",
+    "Direction": 0,
+    "StopStatus": 3,
+    "IsLastBus": true,
+    "SrcUpdateTime": "2026-10-08T02:35:35+08:00"
+  },
+  {
+    "StopUID": "HSZ303608",
+    "StopID": "303608",
+    "SubRouteUID": "HSZ000801",
+    "Direction": 0,
+    "StopStatus": 4,
+    "IsLastBus": false,
+    "SrcUpdateTime": "2026-10-08T02:35:35+08:00"
+  }
+]

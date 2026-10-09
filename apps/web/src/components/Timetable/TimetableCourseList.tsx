@@ -66,6 +66,7 @@ import {
 import Compact from "@uiw/react-color-compact";
 import { TimetableItemDrawer } from "./TimetableItemDrawer";
 import { isCourseHidden } from "@/helpers/timetableVisibility";
+import { UnresolvedCoursesNotice } from "./UnresolvedCoursesNotice";
 
 const DownloadTimetableDialogLazy = lazy(
   () => import("./DownloadTimetableDialog"),
@@ -516,16 +517,7 @@ export const TimetableCourseList = ({
           !isFetchingCourses &&
           listStatus !== "loading" &&
           listStatus !== "error" && (
-            <div
-              className="flex items-center gap-2 text-sm text-muted-foreground"
-              role="status"
-            >
-              <AlertTriangle className="h-4 w-4 shrink-0" />
-              {dict.timetable.unresolved_courses.replace(
-                "{count}",
-                String(unresolvedCourseIds.length),
-              )}
-            </div>
+            <UnresolvedCoursesNotice count={unresolvedCourseIds.length} />
           )}
         {listStatus === "empty" && (
           <div className="flex flex-col items-center space-y-4">

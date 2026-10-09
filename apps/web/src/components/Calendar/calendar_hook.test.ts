@@ -11,6 +11,8 @@ import type {
 process.env.VITE_COURSEWEB_API_URL ??= "https://api.example.test";
 process.env.VITE_NTHUMODS_AUTH_URL ??= "https://auth.example.test";
 
+mock.module("@/config/auth", () => ({ default: {} }));
+
 const actualRxdbHooks = await import("rxdb-hooks");
 const actualOidcContext = await import("react-oidc-context");
 const actualAuth = await import("@/config/auth");
@@ -65,7 +67,12 @@ mock.module("@/config/rxdb", () => ({
   migrateEventToV2: (document: unknown) => document,
 }));
 
-const { UpdateType, useCalendarProvider } = await import("./calendar_hook");
+const {
+  UpdateType,
+  combinedReplicationStatus,
+  isNotAuthorisedReplicationError,
+  useCalendarProvider,
+} = await import("./calendar_hook");
 
 afterAll(() => {
   mock.module("rxdb-hooks", () => actualRxdbHooks);
@@ -192,5 +199,26 @@ describe("calendar hook recurrence operations", () => {
     await act(async () => {
       root.unmount();
     });
+  });
+});
+
+describe("calendar replication status helpers", () => {
+  test("prioritises authorization failures over other replication states", () => {
+    expect(combinedReplicationStatus("error", "not-authorised")).toBe(
+      "not-authorised",
+    );
+    expect(combinedReplicationStatus("syncing", "error")).toBe("error");
+    expect(combinedReplicationStatus("idle", "syncing")).toBe("syncing");
+    expect(combinedReplicationStatus("idle", "idle")).toBe("idle");
+  });
+
+  test("recognises nested authorization failures without confusing generic errors", () => {
+    const cyclic: { cause?: unknown; status?: number } = { status: 403 };
+    cyclic.cause = cyclic;
+
+    expect(isNotAuthorisedReplicationError(cyclic)).toBe(true);
+    expect(isNotAuthorisedReplicationError(new Error("network timeout"))).toBe(
+      false,
+    );
   });
 });

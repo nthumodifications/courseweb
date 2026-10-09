@@ -104,7 +104,7 @@ const AppList = () => {
           )}
         </div>
 
-        {Object.keys(categories).map((category) => (
+        {categories.map((category) => (
           <div
             className="flex flex-col p-4 rounded-md border border-border gap-4"
             key={category}

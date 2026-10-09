@@ -13,6 +13,24 @@ export interface SyncedData<T> {
   deviceId: string;
 }
 
+/** Keep the previous account-scoped record available without adding recovery UI. */
+export const writeSyncedStorageBackup = <T>(
+  storageKey: string,
+  data: SyncedData<T>,
+) => {
+  if (typeof window === "undefined") return;
+
+  try {
+    window.localStorage.setItem(
+      getSyncedStorageBackupKey(storageKey),
+      JSON.stringify(data),
+    );
+  } catch {
+    // Backups are best effort; a full or unavailable localStorage must not
+    // prevent the normal remote-wins reconciliation.
+  }
+};
+
 export type MergeData<T> = (local: T, remote: T) => T;
 
 export const ANONYMOUS_SYNCED_STORAGE_NAMESPACE = "nthumods-storage-anonymous";
@@ -42,8 +60,23 @@ export const getSyncedStorageNamespace = (subject?: string | null) => {
 export const getSyncedStorageKey = (key: string, subject?: string | null) =>
   `${getSyncedStorageNamespace(subject)}-${key}`;
 
+export const getSyncedStorageBackupKey = (storageKey: string) =>
+  `${storageKey}__backup`;
+
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
+
+/** Merge only snapshots that contain values; timestamp ordering handles clears. */
+const isMergeableValue = (value: unknown): boolean => {
+  if (value === null || value === undefined) return false;
+  if (Array.isArray(value)) return value.length > 0;
+  if (typeof value === "string") return value.length > 0;
+  if (isRecord(value)) {
+    const values = Object.values(value);
+    return values.length > 0 && values.some(isMergeableValue);
+  }
+  return true;
+};
 
 const isFiniteNumber = (value: unknown): value is number =>
   typeof value === "number" && Number.isFinite(value);
@@ -232,6 +265,7 @@ export interface SyncedReconciliation<T> {
   data: SyncedData<T>;
   persistLocal: boolean;
   upload?: SyncedUpload;
+  backupLocal?: boolean;
 }
 
 /**
@@ -245,6 +279,7 @@ export const reconcileSyncedData = <T>(options: {
   mergeData?: MergeData<T>;
   initial: boolean;
   deviceId: string;
+  remoteReadSuccessful?: boolean;
   now?: number;
 }): SyncedReconciliation<T> => {
   const {
@@ -253,28 +288,47 @@ export const reconcileSyncedData = <T>(options: {
     mergeData,
     initial,
     deviceId,
+    remoteReadSuccessful = true,
     now = Date.now(),
   } = options;
 
+  if (!remoteReadSuccessful) {
+    return { data: local, persistLocal: false };
+  }
+
+  const localIsUninitialized = local.updatedAt < 0;
+  const canUploadLocal = !localIsUninitialized;
+  const remoteResult = (data: SyncedData<T>): SyncedReconciliation<T> => ({
+    data,
+    persistLocal: !valuesEqual(local, data),
+    ...(!localIsUninitialized &&
+      remote &&
+      !valuesEqual(local.value, remote.value) && { backupLocal: true }),
+  });
+
   if (initial) {
-    if (!remote) {
+    if (!remote || remote.updatedAt < 0) {
       return {
         data: local,
         persistLocal: false,
-        ...(local.updatedAt >= 0 && { upload: { merge: Boolean(mergeData) } }),
+        ...(canUploadLocal && { upload: { merge: Boolean(mergeData) } }),
       };
     }
 
-    if (mergeData) {
+    if (localIsUninitialized) return remoteResult(remote);
+    if (
+      mergeData &&
+      isMergeableValue(local.value) &&
+      isMergeableValue(remote.value)
+    ) {
       const mergedValue = mergeData(local.value, remote.value);
       if (valuesEqual(local.value, remote.value)) {
-        return {
-          data: local.updatedAt >= remote.updatedAt ? local : remote,
-          persistLocal: true,
-        };
+        return local.updatedAt >= remote.updatedAt
+          ? { data: local, persistLocal: false }
+          : remoteResult(remote);
       }
       if (valuesEqual(mergedValue, remote.value)) {
-        return { data: remote, persistLocal: true };
+        return remoteResult(remote);
       }
 
       const updatedAt = nextUpdatedAt(
@@ -294,26 +348,29 @@ export const reconcileSyncedData = <T>(options: {
       };
     }
 
-    const localWins = local.updatedAt >= remote.updatedAt;
-    return {
-      data: localWins ? local : remote,
-      persistLocal: true,
-      ...(localWins && { upload: { merge: false } }),
-    };
+    if (local.updatedAt >= remote.updatedAt) {
+      return {
+        data: local,
+        persistLocal: false,
+        ...(canUploadLocal && { upload: { merge: false } }),
+      };
+    }
+    return remoteResult(remote);
   }
 
-  if (!remote) {
+  if (!remote || remote.updatedAt < 0) {
     return {
       data: local,
       persistLocal: false,
-      ...(local.updatedAt >= 0 && { upload: { merge: false } }),
+      ...(canUploadLocal && { upload: { merge: false } }),
     };
   }
+  if (localIsUninitialized) return remoteResult(remote);
   if (local.updatedAt > remote.updatedAt) {
     return { data: local, persistLocal: false, upload: { merge: false } };
   }
   if (local.updatedAt < remote.updatedAt) {
-    return { data: remote, persistLocal: true };
+    return remoteResult(remote);
   }
   return { data: local, persistLocal: false };
 };

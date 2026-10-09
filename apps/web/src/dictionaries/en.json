@@ -237,6 +237,7 @@
       "dialog_title": "Course Details",
       "open_new_tab": "Open in new tab",
       "missing_time": "Time unavailable",
+      "favourite_unavailable": "This favourite is unavailable in the selected semester",
       "no_favourites": "No favourites added yet",
       "taken": "Taken",
       "restriction_prefix": "Restrictions: ",
@@ -277,6 +278,25 @@
       "second_specialization": "Second Specialization",
       "ptt_title": "PTT Reviews",
       "ptt_disclaimer": "PTT reviews are from the NTHU_Course board and are not moderated by NTHUMods. The reviews do not represent the views of NTHUMods. If you find any inappropriate content, please report to the board itself.",
+      "ptt_fields": {
+        "course_name": "Course",
+        "instructor": "Instructor",
+        "semester": "Semester taken",
+        "target": "Department and audience",
+        "course_content": "Course content",
+        "textbook": "Textbook",
+        "teaching_method": "Teaching method",
+        "grading": "Grading",
+        "notes": "Notes",
+        "experience": "Experience",
+        "summary": "Summary",
+        "workload": "Workload",
+        "sweetness": "Sweetness",
+        "coolness": "Coolness"
+      },
+      "ptt_different_instructor": "Different instructor",
+      "ptt_expand": "Expand full review",
+      "ptt_collapse": "Collapse review",
       "important_dates": "Important Dates",
       "view_ccxp_syllabus": "View Original Webpage",
       "module_history": "Course history",
@@ -630,7 +650,13 @@
     "campus_widget_title": "Campus Bus",
     "widget_title": "Campus and city buses",
     "no_departures": "No departures today",
-    "direction": "Direction"
+    "direction": "Direction",
+    "realtime_arriving": "Arriving",
+    "realtime_last_bus": "Last bus passed",
+    "realtime_not_operating": "Not in service today",
+    "realtime_updated_at": "Updated {time}",
+    "realtime_tab": "Real-time",
+    "timetable_tab": "Timetable"
   },
   "settings": {
     "navigation_aria": "Settings navigation",
@@ -837,6 +863,7 @@
         "description": "Replace Today page with a customizable widget grid",
         "columns": "Columns",
         "widgets": "Widgets",
+        "view_full_page": "View full page",
         "widget_options": {
           "schedule": {
             "title": "Schedule"
@@ -855,7 +882,27 @@
           },
           "bus": {
             "title": "Bus schedule"
+          },
+          "library": {
+            "title": "Library seats"
+          },
+          "laundry": {
+            "title": "Laundry"
+          },
+          "sports-venues": {
+            "title": "Sports venues"
+          },
+          "youbike": {
+            "title": "YouBike"
           }
+        },
+        "weather": {
+          "title": "Hsinchu Weather",
+          "rain": "Rain",
+          "high": "High",
+          "low": "Low",
+          "missing_value": "—",
+          "unavailable": "Weather unavailable"
         }
       }
     },
@@ -936,12 +983,68 @@
       "placeholder_title": "What feature or bug are you reporting?",
       "known_issues": "Known issues",
       "label_description": "Details",
-      "detail_hint": "Include as much detail as possible. Add a contact method if you want a reply.",
+      "detail_hint": "Include as much detail as possible so we can reproduce the problem.",
       "markdown_hint": "Markdown is supported.",
       "feedback": "Feedback",
-      "retrying": "Retrying…",
       "submitting": "Submitting…",
-      "submit": "Submit"
+      "submit": "Submit",
+      "success_title": "Issue submitted",
+      "success_description": "Thank you for your feedback. We will look into it.",
+      "success_description_with_diagnostics": "Thank you for your feedback. The anonymous diagnostics were included.",
+      "report_type": "Type",
+      "report_area": "Area",
+      "type_bug": "Bug",
+      "type_missing_data": "Missing or wrong data",
+      "type_suggestion": "Suggestion",
+      "type_praise": "Praise",
+      "area_timetable": "Timetable",
+      "area_search": "Course search",
+      "area_sync_login": "Sync or login",
+      "area_bus": "Bus",
+      "area_other": "Other",
+      "expected": "What did you expect?",
+      "expected_placeholder": "The result you expected",
+      "actual": "What happened?",
+      "actual_placeholder": "The result you saw",
+      "placeholder_description": "Steps, context, or anything else that may help us reproduce this.",
+      "public_warning_title": "This report will be public",
+      "public_warning_description": "Do not include your name, email, student ID, phone number, tokens, or timetable details.",
+      "diagnostics_attach": "Attach anonymous diagnostics to help troubleshoot",
+      "diagnostics_attached": "Anonymous diagnostics will be attached.",
+      "diagnostics_opted_out": "No diagnostics will be attached.",
+      "diagnostics_see_attached": "See what is attached",
+      "diagnostics_app_version": "App version",
+      "diagnostics_build_commit": "Build commit",
+      "diagnostics_route": "Route",
+      "diagnostics_language": "Language",
+      "diagnostics_theme": "Theme",
+      "diagnostics_browser": "Browser",
+      "diagnostics_os": "OS",
+      "diagnostics_viewport": "Viewport",
+      "diagnostics_online": "Online",
+      "diagnostics_service_worker": "Service worker",
+      "diagnostics_signed_in": "Signed in",
+      "diagnostics_service_worker_not_supported": "Not supported",
+      "diagnostics_service_worker_unregistered": "Not registered",
+      "diagnostics_service_worker_active": "Active",
+      "diagnostics_service_worker_update_available": "Update available",
+      "yes": "Yes",
+      "no": "No",
+      "likely_duplicates": "Possible matches",
+      "validation_error": "Validation error",
+      "verification_required": "Please complete the verification.",
+      "title_invalid": "Enter a title between 7 and 180 characters.",
+      "description_invalid": "Please provide at least 10 characters of details.",
+      "expected_actual_required": "For bugs, tell us what you expected and what happened.",
+      "description_too_long": "Please shorten the report before submitting.",
+      "verification_failed": "Verification failed",
+      "verification_failed_description": "Refresh the page and complete the verification again.",
+      "too_many_requests": "Too many requests",
+      "too_many_requests_description": "Please wait a moment before submitting another report.",
+      "server_error": "Server error",
+      "server_error_description": "The report could not be submitted. Please try again later.",
+      "submission_failed": "Submission failed",
+      "submission_failed_description": "The report could not be submitted. Please try again."
     }
   },
   "venues": {
@@ -989,19 +1092,24 @@
   },
   "applist": {
     "title": "Apps",
+    "quick_links_title": "Quick Links",
+    "pinned_widget_empty": "Pin shortcuts from the Apps page",
     "to_ccxp": "NTHU AIS",
     "empty_pinned_apps_reminder": "Pin your most used apps here!",
     "pinned_apps_title": "Pinned Apps",
     "edit_pinned_apps_title": "Edit Pinned Apps",
     "beta": "Beta",
     "categories": {
-      "campuslife": "Campus Life",
-      "course": "Courses",
-      "club": "Clubs",
-      "other": "Others"
+      "courses": "Courses",
+      "studies": "My Studies",
+      "transport": "Getting Around",
+      "facilities": "Campus Facilities",
+      "services": "Food and Services",
+      "links": "Links"
     },
     "apps": {
       "courses": "Course Search",
+      "modules": "Course Modules",
       "chat": "AI Course Assistant",
       "venues": "Venues",
       "campus-map": "Interactive Campus Map",
@@ -1050,7 +1158,15 @@
       "category:qr": "QR Code",
       "category:links": "Links",
       "links": {
-        "email": "Send Email"
+        "email": "Send Email",
+        "google": "Add to Google Calendar",
+        "apple": "Add to Apple Calendar",
+        "outlook": "Outlook",
+        "copy_link": "Copy link",
+        "copied": "Copied",
+        "copied_description": "Link copied to clipboard",
+        "calendar_name": "NTHUMods Timetable",
+        "subscription_hint": "Subscriptions update automatically; calendar apps refresh on their own schedule."
       }
     },
     "DateContributeForm": {
@@ -2293,10 +2409,45 @@
     "whats_new": "What's new",
     "dismiss": "Dismiss",
     "view_all": "View all changes",
+    "actions": {
+      "bus": "Explore city buses",
+      "modules": "Explore course modules",
+      "prerequisites": "View prerequisites",
+      "search": "Open course search",
+      "timetable": "Open your timetable",
+      "usage": "See usage forecasts",
+      "youbike": "Explore YouBike"
+    },
+    "previous": "Previous",
+    "next": "Next",
+    "finish": "Done",
     "types": {
       "feature": "Feature",
       "improvement": "Improvement",
       "fix": "Fix"
+    },
+    "preview": {
+      "bus": {
+        "line_83": "Bus 83",
+        "line_blue": "Blue line",
+        "campus_line": "Red line",
+        "campus_destination": "To TSMC Building",
+        "destination_83": "North Gate",
+        "destination_blue": "Zhuzhong",
+        "countdown_83": "1 hr 21 min"
+      },
+      "search": {
+        "loading": "Loading",
+        "loaded": "Loaded",
+        "loading_state": "While the index loads",
+        "offline_state": "Search offline too"
+      },
+      "smaller": {
+        "items": {
+          "course_header": "Course detail headers now keep even spacing",
+          "usage_forecast": "Gym and library pages now show usage forecasts"
+        }
+      }
     }
   },
   "youbike": {
@@ -2308,6 +2459,7 @@
       "mine": "My Stations"
     },
     "regular_bikes": "Regular",
+    "available_bikes": "bikes",
     "ebikes": "e-Bikes",
     "empty_docks": "Empty Docks",
     "out_of_service": "Out of Service",
