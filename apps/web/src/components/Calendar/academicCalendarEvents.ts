@@ -17,11 +17,12 @@ export const toAcademicCalendarEvents = (
     const startDate = period?.startDate ?? event.date;
     const endDate = period?.endDate ?? event.date;
     const start = fromTaipeiDateKey(startDate);
-    const end = endOfTaipeiDay(fromTaipeiDateKey(endDate));
+    if (Number.isNaN(start.getTime())) return [];
 
-    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
-      return [];
-    }
+    const parsedEnd = fromTaipeiDateKey(endDate);
+    if (Number.isNaN(parsedEnd.getTime())) return [];
+
+    const end = endOfTaipeiDay(parsedEnd);
 
     return [
       {
