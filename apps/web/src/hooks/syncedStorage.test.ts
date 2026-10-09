@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
+  getSyncedStorageBackupKey,
   getSyncedStorageKey,
   getSyncedStorageNamespace,
   mergeCourseStorage,
@@ -12,6 +13,207 @@ import {
 } from "./syncedStorage";
 
 describe("synced storage reconciliation", () => {
+  test("takes remote data over an uninitialized local snapshot", () => {
+    const reconciliation = reconcileSyncedData({
+      local: {
+        value: {},
+        lastModified: -1,
+        updatedAt: -1,
+        deviceId: "device-a",
+      },
+      remote: {
+        value: { "11410": ["course-a"] },
+        lastModified: 100,
+        updatedAt: 100,
+        deviceId: "device-b",
+      },
+      initial: true,
+      deviceId: "device-a",
+      now: 1000,
+    });
+
+    expect(reconciliation.data.value).toEqual({ "11410": ["course-a"] });
+    expect(reconciliation.upload).toBeUndefined();
+  });
+
+  test("keeps and uploads an explicitly emptied local snapshot when newer", () => {
+    const reconciliation = reconcileSyncedData({
+      local: {
+        value: {},
+        lastModified: 200,
+        updatedAt: 200,
+        deviceId: "device-a",
+      },
+      remote: {
+        value: { "11410": ["course-a"] },
+        lastModified: 100,
+        updatedAt: 100,
+        deviceId: "device-b",
+      },
+      mergeData: mergeCourseStorage,
+      initial: true,
+      deviceId: "device-a",
+    });
+
+    expect(reconciliation.data.value).toEqual({});
+    expect(reconciliation.persistLocal).toBe(false);
+    expect(reconciliation.upload).toEqual({ merge: false });
+  });
+
+  test("takes a newer remote explicit deletion and backs up local data", () => {
+    const reconciliation = reconcileSyncedData({
+      local: {
+        value: { "11410": ["course-a"] },
+        lastModified: 100,
+        updatedAt: 100,
+        deviceId: "device-a",
+      },
+      remote: {
+        value: {},
+        lastModified: 200,
+        updatedAt: 200,
+        deviceId: "device-b",
+      },
+      mergeData: mergeCourseStorage,
+      initial: true,
+      deviceId: "device-a",
+    });
+
+    expect(reconciliation.data.value).toEqual({});
+    expect(reconciliation.persistLocal).toBe(true);
+    expect(reconciliation.upload).toBeUndefined();
+    expect(reconciliation.backupLocal).toBe(true);
+  });
+
+  test("keeps and uploads non-empty local data when remote is uninitialized", () => {
+    for (const remote of [
+      null,
+      {
+        value: {},
+        lastModified: -1,
+        updatedAt: -1,
+        deviceId: "device-b",
+      },
+    ]) {
+      const reconciliation = reconcileSyncedData({
+        local: {
+          value: { theme: "local" },
+          lastModified: 100,
+          updatedAt: 100,
+          deviceId: "device-a",
+        },
+        remote,
+        initial: true,
+        deviceId: "device-a",
+      });
+
+      expect(reconciliation.data.value).toEqual({ theme: "local" });
+      expect(reconciliation.upload).toEqual({ merge: false });
+    }
+  });
+
+  test("does not reconcile or upload after an unsuccessful remote read", () => {
+    const local = {
+      value: { theme: "local" },
+      lastModified: 100,
+      updatedAt: 100,
+      deviceId: "device-a",
+    };
+    const reconciliation = reconcileSyncedData({
+      local,
+      remote: null,
+      remoteReadSuccessful: false,
+      initial: true,
+      deviceId: "device-a",
+      now: 1000,
+    });
+
+    expect(reconciliation.data).toEqual(local);
+    expect(reconciliation.persistLocal).toBe(false);
+    expect(reconciliation.upload).toBeUndefined();
+  });
+
+  test("marks a replaced non-empty local snapshot for one scoped backup", () => {
+    const reconciliation = reconcileSyncedData({
+      local: {
+        value: { theme: "local" },
+        lastModified: 100,
+        updatedAt: 100,
+        deviceId: "device-a",
+      },
+      remote: {
+        value: { theme: "remote" },
+        lastModified: 200,
+        updatedAt: 200,
+        deviceId: "device-b",
+      },
+      initial: false,
+      deviceId: "device-a",
+    });
+
+    expect(reconciliation.data.value).toEqual({ theme: "remote" });
+    expect(reconciliation.backupLocal).toBe(true);
+    expect(getSyncedStorageBackupKey("nthumods-storage-user-theme")).toBe(
+      "nthumods-storage-user-theme__backup",
+    );
+  });
+
+  test("does not persist or upload an equal snapshot on initial reconciliation", () => {
+    const local = {
+      value: ["course-a"],
+      lastModified: 200,
+      updatedAt: 200,
+      deviceId: "device-a",
+    };
+    const reconciliation = reconcileSyncedData({
+      local,
+      remote: {
+        value: ["course-a"],
+        lastModified: 100,
+        updatedAt: 100,
+        deviceId: "device-b",
+      },
+      mergeData: (left, right) => [...new Set([...left, ...right])],
+      initial: true,
+      deviceId: "device-a",
+    });
+
+    expect(reconciliation.persistLocal).toBe(false);
+    expect(reconciliation.upload).toBeUndefined();
+  });
+
+  test("keeps account namespaces isolated across sign-out and account switch", () => {
+    const accountAKey = getSyncedStorageKey("courses", "account-a");
+    const accountBKey = getSyncedStorageKey("courses", "account-b");
+    const localRecords = new Map([
+      [
+        accountAKey,
+        normalizeSyncedData({ "11410": ["course-a"] }, "device-a", 100),
+      ],
+    ]);
+
+    const accountB = reconcileSyncedData({
+      local: localRecords.get(accountBKey) ?? {
+        value: {},
+        lastModified: -1,
+        updatedAt: -1,
+        deviceId: "device-b",
+      },
+      remote: null,
+      mergeData: mergeCourseStorage,
+      initial: true,
+      deviceId: "device-b",
+      now: 200,
+    });
+
+    expect(accountB.data.value).toEqual({});
+    expect(accountB.upload).toBeUndefined();
+    expect(localRecords.has(accountBKey)).toBe(false);
+    expect(localRecords.get(accountAKey)?.value).toEqual({
+      "11410": ["course-a"],
+    });
+  });
+
   test("uses separate subject namespaces and never uploads A to B", () => {
     const accountAKey = getSyncedStorageKey("courses", "account-a");
     const accountBKey = getSyncedStorageKey("courses", "account-b");
