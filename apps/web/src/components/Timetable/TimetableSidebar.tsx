@@ -3,6 +3,7 @@ import {
   Plus,
   EllipsisVertical,
   Share2,
+  Calendar,
   Globe,
   Users,
   ChevronRight,
@@ -35,6 +36,7 @@ import {
   CourseSearchContainerDynamic,
   TimetableCourseList,
 } from "./TimetableCourseList";
+import CalendarSubscriptionLinks from "./CalendarSubscriptionLinks";
 import OpenCollectiveSponsorBanner from "../Sponsorship/OpenCollectiveSponsorBanner";
 import { useAuth } from "react-oidc-context";
 import { useQuery } from "@tanstack/react-query";
@@ -49,6 +51,7 @@ import {
   reorderStoredCourseIdsByCredits,
 } from "@/helpers/timetable";
 import { filterHiddenCourseIds } from "@/helpers/timetableVisibility";
+import { toWebcalCalendarFeedUrl } from "@/lib/calendar-subscription";
 
 const createEmptyCustomItem = (color: string): CustomTimetableItem => ({
   // crypto.randomUUID rather than Math.random: the project already moved its
@@ -115,6 +118,7 @@ const TimetableSidebar = ({
   );
   const icsQuery = `semester=${semester}&semester_${semester}=${visibleCourseIds.map((id) => encodeURI(id)).join(",")}`;
   const icsfileLink = `${apiBase}/timetable/calendar.ics?${icsQuery}`;
+  const webcalLink = toWebcalCalendarFeedUrl(icsfileLink);
 
   const handleGroupByDepartment = (semester: string) => {
     const semesterCourses = getSemesterCourses(semester);
@@ -320,6 +324,29 @@ const TimetableSidebar = ({
             <Download className="w-4 h-4" />
           </Button>
         </DownloadTimetableDialogDynamic>
+
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              title={dict.timetable.sidebar.subscribe_calendar}
+            >
+              <Calendar className="w-4 h-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="start">
+            <div className="flex flex-col gap-4">
+              <p className="text-sm font-medium">
+                {dict.timetable.sidebar.subscribe_calendar}
+              </p>
+              <div className="flex flex-col space-y-2">
+                <CalendarSubscriptionLinks feedUrl={webcalLink} />
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
 
         <ShareTimetableDialogDynamic>
           <Button

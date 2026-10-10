@@ -97,6 +97,7 @@
       "member": "位成員",
       "members": "位成員",
       "download_export": "下載／匯出",
+      "subscribe_calendar": "訂閱行事曆",
       "share_timetable": "分享課表",
       "customizations": "自訂項目",
       "community": "社群"
@@ -623,6 +624,9 @@
     "tsmc": "台積館",
     "nanda": "南大校區",
     "main_campus": "校本部",
+    "leave_by": "請於 {time} 前出發",
+    "next_class": "下堂課：{name}",
+    "next_class_venue": "上課地點：{venue}",
     "service_over": "末班車已過",
     "red_line": "紅線",
     "green_line": "綠線",
@@ -2525,6 +2529,7 @@
     "description": "NTHUMods 最新版本與更新內容。",
     "release": "版本",
     "whats_new": "最新消息",
+    "new": "新增",
     "dismiss": "關閉",
     "view_all": "查看所有更新",
     "actions": {

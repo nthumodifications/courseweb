@@ -97,6 +97,7 @@
       "member": "member",
       "members": "members",
       "download_export": "Download / export",
+      "subscribe_calendar": "Subscribe to calendar",
       "share_timetable": "Share timetable",
       "customizations": "Customizations",
       "community": "Community"
@@ -623,6 +624,9 @@
     "tsmc": "TSMC",
     "nanda": "Nanda Campus",
     "main_campus": "Main Campus",
+    "leave_by": "Leave by {time}",
+    "next_class": "Next class: {name}",
+    "next_class_venue": "Venue: {venue}",
     "service_over": "Service Over",
     "red_line": "Red Line",
     "green_line": "Green Line",
@@ -2525,6 +2529,7 @@
     "description": "The latest NTHUMods releases and changes.",
     "release": "Release",
     "whats_new": "What's new",
+    "new": "New",
     "dismiss": "Dismiss",
     "view_all": "View all changes",
     "actions": {
