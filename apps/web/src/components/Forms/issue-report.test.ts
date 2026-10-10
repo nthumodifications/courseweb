@@ -1,15 +1,24 @@
 import { describe, expect, it } from "bun:test";
 import {
   DEFAULT_ATTACH_DIAGNOSTICS,
+  DIAGNOSTIC_LABEL_KEYS,
+  allowlistIssueDiagnostics,
   buildIssueBody,
   findLikelyDuplicates,
   getBrowserFamily,
+  getEnabledLocalFeatureFlags,
   getOsFamily,
   getRoutePatternFromPath,
   getViewportBucket,
+  getViewportSize,
   getAttachedDiagnostics,
   getReportAreaFromPath,
+  type IssueDiagnosticsInput,
 } from "./issue-report";
+import {
+  normalizeClientErrorName,
+  sanitizeDiagnosticText,
+} from "../../lib/client-diagnostics";
 
 describe("issue report helpers", () => {
   it("infers the report area from the current route", () => {
@@ -56,13 +65,94 @@ describe("issue report helpers", () => {
     );
     expect(getViewportBucket(390, 844)).toBe("compact");
     expect(getViewportBucket(1440, 900)).toBe("wide");
+    expect(getViewportSize(390, 844)).toBe("390x844");
+  });
+
+  it("allowlists diagnostics, bounds values, and keeps only safe values", () => {
+    const input = {
+      appVersion: "v".repeat(300),
+      buildCommit: "build-123",
+      route: "/[lang]/courses",
+      language: "en",
+      theme: "light",
+      browser: "Chrome 130",
+      os: "Windows",
+      viewport: "standard",
+      viewportSize: "390x844",
+      online: true,
+      serviceWorker: "active",
+      serviceWorkerWaiting: false,
+      signedIn: false,
+      enabledLocalFeatureFlags: ["local-search", "other-safe-flag"],
+      clientErrorCount: 7.9,
+      clientErrorNames: ["TypeError", "not-safe"],
+      unexpected: "must not leave the allowlist",
+    } as IssueDiagnosticsInput & { unexpected: string };
+    const diagnostics = allowlistIssueDiagnostics(input);
+
+    expect(Object.keys(diagnostics)).toEqual([
+      "appVersion",
+      "buildCommit",
+      "route",
+      "language",
+      "theme",
+      "browser",
+      "os",
+      "viewport",
+      "viewportSize",
+      "online",
+      "serviceWorker",
+      "serviceWorkerWaiting",
+      "signedIn",
+      "enabledLocalFeatureFlags",
+      "clientErrorCount",
+      "clientErrorNames",
+    ]);
+    expect(diagnostics.appVersion).toHaveLength(160);
+    expect(Object.keys(DIAGNOSTIC_LABEL_KEYS)).toEqual(
+      Object.keys(diagnostics),
+    );
+    expect(diagnostics.enabledLocalFeatureFlags).toEqual(["local-search"]);
+    expect(diagnostics.clientErrorCount).toBe(7);
+    expect(diagnostics.clientErrorNames).toEqual(["TypeError", "Other"]);
+  });
+
+  it("reports only enabled local feature flags", () => {
+    expect(
+      getEnabledLocalFeatureFlags({ VITE_ENABLE_LOCAL_SEARCH: "true" }),
+    ).toEqual(["local-search"]);
+    expect(
+      getEnabledLocalFeatureFlags({ VITE_ENABLE_LOCAL_SEARCH: "false" }),
+    ).toEqual([]);
   });
 
   it("keeps diagnostics opt-in and omits them when opted out", () => {
     const diagnostics = { signedIn: true } as never;
 
     expect(DEFAULT_ATTACH_DIAGNOSTICS).toBe(false);
+    expect(
+      getAttachedDiagnostics(DEFAULT_ATTACH_DIAGNOSTICS, diagnostics),
+    ).toBe(undefined);
     expect(getAttachedDiagnostics(false, diagnostics)).toBeUndefined();
     expect(getAttachedDiagnostics(true, diagnostics)).toBe(diagnostics);
   });
+
+  for (const [value, expected] of [
+    ["backtick ` and mention @here", "backtick ' and mention [at]here"],
+    ["x".repeat(200), "x".repeat(160)],
+  ] as const) {
+    it(`sanitizes diagnostic text: ${value.slice(0, 20)}`, () => {
+      expect(sanitizeDiagnosticText(value)).toBe(expected);
+    });
+  }
+
+  for (const [value, expected] of [
+    ["TypeError", "TypeError"],
+    [{ name: "NotOnTheList" }, "Other"],
+    ["unexpected-name", "Other"],
+  ] as const) {
+    it(`allowlists client error names: ${String(value)}`, () => {
+      expect(normalizeClientErrorName(value)).toBe(expected);
+    });
+  }
 });

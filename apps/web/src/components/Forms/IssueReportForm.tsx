@@ -22,14 +22,7 @@ import {
 } from "@courseweb/ui";
 import { DialogDescription } from "@radix-ui/react-dialog";
 import { ChevronDown, MessageCircle } from "lucide-react";
-import {
-  FormEvent,
-  ReactNode,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { FormEvent, ReactNode, useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "react-oidc-context";
@@ -37,15 +30,20 @@ import Turnstile from "react-turnstile";
 import client from "@/config/api";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useSettings } from "@/hooks/contexts/settings";
+import { getClientErrorDiagnostics } from "@/lib/client-diagnostics";
 import {
   DEFAULT_ATTACH_DIAGNOSTICS,
+  DIAGNOSTIC_LABEL_KEYS,
+  allowlistIssueDiagnostics,
   buildIssueBody,
   findLikelyDuplicates,
+  getEnabledLocalFeatureFlags,
   getBrowserFamily,
   getOsFamily,
   getRoutePatternFromPath,
   getAttachedDiagnostics,
   getViewportBucket,
+  getViewportSize,
   getReportAreaFromPath,
   ISSUE_TITLE_PREFIX,
   MAX_ISSUE_BODY_LENGTH,
@@ -72,6 +70,10 @@ type ApiResponse = {
 };
 
 type ServiceWorkerState = IssueDiagnostics["serviceWorker"];
+type ServiceWorkerSnapshot = {
+  state: ServiceWorkerState;
+  waiting: boolean;
+};
 type AppliedIssueField = "reportType" | "reportArea" | "diagnostics";
 
 const APPLIED_ISSUE_FIELDS: AppliedIssueField[] = [
@@ -80,21 +82,23 @@ const APPLIED_ISSUE_FIELDS: AppliedIssueField[] = [
   "diagnostics",
 ];
 
-const readServiceWorkerState = async (): Promise<ServiceWorkerState> => {
+const readServiceWorkerState = async (): Promise<ServiceWorkerSnapshot> => {
   if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) {
-    return "not-supported";
+    return { state: "none", waiting: false };
   }
 
   try {
     const registrations = await navigator.serviceWorker.getRegistrations();
-    if (registrations.some((registration) => registration.waiting)) {
-      return "update-available";
+    const waiting = registrations.some((registration) => registration.waiting);
+    if (waiting) return { state: "waiting", waiting: true };
+    if (registrations.some((registration) => registration.installing)) {
+      return { state: "installing", waiting: false };
     }
     return registrations.some((registration) => registration.active)
-      ? "active"
-      : "unregistered";
+      ? { state: "active", waiting: false }
+      : { state: "none", waiting: false };
   } catch {
-    return "unregistered";
+    return { state: "none", waiting: false };
   }
 };
 
@@ -169,10 +173,10 @@ const reportAreaLabels = (
 const serviceWorkerLabels = (
   issue: Record<string, string>,
 ): Record<ServiceWorkerState, string> => ({
-  "not-supported": issue.diagnostics_service_worker_not_supported,
-  unregistered: issue.diagnostics_service_worker_unregistered,
+  none: issue.diagnostics_service_worker_none,
+  installing: issue.diagnostics_service_worker_installing,
+  waiting: issue.diagnostics_service_worker_waiting,
   active: issue.diagnostics_service_worker_active,
-  "update-available": issue.diagnostics_service_worker_update_available,
 });
 
 const projectKnownIssue = (value: unknown): KnownIssue | null => {
@@ -239,8 +243,10 @@ export const useIssueReport = ({
   const [attachDiagnostics, setAttachDiagnostics] = useState(
     DEFAULT_ATTACH_DIAGNOSTICS,
   );
-  const [serviceWorker, setServiceWorker] =
-    useState<ServiceWorkerState>("unregistered");
+  const [serviceWorker, setServiceWorker] = useState<ServiceWorkerSnapshot>({
+    state: "none",
+    waiting: false,
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
@@ -250,21 +256,24 @@ export const useIssueReport = ({
 
   useEffect(() => {
     let active = true;
-    void readServiceWorkerState().then((state) => {
-      if (active) setServiceWorker(state);
+    void readServiceWorkerState().then((snapshot) => {
+      if (active) setServiceWorker(snapshot);
     });
     return () => {
       active = false;
     };
   }, []);
 
-  const diagnostics = useMemo<IssueDiagnostics>(() => {
+  const buildDiagnostics = (
+    worker: ServiceWorkerSnapshot,
+  ): IssueDiagnostics => {
     const viewport =
       typeof window === "undefined"
         ? "standard"
         : getViewportBucket(window.innerWidth, window.innerHeight);
+    const clientErrors = getClientErrorDiagnostics();
 
-    return {
+    return allowlistIssueDiagnostics({
       appVersion: import.meta.env.VITE_APP_VERSION || "0.1.0",
       buildCommit:
         import.meta.env.VITE_BUILD_COMMIT ||
@@ -280,17 +289,21 @@ export const useIssueReport = ({
         typeof navigator === "undefined" ? "" : navigator.userAgent,
       ),
       viewport,
+      viewportSize:
+        typeof window === "undefined"
+          ? "unknown"
+          : getViewportSize(window.innerWidth, window.innerHeight),
       online: typeof navigator === "undefined" ? true : navigator.onLine,
-      serviceWorker,
+      serviceWorker: worker.state,
+      serviceWorkerWaiting: worker.waiting,
       signedIn: auth.isAuthenticated,
-    };
-  }, [
-    auth.isAuthenticated,
-    darkMode,
-    language,
-    location.pathname,
-    serviceWorker,
-  ]);
+      enabledLocalFeatureFlags: getEnabledLocalFeatureFlags(import.meta.env),
+      clientErrorCount: clientErrors.count,
+      clientErrorNames: clientErrors.names,
+    });
+  };
+
+  const diagnostics = buildDiagnostics(serviceWorker);
 
   const reset = () => {
     setReportType(initialType ?? "bug");
@@ -327,6 +340,20 @@ export const useIssueReport = ({
   };
 
   const postReport = async () => {
+    let attachedDiagnostics: IssueDiagnostics | undefined;
+    if (attachDiagnostics) {
+      try {
+        const currentServiceWorker = await readServiceWorkerState();
+        setServiceWorker(currentServiceWorker);
+        attachedDiagnostics = getAttachedDiagnostics(
+          true,
+          buildDiagnostics(currentServiceWorker),
+        ) as IssueDiagnostics;
+      } catch {
+        // Diagnostics are best effort; the report must still be submitted.
+      }
+    }
+
     const response = await client.issue.$post({
       json: {
         title: `${ISSUE_TITLE_PREFIX}${title.trim()}`,
@@ -339,7 +366,7 @@ export const useIssueReport = ({
         turnstileToken: token ?? undefined,
         reportType,
         reportArea,
-        diagnostics: getAttachedDiagnostics(attachDiagnostics, diagnostics),
+        diagnostics: attachedDiagnostics as never,
       },
     });
 
@@ -458,19 +485,24 @@ export const IssueReportDisclosure = ({
   const typeLabels = reportTypeLabels(issue);
   const areaLabels = reportAreaLabels(issue);
   const workerLabels = serviceWorkerLabels(issue);
-  const diagnosticsRows = [
-    [issue.diagnostics_app_version, diagnostics.appVersion],
-    [issue.diagnostics_build_commit, diagnostics.buildCommit],
-    [issue.diagnostics_route, diagnostics.route],
-    [issue.diagnostics_language, diagnostics.language],
-    [issue.diagnostics_theme, diagnostics.theme],
-    [issue.diagnostics_browser, diagnostics.browser],
-    [issue.diagnostics_os, diagnostics.os],
-    [issue.diagnostics_viewport, diagnostics.viewport],
-    [issue.diagnostics_online, diagnostics.online ? issue.yes : issue.no],
-    [issue.diagnostics_service_worker, workerLabels[diagnostics.serviceWorker]],
-    [issue.diagnostics_signed_in, diagnostics.signedIn ? issue.yes : issue.no],
-  ];
+  const diagnosticsRows = (
+    Object.keys(DIAGNOSTIC_LABEL_KEYS) as Array<keyof IssueDiagnostics>
+  ).map((key) => {
+    const value = diagnostics[key];
+    const displayValue =
+      typeof value === "boolean"
+        ? value
+          ? issue.yes
+          : issue.no
+        : key === "serviceWorker"
+          ? workerLabels[value as ServiceWorkerState]
+          : Array.isArray(value)
+            ? value.length > 0
+              ? value.join(", ")
+              : issue.diagnostics_none
+            : String(value);
+    return [issue[DIAGNOSTIC_LABEL_KEYS[key]], displayValue];
+  });
 
   return (
     <div className="flex flex-col gap-4 border-t pt-4">

@@ -1,3 +1,10 @@
+import {
+  CLIENT_ERROR_NAMES,
+  MAX_CLIENT_ERROR_NAMES,
+  sanitizeDiagnosticText,
+  type ClientErrorName,
+} from "../../lib/client-diagnostics";
+
 export const REPORT_TYPES = [
   "bug",
   "missing-data",
@@ -35,6 +42,8 @@ export const DEFAULT_ATTACH_DIAGNOSTICS = false;
 export const ISSUE_TITLE_PREFIX = "[UI Submitted]: ";
 export const MAX_ISSUE_TITLE_LENGTH = 180;
 export const MAX_ISSUE_BODY_LENGTH = 10000;
+export const MAX_DIAGNOSTIC_FEATURE_FLAGS = 10;
+const LOCAL_FEATURE_FLAGS = new Set(["local-search"]);
 
 export type KnownIssue = {
   id: number;
@@ -43,6 +52,8 @@ export type KnownIssue = {
   html_url?: string;
   state?: string;
 };
+
+export type ServiceWorkerState = "none" | "installing" | "waiting" | "active";
 
 export type IssueDiagnostics = {
   appVersion: string;
@@ -53,14 +64,98 @@ export type IssueDiagnostics = {
   browser: string;
   os: "Android" | "iOS" | "Windows" | "macOS" | "Linux" | "Other";
   viewport: "compact" | "standard" | "wide";
+  viewportSize: string;
   online: boolean;
-  serviceWorker:
-    | "not-supported"
-    | "unregistered"
-    | "active"
-    | "update-available";
+  serviceWorker: ServiceWorkerState;
+  serviceWorkerWaiting: boolean;
   signedIn: boolean;
+  enabledLocalFeatureFlags: string[];
+  clientErrorCount: number;
+  clientErrorNames: ClientErrorName[];
 };
+
+export type IssueDiagnosticsInput = {
+  appVersion: string;
+  buildCommit: string;
+  route: ReportRoutePattern;
+  language: "en" | "zh";
+  theme: "light" | "dark";
+  browser: string;
+  os: IssueDiagnostics["os"];
+  viewport: IssueDiagnostics["viewport"];
+  viewportSize: string;
+  online: boolean;
+  serviceWorker: ServiceWorkerState;
+  serviceWorkerWaiting: boolean;
+  signedIn: boolean;
+  enabledLocalFeatureFlags: readonly string[];
+  clientErrorCount: number;
+  clientErrorNames: readonly string[];
+};
+
+export const DIAGNOSTIC_LABEL_KEYS: Record<keyof IssueDiagnostics, string> = {
+  appVersion: "diagnostics_app_version",
+  buildCommit: "diagnostics_build_commit",
+  route: "diagnostics_route",
+  language: "diagnostics_language",
+  theme: "diagnostics_theme",
+  browser: "diagnostics_browser",
+  os: "diagnostics_os",
+  viewport: "diagnostics_viewport",
+  viewportSize: "diagnostics_viewport_size",
+  online: "diagnostics_online",
+  serviceWorker: "diagnostics_service_worker",
+  serviceWorkerWaiting: "diagnostics_service_worker_waiting_worker",
+  signedIn: "diagnostics_signed_in",
+  enabledLocalFeatureFlags: "diagnostics_enabled_local_feature_flags",
+  clientErrorCount: "diagnostics_client_error_count",
+  clientErrorNames: "diagnostics_client_error_names",
+};
+
+const safeFeatureFlag = (value: string) =>
+  LOCAL_FEATURE_FLAGS.has(value) ? value : null;
+
+/** Pick and bound the only diagnostics fields allowed to leave the browser. */
+export function allowlistIssueDiagnostics(
+  input: IssueDiagnosticsInput,
+): IssueDiagnostics {
+  const browser = sanitizeDiagnosticText(input.browser);
+  const clientErrorNames = [
+    ...new Set(
+      input.clientErrorNames.map((name) =>
+        CLIENT_ERROR_NAMES.includes(name as ClientErrorName)
+          ? (name as ClientErrorName)
+          : "Other",
+      ),
+    ),
+  ].slice(0, MAX_CLIENT_ERROR_NAMES);
+  return {
+    appVersion: sanitizeDiagnosticText(input.appVersion),
+    buildCommit: sanitizeDiagnosticText(input.buildCommit),
+    route: input.route,
+    language: input.language,
+    theme: input.theme,
+    browser: /^(?:Edge|Firefox|Chrome|Safari) \d{1,4}$|^Other$/.test(browser)
+      ? browser
+      : "Other",
+    os: input.os,
+    viewport: input.viewport,
+    viewportSize: sanitizeDiagnosticText(input.viewportSize),
+    online: input.online,
+    serviceWorker: input.serviceWorker,
+    serviceWorkerWaiting: input.serviceWorkerWaiting,
+    signedIn: input.signedIn,
+    enabledLocalFeatureFlags: input.enabledLocalFeatureFlags
+      .map(safeFeatureFlag)
+      .filter((flag): flag is string => flag !== null)
+      .slice(0, MAX_DIAGNOSTIC_FEATURE_FLAGS),
+    clientErrorCount:
+      Number.isFinite(input.clientErrorCount) && input.clientErrorCount > 0
+        ? Math.floor(input.clientErrorCount)
+        : 0,
+    clientErrorNames,
+  };
+}
 
 export const getRoutePatternFromPath = (
   pathname: string,
@@ -94,6 +189,16 @@ export const getViewportBucket = (
   if (width < 1200) return "standard";
   return "wide";
 };
+
+export const getViewportSize = (width: number, height: number) =>
+  `${Math.max(0, Math.floor(width))}x${Math.max(0, Math.floor(height))}`;
+
+export const getEnabledLocalFeatureFlags = (env: {
+  VITE_ENABLE_LOCAL_SEARCH?: string;
+}): string[] =>
+  env.VITE_ENABLE_LOCAL_SEARCH?.trim().toLowerCase() === "true"
+    ? ["local-search"]
+    : [];
 
 const getBrowserLabel = (
   userAgent: string,
