@@ -27,4 +27,20 @@ describe("chat tool argument guardrails", () => {
   it("accepts the declared empty argument object", () => {
     expect(validateToolArguments("get_weather", {})).toEqual({});
   });
+
+  it("accepts optional student eligibility filters", () => {
+    expect(
+      validateToolArguments("search_courses", {
+        query: "machine learning",
+        level: "undergraduate",
+        year: 2,
+        unit: "CS",
+      }),
+    ).toMatchObject({
+      query: "machine learning",
+      level: "undergraduate",
+      year: 2,
+      unit: "CS",
+    });
+  });
 });
