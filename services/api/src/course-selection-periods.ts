@@ -30,6 +30,8 @@ export type CourseSelectionPeriodDetails = CourseSelectionPeriod & {
   phase: CourseSelectionPhase;
   audience: CourseSelectionAudience;
   sourceEventId: string;
+  startTime?: string;
+  endTime?: string;
 };
 
 const DATE_KEY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;

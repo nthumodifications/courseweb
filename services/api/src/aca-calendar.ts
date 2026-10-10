@@ -3,11 +3,16 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { env } from "hono/adapter";
 import { HTTPException } from "hono/http-exception";
+import type { D1Database } from "@cloudflare/workers-types";
 import {
   parseCourseSelectionPeriod,
   parseCourseSelectionPeriods,
   type AcademicCalendarEvent,
 } from "./course-selection-periods";
+import {
+  readStoredSelectionSchedules,
+  selectionSchedulesToEvents,
+} from "./scheduled/selection-dates";
 
 export type CalendarApiResponse = {
   kind: string;
@@ -102,8 +107,18 @@ const app = new Hono()
         return eventStart <= windowEnd && eventEnd >= windowStart;
       });
 
-      return c.json(
-        calendarDatas.map((item) => {
+      const storedSchedules = await readStoredSelectionSchedules(
+        (c.env as { DB?: D1Database } | undefined)?.DB,
+      );
+      const storedPhases = new Set(
+        storedSchedules.flatMap((schedule) =>
+          schedule.periods.map(
+            (period) => `${schedule.semester}:${period.phase}`,
+          ),
+        ),
+      );
+      const googleEvents = calendarDatas
+        .map((item) => {
           const event = {
             summary: item.summary,
             date: item.start.date,
@@ -113,8 +128,21 @@ const app = new Hono()
             ...event,
             courseSelectionPeriod: parseCourseSelectionPeriod(event),
           };
-        }),
+        })
+        .filter(
+          (event) =>
+            !event.courseSelectionPeriod ||
+            !storedPhases.has(
+              `${event.courseSelectionPeriod.semester}:${event.courseSelectionPeriod.phase}`,
+            ),
+        );
+      const scrapedEvents = selectionSchedulesToEvents(
+        storedSchedules,
+        windowStart,
+        windowEnd,
       );
+
+      return c.json([...googleEvents, ...scrapedEvents]);
     },
   );
 

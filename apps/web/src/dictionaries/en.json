@@ -178,11 +178,24 @@
     },
     "selection_period": {
       "title": "Course selection",
-      "current": "Now",
-      "next": "Next",
-      "open_now": "Within published dates",
-      "opens_today": "Opens today",
-      "opens_in": "Opens in {days} days",
+      "schedule_title": "{semester} Course selection schedule",
+      "dialog_description": "Course selection phases arranged by date.",
+      "starts_in_days": "Starts in {days} days",
+      "starts_tomorrow": "Starts tomorrow",
+      "starts_today": "Starts today",
+      "in_progress": "In progress",
+      "finished": "Finished",
+      "bar_in_progress_until": "In progress · until {date}",
+      "bar_in_progress_until_compact": "Now · {date}",
+      "bar_starts_in_days": "Starts in {days} days · {date}",
+      "bar_starts_in_days_compact": "{days}d · {date}",
+      "bar_starts_tomorrow": "Starts tomorrow · {date}",
+      "bar_starts_tomorrow_compact": "Tmr · {date}",
+      "bar_starts_today": "Starts today · {date}",
+      "bar_starts_today_compact": "Today · {date}",
+      "bar_link": "Course selection schedule",
+      "bar_link_compact": "Schedule",
+      "view_schedule": "View full schedule",
       "no_data": "No selection dates available",
       "phases": {
         "round-1": "1st selection round",
@@ -193,9 +206,14 @@
         "inter-school": "Inter-school selection",
         "withdrawal": "Course withdrawal"
       },
-      "audience": {
-        "new-students": "New and transfer students",
-        "inter-school": "Inter-school students"
+      "bar_phases": {
+        "round-1": "Round 1",
+        "round-2": "Round 2",
+        "round-3": "Round 3",
+        "new-students": "New students",
+        "add-drop": "Add/drop",
+        "inter-school": "Inter-school",
+        "withdrawal": "Withdrawal"
       }
     },
     "refine": {

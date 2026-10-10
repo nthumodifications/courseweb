@@ -16,6 +16,9 @@ minify = true
 # respective free-tier fallback providers.
 # AI_PROVIDER_ORDER optionally overrides the provider order (comma-separated);
 # the AI binding below enables keyless Workers AI as the final fallback.
+# Selection-date discovery uses at most 8 bounded GETs; extraction uses one
+# provider and one attempt per target. Set
+# SELECTION_LLM_PROVIDER and optionally SELECTION_LLM_MODEL to choose it.
 
 [dev]
 port = 5001
@@ -82,7 +85,7 @@ namespace_id = "1006"
   period = 60
 
 [triggers]
-crons = ["0 2 * * 1", "*/10 * * * *"] # PEO opening times Monday; usage collector every 10 minutes
+crons = ["0 2 * * 1", "0 2 * * *", "*/10 * * * *"] # PEO Monday; selection dates daily; usage every 10 minutes
 
 # Issue reports must carry a valid Turnstile token. Every web form sends one
 # since #955; remove this switch once the optional path is deleted.

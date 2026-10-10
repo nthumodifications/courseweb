@@ -44,7 +44,7 @@ Date-only call-site inventory: changed `useCourseDates.ts`, the academic branch 
 
 - `CalendarWeekContainer.tsx` and `CalendarMonthContainer.tsx` are outside this agent’s ownership. They already gate their academic feed with `showAcademicCalendar`, but their direct feed paths still use raw `.toISOString()` boundaries and `new Date(event.date)`; the parallel owner must apply the shared date contract there before the entire repository can be called timezone-safe.
 - `calendar_utils.tsx`, `calendar.types.ts`, `calendar_hook.tsx`, `config/rxdb.tsx`, `EventForm.tsx`, `EventPopover.tsx`, and `components/Timetable/` were not edited per the brief.
-- The API service was not changed. Its response currently exposes only each academic item’s `start.date`, so this change can preserve an inclusive range when one is available to the web layer but cannot recover a multi-day `end.date` that the service does not return. No migration, new dependency, lockfile change, or application environment variable is needed.
+- The API service was outside this UI date-boundary change, but it is changed elsewhere on this branch for selection-date scraping and calendar merging. This report therefore makes no branch-wide claim about API changes, migrations, dependencies, lockfiles, or optional scraper provider settings.
 
 ## Verification
 
