@@ -27,6 +27,7 @@ import recruit from "./recruit";
 import dining from "./dining";
 import youbike from "./youbike";
 import { syncPeoOpeningTimes } from "./scheduled/peo-opening-times";
+import { syncSelectionDates } from "./scheduled/selection-dates";
 import { D1Database } from "@cloudflare/workers-types";
 import usage from "./usage";
 import { syncUsageTick } from "./usage/collector";
@@ -102,9 +103,14 @@ export default {
   async scheduled(event: ScheduledEvent, env: Bindings, ctx: ExecutionContext) {
     if (event.cron === "0 2 * * 1") {
       ctx.waitUntil(syncPeoOpeningTimes(env));
+    }
+    if (event.cron === "0 2 * * *") {
+      // Three bounded GETs keep official selection data at <24h maximum
+      // staleness while staying well below Worker subrequest/CPU limits.
+      ctx.waitUntil(syncSelectionDates(env));
     } else if (event.cron === "*/10 * * * *") {
       ctx.waitUntil(syncUsageTick(env));
-    } else {
+    } else if (event.cron !== "0 2 * * 1") {
       console.warn(`Ignoring unknown scheduled event: ${event.cron}`);
     }
   },

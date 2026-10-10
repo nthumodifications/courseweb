@@ -82,7 +82,7 @@ namespace_id = "1006"
   period = 60
 
 [triggers]
-crons = ["0 2 * * 1", "*/10 * * * *"] # PEO opening times Monday; usage collector every 10 minutes
+crons = ["0 2 * * 1", "0 2 * * *", "*/10 * * * *"] # PEO Monday; selection dates daily; usage every 10 minutes
 
 # Issue reports must carry a valid Turnstile token. Every web form sends one
 # since #955; remove this switch once the optional path is deleted.

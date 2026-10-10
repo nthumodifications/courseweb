@@ -66,4 +66,36 @@ describe("academic calendar overlap filtering", () => {
       expect.objectContaining({ id: "straddles-month" }),
     ]);
   });
+
+  test("keeps the pre-scraper Google-only response when the cache has no row", async () => {
+    process.env.CALENDAR_API_KEY = "test-key";
+    globalThis.fetch = mock(async (input: RequestInfo | URL) =>
+      googleCalendarResponse(new Request(input)),
+    ) as unknown as typeof fetch;
+
+    const emptyDb = {
+      prepare: () => ({
+        bind: () => ({ all: async () => ({ results: [] }) }),
+      }),
+    };
+    const response = await app.request(
+      "/?start=2026-09-14T00:00:00.000Z&end=2026-09-21T00:00:00.000Z",
+      {},
+      { DB: emptyDb, CALENDAR_API_KEY: "test-key" } as never,
+    );
+
+    expect(await response.json()).toEqual([
+      expect.objectContaining({
+        id: "straddles-today",
+        summary:
+          "115學年度第1學期加退選開始(至20日止) Add-or-Drop Selection (9/3-9/20)",
+        date: "2026-09-03",
+        courseSelectionPeriod: expect.objectContaining({
+          semester: "11510",
+          startDate: "2026-09-03",
+          endDate: "2026-09-20",
+        }),
+      }),
+    ]);
+  });
 });
