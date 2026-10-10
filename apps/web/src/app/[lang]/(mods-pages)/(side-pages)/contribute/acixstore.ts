@@ -6,5 +6,5 @@ export const extractAcixstore = (input: string): string | null => {
   const value = input.trim();
   if (ACIXSTORE_VALUE.test(value)) return value;
 
-  return value.match(ACIXSTORE_QUERY)?.[1] ?? null;
+  return ACIXSTORE_QUERY.exec(value)?.[1] ?? null;
 };
