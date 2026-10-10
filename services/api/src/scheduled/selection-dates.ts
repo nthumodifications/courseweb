@@ -3,7 +3,6 @@ import type { D1Database } from "@cloudflare/workers-types";
 import { z } from "zod";
 import {
   type CourseSelectionAudience,
-  type CourseSelectionPeriod,
   type CourseSelectionPeriodDetails,
   type CourseSelectionPhase,
 } from "../course-selection-periods";
@@ -29,8 +28,7 @@ const SOURCE_USER_AGENT = "NTHUMods-selection-dates/1.0";
 const TAIPEI_TIME_ZONE = "Asia/Taipei";
 const SEMESTER_BOUND_MARGIN_DAYS = 120;
 export const MAX_SELECTION_CACHE_AGE_MS = 36 * 60 * 60 * 1000;
-const DATE_PATTERN =
-  /(?:(\d{3,4})\s*[/.\-]\s*)?(\d{1,2})\s*[/.\-]\s*(\d{1,2})/g;
+const DATE_PATTERN = /(?:(\d{3,4})\s*[/.-]\s*)?(\d{1,2})\s*[/.-]\s*(\d{1,2})/g;
 const TIME_PATTERN = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
 
 type HtmlElement = {
@@ -173,26 +171,48 @@ const parseDateRange = (value: string, rocYear: number) => {
   const startDate = toDateKey(startYear, startMonth, startDay);
   if (!startDate) return null;
 
-  const endYear = second[1]
-    ? rocOrGregorianYear(second[1])
-    : Number(second[2]) < startMonth
-      ? startYear + 1
-      : startYear;
+  let endYear = startYear;
+  if (second[1]) {
+    endYear = rocOrGregorianYear(second[1]);
+  } else if (Number(second[2]) < startMonth) {
+    endYear += 1;
+  }
   const endDate = toDateKey(endYear, Number(second[2]), Number(second[3]));
   if (!endDate) return null;
   return { startDate, endDate };
 };
 
 const phaseFromLabel = (label: string): SelectionPhase | null => {
-  if (/新生選課|new\s+students?|transfer\s+students?/i.test(label))
+  const lowerLabel = label.toLowerCase();
+  const compactLabel = lowerLabel.replaceAll(" ", "");
+  if (
+    label.includes("新生選課") ||
+    lowerLabel.includes("new student") ||
+    lowerLabel.includes("transfer student")
+  )
     return "new-students";
-  if (/加退選|add\s*-?\s*drop/i.test(label)) return "add-drop";
-  if (/校際選修|校際選課|inter\s*-?\s*school/i.test(label))
+  if (
+    label.includes("加退選") ||
+    compactLabel.includes("adddrop") ||
+    compactLabel.includes("add-drop")
+  )
+    return "add-drop";
+  if (
+    label.includes("校際選修") ||
+    label.includes("校際選課") ||
+    compactLabel.includes("interschool") ||
+    compactLabel.includes("inter-school")
+  )
     return "inter-school";
-  if (/停修|課程停修|withdrawal/i.test(label)) return "withdrawal";
-  const round = label.match(/第\s*([123])\s*次選課/);
+  if (
+    label.includes("停修") ||
+    label.includes("課程停修") ||
+    lowerLabel.includes("withdrawal")
+  )
+    return "withdrawal";
+  const round = /第\s*([123])\s*次選課/.exec(label);
   if (round) return `round-${round[1]}` as SelectionPhase;
-  const englishRound = label.match(/\b(1st|2nd|3rd)\b.*selection/i);
+  const englishRound = /\b(1st|2nd|3rd)\b.*selection/i.exec(label);
   if (englishRound) {
     return `round-${{ "1st": 1, "2nd": 2, "3rd": 3 }[englishRound[1]!]}` as SelectionPhase;
   }
@@ -209,7 +229,9 @@ const titleMatchesSemester = (value: string, semester: string) => {
   const { rocYear, term } = semesterParts(semester);
   const title = normalizeText(value);
   if (/暑期|暑修|summer\s+(?:session|term)/i.test(title)) return false;
-  if (!new RegExp(`(?:^|\\D)${rocYear}(?:學年度|年度|年)?`).test(title))
+  if (
+    !new RegExp(String.raw`(?:^|\D)${rocYear}(?:學年度|年度|年)?`).test(title)
+  )
     return false;
   const termPattern =
     term === 1
@@ -271,17 +293,26 @@ export async function discoverSelectionSources(
 ): Promise<Map<string, DiscoveredSelectionSource>> {
   const remaining = new Set(semesters);
   const discovered = new Map<string, DiscoveredSelectionSource>();
-  for (const listingUrl of SELECTION_DISCOVERY_URLS) {
-    if (remaining.size === 0) break;
-    let html: string;
-    try {
-      html = await fetchHtml(listingUrl, fetcher);
-    } catch (error) {
-      console.warn(
-        `[selection-dates] discovery listing failed at ${listingUrl}: ${error instanceof Error ? error.message : String(error)}`,
-      );
-      continue;
-    }
+  await discoverSelectionSourcesSequentially(
+    [...SELECTION_DISCOVERY_URLS],
+    remaining,
+    discovered,
+    fetcher,
+  );
+  return discovered;
+}
+
+const discoverSelectionSourcesSequentially = async (
+  listingUrls: readonly string[],
+  remaining: Set<string>,
+  discovered: Map<string, DiscoveredSelectionSource>,
+  fetcher: SelectionFetcher,
+): Promise<void> => {
+  const [listingUrl, ...rest] = listingUrls;
+  if (!listingUrl || remaining.size === 0) return;
+
+  try {
+    const html = await fetchHtml(listingUrl, fetcher);
     for (const semester of remaining) {
       const url = findSelectionSourceLinks(html, semester, listingUrl)[0];
       if (!url) continue;
@@ -293,9 +324,22 @@ export async function discoverSelectionSources(
       });
       remaining.delete(semester);
     }
+  } catch (error) {
+    console.warn(
+      "[selection-dates] discovery listing failed at " +
+        listingUrl +
+        ": " +
+        (error instanceof Error ? error.message : String(error)),
+    );
   }
-  return discovered;
-}
+
+  await discoverSelectionSourcesSequentially(
+    rest,
+    remaining,
+    discovered,
+    fetcher,
+  );
+};
 
 export class SelectionDocumentParseError extends Error {
   constructor(message: string) {
@@ -305,34 +349,56 @@ export class SelectionDocumentParseError extends Error {
 }
 
 type LogicalCell = { cell: HtmlElement; direct: boolean };
+type ActiveCell = { cell: HtmlElement; remaining: number };
+
+const fillRowspanCells = (
+  active: Array<ActiveCell | undefined>,
+  logical: Array<LogicalCell | undefined>,
+) => {
+  for (let column = 0; column < active.length; column += 1) {
+    const entry = active[column];
+    if (!entry) continue;
+    logical[column] = { cell: entry.cell, direct: false };
+    entry.remaining -= 1;
+    if (entry.remaining <= 0) active[column] = undefined;
+  }
+};
+
+const placeDirectCell = (
+  cell: HtmlElement,
+  column: number,
+  active: Array<ActiveCell | undefined>,
+  logical: Array<LogicalCell | undefined>,
+) => {
+  const colspan = Math.max(1, Number(cell.getAttribute("colspan") ?? "1"));
+  const rowspan = Math.max(1, Number(cell.getAttribute("rowspan") ?? "1"));
+  for (let offset = 0; offset < colspan; offset += 1) {
+    const targetColumn = column + offset;
+    logical[targetColumn] = { cell, direct: true };
+    if (rowspan > 1) active[targetColumn] = { cell, remaining: rowspan - 1 };
+  }
+  return column + colspan;
+};
+
+const placeDirectCells = (
+  row: HtmlElement,
+  active: Array<ActiveCell | undefined>,
+  logical: Array<LogicalCell | undefined>,
+) => {
+  let column = 0;
+  for (const cell of row.querySelectorAll("td")) {
+    while (logical[column]) column += 1;
+    column = placeDirectCell(cell, column, active, logical);
+  }
+};
 
 const logicalRows = (table: HtmlElement): LogicalCell[][] => {
-  const active: Array<{ cell: HtmlElement; remaining: number } | undefined> =
-    [];
+  const active: Array<ActiveCell | undefined> = [];
   const rows: LogicalCell[][] = [];
   for (const row of table.querySelectorAll("tbody tr, tr")) {
     const logical: Array<LogicalCell | undefined> = [];
-    for (let column = 0; column < active.length; column += 1) {
-      const entry = active[column];
-      if (!entry) continue;
-      logical[column] = { cell: entry.cell, direct: false };
-      entry.remaining -= 1;
-      if (entry.remaining <= 0) active[column] = undefined;
-    }
-
-    let column = 0;
-    for (const cell of row.querySelectorAll("td")) {
-      while (logical[column]) column += 1;
-      const colspan = Math.max(1, Number(cell.getAttribute("colspan") ?? "1"));
-      const rowspan = Math.max(1, Number(cell.getAttribute("rowspan") ?? "1"));
-      for (let offset = 0; offset < colspan; offset += 1) {
-        const targetColumn = column + offset;
-        logical[targetColumn] = { cell, direct: true };
-        if (rowspan > 1)
-          active[targetColumn] = { cell, remaining: rowspan - 1 };
-      }
-      column += colspan;
-    }
+    fillRowspanCells(active, logical);
+    placeDirectCells(row, active, logical);
     if (logical.some(Boolean))
       rows.push(logical.filter(Boolean) as LogicalCell[]);
   }
@@ -413,7 +479,7 @@ const parseScheduleTable = (
       );
     }
     seen.add(phase);
-    const specialEnd = dateText.match(/(\d{1,2}:\d{2})\s*截止/i)?.[1];
+    const specialEnd = /(\d{1,2}:\d{2})\s*截止/i.exec(dateText)?.[1];
     periods.push({
       id: `course-selection:${target.semester}:${phase}`,
       semester: target.semester,

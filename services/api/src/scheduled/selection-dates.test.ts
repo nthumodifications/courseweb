@@ -94,6 +94,18 @@ describe("official selection schedule parser", () => {
       startDate: "2026-06-15",
     });
   });
+
+  test("handles a 1 MB adversarial phase label promptly", () => {
+    const html = `<table><tr><th>選課階段</th><th>開放日期</th></tr>
+      <tr><td>add${" ".repeat(1_000_000)}drop</td><td>not a date</td></tr>
+    </table>`;
+    const startedAt = performance.now();
+
+    expect(() => parseSelectionHtml(html, target("11510"))).toThrow(
+      /no known selection phases found/,
+    );
+    expect(performance.now() - startedAt).toBeLessThan(1_000);
+  });
 });
 
 const replacePeriod = (
