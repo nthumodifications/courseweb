@@ -2459,6 +2459,7 @@
     "description": "The latest NTHUMods releases and changes.",
     "release": "Release",
     "whats_new": "What's new",
+    "new": "New",
     "dismiss": "Dismiss",
     "view_all": "View all changes",
     "actions": {

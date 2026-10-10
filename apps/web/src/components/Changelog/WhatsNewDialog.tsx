@@ -15,10 +15,13 @@ import {
 import useDictionary from "@/dictionaries/useDictionary";
 import { CHANGELOG } from "@/const/changelog";
 import { ChangelogVisualContent } from "./ChangelogVisual";
-import { getHighlightedRelease, shouldShowWhatsNew } from "./changelogLogic";
+import {
+  getHighlightedRelease,
+  LAST_SEEN_VERSION_KEY,
+  ONBOARDING_COMPLETE_KEY,
+  shouldShowWhatsNew,
+} from "./changelogLogic";
 
-const LAST_SEEN_VERSION_KEY = "last_seen_changelog_version";
-const ONBOARDING_COMPLETE_KEY = "hasVisitedBefore";
 const ONBOARDING_CHECK_INTERVAL_MS = 500;
 const SWIPE_THRESHOLD_PX = 40;
 const OPEN_DIALOG_SELECTOR =

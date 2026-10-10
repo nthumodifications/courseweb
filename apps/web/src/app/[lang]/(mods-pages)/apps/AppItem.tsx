@@ -3,6 +3,8 @@ import useDictionary from "@/dictionaries/useDictionary";
 import { Badge, cn } from "@courseweb/ui";
 import useLaunchApp from "@/hooks/useLaunchApp";
 import { activateOnKey } from "@/lib/activate-on-key";
+import { hasReleaseActionForHref } from "@/components/Changelog/changelogLogic";
+import { useUnseenRelease } from "@/components/Changelog/useUnseenRelease";
 
 const AppItem = ({
   app,
@@ -12,8 +14,12 @@ const AppItem = ({
   mini?: boolean;
 }) => {
   const dict = useDictionary();
+  const unseenRelease = useUnseenRelease();
 
   const [onItemClicked] = useLaunchApp(app);
+  const isNew =
+    unseenRelease !== undefined &&
+    hasReleaseActionForHref(unseenRelease, app.href);
 
   return (
     <div
@@ -41,6 +47,11 @@ const AppItem = ({
           {app.beta && (
             <Badge variant="secondary" className="shrink-0">
               {dict.applist.beta}
+            </Badge>
+          )}
+          {isNew && (
+            <Badge variant="secondary" className="shrink-0">
+              {dict.changelog.new}
             </Badge>
           )}
         </div>
