@@ -10,6 +10,10 @@ export const SERVICE_DAYS = [
   "Saturday",
 ] as const;
 
+/** Preserve the existing deterministic code-unit order used by Array#sort. */
+export const compareCityBusStrings = (left: string, right: string) =>
+  left < right ? -1 : left > right ? 1 : 0;
+
 export type ServiceDay = (typeof SERVICE_DAYS)[number];
 export type CityBusCategory = "pilot" | "city" | "intercity";
 export type CityBusDayType = "weekday" | "weekend";
@@ -305,7 +309,7 @@ function directionBoardingTimeSignature(direction: CityBusDirection) {
           ).join(",");
           return `${schedule.kind}:${serviceDays}:${values.join(",")}`;
         })
-        .sort();
+        .sort(compareCityBusStrings);
       return `${stop.id}:${schedules.join("|")}`;
     })
     .join(";");
@@ -566,7 +570,7 @@ function dayTypeSignature(
         ? [`${schedule.kind}:${times.basis}:${times.values.join(",")}`]
         : [];
     })
-    .sort()
+    .sort(compareCityBusStrings)
     .join("|");
 }
 
