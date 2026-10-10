@@ -68,7 +68,7 @@ export function FolderNavItem({
 
   const getColorClass = () => {
     if (folder.id == "_unsorted" || !hasRequirement) {
-      return "bg-neutral-400 dark:bg-neutral-600";
+      return "bg-muted-foreground";
     }
     return completed >= total
       ? "bg-green-500"
@@ -97,10 +97,10 @@ export function FolderNavItem({
           "flex items-center p-2 rounded-md cursor-pointer group",
           isLeafFolder && "transition-colors duration-200",
           isSelected
-            ? "bg-neutral-100 dark:bg-neutral-800"
+            ? "bg-muted"
             : isOver && isLeafFolder
               ? "bg-primary/20 border border-primary/50"
-              : "hover:bg-neutral-100/50 dark:hover:bg-neutral-800/50",
+              : "hover:bg-muted/50",
           isBlockedDropTarget && "opacity-60 cursor-not-allowed",
         )}
       >
@@ -125,9 +125,9 @@ export function FolderNavItem({
         >
           {hasChildren ? (
             isExpanded ? (
-              <ChevronDown className="h-4 w-4 text-neutral-400" />
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
             ) : (
-              <ChevronRight className="h-4 w-4 text-neutral-400" />
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
             )
           ) : (
             <div className="w-4" />
@@ -158,7 +158,7 @@ export function FolderNavItem({
                 <span className="text-yellow-400">+{inProgress}</span>
               ) : null}
               {pending > 0 ? (
-                <span className="text-neutral-400">+{pending}</span>
+                <span className="text-muted-foreground">+{pending}</span>
               ) : null}
               {" / "}
               {requirementLabel}

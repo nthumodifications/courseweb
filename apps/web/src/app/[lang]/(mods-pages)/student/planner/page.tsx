@@ -754,7 +754,7 @@ function GraduationPlanner() {
             <button
               type="button"
               className={`flex flex-col items-center justify-center gap-1 py-2 min-h-[44px] ${
-                mobileView === "folders" ? "text-primary" : "text-neutral-400"
+                mobileView === "folders" ? "text-primary" : "text-muted-foreground"
               }`}
               onClick={() => setMobileView("folders")}
             >
@@ -766,7 +766,7 @@ function GraduationPlanner() {
             <button
               type="button"
               className={`flex flex-col items-center justify-center gap-1 py-2 min-h-[44px] ${
-                mobileView === "courses" ? "text-primary" : "text-neutral-400"
+                mobileView === "courses" ? "text-primary" : "text-muted-foreground"
               }`}
               onClick={() => setMobileView("courses")}
             >
@@ -778,7 +778,7 @@ function GraduationPlanner() {
             <button
               type="button"
               className={`flex flex-col items-center justify-center gap-1 py-2 min-h-[44px] ${
-                mobileView === "semester" ? "text-primary" : "text-neutral-400"
+                mobileView === "semester" ? "text-primary" : "text-muted-foreground"
               }`}
               onClick={() => setMobileView("semester")}
             >

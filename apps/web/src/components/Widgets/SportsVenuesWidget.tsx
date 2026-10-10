@@ -6,6 +6,13 @@ import { WidgetShell } from "./WidgetShell";
 import { useSettings } from "@/hooks/contexts/settings";
 import { useVenueOccupancy } from "@/hooks/useVenueOccupancy";
 import useDictionary from "@/dictionaries/useDictionary";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@courseweb/ui";
 
 interface SportsVenuesWidgetProps {
   onRemove?: () => void;
@@ -47,19 +54,22 @@ const SportsVenuesWidget: FC<SportsVenuesWidgetProps> = ({
       isDragging={isDragging}
     >
       <div className="flex flex-col gap-3 p-4">
-        <select
-          value={selectedVenueId}
-          onChange={(event) => setVenueId(event.target.value)}
-          aria-label={dict.sports.title}
-          className="w-full rounded-md border border-border bg-transparent px-2 py-1 text-xs"
-        >
-          <option value="all">{dict.common.all}</option>
-          {data.map((item) => (
-            <option key={item.project_id} value={item.project_id}>
-              {item.project_name}
-            </option>
-          ))}
-        </select>
+        <Select value={selectedVenueId} onValueChange={setVenueId}>
+          <SelectTrigger
+            className="h-7 w-full text-xs"
+            aria-label={dict.sports.title}
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{dict.common.all}</SelectItem>
+            {data.map((item) => (
+              <SelectItem key={item.project_id} value={item.project_id}>
+                {item.project_name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         {isLoading ? (
           <div className="flex justify-center py-4">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />

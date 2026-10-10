@@ -30,6 +30,17 @@ const mockUpstream = (body: string, contentType: string) => {
 const requestCalendar = (path = "/ical/user?token=secret") =>
   calendarProxy.request(path, {});
 
+const mockUpstreamFailure = () => {
+  globalThis.fetch = mock(async (input) => {
+    const requestUrl = new URL(String(input));
+    const reflectedInput = `${requestUrl.pathname}${requestUrl.search}`;
+    return new Response(null, {
+      status: 502,
+      statusText: reflectedInput,
+    });
+  }) as unknown as typeof fetch;
+};
+
 const expectInertCalendar = (response: Response) => {
   expect(response.status).toBe(200);
   expect(response.headers.get("content-type")).toBe(
@@ -42,6 +53,17 @@ const expectInertCalendar = (response: Response) => {
   expect(response.headers.get("content-security-policy")).toBe(
     "default-src 'none'",
   );
+};
+
+const expectSafeError = async (response: Response, status: number) => {
+  expect(response.status).toBe(status);
+  expect(response.headers.get("content-type")).toBe(
+    "text/plain; charset=utf-8",
+  );
+  expect(response.headers.get("x-content-type-options")).toBe("nosniff");
+  const body = await response.text();
+  expect(body).toBe("Calendar unavailable");
+  expect(body).not.toContain("<script>");
 };
 
 describe("calendar proxy", () => {
@@ -62,9 +84,9 @@ describe("calendar proxy", () => {
     expect(await response.text()).toContain("END:VCALENDAR");
   });
 
-  it("serves event text containing angle brackets as an inert attachment", async () => {
+  it("passes valid ICS angle brackets through byte-identically", async () => {
     const body =
-      "BEGIN:VCALENDAR\nSUMMARY:<script>alert(1)</script>\nEND:VCALENDAR";
+      "BEGIN:VCALENDAR\r\nDESCRIPTION:Use < and > as literal text\r\nEND:VCALENDAR\r\n";
     mockUpstream(body, "text/calendar");
 
     const response = await requestCalendar();
@@ -74,18 +96,34 @@ describe("calendar proxy", () => {
   });
 
   it.each([
-    ["<script>alert(1)</script>", "text/html", "Unexpected calendar response"],
+    ["text/html", "<script>alert(1)</script>"],
+    ["text/calendar", "<html><script>alert(1)</script></html>"],
+  ])(
+    "returns a safe error for an invalid upstream %s response",
+    async (contentType, body) => {
+      mockUpstream(body, contentType);
+
+      await expectSafeError(await requestCalendar(), 502);
+    },
+  );
+
+  it.each([
     [
-      "<html><script>alert(1)</script></html>",
-      "text/calendar",
-      "Invalid calendar response",
+      "userId",
+      `/ical/${encodeURIComponent("<script>alert(1)</script>")}?token=secret`,
+      502,
     ],
-  ])("does not reflect %p served as %s", async (body, contentType, error) => {
-    mockUpstream(body, contentType);
-
-    const response = await requestCalendar();
-
-    expect(response.status).toBe(502);
-    expect(await response.json()).toEqual({ error });
-  });
+    [
+      "token",
+      `/ical/user?token=${encodeURIComponent("<script>alert(1)</script>")}`,
+      502,
+    ],
+    ["type", "/ical/user?token=secret&type=%3Cscript%3E", 400],
+  ])(
+    "does not reflect script input from %s in an HTML response",
+    async (_field, path, status) => {
+      mockUpstreamFailure();
+      await expectSafeError(await requestCalendar(path), status);
+    },
+  );
 });

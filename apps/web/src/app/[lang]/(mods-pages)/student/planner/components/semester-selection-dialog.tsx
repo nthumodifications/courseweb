@@ -29,7 +29,7 @@ export function SemesterSelectionDialog({
     >
       <div className="grid gap-2 py-4">
         {semesters.length === 0 ? (
-          <p className="text-sm text-neutral-400 text-center py-4">
+          <p className="text-sm text-muted-foreground text-center py-4">
             {dict.planner.semester.noSemestersAvailable}
           </p>
         ) : (

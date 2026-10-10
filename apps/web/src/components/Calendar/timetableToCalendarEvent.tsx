@@ -21,13 +21,14 @@ export const timetableToCalendarEvent = (
   language: Language,
 ): CalendarEvent[] => {
   return timetable
-    .filter(
-      (t) => scheduleTimeSlots[t.startTime] && scheduleTimeSlots[t.endTime],
-    )
-    .map((t) => {
+    .map((t): CalendarEvent | null => {
+      const startSlot = scheduleTimeSlots[t.startTime];
+      const endSlot = scheduleTimeSlots[t.endTime];
+      if (!startSlot || !endSlot) return null;
+
       const semester = semesterInfo.find((s) => s.id == t.course.semester)!;
-      const startTime = parseSlotTime(scheduleTimeSlots[t.startTime].start);
-      const endTime = parseSlotTime(scheduleTimeSlots[t.endTime].end);
+      const startTime = parseSlotTime(startSlot.start);
+      const endTime = parseSlotTime(endSlot.end);
       const classDate = addDays(semester.begins, t.dayOfWeek);
       const startDate = taipeiDateTime(
         classDate,
@@ -65,5 +66,6 @@ export const timetableToCalendarEvent = (
         tag: "course",
         courseId: t.course.raw_id,
       };
-    });
+    })
+    .filter((event): event is CalendarEvent => event !== null);
 };

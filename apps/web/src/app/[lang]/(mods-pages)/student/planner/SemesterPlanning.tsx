@@ -107,7 +107,7 @@ function SemesterCourseRow({
       style={style}
       {...listeners}
       {...attributes}
-      className={`p-2 rounded-md border border-border bg-neutral-50 dark:bg-neutral-800 flex justify-between items-center touch-none cursor-grab active:cursor-grabbing ${
+      className={`p-2 rounded-md border border-border bg-muted/50 flex justify-between items-center touch-none cursor-grab active:cursor-grabbing ${
         isDragging ? "opacity-50" : ""
       }`}
     >
@@ -176,7 +176,7 @@ function SemesterCourseRow({
             <DropdownMenuItem
               onClick={() => onStatusChange(course.uuid, "planned")}
             >
-              <CircleDashed className="h-4 w-4 mr-2 text-neutral-400" />
+              <CircleDashed className="h-4 w-4 mr-2 text-muted-foreground" />
               {dict.planner.semester.markAs}{" "}
               {getStatusLabel("planned", dict.planner.status)}
             </DropdownMenuItem>
@@ -389,7 +389,7 @@ export function SemesterPlanning({
                 <h3 className="font-medium text-lg">
                   {dict.planner.semester.emptyTitle}
                 </h3>
-                <p className="text-neutral-400">
+                <p className="text-muted-foreground">
                   {dict.planner.semester.emptyDescription}
                 </p>
               </div>
@@ -450,7 +450,7 @@ export function SemesterPlanning({
                     ))}
 
                     {getCoursesBySemester(currentSemester).length === 0 && (
-                      <div className="flex items-center justify-center h-24 text-neutral-400 text-center px-4">
+                      <div className="flex items-center justify-center h-24 text-muted-foreground text-center px-4">
                         <p>{dict.planner.semester.dropHint}</p>
                       </div>
                     )}
@@ -466,7 +466,7 @@ export function SemesterPlanning({
                     {dict.planner.semester.statsTitle}
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="p-3 pt-0">
+                <CardContent className="p-3 pt-1">
                   <div className="space-y-2">
                     <div>
                       <div className="flex justify-between items-center mb-1 text-sm">
@@ -489,9 +489,9 @@ export function SemesterPlanning({
                       {creditsInEachTopFolder.map((folder) => (
                         <div
                           key={folder.folder.id}
-                          className="bg-neutral-100 dark:bg-neutral-800 p-2 rounded-md"
+                          className="bg-muted p-2 rounded-md"
                         >
-                          <p className="text-xs text-neutral-400">
+                          <p className="text-xs text-muted-foreground">
                             {folder.folder.title}
                           </p>
                           <p className="font-medium">

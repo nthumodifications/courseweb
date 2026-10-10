@@ -28,6 +28,9 @@ import LibraryWidget from "./LibraryWidget";
 import LaundryWidget from "./LaundryWidget";
 import SportsVenuesWidget from "./SportsVenuesWidget";
 import YouBikeWidget from "./YouBikeWidget";
+import ShopsWidget from "./ShopsWidget";
+import UpcomingEventsWidget from "./UpcomingEventsWidget";
+import GradesWidget from "./GradesWidget";
 import { cn } from "@/lib/utils";
 
 // Individual sortable widget wrapper
@@ -80,6 +83,12 @@ const SortableWidget: FC<{
         return <SportsVenuesWidget {...commonProps} />;
       case "youbike":
         return <YouBikeWidget {...commonProps} />;
+      case "shops":
+        return <ShopsWidget {...commonProps} />;
+      case "upcoming-events":
+        return <UpcomingEventsWidget {...commonProps} />;
+      case "grades":
+        return <GradesWidget {...commonProps} />;
       default:
         return null;
     }

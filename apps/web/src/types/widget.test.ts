@@ -32,6 +32,14 @@ describe("widget dashboard config migration", () => {
         enabled: false,
       },
       { id: "youbike-default", type: "youbike", order: 10, enabled: false },
+      { id: "shops-default", type: "shops", order: 11, enabled: false },
+      {
+        id: "upcoming-events-default",
+        type: "upcoming-events",
+        order: 12,
+        enabled: false,
+      },
+      { id: "grades-default", type: "grades", order: 13, enabled: false },
     ]);
   });
 
@@ -50,7 +58,7 @@ describe("widget dashboard config migration", () => {
         {
           id: "course-selection-default",
           type: "course-selection",
-          order: 11,
+          order: 14,
           enabled: true,
         },
       ],
@@ -84,5 +92,31 @@ describe("widget dashboard config migration", () => {
       true,
     );
     expect(needsDashboardConfigMigration(DEFAULT_DASHBOARD_CONFIG)).toBe(false);
+  });
+
+  test("keeps a pre-slice layout order and appends new widgets disabled", () => {
+    const newTypes = new Set(["shops", "upcoming-events", "grades"]);
+    const stored = {
+      ...DEFAULT_DASHBOARD_CONFIG,
+      widgets: DEFAULT_DASHBOARD_CONFIG.widgets
+        .filter((widget) => !newTypes.has(widget.type))
+        .map((widget, index) => ({ ...widget, order: 30 - index })),
+    };
+
+    const migrated = mergeDashboardConfig(stored);
+
+    expect(migrated.widgets.slice(0, stored.widgets.length)).toEqual(
+      stored.widgets,
+    );
+    expect(migrated.widgets.slice(stored.widgets.length)).toEqual([
+      { id: "shops-default", type: "shops", order: 31, enabled: false },
+      {
+        id: "upcoming-events-default",
+        type: "upcoming-events",
+        order: 32,
+        enabled: false,
+      },
+      { id: "grades-default", type: "grades", order: 33, enabled: false },
+    ]);
   });
 });

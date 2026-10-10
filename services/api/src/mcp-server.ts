@@ -6,6 +6,11 @@ import algolia from "./config/algolia";
 import supabase_server from "./config/supabase_server";
 import type { Bindings } from "./index";
 import { rateLimitMiddleware } from "./utils/rate-limit";
+import {
+  eligibilitySummary,
+  type EligibilityLevel,
+  type StudentForEligibility,
+} from "./course-eligibility";
 
 const MAX_MCP_BODY_BYTES = 64 * 1024;
 const MAX_QUERY_LENGTH = 200;
@@ -37,6 +42,9 @@ const parseToolArgs = <Schema extends z.ZodTypeAny>(
 const searchCoursesArgsSchema = z.object({
   query: z.string().min(1).max(MAX_QUERY_LENGTH),
   limit: z.number().int().min(1).optional().default(10),
+  level: z.string().max(80).optional(),
+  year: z.number().int().min(1).max(10).optional(),
+  unit: z.string().max(120).optional(),
 });
 
 const courseIdArgsSchema = z.object({
@@ -58,10 +66,72 @@ const bulkSearchArgsSchema = z.object({
       department: z.string().max(100).optional(),
       language: z.string().max(100).optional(),
       semester: z.string().max(100).optional(),
+      level: z.string().max(80).optional(),
+      year: z.number().int().min(1).max(10).optional(),
+      unit: z.string().max(120).optional(),
     })
     .optional()
     .default({}),
 });
+
+const studentFromFilters = (filters: {
+  level?: string;
+  year?: number;
+  unit?: string;
+}): StudentForEligibility | undefined => {
+  if (
+    typeof filters.level !== "string" &&
+    typeof filters.year !== "number" &&
+    typeof filters.unit !== "string"
+  )
+    return undefined;
+  return {
+    level: filters.level as EligibilityLevel | undefined,
+    year: filters.year,
+    unit: filters.unit,
+  };
+};
+
+const includeEligibility = (
+  course: Record<string, unknown>,
+  student?: StudentForEligibility,
+) => ({
+  ...course,
+  eligibility: eligibilitySummary(
+    typeof course.restrictions === "string" ? course.restrictions : undefined,
+    student,
+  ),
+});
+
+const toMcpCourseSummary = (
+  hit: Record<string, any>,
+  student?: StudentForEligibility,
+) =>
+  includeEligibility(
+    {
+      raw_id: hit.raw_id,
+      course: hit.course,
+      department: hit.department,
+      class: hit.class,
+      name_zh: hit.name_zh,
+      name_en: hit.name_en,
+      teacher_zh: hit.teacher_zh || [],
+      teacher_en: hit.teacher_en || [],
+      credits: hit.credits,
+      times: hit.times || [],
+      venues: hit.venues || [],
+      language: hit.language,
+      semester: hit.semester,
+      brief: hit.brief,
+      restrictions: hit.restrictions,
+      note: hit.note,
+      prerequisites: hit.prerequisites,
+      capacity: hit.capacity,
+      cross_discipline: hit.cross_discipline || [],
+      ge_type: hit.ge_type,
+    },
+    student,
+  );
 
 const rejectOversizedBody = async (
   c: Context<{ Bindings: Bindings }>,
@@ -114,7 +184,7 @@ const MCP_TOOLS = [
   {
     name: "search_courses",
     description:
-      "Search for NTHU courses using full-text search. Returns structured course information. IMPORTANT: Search by course name, topic, or instructor name - NOT by course ID/code (e.g., search 'machine learning' not 'CS535100'). Each result includes raw_id which can be used with get_course_details or get_course_syllabus for more information.",
+      "Search for NTHU courses using full-text search. Returns structured course information and parsed eligibility. Optional level/year/unit arguments annotate every result with can_select and never filter results. Pass unit exactly as the student wrote it and treat unknown as requiring a check of the restriction text. IMPORTANT: Search by course name, topic, or instructor name - NOT by course ID/code (e.g., search 'machine learning' not 'CS535100'). Each result includes raw_id which can be used with get_course_details or get_course_syllabus for more information.",
     inputSchema: {
       type: "object",
       properties: {
@@ -129,6 +199,19 @@ const MCP_TOOLS = [
             "Maximum number of results to return (default: 10, max: 50)",
           minimum: 1,
           maximum: 50,
+        },
+        level: {
+          type: "string",
+          description: "Optional student level for eligibility annotation",
+        },
+        year: {
+          type: "number",
+          description: "Optional student year, from 1 to 10",
+        },
+        unit: {
+          type: "string",
+          description:
+            "Optional student department/programme, exactly as the student wrote it",
         },
       },
       required: ["query"],
@@ -188,7 +271,7 @@ const MCP_TOOLS = [
   {
     name: "bulk_search_courses",
     description:
-      "Search for courses using multiple query strings and optional filters. Useful for comparing different topics or finding courses across multiple criteria. Returns structured course information with raw_id for each result.",
+      "Search for courses using multiple query strings and optional filters. Useful for comparing different topics or finding courses across multiple criteria. Returns every upstream result with raw_id and parsed eligibility. Optional student level/year/unit arguments annotate results with can_select and never filter them; pass unit exactly as the student wrote it and treat unknown as requiring a check of the restriction text.",
     inputSchema: {
       type: "object",
       properties: {
@@ -222,6 +305,19 @@ const MCP_TOOLS = [
             semester: {
               type: "string",
               description: "Filter by semester (e.g., '11410', '11420')",
+            },
+            level: {
+              type: "string",
+              description: "Optional student level for eligibility annotation",
+            },
+            year: {
+              type: "number",
+              description: "Optional student year, from 1 to 10",
+            },
+            unit: {
+              type: "string",
+              description:
+                "Optional student department/programme, exactly as the student wrote it",
             },
           },
         },
@@ -314,10 +410,9 @@ const app = new Hono<{ Bindings: Bindings }>()
 
             switch (name) {
               case "search_courses": {
-                const { query, limit } = parseToolArgs(
-                  searchCoursesArgsSchema,
-                  args,
-                );
+                const parsedArgs = parseToolArgs(searchCoursesArgsSchema, args);
+                const { query, limit } = parsedArgs;
+                const student = studentFromFilters(parsedArgs);
                 const index = algolia(c);
 
                 try {
@@ -326,28 +421,9 @@ const app = new Hono<{ Bindings: Bindings }>()
                   });
 
                   // Format results as structured JSON similar to CourseListItem
-                  const courses = hits.map((hit: any) => ({
-                    raw_id: hit.raw_id,
-                    course: hit.course,
-                    department: hit.department,
-                    class: hit.class,
-                    name_zh: hit.name_zh,
-                    name_en: hit.name_en,
-                    teacher_zh: hit.teacher_zh || [],
-                    teacher_en: hit.teacher_en || [],
-                    credits: hit.credits,
-                    times: hit.times || [],
-                    venues: hit.venues || [],
-                    language: hit.language,
-                    semester: hit.semester,
-                    brief: hit.brief,
-                    restrictions: hit.restrictions,
-                    note: hit.note,
-                    prerequisites: hit.prerequisites,
-                    capacity: hit.capacity,
-                    cross_discipline: hit.cross_discipline || [],
-                    ge_type: hit.ge_type,
-                  }));
+                  const courses = hits.map((hit: any) =>
+                    toMcpCourseSummary(hit, student),
+                  );
 
                   return c.json({
                     jsonrpc: "2.0",
@@ -414,6 +490,7 @@ const app = new Hono<{ Bindings: Bindings }>()
                             capacity: data.capacity,
                             note: data.note,
                             restrictions: data.restrictions,
+                            eligibility: eligibilitySummary(data.restrictions),
                             prerequisites: data.prerequisites,
                             cross_discipline: data.cross_discipline || [],
                             ge_type: data.ge_type,
@@ -482,6 +559,9 @@ const app = new Hono<{ Bindings: Bindings }>()
                               prerequisites: data.prerequisites,
                               note: data.note,
                               restrictions: data.restrictions,
+                              eligibility: eligibilitySummary(
+                                data.restrictions,
+                              ),
                             },
                             grading: scores.map((s: any) => ({
                               type: s.type,
@@ -550,6 +630,9 @@ const app = new Hono<{ Bindings: Bindings }>()
                               capacity: course.capacity,
                               note: course.note,
                               restrictions: course.restrictions,
+                              eligibility: eligibilitySummary(
+                                course.restrictions,
+                              ),
                             })),
                           },
                           null,
@@ -582,6 +665,7 @@ const app = new Hono<{ Bindings: Bindings }>()
                   if (filters.semester) {
                     algoliaFilters.push(`semester:"${filters.semester}"`);
                   }
+                  const student = studentFromFilters(filters);
 
                   // Perform searches for each query
                   const searchPromises = queries.map((query: string) =>
@@ -597,25 +681,9 @@ const app = new Hono<{ Bindings: Bindings }>()
                   const formattedResults = results.map((result, idx) => ({
                     query: queries[idx],
                     total: result.hits.length,
-                    courses: result.hits.map((hit: any) => ({
-                      raw_id: hit.raw_id,
-                      course: hit.course,
-                      department: hit.department,
-                      class: hit.class,
-                      name_zh: hit.name_zh,
-                      name_en: hit.name_en,
-                      teacher_zh: hit.teacher_zh || [],
-                      teacher_en: hit.teacher_en || [],
-                      credits: hit.credits,
-                      times: hit.times || [],
-                      venues: hit.venues || [],
-                      language: hit.language,
-                      semester: hit.semester,
-                      brief: hit.brief,
-                      restrictions: hit.restrictions,
-                      note: hit.note,
-                      capacity: hit.capacity,
-                    })),
+                    courses: result.hits.map((hit: any) =>
+                      toMcpCourseSummary(hit, student),
+                    ),
                   }));
 
                   return c.json({
@@ -626,7 +694,11 @@ const app = new Hono<{ Bindings: Bindings }>()
                           type: "text",
                           text: JSON.stringify(
                             {
-                              filters_applied: filters,
+                              filters_applied: {
+                                department: filters.department,
+                                language: filters.language,
+                                semester: filters.semester,
+                              },
                               results: formattedResults,
                               note: "Use raw_id with get_course_details or get_course_syllabus for more information",
                             },

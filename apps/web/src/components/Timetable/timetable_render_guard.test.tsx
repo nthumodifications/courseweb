@@ -160,12 +160,19 @@ const { CourseDialogProvider } = await import(
   "@/components/Courses/CourseDialog"
 );
 const { TimetableCourseList } = await import("./TimetableCourseList");
+const { default: TimetableSlotHorizontal } = await import(
+  "./TimetableSlotHorizontal"
+);
+const { default: TimetableSlotVertical } = await import(
+  "./TimetableSlotVertical"
+);
 
 const COURSES_KEY = "nthumods-storage-anonymous-courses";
 const PREFERENCES_KEY =
   "nthumods-storage-anonymous-timetable_display_preferences";
 const DISPLAY_SETTINGS_KEY =
   "nthumods-storage-anonymous-timetable-display-settings";
+const TIMETABLE_THEME_KEY = "nthumods-storage-anonymous-timetable_theme";
 
 const syncedRecord = (value: unknown) =>
   JSON.stringify({ value, lastModified: 1, updatedAt: 1, deviceId: "test" });
@@ -274,14 +281,61 @@ describe("timetable provider render stability", () => {
   test("settles when the provider and empty course list mount", async () => {
     let renderCount = 0;
     const fixture = await renderTimetable(
-      <RenderCount onRender={() => (renderCount += 1)} />,
+      <>
+        <RenderCount onRender={() => (renderCount += 1)} />
+        <TimetableStateProbe />
+      </>,
     );
     await fixture.waitFor(
       () => fixture.container.textContent?.includes("No courses") ?? false,
     );
 
+    await fixture.waitFor(() => fixture.readState().timetableTheme === "ashes");
+    expect(fixture.readState().timetableTheme).toBe("ashes");
     expect(renderCount).toBeLessThan(30);
     expect(fixture.container.textContent).toContain("No courses");
+    await fixture.cleanup();
+  });
+
+  test("keeps stored timetable themes and updates them before courses exist", async () => {
+    const fixture = await renderTimetable(<TimetableStateProbe />, {
+      [TIMETABLE_THEME_KEY]: "ocean",
+    });
+    await fixture.waitFor(() => fixture.readState().timetableTheme === "ocean");
+
+    await act(async () => {
+      fixture.container
+        .querySelector<HTMLButtonElement>("#select-theme")
+        ?.click();
+    });
+
+    expect(fixture.readState().timetableTheme).toBe("ashes");
+    await fixture.cleanup();
+  });
+
+  test("renders malformed timetable indexes in both layouts without throwing", async () => {
+    const malformedSlot = {
+      course: testCourse,
+      venue: "",
+      dayOfWeek: -1,
+      startTime: -1,
+      endTime: -1,
+      color: "#000000",
+      textColor: "#ffffff",
+    };
+    const tableDim = {
+      header: { width: 40, height: 40 },
+      timetable: { width: 100, height: 50 },
+    };
+
+    const fixture = await renderTimetable(
+      <>
+        <TimetableSlotVertical course={malformedSlot} tableDim={tableDim} />
+        <TimetableSlotHorizontal course={malformedSlot} tableDim={tableDim} />
+      </>,
+    );
+
+    expect(fixture.container.textContent).toContain(testCourse.name_en);
     await fixture.cleanup();
   });
 
@@ -540,17 +594,24 @@ const TimetableStateProbe = () => {
   const {
     courses,
     preferences,
+    timetableTheme,
     deleteCourse,
     clearCourses,
     setCourses,
     setPreferences,
+    setTimetableTheme,
   } = useUserTimetable();
 
   return (
     <>
       <output>
-        {JSON.stringify({ courses, hiddenCourses: preferences.hiddenCourses })}
+        {JSON.stringify({
+          courses,
+          hiddenCourses: preferences.hiddenCourses,
+          timetableTheme,
+        })}
       </output>
+      <button id="select-theme" onClick={() => setTimetableTheme("ashes")} />
       <button id="delete-course" onClick={() => deleteCourse("11410-A")} />
       <button
         id="hide-course"

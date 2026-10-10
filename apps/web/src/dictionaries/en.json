@@ -948,6 +948,15 @@
           },
           "youbike": {
             "title": "YouBike"
+          },
+          "shops": {
+            "title": "Shops open now"
+          },
+          "upcoming-events": {
+            "title": "Upcoming events"
+          },
+          "grades": {
+            "title": "Grades and GPA"
           }
         },
         "weather": {
@@ -1075,13 +1084,19 @@
       "diagnostics_browser": "Browser",
       "diagnostics_os": "OS",
       "diagnostics_viewport": "Viewport",
+      "diagnostics_viewport_size": "Viewport size",
       "diagnostics_online": "Online",
       "diagnostics_service_worker": "Service worker",
+      "diagnostics_service_worker_waiting_worker": "Waiting worker exists",
       "diagnostics_signed_in": "Signed in",
-      "diagnostics_service_worker_not_supported": "Not supported",
-      "diagnostics_service_worker_unregistered": "Not registered",
+      "diagnostics_enabled_local_feature_flags": "Enabled local feature flags",
+      "diagnostics_client_error_count": "Client error count",
+      "diagnostics_client_error_names": "Client error names",
+      "diagnostics_service_worker_none": "None",
+      "diagnostics_service_worker_installing": "Installing",
+      "diagnostics_service_worker_waiting": "Waiting",
       "diagnostics_service_worker_active": "Active",
-      "diagnostics_service_worker_update_available": "Update available",
+      "diagnostics_none": "None",
       "yes": "Yes",
       "no": "No",
       "likely_duplicates": "Possible matches",
@@ -1278,6 +1293,8 @@
     "no_phone": "None",
     "area_placeholder": "Select area",
     "area_all": "Anywhere",
+    "no_open": "No shops are open now",
+    "separator": "·",
     "load_error": "Unable to load shop data.",
     "view_on_map": "View on map",
     "map_unavailable": "This location is not yet covered by the campus map"
@@ -1381,6 +1398,7 @@
     "sign_in": "Sign in",
     "predicted_term_gpa": "Predicted term GPA",
     "projected_cumulative_gpa": "Projected cumulative GPA",
+    "widget_empty": "No GPA data yet.",
     "credits_counted": "Credits counted",
     "current_gpa": "Starting cumulative GPA",
     "completed_credits": "Credits before history",

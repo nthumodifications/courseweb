@@ -1,10 +1,14 @@
 import { describe, expect, test } from "bun:test";
 import {
   eventsToDisplay,
+  getAddFunc,
   getActualEndDate,
+  getDiffFunction,
   getDisplayEndDate,
   getRepeatDefinitionBefore,
   getRepeatedStartDays,
+  getMonthForDisplay,
+  getWeek,
   reanchorSeriesEdit,
   serializeEvent,
 } from "./calendar_utils";
@@ -47,6 +51,29 @@ const makeEvent = (
 const dates = (values: Date[]) => values.map((date) => date.toISOString());
 
 describe("calendar recurrence", () => {
+  test.each([
+    ["daily", 1],
+    ["weekly", 7],
+    ["monthly", 31],
+    ["yearly", 365],
+  ] as const)("selects the %s recurrence add function", (type, days) => {
+    const start = localDate(2026, 1, 1);
+    const next = getAddFunc(type)(start, 1);
+
+    expect(Math.round((next.getTime() - start.getTime()) / 86_400_000)).toBe(
+      days,
+    );
+  });
+
+  test("selects the matching recurrence difference function", () => {
+    const start = localDate(2026, 1, 1);
+
+    expect(getDiffFunction("daily")(localDate(2026, 1, 3), start)).toBe(2);
+    expect(getDiffFunction("weekly")(localDate(2026, 1, 15), start)).toBe(2);
+    expect(getDiffFunction("monthly")(localDate(2026, 3, 1), start)).toBe(2);
+    expect(getDiffFunction("yearly")(localDate(2028, 1, 1), start)).toBe(2);
+  });
+
   test("includes the final calendar date for a date-mode rule", () => {
     const event = makeEvent(
       localDate(2026, 9, 10, 9),
@@ -349,6 +376,24 @@ describe("calendar recurrence", () => {
     });
   });
 
+  test("preserves a multi-day all-day event as one inclusive interval", () => {
+    const event = makeEvent(
+      localDate(2026, 9, 10),
+      localDate(2026, 9, 12),
+      null,
+      { allDay: true },
+    );
+
+    expect(
+      eventsToDisplay([event], localDate(2026, 9, 10), localDate(2026, 9, 13)),
+    ).toMatchObject([
+      {
+        displayStart: localDate(2026, 9, 10),
+        displayEnd: localDate(2026, 9, 12),
+      },
+    ]);
+  });
+
   test("clips a cross-midnight event into both Taipei calendar days", () => {
     const event = makeEvent(
       localDate(2026, 9, 10, 23, 30),
@@ -396,5 +441,23 @@ describe("calendar recurrence", () => {
     });
     expect(event.start).toBe(start);
     expect(event.excludedDates).toBe(excludedDates);
+  });
+});
+
+describe("legacy calendar grid helpers", () => {
+  test("returns a Sunday-starting week including both boundary days", () => {
+    const week = getWeek(new Date(2026, 8, 10, 12));
+
+    expect(week).toHaveLength(7);
+    expect(week[0]).toEqual(new Date(2026, 8, 6, 0, 0, 0, 0));
+    expect(week.at(-1)).toEqual(new Date(2026, 8, 12, 0, 0, 0, 0));
+  });
+
+  test("returns a complete month grid across month boundaries", () => {
+    const month = getMonthForDisplay(new Date(2026, 2, 15, 12));
+
+    expect(month).toHaveLength(35);
+    expect(month[0]).toEqual(new Date(2026, 2, 1, 0, 0, 0, 0));
+    expect(month.at(-1)).toEqual(new Date(2026, 3, 4, 0, 0, 0, 0));
   });
 });

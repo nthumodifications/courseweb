@@ -1,5 +1,6 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
+import type { Context, Next } from "hono";
 import jwt from "@tsndr/cloudflare-worker-jwt";
 import { z } from "zod";
 import { env } from "hono/adapter";
@@ -16,6 +17,10 @@ type GithubEnv = {
 
 const MAX_TITLE_LENGTH = 200;
 const MAX_BODY_LENGTH = 10000;
+export const MAX_ISSUE_REQUEST_BODY_BYTES = 32 * 1024;
+const MAX_LABEL_LENGTH = 50;
+const MAX_LABELS = 10;
+const MAX_TURNSTILE_TOKEN_LENGTH = 2048;
 const REPORT_TYPES = ["bug", "missing-data", "suggestion", "praise"] as const;
 const REPORT_AREAS = [
   "timetable",
@@ -39,6 +44,21 @@ const REPORT_ROUTE_PATTERNS = [
 ] as const;
 const PROVISIONED_TRIAGE_LABELS = new Set(["bug", "search", "timetable"]);
 const ALLOWED_ISSUE_LABELS = new Set(["generic"]);
+const MAX_DIAGNOSTIC_TEXT_LENGTH = 160;
+const MAX_DIAGNOSTIC_FEATURE_FLAGS = 10;
+const MAX_CLIENT_ERROR_NAMES = 8;
+const MAX_CLIENT_ERROR_COUNT = 1_000_000;
+const LOCAL_FEATURE_FLAGS = new Set(["local-search"]);
+const CLIENT_ERROR_NAMES = new Set([
+  "TypeError",
+  "ReferenceError",
+  "RangeError",
+  "SyntaxError",
+  "ChunkLoadError",
+  "NetworkError",
+  "AbortError",
+  "Other",
+]);
 
 export const filterIssueLabels = (labels: string[]) => [
   ...new Set(labels.filter((label) => ALLOWED_ISSUE_LABELS.has(label))),
@@ -62,46 +82,88 @@ export const redactPublicText = (value: string) =>
   );
 
 const diagnosticsSchema = z.object({
-  appVersion: z.string().regex(/^[A-Za-z0-9._+-]{1,50}$/),
-  buildCommit: z.string().regex(/^[A-Za-z0-9._-]{1,100}$/),
+  appVersion: z.string().max(MAX_DIAGNOSTIC_TEXT_LENGTH),
+  buildCommit: z.string().max(MAX_DIAGNOSTIC_TEXT_LENGTH),
   route: z.enum(REPORT_ROUTE_PATTERNS),
   language: z.enum(["en", "zh"]),
   theme: z.enum(["light", "dark"]),
-  browser: z.string().regex(/^(?:Edge|Firefox|Chrome|Safari) \d{1,4}$|^Other$/),
+  browser: z.string().max(MAX_DIAGNOSTIC_TEXT_LENGTH),
   os: z.enum(["Android", "iOS", "Windows", "macOS", "Linux", "Other"]),
   viewport: z.enum(["compact", "standard", "wide"]),
+  viewportSize: z.string().max(MAX_DIAGNOSTIC_TEXT_LENGTH),
   online: z.boolean(),
-  serviceWorker: z.enum([
-    "not-supported",
-    "unregistered",
-    "active",
-    "update-available",
-  ]),
+  serviceWorker: z.enum(["none", "installing", "waiting", "active"]),
+  serviceWorkerWaiting: z.boolean(),
   signedIn: z.boolean(),
+  enabledLocalFeatureFlags: z
+    .array(z.string().max(MAX_DIAGNOSTIC_TEXT_LENGTH))
+    .max(MAX_DIAGNOSTIC_FEATURE_FLAGS),
+  clientErrorCount: z.number().int().nonnegative().max(MAX_CLIENT_ERROR_COUNT),
+  clientErrorNames: z
+    .array(z.string().max(MAX_DIAGNOSTIC_TEXT_LENGTH))
+    .max(MAX_CLIENT_ERROR_NAMES),
 });
 
 type IssueDiagnostics = z.infer<typeof diagnosticsSchema>;
 
-export const parseIssueDiagnostics = (value: unknown) =>
-  diagnosticsSchema.parse(value);
+export const sanitizeDiagnosticText = (value: string) =>
+  value
+    .replaceAll("`", "'")
+    .replaceAll("@", "[at]")
+    .slice(0, MAX_DIAGNOSTIC_TEXT_LENGTH);
 
-export const formatDiagnosticsBlock = (diagnostics: IssueDiagnostics) => {
-  const lines = [
-    "### Anonymous diagnostics",
-    `- App version: ${redactPublicText(diagnostics.appVersion)}`,
-    `- Build commit: ${redactPublicText(diagnostics.buildCommit)}`,
-    `- Route: ${redactPublicText(diagnostics.route)}`,
-    `- Language: ${diagnostics.language}`,
-    `- Theme: ${diagnostics.theme}`,
-    `- Browser: ${diagnostics.browser}`,
-    `- OS: ${diagnostics.os}`,
-    `- Viewport: ${diagnostics.viewport}`,
-    `- Online: ${diagnostics.online ? "yes" : "no"}`,
-    `- Service worker: ${diagnostics.serviceWorker}`,
-    `- Signed in: ${diagnostics.signedIn ? "yes" : "no"}`,
-  ];
+const sanitizeFeatureFlags = (values: string[] | undefined) =>
+  (values ?? []).filter((value) => LOCAL_FEATURE_FLAGS.has(value));
 
-  return lines.join("\n");
+const sanitizeClientErrorNames = (values: string[]) => [
+  ...new Set(
+    values.map((value) => (CLIENT_ERROR_NAMES.has(value) ? value : "Other")),
+  ),
+];
+
+const sanitizeBrowser = (value: string) => {
+  const browser = sanitizeDiagnosticText(value);
+  return /^(?:Edge|Firefox|Chrome|Safari) \d{1,4}$/.test(browser)
+    ? browser
+    : "Other";
+};
+
+export const parseIssueDiagnostics = (
+  value: unknown,
+): IssueDiagnostics | undefined => {
+  const parsed = diagnosticsSchema.safeParse(value);
+  if (!parsed.success) return undefined;
+
+  return {
+    ...parsed.data,
+    appVersion: sanitizeDiagnosticText(parsed.data.appVersion),
+    buildCommit: sanitizeDiagnosticText(parsed.data.buildCommit),
+    browser: sanitizeBrowser(parsed.data.browser),
+    viewportSize: sanitizeDiagnosticText(parsed.data.viewportSize),
+    enabledLocalFeatureFlags: sanitizeFeatureFlags(
+      parsed.data.enabledLocalFeatureFlags,
+    ),
+    clientErrorNames: sanitizeClientErrorNames(parsed.data.clientErrorNames),
+  };
+};
+
+export const formatDiagnosticsBlock = (diagnostics: unknown) => {
+  const safeDiagnostics = parseIssueDiagnostics(diagnostics);
+  if (!safeDiagnostics) return "";
+
+  const safeJson = JSON.stringify(safeDiagnostics, null, 2)
+    .replaceAll("`", "'")
+    .replaceAll("@", "[at]");
+
+  return [
+    "<details>",
+    "<summary>Anonymous diagnostics</summary>",
+    "",
+    "```text",
+    safeJson,
+    "```",
+    "</details>",
+  ].join("\n");
 };
 
 type ErrorResponse = {
@@ -260,22 +322,48 @@ const issueRateLimit = rateLimitMiddleware({
   errorMessage: "Too many issue requests. Please try again in a minute.",
 });
 
+const rejectOversizedIssueBody = async (
+  c: Context<{ Bindings: Bindings }>,
+  next: Next,
+) => {
+  const contentLength = Number(c.req.header("content-length"));
+  if (
+    Number.isFinite(contentLength) &&
+    contentLength > MAX_ISSUE_REQUEST_BODY_BYTES
+  ) {
+    return c.json(
+      { error: "Request body is too large", code: "REQUEST_TOO_LARGE" },
+      413,
+    );
+  }
+
+  const body = await c.req.raw.clone().arrayBuffer();
+  if (body.byteLength > MAX_ISSUE_REQUEST_BODY_BYTES) {
+    return c.json(
+      { error: "Request body is too large", code: "REQUEST_TOO_LARGE" },
+      413,
+    );
+  }
+
+  await next();
+};
+
+const issueRequestSchema = z.object({
+  title: z.string().max(MAX_TITLE_LENGTH),
+  body: z.string().max(MAX_BODY_LENGTH),
+  labels: z.array(z.string().max(MAX_LABEL_LENGTH)).max(MAX_LABELS),
+  turnstileToken: z.string().max(MAX_TURNSTILE_TOKEN_LENGTH).optional(),
+  reportType: z.enum(REPORT_TYPES).optional(),
+  reportArea: z.enum(REPORT_AREAS).optional(),
+  diagnostics: z.unknown().optional(),
+});
+
 const app = new Hono<{ Bindings: Bindings }>()
   .post(
     "/",
     issueRateLimit,
-    zValidator(
-      "json",
-      z.object({
-        title: z.string().max(MAX_TITLE_LENGTH),
-        body: z.string().max(MAX_BODY_LENGTH),
-        labels: z.array(z.string()),
-        turnstileToken: z.string().optional(),
-        reportType: z.enum(REPORT_TYPES).optional(),
-        reportArea: z.enum(REPORT_AREAS).optional(),
-        diagnostics: diagnosticsSchema.optional(),
-      }),
-    ),
+    rejectOversizedIssueBody,
+    zValidator("json", issueRequestSchema),
     async (c) => {
       const {
         title,
@@ -345,10 +433,14 @@ const app = new Hono<{ Bindings: Bindings }>()
         );
       }
 
+      const safeDiagnostics = diagnostics
+        ? parseIssueDiagnostics(diagnostics)
+        : undefined;
+
       // Redact sensitive identifiers from the public report content.
       const publicTitle = redactPublicText(title);
       const publicBody = redactPublicText(
-        [body, diagnostics ? formatDiagnosticsBlock(diagnostics) : ""]
+        [body, safeDiagnostics ? formatDiagnosticsBlock(safeDiagnostics) : ""]
           .filter(Boolean)
           .join("\n\n"),
       );
@@ -462,7 +554,7 @@ const app = new Hono<{ Bindings: Bindings }>()
         const applied = [
           reportType ? ("reportType" as const) : undefined,
           reportArea ? ("reportArea" as const) : undefined,
-          diagnostics ? ("diagnostics" as const) : undefined,
+          safeDiagnostics ? ("diagnostics" as const) : undefined,
         ].filter((field): field is AppliedIssueField => field !== undefined);
 
         return c.json({ ...data, applied });

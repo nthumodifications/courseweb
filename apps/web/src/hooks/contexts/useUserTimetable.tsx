@@ -332,6 +332,10 @@ const useUserTimetableProvider = (loadCourse = true) => {
 
       const coursesCopy = { ...courses };
 
+      // Persist the selection even before a course has been added. The
+      // settings row is also responsible for healing the old default key.
+      _setTimetableTheme(theme);
+
       // Check and confirm if coursesCopy is traversable
       if (Object.keys(coursesCopy).length === 0) return;
       if (Object.keys(coursesCopy).some((sem) => sem.length !== 5)) return;
@@ -347,7 +351,6 @@ const useUserTimetableProvider = (loadCourse = true) => {
       });
       setColorMap(newColorMap);
       setUserDefinedColors({});
-      _setTimetableTheme(theme);
     },
     [courses],
   );

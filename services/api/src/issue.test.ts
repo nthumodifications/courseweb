@@ -6,9 +6,11 @@ mock.module("@tsndr/cloudflare-worker-jwt", () => ({
 const {
   filterIssueLabels,
   formatDiagnosticsBlock,
+  MAX_ISSUE_REQUEST_BODY_BYTES,
   mapTriageLabels,
   parseIssueDiagnostics,
   redactPublicText,
+  sanitizeDiagnosticText,
 } = await import("./issue");
 const { default: issue } = await import("./issue");
 
@@ -62,9 +64,14 @@ const issueDiagnostics = {
   browser: "Chrome 130",
   os: "Windows",
   viewport: "standard",
+  viewportSize: "390x844",
   online: true,
   serviceWorker: "active",
+  serviceWorkerWaiting: false,
   signedIn: false,
+  enabledLocalFeatureFlags: [],
+  clientErrorCount: 0,
+  clientErrorNames: [],
 } as const;
 
 const githubIssue = {
@@ -112,6 +119,23 @@ describe("issue creation abuse controls", () => {
     expect(bodyResponse.status).toBe(400);
   });
 
+  it("rejects an oversized request body before JSON parsing", async () => {
+    const response = await postIssue(
+      {
+        title: "valid title",
+        body: "valid description",
+        labels: [],
+        extra: "x".repeat(MAX_ISSUE_REQUEST_BODY_BYTES),
+      },
+      {},
+    );
+
+    expect(response.status).toBe(413);
+    expect(await response.json()).toMatchObject({
+      code: "REQUEST_TOO_LARGE",
+    });
+  });
+
   it("rejects a short user description before adding diagnostics or calling GitHub", async () => {
     const requests = mockGithub();
     const response = await postIssue(
@@ -152,6 +176,8 @@ describe("issue creation abuse controls", () => {
     });
     expect(githubRequest.body).toContain("12345678");
     expect(githubRequest.body).not.toContain("student@example.com");
+    expect(githubRequest.body).toContain("<details>");
+    expect(githubRequest.body).toContain("```text");
     expect(githubRequest.labels).toEqual(["generic", "bug", "search"]);
   });
 
@@ -296,9 +322,14 @@ describe("issue creation abuse controls", () => {
       browser: "Chrome 130",
       os: "Windows",
       viewport: "standard",
+      viewportSize: "390x844",
       online: true,
       serviceWorker: "active",
+      serviceWorkerWaiting: false,
       signedIn: true,
+      enabledLocalFeatureFlags: [],
+      clientErrorCount: 0,
+      clientErrorNames: [],
       error: "Failed to sync course MATH 101 with token eyJsecret",
       selectedSemester: "1132",
       timetableCourseCount: 3,
@@ -313,13 +344,62 @@ describe("issue creation abuse controls", () => {
       browser: "Chrome 130",
       os: "Windows",
       viewport: "standard",
+      viewportSize: "390x844",
       online: true,
       serviceWorker: "active",
+      serviceWorkerWaiting: false,
       signedIn: true,
+      enabledLocalFeatureFlags: [],
+      clientErrorCount: 0,
+      clientErrorNames: [],
     });
   });
 
-  it("does not publish free-form client errors", () => {
+  it("bounds diagnostics and keeps only fixed error names", () => {
+    const diagnostics = parseIssueDiagnostics({
+      ...issueDiagnostics,
+      appVersion: "v".repeat(160),
+      viewportSize: "`@".repeat(80),
+      enabledLocalFeatureFlags: ["local-search", "other-safe-flag"],
+      clientErrorCount: 7,
+      clientErrorNames: ["TypeError", "not-safe"],
+      unexpected: "drop me",
+    });
+
+    expect(diagnostics?.appVersion).toHaveLength(160);
+    expect(diagnostics?.viewportSize).toHaveLength(160);
+    expect(diagnostics?.enabledLocalFeatureFlags).toEqual(["local-search"]);
+    expect(diagnostics?.clientErrorCount).toBe(7);
+    expect(diagnostics?.clientErrorNames).toEqual(["TypeError", "Other"]);
+    expect(diagnostics).not.toHaveProperty("unexpected");
+    expect(
+      parseIssueDiagnostics({
+        ...issueDiagnostics,
+        appVersion: "v".repeat(161),
+      }),
+    ).toBeUndefined();
+  });
+
+  it("drops an invalid diagnostics snapshot without blocking the report", async () => {
+    const requests = mockGithub();
+    const response = await postIssue(
+      {
+        title: "valid title",
+        body: "valid description",
+        labels: [],
+        diagnostics: { route: "full user URL?student=12345678" },
+      },
+      githubEnv,
+    );
+    const payload = await response.json();
+    const githubRequest = JSON.parse(String(requests[1]?.init?.body));
+
+    expect(response.status).toBe(200);
+    expect(payload).toMatchObject({ applied: [] });
+    expect(githubRequest.body).not.toContain("Anonymous diagnostics");
+  });
+
+  it("collapses diagnostics and neutralizes error injection characters", () => {
     const diagnostics = formatDiagnosticsBlock({
       appVersion: "0.1.0",
       buildCommit: "abc123",
@@ -329,20 +409,20 @@ describe("issue creation abuse controls", () => {
       browser: "Chrome 130",
       os: "Windows",
       viewport: "standard",
+      viewportSize: "390x844",
       online: true,
       serviceWorker: "active",
+      serviceWorkerWaiting: false,
       signedIn: true,
-      recentClientErrors: [
-        {
-          component: "sync",
-          message: "Failed to sync course MATH 101 with token eyJsecret",
-        },
-      ],
+      enabledLocalFeatureFlags: [],
+      clientErrorCount: 1,
+      clientErrorNames: ["Other"],
     } as never);
 
-    expect(diagnostics).toContain("Signed in: yes");
-    expect(diagnostics).not.toContain("MATH 101");
-    expect(diagnostics).not.toContain("eyJsecret");
+    expect(diagnostics).toContain("<details>");
+    expect(diagnostics).toContain("```text");
+    expect(diagnostics).toContain('"signedIn": true');
+    expect(diagnostics).toContain('"clientErrorNames": [');
   });
 
   it("keeps signed-in status but excludes account and timetable state", () => {
@@ -355,15 +435,29 @@ describe("issue creation abuse controls", () => {
       browser: "Chrome 130",
       os: "Windows",
       viewport: "standard",
+      viewportSize: "390x844",
       online: true,
       serviceWorker: "active",
+      serviceWorkerWaiting: false,
       signedIn: true,
+      enabledLocalFeatureFlags: [],
+      clientErrorCount: 0,
+      clientErrorNames: [],
       selectedSemester: "1132",
       timetableCourseCount: 3,
     } as never);
 
-    expect(diagnostics).toContain("Signed in: yes");
+    expect(diagnostics).toContain('"signedIn": true');
     expect(diagnostics).not.toContain("1132");
     expect(diagnostics).not.toContain("course count");
   });
+
+  for (const [value, expected] of [
+    ["backtick ` and mention @here", "backtick ' and mention [at]here"],
+    ["x".repeat(200), "x".repeat(160)],
+  ] as const) {
+    it(`sanitizes diagnostic text: ${value.slice(0, 20)}`, () => {
+      expect(sanitizeDiagnosticText(value)).toBe(expected);
+    });
+  }
 });

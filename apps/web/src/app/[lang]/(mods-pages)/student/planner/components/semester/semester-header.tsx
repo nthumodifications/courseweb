@@ -15,7 +15,7 @@ export function SemesterHeader({
     <div className="p-4 border-b border-border flex justify-between items-center">
       <div>
         <h2 className="text-lg font-bold">{dict.planner.semester.title}</h2>
-        <p className="text-sm text-neutral-400">
+        <p className="text-sm text-muted-foreground">
           {dict.planner.semester.subtitle}
         </p>
       </div>

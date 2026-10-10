@@ -25,6 +25,11 @@ import {
   setCachedRequirements,
 } from "../graduation/cache";
 import { findRequirementsPDF, scrapeAllColleges } from "../graduation/scraper";
+import {
+  eligibilitySummary,
+  type EligibilityLevel,
+  type StudentForEligibility,
+} from "../course-eligibility";
 
 const MAX_RESULT_ITEMS = 15;
 const MAX_COMPARE_QUERIES = 8;
@@ -127,8 +132,38 @@ const buildCourseFilters = (semester?: string, department?: string) =>
     .filter((filter): filter is string => Boolean(filter))
     .join(" AND ");
 
-const toCourseSummary = (value: unknown, briefLength = 450): UnknownRecord => {
+type StudentFilters = {
+  level?: EligibilityLevel;
+  year?: number;
+  unit?: string;
+};
+
+const studentFiltersFromArgs = (
+  args: Record<string, unknown>,
+): StudentFilters | undefined => {
+  const level = args.level;
+  const year = args.year;
+  const unit = args.unit;
+  if (
+    typeof level !== "string" &&
+    typeof year !== "number" &&
+    typeof unit !== "string"
+  )
+    return undefined;
+  return {
+    level: typeof level === "string" ? (level as EligibilityLevel) : undefined,
+    year: typeof year === "number" ? year : undefined,
+    unit: typeof unit === "string" ? unit : undefined,
+  };
+};
+
+const toCourseSummary = (
+  value: unknown,
+  briefLength = 450,
+  student?: StudentForEligibility,
+): UnknownRecord => {
   const course = asRecord(value);
+  const restrictions = trimText(course.restrictions, 500);
   const result: UnknownRecord = {
     raw_id: course.raw_id ?? course.objectID,
     course: course.course,
@@ -146,7 +181,8 @@ const toCourseSummary = (value: unknown, briefLength = 450): UnknownRecord => {
     capacity: course.capacity,
     enrolled: course.enrolled,
     closed_mark: course.closed_mark,
-    restrictions: trimText(course.restrictions, 500),
+    restrictions,
+    eligibility: eligibilitySummary(restrictions, student),
     note: trimText(course.note, 500),
     prerequisites: trimText(course.prerequisites, 500),
     cross_discipline: asStringArray(course.cross_discipline),
@@ -240,17 +276,18 @@ const searchCourses = async (
   limit = MAX_RESULT_ITEMS,
   semester?: string,
   department?: string,
+  student?: StudentFilters,
 ): Promise<UnknownRecord> => {
   const outputLimit = asPositiveLimit(limit, 10);
   const result = await searchWithFallback(
     c,
     query.trim(),
-    Math.max(outputLimit, 15),
+    outputLimit,
     semester,
     department,
   );
   const hits = trimList(result.hits ?? [], outputLimit).map((hit) =>
-    toCourseSummary(hit, 450),
+    toCourseSummary(hit, 450, student),
   );
   return {
     query,
@@ -331,6 +368,7 @@ const findFreeCourses = async (
   const selected = currentCourses(userContext, semester);
   const occupied = getOccupiedSlots(selected);
   const limit = asPositiveLimit(args.limit, 10);
+  const student = studentFiltersFromArgs(args);
   const result = await searchWithFallback(
     c,
     typeof args.query === "string" ? args.query.trim() : "",
@@ -339,7 +377,7 @@ const findFreeCourses = async (
     typeof args.department === "string" ? args.department : undefined,
   );
   const courses = (result.hits ?? [])
-    .map((course) => toCourseSummary(course))
+    .map((course) => toCourseSummary(course, 450, student))
     .filter((course) => {
       const slots = parseTimeSlots(
         Array.isArray(course.times)
@@ -592,6 +630,22 @@ const toolSemester = z
 const optionalText = (max: number) => z.string().trim().max(max).optional();
 const courseId = z.string().trim().min(1).max(100);
 const resultLimit = z.number().int().min(1).max(MAX_RESULT_ITEMS).optional();
+const studentLevel = z
+  .enum([
+    "undergraduate",
+    "master",
+    "doctoral",
+    "special-program",
+    "advanced-student",
+    "international-student",
+    "secondary-teacher-education",
+    "primary-teacher-education",
+    "male",
+    "female",
+  ])
+  .optional();
+const studentYear = z.number().int().min(1).max(10).optional();
+const studentUnit = optionalText(120);
 
 const compareQueries = z
   .string()
@@ -631,6 +685,9 @@ const TOOL_ARGUMENT_SCHEMAS = {
       query: z.string().trim().min(1).max(200),
       semester: toolSemester,
       limit: resultLimit,
+      level: studentLevel,
+      year: studentYear,
+      unit: studentUnit,
     })
     .strict(),
   get_course_details: z.object({ courseId }).strict(),
@@ -639,6 +696,9 @@ const TOOL_ARGUMENT_SCHEMAS = {
       queries: compareQueries,
       department: optionalText(120),
       semester: toolSemester,
+      level: studentLevel,
+      year: studentYear,
+      unit: studentUnit,
     })
     .strict(),
   list_departments: z.object({ query: optionalText(120) }).strict(),
@@ -657,6 +717,9 @@ const TOOL_ARGUMENT_SCHEMAS = {
       department: optionalText(120),
       semester: toolSemester,
       limit: resultLimit,
+      level: studentLevel,
+      year: studentYear,
+      unit: studentUnit,
     })
     .strict(),
   check_timetable_conflicts: z
@@ -719,7 +782,7 @@ export const TOOL_DECLARATIONS: FunctionDeclaration[] = [
   {
     name: "search_courses",
     description:
-      "Search NTHU courses by topic, name, course code, or instructor. Defaults to the current semester and returns raw_ids.",
+      "Search NTHU courses by topic, name, course code, or instructor. Defaults to the current semester and returns raw_ids plus parsed eligibility. Optional level/year/unit arguments annotate each course with can_select; they never filter results. Pass unit exactly as the student wrote it and treat unknown as requiring a check of the restriction text.",
     parameters: {
       type: Type.OBJECT,
       properties: {
@@ -734,6 +797,31 @@ export const TOOL_DECLARATIONS: FunctionDeclaration[] = [
         limit: {
           type: Type.NUMBER,
           description: "Maximum results, default 10",
+        },
+        level: {
+          type: Type.STRING,
+          enum: [
+            "undergraduate",
+            "master",
+            "doctoral",
+            "special-program",
+            "advanced-student",
+            "international-student",
+            "secondary-teacher-education",
+            "primary-teacher-education",
+            "male",
+            "female",
+          ],
+          description: "Optional student level for eligibility annotation",
+        },
+        year: {
+          type: Type.NUMBER,
+          description: "Optional student year, from 1 to 10",
+        },
+        unit: {
+          type: Type.STRING,
+          description:
+            "Optional student department/programme, exactly as the student wrote it",
         },
       },
       required: ["query"],
@@ -772,6 +860,19 @@ export const TOOL_DECLARATIONS: FunctionDeclaration[] = [
         semester: {
           type: Type.STRING,
           description: "Optional five-digit semester",
+        },
+        level: {
+          type: Type.STRING,
+          description: "Optional student level for eligibility annotation",
+        },
+        year: {
+          type: Type.NUMBER,
+          description: "Optional student year",
+        },
+        unit: {
+          type: Type.STRING,
+          description:
+            "Optional student department/programme, exactly as the student wrote it",
         },
       },
       required: ["queries"],
@@ -834,6 +935,19 @@ export const TOOL_DECLARATIONS: FunctionDeclaration[] = [
         limit: {
           type: Type.NUMBER,
           description: "Maximum matches, default 10",
+        },
+        level: {
+          type: Type.STRING,
+          description: "Optional student level for eligibility annotation",
+        },
+        year: {
+          type: Type.NUMBER,
+          description: "Optional student year",
+        },
+        unit: {
+          type: Type.STRING,
+          description:
+            "Optional student department/programme, exactly as the student wrote it",
         },
       },
       required: [],
@@ -953,6 +1067,8 @@ export async function executeTool(
         validatedArgs.query as string,
         validatedArgs.limit as number | undefined,
         semester,
+        undefined,
+        studentFiltersFromArgs(validatedArgs),
       );
 
     case "get_course_details":
@@ -964,12 +1080,13 @@ export async function executeTool(
         .map((query) => query.trim())
         .filter(Boolean);
       const department = validatedArgs.department as string | undefined;
+      const student = studentFiltersFromArgs(validatedArgs);
       return {
         semester,
         filters_applied: { department: department ?? null },
         results: await Promise.all(
           queries.map(async (query) =>
-            searchCourses(c, query, 5, semester, department),
+            searchCourses(c, query, 5, semester, department, student),
           ),
         ),
       };

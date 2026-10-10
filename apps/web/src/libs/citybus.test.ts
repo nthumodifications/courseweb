@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
+  compareCityBusStrings,
   formatDepartureCountdown,
   formatDepartureTime,
   formatCityBusRealtimeDisplay,
@@ -14,6 +15,33 @@ import {
   type CityBusRoute,
   type CityBusSchedule,
 } from "./citybus";
+
+const cityBusIndex = (await Bun.file(
+  `${import.meta.dir}/../../public/fallback_data/citybus/index.json`,
+).json()) as {
+  routes: Array<{
+    id: string;
+    nameZh: string;
+    nameEn: string;
+    stopNamesZh: string[];
+    stopNamesEn: string[];
+  }>;
+};
+
+const routeAndStopLists = [
+  {
+    name: "route names (Chinese)",
+    values: cityBusIndex.routes.map((route) => route.nameZh),
+  },
+  {
+    name: "route names (English)",
+    values: cityBusIndex.routes.map((route) => route.nameEn),
+  },
+  ...cityBusIndex.routes.flatMap((route) => [
+    { name: `${route.id} stop names (Chinese)`, values: route.stopNamesZh },
+    { name: `${route.id} stop names (English)`, values: route.stopNamesEn },
+  ]),
+];
 
 const zhLabels = {
   underHour: "分鐘",
@@ -269,6 +297,16 @@ describe("city bus route variants and full-day timetable", () => {
         (item) => item.departureTime,
       ),
     ).toEqual(["09:00"]);
+  });
+});
+
+describe("city bus ordering", () => {
+  test("explicit sorting preserves every generated route and stop list", () => {
+    for (const { name, values } of routeAndStopLists) {
+      expect([...values].sort(compareCityBusStrings), name).toEqual(
+        [...values].sort(),
+      );
+    }
   });
 });
 
