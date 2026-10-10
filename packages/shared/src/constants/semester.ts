@@ -106,6 +106,12 @@ export const semesterInfo = [
     begins: new Date(2026, 9 - 1, 7),
     ends: new Date(2026, 12 - 1, 27),
   },
+  // Next: 11520 (year 2026, semester 2). Per the NTHU academic calendar,
+  // classes begin 2027-02-15 and summer vacation begins 2027-06-07, so
+  // begins: new Date(2027, 2 - 1, 15), ends: new Date(2027, 6 - 1, 6).
+  // Add the row here and in services/api/src/timetable-ics.ts in the same
+  // change that syncs the 11520 courses: the last row is treated as the latest
+  // semester with course data.
 ];
 
 export const currentSemester = semesterInfo.find((semester) => {
