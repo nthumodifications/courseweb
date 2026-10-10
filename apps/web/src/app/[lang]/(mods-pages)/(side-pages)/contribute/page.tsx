@@ -14,6 +14,7 @@ import {
 import IssueFormDialog from "@/components/Forms/IssueFormDialog";
 import Footer from "@/components/Footer";
 import useDictionary from "@/dictionaries/useDictionary";
+import CourseStatisticsContribution from "./CourseStatisticsContribution";
 
 const ContributePage = () => {
   const dict = useDictionary();
@@ -128,6 +129,8 @@ const ContributePage = () => {
         <p className="text-muted-foreground leading-relaxed">
           {dict.contribute.how_to_contribute.description}
         </p>
+
+        <CourseStatisticsContribution />
 
         <h2 className="text-base font-bold">
           {dict.contribute.financial_support.title}

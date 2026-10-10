@@ -1638,6 +1638,31 @@
       "title": "How You Can Contribute",
       "description": "NTHUMods is a 100% student-led, open source project. We rely on the support of our contributors and the NTHU community to keep this platform alive and thriving. Every contribution, no matter how small, makes a real difference in the lives of thousands of students!"
     },
+    "course_statistics": {
+      "title": "Share course statistics",
+      "description": "Share the school's course average and standard-deviation table. It says nothing about you.",
+      "steps": {
+        "sign_in": "Sign in to the school's CCXP system.",
+        "copy": "Copy the ACIXSTORE value from the address bar."
+      },
+      "session_label": "ACIXSTORE value",
+      "privacy": "The value is used once and is not stored.",
+      "submit": "Share course statistics",
+      "loading": "Sharing course statistics…",
+      "progress": "Sharing semester {completed} of {total}…",
+      "result": "Saved {courses} course statistics across {semesters} semesters.",
+      "already_up_to_date": "Course statistics are already up to date for {count} semesters.",
+      "no_data": "No course statistics were available for these semesters.",
+      "errors": {
+        "invalid_session": "That ACIXSTORE value is not valid.",
+        "session_expired": "The CCXP session has expired. Copy a new ACIXSTORE value and try again.",
+        "school_unreachable": "The school system could not be reached. Try again later.",
+        "school_response_invalid": "The school system returned an unexpected page.",
+        "invalid_semester": "The selected semester was not accepted by the school system.",
+        "storage_error": "The course statistics could not be saved. Try again later.",
+        "unknown": "The course statistics could not be shared. Try again later."
+      }
+    },
     "financial_support": {
       "title": "💰 Financial Support",
       "description": "Help us cover development costs, and other expenses. Every dollar helps us maintain and improve the platform for all students.",
