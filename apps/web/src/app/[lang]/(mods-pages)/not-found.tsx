@@ -1,14 +1,14 @@
 import { Helmet } from "react-helmet-async";
 import { useParams } from "react-router-dom";
+import useDictionary from "@/dictionaries/useDictionary";
 
 const NotFound = () => {
   const { lang } = useParams<{ lang: string }>();
+  const dict = useDictionary();
   const isZh = lang !== "en";
 
-  const title = isZh ? "找不到頁面 | NTHUMods" : "Page Not Found | NTHUMods";
-  const description = isZh
-    ? "您要尋找的頁面不存在或已被移除。"
-    : "The page you are looking for does not exist or has been removed.";
+  const title = dict.common.not_found_title;
+  const description = dict.common.not_found_description;
   const canonical = `https://nthumods.com/${isZh ? "zh" : "en"}/not-found`;
 
   return (
@@ -24,7 +24,7 @@ const NotFound = () => {
       <div className="grid place-items-center dark:bg-background w-screen h-screen">
         <div className="flex flex-col items-center">
           <h1 className="text-4xl font-bold">404</h1>
-          <p className="text-2xl">{isZh ? "找不到頁面" : "Page not found"}</p>
+          <p className="text-2xl">{dict.common.not_found_heading}</p>
         </div>
       </div>
     </>

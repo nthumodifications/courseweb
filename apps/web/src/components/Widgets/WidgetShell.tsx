@@ -1,6 +1,7 @@
 import { ReactNode, FC } from "react";
 import { cn } from "@/lib/utils";
 import { GripVertical, X } from "lucide-react";
+import useDictionary from "@/dictionaries/useDictionary";
 
 interface WidgetShellProps {
   title: string;
@@ -19,6 +20,7 @@ export const WidgetShell: FC<WidgetShellProps> = ({
   dragHandleProps,
   isDragging,
 }) => {
+  const dict = useDictionary();
   return (
     <div
       className={cn(
@@ -35,7 +37,7 @@ export const WidgetShell: FC<WidgetShellProps> = ({
               {...(dragHandleProps as Record<string, unknown> &
                 React.HTMLAttributes<HTMLButtonElement>)}
               className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground transition-colors touch-none"
-              aria-label="Drag to reorder"
+              aria-label={dict.common.drag_to_reorder}
             >
               <GripVertical className="h-4 w-4" />
             </button>
@@ -48,7 +50,7 @@ export const WidgetShell: FC<WidgetShellProps> = ({
           <button
             onClick={onRemove}
             className="text-muted-foreground hover:text-destructive transition-colors"
-            aria-label="Remove widget"
+            aria-label={dict.common.remove_widget}
           >
             <X className="h-4 w-4" />
           </button>

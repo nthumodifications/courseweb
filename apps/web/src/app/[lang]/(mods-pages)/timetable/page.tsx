@@ -15,6 +15,7 @@ import { useSettings } from "@/hooks/contexts/settings";
 import { timetableEvents } from "@/lib/trackingEvents";
 import CourseSelectionStatus from "@/components/CourseSelection/CourseSelectionStatus";
 import { filterHiddenCourses } from "@/helpers/timetableVisibility";
+import useDictionary from "@/dictionaries/useDictionary";
 
 const TimetablePage = () => {
   const {
@@ -27,6 +28,7 @@ const TimetablePage = () => {
   } = useUserTimetable();
   const [vertical, setVertical] = useLocalStorage("timetable_vertical", true);
   const { language } = useSettings();
+  const dict = useDictionary();
   const { setPortalContent, clearPortalContent } = useHeaderPortal();
   const previousSemesterRef = useRef(semester);
 
@@ -96,7 +98,7 @@ const TimetablePage = () => {
     {
       "@context": "https://schema.org",
       "@type": "WebApplication",
-      name: "NTHUMods 課表系統",
+      name: dict.timetable.seo.application_name,
       url: "https://nthumods.com/zh/timetable",
       applicationCategory: "EducationalApplication",
       operatingSystem: "Web Browser",
@@ -105,8 +107,8 @@ const TimetablePage = () => {
     {
       "@context": "https://schema.org",
       "@type": "WebPage",
-      name: "課表管理 | NTHUMods",
-      description: "智慧排課系統，輕鬆管理清華大學課程時間表",
+      name: dict.timetable.seo.page_title,
+      description: dict.timetable.seo.page_description,
       url: `https://nthumods.com/${language}/timetable`,
       inLanguage: language === "en" ? "en-US" : "zh-TW",
       isPartOf: { "@type": "WebSite", url: "https://nthumods.com" },

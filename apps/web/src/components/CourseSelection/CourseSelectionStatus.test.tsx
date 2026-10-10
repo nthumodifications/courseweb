@@ -49,6 +49,8 @@ let calendarEvents = [
   ),
 ];
 
+const actualDictionary = await import("@/dictionaries/useDictionary");
+
 mock.module("@/config/api", () => ({
   default: {
     acacalendar: {
@@ -74,6 +76,7 @@ mock.module("@/dictionaries/useDictionary", () => ({
         open_now: "Open now",
         opens_today: "Opens today",
         opens_in: "Opens in {days} days",
+        date_format: "MMM d",
         phases: { "add-drop": "Add/drop" },
         audience: {
           "new-students": "New students",
@@ -119,9 +122,10 @@ mock.module("usehooks-ts", () => ({
   useLocalStorage: useTestLocalStorage,
 }));
 
-const { default: CourseSelectionStatus } = await import(
+const { default: CourseSelectionStatus, formatDateRange } = await import(
   "./CourseSelectionStatus"
 );
+mock.module("@/dictionaries/useDictionary", () => actualDictionary);
 
 let activeDom: JSDOM | null = null;
 afterEach(() => {
@@ -202,6 +206,19 @@ const cleanupStatus = async ({
 };
 
 describe("CourseSelectionStatus", () => {
+  test("formats rendered dates with the English and Chinese dictionary formats", () => {
+    const period = addDropEvent(
+      "format",
+      "2026-10-20",
+      "Selection",
+      "2026-10-20",
+      "2026-10-22",
+    ).courseSelectionPeriod;
+
+    expect(formatDateRange(period, "en", "MMM d")).toBe("Oct 20–Oct 22");
+    expect(formatDateRange(period, "zh", "M月d日")).toBe("10月20日–10月22日");
+  });
+
   test("does not render when academic calendar is disabled", async () => {
     showAcademicCalendar = false;
     calendarEvents = [
@@ -252,6 +269,7 @@ describe("CourseSelectionStatus", () => {
     await waitFor(() =>
       Boolean(rendered.container.querySelector('button[aria-label="Dismiss"]')),
     );
+    expect(rendered.container.textContent).toContain("Oct 20–Oct 22");
 
     const dismissButton = rendered.container.querySelector(
       'button[aria-label="Dismiss"]',

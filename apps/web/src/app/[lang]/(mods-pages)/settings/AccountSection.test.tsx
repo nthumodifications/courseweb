@@ -16,6 +16,7 @@ const authState = {
   clearStaleState: mock(async () => {}),
   revokeTokens: mock(async () => {}),
 };
+const actualDictionary = await import("@/dictionaries/useDictionary");
 
 const passthrough = ({ children, ...props }: Record<string, unknown>) =>
   createElement("div", props, children as never);
@@ -60,6 +61,7 @@ mock.module("@/dictionaries/useDictionary", () => ({
 }));
 
 const { AccountSection } = await import("./AccountSection");
+mock.module("@/dictionaries/useDictionary", () => actualDictionary);
 
 const renderAccountSection = async () => {
   const dom = new JSDOM("<!doctype html><html><body></body></html>", {

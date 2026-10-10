@@ -73,209 +73,227 @@ const IntroAnimation = () => (
   </motion.div>
 );
 
-const CoursesAnimation = () => (
-  <motion.div
-    className="w-full h-full relative p-2 bg-muted"
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    transition={{ duration: 0.5 }}
-  >
-    {/* Time column labels */}
-    <div className="absolute left-1 top-0 h-full w-8 flex flex-col text-[10px] text-muted-foreground">
-      {["9:00", "10:00", "11:00", "12:00", "13:00", "14:00"].map((time, i) => (
-        <div
-          key={`time-${i}`}
+const CoursesAnimation = () => {
+  const dict = useDictionary();
+
+  return (
+    <motion.div
+      className="w-full h-full relative p-2 bg-muted"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      {/* Time column labels */}
+      <div className="absolute left-1 top-0 h-full w-8 flex flex-col text-[10px] text-muted-foreground">
+        {["9:00", "10:00", "11:00", "12:00", "13:00", "14:00"].map(
+          (time, i) => (
+            <div
+              key={`time-${i}`}
+              style={{ top: `${15 + i * 14}%` }}
+              className="absolute"
+            >
+              {time}
+            </div>
+          ),
+        )}
+      </div>
+
+      {/* Horizontal timetable grid lines */}
+      {[...new Array(6)].map((_, i) => (
+        <motion.div
+          key={`h-${i}`}
+          className="absolute left-8 right-0 h-px bg-border"
           style={{ top: `${15 + i * 14}%` }}
-          className="absolute"
-        >
-          {time}
-        </div>
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ duration: 0.3, delay: 0.1 * i }}
+        />
       ))}
-    </div>
 
-    {/* Horizontal timetable grid lines */}
-    {[...new Array(6)].map((_, i) => (
-      <motion.div
-        key={`h-${i}`}
-        className="absolute left-8 right-0 h-px bg-border"
-        style={{ top: `${15 + i * 14}%` }}
-        initial={{ scaleX: 0 }}
-        animate={{ scaleX: 1 }}
-        transition={{ duration: 0.3, delay: 0.1 * i }}
-      />
-    ))}
+      {/* Vertical day dividers */}
+      {[...new Array(4)].map((_, i) => (
+        <motion.div
+          key={`v-${i}`}
+          className="absolute top-0 bottom-0 w-px bg-border"
+          style={{ left: `${30 + i * 22}%` }}
+          initial={{ scaleY: 0 }}
+          animate={{ scaleY: 1 }}
+          transition={{ duration: 0.3, delay: 0.1 * i }}
+        />
+      ))}
 
-    {/* Vertical day dividers */}
-    {[...new Array(4)].map((_, i) => (
-      <motion.div
-        key={`v-${i}`}
-        className="absolute top-0 bottom-0 w-px bg-border"
-        style={{ left: `${30 + i * 22}%` }}
-        initial={{ scaleY: 0 }}
-        animate={{ scaleY: 1 }}
-        transition={{ duration: 0.3, delay: 0.1 * i }}
-      />
-    ))}
-
-    {/* Course slots with better distribution */}
-    {[
-      {
-        title: "程式設計",
-        code: "CS1011",
-        color: "bg-nthu-500",
-        textColor: "text-primary-foreground",
-        top: "15%",
-        left: "11%",
-        width: "21%",
-        height: "28%",
-      },
-      {
-        title: "線性代數",
-        code: "MATH2011",
-        color: "bg-primary",
-        textColor: "text-primary-foreground",
-        top: "29%",
-        left: "31%",
-        width: "21%",
-        height: "28%",
-      },
-      {
-        title: "資料結構",
-        code: "CS2041",
-        color: "bg-accent",
-        textColor: "text-accent-foreground",
-        top: "43%",
-        left: "53%",
-        width: "21%",
-        height: "28%",
-      },
-      {
-        title: "電腦網路",
-        code: "CS3051",
-        color: "bg-secondary",
-        textColor: "text-foreground",
-        top: "57%",
-        left: "74%",
-        width: "21%",
-        height: "28%",
-      },
-    ].map((course, i) => (
-      <motion.div
-        key={i}
-        className={`absolute rounded-md ${course.color} ${course.textColor}`}
-        style={{
-          top: course.top,
-          left: course.left,
-          width: course.width,
-          height: course.height,
-        }}
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.4, delay: 0.2 * i }}
-      >
-        <div className="flex flex-col h-full p-2 select-none items-start justify-between">
-          <div className="flex-1 flex flex-col overflow-hidden">
-            <span className="text-xs font-medium">{course.code}</span>
-            <span className="text-xs md:text-sm font-medium">
-              {course.title}
-            </span>
+      {/* Course slots with better distribution */}
+      {[
+        {
+          title: dict.help.demo.course_programming,
+          code: "CS1011",
+          color: "bg-nthu-500",
+          textColor: "text-primary-foreground",
+          top: "15%",
+          left: "11%",
+          width: "21%",
+          height: "28%",
+        },
+        {
+          title: dict.help.demo.course_linear_algebra,
+          code: "MATH2011",
+          color: "bg-primary",
+          textColor: "text-primary-foreground",
+          top: "29%",
+          left: "31%",
+          width: "21%",
+          height: "28%",
+        },
+        {
+          title: dict.help.demo.course_data_structures,
+          code: "CS2041",
+          color: "bg-accent",
+          textColor: "text-accent-foreground",
+          top: "43%",
+          left: "53%",
+          width: "21%",
+          height: "28%",
+        },
+        {
+          title: dict.help.demo.course_computer_networks,
+          code: "CS3051",
+          color: "bg-secondary",
+          textColor: "text-foreground",
+          top: "57%",
+          left: "74%",
+          width: "21%",
+          height: "28%",
+        },
+      ].map((course, i) => (
+        <motion.div
+          key={i}
+          className={`absolute rounded-md ${course.color} ${course.textColor}`}
+          style={{
+            top: course.top,
+            left: course.left,
+            width: course.width,
+            height: course.height,
+          }}
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.4, delay: 0.2 * i }}
+        >
+          <div className="flex flex-col h-full p-2 select-none items-start justify-between">
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <span className="text-xs font-medium">{course.code}</span>
+              <span className="text-xs md:text-sm font-medium">
+                {course.title}
+              </span>
+            </div>
+            <div className="flex flex-row justify-end items-center w-full">
+              <span className="text-[10px] bg-white/20 rounded-sm px-1">
+                R201
+              </span>
+            </div>
           </div>
-          <div className="flex flex-row justify-end items-center w-full">
-            <span className="text-[10px] bg-white/20 rounded-sm px-1">
+        </motion.div>
+      ))}
+    </motion.div>
+  );
+};
+
+const DashboardAnimation = () => {
+  const dict = useDictionary();
+
+  return (
+    <motion.div
+      className="w-full h-full flex flex-col gap-4 p-4 overflow-y-auto"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+    >
+      {/* Today's Schedule */}
+      <div className="flex flex-col gap-2 pb-4">
+        <div className="flex flex-row justify-between">
+          <div className="flex flex-row flex-1 items-baseline gap-2">
+            <div className="whitespace-nowrap font-medium text-lg">
+              {dict.today.upcoming.today}
+            </div>
+            <div className="text-sm text-muted-foreground whitespace-nowrap">
+              {dict.help.demo.date_today}
+            </div>
+          </div>
+          <div className="flex items-center gap-1 rounded-full bg-muted px-2 py-1 text-sm">
+            <Cloud size={14} className="text-muted-foreground" />
+            <span className="font-medium">26°</span>
+            <span className="text-muted-foreground text-xs">18°</span>
+            <div className="ml-1 text-xs bg-muted px-1 rounded-full">10%</div>
+          </div>
+        </div>
+
+        {/* Class 1 */}
+        <div className="flex flex-row gap-2 items-start">
+          <div className="size-4 rounded-sm mt-1 bg-nthu-500"></div>
+          <div className="flex flex-col gap-1">
+            <div className="font-medium">
+              {dict.help.demo.course_programming}
+            </div>
+            <div className="text-xs text-muted-foreground align-baseline">
+              <Clock className="size-3 inline mr-1" />
+              9:00 - 10:00
+            </div>
+            <div className="text-xs text-muted-foreground align-baseline">
+              <MapPin className="size-3 inline mr-1" />
               R201
-            </span>
+            </div>
           </div>
         </div>
-      </motion.div>
-    ))}
-  </motion.div>
-);
 
-const DashboardAnimation = () => (
-  <motion.div
-    className="w-full h-full flex flex-col gap-4 p-4 overflow-y-auto"
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-  >
-    {/* Today's Schedule */}
-    <div className="flex flex-col gap-2 pb-4">
-      <div className="flex flex-row justify-between">
+        {/* Class 2 */}
+        <div className="flex flex-row gap-2 items-start">
+          <div className="size-4 rounded-sm mt-1 bg-primary"></div>
+          <div className="flex flex-col gap-1">
+            <div className="font-medium">
+              {dict.help.demo.course_linear_algebra}
+            </div>
+            <div className="text-xs text-muted-foreground align-baseline">
+              <Clock className="size-3 inline mr-1" />
+              11:00 - 12:00
+            </div>
+            <div className="text-xs text-muted-foreground align-baseline">
+              <MapPin className="size-3 inline mr-1" />
+              R301
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Tomorrow's Schedule */}
+      <div className="flex flex-col gap-2">
         <div className="flex flex-row flex-1 items-baseline gap-2">
-          <div className="whitespace-nowrap font-medium text-lg">今天</div>
+          <div className="whitespace-nowrap font-medium text-lg text-muted-foreground">
+            {dict.today.upcoming.tomorrow}
+          </div>
           <div className="text-sm text-muted-foreground whitespace-nowrap">
-            5 月 7 日 星期三
+            {dict.help.demo.date_tomorrow}
           </div>
         </div>
-        <div className="flex items-center gap-1 rounded-full bg-muted px-2 py-1 text-sm">
-          <Cloud size={14} className="text-muted-foreground" />
-          <span className="font-medium">26°</span>
-          <span className="text-muted-foreground text-xs">18°</span>
-          <div className="ml-1 text-xs bg-muted px-1 rounded-full">10%</div>
-        </div>
-      </div>
 
-      {/* Class 1 */}
-      <div className="flex flex-row gap-2 items-start">
-        <div className="size-4 rounded-sm mt-1 bg-nthu-500"></div>
-        <div className="flex flex-col gap-1">
-          <div className="font-medium">程式設計</div>
-          <div className="text-xs text-muted-foreground align-baseline">
-            <Clock className="size-3 inline mr-1" />
-            9:00 - 10:00
-          </div>
-          <div className="text-xs text-muted-foreground align-baseline">
-            <MapPin className="size-3 inline mr-1" />
-            R201
-          </div>
-        </div>
-      </div>
-
-      {/* Class 2 */}
-      <div className="flex flex-row gap-2 items-start">
-        <div className="size-4 rounded-sm mt-1 bg-primary"></div>
-        <div className="flex flex-col gap-1">
-          <div className="font-medium">線性代數</div>
-          <div className="text-xs text-muted-foreground align-baseline">
-            <Clock className="size-3 inline mr-1" />
-            11:00 - 12:00
-          </div>
-          <div className="text-xs text-muted-foreground align-baseline">
-            <MapPin className="size-3 inline mr-1" />
-            R301
+        {/* Class for tomorrow */}
+        <div className="flex flex-row gap-2 items-start">
+          <div className="size-4 rounded-sm mt-1 bg-accent"></div>
+          <div className="flex flex-col gap-1">
+            <div className="font-medium">
+              {dict.help.demo.course_data_structures}
+            </div>
+            <div className="text-xs text-muted-foreground align-baseline">
+              <Clock className="size-3 inline mr-1" />
+              14:00 - 15:00
+            </div>
+            <div className="text-xs text-muted-foreground align-baseline">
+              <MapPin className="size-3 inline mr-1" />
+              R401
+            </div>
           </div>
         </div>
       </div>
-    </div>
-
-    {/* Tomorrow's Schedule */}
-    <div className="flex flex-col gap-2">
-      <div className="flex flex-row flex-1 items-baseline gap-2">
-        <div className="whitespace-nowrap font-medium text-lg text-muted-foreground">
-          明天
-        </div>
-        <div className="text-sm text-muted-foreground whitespace-nowrap">
-          5 月 8 日
-        </div>
-      </div>
-
-      {/* Class for tomorrow */}
-      <div className="flex flex-row gap-2 items-start">
-        <div className="size-4 rounded-sm mt-1 bg-accent"></div>
-        <div className="flex flex-col gap-1">
-          <div className="font-medium">資料結構</div>
-          <div className="text-xs text-muted-foreground align-baseline">
-            <Clock className="size-3 inline mr-1" />
-            14:00 - 15:00
-          </div>
-          <div className="text-xs text-muted-foreground align-baseline">
-            <MapPin className="size-3 inline mr-1" />
-            R401
-          </div>
-        </div>
-      </div>
-    </div>
-  </motion.div>
-);
+    </motion.div>
+  );
+};
 
 const BusAnimation = ({ title }: { title: string }) => (
   <motion.div

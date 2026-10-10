@@ -24,6 +24,7 @@ const knownIssuesGet = mock(async () =>
   ]),
 );
 const issuePost = mock(async () => Response.json({ applied: [] }));
+const actualDictionary = await import("@/dictionaries/useDictionary");
 
 mock.module("@/config/api", () => ({
   default: {
@@ -58,6 +59,7 @@ const { default: EmptyIssueForm } = await import(
   "@/app/[lang]/(mods-pages)/(side-pages)/issues/EmptyIssueForm"
 );
 const { useIssueReport, useKnownIssues } = await import("./IssueReportForm");
+mock.module("@/dictionaries/useDictionary", () => actualDictionary);
 
 const renderInQueryClient = async (element: React.ReactNode) => {
   const dom = new JSDOM("<!doctype html><html><body></body></html>", {

@@ -14,6 +14,7 @@ import SearchContainer from "./SearchContainer";
 import { lastSemester } from "@courseweb/shared";
 import CourseSidePanel from "./CourseSidePanel";
 import { createResilientSearchClient } from "@/lib/search-client";
+import useDictionary from "@/dictionaries/useDictionary";
 
 const searchClient = createResilientSearchClient();
 const sessionStorageCache = createInfiniteHitsSessionStorageCache();
@@ -22,6 +23,7 @@ const CourseSearchContainer = () => {
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const [searchParams] = useSearchParams();
   const { language } = useSettings();
+  const dict = useDictionary();
   const department = searchParams.get("department");
 
   const initialUiState = useMemo(
@@ -37,10 +39,13 @@ const CourseSearchContainer = () => {
 
   const departmentHelmet = department ? (
     <Helmet>
-      <title>{`清華大學${department}課程列表 | NTHUMods`}</title>
+      <title>{dict.course.seo.title.replace("{department}", department)}</title>
       <meta
         name="description"
-        content={`瀏覽清華大學${department}所有課程，搜尋選課資訊。`}
+        content={dict.course.seo.description.replace(
+          "{department}",
+          department,
+        )}
       />
       <link
         rel="canonical"
@@ -56,13 +61,13 @@ const CourseSearchContainer = () => {
               {
                 "@type": "ListItem",
                 position: 1,
-                name: "首頁",
+                name: dict.course.seo.home,
                 item: `https://nthumods.com/${language}`,
               },
               {
                 "@type": "ListItem",
                 position: 2,
-                name: "課程",
+                name: dict.course.seo.course_breadcrumb,
                 item: `https://nthumods.com/${language}/courses`,
               },
               {
@@ -76,8 +81,11 @@ const CourseSearchContainer = () => {
           {
             "@context": "https://schema.org",
             "@type": "WebPage",
-            name: `${department}課程列表 | NTHUMods`,
-            description: `瀏覽清華大學${department}所有課程`,
+            name: dict.course.seo.title.replace("{department}", department),
+            description: dict.course.seo.page_description.replace(
+              "{department}",
+              department,
+            ),
             url: `https://nthumods.com/${language}/courses?department=${encodeURIComponent(department)}`,
             inLanguage: language === "en" ? "en-US" : "zh-TW",
             isPartOf: { "@type": "WebSite", url: "https://nthumods.com" },

@@ -30,6 +30,7 @@ mock.module("@/config/api", () => ({
 }));
 mock.module("@/config/auth", () => ({ default: {} }));
 mock.module("@/lib/gtag", () => ({ event: () => {} }));
+const actualDictionary = await import("@/dictionaries/useDictionary");
 mock.module("@/hooks/contexts/settings", () => ({
   useSettings: () => ({ language: "en" }),
 }));
@@ -166,6 +167,7 @@ const { default: TimetableSlotHorizontal } = await import(
 const { default: TimetableSlotVertical } = await import(
   "./TimetableSlotVertical"
 );
+mock.module("@/dictionaries/useDictionary", () => actualDictionary);
 
 const COURSES_KEY = "nthumods-storage-anonymous-courses";
 const PREFERENCES_KEY =
