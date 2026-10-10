@@ -143,6 +143,29 @@ model UsageAnomalyState {
   @@unique([source, seriesId])
 }
 
+model CourseStatistic {
+  rawId      String   @id
+  courseCode String
+  semester   String
+  enrollment Int
+  scale      String
+  average    Float
+  stdDev     Float
+  updatedAt  DateTime
+
+  @@index([courseCode])
+  @@index([semester])
+}
+
+model CourseStatisticSemester {
+  semester    String   @id
+  contentHash String
+  courseCount Int
+  updatedAt   DateTime
+
+  @@index([updatedAt])
+}
+
 model SharedTimetable {
   id           String    @id
   ownerId      String

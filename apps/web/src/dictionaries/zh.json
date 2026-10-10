@@ -240,9 +240,14 @@
     },
     "details": {
       "semester": "學期",
+      "past_grade_statistics": "歷年成績統計",
+      "past_grade_statistics_gpa": "GPA／4.3",
+      "past_grade_statistics_percent": "百分比",
+      "past_grade_statistics_contributed": "資料由本校學生透過校務系統貢獻。",
       "language": "授課語言",
       "reserved": "新生保留",
       "capacity": "名額",
+      "enrollment": "修課人數",
       "venue_time": "時間地點",
       "class": "系班",
       "brief": "簡介",
@@ -1643,6 +1648,65 @@
     "how_to_contribute": {
       "title": "如何貢獻",
       "description": "NTHUMods 是一個 100% 由學生主導的開放原始碼專案。我們依靠貢獻者和清華大學社群的支援，讓這個平台持續發展。每一個貢獻，無論多小，都能為數以千計的學生生活帶來真正的改變！"
+    },
+    "course_statistics": {
+      "title": "分享課程統計",
+      "description": "分享學校的課程平均值與標準差表。內容不包含任何你的資料。",
+      "school_url": "https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/",
+      "school_name": "NTHU CCXP",
+      "copied": "已複製",
+      "detected": "已偵測到 ACIXSTORE 值：{value}",
+      "open_guide": "瞭解如何分享課程統計",
+      "open_school": "開啟校務系統",
+      "step_indicator": "導覽步驟",
+      "step_label": "前往第 {step} 步",
+      "back": "上一步",
+      "next": "下一步",
+      "retry": "重試剩餘學期",
+      "finish": "完成",
+      "steps": {
+        "open_school": {
+          "title": "開啟校務系統",
+          "description": "前往校務系統，使用學生帳號登入。"
+        },
+        "find_code": {
+          "title": "找出 ACIXSTORE 代碼",
+          "description": "登入後，查看瀏覽器的網址列。",
+          "caption": "只複製 ACIXSTORE= 後、下一個 & 前的值。"
+        },
+        "paste": {
+          "title": "貼上代碼",
+          "description": "貼上代碼、完整網址列網址，或 ACIXSTORE= 片段。"
+        },
+        "result": {
+          "title": "貢獻結果",
+          "description": "查看下方每個學期的結果。"
+        }
+      },
+      "session_label": "ACIXSTORE 值",
+      "privacy": "這個值只會使用一次，不會儲存。",
+      "submit": "分享課程統計",
+      "loading": "正在分享課程統計…",
+      "progress": "正在分享第 {completed}／{total} 個學期…",
+      "result": "已儲存 {courses} 門課程、涵蓋 {semesters} 個學期。",
+      "already_up_to_date": "課程統計已是最新，共 {count} 個學期。",
+      "no_data": "這些學期沒有課程統計資料。",
+      "no_data_count": "共有 {count} 個學期沒有課程統計資料。",
+      "semester_status": {
+        "saved": "已儲存",
+        "already_up_to_date": "已是最新",
+        "no_data": "沒有資料"
+      },
+      "errors": {
+        "invalid_session": "ACIXSTORE 值格式不正確。",
+        "session_expired": "CCXP 工作階段已過期，請複製新的 ACIXSTORE 值再試一次。",
+        "school_unreachable": "目前無法連線至學校系統，請稍後再試。",
+        "school_response_invalid": "學校系統回傳了無法辨識的頁面。",
+        "invalid_semester": "學校系統不接受這個學期。",
+        "storage_error": "課程統計無法儲存，請稍後再試。",
+        "rate_limited": "目前有太多貢獻正在處理，請稍後重試剩餘學期。",
+        "unknown": "課程統計無法分享，請稍後再試。"
+      }
     },
     "financial_support": {
       "title": "財務支援",

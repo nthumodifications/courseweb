@@ -53,6 +53,13 @@ import {
 } from "@/lib/modules";
 import { cleanSyllabusFields } from "@/lib/syllabus-text";
 import { usePrerequisiteGraphData } from "./usePrerequisiteGraphData";
+import CourseGradeStatistics, {
+  type CourseGradeStatisticsResponse,
+} from "./CourseGradeStatistics";
+import {
+  courseCodeFromRawId,
+  courseStatisticsKey,
+} from "./courseGradeStatisticsLogic";
 import {
   getPttToggleLabel,
   normalizePttReview,
@@ -66,6 +73,19 @@ const PDFViewerDynamic = lazy(
 const SelectCourseButtonDynamic = lazy(
   () => import("@/components/Courses/SelectCourseButton"),
 );
+
+type CourseStatisticsApi = {
+  contribute: {
+    grades: {
+      ":courseCode": {
+        $get: (args: { param: { courseCode: string } }) => Promise<{
+          ok: boolean;
+          json: () => Promise<CourseGradeStatisticsResponse>;
+        }>;
+      };
+    };
+  };
+};
 
 type CleanSyllabusDescription = ReturnType<
   typeof cleanSyllabusFields
@@ -197,6 +217,7 @@ const CourseDetailContainer = ({
 }) => {
   const dict = useDictionary();
   const { openCourse } = useCourseLink();
+  const courseStatisticsClient = client as unknown as CourseStatisticsApi;
 
   // Use React Query to fetch the course data
   const {
@@ -252,6 +273,27 @@ const CourseDetailContainer = ({
       return res.json();
     },
     enabled: !!course, // Only fetch if course data is available
+  });
+
+  const {
+    data: contributedGradeStatistics,
+    error: contributedGradeStatisticsError,
+  } = useQuery<CourseGradeStatisticsResponse>({
+    queryKey: ["course", courseId, "contributed-grade-statistics"],
+    queryFn: async () => {
+      const res = await courseStatisticsClient.contribute.grades[
+        ":courseCode"
+      ].$get({
+        param: {
+          courseCode: courseCodeFromRawId(course!.raw_id),
+        },
+      });
+      if (!res.ok) throw new Error("Failed to load course grade statistics");
+      return (await res.json()) as CourseGradeStatisticsResponse;
+    },
+    enabled: !!course && !modal,
+    staleTime: 5 * 60 * 1000,
+    retry: false,
   });
 
   // Which terms this course runs in, across every semester on record. Kept out
@@ -399,6 +441,13 @@ const CourseDetailContainer = ({
   const missingSyllabus = course.course_syllabus == null;
   const bilingualNamesAreAligned =
     (course.teacher_zh?.length ?? 0) === (course.teacher_en?.length ?? 0);
+  const teacherByCourse = new Map<string, readonly string[]>();
+  for (const offering of [course, ...otherClasses]) {
+    teacherByCourse.set(
+      courseStatisticsKey(offering.semester, offering.raw_id),
+      offering.teacher_zh ?? [],
+    );
+  }
 
   return (
     <Fade>
@@ -815,6 +864,25 @@ const CourseDetailContainer = ({
                   </p>
                 </div>
               )}
+              <CourseGradeStatistics
+                lang={lang}
+                statistics={contributedGradeStatistics?.statistics}
+                error={contributedGradeStatisticsError}
+                teacherByCourse={teacherByCourse}
+                copy={{
+                  title: dict.course.details.past_grade_statistics,
+                  semester: dict.course.details.semester,
+                  instructor: dict.course.details.instructor,
+                  enrollment: dict.course.details.enrollment,
+                  average: dict.course.details.average,
+                  standardDeviation: dict.course.details.standard_deviation,
+                  gpaScale: dict.course.details.past_grade_statistics_gpa,
+                  percentScale:
+                    dict.course.details.past_grade_statistics_percent,
+                  contributed:
+                    dict.course.details.past_grade_statistics_contributed,
+                }}
+              />
               <div className="flex flex-col gap-2">
                 <div className="flex flex-row">
                   <h3 className="flex-1 font-bold" id="other">
@@ -929,6 +997,12 @@ const CourseDetailContainer = ({
                         label={dict.course.details.scores}
                       />
                     )}
+                    {contributedGradeStatistics?.statistics.length ? (
+                      <TOCNavItem
+                        href="#past-grade-statistics"
+                        label={dict.course.details.past_grade_statistics}
+                      />
+                    ) : null}
                     {reviews.length > 0 && (
                       <TOCNavItem href="#ptt" label={dict.course.details.ptt} />
                     )}
