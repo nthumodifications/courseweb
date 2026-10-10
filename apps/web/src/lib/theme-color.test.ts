@@ -1,9 +1,11 @@
 import { describe, expect, test } from "bun:test";
-import { themeColorForMode } from "./theme-color";
+import { statusBarStyleForMode, themeColorForMode } from "./theme-color";
 
 describe("theme color", () => {
-  test("uses dark text contrast colors for each app mode", () => {
+  test("uses matching browser chrome colors for each app mode", () => {
     expect(themeColorForMode("light")).toBe("#ffffff");
     expect(themeColorForMode("dark")).toBe("#171717");
+    expect(statusBarStyleForMode("light")).toBe("default");
+    expect(statusBarStyleForMode("dark")).toBe("black");
   });
 });
