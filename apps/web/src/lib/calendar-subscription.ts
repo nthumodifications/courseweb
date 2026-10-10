@@ -6,7 +6,11 @@ export type CalendarSubscriptionLinks = {
 };
 
 export function toHttpsCalendarFeedUrl(feedUrl: string): string {
-  return feedUrl.replace(/^(?:webcals?|http):\/\//i, "https://");
+  return feedUrl.replace(/^(?:webcals?|https?):\/\//i, "https://");
+}
+
+export function toWebcalCalendarFeedUrl(feedUrl: string): string {
+  return feedUrl.replace(/^(?:webcals?|https?):\/\//i, "webcal://");
 }
 
 export function buildCalendarSubscriptionLinks(

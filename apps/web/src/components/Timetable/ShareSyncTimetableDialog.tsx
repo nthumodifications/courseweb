@@ -1,4 +1,4 @@
-import { Calendar, Copy, Mail, Share } from "lucide-react";
+import { Copy, Mail, Share } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useEffect, useMemo, useState } from "react";
@@ -15,7 +15,7 @@ import {
 } from "@courseweb/ui";
 import client from "@/config/api";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
-import { buildCalendarSubscriptionLinks } from "@/lib/calendar-subscription";
+import CalendarSubscriptionLinks from "./CalendarSubscriptionLinks";
 
 const ComponentSkeleton = () => {
   return (
@@ -54,14 +54,6 @@ const ShareSyncTimetableDialog = ({
   const dict = useDictionary();
   const [link, setLink] = useState<string | null>(null);
   const { customItems } = useUserTimetable();
-  const calendarLinks = useMemo(
-    () =>
-      buildCalendarSubscriptionLinks(
-        webcalLink,
-        dict.dialogs.ShareSyncTimetableDialog.links.calendar_name,
-      ),
-    [dict.dialogs.ShareSyncTimetableDialog.links.calendar_name, webcalLink],
-  );
   const shareLinkWithCustomItems = useMemo(() => {
     try {
       const url = new URL(shareLink);
@@ -165,62 +157,7 @@ const ShareSyncTimetableDialog = ({
                     {dict.dialogs.ShareSyncTimetableDialog.links.email}
                   </a>
                 </Button>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  asChild
-                >
-                  <a
-                    href={calendarLinks.google}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <Calendar className="w-4 h-4 mr-2" />
-                    {dict.dialogs.ShareSyncTimetableDialog.links.google}
-                  </a>
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  asChild
-                >
-                  <a
-                    href={calendarLinks.apple}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <Calendar className="w-4 h-4 mr-2" />
-                    {dict.dialogs.ShareSyncTimetableDialog.links.apple}
-                  </a>
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  asChild
-                >
-                  <a
-                    href={calendarLinks.outlook}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <Calendar className="w-4 h-4 mr-2" />
-                    {dict.dialogs.ShareSyncTimetableDialog.links.outlook}
-                  </a>
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => handleCopy(calendarLinks.copy)}
-                >
-                  <Copy className="w-4 h-4 mr-2" />
-                  {dict.dialogs.ShareSyncTimetableDialog.links.copy_link}
-                </Button>
-                <p className="text-xs text-muted-foreground">
-                  {
-                    dict.dialogs.ShareSyncTimetableDialog.links
-                      .subscription_hint
-                  }
-                </p>
+                <CalendarSubscriptionLinks feedUrl={webcalLink} />
               </div>
             </div>
           </div>
