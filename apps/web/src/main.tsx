@@ -6,6 +6,7 @@ import { router } from "@/router";
 import * as Sentry from "@sentry/browser";
 import { initializeGTM } from "@/lib/gtm";
 import "@/lib/chunk-recovery";
+import { recordClientError } from "@/lib/client-diagnostics";
 
 import "./app/globals.css";
 
@@ -25,6 +26,11 @@ if (import.meta.env.PROD) {
       Sentry.breadcrumbsIntegration(),
       Sentry.globalHandlersIntegration(),
     ],
+    beforeSend: (event) => {
+      const error = event.exception?.values?.[0];
+      if (error) recordClientError(error.type);
+      return event;
+    },
   });
 }
 
