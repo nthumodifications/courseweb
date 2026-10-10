@@ -172,6 +172,7 @@ const PREFERENCES_KEY =
   "nthumods-storage-anonymous-timetable_display_preferences";
 const DISPLAY_SETTINGS_KEY =
   "nthumods-storage-anonymous-timetable-display-settings";
+const TIMETABLE_THEME_KEY = "nthumods-storage-anonymous-timetable_theme";
 
 const syncedRecord = (value: unknown) =>
   JSON.stringify({ value, lastModified: 1, updatedAt: 1, deviceId: "test" });
@@ -280,14 +281,35 @@ describe("timetable provider render stability", () => {
   test("settles when the provider and empty course list mount", async () => {
     let renderCount = 0;
     const fixture = await renderTimetable(
-      <RenderCount onRender={() => (renderCount += 1)} />,
+      <>
+        <RenderCount onRender={() => (renderCount += 1)} />
+        <TimetableStateProbe />
+      </>,
     );
     await fixture.waitFor(
       () => fixture.container.textContent?.includes("No courses") ?? false,
     );
 
+    await fixture.waitFor(() => fixture.readState().timetableTheme === "ashes");
+    expect(fixture.readState().timetableTheme).toBe("ashes");
     expect(renderCount).toBeLessThan(30);
     expect(fixture.container.textContent).toContain("No courses");
+    await fixture.cleanup();
+  });
+
+  test("keeps stored timetable themes and updates them before courses exist", async () => {
+    const fixture = await renderTimetable(<TimetableStateProbe />, {
+      [TIMETABLE_THEME_KEY]: "ocean",
+    });
+    await fixture.waitFor(() => fixture.readState().timetableTheme === "ocean");
+
+    await act(async () => {
+      fixture.container
+        .querySelector<HTMLButtonElement>("#select-theme")
+        ?.click();
+    });
+
+    expect(fixture.readState().timetableTheme).toBe("ashes");
     await fixture.cleanup();
   });
 
@@ -572,17 +594,24 @@ const TimetableStateProbe = () => {
   const {
     courses,
     preferences,
+    timetableTheme,
     deleteCourse,
     clearCourses,
     setCourses,
     setPreferences,
+    setTimetableTheme,
   } = useUserTimetable();
 
   return (
     <>
       <output>
-        {JSON.stringify({ courses, hiddenCourses: preferences.hiddenCourses })}
+        {JSON.stringify({
+          courses,
+          hiddenCourses: preferences.hiddenCourses,
+          timetableTheme,
+        })}
       </output>
+      <button id="select-theme" onClick={() => setTimetableTheme("ashes")} />
       <button id="delete-course" onClick={() => deleteCourse("11410-A")} />
       <button
         id="hide-course"
